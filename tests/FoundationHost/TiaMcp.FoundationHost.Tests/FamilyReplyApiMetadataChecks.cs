@@ -51,7 +51,7 @@ public sealed class FamilyReplyApiMetadataChecks
     {
         var all = Operations().Select(row => (string)row[1]).ToHashSet(StringComparer.Ordinal);
         Assert.All(FamilyReplyShapes.Reviewed.Keys, operation => Assert.Contains(operation, all));
-        Assert.Single(FamilyReplyShapes.Reviewed);
+        Assert.Empty(FamilyReplyShapes.Reviewed);
     }
 
     // Return types of the public instance methods that WorkerOperationModule registers (it reflects DeclaredOnly).
@@ -143,8 +143,6 @@ internal static class FamilyReplyShapes
     // Family operations whose reply is checked against the request elsewhere, with the reason.
     internal static readonly IReadOnlyDictionary<string, string> Reviewed = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["hardware-devices.HardwareDeviceCandidate"] = "Checked by CandidateWire.Device against the request's candidate identity before the family check "
-            + "(WorkerProtocol.ValidateExchangeResult); a reply without a matching request cannot be built here. Covered by the device candidate tests.",
     };
 
     private static readonly JsonObject NoArguments = new();

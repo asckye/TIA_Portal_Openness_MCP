@@ -33,10 +33,10 @@ public sealed class SoftwareUnitCoverageTests
             {
                 Assert.Equal(software && !name.Contains("Tag", StringComparison.Ordinal), properties.TryGetProperty("swImportOptions", out _));
                 Assert.Equal(cultures, properties.TryGetProperty("importOptions", out _));
-                var candidate = PlcImportContract.Schema(name, release).GetProperty("properties");
-                Assert.Equal(units, candidate.TryGetProperty("unitName", out _));
-                Assert.Equal(software && !name.Contains("Tag", StringComparison.Ordinal), candidate.TryGetProperty("swImportOptions", out _));
-                Assert.Equal(cultures, candidate.TryGetProperty("importOptions", out _));
+                var current = tools[name].InputSchema.GetProperty("properties");
+                Assert.Equal(units, current.TryGetProperty("unitName", out _));
+                Assert.Equal(software && !name.Contains("Tag", StringComparison.Ordinal), current.TryGetProperty("swImportOptions", out _));
+                Assert.Equal(cultures, current.TryGetProperty("importOptions", out _));
             }
         }
         Assert.True(tools["ManagePlcExternalSources"].InputSchema.GetProperty("properties").TryGetProperty("unitName", out _));
@@ -129,29 +129,32 @@ public sealed class SoftwareUnitCoverageTests
         string fixture = Path.Combine(Repository(), "tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BranchShapes.xml");
         string path = Path.Combine(root, "BranchShapes.xml"); File.Copy(fixture, path);
         var original = File.ReadAllBytes(path);
-        var adapter = new PreviewAdapter();
-        var request = new PlcImportRequest { SoftwarePath = "devices/PLC/CPU", InputPath = path, MaxItems = 1,
-            UnitName = "Unit A/B", BlockGroupPath = "Nested", SwImportOptions = new[] { "IgnoreMissingReferencedObjects", "IgnoreUnitAttributes" },
+        int importCalls = 0;
+        var request = new PlcBatchImportRequest { Release = "21", Project = @"C:\Fixture.ap21", Software = "devices/PLC/CPU", Directory = root,
+            UnitName = "Unit A/B", BlockGroup = "Nested", SwImportOptions = new[] { "IgnoreMissingReferencedObjects", "IgnoreUnitAttributes" },
             ImportOptions = new[] { "SkipInactiveCultures" } };
-        var session = new PlcImportSession();
-        var preview = session.Run(adapter, "21", "ImportPlcBlock", "test", request);
-        Assert.True(preview.Ok, V4Json.Serialize(preview));
-        var data = JsonNode.Parse(preview.Data!.Value.GetRawText())!;
-        Assert.Equal("Unit A/B", (string?)data["unitName"]);
-        Assert.Equal("Nested", (string?)data["targets"]![0]!["target"]!["groupPath"]);
-        Assert.Equal("SkipInactiveCultures", (string?)data["importOptions"]![0]);
-        Assert.Equal(2, data["swImportOptions"]!.AsArray().Count);
-        string hash = (string)data["plan"]!["hash"]!;
-        Assert.Equal(PlcImportSession.ByteHash(original), (string?)data["files"]![0]!["sha256"]);
-        request.UnitName = "Unit_2";
-        var stale = session.Run(adapter, "21", "ImportPlcBlock", "test", request, "apply", true, hash, adapter.ReadIdentity().ProjectFile);
-        Assert.Equal(ErrorCode.PlanStale, stale.Error!.Code);
-        Assert.Equal(0, adapter.ImportCalls);
+        PlcBatchImportResult Run() => PlcBatchImportPolicy.Run(request, Array.Empty<PlcBatchImportObject>(), () => { },
+            (_, item) => { importCalls++; return new[] { item }; });
+        var preview = Run();
+        Assert.False(preview.Executed);
+        var data = Assert.IsType<PlcScopedBatchImportResult>(preview);
+        Assert.Equal("Unit A/B", data.UnitName);
+        Assert.Equal("Nested", data.Items[0].Planned.GroupPath);
+        Assert.Equal("SkipInactiveCultures", data.ImportOptions[0]);
+        Assert.Equal(2, data.SwImportOptions.Length);
+        string hash = preview.PlanHash;
+        Assert.Equal(CandidatePrimitives.ByteHash(original), data.Items[0].InputSha256);
+        request.UnitName = "Unit_2"; request.DryRun = false; request.Confirm = true;
+        request.ExpectedHash = hash; request.ExpectedProject = request.Project;
+        request.Order = data.Items.Select(item => item.RelativePath).ToArray();
+        var stale = Assert.Throws<AdapterPreconditionException>(() => Run());
+        Assert.Equal("expectedPlanHash", stale.ParamName);
+        Assert.Equal(0, importCalls);
         Assert.Equal(original, File.ReadAllBytes(path));
-        request.UnitName = "Unit A/B"; request.ImportOptions = new[] { "ActivateInactiveCultures" };
-        var changed = session.Run(adapter, "21", "ImportPlcBlock", "test", request);
-        Assert.True(changed.Ok);
-        Assert.NotEqual(hash, changed.Data!.Value.GetProperty("plan").GetProperty("hash").GetString());
+        request.UnitName = "Unit A/B"; request.ImportOptions = new[] { "ActivateInactiveCultures" }; request.DryRun = true;
+        var changed = Run();
+        Assert.False(changed.Executed);
+        Assert.NotEqual(hash, changed.PlanHash);
     }
 
     [Fact]
@@ -202,17 +205,4 @@ public sealed class SoftwareUnitCoverageTests
         throw new DirectoryNotFoundException("Repository fixture root not found.");
     }
 
-    private sealed class PreviewAdapter : IPlcImportAdapter
-    {
-        internal int ImportCalls;
-        public CandidateIdentity ReadIdentity() => new(23, DateTimeOffset.Parse("2026-11-01T00:00:00Z"), @"C:\Fixture.ap21", 1);
-        public IReadOnlyList<PlcImportInput> ReadInputs(string release, string tool, PlcImportRequest request, IDictionary<string, Stream> locks)
-            => CandidateImportFiles.Read(release, tool, request, locks);
-        public IReadOnlyList<PlcImportObject> ReadInventory() => Array.Empty<PlcImportObject>();
-        public string TargetGroupIdentity(PlcImportObject target) => "reviewed-group";
-        public bool SupportsOverwrite(PlcImportInput input) => true;
-        public void BeforeImport(PlcImportInput input) { }
-        public PlcImportObject Import(PlcImportInput input, bool overwrite) { ImportCalls++; throw new InvalidOperationException("Stale requests must not import."); }
-        public string ReadContent(PlcImportInput input, PlcImportObject imported) => throw new InvalidOperationException("No import expected.");
-    }
 }

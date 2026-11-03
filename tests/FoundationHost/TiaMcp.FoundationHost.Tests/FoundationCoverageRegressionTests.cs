@@ -103,17 +103,13 @@ public sealed class FoundationCoverageRegressionTests
         Assert.DoesNotContain("PLC/root identity changed.", state.StructuredContent!.ToJsonString());
     }
 
-    private sealed class SourceFailureWorker : IFoundationWorker
-    {
-        public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token) => throw new WorkerOperationException(
-            "Fixture source admission.", -32602, "read-failed", "{\"parameter\":\"softwarePath\",\"exceptionType\":\"AdapterPreconditionException\"}");
-        public void Dispose() { }
-    }
     [Fact]
-    public void Source_candidate_observation_preserves_the_worker_admission_error()
+    public void Current_source_failure_preserves_the_worker_admission_error()
     {
-        var result = FoundationCandidateSession.For(new SourceFailureWorker()).Source("14sp1", "ListPlcExternalSources", "fixture",
-            new SourceRequest { SoftwarePath = "WrongPLC" }, "preview", false, "", "", default);
+        var response = FoundationV4Result.Failure("14sp1", "ListPlcExternalSources", "fixture", true, false, null,
+            new WorkerOperationException("Fixture source admission.", -32602, "read-failed",
+                "{\"parameter\":\"softwarePath\",\"exceptionType\":\"AdapterPreconditionException\"}"));
+        var result = V4Json.Deserialize<Envelope>(response.StructuredContent!.ToJsonString());
         Assert.Equal(ErrorCode.InvalidArgument, result.Error!.Code);
         Assert.Equal("Fixture source admission.", result.Error.Message);
         Assert.Equal(Execution.NotStarted, result.Meta.Execution);
@@ -144,7 +140,7 @@ public sealed class FoundationCoverageRegressionTests
         var worker = new DeleteWorker(exists); int waits = 0;
         var audit = new AuditLog(Path.GetFullPath(Path.Combine("bin-build/P6-64/audit", Guid.NewGuid().ToString("N"))));
         using var scope = AuditInvocation.UseLog(audit);
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "DeletePlcExternalSource"), worker), "14sp1", null,
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "DeletePlcExternalSource"), worker), "14sp1",
             () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
         var args = new { softwarePath = "PLC_1", groupPath = "", externalSourceName = "Pump.scl", dryRun = false, confirm = true,
             expectedProjectFile = @"C:\Projects\Example.ap14", expectedPlanHash = new string('a', 64) };

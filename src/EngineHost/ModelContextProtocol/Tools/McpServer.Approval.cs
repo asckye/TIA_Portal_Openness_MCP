@@ -107,24 +107,16 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var args = JsonNode.Parse(arguments)!.AsObject();
             if (HostBehavior.LegacyBatchImport(name, args)) return null;
-            bool candidate = ToolBehaviorPolicy(name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
-                TryDryRunDefault(name, out _) || candidate || HostBehavior.IsSingleXmlImport(name))) return null;
+                TryDryRunDefault(name, out _) || HostBehavior.IsSingleXmlImport(name))) return null;
             string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
             AuditInvocation.RecordCurrentRequest(PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId).PlanHash);
             CallToolResult? result = null;
             var batchRefusal = HostBehavior.BatchApplyRefusal(name, args);
             if (batchRefusal != null) result = V4Reject(name, batchRefusal);
-            if (candidate)
-            {
-                string? missing = HostBehavior.MissingApplyArgument(args,
-                    SessionCandidateContract.Entries.Contains(name, StringComparer.Ordinal) && SessionCandidateContract.Action(name) == "attach");
-                if (missing != null) result = V4Reject(name, InvalidInput(missing));
-            }
             if (result == null)
             {
-                if (candidate || TryDryRunDefault(name, out _))
-                    args[candidate ? "mode" : "dryRun"] = candidate ? JsonValue.Create("preview") : JsonValue.Create(true);
+                if (TryDryRunDefault(name, out _)) args["dryRun"] = JsonValue.Create(true);
                 using var preview = BeginReadOnlyApprovalPreview();
                 using var audit = AuditInvocation.ReadOnlyPreview();
                 try { token.ThrowIfCancellationRequested(); result = await BridgeWait.On(previewCall(args.ToJsonString())).ConfigureAwait(false); token.ThrowIfCancellationRequested(); }
@@ -147,7 +139,6 @@ namespace TiaMcpServer.ModelContextProtocol
             var args = JsonNode.Parse(arguments)!.AsObject();
             bool hasDryRun = TryDryRunDefault(tool, out var defaultPreview);
             return HostBehavior.ApprovalWrite(tool, args,
-                ToolBehaviorPolicy(tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4,
                 IsWriteTool(tool), hasDryRun, defaultPreview);
         }
         private static bool TryDryRunDefault(string tool, out bool defaultPreview)
@@ -179,8 +170,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (!ApprovalWrite(tool, arguments) || tool == "ApplyToolBatch") return null;
             var args = JsonNode.Parse(arguments)!.AsObject();
-            if (ToolBehaviorPolicy(tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
-                && (string?)args["mode"] != "apply") return null;
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
             var pending = PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);

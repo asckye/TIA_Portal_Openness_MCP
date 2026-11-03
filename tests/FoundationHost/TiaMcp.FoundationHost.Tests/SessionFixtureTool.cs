@@ -39,17 +39,23 @@ internal static class SessionFixtureTool
             global::ModelContextProtocol.Server.RequestContext<CallToolRequestParams> request, CancellationToken token = default)
         {
             var args = JsonSerializer.SerializeToNode(request.Params!.Arguments)?.AsObject() ?? new JsonObject();
-            // Same request id as a served worker tool (WorkerToolInvoker) and the PlcWorker's
-            // candidate-session invalidation below.
+            // Same request id as a served worker tool (WorkerToolInvoker) and the fixture outcome below.
             string id = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
             var reply = await worker.Call("FixtureInvoke", new JsonObject { ["name"] = Name,
                 ["requestId"] = id, ["arguments"] = args }, token);
             var result = JsonSerializer.Deserialize<CallToolResult>(reply!["result"]!.ToJsonString(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!;
-            // A host tool that observes an unknown V4 outcome on the PlcWorker invalidates the
-            // worker session exactly as the production candidate tools do.
+            // Project the synthetic unknown reply into the current worker outcome state.
+            // Production tools reach this state through WorkerProtocol/channel evidence.
             if ((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"] == true)
             {
-                if (worker is foundationhost::TiaMcp.FoundationHost.WorkerClient native) native.InvalidateCandidateSession();
+                if (worker is foundationhost::TiaMcp.FoundationHost.WorkerClient native)
+                {
+                    const System.Reflection.BindingFlags fields = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                    var state = typeof(foundationhost::TiaMcp.FoundationHost.WorkerClient).GetField("outcome", fields)!.GetValue(native)!;
+                    state.GetType().GetMethod("Failed", fields)!.Invoke(state, new object[] { true, new IOException("Fixture native outcome is unknown.") });
+                    var prior = typeof(foundationhost::TiaMcp.FoundationHost.WorkerClient).GetField("priorUnknownRequestId", fields)!;
+                    if (prior.GetValue(native) == null) prior.SetValue(native, id);
+                }
                 else worker.MarkUncertain();
             }
             return result;

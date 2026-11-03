@@ -198,7 +198,7 @@ public sealed class BehaviorParityTests
                     string source = BehaviorParityCases.StagingTool(scenario);
                     var arguments = BehaviorParityCases.StagingArguments(scenario, store, bundle, release);
                     var inner = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), new Worker(scenario), store);
-                    var tool = new FoundationV4Tool(inner, release, null, () => new(enabled, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, !enabled, scenario == "staging-refused" ? "denied" : null)); });
+                    var tool = new FoundationV4Tool(inner, release, () => new(enabled, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, !enabled, scenario == "staging-refused" ? "denied" : null)); });
                     var body = (await tool.InvokeAsync(Request(source, arguments))).StructuredContent!;
                     var row = BehaviorParityCases.Project(body);
                     Assert.Equal(code, (string?)row["code"]); Assert.Equal(outcome, (string?)row["outcome"]); Assert.Equal(execution, (string?)row["execution"]);
@@ -212,8 +212,7 @@ public sealed class BehaviorParityTests
                 continue;
             }
             var worker = new Worker(scenario); int waits = 0;
-            FoundationV4Tool Tool(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), release, null,
-                () => new(enabled, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, !enabled, scenario == "refused-approval" ? "denied" : null)); });
+            FoundationV4Tool Tool(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), release, () => new(enabled, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, !enabled, scenario == "refused-approval" ? "denied" : null)); });
             async Task<JsonObject> Call(string source, JsonObject args)
             {
                 if (scenario is "single-legacy-group-missing" or "single-type-group-missing" or "single-table-group-missing") { args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
@@ -285,7 +284,7 @@ public sealed class BehaviorParityTests
             using var worker=new LocalBatchWorker(fixture);
             async Task<JsonNode> Call(string source,JsonObject args)
             {
-                var tool=new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name==source),worker),release,null,
+                var tool=new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name==source),worker),release,
                     ()=>new(false,1),(pending,current,_)=> { Assert.False(current.Enabled);return Task.FromResult(new ApprovalOutcome(pending,true,null)); });
                 return (await tool.InvokeAsync(Request(tool.ProtocolTool.Name,args))).StructuredContent!;
             }

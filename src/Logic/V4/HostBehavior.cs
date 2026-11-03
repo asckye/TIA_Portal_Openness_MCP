@@ -16,10 +16,9 @@ namespace TiaMcp.Logic.V4
     // Host wrappers supply transport/native evidence; this code owns admission decisions.
     internal static class HostBehavior
     {
-        internal static bool ApprovalWrite(string tool, JsonObject args, bool candidate, bool classifiedWrite,
+        internal static bool ApprovalWrite(string tool, JsonObject args, bool classifiedWrite,
             bool hasDryRun, bool defaultPreview)
         {
-            if (candidate) return args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var text) && text == "apply";
             if (hasDryRun)
             {
                 // Only an explicit boolean true previews. A present dryRun that is not a JSON boolean (a string, number or null

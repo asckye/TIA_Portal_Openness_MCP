@@ -17,7 +17,7 @@ internal static partial class ReleaseCommands
     ["functional", "worker-isolation", "approval", "ecosystem", "stability", "isolated-stability", "contracts", "responses"];
 
     private static string ReleasePlcFixture(string logs, string key) =>
-        new PlcWorkerFixtureBuild(key, "sdk", null).Worker(Path.Combine(logs, "plc-fixtures"));
+        new PlcWorkerFixtureBuild(key, "sdk").Worker(Path.Combine(logs, "plc-fixtures"));
 
     private static void PreparePlcReleaseChecks(string dotnet, string apiRoot, string? nuget, string logs,
         string temp, string cli, bool production)
@@ -51,7 +51,7 @@ internal static partial class ReleaseCommands
         foreach (var key in new[] { "20", "21" })
         {
             var api = ResolveReleaseApi(null, apiRoot, int.Parse(key, System.Globalization.CultureInfo.InvariantCulture));
-            var unit = new PlcWorkerFixtureBuild(key, "sdk", null);
+            var unit = new PlcWorkerFixtureBuild(key, "sdk");
             string[] properties = ["-p:TiaReleaseKey=" + key, "-p:SiemensEngineeringDirectory=" + api,
                 "-p:NativeCallWeaverPath=" + Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"),
                 .. unit.Properties(Path.Combine(logs, "plc-fixtures"))];

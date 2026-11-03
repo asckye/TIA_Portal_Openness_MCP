@@ -49,17 +49,12 @@ namespace TiaMcp.Adapters {
         private Siemens.Engineering.Project? project;
         private readonly PlcLifecycleState lifecycle = new();
         private bool ownsPortal;
-        private object? saveCloseAdapter;
-        private FakeCandidate? sessionCandidateAdapter;
-        private DateTimeOffset? sessionCandidateStart;
-        private sealed class FakeCandidate { public void VerifyOwnedState() { } }
         // P8-81c stand-ins for PortalSessionGuards.cs (Siemens-typed, not linked here).
         private bool workerStartedPortal;
         public bool WorkerStartedPortal => workerStartedPortal;
         private void ObservePortal(Siemens.Engineering.TiaPortal connection) { }
         internal static string ExclusiveAccessText() => "TIA MCP: fixture is changing the project";
         public bool OwnsPortal => ownsPortal;
-        public object? SaveCloseAdapter => saveCloseAdapter;
         public string[] NativeCalls => TiaMcpServer.ModelContextProtocol.InvocationJournal.Calls.ToArray();
         public void ClearCalls() => TiaMcpServer.ModelContextProtocol.InvocationJournal.Calls.Clear();
         public string ReleaseKey { get; }
@@ -68,7 +63,6 @@ namespace TiaMcp.Adapters {
         public Func<string>? ProjectValidationTree { get; set; }
         public Func<IDisposable>? AcquireEngineeringEditAccess { get; set; }
         public Action<string>? SharedFamilyMutationIdentity { get; set; }
-        public Func<Func<string>,TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity>? SharedHardwareCandidateIdentity { get; set; }
         public Func<object?>? HmiBindingIdentity { get; set; }
         public Func<SeedHmiRequest,PlcSeedHmiReply>? SeedReferenceHmiImport { get; set; }
         public readonly Siemens.Engineering.TiaPortal Connection = new();

@@ -10,8 +10,12 @@ using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
 using Xunit;
 
 [Collection(BundleSelectionCollection.Name)]
-public sealed class Round2BlockPageTests
+public sealed class Round2BlockPageTests : IDisposable
 {
+    private readonly string previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+    public Round2BlockPageTests() => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+    public void Dispose() => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+
     [Fact]
     public async Task Generation_fixture_restores_the_host_context_before_paging_and_decoder_tests()
     {
@@ -91,7 +95,7 @@ public sealed class Round2BlockPageTests
     public async Task Malformed_worker_pages_return_classified_read_failure(string payload)
     {
         using var worker = new Worker(JsonNode.Parse(payload));
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks"), worker), "21", null, () => new(false, 1));
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks"), worker), "21", () => new(false, 1));
         var result = await tool.InvokeAsync(Request("ListPlcBlocks", new() { ["softwarePath"] = "PLC", ["limit"] = 1 }));
         Assert.True(result.IsError);
         Assert.Equal("NATIVE_OPERATION_FAILED", (string?)result.StructuredContent!["error"]!["code"]);

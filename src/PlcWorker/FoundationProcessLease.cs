@@ -154,20 +154,11 @@ namespace TiaMcp.PlcWorker
 
         private static int? AttachProcessId(ChannelRequest request)
         {
-            if (request.Method != "adapter.Attach" && request.Method != "adapter." + WorkerOperations.SessionCandidate) return null;
+            if (request.Method != "adapter.Attach") return null;
             using var document = JsonDocument.Parse(request.ArgumentsJson);
             var args = document.RootElement;
             if (args.ValueKind != JsonValueKind.Object) return null;
-            if (request.Method == "adapter.Attach")
-                return args.TryGetProperty("processId", out var pid) && pid.ValueKind == JsonValueKind.Number && pid.TryGetInt32(out var id) ? id : (int?)null;
-            if (args.TryGetProperty("mode", out var mode) && mode.ValueKind == JsonValueKind.String && mode.GetString() == "apply"
-                && args.TryGetProperty("candidate", out var candidate) && candidate.ValueKind == JsonValueKind.Object
-                && candidate.TryGetProperty("Action", out var action) && action.ValueKind == JsonValueKind.String && action.GetString() == "execute"
-                && candidate.TryGetProperty("Check", out var check) && check.ValueKind == JsonValueKind.Object
-                && check.TryGetProperty("Request", out var planned) && planned.ValueKind == JsonValueKind.Object
-                && planned.TryGetProperty("Action", out var plannedAction) && plannedAction.ValueKind == JsonValueKind.String && plannedAction.GetString() == "attach"
-                && planned.TryGetProperty("ProcessId", out var selected) && selected.ValueKind == JsonValueKind.Number && selected.TryGetInt32(out var attachPid)) return attachPid;
-            return null;
+            return args.TryGetProperty("processId", out var pid) && pid.ValueKind == JsonValueKind.Number && pid.TryGetInt32(out var id) ? id : (int?)null;
         }
 
         internal ChannelResponse Dispatch(ChannelRequest request)
@@ -192,8 +183,7 @@ namespace TiaMcp.PlcWorker
                 else
                 {
                     uncertain |= response.Failure?.Outcome == ChannelOutcome.Unknown || requiresReset();
-                    // A rejected legacy attach or a candidate that never issued its
-                    // attach leaves no native connection and can return its reservation.
+                    // A rejected attach leaves no native connection and can return its reservation.
                     if (reserved && !attached() && !uncertain) ReleaseCleanly();
                     else lease?.CompleteRequest(uncertain);
                     if (reserved && lease?.PreviousOwnerEndedIdle == true && attached() && response.Failure == null)

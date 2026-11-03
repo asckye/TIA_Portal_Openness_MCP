@@ -296,7 +296,7 @@ namespace TiaMcp.Engine.Tests
             {
                 string path = entry!["path"]!.GetValue<string>(); var bytes = System.IO.File.ReadAllBytes(path);
                 Assert.False(bytes.Take(3).SequenceEqual(new byte[] { 239, 187, 191 }));
-                Assert.Equal(TiaMcp.Logic.V4.PlcImportSession.ByteHash(bytes), entry["sha256"]!.GetValue<string>());
+                Assert.Equal(TiaMcp.Adapters.Contracts.Candidates.CandidatePrimitives.ByteHash(bytes), entry["sha256"]!.GetValue<string>());
             }
             Assert.Single(store.List()["batches"]!.AsArray());
             var again = store.Stage(new[] { source }, false); Assert.NotEqual(dir, (string?)again["directory"]);

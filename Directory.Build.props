@@ -1,14 +1,4 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)src/Shared/DependencyVersions.props" Condition="'$(TiaMcpDependencyVersionsImported)' != 'true'" />
   <Import Project="$(MSBuildThisFileDirectory)src/Shared/CodeAnalysis.props" Condition="'$(TiaMcpCodeAnalysisImported)' != 'true'" />
-  <ItemGroup Condition="'$(TiaMcpTestPolicy)' != ''">
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-      <_Parameter1>TiaMcpTestPolicy</_Parameter1>
-      <_Parameter2>$(TiaMcpTestPolicy)</_Parameter2>
-    </AssemblyAttribute>
-  </ItemGroup>
-  <Target Name="ValidateTiaMcpTestPolicy" BeforeTargets="CoreCompile">
-    <Error Condition="'$(TiaMcpTestPolicy)' != '' and !$([System.Text.RegularExpressions.Regex]::IsMatch('$(TiaMcpTestPolicy)', '^P6-(DEVICE|IMPORT|EXPORT|SESSION|CLOSE|SOURCE|COMPILE|FALLBACK):safe-v4(,P6-(DEVICE|IMPORT|EXPORT|SESSION|CLOSE|SOURCE|COMPILE|FALLBACK):safe-v4)*$'))" Text="Unsupported test policy build. Use a comma-separated list of known P6 families with :safe-v4 only for isolated test artifacts." />
-    <Error Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TiaMcpTestPolicy)', '(^|,)(P6-[A-Z]+:safe-v4)(,[^,]+)*,\2(,|$)'))" Text="Duplicate test policy family." />
-  </Target>
 </Project>

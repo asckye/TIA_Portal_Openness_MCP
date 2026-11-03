@@ -18,7 +18,7 @@ internal static class CiCoverage
         ["foundation"] = new("offline-checks", ".github/workflows/offline-checks.yml", "foundation-suites-gate",
             ["foundation", "engine-host", "shared-lifecycle-plc", "worker-progress-foundation", "prompt-registration", "software-read",
                 "special-export-shape", "device-add", "hardware-catalog", "diagnostic-membership", "adapter-contracts", "worker-channel",
-                "compile-candidate", "compile-candidate-no-safety", "fallback-vci-modern", "fallback-vci-initial", "fallback-vci-classic", "workbench-control-protocol"], []),
+                "workbench-control-protocol"], []),
         ["release"] = new("validate-bundle", ".github/workflows/validate.yml", "validate-bundle",
             ["release-tool", "generation-model", "generation-planning", "crash-evidence", "write-guard", "source-contracts"],
             ["bundle-self-tests", "release-documentation", "release-dry-run", "native-lifecycle", "native-mcp-session", "tia-features", "match-plc-name-source"])

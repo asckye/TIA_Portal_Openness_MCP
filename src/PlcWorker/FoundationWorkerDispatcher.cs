@@ -50,24 +50,7 @@ namespace TiaMcp.PlcWorker
 #endif
             // Only this application's typed facade is reflected; no arbitrary Siemens
             // type/member names or object handles are accepted on the wire.
-            bool deviceCandidateEnabled = (releaseKey == "18" || releaseKey == "19") && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-DEVICE");
-            bool compileCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-COMPILE");
-            bool sourceCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-SOURCE");
-            engine.SourceCandidateEnabled = sourceCandidateEnabled;
-            bool saveCloseCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-CLOSE");
-            bool sessionCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-SESSION");
-            bool importCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-IMPORT");
-            bool exportCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-EXPORT");
-            var names = WorkerOperations.Names.Concat(new[] {
-                deviceCandidateEnabled ? WorkerOperations.DeviceCreationCandidate : null,
-                importCandidateEnabled ? WorkerOperations.PlcImportCandidate : null,
-                exportCandidateEnabled ? WorkerOperations.PlcExportCandidate : null,
-                sessionCandidateEnabled ? WorkerOperations.SessionCandidate : null,
-                saveCloseCandidateEnabled ? WorkerOperations.SaveCloseCandidate : null,
-                sourceCandidateEnabled ? WorkerOperations.SourceCandidate : null,
-                compileCandidateEnabled ? WorkerOperations.CompileCandidate : null
-            }.Where(n => n != null).Select(n => n!));
-            var modules = new List<WorkerOperationModule> { new WorkerOperationModule("", typeof(PlcFoundationEngine), names) };
+            var modules = new List<WorkerOperationModule> { new WorkerOperationModule("", typeof(PlcFoundationEngine), WorkerOperations.Names) };
             modules.Add(new WorkerOperationModule("plc-paging", typeof(PlcFoundationEngine), new[] { "ReadBlockPage" }));
             modules.Add(new WorkerOperationModule("plc-analysis", typeof(PlcFoundationEngine), new[] { "ExportBlockDocument" }));
             foreach (var family in PortedFamilies.All.Where(f => f.Available(releaseKey)))
@@ -129,14 +112,6 @@ namespace TiaMcp.PlcWorker
                     WorkerJson.Get(values, "extendedPositionNumber").ValueKind == JsonValueKind.Number ? WorkerJson.Get(values, "extendedPositionNumber").GetInt32() : -1,
                     WorkerJson.Get(values, "password").ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(WorkerJson.Get(values, "password").GetString())) is string unavailable)
                     throw new NotSupportedException(unavailable);
-                if (name == "hardware-devices.HardwareDeviceCandidate" || name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate || name == WorkerOperations.PlcExportCandidate || name == WorkerOperations.SessionCandidate || name == WorkerOperations.SaveCloseCandidate || name == WorkerOperations.SourceCandidate || name == WorkerOperations.CompileCandidate)
-                {
-                    if (values.ContainsKey("bindingEpoch")) throw new ArgumentException("The worker owns the binding epoch.");
-                    values["bindingEpoch"] = System.Text.Json.JsonSerializer.SerializeToElement(bindingEpoch);
-                    var candidateMode = WorkerJson.Get(values, "mode");
-                    string? mode = candidateMode.ValueKind == System.Text.Json.JsonValueKind.Undefined ? null : candidateMode.GetString();
-                    readOnly = name == "hardware-devices.HardwareDeviceCandidate" && mode != "apply" || WorkerOperations.IsDevicePreview(name, mode) || WorkerOperations.IsImportPreview(name, mode) || WorkerOperations.IsExportPreview(name, mode) || WorkerOperations.IsSessionPreview(name, mode) || WorkerOperations.IsSaveClosePreview(name, mode) || WorkerOperations.IsSourcePreview(name, mode) || WorkerOperations.IsCompilePreview(name, mode);
-                }
                 if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                 if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
                 readOnly=readOnly || (WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.True);
@@ -178,9 +153,6 @@ namespace TiaMcp.PlcWorker
                 var result = method.Invoke(engine, call);
                 if (result is IWorkerOperationReply reply && reply.RequiresSessionReset)
                     sessionOutcome.MarkUncertain(blockReads: reply.BlockReadsAfterUncertain);
-                if (result is TiaMcp.Adapters.Contracts.Candidates.SaveCloseReply closeReply && closeReply.Attempt?.Issued == true
-                    && (string?)values["candidate"].GetProperty("Check").GetProperty("Request").GetProperty("Action").GetString() == "disconnect")
-                { disconnectAttempted = true; disconnected = closeReply.Attempt.Fault == null; }
                 if(name=="Disconnect") disconnected=true;
                 return ChannelResponse.Success(WorkerJson.Serialize(result));
             }

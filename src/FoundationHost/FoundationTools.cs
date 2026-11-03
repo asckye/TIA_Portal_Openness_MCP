@@ -168,87 +168,14 @@ internal sealed partial class FoundationTool : McpServerTool
         => portedMethod != null ? InvokePortedAsync(request, cancellationToken) : InvokeCoreAsync(request, cancellationToken);
     internal ValueTask<CallToolResult> InvokeV4Async(RequestContext<CallToolRequestParams> request, string release, string id, CancellationToken cancellationToken)
         => portedMethod != null ? InvokePortedAsync(request, cancellationToken) : InvokeCoreAsync(request, cancellationToken, release, id);
-    internal async ValueTask<CallToolResult> InvokeDeviceCandidateAsync(IReadOnlyDictionary<string, JsonElement> args, string release, string id, CancellationToken cancellationToken)
-    {
-        var values = new JsonObject();
-        foreach (var pair in args) values[pair.Key] = JsonNode.Parse(pair.Value.GetRawText());
-        values["requestId"] = id;
-        bool apply = (string?)values["mode"] == "apply";
-        bool dispatched = false;
-        try
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            dispatched = true;
-            var result = await Task.Run(() => FoundationCandidateSession.For(worker).Device(release, id,
-                (string)values["typeIdentifier"]!, (string)values["deviceName"]!, (string)values["family"]!, (string?)values["mode"] ?? "preview",
-                (bool?)values["confirm"] ?? false, (string?)values["expectedPlanHash"] ?? "", (string?)values["expectedProjectFile"] ?? "", cancellationToken));
-            return FoundationV4Result.DeviceCandidate(DeviceAddContract.ValidateCandidate(JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(result)), values, release));
-        }
-        catch (Exception ex)
-        {
-            bool sent = ex.Data["foundationRequestSent"] is bool wasSent ? wasSent : dispatched;
-            bool unknown = apply && sent && !(ex is WorkerOperationException known && known.KnownNoMutation);
-            var error = unknown
-                ? new TiaMcp.Logic.V4.Error("Device creation outcome is unknown; rebuild the session and inspect the target.", new TiaMcp.Logic.V4.OutcomeUnknownDetails("worker-channel", new Dictionary<string, JsonElement> { ["residueCheck"] = JsonSerializer.SerializeToElement(new { status = "unavailable", reason = "worker-channel-failure" }) }))
-                : new TiaMcp.Logic.V4.Error("The candidate worker request could not complete.", new TiaMcp.Logic.V4.PreconditionFailedDetails("device-candidate-worker", null));
-            return FoundationV4Result.DeviceCandidate(TiaMcp.Logic.V4.DeviceCreationSession.Result(release, "CreateHardwareDevice", id, null, error,
-                unknown ? TiaMcp.Logic.V4.Outcome.Unknown : TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation,
-                unknown ? TiaMcp.Logic.V4.Execution.Unknown : TiaMcp.Logic.V4.Execution.NotStarted));
-        }
-    }
-    internal async ValueTask<CallToolResult> InvokeExportCandidateAsync(IReadOnlyDictionary<string, JsonElement> args, string release, string tool, string id, CancellationToken cancellationToken)
-    {
-        string Text(string key, string fallback = "") => args.TryGetValue(key, out var value) ? value.GetString()! : fallback;
-        bool Flag(string key) => args.TryGetValue(key, out var value) && value.GetBoolean();
-        var exportRequest = new TiaMcp.Adapters.Contracts.Candidates.PlcExportRequest { SoftwarePath = Text("softwarePath"), UnitName = Text("unitName"), OutputPath = Text("exportPath"),
-            ObjectPath = Text(tool == "ExportPlcType" ? "typePath" : tool == "ExportPlcTagTable" ? "tagTableName" : "blockPath"), GroupPath = Text("groupPath"),
-            WorkspaceRoot = Text("workspaceRoot"), RegexName = Text("regexName"), PreservePath = Flag("preservePath"), Recursive = Flag("recursive"), Overwrite = Flag("overwrite"),
-            OnError = Text("onError", "stop"), MaxItems = args.TryGetValue("maxItems", out var maximum) ? maximum.GetInt32() : TiaMcp.Logic.V4.PlcExportContract.Batch(tool) ? 128 : 1 };
-        var result = await Task.Run(() => FoundationCandidateSession.For(worker).Export(release, tool, id, exportRequest, Text("mode", "preview"), Flag("confirm"), Text("expectedPlanHash"), Text("expectedProjectFile"), cancellationToken));
-        return FoundationV4Result.ImportCandidate(result);
-    }
-    internal async ValueTask<CallToolResult> InvokeImportCandidateAsync(IReadOnlyDictionary<string, JsonElement> args, string release, string tool, string id, CancellationToken cancellationToken)
-    {
-        var values = new JsonObject();
-        foreach (var pair in args) values[pair.Key] = JsonNode.Parse(pair.Value.GetRawText());
-        void Move(string from, string to) { if (values.TryGetPropertyValue(from, out var value)) { values.Remove(from); values[to] = value; } }
-        Move(tool == "ImportPlcProgramFromDirectory" ? "sourceDir" : tool.EndsWith("FromDirectory", StringComparison.Ordinal) ? "dir" : "importPath", "inputPath");
-        Move("groupPath", tool == "ImportPlcType" ? "typeGroupPath" : "blockGroupPath"); Move("folderPath", "tagFolderPath");
-        values["tool"] = tool; values["requestId"] = id;
-        values["maxItems"] ??= tool == "ImportPlcBlocksDocuments" ? 16 : TiaMcp.Logic.V4.PlcImportContract.IsDirectory(tool) ? 128 : 1;
-        bool apply = (string?)values["mode"] == "apply", dispatched = false;
-        try
-        {
-            cancellationToken.ThrowIfCancellationRequested(); dispatched = true;
-            string Text(string key) => (string?)values[key] ?? "";
-            var importRequest = new TiaMcp.Adapters.Contracts.Candidates.PlcImportRequest { SoftwarePath = Text("softwarePath"), UnitName = Text("unitName"), SwImportOptions = values["swImportOptions"]?.Deserialize<string[]>() ?? Array.Empty<string>(), ImportOptions = values["importOptions"]?.Deserialize<string[]>() ?? Array.Empty<string>(), InputPath = Text("inputPath"),
-                BlockGroupPath = Text("blockGroupPath"), TypeGroupPath = Text("typeGroupPath"), TagFolderPath = Text("tagFolderPath"), TechnologyFolderPath = Text("technologyFolderPath"),
-                RegexName = Text("regexName"), FileNameWithoutExtension = Text("fileNameWithoutExtension"), ImportOrder = values["importOrder"]?.Deserialize<string[]>() ?? Array.Empty<string>(),
-                Overwrite = (bool?)values["overwrite"] ?? false, VersionPolicy = (string?)values["versionPolicy"] ?? "exact", OnError = (string?)values["onError"] ?? "stop",
-                CompileAfter = (bool?)values["compileAfter"] ?? false, MaxItems = (int)values["maxItems"]! };
-            var mapped = await Task.Run(() => FoundationCandidateSession.For(worker).Import(release, tool, id, importRequest, (string?)values["mode"] ?? "preview",
-                (bool?)values["confirm"] ?? false, Text("expectedPlanHash"), Text("expectedProjectFile"), cancellationToken));
-            var result = BatchImportContract.ValidateCandidate(JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(mapped)), values);
-            if (result.Meta.ReleaseKey != release) throw new InvalidDataException("Import candidate release mismatch.");
-            return FoundationV4Result.ImportCandidate(result);
-        }
-        catch (Exception ex)
-        {
-            bool sent = ex.Data["foundationRequestSent"] is bool wasSent ? wasSent : dispatched;
-            bool unknown = apply && sent && !(ex is WorkerOperationException known && known.KnownNoMutation);
-            var error = unknown ? new TiaMcp.Logic.V4.Error("Import outcome is unknown; inspect the residue and rebuild the session.",
-                new TiaMcp.Logic.V4.OutcomeUnknownDetails("worker-channel", new Dictionary<string, JsonElement> { ["residueCheck"] = JsonSerializer.SerializeToElement(new { status = "unavailable", reason = "worker-channel-failure" }) }))
-                : new TiaMcp.Logic.V4.Error("The import candidate worker request could not complete.", new TiaMcp.Logic.V4.PreconditionFailedDetails("plc-import-worker", null));
-            return FoundationV4Result.ImportCandidate(TiaMcp.Logic.V4.PlcImportSession.Result(release, tool, id, null, error,
-                unknown ? TiaMcp.Logic.V4.Outcome.Unknown : TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation,
-                unknown ? TiaMcp.Logic.V4.Execution.Unknown : TiaMcp.Logic.V4.Execution.NotStarted));
-        }
-    }
-    internal bool SessionRequiresReset => FoundationCandidateSession.For(worker).RequiresSessionReset
+    private sealed class SessionUncertainty { internal volatile bool Poisoned; }
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IFoundationWorker, SessionUncertainty> UncertainSessions = new();
+    internal static void ResetSessionUncertainty(IFoundationWorker worker) => UncertainSessions.Remove(worker);
+    internal bool SessionRequiresReset => UncertainSessions.GetValue(worker, _ => new()).Poisoned
         || worker is IFoundationSessionWorker { Poisoned: true };
     internal void MarkSessionUncertain()
     {
-        FoundationCandidateSession.For(worker).MarkUncertain();
+        UncertainSessions.GetValue(worker, _ => new()).Poisoned = true;
         (worker as IFoundationSessionWorker)?.MarkUncertain();
     }
     internal void ValidateApplyArguments(IReadOnlyDictionary<string, JsonElement> arguments)

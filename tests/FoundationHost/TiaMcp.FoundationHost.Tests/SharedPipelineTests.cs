@@ -84,7 +84,7 @@ public sealed class SharedPipelineTests
             var catalog = new Catalog();
             Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime), () => false, new HashSet<string>());
         }
-        internal FoundationV4Tool Foundation(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), Worker), "21", null, () => new(false, 1));
+        internal FoundationV4Tool Foundation(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), Worker), "21", () => new(false, 1));
         internal void RegisterShared(FoundationV4Tool tool)
         {
             var catalog = new Catalog();
@@ -150,7 +150,7 @@ public sealed class SharedPipelineTests
         using var scope = new Scope(); const string id = "fedcba9876543210fedcba9876543210";
         using var journal = TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(id);
         var shared = scope.Foundation("GetSessionState");
-        var usage = new FoundationV4Tool(new ToolUsageTool("21", () => new[] { shared }), "21", null, sharedSession: true);
+        var usage = new FoundationV4Tool(new ToolUsageTool("21", () => new[] { shared }), "21", sharedSession: true);
         var result = await usage.InvokeAsync(Scope.Request("GetToolUsage", new() { ["toolName"] = "GetSessionState" }));
         Assert.Equal(id, (string?)result.StructuredContent?["meta"]?["requestId"]);
         Assert.Equal("GetSessionState", (string?)result.StructuredContent?["data"]?["toolName"]);
@@ -161,7 +161,7 @@ public sealed class SharedPipelineTests
     public void Shared_bridge_runs_one_precheck_and_one_approval()
     {
         using var scope = new Scope(); int waits = 0;
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTag"), scope.Worker), "21", null,
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTag"), scope.Worker), "21",
             () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
         scope.RegisterShared(tool);
         var args = new JsonObject { ["plc"] = "PLC", ["table"] = "T", ["name"] = "Ready", ["dataType"] = "Bool", ["address"] = "%M0.0",

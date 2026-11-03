@@ -31,7 +31,7 @@ public sealed class BlockPagingDispatchTests
     public async Task All_releases_dispatch_pages_and_preserve_exact_paths(string release)
     {
         var worker = new Worker();
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks"), worker), release, null, () => new(false, 1));
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks"), worker), release, () => new(false, 1));
         var found = new List<string>();
         string cursor = "";
         do

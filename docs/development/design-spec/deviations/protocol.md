@@ -635,7 +635,7 @@
 
 ### API-36　已定义但未使用的类型和错误码
 
-- **现状**：`PreviewData` 从未被构造，因此 `V4Validation.Preview` 在发布路径上从不执行；`CursorScope` 从未被构造；`NATIVE_CAPABILITY_LIMIT` 从未发出；`AUTHENTICATION_REQUIRED` 和 `TIMEOUT` 都只有 1 个构造点。`Plan`、`PlanIdentity` 等只在 safe-v4 候选路径中使用。
+- **现状**：`PreviewData` 从未被构造，因此 `V4Validation.Preview` 在发布路径上从不执行；`CursorScope` 从未被构造；`NATIVE_CAPABILITY_LIMIT` 从未发出；`AUTHENTICATION_REQUIRED` 和 `TIMEOUT` 都只有 1 个构造点。`Plan`、`PlanIdentity` 等保留为协议类型；SafeV4 候选实现已于 2026-11-02 归档到 `archive/safev4-candidates` 后删除。
 - **外部影响**：删除 `NATIVE_CAPABILITY_LIMIT` 会缩小闭集，对“已知码”列表是破坏性变更；标为保留则没有影响。
 - **成本与风险**：低。
 - **建议：4.0 前修改。** 逐项决定保留还是删除：`NATIVE_CAPABILITY_LIMIT` 要么开始使用，要么删除；`PreviewData` 和 `CursorScope` 在规范中标为“保留给 safe-v4 或 cursor 宿主”，或者真正接入。
@@ -663,7 +663,7 @@
 
 ### API-39　规范承诺的 `data.plan` 与实际发布的不符
 
-- **现状**：phase6 第 4 节说预览返回 `data.plan{hash, …}`。4.0 的发布配置全部是 current 政策，预览返回的是旧形状（例如 `data.planHash`、`data.projectFile`），`data.plan` 只出现在 safe-v4 候选路径中（`DeviceCreation.cs:71` 等）。
+- **现状**：phase6 第 4 节说预览返回 `data.plan{hash, …}`。4.0 的发布配置全部是 current 政策，预览返回的是旧形状（例如 `data.planHash`、`data.projectFile`），`data.plan` 曾用于 SafeV4 候选路径；该实现已归档删除，通过 L5 的族基于现行代码重建（ADR 0002）。
 - **外部影响**：无，只修改文档。
 - **成本与风险**：无。
 - **建议：保留为有意偏差（文档）。** 新规范把 D1 预览协议标为“safe-v4 族切换后生效”，并列出 current 政策下各工具预览的实际字段。

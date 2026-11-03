@@ -13,7 +13,7 @@
 | 编号 | 标题 | 状态 | 日期 | 待办编号 |
 |---|---|---|---|---|
 | [0001](0001-hard-cut-v4-contract.md) | 4.0 硬切换到 V4 契约，不提供 3.x 兼容层 | 已采纳 | 2026-10-03 | B01 |
-| [0002](0002-native-behavior-by-family-acceptance.md) | 原生行为按 D1 行为族真机验收后才切换为 safe-v4 | 已采纳 | 2026-10-03 | B05 |
+| [0002](0002-native-behavior-by-family-acceptance.md) | 原生行为按 D1 行为族真机验收后才切换为 safe-v4；候选实现归档删除 | 已采纳（2026-11-02 修订） | 2026-10-03 | B05 |
 | [0003](0003-workbench-approval-for-mcp-writes.md) | MCP 写调用默认须在工作台审批，工作台功能纳入 4.0 | 已采纳 | 2026-10-05 | B21 |
 | [0004](0004-precheck-before-approval.md) | 写请求先预检再审批，批准后复核再执行 | 已采纳 | 2026-10-06 | B28 |
 | [0005](0005-v20-v21-on-foundation-host.md) | V20/V21 与其他六个版本采用同一架构：FoundationHost 加每版本 worker | 已采纳 | 2026-10-08 | B07 |

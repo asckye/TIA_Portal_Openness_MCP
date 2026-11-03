@@ -135,9 +135,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (required.Count > 0) schema["required"] = required;
             McpServer.RemoveV4NullDefaults(schema);
-            var candidate = method.GetCustomAttribute<BehaviorCandidateAttribute>();
-            if (candidate != null)
-                schema = JsonNode.Parse(((IBehaviorCandidateContract)Activator.CreateInstance(candidate.Contract)!).InputSchema.GetRawText())!.AsObject();
             return new SchemaHintedTool(tool, V4(new Tool
             {
                 Name = protocol.Name, Title = protocol.Title, Description = protocol.Description,
@@ -229,9 +226,7 @@ namespace TiaMcpServer.ModelContextProtocol
             release ??= HardwareContract.ReleaseKey;
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
-            var decorated = method.GetCustomAttribute<TiaMcp.Logic.V4.BehaviorCandidateAttribute>() != null
-                ? description + TiaOpenness.Shared.ToolUsageCatalog.Hint(name)
-                : ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
+            var decorated = ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
             var tool = ReferenceEquals(decorated, description) || decorated == description
                 ? CreateToolCore(method, null, target)
                 : CreateToolCore(method, new McpServerToolCreateOptions { Name = name, Description = decorated }, target);
@@ -250,7 +245,7 @@ namespace TiaMcpServer.ModelContextProtocol
             descriptor = new ToolDescriptor(name, description, hinted.ProtocolTool, classification == null ? null :
                 new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead, classification.BatchWrite),
                 RenderSignature(name, method, release), parameters, new ToolDryRunDescriptor(dryRun != null,
-                    dryRun?.DefaultValue is not bool value || value), method.GetCustomAttribute<BehaviorCandidateAttribute>()?.Family,
+                    dryRun?.DefaultValue is not bool value || value), null,
                 ToolExecution.Table.TryGetValue(name, out var execution) ? execution : "worker");
             return hinted;
         }

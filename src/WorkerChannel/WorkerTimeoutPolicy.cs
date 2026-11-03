@@ -27,9 +27,7 @@ namespace TiaMcp.WorkerChannel
             ["Attach"] = "default",
             ["BindProject"] = "default",
             ["CloseProject"] = "default",
-            ["CompileCandidate"] = "compile",
             ["CompileSoftware"] = "compile",
-            ["CreateHardwareDeviceCandidate"] = "default",
             ["CreateProject"] = "default",
             ["CreateTag"] = "default",
             ["CreateTagTable"] = "default",
@@ -40,7 +38,6 @@ namespace TiaMcp.WorkerChannel
             ["ExportBlock"] = "importExport",
             ["ExportBlocks"] = "importExport",
             ["ExportBlocksAsDocuments"] = "importExport",
-            ["ExportPlcCandidate"] = "importExport",
             ["ExportPlcWatchTable"] = "importExport",
             ["ExportTagTable"] = "importExport",
             ["ExportTechnologyObject"] = "importExport",
@@ -51,7 +48,6 @@ namespace TiaMcp.WorkerChannel
             ["ImportBlocksFromDirectory"] = "importExport",
             ["ImportBlocksFromDocuments"] = "importExport",
             ["ImportFromDocuments"] = "importExport",
-            ["ImportPlcCandidate"] = "importExport",
             ["ImportPlcExternalSource"] = "importExport",
             ["ImportPlcProgramFromDirectory"] = "importExport",
             ["ImportTagTables"] = "importExport",
@@ -77,11 +73,8 @@ namespace TiaMcp.WorkerChannel
             ["ReadTypeInfo"] = "default",
             ["ReadTypes"] = "default",
             ["ReadWatchTableNames"] = "default",
-            ["SaveCloseCandidate"] = "default",
             ["SaveProject"] = "default",
             ["SearchHardwareCatalog"] = "default",
-            ["SessionCandidate"] = "default",
-            ["SourceCandidate"] = "compile",
             ["engineering-services.BeginEngineeringTransaction"] = "default",
             ["engineering-services.CommitEngineeringTransaction"] = "default",
             ["engineering-services.DisposeEngineeringTransaction"] = "default",
@@ -102,7 +95,6 @@ namespace TiaMcp.WorkerChannel
             ["hardware-devices.HardwareDescribeDeviceAt"] = "default",
             ["hardware-devices.HardwareDescribeDevices"] = "default",
             ["hardware-devices.HardwareDescribeItemAt"] = "default",
-            ["hardware-devices.HardwareDeviceCandidate"] = "default",
             ["hardware-devices.HardwareExchangeSystemDiagnosticsSettings"] = "default",
             ["hardware-devices.HardwareLegacyDumpDeviceAttributes"] = "default",
             ["hardware-devices.HardwareLegacySearchHardwareCatalog"] = "default",
@@ -189,17 +181,10 @@ namespace TiaMcp.WorkerChannel
         {
             string? mode = (string?)arguments["mode"];
             var request = arguments["request"] as System.Text.Json.Nodes.JsonObject;
-            if ((bool?)arguments["dryRun"] == true || (bool?)request?["DryRun"] == true || mode == "preview"
-                || mode == null && operation.EndsWith("Candidate", StringComparison.Ordinal)) return "default";
+            if ((bool?)arguments["dryRun"] == true || (bool?)request?["DryRun"] == true || mode == "preview") return "default";
             if (operation == "runtime-channels.ExecutePlcSimAdvanced")
                 return (bool?)request?["arguments"]?["dryRun"] == true
                     || (string?)request?["operation"] is "ReadPlcSimAdvancedInstances" or "ReadPlcSimAdvancedTags" ? "default" : "transfer";
-            if (operation == "SourceCandidate")
-            {
-                var items = arguments["candidate"]?["Check"]?["Request"]?["Items"] as System.Text.Json.Nodes.JsonArray;
-                if (items?.Any(item => (string?)item?["Action"] == "generate") == true) return "compile";
-                return items?.Any(item => (string?)item?["Action"] == "import") == true ? "importExport" : "default";
-            }
             if (request != null)
             {
                 if (operation == "project-lifecycle.ExecuteProjectScaffoldPrimitive")

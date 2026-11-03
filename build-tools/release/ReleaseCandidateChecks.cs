@@ -80,7 +80,7 @@ internal static partial class ReleaseCommands
         {
             foreach (var release in new[] { "20", "21" })
             {
-                var unit = new PlcWorkerFixtureBuild(release, "sdk", null);
+                var unit = new PlcWorkerFixtureBuild(release, "sdk");
                 var result = runIsolated("sdk-worker-build-plc-v" + release, dotnet,
                     ["build", Path.Combine(Root, "src/PlcWorker/TiaMcp.PlcWorker.csproj"), "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false",
                      "-p:TiaReleaseKey=" + release, "-p:SiemensEngineeringDirectory=" + ResolveReleaseApi(null, api, int.Parse(release, System.Globalization.CultureInfo.InvariantCulture)),

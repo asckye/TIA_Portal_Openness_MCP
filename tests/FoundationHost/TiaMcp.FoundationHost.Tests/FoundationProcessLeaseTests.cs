@@ -13,8 +13,8 @@ public sealed class FoundationProcessLeaseTests
 {
     private static ChannelRequest Request(string method, string args = "{}") => new(1, "adapter." + method, args, (_, _) => { });
     private static ChannelRequest Attach(int pid) => Request("Attach", JsonSerializer.Serialize(new { processId = pid }));
-    private static ChannelRequest Candidate(int pid, string mode = "apply") => Request(WorkerOperations.SessionCandidate,
-        JsonSerializer.Serialize(new { mode, candidate = new { Action = "execute", Check = new { Request = new { Action = "attach", ProcessId = pid } } } }));
+    private static ChannelRequest FormattedAttach(int pid) => Request("Attach",
+        JsonSerializer.Serialize(new { processId = pid }, new JsonSerializerOptions { WriteIndented = true }));
     private static ChannelFailureException Rejection(string message) => new(message, -32603, ChannelOutcome.RejectedBeforeNative,
         "{\"exceptionType\":\"InvalidOperationException\"}");
 
@@ -50,10 +50,10 @@ public sealed class FoundationProcessLeaseTests
     }
 
     [Theory, InlineData(false), InlineData(true)]
-    public void Legacy_and_candidate_attach_reserve_the_same_identity_as_the_engine(bool candidate)
+    public void Compact_and_formatted_attach_reserve_the_same_identity_as_the_engine(bool formatted)
     {
         using var session = new Session();
-        Assert.Null(session.Boundary.Dispatch(candidate ? Candidate(session.Pid) : Attach(session.Pid)).Failure);
+        Assert.Null(session.Boundary.Dispatch(formatted ? FormattedAttach(session.Pid) : Attach(session.Pid)).Failure);
         var refused = Assert.Throws<InvalidOperationException>(() => PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks));
         Assert.Equal(SessionBehavior.LeaseReserved, refused.Message);
         Assert.Equal(1, session.NativeCalls);
@@ -147,12 +147,12 @@ public sealed class FoundationProcessLeaseTests
     }
 
     [Theory, InlineData(false), InlineData(true)]
-    public void Rejected_legacy_or_nonissued_candidate_attach_returns_its_reservation(bool candidate)
+    public void Rejected_or_unbound_attach_returns_its_reservation(bool unbound)
     {
         using var session = new Session();
-        session.Reply = _ => candidate ? ChannelResponse.Success("{\"Attempt\":{\"Issued\":false}}")
+        session.Reply = _ => unbound ? ChannelResponse.Success("{}")
             : ChannelResponse.Error(Rejection("Attach rejected before native."));
-        session.Boundary.Dispatch(candidate ? Candidate(session.Pid) : Attach(session.Pid));
+        session.Boundary.Dispatch(Attach(session.Pid));
         Assert.Equal("RELEASED\n", File.ReadAllText(session.FilePath));
     }
 
@@ -166,9 +166,9 @@ public sealed class FoundationProcessLeaseTests
     }
 
     [Fact]
-    public void Candidate_preview_does_not_reserve_a_process()
+    public void Cached_state_read_does_not_reserve_a_process()
     {
-        using var session = new Session(); session.Boundary.Dispatch(Candidate(session.Pid, "preview"));
+        using var session = new Session(); session.Boundary.Dispatch(Request("ReadState"));
         Assert.False(Directory.Exists(session.Root));
     }
 
@@ -202,7 +202,7 @@ public sealed class FoundationProcessLeaseTests
         Assert.Equal(new[] { "ATTACHED", SessionBehavior.LeaseReserved }.Order(), replies.Order());
         var winner = replies[0] == "ATTACHED" ? a : b; var loser = winner == a ? b : a;
         Assert.Equal("DISCONNECTED", await Command(winner, "disconnect"));
-        Assert.Equal("ATTACHED", await Command(loser, "candidate"));
+        Assert.Equal("ATTACHED", await Command(loser, "attach-formatted"));
         Assert.Equal("DISCONNECTED", await Command(loser, "disconnect"));
         await Stop(a); await Stop(b);
         Assert.Equal("RELEASED\n", File.ReadAllText(session.FilePath));
@@ -359,7 +359,7 @@ public sealed class FoundationProcessLeaseTests
         string? command;
         while ((command = Console.ReadLine()) != null)
         {
-            var request = command == "busy" ? Request("FixtureBusy") : command == "disconnect" ? Request("Disconnect") : command == "candidate" ? Candidate(int.Parse(args[2])) : Attach(int.Parse(args[2]));
+            var request = command == "busy" ? Request("FixtureBusy") : command == "disconnect" ? Request("Disconnect") : command == "attach-formatted" ? FormattedAttach(int.Parse(args[2])) : Attach(int.Parse(args[2]));
             var response = boundary.Dispatch(request);
             Console.WriteLine(response.Failure?.Message ?? (detached ? "DISCONNECTED" : "ATTACHED"));
         }

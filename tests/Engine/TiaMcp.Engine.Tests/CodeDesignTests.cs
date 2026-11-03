@@ -9,6 +9,7 @@ using TiaMcp.Logic.V4;
 using TiaMcpServer.ModelContextProtocol;
 using TiaOpenness.Shared;
 using Xunit;
+using DecoderRuntime = TiaMcp.Logic.ModelContextProtocol.DecoderRuntime;
 
 namespace TiaMcp.Engine.Tests;
 
@@ -19,9 +20,9 @@ public sealed class CodeDesignTests
     {
         var collections = new[]
         {
-            WatchTableEntryXml.ReadOnlyEntryAttributes, CompileContract.Entries, FallbackContract.Entries,
-            PlcExportContract.Entries, PlcImportContract.Entries, SaveCloseContract.Entries,
-            SessionCandidateContract.Entries, SourceContract.Entries, OfflineAnalysisLogic.DefaultMarkers,
+            WatchTableEntryXml.ReadOnlyEntryAttributes, PortedFamilies.FoundationCandidates, TiaMcp.Logic.Generation.GenerationPlanner.Phases,
+            DecoderRuntime.BinaryFiles, DecoderRuntime.StandardLibraryFiles, DecoderRuntime.RequiredFiles,
+            PlcDeclarationXmlFormat.ReleaseKeys, TiaMcpServer.Runtime.PlcSimAdvancedLogic.InstanceActions, OfflineAnalysisLogic.DefaultMarkers,
             OfflineAnalysisLogic.DefaultExtensions, OfflineAnalysisLogic.NormalizationRules,
         };
         foreach (var collection in collections)
@@ -72,9 +73,9 @@ public sealed class CodeDesignTests
     [Fact]
     public void Renamed_exception_types_keep_error_payloads_and_channel_semantics()
     {
-        var error = new Error("Rejected.", new InvalidArgumentDetails("input", Array.Empty<string>()));
-        var rejected = new DeviceCreationRejectionException(error);
-        Assert.Same(error, rejected.Error);
+        var error = new TiaMcp.Adapters.Contracts.Candidates.CandidateFault { Kind = "invalid", Subject = "input", Message = "Rejected." };
+        var rejected = new TiaMcp.Adapters.Contracts.Candidates.CandidateObservationException(error);
+        Assert.Same(error, rejected.Fault);
         Assert.Equal(error.Message, rejected.Message);
         Assert.EndsWith("Exception", rejected.GetType().Name, StringComparison.Ordinal);
     }

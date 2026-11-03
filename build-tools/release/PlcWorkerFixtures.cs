@@ -5,37 +5,23 @@ using TiaMcp.WorkerChannel;
 
 namespace TiaMcp.ReleaseTool;
 
-internal sealed record PlcWorkerFixtureBuild(string Release, string Variant, string? TestPolicy)
+internal sealed record PlcWorkerFixtureBuild(string Release, string Variant)
 {
     internal string Root(string output) => Path.Combine(output, Variant);
     internal string Worker(string output) => Path.Combine(Root(output), "bin", Release, "Release/net48", $"TiaMcp.PlcWorker.{Release}.exe");
     internal string[] Properties(string output) => ["-p:TiaMcpPlcWorkerSdkFixture=true",
-        "-p:TiaMcpPlcWorkerFixtureRoot=" + Root(output), .. TestPolicy == null ? Array.Empty<string>() : new[] { "-p:TiaMcpTestPolicy=" + TestPolicy }];
+        "-p:TiaMcpPlcWorkerFixtureRoot=" + Root(output)];
 }
 
 internal static class PlcWorkerFixtures
 {
     internal static readonly string[] Keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
-    internal static readonly string[] Families = ["DEVICE", "IMPORT", "SESSION", "CLOSE", "COMPILE", "FALLBACK", "SOURCE", "EXPORT"];
-    internal static PlcWorkerFixtureBuild Candidate(string key, string family, string policy)
+    internal static PlcWorkerFixtureBuild Sdk(string key)
     {
-        if (key is not ("20" or "21") || !Families.Contains(family) || policy is not ("current" or "safe-v4"))
-            throw new ReleaseException("Unknown PlcWorker candidate build.");
-        // Like the engine candidate jobs, current uses the unmodified policy.
-        // DEVICE remains unavailable on 20/21 under CandidatePolicy's V19 guard.
-        return policy == "current" ? new(key, "sdk", null)
-            : new(key, "candidate-" + family.ToLowerInvariant(), "P6-" + family + ":safe-v4");
+        if (!Keys.Contains(key)) throw new ReleaseException("Unknown PlcWorker release: " + key);
+        return new(key, "sdk");
     }
-    internal static IEnumerable<PlcWorkerFixtureBuild> Builds(IEnumerable<string> keys)
-    {
-        foreach (string key in keys)
-        {
-            if (!Keys.Contains(key)) throw new ReleaseException("Unknown PlcWorker release: " + key);
-            yield return new(key, "sdk", null);
-            if (key is "20" or "21")
-                foreach (string family in Families) yield return Candidate(key, family, "safe-v4");
-        }
-    }
+    internal static IEnumerable<PlcWorkerFixtureBuild> Builds(IEnumerable<string> keys) => keys.Select(Sdk);
 
     internal static async Task<string> Smoke(string worker, string api, string key, string? fault = null, string? environmentFault = null)
     {
@@ -132,13 +118,13 @@ internal static partial class ReleaseCommands
             var metadata = WorkerAssemblyMetadata.Read(worker);
             if (metadata.GetValueOrDefault("TiaMcpPlcWorkerSdkFixture") != "true"
                 || metadata.GetValueOrDefault("TiaReleaseKey") != unit.Release
-                || metadata.GetValueOrDefault("TiaMcpTestPolicy") != unit.TestPolicy)
+                || metadata.GetValueOrDefault("TiaMcpTestPolicy") != null)
                 throw new ReleaseException("PlcWorker fixture metadata differs from its build unit: " + worker);
             var verified = ProcessRunner.Run(Dotnet, [weaver, "verify", Path.Combine(Path.GetDirectoryName(worker)!, "TiaMcp.Adapter." + unit.Release + ".dll")], Root);
             WriteLog(Path.Combine(unit.Root(output), "verify-" + unit.Release + ".log"), verified);
             ProcessRunner.RequireSuccess(verified, "PlcWorker fixture adapter weave verify");
             string startupState = PlcWorkerFixtures.Smoke(worker, api, unit.Release).GetAwaiter().GetResult();
-            results.Add(new { unit.Release, unit.Variant, unit.TestPolicy, worker, workerSha256 = ReleaseRecords.HashFile(worker), startupState });
+            results.Add(new { unit.Release, unit.Variant, worker, workerSha256 = ReleaseRecords.HashFile(worker), startupState });
             Console.WriteLine($"PASS PlcWorker fixture {unit.Release}/{unit.Variant}");
         }
         WriteJson(Path.Combine(output, "summary.json"), new { results, nativeAcceptance = "NOT RUN" });
@@ -169,7 +155,7 @@ internal static partial class ReleaseCommands
         foreach (string key in PlcWorkerFixtures.Keys)
         {
             string worker = fixtureRoot == null ? Path.Combine(Root, $"src/PlcWorker/bin/{key}/Release/net48/TiaMcp.PlcWorker.{key}.exe")
-                : new PlcWorkerFixtureBuild(key, "sdk", null).Worker(Path.GetFullPath(fixtureRoot));
+                : new PlcWorkerFixtureBuild(key, "sdk").Worker(Path.GetFullPath(fixtureRoot));
             string api = Path.Combine(apiRoot, PlcWorkerApi(key).Directory);
             if (!Path.GetFullPath(worker).StartsWith(Path.GetFullPath(Root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                 throw new ReleaseException("PlcWorker smoke may launch only outputs in this worktree.");

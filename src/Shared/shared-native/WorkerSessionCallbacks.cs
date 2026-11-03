@@ -35,6 +35,9 @@ namespace TiaMcp.Adapters
         private object? _workerProject;
         private string? _workerBindingFault, _workerDeviceGeneration;
         private long _workerDeviceEpoch;
+        public Func<Func<string>, CandidateIdentity>? SharedHardwareCandidateIdentity { get; set; }
+        private CandidateIdentity DeviceCreationBindingIdentity(Func<string> path)
+            => (SharedHardwareCandidateIdentity ?? throw new InvalidOperationException("Exact device-creation binding is unavailable."))(path);
         private Func<long>? _workerProcessStart;
         private Func<bool>? _workerProcessReserved;
         public string? WorkerSessionBindingFault => _workerBindingFault;
@@ -107,7 +110,6 @@ namespace TiaMcp.Adapters
             if (!ReferenceEquals(_workerProject, project) || !samePath)
             {
                 _resetWorkerFamilyState?.Invoke();
-                sessionCandidateAdapter = null; saveCloseAdapter = null;
             }
             if (_workerBinding == null || _workerBinding.ProcessId != lifecycle.ProcessId
                 || _workerBinding.StartUtcTicks != ticks || !samePath)
@@ -129,7 +131,6 @@ namespace TiaMcp.Adapters
                 _workerProcessReserved!(), () => _workerCreateIdentity!(TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).MajorVersion,
                     lifecycle.ProcessId!.Value, _workerProcessStart!(), project.Path.FullName, project.Name));
             _workerProject = project;
-            sessionCandidateAdapter = null; saveCloseAdapter = null;
         }
 
         public void LockWorkerSessionBinding(string reason)
@@ -146,13 +147,11 @@ namespace TiaMcp.Adapters
             _workerBinding = null;
             _workerProject = null;
             _workerBindingFault = null;
-            sessionCandidateAdapter = null; saveCloseAdapter = null;
         }
 
         private void VerifyWorkerBinding(string operation)
         {
             Check();
-            sessionCandidateAdapter?.VerifyOwnedState();
             if (_workerBindingFault != null)
                 throw new PortalException(PortalErrorCode.InvalidState, _workerBindingFault);
             if (project == null) return;

@@ -34,7 +34,7 @@ public sealed class FoundationV4InnerResultTests : IDisposable
         {
             var inner = new ResultTool("EnsureOpennessUserGroup", new CallToolResult { IsError = isError,
                 Content = new[] { new TextContentBlock { Text = PrivateMessage } } });
-            var tool = new FoundationV4Tool(inner, "19", null, () => new ApprovalSettings(false, 1));
+            var tool = new FoundationV4Tool(inner, "19", () => new ApprovalSettings(false, 1));
             var result = await tool.InvokeAsync(Request(inner.ProtocolTool.Name));
             // EnsureOpennessUserGroup discloses the current native behavior policy on every envelope.
             AssertInternalFailure(result, inner.ProtocolTool.Name, "current");
@@ -60,7 +60,7 @@ public sealed class FoundationV4InnerResultTests : IDisposable
     {
         using var diagnostics = new GenerationFailureDiagnostics();
         var inner = new GenerationTool("ListStandardPackages", "19", () => throw new InvalidOperationException(PrivateMessage));
-        var tool = new FoundationV4Tool(inner, "19", null, () => new ApprovalSettings(true, 1));
+        var tool = new FoundationV4Tool(inner, "19", () => new ApprovalSettings(true, 1));
         var result = await tool.InvokeAsync(Request(inner.ProtocolTool.Name));
         AssertInternalFailure(result, inner.ProtocolTool.Name, "not-applicable");
         string failure = diagnostics.Failure(inner.ProtocolTool.Name, result);
@@ -77,7 +77,7 @@ public sealed class FoundationV4InnerResultTests : IDisposable
         var raw = new JsonObject { ["success"] = !isError, ["summary"] = "JSON result", ["items"] = new JsonArray(1, 2) };
         var inner = new ResultTool("GetToolUsage", new CallToolResult { IsError = isError,
             Content = new[] { new TextContentBlock { Text = raw.ToJsonString() } } });
-        var tool = new FoundationV4Tool(inner, "19", null, () => new ApprovalSettings(true, 1));
+        var tool = new FoundationV4Tool(inner, "19", () => new ApprovalSettings(true, 1));
         var result = await tool.InvokeAsync(Request(inner.ProtocolTool.Name));
         string id = (string)result.StructuredContent!["meta"]!["requestId"]!;
         var expected = FoundationV4Result.Host("19", inner.ProtocolTool.Name, id, raw, false, isError,

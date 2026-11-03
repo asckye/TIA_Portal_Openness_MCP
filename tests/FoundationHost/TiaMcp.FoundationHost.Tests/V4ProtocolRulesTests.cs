@@ -73,7 +73,7 @@ public sealed class V4ProtocolRulesTests
         if (name.StartsWith("Exchange", StringComparison.Ordinal)) arguments.Add(new Argument("action"));
         if (name == "GetEnvironmentDiagnostics") arguments.Add(new Argument("fix", "boolean", false, false));
         var worker = new ApprovalWorker(); int waits = 0;
-        var tool = new FoundationV4Tool(new FoundationTool(new Definition(name, "ApprovalFixture", "Offline approval fixture.", arguments.ToArray()), worker), "19", null,
+        var tool = new FoundationV4Tool(new FoundationTool(new Definition(name, "ApprovalFixture", "Offline approval fixture.", arguments.ToArray()), worker), "19",
             () => new ApprovalSettings(true, 1), (pending, _, _) => {
                 Assert.Equal(name, pending.Tool); waits++;
                 return Task.FromResult(new ApprovalOutcome(pending, false, "denied")); });

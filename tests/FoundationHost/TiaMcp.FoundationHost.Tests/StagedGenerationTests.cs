@@ -72,12 +72,12 @@ public sealed class StagedGenerationTests
             Configuration.ReleaseKey = Release;
             hostScope = Configuration.Enter(new enginehost::TiaMcp.FoundationHost.EngineSessionContext(Worker));
             var tools = new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource" }.Select(name =>
-                new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), Worker), Release, null,
+                new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), Worker), Release,
                     () => new ApprovalSettings(true, 1), (pending, _, _) => {
                         StepWaits++;
                         return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Source requested a second approval."));
                     })).ToArray();
-            var record = new FoundationV4Tool(new GenerationTool("PublishGenerationRecord", Release, executionSession: Session), Release, null,
+            var record = new FoundationV4Tool(new GenerationTool("PublishGenerationRecord", Release, executionSession: Session), Release,
                 () => new ApprovalSettings(true, 1), (pending, _, _) => { StepWaits++; return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Record requested a second approval.")); });
             var registered = tools.Append(record).ToArray(); catalog = new Catalog(registered);
             Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, registered), () => false, new HashSet<string>());

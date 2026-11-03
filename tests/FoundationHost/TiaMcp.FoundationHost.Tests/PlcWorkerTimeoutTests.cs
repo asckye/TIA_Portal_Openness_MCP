@@ -27,9 +27,7 @@ public sealed class PlcWorkerRobustnessTests
         ["Attach"] = "default",
         ["BindProject"] = "default",
         ["CloseProject"] = "default",
-        ["CompileCandidate"] = "compile",
         ["CompileSoftware"] = "compile",
-        ["CreateHardwareDeviceCandidate"] = "default",
         ["CreateProject"] = "default",
         ["CreateTag"] = "default",
         ["CreateTagTable"] = "default",
@@ -40,7 +38,6 @@ public sealed class PlcWorkerRobustnessTests
         ["ExportBlock"] = "importExport",
         ["ExportBlocks"] = "importExport",
         ["ExportBlocksAsDocuments"] = "importExport",
-        ["ExportPlcCandidate"] = "importExport",
         ["ExportPlcWatchTable"] = "importExport",
         ["ExportTagTable"] = "importExport",
         ["ExportTechnologyObject"] = "importExport",
@@ -51,7 +48,6 @@ public sealed class PlcWorkerRobustnessTests
         ["ImportBlocksFromDirectory"] = "importExport",
         ["ImportBlocksFromDocuments"] = "importExport",
         ["ImportFromDocuments"] = "importExport",
-        ["ImportPlcCandidate"] = "importExport",
         ["ImportPlcExternalSource"] = "importExport",
         ["ImportPlcProgramFromDirectory"] = "importExport",
         ["ImportTagTables"] = "importExport",
@@ -77,11 +73,8 @@ public sealed class PlcWorkerRobustnessTests
         ["ReadTypeInfo"] = "default",
         ["ReadTypes"] = "default",
         ["ReadWatchTableNames"] = "default",
-        ["SaveCloseCandidate"] = "default",
         ["SaveProject"] = "default",
         ["SearchHardwareCatalog"] = "default",
-        ["SessionCandidate"] = "default",
-        ["SourceCandidate"] = "compile",
         ["engineering-services.BeginEngineeringTransaction"] = "default",
         ["engineering-services.CommitEngineeringTransaction"] = "default",
         ["engineering-services.DisposeEngineeringTransaction"] = "default",
@@ -102,7 +95,6 @@ public sealed class PlcWorkerRobustnessTests
         ["hardware-devices.HardwareDescribeDeviceAt"] = "default",
         ["hardware-devices.HardwareDescribeDevices"] = "default",
         ["hardware-devices.HardwareDescribeItemAt"] = "default",
-        ["hardware-devices.HardwareDeviceCandidate"] = "default",
         ["hardware-devices.HardwareExchangeSystemDiagnosticsSettings"] = "default",
         ["hardware-devices.HardwareLegacyDumpDeviceAttributes"] = "default",
         ["hardware-devices.HardwareLegacySearchHardwareCatalog"] = "default",
@@ -576,8 +568,6 @@ public sealed class PlcWorkerRobustnessTests
         if (operation == "runtime-channels.ExecutePlcSimAdvanced" && nested != null)
             args["request"] = new JsonObject { ["operation"] = nested == "ListPlcSimAdvancedInstances" ? "ReadPlcSimAdvancedInstances"
                 : nested == "GetPlcSimAdvancedTags" ? "ReadPlcSimAdvancedTags" : nested, ["arguments"] = new JsonObject { ["dryRun"] = false } };
-        if (operation == "SourceCandidate") args["candidate"] = new JsonObject { ["Check"] = new JsonObject {
-            ["Request"] = new JsonObject { ["Items"] = new JsonArray(new JsonObject { ["Action"] = "generate" }) } } };
         Assert.Equal(expected, WorkerTimeoutPolicy.PlcFamily(operation, args));
         Assert.Equal(WorkerTimeoutPolicy.Defaults[expected], new WorkerTimeoutPolicy().ForPlc(operation, args));
         args["mode"] = "preview";
@@ -758,14 +748,10 @@ public sealed class PlcWorkerRobustnessTests
     {
         using var scope = new PlcTimeoutScope("19", "{\"default\":2,\"compile\":0.2}");
         await scope.WarmGenerationUnderProductionBudgets();
-        var observation = new CompileObservation { Binding = new() { ProcessId = Environment.ProcessId,
-            ProcessStartUtc = DateTimeOffset.UtcNow, ProjectFile = Path.Combine(AppContext.BaseDirectory, "fixture.ap19"), Ownership = "borrowed" },
-            ObjectValidity = "valid", Dirty = false, TargetId = "software-1", SoftwareId = "software-1", TargetKind = "PlcSoftware",
-            TargetName = "PLC_1", Compilable = true, OfflineState = "offline", SafetyPermission = "not-applicable" };
-        var reply = await scope.Worker.Call("CompileCandidate", new() { ["mode"] = "preview", ["fixtureDelayMilliseconds"] = 400,
-            ["candidate"] = JsonSerializer.SerializeToNode(new CompileCall { Action = "observe" }),
-            ["fixtureReply"] = JsonSerializer.SerializeToNode(new CompileReply { Observation = observation }) }, CancellationToken.None);
-        Assert.Equal("software-1", (string?)reply!["Observation"]?["TargetId"]);
+        var preview = new TiaMcp.Adapters.PlcCompileResult { Executed = false, ProjectFile = Path.Combine(AppContext.BaseDirectory, "fixture.ap19") };
+        var reply = await scope.Worker.Call("CompileSoftware", new() { ["dryRun"] = true, ["softwarePath"] = "PLC_1",
+            ["fixtureDelayMilliseconds"] = 400, ["fixtureReply"] = JsonSerializer.SerializeToNode(preview) }, CancellationToken.None);
+        Assert.Equal(preview.ProjectFile, (string?)reply!["ProjectFile"]);
         Assert.False(scope.Worker.Poisoned);
     }
 
@@ -789,12 +775,10 @@ public sealed class PlcWorkerRobustnessTests
     public async Task Plc_default_seconds_and_first_attach_budget_apply_once_per_generation()
     {
         using var scope = new PlcTimeoutScope("19", "{\"firstAttach\":3}", defaultSeconds: 1);
-        // Each generation starts with a ReadState under the production budgets; its first Attach still runs on the scaled
-        // first-attach budget (3 s for a 1.3-s attach) and the second on the scaled default (1 s).
+        // Read-only state queries do not consume the first-attach budget: the first Attach runs on 3 s
+        // and the second on the scaled default (1 s).
         await scope.WarmGenerationUnderProductionBudgets();
-        await scope.Worker.Call("SessionCandidate", new() { ["mode"] = "preview",
-            ["candidate"] = JsonSerializer.SerializeToNode(new SessionCandidateCall { Action = "observe", Check = new() { Request = new() { Action = "attach" } } }),
-            ["fixtureReply"] = JsonSerializer.SerializeToNode(new SessionCandidateReply { Observation = new() }) }, CancellationToken.None);
+        await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         var args = new JsonObject { ["processId"] = Environment.ProcessId, ["fixtureDelayMilliseconds"] = 1300 };
         await scope.Worker.Call("Attach", args, CancellationToken.None);
         Assert.False(scope.Worker.Poisoned);

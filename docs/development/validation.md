@@ -130,8 +130,8 @@ check-all 的合并和 nightly 构建统一设置 `TiaCheckBuild=true` 与固定
 | offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；kept-code、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
 | offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
 | offline-checks / studio-tests，Windows、交付默认 false 配置 | studio-core、studio-gui | 同项目与交付配置，使用完整注册套件门禁；studio profile 出具 CI 收据，仍核对本机 SDK 和运行时投影 |
-| offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
-| offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 17 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
+| offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
+| offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 13 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
 | validate-bundle / validate-bundle，Windows | release-tool、generation-model、generation-planning、crash-evidence、write-guard、source-contracts；repository、bundle、bundle-self-tests、release-documentation、release-dry-run、native-lifecycle、native-mcp-session、tia-features、match-plc-name-source | release profile 可采纳六套件及除 repository/bundle 外的七个精确命令；repository/bundle 含实际已收集 analyzer 报告的核对，CI 缺少本机完整 SDK 构建的报告，继续本机执行。release-tool 改用完整注册入口，新增原有最低通过/跳过门禁；preflight 仍本机汇总。build-configurator -Test 是较大的构建/测试入口，不当成 configuration-page 的单独收据 |
 | Verify published release / verify，release 或 workflow_dispatch | 无 check-all 等价项 | 只校验已发布 ZIP 与其 `.sha256`；包内容与过滤树的严格验证在本机准备阶段完成，继续独立执行 |
 
@@ -437,7 +437,7 @@ version-policy 至少 10 项通过，均不允许跳过。Q2 退役 offline；Ke
 kept-code 的数据行数量没有平台差异；平台专用实现的测试保留行身份，使用跨平台夹具或测试平台回退。
 `splitFrom` 注册字段记录拆分来源；CI 的 TRX 门禁自检拒绝 CI 工作流或 release 执行清单遗漏任何拆分子套件。
 ImportSelection 的 10 项已并入 offline；BindingSnapshot、ExternalSourcePlan、ExternalSourceDelete 的 199 项已并入 foundation。
-foundation 至少 29000 项通过、最多 1 项跳过；foundation-api 至少 30000 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 195、258、12、175、57、4 项通过，均不允许跳过。
+foundation 至少 27820 项通过、最多 1 项跳过；foundation-api 至少 28812 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 195、258、12、116、57、4 项通过，均不允许跳过。Q7 按删除前后 TRX 实测分别减少 foundation 1180、foundation-api 1188、device-add 59 个用例；跳过上限不变。
 门禁按请求顺序执行，拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
 每次清除同名旧结果，在 `bin-build/test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
 可用 `--results-directory <dir>`、`--dotnet <path>`、`--no-restore` 或重复的 `--dotnet-arg=<arg>` 定制执行。
@@ -722,18 +722,14 @@ python scripts/checks/Test-CampaignInputs.py --exe runtime/v21/TiaMcp.Foundation
 
 最后一个命令用离线 STDIO 目录和宿主的实际 `InputSchema` 读取已生成的 `plan_*.json` 并校验全部 campaign 输入，不再执行计划生成器，也不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
 
-`check-all` 在 V20/V21 的引擎兼容副本上运行 `descriptor-catalog-only`、campaign 输入检查和全部八个 `*-candidate-only current` 分支，并在 FoundationHost 与 PlcWorker 上运行对应的后继作业（P8-04k3a、P8-04k3b）。
+`check-all` 在 FoundationHost 与 PlcWorker 上运行目录和 campaign 输入检查；引擎兼容副本已退役。SafeV4 候选实现已归档到标签 `archive/safev4-candidates`，并于 2026-11-02 从当前代码删除；各族通过 L5 后基于届时的现行代码重建。P8-04l3 已取消，P8-31e6 延后。
 审查者的 Harness 清单也包含 `descriptor-catalog-only`、`check-modes-self-test` 和两版 campaign 命令；生产模式不可用测试策略替代。
 execution 表必须与完整引擎目录及 host 声明的并集精确相等，逐项保留 ownership、名称及 SDK Tool 引用检查。
 campaign 每一步都进入 `inputs.json`；缺少工具的版本在计划中显式声明 `applicability.<release>.applicable=false` 和 `reason`，
 存在工具的版本仍校验该输入。脚本核对实际目录与生成的版本目录一致，拒绝隐藏存在的工具，并在 `result.json` 中报告
 passed、failed、explicitRejections、notApplicable、total 和逐步结果；任一失败返回非零状态。
 
-safe-v4 的八个分支使用 `check-all` 独立构建的 `candidate-<mode>-<release>` 变体，各变体仅设置对应的
-`TiaMcpTestPolicy=P6-<family>:safe-v4`（save-close 对应 CLOSE）。不将它们复制到生产输出或发布包。
-compile 与 fallback 对同名工具提供不同 schema，必须各自使用单家族变体；同时启用时仍保留 owning family 的选择优先级。
-`check-modes-self-test` 用系统临时目录验证坏 campaign 输入的退出状态、显式拒绝和适用性计数，另验证 descriptor 缺项、多项和等数量替换均失败。
-两版 `candidate-negative` 检查证明 production 引擎拒绝 safe-v4 方法选择期望。Python runner 的自测也进入 CI。
+SafeV4 的八个 `*-candidate-only` Harness 分支、5 个注册候选套件和 16 个 PlcWorker 候选构建单元已删除；`build-plc-worker-fixtures` 仅构建八版 SDK 夹具。`check-modes-self-test` 仍验证坏 campaign 输入、退出状态、显式拒绝、适用性计数及 descriptor 清单。
 
 沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`TiaMcp.Engine.Harness.exe <engine.exe> test-ecosystem-assembly <PublicAPI> --skip-pdf --skip-companion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
 

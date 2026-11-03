@@ -325,7 +325,7 @@ public sealed class PlcReleasePipelineTests
     {
         using var tree = new StaticTree();
         var logs = Path.Combine(tree.Root, "logs");
-        var worker = new PlcWorkerFixtureBuild("20", "sdk", null).Worker(Path.Combine(logs, "plc-fixtures"));
+        var worker = new PlcWorkerFixtureBuild("20", "sdk").Worker(Path.Combine(logs, "plc-fixtures"));
         Directory.CreateDirectory(Path.GetDirectoryName(worker)!); File.WriteAllText(worker, "sdk-worker");
         tree.Write("runtime/v20/TiaMcp.FoundationHost.exe", "host");
         string workerHash = ReleaseRecords.HashFile(worker), hostHash = ReleaseRecords.HashFile(Path.Combine(tree.Root, "runtime/v20/TiaMcp.FoundationHost.exe"));
@@ -374,7 +374,7 @@ public sealed class PlcReleasePipelineTests
         using var tree = new StaticTree();
         var job = Jobs(tree.Root).First(job => job.Check == "plc-isolated-stability");
         var logs = Path.Combine(tree.Root, "logs");
-        var worker = new PlcWorkerFixtureBuild("20", "sdk", null).Worker(Path.Combine(logs, "plc-fixtures"));
+        var worker = new PlcWorkerFixtureBuild("20", "sdk").Worker(Path.Combine(logs, "plc-fixtures"));
         Directory.CreateDirectory(Path.GetDirectoryName(worker)!); File.WriteAllText(worker, "sdk-worker");
         tree.Write("runtime/v20/TiaMcp.FoundationHost.exe", "host");
         Directory.CreateDirectory(Path.GetDirectoryName(job.Evidence)!);

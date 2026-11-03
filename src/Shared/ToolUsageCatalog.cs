@@ -110,10 +110,6 @@ namespace TiaOpenness.Shared
 
         private static JsonObject? CallExample(string name, string release, string profile)
         {
-            var candidate = TiaMcp.Logic.V4.BehaviorCapabilities.CandidateExample(release, RegisteredName(name, release));
-            if (candidate != null) return new JsonObject { ["arguments"] = candidate, ["parameters"] = new JsonObject(),
-                ["note"] = candidate.ContainsKey("retryPolicy") ? "Preview to discover exact routes, select one verbatim, review the resulting plan, then apply once with confirmation and the expected project file."
-                    : candidate.ContainsKey("exportPath") ? "Review the exact export objects and destination identities, then apply that plan once with confirmation and the expected project file." : "Resolve the exact installed catalog TypeIdentifier, preview, then apply that plan once with confirmation and the expected project file." };
             var entry = profile is "full-engine" or "engine-source" ? ProfileEntry(name, release, profile == "engine-source") : null;
             var source = (string?)entry?["currentName"] ?? name;
             var row = (CurrentHmiCall(source, release) ?? (profile == "engine-source" ? Data.Value["engineSourceCalls"]?[source] : Data.Value["calls"]?["profiles"]?[profile]?[source]))?.DeepClone();

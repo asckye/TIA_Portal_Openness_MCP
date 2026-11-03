@@ -32,8 +32,7 @@ public sealed class ImportStagingHostTests : IDisposable
         using var worker = new Worker();
         using var owner = FoundationTool.RegisterStagingSession(worker, mcpSessionId);
         var store = new ImportStagingStore(bundle, "18", owner);
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "StageImportFiles"), worker, store), "18",
-            null, () => new(false, 1));
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "StageImportFiles"), worker, store), "18", () => new(false, 1));
         var stage = (await tool.InvokeAsync(Request("StageImportFiles", Args()))).StructuredContent!;
         Assert.True((bool?)stage["ok"]); Assert.Equal(mcpSessionId, (string?)stage["data"]?["mcpSessionId"]);
         using var connected = new ImportStagingStore(bundle, "18", Guid.NewGuid().ToString("N"));
@@ -72,7 +71,7 @@ public sealed class ImportStagingHostTests : IDisposable
         var audit = new AuditLog(Path.Combine(bundle, "audit")); using var scope = AuditInvocation.UseLog(audit);
         var inner = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "StageImportFiles"), worker, store);
         Assert.False(inner.ProtocolTool.InputSchema.GetProperty("properties").TryGetProperty("expectedProjectFile", out _));
-        var tool = new FoundationV4Tool(inner, release, null, () => new(true, 1), async (pending, _, _) =>
+        var tool = new FoundationV4Tool(inner, release, () => new(true, 1), async (pending, _, _) =>
         { approvals++; await TiaMcp.Engine.Tests.ImportStagingTests.VerifyApproval(pending); audit.Approval(pending.RequestId, pending.Host, pending.ReleaseKey, pending.Tool, "granted", pending.PlanHash); Assert.Empty(store.List()["batches"]!.AsArray()); Assert.False(Directory.Exists(Path.Combine(bundle, "staging"))); return new ApprovalOutcome(pending, false, null); });
         var refusal = await tool.InvokeAsync(Request("StageImportFiles", Args("../escape.xml")));
         Assert.False((bool?)refusal.StructuredContent?["ok"]); Assert.Equal(0, approvals); Assert.Equal(0, worker.Calls);
@@ -89,7 +88,7 @@ public sealed class ImportStagingHostTests : IDisposable
     public async Task Staged_directory_round_trips_through_actual_facade_and_fake_import_worker()
     {
         var worker = new Worker(); var store = new ImportStagingStore(bundle, "17", Guid.NewGuid().ToString("N"));
-        FoundationV4Tool Tool(string name) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), worker, store), "17", null, () => new(false, 1), (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, true, null)));
+        FoundationV4Tool Tool(string name) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), worker, store), "17", () => new(false, 1), (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, true, null)));
         var stage = await Tool("StageImportFiles").InvokeAsync(Request("StageImportFiles", Args()));
         Assert.True((bool?)stage.StructuredContent?["ok"]);
         var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["dir"] = stage.StructuredContent!["data"]!["directory"]!.DeepClone() };

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering.SW;
 using TiaMcp.Adapters.Contracts;
-using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Adapters.Native.Hmi;
 using TiaMcp.Adapters.Native.Online;
 
@@ -11,20 +10,6 @@ namespace TiaMcp.Adapters;
 
 public sealed partial class PlcFoundationEngine
 {
-#if ONLINE_DOWNLOAD
-    private OnlineDownloadAdapter? _onlineFallbackAdapter;
-    private OnlineDownloadAdapter OnlineFallbackAdapter => _onlineFallbackAdapter ??= OnlineAdapter(new OnlineRequest());
-    public TiaMcp.Adapters.Contracts.Candidates.IFallbackAdapter OnlineFallback(TiaMcp.Adapters.Contracts.Candidates.FallbackRequest request, string password, Func<SessionState> binding, Action uncertain, Func<TiaMcp.Adapters.Contracts.Candidates.FallbackRequest, TiaMcp.Adapters.Contracts.Candidates.FallbackNativeResult> otherOperation)
-    {
-        Check();
-        return OnlineFallbackAdapter.FallbackAdapter(request, password, binding, uncertain, otherOperation);
-    }
-    public string OnlineFallbackOfflineState(string softwarePath)
-    {
-        Check();
-        return OnlineFallbackAdapter.FallbackOfflineState(softwarePath);
-    }
-#endif
     public Func<List<PlcSoftware>>? OnlinePlcs { get; set; }
     public Action<int, Exception?, string, object?[]>? OnlineLog { get; set; }
     private OnlineDownloadAdapter OnlineAdapter(OnlineRequest request)

@@ -98,11 +98,11 @@ internal static partial class ReleaseCommands
     }
 
     private static string CheckAllPlcFixtureRoot => Path.GetFullPath(Path.Combine(Root, "bin-build", "check-plc-fixtures"));
-    internal static string CheckAllPlcFixture(string release) => PlcWorkerFixtures.Candidate(release, "SOURCE", "current").Worker(CheckAllPlcFixtureRoot);
+    internal static string CheckAllPlcFixture(string release) => PlcWorkerFixtures.Sdk(release).Worker(CheckAllPlcFixtureRoot);
 
     internal static CheckBuild[] CheckAllPlcFixtureBuilds(string apiRoot) => new[] { "20", "21" }.Select(key =>
     {
-        var fixture = PlcWorkerFixtures.Candidate(key, "SOURCE", "current");
+        var fixture = PlcWorkerFixtures.Sdk(key);
         return new CheckBuild("src/PlcWorker/TiaMcp.PlcWorker.csproj", "plc-sdk-" + key,
             // Same API directory as the production worker units and build-plc-worker-fixtures; inventory needs no SDK present.
             ["-p:TiaReleaseKey=" + key, "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(apiRoot, PlcWorkerApi(key).Directory)),

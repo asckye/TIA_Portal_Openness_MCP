@@ -2,44 +2,6 @@ using System.Text.Json.Nodes;
 namespace TiaMcp.FoundationHost;
 internal static class DeviceAddContract
 {
-    internal static TiaMcp.Logic.V4.Envelope ValidateCandidate(JsonNode? payload, JsonObject request, string release = "19")
-    {
-        if (payload == null) throw new InvalidDataException("Missing device candidate result.");
-        var result = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Envelope>(payload.ToJsonString());
-        if (release is not ("18" or "19") || result.Meta.ReleaseKey != release || result.Meta.Tool != "CreateHardwareDevice" || result.Meta.RequestId != (string?)request["requestId"]
-            || result.Meta.BehaviorPolicy != TiaMcp.Logic.V4.BehaviorPolicy.SafeV4) throw new InvalidDataException("Candidate response identity mismatch.");
-        bool apply = (string?)request["mode"] == "apply";
-        if (!apply && result.Meta.Execution is not (TiaMcp.Logic.V4.Execution.ReadOnly or TiaMcp.Logic.V4.Execution.NotStarted)) throw new InvalidDataException("Candidate preview wrote to the project.");
-        if (result.Ok)
-        {
-            var data = JsonNode.Parse(result.Data!.Value.GetRawText())!.AsObject();
-            string article = (string?)data["catalogEntry"]?["articleNumber"] ?? "";
-            string version = (string?)data["catalogEntry"]?["version"] ?? "";
-            string family = (string?)request["family"] ?? "";
-            if (string.IsNullOrWhiteSpace(family) || family.Length > 64 || family.Trim() != family || family.Any(char.IsControl)
-                || string.IsNullOrWhiteSpace(article) || article.Length > 256 || string.IsNullOrWhiteSpace(version) || version.Length > 64
-                || article.Any(c => c == '*' || c == '?' || c == '/' || char.IsControl(c)) || version.Any(c => c == '*' || c == '?' || c == '/' || char.IsControl(c))
-                || (string?)request["typeIdentifier"] != "OrderNumber:" + article + "/" + version
-                || (string?)data["capabilityScope"]?["host"] != "foundation" || (string?)data["capabilityScope"]?["family"] != family)
-                throw new InvalidDataException("Candidate catalog identity is not an exact OrderNumber selection.");
-            if (data["createIssued"]?.GetValue<bool>() != apply
-                || result.Meta.Execution != (apply ? TiaMcp.Logic.V4.Execution.Completed : TiaMcp.Logic.V4.Execution.ReadOnly)
-                || apply && ((string?)data["created"]?["name"] != (string?)request["deviceName"] || (string?)data["residueCheck"]?["status"] != "checked"))
-                throw new InvalidDataException("Candidate success did not verify the planned operation.");
-            var plan = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Plan>(data["plan"]!.ToJsonString());
-            var arguments = plan.Operations.Single().Arguments;
-            if (plan.ReleaseKey != release || plan.Tool != "CreateHardwareDevice" || plan.Operations[0].Tool != plan.Tool
-                || arguments.GetProperty("typeIdentifier").GetString() != (string?)request["typeIdentifier"]
-                || arguments.GetProperty("deviceName").GetString() != (string?)request["deviceName"]
-                || arguments.GetProperty("family").GetString() != (string?)request["family"]
-                || (string?)data["catalogEntry"]?["typeIdentifier"] != (string?)request["typeIdentifier"])
-                throw new InvalidDataException("Candidate plan target mismatch.");
-            if (apply && (request["confirm"]?.GetValue<bool>() != true || plan.Hash != (string?)request["expectedPlanHash"]
-                || TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject(plan.Identity.ProjectFile!) != TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject((string)request["expectedProjectFile"]!)))
-                throw new InvalidDataException("Candidate apply confirmation mismatch.");
-        }
-        return result;
-    }
     internal static JsonObject Validate(JsonNode? payload,JsonObject request)
     {
         if(payload is not JsonObject r) throw new InvalidDataException("Missing device creation result.");

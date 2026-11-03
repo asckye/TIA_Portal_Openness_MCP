@@ -30,43 +30,6 @@ public sealed class FixR1RegressionTests
         Assert.False(FoundationV4Result.Classified(new JsonArray()));
     }
 
-    [Fact]
-    public void Device_proxy_keeps_its_unknown_outcome_reset_and_residue_after_a_worker_rejection()
-    {
-        var native = new CandidateWorkerFixture.DeviceNative();
-        var failure = new WorkerOperationException("Rejected before worker operation", -32603, "rejected-before-operation");
-        failure.Data["foundationRequestSent"] = true;
-        JsonNode? Call(string operation, JsonObject args)
-        {
-            Assert.Equal("hardware-devices.HardwareDeviceCandidate", operation);
-            var request = args["candidate"]!.Deserialize<DeviceCandidateCall>()!;
-            var reply = new DeviceCandidateReply { RootId = native.RootId };
-            switch (request.Action)
-            {
-                case "identity": reply.Identity = native.ReadIdentity(); break;
-                case "catalog": reply.Catalog = native.ReadCatalog(request.TypeIdentifier).ToArray(); break;
-                case "inventory": reply.Inventory = native.ReadInventory().ToArray(); break;
-                case "execute": throw failure;
-                default: throw new InvalidOperationException(request.Action);
-            }
-            return JsonSerializer.SerializeToNode(reply);
-        }
-        var proxyType = typeof(enginehost::TiaMcpServer.Siemens.Services.HardwareDevicesService).GetNestedType("DeviceProxy", BindingFlags.NonPublic)!;
-        var proxy = (IDeviceCreationAdapter)Activator.CreateInstance(proxyType, BindingFlags.Instance | BindingFlags.NonPublic,
-            null, new object[] { (Func<string, JsonObject, JsonNode?>)Call }, null)!;
-        var session = new DeviceCreationSession();
-        var preview = session.Run(proxy, "19", "CreateDevice", "preview", CandidateWorkerFixture.Identifier, "PLC_2", "S7-1500");
-        Assert.True(preview.Ok);
-        string hash = preview.Data!.Value.GetProperty("plan").GetProperty("hash").GetString()!;
-        var applied = session.Run(proxy, "19", "CreateDevice", "apply", CandidateWorkerFixture.Identifier, "PLC_2", "S7-1500",
-            "apply", true, hash, @"C:\Test.ap19");
-        var result = FoundationV4Result.WorkerFailure(FoundationV4Result.DeviceCandidate(applied), "19", "CreateDevice", "apply", true, failure);
-        Assert.Equal("OUTCOME_UNKNOWN", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-        Assert.NotNull(result.StructuredContent?["data"]?["residueCheck"]);
-    }
-
     [Theory]
     [InlineData("rejected-before-operation", "partial", "PARTIAL_FAILURE")]
     [InlineData("unknown", "unknown", "OUTCOME_UNKNOWN")]

@@ -86,7 +86,7 @@ public sealed class PlcSimReadinessTests
     private static FoundationV4Tool Tool(Simulator worker, string release, string name,
         Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>> approval)
         => new(PortedToolContract.Create(worker, release).OfType<FoundationTool>().Single(tool => tool.ProtocolTool.Name == name),
-            release, null, () => new ApprovalSettings(true, 1), approval,
+            release, () => new ApprovalSettings(true, 1), approval,
             () => new JsonObject { ["ready"] = false, ["cause"] = "Synthetic no TIA installation." });
 
     private static JsonObject Arguments(string name) => name switch {

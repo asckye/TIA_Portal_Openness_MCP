@@ -22,7 +22,7 @@ public sealed class ReleaseRecordConsumerTests
             Assert.Equal("50", Argument("--rounds"));
             Assert.Equal(concurrency, Argument("--concurrency"));
             Assert.Equal(Path.Combine("root", $"runtime/v{key}/TiaMcp.FoundationHost.exe"), Argument("--exe"));
-            Assert.Equal(new PlcWorkerFixtureBuild(key, "sdk", null).Worker(Path.Combine("logs", "plc-fixtures")), Argument("--plc-worker"));
+            Assert.Equal(new PlcWorkerFixtureBuild(key, "sdk").Worker(Path.Combine("logs", "plc-fixtures")), Argument("--plc-worker"));
             Assert.True(ReleaseCommands.IsExclusivePlcJob(job));
             Assert.DoesNotContain("--transports", job.Arguments);
             Assert.DoesNotContain("--profiles", job.Arguments);
@@ -482,7 +482,7 @@ public sealed class ReleaseRecordConsumerTests
         foreach (var key in new[] { "20", "21" })
         {
             tree.Write("logs/tools-" + key + ".json", "{\"tools\":[]}");
-            var worker = new PlcWorkerFixtureBuild(key, "sdk", null).Worker(Path.Combine(logs, "plc-fixtures"));
+            var worker = new PlcWorkerFixtureBuild(key, "sdk").Worker(Path.Combine(logs, "plc-fixtures"));
             tree.Write(Path.GetRelativePath(tree.Root, worker), "SDK fixture " + key);
         }
         var proof = ReleaseRecords.PlcProof(tree.Root, logs, new("package", [], [], []));
@@ -708,7 +708,7 @@ public sealed class ReleaseRecordConsumerTests
         foreach (var key in new[] { "20", "21" })
         {
             tree.Write("bin-build/multi-version/tools-" + key + ".json", "{\"tools\":[]}");
-            var worker = new PlcWorkerFixtureBuild(key, "sdk", null).Worker(Path.Combine(logs, "plc-fixtures"));
+            var worker = new PlcWorkerFixtureBuild(key, "sdk").Worker(Path.Combine(logs, "plc-fixtures"));
             tree.Write(Path.GetRelativePath(tree.Root, worker), "SDK fixture " + key);
             tree.Write($"bin-build/multi-version/stability-c8-v{key}-plc.log",
                 "Running in " + tree.Root + "\r\nuncounted line " + profile + "\r\nCOMPLETE: V" + key + " 5504 local tool calls passed; evidence: " +

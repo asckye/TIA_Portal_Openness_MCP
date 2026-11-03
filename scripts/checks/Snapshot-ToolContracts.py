@@ -836,17 +836,7 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
     return names
 
 
-def candidate_parameters(root):
-    fields = set()
-    for path in (root / 'src/Logic/V4').glob('*Contract.cs'):
-        text = path.read_text(encoding='utf-8-sig')
-        if 'IBehaviorCandidateContract' not in text and 'Contract :' not in text: continue
-        fields.update(re.findall(r'(?:(?:properties|p)\[|\{\s*\[|,\s*\[)"([^"\n]+)"\]\s*=\s*new JsonObject|(?:Text|Flag|String|Bool)\("([^"\n]+)"', text))
-    return {a or b for a, b in fields}
-
-
 def check_current_schemas(snapshot, contracts, root=Path(__file__).resolve().parents[2]):
-    candidate_fields = candidate_parameters(root)
     foundation_names = foundation_registered_names(root, contracts) | FOUNDATION_UNAVAILABLE_BELOW_20
     by_name = {tool['name']: tool for tool in snapshot['tools']}
     for row in snapshot['behaviorCapabilities']:
@@ -858,10 +848,6 @@ def check_current_schemas(snapshot, contracts, root=Path(__file__).resolve().par
             allowed = contracts[(profile, entry)]
             if set(properties) - set(allowed):
                 raise ValueError(entry + ': current schema advertises unimplemented parameters: ' + ', '.join(sorted(set(properties) - set(allowed))))
-            for name in candidate_fields & set(properties):
-                # Both products' defaults come from their current source declarations.
-                if 'default' in properties[name] and properties[name]['default'] != allowed[name]:
-                    raise ValueError(entry + ': current schema advertises a candidate default for ' + name)
 
 
 def self_test(args):
@@ -881,19 +867,6 @@ def self_test(args):
         snapshot['behaviorCapabilities'] = [{'state': 'current', 'entries': [e['entry'] for e in catalog['behaviorEntries'] if e['releaseKey'] == '21']}]
     check_current_schemas(snapshot, contracts)
     count = 0
-    for parameter in sorted(candidate_parameters(root) - set(contracts[('full-engine', 'ImportPlcBlock')])):
-        mutated = copy.deepcopy(snapshot)
-        tool = next(t for t in mutated['tools'] if t['name'] == 'ImportPlcBlock')
-        tool['inputSchema']['properties'][parameter] = {'type': 'string', 'default': 'preview'}
-        try: check_current_schemas(mutated, contracts)
-        except ValueError: count += 1
-        else: raise AssertionError('Candidate schema negative case accepted: ' + parameter)
-    mutated = copy.deepcopy(snapshot)
-    tool = next(t for t in mutated['tools'] if t['name'] == 'CompilePlcSoftware')
-    tool['inputSchema']['properties']['password']['default'] = 'candidate-default'
-    try: check_current_schemas(mutated, contracts)
-    except ValueError: count += 1
-    else: raise AssertionError('Candidate default accepted')
     import shutil, uuid
     scratch = root / 'bin-build' / ('p6-35-contract-selftest-' + uuid.uuid4().hex)
     scratch.mkdir(parents=True)

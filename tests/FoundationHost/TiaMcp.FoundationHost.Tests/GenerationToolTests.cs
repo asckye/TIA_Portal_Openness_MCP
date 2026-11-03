@@ -21,7 +21,7 @@ public sealed class GenerationToolTests : IDisposable
     }
     public void Dispose() { if (Directory.Exists(root)) Directory.Delete(root, true); }
     private FoundationV4Tool Tool(string name, string release, Action<PendingApproval>? observe = null, string? refusal = null)
-        => new(new GenerationTool(name, release, () => store), release, null, () => new ApprovalSettings(true, 1),
+        => new(new GenerationTool(name, release, () => store), release, () => new ApprovalSettings(true, 1),
             (pending, _, _) => { observe?.Invoke(pending); return Task.FromResult(new ApprovalOutcome(pending, false, refusal)); });
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments)
         => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) { Params = new CallToolRequestParams { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };

@@ -19,11 +19,11 @@ D1 统一的显式安全政策（默认不覆盖、拒绝升级、精确创建�
 
 ## 决定
 
-采用选项 2。原生行为按 D1 行为族、逐个发布版本完成真机验收后才切换为 `safe-v4`；未验收的族保持 `current` 行为，在工具描述和 `meta.behaviorPolicy` 中标明，并在结果中附 `UNVERIFIED_BEHAVIOR` 警告。SafeV4 候选实现只在显式的 `TiaMcpTestPolicy` 测试构建中可选。
+采用选项 2。原生行为按 D1 行为族、逐个发布版本完成真机验收后才切换为 `safe-v4`；未验收的族保持 `current` 行为，在工具描述和 `meta.behaviorPolicy` 中标明，并在结果中附 `UNVERIFIED_BEHAVIOR` 警告。SafeV4 候选实现已归档到标签 `archive/safev4-candidates`，并于 2026-11-02 从当前代码删除；各族通过 L5 后基于届时的现行代码重建。P8-04l3 已取消，P8-31e6 延后。
 
 ## 后果
 
 - 正面：未经验证的原生行为不会以新政策的名义发布；客户端能从每个结果知道行为是否已经验收。
-- 负面与取舍：4.0 的发布配置中八个版本全部为 `current / NOT RUN`；预览返回旧的数据形状，D1 候选协议（`mode`、`data.plan`）只在测试构建中可用（API-39）；`UNVERIFIED_BEHAVIOR` 出现在大量结果中。
-- 后续工作：真机验收在阶段 8 结束后集中进行（ADR 0013），结果记入真机台账。
+- 负面与取舍：4.0 的发布配置中八个版本全部为 `current / NOT RUN`；预览保留现行数据形状，D1 候选协议（`mode`、`data.plan`）的实现已归档删除（API-39）；`UNVERIFIED_BEHAVIOR` 出现在大量结果中。
+- 后续工作：真机验收结果记入真机台账；通过逐版 L5 的族在现行代码上重建。P8-04l3 取消，P8-31e6 延后，不恢复归档的候选测试构建。
 - 验证方式：`V4Validation` 要求 `behaviorPolicy == current` 时必须带 `UNVERIFIED_BEHAVIOR`；`ToolProfiles.resx` 的 `behaviorPolicies` 与契约快照中的 `behaviorCapabilities`。

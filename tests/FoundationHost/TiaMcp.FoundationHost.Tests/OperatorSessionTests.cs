@@ -138,14 +138,14 @@ public sealed class OperatorSessionTestsPlc
     {
         var worker = new ApprovalWorker(); PendingApproval? pending = null;
         var inner = TiaMcp.FoundationHost.FoundationTools.Create(worker, "19").Single(t => t.ProtocolTool.Name == "SaveProject");
-        var tool = new TiaMcp.FoundationHost.FoundationV4Tool(inner, "19", _ => TiaMcp.Logic.V4.BehaviorPolicy.SafeV4, () => new ApprovalSettings(true, 1), approvalWait: (request, _, _) => {
+        var tool = new TiaMcp.FoundationHost.FoundationV4Tool(inner, "19", () => new ApprovalSettings(true, 1), approvalWait: (request, _, _) => {
             pending = request; return Task.FromResult(new ApprovalOutcome(request, false, "denied"));
         });
         using var session = new Session("19", "fixture", false, [tool], [tool], () => new JsonObject(), worker.Dispose);
         await using var pair = await Peer.Ai(session);
         using var fixture = new Fixture("19"); using var registration = fixture.Register(); using var member = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
-        var arguments = new Dictionary<string, object?> { ["mode"] = "apply", ["confirm"] = true, ["expectedPlanHash"] = new string('a', 64), ["expectedProjectFile"] = @"C:\fixture.ap19" };
+        var arguments = new Dictionary<string, object?> { ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = @"C:\fixture.ap19" };
         await panel.Tool("SaveProject", arguments, false);
         Assert.True(pending != null, session.Snapshot().ToJsonString()); Assert.Equal(2, pending!.Version); Assert.Equal("workbench", pending.Actor); Assert.NotNull(pending.OperatorCallId);
         await pair.Tool("SaveProject", arguments, false);
@@ -355,11 +355,7 @@ public sealed class OperatorSessionTestsPlc
     private sealed class ApprovalWorker : TiaMcp.FoundationHost.IFoundationWorker
     {
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
-            => Task.FromResult(JsonSerializer.SerializeToNode(new TiaMcp.Adapters.Contracts.Candidates.SaveCloseReply {
-                Observation = new TiaMcp.Adapters.Contracts.Candidates.SaveCloseObservation {
-                    Binding = new TiaMcp.Adapters.Contracts.Candidates.SessionState { ProcessId = 1, ProcessStartUtc = DateTimeOffset.Parse("2026-10-05T00:00:00Z"),
-                        ProjectFile = @"C:\fixture.ap19", Ownership = "owned", Epoch = 1, WorkerEpoch = 1 },
-                    Dirty = false, ObjectValidity = "valid", DisconnectSupported = true, WorkerCleanup = "deferred-until-channel-close" } }));
+            => Task.FromResult<JsonNode?>(new JsonObject { ["Executed"] = arguments["dryRun"]?.GetValue<bool>() != true, ["ProjectFile"] = @"C:\fixture.ap19" });
         public void Dispose() { }
     }
     private sealed class DisabledApproval : IDisposable
@@ -379,7 +375,7 @@ public sealed class OperatorSessionTestsPlc
     public async Task Attached_panel_and_ai_share_generation_fence_before_approval(string release)
     {
         using var fixture = new Fixture(release); var worker = new GenerationFenceWorker(release); int approvals = 0;
-        var tools = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Select(t => (McpServerTool)new TiaMcp.FoundationHost.FoundationV4Tool(t, release, null,
+        var tools = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Select(t => (McpServerTool)new TiaMcp.FoundationHost.FoundationV4Tool(t, release,
             () => new ApprovalSettings(false, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, true, null)); })).ToArray();
         using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, tools);
         using var session = new Session(release, "fence fixture", false, pipeline.Tools.ToArray(), pipeline.OperatorTools,
@@ -421,7 +417,7 @@ public sealed class OperatorSessionTestsPlc
     {
         var worker = new GenerationFenceWorker(release); IDisposable? fence = null; int approvals = 0;
         var inner = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Single(t => t.ProtocolTool.Name == "SaveProject");
-        var tool = new TiaMcp.FoundationHost.FoundationV4Tool(inner, release, null, () => new ApprovalSettings(false, 1), (pending, _, _) => {
+        var tool = new TiaMcp.FoundationHost.FoundationV4Tool(inner, release, () => new ApprovalSettings(false, 1), (pending, _, _) => {
             approvals++; fence = GenerationWriteFence.Acquire(worker.SessionKey, "queued-run");
             return Task.FromResult(new ApprovalOutcome(pending, true, null));
         });

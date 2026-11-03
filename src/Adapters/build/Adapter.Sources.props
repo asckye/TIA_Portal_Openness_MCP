@@ -14,7 +14,6 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDataAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDataPolicy.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.FallbackCandidate.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/DownloadPromptPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" />
@@ -74,7 +73,6 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Collaboration/CollaborationEvidence.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciExportPolicy.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlFallback.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/LegacyVciPortPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/ClassicHmiFoldersAdapter.cs" />
@@ -136,7 +134,6 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSystemGroups.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSoftwareEditing.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcDeviceCompile.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationCompileTarget.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcLegacyCompile.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcArtifactExchange.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcVerifiedImportBoundary.cs" />
@@ -182,7 +179,6 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcGroupCreation.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcGroupOperations.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/EmptyPlcGroupPolicy.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciFallbackAdapter.cs" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDelete.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDeletePolicy.cs" />
@@ -217,26 +213,15 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/BindingSnapshotProcessSource.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/BindingSnapshotAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcRuntimeQueries.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/SessionCandidateAdapter.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcSessionCandidate.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/SaveCloseAdapter.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcSaveCloseCandidate.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcRuntimeQueryPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/MutationIdentityPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCompilePolicy.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/CompileAdapter.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCompileCandidate.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExchangePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExportPublication.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchExport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchImport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchImportRecovery.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcImportAdapter.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSourceAdapter.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSourceCandidate.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcImportCandidate.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExportAdapter.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExportCandidate.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchImportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchExportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcBlockXmlPolicy.cs" />
@@ -272,8 +257,6 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchDocumentImportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcDeviceAdd.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcDeviceAddPolicy.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/DeviceCreationAdapter.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcDeviceCreationCandidate.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/OpennessAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/EngineeringExtensions.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/HmiNavigator.cs" />

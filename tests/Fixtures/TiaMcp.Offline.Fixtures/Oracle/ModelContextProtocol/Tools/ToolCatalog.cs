@@ -221,8 +221,6 @@ namespace TiaMcpServer.ModelContextProtocol
             if (types == null) throw new ArgumentNullException(nameof(types));
             var methods = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
             var allTypes = types.ToArray();
-            var candidates = allTypes.SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
-                .Where(m => m.GetCustomAttribute<BehaviorCandidateAttribute>() != null).ToArray();
             foreach (var type in allTypes)
             {
                 foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
@@ -234,7 +232,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         throw new InvalidOperationException("Duplicate MCP tool name '" + name + "': "
                             + previous.DeclaringType!.FullName + "." + previous.Name + " and "
                             + method.DeclaringType!.FullName + "." + method.Name + ". Tool names must be unique (OrdinalIgnoreCase).");
-                    methods.Add(name, TiaMcp.Logic.V4.BehaviorCapabilities.SelectMethod(name, method, candidates, McpServer.ReleaseKey));
+                    methods.Add(name, method);
                 }
             }
             Methods = methods.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToList().AsReadOnly();

@@ -96,7 +96,7 @@ SPD-3d 的 P-C 已于 2026-11-01 批准：合并和 nightly 的 check 构建统�
 | 编号 | 内容 | 状态 |
 |---|---|---|
 | P8-04l2 | Q1 移除生成器引擎读取；Q2 删除 `src/Engine` 残余源码、引擎专属测试/脚本/夹具与诊断链接，保留代码的测试转入 KeptCode；不保留残余源码、不要求引擎专属测试的继任测试（维护者 2026-11-02，ADR 0022）。宿主引擎客户端、目录和死条件分支另由 Q3 清理 | 残余源码清理完成（Q2，待审查与主机验证）；Q3 待执行 |
-| P8-04l3 | 为 P8-04l 退役的 34 个引擎候选 check-all 作业补 PLC worker 版 | 未开始 |
+| P8-04l3 | SafeV4 候选实现归档到 `archive/safev4-candidates` 并删除；不重建退役候选作业（Q7，2026-11-02，[ADR 0002](../development/decisions/0002-native-behavior-by-family-acceptance.md)） | 已取消 |
 | P8-10d/e/f | 发布链 Python 改 C#（快照、打包、验包），重新移植 10-21 以来的发布链修复，rc 证明字节一致 | 进行中（`refactor/P8-10d`、`refactor/P8-10e` 有未验证的 WIP） |
 | P8-93b、P8-94b | 未被 check-all 覆盖的发布链检查并入 check-all；TiaMcp.Logic 统一构建属性，package-test 报告退役文件与日志排除 | 未开始 |
 | SPD-6/6b | 按用例成本分片，压缩 nightly 时长（按 45 分钟门槛重新评估） | 进行中（`refactor/SPD-6b`） |
@@ -108,7 +108,7 @@ SPD-3d 的 P-C 已于 2026-11-01 批准：合并和 nightly 的 check 构建统�
 
 | 范围 | 内容 | 决定 |
 |---|---|---|
-| P8-31f–i | 库与母版实例化、`CheckProjectStandard`、工作台生成模块、状态模型包；P8-31e6（SafeV4 候选规则，随 SafeV4 启用）、P8-31h1（审批抽屉扩展） | 2026-10-22 |
+| P8-31f–i | 库与母版实例化、`CheckProjectStandard`、工作台生成模块、状态模型包；P8-31e6（延后；族通过 L5 后基于现行代码重建规则，候选实现已归档删除）、P8-31h1（审批抽屉扩展） | 2026-10-22 |
 | P8-40 | 表格与 ECAD 导入、Classic VB 到 Unified JS、V20/V21 补深度、按版本输出的构建工具 | 2026-10-22 |
 | P8-95a–g | EplanMCP 借鉴项：VM HTTP 加固、“工程内容是数据”的服务器说明与审批卡清理、防误点、退出确认与单实例、Claude Desktop（MSIX）配置路径、CI 加固、doctor/audit 的 `schemaVersion` | 2026-11-01 |
 | T-IA 大项 | 块接口编辑与 SCL 体替换（带回滚）；硬件缺口（改 CPU 型号、子网删除与创建、插槽兼容、命名 CPU/网络/PN 属性、AML/GSD 预检）；异步作业与取消；离线快照与撤销；工程报告与交付物；PLCSIM Advanced 扩展；Classic HMI 动画与事件；GRAPH/FBD/STL 生成；流水线与工作计划；帮助与文档搜索；多工程会话；模式库内容；显示密码；VCI 工作区分组；一次调用导出整个工程到 Git | 2026-10-30 |

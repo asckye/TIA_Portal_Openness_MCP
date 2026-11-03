@@ -62,7 +62,7 @@ public sealed class B1OldReleaseBridgeTests
         using var worker = new ApprovalWorker();
         var inner = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTag"), worker);
         int approvals = 0;
-        var target = new FoundationV4Tool(inner, release, _ => TiaMcp.Logic.V4.BehaviorPolicy.Current, () => new(true, 1), (pending, _, _) => {
+        var target = new FoundationV4Tool(inner, release, () => new(true, 1), (pending, _, _) => {
             approvals++;
             return Task.FromResult(new TiaOpenness.Shared.ApprovalOutcome(pending, false, "workbench-unavailable"));
         });

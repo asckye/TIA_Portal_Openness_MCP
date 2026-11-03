@@ -44,7 +44,7 @@ public sealed class CheckAllRound5Tests
             var fixtureRoot = Assert.Single(unit.Properties.Where(property => property.StartsWith("-p:TiaMcpPlcWorkerFixtureRoot=", StringComparison.Ordinal))).Split('=', 2)[1];
             Assert.StartsWith(root + Path.DirectorySeparatorChar, fixtureRoot, StringComparison.OrdinalIgnoreCase);
             var worker = ReleaseCommands.CheckAllPlcFixture(key);
-            Assert.Equal(PlcWorkerFixtures.Candidate(key, "SOURCE", "current").Worker(Path.GetDirectoryName(fixtureRoot)!), worker);
+            Assert.Equal(PlcWorkerFixtures.Sdk(key).Worker(Path.GetDirectoryName(fixtureRoot)!), worker);
             Assert.DoesNotContain("src/Engine", worker.Replace('\\', '/'));
             Assert.False(unit.Variant.StartsWith("sdk-", StringComparison.Ordinal)); // Engine runtime projection must not claim the PLC fixture.
         }

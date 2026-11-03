@@ -452,7 +452,7 @@ public sealed class UnifiedPortAdmissionTests
         // releases use its shared serialized approval boundary.
         var tool = release == "19"
             ? new FoundationV4Tool(PortedToolContract.Create(worker, release).Single(t => t.ProtocolTool.Name == name),
-                release, null, approvalWait: Wait)
+                release, approvalWait: Wait)
             : tools.Single(t => t.ProtocolTool.Name == name);
         var arguments = Arguments(name); arguments["dryRun"] = preview;
         if (name is "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" or "ImportUnifiedOpcUaAlarms") arguments["action"] = action;

@@ -32,6 +32,7 @@
   <ItemGroup>
     <Compile Include="../V4Fixtures.cs" Link="V4Fixtures.cs" />
     <EmbeddedResource Include="../V4Supplemental.json" Link="V4Supplemental.json" />
+    <EmbeddedResource Include="McpReviewedSchemas.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../Shared/ShardFramework.cs" Link="Shared/ShardFramework.cs" />

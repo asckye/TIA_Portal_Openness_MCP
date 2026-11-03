@@ -309,7 +309,7 @@
 | `NATIVE_WARNING` | 原生结果为 Warning 状态，或旧数据带有 `warnings` | `{nativeState, nativeStateType}` 或 `{}` | 4 处 |
 | `CANDIDATE_ONLY` | 离线构造器生成的候选内容，尚未经过导入验证 | `{}` | 快照 22 次 |
 | `UNVERIFIED_BEHAVIOR` | `behaviorPolicy == current` | `{}` | 快照 2645 次 |
-| `CLEANUP_FAILED` | 编译候选清理 Safety 登录失败 | 候选定义 | 仅 safe-v4 候选路径 |
+| `CLEANUP_FAILED` | 保留的编译清理错误码 | 历史候选定义已归档 | 当前无候选执行路径；契约枚举保留 |
 | `NATIVE_CAPABILITY_LIMIT` | 原生 SDK 能力受限 | 无 | 已定义，**从未发出**（API-36） |
 | `DIAGNOSTIC_WRITE_FAILED` | CLI 报告文件写不出 | 报告定义 | 仅 CLI |
 | `APPROVAL_DISABLED` | 审批关闭时执行的 MCP 写调用 | `{enabled: false}` | 通过重新构造并校验信封追加，每个信封至多 1 条 |
@@ -412,7 +412,7 @@ V20/V21 worker 通道的单帧上限为 1 MiB：超限的请求在派发前以 `
 
 是否算作需要审批的写调用，由 `HostBehavior.ApprovalWrite` 判断：
 
-- safe-v4 候选：`mode == "apply"` 时算写调用。
+- SafeV4 候选执行路径已归档删除；当前写分类按现行工具的 `dryRun`、动作和元数据判定。
 - 有 `dryRun` 参数的工具：显式传入 `dryRun: true`，或者省略 `dryRun` 且默认是预览时，不算写调用。
 - 混合文件工具 `ExchangeSystemDiagnosticsSettings`、`ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules` 仅 action=import 触发审批；export/read 保持不触发。`GetEnvironmentDiagnostics` 仅 fix=true 触发；默认 fix=false。`EnsureOpennessUserGroup` 始终触发。
 - 其余情况：分类为 WRITE 或 ONLINE-WRITE 的工具，以及 `SaveProject`、`SaveProjectCopy`、`CloseProject`。`ImportDeviceAml` 为 WRITE，两个测试执行工具 `RunPlcSimAdvancedTestScenario`、`RunTestSuiteCase` 为 ONLINE-WRITE（维护者 2026-10-11，P8-60 第二轮）。FILE 分类本身不触发审批；`StageImportFiles` 和 `CleanupStagedImportFiles` 沿用显式文件操作审批。
@@ -430,11 +430,11 @@ V20/V21 worker 通道的单帧上限为 1 MiB：超限的请求在派发前以 `
 | `expectedDocumentHash`、`expectedPackageHash` | 文档或包的预期哈希；与 expectedPlanHash 分开 |
 | `expectedInventoryHash` | 既有库存身份输入 |
 
-规则：预览（`dryRun: true` 或 `mode: preview`）**MUST NOT** 等待审批，也不写审计中的写记录。生产者 **MUST** 在原生调用前完成所有 apply 参数检查。批量目录导入的 apply 缺少 `expectedProjectFile`、`expectedPlanHash`、`confirm` 或 `importOrder` 时，返回 `INVALID_ARGUMENT`（`HostBehavior.BatchApplyRefusal`）。
+规则：当前预览（`dryRun: true`）**MUST NOT** 等待审批，也不写审计中的写记录。生产者 **MUST** 在原生调用前完成所有 apply 参数检查。批量目录导入的 apply 缺少 `expectedProjectFile`、`expectedPlanHash`、`confirm` 或 `importOrder` 时，返回 `INVALID_ARGUMENT`（`HostBehavior.BatchApplyRefusal`）。
 
-### 9.3 D1 safe-v4 候选协议（4.0 发布配置中未广告）
+### 9.3 D1 safe-v4 协议保留定义（候选实现已归档）
 
-候选路径（`src/Logic/V4/*Candidate.cs`、`PlcImport.cs`、`PlcExport.cs`、`DeviceCreation.cs`）使用 `mode = preview|apply`（默认 preview）、`confirm`、`expectedPlanHash` 和 `expectedProjectFile`。预览返回 `data.plan`：
+SafeV4 候选实现已归档到标签 `archive/safev4-candidates`，并于 2026-11-02 从当前代码删除；各族通过 L5 后基于届时的现行代码重建。P8-04l3 已取消，P8-31e6 延后。归档候选曾使用 `mode = preview|apply`（默认 preview）、`confirm`、`expectedPlanHash` 和 `expectedProjectFile`，预览返回 `data.plan`。以下类型与协议约束保留，不代表当前可调用的路径：
 
 ```text
 Plan = {hash, releaseKey, tool, argumentsHash, identity, inputHashes, inventoryHash, operations, warnings}
@@ -445,7 +445,7 @@ PlanFile = {path, exists, byteLength|null, sha256|null}；PlanOperation = {tool,
 规则：
 
 - 各个哈希 **MUST** 是 64 位小写十六进制的 SHA-256。工程身份 **MUST** 完整包含 PID、启动时间和绑定纪元；离线身份只填 `workspaceRoot`，两者互斥。
-- apply 前重新读取身份和库存，不一致时返回 `PLAN_STALE` 或 `IDENTITY_MISMATCH`。一个计划只允许一次执行尝试（例如设备创建每个会话最多保存 128 个计划；计划已被消费时返回 `PLAN_STALE`，reason 为 `missing-or-consumed-plan`）。
+- apply 前重新读取身份和库存，不一致时返回 `PLAN_STALE` 或 `IDENTITY_MISMATCH`。一个计划只允许一次执行尝试；具体会话存储与消费规则由通过 L5 后的新实现确定。
 - `PreviewData` 类型和 `V4Validation.Preview`（要求预览是 read-only 成功，且 tool 与发布键一致）已经定义，但没有代码构造 `PreviewData`。所以 4.0 实际发布的预览返回的是旧实现的数据形状（例如 `data.planHash`），而不是 `data.plan`（API-39）。
 
 ### 9.4 工作台审批流程
@@ -457,7 +457,7 @@ PlanFile = {path, exists, byteLength|null, sha256|null}；PlanOperation = {tool,
    - 会话锁：返回 `SESSION_RESET_REQUIRED`（`previous-outcome-unknown`）。
    - 审批开启时检查调用方输入文件。
    - 批量 apply 参数检查。
-   - 用同样的参数在只读作用域内跑一次预览（`dryRun: true` 或 `mode: preview`）。预览阻止 apply 时返回 `PRECONDITION_FAILED`；预览失败时，把预览结果标记为 `rejected-before-operation` 并加上 `APPROVAL_PRECHECK_REFUSED` 后返回；预览报告“无效果”时直接返回预览结果，不再审批。
+   - 用同样的参数在只读作用域内跑一次预览（`dryRun: true`）。预览阻止 apply 时返回 `PRECONDITION_FAILED`；预览失败时，把预览结果标记为 `rejected-before-operation` 并加上 `APPROVAL_PRECHECK_REFUSED` 后返回；预览报告“无效果”时直接返回预览结果，不再审批。
 2. **等待审批**（`WaitForApproval`）：创建 `PendingApproval{requestId, planHash（有计划时用计划哈希，否则用参数摘要）, argumentDigest, timeout}`，通过本机命名管道 `TiaMcp.Approval.v1.<hash>` 交给工作台。得到 granted、denied、timeout 或 workbench-unavailable 之一；后三者返回 `CONFIRMATION_REQUIRED`。
 3. **派发前复核**（在 Openness 通道内）：再次检查写栅栏和会话锁；`ApprovalStillMatches` 核对参数摘要与绑定身份，不一致时返回 `CONFIRMATION_REQUIRED/denied`；再次检查输入文件。
 

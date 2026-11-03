@@ -158,8 +158,7 @@ public sealed class ReadOnlySourceContracts
         // F4 round 2: a failed CloseAndCommit is never mapped to a refusal; its outcome stays unknown.
         Contains(Read("src/Adapters/Native/Session/ProjectMultiuserAdapter.cs"), "catch (Exception error) when (action != \"commit\" && OpennessRefusalMapping.Refusal(error, out _) != null)");
         // F19: project-kind aliases follow PROJECT_BASE / PROJECT_MULTIUSER, never the Safety define.
-        foreach (var file in new[] { "src/Adapters/Native/Session/PlcFoundationEngine.cs", "src/Adapters/Native/Session/SessionCandidateAdapter.cs",
-            "src/Adapters/Native/Session/SaveCloseAdapter.cs", "src/Adapters/Native/Engineering/EngineeringServices.cs" })
+        foreach (var file in new[] { "src/Adapters/Native/Session/PlcFoundationEngine.cs", "src/Adapters/Native/Engineering/EngineeringServices.cs" })
         {
             var source = Read(file);
             Contains(source, "#if PROJECT_BASE\nusing EngineeringProject = Siemens.Engineering.ProjectBase;");
@@ -262,8 +261,6 @@ public sealed class ReadOnlySourceContracts
         Contains(connect, "if (!node.Structural)", "lines.Add(VciWorkspaceLayout.NativeRefusal(node.Label, Flatten(ex.Message)));",
             "catch (Exception ex) when (!(ex is AdapterPreconditionException))", "lines.Add(VciWorkspaceLayout.NothingMappable(device.Label));");
         Contains(adapter, ": error is AdapterPreconditionException ? \"PRECONDITION_FAILED\"");
-        Contains(Read("src/Adapters/Native/Vci/VersionControlFallback.cs"), "if (!node.Structural) targets.Add(",
-            "catch (AdapterPreconditionException error) { CandidatePrimitives.Fail(\"precondition\", \"vci-ungrouped-workspace-folder\", error.Message); }");
         Contains(Read("src/Adapters/Native/Vci/LegacyVciPortPrimitives.cs"), "internal static DeviceSystemGroup UngroupedDevicesGroup(Project project) => project.UngroupedDevicesGroup;");
         Contains(Read("src/Adapters/Native/Vci/VersionControlPrimitives.cs"), "public static DeviceSystemGroup UngroupedDevicesGroup(ProjectBase project) => project.UngroupedDevicesGroup;");
         Contains(Read("src/Shared/VersionControlTools.cs"), "fixed workspace folder 'UngroupedDevices'");

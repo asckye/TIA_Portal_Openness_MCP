@@ -45,20 +45,6 @@ public sealed class WorkerOperationModuleTests
         }));
 
     [Fact]
-    public void CandidateResetAndMutationEvidenceAreIndependent()
-    {
-        var reply = new DeviceCandidateReply { Attempt = new DeviceCreateAttempt { Issued = true } };
-        var outcome = (IWorkerOperationReply)reply;
-        Assert.True(outcome.MayHaveChanged);
-        Assert.False(outcome.RequiresSessionReset);
-        Assert.True(outcome.BlockReadsAfterUncertain);
-        reply.RequiresSessionReset = true;
-        Assert.True(outcome.RequiresSessionReset);
-        Assert.DoesNotContain("MayHaveChanged", WorkerJson.Serialize(reply));
-        Assert.DoesNotContain("BlockReadsAfterUncertain", WorkerJson.Serialize(reply));
-    }
-
-    [Fact]
     public void ExistingReplyReadLockPoliciesStayDistinct()
     {
         var device = new TiaMcp.Adapters.PlcDeviceAddResult();

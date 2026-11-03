@@ -78,7 +78,7 @@ public sealed class BatchOverwriteTests : IDisposable
     {
         Inputs(("A", "FC", ""), ("B", "FC", "")); var result = Run(Apply(Run(Request())));
         Assert.Equal(new[] { "backup:A", "backup:B", "import:A", "import:B" }, calls);
-        Assert.All(result.Items, x => Assert.Equal(PlcImportSession.ByteHash(File.ReadAllBytes(x.RecoveryPath)), x.RecoverySha256));
+        Assert.All(result.Items, x => Assert.Equal(TiaMcp.Adapters.Contracts.Candidates.CandidatePrimitives.ByteHash(File.ReadAllBytes(x.RecoveryPath)), x.RecoverySha256));
         Assert.False(result.RequiresSessionReset); BatchImportContract.Validate(Wire(result), false);
     }
     [Fact]

@@ -1,6 +1,5 @@
 using System;
 using TiaMcp.Adapters.Contracts;
-using TiaMcp.Adapters.Contracts.Candidates;
 #if STUDIO_VCI
 using TiaMcp.Adapters.Native.Vci;
 #endif
@@ -13,11 +12,6 @@ public sealed partial class PlcFoundationEngine
     private VersionControlAdapter? versionControl;
     private VersionControlAdapter VersionControl => versionControl ??= new VersionControlAdapter(() => project);
 
-    public IFallbackAdapter VersionControlFallback(FallbackRequest request, Func<SessionState> binding, Action uncertain)
-    {
-        Check();
-        return VersionControl.FallbackAdapter(request, binding, uncertain);
-    }
 #endif
 
     public VersionControlResult ExecuteVersionControl(VersionControlRequest request, bool dryRun = true)

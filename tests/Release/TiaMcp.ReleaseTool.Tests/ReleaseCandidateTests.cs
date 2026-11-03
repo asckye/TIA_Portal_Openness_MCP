@@ -205,7 +205,7 @@ public sealed class ReleaseCandidateTests
         var root = tree.Root; var output = Path.Combine(root, "evidence"); Directory.CreateDirectory(output);
         var logs = Path.Combine(root, "bin-build/multi-version"); Directory.CreateDirectory(logs);
         var host = tree.Write("runtime/v20/TiaMcp.FoundationHost.exe", "host");
-        var worker = new PlcWorkerFixtureBuild("20", "sdk", null).Worker(Path.Combine(logs, "plc-fixtures"));
+        var worker = new PlcWorkerFixtureBuild("20", "sdk").Worker(Path.Combine(logs, "plc-fixtures"));
         Directory.CreateDirectory(Path.GetDirectoryName(worker)!); File.WriteAllText(worker, "worker");
         var harness = tree.Write("harness/app.exe", "harness");
         var binaryInputs = new Dictionary<string, string> { ["host"] = host, ["worker"] = worker, ["harness"] = harness };

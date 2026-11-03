@@ -140,8 +140,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var protocol = tool.ProtocolTool;
             var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
             var example = ToolExamples.Find(name);
-            var exampleArgs = TiaMcp.Logic.V4.BehaviorCapabilities.CandidateExample(ReleaseKey, name)
-                ?? (example == null ? null : JsonNode.Parse(example.ArgumentsJson)!.AsObject());
+            var exampleArgs = example == null ? null : JsonNode.Parse(example.ArgumentsJson)!.AsObject();
             SchemaHintsLogic.Augment(schema, specs, exampleArgs);
             preserveTypedSchemas(schema, protocol.InputSchema);
             InfrastructureSchema(name, schema);

@@ -59,8 +59,7 @@ public sealed class WorkbenchControlHostTests
         => new(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) { Params = new() { Name = name,
             Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
     private static FoundationV4Tool Tool(int index, Worker worker, WorkbenchControlClient client)
-        => new(WorkbenchControlTools.Create(worker, "21", client).ElementAt(index), "21", null,
-            () => throw new Exception("Approval settings are forbidden."), (_, _, _) => throw new Exception("Approval wait is forbidden."),
+        => new(WorkbenchControlTools.Create(worker, "21", client).ElementAt(index), "21", () => throw new Exception("Approval settings are forbidden."), (_, _, _) => throw new Exception("Approval wait is forbidden."),
             () => throw new Exception("Readiness probe is forbidden."));
     public static IEnumerable<object[]> Operations() => Enumerable.Range(0, 8).Select(index => new object[] { index });
     public static IEnumerable<object[]> Refusals() => Enum.GetValues<WorkbenchControlError>().SelectMany(code => new[] {

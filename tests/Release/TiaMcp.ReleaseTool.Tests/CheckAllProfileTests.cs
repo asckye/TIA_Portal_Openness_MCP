@@ -100,8 +100,7 @@ public sealed class CheckAllProfileTests
             Assert.Equal(name != "foundation", CheckAllProfiles.RunsSeparately(name, "nightly", plan));
             Assert.Equal(!plan.Mappings.ContainsKey(name), CheckAllProfiles.RunsSeparately(name, "merge", plan));
         }
-        foreach (var name in new[] { "compile-candidate", "fallback-vci-modern",
-            "fallback-vci-initial", "fallback-vci-classic", "plc-exchange-worker-v20", "plc-exchange-worker-v21" })
+        foreach (var name in new[] { "plc-exchange-worker-v20", "plc-exchange-worker-v21" })
             Assert.True(CheckAllProfiles.RunsSeparately(name, "merge", plan));
         Assert.Empty(CheckAllProfiles.Profiles("foundation-shard-0", plan));
         Assert.Empty(CheckAllProfiles.Profiles("foundation-sequential", plan));
@@ -354,11 +353,6 @@ public sealed class CheckAllProfileTests
             var project = (string)Catalog[name]!["project"]!;
             Assert.Empty(Assert.Single(builds, unit => unit.Project == project).Properties);
         }
-        var compileProject = (string)Catalog["compile-candidate"]!["project"]!;
-        var compileBuilds = builds.Where(unit => unit.Project == compileProject).ToArray();
-        Assert.Equal(2, compileBuilds.Length);
-        Assert.Empty(Assert.Single(compileBuilds, unit => unit.Variant == "default").Properties);
-        Assert.Equal(new[] { "-p:TestCompileSafety=false" }, Assert.Single(compileBuilds, unit => unit.Variant != "default").Properties);
         Assert.Equal(2, builds.Count(unit => unit.Project == SuiteWorkerCopies.FoundationProject));
         Assert.Single(builds, unit => unit.Project == SuiteWorkerCopies.FoundationProject && unit.Variant == "default");
         foreach (var key in CatalogJson.Keys)

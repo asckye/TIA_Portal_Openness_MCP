@@ -24,7 +24,7 @@ public sealed class PlcCrossReferenceAnalysisTests
         {
             var inner = new ConsentFileTool();
             int approvals = 0;
-            var wrapper = new FoundationV4Tool(inner, release, null, () => new TiaOpenness.Shared.ApprovalSettings(approvalEnabled, 1),
+            var wrapper = new FoundationV4Tool(inner, release, () => new TiaOpenness.Shared.ApprovalSettings(approvalEnabled, 1),
                 (_, _, _) => { approvals++; throw new InvalidOperationException("Consent must never reach approval."); });
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ConsentServerProxy>()) {
                 Params = new CallToolRequestParams { Name = inner.ProtocolTool.Name, Arguments = new Dictionary<string, JsonElement> {

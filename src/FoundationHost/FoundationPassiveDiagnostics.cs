@@ -293,7 +293,7 @@ internal static class LegacyHostToolRegistry
                 wrapped[i] = PortedToolContract.Wrap(ported);
                 return;
             }
-            wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, null, readinessForTest: readinessForTool,
+            wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, readinessForTest: readinessForTool,
                 sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });
         tools.Clear(); tools.AddRange(wrapped);

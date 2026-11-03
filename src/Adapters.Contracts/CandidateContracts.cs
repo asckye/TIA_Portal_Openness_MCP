@@ -4,6 +4,21 @@ using System.IO;
 
 namespace TiaMcp.Adapters.Contracts.Candidates
 {
+    public sealed class PlcImportCheck
+    {
+        public string Release { get; set; } = "";
+        public string Tool { get; set; } = "";
+        public PlcImportRequest Request { get; set; } = new PlcImportRequest();
+        public CandidateIdentity Identity { get; set; } = new CandidateIdentity();
+        public PlcImportInput[] Inputs { get; set; } = Array.Empty<PlcImportInput>();
+        public CandidateFile[] Files { get; set; } = Array.Empty<CandidateFile>();
+        public PlcImportObject[] InitialInventory { get; set; } = Array.Empty<PlcImportObject>();
+        public PlcImportObject[] CurrentInventory { get; set; } = Array.Empty<PlcImportObject>();
+        public string GroupIdentity { get; set; } = "";
+        public bool OverwriteSupported { get; set; }
+        public int Index { get; set; }
+        public string Digest { get; set; } = "";
+    }
     public sealed class DeviceCatalogEntry
     {
         public string TypeIdentifier { get; set; } = "";

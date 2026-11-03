@@ -45,8 +45,7 @@ public sealed class DeviceApplyAdmissionTests
     public async Task Approval_disabled_apply_checks_the_real_policy_and_keeps_the_session_usable(string scenario, string code, string parameter)
     {
         using var worker=new Worker();
-        FoundationV4Tool Tool(string source)=>new(new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name==source),worker),"19",null,
-            ()=>new(false,1),(pending,current,_)=> { Assert.False(current.Enabled);return Task.FromResult(new ApprovalOutcome(pending,true,null)); });
+        FoundationV4Tool Tool(string source)=>new(new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name==source),worker),"19", ()=>new(false,1),(pending,current,_)=> { Assert.False(current.Enabled);return Task.FromResult(new ApprovalOutcome(pending,true,null)); });
         async Task<JsonNode> Call(string source,JsonObject args)
         {
             var tool=Tool(source);

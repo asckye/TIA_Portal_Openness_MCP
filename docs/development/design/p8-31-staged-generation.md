@@ -8,7 +8,7 @@
 
 ## 0 结论摘要
 
-- **阻塞点**：生产策略下，八个版本的所有行为族都是 `current`（`src/Logic/ModelContextProtocol/ToolProfiles.resx` 的 `behaviorPolicies`）。完整 PLC 生成实际缺的只有外部源的三个工具：`ImportPlcExternalSource`、`GenerateBlocksFromExternalSource`，以及清理时要用的 `DeletePlcExternalSource`。八个版本都走同一个 `PlcExternalSourceWorkflowPolicy`：预览哈希包含进程号、工程文件和目标源清单；生成步骤还包含会话内的源标识 `SourceIdentity` 和全部块/类型的 `ModifiedDate`。apply 时重算哈希，必须与预览相等。`current` 下的编译和保存没有 `expectedPlanHash`，P8-31e 已经能执行。它们和 XML/S7DCL 导入的候选形态（`mode=preview/apply`，会话内存放预览）只出现在 SafeV4 测试策略下，作为同一机制的第二组规则处理。
+- **阻塞点**：生产策略下，八个版本的所有行为族都是 `current`（`src/Logic/ModelContextProtocol/ToolProfiles.resx` 的 `behaviorPolicies`）。完整 PLC 生成实际缺的只有外部源的三个工具：`ImportPlcExternalSource`、`GenerateBlocksFromExternalSource`，以及清理时要用的 `DeletePlcExternalSource`。八个版本都走同一个 `PlcExternalSourceWorkflowPolicy`：预览哈希包含进程号、工程文件和目标源清单；生成步骤还包含会话内的源标识 `SourceIdentity` 和全部块/类型的 `ModifiedDate`。apply 时重算哈希，必须与预览相等。`current` 下的编译和保存没有 `expectedPlanHash`，P8-31e 已经能执行。SafeV4 候选实现已归档到标签 `archive/safev4-candidates`，并于 2026-11-02 从当前代码删除；各族通过 L5 后基于届时的现行代码重建。P8-04l3 已取消，P8-31e6 延后。
 - **推荐 D3（A 加三项强化）**。Apply 逐步执行。凡是需要预览哈希的写步骤，执行前先调用该工具**自己的预览**：走同一条 `CallToolCore` 路径，只读，读取当时的真实状态。预览结果按逐工具规则投影后，与计划里已审批的“预期投影”比较：
   - 决定性字段必须一致，例如目标、文件 SHA-256、源名、要新建的对象、不得覆盖的对象；
   - 见证字段只检查约束，例如会话标识、清单哈希、时间戳。
@@ -48,7 +48,7 @@
 |---|---|---|---|---|---|
 | 无哈希（`dryRun`/`confirm`/`expectedProjectFile`，或无 dryRun） | `CreatePlcTag`、`CreatePlcTagTable`、`CompilePlcDiagnostics`、`SaveProject`、`CreateProject`；无 dryRun 的 `CreatePlcBlockGroup`、`MovePlcBlockToGroup` | 八版 `current` | 无 | 工具自身前置检查与工程身份 | 无 |
 | 无状态哈希（`dryRun` + `expectedPlanHash`） | 外部源导入/生成/删除（八版同一 `PlcExternalSourceWorkflowPolicy`，V20/V21 走移植路径）；导出、批量导入、S7DCL 文档导入 | `current` | 不存放，apply 时重算 | `confirm`、`expectedProjectFile`、重算哈希相等（`src/Adapters/Native/Plc/PlcExternalSourceWorkflowPolicy.cs`） | 导入：操作、版本、工程文件、PID、`softwarePath`、`groupPath`、源名，加文件路径、文件 SHA-256 和现有源名清单。生成：同样的身份字段，加 `SourceIdentity`、`GenerationOption`，以及全部块/类型的 kind、path、name、typeName、language、isConsistent、`ModifiedDate` |
-| 会话候选（`mode=preview/apply`） | P6-SOURCE/COMPILE/CLOSE/IMPORT/EXPORT/SESSION/DEVICE 候选 | 仅 SafeV4 测试策略（`TiaMcpTestPolicy`） | 会话内 `plans` 字典，每族上限 128，消费后不移出 | 必须是本会话存过、未消费、重算相等的预览（`src/Logic/V4/SourceCandidate.cs`；`CompileCandidate.cs`；`SaveCloseCandidate.cs`） | 统一的 V4 `Plan`：identity（PID、进程启动时间、工程、绑定纪元、文件）、inputHashes、inventoryHash、operations、warnings（`src/Logic/V4/Plan.cs`） |
+| 历史会话候选（`mode=preview/apply`） | SafeV4 各族 | 已归档删除（2026-11-02） | 标签 `archive/safev4-candidates` | 当前不提供候选会话；通过 L5 后在现行代码上重建 | V4 `Plan` 类型保留 |
 
 为什么规划期算不出这些哈希：
 
@@ -65,7 +65,7 @@
 | 2 | 每步 `Check` 都检查 10 分钟过期，长运行会在中途以 partial 停止 | `GenerationExecutionTools.cs` | 过期只约束审批前和首个写入前（4.9） |
 | 3 | 已消费声明只按 planId 记录：第 1 步在操作前被拒、工程没变时，重新规划得到同一 planId，会被拒绝 | `src/Logic/Generation/GenerationRunStore.cs` | 谱系种子（第 8 节） |
 | 4 | 重新规划会把上次生成的对象全部报成冲突：观测到的块只有名称和分组，期望对象带代码/接口指纹，比较时视为“未核实字段”；源同理 | `src/Logic/Generation/ProjectModelComparison.cs` | 归属记录（第 6、8 节）。没有它，§6.5 的“新计划只含缺失步骤”不成立 |
-| 5 | SafeV4 候选会话的 `plans` 上限 128，消费后也不移除：同一会话里同族预览超过 128 次就返回 `LIMIT_EXCEEDED` | `SourceCandidate.cs`；`CompileCandidate.cs` | 消费后移除，或改为有界 LRU（e6） |
+| 5 | 历史 SafeV4 候选会话的 128 个计划上限随候选实现归档删除 | `archive/safev4-candidates` | e6 延后；通过 L5 后重新设计现行实现 |
 | 6 | 步骤 request 审计行的 `planHash` 字段有两种含义：有工具哈希时写工具哈希，否则写生成计划哈希 | `src/Shared/AuditInvocation.cs` | 步骤行一律写工具自己的哈希（没有就留空），生成计划哈希只放在父 Apply 行和运行记录里 |
 
 ## 2 必须保持的安全性质
@@ -128,7 +128,7 @@
 | 变体 | 内容 | 结论 |
 |---|---|---|
 | D1 哈希预测 | 在规划器里复刻各工具的哈希公式，规划期直接算出 `expectedPlanHash` | 导入可行（输入都可预测）；生成（`SourceIdentity`、`ModifiedDate`）和候选（`inventoryHash`）不可行。还与八版内部公式强耦合，**否决** |
-| D2 组合批量工具 | 新增一个经过复核的工具，一次请求完成 N 个源的导入加生成。预览用“计划中的源”占位，SafeV4 的 `SourceSession` 已有类似模拟（`SourceCandidate.cs`） | 会引入新的公共工具和新的原生调用序列，需要 L5；哈希仍依赖当时的清单，Apply 时还是要预览。4.0 **不做**，以后可以用来减少步骤数 |
+| D2 组合批量工具 | 新增一个经过复核的工具，一次请求完成 N 个源的导入加生成。预览用“计划中的源”占位，归档的 SafeV4 `SourceSession` 曾有类似模拟（标签 `archive/safev4-candidates`） | 会引入新的公共工具和新的原生调用序列，需要 L5；哈希仍依赖当时的清单，Apply 时还是要预览。4.0 **不做**，以后可以用来减少步骤数 |
 | **D3 A + 强化（推荐）** | A，再加：①会话写栅栏（同一会话里非本运行的写调用一律拒绝）；②运行事实链（后续步骤的预期引用前面步骤的结果）；③写后效果核对（生成的对象必须与声明一致）；④可选的规划期试预览（第 11 节 Q10） | 补上 A 在步骤之间的空隙，并且能发现“工具成功了但效果超出声明”这种情况 |
 
 ### 3.5 对照
@@ -222,7 +222,7 @@ V14 SP1 的 `generationOption` 为 `parameterless`，效果按 `observedChanges`
 
 没有预览哈希的工具（`CreatePlcTag`、`CreatePlcTagTable`、`CreatePlcBlockGroup`、`MovePlcBlockToGroup`、编译、保存）不做执行器预览，依靠宿主预检和工具自身检查。效果核对按结果字段可选进行，例如 `MovePlcBlockToGroup` 之后块路径应为 `组/名`。
 
-SafeV4 候选形态（e6）共用一条 `v4-candidate/1` 规则：
+以下 `v4-candidate/1` 是历史候选形态的规则草案；P8-31e6 延后，候选代码已归档删除，通过 L5 后基于现行代码重建时重新评审：
 - `plan.identity` 必须等于当前绑定（PID、启动时间、工程、纪元）；
 - `plan.tool` 等于步骤工具；
 - `plan.inputHashes` 等于产物哈希；
@@ -288,7 +288,7 @@ SafeV4 候选形态（e6）共用一条 `v4-candidate/1` 规则：
 
 - 执行器和规则都在共享代码里（Logic 和 `src/Shared/Host`），旧版 Foundation 宿主与 V20/V21 组合宿主各自经自己的准入派发，规则相同。
 - 一致性测试使用有状态的夹具工程，用真实的 `PlcExternalSourceWorkflowPolicy` 驱动假清单，走真实的 `FoundationV4Tool` 和 `CallToolCore` 路径。P8-31e 的实施报告承认当时只测了公共执行器。
-- SafeV4 族启用前需完成 e6：候选规则；候选会话消费后移除 `plans`；同一 PLC 编译只出现一次，避免相同哈希被判为已消费。
+- P8-31e6 延后。SafeV4 候选实现已归档删除；族通过 L5 后基于现行代码重建规则、计划消费和编译步骤，启用前再验证。
 
 ## 5 新建工程
 
@@ -428,11 +428,11 @@ SafeV4 候选形态（e6）共用一条 `v4-candidate/1` 规则：
 | P8-31e3 | e | 会话写栅栏与步骤间取消 | `src/Shared/Host/McpServer.ToolBridge.cs`、`src/EngineHost/ModelContextProtocol/Tools/McpServer.Approval.cs`、`src/FoundationHost/FoundationV4Tool.cs`、`src/EngineHost/EngineHostPipeline.cs`、执行器 | 10.2 第 9、10 项；`shared-session`、`shared-pipeline`、`workbench-control-host` 不退化 | e2；与 P8-21c 协调（面板附着） |
 | P8-31e4 | e | 新建工程同次运行换绑：未绑定规划、预测路径（Logic 实现并做奇偶测试）、transition 规则 | 执行器（`Target` 变体）、规划器、Logic 的路径规则（只引用适配器，不改它） | 10.2 第 12 项；两类宿主 | e2 |
 | P8-31e5 | e | 归属与记录：`tiamcp.generation-record/1` schema 与模型；见证采集；`PublishGenerationRecord`（宿主 FILE，八版）；规划读取记录与日志并按第 8 节分类，新增 `adopt` 参数；`cleanup` 阶段；保留规则；`ManageGenerationArtifacts`（可并入） | 新增 `src/Logic/Generation/GenerationRecord.cs`、`schemas/standards/v1/generation-record.schema.json`；规划器、`ProjectModelComparison.cs`；执行器；`src/FoundationHost/GenerationTool.cs`、`src/Logic/ModelContextProtocol/ToolMetadata.cs`、`ToolProfiles.resx`；目录、契约、响应快照、示例都用生成器和捕获工具重建（八版） | 10.2 第 13、14 项；契约差异只有新增工具及其记录；八版 `GetToolUsage` 检索与功能检查 | e2；e4（新建工程的记录路径） |
-| P8-31e6 | e（SafeV4） | `v4-candidate/1` 规则；候选会话消费后移除 `plans`（共享代码，需 grep 全部调用方） | `src/Logic/V4/*Candidate*.cs`、规则注册表 | 在 `TiaMcpTestPolicy` 构建下重跑同一套故障注入；`compile-candidate`、`compile-candidate-no-safety` 等候选套件 | e2；可推迟到 SafeV4 启用前 |
+| P8-31e6 | e（SafeV4，延后） | 族通过 L5 后在现行代码上重建规则和计划消费；归档候选不恢复 | 现行代码与规则注册表，重建时确定 | 重建时确定对等测试与故障注入；不恢复已取消的候选作业 | e2；延后至逐族 L5 之后 |
 | P8-31h1 | h | 第 9 节的审批抽屉扩展和结果卡 | `src/Studio/Gui/Services/ApprovalService.cs`、`FeatureContracts.cs`、`ViewModels/FeaturePagesViewModel.cs`、`Views/ApprovalsDrawer.xaml(.cs)`、`Localization/Strings.FeaturePages.cs` | 视图模型测试，加 `WpfContext` 真实窗口：大计划渲染、迟填列、禁止集、发散结果卡；真实 Windows 账户下的审批往返（P8-31e 实施报告列出的遗留项） | e2、e5；P8-21c |
 | P8-31j1 | j | 修订 §6.3、§6.5–6.7；`reference/tool-examples` 的 `sequence/project-generation` 和新工具示例；生成嵌入目录；八版检索与功能检查 | `docs/development/design/project-generation-framework.md`、`reference/tool-examples/*`、生成产物 | `dotnet run --project build-tools/release -- check-repository -NoBinaries`；核对链接、路径、适用版本和引用 | e2–e5 |
 
-顺序：e1 → e2 → e3、e4、e5（e3 改共享准入，要与 P8-21c 错开）→ h1 → j1；e6 视 SafeV4 启用时间而定。各子任务按 `docs/development/validation.md` 构建并跑全部版本检查，新增用例进入现有注册套件并上调最低数，不放宽门禁。
+顺序：e1 → e2 → e3、e4、e5（e3 改共享准入，要与 P8-21c 错开）→ h1 → j1；e6 延后至族通过 L5 后基于现行代码重建。各子任务按 `docs/development/validation.md` 构建并跑全部版本检查，新增用例进入现有注册套件并上调最低数，不放宽门禁。
 
 ### 10.2 故障注入（两类宿主：旧版 Foundation 宿主与 V20/V21 组合宿主，使用有状态夹具工程）
 
@@ -452,7 +452,7 @@ SafeV4 候选形态（e6）共用一条 `v4-candidate/1` 规则：
 14. 重新规划：部分运行后只含缺失步骤；未知步骤的对象为冲突，`adopt` 之后转为跳过；人工改动后为冲突；包升级后为冲突；谱系让 planId 改变；没有运行时同输入的 planId 稳定。
 15. 两类宿主一致：同一份计划产生相同的步骤状态序列，运行记录除 requestId 和时间外相同。
 16. 审批：每次 Apply 只有一次计划审批；被拒或超时不派发；关闭审批时照常做预览比对，并记录“审批已关闭”。
-17. 大计划：审批帧超限在规划时就拒绝。SafeV4 下（e6）超过 128 次候选预览不阻塞运行。
+17. 大计划：审批帧超限在规划时就拒绝。e6 重建时重新评审计划存储上限；当前没有候选预览会话。
 
 ### 10.3 L5 场景（阶段 8 末，由审查者执行，记入真机台账）
 
@@ -483,7 +483,7 @@ SafeV4 候选形态（e6）共用一条 `v4-candidate/1` 规则：
 | Q9 | 计划 schema | **直接修订尚未发布的 `tiamcp.plan/1`** · 升级为 `tiamcp.plan/2` | **修订 /1**（4.0 尚未发布） | 修订 `tiamcp.plan/1` |
 | Q10 | 规划期试预览 | 允许规划时对前置条件已满足的写工具做只读预览，提前发现拒绝（不作为审批依据） · **规划只用 READ 工具（P8-31e 现状）** | 首版**只用 READ**；试预览作为以后的改进 | 规划只用 READ 工具 |
 | Q11 | 长运行 | **批准后不过期，另设总时长和步数上限（默认 4 小时、10000 步，可配置）** · 维持 10 分钟 | **前者** | 批准后不过期，4 小时与 10,000 步上限 |
-| Q12 | SafeV4 规则范围 | **4.0 只做 `current` 形态，SafeV4 规则与候选会话清理在族启用前完成（e6）** · 一并完成 | **前者** | 4.0 只做 `current` 形态，SafeV4 规则在 e6 完成 |
+| Q12 | SafeV4 规则范围 | **4.0 只做 `current` 形态，SafeV4 候选实现已归档删除，e6 延后至族通过 L5 后基于现行代码重建** · 一并完成 | **前者** | 4.0 只做 `current` 形态，SafeV4 规则在延后的 e6 重建时确定 |
 | Q13 | 大计划的审批载荷 | **`PlanJson` 内联，1 MiB 帧，超限时要求按阶段或单元拆分** · 只传哈希，工作台读数据目录里的文件并核对哈希 | **内联**；引用方式以后再做 | `PlanJson` 内联 |
 | Q14 | 结果未知的对象 | **冲突，人核对后显式 `adopt`** · 只能人工删除后重新生成 | **adopt** | 冲突，人核对后显式 `adopt` |
 

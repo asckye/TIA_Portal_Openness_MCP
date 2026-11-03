@@ -48,12 +48,6 @@ internal static class PortedToolContract
                 TiaMcp.PlcWorker.WorkerOperations.FamilyTools(family), family.Actions));
     internal static McpServerTool Wrap(FoundationTool tool)
     {
-        string? candidate = tool.ProtocolTool.Name switch {
-            "CompileDevice" or "CompileHmiDiagnostics" => "P6-COMPILE",
-            "ImportPlcTagTablesFromDirectory" => "P6-IMPORT",
-            "ManagePlcExternalSources" => "P6-SOURCE", _ => null };
-        if (candidate != null && BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, tool.Release, candidate) == BehaviorPolicy.SafeV4)
-            return new FoundationV4Tool(tool, tool.Release, null);
         // The readiness guard of a bridged call asks whether this target refuses its arguments by capability (P8-04j2).
         // The answer depends only on the release, the tool and the arguments, so any registered instance answers it.
         McpServer.PortedCapabilityRefusals[(tool.Release, tool.ProtocolTool.Name)] = tool.RefusesByCapability;
@@ -184,7 +178,6 @@ internal static class PortedToolContract
 
 internal sealed partial class FoundationTool
 {
-    private static readonly ConditionalWeakTable<IFoundationWorker, DeviceCreationSession> DeviceCandidates = new();
     private readonly MethodInfo? portedMethod;
     private readonly string? portedRelease;
     private readonly ToolDescriptor? portedDescriptor;
@@ -538,8 +531,7 @@ internal sealed partial class FoundationTool
             "PlcBuildTools" => new PlcBuildTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcReadModifyTools" => new PlcReadModifyTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcOrganisationTools" => new PlcOrganisationTools(new PlcOrganisationPortService(call, hasProject, identity)),
-            "HardwareDevicesTools" => new HardwareDevicesTools(new HardwareDevicesService(call, hasProject, identity,
-                DeviceCandidates.GetValue(worker, _ => new DeviceCreationSession()))),
+            "HardwareDevicesTools" => new HardwareDevicesTools(new HardwareDevicesService(call, hasProject, identity)),
             "ModulesTools" => new ModulesTools(new HardwareModulesService(call, hasProject, identity)),
             "HardwareManagementTools" => new HardwareManagementTools(new HardwareManagementService(call, hasProject, identity)),
             "HardwareNetworkTools" => new HardwareNetworkTools(new HardwareNetworkPortService(call, hasProject, identity)),

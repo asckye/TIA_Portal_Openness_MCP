@@ -258,7 +258,7 @@ marketplace 版本、发布文档、伴随 Python 的依赖导入、Git 规范�
 
 1. 重新构建分析器报告，再运行分析器 ratchet 与源码/文档早期检查；旧报告不能阻断这次发布。
 2. `build-multi-version -PrepareOnly`、`build-release -DeferTests`、`build-multi-version -CompleteOnly -DeferTests` 保留所有产物及二进制/审批安全检查，生产器不执行套件。
-3. 保留 `tests/test-suites.json` 的全部 44 个注册套件门槛，逐套件检查原有 `minimumPassed` 和 `maximumSkipped`。
+3. 保留 `tests/test-suites.json` 的全部 38 个注册套件门槛，逐套件检查原有 `minimumPassed` 和 `maximumSkipped`。
    先完成普通套件、配置器、PLC file app 及行为对等夹具的构建，再启动测试池；不同编译参数的变体保留各自输出，同项目普通测试串行执行。
    池排空后，`foundation-api` 独占调用已有的 `FastSuites.Run` 分片执行器，沿用 `FoundationApiSuiteArguments`、成本分片、合并和门槛检查，不使用 worker copies。
    同次合并 TRX 经批准的 SPD 派生规则生成 `foundation`、`worker-robustness`、`workbench-control-host`、`shared-pipeline`、`shared-lifecycle-plc`，保留各自门槛，并在全部六份结果中记录 `exitCode`。

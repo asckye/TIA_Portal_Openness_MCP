@@ -1,4 +1,3 @@
-extern alias PlcRendering;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -119,17 +118,13 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
         state["binding"] = new JsonObject { ["processId"] = 123, ["projectFile"] = @"D:\fixture\Line.ap19", ["bindingEpoch"] = 1 };
         Publish();
     }
-    private static JsonElement? CandidateSchema(string tool) => tool switch
+    // Frozen test inputs from archive/safev4-candidates retain the client's schema-negotiation coverage.
+    private static JsonElement? CandidateSchema(string tool)
     {
-        "CompilePlcSoftware" => PlcRendering::TiaMcp.Logic.V4.CompileContract.Schema(tool),
-        "SaveProject" or "DisconnectPortal" => PlcRendering::TiaMcp.Logic.V4.SaveCloseContract.Schema(tool),
-        "OpenProject" or "ConnectPortal" or "AttachOpenProject" => PlcRendering::TiaMcp.Logic.V4.SessionCandidateContract.Schema(tool),
-        "ExportPlcBlock" => PlcRendering::TiaMcp.Logic.V4.PlcExportContract.Schema(tool, "19"),
-        "ImportPlcBlock" => PlcRendering::TiaMcp.Logic.V4.PlcImportContract.Schema(tool, "19"),
-        "ListVersionControlWorkspaces" or "GetVersionControlStatus" or "CreateVersionControlWorkspace" or "ConnectProjectToWorkspace" or "SynchronizeVersionControlWorkspace"
-            => PlcRendering::TiaMcp.Logic.V4.FallbackContract.Schema(tool),
-        _ => null
-    };
+        using var stream = typeof(McpOperatorFixture).Assembly.GetManifestResourceStream("TiaOpenness.Gui.Tests.McpReviewedSchemas.json")!;
+        using var schemas = JsonDocument.Parse(stream);
+        return schemas.RootElement.TryGetProperty(tool, out var schema) ? schema.Clone() : null;
+    }
     private async ValueTask<CallToolResult> Invoke(string name, CallToolRequestParams request, CancellationToken token)
     {
         var arguments = JsonSerializer.SerializeToNode(request.Arguments)!.AsObject();

@@ -120,7 +120,7 @@ public sealed class WorkerRobustnessTests
             var spillRead = Foundation.FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks")
                 with { Name = "GetPlcBlockHierarchy", Operation = "ReadBlocks", ResponseMember = "Items" };
             shared = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(spillRead, Worker),
-                release, null, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
+                release, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
             Worker.SessionLocked = () => Host.SessionPrecheckRefusal("GetSessionState") != null;
             // The first generation starts and reports its status under the production budgets; the scaled budgets above apply
             // from the first operation a test measures (P8-stab-1).

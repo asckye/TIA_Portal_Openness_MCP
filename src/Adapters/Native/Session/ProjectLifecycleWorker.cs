@@ -70,7 +70,6 @@ public sealed partial class PlcFoundationEngine
     {
         Check();
         lifecycle.Attached(processId);
-        sessionCandidateStart = new DateTimeOffset(new DateTime(processStartTicks, DateTimeKind.Utc));
         ownsPortal = true; workerStartedPortal = true;
     }
     public void RefreshProjectLifecyclePath()
@@ -82,7 +81,6 @@ public sealed partial class PlcFoundationEngine
             path = project!.Path.FullName;
         lifecycle.Adopt(new PlcRuntimeState { ProcessId = lifecycle.ProcessId, IsAttached = true,
             ProjectFile = path, OwnsProject = lifecycle.OwnsProject, IsLocalSession = lifecycle.IsLocalSession });
-        sessionCandidateAdapter = null; saveCloseAdapter = null;
     }
     public void AdoptProjectLifecycleRetrieved(object returned)
     {

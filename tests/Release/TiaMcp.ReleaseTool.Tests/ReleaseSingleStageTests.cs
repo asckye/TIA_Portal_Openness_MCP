@@ -499,12 +499,10 @@ public sealed class ReleaseSingleStageTests
     {
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(TiaMcp.BuildCommon.Repository.FindRoot(), "tests/test-suites.json"), TiaMcp.BuildCommon.Repository.FindRoot());
         var groups = ReleaseSuiteStage.Groups(catalog);
-        Assert.Equal(44, groups.SelectMany(group => group).Count());
+        Assert.Equal(38, groups.SelectMany(group => group).Count());
         Assert.Equal(new[] { "foundation", "foundation-api", "shared-lifecycle-plc", "shared-pipeline", "workbench-control-host", "worker-robustness" }, ReleaseFoundationStage.Names.Order());
         Assert.Equal(catalog.Select(pair => pair.Key).Order(), groups.SelectMany(group => group).Order());
-        foreach (var names in new[] { new[] { "compile-candidate", "compile-candidate-no-safety" },
-            new[] { "fallback-vci-modern", "fallback-vci-initial", "fallback-vci-classic" },
-            new[] { "plc-exchange-worker-v20", "plc-exchange-worker-v21" },
+        foreach (var names in new[] { new[] { "plc-exchange-worker-v20", "plc-exchange-worker-v21" },
             new[] { "foundation", "foundation-api", "operator-host", "worker-robustness", "shared-lifecycle-plc" } })
             Assert.Contains(groups, group => names.All(group.Contains));
     }

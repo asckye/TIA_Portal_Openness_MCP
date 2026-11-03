@@ -125,7 +125,7 @@ flowchart LR
 - 发布键决定工具目录。旧版只注册至少有一个已实现动作能在该版 API 上运行的已移植工具；部分动作缺 API 的工具保留，并在原生调用前对该动作返回 `UNSUPPORTED_CAPABILITY`。依据是 `src/Adapters.Contracts/PortedFamilies.cs` 的逐工具、逐发布键表，注册、发现、用法、桥接和被动诊断共用它。
 - 编译期差异由 `src/Shared/TiaFeatures.props` 的特性符号表达（例如过程映像服务只在 V21），适配器按精确 PublicAPI 编译八次；运行期不靠工具名或相邻版本推断能力。
 - V20/V21 的版本准入（`ToolVersionPolicy`）在发现、桥接、预检和派发前生效；V20 的排除工具由目录和官方 API 支持规则生成。
-- 原生行为能力按 D1 行为族披露，当前八版全部为 `current / NOT RUN`；SafeV4 候选实现只在显式 `TiaMcpTestPolicy` 测试构建中可选。
+- 原生行为能力按 D1 行为族披露，当前八版全部为 `current / NOT RUN`；SafeV4 候选实现已归档到标签 `archive/safev4-candidates`，并于 2026-11-02 从当前代码删除；各族通过 L5 后基于届时的现行代码重建。P8-04l3 已取消，P8-31e6 延后。
 
 ## 5 关键流程
 
@@ -248,7 +248,7 @@ sequenceDiagram
 - 运行期间同一会话中其他写调用（包括附着的工作台面板）被写栅栏拒绝；取消只在步骤之间生效；批准后的运行不再按 10 分钟计划期限中断，另有 4 小时和 10,000 步上限。
 - 新建工程模式：`CreateProject` 步骤之后核对同一进程、路径与预测一致、绑定纪元前进、读回为空工程，全部通过才在同一运行中换绑（transition）。
 - 运行记录是只追加的 `tiamcp.run/1`，宿主重启后仍可由 `GetGenerationRun` 读取；中断的步骤记为 unknown，从不重放。
-- 尚未实现：生成记录文件 `.tiagen.json` 与 `PublishGenerationRecord`（P8-31e5）、SafeV4 候选规则（e6）、工作台计划视图扩展（h1）。
+- 尚未实现：生成记录文件 `.tiagen.json` 与 `PublishGenerationRecord`（P8-31e5）、SafeV4 规则（e6，延后至族通过 L5 后基于现行代码重建）、工作台计划视图扩展（h1）。
 
 ### 5.4 工作台附着会话
 
@@ -404,7 +404,7 @@ stateDiagram-v2
 | 引擎退役（P8-04） | 进行中：P8-04j2 已合并，V20/V21 默认使用 PLC worker，交付包不含引擎；引擎兼容副本由 P8-04l 删除，之后是 P8-04m、P8-04n | [重构计划](../refactor-plan.md)；[ADR 0009](../decisions/0009-port-v20-v21-tools-to-foundation-adapters.md) |
 | Studio 桥接与 Studio 适配器删除（P8-21f） | 未开始；V16–V19 版本控制页用桥接只读 VCI，禁用工作区到工程的同步 | `ReadOnlyVciBridge.cs`；工作台控制设计决定 4 |
 | 工作台控制端到端验收（P8-20e） | 未完成 | 工作台控制设计第 6 节 |
-| 生成记录与发布工具（P8-31e5）、SafeV4 规则（e6）、审批抽屉计划视图（h1） | 未实现 | [分阶段生成设计](../design/p8-31-staged-generation.md) 第 10 节 |
+| 生成记录与发布工具（P8-31e5）、SafeV4 规则（e6，延后）、审批抽屉计划视图（h1） | 未实现 | [分阶段生成设计](../design/p8-31-staged-generation.md) 第 10 节 |
 | 真机验收 | 八版 D1 行为族、旧版启用的已移植族、V20/V21 在 Foundation 宿主上的验收（P7-07）均为 `NOT RUN`；4.0 以 GitHub 预发布交给测试者，我们在 VM 上按真机核对清单回归（2026-11-01 修订），未验证项列在预发布说明中 | 交接、真机台账；[ADR 0020](../decisions/0020-prereleases-tested-by-users.md) |
 | `TiaSharedAdapterPaths` | 默认 `false`；引擎领域的共享原语路径在真机验收前不启用 | `src/Shared/TiaSharedAdapterPaths.props` |
 | PLC worker 调用超时 | P8-64 已消除：八版共用按类超时与配置覆盖；超预算仍为结果未知并锁定会话。预算见 [4.0 发布说明](../../releases/v4.0.0.md) | `src/FoundationHost/WorkerClient.cs`；[设计规范决定](README.md#决定摘要) |

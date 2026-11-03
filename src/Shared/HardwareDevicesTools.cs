@@ -275,18 +275,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 return AddDevice(orderNumber, version, deviceName);
             }, write: true, current: true);
 
-        [BehaviorCandidate("CreateDevice", "P6-DEVICE", typeof(DeviceCreationContract))]
-        [Description("[L2][Hardware][WRITE] Exact catalog device creation. Preview reads one matched entry, capability, conflicts and plan; apply requires confirmation, the reviewed plan hash and project file. One Create; no candidate retries, save, compile or download. Test/accepted behaviorPolicy=safe-v4.")]
-        public CallToolResult CreateDevice(string typeIdentifier, string deviceName, string family, string mode = "preview", bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
-            => DeviceCandidateResult(_service.CreateDeviceCandidate("CreateDevice", typeIdentifier, deviceName, family, mode, confirm, expectedPlanHash, expectedProjectFile));
-
-        private static CallToolResult DeviceCandidateResult(Envelope envelope)
-        {
-            var result = McpResult.From(envelope);
-            return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
-                Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
-        }
-
         public ResponseMessage AddDevice(
             [Description("orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'")] string orderNumber,
             [Description("version: exact catalog device version; empty only when orderNumber is a full TypeIdentifier; no default or retry")] string version,
@@ -321,11 +309,6 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 return AddDeviceWithFallback(preferredMlfb, preferredVersion, deviceName, family);
             }, write: true, current: true);
-
-        [BehaviorCandidate("CreateHardwareDevice", "P6-DEVICE", typeof(DeviceCreationContract))]
-        [Description("[L1][Hardware][WRITE] Exact catalog device creation. Default preview; apply requires confirm=true, expectedPlanHash and expectedProjectFile. One Create, no fallback or retry. Test/accepted behaviorPolicy=safe-v4.")]
-        public CallToolResult CreateHardwareDevice(string typeIdentifier, string deviceName, string family, string mode = "preview", bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
-            => DeviceCandidateResult(_service.CreateDeviceCandidate("CreateHardwareDevice", typeIdentifier, deviceName, family, mode, confirm, expectedPlanHash, expectedProjectFile));
 
         public ResponseDeviceProbe AddDeviceWithFallback(
             [Description("preferredMlfb: exact installed catalog article number or full OrderNumber TypeIdentifier; no family fallback")] string preferredMlfb,
@@ -447,11 +430,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 return AddGsdDeviceWithProbe(keyword, deviceName, preferredDap);
             }, write: true, current: true);
 
-        [BehaviorCandidate("CreateGsdDevice", "P6-DEVICE", typeof(DeviceCreationContract))]
-        [Description("[L2][Hardware][WRITE] Create the single exact installed GSD catalog entry with family=GSD. Default preview; apply requires confirmation, plan hash and project identity. One Create, no ranking or retry. Test/accepted behaviorPolicy=safe-v4.")]
-        public CallToolResult CreateGsdDevice(string typeIdentifier, string deviceName, string family, string mode = "preview", bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
-            => DeviceCandidateResult(_service.CreateDeviceCandidate("CreateGsdDevice", typeIdentifier, deviceName, family, mode, confirm, expectedPlanHash, expectedProjectFile));
-
         public ResponseGsdDeviceProbe AddGsdDeviceWithProbe(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'")] string keyword,
             [Description("deviceName: name in project tree, e.g. 'ENC_AFM60A_1'")] string deviceName,
@@ -505,11 +483,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 HardwareContract.RequireProject(_service.HasProject);
                 return AddHardwareCatalogDeviceWithProbe(keyword, deviceName, preferredText);
             }, write: true, current: true);
-
-        [BehaviorCandidate("CreateHardwareCatalogDevice", "P6-DEVICE", typeof(DeviceCreationContract))]
-        [Description("[L2][Hardware][WRITE] Create the single exact installed catalog entry. Default preview exposes scope, name conflicts and plan; apply requires confirmation, plan hash and project identity. One Create; no ranking, fallback or retry. Test/accepted behaviorPolicy=safe-v4.")]
-        public CallToolResult CreateHardwareCatalogDevice(string typeIdentifier, string deviceName, string family, string mode = "preview", bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
-            => DeviceCandidateResult(_service.CreateDeviceCandidate("CreateHardwareCatalogDevice", typeIdentifier, deviceName, family, mode, confirm, expectedPlanHash, expectedProjectFile));
 
         public ResponseHardwareCatalogDeviceProbe AddHardwareCatalogDeviceWithProbe(
             [Description("keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'")] string keyword,

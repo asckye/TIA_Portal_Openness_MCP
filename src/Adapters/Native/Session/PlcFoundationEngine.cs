@@ -95,12 +95,7 @@ namespace TiaMcp.Adapters
             if ((connection!=null)!=state.ProcessId.HasValue || (boundProject!=null)!=(state.ProjectFile!=null)
                 || (session!=null)!=state.IsLocalSession)
                 throw new InvalidOperationException("Shared session handles and cached identity differ.");
-            bool changed=!ReferenceEquals(portal,connection) || !ReferenceEquals(project,boundProject);
-            changed=lifecycle.Adopt(state) || changed;
-            // Controlled engine lifecycle changes supersede old candidate observations.
-            // Retaining their expected binding would falsely lock the next Foundation call.
-            if(changed) { sessionCandidateAdapter=null; saveCloseAdapter=null; }
-            sessionCandidateStart=state.ProcessId.HasValue ? new DateTimeOffset(new DateTime(processStartTicks,DateTimeKind.Utc)) : (DateTimeOffset?)null;
+            lifecycle.Adopt(state);
             portal=connection; project=boundProject; ownsPortal=ownedPortal; sharedPortal=true;
 #if PROJECT_MULTIUSER
             localSession=session as Siemens.Engineering.Multiuser.LocalSession;
@@ -128,12 +123,11 @@ namespace TiaMcp.Adapters
             Check(true);
             _resetWorkerFamilyState?.Invoke();
             portal=null; project=null; lifecycle.Detached();
-            sessionCandidateAdapter=null; saveCloseAdapter=null; sessionCandidateStart=null;
 #if PROJECT_MULTIUSER
             localSession=null;
 #endif
         }
-        private TiaPortal Portal() { Check(); sessionCandidateAdapter?.VerifyOwnedState(); disconnect.RequireActive(); RequirePortalAlive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
+        private TiaPortal Portal() { Check(); disconnect.RequireActive(); RequirePortalAlive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
         private EngineeringProject Project() { Portal(); lifecycle.RequireBound(); return project ?? throw new InvalidOperationException("Bind, open or create an explicit project first."); }
 
         private void RequireHardwareCatalogBinding()

@@ -194,7 +194,7 @@ internal static class ReleaseRecords
             var runtime = new JsonObject
             {
                 ["worker"] = Artifact(Path.Combine(directory, $"TiaMcp.PlcWorker.{key}.exe")),
-                ["sdkWorker"] = Artifact(new PlcWorkerFixtureBuild(key, "sdk", null).Worker(Path.Combine(logs, "plc-fixtures"))),
+                ["sdkWorker"] = Artifact(new PlcWorkerFixtureBuild(key, "sdk").Worker(Path.Combine(logs, "plc-fixtures"))),
                 ["adapter"] = Artifact(Path.Combine(directory, $"TiaMcp.Adapter.{key}.dll")),
                 ["host"] = Artifact(Path.Combine(root, $"runtime/v{key}/TiaMcp.FoundationHost.exe")),
                 ["catalog"] = Artifact(Path.Combine(logs, "tools-" + key + ".json")),

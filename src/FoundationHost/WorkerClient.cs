@@ -280,7 +280,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             WorkerShutdown.Unregister(this); process = null; channel = null;
             approvalIdentity = new JsonObject(); attachedProcessId = null; attachAttempted = false;
             disconnectAcknowledgement = null; disconnecting = false; priorUnknownRequestId = null; faultEvidence = null;
-            outcome = new WorkerOutcomeState(); ClearHostBinding(); HostSessionKey = new object(); FoundationCandidateSession.Reset(this);
+            outcome = new WorkerOutcomeState(); ClearHostBinding(); HostSessionKey = new object(); FoundationTool.ResetSessionUncertainty(this);
             generation++;
         }
         if (extended) await Observe("status", new JsonObject(), token);
@@ -353,10 +353,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (!nativeEnabled && !managed) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
             if (!managed && Bundled && WorkerOperations.RequiresPortal(operation) && !attachedProcessId.HasValue)
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
-            hostAttachPid = operation == "Attach" ? (int?)arguments["processId"]
-                : operation == WorkerOperations.SessionCandidate && !WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"])
-                    && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"
-                    ? (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"] : null;
+            hostAttachPid = operation == "Attach" ? (int?)arguments["processId"] : null;
             if (hostAttachPid.HasValue) startBeforeAttach = ProcessStartUtc(hostAttachPid.Value);
             EnsureProcess();
             if (!WorkerOperations.IsIndependentRuntime(operation) || !channel!.CanCallIndependentRuntime)
@@ -369,15 +366,14 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             string response;
             try
             {
-                bool attach = operation == "Attach" || operation == "project-lifecycle.ConnectIsolatedPortal" || operation == WorkerOperations.SessionCandidate
-                    && (string?)arguments["mode"] == "apply" && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
+                bool attach = operation == "Attach" || operation == "project-lifecycle.ConnectIsolatedPortal";
                 bool firstAttach = attach && !attachAttempted;
                 token.ThrowIfCancellationRequested();
                 if (attach) attachAttempted = true;
                 if (operation == "HostObserve") response = await channel.CallAsync("adapter.HostObserve", arguments.ToJsonString(), BindingChange.None, true, timeouts.For("status"), CancellationToken.None);
                 else
                 response=await FoundationWorkerRequest.Dispatch(channel, "adapter."+operation,arguments.ToJsonString(),change,
-                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSourcePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsCompilePreview(operation, (string?)arguments["mode"]),timeouts.ForPlc(operation, arguments, firstAttach), firstAttach, CancellationToken.None);
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true,timeouts.ForPlc(operation, arguments, firstAttach), firstAttach, CancellationToken.None);
                 sent=true;
             }
             catch(ChannelFailureException failure)
@@ -407,14 +403,6 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 if (!Poisoned && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc = startBeforeAttach;
             }
             if (operation == "ReadState" && result is JsonObject cachedState) hostState = (JsonObject)cachedState.DeepClone();
-            else if (operation == WorkerOperations.SessionCandidate && !outcome.Poisoned
-                && result?["Attempt"]?["Issued"]?.GetValue<bool>() == true && result?["Attempt"]?["Fault"] == null
-                && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach")
-            {
-                attachedProcessId = (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
-                ClearHostBinding();
-                if (hostAttachPid.HasValue && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(hostAttachPid.Value)) hostProcessStartUtc = startBeforeAttach;
-            }
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
             if (SharedSession && !outcome.Poisoned && !WorkerOperations.IsIndependentRuntime(operation))
@@ -436,15 +424,14 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (!sent && ex is ChannelLimitException) ex.Data["workerLimitBytes"] = ChannelLimits.RequestBytes;
             if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && operation == "project-lifecycle.ConnectIsolatedPortal")
                 ex.Data["sessionReason"] = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ConfirmationReason;
-            if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && (operation == "Attach" || operation == WorkerOperations.SessionCandidate && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"))
+            if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && operation == "Attach")
             {
-                int? selectedPid = operation == "Attach" ? (int?)arguments["processId"] : (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
+                int? selectedPid = (int?)arguments["processId"];
                 bool matching = false;
                 try
                 {
                     using var selected = Process.GetProcessById(selectedPid ?? 0);
-                    var expected = (string?)arguments["candidate"]?["Check"]?["Request"]?["ProcessStartUtc"];
-                    matching = !selected.HasExited && (expected == null || new DateTimeOffset(selected.StartTime.ToUniversalTime()) == DateTimeOffset.Parse(expected, System.Globalization.CultureInfo.InvariantCulture));
+                    matching = !selected.HasExited;
                 }
                 catch (Exception) /* swallow(env-probe): timeout guidance does not claim a matching process after exit or access denial */ { }
                 string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.TimeoutReason(true, matching);
@@ -590,26 +577,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     internal static BindingChange BindingChangeFor(string operation, JsonObject arguments)
     {
-        if (operation == WorkerOperations.SaveCloseCandidate)
-            return WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"])
-                || (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "save" ? BindingChange.None : BindingChange.MayAdvance;
-        if (operation == WorkerOperations.SessionCandidate)
-            return WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) ? BindingChange.None : BindingChange.MayAdvance;
         var dryRun = arguments["dryRun"]?.GetValue<bool>() ?? true;
         return operation is "Attach" or "BindProject" || (!dryRun && operation is "OpenProject" or "CreateProject" or "CloseProject")
             ? BindingChange.Advance : operation == "Disconnect" ? BindingChange.MayAdvance : BindingChange.None;
-    }
-
-    internal void InvalidateCandidateSession()
-    {
-        bool acquired = !ReferenceEquals(Held.Value, this);
-        if (acquired) serial.Wait();
-        try
-        {
-            var failure = new IOException("The candidate outcome is unknown; inspect TIA before a new session.");
-            outcome.Failed(true, failure);
-            priorUnknownRequestId ??= TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
-        }
-        finally { if (acquired) serial.Release(); }
     }
 }

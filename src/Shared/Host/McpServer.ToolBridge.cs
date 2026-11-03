@@ -722,7 +722,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 AssertV4Tool(name);
                 var usage = ResultBody(new ToolUsageTools().GetToolUsage(toolName: name));
                 if (usage?["ok"]?.GetValue<bool?>() != true) { problems.Add(name + ": usage retrieval failed"); continue; }
-                foreach (var args in new[] { BehaviorCapabilities.CandidateExample(ReleaseKey, name) ?? row["arguments"]!, usage["data"]!["example"]!["request"]!["params"]!["arguments"]! })
+                foreach (var args in new[] { row["arguments"]!, usage["data"]!["example"]!["request"]!["params"]!["arguments"]! })
                 {
                     var error = ValidateInfrastructureExample(name, args.AsObject());
                     if (error != null) problems.Add(name + ": " + V4Json.Serialize(error));

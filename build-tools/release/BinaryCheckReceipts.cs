@@ -70,7 +70,7 @@ internal static class BinaryCheckReceipts
         var binaries = Binaries(new Dictionary<string, string>
         {
             ["host"] = requestedHost,
-            ["worker"] = new PlcWorkerFixtureBuild(key, "sdk", null).Worker(Path.Combine(logs, "plc-fixtures")), ["harness"] = harness
+            ["worker"] = new PlcWorkerFixtureBuild(key, "sdk").Worker(Path.Combine(logs, "plc-fixtures")), ["harness"] = harness
         });
         var receipts = new List<JsonObject>();
         var copies = new List<(string Source, string Relative)>();

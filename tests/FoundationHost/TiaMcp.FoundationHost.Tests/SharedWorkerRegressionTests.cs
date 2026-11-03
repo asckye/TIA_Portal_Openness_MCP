@@ -212,7 +212,7 @@ public sealed class SharedWorkerRegressionTests
         var worker = fixture.Worker;
         var inner = PortedToolContract.Create(worker, release)
             .OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == "CompileDevice");
-        var target = new FoundationV4Tool(inner, release, null,
+        var target = new FoundationV4Tool(inner, release,
             readinessForTest: () => new JsonObject { ["ready"] = true });
         var services = FoundationHostPorts.CreateServices(worker, release,
             () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
@@ -286,7 +286,7 @@ public sealed class SharedWorkerRegressionTests
         var worker = fixture.Worker;
         var inner = PortedToolContract.Create(worker, release)
             .OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == "CompileDevice");
-        var target = new FoundationV4Tool(inner, release, null,
+        var target = new FoundationV4Tool(inner, release,
             readinessForTest: () => new JsonObject { ["ready"] = true });
         var services = FoundationHostPorts.CreateServices(worker, release,
             () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
@@ -401,19 +401,6 @@ public sealed class SharedWorkerRegressionTests
         foreach (bool dispatched in new[] { false, true }) foreach (bool readOnly in new[] { false, true })
             Assert.Equal(classify.Invoke(null, new object?[] { original, dispatched, readOnly, null, null, null, true }),
                 classify.Invoke(null, new object?[] { typed, dispatched, readOnly, null, null, null, true }));
-    }
-
-    [Fact]
-    public void Candidate_mappers_keep_the_original_top_level_exception_boundary()
-    {
-        var authored = new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Authored inner diagnostic.", isArgument: false);
-        foreach (bool io in new[] { false, true })
-        {
-            Exception original = io ? new IOException("Outer fixture failure.") : new InvalidOperationException("Outer fixture failure.");
-            Exception nested = io ? new IOException(original.Message, authored) : new InvalidOperationException(original.Message, authored);
-            Assert.Equal(TiaMcp.Logic.V4.V4Json.Serialize(TiaMcp.Logic.V4.SourceSession.Map(original)),
-                TiaMcp.Logic.V4.V4Json.Serialize(TiaMcp.Logic.V4.SourceSession.Map(nested)));
-        }
     }
 
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"),

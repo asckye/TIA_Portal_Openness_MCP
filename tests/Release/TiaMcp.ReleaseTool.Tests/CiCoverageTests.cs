@@ -18,7 +18,7 @@ public sealed class CiCoverageTests
         Assert.Single(runs);
         Assert.Equal(CiCoverage.Profiles["foundation"].Suites.Order(), CiCoverage.Suites(candidate).Keys.Order());
         var receipt = candidate["jobs"]![0]!["receipt"]!;
-        receipt["suites"]!["compile-candidate-no-safety"]!["summary"]!["failed"] = 1;
+        receipt["suites"]!["device-add"]!["summary"]!["failed"] = 1;
         Assert.Throws<ReleaseException>(() => CiCoverage.Validate(Root, candidate, Sha));
     }
 

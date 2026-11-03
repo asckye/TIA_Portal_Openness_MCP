@@ -194,11 +194,11 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
 都保留 `meta.behaviorPolicy=current` 与 `UNVERIFIED_BEHAVIOR`。CallTool/批次派发前的拒绝保留桥接身份，
 同时披露已明确选定的 D1 目标族；不改变原来的错误码、执行状态或派发顺序。
 
-worker 宿主在接收请求前将 SOURCE 路径选择注入适配器。其余宿主/Portal 的程序集选择由全目录一致性
-测试核对。只有显式 `TiaMcpTestPolicy` 测试构建可选择候选 schema；Strict 验包与 Release 拒绝此标记。
+SafeV4 候选实现已归档到标签 `archive/safev4-candidates`，并于 2026-11-02 从当前代码删除；各族通过 L5 后基于届时的现行代码重建。P8-04l3 已取消，P8-31e6 延后。
+Strict 验包与 Release 继续拒绝 `TiaMcpTestPolicy` 元数据，防止重新引入测试策略发布包。
 当前 schema 保留已实现的参数和真实缺省，包括 Foundation 原有 confirm/expectedProjectFile/计划哈希
-以及完整引擎 ConnectProject 的 processStartUtc，不能仅凭参数名把这些现行能力删除。
+以及所选发布版本的身份参数，不能仅凭参数名把这些现行能力删除。
 
 `Snapshot-ToolContracts.py` 从实际工具目录记录每个 `outputSchema`（未广告时显式 null）及实际查询的
-行为能力表。verify 对照生成目录，拒绝候选专用参数、错误缺省、遗漏输出字段或不一致的族状态。
+行为能力表。verify 对照生成目录，拒绝未实现的参数、遗漏输出字段或不一致的族状态。
 [功能矩阵](../../reference/version-feature-matrix.json)与台账的能力表由同一次生成产生；原生验收条目仍为 NOT RUN。
