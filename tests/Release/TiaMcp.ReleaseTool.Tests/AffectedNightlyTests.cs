@@ -246,6 +246,45 @@ public sealed class AffectedNightlyTests
         Assert.Contains("Unmapped", unknown.Fallback);
     }
 
+    [Theory]
+    [InlineData("contracts")]
+    [InlineData("responses")]
+    [InlineData("usage")]
+    [InlineData("transport-usage")]
+    public void ReleaseScriptDataDeclaresTheVersionCatalog(string family)
+        => Assert.Contains("src/Logic/Siemens/TiaVersionCatalog.cs", CheckAllScriptInputs.Data(family));
+
+    [Theory]
+    [InlineData("contracts-v14sp1")]
+    [InlineData("contracts-v20-plc")]
+    [InlineData("responses-v21-plc")]
+    [InlineData("usage-v20-plc")]
+    [InlineData("transport-usage-v21-plc")]
+    [InlineData("usage-audit-plc")]
+    [InlineData("contract-self-tests")]
+    [InlineData("check-all-speedup-self-tests")]
+    [InlineData("plc-script-self-tests")]
+    [InlineData("plc-harness-self-tests")]
+    [InlineData("relocation-self-tests")]
+    [InlineData("domain-source")]
+    [InlineData("harness-v20-plc")]
+    public void VersionCatalogOnlyChangeSelectsReleaseScriptConsumers(string name)
+    {
+        const string path = "src/Logic/Siemens/TiaVersionCatalog.cs";
+        var catalog = Catalog;
+        var job = Job(name);
+        var declaration = CheckAllJobInputs.Find(job, catalog)!;
+        // This existing broad source check maps the path even before the fix,
+        // so an unmapped-path fallback cannot hide a missing consumer input.
+        var selection = new CheckAllAffected([path], [], null, false);
+        selection.Map([job, Job("contract-verify")], catalog);
+        Assert.Null(selection.Fallback);
+        Assert.True(selection.Selected(job, declaration));
+        Assert.Contains(path, declaration.Paths);
+        Assert.Contains(selection.QuickPlan([job, Job("contract-verify")], catalog), selected => selected.Name == name);
+        Assert.True(new CheckAllMergePolicy([path], null).Includes(name, "merge"));
+    }
+
     [Fact]
     public void DocsOnlyStillRunsFastChecksAndQuickNeverRunsStressOrUnchangedGui()
     {

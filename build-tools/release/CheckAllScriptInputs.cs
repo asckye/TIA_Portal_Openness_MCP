@@ -12,6 +12,8 @@ internal static class CheckAllScriptInputs
         void Visit(string path)
         {
             if (!paths.Add(path)) return;
+            // The imported availability reader also reads the ordered catalog source.
+            if (path == "scripts/checks/ported_families.py") paths.Add("src/Logic/Siemens/TiaVersionCatalog.cs");
             var full = Path.Combine(root, path);
             if (!File.Exists(full)) return;
             var text = File.ReadAllText(full);
@@ -48,9 +50,9 @@ internal static class CheckAllScriptInputs
 
     internal static string[] Data(string family) => family switch
     {
-        "contracts" => ["manifest/contracts/v4", "reference/tool-catalog", "reference/tool-examples", "src/Adapters.Contracts/PortedFamilies.cs"],
-        "responses" => ["manifest/contracts/v4", "reference/tool-catalog", "reference/tool-examples", "templates", "catalog", "src/Adapters.Contracts/PortedFamilies.cs"],
-        "usage" or "transport-usage" => ["reference/tool-examples", "reference/tool-catalog", "manifest/contracts/v4", "src/Shared/ToolUsageData.json", "src/Logic/ModelContextProtocol/ToolTaxonomy.cs", "src/Adapters.Contracts/PortedFamilies.cs"],
+        "contracts" => ["manifest/contracts/v4", "reference/tool-catalog", "reference/tool-examples", "src/Adapters.Contracts/PortedFamilies.cs", "src/Logic/Siemens/TiaVersionCatalog.cs"],
+        "responses" => ["manifest/contracts/v4", "reference/tool-catalog", "reference/tool-examples", "templates", "catalog", "src/Adapters.Contracts/PortedFamilies.cs", "src/Logic/Siemens/TiaVersionCatalog.cs"],
+        "usage" or "transport-usage" => ["reference/tool-examples", "reference/tool-catalog", "manifest/contracts/v4", "src/Shared/ToolUsageData.json", "src/Logic/ModelContextProtocol/ToolTaxonomy.cs", "src/Adapters.Contracts/PortedFamilies.cs", "src/Logic/Siemens/TiaVersionCatalog.cs"],
         "campaign-inputs" => ["scripts/diagnostics/campaign", "catalog", "templates", "reference/tool-catalog"],
         "resources" or "ecosystem" => ["reference", "templates", "catalog", "third_party"],
         "harness" => ["reference", "templates", "catalog", "manifest/contracts/v4", "tests/Engine/TiaMcp.Engine.Harness/Golden"],

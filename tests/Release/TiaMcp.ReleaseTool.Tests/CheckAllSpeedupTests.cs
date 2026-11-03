@@ -88,7 +88,7 @@ public sealed class CheckAllSpeedupTests
     }
 
     [Theory]
-    [InlineData("scripts/checks/Snapshot-ToolContracts.py")]
+    // Snapshot-ToolContracts.py no longer imports engine_sources.py since Q8, so only Test-DomainTools.py reads the lexer.
     [InlineData("scripts/checks/Test-DomainTools.py")]
     public void SourceContractInputsIncludeTheExtractedLexer(string script) =>
         Assert.Contains("scripts/checks/csharp_lexer.py", CheckAllScriptInputs.Closure(script));
@@ -205,6 +205,24 @@ public sealed class CheckAllSpeedupTests
         Assert.DoesNotContain("scripts", inputs.Paths); Assert.DoesNotContain("src", inputs.Paths); Assert.DoesNotContain("tests", inputs.Paths);
         Assert.Contains("scripts/checks/call_latency.py", inputs.Paths);
     }
+
+    [Theory]
+    [InlineData("Snapshot-ToolContracts.py")]
+    [InlineData("Snapshot-ToolResponses.py")]
+    [InlineData("Test-FoundationTransport.py")]
+    [InlineData("Test-ToolUsage.py")]
+    [InlineData("Test-CheckAllSpeedups.py")]
+    [InlineData("Test-PlcScriptSuccessors.py")]
+    [InlineData("Test-PlcHarnessSuccessors.py")]
+    [InlineData("Test-RelocatedBundle.py")]
+    [InlineData("Test-DomainTools.py")]
+    [InlineData("Test-PlcHarness.py")]
+    public void AvailabilityReaderImportsIncludeTheVersionCatalogData(string script)
+        => Assert.Contains("src/Logic/Siemens/TiaVersionCatalog.cs", CheckAllScriptInputs.Closure("scripts/checks/" + script));
+
+    [Fact]
+    public void UnrelatedScriptDoesNotAcquireTheVersionCatalogData()
+        => Assert.DoesNotContain("src/Logic/Siemens/TiaVersionCatalog.cs", CheckAllScriptInputs.Closure("scripts/checks/Test-ResourceDiscovery.py"));
 
     [Fact]
     public void AnalyzerResultReferencesRejectChangedSourcesReportsAndMissingEvidence()
