@@ -154,7 +154,8 @@ internal static class FamilyReplyShapes
         string name = operation[(operation.IndexOf('.') + 1)..];
         if (Untyped(operation) is { } untyped) return untyped;
         if (name is "ReadHardwareAddressing" or "UpdateHardwareAddress")
-            return One(Step(new JsonObject { ["tool"] = name == "ReadHardwareAddressing" ? "GetDeviceAddressing" : "SetDeviceAddress", ["success"] = true }));
+            return One(Step(new HardwareAddressingReply { Message = "fixture", Meta = new() {
+                ["tool"] = name == "ReadHardwareAddressing" ? "GetDeviceAddressing" : "SetDeviceAddress", ["success"] = true } }));
         return returnType switch
         {
             "System.Boolean" => new[] { (NoArguments, (JsonNode?)JsonValue.Create(true)), (NoArguments, (JsonNode?)JsonValue.Create(false)) },
@@ -167,10 +168,10 @@ internal static class FamilyReplyShapes
 
     private static IReadOnlyList<(JsonObject, JsonNode?)> One(JsonNode? reply) => new[] { (NoArguments, reply) };
 
-    private static JsonObject Step(JsonObject meta) => new() { ["Message"] = "fixture", ["Meta"] = meta, ["RequiresSessionReset"] = false, ["MayHaveChanged"] = false };
+    private static JsonObject Step(object reply) => JsonNode.Parse(WorkerJson.Serialize(reply))!.AsObject();
 
     // A contract type instantiated with its defaults; a null string member becomes "" and an empty Meta dictionary gets the
-    // success flag that every family step sets. Collections of contract types get one such element.
+    // positive legacy success sample. Collections of contract types get one such element.
     private static JsonNode? Contract(string typeName)
     {
         string element = typeName;
@@ -244,8 +245,8 @@ internal static class FamilyReplyShapes
                     (Request("Operation", "SetPlcPutGetAccess"), Parse("{\"ok\":false,\"failureCode\":\"NOT_FOUND\",\"device\":\"PLC_1\",\"message\":\"m\"}")),
                     (Request("Operation", "SetPlcPutGetAccess"), Parse("{\"ok\":false,\"mayHaveChanged\":true,\"writeOutcomeKnown\":false,\"device\":\"PLC_1\",\"attributeName\":\"a\",\"message\":\"m\"}")),
                     (Request("Operation", "SetPlcPutGetAccess"), Parse("{\"ok\":true,\"mayHaveChanged\":true,\"writeOutcomeKnown\":true,\"device\":\"PLC_1\",\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"before\":\"False\",\"after\":\"True\",\"note\":\"n\"}")),
-                    (Request("Operation", "ManagePlcProtection"), (JsonNode?)Step(new JsonObject { ["success"] = true })),
-                    (Request("Operation", "ManageWatchForceTableWebAccess"), (JsonNode?)Step(new JsonObject { ["success"] = true })),
+                    (Request("Operation", "ManagePlcProtection"), (JsonNode?)Step(new SecurityResult { Message = "fixture", Meta = new() { ["success"] = true } })),
+                    (Request("Operation", "ManageWatchForceTableWebAccess"), (JsonNode?)Step(new SecurityResult { Message = "fixture", Meta = new() { ["success"] = true } })),
                 };
             // PlcWorker/WorkerProjectScaffold.cs Execute, per primitive kind.
             case "project-lifecycle.ExecuteProjectScaffoldPrimitive":

@@ -38,13 +38,14 @@ namespace TiaMcp.Adapters.Native.Hmi
             now = clock ?? (() => DateTime.UtcNow);
             timer = new Timer(_ => { lock (gate) { Expire(); } }, null, 60000, 60000);
         }
-        internal HmiObject Read(object project, string scope, string cursor, int pageSize, int budgetMs,
+        internal HmiObject Read(object project, HmiObject scope, string cursor, int pageSize, int budgetMs,
             Func<IEnumerable<HmiObject>> factory, int? expected = null)
         {
             if (pageSize < 1 || pageSize > 500 || budgetMs < 50 || budgetMs > 20000)
                 throw new ArgumentException("pageSize must be 1..500; budgetMs 50..20000.");
             lock (gate)
             {
+                string scopeKey = scope.ToJsonString();
                 if (disposed) throw new ObjectDisposedException(nameof(MigrationPages));
                 Expire();
                 foreach (var id in sessions.Where(p => !ReferenceEquals(p.Value.ProjectIdentity?.Target, project)).Select(p => p.Key).ToArray())
@@ -54,7 +55,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     if (sessions.Values.Count(p => p.Iterator != null) >= ActiveCapacity)
                         throw new InvalidOperationException("CursorCapacity: 16 collections are still active. Complete or release an unfinished collection; completed replay caches do not consume active capacity.");
-                    s = new Session { Project = project, ProjectIdentity = new WeakReference(project), Scope = scope, Id = Guid.NewGuid().ToString("N"), Used = now(), Expected = expected };
+                    s = new Session { Project = project, ProjectIdentity = new WeakReference(project), Scope = scopeKey, Id = Guid.NewGuid().ToString("N"), Used = now(), Expected = expected };
                     // The factory must be lazy; no traversal before the first page.
                     s.Iterator = factory().GetEnumerator(); sessions.Add(s.Id, s);
                 }
@@ -63,7 +64,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     var parts = cursor.Split(':');
                     if (parts.Length != 2 || !int.TryParse(parts[1], out int sequence) || !sessions.TryGetValue(parts[0], out s!))
                         throw new InvalidOperationException("CursorExpiredOrUnknown: start a new collection; do not append it to the old collection.");
-                    if (s.Scope != scope || (s.Project != null && !ReferenceEquals(s.Project, project)))
+                    if (s.Scope != scopeKey || (s.Project != null && !ReferenceEquals(s.Project, project)))
                         throw new InvalidOperationException("CursorScopeMismatch: use the same tool, project and arguments.");
                     s.Used = now();
                     s.Access = ++access;
@@ -78,7 +79,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     HmiObject? row = null;
                     try { if (s.Iterator!.MoveNext()) row = s.Iterator.Current; else finished = true; }
-                    catch (Exception ex) { row = MigrationRead.Failure(scope, "TraversalFailed", ex); finished = true; aborted = true; }
+                    catch (Exception ex) { row = MigrationRead.Failure(scopeKey, "TraversalFailed", ex); finished = true; aborted = true; }
                     if (row != null)
                     {
                         rows.Add(row); s.Total++; chars += row.ToJsonString().Length;
@@ -94,7 +95,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
                 if (finished) { Release(s); }
                 var result = new HmiObject {
-                    ["schemaVersion"] = 1, ["scope"] = UnifiedRequestValues.Parse(scope), ["readOnly"] = true,
+                    ["schemaVersion"] = 1, ["scope"] = scope.DeepClone(), ["readOnly"] = true,
                     ["collectionId"] = s.Id, ["pageIndex"] = s.Sequence, ["pageCursor"] = inputCursor,
                     ["apiCallSuccess"] = !aborted, ["dataComplete"] = finished && s.Failures == 0,
                     ["readComplete"] = finished && !aborted && s.ReadFailures == 0,

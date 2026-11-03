@@ -24,6 +24,7 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class HardwareProbeEvidence : List<string>
     {
         internal string? FailureCode { get; set; }
+        internal string? Target { get; set; }
     }
 
     // This boundary is exclusive to the hardware network/service tools. Native work
@@ -91,6 +92,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult MapResult(string tool, ResponseMessage response, bool readOnly, bool current)
         {
             var evidence = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
+            if (tool.StartsWith("ProbeHardwareHmiConnection", StringComparison.Ordinal) && evidence["target"] == null)
+                evidence.Remove("target");
             var data = response is ResponseJsonReport report && report.Data != null ? (JsonObject)report.Data.DeepClone() : new JsonObject();
             bool? success = evidence.ContainsKey("operationSuccess") ? Flag(evidence, "operationSuccess") : Flag(evidence, "success");
             if (response is ResponseJsonReport verdict) success = verdict.Ok ?? success;
@@ -139,7 +142,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "NOT_FOUND" || status == "UNSUPPORTED_CAPABILITY" || status == "INVALID_ARGUMENT")
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
-                error = status == "NOT_FOUND" ? new Error("The hardware target was not found.", new NotFoundDetails(null))
+                error = status == "NOT_FOUND" ? new Error("The hardware target was not found.", new NotFoundDetails((string?)evidence["target"]))
                     : status == "UNSUPPORTED_CAPABILITY" ? new Error("The hardware capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
                     : McpServer.InvalidInput("arguments");
             }
@@ -667,7 +670,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = "Hardware HMI connection owner candidates enumerated",
                     Items = items,
                     Meta = ResponseMeta.Basic(DateTime.Now, (items as HardwareProbeEvidence)?.FailureCode == null,
-                        ("failureCode", (items as HardwareProbeEvidence)?.FailureCode))
+                        ("failureCode", (items as HardwareProbeEvidence)?.FailureCode), ("target", (items as HardwareProbeEvidence)?.Target))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -689,7 +692,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = "Hardware HMI connection whitelisted services scanned",
                     Items = items,
                     Meta = ResponseMeta.Basic(DateTime.Now, (items as HardwareProbeEvidence)?.FailureCode == null,
-                        ("failureCode", (items as HardwareProbeEvidence)?.FailureCode))
+                        ("failureCode", (items as HardwareProbeEvidence)?.FailureCode), ("target", (items as HardwareProbeEvidence)?.Target))
                 };
             }
             catch (Exception ex) when (ex is not McpException)

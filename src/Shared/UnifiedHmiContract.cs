@@ -61,7 +61,9 @@ namespace TiaMcpServer.ModelContextProtocol
             data["evidence"] = evidence;
             if (evidence["records"] is JsonArray records) data["items"] = records.DeepClone();
             else if (evidence["itemResults"] is JsonArray results) data["items"] = results.DeepClone();
+            string? nativeMessage = HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]);
             Clean(data);
+            if (nativeMessage != null) evidence["nativeMessage"] = nativeMessage;
 
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success") ?? Flag(evidence, "ok") ?? Flag(data, "ok");
             if (Flag(data, "ok") == false || Flag(evidence, "ok") == false || Flag(evidence, "success") == false) success = false;
@@ -83,7 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : code == "INVALID_ARGUMENT" || code == "InvalidParams" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
                     : code == "NOT_FOUND" || code == "NotFound" ? new NotFoundDetails(null)
                     : new PreconditionFailedDetails(evidence["error"]?.ToString(), null);
-                return Result(tool, data, new Error("The HMI request was rejected before the operation.", details),
+                return Result(tool, data, new Error(nativeMessage ?? "The HMI request was rejected before the operation.", details),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             }
             if (evidence["applyStatus"]?.ToString() == "rejected")
@@ -123,7 +125,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return Result(tool, data, new Error("Some HMI items did not complete.", new PartialFailureDetails(passed, failed, 0)),
                         Outcome.Partial, Completeness.Partial, writes, current);
                 bool before = writes && Flag(evidence, "mayHaveChanged") == false;
-                return Result(tool, data, before ? new Error("The HMI operation was rejected before a write.", new PreconditionFailedDetails(null, null)) : NativeFailure(evidence),
+                return Result(tool, data, before ? new Error(nativeMessage ?? "The HMI operation was rejected before a write.", new PreconditionFailedDetails("hmi-before-write", null)) : NativeFailure(evidence),
                     before ? Outcome.RejectedBeforeOperation : Outcome.ReadFailed, incomplete ? Completeness.Partial : Completeness.None, writes, current);
             }
             Paging? paging = null;
@@ -166,7 +168,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (node is not JsonObject obj) return;
             foreach (var pair in obj.ToArray())
                 if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
-                else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text) && text.Contains("\n   ")) obj[pair.Key] = "Diagnostic details retained in the server log.";
+                else if (!pair.Key.Equals("ScriptCode", StringComparison.OrdinalIgnoreCase)
+                    && !pair.Key.Equals("GlobalDefinitionAreaScriptCode", StringComparison.OrdinalIgnoreCase)
+                    && pair.Value is JsonValue value && value.TryGetValue<string>(out var text) && text.Contains("\n   "))
+                    obj[pair.Key] = "Diagnostic details retained in the server log.";
                 else Clean(pair.Value);
         }
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,

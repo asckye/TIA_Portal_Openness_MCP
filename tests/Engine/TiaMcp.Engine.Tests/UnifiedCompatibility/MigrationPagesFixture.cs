@@ -8,7 +8,7 @@ namespace TiaMcpServer.Siemens
         internal readonly object state;
         internal MigrationPages(Func<DateTime>? clock = null) => state = UnifiedPrimitiveCompatibility.Create("MigrationPages", clock);
         internal JsonObject Read(object project, string scope, string cursor, int pageSize, int budgetMs, Func<IEnumerable<JsonObject>> factory, int? expected = null)
-            => UnifiedPrimitiveCompatibility.CallState<JsonObject>(state, "MigrationPages", "Read", project, scope, cursor, pageSize, budgetMs, factory, expected);
+            => UnifiedPrimitiveCompatibility.CallState<JsonObject>(state, "MigrationPages", "Read", project, JsonNode.Parse(scope), cursor, pageSize, budgetMs, factory, expected);
         internal bool Cancel(string cursor) => UnifiedPrimitiveCompatibility.CallState<bool>(state, "MigrationPages", "Cancel", cursor);
         public void Dispose() => UnifiedPrimitiveCompatibility.CallState(state, "MigrationPages", "Dispose");
     }

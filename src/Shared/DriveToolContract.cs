@@ -72,6 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult Map(string tool, ResponseMessage response, bool writes, bool current,
             int? offset = null, int? limit = null)
         {
+            string? nativeMessage = HostBehavior.SafeDiagnostic(response.Message);
             var evidence = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success");
             if (Flag(evidence, "success") == false || Flag(evidence, "result") == false) success = false;
@@ -89,7 +90,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 outcome = applied > 0 ? Outcome.Partial : Outcome.Failed;
                 error = applied > 0 ? new Error("Configuration entries were applied before the native operation returned false.",
-                    new PartialFailureDetails(applied, 1, 0)) : NativeFailure();
+                    new PartialFailureDetails(applied, 1, 0)) : NativeFailure(nativeMessage);
             }
             else if (projectMissing)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
@@ -102,10 +103,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
                     : status == "InvalidParams" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
                     : new PreconditionFailedDetails("option-package-prerequisites", null);
-                error = new Error("The option-package request was rejected before execution.", details);
+                error = new Error(nativeMessage ?? "The option-package request was rejected before execution.", details);
             }
             else if (success == true) outcome = Outcome.Succeeded;
-            else if (!writes) { outcome = Outcome.ReadFailed; error = NativeFailure(); }
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
+            else if (!writes) { outcome = Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
             else if (Flag(evidence, "mayHaveChanged") == false && Flag(evidence, "mayHaveWrittenFiles") != true)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("The write prerequisites were not satisfied.", new PreconditionFailedDetails("option-package-before-write", null)); }
             else { outcome = Outcome.Unknown; error = Unknown(); }
@@ -163,8 +166,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static Error NativeFailure() => new Error("The option-package operation did not establish success.",
-            new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
+        private static Error NativeFailure(string? nativeMessage = null) => new Error(nativeMessage ?? "The option-package operation did not establish success.",
+            new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
         private static Error Unknown() => new Error("The write outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
             new OutcomeUnknownDetails("option-package-operation", new Dictionary<string, JsonElement>()));
 

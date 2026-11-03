@@ -45,6 +45,13 @@ namespace TiaMcp.Adapters.Native.Hmi
     }
     internal static class HmiMeta
     {
+        internal static string Failure(HmiObject meta, Exception error)
+        {
+            string message = HmiValues.Cause(error).Message;
+            meta["nativeMessage"] = message;
+            return message;
+        }
+
         internal static HmiObject Unstamped(bool success, params (string Key, object? Value)[] values)
         {
             var meta = new HmiObject(LegacyResponseMetadata.Basic(null, success));

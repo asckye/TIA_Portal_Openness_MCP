@@ -89,23 +89,24 @@ namespace TiaMcpServer.ModelContextProtocol
             bool verificationFailed = Flag(data, "expectedPresenceVerified") == false || Flag(data, "verifiedAbsent") == false;
             if (verificationFailed) success = false;
             bool notStarted = Flag(data, "operationNotStarted") == true;
+            bool unchangedFailure = HostBehavior.UnchangedNativeFailure(data, success);
             // A lost worker acknowledgement is unknown for reads too, as in HostFailurePolicy.
             bool unknown = outcomeLost || rejection == null && writes && !notStarted && (stateRequired && !stateKnown
-                || reset && issued || success != true && !nativeKnown && !verificationFailed);
+                || reset && issued || success != true && !nativeKnown && !verificationFailed && !unchangedFailure);
             int imported = (data["imported"] as JsonArray)?.Count ?? 0;
             bool knownPartial = verificationFailed && imported > 0
                 || success == false && nativeKnown && (data["file"] is JsonObject || data["output"] is JsonObject);
             Outcome outcome = unknown ? Outcome.Unknown : rejection != null ? Outcome.RejectedBeforeOperation
                 : success == true ? Outcome.Succeeded : knownPartial ? Outcome.Partial
-                : writes && nativeKnown || verificationFailed ? Outcome.Failed : writes && !notStarted ? Outcome.Unknown : Outcome.ReadFailed;
-            string failureMessage = outcome == Outcome.RejectedBeforeOperation && rejection == "UNSUPPORTED_CAPABILITY"
+                : writes && (nativeKnown || unchangedFailure) || verificationFailed ? Outcome.Failed : writes && !notStarted ? Outcome.Unknown : Outcome.ReadFailed;
+            string failureMessage = HostBehavior.SafeDiagnostic(response.Message) ?? (outcome == Outcome.RejectedBeforeOperation && rejection == "UNSUPPORTED_CAPABILITY"
                 && (tool == "ExchangeCfcCharts" || tool == "ManageCfcChartProtection") && data["unsupportedReason"] is JsonValue reason
-                && reason.TryGetValue<string>(out var guardReason) ? guardReason : "The optional-package operation did not establish success.";
+                && reason.TryGetValue<string>(out var guardReason) ? guardReason : "The optional-package operation did not establish success.");
             Error? error = outcome == Outcome.Succeeded ? null : new Error(failureMessage,
                 outcome == Outcome.Unknown ? new OutcomeUnknownDetails("optional-package-operation", new Dictionary<string, JsonElement>())
                 : outcome == Outcome.Partial ? new PartialFailureDetails(imported, imported > 0 ? 1 : 0, 0)
                 : outcome == Outcome.RejectedBeforeOperation ? Rejection(rejection!, tool)
-                : new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
+                : new NativeOperationFailedDetails(null, HostBehavior.SafeDiagnostic(response.Message), new Dictionary<string, JsonElement>()));
             bool incomplete = Incomplete(data) || tool == "ExchangeCfcCharts" && (data["action"]?.ToString() == "import" || data["action"]?.ToString() == "export")
                 || data.ContainsKey("contentVerified") && Flag(data, "contentVerified") != true;
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None

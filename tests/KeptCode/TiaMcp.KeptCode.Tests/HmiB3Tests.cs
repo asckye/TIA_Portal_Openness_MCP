@@ -14,6 +14,17 @@ namespace TiaMcp.Engine.Tests;
 
 public sealed class HmiB3Tests
 {
+    [Fact]
+    public void Skeleton_failure_retains_the_native_cause_without_a_diagnostic_stack()
+    {
+        var native = new InvalidOperationException("Configured HMI connection 'Missing' was not found.");
+        var meta = new HmiObject();
+        string detail = HmiMeta.Failure(meta, new System.Reflection.TargetInvocationException(native));
+        Assert.Equal(native.Message, detail);
+        Assert.Equal(native.Message, meta["nativeMessage"]);
+        Assert.DoesNotContain(nameof(System.Reflection.TargetInvocationException), detail, StringComparison.Ordinal);
+    }
+
     public sealed class InterfaceItem
     {
         public string PropertyName => "Speed";

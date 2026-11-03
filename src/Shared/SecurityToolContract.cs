@@ -44,6 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static CallToolResult MapResult(string tool, ResponseMessage response, bool readOnly, bool current, params string[] secrets)
         {
+            string? nativeMessage = HostBehavior.SafeDiagnostic(Redact(response.Message, secrets));
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
             bool? success = data.ContainsKey("operationSuccess") ? Flag(data, "operationSuccess") : Flag(data, "success");
             bool issued = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
@@ -55,7 +56,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (issued && (reset || success != true && !knownFailure && !knownFile))
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
             else if (knownFailure)
-            { outcome = Outcome.Failed; execution = Execution.Completed; error = NativeFailure(); }
+            { outcome = Outcome.Failed; execution = Execution.Completed; error = NativeFailure(nativeMessage); }
             else if (success != true && knownFile)
             { outcome = Outcome.Partial; execution = Execution.Partial; error = new Error("A verified output file remains after the operation failed.", new PartialFailureDetails(1, 1, 0)); }
             else if (status == "HmiReadSessionBlocked")
@@ -70,7 +71,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (success != true && (status == "NotSupportedOnVersion" || status == "NotFound" || status == "AccessDenied"))
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
-                error = status == "NotSupportedOnVersion" ? new Error("The requested security capability is unavailable.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null))
+                error = status == "NotSupportedOnVersion" ? new Error(nativeMessage ?? "The requested security capability is unavailable.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null))
                     : status == "NotFound" ? new Error("The requested security target was not found.", new NotFoundDetails(null))
                     : new Error("Access to the security operation was denied.", new AccessDeniedDetails(tool, null));
             }
@@ -83,8 +84,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else if (success == true)
             { outcome = Outcome.Succeeded; execution = readOnly ? Execution.ReadOnly : Execution.Completed; }
+            else if (HostBehavior.UnchangedNativeFailure(data, success))
+            { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error = NativeFailure(nativeMessage); }
             else if (readOnly)
-            { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = NativeFailure(); }
+            { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = NativeFailure(nativeMessage); }
             else if (Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") != true)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("Security operation preconditions were not satisfied.", new PreconditionFailedDetails("security-before-write", null)); }
             else
@@ -150,8 +153,8 @@ namespace TiaMcpServer.ModelContextProtocol
             return text;
         }
 
-        private static Error NativeFailure() => new Error("The security operation did not establish a successful result.",
-            new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
+        private static Error NativeFailure(string? nativeMessage = null) => new Error(nativeMessage ?? "The security operation did not establish a successful result.",
+            new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
         private static Error UnknownFailure() => new Error("The security operation outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
             new OutcomeUnknownDetails("security-operation", new Dictionary<string, JsonElement>()));
 

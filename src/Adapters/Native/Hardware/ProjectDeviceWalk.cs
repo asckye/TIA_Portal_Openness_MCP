@@ -152,7 +152,8 @@ namespace TiaMcp.Adapters.Native.Hardware
         }
 
         /// <summary>
-        /// Resolves a slash-separated device item path. The first level searches the root and the ungrouped devices;
+        /// Resolves a project-tree path, an exact device/head-item name across all groups, or a slash-separated legacy path.
+        /// The first level of a legacy path searches the root and the ungrouped devices;
         /// a segment that is not a device of the current level may name a user group (or "$ungrouped" at the top level).
         /// The window slides only while a segment is not claimed by the current level: once a device or item claims a
         /// segment, a later missing segment fails instead of silently resolving to an ancestor.
@@ -160,6 +161,12 @@ namespace TiaMcp.Adapters.Native.Hardware
         internal static DeviceItem? FindItem(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped, string deviceItemPath)
         {
             if (root == null || string.IsNullOrWhiteSpace(deviceItemPath)) return null;
+            if (deviceItemPath.StartsWith("device-groups/", StringComparison.Ordinal)
+                || deviceItemPath.StartsWith("devices/", StringComparison.Ordinal)
+                || deviceItemPath.StartsWith("ungrouped/", StringComparison.Ordinal))
+                return CanonicalItem(root, groups, ungrouped, deviceItemPath.Split('/'));
+            var named = ItemFromDevices(new[] { deviceItemPath }, Devices(root, groups, ungrouped).ToList(), 0, out var namedAnchor);
+            if (namedAnchor) return named;
             var segments = deviceItemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
             var ungroupedDevices = ungrouped == null ? new List<Device>() : ungrouped.Devices.ToList();
             IReadOnlyList<Device> devices = root.Concat(ungroupedDevices).ToList();
@@ -198,6 +205,29 @@ namespace TiaMcp.Adapters.Native.Hardware
                 topLevel = false;
             }
             return deviceItem;
+        }
+
+        private static DeviceItem? CanonicalItem(IEnumerable<Device> root, IEnumerable<DeviceUserGroup>? groups,
+            DeviceGroup? ungrouped, string[] segments)
+        {
+            IEnumerable<Device> devices = root;
+            int index = 1;
+            if (segments[0] == "ungrouped") devices = ungrouped?.Devices ?? Enumerable.Empty<Device>();
+            else if (segments[0] == "device-groups")
+            {
+                while (index < segments.Length)
+                {
+                    var group = groups?.FirstOrDefault(g => g.Name.Equals(Uri.UnescapeDataString(segments[index]), StringComparison.OrdinalIgnoreCase));
+                    if (group == null || ++index >= segments.Length) return null;
+                    string kind = segments[index++];
+                    if (kind == "devices") { devices = group.Devices; break; }
+                    if (kind != "groups") return null;
+                    groups = group.Groups;
+                }
+            }
+            if (index >= segments.Length) return null;
+            var path = segments.Skip(index).Select(Uri.UnescapeDataString).ToArray();
+            return ItemFromDevices(path, devices.ToList(), 0, out _);
         }
 
         private static bool HasItemNamed(IEnumerable<DeviceItem>? items, string name)

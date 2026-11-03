@@ -65,6 +65,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => obj[key] is JsonValue v && v.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
         internal static CallToolResult Map(string tool, object response, bool writes, bool current = true)
         {
+            string? nativeMessage = HostBehavior.SafeDiagnostic((response as ResponseMessage)?.Message);
             var data = JsonSerializer.SerializeToNode(response, response.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.Web))!.AsObject();
             var evidence = data["meta"] as JsonObject ?? new JsonObject();
             data.Remove("meta");
@@ -123,6 +124,8 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "HmiReadSessionBlocked")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("engineering-session")); }
             else if (success == true) outcome = Outcome.Succeeded;
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
             else if (before)
             {
                 outcome = Outcome.RejectedBeforeOperation;
@@ -131,12 +134,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     : status == "ALREADY_EXISTS" ? new AlreadyExistsDetails(null)
                     : status == "INVALID_ARGUMENT" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
                     : new PreconditionFailedDetails("engineering-before-operation", null);
-                error = new Error(refusedScreenItemImport ? screenItemRefusal : "The engineering request was rejected before execution.", details);
+                error = new Error(refusedScreenItemImport ? screenItemRefusal : nativeMessage ?? "The engineering request was rejected before execution.", details);
             }
-            else if (!writes) { outcome = Outcome.ReadFailed; error = NativeFailure(); }
+            else if (!writes) { outcome = Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
             else if (succeeded > 0)
             { outcome = Outcome.Partial; error = new Error("Some engineering operations did not complete.", new PartialFailureDetails(succeeded, Math.Max(1, failed), 0)); }
-            else { outcome = Outcome.Failed; error = NativeFailure(); }
+            else { outcome = Outcome.Failed; error = NativeFailure(nativeMessage); }
             bool incomplete = Incomplete(data) || Flag(evidence, "supported") == false
                 || tool == "ProbeGlobalLibrary" || tool == "ListVersionControlWorkspaces" || tool == "GetVersionControlStatus";
             if (tool == "ConnectProjectToWorkspace" && Count(evidence, "unsupported") > 0) incomplete = true;
@@ -181,7 +184,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 else Clean(pair.Value);
             }
         }
-        private static Error NativeFailure() => new Error("The engineering operation did not establish success.", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
+        private static Error NativeFailure(string? nativeMessage = null) => new Error(nativeMessage ?? "The engineering operation did not establish success.", new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
         private static Error Unknown() => new Error("The write outcome is unknown. Inspect the retained evidence and reset the session before further writes.", new OutcomeUnknownDetails("engineering-operation", new Dictionary<string, JsonElement>()));
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,
             bool writes = false, Paging? paging = null, bool reset = false, bool current = true)

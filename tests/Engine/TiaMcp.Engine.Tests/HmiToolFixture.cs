@@ -26,26 +26,37 @@ namespace TiaMcp.Engine.Tests
                 ? new TiaMcp.Adapters.Contracts.UnifiedRequest { Operation = "ReleaseUnifiedReadCursor", Cursor = (string)args["cursor"]! }
                 : System.Text.Json.JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.UnifiedRequest>(args["request"]!.ToJsonString())!;
             TiaMcpServer.Siemens.UnifiedPrimitiveCompatibility.Configure();
-            TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Inputs = request.Inputs.ToDictionary(p => p.Key,
-                p => TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Decode(p.Value));
-            var session = new UnifiedSession(fixture);
-            object value = request.Operation switch
+            var previousDecoder = TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Decoder;
+            var previousInputs = TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Inputs;
+            TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Decoder = null;
+            try
             {
-                "ListUnifiedGlobalScripts" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ListUnifiedGlobalScripts(request.SoftwarePath, request.ExpectedProject, request.Cursor, request.PageSize, request.BudgetMs),
-                "GetUnifiedGlobalScript" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.Cursor, request.PageSize, request.BudgetMs),
-                "ListUnifiedTagDefinitions" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedTagDefinitions(request.SoftwarePath, request.ExpectedProject, request.Cursor, request.PageSize, request.BudgetMs),
-                "GetUnifiedScreenBranch" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedScreenBranch(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemName, request.BranchJson, request.Cursor, request.PageSize, request.BudgetMs),
-                "GetUnifiedLibraryType" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedLibraryType(request.SoftwarePath, request.ExpectedProject, request.TypePath, request.Version, request.Cursor, request.PageSize, request.BudgetMs),
-                "ListUnifiedLibraryFolderEntries" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ListUnifiedLibraryFolder(request.SoftwarePath, request.ExpectedProject, request.FolderPath, request.Cursor, request.PageSize, request.BudgetMs),
-                "GetUnifiedFaceplateInstance" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedFaceplateInstance(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemName, request.TypePath, request.Version, request.Cursor, request.PageSize, request.BudgetMs),
-                "ReleaseUnifiedReadCursor" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReleaseUnifiedReadCursor(request.Cursor),
-                "GetUnifiedGraphicSelection" => new TiaMcp.Adapters.Native.Hmi.GraphicSelectionAdapter(session, new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session)).ReadUnifiedGraphicSelection(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemNamesJson, request.Cursor, request.PageSize, request.BudgetMs),
-                "GetUnifiedRuntimeSettings" => new TiaMcp.Adapters.Native.Hmi.RuntimeSettingsAdapter(session).ReadUnifiedRuntimeSettings(request.SoftwarePath, request.ExpectedProject, request.FieldsJson),
-                "SetUnifiedRuntimeSettings" => new TiaMcp.Adapters.Native.Hmi.RuntimeSettingsAdapter(session).UpdateUnifiedRuntimeSettings(request.SoftwarePath, request.ExpectedProject, request.ChangesJson, request.DryRun, request.ExpectedToken),
-                "SetUnifiedGlobalScript" => new TiaMcp.Adapters.Native.Hmi.GlobalScriptEditAdapter(session).UpdateUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.ScriptCode, request.DryRun, request.ExpectedToken),
-                _ => throw new System.ArgumentException(request.Operation)
-            };
-            return System.Text.Json.JsonSerializer.SerializeToNode(new TiaMcp.Adapters.Contracts.HmiReply { Value = value });
+                TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Inputs = request.Inputs.ToDictionary(p => p.Key,
+                    p => TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Decode(p.Value));
+                var session = new UnifiedSession(fixture);
+                object value = request.Operation switch
+                {
+                    "ListUnifiedGlobalScripts" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ListUnifiedGlobalScripts(request.SoftwarePath, request.ExpectedProject, request.Cursor, request.PageSize, request.BudgetMs),
+                    "GetUnifiedGlobalScript" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.Cursor, request.PageSize, request.BudgetMs),
+                    "ListUnifiedTagDefinitions" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedTagDefinitions(request.SoftwarePath, request.ExpectedProject, request.Cursor, request.PageSize, request.BudgetMs),
+                    "GetUnifiedScreenBranch" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedScreenBranch(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemName, request.BranchJson, request.Cursor, request.PageSize, request.BudgetMs),
+                    "GetUnifiedLibraryType" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedLibraryType(request.SoftwarePath, request.ExpectedProject, request.TypePath, request.Version, request.Cursor, request.PageSize, request.BudgetMs),
+                    "ListUnifiedLibraryFolderEntries" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ListUnifiedLibraryFolder(request.SoftwarePath, request.ExpectedProject, request.FolderPath, request.Cursor, request.PageSize, request.BudgetMs),
+                    "GetUnifiedFaceplateInstance" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReadUnifiedFaceplateInstance(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemName, request.TypePath, request.Version, request.Cursor, request.PageSize, request.BudgetMs),
+                    "ReleaseUnifiedReadCursor" => new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session).ReleaseUnifiedReadCursor(request.Cursor),
+                    "GetUnifiedGraphicSelection" => new TiaMcp.Adapters.Native.Hmi.GraphicSelectionAdapter(session, new TiaMcp.Adapters.Native.Hmi.MigrationReadAdapter(session)).ReadUnifiedGraphicSelection(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemNamesJson, request.Cursor, request.PageSize, request.BudgetMs),
+                    "GetUnifiedRuntimeSettings" => new TiaMcp.Adapters.Native.Hmi.RuntimeSettingsAdapter(session).ReadUnifiedRuntimeSettings(request.SoftwarePath, request.ExpectedProject, request.FieldsJson),
+                    "SetUnifiedRuntimeSettings" => new TiaMcp.Adapters.Native.Hmi.RuntimeSettingsAdapter(session).UpdateUnifiedRuntimeSettings(request.SoftwarePath, request.ExpectedProject, request.ChangesJson, request.DryRun, request.ExpectedToken),
+                    "SetUnifiedGlobalScript" => new TiaMcp.Adapters.Native.Hmi.GlobalScriptEditAdapter(session).UpdateUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.ScriptCode, request.DryRun, request.ExpectedToken),
+                    _ => throw new System.ArgumentException(request.Operation)
+                };
+                return System.Text.Json.JsonSerializer.SerializeToNode(new TiaMcp.Adapters.Contracts.HmiReply { Value = value });
+            }
+            finally
+            {
+                TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Decoder = previousDecoder;
+                TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues.Inputs = previousInputs;
+            }
         }
         private sealed class UnifiedSession(FakeHmiToolSession fixture) : TiaMcp.Adapters.Native.Hmi.IUnifiedSession
         {

@@ -111,6 +111,7 @@ internal static class Program
             if (request.Method == "adapter.optional-products.ExecuteOptionalProduct")
             {
                 string step = new JsonObject { ["Message"] = "fixture", ["RequiresSessionReset"] = false,
+                    ["MayHaveChanged"] = false, ["BlockReadsAfterUncertain"] = true,
                     ["Meta"] = new JsonObject { ["tool"] = "ListTestSuiteCases", ["success"] = true,
                         ["fixture"] = padding, ["records"] = new JsonArray() } }.ToJsonString();
                 return ChannelResponse.WithSpill(step, () => Spill(step, mode));

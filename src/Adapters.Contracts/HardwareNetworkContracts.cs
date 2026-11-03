@@ -14,10 +14,12 @@ namespace TiaMcp.Adapters.Contracts
     public sealed class HardwareProbeLines : List<string>
     {
         public string? FailureCode { get; set; }
+        public string? Target { get; set; }
     }
     public sealed class HardwareProbeReply
     {
         public string[] Lines { get; set; } = System.Array.Empty<string>();
         public string? FailureCode { get; set; }
+        public string? Target { get; set; }
     }
 }

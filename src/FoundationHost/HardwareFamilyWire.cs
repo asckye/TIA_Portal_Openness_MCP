@@ -13,6 +13,7 @@ internal static class HardwareFamilyWire
     private static bool Object(JsonNode? node) => node is JsonObject;
     private static bool OptionalText(JsonNode? node) => node == null || Text(node);
     private static bool OptionalNumber(JsonNode? node) => node == null || Number(node);
+    private static bool OptionalFlag(JsonNode? node) => node == null || Flag(node);
     private static bool OptionalObject(JsonNode? node) => node == null || node is JsonObject;
     private static bool Texts(JsonNode? node) => node is JsonArray items && items.All(Text);
     private static bool Objects(JsonNode? node) => node is JsonArray items && items.All(Object);
@@ -24,9 +25,22 @@ internal static class HardwareFamilyWire
         && binding.ContainsKey("identity") && (binding["identity"] is null or JsonObject)
         && binding.ContainsKey("fault") && (binding["fault"] == null || Text(binding["fault"]))
         && Flag(binding["instanceReserved"]) && Flag(binding["verifiedLive"]) && Text(binding["note"]);
-    // A family step reply (Message, RequiresSessionReset and Meta with the success flag).
-    private static bool Step(JsonNode? reply) => reply is JsonObject step && Text(step["Message"]) && Flag(step["RequiresSessionReset"])
-        && step["Meta"] is JsonObject meta && Flag(meta["success"]);
+    // HardwareAddressingReply, SecurityResult and OptionalProductReply share these wire members.
+    // Meta is an evidence bag: refusals and failures need not contain the legacy success flag.
+    private static bool Step(JsonNode? reply) => Exactly(reply, ("Message", Text), ("Meta", Object),
+        ("RequiresSessionReset", Flag), ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", True));
+
+    private static bool SoftwareFailure(JsonNode? node) => node == null || Exactly(node, ("Code", Text), ("Message", Text),
+        ("Candidates", values => values == null || Texts(values)), ("Evidence", Object));
+
+    private static bool B5Block(JsonNode? node) => Exactly(node, ("Name", OptionalText), ("TypeName", OptionalText),
+        ("Namespace", OptionalText), ("ProgrammingLanguage", OptionalText), ("MemoryLayout", OptionalText),
+        ("IsConsistent", OptionalFlag), ("HeaderName", OptionalText), ("ModifiedDate", OptionalText),
+        ("IsKnowHowProtected", OptionalFlag), ("Attributes", values => values == null || values is JsonArray attributes
+            && attributes.All(a => Exactly(a, ("Name", Text), ("AccessMode", OptionalText), ("Value", Any)))), ("Description", OptionalText));
+
+    private static bool B5Event(JsonNode? node) => Exactly(node, ("Kind", Text), ("Stage", Text), ("State", OptionalText),
+        ("ChangesProject", Flag), ("Directory", Text), ("Name", Text), ("Value", Any));
 
     // An object with exactly these members, each valid. WorkerJson writes every member, nulls included.
     private static bool Exactly(JsonNode? node, params (string Name, Func<JsonNode?, bool> Valid)[] members)
@@ -120,14 +134,33 @@ internal static class HardwareFamilyWire
             "ExecuteHardwareSecurity" => HardwareSecurity(Request(arguments, "Operation"), reply),
             "ExecuteProjectScaffoldPrimitive" => Scaffold(Request(arguments, "Kind"), reply),
             // Contract replies of the ported families without step members, as WorkerJson writes them.
+            "ExecutePlcB5" => Exactly(reply, ("Blocks", node => node == null || node is JsonArray blocks && blocks.All(B5Block)), ("Count", OptionalNumber),
+                ("Events", node => node is JsonArray events && events.All(B5Event)), ("ExportFailures", Texts), ("ImportFailures", Texts), ("ImportedNames", Texts),
+                ("Scanned", Number), ("Selected", Number), ("Attempted", Number), ("Succeeded", Number),
+                ("Stopped", Flag), ("Ok", Flag), ("Value", Flag), ("Message", Text), ("Meta", OptionalObject),
+                ("Data", OptionalObject), ("Failure", SoftwareFailure), ("RequiresSessionReset", Flag),
+                ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", True)),
+            "ExecuteVersionControl" or "ExecuteTeamcenter" => Exactly(reply, ("Message", Text),
+                ("Items", node => node == null || Texts(node)), ("Meta", Object), ("RequiresSessionReset", Flag),
+                ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", True)),
+            "ExecuteSivarc" or "ExecuteStartdrive" or "ExecuteDcc" or "ExecuteSafety" or "ExecuteSafetyValidation"
+                or "ExecuteOptionalProduct" or "ExecuteEngineeringServices" or "ReadPortalInfo" or "ConnectIsolatedPortal"
+                or "ArchiveSavedProject" or "RetrieveProjectArchive" or "ExecuteMultiuserSession" or "ValidateAutomationContext"
+                or "ReadProjectProtection" or "ExecuteProjectUsers" or "ExecuteCertificate" or "ExecuteSecurityDeep" or "ExecuteDeviceUsers"
+                or "HardwareLegacySetDeviceItemAttribute" or "HardwareLegacySetCpuCommonSettings" or "HardwareManageHardwareObject"
+                or "HardwareReadCommunicationConnections" or "HardwareManageCommunicationConnection" or "HardwareExchangeSystemDiagnosticsSettings"
+                or "HardwareReadHardwareFeatures" or "HardwareManageDeviceServiceObjects" or "HardwareManageHardwareUtilities"
+                or "HardwareManageDeviceUserGroup" or "HardwareReadIoSystems" or "HardwareManageIoSystem" or "HardwareReadNetworkDomains"
+                or "HardwareManageNetworkDomain" or "HardwareReadTransferAreas" or "HardwareManageTransferArea" or "HardwareReadDeviceItemChannels"
+                or "HardwareUpdateDeviceItemChannel" or "HardwareManagePortInterconnection" or "HardwareEnsureSubnet"
+                or "HardwareAttachDeviceNodeToSubnet" or "ImportHardwareAml" => Step(reply),
             "ExecuteOnline" => Exactly(reply, ("Value", Any), ("Failure", OptionalObject), ("MayHaveChanged", Flag),
                 ("RequiresSessionReset", Flag), ("BlockReadsAfterUncertain", Flag)),
             "ExecutePlcOrganisation" => Exactly(reply, ("Report", OptionalObject), ("Names", node => node == null || Texts(node)),
                 ("TagAddresses", OptionalObject), ("Message", Text), ("Meta", Object), ("Data", OptionalObject),
                 ("Created", Texts), ("References", node => node == null || Objects(node)), ("Reason", OptionalText),
                 ("Queried", Flag), ("Batch", OptionalObject), ("Compiler", OptionalObject), ("Found", Flag),
-                ("Failure", node => node == null || Exactly(node, ("Code", Text), ("Message", Text),
-                    ("Candidates", values => values == null || Texts(values)), ("Evidence", Object))),
+                ("Failure", SoftwareFailure),
                 ("RequiresSessionReset", Flag), ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", Flag)),
             "ExecuteHmi" or "ExecuteUnified" or "ExecuteUnifiedHmi" or "ExecuteUnifiedHmiMetadata" or "ReleaseUnifiedReadCursor" => Exactly(reply,
                 ("Value", Any), ("Notes", OptionalText), ("Failure", OptionalObject), ("MayHaveChanged", Flag),
@@ -139,7 +172,7 @@ internal static class HardwareFamilyWire
             "SeedReferenceHmi" => Exactly(reply, ("Message", OptionalText), ("Imported", node => node == null || Texts(node)),
                 ("Failed", node => node == null || node is JsonArray failures && failures.All(f => Exactly(f, ("Path", OptionalText), ("Error", OptionalText)))),
                 ("Meta", OptionalObject)),
-            _ => Step(reply)
+            _ => false
         };
         if (!valid) throw new IOException("Malformed hardware worker reply; session stopped: " + operation);
     }

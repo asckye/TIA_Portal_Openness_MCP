@@ -104,7 +104,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
                 catch (Exception ex)
                 {
-                    Step("ensureUnifiedHmiConnection", false, ex.InnerException?.Message ?? ex.Message);
+                    Step("ensureUnifiedHmiConnection", false, HmiMeta.Failure(meta, ex));
                     meta["v4Rejection"] = ex.GetBaseException() is NotSupportedException ? "UNSUPPORTED_CAPABILITY" : "PRECONDITION_FAILED";
                     return new HmiMessage { Message = "Connection step failed; no tags or screen items were attempted.", Meta = meta };
                 }
@@ -338,7 +338,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
             catch (Exception ex)
             {
-                Step("exception", false, ex.ToString());
+                Step("exception", false, HmiMeta.Failure(meta, ex));
                 return new HmiMessage { Message = "Failed creating HMI skeleton", Meta = meta };
             }
             finally { meta["mayHaveChanged"] = _session.MayHaveChanged || meta["mayHaveChanged"] is true; }

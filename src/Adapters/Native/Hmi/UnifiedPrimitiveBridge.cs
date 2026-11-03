@@ -15,9 +15,9 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             private readonly MigrationPages _pages;
             public Pages(Func<DateTime>? clock = null) => _pages = new MigrationPages(clock);
-            public Dictionary<string, object?> Read(object project, string scope, string cursor, int limit, int budgetMs,
+            public Dictionary<string, object?> Read(object project, Dictionary<string, object?> scope, string cursor, int limit, int budgetMs,
                 Func<IEnumerable<Dictionary<string, object?>>> factory, int? expected = null)
-                => _pages.Read(project, scope, cursor, limit, budgetMs,
+                => _pages.Read(project, new HmiObject(scope), cursor, limit, budgetMs,
                     () => factory().Select(row => new HmiObject(row)), expected);
             public bool Cancel(string cursor) => _pages.Cancel(cursor);
             public void Dispose() => _pages.Dispose();

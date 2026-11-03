@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- 修复扩展族 worker 回复校验：报警、OPC UA、SiVArc、Startdrive/DCC、Safety 等正常拒绝或失败不再因回复形状被误判而锁定会话，错误保留原生原因。
+- 修复 Unified 分页读取的结构化输入故障，保留事件脚本正文；设备探测支持分组设备名称及项目树路径，未找到时返回目标；HMI 运行状态快捷操作报告原生失败原因。
+
 ## [4.0.0-beta.3] - 2026-11-0X
 <!-- set on release day -->
 

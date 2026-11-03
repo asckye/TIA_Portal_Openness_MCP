@@ -53,7 +53,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             var data = JsonSerializer.Deserialize<HardwareProbeReply>(reply!.ToJsonString())
                 ?? throw new InvalidOperationException("Missing hardware network probe reply.");
-            var evidence = new HardwareProbeEvidence { FailureCode = data.FailureCode }; evidence.AddRange(data.Lines); return evidence;
+            var evidence = new HardwareProbeEvidence { FailureCode = data.FailureCode, Target = data.Target }; evidence.AddRange(data.Lines); return evidence;
         }
         public ResponseMessage ReadIoSystems(string subnetName = "", string devicePathJson = "[]", string itemPathJson = "[]", int offset = 0, int limit = 100)
             => Step(Invoke("hardware-network.HardwareReadIoSystems", new JsonObject { ["subnetName"] = JsonSerializer.SerializeToNode(subnetName), ["devicePathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(devicePathJson)), ["itemPathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(itemPathJson)), ["offset"] = JsonSerializer.SerializeToNode(offset), ["limit"] = JsonSerializer.SerializeToNode(limit) }, false));

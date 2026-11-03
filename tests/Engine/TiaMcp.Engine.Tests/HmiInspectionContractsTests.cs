@@ -33,6 +33,7 @@ namespace TiaMcp.Engine.Tests
             var screen = new GraphicSelectionTests.Screen();
             screen.ScreenItems.Add(new BranchProbe()); hmi.Screens.Add(screen);
             branchSession.FixtureRoot = hmi;
+            branchSession.FixtureProject = new ReadProject();
             catalog = new ToolCatalog(new[] { typeof(HmiInspectionTools), typeof(ProjectLifecycleInspectionTools), typeof(HmiInspectionPortTools), typeof(MigrationReadTools), typeof(GraphicSelectionTools),
                 typeof(GlobalScriptEditTools), typeof(ReflectionTools), typeof(UnifiedEngineeringTools), typeof(UnifiedEventsTools), typeof(UnifiedObjectServicesTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
@@ -42,7 +43,8 @@ namespace TiaMcp.Engine.Tests
                 .AddSingleton(new ReflectionTools(reflection)).AddSingleton(new UnifiedEventsTools(new UnifiedEventsService()))
                 .AddSingleton(HmiToolFixture.HmiInspection).AddSingleton(new HmiInspectionPortTools(HmiToolFixture.HmiInspectionPort))
                 .AddSingleton(new MigrationReadTools(HmiToolFixture.CreateMigrationRead(branchSession)))
-                .AddSingleton(HmiToolFixture.GraphicSelection).AddSingleton(HmiToolFixture.GlobalScriptEdit).BuildServiceProvider());
+                .AddSingleton(new GraphicSelectionTools(HmiToolFixture.CreateGraphicSelection(branchSession)))
+                .AddSingleton(HmiToolFixture.GlobalScriptEdit).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();
         private static ToolArguments Args(string json) => new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json));
@@ -77,6 +79,37 @@ namespace TiaMcp.Engine.Tests
         }
         private static string BranchArgs(string path) => "{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"screenPath\":\"/Main\",\"itemName\":\"Probe\",\"branch\":" + path + "}";
         private static JsonObject BatchItem(CallToolResult result) => Body(result)["data"]!["items"]![0]!["result"]!.AsObject();
+
+        public sealed class ReadProject
+        {
+            public string Name => "Project_A";
+            public object ProjectLibrary { get; } = new object();
+        }
+
+        [Theory]
+        [InlineData("GetUnifiedScreenBranch")]
+        [InlineData("GetUnifiedGlobalScript")]
+        [InlineData("GetUnifiedGraphicSelection")]
+        [InlineData("GetUnifiedLibraryType")]
+        [InlineData("ListUnifiedTagDefinitions")]
+        [InlineData("ListUnifiedGlobalScripts")]
+        [InlineData("ListUnifiedLibraryFolderEntries")]
+        [InlineData("GetUnifiedFaceplateInstance")]
+        public async Task Catalogue_reads_use_only_host_decoded_inputs(string tool)
+        {
+            var usage = Body(new ToolUsageTools().GetToolUsage(toolName: tool));
+            var args = usage["data"]!["example"]!["request"]!["params"]!["arguments"]!.DeepClone().AsObject();
+            args["softwarePath"] = "HMI";
+            args["expectedProject"] = "Project_A";
+            if (args.ContainsKey("screenPath")) args["screenPath"] = "/Main";
+            if (args.ContainsKey("moduleName")) args["moduleName"] = "Navigation";
+            if (args.ContainsKey("cursor")) args["cursor"] = "";
+            if (tool == "GetUnifiedFaceplateInstance") args["typePath"] = "/FixtureType";
+            var body = Body(await Direct(tool, args.ToJsonString()));
+            Assert.DoesNotContain("Structured input was not decoded", body.ToJsonString(), StringComparison.Ordinal);
+            Assert.True(body["data"]?["scope"] != null, body.ToJsonString());
+            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+        }
 
         [Theory]
         [InlineData("[]")]

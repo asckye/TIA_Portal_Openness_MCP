@@ -234,7 +234,7 @@ namespace TiaMcp.Adapters
             var hmiRoot = HardwareResolveItem(hmiRootPath);
             lines.Add("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
             lines.Add("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
-            if (plcRoot == null || hmiRoot == null) return lines;
+            if (plcRoot == null || hmiRoot == null) { lines.Target = plcRoot == null ? plcRootPath : hmiRootPath; return lines; }
 
             lines.FailureCode = "UNSUPPORTED_CAPABILITY";
             var plcNode = FindNetworkNodes(plcRoot).FirstOrDefault(n => IsIndustrialEthernetNode(n.Node)) ?? new NetworkNodeInfo();
@@ -275,7 +275,7 @@ namespace TiaMcp.Adapters
             var hmiRoot = HardwareResolveItem(hmiRootPath);
             lines.Add("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
             lines.Add("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
-            if (plcRoot == null || hmiRoot == null) return lines;
+            if (plcRoot == null || hmiRoot == null) { lines.Target = plcRoot == null ? plcRootPath : hmiRootPath; return lines; }
 
             lines.FailureCode = "UNSUPPORTED_CAPABILITY";
             var plcNode = FindNetworkNodes(plcRoot).FirstOrDefault(n => IsIndustrialEthernetNode(n.Node)) ?? new NetworkNodeInfo();
@@ -743,12 +743,12 @@ namespace TiaMcp.Adapters
         public HardwareProbeReply ReadHardwareOwnerCandidates(string plcRootPath, string hmiRootPath, bool deepScan = true)
         {
             var lines = HardwareProbeHardwareHmiConnectionOwnerCandidates(plcRootPath, hmiRootPath, deepScan);
-            return new HardwareProbeReply { Lines = lines.ToArray(), FailureCode = lines.FailureCode };
+            return new HardwareProbeReply { Lines = lines.ToArray(), FailureCode = lines.FailureCode, Target = lines.Target };
         }
         public HardwareProbeReply ReadHardwareWhitelistedServices(string plcRootPath, string hmiRootPath, bool deepScan = true)
         {
             var lines = HardwareProbeHardwareHmiConnectionWhitelistedServices(plcRootPath, hmiRootPath, deepScan);
-            return new HardwareProbeReply { Lines = lines.ToArray(), FailureCode = lines.FailureCode };
+            return new HardwareProbeReply { Lines = lines.ToArray(), FailureCode = lines.FailureCode, Target = lines.Target };
         }
     }
 }

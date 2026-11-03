@@ -5,7 +5,7 @@ namespace Siemens.Engineering
 namespace Siemens.Engineering.HW
 {
     public class Device { public string Name="";public object? Parent;public List<DeviceItem> DeviceItems=new(); }
-    public class DeviceItem { public string Name=""; }
+    public class DeviceItem { public string Name=""; public List<DeviceItem> DeviceItems=new(); }
     public class DeviceComposition : List<Device>
     {
         public object? Owner;public int Calls;public bool ThrowAfterCreate;
@@ -15,8 +15,9 @@ namespace Siemens.Engineering.HW
             if(ThrowAfterCreate)throw new InvalidOperationException("native failure after addition");return d;
         }
     }
-    public class DeviceUserGroup {public string Name="Group";public object? Parent;public DeviceComposition Devices=new();public List<DeviceUserGroup> Groups=new();public DeviceUserGroup(){Devices.Owner=this;} }
-    public class DeviceSystemGroup {public object? Parent;public DeviceComposition Devices=new();public DeviceSystemGroup(){Devices.Owner=this;} }
+    public class DeviceGroup {public string Name="Group";public object? Parent;public DeviceComposition Devices=new();public DeviceGroup(){Devices.Owner=this;} }
+    public class DeviceUserGroup : DeviceGroup {public List<DeviceUserGroup> Groups=new();}
+    public class DeviceSystemGroup : DeviceGroup { }
 }
 namespace TiaMcp.Adapters
 {

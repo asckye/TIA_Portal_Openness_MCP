@@ -211,6 +211,17 @@ namespace TiaMcp.Logic.V4
             Outcome.RejectedBeforeOperation => Execution.NotStarted, Outcome.ReadFailed => Execution.ReadOnly,
             Outcome.Failed => Execution.Completed, Outcome.Partial => Execution.Partial, Outcome.Unknown => Execution.Unknown,
             _ => mutation ? Execution.Completed : Execution.ReadOnly };
+        // A negative worker verdict with explicit unchanged evidence is known, even for a write-declared tool.
+        internal static bool UnchangedNativeFailure(JsonObject evidence, bool? success)
+        {
+            bool? Flag(string name) => evidence[name] is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
+            return success == false && Flag("apiCallSuccess") == false && Flag("mayHaveChanged") == false && Flag("mayHaveWrittenFiles") != true
+                && Flag("mayHaveExternalEffects") != true && Flag("operationStarted") != true
+                && Flag("requiresSessionReset") != true && Flag("requiresExplicitRebind") != true
+                && evidence["v4Rejection"] == null && evidence["rejectionCode"] == null
+                && (evidence["status"]?.ToString() is null or "" or "ReadOrWriteFailed");
+        }
+
         internal static Outcome OperationOutcome(bool succeeded, bool unknown, bool rejected, bool mutation, bool partial = false)
             => unknown ? Outcome.Unknown : rejected ? Outcome.RejectedBeforeOperation : succeeded ? Outcome.Succeeded
                 : !mutation ? Outcome.ReadFailed : partial ? Outcome.Partial : Outcome.Failed;

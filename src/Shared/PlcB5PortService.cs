@@ -22,13 +22,35 @@ namespace TiaMcpServer.Siemens.Services
             if (!request.DryRun) { args["confirm"] = true; args["expectedProjectFile"] = identity(); }
             var reply = call(PortedFamilies.ForTool(request.Operation).OperationPrefix + ".ExecutePlcB5", args) as JsonObject ?? throw new InvalidOperationException("Missing PLC B5 reply.");
             ObserveReply(reply);
+            // Message-only B5 failures still carry the worker's explicit mutation/reset flags.
+            if (reply["Meta"] == null)
+                reply["Meta"] = new JsonObject { ["operationSuccess"] = (bool?)reply["Ok"] == true,
+                    ["apiCallSuccess"] = (bool?)reply["Ok"] == true,
+                    ["mayHaveChanged"] = reply["MayHaveChanged"]?.DeepClone(),
+                    ["requiresSessionReset"] = reply["RequiresSessionReset"]?.DeepClone() };
+            // Legacy B5 catch paths report a negative verdict without the newer native flags.
+            else if (reply["Meta"] is JsonObject meta && !meta.ContainsKey("apiCallSuccess")
+                && meta["success"] is JsonValue legacy && legacy.TryGetValue<bool>(out var succeeded) && !succeeded)
+            {
+                meta["apiCallSuccess"] = false;
+                meta["mayHaveChanged"] ??= reply["MayHaveChanged"]?.DeepClone();
+                meta["requiresSessionReset"] ??= reply["RequiresSessionReset"]?.DeepClone();
+            }
             if (reply["Failure"] is JsonObject error)
             {
                 string code = (string?)error["Code"] ?? "", message = (string?)error["Message"] ?? "";
-                if (Enum.TryParse<PortalErrorCode>(code, out var native)) throw new PortalException(native, message);
-                if (code == nameof(ArgumentException)) throw new ArgumentException(message);
+                if ((bool?)reply["MayHaveChanged"] == true || (bool?)reply["RequiresSessionReset"] == true)
+                {
+                    var uncertain = new InvalidOperationException(message);
+                    uncertain.Data["workerOutcomeUnknown"] = true;
+                    throw uncertain;
+                }
+                if (Enum.TryParse<PortalErrorCode>(code, out var native) && native != PortalErrorCode.OpennessError) throw new PortalException(native, message);
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
-                throw new InvalidOperationException(message);
+                var nativeFailure = new PortalException(PortalErrorCode.OpennessError, message);
+                nativeFailure.Data["foundationKnownNoMutation"] = (bool?)reply["MayHaveChanged"] == false
+                    && (bool?)reply["RequiresSessionReset"] == false;
+                throw nativeFailure;
             }
             return reply;
         }

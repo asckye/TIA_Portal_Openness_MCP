@@ -9,10 +9,11 @@ namespace TiaMcp.Engine.Tests
     internal class FakeHmiToolSession : IHmiToolSession
     {
         internal object? FixtureRoot;
+        internal object? FixtureProject;
         internal Exception? FixtureResolutionError;
         internal int FixtureResolveCalls, FixtureCacheClears;
         private JsonObject? _hmiReadFault;
-        public object? CurrentProject => FixtureRoot;
+        public object? CurrentProject => FixtureProject ?? FixtureRoot;
         public MigrationPages MigrationPages { get; } = new MigrationPages();
         public JsonObject? HmiReadFault => _hmiReadFault;
         internal void FixtureResetReadHealth() => ResetHmiReadHealth();
