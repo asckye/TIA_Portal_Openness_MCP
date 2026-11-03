@@ -2,33 +2,50 @@
 import re
 from pathlib import Path
 
+RELEASES = tuple(re.findall(r'(?:Foundation|new TiaVersionDescriptor)\("([0-9.a-z]+)",',
+                           (Path(__file__).resolve().parents[2] / 'src/Logic/Siemens/TiaVersionCatalog.cs').read_text('utf-8-sig')))
+RELEASE_LIST_PATTERN = r'(?:new\[\]\s*\{[^}]+\}|ReleaseRange\.(?:All\b|Since\("[^"\n]+"\)|Between\("[^"\n]+",\s*"[^"\n]+"\)))'
+
+
+def expand_releases(expression):
+    if expression.startswith('new[]'):
+        return re.findall(r'"([^"\n]+)"', expression)
+    if expression == 'ReleaseRange.All':
+        return list(RELEASES)
+    endpoints = re.findall(r'"([^"\n]+)"', expression)
+    assert all(key in RELEASES for key in endpoints), ("Unknown release key", endpoints)
+    first = RELEASES.index(endpoints[0])
+    last = RELEASES.index(endpoints[1]) if len(endpoints) == 2 else len(RELEASES) - 1
+    assert first <= last, ("Reversed release range", endpoints)
+    return list(RELEASES[first:last + 1])
+
 
 def parse(source):
     # The optional fifth argument contains action switches; it does not change
     # the tool roster and must not cause a partially supported family to vanish.
-    rows = re.findall(r'new Family\("([^"\n]+)",\s*"([^"\n]+)",\s*new\[\]\s*\{([^}]+)\},\s*new\[\]\s*\{([^}]+)\}\s*(?=[,)])', source)
+    rows = re.findall(r'new Family\("([^"\n]+)",\s*"([^"\n]+)",\s*(' + RELEASE_LIST_PATTERN + r'),\s*new\[\]\s*\{([^}]+)\}\s*(?=[,)])', source)
     assert rows, "No reviewed ported-family availability rows"
     assert len(rows) == len(re.findall(r'\bnew\s+Family\s*\(', source)), "Unparsed ported-family availability row"
     result = {}
     for name, prefix, releases, tools in rows:
         assert name not in result, ("Duplicate ported family", name)
-        releases = re.findall(r'"([^"\n]+)"', releases)
+        releases = expand_releases(releases)
         tools = re.findall(r'"([^"\n]+)"', tools)
         assert releases and len(releases) == len(set(releases))
-        assert set(releases) <= {"14sp1", "15.1", "16", "17", "18", "19", "20", "21"}
+        assert set(releases) <= set(RELEASES)
         assert tools and len(tools) == len(set(tools))
         assert not set(tools) & {t for f in result.values() for t in f["tools"]}, "Duplicate ported tool"
         result[name] = {"prefix": prefix, "releases": releases, "tools": tools}
     overrides = re.search(r'\bToolReleases\s*=\s*new Dictionary<string, string\[\]>\([^)]*\)\s*\{(.*?)\n\s*\};', source, re.S)
     assert overrides or not re.search(r'\bToolReleases\s*=', source), "Unparsed per-tool availability overrides"
     if overrides:
-        entries = re.findall(r'\["([^"\n]+)"\]\s*=\s*new\[\]\s*\{([^}]+)\}', overrides.group(1))
+        entries = re.findall(r'\["([^"\n]+)"\]\s*=\s*(' + RELEASE_LIST_PATTERN + ')', overrides.group(1))
         assert len(entries) == overrides.group(1).count('=')
         for tool, releases in entries:
             owners = [f for f in result.values() if tool in f["tools"]]
             assert len(owners) == 1, ("Unknown per-tool availability override", tool)
             owner = owners[0]
-            releases = re.findall(r'"([^"\n]+)"', releases)
+            releases = expand_releases(releases)
             assert releases and len(releases) == len(set(releases)) and set(releases) <= set(owner["releases"])
             assert tool not in owner.setdefault("tool_releases", {})
             owner["tool_releases"][tool] = releases

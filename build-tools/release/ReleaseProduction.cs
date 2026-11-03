@@ -459,7 +459,7 @@ internal static partial class ReleaseCommands
         var deliveryPath = Path.Combine(Root, "manifest/delivery.json");
         var delivery = JsonNode.Parse(File.ReadAllText(deliveryPath))?.AsObject() ?? throw new ReleaseException("manifest/delivery.json is invalid");
         delivery["multiVersionBuildSha256"] = ReleaseRecords.HashFile(recordPath);
-        delivery["releaseKeys"] = new JsonArray("14sp1", "15.1", "16", "17", "18", "19", "20", "21");
+        delivery["releaseKeys"] = JsonSerializer.SerializeToNode(CatalogJson.Keys);
         WriteJson(deliveryPath, delivery);
     }
 

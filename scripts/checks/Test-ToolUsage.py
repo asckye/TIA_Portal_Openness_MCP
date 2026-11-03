@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+from ported_families import RELEASES
 
 from tool_usage_checks import check_usage
 
@@ -24,7 +25,7 @@ def coverage(records, output):
     # Use the V4 contracts: version-tools.json still omits the two render tools
     # on Foundation. This audit must not bless or rewrite an unrelated manifest.
     matrix = {key: json.loads((ROOT / f'manifest/contracts/v4/baseline/{key}.json').read_text('utf-8'))['tools']
-              for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
+              for key in RELEASES}
     source = ROOT / 'src/Shared/ToolUsageData.json'
     catalog = json.loads(source.read_text('utf-8'))
     by_release = {}
@@ -63,8 +64,8 @@ def main():
     parser.add_argument('--public-api-root', type=Path, required=True)
     parser.add_argument('--evidence', type=Path, required=True, help='New worktree directory for this run')
     parser.add_argument('--coverage-output', type=Path, required=True)
-    parser.add_argument('--releases', nargs='+', choices=('14sp1', '15.1', '16', '17', '18', '19', '20', '21'),
-                        default=('14sp1', '15.1', '16', '17', '18', '19', '20', '21'))
+    parser.add_argument('--releases', nargs='+', choices=RELEASES,
+                        default=RELEASES)
     args = parser.parse_args()
     if args.coverage_output.resolve() == (ROOT / 'manifest/tool-usage-coverage.json').resolve():
         raise ValueError('audit-tool-usage is the only writer of manifest/tool-usage-coverage.json; choose a bin-build evidence output')

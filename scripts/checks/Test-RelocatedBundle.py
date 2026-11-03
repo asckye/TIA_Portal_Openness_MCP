@@ -35,6 +35,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+from ported_families import RELEASES
 import queue
 import shutil
 import subprocess
@@ -48,7 +49,7 @@ from contextlib import contextmanager
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RELEASE_KEYS = ("14sp1", "15.1", "16", "17", "18", "19", "20", "21")
+RELEASE_KEYS = RELEASES
 FOUNDATION_KEYS = RELEASE_KEYS[:6]
 PROTOCOL_VERSION = "2024-11-05"
 OPENNESS_GROUP = "Siemens TIA Openness"

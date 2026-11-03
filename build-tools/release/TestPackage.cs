@@ -19,7 +19,7 @@ internal static partial class ReleaseCommands
 {
     internal const string TestPackageMarker = "TEST-PACKAGE.txt";
     internal const string TestPackageNotice = "Test package - not a release; no release records are bound";
-    internal static readonly string[] TestPackageKeys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
+    internal static readonly string[] TestPackageKeys = CatalogJson.Keys.ToArray();
     // Built outside runtime/ and untracked; the updater comes from ReleaseRecords.UpdaterOutputs.
     internal static readonly string[] TestPackageBuiltFiles = ["TiaOpenness.exe"];
     // A superset of what the product outputs are compiled from; bin/obj folders and Markdown are not inputs.

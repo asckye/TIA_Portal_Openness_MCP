@@ -16,6 +16,8 @@ namespace TiaMcp.Adapters
     }
     internal static class PlcExternalSourceImportPolicy
     {
+        private static readonly string[] ReleaseKeys = ReleaseRange.All;
+
         internal const int MaximumFileBytes=4*1024*1024;
         internal const string ApplyBlock=TiaMcp.Adapters.Contracts.ExternalSourceImportContract.ApplyBlock;
         private static string Hash(byte[] bytes) { using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-","").ToLowerInvariant(); }
@@ -37,7 +39,7 @@ namespace TiaMcp.Adapters
         internal static void ValidateOptions(PlcExternalSourceImportRequest request)
         {
             if(!request.DryRun) throw new AdapterPreconditionException(ApplyBlock,"import-plan",false);
-            if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(request.Release)) throw new AdapterPreconditionException("Unknown exact release; V14/V15 are not aliases.","release");
+            if(!ReleaseKeys.Contains(request.Release)) throw new AdapterPreconditionException("Unknown exact release; V14/V15 are not aliases.","release");
             if(request.Group!="") throw new AdapterPreconditionException("Only groupPath empty string denotes the supported external-source root.","groupPath");
             request.File=ValidateFile(request.File);
             request.AllowedFile=ValidateFile(request.AllowedFile,"allowedFilePath");

@@ -6,7 +6,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class TiaFeatures
 {
-    internal static readonly string[] Releases = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
+    internal static readonly string[] Releases = CatalogJson.Keys.ToArray();
     internal static List<(string Project, Dictionary<string, string> Properties)> ProjectCases(string root)
     {
         var cases = new List<(string Project, Dictionary<string, string> Properties)>();

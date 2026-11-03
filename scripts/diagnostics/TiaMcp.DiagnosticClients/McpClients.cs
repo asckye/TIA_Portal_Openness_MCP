@@ -140,7 +140,7 @@ public sealed record FoundationLaunch(string Executable, string BundleRoot, stri
     public string[] Arguments => ["--bundle-root", BundleRoot, "--release-key", ReleaseKey, "--transport", "stdio", "--profile", "full", "--logging", "0"];
     public static FoundationLaunch Resolve(string bundleRoot, string releaseKey)
     {
-        if (!new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Contains(releaseKey)) throw new ArgumentException("Unsupported release key");
+        if (!TiaMcp.Adapters.Contracts.ReleaseRange.All.Contains(releaseKey)) throw new ArgumentException("Unsupported release key");
         var root = Path.GetFullPath(bundleRoot);
         var exe = Path.Combine(root, "runtime", "v" + releaseKey, "TiaMcp.FoundationHost.exe");
         if (!File.Exists(Path.Combine(root, "manifest/package-manifest.json")) || !File.Exists(exe)) throw new ArgumentException("Selected bundle has no FoundationHost or package manifest");

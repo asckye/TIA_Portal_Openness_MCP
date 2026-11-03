@@ -1096,7 +1096,7 @@ internal static partial class ReleaseCommands
             ? string.Equals((string?)XDocument.Load(Path.Combine(Root, "src/Shared/TiaSharedAdapterPaths.props")).Root?.Element("PropertyGroup")?.Element("TiaSharedAdapterPaths"), "true", StringComparison.OrdinalIgnoreCase)
             : sharedText == "true";
         var keys = options.All("ReleaseKeys").ToArray();
-        if (keys.Length == 0) keys = options.Get("PublicApiRoot") is null ? ["20", "21"] : ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
+        if (keys.Length == 0) keys = options.Get("PublicApiRoot") is null ? ["20", "21"] : CatalogJson.Keys.ToArray();
         var logs = Path.Combine(Root, shared ? "bin-build/studio-shared-adapter" : "bin-build/studio-native");
         Directory.CreateDirectory(logs);
         Environment.SetEnvironmentVariable("DOTNET_GENERATE_ASPNET_CERTIFICATE", "false");
@@ -1181,7 +1181,7 @@ internal static partial class ReleaseCommands
         Directory.CreateDirectory(output);
         var keys = options.All("ReleaseKeys").ToArray();
         // All eight releases ship the PLC worker.
-        if (keys.Length == 0) keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
+        if (keys.Length == 0) keys = CatalogJson.Keys.ToArray();
         var results = new List<object>();
         foreach (var key in keys)
         {
@@ -1416,7 +1416,8 @@ internal static partial class ReleaseCommands
             }
 
             var studioArgs = new List<string> { "build-studio", "-PublicApiRoot", api, "-Dotnet", dotnet,
-                "-TiaSharedAdapterPaths", "false", "-ReleaseKeys", "14sp1", "-ReleaseKeys", "15.1", "-ReleaseKeys", "16", "-ReleaseKeys", "17", "-ReleaseKeys", "18", "-ReleaseKeys", "19", "-ReleaseKeys", "20", "-ReleaseKeys", "21" };
+                "-TiaSharedAdapterPaths", "false" };
+            studioArgs.AddRange(CatalogJson.Keys.SelectMany(key => new[] { "-ReleaseKeys", key }));
             if (test && plan.Includes("gui-tests")) studioArgs.Add("-Test");
             if (!string.IsNullOrWhiteSpace(nuget)) studioArgs.AddRange(["-NuGetConfig", nuget]);
             WithIsolatedHost(runTemp, "studio-build-and-tests", approvalEnabled: false, _ =>
@@ -1433,7 +1434,7 @@ internal static partial class ReleaseCommands
             ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, publishArgs, logs, "host.log", nuget), "Foundation host publication failed");
 
             var releaseRows = new List<object>();
-            foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+            foreach (var key in CatalogJson.Keys.ToArray())
             {
                 var runtime = Path.Combine(Root, $"runtime/v{key}");
                 if (key is "20" or "21") CleanLegacyEngineLayout(key);
@@ -1773,7 +1774,7 @@ internal static partial class ReleaseCommands
                 createdAt = DateTimeOffset.UtcNow.ToString("o"), release, fileVersion = releaseFileVersion, test,
                 releases = pending.RootElement.GetProperty("releases"),
                 plcRuntimes,
-                studioReleaseKeys = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+                studioReleaseKeys = CatalogJson.Keys.ToArray(),
                 nativeAcceptance = "NOT RUN", validation = validationAfter,
                 files = files.Select(row => new { path = row.Path, sha256 = row.Sha256, length = new FileInfo(Path.Combine(Root, row.Path)).Length }),
                 updaterFiles = engineRecord.RootElement.GetProperty("updaterFiles"),
@@ -1801,7 +1802,7 @@ internal static partial class ReleaseCommands
             deliveryNode.Remove("engineBuildSha256");
             deliveryNode["configuratorBuildSha256"] = ReleaseRecords.HashFile(Path.Combine(Root, "manifest/configurator-build.json"));
             deliveryNode["multiVersionBuildSha256"] = ReleaseRecords.HashFile(recordPath);
-            deliveryNode["releaseKeys"] = JsonSerializer.SerializeToNode(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" });
+            deliveryNode["releaseKeys"] = JsonSerializer.SerializeToNode(CatalogJson.Keys.ToArray());
             WriteJson(deliveryPath, deliveryNode);
             Console.WriteLine("Multi-version build record and delivery binding written.");
             return 0;

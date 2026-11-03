@@ -27,7 +27,7 @@ internal static class OpennessGroupRuntime
 
     internal static IEnumerable<string> DeliveryPolicyErrors(Func<string, bool> delivered)
     {
-        foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (var key in CatalogJson.Keys.ToArray())
             foreach (var assembly in CollaborationAssemblies)
             {
                 var host = $"runtime/v{key}/{assembly}";

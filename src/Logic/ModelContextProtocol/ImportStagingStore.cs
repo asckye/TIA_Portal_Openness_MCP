@@ -24,6 +24,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
     // Quotas belong to one MCP session; persisted batches remain visible after reconnection.
     public sealed class ImportStagingStore : IDisposable
     {
+        private static readonly string[] ReleaseKeys = TiaMcp.Adapters.Contracts.ReleaseRange.All;
+
         public const int MaximumFiles = 128, MaximumBatches = 32;
         public const long MaximumFileBytes = 4 * 1024 * 1024, MaximumBytes = 32 * 1024 * 1024;
         private readonly object gate = new object();
@@ -233,7 +235,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
             if (input != null && ((string?)input["sessionId"] != owner || (string?)input["batchId"] != id)) throw new ManifestIdentityException();
             if ((int?)input?["manifestVersion"] is not (1 or 2) || !DateTimeOffset.TryParse((string?)input?["createdUtc"], System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _) || input?["files"] is not JsonArray files
                 || files.Count > MaximumFiles || (int?)input["writtenFileCount"] is not int written || written < 0 || written > files.Count) return null;
-            if ((string?)input["releaseKey"] is not string releaseKey || !new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Contains(releaseKey)) return null;
+            if ((string?)input["releaseKey"] is not string releaseKey || !ReleaseKeys.Contains(releaseKey)) return null;
             if ((int?)input["manifestVersion"] == 2 && ((string?)input["mcpSessionId"] is not string mcp || string.IsNullOrWhiteSpace(mcp) || mcp.Length > 256
                 || !Guid.TryParseExact((string?)input["hostInstanceId"], "N", out _))) return null;
             if (input["hostPid"] != null && (input["hostPid"] is not JsonValue pidValue || !pidValue.TryGetValue<int>(out var pid) || pid < 1)

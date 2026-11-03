@@ -623,8 +623,8 @@ internal static class ReleaseRecords
         string[] dependencies = ["TiaMcp.WorkerChannel.dll", "System.Text.Json.dll", "System.Text.Encodings.Web.dll", "System.IO.Pipelines.dll", "Microsoft.Bcl.AsyncInterfaces.dll", "System.Buffers.dll", "System.Memory.dll", "System.Numerics.Vectors.dll", "System.Runtime.CompilerServices.Unsafe.dll", "System.Threading.Tasks.Extensions.dll"];
         var required = new List<string> { "runtime/studio/TiaOpenness.exe", "runtime/studio/TiaMcp.WorkerChannel.dll" };
         required.AddRange(dependencies.Select(name => "runtime/studio/bridge/" + name));
-        required.AddRange(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(key => $"runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll"));
-        foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        required.AddRange(CatalogJson.Keys.ToArray().Select(key => $"runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll"));
+        foreach (var key in CatalogJson.Keys.ToArray())
         {
             required.Add($"runtime/v{key}/TiaMcp.FoundationHost.exe");
             required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));

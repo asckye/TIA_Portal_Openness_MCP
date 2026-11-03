@@ -15,6 +15,8 @@ namespace TiaMcp.Adapters
 
     internal static class PlcOfflinePolicy
     {
+        private static readonly string[] ReleaseKeys = ReleaseRange.All;
+
         internal static void RequireProjectDevicesOffline<TDevice,TGroup>(
             IEnumerable<TDevice> devices,IEnumerable<TDevice> ungrouped,IEnumerable<TGroup> groups,
             Func<TGroup,IEnumerable<TDevice>> groupDevices,Func<TGroup,IEnumerable<TGroup>> children,
@@ -71,7 +73,7 @@ namespace TiaMcp.Adapters
         }
         internal static void RequireDocumentedRelease(string release)
         {
-            if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(release))
+            if(!ReleaseKeys.Contains(release))
                 throw new AdapterPreconditionException("Offline-state workflow evidence is incomplete for release "+release+"; execution remains blocked.","offline-state",false);
         }
         internal static bool CheckCompileStates(IEnumerable<string?> states,bool plcCoverageComplete,string scope)

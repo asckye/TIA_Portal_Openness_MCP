@@ -26,7 +26,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // Contract identity is independent of which release initializes this type.
         // The selected catalog still owns version availability and admission.
         private static readonly HashSet<string> V4ToolNames = new HashSet<string>(
-            new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.SelectMany(release =>
+            TiaMcp.Adapters.Contracts.ReleaseRange.All.SelectMany(release =>
                 Enumerable.Concat(TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(release),
                     (IEnumerable<JsonNode?>)TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(release, engineSource: true)))
                 .Where(row => (int?)row!["envelopeVersion"] == 4).Select(row => (string)row!["currentName"]!), StringComparer.Ordinal);

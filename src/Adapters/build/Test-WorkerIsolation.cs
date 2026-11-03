@@ -3,6 +3,7 @@
 // Usage: dotnet run src/Adapters/build/Test-WorkerIsolation.cs -- --evidence-directory <path> --native-call-weaver <dll>
 #:property PublishAot=false
 #:property NuGetAudit=false
+#:project ../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj
 
 using System.Text;
 using System.Text.Json;
@@ -25,7 +26,7 @@ var results = new JsonArray();
 var passed = 0;
 var failed = 0;
 
-foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+foreach (var key in TiaMcp.Adapters.Contracts.ReleaseRange.All)
 {
     var selectionLog = Path.Combine(evidenceDirectory, "selection-" + key + ".json");
     var selection = await Run(dotnet, new[] { "msbuild", worker, "-nologo", "-v:quiet", "-t:ValidateWorkerAdapter", "-p:TiaReleaseKey=" + key, "-getItem:ProjectReference", "-getProperty:TargetFramework" }, repo);

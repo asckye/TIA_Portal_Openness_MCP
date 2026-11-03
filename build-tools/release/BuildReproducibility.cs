@@ -49,7 +49,7 @@ internal static class BuildReproducibility
         new("src/FoundationHost/TiaMcp.FoundationHost.csproj", "v20", ["-p:TiaReleaseKey=20"]),
         new("src/FoundationHost/TiaMcp.FoundationHost.csproj", "v14sp1", ["-p:TiaReleaseKey=14sp1"]),
         new("src/PlcWorker/TiaMcp.PlcWorker.csproj", "v21", ["-p:TiaReleaseKey=21"]),
-        .. new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(key =>
+        .. CatalogJson.Keys.ToArray().Select(key =>
             new CheckBuild($"src/Adapters/{(key == "14sp1" ? "V14Sp1" : key == "15.1" ? "V15_1" : "V" + key)}/Adapter.{key}.csproj", "adapter-" + key, ["-p:TiaReleaseKey=" + key])),
         new("src/Studio/Core/TiaOpenness.Core.csproj", "", [])
     ];

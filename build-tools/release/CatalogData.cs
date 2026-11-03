@@ -8,7 +8,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class CatalogJson
 {
-    internal static readonly IReadOnlyList<string> Keys = PortedFamilies.ReleaseKeys;
+    internal static readonly IReadOnlyList<string> Keys = TiaMcp.Versioning.TiaVersionCatalog.All.Select(release => release.Key).ToArray();
     internal static JsonNode Read(string root, string path) => JsonNode.Parse(Repository.ReadSource(Path.Combine(root, path))) ?? throw new ReleaseException("Empty JSON: " + path);
     internal static string Text(JsonNode? node) => node?.GetValue<string>() ?? "";
     internal static string[] Strings(JsonNode? node) => node?.AsArray().Select(Text).ToArray() ?? [];
@@ -63,8 +63,8 @@ internal sealed class CatalogData
         Root = root; EngineSource = CatalogJson.Read(root, "reference/tool-catalog/engine-source.json").AsObject();
         Additions = CatalogJson.Read(root, "reference/tool-catalog/new-v4-tools.json").AsObject();
         Renames = CatalogJson.Read(root, "reference/tool-catalog/v3-v4-renames.json").AsObject().ToDictionary(p => p.Key, p => CatalogJson.Text(p.Value));
-        Families = PortedFamilies.Load(root);
-        FoundationCandidates = PortedFamilies.FoundationCandidates(root);
+        Families = PortedFamilies.Load(root, CatalogJson.Keys);
+        FoundationCandidates = PortedFamilies.FoundationCandidates(root, CatalogJson.Keys);
         Reviewed = CatalogJson.Keys.ToDictionary(k => k, k => PortedFamilies.Additions(Families, k));
         Ported = Reviewed.ToDictionary(p => p.Key, p => CatalogJson.Set(p.Value.Except(Families["F00"].Tools)));
         foreach (var key in CatalogJson.Keys)

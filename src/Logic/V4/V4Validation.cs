@@ -10,6 +10,8 @@ namespace TiaMcp.Logic.V4
     // capability verification, redaction, page-size budgets and native execution evidence.
     internal static class V4Validation
     {
+        private static readonly string[] ReleaseKeys = TiaMcp.Versioning.TiaVersionCatalog.All.Select(release => release.Key).ToArray();
+
         internal static void Require(bool condition, string message)
         {
             if (!condition) throw new ArgumentException(message);
@@ -58,7 +60,7 @@ namespace TiaMcp.Logic.V4
             && value.All(c => c >= '0' && c <= '9' || c >= 'a' && c <= 'f'), "SHA-256 must be 64 lowercase hexadecimal characters.");
 
         internal static void Release(string? value) => Require(value == null ||
-            new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Contains(value), "Unknown release key.");
+            ReleaseKeys.Contains(value), "Unknown release key.");
 
         internal static void Json(JsonElement value)
         {

@@ -5,7 +5,7 @@ namespace TiaMcp.FoundationHost;
 
 internal static class RuntimeQueryContract
 {
-    private static readonly string[] Releases={"14sp1","15.1","16","17","18","19","20","21"};
+    private static readonly string[] Releases=TiaMcp.Adapters.Contracts.ReleaseRange.All;
     internal static JsonNode Validate(string tool,JsonNode? result,int? expectedProcessId=null)
     {
         try

@@ -12,6 +12,7 @@
 
 - 发布诊断新增 `release -TestStageOnly [-Only <作业名,...>]`，复用已暂存产物执行测试，不绑定发布记录或生成发布包。
 
+- Derive reviewed release availability from ordered ranges and the version catalog without changing shipped contracts.
 - Centralize NuGet package versions in Directory.Packages.props and align the Studio core tests on Newtonsoft.Json 13.0.4.
 - **维护**：工具契约基线升级为格式 2，每个文件按 SHA-256 去重输出 schema；八版契约语义和逐字节捕获比较保持不变。
 

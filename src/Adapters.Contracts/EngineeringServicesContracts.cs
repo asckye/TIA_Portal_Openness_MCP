@@ -39,9 +39,11 @@ namespace TiaMcp.Adapters.Contracts
 
     public static class EngineeringServicesCapabilities
     {
+        private static readonly string[] ReleaseKeys = ReleaseRange.All;
+
         public static bool AtLeast(string release, string first)
         {
-            var releases = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" };
+            var releases = ReleaseKeys;
             return Array.IndexOf(releases, release) >= Array.IndexOf(releases, first);
         }
         public static string? Unsupported(string release, string tool, string kind = "", string customIdentityKey = "", System.Collections.Generic.IEnumerable<string>? properties = null)

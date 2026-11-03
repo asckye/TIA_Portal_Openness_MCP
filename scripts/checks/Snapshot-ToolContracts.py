@@ -12,6 +12,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+from ported_families import RELEASES
 import re
 import shutil
 import subprocess
@@ -161,7 +162,6 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
         process.stderr.close()
 
 
-RELEASES = ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')
 FORMAT_VERSION = 2
 CONTRACT_FIELDS = {'formatVersion', 'release', 'profile', 'tools', 'behaviorCapabilities'}
 ENGINE_CONTRACT_FIELDS = CONTRACT_FIELDS | {'liteTools'}
@@ -1010,8 +1010,9 @@ def self_test(args):
     for invalid in (
             availability.replace('ToolReleases = new Dictionary<string, string[]>', 'ToolReleases = UnknownFactory'),
             availability.replace('["ListCommunicationConnections"]', '["UnknownPortedTool"]'),
-            availability.replace('["ListCommunicationConnections"] = new[] { "21" }', '["ListCommunicationConnections"] = new[] { "21", "21" }'),
-            availability.replace('["ListCommunicationConnections"] = new[] { "21" }', '["ListCommunicationConnections"] = new[] { "22" }')):
+            availability.replace('["ListCommunicationConnections"] = ReleaseRange.Since("21")', '["ListCommunicationConnections"] = new[] { "21", "21" }'),
+            availability.replace('["ListCommunicationConnections"] = ReleaseRange.Since("21")', '["ListCommunicationConnections"] = new[] { "22" }'),
+            availability.replace('ReleaseRange.Since("21")', 'ReleaseRange.Since("22")')):
         try: ported_families.parse(invalid)
         except AssertionError: count += 1
         else: raise AssertionError('Unreviewed per-tool release override accepted')

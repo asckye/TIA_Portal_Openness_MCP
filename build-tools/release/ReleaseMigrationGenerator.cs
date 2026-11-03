@@ -45,7 +45,7 @@ internal static class ReleaseMigrationGenerator
     }
     internal static string Render(string root, bool legacyNames = false)
     {
-        var mapping = Read(root, "reference/tool-catalog/v3-v4-renames.json").AsObject().ToDictionary(p => p.Key, p => Text(p.Value)); var families = PortedFamilies.Load(root);
+        var mapping = Read(root, "reference/tool-catalog/v3-v4-renames.json").AsObject().ToDictionary(p => p.Key, p => Text(p.Value)); var families = PortedFamilies.Load(root, CatalogJson.Keys);
         var oldDocs = new Dictionary<string, JsonNode>(); var newDocs = new Dictionary<string, JsonNode>();
         foreach (var key in Keys) { oldDocs[key] = Read(root, $"manifest/history/contracts-v3/baseline/{key}.json"); newDocs[key] = Read(root, $"manifest/contracts/v4/baseline/{key}.json"); Require(Text(oldDocs[key]["release"]) == key && Text(newDocs[key]["release"]) == key, "Contract release key mismatch: " + key); }
         var oldNames = Set(oldDocs.Values.SelectMany(d => d["tools"]!.AsArray().Select(t => Text(t!["name"]))));

@@ -15,7 +15,7 @@ internal sealed record PlcWorkerFixtureBuild(string Release, string Variant)
 
 internal static class PlcWorkerFixtures
 {
-    internal static readonly string[] Keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
+    internal static readonly string[] Keys = CatalogJson.Keys.ToArray();
     internal static PlcWorkerFixtureBuild Sdk(string key)
     {
         if (!Keys.Contains(key)) throw new ReleaseException("Unknown PlcWorker release: " + key);

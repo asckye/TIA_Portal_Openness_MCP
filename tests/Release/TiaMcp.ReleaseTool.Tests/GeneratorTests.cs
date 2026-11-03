@@ -34,8 +34,8 @@ public sealed class GeneratorTests
     {
         const string row = "new Family(\"family\", \"prefix\", new[] { \"20\", \"21\" }, new[] { \"Tool\" })";
         var declaration = mutation switch { "missing" => "", "malformed" => "FoundationCandidates = { Tool };", "duplicate" => "FoundationCandidates = { \"Tool\", \"Tool\" };", "unknown" => "FoundationCandidates = { \"Other\" };", _ => "FoundationCandidates = { \"Tool\" }; FoundationCandidates = { \"Tool\" };" };
-        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(row + declaration));
-        Assert.Contains("Tool", PortedFamilies.ParseFoundationCandidates(row + "FoundationCandidates = { \"Tool\" };"));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(row + declaration, Keys));
+        Assert.Contains("Tool", PortedFamilies.ParseFoundationCandidates(row + "FoundationCandidates = { \"Tool\" };", Keys));
     }
     [Theory]
     [InlineData("generate-catalogs")]
@@ -99,6 +99,30 @@ public sealed class GeneratorTests
         Assert.Throws<ReleaseException>(() => CatalogData.ValidateReviewedData(additions, mapping, archived));
     }
     [Theory]
+    [InlineData("ReleaseRange.All", "14sp1,15.1,16,17,18,19,20,21")]
+    [InlineData("ReleaseRange.Since(\"19\")", "19,20,21")]
+    [InlineData("ReleaseRange.Between(\"17\", \"20\")", "17,18,19,20")]
+    public void PortedFamiliesExpandReleaseRanges(string expression, string expected)
+    {
+        var source = "new Family(\"family\", \"prefix\", " + expression + ", new[] { \"Tool\" })\n"
+            + "ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Tool\"] = " + expression + "\n};";
+        var family = PortedFamilies.Parse(source, Keys)["family"];
+        Assert.Equal(expected.Split(','), family.Releases);
+        Assert.Equal(expected.Split(','), family.ToolReleases["Tool"]);
+    }
+    [Theory]
+    [InlineData("ReleaseRange.Since(\"22\")")]
+    [InlineData("ReleaseRange.Between(\"17\", \"22\")")]
+    [InlineData("ReleaseRange.Between(\"20\", \"17\")")]
+    public void PortedFamiliesRejectInvalidReleaseRanges(string expression)
+    {
+        Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(
+            "new Family(\"family\", \"prefix\", " + expression + ", new[] { \"Tool\" })", Keys));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(
+            "new Family(\"family\", \"prefix\", ReleaseRange.All, new[] { \"Tool\" })\n"
+            + "ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Tool\"] = " + expression + "\n};", Keys));
+    }
+    [Theory]
     [InlineData("partial")]
     [InlineData("duplicate")]
     [InlineData("unparsed")]
@@ -107,16 +131,16 @@ public sealed class GeneratorTests
     public void PortedFamiliesPreserveActionSwitchesAndToolReleaseDecisions(string kind)
     {
         const string row = "new Family(\"family\", \"prefix\", new[] { \"20\", \"21\" }, new[] { \"Tool\" }, new Dictionary<string, string[]> { [\"write\"] = new[] { \"21\" } })";
-        if (kind == "partial") { var parsed = PortedFamilies.Parse(row); Assert.Contains("Tool", PortedFamilies.Additions(parsed, "20")); Assert.Empty(PortedFamilies.Withheld(parsed, "20")); return; }
+        if (kind == "partial") { var parsed = PortedFamilies.Parse(row, Keys); Assert.Contains("Tool", PortedFamilies.Additions(parsed, "20")); Assert.Empty(PortedFamilies.Withheld(parsed, "20")); return; }
         if (kind == "override")
         {
-            var parsed = PortedFamilies.Parse(row + "\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Tool\"] = new[] { \"21\" }\n};");
+            var parsed = PortedFamilies.Parse(row + "\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Tool\"] = new[] { \"21\" }\n};", Keys);
             Assert.Empty(PortedFamilies.Additions(parsed, "20")); Assert.Contains("Tool", PortedFamilies.Additions(parsed, "21"));
             // A tool without any supported action on a release is withheld there, modern releases included.
             Assert.Contains("Tool", PortedFamilies.Withheld(parsed, "20")); Assert.Empty(PortedFamilies.Withheld(parsed, "21"));
             return;
         }
-        Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(kind == "duplicate" ? row + row : kind == "unparsed" ? row + "new Family(other, prefix, releases, tools)" : row + "\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Other\"] = new[] { \"21\" }\n};"));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(kind == "duplicate" ? row + row : kind == "unparsed" ? row + "new Family(other, prefix, releases, tools)" : row + "\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Other\"] = new[] { \"21\" }\n};", Keys));
     }
 
     [Theory]
@@ -127,11 +151,11 @@ public sealed class GeneratorTests
     {
         const string row = "new Family(\"F34\", \"options\", new[] { \"20\", \"21\" }, new[] { \"Tool\" })\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Tool\"] = new[] { \"20\" }\n};\n";
         string source = row + "UnavailableReasons = new Dictionary<string, string>(StringComparer.Ordinal) { [\"" + owner + "\"] = \"no API in the supplied V21 SDK\"\n};";
-        if (!valid) { Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(source)); return; }
-        var families = PortedFamilies.Parse(source);
+        if (!valid) { Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(source, Keys)); return; }
+        var families = PortedFamilies.Parse(source, Keys);
         Assert.Equal("no API in the supplied V21 SDK", PortedFamilies.WithheldReason(families, "21", "Tool"));
         Assert.Throws<ArgumentException>(() => PortedFamilies.WithheldReason(families, "20", "Tool"));
-        Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(source.Replace("\"no API in the supplied V21 SDK\"\n};", "\"no API in the supplied V21 SDK\", [\"F34/21\"] = \"duplicate\"\n};", StringComparison.Ordinal)));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(source.Replace("\"no API in the supplied V21 SDK\"\n};", "\"no API in the supplied V21 SDK\", [\"F34/21\"] = \"duplicate\"\n};", StringComparison.Ordinal), Keys));
     }
     [Theory]
     [InlineData("missing")]
@@ -406,10 +430,10 @@ public sealed class GeneratorTests
     {
         const string family = "new Family(\"F00\", \"F00\", new[] { \"21\" }, new[] { \"Tool\" })";
         string source = family + "; FoundationCandidates = Array.AsReadOnly(new string[] { \"Tool\" });";
-        Assert.Equal(new[] { "Tool" }, PortedFamilies.ParseFoundationCandidates(source));
-        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source.Replace("AsReadOnly", "Unknown")));
-        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source.Replace("{ \"Tool\" });", "{ \"Tool\", \"Tool\" });")));
-        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source + " FoundationCandidates = { \"Tool\" };"));
+        Assert.Equal(new[] { "Tool" }, PortedFamilies.ParseFoundationCandidates(source, Keys));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source.Replace("AsReadOnly", "Unknown"), Keys));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source.Replace("{ \"Tool\" });", "{ \"Tool\", \"Tool\" });"), Keys));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source + " FoundationCandidates = { \"Tool\" };", Keys));
     }
 
 }

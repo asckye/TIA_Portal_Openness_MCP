@@ -31,9 +31,11 @@ namespace TiaMcp.Adapters
     }
     internal static class PlcExternalSourceDeletePolicy
     {
+        private static readonly string[] ReleaseKeys = ReleaseRange.All;
+
         internal static void ValidateOptions(PlcExternalSourceDeleteRequest r)
         {
-            if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(r.Release)) throw new AdapterPreconditionException("Unknown exact release.","release");
+            if(!ReleaseKeys.Contains(r.Release)) throw new AdapterPreconditionException("Unknown exact release.","release");
             if(r.Group!="") throw new AdapterPreconditionException("Only the empty external-source root group is supported.","groupPath");
             if(string.IsNullOrWhiteSpace(r.Name) || r.Name.Length>256 || r.Name.Any(c=>char.IsControl(c) || c=='/' || c=='\\') || r.Name=="." || r.Name=="..") throw new AdapterPreconditionException("One exact source name is required; no path or extension fallback.","externalSourceName");
             if(!r.DryRun && (!r.Confirm || r.ExpectedHash.Length!=64 || r.ExpectedHash.Any(c=>!"0123456789abcdef".Contains(c)))) throw new AdapterPreconditionException("Delete requires confirm=true and the exact preview plan hash.","expectedPlanHash");

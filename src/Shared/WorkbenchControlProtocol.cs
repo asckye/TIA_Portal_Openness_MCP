@@ -216,6 +216,8 @@ namespace TiaOpenness.Shared
 
     internal static class WorkbenchControlProtocol
     {
+        private static readonly string[] ReleaseKeys = TiaMcp.Versioning.TiaVersionCatalog.All.Select(release => release.Key).ToArray();
+
         internal const string Name = "tiamcp.workbench-control";
         internal const int Version = 1;
         internal static readonly JsonSerializerOptions Json = CreateOptions();
@@ -302,7 +304,7 @@ namespace TiaOpenness.Shared
         }
         private static bool Text(string? value) => !string.IsNullOrWhiteSpace(value) && value!.Length <= 4096;
         private static void ValidateOrigin(WorkbenchControlOrigin origin)
-            => Require(origin.Host == "foundation" && new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Contains(origin.ReleaseKey)
+            => Require(origin.Host == "foundation" && ReleaseKeys.Contains(origin.ReleaseKey)
                 && origin.HostProcessId > 0 && IsHex(origin.McpSession, 16) && origin.ClientName != null && origin.ClientName.Length <= 256);
         private static void ValidateArtifact(string? id, WorkbenchRenderArtifact? artifact, WorkbenchRenderKind kind)
         {

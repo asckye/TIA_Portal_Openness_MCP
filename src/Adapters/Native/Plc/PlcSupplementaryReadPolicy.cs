@@ -6,13 +6,15 @@ namespace TiaMcp.Adapters
 {
     internal static class PlcSupplementaryReadPolicy
     {
+        private static readonly string[] ReleaseKeys = TiaMcp.Adapters.Contracts.ReleaseRange.All;
+
         internal const string WatchScope = "ordinary PLC root/user-group watch-table paths only; force tables, entries and live values excluded";
         internal const string TechnologyScope = "ordinary PLC root/user-group top-level technology-object engineering metadata only; sub-level TOs, parameters and live values excluded";
         internal const string TechnologyRootScope = "ordinary PLC root top-level technology-object engineering metadata only; no user-group composition in this API; sub-level TOs, parameters and live values excluded";
         internal static string TechnologyReadScope(string key) => key=="19" || key=="20" || key=="21" ? TechnologyScope : TechnologyRootScope;
         internal static void RequireRelease(string key,bool watch=false)
         {
-            if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(key)) throw new NotSupportedException("Exact supported release key required; original V14/V15 and unknown releases are excluded.");
+            if(!ReleaseKeys.Contains(key)) throw new NotSupportedException("Exact supported release key required; original V14/V15 and unknown releases are excluded.");
             if(watch && key=="14sp1") throw new NotSupportedException("The V14 SP1 PublicAPI lacks PlcSoftware.WatchAndForceTableGroup; no guessed reflection fallback is permitted.");
         }
         internal static string Name(string value)

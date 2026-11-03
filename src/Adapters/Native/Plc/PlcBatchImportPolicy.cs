@@ -35,6 +35,8 @@ namespace TiaMcp.Adapters
     }
     internal static class PlcBatchImportPolicy
     {
+        private static readonly string[] ReleaseKeys = ReleaseRange.All;
+
         internal const long MaximumFileBytes=4*1024*1024,MaximumTotalBytes=32*1024*1024;
         private static string Hash(byte[] bytes) { using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-","").ToLowerInvariant(); }
         private static string Field(string value)=>value.Length+":"+value;
@@ -75,7 +77,7 @@ namespace TiaMcp.Adapters
             TiaOpenness.Shared.NativeExportPolicy.RequireBatchOptions(request.CompileAfter,request.StopOnImportFailure,request.TechnologyGroup);
             if(request.MaxItems<1 || request.MaxItems>256) throw new AdapterPreconditionException("maxItems must be 1..256.","maxItems");
             if(request.Regex.Length>1024) throw new AdapterPreconditionException("Regex exceeds bounded length.","regexName");
-            if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(request.Release)) throw new AdapterPreconditionException("Unknown exact release.","releaseKey");
+            if(!ReleaseKeys.Contains(request.Release)) throw new AdapterPreconditionException("Unknown exact release.","releaseKey");
             if(!request.DryRun)
             {
                 if(!request.Confirm) throw new AdapterPreconditionException("Apply requires confirm=true.","confirm");

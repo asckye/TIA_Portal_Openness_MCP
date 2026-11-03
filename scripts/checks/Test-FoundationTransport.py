@@ -12,6 +12,7 @@ import json
 import importlib.util
 import os
 from pathlib import Path
+from ported_families import RELEASES
 import queue
 import re
 import socket
@@ -24,7 +25,7 @@ import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
-KEYS = ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']
+KEYS = list(RELEASES)
 USAGE_REPORTS = []
 LATENCIES = None
 CHECK_PROFILE = 'full'
