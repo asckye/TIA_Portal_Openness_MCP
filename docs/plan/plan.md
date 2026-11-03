@@ -90,7 +90,7 @@ beta.4 合并后开始。V21 API 的 6 个 P1 缺口按 API 先行注册，带�
 | TIA-TEST | 持久 PLC 测试用例库（PLCSIM Advanced、批量运行、结果历史、官方 TIA Test Suite 用例）、FAT/SAT 报告、支持复现报告；JUnit 报告与稳定退出码 | 未开始 | 2026-10-30 |
 | TIA-SAFE | 机密保管库；下载安全（实物与 PLCSIM 确认、先保存并编译、兼容指南）；高风险确认；审批状态读取工具 | 未开始 | 2026-10-30 |
 | TIA-BATCH | 批量与递归的块、变量、UDT、HMI 变量操作；变量 CSV/Excel 交换，扩到 HMI 变量与报警、文本列表、DB 起始值 | 未开始 | 2026-10-30 |
-| TIA-GAPS | API-P1 未覆盖的其余缺口：建脚本模块、嵌套运行设置（见 D-T1）、工程概览与新建/打开选项、专题使用指南 | 未开始 | 2026-10-30 |
+| TIA-GAPS | API-P1 未覆盖的其余缺口：建脚本模块、嵌套运行设置（维护者 2026-11-03：排 beta.5）、工程概览与新建/打开选项、专题使用指南 | 未开始 | 2026-10-30 |
 | ECO-S | Siemens 官方 tia-portal-ai-extensions 技能进入 `GetToolUsage`（MIT，署名）；参数预设与强制预设；导出时剥离易变节点（可选编译成功后自动提交） | 未开始 | 2026-10-30 |
 | SELF | `ManagePlcDataBlockSnapshot` 的注册范围与官方 API 核对（ValueService 只在 V21 文档化）；`ManageProjectCompilationSettings` 从 V16 起注册并修正描述 | 未开始 | 2026-11-01 |
 | P8-97b | 单块、块组编译 | 并入 API-P1b | 2026-10-27 |
@@ -130,7 +130,6 @@ beta.4 合并后开始。V21 API 的 6 个 P1 缺口按 API 先行注册，带�
 | D-P9 | HMI 审查遗留的 D2、D5、D7；B2、B9 是否已随 HMI-B3 完成 |
 | D-P13 | 长操作（编译、下载、导入、导出）的 MCP 进度上报经 PLC worker 通道实现（Q3 发现 `WorkerClient` 未实现进度接口），排 beta.4 还是 beta.5 |
 | D-Q11 | 代码精简计划其余批次的批准与排期：Q6c、Q11（worker 回复携带 V4 结果字段）、Q12a–e（一个 ResultMapper）、Q13（重复源码合并）、Q14（SafeXml 与路径策略）、Q15（命名）、Q16（开发文档从源生成） |
-| D-T1 | 嵌套 Unified 运行设置：按 T-IA 范围排 beta.5（TIA-GAPS），还是按 V21 差距评审排 4.1（API-P2） |
 | D-J1 | P8-31j1（生成框架方案的修订与示例）在 4.0 完成，还是随 P8-31f–i 进入 4.1 |
 | D-D4 | `docs/releases/v3.2.0.md`、`v3.3.0.md` 保留与否 |
 | D-D6 | 4.1 是否把生成的工具矩阵并入版本工具目录 |
