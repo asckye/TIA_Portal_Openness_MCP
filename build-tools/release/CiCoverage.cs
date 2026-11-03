@@ -14,8 +14,7 @@ internal static class CiCoverage
     internal sealed record Profile(string Workflow, string File, string Job, string[] Suites, string[] Checks, string? ActionsJob = null);
     internal static readonly IReadOnlyDictionary<string, Profile> Profiles = new Dictionary<string, Profile>(StringComparer.Ordinal)
     {
-        ["studio-true"] = new("offline-checks", ".github/workflows/offline-checks.yml", "studio-tests (true)",
-            ["studio-core-true", "studio-gui-true"], [], "studio-tests"),
+        // The only shipped Studio configuration must always execute locally.
         ["foundation"] = new("offline-checks", ".github/workflows/offline-checks.yml", "foundation-suites-gate",
             ["foundation", "engine-host", "shared-lifecycle-plc", "worker-progress-foundation", "prompt-registration", "software-read",
                 "special-export-shape", "device-add", "hardware-catalog", "diagnostic-membership", "adapter-contracts", "worker-channel",

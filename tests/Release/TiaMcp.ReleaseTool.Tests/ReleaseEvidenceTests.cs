@@ -65,7 +65,7 @@ public sealed class ReleaseEvidenceTests
     }
 
     [Fact]
-    public void MergeCannotBecomeReleaseEvidenceOrSupplyKeptCodeV20RecordCounts()
+    public void MergeCannotBecomeReleaseEvidence()
     {
         using var fixture = new EvidenceFixture();
         var adoption = fixture.Verify();
@@ -73,13 +73,14 @@ public sealed class ReleaseEvidenceTests
         fixture.Edit(evidence => evidence["mode"]!["profile"] = "merge");
         Assert.Contains("full nightly profile", Assert.Throws<ReleaseException>(fixture.Verify).Message);
         adoption["record"]!["evidence"]!["profile"] = "merge";
-        adoption["record"]!["suites"]!["kept-code-v20"] = new JsonObject { ["passed"] = 4908, ["failed"] = 0, ["skipped"] = 0 };
-        Assert.Contains("keptCodeV20Passed", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20")).Message);
-        Assert.Throws<ReleaseException>(() => ReleaseEvidence.AnnotateRecord(new JsonObject { ["test"] = false, ["validation"] = new JsonObject() }, adoption, ["kept-code-v20"]));
+        adoption["record"]!["suites"]!["kept-code"] = new JsonObject { ["passed"] = 4908, ["failed"] = 0, ["skipped"] = 0 };
+        Assert.Contains("full nightly evidence", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code")).Message);
+        Assert.Throws<ReleaseException>(() => ReleaseEvidence.AnnotateRecord(new JsonObject { ["test"] = false, ["validation"] = new JsonObject() }, adoption, ["kept-code"]));
         adoption["record"]!["evidence"]!["profile"] = "nightly";
-        Assert.Equal(4908, ReleaseEvidence.SuitePassed(adoption, "kept-code-v20"));
-        adoption["record"]!["suites"]!["kept-code-v20"]!["execution"] = "derived";
-        Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20"));
+        Assert.Equal(4908, ReleaseEvidence.SuitePassed(adoption, "kept-code"));
+        adoption["record"]!["suites"]!["kept-code"]!["execution"] = "derived";
+        Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code"));
+        Assert.Throws<ReleaseException>(() => ReleaseEvidence.AnnotateRecord(new JsonObject { ["test"] = false, ["validation"] = new JsonObject() }, adoption, ["kept-code"]));
     }
 
     [Fact]
@@ -200,15 +201,15 @@ public sealed class ReleaseEvidenceTests
             evidence["planned"]!.AsArray().Add("not-run-job");
             evidence["mode"]!["buildOnly"] = true;
             var jobs = evidence["jobs"]!.AsArray();
-            jobs.Remove(jobs.Single(job => ReleaseEvidence.Text(job!["name"]) == "studio-gui-true"));
-            evidence["planned"] = ReleaseEvidence.Strings(evidence["planned"]!.AsArray().Select(ReleaseEvidence.Text).Where(name => name != "studio-gui-true"));
+            jobs.Remove(jobs.Single(job => ReleaseEvidence.Text(job!["name"]) == "studio-gui"));
+            evidence["planned"] = ReleaseEvidence.Strings(evidence["planned"]!.AsArray().Select(ReleaseEvidence.Text).Where(name => name != "studio-gui"));
             evidence["suites"]!.AsObject().Remove("beta");
         });
 
         var error = Assert.Throws<ReleaseException>(fixture.Verify);
         Assert.Contains("planned job has no result (partial run): not-run-job", error.Message);
         Assert.Contains("-BuildOnly", error.Message);
-        Assert.Contains("required check-all job missing: studio-gui-true", error.Message);
+        Assert.Contains("required check-all job missing: studio-gui", error.Message);
         Assert.Contains("registered suite missing from evidence: beta", error.Message);
     }
 
@@ -216,11 +217,11 @@ public sealed class ReleaseEvidenceTests
     public void TimeGateExceptionAcceptsOnlyARunWhoseSoleFailureIsTheGate()
     {
         using var fixture = new EvidenceFixture();
-        fixture.Edit(evidence => { evidence["result"]!["exitCode"] = 1; evidence["result"]!["underThirtyMinutes"] = false; evidence["result"]!["wallSeconds"] = 1985.0; });
-        Assert.Contains("30-minute gate", Assert.Throws<ReleaseException>(fixture.Verify).Message);
+        fixture.Edit(evidence => { evidence["result"]!["exitCode"] = 1; evidence["result"]!["underThirtyMinutes"] = false; evidence["result"]!["wallSeconds"] = 2760.0; });
+        Assert.Contains("45-minute gate", Assert.Throws<ReleaseException>(fixture.Verify).Message);
         var record = fixture.VerifyWithTimeGateException("maintainer 2026-10-27, beta.2 only")["record"]!;
         Assert.Equal("maintainer 2026-10-27, beta.2 only", ReleaseEvidence.Text(record["timeGateException"]?["approval"]));
-        Assert.Equal(1800, (int)record["timeGateException"]!["gateSeconds"]!);
+        Assert.Equal(2700, (int)record["timeGateException"]!["gateSeconds"]!);
     }
 
     [Fact]
@@ -230,7 +231,7 @@ public sealed class ReleaseEvidenceTests
         fixture.Edit(evidence => { evidence["result"]!["exitCode"] = 1; evidence["result"]!["failed"] = 1; evidence["result"]!["underThirtyMinutes"] = false; });
         var error = Assert.Throws<ReleaseException>(() => fixture.VerifyWithTimeGateException("maintainer 2026-10-27, beta.2 only"));
         Assert.Contains("check-all exited 1", error.Message);
-        Assert.Contains("30-minute gate", error.Message);
+        Assert.Contains("45-minute gate", error.Message);
     }
 
     [Fact]
@@ -244,7 +245,7 @@ public sealed class ReleaseEvidenceTests
             evidence["result"]!["failed"] = 1;
             evidence["result"]!["underThirtyMinutes"] = false;
             evidence["result"]!["drift"] = ReleaseEvidence.Strings(["manifest/tools-list.json"]);
-            var job = evidence["jobs"]!.AsArray().Single(job => ReleaseEvidence.Text(job!["name"]) == "responses-v19-plc")!;
+            var job = evidence["jobs"]!.AsArray().Single(job => ReleaseEvidence.Text(job!["name"]) == "responses-v21-plc")!;
             job["status"] = "failed";
             job["exitCode"] = 1;
         });
@@ -252,10 +253,10 @@ public sealed class ReleaseEvidenceTests
         var error = Assert.Throws<ReleaseException>(fixture.Verify);
         Assert.Contains("check-all exited 1", error.Message);
         Assert.Contains("1 check-all job(s) failed", error.Message);
-        Assert.Contains("job responses-v19-plc is failed", error.Message);
+        Assert.Contains("job responses-v21-plc is failed", error.Message);
         Assert.Contains("tracked-tree drift: manifest/tools-list.json", error.Message);
-        Assert.Contains("30-minute gate", error.Message);
-        Assert.Contains("required check-all job missing: responses-v19", error.Message);
+        Assert.Contains("45-minute gate", error.Message);
+        Assert.Contains("required check-all job missing: responses-v21", error.Message);
     }
 
     [Fact]
@@ -344,7 +345,7 @@ public sealed class ReleaseEvidenceTests
 
         var error = Assert.Throws<ReleaseException>(fixture.Verify);
         Assert.Contains("lacks its result, mode or source section (partial run)", error.Message);
-        Assert.Contains("30-minute gate", error.Message);
+        Assert.Contains("45-minute gate", error.Message);
     }
 
     [Theory]
@@ -392,7 +393,7 @@ public sealed class ReleaseEvidenceTests
         Assert.Contains(("alpha-gate", true), required);
         Assert.Contains(("beta-gate", true), required);
         foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
-            foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage" })
+            foreach (var family in key is "20" or "21" ? new[] { "contracts", "responses", "transport-usage", "usage" } : new[] { "contracts", "usage" })
                 Assert.Contains((family + "-v" + key, false), required);
         foreach (var key in new[] { "20", "21" })
             foreach (var family in new[] { "harness", "approval", "resources", "ecosystem", "campaign-inputs" })

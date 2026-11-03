@@ -32,7 +32,7 @@ internal sealed class CheckAllNightlyCoverage
             if (latest == null || latest.RunId != (string?)pointer["runId"] || latest.ReportPath != (string?)pointer["reportPath"] ||
                 latest.ReportSha256 != (string?)pointer["reportSha256"] || latest.EvidenceSha256 != (string?)pointer["evidenceSha256"] ||
                 latest.IdentitiesSha256 != (string?)pointer["identitiesSha256"] || !latest.UnderThirtyMinutes ||
-                !double.IsFinite(latest.WallSeconds) || latest.WallSeconds < 0 || latest.WallSeconds >= 1800) return;
+                !double.IsFinite(latest.WallSeconds) || latest.WallSeconds < 0 || latest.WallSeconds >= NightlyRuns.LimitSeconds) return;
             var reportPath = Path.GetFullPath((string)pointer["reportPath"]!);
             var directory = Path.GetDirectoryName(reportPath)!;
             var evidencePath = Path.Combine(directory, ReleaseEvidence.FileName);

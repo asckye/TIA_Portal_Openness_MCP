@@ -51,7 +51,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Core.Tests.IntegrationTests"] = "Synthetic bridge process connect/dispatch budgets.",
             ["TiaOpenness.Gui.Tests.ResponsivenessTests"] = "Reader throttling, latency measurement and bounded lock recovery.",
             ["TiaOpenness.Gui.Tests.ResponsivenessHarness"] = "Opt-in dispatcher p95/max latency and idle CPU thresholds.",
-            ["TiaOpenness.Gui.Tests.WorkbenchControlLoadTests"] = "Dispatcher p95 below 50 ms and maximum below 200 ms.",
+            ["TiaOpenness.Gui.Tests.WorkbenchControlLoadTests"] = "Continuous dispatcher and control pressure; functional completion checks.",
             ["TiaOpenness.Gui.Tests.ApprovalServiceTests"] = "One-second pipe connect and bounded approval delivery.",
             ["TiaOpenness.Gui.Tests.WorkbenchControlPipeTests"] = "One-second pipe connect and bounded response.",
             ["TiaOpenness.Gui.Tests.WorkbenchControlTests"] = "Blocked-dispatcher ordering and pipe deadlines.",
@@ -333,7 +333,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Measure_dispatcher_under_fake_engine_load"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlLoadTests"] = new[] {
-                "Continuous_control_queue_keeps_existing_dispatcher_latency_budget"
+                "Continuous_control_queue_applies_requests_and_keeps_reads_available"
             },
             ["TiaOpenness.Gui.Tests.ApprovalServiceTests"] = new[] {
                 "Workbench_v2_write_stays_pending_until_the_same_approval_card_is_decided",

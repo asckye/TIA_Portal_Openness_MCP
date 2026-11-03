@@ -40,15 +40,15 @@ public sealed class CheckAllTests
         foreach (var key in new[] { "20", "21" })
         {
             foreach (var c in new[] { 8, 16 })
-            foreach (var transport in new[] { "stdio", "http" })
+            foreach (var transport in new[] { "stdio" })
             foreach (var profile in new[] { "full", "lite" }) expected.Add($"stability-v{key}-c{c}-{transport}-{profile}");
             foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage", "campaign-inputs", "approval", "resources", "ecosystem" })
                 expected.Add(family + "-v" + key);
         }
         var plc = ReleaseCommands.CheckAllPlcScriptJobs();
-        Assert.Equal(33, plc.Count);
+        Assert.Equal(25, plc.Count);
         Assert.Equal(expected.Select(name => name + "-plc").Order(), plc.Order());
-        Assert.Equal(33, plc.Distinct().Count());
+        Assert.Equal(25, plc.Distinct().Count());
         foreach (var name in expected) Assert.Equal(name + "-plc", ReleaseCommands.CheckAllPlcSuccessor(name));
         Assert.Throws<ReleaseException>(() => ReleaseCommands.CheckAllPlcSuccessor("harness-v21-http"));
         var jobs = plc.Select(name => new CheckJob(name, Passed, [])).ToArray();

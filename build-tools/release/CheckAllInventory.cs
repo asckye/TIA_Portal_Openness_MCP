@@ -74,9 +74,8 @@ internal static partial class ReleaseCommands
         foreach (var key in new[] { "20", "21" })
         {
             foreach (var concurrency in new[] { "8", "16" })
-            foreach (var transport in new[] { "stdio", "http" })
             foreach (var profile in new[] { "full", "lite" })
-                names.Add($"stability-v{key}-c{concurrency}-{transport}-{profile}-plc");
+                names.Add($"stability-v{key}-c{concurrency}-stdio-{profile}-plc");
             foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage", "campaign-inputs", "approval", "resources", "ecosystem" })
                 names.Add(family + "-v" + key + "-plc");
         }
@@ -152,7 +151,7 @@ internal static partial class ReleaseCommands
     internal static bool CheckAllSourceOnly(string name) => name is
         "catalog-drift" or "tool-counts-drift" or "usage-drift" or "migration-drift" or
         "tools-list" or "script-calls" or "dead-references" or "adapter-boundary" or "tia-features" or
-        "release-documentation" or "python-script-self-tests" or
+        "release-documentation" or "python-script-self-tests" or "check-all-speedup-self-tests" or
         "python-script-calls" or "domain-source" or "contract-self-tests" or "contract-verify" or "response-verify";
 
     internal static bool CheckAllEarly(string name) => CheckAllSourceOnly(name) || name is "bundle" or "python-repository";
@@ -163,15 +162,12 @@ internal static partial class ReleaseCommands
             : job.Name == "migration-drift" ? ["generate-release-migration"] : job.Dependencies
     };
 
-    internal static List<CheckJob> CheckAllRuntimeDependencies(IEnumerable<CheckJob> jobs, bool independentParity = false) => jobs.Select(job =>
-        job.Name == "suite-output-parity" ? job : job with
+    internal static List<CheckJob> CheckAllRuntimeDependencies(IEnumerable<CheckJob> jobs) => jobs.Select(job =>
+        job with
         {
-            // Parity temporarily writes ordinary outputs and restores them in
-            // finally. Preserve the old behavior of running checks even when
-            // parity fails, once those writes have finished.
             Dependencies = job.Name is "bundle" or "python-repository" or "repository"
-                ? [.. job.Dependencies, independentParity ? "build-once" : "suite-output-parity", "analyzer-warnings"]
-                : job.Dependencies.Length == 0 ? [independentParity ? "build-once" : "suite-output-parity"] : job.Dependencies,
+                ? [.. job.Dependencies, "build-once", "analyzer-warnings"]
+                : job.Dependencies.Length == 0 ? ["build-once"] : job.Dependencies,
             AllowFailedDependencies = job.Dependencies.Length == 0 || job.AllowFailedDependencies
         }).ToList();
 
@@ -189,12 +185,12 @@ internal static partial class ReleaseCommands
         Tool("tools-list", "check-tools-list");
         Tool("script-calls", "check-script-tool-calls");
         Tool("dead-references", "check-dead-tool-references");
-        Tool("repository", "check-repository", "-NoBinaries");
+        Tool("repository", "check-repository", "-NoBinaries", "-AnalyzerResult", Path.Combine(output, "analyzer-result.json"));
         Tool("repository-self-tests", "check-repository", "-SelfTest", "-NoBuild");
         Tool("suite-runner-self-tests", "test-suites", "-SelfTest");
         Tool("adapter-boundary", "check-adapter-boundary");
         Tool("tia-features", "check-tia-features");
-        Tool("bundle", "validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes");
+        Tool("bundle", "validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes", "-AnalyzerResult", Path.Combine(output, "analyzer-result.json"));
         Tool("bundle-self-tests", "validate-bundle", "-SelfTest", "-NoBuild");
         Tool("release-documentation", "release", "-DocumentationOnly");
         Tool("release-dry-run", "run-release-build", "-Tier", "full", "-DryRun");
@@ -205,6 +201,7 @@ internal static partial class ReleaseCommands
         Python("python-script-self-tests", "scripts/checks/Check-ScriptToolCalls.py", "--self-test");
         Python("python-script-calls", "scripts/checks/Check-ScriptToolCalls.py");
         Python("campaign-runner-self-tests", "scripts/checks/Test-CampaignInputs.py", "--self-test");
+        Python("check-all-speedup-self-tests", "scripts/checks/Test-CheckAllSpeedups.py");
         Python("plc-script-self-tests", "scripts/checks/Test-PlcScriptSuccessors.py");
         Python("plc-harness-self-tests", "scripts/checks/Test-PlcHarnessSuccessors.py");
         // The runner finds the file program compiled by build-once below the original TEMP, not the job's private TEMP.

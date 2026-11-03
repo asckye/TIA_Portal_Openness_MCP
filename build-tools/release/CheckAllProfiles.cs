@@ -22,13 +22,38 @@ internal static class CheckAllProfiles
     {
         ["foundation"] = "foundation-api", ["worker-robustness"] = "foundation-api",
         ["workbench-control-host"] = "foundation-api", ["shared-pipeline"] = "foundation-api", ["shared-lifecycle-plc"] = "foundation-api",
-        ["workbench-control"] = "studio-gui-false", ["mcp-panel"] = "studio-gui-false",
-        ["workbench-vci-prefill"] = "studio-gui-false", ["crash-evidence"] = "studio-gui-false",
-        ["vci-read-only-binding"] = "studio-core-false", ["shared-lifecycle"] = "shared-session",
-        ["kept-code-v20"] = "kept-code"
+        ["workbench-control"] = "studio-gui", ["mcp-panel"] = "studio-gui",
+        ["workbench-vci-prefill"] = "studio-gui", ["crash-evidence"] = "studio-gui",
+        ["vci-read-only-binding"] = "studio-core", ["shared-lifecycle"] = "shared-session",
     };
 
-    internal static readonly string[] StudioSuites = ["studio-core-false", "studio-core-true", "studio-gui-false", "studio-gui-true"];
+    internal static readonly string[] StudioSuites = ["studio-core", "studio-gui"];
+
+    // Old resource observations remain on disk, but deleted jobs must not size the active packing plan.
+    internal static bool RetiredJob(string name) => name is "check-latency" or "suite-output-parity" or "studio-gui-control-load" ||
+        name.StartsWith("latency-", StringComparison.Ordinal) ||
+        name.StartsWith("stability-", StringComparison.Ordinal) && name.Contains("-http-", StringComparison.Ordinal) ||
+        new[] { "offline-v20", "kept-code-v20", "studio-core-true", "studio-core-false", "studio-gui-true", "studio-gui-false" }
+            .Any(suite => name == suite || name.StartsWith(suite + "-", StringComparison.Ordinal)) ||
+        new[] { "14sp1", "15.1", "16", "17", "18", "19" }.Any(key => name == "responses-v" + key ||
+            name.StartsWith("responses-v" + key + "-", StringComparison.Ordinal) || name == "transport-usage-v" + key ||
+            name.StartsWith("transport-usage-v" + key + "-", StringComparison.Ordinal));
+
+    // Dropping the shipping variant suffix must preserve its deadlines, packing observations and ordering history.
+    internal static void UseShippingHistory<T>(Dictionary<string, T> history, Func<T, T, T>? combine = null)
+    {
+        foreach (var name in StudioSuites)
+        {
+            string legacy = name + "-false";
+            foreach (var key in history.Keys.Where(key => key == legacy || key.StartsWith(legacy + "-", StringComparison.Ordinal)).ToArray())
+            {
+                string renamed = name + key[legacy.Length..];
+                if (!history.TryGetValue(renamed, out var current)) history[renamed] = history[key];
+                else if (combine != null) history[renamed] = combine(current, history[key]);
+                history.Remove(key);
+            }
+        }
+    }
 
     // These are the only extra settings of the original Studio Isolated jobs. Per-process scratch roots, pipe scopes and
     // shard/timing paths are supplied by the same RunShard/EnvironmentFor implementation for both executions.
@@ -38,6 +63,7 @@ internal static class CheckAllProfiles
 
     internal static DerivationPlan Plan(JsonObject catalog, string api, string nuget, string? companion, string dotnet)
     {
+        IncludeApprovedSubsets(catalog);
         var executions = catalog.ToDictionary(pair => pair.Key, pair =>
         {
             string? sdk = pair.Key == "foundation-api" || pair.Value!["publicApiRoot"]?.GetValue<bool>() == true ? api : null;
@@ -56,6 +82,24 @@ internal static class CheckAllProfiles
                 BaseEnvironment: FastSuites.EnvironmentValues("$ISOLATION", "$PIPE_SCOPE", sdk));
         }, StringComparer.Ordinal);
         return ValidatePlan(catalog, executions);
+    }
+
+    internal static void IncludeApprovedSubsets(JsonObject catalog)
+    {
+        if (catalog["foundation-api"] is not JsonObject source) return;
+        var arguments = source["arguments"]!.AsArray();
+        int filter = Enumerable.Range(0, arguments.Count).FirstOrDefault(index => (string?)arguments[index] == "--filter", -1);
+        if (filter < 0) return; // Unfiltered already contains every approved subset.
+        var terms = ((string)arguments[filter + 1]!).Split('|').ToList();
+        foreach (var name in new[] { "worker-robustness", "workbench-control-host", "shared-pipeline", "shared-lifecycle-plc" })
+        {
+            if (catalog[name] is not JsonObject subset) continue;
+            var args = subset["arguments"]!.AsArray();
+            int index = Enumerable.Range(0, args.Count).FirstOrDefault(i => (string?)args[i] == "--filter", -1);
+            if (index >= 0) terms.AddRange(((string)args[index + 1]!).Split('|'));
+        }
+        // Expand the superset rather than assume that a subset's future method names cannot contain "Operator".
+        arguments[filter + 1] = string.Join('|', terms.Distinct(StringComparer.Ordinal));
     }
 
     internal static DerivationPlan ValidatePlan(JsonObject catalog, IReadOnlyDictionary<string, SuiteExecution> executions)
@@ -123,26 +167,6 @@ internal static class CheckAllProfiles
     internal static bool RunsSeparately(string name, string profile, DerivationPlan plan) => !StudioSuites.Contains(name) &&
         (profile == "nightly" || !plan.Mappings.ContainsKey(name));
 
-    // GUI uses Foundation MCP clients after P8-21, and has no direct reference to SessionFactoryLoader, BridgeChannel or
-    // RpcDispatcher. Core's true suite exercises those variant-specific types. Keep the GUI session/control integration
-    // classes too (including their partial files); UiSettings inspects Core's assembly and StudioBundleLayout checks loading.
-    // Pure rendering/layout classes construct windows with fake clients and never dispatch to the changed Core types.
-    internal static readonly string[] SharedGuiClasses = ["MainWindowTests", "McpPanelTests", "OfflineDemoTests",
-        "ProjectPageInteractionTests", "UnifiedDesktopTests", "VciPanelTests", "WorkbenchControlArtifactTests",
-        "WorkbenchControlLoadTests", "WorkbenchControlPipeTests", "WorkbenchControlTests", "WorkbenchMcpPrefillTests",
-        "WorkbenchViewModelTests", "UiSettingsTests", "StudioBundleLayoutTests"];
-
-    internal static JsonObject SharedGuiSuite(JsonObject suite)
-    {
-        var selected = suite.DeepClone().AsObject();
-        selected["arguments"]!.AsArray().Add("--filter");
-        selected["arguments"]!.AsArray().Add(string.Join("|", SharedGuiClasses.Select(cls => "FullyQualifiedName~TiaOpenness.Gui.Tests." + cls + ".")));
-        // Full registration remains unchanged. Merge has a presence gate for every approved class, not a fixed case count.
-        selected["minimumPassed"] = 1;
-        selected["maximumSkipped"] = 0;
-        return selected;
-    }
-
     internal static string[] Profiles(string job, DerivationPlan plan) => CheckAllJobInputs.NightlyOnly(job) || job.EndsWith("-coverage-proof", StringComparison.Ordinal) ? ["nightly"] : plan.Mappings.Keys.Any(name => job.StartsWith(name + "-shard-", StringComparison.Ordinal)
         || job == name + "-sequential") ? ["nightly"] : ["merge", "nightly"];
 
@@ -152,11 +176,10 @@ internal static class CheckAllProfiles
         {
             name = pair.Key, buildProfiles = new[] { "merge", "nightly" },
             processProfiles = plan.Mappings.ContainsKey(pair.Key) ? new[] { "nightly" } : new[] { "merge", "nightly" },
-            fullProfiles = plan.Mappings.ContainsKey(pair.Key) || pair.Key == "studio-gui-true" ? new[] { "nightly" } : new[] { "merge", "nightly" },
+            fullProfiles = plan.Mappings.ContainsKey(pair.Key) ? new[] { "nightly" } : new[] { "merge", "nightly" },
             mergeDerivedFrom = plan.Mappings.GetValueOrDefault(pair.Key),
             fallbackReason = plan.Fallbacks.GetValueOrDefault(pair.Key),
-            mergeClasses = pair.Key == "studio-gui-true" ? SharedGuiClasses : null,
-            guiShards = pair.Key.StartsWith("studio-gui-", StringComparison.Ordinal) ? 3 : (int?)null,
+            guiShards = pair.Key == "studio-gui" ? 3 : (int?)null,
             concurrentGuiShards = false
         });
         File.WriteAllText(Path.Combine(output, "profile-inventory.json"), JsonSerializer.Serialize(new { profile, suites = rows },
@@ -184,33 +207,17 @@ internal static class CheckAllProfiles
         }
     }
 
-    internal static IReadOnlyList<string> SharedGuiErrors(IEnumerable<DerivedSuiteGates.Case> cases, bool requirePassed)
-    {
-        var rows = cases.ToArray(); var errors = new List<string>();
-        foreach (var cls in SharedGuiClasses)
-        {
-            string full = "TiaOpenness.Gui.Tests." + cls;
-            var group = rows.Where(row => row.Class == full).ToArray();
-            if (group.Length == 0) errors.Add("Missing selected GUI class: " + full);
-            else if (requirePassed && (!group.Any(row => (string?)row.Result.Attribute("outcome") == "Passed") ||
-                group.Any(row => (string?)row.Result.Attribute("outcome") != "Passed")))
-                errors.Add("Selected GUI class must have >0 passed and zero failed/skipped: " + full);
-        }
-        return errors;
-    }
-
     internal static void AddStudio(List<CheckJob> jobs, string root, JsonObject catalog, string output, string dotnet, string profile,
         string? manifest, SuiteProcess? process = null, IReadOnlyDictionary<string, double>? history = null, Func<string, SuiteProcess>? processFor = null, string? api = null)
     {
         foreach (var name in StudioSuites)
         {
-            var full = catalog[name]!.AsObject();
-            var suite = name == "studio-gui-true" && profile == "merge" ? SharedGuiSuite(full) : full;
-            bool gui = name.StartsWith("studio-gui-", StringComparison.Ordinal);
+            var suite = catalog[name]!.AsObject();
+            bool gui = name == "studio-gui";
             int count = gui ? 3 : 1;
             string directory = Path.Combine(output, name);
             Directory.CreateDirectory(directory);
-            var (assignments, costs) = GuiPlan(root, name, count, !ReferenceEquals(suite, full));
+            var (assignments, costs) = GuiPlan(root, name, count);
             string plan = Path.Combine(directory, "shard-plan.tsv");
             File.WriteAllLines(plan, assignments.Select(pair => Convert.ToBase64String(Encoding.UTF8.GetBytes(pair.Key)) + "\t" + pair.Value));
             File.WriteAllText(Path.Combine(directory, "shard-plan.json"), JsonSerializer.Serialize(new { assignments, costs,
@@ -235,7 +242,7 @@ internal static class CheckAllProfiles
                     { AllowFailedDependencies = true, SensitiveGroup = unit.Project, EstimatedSeconds = costs[index] + 5,
                         ResultInputs = new("suite", new JsonObject { ["suite"] = name, ["registration"] = suite.DeepClone(),
                             ["project"] = unit.Project, ["variant"] = unit.Variant, ["index"] = index, ["count"] = count,
-                            ["api"] = api, ["runner"] = "Studio RunShard", ["profileSelection"] = ReferenceEquals(suite, full) ? "full" : "selected-classes" }.ToJsonString(),
+                            ["api"] = api, ["runner"] = "Studio RunShard", ["profileSelection"] = "full" }.ToJsonString(),
                             shardDirectory, name + ".trx", plan, (int)suite["maximumSkipped"]!) });
             }
             jobs.Add(new(name + "-gate", () =>
@@ -245,18 +252,17 @@ internal static class CheckAllProfiles
                 if (result.ExitCode != 0) errors.Add(result.StandardError);
                 // Three processes must not gain three times the former unsharded job's runtime allowance.
                 if (StudioRuntimeError(TimeSpan.FromTicks(runtimeTicks), budget) is { } timeout) errors.Add(timeout);
-                if (name == "studio-gui-true") errors.AddRange(SharedGuiErrors(DerivedSuiteGates.Read(Path.Combine(output, name + ".trx")), requirePassed: profile == "merge"));
                 var summaryPath = Path.Combine(output, name + ".json");
                 var summary = JsonNode.Parse(File.ReadAllText(summaryPath))!.AsObject();
-                summary["profile"] = profile; summary["execution"] = ReferenceEquals(suite, full) ? "full" : "selected-classes";
-                summary["releaseEligible"] = ReferenceEquals(suite, full);
+                summary["profile"] = profile; summary["execution"] = "full";
+                summary["releaseEligible"] = true;
                 summary["runtimeSeconds"] = TimeSpan.FromTicks(runtimeTicks).TotalSeconds; summary["timeoutSeconds"] = budget.TotalSeconds;
                 summary["errors"] = ReleaseEvidence.Strings(errors);
                 File.WriteAllText(summaryPath, summary.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n");
                 SuiteCosts.Record(name, directory, Path.Combine(root, "bin-build/check-timings"));
                 return result with { ExitCode = errors.Count == 0 ? 0 : 1, StandardError = string.Join("\n", errors) };
             }, names.ToArray()) { AllowFailedDependencies = true, Priority = 1 });
-            // Preserve the historical release-evidence job names as full-suite aggregate aliases.
+            // Release evidence binds the full-suite aggregate alias to its registered gate.
             jobs.Add(new(name, () => new(0, name + ": registered gate passed\n", ""), [name + "-gate"]));
         }
     }
@@ -275,22 +281,22 @@ internal static class CheckAllProfiles
     internal static string? StudioRuntimeError(TimeSpan runtime, TimeSpan budget) => runtime >= budget
         ? "Studio shards exceeded the original unsharded runtime budget: " + runtime.TotalSeconds + "s >= " + budget.TotalSeconds + "s" : null;
 
-    internal static (Dictionary<string, int>, double[]) GuiPlan(string root, string name, int count, bool selected = false)
+    internal static (Dictionary<string, int>, double[]) GuiPlan(string root, string name, int count)
     {
         var path = Path.Combine(root, "bin-build/check-timings", name + ".classes.json");
+        if (!File.Exists(path)) path = Path.Combine(root, "bin-build/check-timings", name + "-false.classes.json");
         Dictionary<string, SuiteCosts.ClassCost> measured;
         try { measured = File.Exists(path) ? JsonSerializer.Deserialize<Dictionary<string, SuiteCosts.ClassCost>>(File.ReadAllText(path)) ?? new() : new(); }
         catch (Exception ex) when (ex is IOException or JsonException) { measured = new(); }
-        var costs = measured.Where(pair => !selected || SharedGuiClasses.Any(cls => pair.Key == "TiaOpenness.Gui.Tests." + cls))
+        var costs = measured
             .ToDictionary(pair => "C:" + pair.Key, pair => pair.Value is { Seconds: var seconds } && double.IsFinite(seconds) && seconds >= 0 ? seconds : 1, StringComparer.Ordinal);
         // Estimates only: absent, added or renamed classes never fail a gate. Unknown classes use ShardFramework's
         // deterministic class fallback, so all their cases still execute in exactly one of the three processes.
-        if (name.StartsWith("studio-gui-", StringComparison.Ordinal) && !selected)
+        if (name == "studio-gui")
         {
             costs.TryAdd("C:TiaOpenness.Gui.Tests.WorkbenchFontStyleTests", 76);
             costs.TryAdd("C:TiaOpenness.Gui.Tests.WorkbenchNarrowLayoutTests", 67);
         }
-        if (selected) foreach (var cls in SharedGuiClasses) costs.TryAdd("C:TiaOpenness.Gui.Tests." + cls, 1);
         return SuiteCosts.Balance(costs, count);
     }
 }

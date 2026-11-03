@@ -5,11 +5,14 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcp.ReleaseTool;
 
+// Keep the legacy serialized UnderThirtyMinutes name; nightly/release now enforce 45 minutes.
 internal sealed record NightlyRun(string RunId, string Revision, string ReportPath, string Status, double WallSeconds,
     bool UnderThirtyMinutes, DateTime CompletedUtc, string? ReportSha256 = null, string? EvidenceSha256 = null, string? IdentitiesSha256 = null);
 
 internal static class NightlyRuns
 {
+    internal const int LimitSeconds = 2700;
+    internal static bool WithinTimeGate(string profile, double seconds) => seconds < (profile == "nightly" ? LimitSeconds : 1800);
     internal static bool EvidenceRun(Options options) => options.Get("Profile", "merge") == "nightly" &&
         options.Has("NoBuildCache") && (options.Has("Clean") || options.Has("Cold")) && !options.Has("BuildOnly") &&
         !options.Has("Quick") && !options.Has("Affected");
@@ -29,6 +32,23 @@ internal static class NightlyRuns
 
     internal static string DirectoryFor(string root) => Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_ROOT") ??
         Path.Combine(Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT") ?? root, "bin-build/nightly"));
+
+    internal static string LatestPassedFor(string root, string? mainRoot = null, string? explicitDirectory = null)
+    {
+        var configured = explicitDirectory ?? Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_ROOT");
+        var local = Path.GetFullPath(Path.Combine(configured ?? DirectoryFor(root), "latest-passed.json"));
+        if (File.Exists(local) || configured != null) return local;
+        // New worktrees have no local nightly yet. Read the main checkout's passing evidence;
+        // the existing machine, complete-run, input-identity and artifact-byte guards still apply.
+        if (mainRoot == null)
+        {
+            var common = ProcessRunner.Run("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], root);
+            if (common.ExitCode != 0) return local;
+            mainRoot = Path.GetDirectoryName(common.StandardOutput.Trim());
+        }
+        var main = mainRoot == null ? local : Path.GetFullPath(Path.Combine(mainRoot, "bin-build/nightly/latest-passed.json"));
+        return File.Exists(main) ? main : local;
+    }
 
     internal static void Save(string directory, NightlyRun run)
     {
@@ -67,13 +87,13 @@ internal static class NightlyRuns
         bool passed = false;
         try
         {
-            passed = exitCode == 0 && wallSeconds < 1800 && File.Exists(report) && File.Exists(evidence) && File.Exists(identities) &&
+            passed = exitCode == 0 && wallSeconds < LimitSeconds && File.Exists(report) && File.Exists(evidence) && File.Exists(identities) &&
                 JsonNode.Parse(File.ReadAllText(report)) is JsonObject reportNode && JsonNode.Parse(File.ReadAllText(evidence)) is JsonObject evidenceNode &&
                 CheckAllNightlyCoverage.PassedNightly(reportNode, evidenceNode);
         }
         catch (Exception ex) when (CheckAllNightlyCoverage.InputError(ex)) { Console.Error.WriteLine("Nightly report unavailable: " + ex.Message); }
-        Save(DirectoryFor(root), new(Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(output))), revision, report, passed ? "passed" : wallSeconds >= 1800 ? "timed-out" : "failed",
-            wallSeconds, wallSeconds < 1800, DateTime.UtcNow, File.Exists(report) ? CheckAllResultCache.FileHash(report) : null,
+        Save(DirectoryFor(root), new(Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(output))), revision, report, passed ? "passed" : wallSeconds >= LimitSeconds ? "timed-out" : "failed",
+            wallSeconds, wallSeconds < LimitSeconds, DateTime.UtcNow, File.Exists(report) ? CheckAllResultCache.FileHash(report) : null,
             File.Exists(evidence) ? CheckAllResultCache.FileHash(evidence) : null, File.Exists(identities) ? CheckAllResultCache.FileHash(identities) : null));
     }
 
@@ -85,7 +105,7 @@ internal static class NightlyRuns
         var relevant = rows.Where(row => ancestor(row.Revision, commit) && (row.Revision == commit || previousRelease == null ||
             row.Revision != previousRelease && ancestor(previousRelease, row.Revision))).OrderBy(row => row.CompletedUtc).ToArray();
         var last = relevant.LastOrDefault();
-        return last != null && (last.Status != "passed" || !last.UnderThirtyMinutes || !double.IsFinite(last.WallSeconds) || last.WallSeconds < 0 || last.WallSeconds >= 1800)
+        return last != null && (last.Status != "passed" || !last.UnderThirtyMinutes || !double.IsFinite(last.WallSeconds) || last.WallSeconds < 0 || last.WallSeconds >= LimitSeconds)
             ? $"Release blocked by nightly {last.RunId} ({last.Status}, {last.WallSeconds:F1}s) for {last.Revision}; a later passing nightly is required. No override is available." : null;
     }
 
@@ -123,8 +143,8 @@ internal static class NightlyRuns
         // A killed runner cannot execute finally. Its original deadline still
         // defines the failure time; discovering it later must not revoke a
         // genuinely later passed nightly.
-        foreach (var abandoned in history.Where(row => row.Status == "running" && now - row.CompletedUtc >= TimeSpan.FromMinutes(30)).ToArray())
-            Save(directory, abandoned with { Status = "timed-out", WallSeconds = 1800, UnderThirtyMinutes = false, CompletedUtc = abandoned.CompletedUtc.AddMinutes(30) });
+        foreach (var abandoned in history.Where(row => row.Status == "running" && now - row.CompletedUtc >= TimeSpan.FromSeconds(LimitSeconds)).ToArray())
+            Save(directory, abandoned with { Status = "timed-out", WallSeconds = LimitSeconds, UnderThirtyMinutes = false, CompletedUtc = abandoned.CompletedUtc.AddSeconds(LimitSeconds) });
         history = JsonSerializer.Deserialize<NightlyRun[]>(File.ReadAllText(Path.Combine(directory, "history.json")))!;
         var retained = history.OrderByDescending(row => row.CompletedUtc).Take(keep).Select(row => row.RunId).ToHashSet(StringComparer.Ordinal);
         // Never lose the source of identity reuse, even after newer failures.
@@ -183,13 +203,15 @@ internal static partial class ReleaseCommands
             File.WriteAllText(Path.Combine(checkout, ".git/packed-refs"), ReleaseEvidence.GitText(Root, git, "for-each-ref", "--format=%(objectname) %(refname)").Replace("\r\n", "\n", StringComparison.Ordinal) + "\n");
             ProcessRunner.RequireSuccess(ProcessRunner.Run(git, ["read-tree", "HEAD"], checkout), "nightly detached index");
             ProcessRunner.RequireSuccess(ProcessRunner.Run(git, ["checkout-index", "--all"], checkout), "nightly committed source");
+            SeedCheckAllHistory(Root);
+            CopyCheckAllHistory(Path.Combine(Root, "bin-build/check-timings"), Path.Combine(checkout, "bin-build/check-timings"));
             // Run this revision's tool, never the caller's binary. -Clean retains
             // the existing clean-snapshot and cold-build semantics.
             var args = new List<string> { "run", "--project", Path.Combine(checkout, "build-tools/release"), "--", "check-all", "-Profile", "nightly", "-Clean", "-NoBuildCache", "-OutputDirectory", output };
             foreach (var key in new[] { "PublicApiRoot", "NuGetConfig", "CompanionPython", "Python", "Dotnet", "BuildParallelism", "MaxParallelism" })
                 if (options.Get(key) is { } value) args.AddRange(["-" + key, Path.IsPathRooted(value) || key.EndsWith("Parallelism", StringComparison.Ordinal) ? value :
                     key is "PublicApiRoot" or "NuGetConfig" or "CompanionPython" ? Path.GetFullPath(value) : value]);
-            int remaining = (int)Math.Max(0, 1800000 - clock.Elapsed.TotalMilliseconds);
+            int remaining = (int)Math.Max(0, NightlyRuns.LimitSeconds * 1000 - clock.Elapsed.TotalMilliseconds);
             if (remaining == 0) throw new ReleaseException("Nightly timed out preparing the detached worktree");
             exitCode = ProcessRunner.Run(Dotnet, args, checkout, new Dictionary<string, string?> { ["TIA_MCP_NIGHTLY_ROOT"] = directory,
                 ["TIA_MCP_NIGHTLY_MANAGED"] = "1",

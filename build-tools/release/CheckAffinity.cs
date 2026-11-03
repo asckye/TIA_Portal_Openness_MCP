@@ -135,6 +135,36 @@ internal static class CheckAffinity
         return Math.Min(state.AvailablePhysical, state.AvailablePageFile);
     }
 
+    internal static ulong TotalPhysicalMemory()
+    {
+        var state = new MemoryStatus { Length = (uint)Marshal.SizeOf<MemoryStatus>() };
+        if (!GlobalMemoryStatusEx(ref state)) throw new Win32Exception(Marshal.GetLastWin32Error());
+        return state.TotalPhysical;
+    }
+
+    internal static (ulong Bytes, int Unreadable) CommittedMemory(IEnumerable<SafeFileHandle> jobs)
+    {
+        ulong bytes = 0; int unreadable = 0;
+        var observed = new HashSet<int>();
+        foreach (var job in jobs)
+        foreach (int pid in JobProcesses(job))
+        {
+            Process? process = null;
+            try
+            {
+                process = Process.GetProcessById(pid);
+                // Membership also rejects a PID reused after the job snapshot.
+                if (!IsMember(job, process) || !observed.Add(pid)) continue;
+                process.Refresh();
+                bytes += (ulong)process.PrivateMemorySize64;
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException) { } // Exited during the sample.
+            catch (Win32Exception) { unreadable++; }
+            finally { process?.Dispose(); }
+        }
+        return (bytes, unreadable);
+    }
+
     internal sealed record JobProcess(int Pid, DateTime? StartTimeUtc, string? ImagePath, bool Member, string? Error = null);
     internal static JobProcess Observe(SafeFileHandle job, Process process) => new(process.Id, process.StartTime.ToUniversalTime(), process.MainModule?.FileName, IsMember(job, process));
 
@@ -440,6 +470,15 @@ internal static class CheckAffinity
             var observation = Observe(job, process);
             File.WriteAllText(fields[1], JsonSerializer.Serialize(observation));
             return observation.Member ? 0 : 1;
+        }
+        if (fields[0] == "memory")
+        {
+            var retained = new byte[int.Parse(fields[2], System.Globalization.CultureInfo.InvariantCulture)];
+            for (int index = 0; index < retained.Length; index += 4096) retained[index] = 1;
+            File.WriteAllText(fields[1], Environment.ProcessId.ToString());
+            Console.In.ReadLine();
+            GC.KeepAlive(retained);
+            return 0;
         }
         if (fields[0] is "child" or "exit-after-input")
         {

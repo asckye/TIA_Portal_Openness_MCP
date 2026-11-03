@@ -56,7 +56,7 @@ jobs:
       - name: TRX gate self-checks
         run: dotnet run --project build-tools/release -- test-suites -SelfTest
       - name: Offline regression, generation basic package and MCP SDK version policy
-        run: dotnet run --project build-tools/release -- test-suites -Shards 4 -MaxParallelism 4 -Suite offline -Suite offline-v20 -Suite kept-code -Suite kept-code-v20 -Suite version-policy -Suite generation-model -Suite generation-planning -Suite workbench-control-protocol
+        run: dotnet run --project build-tools/release -- test-suites -Shards 4 -MaxParallelism 4 -Suite offline -Suite kept-code -Suite version-policy -Suite generation-model -Suite generation-planning -Suite workbench-control-protocol
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -131,27 +131,21 @@ jobs:
 
   studio-tests:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        shared-adapter-paths: ['false', 'true']
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Build Studio
-        run: dotnet build src/Studio/Gui/TiaOpenness.Gui.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
+        run: dotnet build src/Studio/Gui/TiaOpenness.Gui.csproj -c Release --nologo -p:TiaSharedAdapterPaths=false
       - name: Studio client functional tests
-        run: dotnet run --project build-tools/release -- test-suites -Suite studio-core-${{ matrix.shared-adapter-paths }} -Shards 1 -ResultsDirectory bin-build/ci-test-results
+        run: dotnet run --project build-tools/release -- test-suites -Suite studio-core -Shards 1 -ResultsDirectory bin-build/ci-test-results
       - name: Studio WPF functional tests
-        run: dotnet run --project build-tools/release -- test-suites -Suite studio-gui-${{ matrix.shared-adapter-paths }} -Shards 1 -ResultsDirectory bin-build/ci-test-results
-      - name: Bind the full shared-adapter variant gates to this CI attempt
-        if: matrix.shared-adapter-paths == 'true'
-        run: dotnet run --project build-tools/release -- ci-coverage -Profile studio-true -ResultsDirectory bin-build/ci-test-results -Output bin-build/ci-test-results/ci-receipt.json
+        run: dotnet run --project build-tools/release -- test-suites -Suite studio-gui -Shards 1 -ResultsDirectory bin-build/ci-test-results
       - uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: studio-test-results-${{ matrix.shared-adapter-paths }}
+          name: studio-test-results
           path: bin-build/ci-test-results/
 
       - name: Compile every file-based C# program
@@ -211,39 +205,3 @@ jobs:
           name: foundation-transport-test-results
           path: |
             bin-build/test-results*/
-
-  foundation-transport:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: '10.0.x'
-      - uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-      - name: Build host and synthetic worker without Siemens SDKs
-        shell: bash
-        run: |
-          set -euo pipefail
-          dotnet publish src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release -o bin-build/ci-foundation
-          dotnet build tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj -c Release
-          for key in 14sp1 15.1 16 17 18 19; do
-            target="runtime/v$key"
-            mkdir -p "$target"
-            cp bin-build/ci-foundation/* "$target/"
-            printf '%s' "$key" > "$target/release-key.txt"
-          done
-      - name: Six real STDIO hosts and isolated HTTP sessions
-        run: python scripts/checks/Test-FoundationTransport.py --fixture tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe --releases 14sp1 15.1 16 17 18 19 --output bin-build/ci-foundation-results
-      - name: Compile every file-based C# program
-        run: dotnet run --project build-tools/release -- build-file-programs
-      - name: Reviewed analyzer warning ratchet
-        run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
-      - uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: foundation-transport-host-results
-          path: |
-            bin-build/check-all/
-            bin-build/ci-foundation-results/

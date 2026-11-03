@@ -14,8 +14,12 @@ internal static class CheckNodeProperties
         // a separate wpf-temp intermediate directory below it.
         var name = System.Text.RegularExpressions.Regex.Replace(Path.GetFileNameWithoutExtension(project), "_[^_]+_wpftmp$", "");
         var path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(project))!, name + Path.GetExtension(project)).ToLowerInvariant();
-        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(path + "\n" +
-            string.Join("\n", properties.OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase).Select(pair => pair.Key.ToLowerInvariant() + "=" + pair.Value)))));
+        var root = properties.TryGetValue("DirectoryBuildPropsPath", out var import)
+            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(import)!, "../..")) : Path.GetDirectoryName(path)!;
+        string Portable(string value) => value.Replace(root, "<repo>", StringComparison.OrdinalIgnoreCase)
+            .Replace(root.Replace('\\', '/'), "<repo>", StringComparison.OrdinalIgnoreCase).Replace('\\', '/');
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Portable(path) + "\n" +
+            string.Join("\n", properties.OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase).Select(pair => pair.Key.ToLowerInvariant() + "=" + Portable(pair.Value))))));
     }
     internal static void Apply(Dictionary<string, string> properties, string text)
     {
@@ -53,7 +57,25 @@ public sealed class AssignCheckBuildNodes : ITask
                 .Where(part => !part.StartsWith("CheckAllNodeId=", StringComparison.OrdinalIgnoreCase));
             CheckNodeProperties.Apply(properties, string.Join(";", additional));
             var item = new Microsoft.Build.Utilities.TaskItem(project);
-            item.SetMetadata("AdditionalProperties", string.Join(";", additional.Append("CheckAllNodeId=" + CheckNodeProperties.Hash(project.GetMetadata("FullPath"), properties)[..24])));
+            var root = properties.TryGetValue("DirectoryBuildPropsPath", out var import)
+                ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(import)!, "../..")) : "";
+            var relative = root.Length == 0 ? "" : Path.GetRelativePath(root, project.GetMetadata("FullPath")).Replace('\\', '/');
+            var shared = relative is "src/Logic/TiaMcp.Logic.csproj" or "src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" or
+                "src/WorkerChannel/TiaMcp.WorkerChannel.csproj" or "third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" or
+                "build-tools/native-call-weaver/NativeCallWeaver.csproj" or "src/OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj";
+            var additions = additional.ToList();
+            if (shared && Environment.GetEnvironmentVariable("TIA_MCP_CHECK_SHARE_LIBRARIES") != "0")
+            {
+                // Release/API/path-mode globals do not enter these libraries' sources or references.
+                // Keep DefineConstants, frameworks, test-policy metadata and compiler options:
+                // those can change bytes and must remain separate nodes.
+                var variantOnly = new[] { "TiaReleaseKey", "TiaSharedAdapterPaths", "TiaPublicApiRoot", "SiemensEngineeringDirectory", "TiaMcpPlcWorkerSdkFixture", "TiaMcpPlcWorkerFixtureRoot", "TiaMcpEngineWorkerFaultFixture" };
+                foreach (var name in variantOnly) properties.Remove(name);
+                additions.RemoveAll(part => variantOnly.Any(name => part.StartsWith(name + "=", StringComparison.OrdinalIgnoreCase)) || part.StartsWith("CheckAllVariant=", StringComparison.OrdinalIgnoreCase));
+                if (properties.ContainsKey("CheckAllVariant")) { properties["CheckAllVariant"] = "shared"; additions.Add("CheckAllVariant=shared"); }
+                item.SetMetadata("GlobalPropertiesToRemove", project.GetMetadata("GlobalPropertiesToRemove") + ";" + string.Join(";", variantOnly));
+            }
+            item.SetMetadata("AdditionalProperties", string.Join(";", additions.Append("CheckAllNodeId=" + CheckNodeProperties.Hash(project.GetMetadata("FullPath"), properties)[..24])));
             return (ITaskItem)item;
         }).ToArray();
         return true;

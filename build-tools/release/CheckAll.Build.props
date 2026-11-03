@@ -3,6 +3,7 @@
        Passing this import globally also covers nested Directory.Build.props files. -->
   <PropertyGroup><_CheckAllOriginalProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildProjectDirectory)'))</_CheckAllOriginalProps></PropertyGroup>
   <Import Project="$(_CheckAllOriginalProps)" Condition="'$(_CheckAllOriginalProps)' != ''" />
+  <Import Project="$(MSBuildThisFileDirectory)../../src/Shared/ReproducibleBuild.props" Condition="'$(TiaReproducibleBuildImported)' != 'true' and Exists('$(MSBuildThisFileDirectory)../../src/Shared/ReproducibleBuild.props')" />
   <PropertyGroup Condition="'$(CheckAllVariant)' != ''">
     <_CheckAllPropertyHash>$(CheckAllNodeId)</_CheckAllPropertyHash>
     <!-- The ID includes the project path, so colocated projects remain separate

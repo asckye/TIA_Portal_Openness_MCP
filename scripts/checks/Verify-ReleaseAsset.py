@@ -41,6 +41,7 @@ def main():
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2], help='the Git checkout (default: this repository)')
     parser.add_argument('--commit', default='', help='expected source commit (default: HEAD of --root)')
     parser.add_argument('--git', default='git')
+    parser.add_argument('--working-tree', action='store_true', help='Preparation dry run: apply every asset check to current tracked bytes without a commit')
     args = parser.parse_args()
     if args.self_test:
         result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(AssetChecks))
@@ -67,6 +68,8 @@ def main():
     commit = args.commit or subprocess.check_output([args.git, 'rev-parse', 'HEAD'], cwd=root).decode().strip()
     tree = subprocess.check_output([args.git, 'ls-tree', '-r', '--name-only', '-z', commit], cwd=root).decode('utf-8').split('\0')
     def committed(name):
+        if args.working_tree:
+            return (root / name).read_bytes()
         return subprocess.check_output([args.git, 'show', f'{commit}:{name}'], cwd=root)
     rules = json.loads(committed(layout.DELIVERY_RULES).decode('utf-8-sig'))
     tracked = [name for name in tree if name and layout.delivered(name, rules)]

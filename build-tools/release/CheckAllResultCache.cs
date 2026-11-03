@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,7 +25,7 @@ internal sealed class CheckAllResultCache
     private readonly string versions, machine, settings;
     private readonly bool enabled;
     private readonly Func<string> machineStateProbe;
-    private readonly Dictionary<string, CheckAllSuiteClosure> closures = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, Lazy<CheckAllSuiteClosure>> closures = new(StringComparer.Ordinal);
     private string[]? layout;
 
     internal CheckAllResultCache(string root, string output, string manifest, string api, string nuget,
@@ -97,9 +98,8 @@ internal sealed class CheckAllResultCache
         var registration = definition["registration"]?.AsObject() ?? new JsonObject();
         string project = (string)definition["project"]!;
         var key = project + "|" + registration.ToJsonString() + "|" + (string?)definition["api"];
-        if (!closures.TryGetValue(key, out var closure))
-            closures[key] = closure = CheckAllInputClosure.Derive(root, project, registration, layout ??= CheckAllLayout.SourceInventory(root), dotnet, (string?)definition["api"]);
-        return closure;
+        return closures.GetOrAdd(key, _ => new Lazy<CheckAllSuiteClosure>(() => CheckAllInputClosure.Derive(root, project,
+            registration, layout ??= CheckAllLayout.SourceInventory(root), dotnet, (string?)definition["api"]))).Value;
     }
 
     internal CheckAllResultSpec Prepare(CheckAllResultSpec spec) => spec.Family == "suite" ? spec with { Closure = SuiteClosure(spec) } : spec;
@@ -134,6 +134,10 @@ internal sealed class CheckAllResultCache
         if (declaration?.SourceOnly == true) source = [.. source, ReleaseCommands.ResolveResultApplication(dotnet)];
         var trees = new Dictionary<string, string>(StringComparer.Ordinal);
         if (declaration != null) trees["driver"] = Path.GetDirectoryName(typeof(CheckAllResultCache).Assembly.Location)!;
+        // Preparation always runs, but a reused executable check must also bind
+        // the decoder payload handed to it outside the MSBuild runtime receipts.
+        var decoderRuntime = Path.Combine(root, "runtime/decoder-python");
+        if (declaration?.SourceOnly != true && Directory.Exists(decoderRuntime)) trees["decoder-runtime"] = decoderRuntime;
         if (declaration?.BinaryRoots is { } binaries)
             foreach (var binary in binaries) trees["declared-binary/" + binary] = Path.Combine(root, binary);
         if (declaration?.FilePrograms is { } programs)

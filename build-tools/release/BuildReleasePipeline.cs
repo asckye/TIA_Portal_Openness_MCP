@@ -190,9 +190,7 @@ internal static partial class ReleaseCommands
             foreach (var name in ReleaseCommandTable.OfflineSuites)
                 RunDotnetSuiteForRelease(name, name, dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             offlinePassed = ReadSuitePassed(suiteResults, "offline");
-            offlineV20Passed = ReadSuitePassed(suiteResults, "offline-v20");
             keptCodePassed = ReadSuitePassed(suiteResults, "kept-code");
-            keptCodeV20Passed = ReadSuitePassed(suiteResults, "kept-code-v20");
             var versionPolicyProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj");
             RestoreBuildProject(dotnet, versionPolicyProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RunDotnetSuiteForRelease("version-policy", "version-policy", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);

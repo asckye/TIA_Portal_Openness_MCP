@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "absoluteMarginMilliseconds": 2.0,
+  "relativeMargin": 0.25,
+  "maximumMarginMilliseconds": 4.0,
+  "samples": {
+    "transport/14sp1/http/merge": {
+      "calls": 458,
+      "medianMilliseconds": 44.92610001761932,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/14sp1/stdio/merge": {
+      "calls": 341,
+      "medianMilliseconds": 16.183100000489503,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/15.1/http/merge": {
+      "calls": 513,
+      "medianMilliseconds": 42.3175000178162,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/15.1/stdio/merge": {
+      "calls": 401,
+      "medianMilliseconds": 15.07379999384284,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/16/http/merge": {
+      "calls": 537,
+      "medianMilliseconds": 43.07200000039302,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/16/stdio/merge": {
+      "calls": 593,
+      "medianMilliseconds": 14.585600001737475,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/17/http/merge": {
+      "calls": 552,
+      "medianMilliseconds": 44.799449999118224,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/17/stdio/merge": {
+      "calls": 563,
+      "medianMilliseconds": 14.206299994839355,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/18/http/merge": {
+      "calls": 533,
+      "medianMilliseconds": 44.25570002058521,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/18/stdio/merge": {
+      "calls": 568,
+      "medianMilliseconds": 14.455199998337775,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/19/http/merge": {
+      "calls": 568,
+      "medianMilliseconds": 41.697500011650845,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/19/stdio/merge": {
+      "calls": 559,
+      "medianMilliseconds": 15.363299986347556,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/20/http/merge": {
+      "calls": 297,
+      "medianMilliseconds": 36.89519999898039,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/20/stdio/merge": {
+      "calls": 561,
+      "medianMilliseconds": 14.055099978577346,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/21/http/merge": {
+      "calls": 320,
+      "medianMilliseconds": 32.66450001683552,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "transport/21/stdio/merge": {
+      "calls": 535,
+      "medianMilliseconds": 16.501000005519018,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "transport"
+    },
+    "responses/14sp1/stdio/merge": {
+      "calls": 339,
+      "medianMilliseconds": 13.799400010611862,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/15.1/stdio/merge": {
+      "calls": 399,
+      "medianMilliseconds": 12.102699984097853,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/16/stdio/merge": {
+      "calls": 591,
+      "medianMilliseconds": 12.09289999678731,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/17/stdio/merge": {
+      "calls": 561,
+      "medianMilliseconds": 11.611699999775738,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/18/stdio/merge": {
+      "calls": 566,
+      "medianMilliseconds": 12.842550000641495,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/19/stdio/merge": {
+      "calls": 557,
+      "medianMilliseconds": 11.247399990679696,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/20/stdio/merge": {
+      "calls": 561,
+      "medianMilliseconds": 18.42380000744015,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/21/stdio/merge": {
+      "calls": 535,
+      "medianMilliseconds": 18.82100000511855,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/20/http/merge": {
+      "calls": 297,
+      "medianMilliseconds": 35.814300004858524,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "responses/21/http/merge": {
+      "calls": 320,
+      "medianMilliseconds": 32.75425000174437,
+      "masterRevision": "9563b95c98732ce41afe33dab523198ec80a0866",
+      "producer": "responses"
+    },
+    "transport/14sp1/http/full": {
+      "calls": 1990,
+      "medianMilliseconds": 31.332749997091014,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/14sp1/stdio/full": {
+      "calls": 995,
+      "medianMilliseconds": 15.408499995828606,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/15.1/http/full": {
+      "calls": 2272,
+      "medianMilliseconds": 31.923399998049717,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/15.1/stdio/full": {
+      "calls": 1136,
+      "medianMilliseconds": 14.663750000181608,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/16/http/full": {
+      "calls": 2498,
+      "medianMilliseconds": 35.556099996028934,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/16/stdio/full": {
+      "calls": 1249,
+      "medianMilliseconds": 17.396700000972487,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/17/http/full": {
+      "calls": 2742,
+      "medianMilliseconds": 32.3035500041442,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/17/stdio/full": {
+      "calls": 1371,
+      "medianMilliseconds": 15.287200003513135,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/18/http/full": {
+      "calls": 2998,
+      "medianMilliseconds": 32.64270000363467,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/18/stdio/full": {
+      "calls": 1499,
+      "medianMilliseconds": 15.42340000742115,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/19/http/full": {
+      "calls": 3428,
+      "medianMilliseconds": 34.37370000756346,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/19/stdio/full": {
+      "calls": 1714,
+      "medianMilliseconds": 15.618249999533873,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/20/http/full": {
+      "calls": 1996,
+      "medianMilliseconds": 30.853700001898687,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/20/stdio/full": {
+      "calls": 997,
+      "medianMilliseconds": 12.498699987190776,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/21/http/full": {
+      "calls": 2056,
+      "medianMilliseconds": 31.590099999448285,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "transport/21/stdio/full": {
+      "calls": 1027,
+      "medianMilliseconds": 12.491899993619882,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "transport"
+    },
+    "responses/14sp1/stdio/full": {
+      "calls": 1144,
+      "medianMilliseconds": 15.54749999922933,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/15.1/stdio/full": {
+      "calls": 1304,
+      "medianMilliseconds": 16.11455000238493,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/16/stdio/full": {
+      "calls": 1420,
+      "medianMilliseconds": 15.742200004751794,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/17/stdio/full": {
+      "calls": 1512,
+      "medianMilliseconds": 15.025849999801721,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/18/stdio/full": {
+      "calls": 1616,
+      "medianMilliseconds": 15.035199998237658,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/19/stdio/full": {
+      "calls": 1920,
+      "medianMilliseconds": 14.774950002902187,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/20/stdio/full": {
+      "calls": 4300,
+      "medianMilliseconds": 16.854349996719975,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/21/stdio/full": {
+      "calls": 4406,
+      "medianMilliseconds": 17.195950000314042,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/20/http/full": {
+      "calls": 4300,
+      "medianMilliseconds": 30.221150002034847,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    },
+    "responses/21/http/full": {
+      "calls": 4406,
+      "medianMilliseconds": 31.069800003024284,
+      "masterRevision": "34e85560d1ca3fc04797b4176388c14670248856",
+      "producer": "responses"
+    }
+  }
+}

@@ -16,10 +16,18 @@ internal static partial class ReleaseCommands
         {
             activeLog.Value = Path.Combine(logs, name + ".log");
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            try { action(); }
+            var status = "failed";
+            try { action(); status = "passed"; }
             finally
             {
                 File.AppendAllText(activeLog.Value, $"Elapsed: {stopwatch.Elapsed.TotalSeconds:F3}s{Environment.NewLine}");
+                var directory = Path.Combine(logs, "check-receipts");
+                Directory.CreateDirectory(directory);
+                WriteJson(Path.Combine(directory, name + ".json"), new
+                {
+                    name, status, seconds = stopwatch.Elapsed.TotalSeconds,
+                    log = ReleaseCandidate.FileBinding(Root, activeLog.Value)
+                });
                 activeLog.Value = null;
             }
         }

@@ -250,35 +250,6 @@ public sealed class CheckAllPerformanceTests
         Assert.Equal("5m", (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "fixture.hang.json")))!["timeout"]);
     }
 
-    [Fact]
-    public void ParityStartsBeforeBuildAndTheFinalWaveCollectsItExactlyOnce()
-    {
-        using var fixture = new OfflineFixtures(); using var began = new ManualResetEventSlim(); using var finish = new ManualResetEventSlim();
-        using var overlap = new Barrier(2);
-        var ready = new TaskCompletionSource<CommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        int runs = 0;
-        var parity = new CheckJob("suite-output-parity", () => {
-            Interlocked.Increment(ref runs); began.Set();
-            Assert.True(finish.Wait(TimeSpan.FromSeconds(10)));
-            Assert.Equal(0, CheckScheduler.AwaitRuntime(ready.Task).ExitCode);
-            Assert.True(overlap.SignalAndWait(TimeSpan.FromSeconds(10))); return Passed();
-        }, ["generated"]);
-        var task = CheckScheduler.Start(parity, fixture.DirectoryPath);
-        try
-        {
-            Assert.True(began.Wait(TimeSpan.FromSeconds(10)));
-            var built = CheckScheduler.Run([new("build-once", () => { ready.SetResult(Passed()); return Passed(); }, [])], 1, fixture.DirectoryPath);
-            Assert.False(task.IsCompleted);
-            finish.Set();
-            var rows = CheckScheduler.Run([parity, new("shard", () => { Assert.True(overlap.SignalAndWait(TimeSpan.FromSeconds(10))); return Passed(); }, ["build-once"])],
-                2, fixture.DirectoryPath, prerequisites: [new("generated", "passed", 0, 1, null), .. built],
-                started: new Dictionary<Task<CheckTiming>, CheckJob> { [task] = parity });
-            Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
-            Assert.Equal(1, runs); Assert.Equal(2, rows.Count);
-            Assert.True(rows[0].StartedAtUtc < built[0].StartedAtUtc);
-        }
-        finally { finish.Set(); }
-    }
 
     [Fact]
     public void BuiltReleaseToolMustBeTheExactOwnedManifestOutput()
@@ -293,35 +264,7 @@ public sealed class CheckAllPerformanceTests
         File.WriteAllText(manifest, ""); Assert.Throws<ReleaseException>(() => CheckAllBuild.ReleaseTool(root, manifest));
     }
 
-    [Fact]
-    public void OrdinaryParityBuildFinishesBeforeTheRuntimeManifestIsPublished()
-    {
-        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
-        void Write(string relative, string content) { var path = Path.Combine(root, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, content); }
-        Write(".gitignore", "bin-build/\nruntime/\n**/bin/\n**/obj/\n"); Write("Directory.Build.props", "<Project />");
-        Write("tests/unit/unit.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
-        Write("tests/unit/Input.cs", "public class Input {}\n"); Write("offline.config", "<configuration><packageSources><clear /></packageSources></configuration>");
-        ProcessRunner.RequireSuccess(ProcessRunner.Run("git", ["init", "--quiet", root], root), "ordinary parity source fixture");
-        var directory = Path.Combine(root, "bin-build/parity"); var manifest = Path.Combine(root, "bin-build/runtime-paths.tsv");
-        bool ready = false;
-        var result = CheckAllLayout.Verify(root, [new("tests/unit/unit.csproj", "", [])], "dotnet", Path.Combine(root, "offline.config"), root, directory, manifest,
-            independent: true, awaitRuntime: () => {
-                Assert.False(File.Exists(manifest));
-                var receipt = Assert.Single(Directory.GetFiles(directory, "*.tsv")); var lines = File.ReadAllLines(receipt);
-                Assert.True(File.Exists(Path.Combine(lines[1], "unit.dll")));
-                var output = Path.Combine(root, "runtime");
-                foreach (var file in Directory.EnumerateFiles(lines[1], "*", SearchOption.AllDirectories))
-                {
-                    var destination = Path.Combine(output, Path.GetRelativePath(lines[1], file)); Directory.CreateDirectory(Path.GetDirectoryName(destination)!); File.Copy(file, destination);
-                }
-                File.WriteAllText(manifest, Path.Combine(root, "tests/unit/unit.csproj") + "\tdefault\t" + output + "\t" + output + "\t" + Path.Combine(output, "unit.dll") + "\n");
-                ready = true; return Passed();
-            });
-        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError); Assert.True(ready);
-        var phases = JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "phases.json")))!;
-        Assert.True((bool)phases["runtimeManifestRead"]!); Assert.True((double)phases["baselineSeconds"]! > 0);
-        Assert.Empty(JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "comparison.json")))![0]!["missing"]!.AsArray());
-    }
+
 
     [Theory]
     [InlineData("sensitive-0", true)]
@@ -383,57 +326,10 @@ public sealed class CheckAllPerformanceTests
         Assert.All(history.Values, row => { Assert.Equal(10, row.CpuSeconds); Assert.Equal(1, row.CoreDemand); Assert.Contains("apportioned", row.Source); });
     }
 
-    [Fact]
-    public void IndependentParityAndAllRuntimeChecksCanStartAfterTheBuild()
-    {
-        using var fixture = new OfflineFixtures(); using var barrier = new Barrier(2);
-        CommandResult Both() { Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(10))); return Passed(); }
-        var plan = ReleaseCommands.CheckAllRuntimeDependencies([
-            new("suite-output-parity", Both, ["build-once"]), new("foundation-api-shard-1", Both, []),
-            new("repository", Passed, [])], independentParity: true);
-        Assert.Equal(new[] { "build-once" }, plan[1].Dependencies);
-        Assert.Equal(new[] { "build-once", "analyzer-warnings" }, plan[2].Dependencies);
-        var rows = CheckScheduler.Run(plan, 2, fixture.DirectoryPath, prerequisites: [new("build-once", "passed", 0, 1, null), new("analyzer-warnings", "passed", 0, 1, null)]);
-        Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
-        foreach (var name in new[] { "bundle", "python-repository" })
-        {
-            Assert.False(ReleaseCommands.CheckAllSourceOnly(name));
-            var job = ReleaseCommands.CheckAllEarlyDependencies(new(name, Passed, []));
-            Assert.Equal(new[] { "analyzer-warnings" }, job.Dependencies);
-        }
-    }
 
-    [Fact]
-    public void OrdinaryBaselineSourcesHaveIdenticalBytesAndIndependentWriters()
-    {
-        using var fixture = new OfflineFixtures();
-        File.WriteAllText(Path.Combine(fixture.DirectoryPath, "input.cs"), "source bytes\n");
-        var baseline = CheckAllLayout.CopyBaselineSources(fixture.DirectoryPath, ["input.cs"]);
-        Assert.Equal(File.ReadAllBytes(Path.Combine(fixture.DirectoryPath, "input.cs")), File.ReadAllBytes(Path.Combine(baseline, "input.cs")));
-        File.WriteAllText(Path.Combine(baseline, "input.cs"), "ordinary writer");
-        Assert.Equal("source bytes\n", File.ReadAllText(Path.Combine(fixture.DirectoryPath, "input.cs")));
-        Assert.Throws<ReleaseException>(() => CheckAllLayout.CopyBaselineSources(fixture.DirectoryPath, ["../outside.cs"]));
-    }
 
-    [Fact]
-    public void OrdinaryBaselineBuildDoesNotTouchTheRuntimeOutputBeingRead()
-    {
-        using var fixture = new OfflineFixtures();
-        var root = fixture.DirectoryPath;
-        var project = "tests/unit/unit.csproj";
-        Directory.CreateDirectory(Path.Combine(root, "tests/unit/bin/Release/net10.0"));
-        File.WriteAllText(Path.Combine(root, project), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
-        File.WriteAllText(Path.Combine(root, "tests/unit/Input.cs"), "public class Input {}\n");
-        File.WriteAllText(Path.Combine(root, "offline.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
-        var ordinary = Path.Combine(root, "tests/unit/bin/Release/net10.0/unit.dll");
-        File.WriteAllText(ordinary, "runtime reader");
-        using var locked = new FileStream(ordinary, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var baseline = CheckAllLayout.CopyBaselineSources(root, [project, "tests/unit/Input.cs", "offline.config"]);
-        var result = CheckAllLayout.BuildInventories(baseline, [new(project, "", [])], "dotnet", Path.Combine(baseline, "offline.config"), root, Path.Combine(root, "receipts"), 1);
-        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
-        Assert.True(File.Exists(Path.Combine(baseline, "tests/unit/bin/Release/net10.0/unit.dll")));
-        Assert.Equal("runtime reader", File.ReadAllText(ordinary));
-    }
+
+
 
     [Fact]
     public void CommandResourcesComeFromItsOwnedJobIncludingExitedChildren()
@@ -446,6 +342,107 @@ public sealed class CheckAllPerformanceTests
         Assert.True(CheckTiming.Passed(row), row.Error);
         Assert.NotNull(row.Resources); Assert.True(row.Resources.CpuSeconds > 0); Assert.True(row.Resources.PeakMemoryBytes > 0);
         Assert.Contains("owned command jobs", row.Resources.Source);
+    }
+
+    [Fact]
+    public void OversizeCommandHistoryStartsAloneWithinPhysicalMemory()
+    {
+        using var fixture = new OfflineFixtures();
+        int active = 0, peak = 0;
+        CommandResult Run()
+        {
+            int count = Interlocked.Increment(ref active); peak = Math.Max(peak, count);
+            Assert.Equal(1, count); Interlocked.Decrement(ref active); return Passed();
+        }
+        var parity = new CheckJob("large-command", Run, []) { Priority = 2 };
+        var small = new CheckJob("small", Run, []);
+        var history = new Dictionary<string, CheckResourceUsage>
+        {
+            [parity.Name] = new(1, 1, 34UL << 30, "previous compound command peaks"),
+            [small.Name] = new(1, 1, 256UL << 20, "measured"),
+            ["too-large"] = new(1, 1, 65UL << 30, "measured")
+        };
+        var packing = CheckPacking.Plan(3, history.Values, 64UL << 30, 2) with
+            { MemoryBudget = 17UL << 30, Available = 7, History = history };
+        Assert.True(packing.CanAdmit(parity, 3, []));
+        Assert.False(packing.CanAdmit(parity, 3, [small]));
+        Assert.False(packing.CanAdmit(small, 3, [parity]));
+        Assert.False(packing.CanAdmit(new("too-large", Passed, []), 3, []));
+        var reserved = small with { Lane = "sensitive", Affinity = 4 };
+        Assert.True(packing.CanAdmit(parity, 3, [reserved]));
+        Assert.False(packing.CanAdmit(parity, 3, [reserved with { Name = "too-large" }]));
+        var insufficient = CheckPacking.Plan(3, history.Values, 16UL << 30, 2) with { History = history };
+        Assert.False(insufficient.CanAdmit(parity, 3, []));
+        var rows = CheckScheduler.Run([parity, small], 2, fixture.DirectoryPath, packing: packing);
+        Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
+        Assert.Equal(1, peak); Assert.Equal(0, active);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CommandMemoryTracksTheConcurrentPeakOfSequentialAndOverlappingChildren(bool overlap)
+    {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Windows command memory verification");
+        using var fixture = new OfflineFixtures(); using var meter = CheckResourceMeter.Start();
+        const int payload = 64 << 20;
+        using var first = new MemoryChild(fixture.DirectoryPath, payload);
+        meter.Usage(1);
+        if (!overlap) first.Dispose();
+        using var second = new MemoryChild(fixture.DirectoryPath, payload);
+        var live = meter.Usage(2);
+        if (overlap) Assert.True(live.PeakMemoryBytes >= 2UL * payload, live.ToString());
+        first.Dispose(); second.Dispose();
+        var recorded = meter.Usage(3);
+        Assert.True(recorded.PeakMemoryBytes >= payload, recorded.ToString());
+        if (overlap)
+        {
+            Assert.True(recorded.PeakMemoryBytes > Math.Max(first.Peak, second.Peak), recorded.ToString());
+            Assert.True(recorded.PeakMemoryBytes <= first.Peak + second.Peak, recorded.ToString());
+        }
+        else Assert.True(recorded.PeakMemoryBytes <= Math.Max(first.Peak, second.Peak), recorded.ToString());
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private sealed class MemoryChild : IDisposable
+    {
+        private readonly System.Diagnostics.Process process;
+        private readonly Microsoft.Win32.SafeHandles.SafeFileHandle job;
+        private readonly IDisposable observation;
+        private bool disposed;
+        internal ulong Peak { get; private set; }
+        internal MemoryChild(string directory, int bytes)
+        {
+            var descriptor = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".txt");
+            var ready = descriptor + ".ready";
+            File.WriteAllLines(descriptor, ["memory", ready, bytes.ToString(System.Globalization.CultureInfo.InvariantCulture)]);
+            var start = new System.Diagnostics.ProcessStartInfo("dotnet")
+                { WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true };
+            Assert.StartsWith(Path.GetFullPath(Repository.FindRoot()) + Path.DirectorySeparatorChar,
+                Path.GetFullPath(typeof(CheckAffinity).Assembly.Location), StringComparison.OrdinalIgnoreCase);
+            foreach (var argument in new[] { typeof(CheckAffinity).Assembly.Location, "--check-probe", descriptor }) start.ArgumentList.Add(argument);
+            start.Environment["TIA_MCP_CHECK_PROBE"] = "1";
+            process = System.Diagnostics.Process.Start(start)!;
+            using var current = System.Diagnostics.Process.GetCurrentProcess();
+            job = CheckAffinity.Assign(process, unchecked((ulong)current.ProcessorAffinity.ToInt64()));
+            observation = CheckResourceMeter.Observe(job);
+            try { Assert.True(SpinWait.SpinUntil(() => File.Exists(ready), TimeSpan.FromSeconds(10))); }
+            catch { Dispose(); throw; }
+        }
+        public void Dispose()
+        {
+            if (disposed) return;
+            try
+            {
+                if (!process.HasExited) process.StandardInput.Close();
+                Assert.True(process.WaitForExit(10000));
+                Peak = CheckAffinity.Accounting(job).PeakMemoryBytes;
+            }
+            finally
+            {
+                observation.Dispose(); job.Dispose(); process.Dispose(); disposed = true;
+            }
+        }
     }
 
     [Fact]
@@ -489,15 +486,15 @@ public sealed class CheckAllPerformanceTests
         using var fixture = new OfflineFixtures();
         var ran = new List<string>();
         CommandResult Run(string name) { ran.Add(name); return name == "two" ? new(1, "", "failure") : Passed(); }
-        var source = new List<CheckJob> { new("suite-output-parity", () => Run("suite-output-parity"), []) };
+        var source = new List<CheckJob> { new("large-command", () => Run("large-command"), []) };
         foreach (var name in new[] { "one", "two", "three" }) source.Add(new(name, () => Run(name), []));
         source.Add(new CheckJob("gate", () => { Assert.Equal(4, ran.Count); return Run("gate"); }, ["one", "two", "three"])
             { AllowFailedDependencies = true, Priority = 1 });
         var plan = ReleaseCommands.CheckAllRuntimeDependencies(source);
         Assert.Equal(source.Select(job => job.Name), plan.Select(job => job.Name));
         Assert.Equal(new[] { "one", "two", "three" }, plan[^1].Dependencies);
-        Assert.All(plan.Skip(1).Take(3), job => Assert.Equal(new[] { "suite-output-parity" }, job.Dependencies));
-        CheckScheduler.Run(plan, 1, fixture.DirectoryPath);
+        Assert.All(plan.Skip(1).Take(3), job => Assert.Equal(new[] { "build-once" }, job.Dependencies));
+        CheckScheduler.Run(plan, 1, fixture.DirectoryPath, prerequisites: [new("build-once", "passed", 0, 1, null)]);
         Assert.Equal(source.Count, ran.Count);
         Assert.Equal(source.Select(job => job.Name).Order(), ran.Order());
     }
@@ -517,19 +514,6 @@ public sealed class CheckAllPerformanceTests
         Assert.Throws<ReleaseException>(() => CheckScheduler.Run([new("source", Passed, [])], 1, fixture.DirectoryPath, prerequisites: completed));
     }
 
-    [Fact]
-    public void FailedParityStillRunsEveryIndependentRuntimeCheckAfterProjection()
-    {
-        using var fixture = new OfflineFixtures();
-        bool projected = false;
-        var ran = new List<string>();
-        var plan = ReleaseCommands.CheckAllRuntimeDependencies([
-            new("suite-output-parity", () => { projected = true; return new(1, "", "missing output"); }, []),
-            new("runtime", () => { Assert.True(projected); ran.Add("runtime"); return Passed(); }, [])]);
-        var rows = CheckScheduler.Run(plan, 1, fixture.DirectoryPath);
-        Assert.Equal(new[] { "failed", "passed" }, rows.Select(row => row.Status));
-        Assert.Equal(new[] { "runtime" }, ran);
-    }
 
     [Fact]
     public void MeasuredSensitiveCasesAreBalancedAndStayOnTheirOriginalExclusiveWorkers()

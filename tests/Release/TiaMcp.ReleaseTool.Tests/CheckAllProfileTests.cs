@@ -18,7 +18,7 @@ public sealed class CheckAllProfileTests
         "shared-lifecycle-plc" => "PlcSharedLifecycleTests", "shared-lifecycle" => "SharedLifecycleTests",
         "workbench-control" => "TiaOpenness.Gui.Tests.WorkbenchControlTests", "mcp-panel" => "TiaOpenness.Gui.Tests.McpPanelTests",
         "workbench-vci-prefill" => "TiaOpenness.Gui.Tests.VciPanelTests", "crash-evidence" => "TiaOpenness.Gui.Tests.CrashEvidencePortTests",
-        "vci-read-only-binding" => "TiaOpenness.Core.Tests.VciReadOnlyBindingTests", "kept-code-v20" => "KeptCodeTests",
+        "vci-read-only-binding" => "TiaOpenness.Core.Tests.VciReadOnlyBindingTests",
         _ => throw new InvalidOperationException(name)
     };
 
@@ -68,25 +68,24 @@ public sealed class CheckAllProfileTests
         Assert.Equal("merge", CheckAllProfiles.Parse(Options.Parse([], new HashSet<string>())));
         Assert.Equal("nightly", CheckAllProfiles.Parse(Options.Parse(["-Profile", "nightly"], new HashSet<string>())));
         Assert.Throws<ReleaseException>(() => CheckAllProfiles.Parse(Options.Parse(["-Profile", "quick"], new HashSet<string>())));
-        Assert.Equal(12, CheckAllProfiles.Derived.Count);
-        Assert.Equal(new[] { "kept-code-v20", "shared-lifecycle-plc", "shared-pipeline", "workbench-control-host", "worker-robustness" }, plan.Fallbacks.Keys.Order());
-        Assert.Equal(7, plan.Mappings.Count);
+        Assert.Equal(11, CheckAllProfiles.Derived.Count);
+        Assert.Empty(plan.Fallbacks);
+        Assert.Equal(11, plan.Mappings.Count);
         foreach (var name in catalog.Select(pair => pair.Key).Except(CheckAllProfiles.StudioSuites))
         {
             Assert.True(CheckAllProfiles.RunsSeparately(name, "nightly", plan));
             Assert.Equal(!plan.Mappings.ContainsKey(name), CheckAllProfiles.RunsSeparately(name, "merge", plan));
         }
-        foreach (var name in new[] { "offline", "offline-v20", "compile-candidate", "compile-candidate-no-safety", "fallback-vci-modern",
+        foreach (var name in new[] { "offline", "compile-candidate", "fallback-vci-modern",
             "fallback-vci-initial", "fallback-vci-classic", "plc-exchange-worker-v20", "plc-exchange-worker-v21" })
             Assert.True(CheckAllProfiles.RunsSeparately(name, "merge", plan));
         Assert.Equal(new[] { "nightly" }, CheckAllProfiles.Profiles("foundation-shard-0", plan));
-        Assert.Equal(new[] { "merge", "nightly" }, CheckAllProfiles.Profiles("kept-code-v20-shard-0", plan));
         var jobs = new List<CheckJob>(); using var temp = new OfflineFixtures();
         CheckAllProfiles.AddDerived(jobs, catalog, temp.DirectoryPath, plan);
-        Assert.Equal(7, jobs.Count);
+        Assert.Equal(11, jobs.Count);
         Assert.All(jobs, job => { Assert.Null(job.ResultInputs); Assert.True(job.AllowFailedDependencies); });
         CheckAllProfiles.AddNightlyProofs(jobs = [], catalog, temp.DirectoryPath);
-        Assert.Equal(12, jobs.Count);
+        Assert.Equal(11, jobs.Count);
         foreach (var (name, source) in CheckAllProfiles.Derived)
         {
             Assert.Equal(new[] { name + "-gate", source + "-gate" }, jobs.Single(job => job.Name == name + "-coverage-proof").Dependencies);
@@ -94,7 +93,7 @@ public sealed class CheckAllProfileTests
         }
         CheckAllProfiles.WriteInventory(catalog, temp.DirectoryPath, "merge", plan);
         var inventory = JsonNode.Parse(File.ReadAllText(Path.Combine(temp.DirectoryPath, "profile-inventory.json")))!;
-        Assert.Contains(inventory["suites"]!.AsArray(), row => (string?)row!["name"] == "kept-code-v20" && (string?)row["fallbackReason"] == "different project, variant or build unit");
+        Assert.Contains(inventory["suites"]!.AsArray(), row => (string?)row!["name"] == "foundation" && row["fallbackReason"] == null && (string?)row["mergeDerivedFrom"] == "foundation-api");
     }
 
     [Theory]
@@ -160,21 +159,21 @@ public sealed class CheckAllProfileTests
     public void ExecutionUsesTheSameEnvironmentDeclarationThatThePreconditionChecks()
     {
         using var temp = new OfflineFixtures(); var plan = Plan();
-        foreach (var name in new[] { "foundation", "foundation-api", "studio-gui-false", "workbench-control" })
+        foreach (var name in new[] { "foundation", "foundation-api", "studio-gui", "workbench-control" })
         {
             var environment = FastSuites.EnvironmentFor(Path.Combine(temp.DirectoryPath, name));
             CheckAllProfiles.ApplyEnvironment(plan.Executions[name], environment, CheckAllProfiles.StudioSuites.Contains(name));
             foreach (var pair in plan.Executions[name].Environment)
                 Assert.Equal(pair.Value == "$TEMP" ? environment["TEMP"] : pair.Value, environment[pair.Key]);
         }
-        Assert.Equal(CheckAllBuild.Suite(Catalog["workbench-control"]!.AsObject()).Variant, CheckAllBuild.Suite(Catalog["studio-gui-false"]!.AsObject()).Variant);
+        Assert.Equal(CheckAllBuild.Suite(Catalog["workbench-control"]!.AsObject()).Variant, CheckAllBuild.Suite(Catalog["studio-gui"]!.AsObject()).Variant);
     }
 
     [Fact]
     public void StudioSuitesRunTheRegisteredOutputAssemblyLikeTheOriginalIsolatedJobs()
     {
         using var temp = new OfflineFixtures();
-        var unit = CheckAllBuild.Suite(Catalog["studio-core-true"]!.AsObject());
+        var unit = CheckAllBuild.Suite(Catalog["studio-core"]!.AsObject());
         var project = Path.Combine(temp.DirectoryPath, unit.Project);
         var registered = Path.Combine(temp.DirectoryPath, "registered");
         var manifest = Path.Combine(temp.DirectoryPath, "runtime-paths.tsv");
@@ -209,83 +208,20 @@ public sealed class CheckAllProfileTests
         foreach (var name in CheckAllProfiles.StudioSuites)
         {
             var shards = jobs.Where(job => job.Name.StartsWith(name + "-shard-", StringComparison.Ordinal)).ToArray();
-            Assert.Equal(name.StartsWith("studio-gui-", StringComparison.Ordinal) ? 3 : 1, shards.Length);
+            Assert.Equal(name == "studio-gui" ? 3 : 1, shards.Length);
             Assert.All(shards, job => Assert.True(job.Exclusive));
             for (int index = 1; index < shards.Length; index++) Assert.Contains(shards[index - 1].Name, shards[index].Dependencies);
         }
-        var (plan, costs) = CheckAllProfiles.GuiPlan(temp.DirectoryPath, "studio-gui-false", 3);
+        var (plan, costs) = CheckAllProfiles.GuiPlan(temp.DirectoryPath, "studio-gui", 3);
         Assert.NotEqual(plan["C:TiaOpenness.Gui.Tests.WorkbenchFontStyleTests"], plan["C:TiaOpenness.Gui.Tests.WorkbenchNarrowLayoutTests"]);
         var unknown = Enumerable.Range(0, 50).Select(i => "NewClass" + i).ToArray();
         foreach (var cls in unknown) Assert.InRange(TestShard.Assign(cls, "T:" + cls + ".NewCase", cls, 3, plan, false), 0, 2);
         Assert.Equal(143, costs.Sum());
         string history = Path.Combine(temp.DirectoryPath, "bin-build/check-timings"); Directory.CreateDirectory(history);
-        File.WriteAllText(Path.Combine(history, "studio-gui-false.classes.json"), "{\"RemovedClass\":{\"Seconds\":200},\"InvalidClass\":null}");
-        Assert.Contains("C:RemovedClass", CheckAllProfiles.GuiPlan(temp.DirectoryPath, "studio-gui-false", 3).Item1.Keys);
-        File.WriteAllText(Path.Combine(history, "studio-gui-false.classes.json"), "obsolete format");
-        Assert.Equal(143, CheckAllProfiles.GuiPlan(temp.DirectoryPath, "studio-gui-false", 3).Item2.Sum());
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void SelectedClassesMustExistAndMergeRequiresPassesWithoutFailuresOrSkips(bool merge)
-    {
-        using var temp = new OfflineFixtures();
-        var rows = CheckAllProfiles.SharedGuiClasses.Select(cls => ("TiaOpenness.Gui.Tests." + cls, "NewMethod", "new case", "Passed")).ToArray();
-        var full = DerivedSuiteGates.Read(Trx(temp.DirectoryPath, "full", rows));
-        Assert.Empty(CheckAllProfiles.SharedGuiErrors(full, merge));
-        Assert.Contains(CheckAllProfiles.SharedGuiErrors(full.Skip(1), merge), error => error.Contains(CheckAllProfiles.SharedGuiClasses[0], StringComparison.Ordinal));
-        foreach (var outcome in new[] { "Failed", "NotExecuted" })
-        {
-            var changed = rows.ToArray(); changed[0].Item4 = outcome;
-            var actual = DerivedSuiteGates.Read(Trx(temp.DirectoryPath, outcome, changed));
-            Assert.Equal(merge, CheckAllProfiles.SharedGuiErrors(actual, merge).Count > 0);
-        }
-        Assert.Empty(CheckAllProfiles.SharedGuiErrors([.. full, full[0]], merge));
-    }
-
-    [Theory]
-    [InlineData("merge", "complete")]
-    [InlineData("merge", "missing")]
-    [InlineData("merge", "failed")]
-    [InlineData("merge", "skipped")]
-    [InlineData("nightly", "complete")]
-    [InlineData("nightly", "missing")]
-    [InlineData("nightly", "failed")]
-    public void ActualStudioJobGateUsesPerClassPresenceAndTheRegisteredFullNightlyGate(string profile, string defect)
-    {
-        using var temp = new OfflineFixtures(); string root = temp.DirectoryPath;
-        var catalog = new JsonObject();
-        var cases = CheckAllProfiles.SharedGuiClasses.Select(cls => (Class: "TiaOpenness.Gui.Tests." + cls, Method: "Check", Display: cls, Outcome: "Passed")).ToArray();
-        foreach (var name in CheckAllProfiles.StudioSuites)
-            catalog[name] = new JsonObject { ["project"] = Catalog[name]!["project"]!.DeepClone(), ["arguments"] = Catalog[name]!["arguments"]!.DeepClone(), ["minimumPassed"] = 1, ["maximumSkipped"] = 0 };
-        var manifest = Path.Combine(root, "runtime-paths.tsv");
-        File.WriteAllLines(manifest, catalog.Select(pair =>
-        {
-            var unit = CheckAllBuild.Suite(pair.Value!.AsObject()); string assembly = Path.Combine(root, pair.Key + ".dll"); File.WriteAllText(assembly, "fixture");
-            // Real manifests carry the registered output directory in the fourth column.
-            return string.Join('\t', Path.Combine(root, unit.Project), unit.Variant, assembly, root, assembly);
-        }));
-        CommandResult Process(string executable, IEnumerable<string> args, string cwd, IDictionary<string, string?>? environment)
-        {
-            var arguments = args.ToArray(); Assert.Equal("vstest", arguments[0]); Assert.Equal(Path.Combine(root, "studio-gui-true.dll"), arguments[1]);
-            string directory = arguments.Single(arg => arg.StartsWith("--ResultsDirectory:", StringComparison.Ordinal))["--ResultsDirectory:".Length..];
-            var plan = File.ReadLines(environment!["TIA_MCP_TEST_SHARD_PLAN"]!).Select(line => line.Split('\t'))
-                .ToDictionary(fields => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(fields[0])), fields => int.Parse(fields[1]));
-            int count = int.Parse(environment["TIA_MCP_TEST_SHARD_COUNT"]!), index = int.Parse(environment["TIA_MCP_TEST_SHARD_INDEX"]!);
-            var rows = cases.Where(row => TestShard.Assign(row.Class, "T:" + row.Display, row.Class, count, plan, false) == index)
-                .Where(row => defect != "missing" || row.Class != cases[0].Class)
-                .Select(row => row.Class == cases[0].Class && defect is "failed" or "skipped"
-                    ? (row.Class, row.Method, row.Display, defect == "failed" ? "Failed" : "NotExecuted") : row).ToArray();
-            Trx(directory, "studio-gui-true", rows); return new(rows.Any(row => row.Item4 == "Failed") ? 1 : 0, "synthetic VSTest\n", "");
-        }
-        var jobs = new List<CheckJob>(); var output = Path.Combine(root, "results");
-        CheckAllProfiles.AddStudio(jobs, root, catalog, output, "dotnet", profile, manifest, Process);
-        foreach (var job in jobs.Where(job => job.Name.StartsWith("studio-gui-true-shard-", StringComparison.Ordinal))) _ = job.Run();
-        var gate = jobs.Single(job => job.Name == "studio-gui-true-gate").Run();
-        Assert.Equal(defect == "complete" ? 0 : 1, gate.ExitCode);
-        if (defect == "missing") Assert.Contains("Missing selected GUI class", gate.StandardError);
-        if (defect == "failed") Assert.Contains("1 failed checks", gate.StandardError);
+        File.WriteAllText(Path.Combine(history, "studio-gui.classes.json"), "{\"RemovedClass\":{\"Seconds\":200},\"InvalidClass\":null}");
+        Assert.Contains("C:RemovedClass", CheckAllProfiles.GuiPlan(temp.DirectoryPath, "studio-gui", 3).Item1.Keys);
+        File.WriteAllText(Path.Combine(history, "studio-gui.classes.json"), "obsolete format");
+        Assert.Equal(143, CheckAllProfiles.GuiPlan(temp.DirectoryPath, "studio-gui", 3).Item2.Sum());
     }
 
     [Fact]
@@ -308,26 +244,93 @@ public sealed class CheckAllProfileTests
     [Fact]
     public void UnshardedBudgetUsesTheLargerOfTheFormerJobHistoryAndTheShardSum()
     {
-        Assert.Equal(TimeSpan.FromSeconds(300), CheckAllProfiles.UnshardedBudget("studio-gui-false", 3, null));
-        Assert.Equal(TimeSpan.FromSeconds(785), CheckAllProfiles.UnshardedBudget("studio-gui-false", 3,
-            new Dictionary<string, double> { ["studio-gui-false"] = 261.6666666666667 }));
-        var shards = new Dictionary<string, double> { ["studio-gui-false"] = 0.01, ["studio-gui-false-shard-0"] = 123, ["studio-gui-false-shard-1"] = 157,
-            ["studio-gui-false-shard-2"] = 44, ["studio-gui-false-shard-3"] = 1000 };
+        Assert.Equal(TimeSpan.FromSeconds(300), CheckAllProfiles.UnshardedBudget("studio-gui", 3, null));
+        Assert.Equal(TimeSpan.FromSeconds(785), CheckAllProfiles.UnshardedBudget("studio-gui", 3,
+            new Dictionary<string, double> { ["studio-gui"] = 261.6666666666667 }));
+        var shards = new Dictionary<string, double> { ["studio-gui"] = 0.01, ["studio-gui-shard-0"] = 123, ["studio-gui-shard-1"] = 157,
+            ["studio-gui-shard-2"] = 44, ["studio-gui-shard-3"] = 1000 };
         // Only the job's own shards count; the aggregate alias's near-zero history never lowers the allowance.
-        Assert.Equal(TimeSpan.FromSeconds(972), CheckAllProfiles.UnshardedBudget("studio-gui-false", 3, shards));
+        Assert.Equal(TimeSpan.FromSeconds(972), CheckAllProfiles.UnshardedBudget("studio-gui", 3, shards));
     }
 
     [Fact]
     public void GuiShardsShareTheOriginalUnshardedTimeoutInsteadOfMultiplyingItsAllowance()
     {
-        var budget = CheckScheduler.JobTimeout(new("studio-gui-false", () => new(0, "", ""), []), new Dictionary<string, double>());
+        var budget = CheckScheduler.JobTimeout(new("studio-gui", () => new(0, "", ""), []), new Dictionary<string, double>());
         Assert.Equal(TimeSpan.FromSeconds(300), budget);
         Assert.Null(CheckAllProfiles.StudioRuntimeError(TimeSpan.FromSeconds(299), budget));
         Assert.NotNull(CheckAllProfiles.StudioRuntimeError(TimeSpan.FromSeconds(300), budget));
         Assert.NotNull(CheckAllProfiles.StudioRuntimeError(TimeSpan.FromSeconds(301), budget));
-        var measured = CheckScheduler.JobTimeout(new("studio-gui-false", () => new(0, "", ""), []), new Dictionary<string, double> { ["studio-gui-false"] = 297 });
+        var measured = CheckScheduler.JobTimeout(new("studio-gui", () => new(0, "", ""), []), new Dictionary<string, double> { ["studio-gui"] = 297 });
         Assert.Equal(TimeSpan.FromSeconds(891), measured);
         Assert.NotNull(CheckAllProfiles.StudioRuntimeError(TimeSpan.FromSeconds(891), measured));
+    }
+
+    [Fact]
+    public void ShippingNamesKeepTheOldMaximumBudgetsResourcesAndClassCosts()
+    {
+        var costs = new Dictionary<string, double> { ["studio-gui-false"] = 800, ["studio-gui"] = 50,
+            ["studio-gui-false-shard-0"] = 123, ["unrelated"] = 17 };
+        CheckAllProfiles.UseShippingHistory(costs, Math.Max);
+        Assert.Equal(800, costs["studio-gui"]);
+        Assert.Equal(123, costs["studio-gui-shard-0"]);
+        Assert.Equal(17, costs["unrelated"]);
+        Assert.DoesNotContain(costs.Keys, key => key.Contains("-false", StringComparison.Ordinal));
+        Assert.Equal(TimeSpan.FromSeconds(2400), CheckAllProfiles.UnshardedBudget("studio-gui", 3, costs));
+        var usage = new CheckResourceUsage(5, 3, 1UL << 30, "owned command peak");
+        var resources = new Dictionary<string, CheckResourceUsage> { ["studio-core-false-shard-0"] = usage };
+        CheckAllProfiles.UseShippingHistory(resources);
+        Assert.Same(usage, resources["studio-core-shard-0"]);
+        using var fixture = new OfflineFixtures();
+        string directory = Path.Combine(fixture.DirectoryPath, "bin-build/check-timings"); Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, "studio-gui-false.classes.json"), "{\"LegacyClass\":{\"Seconds\":12}}");
+        var (plan, weights) = CheckAllProfiles.GuiPlan(fixture.DirectoryPath, "studio-gui", 3);
+        Assert.Contains("C:LegacyClass", plan.Keys);
+        Assert.Equal(155, weights.Sum());
+    }
+
+    [Fact]
+    public void DeletedJobHistoryCannotSizePackingButLegacyShippingHistoryAndNoSafetyCoverageRemain()
+    {
+        var retained = new CheckResourceUsage(1, 10, 256UL << 20, "shipping");
+        var retired = new CheckResourceUsage(32, 100, 32UL << 30, "deleted");
+        var history = new Dictionary<string, CheckResourceUsage>
+        {
+            ["studio-core-false-shard-0"] = retained, ["compile-candidate-no-safety-shard-0"] = retained,
+            ["responses-v20-plc"] = retained, ["transport-usage-v21-plc"] = retained
+        };
+        foreach (var name in new[] { "latency-v20", "check-latency", "suite-output-parity", "offline-v20-shard-0", "kept-code-v20-gate",
+            "studio-core-true-shard-0", "studio-gui-false-control-load", "stability-v20-http-lite-c8", "responses-v19-plc", "transport-usage-v14sp1-plc" })
+            history[name] = retired;
+        CheckAllProfiles.UseShippingHistory(history);
+        var input = history.Where(pair => !CheckAllProfiles.RetiredJob(pair.Key)).ToDictionary();
+        Assert.Equal(new[] { "compile-candidate-no-safety-shard-0", "responses-v20-plc", "studio-core-shard-0", "transport-usage-v21-plc" }, input.Keys.Order());
+        var expected = CheckPacking.Plan(15, [retained], 8UL << 30, 32);
+        var actual = CheckPacking.Plan(15, input.Values, 8UL << 30, 32);
+        Assert.Empty(actual.History);
+        Assert.Equal(expected, actual with { History = expected.History });
+    }
+
+    [Fact]
+    public void BuildInventoryUsesOnlyTheShippingConfigurationAndKeepsAllEightReleaseWorkers()
+    {
+        var builds = (CheckBuild[])typeof(ReleaseCommands).GetMethod("CheckAllBuildInventory",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.Invoke(null, [Catalog, Path.Combine(Root, "sdk")])!;
+        Assert.DoesNotContain(builds, unit => unit.Properties.Any(property => property is "-p:TiaSharedAdapterPaths=true"));
+        foreach (var name in new[] { "studio-core", "studio-gui", "offline", "kept-code" })
+        {
+            var project = (string)Catalog[name]!["project"]!;
+            Assert.Empty(Assert.Single(builds, unit => unit.Project == project).Properties);
+        }
+        var compileProject = (string)Catalog["compile-candidate"]!["project"]!;
+        var compileBuilds = builds.Where(unit => unit.Project == compileProject).ToArray();
+        Assert.Equal(2, compileBuilds.Length);
+        Assert.Empty(Assert.Single(compileBuilds, unit => unit.Variant == "default").Properties);
+        Assert.Equal(new[] { "-p:TestCompileSafety=false" }, Assert.Single(compileBuilds, unit => unit.Variant != "default").Properties);
+        Assert.Equal(2, builds.Count(unit => unit.Project == SuiteWorkerCopies.FoundationProject));
+        Assert.Single(builds, unit => unit.Project == SuiteWorkerCopies.FoundationProject && unit.Variant == "default");
+        foreach (var key in CatalogJson.Keys)
+            Assert.Contains(builds, unit => unit.Project == "src/PlcWorker/TiaMcp.PlcWorker.csproj" && unit.Properties.Contains("-p:TiaReleaseKey=" + key));
     }
 
     internal static string Trx(string directory, string name, (string Class, string Method, string Display, string Outcome)[] rows)

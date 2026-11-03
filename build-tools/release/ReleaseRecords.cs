@@ -535,8 +535,8 @@ internal static class ReleaseRecords
         try
         {
             if (!record.TryGetProperty("validation", out var validation)) return "validation record missing";
-            if (includes("offline-suites") && (GetInt(validation, "offlinePassed") <= 0 || GetInt(validation, "offlineV20Passed") <= 0 || GetInt(validation, "versionPolicySdkPassed") <= 0 ||
-                GetInt(validation, "keptCodePassed") <= 0 || GetInt(validation, "keptCodeV20Passed") <= 0 ||
+            if (includes("offline-suites") && (GetInt(validation, "offlinePassed") <= 0 || GetInt(validation, "versionPolicySdkPassed") <= 0 ||
+                GetInt(validation, "keptCodePassed") <= 0 ||
                 GetInt(validation, "writeGuardPassed") < 3 || GetInt(validation, "crashEvidencePassed") < 7 || GetInt(validation, "updaterPassed") < 20 ||
                 // Formerly each engine runtime's sessionStability gate; the native MCP safety checks are release-wide.
                 GetInt(validation, "nativeMcpSafetyPassed") < 8))
@@ -648,6 +648,23 @@ internal static class ReleaseRecords
     {
         using var stream = File.OpenRead(path);
         return Convert.ToHexStringLower(SHA256.HashData(stream));
+    }
+
+    internal static string HashFile(string path, Action? checkDeadline)
+    {
+        if (checkDeadline == null) return HashFile(path);
+        checkDeadline();
+        using var stream = File.OpenRead(path);
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(128 * 1024);
+        try
+        {
+            int read;
+            while ((read = stream.Read(buffer)) != 0) { checkDeadline(); hash.AppendData(buffer, 0, read); }
+            checkDeadline();
+            return Convert.ToHexStringLower(hash.GetHashAndReset());
+        }
+        finally { System.Buffers.ArrayPool<byte>.Shared.Return(buffer); }
     }
 
     private static int GetInt(JsonElement element, string name) => element.TryGetProperty(name, out var value) && value.TryGetInt32(out var result) ? result : 0;

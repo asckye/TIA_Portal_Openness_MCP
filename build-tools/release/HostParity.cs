@@ -6,7 +6,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class HostParity
 {
-    internal static CheckBuild Unit(string major) => new(SuiteWorkerCopies.FoundationProject, "parity-v" + major,
+    internal static CheckBuild Unit(string major) => new(SuiteWorkerCopies.FoundationProject, major == "20" ? "parity-v20" : "",
         major == "20" ? ["-p:DefineConstants=TIA_V20"] : []);
 
     internal static string Prepare(string root, string directory, string dotnet, string? api, string? nuget)

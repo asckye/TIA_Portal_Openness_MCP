@@ -64,6 +64,50 @@ public sealed class BuildOutputCacheTests
         Assert.NotEqual(before, ReleaseCommands.CacheEnvironment(secondRoot, second));
     }
 
+    [Theory]
+    [InlineData("TIA_MCP_RUNNER_JOB")]
+    [InlineData("TIA_MCP_COMMAND_JOB")]
+    [InlineData("TIA_MCP_NIGHTLY_ROOT")]
+    [InlineData("TIA_MCP_TEST_PIPE_SCOPE")]
+    [InlineData("TIA_MCP_TEST_WORKER_FIXTURE_ROOT")]
+    [InlineData("TIA_MCP_TEST_REGISTERED_OUTPUT")]
+    [InlineData("TIA_MCP_TEST_SHARD_PLAN")]
+    [InlineData("TIA_MCP_TEST_CASE_TIMINGS")]
+    [InlineData("TIA_MCP_TEST_PRODUCER_TIMINGS")]
+    [InlineData("TIA_MCP_TEST_PHASE_TIMINGS")]
+    [InlineData("TIA_MCP_TEST_DECODER_PREPARE_TOOL")]
+    public void PerRunIdentitiesDoNotChangeBuildEnvironmentRows(string name)
+    {
+        var root = Path.GetTempPath();
+        string RunValue(string run) => name switch
+        {
+            "TIA_MCP_RUNNER_JOB" => "Local\\TIA-Runner-" + run,
+            "TIA_MCP_COMMAND_JOB" => "Local\\TIA-Check-" + run,
+            "TIA_MCP_TEST_PIPE_SCOPE" => run,
+            _ => Path.Combine(root, "bin-build", run, "output")
+        };
+        var environment = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+            { [name] = RunValue(new string('a', 32)), ["Configuration"] = "Release" };
+        var before = ReleaseCommands.CacheEnvironment(root, environment);
+        environment[name.ToLowerInvariant()] = RunValue(new string('b', 32));
+        Assert.Equal(before, ReleaseCommands.CacheEnvironment(root, environment));
+        Assert.Equal(new[] { "CONFIGURATION=Release" }, before);
+    }
+
+    [Theory]
+    [InlineData("TIA_MCP_DECODER_PYTHON")]
+    [InlineData("TIA_MCP_DECODER_RUNTIME")]
+    [InlineData("TIA_MCP_PLC_TOOLS_PYTHON")]
+    [InlineData("Configuration")]
+    public void RealBuildInputsStillChangeBuildEnvironmentRows(string name)
+    {
+        var root = Path.GetTempPath();
+        var environment = new Dictionary<string, string?> { [name] = name == "Configuration" ? "Release" : Path.Combine(root, "first-input") };
+        var before = ReleaseCommands.CacheEnvironment(root, environment);
+        environment[name] = name == "Configuration" ? "Debug" : Path.Combine(root, "second-input");
+        Assert.NotEqual(before, ReleaseCommands.CacheEnvironment(root, environment));
+    }
+
     [Fact]
     public void CacheRestoreUsesTheBuildPropertiesIncludingPublishAndOfflineConfig()
     {

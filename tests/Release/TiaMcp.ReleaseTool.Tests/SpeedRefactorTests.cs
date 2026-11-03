@@ -168,6 +168,7 @@ public sealed class SpeedRefactorTests
         }));
         Assert.Contains("-p:DefineConstants=TIA_V20", HostParity.Unit("20").Properties);
         Assert.Empty(HostParity.Unit("21").Properties);
+        Assert.Equal(new CheckBuild(SuiteWorkerCopies.FoundationProject, "", []).Variant, HostParity.Unit("21").Variant);
         Parallel.ForEach(new[] { "20", "21" }, major =>
         {
             var directory = Path.Combine(root, "results-" + major);

@@ -31,7 +31,7 @@ def project_cases(root):
         if '<DefineConstants>' in source or '<TiaMajor>' in source:
             add(path)
     suites = json.loads((root / 'tests/test-suites.json').read_text(encoding='utf-8-sig'))
-    for name in ('offline', 'offline-v20', 'kept-code', 'kept-code-v20'):
+    for name in ('offline', 'kept-code'):
         properties = dict(arg.removeprefix('-p:').split('=', 1)
                           for arg in suites[name]['arguments'] if arg.startswith('-p:'))
         add(root / suites[name]['project'], properties)
@@ -104,7 +104,7 @@ def main():
         if args.capture:
             rows = capture(args.root, args.dotnet)
             args.capture.parent.mkdir(parents=True, exist_ok=True)
-            args.capture.write_text(json.dumps(rows, indent=2) + '\n', encoding='utf-8')
+            args.capture.write_text(json.dumps(rows, indent=2) + '\n', encoding='utf-8', newline='\n')
             print(f'Captured {len(rows)} project/framework evaluations in {args.capture}.')
             return 0
         count, errors = check(args.root, args.dotnet, args.output)

@@ -1036,6 +1036,15 @@
         "validation",
         "validationMulti"
       ]
+    },
+    {
+      "path": "src/Shared/ReproducibleBuild.props",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation",
+        "validationMulti"
+      ]
     }
   ],
   "requiredFiles": [
@@ -1564,6 +1573,15 @@
         "package"
       ],
       "repositoryLabel": ".NET dependency versions"
+    },
+    {
+      "path": "src/Shared/ReproducibleBuild.props",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": "deterministic compiler configuration"
     }
   ]
 }

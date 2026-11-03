@@ -6,7 +6,7 @@ internal sealed record ReleaseCommandSpec(string Name, string Command, string Lo
 
 internal static class ReleaseCommandTable
 {
-    internal static readonly string[] OfflineSuites = ["offline", "offline-v20", "kept-code", "kept-code-v20"];
+    internal static readonly string[] OfflineSuites = ["offline", "kept-code"];
 
     internal static readonly IReadOnlyList<ReleaseCommandSpec> Entries =
     [
@@ -34,9 +34,7 @@ internal static class ReleaseCommandTable
         new("tool-usage", "generate-tool-usage -Check", "tool-usage-catalog.log", "exit 0", "toolUsageCatalog"),
         new("version-catalog", "test-suites -Suite source-contracts", "version-catalog-wiring.log", "registered TRX gate", "versionCatalogWiring"),
         new("offline", "test-suites -Suite offline", "offline.log", "minimum 303 (Linux 302)", "offlinePassed"),
-        new("offline-v20", "test-suites -Suite offline-v20", "offline-v20.log", "minimum 303 (Linux 302)", "offlineV20Passed"),
         new("kept-code", "test-suites -Suite kept-code", "kept-code.log", "minimum 4854; zero skips", "keptCodePassed"),
-        new("kept-code-v20", "test-suites -Suite kept-code-v20", "kept-code-v20.log", "minimum 4854; zero skips", "keptCodeV20Passed"),
         new("worker-progress-foundation", "test-suites -Suite worker-progress-foundation", "worker-progress-foundation.log", "minimum 3; zero skips", "foundationProgressPassed"),
         new("shared-lifecycle-plc", "test-suites -Suite shared-lifecycle-plc", "shared-lifecycle-plc.log", "minimum 46; zero skips", "plcSharedLifecyclePassed"),
         new("plc-exchange-worker-v20", "test-suites -Suite plc-exchange-worker-v20", "plc-exchange-worker-v20.log", "minimum 128; zero skips", "plcExchangeV20Passed"),

@@ -11,15 +11,38 @@ public sealed class CiCoverageTests
     private const string Sha = "1111111111111111111111111111111111111111";
 
     [Fact]
-    public void FullStudioTrueReceiptHasBothRegisteredGatesAndBindsTheConcreteMatrixJob()
+    public void FullFoundationReceiptHasEveryRegisteredGateAndBindsTheConcreteJob()
     {
-        var candidate = CiCoverage.Validate(Root, Candidate(Root, "studio-true", Sha), Sha);
+        var candidate = CiCoverage.Validate(Root, Candidate(Root, "foundation", Sha), Sha);
         var runs = VerifyRemote(candidate);
         Assert.Single(runs);
-        Assert.Equal(new[] { "studio-core-true", "studio-gui-true" }, CiCoverage.Suites(candidate).Keys.Order());
+        Assert.Equal(CiCoverage.Profiles["foundation"].Suites.Order(), CiCoverage.Suites(candidate).Keys.Order());
         var receipt = candidate["jobs"]![0]!["receipt"]!;
-        receipt["suites"]!["studio-gui-true"]!["summary"]!["failed"] = 1;
+        receipt["suites"]!["compile-candidate-no-safety"]!["summary"]!["failed"] = 1;
         Assert.Throws<ReleaseException>(() => CiCoverage.Validate(Root, candidate, Sha));
+    }
+
+    [Fact]
+    public void ShippedStudioSuitesAlwaysRunLocallyEvenWithCiCoverage()
+    {
+        Assert.DoesNotContain("studio", CiCoverage.Profiles.Keys);
+        var candidate = CiCoverage.Validate(Root, Candidate(Root, "release", Sha), Sha);
+        int calls = 0;
+        var jobs = CheckAllProfiles.StudioSuites.SelectMany(suite => new[] { suite, suite + "-gate", suite + "-shard-0" })
+            .Select(name => new CheckJob(name, () => { calls++; return new(0, "local", ""); }, [])).ToArray();
+        var rewritten = CiCoverage.Rewrite(jobs, candidate);
+        Assert.Equal(jobs, rewritten);
+        Assert.All(rewritten, job => { Assert.Null(job.CiCoverage); Assert.Equal(0, job.Run().ExitCode); });
+        Assert.Equal(jobs.Length, calls);
+        candidate["jobs"]![0]!["receipt"]!["profile"] = "studio";
+        Assert.Throws<ReleaseException>(() => CiCoverage.Validate(Root, candidate, Sha));
+        var workflow = File.ReadAllText(Path.Combine(Root, ".github/workflows/offline-checks.yml"));
+        var studio = workflow.Split("\n  studio-tests:", StringSplitOptions.None)[1].Split("\n  foundation-suites:", StringSplitOptions.None)[0];
+        Assert.DoesNotContain("matrix.shared-adapter-paths", studio);
+        Assert.Contains("-p:TiaSharedAdapterPaths=false", studio);
+        Assert.Contains("test-suites -Suite studio-core", studio);
+        Assert.Contains("test-suites -Suite studio-gui", studio);
+        Assert.DoesNotContain("ci-coverage -Profile studio", studio);
     }
 
     [Fact]
@@ -62,22 +85,11 @@ public sealed class CiCoverageTests
     [Fact]
     public void ProfileSuiteListsMatchTheWholeWindowsWorkflowCommandsAndFoundationRunnerUnion()
     {
+        Assert.DoesNotContain("\n  foundation-transport:", File.ReadAllText(Path.Combine(Root, ".github/workflows/offline-checks.yml")));
         foreach (var (name, profile) in CiCoverage.Profiles)
         {
             var workflow = File.ReadAllText(Path.Combine(Root, profile.File));
-            if (name == "studio-true")
-            {
-                var studio = workflow.Split("\n  studio-tests:", StringSplitOptions.None)[1].Split("\n  foundation-suites:", StringSplitOptions.None)[0];
-                Assert.Equal("studio-tests (true)", profile.Job); Assert.Equal("studio-tests", profile.ActionsJob);
-                Assert.Equal(new[] { "studio-core-true", "studio-gui-true" }, profile.Suites);
-                Assert.Contains("shared-adapter-paths: ['false', 'true']", studio);
-                Assert.Contains("test-suites -Suite studio-core-${{ matrix.shared-adapter-paths }}", studio);
-                Assert.Contains("test-suites -Suite studio-gui-${{ matrix.shared-adapter-paths }}", studio);
-                Assert.Contains("if: matrix.shared-adapter-paths == 'true'", studio);
-                Assert.Contains("ci-coverage -Profile studio-true", studio);
-                continue;
-            }
-            var block = workflow.Split("\n  " + profile.Job + ":", StringSplitOptions.None)[1].Split("\n  foundation-transport:", StringSplitOptions.None)[0];
+            var block = workflow.Split("\n  " + profile.Job + ":", StringSplitOptions.None)[1];
             var suites = Regex.Matches(block, @"-Suite ([a-z0-9-]+)").Select(match => match.Groups[1].Value).Distinct().Order().ToArray();
             Assert.Equal(profile.Suites.Order(), suites);
             Assert.Contains("runs-on: windows-latest", block);

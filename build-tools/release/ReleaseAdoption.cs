@@ -26,6 +26,10 @@ internal sealed class ReleaseStageClock(string directory)
         {
             timer.Stop();
             lock (rows) rows.Add((stage, timer.Elapsed.TotalSeconds, status));
+            var receipts = Path.Combine(directory, "stage-receipts");
+            Directory.CreateDirectory(receipts);
+            File.WriteAllText(Path.Combine(receipts, stage + ".json"), new JsonObject
+                { ["name"] = stage, ["status"] = status, ["seconds"] = timer.Elapsed.TotalSeconds }.ToJsonString() + "\n", new UTF8Encoding(false));
             Console.WriteLine($"STAGE {stage}: {status}; {timer.Elapsed.TotalSeconds:F1}s");
             Save();
         }
@@ -44,7 +48,7 @@ internal sealed class ReleaseStageClock(string directory)
         lock (rows) stages = new JsonArray(rows.Select(row => (JsonNode?)new JsonObject
             { ["stage"] = row.Stage, ["seconds"] = Math.Round(row.Seconds, 1), ["status"] = row.Status }).ToArray());
         var document = new JsonObject { ["stages"] = stages, ["totalSeconds"] = Math.Round(total.Elapsed.TotalSeconds, 1) };
-        File.WriteAllText(Path.Combine(directory, "stage-times.json"), document.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
+        lock (rows) File.WriteAllText(Path.Combine(directory, "stage-times.json"), document.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
     }
 }
 
@@ -89,7 +93,7 @@ internal static partial class ReleaseCommands
         var adoption = ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, git, evidencePath, external, DateTimeOffset.UtcNow,
             dryRun ? null : coverage => VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), token, repository,
                 ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage),
-            options.Get("AcceptTimeGateException")));
+            options.Get("AcceptTimeGateException"), SpotCheckColdUnits(options)));
         var record = adoption["record"]!.AsObject();
         var commit = ReleaseEvidence.Text(record["evidence"]?["commit"]);
         if (record["ci"] == null) record["ci"] = dryRun
@@ -132,6 +136,7 @@ internal static partial class ReleaseCommands
     // and fixture adapters and the native harness safety checks. They run on this release's own build after the preparation.
     private static void RunAdoptionLocalChecks(JsonObject adoption, string api, string python, string? nuget, string logRoot, string runTemp, int parallelism)
     {
+        if (TryAdoptPreparationLocalChecks(adoption, api, python, logRoot, runTemp)) return;
         var local = Path.Combine(logRoot, "adoption-local");
         Directory.CreateDirectory(local);
         var cli = ReleaseCliHome(runTemp);
@@ -140,7 +145,7 @@ internal static partial class ReleaseCommands
         var receipts = new System.Collections.Concurrent.ConcurrentBag<JsonObject>();
         JsonObject Receipt(string name, string check, string file) => new()
         {
-            ["name"] = name, ["check"] = check, ["status"] = "passed", ["path"] = Path.GetRelativePath(Root, file).Replace('\\', '/'),
+            ["name"] = name, ["check"] = check, ["status"] = "passed", ["mode"] = "ran", ["path"] = Path.GetRelativePath(Root, file).Replace('\\', '/'),
             ["sha256"] = ReleaseRecords.HashFile(file), ["counts"] = ReleaseEvidence.Strings(ReleaseRecords.CountLines(Root, File.ReadAllText(file)))
         };
         var jobs = PlcReleaseJobs(Root, api, logs, runTemp, dotnet, python).Where(IsAdoptionLocalPlcJob).ToArray();
@@ -181,6 +186,42 @@ internal static partial class ReleaseCommands
         WriteJson(Environment.GetEnvironmentVariable(ReleaseEvidence.AdoptionVariable) ?? throw new ReleaseException("Adoption record path missing"), adoption);
     }
 
+    private static bool TryAdoptPreparationLocalChecks(JsonObject adoption, string api, string python, string logRoot, string runTemp)
+    {
+        var evidence = ReleaseEvidence.Text(adoption["evidencePath"]);
+        var local = Path.Combine(logRoot, "adoption-local");
+        var jobs = PlcReleaseJobs(Root, api, Path.Combine(Root, "bin-build/multi-version"), runTemp, Dotnet, python).Where(IsAdoptionLocalPlcJob).ToArray();
+        var rows = new List<JsonObject>();
+        foreach (var key in new[] { "20", "21" })
+        {
+            var name = "host-behavior-parity-v" + key;
+            if (!BinaryCheckReceipts.TryAdoptLocal(evidence, name, name, local, null, out var row)) return false;
+            rows.Add(row);
+        }
+        foreach (var job in jobs)
+        {
+            var source = job.Name;
+            var binaries = new Dictionary<string, string>();
+            if (job.Mode == "native-safety") binaries["safety"] = job.Executable;
+            else if (job.Name.StartsWith("native-coverage-", StringComparison.Ordinal))
+                binaries["adapter"] = Path.Combine(PlcReleaseInstallDirectory(Root, job.Release), $"TiaMcp.PlcWorker.{job.Release}.exe");
+            else
+            {
+                source = "adapter-coverage-v" + job.Release;
+                binaries["worker"] = ReleasePlcFixture(Path.Combine(Root, "bin-build/multi-version"), job.Release);
+            }
+            if (!BinaryCheckReceipts.TryAdoptLocal(evidence, source, job.Name, local, binaries, out var row, Path.Combine(Root, "bin-build/multi-version"))) return false;
+            rows.Add(row);
+        }
+        foreach (var row in rows)
+        {
+            row["path"] = Path.GetRelativePath(Root, Path.Combine(local, ReleaseEvidence.Text(row["name"]) + ".log")).Replace('\\', '/');
+            adoption["record"]!["localChecks"]!.AsArray().Add(row);
+        }
+        WriteJson(Environment.GetEnvironmentVariable(ReleaseEvidence.AdoptionVariable)!, adoption);
+        return true;
+    }
+
     internal static bool IsAdoptionLocalPlcJob(PlcReleaseJob job) =>
         job.Check == "native-coverage" || job.Name.StartsWith("jit-adapter-coverage-", StringComparison.Ordinal) || job.Mode == "native-safety";
 
@@ -194,13 +235,26 @@ internal static partial class ReleaseCommands
     {
         var cli = Path.Combine(logs, "dotnet-home-plc");
         var jobs = PlcReleaseJobs(Root, api, logs, runTemp, dotnet, python)
-            .Where(job => PlcReleaseSelected(plan, job) && IsAdoptionBinaryPlcJob(job)).ToArray();
-        RunPlcReleaseJobs(jobs, Root, logs, job =>
+            .Where(job => PlcReleaseSelected(plan, job) && (IsAdoptionBinaryPlcJob(job) || job.Name.StartsWith("harness-", StringComparison.Ordinal) || job.Mode == "capture")).ToArray();
+        var decisions = new JsonObject();
+        var evidence = ReleaseEvidence.Text(adoption["evidencePath"]);
+        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
+        var affected = jobs.Where(job => !BinaryCheckReceipts.TryAdopt(evidence, job, Root, logs, harness, decisions)).ToArray();
+        adoption["record"]!["binaryChecks"] = decisions;
+        RunPlcReleaseJobs(affected, Root, logs, job =>
         {
             ResetPlcReleaseJobOutputs(job, logs);
             return RunBuildIsolated(job.Executable, job.Arguments, Path.Combine(logs, job.Name + ".log"),
                 runTemp, cli, api, nuget, false, job.Name);
-        }, (script, _) => throw new ReleaseException("Adopted binary checks include no capture: " + script));
+        }, (script, args) => RunBuildRaw(python, [script, .. args], Path.Combine(logs, "adopted-capture-compare.log"), runTemp, cli, api, nuget, "Adopted capture comparison"));
+        foreach (var job in jobs.Where(job => !IsAdoptionBinaryPlcJob(job)))
+        {
+            var log = Path.Combine(logs, job.Name + ".log");
+            var row = ReleaseCandidate.FileBinding(Root, log);
+            row["name"] = job.Name; row["status"] = "passed"; row["check"] = job.Check;
+            row["execution"] = decisions[job.Name]!.DeepClone();
+            adoption["record"]!["localChecks"]!.AsArray().Add(row);
+        }
         RecordAdoptionBinaryChecks(Root, logs, plan, adoption, runtimes, artifacts);
         WriteJson(Environment.GetEnvironmentVariable(ReleaseEvidence.AdoptionVariable) ?? throw new ReleaseException("Adoption record path missing"), adoption);
     }
@@ -253,6 +307,7 @@ internal static partial class ReleaseCommands
                 row["check"] = name.StartsWith("worker-protocol-", StringComparison.Ordinal) ? "plc-worker-isolation"
                     : name.StartsWith("stability-c8-", StringComparison.Ordinal) ? "plc-stability" : "plc-isolated-stability";
                 row["artifacts"] = evidence;
+                row["execution"] = adoption["record"]?["binaryChecks"]?[name]?.DeepClone();
                 foreach (var field in new[] { "worker", "host", "sdkWorker" }) row[field] = tested[field]!.DeepClone();
                 local.Add(row);
             }
@@ -278,8 +333,8 @@ internal static partial class ReleaseCommands
         _ = ReleaseEvidence.SuitePassed(adoption, "source-contracts");
         foreach (var suite in ReleaseCommandTable.OfflineSuites) _ = ReleaseEvidence.SuitePassed(adoption, suite);
         return new AdoptedCommonCounts(ReleaseEvidence.SuitePassed(adoption, "write-guard"), ReleaseEvidence.SuitePassed(adoption, "crash-evidence"),
-            ReleaseEvidence.SuitePassed(adoption, "offline"), ReleaseEvidence.SuitePassed(adoption, "offline-v20"),
-            ReleaseEvidence.SuitePassed(adoption, "kept-code"), ReleaseEvidence.SuitePassed(adoption, "kept-code-v20"),
+            ReleaseEvidence.SuitePassed(adoption, "offline"), 0,
+            ReleaseEvidence.SuitePassed(adoption, "kept-code"), 0,
             ReleaseEvidence.SuitePassed(adoption, "version-policy"), ReleaseEvidence.SuitePassed(adoption, "updater"), nativeMcpSafety, lifecycleMatch);
     }
 
@@ -311,7 +366,7 @@ internal static partial class ReleaseCommands
         }
         var adoption = ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, git, evidence, external, DateTimeOffset.UtcNow,
             options.Has("Ci") ? coverage => VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), Token(), options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"),
-                ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage) : null, options.Get("AcceptTimeGateException")));
+                ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage) : null, options.Get("AcceptTimeGateException"), SpotCheckColdUnits(options)));
         var record = adoption["record"]!.AsObject();
         var commit = ReleaseEvidence.Text(record["evidence"]?["commit"]);
         Console.WriteLine($"Evidence accepted for {commit}: {record["evidence"]?["jobs"]} passed jobs, {record["suites"]!.AsObject().Count} registered suites, " +

@@ -13,6 +13,26 @@ public sealed class AffectedNightlyTests
     private static JsonObject Catalog => DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root);
     private static CheckJob Job(string name) => new(name, () => new(0, "passed", ""), []);
 
+    private static CheckJob[] AdoptionEvidenceJobs()
+    {
+        using var fixture = new OfflineFixtures();
+        var manifest = Path.Combine(fixture.DirectoryPath, "runtime-paths.tsv");
+        var api = Path.Combine(fixture.DirectoryPath, "api");
+        File.WriteAllLines(manifest, new[] { "20", "21" }.Select(key =>
+        {
+            var unit = new CheckBuild("src/PlcWorker/TiaMcp.PlcWorker.csproj", "", ["-p:TiaReleaseKey=" + key,
+                "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(api, ReleaseCommands.PlcWorkerApi(key).Directory))]);
+            var directory = Path.Combine(fixture.DirectoryPath, key);
+            return string.Join('\t', Path.Combine(Root, unit.Project), unit.Variant, directory, directory,
+                Path.Combine(directory, "TiaMcp.PlcWorker." + key + ".exe"));
+        }));
+        var jobs = new List<CheckJob>();
+        Func<string, string, string[], bool, CommandResult> isolated = (_, _, _, _) => new(0, "", "");
+        typeof(ReleaseCommands).GetMethod("AddAdoptionEvidenceJobs", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null,
+            [jobs, fixture.DirectoryPath, api, "nuget", "dotnet", manifest, isolated]);
+        return jobs.ToArray();
+    }
+
     [Fact]
     public void EngineHostReferenceBindingIsDeclaredWithTheEngineHostSuiteInputs()
     {
@@ -75,13 +95,30 @@ public sealed class AffectedNightlyTests
         typeof(ReleaseCommands).GetMethod("AddCheckAllStaticJobs", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null,
             [add, tool, python, isolated, "output", "api", "nuget", 1, 8, "dotnet"]);
         jobs.AddRange(CheckAllJobInputs.ToolJobs.Select(Job));
+        jobs.AddRange(AdoptionEvidenceJobs());
         jobs.AddRange(ReleaseCommands.CheckAllPlcScriptJobs().Concat(ReleaseCommands.CheckAllPlcHarnessJobs()).Select(Job));
         foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
-        foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage", "adapter-coverage" }) jobs.Add(Job(family + "-v" + key));
+        foreach (var family in key is "20" or "21" ? new[] { "contracts", "responses", "transport-usage", "usage", "adapter-coverage" }
+            : new[] { "contracts", "usage", "adapter-coverage" }) jobs.Add(Job(family + "-v" + key));
         foreach (var name in catalog.Select(pair => pair.Key))
             jobs.AddRange(new[] { name, name + "-gate", name + "-shard-0", name + "-coverage-proof" }.Select(Job));
+        Assert.DoesNotContain(jobs, job => job.Name is "suite-output-parity" or "check-latency" || job.Name.StartsWith("latency-", StringComparison.Ordinal)
+            || job.Name.StartsWith("stability-", StringComparison.Ordinal) && job.Name.Contains("-http-", StringComparison.Ordinal));
+        Assert.DoesNotContain(jobs, job => new[] { "14sp1", "15.1", "16", "17", "18", "19" }.Any(key =>
+            job.Name.StartsWith("responses-v" + key, StringComparison.Ordinal) || job.Name.StartsWith("transport-usage-v" + key, StringComparison.Ordinal)));
+        Assert.Equal(new[] { "studio-core", "studio-gui" }, CheckAllProfiles.StudioSuites);
+        foreach (var removed in new[] { "offline-v20", "kept-code-v20", "studio-core-true", "studio-core-false", "studio-gui-true", "studio-gui-false" })
+            Assert.False(catalog.ContainsKey(removed));
+        Assert.DoesNotContain("check-latency", CommandLine.Commands);
+        Assert.Null(typeof(CheckJob).GetProperty("Quiet"));
+        Assert.DoesNotContain(ReleaseEvidence.RequiredJobs(Root), row => row.Item1.StartsWith("latency-", StringComparison.Ordinal)
+            || row.Item1 == "suite-output-parity");
+        var selfTest = new CheckJob("affected-inputs-self-test", () => CheckAllJobInputs.Validate(jobs, catalog), []);
+        var validation = selfTest.Run();
+        Console.Write(validation.StandardOutput);
+        Console.Error.Write(validation.StandardError);
         Assert.Empty(CheckAllJobInputs.Undeclared(jobs, catalog));
-        Assert.Equal(0, CheckAllJobInputs.Validate(jobs, catalog).ExitCode);
+        Assert.Equal(0, validation.ExitCode);
         Assert.True(CheckAllJobInputs.Find(Job("contract-self-tests"), catalog)!.SourceOnly);
         Assert.False(CheckAllJobInputs.Find(Job("campaign-validator-self-tests"), catalog)!.SourceOnly);
         Assert.Equal("20", CheckAllJobInputs.Find(Job("plc-exchange-worker-v20-shard-0"), catalog)!.Release);
@@ -95,10 +132,41 @@ public sealed class AffectedNightlyTests
     }
 
     [Theory]
-    [InlineData("build-tools/release/CheckAll.cs")]
-    [InlineData("build-tools/release/CheckAllJobInputs.cs")]
-    [InlineData("build-tools/release/CheckAllProfiles.cs")]
-    [InlineData("tests/test-suites.json")]
+    [InlineData("host-behavior-parity-v20", "20", "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj", "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BehaviorParityTests.cs")]
+    [InlineData("host-behavior-parity-v21", "21", "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj", "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BehaviorParityTests.cs")]
+    [InlineData("host-behavior-parity-v20", "20", "tests/Fixtures/TiaMcp.Offline.Fixtures/TiaMcp.Offline.Fixtures.csproj", "tests/Fixtures/TiaMcp.Offline.Fixtures/BehaviorParityCases.cs")]
+    [InlineData("host-behavior-parity-v21", "21", "tests/Fixtures/TiaMcp.Offline.Fixtures/TiaMcp.Offline.Fixtures.csproj", "tests/Fixtures/TiaMcp.Offline.Fixtures/BehaviorParityCases.cs")]
+    [InlineData("native-safety-v20-plc", "20", "tests/Engine/TiaMcp.Engine.Native.Tests/V20/TiaMcp.Engine.Native.Tests.V20.csproj", "tests/Engine/TiaMcp.Engine.Native.Tests/Program.cs")]
+    [InlineData("native-safety-v21-plc", "21", "tests/Engine/TiaMcp.Engine.Native.Tests/V21/TiaMcp.Engine.Native.Tests.V21.csproj", "tests/Engine/TiaMcp.Engine.Native.Tests/Program.cs")]
+    [InlineData("native-coverage-v20-plc", "20", "build-tools/native-call-weaver/NativeCallWeaver.csproj", "build-tools/native-call-weaver/Weaver.cs")]
+    [InlineData("native-coverage-v21-plc", "21", "build-tools/native-call-weaver/NativeCallWeaver.csproj", "build-tools/native-call-weaver/Weaver.cs")]
+    public void AdoptionEvidenceJobsDeclareTheirRealBuildInputs(string name, string release, string project, string source)
+    {
+        var jobs = AdoptionEvidenceJobs();
+        var job = Assert.Single(jobs, job => job.Name == name);
+        var declaration = CheckAllJobInputs.Find(job, Catalog);
+        Assert.NotNull(declaration);
+        Assert.Equal(release, declaration.Release);
+        Assert.Contains(project, declaration.Projects);
+        Assert.All(declaration.Projects, project => Assert.True(File.Exists(Path.Combine(Root, project)), project));
+        Assert.False(declaration.Aggregate);
+        Assert.False(CheckAllJobInputs.AlwaysRun(name));
+        var selection = new CheckAllAffected([source], [new("input", project, [source])], null, true);
+        selection.Map(jobs, Catalog);
+        Assert.Null(selection.Fallback);
+        Assert.True(selection.Selected(job, declaration));
+        Assert.Contains(selection.QuickPlan(jobs, Catalog), selected => selected.Name == name);
+        var unrelated = new CheckAllAffected(["docs/development/validation.md"], [], null, false);
+        unrelated.Map(jobs, Catalog);
+        Assert.Null(unrelated.Fallback);
+        Assert.False(unrelated.Selected(job, declaration));
+        if (name.StartsWith("host-behavior-parity-", StringComparison.Ordinal))
+            Assert.Contains("tests/Fixtures/TiaMcp.Offline.Fixtures/TiaMcp.Offline.Fixtures.csproj", declaration.Projects);
+        if (name.StartsWith("native-coverage-", StringComparison.Ordinal))
+            Assert.Contains("src/PlcWorker/TiaMcp.PlcWorker.csproj", declaration.Projects);
+    }
+
+    [Theory]
     [InlineData("Directory.Build.props")]
     [InlineData("src/Directory.Build.targets")]
     [InlineData("global.json")]
@@ -110,6 +178,21 @@ public sealed class AffectedNightlyTests
         selection.Map([Job("usage-v20-plc")], Catalog);
         Assert.NotNull(selection.Fallback);
         Assert.True(selection.Selected(Job("usage-v21-plc"), CheckAllJobInputs.Find(Job("usage-v21-plc"), Catalog)));
+    }
+
+    [Theory]
+    [InlineData("build-tools/release/CheckAll.cs")]
+    [InlineData("build-tools/release/CheckAllJobInputs.cs")]
+    [InlineData("build-tools/release/CheckAllProfiles.cs")]
+    [InlineData("tests/test-suites.json")]
+    public void PipelineInputsSelectTheirDeclaredChecksWithoutWideFallback(string path)
+    {
+        var job = Job("tools-list");
+        var selection = new CheckAllAffected([path], [], null, true);
+        selection.Map([job], Catalog);
+        Assert.Null(selection.Fallback);
+        Assert.True(selection.Selected(job, CheckAllJobInputs.Find(job, Catalog)));
+        Assert.Equal(job.Name, Assert.Single(selection.QuickPlan([job], Catalog)).Name);
     }
 
     [Theory]
@@ -165,16 +248,55 @@ public sealed class AffectedNightlyTests
     public void DocsOnlyStillRunsFastChecksAndQuickNeverRunsStressOrUnchangedGui()
     {
         var jobs = new[] { Job("repository"), Job("usage-v21-plc"), Job("stability-v21-c8-stdio-full-plc"),
-            Job("studio-gui-false-shard-0"), Job("configuration-page") };
+            Job("studio-gui-shard-0"), Job("configuration-page") };
         var selection = new CheckAllAffected(["docs/development/validation.md"], [], null, true); selection.Map(jobs, Catalog);
         Assert.Null(selection.Fallback);
         Assert.Equal(new[] { "repository" }, selection.QuickPlan(jobs, Catalog).Select(job => job.Name));
         var studio = new CheckAllAffected(["src/Studio/Gui/View.cs"],
-            [new("gui", (string)Catalog["studio-gui-false"]!["project"]!, ["src/Studio/Gui/View.cs"])], null, true);
+            [new("gui", (string)Catalog["studio-gui"]!["project"]!, ["src/Studio/Gui/View.cs"])], null, true);
         studio.Map(jobs, Catalog);
-        Assert.Contains(studio.QuickPlan(jobs, Catalog), job => job.Name == "studio-gui-false-shard-0");
-        Assert.True(CheckAllJobInputs.NightlyOnly("stability-v20-c16-http-lite-plc"));
-        Assert.False(CheckAllJobInputs.NightlyOnly("stability-v20-c8-http-lite-plc"));
+        Assert.Contains(studio.QuickPlan(jobs, Catalog), job => job.Name == "studio-gui-shard-0");
+        Assert.True(CheckAllJobInputs.NightlyOnly("stability-v20-c16-stdio-lite-plc"));
+        Assert.False(CheckAllJobInputs.NightlyOnly("stability-v20-c8-stdio-lite-plc"));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public void QuickDerivedGuiGatesFollowTheirEligibleSourceSuite(bool studioChanged, bool wideInput)
+    {
+        var source = Job("studio-gui-shard-0");
+        var sourceGate = Job("studio-gui-gate") with { Dependencies = [source.Name] };
+        string[] derived = ["workbench-vci-prefill-gate", "mcp-panel-gate", "workbench-control-gate", "crash-evidence-gate"];
+        var jobs = new[] { source, sourceGate, Job("repository") }
+            .Concat(derived.Select(name => Job(name) with { Dependencies = [sourceGate.Name] }))
+            .Append(Job("derived-tail") with { Dependencies = [derived[0]] }).Reverse().ToArray();
+        var path = studioChanged ? "src/Studio/Gui/View.cs" : wideInput ? "Directory.Build.props" : "docs/development/validation.md";
+        var selection = new CheckAllAffected([path],
+            [new("gui", (string)Catalog["studio-gui"]!["project"]!, ["src/Studio/Gui/View.cs"])], null, true);
+        selection.Map(jobs, Catalog);
+        if (wideInput) Assert.Contains("Wide input", selection.Fallback);
+        else Assert.Null(selection.Fallback);
+        var plan = selection.QuickPlan(jobs, Catalog);
+        foreach (string name in derived.Append("derived-tail").Append(source.Name).Append(sourceGate.Name))
+            Assert.Equal(studioChanged, plan.Any(job => job.Name == name));
+        Assert.Contains(plan, job => job.Name == "repository");
+        if (studioChanged)
+        {
+            Assert.All(plan.Where(job => derived.Contains(job.Name)), job => Assert.Equal(new[] { sourceGate.Name }, job.Dependencies));
+            Assert.Equal(new[] { source.Name }, plan.Single(job => job.Name == sourceGate.Name).Dependencies);
+        }
+        else
+        {
+            using var fixture = new OfflineFixtures();
+            selection.Write(fixture.DirectoryPath, [], [], null);
+            var report = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.DirectoryPath, "affected.json")))!;
+            foreach (string name in derived.Append("derived-tail").Append(sourceGate.Name))
+                Assert.Equal("quick: source suite excluded", (string?)report["skippedBecauseUnaffected"]![name]);
+        }
+        var merge = new CheckAllAffected([path], [], null, false);
+        Assert.Equal(jobs, merge.QuickPlan(jobs, Catalog));
     }
 
     private sealed class PassedNightly : IDisposable
@@ -187,16 +309,17 @@ public sealed class AffectedNightlyTests
         internal const string Name = "sensitive-job";
         internal JsonObject Report { get; }
         internal JsonObject Evidence { get; }
-        internal PassedNightly()
+        internal PassedNightly(string name = Name, string? identity = null)
         {
+            Identity = identity ?? Identity;
             Output = Path.Combine(fixture.DirectoryPath, "passed-nightly"); Directory.CreateDirectory(Path.Combine(Output, "logs"));
-            File.WriteAllText(Path.Combine(Output, "logs/" + Name + ".log"), "passed");
+            File.WriteAllText(Path.Combine(Output, "logs/" + name + ".log"), "passed");
             Directory.CreateDirectory(Path.Combine(Output, "suites"));
             DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(Output, "suites/example.trx"), ["Passed", "Passed"]);
             var owner = new CheckAllNightlyCoverage(Output + Path.DirectorySeparatorChar, "machine", null);
-            owner.Record(Name, Identity, ["suites/example.trx"]); owner.Save();
+            owner.Record(name, Identity, ["suites/example.trx"]); owner.Save();
             Report = new JsonObject { ["profile"] = "nightly", ["failed"] = 0, ["underThirtyMinutes"] = true,
-                ["checks"] = new JsonArray(new JsonObject { ["Name"] = Name, ["Status"] = "passed", ["ExitCode"] = 0, ["IdentityHash"] = Identity },
+                ["checks"] = new JsonArray(new JsonObject { ["Name"] = name, ["Status"] = "passed", ["ExitCode"] = 0, ["IdentityHash"] = Identity },
                     new JsonObject { ["Name"] = "tracked-tree-drift", ["Status"] = "passed", ["ExitCode"] = 0 }) };
             Evidence = new JsonObject
             {
@@ -204,8 +327,8 @@ public sealed class AffectedNightlyTests
                 ["mode"] = new JsonObject { ["profile"] = "nightly", ["clean"] = true, ["buildCacheDisabled"] = true, ["resultCacheEnabled"] = false },
                 ["source"] = new JsonObject { ["cleanAtStart"] = true },
                 ["result"] = new JsonObject { ["exitCode"] = 0, ["failed"] = 0, ["reused"] = 0, ["underThirtyMinutes"] = true },
-                ["planned"] = new JsonArray(Name), ["completedUtc"] = DateTime.UtcNow.ToString("o"),
-                ["jobs"] = new JsonArray(new JsonObject { ["name"] = Name, ["status"] = "passed", ["exitCode"] = 0, ["reused"] = false },
+                ["planned"] = new JsonArray(name), ["completedUtc"] = DateTime.UtcNow.ToString("o"),
+                ["jobs"] = new JsonArray(new JsonObject { ["name"] = name, ["status"] = "passed", ["exitCode"] = 0, ["reused"] = false },
                     new JsonObject { ["name"] = "tracked-tree-drift", ["status"] = "passed", ["exitCode"] = 0, ["reused"] = false })
             };
             Pointer = Path.Combine(fixture.DirectoryPath, "latest-passed.json"); Save();
@@ -222,6 +345,42 @@ public sealed class AffectedNightlyTests
             new CheckAllNightlyCoverage(Current, machine, Pointer).Bind(Job(Name), () => Identity, reuse, ["suites/example.trx"]);
         public void Dispose() => fixture.Dispose();
     }
+
+    [Theory]
+    [InlineData("responses-v20-plc", false)]
+    [InlineData("responses-v20-plc", true)]
+    [InlineData("transport-usage-v20-plc", false)]
+    [InlineData("transport-usage-v20-plc", true)]
+    public void UnchangedCaptureInputsStillCheckNightlyIdentityAndRunIfBinaryDiffers(string name, bool binaryChanged)
+    {
+        using var binary = new OfflineFixtures();
+        string host = Path.Combine(binary.DirectoryPath, "host.dll"); File.WriteAllText(host, "nightly runtime bytes");
+        using var fixture = new PassedNightly(name, CheckAllResultCache.FileHash(host));
+        if (binaryChanged) File.WriteAllText(host, "different runtime bytes");
+        int identityChecks = 0, captures = 0;
+        var capture = new CheckJob(name, () => { captures++; return new(0, "captured", ""); }, []);
+        var tail = Job("response-verify") with { Dependencies = [name] };
+        var selection = new CheckAllAffected(["docs/development/validation.md"], [], null, false);
+        selection.Map([capture, tail], Catalog);
+        Assert.Null(selection.Fallback);
+        Assert.False(selection.Selected(capture, CheckAllJobInputs.Find(capture, Catalog)));
+        var plan = selection.QuickPlan([capture, tail], Catalog);
+        Assert.Equal(capture, Assert.Single(plan, job => job.Name == name));
+        Assert.Equal(new[] { name }, Assert.Single(plan, job => job.Name == tail.Name).Dependencies);
+        var nightly = new CheckAllNightlyCoverage(fixture.Current, "machine", fixture.Pointer, recordPasses: false);
+        Assert.Equal("passed-nightly", nightly.NightlyId);
+        var binding = nightly.Bind(capture, () => { identityChecks++; return CheckAllResultCache.FileHash(host); },
+            !selection.Selected(capture, CheckAllJobInputs.Find(capture, Catalog)), ["suites/example.trx"]);
+        var rows = CheckScheduler.Run([capture with { NightlyCoverage = binding }], 1, fixture.Current);
+        var row = Assert.Single(rows); Assert.True(CheckTiming.Passed(row));
+        Assert.True(identityChecks > 0);
+        Assert.Equal(binaryChanged ? 1 : 0, captures);
+        Assert.Equal(binaryChanged ? null : "passed-nightly", row.ReusedRunId);
+        selection.Write(fixture.Current, rows, [], nightly.NightlyId);
+        var report = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.Current, "affected.json")))!;
+        Assert.Null(report["skippedBecauseUnaffected"]![name]);
+    }
+
 
     [Fact]
     public void SensitiveJobCanReuseOnlyAnIdenticalPassedNightlyIdentity()
@@ -246,7 +405,7 @@ public sealed class AffectedNightlyTests
     public void NightlyJobIdentityBindsLoadedBinaryBytesDataDefinitionAndMachineState()
     {
         using var fixture = new OfflineFixtures(); string root = fixture.DirectoryPath;
-        foreach (var path in new[] { "data/input.json", "outputs/product.dll", "sdk/api.dll", "offline.config" })
+        foreach (var path in new[] { "data/input.json", "outputs/product.dll", "sdk/api.dll", "offline.config", "runtime/decoder-python/stdlib.zip" })
         {
             string file = Path.Combine(root, path); Directory.CreateDirectory(Path.GetDirectoryName(file)!); File.WriteAllText(file, "initial");
         }
@@ -263,6 +422,10 @@ public sealed class AffectedNightlyTests
         string binary = Path.Combine(root, "outputs/product.dll"); var timestamp = File.GetLastWriteTimeUtc(binary);
         File.WriteAllText(binary, "changed"); File.SetLastWriteTimeUtc(binary, timestamp); Assert.NotEqual(initial, Identity());
         File.WriteAllText(binary, "initial"); Assert.Equal(initial, Identity());
+        string decoder = Path.Combine(root, "runtime/decoder-python/stdlib.zip");
+        timestamp = File.GetLastWriteTimeUtc(decoder);
+        File.WriteAllText(decoder, "changed"); File.SetLastWriteTimeUtc(decoder, timestamp); Assert.NotEqual(initial, Identity());
+        File.WriteAllText(decoder, "initial"); Assert.Equal(initial, Identity());
         File.WriteAllText(Path.Combine(root, "data/input.json"), "changed"); Assert.NotEqual(initial, Identity());
         File.WriteAllText(Path.Combine(root, "data/input.json"), "initial");
         Assert.NotEqual(initial, cache.JobIdentity(Job("example"), spec with { Definition = "different" }, declaration));
@@ -300,11 +463,11 @@ public sealed class AffectedNightlyTests
     {
         var now = DateTime.UtcNow;
         NightlyRun Run(string id, string revision, string status, int offset, double seconds = 100) =>
-            new(id, revision, "report", status, seconds, seconds < 1800, now.AddMinutes(offset));
+            new(id, revision, "report", status, seconds, seconds < 2700, now.AddMinutes(offset));
         bool Ancestor(string left, string right) => left == right || left is "previous" or "ancestor" && right is "ancestor" or "release";
         var failed = Run("failed", "ancestor", "failed", 1);
         Assert.Contains("No override", NightlyRuns.Block([failed], "release", "previous", Ancestor));
-        Assert.NotNull(NightlyRuns.Block([Run("timeout", "release", "passed", 2, 1800)], "release", "previous", Ancestor));
+        Assert.NotNull(NightlyRuns.Block([Run("timeout", "release", "passed", 2, 2700)], "release", "previous", Ancestor));
         Assert.Null(NightlyRuns.Block([failed, Run("pass", "release", "passed", 2)], "release", "previous", Ancestor));
         Assert.NotNull(NightlyRuns.Block([failed, Run("other", "other-branch", "passed", 2)], "release", "previous", Ancestor));
         Assert.Null(NightlyRuns.Block([Run("old", "previous", "failed", 0)], "release", "previous", Ancestor));
@@ -327,6 +490,53 @@ public sealed class AffectedNightlyTests
     }
 
     [Fact]
+    public void NightlyCompletesAtFortyMinutesAndTimesOutAtFortySixWhileMergeKeepsThirty()
+    {
+        using var fixture = new PassedNightly();
+        var prior = Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_ROOT");
+        var directory = Path.GetDirectoryName(fixture.Pointer)!;
+        try
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_NIGHTLY_ROOT", directory);
+            foreach (var (seconds, passed) in new[] { (2400, true), (2760, false) })
+            {
+                Assert.Equal(passed, NightlyRuns.WithinTimeGate("nightly", seconds));
+                Assert.False(NightlyRuns.WithinTimeGate("merge", seconds));
+                fixture.Report["underThirtyMinutes"] = passed;
+                fixture.Evidence["result"]!["underThirtyMinutes"] = passed;
+                fixture.Save();
+                NightlyRuns.Complete(directory, fixture.Output, "commit", passed ? 0 : 1, seconds);
+                var run = Assert.Single(JsonSerializer.Deserialize<NightlyRun[]>(File.ReadAllText(Path.Combine(directory, "history.json")))!);
+                Assert.Equal(passed ? "passed" : "timed-out", run.Status);
+                Assert.Equal(passed, run.UnderThirtyMinutes);
+                Assert.Equal(!passed, NightlyRuns.Block([run], "commit", null, (_, _) => true) != null);
+                Assert.Equal(passed, fixture.Binding().TryReuse() != null);
+            }
+            Assert.True(NightlyRuns.WithinTimeGate("merge", 1799));
+            Assert.False(NightlyRuns.WithinTimeGate("merge", 1800));
+            Assert.False(NightlyRuns.WithinTimeGate("nightly", 2700));
+        }
+        finally { Environment.SetEnvironmentVariable("TIA_MCP_NIGHTLY_ROOT", prior); }
+    }
+
+    [Fact]
+    public void AbandonedNightlyRetainsItsFortyFiveMinuteDeadline()
+    {
+        using var fixture = new OfflineFixtures();
+        string root = fixture.DirectoryPath, directory = Path.Combine(root, "nightly");
+        var began = DateTime.UtcNow;
+        NightlyRuns.Save(directory, new("running", "commit", Path.Combine(directory, "running/report.json"), "running", 0, false, began));
+        NightlyRuns.Prune(root, directory, 1, began.AddMinutes(40));
+        Assert.Equal("running", JsonSerializer.Deserialize<NightlyRun[]>(File.ReadAllText(Path.Combine(directory, "history.json")))![0].Status);
+        NightlyRuns.Prune(root, directory, 1, began.AddMinutes(46));
+        var run = Assert.Single(JsonSerializer.Deserialize<NightlyRun[]>(File.ReadAllText(Path.Combine(directory, "history.json")))!);
+        Assert.Equal("timed-out", run.Status);
+        Assert.Equal(2700, run.WallSeconds);
+        Assert.Equal(began.AddMinutes(45), run.CompletedUtc);
+        Assert.False(run.UnderThirtyMinutes);
+    }
+
+    [Fact]
     public void NightlyHistoryKeepsLatestFailureAndLatestPassedPointerSeparately()
     {
         using var fixture = new OfflineFixtures(); string directory = Path.Combine(fixture.DirectoryPath, "history");
@@ -336,7 +546,7 @@ public sealed class AffectedNightlyTests
         Assert.Equal("failed", (string)JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "latest.json")))!["status"]!);
         Assert.Equal("pass", (string)JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "latest-passed.json")))!["runId"]!);
         Assert.Equal(2, JsonSerializer.Deserialize<NightlyRun[]>(File.ReadAllText(Path.Combine(directory, "history.json")))!.Length);
-        NightlyRuns.Save(directory, new("pass", "commit", "report", "timed-out", 1801, false, now.AddMinutes(2)));
+        NightlyRuns.Save(directory, new("pass", "commit", "report", "timed-out", 2701, false, now.AddMinutes(2)));
         Assert.False(File.Exists(Path.Combine(directory, "latest-passed.json")));
         var options = Options.Parse(["-PublicApiRoot", "C:\\SDK root", "-CompanionPython", "C:\\Python\\python.exe", "-NuGetConfig", "C:\\offline.config"], new HashSet<string>());
         string schedule = ReleaseCommands.NightlySchedule("C:\\Work tree", options);

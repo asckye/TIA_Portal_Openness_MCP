@@ -1,6 +1,6 @@
 # Kept-code offline checks
 
-This project owns 4,854 test identities moved from each offline engine variant. The registered `kept-code` and `kept-code-v20` suites retain the original namespaces, method names, data row displays, assertions and V20 compilation parameter. The engine residue remains registered as `offline` and `offline-v20`.
+This project owns 4,854 test identities moved from the offline engine. The registered `kept-code` suite retains the original namespaces, method names, data row displays and assertions in the shipped configuration. The engine residue remains registered as `offline`.
 
 The project links retained Logic, Shared, EngineHost, adapter and online-channel code. The frozen dispatcher under `tests/Fixtures/TiaMcp.Offline.Fixtures/Oracle` supplies the old offline invocation fixture; engine-only subjects continue to be tested against their original sources in the residue.
 

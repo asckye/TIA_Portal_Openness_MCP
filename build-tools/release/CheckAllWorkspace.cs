@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace TiaMcp.ReleaseTool;
 
@@ -46,6 +47,7 @@ internal static partial class ReleaseCommands
         Directory.CreateDirectory(Path.GetDirectoryName(snapshot)!);
         WriteCheckAllSnapshotOwner(snapshotBase, snapshot);
         PruneCheckAllSnapshots(snapshotBase, 3, snapshot);
+        SeedCheckAllHistory(original);
         var history = Path.Combine(original, "bin-build/check-timings");
         CopyCheckAllHistory(history, Path.Combine(snapshot, "bin-build/check-timings"));
         // Git for Windows' clone transport invokes sh even for a local worktree,
@@ -74,6 +76,11 @@ internal static partial class ReleaseCommands
             if (!File.Exists(source)) { if (File.Exists(destination)) File.Delete(destination); continue; }
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!); File.Copy(source, destination, true);
         }
+        if (options.Get("SnapshotReadyFile") is { } ready)
+        {
+            RequireCheckAllOwnedPath(original, ready);
+            File.WriteAllText(ready, snapshot);
+        }
         try
         {
             var result = ProcessRunner.Run(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", .. options.Arguments(), "-Worktree=" + snapshot,
@@ -91,6 +98,43 @@ internal static partial class ReleaseCommands
             File.WriteAllText(Path.Combine(snapshot, "bin-build/check-all-snapshot.json"), JsonSerializer.Serialize(new { original, completedUtc = DateTime.UtcNow }) + "\n");
             PruneCheckAllSnapshots(snapshotBase, 3, snapshot);
             Console.WriteLine("Retained detached source checkout: " + snapshot);
+        }
+    }
+
+    internal static void SeedCheckAllHistory(string root, string? mainRoot = null)
+    {
+        if (mainRoot == null)
+        {
+            var common = ProcessRunner.Run("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], root);
+            if (common.ExitCode != 0) return;
+            mainRoot = Path.GetDirectoryName(common.StandardOutput.Trim());
+        }
+        if (string.IsNullOrWhiteSpace(mainRoot)) return;
+        var source = Path.Combine(mainRoot, "bin-build/check-timings");
+        var destination = Path.Combine(root, "bin-build/check-timings");
+        if (!Directory.Exists(source) || Path.GetFullPath(source).Equals(Path.GetFullPath(destination), StringComparison.OrdinalIgnoreCase)) return;
+        // Seed missing estimation history only. Never import check results or overwrite a local observation.
+        foreach (var path in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+        {
+            var target = Path.Combine(destination, Path.GetRelativePath(source, path));
+            RequireCheckAllOwnedPath(root, target);
+            if (File.Exists(target)) continue;
+            try
+            {
+                var bytes = File.ReadAllBytes(path);
+                if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    using (JsonDocument.Parse(bytes)) { }
+                else if (path.EndsWith(".jsonl", StringComparison.OrdinalIgnoreCase))
+                    foreach (var line in System.Text.Encoding.UTF8.GetString(bytes).Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                        using (JsonDocument.Parse(line)) { }
+                if (!bytes.AsSpan().SequenceEqual(File.ReadAllBytes(path))) continue;
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                var temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try { File.WriteAllBytes(temporary, bytes); File.Move(temporary, target, false); }
+                finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            { Console.WriteLine("Timing history was not seeded: " + path + " (" + ex.Message + ")"); }
         }
     }
 
@@ -205,28 +249,19 @@ internal static partial class ReleaseCommands
         return newest;
     }
 
-    private static CommandResult CheckAllCachedBuild(Options options, CheckBuild[] builds, string output, string dotnet, string api, string nuget, int parallelism)
+    private static CommandResult CheckAllBuildOnce(Options options, CheckBuild[] builds, string output, string dotnet, string api, string nuget, int parallelism)
     {
-        if (!options.Has("Clean") && !options.Has("Cold"))
+        // One incremental traversal; per-unit portable cache hashing is outside the gate hot path.
+        var result = CheckAllBuild.Run(Root, builds, Path.Combine(output, "build"), dotnet, api, nuget, parallelism, options.Has("Clean") || options.Has("Cold") || options.Has("NoBuildCache"),
+            cacheRoot: null, noCacheReads: true, runId: Path.GetFileName(output));
+        File.WriteAllText(Path.Combine(output, "build-cache.json"), new JsonObject
         {
-            File.WriteAllText(Path.Combine(output, "build-cache.json"), "{\"mode\":\"in-place-incremental\",\"outputsRestored\":0}\n");
-            return CheckAllInPlaceBuild(options, builds, output, dotnet, api, nuget, parallelism);
-        }
-        // Whole-tree keys and source-path-bearing outputs cannot hit across fresh
-        // snapshots. Do not spend time scanning/copying an unusable cache.
-        var cacheRoot = Path.GetFullPath(options.Get("CacheDirectory", Path.Combine(Root, "bin-build/cache/check-all")));
-        RequireCheckAllOwnedPath(Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT") ?? Root, cacheRoot);
-        BuildOutputCache.PruneRetained(cacheRoot, TimeSpan.FromDays(7), BuildOutputCache.DefaultMaxBytes);
-        File.WriteAllText(Path.Combine(output, "build-cache.json"), "{\"mode\":\"population-disabled\",\"outputsRestored\":0,\"reason\":\"Whole-tree cache cannot reuse path-bearing snapshot outputs; compile authoritative graph.\"}\n");
-        return CheckAllInPlaceBuild(options, builds, output, dotnet, api, nuget, parallelism);
-    }
-    private static CommandResult CheckAllInPlaceBuild(Options options, CheckBuild[] builds, string output, string dotnet, string api, string nuget, int parallelism)
-    {
-        var result = CheckAllBuild.Run(Root, builds, Path.Combine(output, "build"), dotnet, api, nuget, parallelism, options.Has("Cold"));
-        if (result.ExitCode == 0) PrepareCheckAllRuntime(Root, builds, Path.Combine(output, "build/runtime-paths.tsv"));
+            ["schema"] = 1, ["mode"] = "msbuild-incremental", ["outputsRestored"] = 0,
+            ["units"] = new JsonArray(), ["scripts"] = new JsonArray()
+        }.ToJsonString() + "\n");
         if (result.ExitCode == 0)
         {
-            var scripts = FileBasedPrograms.Build(Root, Path.Combine(output, "build/analyzer-warnings"), dotnet, nuget, parallelism);
+            var scripts = FileBasedPrograms.Build(Root, Path.Combine(output, "build/analyzer-warnings"), dotnet, nuget, parallelism, checkBuild: true);
             result = new(scripts.ExitCode, result.StandardOutput + scripts.StandardOutput, result.StandardError + scripts.StandardError);
         }
         if (result.ExitCode == 0)
@@ -243,38 +278,73 @@ internal static partial class ReleaseCommands
         var inputs = Directory.EnumerateFiles(Path.Combine(root, "build-tools/common"), "*", SearchOption.AllDirectories)
             .Where(file => !file.Split(Path.DirectorySeparatorChar).Any(part => part is "obj" or "bin"))
             .Concat(new[] { Path.Combine(root, "scripts/checks/" + name + ".cs"), nuget, Path.Combine(root, "Version.props") })
-            .Concat(new[] { "Directory.Build.props", "Directory.Build.targets", "global.json", ".editorconfig", "src/Shared/CodeAnalysis.props", "src/Shared/DependencyVersions.props" }.Select(file => Path.Combine(root, file)).Where(File.Exists));
-        return CheckAllLayout.InputKey(inputs.Select(file => new KeyValuePair<string, string>(file, ReleaseRecords.HashFile(file))),
-            [name, sdkVersion, "Release;UseAppHost=false;UseSharedCompilation=false;NuGetAudit=false"]);
+            .Concat(Directory.Exists(Path.Combine(root, "build-tools/release"))
+                ? Directory.EnumerateFiles(Path.Combine(root, "build-tools/release"), "*", SearchOption.TopDirectoryOnly) : [])
+            .Concat(new[] { "Directory.Build.props", "Directory.Build.targets", "global.json", ".editorconfig", "src/Shared/CodeAnalysis.props", "src/Shared/DependencyVersions.props", "src/Shared/ReproducibleBuild.props" }.Select(file => Path.Combine(root, file)).Where(File.Exists));
+        return CheckAllLayout.InputKey(inputs.Select(file => new KeyValuePair<string, string>(CacheInputPath(file, root), ReleaseRecords.HashFile(file))),
+            [name, sdkVersion, "check:" + BuildReproducibility.CheckRevision, "Release;UseAppHost=false;UseSharedCompilation=false;NuGetAudit=false"]);
     }
 
     private static CommandResult CheckAllScriptBuild(string name, string output, string dotnet, string nuget)
     {
         var destination = Path.Combine(Root, "bin-build/check-scripts", name);
         var sdk = ProcessRunner.Run(dotnet, ["--version"], Root); ProcessRunner.RequireSuccess(sdk, "File app SDK version");
-        var key = CheckAllScriptInputKey(Root, name, nuget, sdk.StandardOutput);
-        var cache = new BuildOutputCache(Path.Combine(Root, "bin-build/check-script-cache"), name);
+        var sdkRoot = ProcessRunner.Run(dotnet, ["msbuild", Path.Combine(Root, "build-tools/release/TiaMcp.ReleaseTool.csproj"), "-nologo", "-getProperty:MSBuildToolsPath,NetCoreTargetingPackRoot"], Root);
+        ProcessRunner.RequireSuccess(sdkRoot, "File app compiler inputs");
+        var paths = JsonNode.Parse(sdkRoot.StandardOutput)!["Properties"]!;
+        var compilerInputs = Directory.EnumerateFiles((string)paths["MSBuildToolsPath"]!, "*.dll", SearchOption.TopDirectoryOnly)
+            .Concat(Directory.EnumerateFiles(Path.Combine((string)paths["MSBuildToolsPath"]!, "Roslyn"), "*", SearchOption.AllDirectories))
+            .Concat(Directory.EnumerateFiles((string)paths["NetCoreTargetingPackRoot"]!, "*", SearchOption.AllDirectories));
+        string CompilerKey() => BuildOutputCache.Key(compilerInputs.Select(file => new ReleaseArtifact(file, ReleaseRecords.HashFile(file))), [sdk.StandardOutput]);
+        var compilerKey = CompilerKey();
+        var key = CheckAllScriptInputKey(Root, name, nuget, compilerKey);
+        var cacheRoot = Environment.GetEnvironmentVariable("TIA_MCP_CHECK_SCRIPT_CACHE") ?? Path.Combine(Root, "bin-build/cache/check-all/scripts");
+        var cache = new BuildOutputCache(cacheRoot, name);
         var cacheDisabled = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") == "1";
-        if (!cacheDisabled && cache.Restore(key, destination))
+        string[] buildArguments = ["build", Path.Combine(Root, "scripts/checks/" + name + ".cs"), "-c", "Release", "--no-incremental",
+            "-o", destination, "-p:RestoreConfigFile=" + nuget, "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:UseAppHost=false",
+            .. BuildReproducibility.CheckArguments];
+        void Evidence(bool restored)
         {
+            var report = Path.Combine(output, "build-cache.json");
+            var data = JsonNode.Parse(File.ReadAllText(report))!.AsObject();
+            var scripts = data["scripts"] as JsonArray ?? new JsonArray();
+            if (data["scripts"] == null) data["scripts"] = scripts;
+            if (restored) data["outputsRestored"] = (int)data["outputsRestored"]! + 1;
+            var record = cache.Record(key);
+            scripts.Add(JsonSerializer.SerializeToNode(new CheckUnitEvidence("file-program:" + name, key, restored ? "restored" : "cold",
+                restored ? record!.RunId! : Path.GetFileName(output), record?.ColdRunIds ?? [],
+                [new BuildCacheOutput(Path.GetRelativePath(Root, destination).Replace('\\', '/'), BuildReproducibility.Inventory(destination))], BuildArguments: buildArguments),
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+            File.WriteAllText(report, data.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n");
+        }
+        if (!cacheDisabled && cache.RestoreVerified(key, destination))
+        {
+            Evidence(restored: true);
             File.WriteAllText(Path.Combine(output, "build", name + ".log"), "Identical file-app inputs and verified outputs: cache hit " + key + "\n");
             return new(0, name + ": verified file-app cache hit\n", "");
         }
-        var result = ProcessRunner.Run(dotnet, ["build", Path.Combine(Root, "scripts/checks/" + name + ".cs"), "-c", "Release",
-            "-o", destination, "-p:RestoreConfigFile=" + nuget, "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:UseAppHost=false"], Root,
+        var result = ProcessRunner.Run(dotnet, buildArguments, Root,
             logPath: Path.Combine(output, "build", name + ".log"));
-        if (result.ExitCode == 0 && !cacheDisabled) cache.Populate(key, destination);
+        if (result.ExitCode == 0)
+        {
+            if (key != CheckAllScriptInputKey(Root, name, nuget, CompilerKey())) throw new ReleaseException("File app inputs changed during build: " + name);
+            if (BuildOutputCache.EmbeddedPath(destination, Root) == null) cache.RecordBuild(key, destination, Path.GetFileName(output), cold: true, copyOutputs: !cacheDisabled);
+            Evidence(restored: false);
+        }
         return result;
     }
 
-    internal static void PrepareCheckAllRuntime(string root, IEnumerable<CheckBuild> builds, string? manifest = null)
+    internal static void PrepareCheckAllRuntime(string root, IEnumerable<CheckBuild> builds, string? manifest = null, Action? checkDeadline = null)
     {
+        checkDeadline?.Invoke();
         if (manifest != null)
         {
             var paths = File.ReadAllLines(manifest).Where(line => line.Length != 0).Select(line => line.Split('\t')).ToArray();
             if (paths.Any(row => row.Length != 5)) throw new ReleaseException("Invalid build runtime path manifest: " + manifest);
             foreach (var row in paths.OrderBy(row => row[0].Contains("/Bridge/", StringComparison.OrdinalIgnoreCase) || row[0].Contains("\\Bridge\\", StringComparison.OrdinalIgnoreCase) ? 0 : 1))
             {
+                checkDeadline?.Invoke();
                 var project = Path.GetRelativePath(root, row[0]).Replace('\\', '/');
                 // The outer CLI still holds its original DLL while waiting for
                 // the private driver. Checks use that driver or exact variant
@@ -282,14 +352,14 @@ internal static partial class ReleaseCommands
                 if (project == "build-tools/release/TiaMcp.ReleaseTool.csproj") continue;
                 var studio = project is "src/Studio/Gui/TiaOpenness.Gui.csproj" or "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj" or "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj";
                 var destination = row[3];
-                CopyRuntime(row[2], destination, studio);
+                CopyRuntime(row[2], destination, studio, checkDeadline);
                 if (studio)
                 {
                     var unit = builds.First(unit => unit.Project == project && unit.Variant == row[1]);
                     var shared = unit.Properties.Any(p => p == "-p:TiaSharedAdapterPaths=true");
                     var bridge = Path.Combine(root, "src/Studio/Bridge/bin/Release", shared ? "shared-adapter" : "", "net48");
-                    CopyRuntime(bridge, Path.Combine(destination, "bridge"));
-                    CopyRuntime(bridge, Path.Combine(row[2], "bridge"));
+                    CopyRuntime(bridge, Path.Combine(destination, "bridge"), checkDeadline: checkDeadline);
+                    CopyRuntime(bridge, Path.Combine(row[2], "bridge"), checkDeadline: checkDeadline);
                     if (!File.Exists(Path.Combine(bridge, "Newtonsoft.Json.dll"))) File.Delete(Path.Combine(destination, "bridge/Newtonsoft.Json.dll"));
                 }
             }
@@ -299,25 +369,27 @@ internal static partial class ReleaseCommands
         // tests retain their established layout. Identical files keep their timestamps.
         foreach (var worker in builds.Where(unit => unit.Project == "src/PlcWorker/TiaMcp.PlcWorker.csproj" && unit.Variant.Length != 0))
         {
+            checkDeadline?.Invoke();
             var key = worker.Properties.Single(p => p.StartsWith("-p:TiaReleaseKey=", StringComparison.Ordinal))[17..];
             CopyRuntime(Path.Combine(root, "src/PlcWorker/bin/check-all/TiaMcp.PlcWorker", worker.Variant, "Release/net48"),
-                Path.Combine(root, "src/PlcWorker/bin", key, "Release/net48"));
+                Path.Combine(root, "src/PlcWorker/bin", key, "Release/net48"), checkDeadline: checkDeadline);
         }
         foreach (var studio in builds.Where(unit => unit.Project is "src/Studio/Gui/TiaOpenness.Gui.csproj" or
             "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj" or "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj"))
         {
+            checkDeadline?.Invoke();
             var mode = studio.Properties.SingleOrDefault(p => p.StartsWith("-p:TiaSharedAdapterPaths=", StringComparison.Ordinal));
             if (mode == null) continue;
             var suffix = mode.EndsWith("=true", StringComparison.Ordinal) ? "Release/shared-adapter" : "Release";
             var directory = Path.Combine(root, Path.GetDirectoryName(studio.Project)!);
             var destination = Path.Combine(directory, "bin", suffix, "net10.0-windows");
-            CopyRuntime(Path.Combine(directory, "bin/check-all", Path.GetFileNameWithoutExtension(studio.Project), studio.Variant, "Release/net10.0-windows"), destination, excludeBridge: true);
+            CopyRuntime(Path.Combine(directory, "bin/check-all", Path.GetFileNameWithoutExtension(studio.Project), studio.Variant, "Release/net10.0-windows"), destination, excludeBridge: true, checkDeadline: checkDeadline);
             var bridge = Path.Combine(root, "src/Studio/Bridge/bin/check-all/TiaOpenness.Bridge", studio.Variant, "Release/net48");
             var legacyBridge = Path.Combine(root, "src/Studio/Bridge/bin", suffix, "net48");
-            CopyRuntime(bridge, legacyBridge);
+            CopyRuntime(bridge, legacyBridge, checkDeadline: checkDeadline);
             // The ordinary copy targets read the legacy bridge directory. Replace
             // that payload with this variant's output, including on a fresh checkout.
-            CopyRuntime(bridge, Path.Combine(destination, "bridge"));
+            CopyRuntime(bridge, Path.Combine(destination, "bridge"), checkDeadline: checkDeadline);
             if (!File.Exists(Path.Combine(bridge, "Newtonsoft.Json.dll")))
             {
                 File.Delete(Path.Combine(destination, "bridge/Newtonsoft.Json.dll")); File.Delete(Path.Combine(legacyBridge, "Newtonsoft.Json.dll"));
@@ -325,14 +397,16 @@ internal static partial class ReleaseCommands
         }
     }
 
-    private static void CopyRuntime(string source, string destination, bool excludeBridge = false)
+    private static void CopyRuntime(string source, string destination, bool excludeBridge = false, Action? checkDeadline = null)
     {
         foreach (var path in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
         {
+            checkDeadline?.Invoke();
             var relative = Path.GetRelativePath(source, path);
             if (excludeBridge && relative.StartsWith("bridge" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) continue;
             var target = Path.Combine(destination, relative);
-            if (File.Exists(target) && ReleaseRecords.HashFile(path) == ReleaseRecords.HashFile(target)) continue;
+            if (File.Exists(target) && ReleaseRecords.HashFile(path, checkDeadline) == ReleaseRecords.HashFile(target, checkDeadline)) continue;
+            checkDeadline?.Invoke();
             Directory.CreateDirectory(Path.GetDirectoryName(target)!); File.Copy(path, target, true);
         }
     }

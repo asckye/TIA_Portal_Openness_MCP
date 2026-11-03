@@ -55,7 +55,7 @@ internal static class FileBasedPrograms
     private static bool References(string root, string program) => File.ReadLines(Path.Combine(root, program)).Any(line =>
         System.Text.RegularExpressions.Regex.IsMatch(line, @"^\s*#:project(?:\s|$)"));
 
-    internal static CommandResult Build(string root, string directory, string dotnet, string? nuget, int parallelism = 1, bool? noBuildCache = null, SuiteProcess? process = null)
+    internal static CommandResult Build(string root, string directory, string dotnet, string? nuget, int parallelism = 1, bool? noBuildCache = null, SuiteProcess? process = null, bool checkBuild = false)
     {
         Directory.CreateDirectory(directory);
         var programs = Discover(root);
@@ -70,7 +70,8 @@ internal static class FileBasedPrograms
             .Order(StringComparer.Ordinal).Select(path => new ReleaseArtifact(path, ReleaseRecords.HashFile(path))).ToList();
         if (nuget != null) inputs.Add(new(nuget, ReleaseRecords.HashFile(nuget)));
         var properties = new[] { sdk.StandardOutput.Trim(), Path.GetFullPath(root), dotnet,
-            Path.GetTempPath(), Environment.GetEnvironmentVariable("DOTNET_ROOT") ?? "", "file-apps-v2;Release;NuGetAudit=false;UseSharedCompilation=false;Collect=true" };
+            Path.GetTempPath(), Environment.GetEnvironmentVariable("DOTNET_ROOT") ?? "", "file-apps-v2;Release;NuGetAudit=false;UseSharedCompilation=false;Collect=true",
+            checkBuild ? "check:" + BuildReproducibility.CheckRevision : "source-revision:" + BuildReproducibility.SourceRevision(root) };
         var configuration = inputs.Where(row => Path.GetExtension(row.Path) is ".props" or ".targets" or ".config" ||
             Path.GetFileName(row.Path) is ".editorconfig" or "global.json").ToArray();
         var referencedKey = BuildOutputCache.Key(inputs, properties);
@@ -100,6 +101,7 @@ internal static class FileBasedPrograms
                     "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:TiaMcpCollectFileBasedPrograms=true",
                     "-t:Build", "-getProperty:TargetPath,IntermediateOutputPath" };
                 if (nuget != null) arguments.Add("-p:RestoreConfigFile=" + nuget);
+                if (checkBuild) arguments.AddRange(BuildReproducibility.CheckArguments);
                 var environment = new Dictionary<string, string?> { ["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = reports, ["MSBUILDDISABLENODEREUSE"] = "1" };
                 var result = process == null ? ProcessRunner.Run(dotnet, arguments, root, environment, logPath: log) : process(dotnet, arguments, root, environment);
                 if (process != null) File.WriteAllText(log, result.StandardOutput + result.StandardError);

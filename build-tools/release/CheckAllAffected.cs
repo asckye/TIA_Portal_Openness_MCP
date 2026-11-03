@@ -20,14 +20,23 @@ internal sealed class CheckAllAffected(string[] changes, AffectedUnit[] units, s
     internal static CheckAllAffected Discover(string root, Options options, IEnumerable<CheckBuild> builds, string dotnet, string api)
     {
         var (changes, fallback) = ChangeSet(options.Get("Base", "origin/master"), args => ProcessRunner.Run(options.Get("Git", "git"), args, root));
-        var units = new List<AffectedUnit>();
-        foreach (var build in builds)
+        return DiscoverChanges(root, changes, builds, dotnet, api, fallback, options.Has("Quick"));
+    }
+
+    internal static CheckAllAffected DiscoverChanges(string root, string[] changes, IEnumerable<CheckBuild> builds,
+        string dotnet, string api, string? fallback = null, bool quick = false)
+    {
+        var plan = builds.ToArray();
+        var units = new AffectedUnit?[plan.Length]; var errors = new string?[plan.Length];
+        Parallel.For(0, plan.Length, new ParallelOptions { MaxDegreeOfParallelism = 4 }, index =>
         {
-            try { units.Add(new(build.Project + "|" + build.Variant, build.Project, CheckAllInputClosure.BuildInputs(root, build, dotnet, api))); }
+            var build = plan[index];
+            try { units[index] = new(build.Project + "|" + build.Variant + "|" + string.Join(';', build.Properties),
+                build.Project, CheckAllInputClosure.BuildInputs(root, build, dotnet, api)); }
             catch (Exception ex) when (CheckAllNightlyCoverage.InputError(ex))
-            { fallback ??= "Cannot derive build input closure: " + build.Project + ": " + ex.Message; }
-        }
-        return new(changes, units.ToArray(), fallback, options.Has("Quick"));
+            { errors[index] = "Cannot derive build input closure: " + build.Project + ": " + ex.Message; }
+        });
+        return new(changes, units.OfType<AffectedUnit>().ToArray(), fallback ?? errors.FirstOrDefault(error => error != null), quick);
     }
 
     internal static (string[] Changes, string? Fallback) ChangeSet(string basis, Func<string[], CommandResult> git)
@@ -48,8 +57,7 @@ internal sealed class CheckAllAffected(string[] changes, AffectedUnit[] units, s
         }
     }
 
-    internal static bool Wide(string path) => CheckAllInputClosure.Covers("build-tools/release", path) || path == "tests/test-suites.json" ||
-        Path.GetFileName(path).StartsWith("Directory.Build.", StringComparison.OrdinalIgnoreCase) || Path.GetFileName(path).Equals("global.json", StringComparison.OrdinalIgnoreCase) ||
+    internal static bool Wide(string path) => Path.GetFileName(path).StartsWith("Directory.Build.", StringComparison.OrdinalIgnoreCase) || Path.GetFileName(path).Equals("global.json", StringComparison.OrdinalIgnoreCase) ||
         Path.GetFileName(path).Contains("nuget", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".config", StringComparison.OrdinalIgnoreCase) ||
         CheckAllInputClosure.Covers("sdk", path);
 
@@ -63,7 +71,8 @@ internal sealed class CheckAllAffected(string[] changes, AffectedUnit[] units, s
         foreach (var path in Changes)
         {
             if (Wide(path)) Fallback ??= "Wide input: " + path;
-            bool mapped = path.StartsWith("docs/", StringComparison.Ordinal) || path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+            bool mapped = path.StartsWith("docs/", StringComparison.Ordinal) || path.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ||
+                CheckAllInputClosure.Covers("build-tools/release", path) || path == "tests/test-suites.json";
             foreach (var job in plan)
             {
                 var declaration = CheckAllJobInputs.Find(job, catalog);
@@ -100,11 +109,23 @@ internal sealed class CheckAllAffected(string[] changes, AffectedUnit[] units, s
         var all = jobs.ToArray();
         if (!Quick) return all;
         bool studio = Changes.Any(path => CheckAllInputClosure.Covers("src/Studio", path) || CheckAllInputClosure.Covers("tests/Studio", path));
-        bool Eligible(CheckJob job) => !job.Name.StartsWith("stability-", StringComparison.Ordinal) &&
-            (studio || !job.Name.StartsWith("studio-gui-", StringComparison.Ordinal) && job.Name != "configuration-page");
+        var ineligible = all.Where(job => job.Name.StartsWith("stability-", StringComparison.Ordinal) ||
+            !studio && (job.Name.StartsWith("studio-gui-", StringComparison.Ordinal) || job.Name == "configuration-page"))
+            .Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
+        bool changed;
+        do
+        {
+            changed = false;
+            foreach (var job in all)
+                if (job.Dependencies.Any(ineligible.Contains))
+                {
+                    changed |= ineligible.Add(job.Name);
+                    skipped[job.Name] = "quick: source suite excluded";
+                }
+        } while (changed);
+        bool Eligible(CheckJob job) => !ineligible.Contains(job.Name);
         var selected = all.Where(job => Eligible(job) && (Fallback != null || CheckAllJobInputs.AlwaysRun(job.Name) ||
             CheckAllJobInputs.Find(job, catalog) == null || reasons.Any(reason => reason.Job == job.Name))).Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
-        bool changed;
         do
         {
             changed = false;
@@ -116,7 +137,7 @@ internal sealed class CheckAllAffected(string[] changes, AffectedUnit[] units, s
                     job.Dependencies.Any(selected.Contains)) changed |= selected.Add(job.Name);
             }
         } while (changed);
-        foreach (var job in all.Where(job => !selected.Contains(job.Name))) skipped[job.Name] = "quick: unaffected, stress excluded, or Studio GUI unchanged";
+        foreach (var job in all.Where(job => !selected.Contains(job.Name))) skipped.TryAdd(job.Name, "quick: unaffected, stress excluded, or Studio GUI unchanged");
         return all.Where(job => selected.Contains(job.Name)).Select(job => job with { Dependencies = job.Dependencies.Where(dep =>
             !all.Any(candidate => candidate.Name == dep) || selected.Contains(dep)).ToArray() }).ToArray();
     }

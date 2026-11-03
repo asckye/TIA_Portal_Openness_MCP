@@ -1,8 +1,8 @@
 # 验证分层
 
-状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`；2026-11-01 补充下面的规则说明
+状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`；2026-11-03 按 SLIM-1 更新作业清单
 
-> 2026-11-01 维护者决定：合并门为本机受影响的检查，GitHub CI 不阻塞合并（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）；发布证据改为最近一次通过的 nightly 加已验证构建单元，nightly 门槛由三十分钟改为 45 分钟（[ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md)）。两项由 RULES-1 实现；实现合并前，本页描述的同提交冷运行采纳规则和三十分钟门槛仍是工具的实际行为。检查可以在合并、nightly 与 CI 之间移动或按身份复用，不可以删除或放宽。
+> 2026-11-01 维护者决定：合并门为本机受影响的检查，GitHub CI 不阻塞合并（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）；发布证据改为最近一次通过的 nightly 加已验证构建单元，nightly 门槛由三十分钟改为 45 分钟（[ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md)）。RULES-1 负责其余证据策略；SLIM-1 round 2 已落实 nightly/release 45 分钟门槛，同提交运行采纳规则暂保持。检查可以在合并、nightly 与 CI 之间移动或按身份复用，不得未经维护者批准删除或放宽；SLIM-1 的批准删除清单见下文。
 
 [文档目录](../README.md) · [发布流程](release-workflow.md) · [当前交接](handoff.md)
 
@@ -29,7 +29,7 @@
 其他确定性、哈希和语义断言仍执行。移除开关，审查每个 diff，再正常运行同一套件验证；默认运行不写文件。
 
 本机离线全集可用 `check-all` 执行。它先按顺序生成嵌入目录、工具用法和文档数量块，再构建两个 solution 的项目、八版 PLC worker、
-V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
+V20/V21 生产及 SDK fixture 引擎、Harness、Studio 交付路径模式（`TiaSharedAdapterPaths=false`）和全部套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
 SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余独立执行的注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
 
 解码器运行时是必需交付文件。`check-all` 的 `prepare-decoder-python` 作业在构建前运行一次，不能被 affected/nightly 缓存省略。与发布和测试打包命令一致，使用显式 `-Python <absolute-pinned-python.exe>`，或设置 `TIA_MCP_DECODER_PYTHON` 指向完整 CPython 3.12.10 x64 安装（含标准库与匹配许可证）；解释器及核心 DLL 哈希见 [生态工具说明](../reference/ecosystem-tools.md#decodeplcsimaticml-runtime)。缺少配置或固定解释器时明确失败，不跳过。`-CompanionPython` 仍独立配置 PLC Tools 伴随环境。updater/package 与离线就绪夹具调用同一正式准备命令并验证后复用本轮产物。
@@ -52,7 +52,7 @@ dotnet run --project build-tools/release -- nightly -PublicApiRoot <SDK-root> -N
 ```
 
 `nightly [-Rev <rev>] [-Keep 10]` 在 `bin-build/nightly/<date>-<sha8>` 下建立本地 detached checkout，默认验证本地 `origin/master`，
-不 fetch；工作树外部 Git 元数据保持只读。运行 `check-all -Profile nightly -Clean -NoBuildCache`，三十分钟门槛不变。
+不 fetch；工作树外部 Git 元数据保持只读。运行 `check-all -Profile nightly -Clean -NoBuildCache`，nightly 门槛为 45 分钟。
 `latest.json` 保存最近结果，`latest-passed.json` 指向最近成功报告；元数据历史保留，旧产物按保留数量清理，失败产物至少保留 14 天。
 命令打印供维护者手工登记的每日 03:00 Windows Task Scheduler 命令，工具不登记计划任务。合并在主机验收后直接推送，GitHub CI 随后运行且不阻断合并。
 
@@ -63,26 +63,30 @@ dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> 
 `-Profile merge` 是默认值。派生门禁只使用同轮超集 TRX，保留子集注册的最低通过数、最大跳过数和零失败要求。
 执行前检查项目、变体与构建单元完全一致、runner 和配置一致、环境差异属于映射白名单，以及超集过滤表达式确实包含子集。
 该检查做保守的逻辑包含证明，不能证明时记录 `fallbackReason` 并独立执行原套件，不能仅凭已经返回的行推断没有漏例。
-当前 foundation 从 foundation-api 派生；四个 GUI 子集从 studio-gui-false、vci-read-only-binding 从 studio-core-false、
-shared-lifecycle 从 shared-session 派生。Studio 子集显式使用与超集相同的 false 构建属性。
-worker-robustness、workbench-control-host、shared-pipeline、shared-lifecycle-plc 的过滤器不能逻辑保证排除 Operator，
-kept-code-v20 则具有不同的编译变体，故这五项在 merge 中回退为独立进程。两种 kept-code 构建仍保留。
-FoundationChecks 仅归一化 producer 行号；额外的 16 条 API XSD 行有精确识别规则。无 SDK 的原配置继续在 nightly 和 CI 运行。
+当前 foundation、worker-robustness、workbench-control-host、shared-pipeline、shared-lifecycle-plc 从 foundation-api 派生；
+四个 GUI 子集从 studio-gui、vci-read-only-binding 从 studio-core、shared-lifecycle 从 shared-session 派生。
+全部使用交付默认配置 `TiaSharedAdapterPaths=false`；offline-v20、kept-code-v20 的重复编译配置已移除；compile-candidate-no-safety 保留，以覆盖 V14 SP1/V15.1/V16 的非 PLC_SAFETY 分支。
+FoundationChecks 仅归一化 producer 行号；额外的 16 条 API XSD 行有精确识别规则。
 
-merge 的 studio-gui-true 使用 [SharedGuiClasses](../../build-tools/release/CheckAllProfiles.cs) 中已接受的 14 个类，
-要求每类至少一例通过且零失败、零跳过，不固定总数量；全量 studio-core-true 继续检查 Core 的共享适配器分支。
+**maintainer decision 2026-11-03（整套精简，SLIM-1）**：删除延迟门禁、八版延迟基准、HTTP stability/full/lite 作业、独占安静阶段和 suite-output-parity 及其恢复流程；
+`call_latency.py` 只保存调用中位数证据，数值不影响退出状态。WorkbenchControlLoadTests 保留请求完成、读取可用和调用次数断言，
+移除 p95/maximum wall-clock 预算断言并回到正常 GUI 分片。每个套件只用交付配置运行，保留不同 TIA 版本的实际交付构建与测试。
+V14 SP1–V19 保留静态 contract snapshot/verify，删除逐调用 response capture 和 transport-usage 作业；V20/V21 保留功能捕获。
+STDIO stability 的 50 轮、时限、增长和功能要求不变（c8 merge/nightly，c16 nightly）。轮次 1–4 的缓存键、decoder Python、Quick、输入声明和内存峰值保留。
+目标为 affected 冷运行 <25 分钟、暖运行 <20 分钟、nightly <30 分钟；ADR 0025 的 nightly/release 强制门槛为 45 分钟，merge 仍为 30 分钟。
+
+Studio 名称去掉 false 后缀时沿用旧命名的计时最大值、资源记录与类成本，不重设原 deadline 或 packing 门槛。
 GUI 使用实测类耗时做 LPT 三分片，缺失计时时使用估值和确定性类分配。计时条目过期、增加或重命名不导致门禁失败。
 测试显示窗口并检查键盘焦点，因此三片保持同一独占通道并顺序执行；累计时间仍按原未分片作业的预算判定。
 
-`-Profile nightly` 完整执行去重前的每个原套件和两种完整 GUI 变体，还执行全部 12 项 `*-coverage-proof`：
+`-Profile nightly` 完整执行单一交付配置的每个注册套件及完整 GUI，还执行全部 11 项 `*-coverage-proof`：
 将该轮独立子集的身份多重集与同轮超集派生结果比较，保留类名、方法、规范化显示名和重数。缺失、重复、替换会失败并列出差异类。
-新增或重命名测试在两边同步出现即可通过，无需提交用例基线或先运行另一轮 nightly。完整 GUI true 另检查全部 14 个选定类仍存在；
-类名重命名必须同步审查清单。注册数量、跳过和失败门禁仍独立判定，nightly 证明失败会阻止发布采纳。
+新增或重命名测试在两边同步出现即可通过，无需提交用例基线或先运行另一轮 nightly。注册数量、跳过和失败门禁仍独立判定，nightly 证明失败会阻止发布采纳。
 nightly 禁用结果缓存，确实启动本轮测试进程；它需要本机同轮 TRX，因此拒绝只有聚合收据的 `-CiCovered` 分工。merge 仍可使用 CI 分工。
 
 `report.json`、`cpu-plan.json` 和发布证据记录 profile；`profile-inventory.json` 列出各套件的构建/进程/全量适用 profile、
-派生来源、回退原因与 GUI 类清单。nightly 仍受原三十分钟门槛约束。发布只采纳完整 nightly（或旧格式原全集）；merge 不能提供
-发布证据或 `keptCodeV20Passed`。该字段继续取所采纳的同提交完整运行结果，不借用其他提交的 nightly。
+派生来源与回退原因。nightly 受 45 分钟门槛约束（30 分钟仅为目标）。发布只采纳完整 nightly（或旧格式原全集）；merge 不能提供
+发布证据。旧记录的 offlineV20Passed/keptCodeV20Passed 字段保留兼容，新记录不再要求已删除配置的结果。
 
 ```powershell
 dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -NoBuildCache -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/nightly-1
@@ -91,8 +95,9 @@ dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -N
 `-Clean` 在当前 worktree 的 `bin-build` 内建立保留现有源码修改的 detached checkout，往返复制 `bin-build/check-timings` 的用例、类与整项历史；
 干净 checkout 根目录比原 worktree 最多增加 24 个字符，入口和自检都校验这个余量；暂存生命周期夹具在仓库的
 `bin-build` 下创建自有短目录并清理，避免隔离程序集目录消耗产品的 MAX_PATH 余量。
-`-Cold` 先清理已列入构建图的输出，记录冷构建耗时。暖运行不加 `-Clean`，在同一 worktree 内保留 `obj` 和 `bin` 做增量构建，
-不恢复或重写缓存输出。构建复用 SDK 的引用准备目标收集实际节点及全局属性，包含目标执行时修改的引用属性、框架协商和 NuGet 加入的传递引用。
+`-Cold` 先清理已列入构建图的输出；冷运行禁用构建缓存读取。build-once 使用一个 MSBuild 构建图和原生增量检查，
+不再对每个单元执行 portable-cache Prepare/Complete 的输入哈希和输出清单复制。暖运行由 MSBuild 判断重建，测试仍按原身份验证或执行。
+构建复用 SDK 的引用准备目标收集实际节点及全局属性，包含目标执行时修改的引用属性、框架协商和 NuGet 加入的传递引用。
 每轮 Restore 后重新求值，节点与属性集合稳定后才开始一次编译；失败或四轮后仍不稳定立即停止。节点标识在求值前按项目路径及实际全局属性字典计算，区分显式全局值与项目的同值默认值，也区分同目录中的不同项目。
 每个项目/属性组合使用固定的 obj/bin 目录，适配器显式关闭的 Directory.Build 导入也由本入口统一启用；编译前另核对节点标识和完整 SHA-256 收据，冲突立即失败。
 较长项目名的生成 editorconfig 使用同一中间目录内的短文件名，避免 Windows 增量检查把超过 MAX_PATH 的输入误判为缺失而重复编译。
@@ -100,30 +105,33 @@ dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -N
 内容相同时保持时间戳，项目/全局属性身份和输出目录不变。
 构建或生成失败立即停止全集并写出失败报告，不能继续使用旧输出。运行时按 MSBuild 返回的实际路径复制到原发现布局，文件内容不变时不重写；注册套件用对应变体的准确 TargetPath 执行。
 release CLI 保留已经启动的普通目录副本，避免覆盖外层启动器持有的 DLL；检查命令使用私有 driver，release-tool 套件使用准确的变体程序集。
-Foundation 的 transport、Engine fault 与 PLC fault 等 `ReferenceOutputAssembly=false` 夹具也作为构建入口取得 runtime receipt，先投影到测试发现路径；新 checkout 和清单缓存命中都不依赖普通 parity 构建顺便生成这些夹具。
-Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应的隔离编译变体。新增 suite-output-parity 比较每个套件变体普通构建与隔离构建的文件清单，内容缺失即失败。普通构建在单个 MSBuild 遍历中生成清单，各入口及入口内部的引用写入依次执行；即使入口属性相同，引用边删除或增加全局属性后也可能产生写同一 obj 的不同节点，不能同时调度这些入口；每个变体完成后立即保存文件存在性和普通输出，避免后续变体改写比较依据。清单按源码、构建属性、SDK/运行时身份的输入哈希缓存，测试结果不缓存。清单缓存仍只在当前 checkout 内复用，-Clean 不携带清单；缓存命中仍逐项检查普通和隔离输出中的全部预期文件，每次都恢复 runtime；缓存缺失时先构建普通基线。
+Foundation 的 transport、Engine fault 与 PLC fault 等 `ReferenceOutputAssembly=false` 夹具也作为构建入口取得 runtime receipt，先投影到测试发现路径；新 checkout 不依赖额外普通布局构建顺便生成这些夹具。
+Studio 测试使用单一交付配置的准确程序集；保留测试所需的隔离输出与 runtime 投影。suite-output-parity 普通布局的第二次构建、源码副本、基线清单和恢复缓存已删除。
+check-all 的合并和 nightly 构建统一设置 `TiaCheckBuild=true` 与固定 `SourceRevisionId=check`（信息版本后缀为 `+check`），包含 file-based app；保留的缓存键验证不包含 HEAD。file-app 缓存继续逐文件验证，旧版本构建单元的发布证据验证保持兼容。release 不使用此标记，仍写入发布提交号；采纳检查证据只复用验证证据，发布仍独立构建并按哈希验证自己的二进制。
 `-BuildParallelism` 单独控制 MSBuild 并发，沙箱中可设为 1。`-BuildOnly` 只测生成与构建，用于无改动、单文件改动诊断，不能替代全集验收。
-每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和三十分钟门槛（`underThirtyMinutes`）。
-全集低于三十分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
+每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和时间门槛（nightly 45 分钟、merge 30 分钟；兼容字段 `underThirtyMinutes`）。
+全集低于对应时间门槛与检查通过是两个独立条件，任何一个不满足都返回非零状态。
 每次结束时另写 `release-evidence.json`：提交、tree id、开始时的工作树状态与全部输入文件 SHA-256、PublicAPI/NuGet 配置/SDK/Python/机器标识、
-运行模式、计划作业与每个作业的结果和日志哈希、注册套件计数及退出状态。`-NoBuildCache` 关闭文件程序构建缓存并随之关闭结果缓存；
-发布目前只采纳干净提交上 `-Profile nightly`、`-Clean`（或 `-Cold`）且带 `-NoBuildCache` 的完整通过运行，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)；按 ADR 0025 改为采纳最近一次通过的 nightly 加已验证构建单元，由 RULES-1 实现。
+运行模式、计划作业与每个作业的结果和日志哈希、注册套件计数及退出状态，以及构建图、runtime manifest 和 `build-cache.json` 的 `msbuild-incremental` 模式标记。
+`-NoBuildCache` 禁止 file-app 缓存读取，并随之关闭结果缓存；项目构建使用 MSBuild 增量路径。
+发布只采纳干净提交上 `-Profile nightly` 的完整通过运行：`-Clean`（或 `-Cold`）且带 `-NoBuildCache`，或结果缓存关闭且全部恢复单元已冷编译验证；采纳时重新计算输出哈希，默认随机冷编译抽查一个恢复单元（`-SpotCheckColdUnits N`）。旧格式证据仍要求 `-Clean`（或 `-Cold`）与 `-NoBuildCache`，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)。按 ADR 0025 改为采纳最近一次通过的 nightly 加已验证构建单元，由 RULES-1 实现。
+
+夜间执行 `dotnet run --project build-tools/release -- build-reproducibility -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/repro/nightly`，从两个源码路径冷编译代表单元并逐文件比较，包括 PDB。每次使用新输出目录。`-SelfTest` 使用无 SDK 的小夹具；`-SharedLibrariesOnly -NuGetConfig <offline-nuget.config>` 另生成六个共享库的八版字节比较和去重前后的构建图计时。完整冷 check-all 使用 `-Cold -NoBuildCache`；用于发布证据的暖 check-all 使用 `-NoResultCache`。
 
 可选 `-CiCovered <候选 JSON>` 将同一提交的部分检查交给 Windows CI；不传时全部本机执行。
 原计划的每个 shard、gate 和静态作业仍有一条结果：本机执行，或 `covered by CI`，并列出 run ID、attempt、job ID 与 job 名。
 候选收据只用于分工，不能单独作为发布证明；`check-release-evidence -Ci` 与正式采纳必须重新读取 GitHub 的具体 job 及日志中的原始门禁收据。
 缺失、失败、取消、未完成、其他提交或其他 attempt 均拒绝；离线核对和 `-DryRun -AdoptEvidence` 拒绝含未在线核对的 CI 分工证据。
-本机 SDK、路径深度、输出清单对等性、Studio 两种路径模式、传输、捕获和压测继续执行原检查与原时间门槛。
+本机 SDK、路径深度、运行时投影、Studio 交付路径模式（`TiaSharedAdapterPaths=false`）、传输、捕获和压测继续执行原检查与原时间门槛。
 
 | Workflow / job（含矩阵） | 对应 check-all 作业 / 套件 | 分工与差异 |
 |---|---|---|
 | offline-checks / py-cs-parity，ubuntu-latest、windows-latest | static-python-csharp-parity、catalog-drift、usage-drift、migration-drift、tool-counts-drift、tools-list；文件程序构建与 analyzer-warnings 的部分输入 | 生成器字节检查与 tools-list 命令相同，但该 job 尚无分工收据，仍本机执行；parity 的 Python 版本、编译模式与路径环境不同，CI analyzer 未用本机完整 SDK 构建清单，不等价 |
-| offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；offline、offline-v20、kept-code、kept-code-v20、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
+| offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；offline、kept-code、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
 | offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、python-script-self-tests/python-script-calls/script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
-| offline-checks / studio-tests，shared-adapter-paths=false、true，Windows | studio-core-false/true、studio-gui-false/true | 同项目与路径模式，使用注册套件门禁；true 的 studio-true profile 另出 CI 收据，false 保留本机；Studio 构建也不替代本机输出对等性 |
-| offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、compile-candidate-no-safety、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
-| offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 18 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
-| offline-checks / foundation-transport，Windows | transport-usage-v14sp1/v15.1/v16/v17/v18/v19 | CI 一次串行六版、使用 publish 目录/默认 host 发现；本机逐版显式 host 路径、隔离根不同，尚无逐版本收据；继续本机执行，V20/V21 SDK 分支也留本机 |
+| offline-checks / studio-tests，Windows、交付默认 false 配置 | studio-core、studio-gui | 同项目与交付配置，使用完整注册套件门禁；studio profile 出具 CI 收据，仍核对本机 SDK 和运行时投影 |
+| offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
+| offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 17 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
 | validate-bundle / validate-bundle，Windows | release-tool、generation-model、generation-planning、crash-evidence、write-guard、source-contracts；repository、bundle、bundle-self-tests、release-documentation、release-dry-run、native-lifecycle、native-mcp-session、tia-features、match-plc-name-source | release profile 可采纳六套件及除 repository/bundle 外的七个精确命令；repository/bundle 含实际已收集 analyzer 报告的核对，CI 缺少本机完整 SDK 构建的报告，继续本机执行。release-tool 改用完整注册入口，新增原有最低通过/跳过门禁；preflight 仍本机汇总。build-configurator -Test 是较大的构建/测试入口，不当成 configuration-page 的单独收据 |
 | Verify published release / verify，release 或 workflow_dispatch | 无 check-all 等价项 | 检查发布后 tag/ZIP/摘要、过滤树与包模式验证；时点、输入和二进制模式均不同，继续独立执行 |
 
@@ -136,9 +144,8 @@ CI 命令仍执行全部检查；本机分片数量无需等于 CI，但 CI 的 
 读取 Windows 物理核拓扑，敏感队列先选较高性能等级的完整物理核，压测随后从余下核心中预留，避免拆开 SMT 同胞；启动前设置 DOTNET_PROCESSOR_COUNT 与 job 的实际核心数一致。客户端先等待父进程分配 job，再启动实际命令，限制覆盖宿主、worker 和立即启动的子孙进程。
 保留队列没有运行或就绪作业时，其核心借给普通作业；每项普通作业从启动到全部后代退出一直使用同一掩码。保留作业就绪后停止发放重叠借用，等已有借用者及其后代全部结束才启动保留作业，敏感作业运行期间独占所属核心。新普通作业可以继续使用其余核心。实际租用掩码写入 report.json 每项的 AffinityMask。
 check-all 默认 `-SensitiveParallelism 3`。核心足够时，三条敏感通道各至少两个逻辑核，并按完整物理核分配；第三条通道不会挤掉原压测预留。默认三条放不下时，保留原两条通道的核心布局及既有降级规则。显式 `-SensitiveCores`、`-StabilityCores` 大小仍严格保留，`-SensitiveParallelism` 显式值继续生效，实际 worker 数受完整核心分区限制。敏感分片按成本分配到 worker，各 worker 内部串行；Foundation 及 Foundation-API 等复用同一 Foundation 测试程序集的注册套件按分片分配，允许不同敏感 worker 并行。构建仍只执行一次；每条敏感 worker 从准确 runtime manifest 复制逐字节相同的程序集输出及三个 worker fixture，普通 Foundation 分片各用独立副本。全部复制和 SHA-256 校验在启动测试前完成，suite-worker-copies.json 记录源/副本哈希、worker、测试程序集和结果目录；副本位于本轮 checkout 的短 bin-build/w 目录，避免 -Clean 回到原 worktree。程序集旁 adapter 身份、审计/数据及 fixture 身份写入各自副本，TEMP、配置、管道 scope 和 TRX 继续按进程/分片隔离。源码、SDK 和资源仅共享读取，带 GUID 的仓库临时目录各自独立；同一 worker 内仍串行且独占完整核心。尚未审计并隔离的其他程序集继续整组固定在一个 worker，独立 test-suites 入口保留原分组。report.json、cpu-plan.json、comparison.md 和控制台记录请求/实际 worker 数及不足原因。独立 test-suites 入口保留原两条、每条四核 worker 默认；check-all 按实际组和需求配置。
-可用 CPU 无法按完整物理核同时容纳敏感、压测和普通队列时，仍依次尝试调整默认大小、不保留敏感队列、压测共用普通队列、单物理核共用全部 CPU。显式大小保持严格拒绝规则。report.json、cpu-plan.json 和 comparison.md 记录 cpuIsolation 及原因；三十分钟门槛照常决定退出状态。
+可用 CPU 无法按完整物理核同时容纳敏感、压测和普通队列时，仍依次尝试调整默认大小、不保留敏感队列、压测共用普通队列、单物理核共用全部 CPU。显式大小保持严格拒绝规则。report.json、cpu-plan.json 和 comparison.md 记录 cpuIsolation 及原因；对应 profile 的时间门槛照常决定退出状态。
 普通队列默认上限仍为 32 项，`-MaxParallelism` 或优先的 `-CpuParallelism` 可设更小值。有命令资源历史时逐项核算：普通作业的 CPU 秒 / wall 秒需求之和不超过本次掩码的逻辑核数；所有运行作业（含保留通道）的内存预算之和不超过可用物理内存与 commit 余量较小值的一半。每项内存预算取自身历史峰值且至少 256 MiB，不再对所有小作业统一按较重作业的第 95 百分位限流。未知作业仍用历史加权 CPU 需求和第 95 百分位内存，无历史内存按 512 MiB；生成与构建波次继续使用原统一预算及独立的 MSBuild 并发，运行时波次才逐项预留；构建的多条顺序命令峰值之和不作为单条运行时检查的内存需求。完全没有资源历史时保留原统一预算计算。单项超预算命令仅在无其他运行作业时允许前进，单个超核需求命令可独自使用普通通道；这些例外不增加并发上限。新记录 check-resources.json 使用每个命令自有内核 job 的 CPU 累计和峰值 committed memory，不把同期 runner CPU 全算给每项。旧报告只有共享采样时按重叠 job-seconds 分摊并明确标注估算，后续以实际归属计量替换；CPU 采样仍用于外部负载诊断。
-suite-output-parity 在生成完成后就于本 worktree 的 bin-build/p 内复制相同源码，与 build-once 并行构建普通布局；它保留同一个原有整项 deadline，完成 ordinary baseline 后再等待 build-once 发布准确的 runtime manifest，最后执行原文件清单比较。ordinary baseline 不写测试正在发现的输出目录；最后一波接续已启动的 parity，只收集一次真实计时。phases.json 记录 baseline、等待与比较的分段耗时。bundle 与 python-repository 等待读取 analyzer-warnings 成功后登记的本轮报告。-Clean 的 harness 仅接受自身快照中的可执行文件；证据还可写到环境及 owner 标记共同证明的原 worktree，其他 worktree 和兄弟快照均拒绝。
 check-all 为每个注册套件分片保存独立的 VSTest Info 级诊断日志及 host/collector 子日志，供核对进程 PID、退出与收集器原因；原五分钟 hang timeout、mini dump 要求和失败门禁不变。PLC harness 显式接收本轮 runtime manifest 中构建的 release-tool DLL 和同一 runtime manifest，内部 engine-host 套件仍执行完整注册门禁；不会依赖 -Clean 快照中未投影的普通 release-tool 目录。
 cpu-plan.json 记录核掩码、队列容量、依赖、预测成本、每项 CPU/内存预算及 companion Python。就绪作业保留通道、空闲保留通道的输入和原优先级仍优先，同一通道及优先级内按实测整项耗时从长到短启动，名称打破同耗时平局；实测排序不再把子孙作业的成本加到短父项上。待执行图完全没有实测排序记录时，保留原依赖成本排序，让 catalog/capture 等前置图维持原行为。check-order-costs.json 保存最近成功运行的整项耗时，-BaselineReport 的成功结果覆盖排序历史；无记录时回退当前分片估计。已隔离的 Foundation 分片及其余未拆分的敏感组按同一实测成本平衡到 worker；汇总仍依赖全部分片。check-costs.json 继续保存历史最大成本，和原分片估计一起计算原 deadline；排序历史不改变 deadline。`-CompanionPython` 优先于 TIA_MCP_PLC_TOOLS_PYTHON；未指定时查询 worktree 或 SDK 所属仓库的 TiaMcp_Output/ecosystem-python 环境，传给所有隔离子进程，保留 PDF 和伴随命令检查。
 每个进程在系统临时目录下使用独立的短 TEMP，数据及配置位于该 TEMP 内，避免 Git 与安装目录检查误认源码 checkout；Harness 使用独立引擎副本和套件结果目录。
@@ -359,7 +366,7 @@ dotnet run --project build-tools/release -- check-bundle-layout -SelfTest
 dotnet run --project build-tools/release -- check-bundle-layout
 dotnet run --project build-tools/release -- validate-bundle -Strict
 dotnet run --project build-tools/release -- test-suites -SelfTest
-dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite kept-code -Suite kept-code-v20 -Suite version-policy
+dotnet run --project build-tools/release -- test-suites -Suite offline -Suite kept-code -Suite version-policy
 dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership
 dotnet run --project tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
 dotnet run --project build-tools/release -- build-configurator -Test
@@ -370,7 +377,7 @@ dotnet run --project build-tools/release -- build-configurator -Test
 读取并校验资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `validate-bundle`
 实际执行的资源清单中；还核对 C# 5 Launcher 的唯一相对候选与 Studio 安装锚点、GUI 输出文件名一致。
 检查使用 .NET 10，但不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证 Logic/引擎调用方
-（kept-code/kept-code-v20）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
+（kept-code）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
 和中文/空格/尾分隔符路径。解析器不借用祖先仓库的缺失资源，调用方仍保留到 4.0 的兼容探测；
 仓库外完整交付包的重定位检查用于排除这种回退掩盖缺文件。实际解析顺序、嵌入生态目录和证据边界见
 [运行时布局](runtime-layout.md)。Markdown 本地链接及入口路径统一由
@@ -418,7 +425,7 @@ B8 识别没有 Meta 且字面消息含失败/拒绝提示的 `ResponseMessage`�
 中央 `TiaMcpServer.ModelContextProtocol.ResponseMeta` 类型自身仍出现在清点中，但不计作手写调用点；此识别与路径无关。
 任一总数增长即失败，减少允许且报告；`-UpdateBaseline` 仅收缩上限，首次经审查建立基线才使用 `-AllowGrowth`。
 
-`ResponseMetaTests` 已迁至 kept-code/kept-code-v20，每版保留 421 项 E1/E2 检查。每种构造器与注明文件/行号的原初始化器
+`ResponseMetaTests` 已迁至 kept-code，每版保留 421 项 E1/E2 检查。每种构造器与注明文件/行号的原初始化器
 在同一固定时钟下比较四条序列化路径的 UTF-8 字节；测试的选项与 POCO 替身另对照 TiaMcp.Engine.Harness/Golden 中
 V20/V21 的全部 36 项 E1 序列化记录。覆盖键追加、success 原位覆盖、null Meta、Local/UTC、数值 CLR 类型及异步时钟隔离。
 `ResponseClock.Pin` 仅在当前执行上下文生效，可嵌套并在释放时恢复；测试进程临时固定 +08:00 时区并恢复 BCL 缓存。
@@ -427,8 +434,8 @@ operationSuccess/apiCallSuccess/dataComplete，异常文本、状态和 success 
 本阶段构造器尚未接入现有调用点，POCO 和引擎返回保持原样。
 
 已迁移的套件使用 xunit，每个原有 Check 对应一条结果；
-[最低数量表](../../tests/test-suites.json)要求 offline、offline-v20 各至少 303 项通过（Linux 302），
-kept-code、kept-code-v20 各至少 4854 项通过，version-policy 至少 10 项通过，均不允许跳过。
+[最低数量表](../../tests/test-suites.json)要求 offline 至少 303 项通过（Linux 302），
+kept-code 至少 4854 项通过，version-policy 至少 10 项通过，均不允许跳过。
 每版 residue + kept-code 的下限仍为 5157（Linux 5156）；仅 Windows apartment 检查仍在 residue 的 OfficialWorkflowTests。
 kept-code 的数据行数量没有平台差异；平台专用实现的测试保留行身份，使用跨平台夹具或测试平台回退。
 `splitFrom` 注册字段记录拆分来源；CI 的 TRX 门禁自检拒绝 CI 工作流或 release 执行清单遗漏任何拆分子套件。
@@ -437,7 +444,7 @@ foundation 至少 29000 项通过、最多 1 项跳过；foundation-api 至少 3
 门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
 每次清除同名旧结果，在 `bin-build/test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
 可用 `--results-directory <dir>`、`--dotnet <path>`、`--no-restore` 或重复的 `--dotnet-arg=<arg>` 定制执行。
-开发时可直接运行 `dotnet test <csproj> -c Release`（V20 加 `-p:DefineConstants=TIA_V20`），正式门禁仍用脚本核对数量。
+开发时可直接运行 `dotnet test <csproj> -c Release`（使用交付默认配置），正式门禁仍用脚本核对数量。
 普通 `dotnet run` 对已迁移工程返回 2；离线工程保留 `--local-process-fixture` 子进程入口。
 共享 [Harness.props](../../tests/Shared/Harness.props)已用于 PromptRegistration 的两个依赖夹具；其他未迁移框架保持原运行方式。
 PromptRegistration 的既有 Windows 清理失败已仅在测试中修复：释放夹具引用、卸载上下文并通过有界 GC 等待确认，再删除临时目录；卸载或删除失败均记录为失败检查。
@@ -629,7 +636,7 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 只报告。基线只检查输入契约，不检查返回结构或原生语义。基础宿主优先加载 `runtime/dotnet` 中的随包运行时；
 只用开发输出且本机缺少 ASP.NET Core 10 时，抓取前把 `DOTNET_ROOT`/`DOTNET_ROOT_X64` 指向私有运行时。
 
-返回结构另用当前 V4 的 `manifest/contracts/v4/responses` 守护。P8-04j2 起 V20/V21 与其他六版一样经 FoundationHost 抓取：先构建 Release 的
+返回结构另用当前 V4 的 `manifest/contracts/v4/responses` 守护。SLIM-1 后只自动捕获/比较 V20/V21，六个旧版本的响应文件保留为历史记录，静态格式验证继续执行。P8-04j2 起 V20/V21 与其他六版一样经 FoundationHost 抓取：先构建 Release 的
 FoundationHost，再用 `dotnet run --project build-tools/release -- build-plc-worker-fixtures -PublicApiRoot <SDK-root>` 构建 V20/V21 的
 PlcWorker SDK 夹具；八版的 `--exe` 都指向同一个宿主，V20/V21 另用 `--plc-worker` 指定夹具（与发布链 PLC 后继作业的参数相同，见
 `build-tools/release/PlcReleaseChecks.cs`）。引擎兼容副本及其交叉比较已随 P8-04l 第 1 阶段删除（`287bbac2`），发布候选不再构建或比较引擎。
@@ -642,8 +649,8 @@ V20/V21 经 PlcWorker 夹具抓取时，脚本为宿主进程设置仅测试用�
 ```powershell
 $hostExe = 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
 $fixtures = 'bin-build/plc-worker-fixtures/sdk/bin'
-python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --dotnet-root <private-ASP.NET-Core-10-root> --exe "14sp1=$hostExe" --exe "15.1=$hostExe" --exe "16=$hostExe" --exe "17=$hostExe" --exe "18=$hostExe" --exe "19=$hostExe" --exe "20=$hostExe" --exe "21=$hostExe" --plc-worker "20=$fixtures/20/Release/net48/TiaMcp.PlcWorker.20.exe" --plc-worker "21=$fixtures/21/Release/net48/TiaMcp.PlcWorker.21.exe" --temp-root bin-build/responses-temp --output bin-build/responses
-python scripts/checks/Snapshot-ToolResponses.py compare --baseline manifest/contracts/v4/responses --current bin-build/responses
+python scripts/checks/Snapshot-ToolResponses.py capture --releases 20 21 --repo-root . --public-api-root <SDK-root> --dotnet-root <private-ASP.NET-Core-10-root> --exe "20=$hostExe" --exe "21=$hostExe" --plc-worker "20=$fixtures/20/Release/net48/TiaMcp.PlcWorker.20.exe" --plc-worker "21=$fixtures/21/Release/net48/TiaMcp.PlcWorker.21.exe" --temp-root bin-build/responses-temp --output bin-build/responses
+python scripts/checks/Snapshot-ToolResponses.py compare --baseline manifest/contracts/v4/responses --current bin-build/responses --releases 20 21
 ```
 
 脚本复用 STDIO 启动器和统一示例检查，每次 capture 在全新进程中连续抓取两轮，一致才写入。
@@ -680,7 +687,8 @@ Release 构建中的每个宿主检查都使用该次运行 temp 目录下独立
 真实机器 campaign、VM MCP probe、生产 MCP 生命周期和 VCI watcher 在执行前会提示：写入 campaign 期间保持 Workbench 打开以批准调用，或在 MCP 菜单关闭审批；这些客户端不绕过审批。
 
 `Test-LocalStability.py` 对 V20/V21 的 FoundationHost 与会话 worker、两种传输和 full/lite
-组合执行正常调用与错误后的恢复检查。默认每组合 50 轮、HTTP 8 并发（发布链另以 `--concurrency 16` 运行隔离档）；
+组合执行正常调用与错误后的恢复检查。脚本的独立完整模式默认每组合 50 轮、HTTP 8 并发（发布链另以 `--concurrency 16` 运行隔离档）；
+SLIM-1 后 check-all 只登记 STDIO full/lite 的 c8/c16 作业，HTTP stability 作业已删除；
 实际范围和结果由完整构建记录保存。`--exe` 是宿主，worker 用 `--plc-worker`（交付路径的 PlcWorker SDK 夹具）或
 `--engine-worker` 加 `--engine-catalog`（只用于引擎兼容副本的交叉检查）二选一，脚本拒绝同时给出或都不给：
 

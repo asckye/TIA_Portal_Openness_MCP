@@ -1,0 +1,28 @@
+<Project>
+  <PropertyGroup>
+    <TiaReproducibleBuildImported>true</TiaReproducibleBuildImported>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(Configuration)' == 'Release' or '$(CheckAllVariant)' != ''">true</ContinuousIntegrationBuild>
+    <!-- Git remotes/configuration are machine-local and absent in clean snapshots.
+         Stamp SourceRevisionId explicitly; use our maps rather than SDK Git-root maps. -->
+    <EnableSourceLink>false</EnableSourceLink>
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
+    <_TiaReproRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</_TiaReproRoot>
+    <!-- Also maps CallerFilePath literals and generated assembly/PDB source names.
+         Keep the longest (repository) prefix first when CLI temp is inside it. -->
+    <TiaBuildPathBound Condition="'$(MSBuildProjectName)' == 'TiaMcp.Engine.Tests' or '$(MSBuildProjectName)' == 'TiaMcp.FoundationHost.Tests' or '$(MSBuildProjectName)' == 'TiaMcp.Generation.Planning.Tests' or '$(MSBuildProjectName)' == 'TiaMcp.KeptCode.Tests' or '$(MSBuildProjectName)' == 'TiaMcp.WorkerChannel.Tests' or '$(MSBuildProjectName)' == 'TiaOpenness.Core.Tests' or '$(MSBuildProjectName)' == 'TiaOpenness.Gui.Tests'">true</TiaBuildPathBound>
+    <!-- These source-checkout tests intentionally resolve files through CallerFilePath.
+         EmbeddedPath refuses their cache population; retain their existing semantics. -->
+    <PathMap Condition="'$(TiaBuildPathBound)' != 'true'">$(_TiaReproRoot)=/_/repo,$(MSBuildToolsPath)=/_/sdk,$(PathMap)</PathMap>
+    <PathMap Condition="'$(NuGetPackageRoot)' != ''">$(NuGetPackageRoot)=/_/nuget,$(PathMap)</PathMap>
+  </PropertyGroup>
+  <Target Name="TiaStableCompilePaths" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <_TiaStableIntermediate>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)', '$(MSBuildProjectDirectory)'))</_TiaStableIntermediate>
+      <PathMap>$(_TiaStableIntermediate)=/_/obj/$(MSBuildProjectName)/$(TargetFramework),$(PathMap)</PathMap>
+      <PathMap Condition="'$(NuGetPackageRoot)' != ''">$(NuGetPackageRoot)=/_/nuget,$(PathMap)</PathMap>
+      <PathMap Condition="'$(TEMP)' != '' and '$(TiaBuildPathBound)' != 'true'">$(TEMP)=/_/temp,$(PathMap)</PathMap>
+      <PathMap Condition="'$(DOTNET_CLI_HOME)' != '' and '$(TiaBuildPathBound)' != 'true'">$(DOTNET_CLI_HOME)=/_/cli,$(PathMap)</PathMap>
+    </PropertyGroup>
+  </Target>
+</Project>

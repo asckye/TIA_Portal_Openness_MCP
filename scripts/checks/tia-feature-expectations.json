@@ -962,16 +962,6 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj",
-    "properties": {
-      "DefineConstants": "TIA_V20"
-    },
-    "targetFramework": "net10.0",
-    "defineConstants": [
-      "TIA_V20"
-    ]
-  },
-  {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.DeviceAdd.Tests/TiaMcp.FoundationHost.DeviceAdd.Tests.csproj",
     "properties": {},
     "targetFramework": "net10.0",
@@ -1032,19 +1022,6 @@
     "defineConstants": [
       "RELEASE",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
-      "TRACE"
-    ]
-  },
-  {
-    "project": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
-    "properties": {
-      "DefineConstants": "TIA_V20"
-    },
-    "targetFramework": "net10.0",
-    "defineConstants": [
-      "RELEASE",
-      "TIA_ADAPTER_INTERNAL_VERSIONING",
-      "TIA_V20",
       "TRACE"
     ]
   },

@@ -110,9 +110,11 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
             : throw new PlatformNotSupportedException("Windows check-all fixture");
         int reserved = CheckAffinity.PhysicalCores().Where(core => (core.Mask & available) != 0)
             .Min(core => System.Numerics.BitOperations.PopCount(core.Mask & available));
+        // Exercise the complete fallback plan independently of the caller's changed-file set.
         var result = ProcessRunner.Run(dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", "-PublicApiRoot", root,
             "-NuGetConfig", Path.Combine(root, "offline.config"), "-Dotnet", Path.Combine(root, "bin/Release/net10.0/fake.exe"),
             "-CompanionPython", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-StabilityCores", reserved.ToString(),
+            "-Base", "refs/tests/check-all-missing-" + Guid.NewGuid().ToString("N"),
             "-BuildParallelism", "1", "-MaxParallelism", "16", "-OutputDirectory", runDirectory], Repository.FindRoot());
         output.WriteLine("Fake build: logical cores={0}, available mask={1:X}, reserved cores={2}", Environment.ProcessorCount, available, reserved);
         output.WriteLine(result.StandardOutput + result.StandardError);
@@ -121,7 +123,9 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         Assert.Equal(new[] { "generate-catalogs", "prepare-decoder-python", "generate-tool-usage", "generate-release-migration", "build-once", "analyzer-warnings",
             "catalog-drift", "tool-counts-drift", "usage-drift", "migration-drift", "tools-list", "script-calls", "dead-references",
             "adapter-boundary", "tia-features", "bundle", "release-documentation", "python-repository", "python-script-self-tests",
-            "python-script-calls", "domain-source", "contract-self-tests", "contract-verify", "response-verify", "suite-output-parity", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
+            "python-script-calls", "check-all-speedup-self-tests", "domain-source", "contract-self-tests", "contract-verify", "response-verify", "suite-output-parity", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
+        var selection = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(runDirectory, "merge-tier-selection.json")))!;
+        Assert.StartsWith("Cannot resolve merge-base", (string?)selection["fallback"]);
         Assert.Equal("failed", (string)checks[4]!["Status"]!);
         Assert.Equal("blocked", (string)checks[5]!["Status"]!);
         Assert.False(File.Exists(Path.Combine(Repository.FindRoot(), "unexpected-check")));

@@ -369,112 +369,11 @@ public sealed class CheckAllRound5Tests
         Assert.True(doc.RootElement.GetProperty("workers").GetInt32() >= CheckAffinity.BaselineWorkers);
     }
 
-    [Fact]
-    public void OrdinaryInventoryGraphBuildsEveryRootAndContentReceipt()
-    {
-        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
-        File.WriteAllText(Path.Combine(root, "offline.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
-        foreach (var name in new[] { "one", "two" })
-        {
-            Directory.CreateDirectory(Path.Combine(root, name));
-            File.WriteAllText(Path.Combine(root, name, name + ".csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><Content Include=\"content.json\" CopyToOutputDirectory=\"PreserveNewest\" /><BridgePayload Include=\"payload.bin\" /><FixtureFiles Include=\"fixture.bin\" /></ItemGroup><Target Name=\"Scratch\" AfterTargets=\"Build\"><MakeDir Directories=\"$(TargetDir)bridge;$(TargetDir)fixtures\" /><Copy SourceFiles=\"@(BridgePayload)\" DestinationFolder=\"$(TargetDir)bridge\" /><Copy SourceFiles=\"@(FixtureFiles)\" DestinationFolder=\"$(TargetDir)fixtures\" /><WriteLinesToFile File=\"$(TargetDir)scratch.tmp\" Lines=\"transient test data\" Overwrite=\"true\" /></Target></Project>");
-            File.WriteAllText(Path.Combine(root, name, "content.json"), "{}");
-            File.WriteAllText(Path.Combine(root, name, "payload.bin"), "bridge fixture");
-            File.WriteAllText(Path.Combine(root, name, "fixture.bin"), "test fixture");
-        }
-        var directory = Path.Combine(root, "inventory");
-        var result = CheckAllLayout.BuildInventories(root, [new("one/one.csproj", "", []), new("two/two.csproj", "", [])], "dotnet", Path.Combine(root, "offline.config"), root, directory, 1);
-        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
-        var receipts = Directory.GetFiles(directory, "*.tsv"); Assert.Equal(2, receipts.Length);
-        Assert.All(receipts, receipt => Assert.Contains(File.ReadAllLines(receipt), line => line.EndsWith("content.json", StringComparison.Ordinal)));
-        Assert.All(receipts, receipt => {
-            var baseline = File.ReadAllLines(receipt)[1];
-            Assert.True(File.Exists(Path.Combine(baseline, "content.json")));
-            Assert.False(File.Exists(Path.Combine(baseline, "scratch.tmp")));
-            Assert.Equal("bridge fixture", File.ReadAllText(Path.Combine(baseline, "bridge/payload.bin")));
-            Assert.Equal("test fixture", File.ReadAllText(Path.Combine(baseline, "fixtures/fixture.bin")));
-        });
-        var graph = System.Xml.Linq.XDocument.Load(Path.Combine(directory, "ordinary.proj"));
-        Assert.All(graph.Descendants("MSBuild"), node => Assert.Equal("true", (string?)node.Attribute("BuildInParallel")));
-    }
 
-    [Fact]
-    public void OrdinaryPropertyGroupsConsumeTheirOwnRestoredConditionalReferences()
-    {
-        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
-        File.WriteAllText(Path.Combine(root, "offline.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
-        foreach (var name in new[] { "one", "two" })
-        {
-            Directory.CreateDirectory(Path.Combine(root, name));
-            File.WriteAllText(Path.Combine(root, name, name + ".csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
-        }
-        Directory.CreateDirectory(Path.Combine(root, "entry"));
-        Directory.CreateDirectory(Path.Combine(root, "middle"));
-        File.WriteAllText(Path.Combine(root, "middle/middle.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include=\"../one/one.csproj\" Condition=\"'$(Flavor)' == 'one'\" /><ProjectReference Include=\"../two/two.csproj\" Condition=\"'$(Flavor)' == 'two'\" /></ItemGroup></Project>");
-        File.WriteAllText(Path.Combine(root, "entry/entry.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include=\"../middle/middle.csproj\" /></ItemGroup></Project>");
-        // Two projects can share project.assets.json while retaining separate
-        // NuGet no-op receipts. The inventory must restore the actual variant.
-        File.WriteAllText(Path.Combine(root, "entry/alternate.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include=\"../two/two.csproj\" /></ItemGroup></Project>");
-        foreach (var project in new[] { "entry.csproj", "alternate.csproj" })
-        {
-            var restore = ProcessRunner.Run("dotnet", ["msbuild", Path.Combine(root, "entry", project), "-t:Restore", "-m:1", "-nodeReuse:false", "-p:Flavor=one", "-p:RestoreConfigFile=" + Path.Combine(root, "offline.config")], root);
-            Assert.True(restore.ExitCode == 0, restore.StandardOutput + restore.StandardError);
-        }
-        var directory = Path.Combine(root, "inventory");
-        var units = new[] { new CheckBuild("entry/entry.csproj", "one", ["-p:Flavor=one"]), new CheckBuild("entry/entry.csproj", "two", ["-p:Flavor=two"]) };
-        var result = CheckAllLayout.BuildInventories(root, units, "dotnet", Path.Combine(root, "offline.config"), root, directory, 1);
-        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
-        var receipts = Directory.GetFiles(directory, "*.tsv"); Assert.Equal(2, receipts.Length);
-        Assert.Contains(receipts, receipt => File.ReadAllText(receipt).Contains("one.dll", StringComparison.Ordinal));
-        Assert.Contains(receipts, receipt => File.ReadAllText(receipt).Contains("two.dll", StringComparison.Ordinal));
-        Assert.All(receipts, receipt => {
-            var contents = File.ReadAllText(receipt);
-            Assert.NotEqual(contents.Contains("one.dll", StringComparison.Ordinal), contents.Contains("two.dll", StringComparison.Ordinal));
-        });
-        var targets = System.Xml.Linq.XDocument.Load(Path.Combine(directory, "ordinary.proj")).Descendants("MSBuild").Select(node => (string?)node.Attribute("Targets")).ToArray();
-        Assert.Equal(new[] { "Clean", "Restore", "CheckOrdinaryInventory", "Clean", "Restore", "CheckOrdinaryInventory" }, targets);
-    }
 
-    [Fact]
-    public void OrdinaryRootsWithDifferentReferencePropertiesCannotWriteTheSameObjConcurrently()
-    {
-        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
-        File.WriteAllText(Path.Combine(root, "offline.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
-        foreach (var name in new[] { "one", "two", "shared", "middle" }) Directory.CreateDirectory(Path.Combine(root, name));
-        File.WriteAllText(Path.Combine(root, "shared/shared.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><Target Name=\"ObserveWriter\" BeforeTargets=\"PrepareForBuild\"><Error Condition=\"'$(BuildInParallel)' != 'false'\" Text=\"Shared ordinary obj writers must be ordered\" /><WriteLinesToFile File=\"$(MSBuildProjectDirectory)/observed.txt\" Lines=\"$(ReferenceFlavor)\" Overwrite=\"false\" /></Target></Project>");
-        File.WriteAllText(Path.Combine(root, "middle/middle.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include=\"../shared/shared.csproj\" AdditionalProperties=\"ReferenceFlavor=nested\" /></ItemGroup></Project>");
-        foreach (var name in new[] { "one", "two" })
-            File.WriteAllText(Path.Combine(root, name, name + ".csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include=\"../shared/shared.csproj\" AdditionalProperties=\"ReferenceFlavor=" + name + "\" /></ItemGroup></Project>");
-        // A single root also reaches the same obj with different properties.
-        var one = System.Xml.Linq.XDocument.Load(Path.Combine(root, "one/one.csproj"));
-        one.Root!.Add(new System.Xml.Linq.XElement("ItemGroup",
-            new System.Xml.Linq.XElement("ProjectReference", new System.Xml.Linq.XAttribute("Include", "../middle/middle.csproj")),
-            new System.Xml.Linq.XElement("ProjectReference", new System.Xml.Linq.XAttribute("Include", "../two/two.csproj"))));
-        one.Save(Path.Combine(root, "one/one.csproj"));
-        var directory = Path.Combine(root, "inventory");
-        var result = CheckAllLayout.BuildInventories(root, [new("one/one.csproj", "", []), new("two/two.csproj", "", [])], "dotnet", Path.Combine(root, "offline.config"), root, directory, 1);
-        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
-        var graph = System.Xml.Linq.XDocument.Load(Path.Combine(directory, "ordinary.proj"));
-        var items = graph.Root!.Elements("ItemGroup").SelectMany(group => group.Elements()).GroupBy(item => item.Name.LocalName)
-            .ToDictionary(group => "@(" + group.Key + ")", group => group.Count());
-        var builds = graph.Descendants("MSBuild").Where(task => (string?)task.Attribute("Targets") == "CheckOrdinaryInventory").ToArray();
-        Assert.Equal(2, builds.Length);
-        // A parallel MSBuild task is allowed one root only: both roots reach
-        // shared/obj under different node identities. With two roots in one
-        // task this must fail even on a single-node sandbox used for validation.
-        Assert.All(builds, task => Assert.Equal(1, items[(string)task.Attribute("Projects")!]));
-        // References can diverge inside one root too (the production Foundation
-        // root's fault fixture is such an edge). Keep their writers ordered.
-        Assert.All(graph.Descendants("MSBuild"), task => Assert.Contains("BuildInParallel=false", (string?)task.Attribute("Properties")));
-        Assert.Equal(new[] { "Clean", "Clean", "Restore", "Restore", "CheckOrdinaryInventory", "CheckOrdinaryInventory" },
-            graph.Descendants("MSBuild").Select(task => (string)task.Attribute("Targets")!).ToArray());
-        Assert.Equal(2, Directory.GetFiles(directory, "*.tsv").Length);
-        var referencedRoot = Assert.Single(Directory.GetFiles(directory, "*.tsv").Select(File.ReadAllLines)
-            .Where(lines => Path.GetFullPath(lines[0]).StartsWith(Path.Combine(root, "two"), StringComparison.OrdinalIgnoreCase)));
-        Assert.True(File.Exists(Path.Combine(referencedRoot[1], "two.dll")));
-        var observations = File.ReadAllLines(Path.Combine(root, "shared/observed.txt"));
-        Assert.Contains("one", observations); Assert.Contains("two", observations); Assert.Contains("nested", observations);
-    }
+
+
+
 
     [Fact]
     public void SensitiveWorkersHaveDisjointCpusAndDoNotSerializeEachOther()
@@ -621,35 +520,7 @@ public sealed class CheckAllRound5Tests
         Assert.All(expected, file => Assert.Equal(file.Content, File.ReadAllText(file.Path)));
     }
 
-    [Fact]
-    public void OrdinaryInventoryCacheRoundTripsBoundedlyAndStillChecksMissingRuntimeFiles()
-    {
-        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
-        var source = Path.Combine(root, "original/bin-build/check-layout"); var snapshot = Path.Combine(root, "snapshot/bin-build/check-layout");
-        Directory.CreateDirectory(source);
-        for (int i = 0; i < 260; i++)
-        {
-            var path = Path.Combine(source, i.ToString("x64") + ".json");
-            File.WriteAllText(path, JsonSerializer.Serialize(new[] { "one.dll", "two.dll" }));
-            File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddMinutes(i - 300));
-        }
-        CheckAllLayout.CopyInventoryCache(root, source, snapshot);
-        Assert.Equal(256, Directory.GetFiles(source).Length); Assert.Equal(256, Directory.GetFiles(snapshot).Length);
-        var selected = Path.Combine(snapshot, 259.ToString("x64") + ".json");
-        Assert.Equal(new[] { "one.dll", "two.dll" }, CheckAllLayout.ReadInventory(selected));
-        var ordinary = Path.Combine(root, "ordinary"); var actual = Path.Combine(root, "actual");
-        Directory.CreateDirectory(ordinary); Directory.CreateDirectory(actual);
-        foreach (var file in CheckAllLayout.ReadInventory(selected))
-        { File.WriteAllText(Path.Combine(ordinary, file), "payload"); File.WriteAllText(Path.Combine(actual, file), "payload"); }
-        Assert.Empty(CheckAllLayout.Missing(ordinary, actual, CheckAllLayout.ReadInventory(selected)));
-        File.Delete(Path.Combine(actual, "two.dll"));
-        Assert.Equal(new[] { "two.dll" }, CheckAllLayout.Missing(ordinary, actual, CheckAllLayout.ReadInventory(selected)));
-        CheckAllLayout.CopyInventoryCache(root, snapshot, source);
-        Assert.Equal(256, Directory.GetFiles(source).Length);
-        File.WriteAllText(selected, "[]"); Assert.Throws<ReleaseException>(() => CheckAllLayout.ReadInventory(selected));
-        File.WriteAllText(selected, "[\"../outside.dll\"]"); Assert.Throws<ReleaseException>(() => CheckAllLayout.ReadInventory(selected));
-        Assert.Throws<ReleaseException>(() => CheckAllLayout.CopyInventoryCache(root, source, root + "-outside"));
-    }
+
 
     [Fact]
     public void SnapshotRetentionKeepsUncompletedDirectoriesAndRejectsEscapingPaths()
@@ -947,24 +818,7 @@ public sealed class CheckAllRound5Tests
         Assert.Throws<ReleaseException>(() => FastSuites.VstestArguments("suite.dll", ["--unknown"], "suite", "results"));
     }
 
-    [Fact]
-    public void OutputInventoryRejectsMissingContentInEveryVariant()
-    {
-        using var fixture = new OfflineFixtures();
-        var normal = Path.Combine(fixture.DirectoryPath, "normal"); Directory.CreateDirectory(normal);
-        File.WriteAllText(Path.Combine(normal, "suite.dll"), "assembly");
-        Directory.CreateDirectory(Path.Combine(normal, "manifest"));
-        File.WriteAllText(Path.Combine(normal, "manifest/package-manifest.json"), "{}");
-        foreach (var variant in new[] { "default", "sdk-20", "sdk-21", "shared-false", "shared-true" })
-        {
-            var isolated = Path.Combine(fixture.DirectoryPath, variant); Directory.CreateDirectory(isolated);
-            File.WriteAllText(Path.Combine(isolated, "suite.dll"), "assembly");
-            Assert.Equal(new[] { "manifest/package-manifest.json" }, CheckAllLayout.Missing(normal, isolated, ["suite.dll", "manifest/package-manifest.json"]));
-            Directory.CreateDirectory(Path.Combine(isolated, "manifest"));
-            File.Copy(Path.Combine(normal, "manifest/package-manifest.json"), Path.Combine(isolated, "manifest/package-manifest.json"));
-            Assert.Empty(CheckAllLayout.Missing(normal, isolated, ["suite.dll", "manifest/package-manifest.json"]));
-        }
-    }
+
 
     [Fact]
     public void LayoutInventoryCacheInvalidatesOnInputAdditionEditRemovalAndProperties()

@@ -55,16 +55,8 @@ internal static class CheckScheduler
         return Task.Factory.StartNew(() => Execute(job, logs), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
     }
 
-    internal static CommandResult AwaitRuntime(Task<CommandResult> ready)
-    {
-        if (Deadline is not { } budget) return ready.GetAwaiter().GetResult();
-        var remaining = budget.Deadline - DateTime.UtcNow;
-        if (remaining <= TimeSpan.Zero) throw new ReleaseException("Check job timed out: " + budget.Name);
-        try { return ready.WaitAsync(remaining).GetAwaiter().GetResult(); }
-        catch (TimeoutException) { throw new ReleaseException("Check job timed out: " + budget.Name); }
-    }
     internal static TimeSpan JobTimeout(CheckJob job, IReadOnlyDictionary<string, double> history) =>
-        TimeSpan.FromSeconds(Math.Max(job.Name is "build-once" or "suite-output-parity" ? 1800 : 300,
+        TimeSpan.FromSeconds(Math.Max(job.Name == "build-once" ? 1800 : 300,
             3 * Math.Max(job.EstimatedSeconds, history.GetValueOrDefault(job.Name))));
     internal static IReadOnlyList<CheckTiming> Run(IReadOnlyList<CheckJob> jobs, int slots, string logs, IReadOnlyDictionary<string, int>? lanes = null,
         IReadOnlyList<CheckTiming>? prerequisites = null, CheckPacking? packing = null,
@@ -310,6 +302,7 @@ internal sealed record CheckResourceUsage(double CpuSeconds, double WallSeconds,
 internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong MemoryPerJob, ulong MemoryBudget, int Cap)
 {
     internal ulong Available { get; init; }
+    internal ulong PhysicalMemory { get; init; }
     [System.Text.Json.Serialization.JsonIgnore]
     internal IReadOnlyDictionary<string, CheckResourceUsage> History { get; init; } = new Dictionary<string, CheckResourceUsage>();
     internal bool MeasuredMemory { get; init; } = true;
@@ -322,7 +315,12 @@ internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong Memor
     internal bool MemoryFits(CheckJob job, IEnumerable<CheckJob> running)
     {
         var active = running.ToArray();
-        return active.Sum(row => (double)Memory(row)) + Memory(job) <= MemoryBudget;
+        var demand = Memory(job);
+        var total = active.Sum(row => (double)Memory(row)) + demand;
+        if (total <= MemoryBudget) return true;
+        // Historical overestimates must not make a lane permanently unusable.
+        // An oversize command can run alone there, with physical capacity proven.
+        return demand > MemoryBudget && !active.Any(row => row.Lane == job.Lane) && total <= PhysicalMemory;
     }
 
     internal bool CanAdmit(CheckJob job, ulong mask, IEnumerable<CheckJob> running)
@@ -367,14 +365,14 @@ internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong Memor
         (int)Math.Ceiling(System.Numerics.BitOperations.PopCount(mask) / Math.Max(.05, CpuPerJob)),
         (int)Math.Min(int.MaxValue, MemoryBudget / Math.Max(1UL, MemoryPerJob)) - reservedJobs)));
 
-    internal static CheckPacking Plan(ulong general, IEnumerable<CheckResourceUsage> history, ulong memory, int cap)
+    internal static CheckPacking Plan(ulong general, IEnumerable<CheckResourceUsage> history, ulong memory, int cap, ulong? physicalMemory = null)
     {
         var rows = history.Where(row => row.WallSeconds >= 1 && row.CpuSeconds > 0).ToArray();
         double wall = rows.Sum(row => row.WallSeconds);
         double demand = wall > 0 ? rows.Sum(row => row.CpuSeconds) / wall : 1;
         var peaks = rows.Where(row => row.PeakMemoryBytes > 0).Select(row => row.PeakMemoryBytes).Order().ToArray();
         ulong peak = peaks.Length == 0 ? 512UL << 20 : peaks[(int)Math.Ceiling(peaks.Length * .95) - 1];
-        return new(general, demand, Math.Max(256UL << 20, peak), memory / 2, cap);
+        return new(general, demand, Math.Max(256UL << 20, peak), memory / 2, cap) { PhysicalMemory = physicalMemory ?? memory };
     }
 
     internal static Dictionary<string, CheckResourceUsage> Read(string root, string? baseline)
@@ -400,28 +398,66 @@ internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong Memor
     }
 }
 
-// Only this scheduled command's kernel job accounting is attributed to it.
-// Concurrent commands, the runner sampler and unrelated processes are excluded.
+// CPU uses this scheduled command's kernel accounting. Memory samples its live
+// command trees together, excluding other scheduled commands and unrelated PIDs.
 internal sealed class CheckResourceMeter : IDisposable
 {
     private static readonly AsyncLocal<CheckResourceMeter?> current = new();
     private readonly CheckResourceMeter? previous = current.Value;
     private readonly object sync = new();
+    private readonly HashSet<Microsoft.Win32.SafeHandles.SafeFileHandle> jobs = [];
+    private readonly Timer timer;
     private double cpu;
     private ulong memory;
+    private int unreadable;
+    private bool disposed;
+    private CheckResourceMeter() => timer = new Timer(_ => Sample(), null, 50, 50);
     internal static CheckResourceMeter Start() { var meter = new CheckResourceMeter(); current.Value = meter; return meter; }
     internal static IDisposable Observe(Microsoft.Win32.SafeHandles.SafeFileHandle? job) => new Observation(current.Value, job);
-    private sealed class Observation(CheckResourceMeter? meter, Microsoft.Win32.SafeHandles.SafeFileHandle? job) : IDisposable
+    private void Sample()
     {
+        lock (sync)
+        {
+            if (disposed) return;
+            var sample = CheckAffinity.CommittedMemory(jobs);
+            memory = Math.Max(memory, sample.Bytes);
+            unreadable += sample.Unreadable;
+        }
+    }
+    private sealed class Observation : IDisposable
+    {
+        private readonly CheckResourceMeter? meter;
+        private readonly Microsoft.Win32.SafeHandles.SafeFileHandle? job;
+        internal Observation(CheckResourceMeter? meter, Microsoft.Win32.SafeHandles.SafeFileHandle? job)
+        {
+            this.meter = meter; this.job = job;
+            if (meter == null || job == null) return;
+            lock (meter.sync) { meter.jobs.Add(job); meter.Sample(); }
+        }
         public void Dispose()
         {
             if (meter == null || job == null) return;
-            var usage = CheckAffinity.Accounting(job);
-            lock (meter.sync) { meter.cpu += usage.CpuSeconds; meter.memory += usage.PeakMemoryBytes; }
+            lock (meter.sync)
+            {
+                if (!meter.jobs.Contains(job)) return;
+                meter.Sample();
+                meter.cpu += CheckAffinity.Accounting(job).CpuSeconds;
+                meter.jobs.Remove(job);
+            }
         }
     }
-    internal CheckResourceUsage Usage(double wall) { lock (sync) return new(cpu, wall, memory, "owned command jobs (kernel CPU and sum of peak committed memory)"); }
-    public void Dispose() => current.Value = previous;
+    internal CheckResourceUsage Usage(double wall)
+    {
+        Sample();
+        lock (sync) return new(cpu, wall, memory,
+            "owned command jobs (kernel CPU and sampled concurrent committed memory; unreadable process samples=" + unreadable + ")");
+    }
+    public void Dispose()
+    {
+        lock (sync) disposed = true;
+        timer.Dispose();
+        current.Value = previous;
+    }
 }
 
 // Sample deltas, not accumulated process CPU since login. Descendants (including
