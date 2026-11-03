@@ -537,7 +537,7 @@ public sealed class CheckAllPerformanceTests
         using var fixture = new OfflineFixtures();
         var history = Path.Combine(fixture.DirectoryPath, "history"); Directory.CreateDirectory(history);
         var costs = Enumerable.Range(0, 245).ToDictionary(index =>
-            "T:EngineHttpSessionTests.Shutdown_drains_an_open_http_request_and_stops_its_session_worker(release: \"" + index + "\")",
+            "T:EngineHttpSessionTestsPlc.Shutdown_drains_an_open_http_request_and_stops_its_session_worker(release: \"" + index + "\")",
             index => index < 4 ? 34.0 : 1.6, StringComparer.Ordinal);
         const string producer = "M:FoundationChecks.CheckLaterToolUsage";
         const string portal = "T:PortedPortalAdmissionTests.Port_dispatch_takes_the_shared_worker_lane_before_journaling(row: 0)";
@@ -558,7 +558,7 @@ public sealed class CheckAllPerformanceTests
         foreach (var pair in costs)
         {
             string cls = pair.Key == producer ? "FoundationChecks" : pair.Key == portal ? "PortedPortalAdmissionTests"
-                : pair.Key.Contains("EngineHttpSessionTests", StringComparison.Ordinal) ? "EngineHttpSessionTests" : "Ordinary";
+                : pair.Key.Contains("EngineHttpSessionTestsPlc", StringComparison.Ordinal) ? "EngineHttpSessionTestsPlc" : "Ordinary";
             int shard = TestShard.Assign(cls, pair.Key, pair.Key, first.Costs.Length, assignments, true, sensitive);
             actual.Add(pair.Key, shard);
             Assert.Equal(pair.Key.StartsWith("T:Ordinary", StringComparison.Ordinal), shard < ordinary);

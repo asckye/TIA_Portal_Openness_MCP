@@ -316,8 +316,7 @@ internal static class CheckAllLayout
         // Even roots with equal global properties can reach a reference with
         // different properties (GlobalPropertiesToRemove/AdditionalProperties).
         // They then have different MSBuild node identities but the same ordinary
-        // obj. The Foundation root itself reaches Logic both directly and via
-        // EngineWorker.FaultFixture with TiaMcpEngineWorkerFaultFixture=true.
+        // obj. Order every root and reference writer that shares these outputs.
         // Order roots AND their reference writers in this single traversal.
         var graph = new XElement("Project");
         var build = new XElement("Target", new XAttribute("Name", "Build"));

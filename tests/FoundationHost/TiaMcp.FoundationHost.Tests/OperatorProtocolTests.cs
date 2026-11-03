@@ -14,6 +14,7 @@ using Endpoint = foundationhost::TiaMcp.FoundationHost.OperatorEndpoint;
 using Session = foundationhost::TiaMcp.FoundationHost.HostSession;
 using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
 using Registration = foundationhost::TiaMcp.FoundationHost.HostRegistration;
+using SessionTests = OperatorSessionTestsPlc;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class OperatorProtocolTests
@@ -21,19 +22,19 @@ public sealed class OperatorProtocolTests
     [Theory] [InlineData(false)] [InlineData(true)]
     public async Task Operator_shutdown_refuses_busy_calls_and_only_signals_after_the_acknowledgement(bool busy)
     {
-        using var fixture = new OperatorSessionTests.Fixture("21"); using var registration = fixture.Register();
+        using var fixture = new SessionTests.Fixture("21"); using var registration = fixture.Register();
         using var session = new Session("21", "fixture", false, [], [], () => new JsonObject(), () => { });
         using var member = registration.Register(session);
         if (busy) session.LaneChanged(true, "SyntheticNativeCall", "mcp", "fixture");
         bool shutdown = false;
-        var (host, client) = OperatorSessionTests.Streams(); using (host) using (client)
+        var (host, client) = SessionTests.Streams(); using (host) using (client)
         {
             var connection = new Connection(registration, _ => throw new InvalidOperationException("Unexpected create"), _ => false, shutdown: () => shutdown = true);
-            using var deadline = new CancellationTokenSource(OperatorSessionTests.Peer.HandshakeBudget);
+            using var deadline = new CancellationTokenSource(SessionTests.Peer.HandshakeBudget);
             var serving = connection.Serve(host, Environment.ProcessId, deadline.Token);
             await OperatorProtocol.Write(client, Handshake("shutdown"), deadline.Token);
             var response = await OperatorProtocol.Read<OperatorHandshakeResult>(client, deadline.Token);
-            await serving.WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
+            await serving.WaitAsync(SessionTests.Peer.HandshakeBudget);
             Assert.Equal(!busy, response.Accepted); Assert.Equal(busy ? "HOST_BUSY" : null, response.Error);
             Assert.Equal(!busy, shutdown);
         }
@@ -43,8 +44,8 @@ public sealed class OperatorProtocolTests
     [Fact]
     public async Task Failed_session_creation_is_reported_before_the_handshake_read_can_hang()
     {
-        using var fixture = new OperatorSessionTests.Fixture("21"); using var registration = fixture.Register();
-        var error = await Assert.ThrowsAsync<InvalidDataException>(() => OperatorSessionTests.Peer.Operator(registration, null,
+        using var fixture = new SessionTests.Fixture("21"); using var registration = fixture.Register();
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() => SessionTests.Peer.Operator(registration, null,
             "create", true, _ => throw new InvalidDataException("fixture session startup failed")).WaitAsync(TimeSpan.FromSeconds(5)));
         Assert.Equal("fixture session startup failed", error.Message); Assert.Empty(registration.List());
     }
@@ -80,7 +81,7 @@ public sealed class OperatorProtocolTests
     [Theory, InlineData("other-user"), InlineData("wrong-image"), InlineData("remote")]
     public async Task Rejected_identity_never_reads_a_handshake_or_creates_a_session(string reason)
     {
-        Assert.NotEmpty(reason); using var fixture = new OperatorSessionTests.Fixture("19"); using var registration = fixture.Register();
+        Assert.NotEmpty(reason); using var fixture = new SessionTests.Fixture("19"); using var registration = fixture.Register();
         var connection = new Connection(registration, _ => throw new InvalidOperationException("Unexpected create."), _ => true);
         using var forbidden = new NoIo(); await connection.Serve(forbidden, null, CancellationToken.None);
         Assert.Empty(registration.List());
@@ -89,24 +90,24 @@ public sealed class OperatorProtocolTests
     [Theory, InlineData("create", 1, "CREATE_NOT_ALLOWED"), InlineData("attach", 1, "SESSION_NOT_FOUND"), InlineData("list", 2, "UNSUPPORTED_VERSION")]
     public async Task Ai_host_refuses_create_and_unknown_session_or_version(string action, int version, string error)
     {
-        using var fixture = new OperatorSessionTests.Fixture("19"); using var registration = fixture.Register();
-        var (host, client) = OperatorSessionTests.Streams(); using (host) using (client)
+        using var fixture = new SessionTests.Fixture("19"); using var registration = fixture.Register();
+        var (host, client) = SessionTests.Streams(); using (host) using (client)
         {
             var connection = new Connection(registration, _ => throw new InvalidOperationException("Unexpected create."), _ => false);
-            using var deadline = new CancellationTokenSource(OperatorSessionTests.Peer.HandshakeBudget);
+            using var deadline = new CancellationTokenSource(SessionTests.Peer.HandshakeBudget);
             var serving = connection.Serve(host, Environment.ProcessId, deadline.Token);
             var request = Handshake(action); request.Version = version;
             await OperatorProtocol.Write(client, request, deadline.Token);
             var result = await OperatorProtocol.Read<OperatorHandshakeResult>(client, deadline.Token);
-            Assert.False(result.Accepted); Assert.Equal(error, result.Error); await serving.WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
+            Assert.False(result.Accepted); Assert.Equal(error, result.Error); await serving.WaitAsync(SessionTests.Peer.HandshakeBudget);
         }
     }
 
     [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Owner_creates_a_private_session_and_pipe_close_releases_it(string release)
     {
-        using var fixture = new OperatorSessionTests.Fixture(release); using var registration = fixture.Register();
-        var panel = await OperatorSessionTests.Peer.Operator(registration, null, "create", true, async token => await fixture.Create(true, token));
+        using var fixture = new SessionTests.Fixture(release); using var registration = fixture.Register();
+        var panel = await SessionTests.Peer.Operator(registration, null, "create", true, async token => await fixture.Create(true, token));
         string key = panel.Handshake!.SessionKey!;
         Assert.True(registration.Find(key)!.OperatorOwned);
         await panel.Tool("ConnectPortal", new() { ["processId"] = 104 });
@@ -118,7 +119,7 @@ public sealed class OperatorProtocolTests
     [Theory, InlineData("operator", false), InlineData("operator", true), InlineData("http", false)]
     public async Task Slow_owned_session_shutdown_precedes_endpoint_exit_and_http_keeps_serving(string transport, bool holdStream)
     {
-        using var fixture = new OperatorSessionTests.Fixture("19");
+        using var fixture = new SessionTests.Fixture("19");
         var options = new Options { ReleaseKey = "19", WorkerExe = fixture.Options.WorkerExe, ApiDirectory = fixture.Options.ApiDirectory,
             BundleRoot = fixture.Options.BundleRoot, Transport = transport, OperatorOwner = Environment.ProcessId };
         using var registration = new Registration(options, "S-1-5-21-1-2-3-1001", fixture.DirectoryPath, error => throw error);
@@ -141,14 +142,14 @@ public sealed class OperatorProtocolTests
         var endpoint = new Endpoint(registration, _ => Task.FromResult<foundationhost::TiaMcp.FoundationHost.IHostSession>(session),
             _ => Environment.ProcessId, listener, owner, options.Transport == "operator");
         await using var endpointShutdown = new BoundedDisposal(endpoint);
-        using var deadline = new CancellationTokenSource(OperatorSessionTests.Peer.RequestBudget);
+        using var deadline = new CancellationTokenSource(SessionTests.Peer.RequestBudget);
         using var stream = listener.Connect();
-        await OperatorProtocol.Write(stream, Handshake("create"), deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
-        Assert.True((await OperatorProtocol.Read<OperatorHandshakeResult>(stream, deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget)).Accepted);
-        var client = await McpClientFactory.CreateAsync(new StreamClientTransport(stream, stream), cancellationToken: deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
+        await OperatorProtocol.Write(stream, Handshake("create"), deadline.Token).WaitAsync(SessionTests.Peer.HandshakeBudget);
+        Assert.True((await OperatorProtocol.Read<OperatorHandshakeResult>(stream, deadline.Token).WaitAsync(SessionTests.Peer.HandshakeBudget)).Accepted);
+        var client = await McpClientFactory.CreateAsync(new StreamClientTransport(stream, stream), cancellationToken: deadline.Token).WaitAsync(SessionTests.Peer.HandshakeBudget);
         try
         {
-            await client.DisposeAsync().AsTask().WaitAsync(OperatorSessionTests.Peer.ShutdownBudget); stream.Dispose();
+            await client.DisposeAsync().AsTask().WaitAsync(SessionTests.Peer.ShutdownBudget); stream.Dispose();
             await shutdownStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(endpoint.Completion.IsCompleted); Assert.Equal("BUSY\n", File.ReadAllText(lease));
             using var another = holdStream || transport == "http" ? listener.Connect() : null;
@@ -163,25 +164,25 @@ public sealed class OperatorProtocolTests
             else
             {
                 Assert.False(endpoint.Completion.IsCompleted); Assert.False(owner.HasExited);
-                await OperatorProtocol.Write(another!, Handshake("list"), deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
-                var listed = await OperatorProtocol.Read<OperatorHandshakeResult>(another!, deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
+                await OperatorProtocol.Write(another!, Handshake("list"), deadline.Token).WaitAsync(SessionTests.Peer.HandshakeBudget);
+                var listed = await OperatorProtocol.Read<OperatorHandshakeResult>(another!, deadline.Token).WaitAsync(SessionTests.Peer.HandshakeBudget);
                 Assert.True(listed.Accepted); Assert.Equal(ai.SessionKey, Assert.Single(listed.Sessions)["sessionKey"]!.GetValue<string>());
                 Assert.False(endpoint.Completion.IsCompleted);
             }
             Assert.False(owner.HasExited);
         }
-        finally { endpoint.Stop(); await client.DisposeAsync().AsTask().WaitAsync(OperatorSessionTests.Peer.ShutdownBudget); session.Dispose(); }
+        finally { endpoint.Stop(); await client.DisposeAsync().AsTask().WaitAsync(SessionTests.Peer.ShutdownBudget); session.Dispose(); }
     }
     private sealed class BoundedDisposal(IAsyncDisposable endpoint) : IAsyncDisposable
     {
-        public async ValueTask DisposeAsync() => await endpoint.DisposeAsync().AsTask().WaitAsync(OperatorSessionTests.Peer.ShutdownBudget);
+        public async ValueTask DisposeAsync() => await endpoint.DisposeAsync().AsTask().WaitAsync(SessionTests.Peer.ShutdownBudget);
     }
     private sealed class MemoryListener : foundationhost::TiaMcp.FoundationHost.IOperatorListener
     {
         private readonly Channel<Stream> pending = Channel.CreateUnbounded<Stream>();
         internal Stream Connect()
         {
-            var (host, client) = OperatorSessionTests.Streams();
+            var (host, client) = SessionTests.Streams();
             Assert.True(pending.Writer.TryWrite(host)); return client;
         }
         public Task<Stream> Accept(CancellationToken token) => pending.Reader.ReadAsync(token).AsTask();
@@ -195,7 +196,7 @@ public sealed class OperatorProtocolTests
     [Fact]
     public async Task Registration_is_atomic_and_session_end_removes_only_its_record()
     {
-        using var fixture = new OperatorSessionTests.Fixture("19"); using var registration = fixture.Register(); registration.Publish();
+        using var fixture = new SessionTests.Fixture("19"); using var registration = fixture.Register(); registration.Publish();
         using var session = await fixture.Create(); var member = registration.Register(session);
         for (int index = 0; index < 10; index++)
         {
@@ -210,7 +211,7 @@ public sealed class OperatorProtocolTests
     [Theory, InlineData(true), InlineData(false)]
     public async Task Registration_retries_a_read_lock_and_reports_a_bounded_failure(bool releaseLock)
     {
-        using var fixture = new OperatorSessionTests.Fixture("19");
+        using var fixture = new SessionTests.Fixture("19");
         var errors = new List<Exception>();
         var retrying = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var registration = new Registration(fixture.Options, "S-1-5-21-1-2-3-1001", fixture.DirectoryPath, errors.Add,
@@ -254,7 +255,7 @@ public sealed class OperatorProtocolTests
     [Fact]
     public void Registration_logs_initial_publication_io_failure_without_throwing()
     {
-        using var fixture = new OperatorSessionTests.Fixture("19");
+        using var fixture = new SessionTests.Fixture("19");
         var errors = new List<Exception>();
         using var registration = new Registration(fixture.Options, "S-1-5-21-1-2-3-1001", fixture.DirectoryPath, errors.Add);
         File.WriteAllText(Path.Combine(fixture.DirectoryPath, "run"), "blocks the directory");
@@ -288,14 +289,14 @@ public sealed class OperatorProtocolTests
     [Theory, InlineData("--transport", "operator"), InlineData("--operator-owner", "0"), InlineData("--operator-owner", "bad"), InlineData("--operator-owner", "123")]
     public void Startup_refuses_missing_owner_invalid_pid_and_stdio_owner(string option, string value)
     {
-        using var fixture = new OperatorSessionTests.Fixture("19");
+        using var fixture = new SessionTests.Fixture("19");
         Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(
             ["--bundle-root", fixture.Options.BundleRoot, "--release-key", "19", option, value], AppContext.BaseDirectory));
     }
     [WindowsWorkbenchTheory, InlineData("operator"), InlineData("http")]
     public void Startup_accepts_owned_transport_options_and_rejects_the_wrong_owner_image(string transport)
     {
-        using var fixture = new OperatorSessionTests.Fixture("19");
+        using var fixture = new SessionTests.Fixture("19");
         var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(["--bundle-root", fixture.Options.BundleRoot, "--release-key", "19",
             "--transport", transport, "--operator-owner", Environment.ProcessId.ToString(), "--http-api-key", "fixture"], AppContext.BaseDirectory);
         Assert.Equal(Environment.ProcessId, options.OperatorOwner);

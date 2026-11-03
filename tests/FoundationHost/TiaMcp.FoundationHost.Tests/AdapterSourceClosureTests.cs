@@ -29,7 +29,7 @@ internal static class AdapterSourceClosureTests
         files=files.Concat(primitives).ToArray();
         check(files.Length==files.Distinct(StringComparer.Ordinal).Count(),"Explicit adapter source inventory has no duplicates");
         CheckEvaluatedCompileItems(src,files,primitives,check);
-        // P8-04l: the engine projects whose primitive selection this evaluated are deleted (TIA_ENGINE_LOCAL_PRIMITIVES has no consumer).
+        // Primitive source selection is owned by the adapter projects.
         var code=new Dictionary<string,string>(StringComparer.Ordinal);
         foreach(var path in files)
         {

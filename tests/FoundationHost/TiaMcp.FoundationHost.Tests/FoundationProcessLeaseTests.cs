@@ -261,10 +261,10 @@ public sealed class FoundationProcessLeaseTests
         Assert.Equal(0, session.NativeCalls);
     }
 
-    [Theory, InlineData("19", false), InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
-    public async Task Host_process_exit_runs_graceful_stop_before_its_job_closes(string release, bool plcWorker)
+    [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Host_process_exit_runs_graceful_stop_before_its_job_closes(string release)
     {
-        using var session = new Session(); using var host = Start("shutdown", session.Root, session.Pid.ToString(), release, plcWorker.ToString());
+        using var session = new Session(); using var host = Start("shutdown", session.Root, session.Pid.ToString(), release);
         using var worker = Process.GetProcessById(int.Parse((await Line(host))!));
         host.StandardInput.WriteLine("exit");
         Assert.True(host.WaitForExit(10000)); Assert.True(host.ExitCode == 0, FixtureExit.Describe(host.ExitCode, host.StandardError.ReadToEnd())); Assert.Equal(0, host.ExitCode); Assert.True(worker.WaitForExit(10000));
@@ -330,20 +330,9 @@ public sealed class FoundationProcessLeaseTests
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", args[2]);
             string exe = Environment.ProcessPath!, release = args[4];
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
-            if ((release is "20" or "21") && !bool.Parse(args[5]))
-            {
-                var worker = new foundationhost::TiaMcp.FoundationHost.EngineWorkerClient(new foundationhost::TiaMcp.FoundationHost.HostOptions {
-                    ReleaseKey = release, WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, BundleRoot = AppContext.BaseDirectory,
-                    EngineWorkerExe = exe, NativeEnabled = true }, foundationhost::TiaMcp.FoundationHost.EngineWorkerClient.Hash(exe));
-                worker.Call("Attach", new System.Text.Json.Nodes.JsonObject { ["processId"] = int.Parse(args[3]) }, CancellationToken.None).GetAwaiter().GetResult();
-                Console.WriteLine(((Process)typeof(foundationhost::TiaMcp.FoundationHost.EngineWorkerClient).GetField("process", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(worker)!).Id);
-            }
-            else
-            {
-                var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true);
-                worker.Call("Attach", new System.Text.Json.Nodes.JsonObject { ["processId"] = int.Parse(args[3]) }, CancellationToken.None).GetAwaiter().GetResult();
-                Console.WriteLine(((Process)typeof(WorkerClient).GetField("process", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(worker)!).Id);
-            }
+            var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true);
+            worker.Call("Attach", new System.Text.Json.Nodes.JsonObject { ["processId"] = int.Parse(args[3]) }, CancellationToken.None).GetAwaiter().GetResult();
+            Console.WriteLine(((Process)typeof(WorkerClient).GetField("process", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(worker)!).Id);
             Console.ReadLine(); Environment.Exit(0); return 0;
         }
         if (args[1] == "job")

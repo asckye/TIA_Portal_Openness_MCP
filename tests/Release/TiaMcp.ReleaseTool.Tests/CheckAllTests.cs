@@ -201,7 +201,7 @@ public sealed class CheckAllTests
             Assert.True(jobs[^1].AllowFailedDependencies); Assert.Equal(original, suite.ToJsonString());
             var plan = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.DirectoryPath, name, "shard-plan.json")))!;
             Assert.Equal(4, (int)plan["exclusiveShard"]!);
-            Assert.Contains("EngineHttpSessionTests", plan["timeSensitiveClasses"]!.AsObject().Select(pair => pair.Key));
+            Assert.Contains("EngineHttpSessionTestsPlc", plan["timeSensitiveClasses"]!.AsObject().Select(pair => pair.Key));
         }
     }
 

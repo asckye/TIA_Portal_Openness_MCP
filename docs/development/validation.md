@@ -664,7 +664,7 @@ source-contracts 同时运行 `Snapshot-ToolContracts.py verify` 和 `Snapshot-T
 `FIXTURE_UNHANDLED_EXCEPTION <完整类型名>: <消息首行，最多 500 字符>`，刷新 stderr 后以 **86** 退出。
 聚合和反射包装异常逐层取第一个内部异常。调用方将 86 显示为
 `fixture crashed with an unhandled exception (exit 86): <诊断行>`；其他退出码仍附带 stderr 尾部。
-这只适用于测试程序，不修改交付宿主、worker、桥接或工作台，也不修改 WER、注册表、进程错误模式或机器策略。
+这只适用于测试程序，不修改交付宿主、worker、桥接或工作台，也不修改 WER、注册表、进程错误模式或机器策略。Q3 已删除引擎故障夹具；PLC worker 与宿主会话夹具继续使用该守卫。
 PlcWorker 夹具的 `background-tia-exit` 保留 net48 `legacyUnhandledExceptionPolicy` 的非终止行为和
 `PlcWorker background exception; terminating=False` 日志。不可由托管守卫可靠拦截的栈溢出、原生进程损坏和显式
 `FailFast` 不改为 86，需要维护者另行决定。
@@ -683,8 +683,7 @@ Release 构建中的每个宿主检查都使用该次运行 temp 目录下独立
 
 `Test-LocalStability.py` 对 V20/V21 的 FoundationHost 与会话 worker、两种传输和 full/lite
 组合执行正常调用与错误后的恢复检查。默认每组合 50 轮、HTTP 8 并发（发布链另以 `--concurrency 16` 运行隔离档）；
-实际范围和结果由完整构建记录保存。`--exe` 是宿主，worker 用 `--plc-worker`（交付路径的 PlcWorker SDK 夹具）或
-`--engine-worker` 加 `--engine-catalog`（只用于引擎兼容副本的交叉检查）二选一，脚本拒绝同时给出或都不给：
+实际范围和结果由完整构建记录保存。`--exe` 是宿主，worker 用 `--plc-worker`（交付路径的 PlcWorker SDK 夹具）；引擎交叉检查路线已退役，宿主拒绝全部 `--engine-*` 选项：
 
 ```powershell
 python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcp.FoundationHost.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --plc-worker bin-build/plc-worker-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe --rounds 50 --output bin-build/stability-v21

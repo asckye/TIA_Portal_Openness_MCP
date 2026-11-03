@@ -11,12 +11,11 @@ internal static class EngineSessionFixture
     internal const string LeaseMessage = "The prior MCP owner did not release this TIA instance cleanly. Native outcome is unknown. Inspect diagnostics and restart that TIA instance before reconnecting; do not erase the lease to bypass this guard.";
     internal static int Run(string[] args)
     {
-        bool foundation = args.Contains("--native-session");
-        string release = args[Array.IndexOf(args, foundation ? "--native-session" : "--tia-major-version") + 1];
+        string release = args[Array.IndexOf(args, "--native-session") + 1];
         string exe = Environment.ProcessPath!;
         string Hash(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
         var identity = new ChannelIdentity(release, Hash(exe), Hash(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll")),
-            Environment.ProcessId, foundation ? args[Array.IndexOf(args, "--native-session") + 3] : Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_NONCE")!);
+            Environment.ProcessId, args[Array.IndexOf(args, "--native-session") + 3]);
         int? attached = null;
         PortalProcessLease? lease = null;
         long epoch = 0; bool uncertain = false, hasProject = true, lockOnNextFamily = false, locked = false;
@@ -32,7 +31,6 @@ internal static class EngineSessionFixture
             ["session"] = new JsonObject { ["isConnected"] = attached != null } };
         ChannelResponse Dispatch(ChannelRequest request)
         {
-            if (request.Method == "engine.status") return ChannelResponse.Success(Status().ToJsonString());
             if (request.Method == "adapter.HostObserve")
                 return ChannelResponse.Success(((string?)JsonNode.Parse(request.ArgumentsJson)?["operation"] == "assemblies"
                     ? new JsonArray() : (JsonNode)Status()).ToJsonString());
@@ -59,15 +57,13 @@ internal static class EngineSessionFixture
                 locked = outcome.RequiresReset;
                 return response;
             }
-            if (request.Method == "engine.observe" && (string?)input["operation"] == "assemblies")
-                return ChannelResponse.Success("[]");
             if (request.Method == "adapter.Attach")
             {
                 int pid = (int)input["processId"]!;
                 if (pid is 901 or 902 or 903 or 904)
                     return ChannelResponse.Error(new ChannelFailureException(pid == 901 ? LeaseMessage : pid == 904 ? SessionBehavior.LeaseReserved : pid == 903 ? "Authored refusal at C:\\private\\lease.json" : "Internal secret exception text", -32603,
                         ChannelOutcome.RejectedBeforeNative, new JsonObject { ["exceptionType"] = pid == 903 ? "AdapterPreconditionException" : "InvalidOperationException" }.ToJsonString()));
-                if (!foundation || leaseRoot != null) lease = PortalProcessLease.Acquire(leaseRoot ?? DataLocations.Current.LeasesDirectory, pid, 1);
+                if (leaseRoot != null) lease = PortalProcessLease.Acquire(leaseRoot ?? DataLocations.Current.LeasesDirectory, pid, 1);
                 attached = pid; epoch++;
                 return ChannelResponse.Success(new JsonObject { ["Stage"] = "attached", ["OwnsPortal"] = false,
                     ["AttemptedPids"] = new JsonArray(pid), ["Strategy"] = "explicit", ["LaunchMode"] = "attach" }.ToJsonString());
@@ -110,13 +106,13 @@ internal static class EngineSessionFixture
             return ChannelResponse.Success(reply.ToJsonString());
         }
         var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new(epoch, attached != null), request => {
-            if (request.Method != "engine.status") lease?.BeginRequest();
+            lease?.BeginRequest();
             var response = Dispatch(request);
             uncertain |= response.Failure?.Outcome == ChannelOutcome.Unknown
                 || (bool?)(JsonNode.Parse(response.ResultJson ?? "null") as JsonObject)?["result"]?["structuredContent"]?["meta"]?["requiresSessionReset"] == true;
-            if (request.Method != "engine.status") lease?.CompleteRequest(uncertain);
+            lease?.CompleteRequest(uncertain);
             return response;
-        }, foundation ? ChannelProfile.Foundation : ChannelProfile.Engine);
+        }, ChannelProfile.Foundation);
         try { server.Run(); }
         finally
         {

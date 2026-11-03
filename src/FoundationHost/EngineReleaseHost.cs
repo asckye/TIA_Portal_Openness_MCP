@@ -98,16 +98,14 @@ internal static class SharedReleaseHost
         return (installation, installation == null ? null : "host-option");
     }
 
-    internal static IFoundationSessionWorker CreateWorker(HostOptions options) => options.EngineWorkerExe != null
-            ? new EngineWorkerClient(options, File.Exists(options.EngineWorkerExe) ? EngineCatalog.Hash(options.EngineWorkerExe) : "")
-            : new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
-                { Bundled = options.BundledWorker, WithUi = options.WithUi, TiaPortalLocation = options.TiaPortalLocation,
-                    SharedSession = ReleaseCatalogData.Releases[options.ReleaseKey].SharedSession };
+    internal static WorkerClient CreateWorker(HostOptions options) => new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
+        { Bundled = options.BundledWorker, WithUi = options.WithUi, TiaPortalLocation = options.TiaPortalLocation,
+            SharedSession = ReleaseCatalogData.Releases[options.ReleaseKey].SharedSession };
 
     private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
         EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
-        IFoundationSessionWorker worker = CreateWorker(options);
+        WorkerClient worker = CreateWorker(options);
         LocalStabilityTelemetry.StartupStage("session.worker.created");
         try
         {
@@ -116,27 +114,21 @@ internal static class SharedReleaseHost
             Func<System.Text.Json.Nodes.JsonObject> production = () => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
             var (installation, installationSource) = ReadinessInstallation(options);
             Func<System.Text.Json.Nodes.JsonObject> notReady = () => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, installation, installationSource);
-            Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker is WorkerClient plc
-                ? plc.Readiness(production, notReady)
-                : ((EngineWorkerClient)worker).FoundationReadiness();
+            Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker.Readiness(production, notReady);
             var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
                 options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false);
             LocalStabilityTelemetry.StartupStage("session.registry.created");
             if (toolsForTest != null) shared = toolsForTest(worker, shared);
             var services = FoundationHostPorts.CreateServices(worker, options.ReleaseKey, readiness, options.ApiDirectory);
             LocalStabilityTelemetry.StartupStage("session.services.created");
-            var pipeline = new EngineHostPipeline("", options.EngineWorkerExe ?? options.WorkerExe, options.ReleaseKey, services,
+            var pipeline = new EngineHostPipeline("", options.WorkerExe, options.ReleaseKey, services,
                 data.HasLite ? options.Profile : "full", shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest);
             LocalStabilityTelemetry.StartupStage("session.pipeline.created");
             services.Roster = () => roster!;
             services.ResetExports = pipeline.ResetExports;
             roster = pipeline.AllTools;
-            if (worker is WorkerClient client)
-            {
-                client.SessionLocked = () => pipeline.SessionLocked;
-                client.StagingProvider = () => { using var scope = pipeline.EnterSession(); return McpServer.SharedStagingOwner; };
-            }
-            else ((EngineWorkerClient)worker).SessionLocked = () => pipeline.SessionLocked;
+            worker.SessionLocked = () => pipeline.SessionLocked;
+            worker.StagingProvider = () => { using var scope = pipeline.EnterSession(); return McpServer.SharedStagingOwner; };
             return new Session(worker, services, pipeline);
         }
         catch { worker.Dispose(); throw; }
@@ -147,8 +139,8 @@ internal static class SharedReleaseHost
             session.Pipeline.OperatorTools, () => session.Services.OperatorSnapshot(), session.Dispose);
         SharedSessionState.For(session.Worker).HumanCrossReferences = () => TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(host.NativeCrossReferenceSessionFile, host.NativeCrossReferenceSessionSecret);
         SharedSessionState.For(session.Worker).HostSessionKey = () => host.SessionKey;
-        if (session.Worker is WorkerClient plc) { plc.NativeCrossReferenceSessionFile = host.NativeCrossReferenceSessionFile; plc.NativeCrossReferenceSessionSecret = host.NativeCrossReferenceSessionSecret; }
-        else if (session.Worker is EngineWorkerClient engine) { engine.NativeCrossReferenceSessionFile = host.NativeCrossReferenceSessionFile; engine.NativeCrossReferenceSessionSecret = host.NativeCrossReferenceSessionSecret; }
+        session.Worker.NativeCrossReferenceSessionFile = host.NativeCrossReferenceSessionFile;
+        session.Worker.NativeCrossReferenceSessionSecret = host.NativeCrossReferenceSessionSecret;
         if (operatorOwned || options.Transport == "stdio") host.RegisterSession(host.SessionKey, session.Pipeline.RegisterStagingSession);
         else host.RegisterSessionOnBind(session.Pipeline.RegisterHttpSession);
         return host;
@@ -166,17 +158,16 @@ internal static class SharedReleaseHost
         catch { session.Dispose(); throw; }
     }
 
-    private sealed class Session(IFoundationSessionWorker worker, FoundationHostPorts.Services services, EngineHostPipeline pipeline) : IDisposable
+    private sealed class Session(WorkerClient worker, FoundationHostPorts.Services services, EngineHostPipeline pipeline) : IDisposable
     {
         private int disposed;
-        internal IFoundationSessionWorker Worker => worker;
+        internal WorkerClient Worker => worker;
         internal FoundationHostPorts.Services Services => services;
         internal EngineHostPipeline Pipeline => pipeline;
         public void Dispose()
         {
             if (Interlocked.Exchange(ref disposed, 1) != 0) return;
-            if (worker is WorkerClient plc) plc.SessionLocked = null;
-            else ((EngineWorkerClient)worker).SessionLocked = null;
+            worker.SessionLocked = null;
             worker.Dispose(); pipeline.Dispose();
         }
     }
@@ -268,13 +259,4 @@ internal static class SharedReleaseHost
         catch (IOException error) { OperatorEndpoint.Report(error); }
     }
 
-}
-
-// Compatibility entry for existing harnesses. Every transport and release uses SharedReleaseHost.
-internal static class EngineReleaseHost
-{
-    internal static Task<int> Run(HostOptions options, HostFileLogger logger, CancellationToken token = default) => SharedReleaseHost.Run(options, logger, token);
-    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalog, CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) => SharedReleaseHost.RunForTest(options, logger, catalog, token, toolsForTest);
-    internal static Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default) => SharedReleaseHost.CreateHostSession(options, operatorOwned, token);
-    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalog, CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) => SharedReleaseHost.CreateHostSessionForTest(options, operatorOwned, catalog, token, toolsForTest);
 }

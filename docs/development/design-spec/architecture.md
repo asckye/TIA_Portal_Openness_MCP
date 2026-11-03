@@ -9,7 +9,7 @@
 ## 1 一页概览
 
 - 八个 TIA Portal 版本（发布键 `14sp1`、`15.1`、`16`、`17`、`18`、`19`、`20`、`21`）使用同一个 MCP 宿主程序：`runtime/v{发布键}/TiaMcp.FoundationHost.exe --release-key {发布键}`（net10，随包 .NET 10 运行时）。宿主负责 MCP 传输、工具目录、参数校验、预检、审批、审计、调用日志和 Openness 通道。
-- 宿主为每个 MCP 会话启动一个 worker 进程（net48）。自 P8-04j2（`62ebf86e`）起八个版本都是 PLC worker `runtime/v{发布键}/worker/TiaMcp.PlcWorker.{发布键}.exe`；所属线程在 V14 SP1–V19 为 STA，在 V20/V21 为 MTA（`src/Adapters/Policy/PlcLifecyclePolicy.cs`），同一会话的全部原生调用共用一个 TIA 连接。交付包不再包含 V20/V21 引擎；引擎只作为 `bin-build/engine-compat` 下的私有兼容副本供仓库交叉检查，直到 P8-04l 删除。
+- 宿主为每个 MCP 会话启动一个 worker 进程（net48）。自 P8-04j2（`62ebf86e`）起八个版本都是 PLC worker `runtime/v{发布键}/worker/TiaMcp.PlcWorker.{发布键}.exe`；所属线程在 V14 SP1–V19 为 STA，在 V20/V21 为 MTA（`src/Adapters/Policy/PlcLifecyclePolicy.cs`），同一会话的全部原生调用共用一个 TIA 连接。交付包不再包含 V20/V21 引擎；私有兼容副本和交叉检查路线已退役，Q3 删除宿主残留的引擎客户端与冻结目录读取。
 - 八版共有的工具和已移植的能力族在八个版本上使用同一份 Foundation 适配器代码（`TiaMcp.Adapter.{发布键}.dll`，按发布键编译八次）。35 个能力族已全部移植，V20/V21 专有工具的原生调用也在 PLC worker 中执行。
 - 只有 worker 接触 Siemens 对象。worker 与宿主之间是 WorkerChannel 协议 2（行分隔 JSON-RPC 2.0，hello 握手核对 worker 与适配器的 SHA-256、PID 和启动 nonce，绑定纪元）。
 - 每个会话一条 Openness 通道（lane），原生调用在会话内串行；不调用 TIA 的工具走并发的本地通道，不等待正在运行的 TIA 调用。
@@ -28,15 +28,11 @@ flowchart TB
     sess["HostSession × N<br/>每个 MCP 会话一个"]
     pipeline["工具管线<br/>参数校验、预检、审批、审计、调用日志、Openness 通道"]
     localtools["宿主本地工具<br/>离线构建、桥接与批次、导出句柄、导入暂存、生成编排、工作台控制、GetToolUsage"]
-    wclient["worker 客户端<br/>WorkerClient 或 EngineWorkerClient"]
+    wclient["worker 客户端<br/>WorkerClient"]
   end
-  subgraph plcw["PLC worker（V14 SP1–V19，net48，STA）"]
+  subgraph plcw["PLC worker（八版，net48；V14 SP1–V19 STA，V20/V21 MTA）"]
     pfe1["PlcFoundationEngine<br/>FoundationWorkerDispatcher"]
     ad1["Foundation 适配器<br/>TiaMcp.Adapter.{发布键}.dll"]
-  end
-  subgraph engw["引擎 worker（V20/V21，net48，MTA）"]
-    pfe2["PlcFoundationEngine 与 Foundation 适配器<br/>共享工具、已移植族"]
-    portal["Portal 与引擎服务<br/>V20/V21 专有工具"]
   end
   tia["TIA Portal 进程<br/>Siemens Openness API"]
   wb["工作台 TiaOpenness.exe<br/>WPF，net10"]
@@ -48,10 +44,7 @@ flowchart TB
   pipeline --> localtools
   pipeline --> wclient
   wclient -->|"WorkerChannel 协议 2，adapter.*"| pfe1
-  wclient -->|"WorkerChannel Engine 配置，adapter.* 与 engine.*"| engw
   pfe1 --> ad1 --> tia
-  pfe2 --> tia
-  portal --> tia
   pipeline -.->|"审批管道 TiaMcp.Approval.v1"| wb
   localtools -.->|"工作台控制通道 TiaMcp.Workbench.v1"| wb
   wb -.->|"操作端管道 TiaMcp.Operator.v1"| sess
@@ -60,7 +53,6 @@ flowchart TB
   pipeline --> data
   localtools --> staging
   plcw --> data
-  engw --> data
 ```
 
 图中实线是调用方向，虚线是工作台相关的本机管道。Studio 桥接进程是迁移期的遗留路径：工程操作页的其余功能已经改走操作端管道，V16–V19 的版本控制页在 F33 移入 Foundation 适配器之前用它只读 VCI（见第 9 节）。
@@ -73,12 +65,11 @@ flowchart TB
 | 工作台 | `runtime/studio/TiaOpenness.exe` | net10 WPF | MCP 与客户端配置、工程操作页、AI 调用、审批、审计、环境检查、版本控制、设置 |
 | MCP 宿主 | `runtime/v{发布键}/TiaMcp.FoundationHost.exe` 及 `release-key.txt` | net10 | MCP 服务器入口，八个版本相同 |
 | PLC worker | `runtime/v{发布键}/worker/TiaMcp.PlcWorker.{发布键}.exe` | net48 | 八个版本的 Openness 执行进程 |
-| 引擎兼容副本 | `bin-build/engine-compat/v20|v21/`（不交付） | net48 | 只供仓库交叉检查；宿主仅在 `TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY` 指向该目录、且宿主与引擎文件都来自该 checkout 的构建输出时接受 `--engine-worker`、`--engine-catalog`，否则以 64 退出（`src/FoundationHost/HostOptions.cs`）；P8-04l 删除 |
 | Studio 桥接 | `runtime/studio/bridge/` 与 `bridge/adapters/v{发布键}/` | net48 | 迁移期遗留，见第 9 节 |
 | 更新器 | `runtime/tools/TiaMcp.Updater.exe` | net48 | 交付包更新与回滚 |
 | 写入防护钩子 | `runtime/tools/TiaMcp.WriteGuard.exe` | net10 | Claude Code 插件的写操作审计钩子 |
 
-net10 与 net48 的依赖必须分目录，所以 V20/V21 的引擎放在 `worker/` 子目录。宿主启动时从 `release-key.txt` 核对发布键，从 `BundleLayout` 定位 worker，V20/V21 还核对 worker 文件哈希与目录中记录的哈希一致。
+net10 与 net48 的依赖必须分目录，八版 PLC worker 都位于 `worker/` 子目录。宿主从 `release-key.txt` 核对发布键，从 `BundleLayout` 定位 worker；`WorkerClient` 的 hello 握手核对 worker 与适配器哈希、PID 和 nonce。`--engine-*` 选项始终以 64 拒绝。
 
 ## 3 进程与会话视图
 
@@ -121,12 +112,12 @@ flowchart LR
 
 | 方面 | V14 SP1–V19 | V20/V21 |
 |---|---|---|
-| 入口 | `Program.cs` → `HostSession.Legacy` | `Program.cs` 发现 `WorkerKind == "engine"` → `EngineReleaseHost.Run` |
-| 工具来源 | `LegacyHostToolRegistry`：Foundation 工具、已移植族契约、离线构建、工作台控制、生成、被动诊断、`GetToolUsage`；再由 `FoundationHostPorts` 包入 `EngineHostPipeline`，提供桥接、批次与导出句柄 | `EngineCatalog` 读取 `worker/tool-catalog.json`（引擎 `--write-tool-catalog` 生成），`SharedToolCatalog` 合入共享 Foundation 工具；`EngineHostPipeline` 发布 full 或 lite 目录 |
+| 入口 | `Program.cs` → `SharedReleaseHost.Run` | 同左；实现保留在 `EngineReleaseHost.cs` 文件中 |
+| 工具来源 | `LegacyHostToolRegistry`：Foundation 工具、已移植族契约、离线构建、工作台控制、生成、被动诊断、`GetToolUsage`；再由 `FoundationHostPorts` 包入 `EngineHostPipeline`，提供桥接、批次与导出句柄 | `FoundationCatalog` 合入共享 Foundation 工具与宿主声明；`SharedToolCatalog` 和 `EngineHostPipeline` 发布 full 或 lite 目录 |
 | 单个工具的准入 | `FoundationV4Tool`（参数校验、生成写栅栏、未提供能力拒绝、会话重置、就绪检查、预检、审批、Openness 通道、复核、审计） | Foundation 工具同左；引擎工具走链接进来的引擎宿主层（`McpServer.SerializedCalls` 等，顺序见第 5.2 节）；已移植族由 `PortedToolContract.Wrap` 包装 |
-| 执行位置 | 宿主本地，或经 `WorkerClient` 发 `adapter.<操作>` 到 PLC worker | 由 `ToolExecution` 表决定：`host`（宿主本地）、`foundation`（`adapter.*` 到引擎 worker 内的 `PlcFoundationEngine`）、`worker`（`engine.invoke` 到引擎代码） |
+| 执行位置 | 宿主本地，或经 `WorkerClient` 发 `adapter.<操作>` 到 PLC worker | 宿主本地，或经 `WorkerClient` 发 `adapter.<操作>` 到 PLC worker；V20/V21 保留版本准入与已移植族包装链 |
 | worker 调用超时 | 共享 `WorkerTimeoutPolicy`（P8-64），预算与配置见 [4.0 发布说明](../../releases/v4.0.0.md) | `WorkerTimeoutPolicy`：默认 120 秒，worker 代次的首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖 |
-| 线程 | STA 所属线程 | 一个 MTA 所属线程，Foundation 代码与引擎代码共用同一个 TIA 连接 |
+| 线程 | STA 所属线程 | 一个 MTA 所属线程，全部原生操作共用同一个 TIA 连接 |
 | 审批与审计的宿主标记 | `foundation` | 引擎工具 `engine`，共享 Foundation 工具 `foundation` |
 
 ### 4.1 版本差异的处理
@@ -357,9 +348,9 @@ stateDiagram-v2
 | 每会话对象、人/AI 归属、会话快照 | `src/FoundationHost/HostSession.cs`、`HostSessionCall.cs`、`src/Shared/ActorScope.cs` |
 | 旧版工具注册与被动诊断 | `src/FoundationHost/FoundationPassiveDiagnostics.cs`（`LegacyHostToolRegistry`）、`FoundationTools.cs`、`*Contract.cs`、`FoundationHostPorts.cs` |
 | Foundation 工具准入、预检、审批与结果映射 | `src/FoundationHost/FoundationV4Tool.cs`、`FoundationV4Result.cs`、`src/Logic/V4/HostBehavior.cs`、`src/Shared/SessionBehavior.cs` |
-| V20/V21 宿主管线 | `src/EngineHost/EngineHostPipeline.cs`、`EngineCatalog.cs`、`SharedToolCatalog.cs`、`WorkerToolInvoker.cs`；`src/EngineHost/ModelContextProtocol/Tools/McpServer.{Approval,SerializedCalls,VersionPolicy,ArgDiagnostics,Profile,CallDiscipline}.cs` 与 `src/Shared/Host/McpServer.{ToolBridge,Batch,Exports}.cs` |
+| V20/V21 宿主管线 | `src/EngineHost/EngineHostPipeline.cs`、`FoundationCatalog.cs`、`SharedToolCatalog.cs`、`WorkerToolInvoker.cs`；`src/EngineHost/ModelContextProtocol/Tools/McpServer.{Approval,SerializedCalls,VersionPolicy,ArgDiagnostics,Profile,CallDiscipline}.cs` 与 `src/Shared/Host/McpServer.{ToolBridge,Batch,Exports}.cs` |
 | Openness 通道 | `src/Shared/Host/ToolDispatchLanes.cs` |
-| worker 客户端、job object、关停 | `src/FoundationHost/WorkerClient.cs`、`EngineWorkerClient.cs`、`WorkerJob.cs` |
+| worker 客户端、job object、关停 | `src/FoundationHost/WorkerClient.cs`、`WorkerJob.cs`、`WorkerShutdown.cs` |
 | worker 通道协议、超时、回复转存、故障注入 | `src/WorkerChannel/` |
 | PLC worker | `src/PlcWorker/Program.cs`、`FoundationWorkerDispatcher.cs`、`WorkerOperations.cs`、`WorkerOperationModule.cs`、`FoundationProcessLease.cs` |
 | 引擎 worker 与目录导出（历史） | 引擎程序已退役；残余 `src/Engine` 源码由 Q2 删除，历史实现见提交 `ab5a89af` |

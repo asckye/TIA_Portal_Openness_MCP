@@ -203,7 +203,7 @@ namespace TiaMcp.FoundationHost
                       : "NOT READY — fix the FAIL items above, then run `tia doctor` again."));
             if (json)
             {
-                var (outcome, code) = HostDoctorGroupOutcome.Classify(fix, groupOk, failure, probe.FixReportsOutcome);
+                var (outcome, code) = HostDoctorGroupOutcome.Classify(fix, groupOk, failure);
                 var report = captured.ToString().Split('\n').Select(line => line.TrimEnd('\r')).ToList();
                 if (report.Count > 0 && report[^1].Length == 0) report.RemoveAt(report.Count - 1);
                 output.WriteLine(new JsonObject

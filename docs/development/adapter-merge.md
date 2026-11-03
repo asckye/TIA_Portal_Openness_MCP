@@ -258,10 +258,9 @@ TiaMcp.Engine.Harness engineering-api 每版增加 13 项，native-diagnostics �
 
 ## 第 I 步的领域迁移样板（P4-I1：VCI）
 
-引擎目录只导入一次 `TiaSharedAdapterPaths.props`，构建日志打印开关值，默认仍为 `false`。
-原语只有一份源码：[VersionControlPrimitives.cs](../../src/Adapters/Native/Vci/VersionControlPrimitives.cs)。
-默认引擎通过共享 props 链接它并定义 `TIA_ENGINE_LOCAL_PRIMITIVES`，命名空间为 `TiaMcpServer.Siemens.LocalVci`；
-开启开关时不链接该文件，改用适配器中的 `TiaOpenness.Openness.VersionControlPrimitives`，不会产生同名类型冲突。
+此节记录 P4-I1 的迁移样板。当前原语只有一份源码，位于 `src/Adapters/Native/Vci/VersionControlPrimitives.cs`，
+由适配器导入 `src/Shared/shared-native/*.props` 选择编译。引擎已退役，Q3 删除 `TIA_ENGINE_LOCAL_PRIMITIVES`
+命名空间分支与 Engine profile 导入；`TiaSharedAdapterPaths.props` 保留 `TIA_SHARED_ADAPTER_PATHS` 开关。
 服务只在 `using Vci = …` 处选择原语类型，所有读写无条件调用 `Vci.X(...)`。
 工程借用集中在一个私有成员：共享路径经 `PlcServices.Over(Func<ProjectBase>).VersionControl` 读取同一个内核工程，
 默认路径直接读取原来的 session；这一个私有成员保留独立条件编译，不在工具实现中散布开关。

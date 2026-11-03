@@ -147,13 +147,13 @@ public sealed class FixR1RegressionTests
         Assert.Equal(512, (int?)FoundationV4Result.ReconcileWorker(exported, false, null).StructuredContent?["data"]?["stackUsageBytes"]);
     }
 
-    [Theory] [InlineData(false)] [InlineData(true)]
-    public async Task Portal_attachment_without_a_project_preserves_connection_process_and_channel_epoch(bool plcWorker)
+    [Fact]
+    public async Task Portal_attachment_without_a_project_preserves_connection_process_and_channel_epoch()
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.21.dll"), "offline session fixture");
-        using var worker = new WorkerBackendFixture(plcWorker, new Foundation.HostOptions { ReleaseKey = "21", BundleRoot = AppContext.BaseDirectory,
-            WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, EngineWorkerExe = exe, NativeEnabled = true, BundledWorker = false }, WorkerBackendFixture.Hash(exe));
+        using var worker = new WorkerBackendFixture(new Foundation.HostOptions { ReleaseKey = "21", BundleRoot = AppContext.BaseDirectory,
+            WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, NativeEnabled = true, BundledWorker = false });
         await worker.Call("Attach", new JsonObject { ["processId"] = Environment.ProcessId }, CancellationToken.None);
         await worker.Call("FixtureNoProject", new JsonObject(), CancellationToken.None);
         var snapshot = await worker.Status(CancellationToken.None);

@@ -38,14 +38,6 @@ internal static class PlcExchangeTarget
     internal static IReadOnlyList<McpServerTool> HostTools => Registered.Value;
     internal static FoundationCatalog HostCatalog() => new(Release, HostTools);
     internal static McpServerTool RegisteredTool(string name) => HostTools.Single(tool => tool.ProtocolTool.Name == name);
-    // What the V20/V21 engine host publishes: the frozen engine export
-    // (tests/FoundationHost/TiaMcp.EngineHost.Tests/Fixtures) merged with the same shared registration.
-    internal static IToolCatalogView EngineHostCatalog(FoundationCatalog host)
-    {
-        var frozen = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "EngineCatalog" + Release + ".json")))!.AsObject();
-        var engine = new EngineCatalog(frozen, (string)frozen["workerSha256"]!, Release);
-        return new SharedToolCatalog(engine, HostTools, host.Lite.Select(tool => tool.Name).ToHashSet(StringComparer.Ordinal));
-    }
     private sealed class MetadataWorker : foundationhost::TiaMcp.FoundationHost.IFoundationWorker
     {
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)

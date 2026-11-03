@@ -9,7 +9,6 @@
     <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="global,enginehost" />
     <!-- The host-registered tools (LegacyHostToolRegistry) are the successor subject of the engine reflection rows. -->
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" />
-    <None Include="../TiaMcp.EngineHost.Tests/Fixtures/EngineCatalog*.json" Link="Fixtures/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/PlcExchangeContractsTests.cs" Link="PlcExchangeContractsTests.cs" />
     <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/HmiExchangeContractsTests.cs" Link="HmiExchangeContractsTests.cs" />
     <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/P707bNativeTests.cs" Link="P707bNativeTests.cs" />

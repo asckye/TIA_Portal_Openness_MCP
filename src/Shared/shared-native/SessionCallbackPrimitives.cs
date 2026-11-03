@@ -1,4 +1,4 @@
-#if WORKER_SESSION_LIFECYCLE || TIA_ENGINE_LOCAL_PRIMITIVES
+#if WORKER_SESSION_LIFECYCLE
 using System;
 using System.Collections.Generic;
 using TiaMcp.Adapters.Contracts;
@@ -6,19 +6,12 @@ using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
 
-#if TIA_ENGINE_LOCAL_PRIMITIVES
-namespace TiaMcp.Shared.Native
-#else
 namespace TiaMcp.Adapters.Session
-#endif
 {
     // The engine and the standalone worker use the same cached identity and native
     // guard sequence. Delegates keep ownership, token invalidation and handles local.
     public static partial class SessionCallbackPrimitives
     {
-#if TIA_ENGINE_LOCAL_PRIMITIVES
-        public static long ProcessStart(int pid) => Portal.ProcessStart(pid);
-#endif
         public static T Capture<T>(int? pid, long ticks, bool reserved, Func<T> capture,
             Func<int, long>? processStart = null)
         {

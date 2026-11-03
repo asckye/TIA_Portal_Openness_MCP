@@ -12,7 +12,7 @@ internal sealed class ProductionWorkerBudgets : IDisposable
     private readonly IDictionary<string, TimeSpan> budgets;
     private readonly Dictionary<string, TimeSpan> scaled;
     private bool disposed;
-    // client: the production WorkerClient or EngineWorkerClient whose own policy the calls read.
+    // client: the production WorkerClient whose own policy the calls read.
     internal ProductionWorkerBudgets(object client)
     {
         budgets = Live(client);

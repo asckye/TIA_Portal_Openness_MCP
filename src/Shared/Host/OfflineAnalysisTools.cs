@@ -1,4 +1,3 @@
-#if !TIA_ENGINE_PORTED
 using ModelContextProtocol.Protocol;
 using System;
 using System.ComponentModel;
@@ -166,5 +165,3 @@ namespace TiaMcpServer.ModelContextProtocol
 
     }
 }
-
-#endif

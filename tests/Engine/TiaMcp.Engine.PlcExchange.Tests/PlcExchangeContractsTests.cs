@@ -246,7 +246,7 @@ namespace PlcExchangeTests
             var entries = Entries();
 #if TIA_PLC_EXCHANGE_TESTS
             // Host subject: the same 25 names, each registered once in the host-built catalog under
-            // its V4 name only, with the parameters and metadata the engine host publishes.
+            // its V4 name only, with the production host metadata.
             var names = entries.Keys.Concat(PlcExchangeTarget.EngineOnlyExternalSourceTools).ToArray();
             Assert.Equal(25, names.Distinct(StringComparer.Ordinal).Count());
             Assert.Contains(name, names);
@@ -254,16 +254,12 @@ namespace PlcExchangeTests
             Assert.All(entries.Values, method => Assert.True(method.ReturnType == typeof(CallToolResult)
                 || method.ReturnType == typeof(System.Threading.Tasks.Task<CallToolResult>)));
             var catalog = PlcExchangeTarget.HostCatalog();
-            var engineHost = PlcExchangeTarget.EngineHostCatalog(catalog);
             Assert.DoesNotContain(catalog.IncludingUnavailable.Keys, key => string.Equals(key, oldName, StringComparison.OrdinalIgnoreCase));
             foreach (string tool in names)
             {
                 Assert.Single(catalog.IncludingUnavailable.Keys, key => string.Equals(key, tool, StringComparison.OrdinalIgnoreCase));
                 Assert.True(catalog.All.TryGetValue(tool, out var descriptor), tool);
-                Assert.True(engineHost.All.TryGetValue(tool, out var published), tool);
-                var expected = JsonSerializer.SerializeToNode(published, ModelContextProtocol.McpJsonUtilities.DefaultOptions);
-                var actual = JsonSerializer.SerializeToNode(descriptor, ModelContextProtocol.McpJsonUtilities.DefaultOptions);
-                Assert.True(JsonNode.DeepEquals(expected, actual), tool + "\nengine-host=" + expected + "\nplc-host=" + actual);
+
             }
 #else
             Assert.Equal(25, entries.Count);

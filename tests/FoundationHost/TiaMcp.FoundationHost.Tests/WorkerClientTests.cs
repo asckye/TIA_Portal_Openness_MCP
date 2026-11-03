@@ -30,19 +30,15 @@ internal static class WorkerClientTests
 public sealed class WorkerDispatchTests
 {
     [Xunit.Theory]
-    [Xunit.InlineData(false, false)] [Xunit.InlineData(true, false)]
-    [Xunit.InlineData(false, true)] [Xunit.InlineData(true, true)]
-    public async Task Both_clients_journal_the_served_tool_and_host_request_id(bool engine, bool observed)
+    [Xunit.InlineData(false)]
+    [Xunit.InlineData(true)]
+    public async Task Client_journals_the_served_tool_and_host_request_id(bool observed)
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        string release = engine ? "21" : "19";
+        string release = "19";
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         var rows = new List<string>();
-        using IFoundationWorker? plc = engine ? null : new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
-        using var worker = engine ? new foundationhost::TiaMcp.FoundationHost.EngineWorkerClient(
-            new foundationhost::TiaMcp.FoundationHost.HostOptions { ReleaseKey = release, BundleRoot = AppContext.BaseDirectory,
-                WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, EngineWorkerExe = exe, NativeEnabled = true, BundledWorker = false },
-            foundationhost::TiaMcp.FoundationHost.EngineWorkerClient.Hash(exe)) : null;
+        using IFoundationWorker plc = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
         TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(rows.Add);
         enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(rows.Add);
         var previousBinding = TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot;
@@ -52,21 +48,16 @@ public sealed class WorkerDispatchTests
         try
         {
             using IDisposable request = observed
-                ? engine ? enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe("served-request", "GetSessionState", "host", release, false, () => "{}")
-                    : TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe("served-request", "GetSessionState", "host", release, false, () => "{}")
-                : engine ? foundationhost::TiaMcp.FoundationHost.FoundationWorkerRequest.Use("served-request", "GetSessionState")
-                    : FoundationWorkerRequest.Use("served-request", "GetSessionState");
-            var result = engine ? await worker!.Call("FixtureCorrelation", new(), CancellationToken.None)
-                : await plc!.Call("FixtureCorrelation", new(), CancellationToken.None);
+                ? TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe("served-request", "GetSessionState", "host", release, false, () => "{}")
+                : FoundationWorkerRequest.Use("served-request", "GetSessionState");
+            var result = await plc.Call("FixtureCorrelation", new(), CancellationToken.None);
             Xunit.Assert.Equal("served-request", (string?)result!["id"]);
             Xunit.Assert.Equal("GetSessionState", (string?)result["tool"]);
             var dispatch = rows.Select(row => JsonNode.Parse(row)!).Where(row => (string?)row["tool"] == "worker:GetSessionState").ToArray();
             Xunit.Assert.Equal(new[] { "BEFORE", "RETURNED" }, dispatch.Select(row => (string?)row["phase"]));
             Xunit.Assert.All(dispatch, row => Xunit.Assert.Equal("served-request", (string?)row["id"]));
             rows.Clear();
-            await Xunit.Assert.ThrowsAnyAsync<Exception>(() => engine
-                ? worker!.Call("Attach", new() { ["processId"] = 901 }, CancellationToken.None)
-                : plc!.Call("Attach", new() { ["processId"] = 901 }, CancellationToken.None));
+            await Xunit.Assert.ThrowsAnyAsync<Exception>(() => plc.Call("Attach", new() { ["processId"] = 901 }, CancellationToken.None));
             dispatch = rows.Select(row => JsonNode.Parse(row)!).Where(row => (string?)row["tool"] == "worker:GetSessionState").ToArray();
             Xunit.Assert.Equal(new[] { "BEFORE", "THREW" }, dispatch.Select(row => (string?)row["phase"]));
             Xunit.Assert.All(dispatch, row => Xunit.Assert.Equal("served-request", (string?)row["id"]));

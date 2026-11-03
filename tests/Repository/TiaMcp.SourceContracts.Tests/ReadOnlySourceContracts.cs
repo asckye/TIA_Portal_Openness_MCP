@@ -47,7 +47,6 @@ public sealed class ReadOnlySourceContracts
         Contains(EngineSources.BlockAfter(doctorSource, "private static (bool Connected, string? ProjectName) ReadPortalState()"), "HostToolServices.Observe(\"session.GetState\", new JsonObject())");
         Excludes(doctorSource, "EngineServices.", "Siemens.Portal");
         Assert.Matches(@"\[MethodImpl\(MethodImplOptions\.NoInlining\)\]\s+private static Task<bool> ReadOpennessGroup", doctorSource);
-        Contains(Read("src/FoundationHost/EngineWorkerClient.cs"), "channel!.CallAsync(\"engine.observe\"");
         Count(logic, "opennessOk = group();", 1);
         Contains(logic, "catch (Exception ex)", "\"fail\", ex.Message", "if (!isConnected && connectIfNeeded)", "isConnected = connect();");
         Contains(Sources.Member("EnsureOpennessUserGroup", tool: false, owner: "ProjectLifecycleSessionTools"), "_service.EnsureGroup()");

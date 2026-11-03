@@ -6,7 +6,6 @@ using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using Xunit;
 using Catalog = enginehost::TiaMcp.FoundationHost.FoundationCatalog;
-using Export = enginehost::TiaMcp.FoundationHost.EngineCatalog;
 using Data = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
 
 namespace TiaMcp.FoundationHost.Tests;
@@ -27,13 +26,6 @@ public sealed class HostCatalogTests
         Assert.NotNull(host.Find("GetToolUsage"));
     }
 
-    [Theory, InlineData("20"), InlineData("21")]
-    public void Host_catalog_matches_every_frozen_export_field_and_order(string release)
-    {
-        var (host, shared, essentials) = Build(release);
-        var root = Read(release);
-        new Export(root, (string)root["workerSha256"]!, release).CrossCheck(host, shared, essentials);
-    }
 
     [Theory, InlineData("20"), InlineData("21")]
     public void Example_profile_data_preserves_the_original_registration_mapping(string release)
@@ -46,34 +38,8 @@ public sealed class HostCatalogTests
             Assert.Equal(foundationNames.Contains(name) ? "plc-foundation" : "full-engine", Data.Releases[release].ExampleProfile(name));
     }
 
-    [Theory, InlineData("20"), InlineData("21")]
-    public void Changed_export_instructions_reports_the_field(string release)
-    {
-        var (host, shared, essentials) = Build(release);
-        var root = Read(release);
-        root["serverInstructions"] = "Changed export.";
-        var error = Assert.Throws<InvalidDataException>(() =>
-            new Export(root, (string)root["workerSha256"]!, release).CrossCheck(host, shared, essentials));
-        Assert.Contains("serverInstructions", error.Message);
-    }
 
-    [Theory, InlineData("20"), InlineData("21")]
-    public void Changed_host_description_reports_the_field(string release)
-    {
-        var (host, shared, essentials) = Build(release);
-        host.All["FindTools"].Tool.Description = "Changed host description.";
-        var root = Read(release);
-        var error = Assert.Throws<InvalidDataException>(() =>
-            new Export(root, (string)root["workerSha256"]!, release).CrossCheck(host, shared, essentials));
-        Assert.Contains("FindTools.tool.description", error.Message);
-    }
 
-    private static JsonObject Read(string release)
-    {
-        string repo = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
-        return JsonNode.Parse(File.ReadAllText(Path.Combine(repo,
-            "tests/FoundationHost/TiaMcp.EngineHost.Tests/Fixtures/EngineCatalog" + release + ".json")))!.AsObject();
-    }
 
     private static (Catalog Host, IReadOnlyList<McpServerTool> Shared, ISet<string> Essentials) Build(string release)
     {

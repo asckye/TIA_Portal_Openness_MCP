@@ -66,8 +66,6 @@ public sealed class BundleRootTests : IDisposable
         Put("runtime/v" + release + "/release-key.txt", release);
         var options = HostOptions.Parse(new[] { "--profile", "full" }, At("runtime/v" + release));
         Assert.Equal(At("runtime/v" + release + "/worker/TiaMcp.PlcWorker." + release + ".exe"), options.WorkerExe);
-        Assert.Null(options.EngineWorkerExe);
-        Assert.Null(options.EngineCatalog);
         Assert.Equal(scratch, BundleLayout.ResolveRoot(Path.GetDirectoryName(options.WorkerExe)!, null, null));
         Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--engine-worker", At("worker.exe") }, At("runtime/v" + release)));
         var error = Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--engine-worker", At("custom.exe"), "--engine-catalog", At("custom.json") }, At("runtime/v" + release)));
@@ -81,7 +79,6 @@ public sealed class BundleRootTests : IDisposable
         Put("manifest/package-manifest.json", "fixture");
         Put("runtime/v" + release + "/release-key.txt", release);
         var options = HostOptions.Parse(new[] { "--plc-worker", "--profile", "full", "--offline" }, At("runtime/v" + release));
-        Assert.True(options.PlcWorker); Assert.Null(options.EngineWorkerExe); Assert.Null(options.EngineCatalog);
         Assert.Equal(At("runtime/v" + release + "/worker/TiaMcp.PlcWorker." + release + ".exe"), options.WorkerExe);
         Assert.True(options.BundledWorker); Assert.Equal(scratch, options.BundleRoot);
         options = HostOptions.Parse(new[] { "--plc-worker", "--worker-exe", At("custom worker.exe"), "--offline" }, At("runtime/v" + release));

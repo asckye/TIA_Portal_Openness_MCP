@@ -29,7 +29,7 @@ V20/V21 宿主在 TIA 缺失、版本不匹配或 Openness 环境未就绪时仍
 | V21 | 512 | 84 |
 <!-- generated:tool-counts:end -->
 
-交付包不再包含引擎：`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`、它们的 worker 文件和 `tool-catalog.json` 已从 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 的必需文件移入 `exclude` 与 `legacyCleanup` 规则，多版本打包器断言 `runtime/` 下没有引擎文件。引擎程序和私有交叉检查路线已退役；Q2 删除了剩余的非编译 `src/Engine` 源码和引擎专属检查。宿主继续以退出码 64 拒绝 `--engine-*` 选项。发布记录为 `manifest/multi-version-build.json`；`manifest/release-build.json` 作为历史记录保留，不再交付。
+交付包不再包含引擎：`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`、它们的 worker 文件和 `tool-catalog.json` 已从 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 的必需文件移入 `exclude` 与 `legacyCleanup` 规则，多版本打包器断言 `runtime/` 下没有引擎文件。引擎程序和私有交叉检查路线已退役；Q2 删除了剩余的非编译 `src/Engine` 源码和引擎专属检查。Q3 删除宿主中仅由测试使用的引擎客户端、冻结目录交叉检查和死编译符号；所有会话只构造 `WorkerClient`。宿主继续以退出码 64 拒绝 `--engine-*` 选项。发布记录为 `manifest/multi-version-build.json`；`manifest/release-build.json` 作为历史记录保留，不再交付。
 
 每个 MCP 会话拥有一个独立 worker（八版相同）：stdio 为一个会话、一个 worker；HTTP 的 N 个同时存活会话对应 N 个 worker，不另设会话数量上限，部署时需按 worker 内存和 TIA 实例数限制客户端并发。HTTP 启动校验使用的短期 probe 在监听前退出，每个 worker 都绑定宿主 job object，会话结束、超时或宿主退出时终止。Disconnect 只结束当前会话的原生连接，RestartOpennessWorker 只重启调用方 worker；新 HTTP 会话从未绑定状态开始。工具桥接、审批/故障键、预演计划、暂存归属和导出句柄访问按会话隔离；导出内容仍共用进程内的 32 句柄/8,000,000 字符容量限制，避免 HTTP 并发扩大缓存上限。`/mcp/health` 无需鉴权，含 fileVersion、releaseKey 和 profile 名（V20/V21 仍为 `full-engine`，P8-04n 统一对外呈现前保持不变）；`/mcp/ready` 与 MCP 调用使用相同 Bearer 鉴权，只证明宿主已就绪。
 

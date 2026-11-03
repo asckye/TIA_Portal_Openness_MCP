@@ -27,9 +27,6 @@ internal sealed class HostOptions
     public string Transport { get; init; } = "stdio";
     public string HttpPrefix { get; init; } = "http://127.0.0.1:8735/";
     public string ApiKey { get; init; } = "";
-    public bool PlcWorker { get; init; } = true;
-    public string? EngineWorkerExe { get; init; }
-    public string? EngineCatalog { get; init; }
     public int EngineTimeoutSeconds { get; init; } = 120;
     public string? WorkerTimeoutConfig { get; init; }
     public bool WithUi { get; init; }
