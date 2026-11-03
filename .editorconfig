@@ -191,7 +191,7 @@ dotnet_diagnostic.CA2007.severity = none
 [src/{WorkerChannel,Logic,Adapters.Contracts}/**.cs]
 dotnet_diagnostic.CA2007.severity = suggestion
 
-# 测试与脚本（§12）
+# 测试与脚本（docs/standards/development.md 第 5.9 节）
 [{tests,scripts}/**.cs]
 dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA2201.severity = suggestion

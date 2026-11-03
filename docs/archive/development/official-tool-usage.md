@@ -70,7 +70,7 @@ blocks/methods, including setup and dependency context:
 - [Siemens code snippets](https://github.com/siemens/tia-portal-openness-code-snippets),
   commit `4a8cc79d0666633e524e52f3335d99ff993f8830`: 41 C# files, eight project files,
   README, license and two build files. Source licensing is retained in the
-  [upstream license](../../reference/siemens-code-snippets/LICENSE.md).
+  [upstream license](../../../reference/siemens-code-snippets/LICENSE.md).
   Fixtures/build properties select V21 while the README says V20; neither proves
   compatibility with older releases.
 
@@ -105,7 +105,7 @@ against each release's official XSD. This does not validate a whole document or 
 
 Full/lite and STDIO/HTTP are checked. Foundation fake-worker tests verify retrieval
 does not invoke the worker. The eight-version audit writes the
-[coverage record](../../manifest/tool-usage-coverage.json). Native PLC/HMI
+[coverage record](../../../manifest/tool-usage-coverage.json). Native PLC/HMI
 import/compile acceptance of the new sources remains NOT RUN.
 
 ## Adding or changing an example
@@ -121,4 +121,4 @@ Choose a complete source, a fragment or an exported-module edit honestly. Update
 the same record's operation-specific result interpretation, version/encoding
 constraints and official source links. Run the generator and the functional
 retrieval checks for every affected release; do not add a second guide system
-for one API incident or language. Current build/test scope is in [validation](validation.md).
+for one API incident or language. Current build/test scope is in [validation](../../manuals/validation.md).

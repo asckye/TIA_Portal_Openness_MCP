@@ -2,7 +2,7 @@
 
 状态：现行 · 最后核对：2026-11-01，master `902a86fe`
 
-[文档目录](../README.md) · [架构说明](design.md) · [V4 工具协议规范](design.md) · [漏洞报告方式](../../.github/SECURITY.md)
+[文档目录](../README.md) · [设计规范](design.md) · [开发规范](development.md) · [漏洞报告方式](../../.github/SECURITY.md)
 
 本文记录自动化工程工作台的资产、信任边界、STRIDE 威胁和现有防护措施，供维护者、实现代理和审查者使用。漏洞的报告方式和受理范围只在 [`.github/SECURITY.md`](../../.github/SECURITY.md) 中维护，本文不重复。
 
@@ -11,7 +11,7 @@
 ## 1 范围与威胁模型的前提
 
 - 产品在一台 Windows 电脑上运行：FoundationHost 为每个 MCP 会话启动一个 PLC worker，worker 经 Siemens Openness 操作 TIA Portal；工作台在同一台电脑上审批写调用。虚拟机部署时，AI 客户端可以在宿主机上，经 HTTP 连接虚拟机中的 FoundationHost。
-- 信任边界是“同一 Windows 用户”。三条本机管道防止 MCP 客户端经工具参数、元数据或批次越权（例如自己批准写调用、关闭审批），不防同一用户下已经能执行代码的本机进程（[架构说明](design.md) 第 8 节）。
+- 信任边界是“同一 Windows 用户”。三条本机管道防止 MCP 客户端经工具参数、元数据或批次越权（例如自己批准写调用、关闭审批），不防同一用户下已经能执行代码的本机进程（[设计规范](design.md) 第 2.5 节）。
 - 主要威胁是“AI 经 MCP 工具越权写入”：模型可能误解提示，也可能受到项目内容、文件或网页中注入文本的影响。
 - 不在范围内：已经取得本机管理员权限的攻击者、TIA Portal、Openness 和 Windows 本身的漏洞、对生产设备执行下载这一运营决定（见 [`.github/SECURITY.md`](../../.github/SECURITY.md)）。
 
@@ -71,7 +71,7 @@
 
 ### SEC-01 写调用默认须在工作台审批
 
-- 分类为 `WRITE`、`ONLINE-WRITE` 的实际执行，以及 `SaveProject`、`SaveProjectCopy`、`CloseProject`、`StageImportFiles`、`CleanupStagedImportFiles`，在派发前等待工作台审批。预览（`dryRun: true`、`mode: preview`）不审批（[V4 工具协议规范](design.md) 第 9 节）。
+- 分类为 `WRITE`、`ONLINE-WRITE` 的实际执行，以及 `SaveProject`、`SaveProjectCopy`、`CloseProject`、`StageImportFiles`、`CleanupStagedImportFiles`，在派发前等待工作台审批。预览（`dryRun: true`、`mode: preview`）不审批（[设计规范](design.md) 第 4.10 节）。
 - 审批默认开启；`approval.settings` 缺失或格式无效时按开启处理。开关变化写入审计。工具不能写 `approval.settings`，包括经短文件名、链接或文件 ID 的写法。
 - 宿主生成请求 nonce，MCP 参数和元数据都不能充当审批令牌；重复的请求号被拒绝；迟到、不匹配或格式错误的决定一律按拒绝处理。
 - 实现：`src/Shared/ApprovalSettings.cs`、`src/Shared/ApprovalPipe.cs`、`src/Shared/ApprovalProtocol.cs`、`src/FoundationHost/FoundationTools.cs`。
@@ -148,7 +148,7 @@
 
 ### SEC-12 结果未知时不重放
 
-- 写入、传输或 worker 通道中断时返回 `OUTCOME_UNKNOWN`，会话按需要锁定，恢复前拒绝后续原生调用；宿主和客户端都不得自动重放写调用（[ADR 0008](decisions/0008-worker-timeouts-and-faults.md)，[V4 工具协议规范](design.md) 第 10 节）。TIA 进程租约把一个 TIA 进程保留给一个 MCP 会话（[ADR 0011](decisions/0011-tia-process-lease-on-all-releases.md)）。
+- 写入、传输或 worker 通道中断时返回 `OUTCOME_UNKNOWN`，会话按需要锁定，恢复前拒绝后续原生调用；宿主和客户端都不得自动重放写调用（[ADR 0008](decisions/0008-worker-timeouts-and-faults.md)，[设计规范](design.md) 第 4.11 节）。TIA 进程租约把一个 TIA 进程保留给一个 MCP 会话（[ADR 0011](decisions/0011-tia-process-lease-on-all-releases.md)）。
 - 实现：`src/Logic/V4/HostBehavior.cs`、`src/Logic/ModelContextProtocol/RecoveryHints.cs`、`src/PlcWorker/FoundationProcessLease.cs`。
 - 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs`；注册套件 `worker-robustness`。
 
@@ -167,7 +167,7 @@
 | HTTP 访问密钥在命令行和客户端配置中是明文 | 宿主经 `--http-api-key` 接收；客户端配置写入 `Authorization` 头 | 未决定 |
 | 更新包没有签名 | 只有同源 `.sha256` | 未决定 |
 | 凭据按参数名替换 | 没有 UMAC、PLC 保护、Web 服务器凭据的专用名单 | 新增带凭据参数的工具时按 SEC-06 的命名规则命名，并在测试中证明被替换 |
-| 原生失败的诊断信息 | `NATIVE_OPERATION_FAILED` 的 `nativeMessage` 多数为空 | 维护者 2026-11-01 决定返回去敏后的原生消息首行、原生异常类型、HResult 和关联日志的诊断编号，堆栈只进日志（DES-4，尚未实现；见 [MCP 工具设计规范](design.md) 第 6 节） |
+| 原生失败的诊断信息 | `NATIVE_OPERATION_FAILED` 的 `nativeMessage` 多数为空 | 维护者 2026-11-01 决定返回去敏后的原生消息首行、原生异常类型、HResult 和关联日志的诊断编号，堆栈只进日志（DES-4，尚未实现；见[设计规范](design.md)第 6.5 节） |
 | EplanMCP 的安全借鉴项 | 虚拟机 HTTP 加固、“项目内容是数据”的服务器说明、审批卡清理等 | P8-95a–g，尚未实施 |
 
 ## 7 开发中的安全要求
@@ -179,4 +179,4 @@
 - 启动子进程只用参数列表或 stdin，不拼接 shell 命令行。
 - 新的本机管道使用 `LocalPipeSecurity` 创建并核对对方身份。
 - 不在日志、文档、测试夹具和提交中写真实凭据、机器地址、客户项目或未脱敏的截图。
-- 删除或放宽上述测试与检查须经维护者批准（[测试策略](development.md) 第 4 节）。
+- 删除或放宽上述测试与检查须经维护者批准（[开发规范](development.md) 第 5.8 节）。

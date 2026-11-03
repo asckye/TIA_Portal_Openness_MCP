@@ -2,7 +2,7 @@
 
 状态：历史记录 · 最后核对：2026-10-11，master `578a05ee` · 现行规则见[设计规范](design-spec/README.md)
 
-[重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md)
+[重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [验证分层](../../manuals/validation.md) · [版本框架](unified-version-framework.md)
 
 本页是 P4-01 的设计结论。路径前缀：**E** = `src/Engine/Siemens/Portal/`，
 **F** = `src/Adapters/Native/` 与 `Policy/`（第 D 步迁移后），**S** = `src/Adapters/Native/Studio/OpennessSession.cs`。
@@ -112,7 +112,7 @@ Foundation 的具体信封如下（每行一个 UTF-8 JSON 对象，无 BOM）�
 
 信封统一使用宿主已有的 `System.Text.Json 10.0.0-preview.4.25258.110`；worker 的 Newtonsoft DTO 结果和错误证据通过 `WriteRawValue` 原样嵌入，宿主的 DTO codec 仍是 STJ，P2-04 再统一 DTO codec。worker 部署包含 WorkerChannel、STJ 及 net48 的传递依赖；构建脚本既有的 DLL 复制规则会一起部署，三份发布文件清单分别校验它们。
 
-[worker-channel 回归套件及预览规则映射](../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcp.WorkerChannel.TransportFixture` 是 Foundation 协议 2 的夹具；第 A 步删除了无 `Server` 前缀的两个预览夹具及其项目。
+[worker-channel 回归套件及预览规则映射](../../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcp.WorkerChannel.TransportFixture` 是 Foundation 协议 2 的夹具；第 A 步删除了无 `Server` 前缀的两个预览夹具及其项目。
 
 **第 A 步删除 `TiaMcp.WorkerProtocol.*`**：8 个源码目录、7 个测试项目（实测 6,676 个断言）以及
 `TiaMcp.TransportFixture`/`TiaMcp.EndpointFixture`。理由：生产中没有使用；长度前缀分帧只在 Linux 上验证过；维护两套并行编解码，
@@ -127,7 +127,7 @@ JsonLegacy 的 `DifferentialCodec.cs` 和两个夹具。原套件实测断言数
 JsonLegacy 5,462、HostPreview 78、AsyncPreview 203、HostTransport 102、Endpoint 383（含进程测试 302），
 共 **6,676**。删除 70 个版本化文件、10,572 行（其中 C# 25 个文件、3,156 行）。循环、差分语料和进程断言均按原计数器统计，不等同于 xunit 用例数。
 下表按断言规则归组；`P` = `ProtocolTests`，`S` = `ServerTests`，`X` = `ProcessTests`，
-`A` = 新增的 `PreviewRuleTests`，均在 [worker-channel 测试目录](../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests)。
+`A` = 新增的 `PreviewRuleTests`，均在 [worker-channel 测试目录](../../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests)。
 
 | 预览断言组（包含循环变体） | 协议 2 测试或不移植原因 |
 |---|---|
@@ -298,7 +298,7 @@ Studio 仍在原位置 `ToList()`，不能为了共用代码提前物化或省�
 `evidence` 是仓库内证据输出路径，版本键必须使用字符串。不同领域单独运行证明，不能合并差量后验收；
 默认变体同时核对领域内精确去重与领域外逐调用者清单，防止同一 Siemens 成员在两个领域一增一减互相抵消。
 
-原语链接也按领域拆分：[vci.props](../../src/Shared/shared-native/vci.props) 显式列出
+原语链接也按领域拆分：[vci.props](../../../src/Shared/shared-native/vci.props) 显式列出
 `TiaSharedNativePrimitive` 项及其 `Link` 路径。共享引擎 props 与 `Adapter.Sources.props` 都只通配导入
 `src/Shared/shared-native/*.props` 这个专用目录，默认引擎和每版适配器消费同一项；不通配收集 C# 源码。
 以后每个领域新增自己的小 props 文件即可，避免并行任务修改同一清单，审查者仍能逐行核对进入引擎和适配器的原语源码。
@@ -336,7 +336,7 @@ Studio 有 VCI 的六个版本也按同一检查器比较原有每个方法；14
 
 共享路径的全局引擎 ∪ 适配器多重集按精确增减验收：引擎 VCI 的直接成员归零，适配器只加入宿主实际到达的新原语，
 共享成员不保留重复的原生实现。领域外的方法体及织入清单不允许变化。默认迁移及共享路径增减清单均由检查器生成到
-[VCI 原生迁移证据](evidence/p4-i1-native-evidence.json)，不得手填或按实际差异扩大允许范围。
+[VCI 原生迁移证据](../../development/evidence/p4-i1-native-evidence.json)，不得手填或按实际差异扩大允许范围。
 该 JSON 的 `acceptanceRule` 记录上述规则；默认精确去重差量、展开图及其他检查全部通过时才令 `accepted` 为 `true`。
 每版 `errors` 保留实际失败；`--include-failed` 只允许输出失败证据，仍返回非零退出码。
 证据格式 2 的 `expectedNativeDelta` 增加 `opcode`：直接成员的计数、去重及允许增量均以成员与分派操作码为键，
@@ -375,7 +375,7 @@ python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/share
 其 Mono.Cecil 仅用于元数据解析。所有生成的测试文件和日志留在当前 worktree 的 `bin-build`。
 随后跑离线 TRX 数量门禁、全部 TiaMcp.Engine.Harness 模式、VersionControl 领域逐字节比较、P0-06 原始响应和契约快照、
 两种 Studio 的 Core/GUI 与 bridge smoke、八版织入，以及仓库、bundle、异常、注释、MCP 文本和信封门禁。
-真机新增项目见[验收台账](../reference/real-machine-ledger.md)：V20/V21 的五工具、参数与线程、句柄失效、部分失败和诊断关联均须回放；
+真机新增项目见[验收台账](../../reference/real-machine-ledger.md)：V20/V21 的五工具、参数与线程、句柄失效、部分失败和诊断关联均须回放；
 接受这些结果前不能把开关默认值改为 `true`。
 
 ## 关键文件

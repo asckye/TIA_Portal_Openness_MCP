@@ -2,7 +2,7 @@
 
 状态：历史记录 · 最后核对：2026-10-11，master `578a05ee` · 现行规则见[设计规范](design-spec/README.md)
 
-[重构计划](refactor-plan.md) · [版本框架](unified-version-framework.md) · [验证分层](validation.md)
+[重构计划](refactor-plan.md) · [版本框架](unified-version-framework.md) · [验证分层](../../manuals/validation.md)
 
 本页是 P3-01 的设计结论。路径相对 `src/Engine`；`P.` 表示 `Siemens/Portal/Portal.`，
 `T.` 表示 `ModelContextProtocol/Tools/McpServer.`。数字为 2026-10-03 的源码统计。
@@ -118,30 +118,30 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 
 | 原试点文件（`McpServer.` 前缀） | 实例工具类 | 工具数 |
 |---|---|---|
-| `Ecosystem.cs`、`EcosystemFiles.cs` | [EcosystemTools](../../src/Shared/Host/EcosystemTools.cs) | 3 |
-| `V21Ecosystem.cs` | [V21EcosystemTools](../../src/Shared/Host/V21EcosystemTools.cs) | 4 |
-| `GitWorkflow.cs` | [GitWorkflowTools](../../src/Shared/Host/GitWorkflowTools.cs) | 1 |
-| `PlcTemplates.cs` | [TemplateTools](../../src/Shared/Host/TemplateTools.cs) | 2 |
-| `QualityAudit.cs` | [QualityAuditTools](../../src/Shared/Host/QualityAuditTools.cs) | 1 |
-| `ImportOrder.cs` | [ImportOrderTools](../../src/EngineHost/ModelContextProtocol/Tools/ImportOrderTools.cs) | 1 |
-| `Guides.cs` | P6-07 已并入 [ToolUsageTools](../../src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs)，原独立入口删除 | 0 |
-| `ToolUsage.cs` | [ToolUsageTools](../../src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs) | 1 |
-| `PlcSoftware.OfflineSuites.cs` | [OfflineSuiteTools](../../src/Shared/Host/OfflineSuiteTools.cs) | 16 |
+| `Ecosystem.cs`、`EcosystemFiles.cs` | [EcosystemTools](../../../src/Shared/Host/EcosystemTools.cs) | 3 |
+| `V21Ecosystem.cs` | [V21EcosystemTools](../../../src/Shared/Host/V21EcosystemTools.cs) | 4 |
+| `GitWorkflow.cs` | [GitWorkflowTools](../../../src/Shared/Host/GitWorkflowTools.cs) | 1 |
+| `PlcTemplates.cs` | [TemplateTools](../../../src/Shared/Host/TemplateTools.cs) | 2 |
+| `QualityAudit.cs` | [QualityAuditTools](../../../src/Shared/Host/QualityAuditTools.cs) | 1 |
+| `ImportOrder.cs` | [ImportOrderTools](../../../src/EngineHost/ModelContextProtocol/Tools/ImportOrderTools.cs) | 1 |
+| `Guides.cs` | P6-07 已并入 [ToolUsageTools](../../../src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs)，原独立入口删除 | 0 |
+| `ToolUsage.cs` | [ToolUsageTools](../../../src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs) | 1 |
+| `PlcSoftware.OfflineSuites.cs` | [OfflineSuiteTools](../../../src/Shared/Host/OfflineSuiteTools.cs) | 16 |
 
-试点工具直接使用 [OfflineToolExecution](../../src/Shared/Host/OfflineToolExecution.cs)
-与 [XmlBuildResults](../../src/EngineHost/ModelContextProtocol/Tools/XmlBuildResults.cs)；目录查询和工具构造仍由 MCP 宿主提供。
+试点工具直接使用 [OfflineToolExecution](../../../src/Shared/Host/OfflineToolExecution.cs)
+与 [XmlBuildResults](../../../src/EngineHost/ModelContextProtocol/Tools/XmlBuildResults.cs)；目录查询和工具构造仍由 MCP 宿主提供。
 P6-07 将指南和配方统一为 `GetToolUsage` 的语言/示例选择器，已删除不再注册工具的指南类。
 这些试点工具没有 CLI 静态调用点；CLI 的同名报告命令直接使用既有构造器。
 TiaMcp.Engine.Harness 的 `engineering-api-only` 检查真实实例归属、单例生命周期和指南依赖注入；
-[Test-PilotTools.py](../../scripts/checks/Test-PilotTools.py) 通过 STDIO 覆盖九个领域的直接、桥接及隔离子进程调用。
+[Test-PilotTools.py](../../../scripts/checks/Test-PilotTools.py) 通过 STDIO 覆盖九个领域的直接、桥接及隔离子进程调用。
 传入 `--baseline-exe` 可逐项比较迁移前后的 `tools/list` 序列；`ToolCatalog` 按名称排序，SDK 的线上枚举序列
 仍以实际宿主输出为准，不在本步调整。
 
 ### Portal 领域迁移样板
 
-CFC 的现行实现为 [CfcAdapter](../../src/Adapters/Native/Options/CfcAdapter.cs)，命名空间为
+CFC 的现行实现为 [CfcAdapter](../../../src/Adapters/Native/Options/CfcAdapter.cs)，命名空间为
 `TiaMcp.Adapters.Native.Options`，通过 `OptionalProductSession` 复用会话的 worker lane 和工程访问。
-[CfcTools](../../src/Shared/CfcTools.cs) 与 [CfcPortService](../../src/Shared/CfcPortService.cs) 在 Shared；
+[CfcTools](../../../src/Shared/CfcTools.cs) 与 [CfcPortService](../../../src/Shared/CfcPortService.cs) 在 Shared；
 托管 port 持有 worker delegate，不持有原生 `IEngineeringSession`。请求/返回为 Contracts DTO，
 宿主按 release 注册工具并投影通用 missing-portal 拒绝。工具与 port 保持非 `IDisposable` 单例，
 无静态 CLI 转发。V18 及以后由共享 `CfcSafetyPolicy` 在 provider 访问前拒绝不安全的导出和保护操作，导入保留。
@@ -149,7 +149,7 @@ CFC 的现行实现为 [CfcAdapter](../../src/Adapters/Native/Options/CfcAdapter
 迁移前先单独补吞异常原因并缩减基线，保存注释补丁，以去注释代码和 Release EXE 字节一致性验收。
 随后原样移动方法，将服务加入 TiaMcp.Engine.Harness 的 `EngineSurface` 服务名单；`CfcShapeChecks` 和
 `EngineeringApiShapeTests` 保留原断言，并验证真实声明类型、共享会话、单例和工具到服务的 IL 调用。
-[Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCallOrder.py) 接收两份 `NativeCallWeaver verify`
+[Compare-NativeCallOrder.py](../../../scripts/checks/Compare-NativeCallOrder.py) 接收两份 `NativeCallWeaver verify`
 清单（`--baseline before.json --current after.json`），比较全局 Siemens 成员多重集合，并按同名方法自动匹配
 从 `Portal` / `McpServer` / `Program` 消失、在服务、工具或具名 CLI 类型中出现的方法族。折入 lambda、局部函数及其迭代器后的
 各方法体按 IL offset 排序，保留局部编号和重载签名，忽略迁移造成的全局闭包编号。
@@ -164,7 +164,7 @@ full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，�
 `--domain Cfc` 覆盖两个工具的八种操作；均须到达未连接会话的工程前置检查，返回文本除 `meta.timestamp`（桥接为 `Meta.timestamp`）外
 逐字节相同。契约、响应快照、原生清单及全部离线门禁仍按本页验收要求运行。
 
-CFC 已纳入 [Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCallOrder.py) 和
+CFC 已纳入 [Compare-NativeCallOrder.py](../../../scripts/checks/Compare-NativeCallOrder.py) 和
 `Test-DomainTools.py`（历史文件，已退役） 的统一领域检查；旧兼容入口已删除。
 
 ### CLI 宿主与命令实现
@@ -316,9 +316,9 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| 库 | [LibraryPortService](../../src/Shared/LibraryPortService.cs) / [LibraryTools](../../src/Shared/LibraryTools.cs)，原生实现 [LibraryService](../../src/Adapters/Native/Libraries/LibraryService.cs) | 14 |
-| VCI | [VersionControlService](../../src/Adapters/Native/Vci/VersionControlAdapter.cs) / [VersionControlTools](../../src/Shared/VersionControlTools.cs) | 5 |
-| SiVArc | [SivarcPortService](../../src/Shared/SivarcPortService.cs) / [SivarcTools](../../src/Shared/SivarcTools.cs)，原生实现 [SivarcAdapter](../../src/Adapters/Native/Optional/SivarcAdapter.cs) | 9 |
+| 库 | [LibraryPortService](../../../src/Shared/LibraryPortService.cs) / [LibraryTools](../../../src/Shared/LibraryTools.cs)，原生实现 [LibraryService](../../../src/Adapters/Native/Libraries/LibraryService.cs) | 14 |
+| VCI | [VersionControlService](../../../src/Adapters/Native/Vci/VersionControlAdapter.cs) / [VersionControlTools](../../../src/Shared/VersionControlTools.cs) | 5 |
+| SiVArc | [SivarcPortService](../../../src/Shared/SivarcPortService.cs) / [SivarcTools](../../../src/Shared/SivarcTools.cs)，原生实现 [SivarcAdapter](../../../src/Adapters/Native/Optional/SivarcAdapter.cs) | 9 |
 
 库生命周期、类型和主副本工具从混合工具文件一并迁入；SiVArc 的注册工具为 `GenerateSivarc`，其实现方法保留 `GenerateSiVArc` 标识符。
 VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例字段，保留原有获取、保活和失效清理顺序。
@@ -339,8 +339,8 @@ VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例�
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| 报警 | [AlarmsService](../../src/Shared/PlcB5Services.cs) / [AlarmsTools](../../src/Shared/AlarmsTools.cs) | 8 |
-| OPC UA | [OpcUaService](../../src/Shared/PlcB5Services.cs) / [OpcUaTools](../../src/Shared/OpcUaTools.cs) | 8 |
+| 报警 | [AlarmsService](../../../src/Shared/PlcB5Services.cs) / [AlarmsTools](../../../src/Shared/AlarmsTools.cs) | 8 |
+| OPC UA | [OpcUaService](../../../src/Shared/PlcB5Services.cs) / [OpcUaTools](../../../src/Shared/OpcUaTools.cs) | 8 |
 | 工艺对象 | [TechnologyObjectsService](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/Siemens/Services/TechnologyObjectsService.cs) / [TechnologyObjectsTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 7 |
 
 报警服务包括 `Step7Leftovers` 中的 XLSX 交换以及 `PlcBlockServices` 中的实例文本导入、文本列表管理；
@@ -366,11 +366,11 @@ OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具�
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| TestSuite | [TestSuiteAdapter](../../src/Adapters/Native/Options/TestSuiteAdapter.cs) + [TestSuitePortService](../../src/Shared/TestSuitePortService.cs) / [TestSuiteTools](../../src/Shared/TestSuiteTools.cs) | 4 |
-| V20Options | [OptionalProductsAdapter](../../src/Adapters/Native/Options/OptionalProductsAdapter.cs) + [OptionalProductsPortService](../../src/Shared/OptionalProductsPortService.cs) / [V20OptionsTools](../../src/Shared/V20OptionsTools.cs) | 5 |
-| OptionalEngineering | [OptionalEngineeringPortService](../../src/Shared/OptionalEngineeringPortService.cs) / [OptionalEngineeringTools](../../src/Shared/OptionalEngineeringTools.cs)，原生实现 [OptionalEngineeringAdapter](../../src/Adapters/Native/Optional/OptionalEngineeringAdapter.cs) | 2 |
-| SpecializedExchange | [SpecializedExchangeService](../../src/Shared/PlcB5Services.cs) / [SpecializedExchangeTools](../../src/Shared/SpecializedExchangeTools.cs) | 1 |
-| SoftwareUnitDeep | [SoftwareUnitDeepService](../../src/Shared/PlcB5Services.cs) / [SoftwareUnitDeepTools](../../src/Shared/SoftwareUnitDeepTools.cs) | 7 |
+| TestSuite | [TestSuiteAdapter](../../../src/Adapters/Native/Options/TestSuiteAdapter.cs) + [TestSuitePortService](../../../src/Shared/TestSuitePortService.cs) / [TestSuiteTools](../../../src/Shared/TestSuiteTools.cs) | 4 |
+| V20Options | [OptionalProductsAdapter](../../../src/Adapters/Native/Options/OptionalProductsAdapter.cs) + [OptionalProductsPortService](../../../src/Shared/OptionalProductsPortService.cs) / [V20OptionsTools](../../../src/Shared/V20OptionsTools.cs) | 5 |
+| OptionalEngineering | [OptionalEngineeringPortService](../../../src/Shared/OptionalEngineeringPortService.cs) / [OptionalEngineeringTools](../../../src/Shared/OptionalEngineeringTools.cs)，原生实现 [OptionalEngineeringAdapter](../../../src/Adapters/Native/Optional/OptionalEngineeringAdapter.cs) | 2 |
+| SpecializedExchange | [SpecializedExchangeService](../../../src/Shared/PlcB5Services.cs) / [SpecializedExchangeTools](../../../src/Shared/SpecializedExchangeTools.cs) | 1 |
+| SoftwareUnitDeep | [SoftwareUnitDeepService](../../../src/Shared/PlcB5Services.cs) / [SoftwareUnitDeepTools](../../../src/Shared/SoftwareUnitDeepTools.cs) | 7 |
 
 Motion、HMI、库及 SiVArc 生成工具已归入所属实例工具类；
 `ManagePlcSoftwareUnit` 归入 `SoftwareUnitDeepTools`。
@@ -395,9 +395,9 @@ V20Options 的原生实现仅在 `TIA_V20` 分支编译；V21 仍注册五个工
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| DCC | [DccPortService](../../src/Shared/DccPortService.cs) / [DccTools](../../src/Shared/DccTools.cs)，原生实现 [DccAdapter](../../src/Adapters/Native/Optional/DccAdapter.cs) | 8 |
-| Teamcenter | [TeamcenterService](../../src/Adapters/Native/Collaboration/TeamcenterAdapter.cs) / [TeamcenterTools](../../src/Shared/TeamcenterTools.cs) | 3 |
-| Startdrive | [StartdrivePortService](../../src/Shared/StartdrivePortService.cs) / [StartdriveTools](../../src/Shared/StartdriveTools.cs)，原生实现 [StartdriveAdapter](../../src/Adapters/Native/Optional/StartdriveAdapter.cs) | 11 |
+| DCC | [DccPortService](../../../src/Shared/DccPortService.cs) / [DccTools](../../../src/Shared/DccTools.cs)，原生实现 [DccAdapter](../../../src/Adapters/Native/Optional/DccAdapter.cs) | 8 |
+| Teamcenter | [TeamcenterService](../../../src/Adapters/Native/Collaboration/TeamcenterAdapter.cs) / [TeamcenterTools](../../../src/Shared/TeamcenterTools.cs) | 3 |
+| Startdrive | [StartdrivePortService](../../../src/Shared/StartdrivePortService.cs) / [StartdriveTools](../../../src/Shared/StartdriveTools.cs)，原生实现 [StartdriveAdapter](../../../src/Adapters/Native/Optional/StartdriveAdapter.cs) | 11 |
 
 这些工具没有 CLI 静态调用点，继续按约定注册为单例。Teamcenter 的 `_teamcenterConnection` 与
 `_teamcenterConnectionLabel` 随方法迁入服务，不增加连接、断开或清理动作。
@@ -411,7 +411,7 @@ V20Options 的原生实现仅在 `TIA_V20` 分支编译；V21 仍注册五个工
 
 `TelegramRow` 和 `DriveObjectRow` 改为服务实例辅助方法，以通过会话接口访问上述共享成员。
 `ManageStartdriveParameter` 的解析、单值读取、写入和读回顺序不变；
-[`p2051[0]` 崩溃事项](../reference/real-machine-ledger.md)仍待原生复测。
+[`p2051[0]` 崩溃事项](../../reference/real-machine-ledger.md)仍待原生复测。
 通用领域测试的 `Dcc`、`Teamcenter`、`Startdrive` 用例覆盖全部 22 个工具及 V20 的工具/操作拒绝。
 原 `ConnectionRow` 的两个重载分别迁入 DCC 和 Teamcenter；原生清单比对须显式列出这三个同名方法族的
 `--allow-unmatched` 例外，并另按重载及其 lambda 核对全部调用点，不能只检查全局成员多重集合。
@@ -445,10 +445,10 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
 | Devices | [DevicesService](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/Siemens/Services/DevicesService.cs) / [DevicesTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) | 14 |
-| HardwareManagement | [HardwareManagementService](../../src/Shared/HardwareManagementService.cs) / [HardwareManagementTools](../../src/Shared/HardwareManagementTools.cs) | 1 |
-| HardwareAml | [HardwareAmlService](../../src/Shared/HardwareAmlService.cs) / [HardwareAmlTools](../../src/Shared/HardwareAmlTools.cs) | 3 |
-| Modules | [ModulesService](../../src/Shared/HardwareModulesService.cs) / [ModulesTools](../../src/Shared/ModulesTools.cs) | 2 |
-| Addresses（P8-02 已迁） | [Foundation native](../../src/Adapters/Native/Hardware/HardwareAddressing.cs) / [共享声明](../../src/Shared/HardwareAddressTools.cs) | 2（原引擎文件已删除） |
+| HardwareManagement | [HardwareManagementService](../../../src/Shared/HardwareManagementService.cs) / [HardwareManagementTools](../../../src/Shared/HardwareManagementTools.cs) | 1 |
+| HardwareAml | [HardwareAmlService](../../../src/Shared/HardwareAmlService.cs) / [HardwareAmlTools](../../../src/Shared/HardwareAmlTools.cs) | 3 |
+| Modules | [ModulesService](../../../src/Shared/HardwareModulesService.cs) / [ModulesTools](../../../src/Shared/ModulesTools.cs) | 2 |
+| Addresses（P8-02 已迁） | [Foundation native](../../../src/Adapters/Native/Hardware/HardwareAddressing.cs) / [共享声明](../../../src/Shared/HardwareAddressTools.cs) | 2（原引擎文件已删除） |
 
 `ModulesService` 通过构造器接收同一容器的 `DevicesService` 单例以复用目录查询；模块地址读取复用
 `AddressesService.ReadAddresses`，订货号格式化复用 DevicesService 的静态辅助。四个领域结果 DTO
@@ -508,8 +508,8 @@ TiaMcp.Engine.Harness 保留全部既有断言，另检查两个领域的工具�
 `OnlineDownloadService` 与 `OnlineDownloadTools` 合并承载在线、下载及设备传输的 12 个工具，
 包括迁入的 `ListTransferRoutes`。
 原 `Portal.Online.cs`、`Portal.DeviceTransfer.cs` 与 `McpServer.DeviceTransfer.cs` 已删除；
-下载提示处理位于 [OnlineDownloadService](../../src/Adapters/Native/Online/OnlineDownloadAdapter.cs)，
-工具位于 [OnlineDownloadTools](../../src/Shared/OnlineDownloadTools.cs)。
+下载提示处理位于 [OnlineDownloadService](../../../src/Adapters/Native/Online/OnlineDownloadAdapter.cs)，
+工具位于 [OnlineDownloadTools](../../../src/Shared/OnlineDownloadTools.cs)。
 原 `McpServer.PlcSoftware.Online.cs` 的五个硬件工具已迁入 Addresses、Devices、HardwareNetwork、HardwareServices；
 跨领域的 `IsOnlineModeError`、
 `WithAutoOffline` 保持原入口，后者通过容器取得同一服务，保留下线后仅重试一次的行为。
@@ -693,9 +693,9 @@ CLI 直接解析 `UnifiedHmiTools` 调用以下 13 个入口：
 原生调用顺序、参数与线程归属保持不变；上述离线证明不替代真机验收。
 ### 运行时通道与实例工具（P3-16a）
 
-18 个工具分别位于 [RuntimeTools](../../src/Shared/Host/RuntimeTools.cs)（5）、
-[RuntimeChannelTools](../../src/Shared/Host/RuntimeChannelTools.cs)（8）和
-[PlcSimAdvancedTools](../../src/Shared/PlcSimAdvancedTools.cs)（5）。
+18 个工具分别位于 [RuntimeTools](../../../src/Shared/Host/RuntimeTools.cs)（5）、
+[RuntimeChannelTools](../../../src/Shared/Host/RuntimeChannelTools.cs)（8）和
+[PlcSimAdvancedTools](../../../src/Shared/PlcSimAdvancedTools.cs)（5）。
 RuntimeTools 和 RuntimeChannelTools 在 .NET 10 host 上执行；PLCSIM 的五个声明通过端口在 net48 worker 上执行。
 三个工具类按约定注册为非 IDisposable 单例，没有 CLI 静态调用点或 McpServer 转发。
 
@@ -703,7 +703,7 @@ RuntimeTools 通过同一会话的 dispatcher 回调完成 `GetPlcLiveValuesS7` 
 TraceTagCause、TraceTagCauseLive 留在工程域，继续使用 IEngineeringSession。工程读取、块导出和 S7 读取的顺序不变。
 PLCSIM 不需要 TIA 项目，不受项目会话故障锁影响；未知模拟器结果也不锁定 TIA 项目，写入和场景仍须审批。
 
-[TiaMcp.Runtime](../../src/OnlineChannels/TiaMcp.OnlineChannels.csproj) 为不织入的 net48/net10.0 协议程序集，
+[TiaMcp.Runtime](../../../src/OnlineChannels/TiaMcp.OnlineChannels.csproj) 为不织入的 net48/net10.0 协议程序集，
 保持 TiaMcpServer.Runtime 命名空间，引用原版本 Sharp7、Workstation.UaClient、官方 HTTP Web API 客户端及 Logic。
 官方 Siemens.Simatic.S7.Webserver.API 是协议客户端；此程序集不引用 Siemens.Engineering、PLCSIM 或引擎。
 独立还原时显式保持引擎已有的 DependencyInjection 版本，不引入新的依赖版本。

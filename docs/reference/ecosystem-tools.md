@@ -39,7 +39,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认先由 工作台 审批再派发；
 | `ManageUnifiedCwcPackage` | 检查 CWC 文件夹并打包新 ZIP；不执行 JavaScript、不部署到 TIA、不认证运行行为。CWC 与面板库类型不同。 |
 | `GetV21EcosystemCatalog` | V20/V21 V20/V21查询嵌入的 V21 生态快照，包含版本证据、许可元数据及集成状态；不是在线搜索。 |
 
-V14 SP1–V21 的全部八个发布版本都提供 `RunReadOnlyToolBatch`、`PreviewToolBatch` 和 `ApplyToolBatch`。八版使用相同的审核分类：只读批次要求目标的 `BatchRead: true`，预览批次要求 `BatchWrite: true` 且带布尔 `dryRun` 参数。`READ` 类别本身不保证批次准入。准入标准见[协议规范第 11 节](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#11-批次与桥接)，工具的版本可用性见[版本工具目录](version-tool-catalog.md)。
+V14 SP1–V21 的全部八个发布版本都提供 `RunReadOnlyToolBatch`、`PreviewToolBatch` 和 `ApplyToolBatch`。八版使用相同的审核分类：只读批次要求目标的 `BatchRead: true`，预览批次要求 `BatchWrite: true` 且带布尔 `dryRun` 参数。`READ` 类别本身不保证批次准入。准入标准见[设计规范第 4.12 节](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#412-批次与桥接)，工具的版本可用性见[版本工具目录](version-tool-catalog.md)。
 
 `ApplyToolBatch` 失败可能保留先前修改，不提供原子回滚。原生 `RunToolTransaction` 只支持自身声明的同步编辑白名单。不能把编译、保存、在线、文件或嵌套编排塞入事务。
 

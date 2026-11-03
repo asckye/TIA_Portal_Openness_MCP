@@ -1,6 +1,6 @@
 # 工具规格：`<ToolName>`
 
-> 使用说明：新工具或 MCP 契约变化（工具名、参数、返回结构、错误语义）在实现前复制本文件为 `docs/tools/<tool-name>.md`（工具名改为小写连字符，例如 `export-plc-block.md`），填写后删除本段和各节中的提示文字。规则见 [MCP 工具设计规范](../standards/mcp-tool-design.md)，流程见 [开发流程](../process/development-workflow.md) 第 3 节。现有工具的事实以生成目录为准，不为它们补写规格。
+> 使用说明：新工具或 MCP 契约变化（工具名、参数、返回结构、错误语义）在实现前复制本文件为 `docs/tools/<tool-name>.md`（工具名改为小写连字符，例如 `export-plc-block.md`），填写后删除本段和各节中的提示文字。规则见 [MCP 工具设计规范](../../../standards/design.md)，流程见 [开发流程](../../../manuals/workflow.md) 第 3 节。现有工具的事实以生成目录为准，不为它们补写规格。
 
 状态：草稿 | 已审查 | 已实现 · 最后核对：YYYY-MM-DD，master `<提交>`
 
@@ -64,13 +64,13 @@
 | 原生失败 | `NATIVE_OPERATION_FAILED` | `nativeCode`、`nativeMessage`、`evidence` | `failed` 或 `read-failed` |
 | 写入中断 | `OUTCOME_UNKNOWN` | `stage`、`evidence` | `unknown` |
 
-按需增删行；错误码和组合以 [V4 工具协议规范](../development/design-spec/v4-protocol.md) 第 4、5 节为准。
+按需增删行；错误码和组合以 [V4 工具协议规范](../design-spec/v4-protocol.md) 第 4、5 节为准。
 
 ## 7 审批、审计与安全
 
 - 哪些动作需要工作台审批，预览是否完全不写入：
 - 计划哈希或预览令牌如何绑定执行：
-- 写入审计的内容；带凭据的参数是否会被替换（[安全标准](../standards/security.md) SEC-06）：
+- 写入审计的内容；带凭据的参数是否会被替换（[安全标准](../../../standards/security.md) SEC-06）：
 - 读取的文件、目录或压缩包的路径与大小限制：
 - 是否能回滚；失败后项目处于什么状态：
 
@@ -88,7 +88,7 @@
 ## 10 测试与捕获
 
 - 新增或修改的测试工程与套件（`tests/test-suites.json`）：
-- 必须覆盖的失败路径（[测试策略](../standards/testing.md) 第 5 节）：
+- 必须覆盖的失败路径（[测试策略](../../../standards/development.md) 第 5 节）：
 - 需要运行的生成器：`generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`、`generate-release-migration`（按需）：
 - 契约与响应基线的预期差异：
 

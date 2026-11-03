@@ -1,11 +1,11 @@
 # P8-01 迁移清单与方案：V20/V21 独有工具迁入 Foundation 适配器
 
-状态：历史记录（35 个能力族已全部迁完，V20/V21 引擎已删除，见 [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md)；文档重组时归档） · 最后核对：2026-11-01；正文为 2026-10-11，任务启动基线 master `578a05ee`
+状态：历史记录（35 个能力族已全部迁完，V20/V21 引擎已删除，见 [ADR 0022](../../standards/decisions/0022-engine-retirement-and-eight-release-unification.md)；文档重组时归档） · 最后核对：2026-11-01；正文为 2026-10-11，任务启动基线 master `578a05ee`
 
 历史调研基线（只读调查，未改动仓库其他文件，未构建、未连接 TIA/VM）。日期 2026-10-08，基于 master `5623a784` 的当前工作区。
 上游任务：[重构计划](refactor-plan.md) 阶段 8 P8-01；背景见 [路线图](roadmap.md)“阶段 8”与 [差距复查](gap-review-2026-10.md)。
 
-现行实施：B1–B7 和 F19 样板已合并；旧版注册规则与 API 复核已合并。后续批次及验收状态以[重构计划](refactor-plan.md)为准。下方数量、源码定位和 API 调研保留 2026-10-08 的研究基线；现行范围只引用[生成目录](../reference/version-tool-catalog.md)。决定见 [ADR 0009](decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)、[ADR 0012](decisions/0012-old-release-tool-registration.md)和 [ADR 0014](decisions/0014-tool-counts-follow-official-api.md)。
+现行实施：B1–B7 和 F19 样板已合并；旧版注册规则与 API 复核已合并。后续批次及验收状态以[重构计划](refactor-plan.md)为准。下方数量、源码定位和 API 调研保留 2026-10-08 的研究基线；现行范围只引用[生成目录](../../reference/version-tool-catalog.md)。决定见 [ADR 0009](../../standards/decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)、[ADR 0012](../../standards/decisions/0012-old-release-tool-registration.md)和 [ADR 0014](../../standards/decisions/0014-tool-counts-follow-official-api.md)。
 
 2026-10-21 补注：下方批次工具表中的 `20/21` 是历史范围；现行八版批次准入按[协议规范第 11 节](design-spec/v4-protocol.md#11-批次与桥接)执行。
 
@@ -81,7 +81,7 @@ F01–F03 保持已有格式分段；F08/F09/F11/F17/F18–F21 的本次调整�
 | F16 | 软件单元与 PLC 完整性（校验和/指纹/写保护） | 5/6 | R3 W3 | worker6 | ManagePlcBlockWriteProtection | SoftwareUnitDeepTools, SoftwareUnitManagementTools | Svc/SoftwareUnitDeepService, Portal/Portal.SoftwareUnitDeep, Svc/SoftwareUnitManagementService |
 | F17 | 设备与 HMI 编译 | 2/2 | X2 | worker2 | — | HardwareServicesTools, HmiDescribeTools | Portal/Portal.CompileCandidate, Tools/PlcCompilation |
 | F18 | 硬件设备、模块、属性、设备分组与硬件服务 | 19/19 | R8 W9 F2 | worker19 | — | DevicesTools, HardwareManagementTools, HardwareNetworkTools, HardwareServicesTools, ModulesTools | Svc/DevicesService, Portal/Portal.Devices, Svc/ModulesService, Svc/HardwareManagementService, Svc/HardwareServicesService, Portal/Portal.HardwareServices, DeviceServiceObjectRules, HardwareUtilityRules |
-| F19 | 硬件地址（IO/IP/HW 标识），P8-02 已迁 | 5/5 | R3 W2 | Foundation adapter5 | — | [共享声明](../../src/Shared/HardwareAddressTools.cs) | [HardwareAddressing](../../src/Adapters/Native/Hardware/HardwareAddressing.cs)；原 AddressesService 已删除 |
+| F19 | 硬件地址（IO/IP/HW 标识），P8-02 已迁 | 5/5 | R3 W2 | Foundation adapter5 | — | [共享声明](../../../src/Shared/HardwareAddressTools.cs) | [HardwareAddressing](../../../src/Adapters/Native/Hardware/HardwareAddressing.cs)；原 AddressesService 已删除 |
 | F20 | 网络：子网、IO 系统、拓扑、域、通道、传输区、通信连接 | 17/19 | R9 W9 Off1 | worker19 | ListCommunicationConnections, ManageCommunicationConnection | HardwareNetworkTools, HardwareServicesTools | Svc/HardwareNetworkService, Portal/Portal.HardwareNetwork |
 | F21 | CAx / AutomationML 设备交换 | 3/3 | F2 Off1 | worker3 | — | HardwareAmlTools | Svc/HardwareAmlService |
 | F22 | 在线、下载、上传、在线比较与在线数据 | 15/15 | R2 F2 On8 OnW3 | worker15 | — | NativeExchangeTools, OnlineDownloadTools, PlcBlocksTools | Svc/OnlineDownloadService, Svc/OnlineDownloadService.FallbackCandidate, Portal/Portal.Download, Tools/OnlineToolPolicy |

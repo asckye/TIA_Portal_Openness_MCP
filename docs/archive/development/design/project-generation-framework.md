@@ -2,7 +2,7 @@
 
 状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee` · 模型、规划、包管理与执行记录已实施；界面与验收继续
 
-历史调研口径：2026-10-08，master `f02b4cdd`。下方现有能力盘点保留当时的方案输入，数量不作为当前目录。现行范围见[生成目录](../../reference/version-tool-catalog.md)，实施状态见[重构计划](../refactor-plan.md)。API 和工具存在不代表原生行为已验收。
+历史调研口径：2026-10-08，master `f02b4cdd`。下方现有能力盘点保留当时的方案输入，数量不作为当前目录。现行范围见[生成目录](../../../reference/version-tool-catalog.md)，实施状态见[重构计划](../refactor-plan.md)。API 和工具存在不代表原生行为已验收。
 
 2026-10-21 补注：下方预览与执行批次“仅 20/21”的表述保留调研时的范围；现行八版批次准入见[协议规范第 11 节](../design-spec/v4-protocol.md#11-批次与桥接)。
 
@@ -231,7 +231,7 @@ tiamcp.basic/
 ### 3.3.1 P8-31a 已实现的格式 1
 
 模型位于 `src/Logic/Generation/`（命名空间 `TiaMcp.Logic.Generation`，net48/net10.0），
-schema 固定在 [schemas/standards/v1](../../../schemas/standards/v1/README.md)，作为资源嵌入 Logic，
+schema 固定在 [schemas/standards/v1](../../../../schemas/standards/v1/README.md)，作为资源嵌入 Logic，
 并由交付文件规则随包分发；不新增 JSON/schema 依赖。包、八个分部、设备规则、机器描述、计划、检查结果
 及共享定义共 14 份 schema。包内容仍由 P8-31c/i 提供。
 

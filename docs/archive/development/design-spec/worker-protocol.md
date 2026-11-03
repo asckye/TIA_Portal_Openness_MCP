@@ -32,8 +32,8 @@ Foundation 仍只接受百分比进度；含 `payload` 的进度仅用于 Engine
 
 派发前取消不发送、不消耗 id、不使后续调用失效。派发后的写入或读取错误、超时和无可信回复导致未知结果及代次失效，禁止重试或自动重启。产品的 MCP 取消在派发后等待真实结果；通道级终止不能证明 TIA 已取消。释放通道只关闭自己的管道，不结束 TIA。
 
-默认、首次附着和长操作预算见 [ADR 0008](../decisions/0008-worker-timeouts-and-faults.md)。每会话 worker 与线程归属见 [ADR 0007](../decisions/0007-one-worker-per-mcp-session.md)。
+默认、首次附着和长操作预算见 [ADR 0008](../../../standards/decisions/0008-worker-timeouts-and-faults.md)。每会话 worker 与线程归属见 [ADR 0007](../../../standards/decisions/0007-one-worker-per-mcp-session.md)。
 
 ## 验证
 
-[worker-channel 套件](../../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)覆盖双端状态机与独立进程故障，`TiaMcp.WorkerChannel.TransportFixture` 提供协议替身。这些证据不替代原生行为验收。
+[worker-channel 套件](../../../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)覆盖双端状态机与独立进程故障，`TiaMcp.WorkerChannel.TransportFixture` 提供协议替身。这些证据不替代原生行为验收。

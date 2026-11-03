@@ -2,9 +2,9 @@
 
 状态：部分过时（第 2、3、4 节，第 5.1、5.2、6.2、6.3、7 节中关于 V20/V21 引擎 worker 的组件、执行位置、线程、租约与代码位置描述仍是 P8-04j2 之前的状态，待逐项核对后改写）· 最后核对：2026-10-21，master `62ebf86e`（第 1 节、第 2.1 节和第 9 节）；其余部分为 2026-10-11，`3a227657`
 
-[设计规范索引](README.md) · [架构决策记录](../decisions/README.md)
+[设计规范索引](README.md) · [架构决策记录](../../../standards/decisions/README.md)
 
-本页描述 4.0 源码当前的运行架构：有哪些进程、它们怎样通信、一次调用经过哪些环节，以及每个关注点在代码中的位置。所有结论都按基线提交的源码核对过；仍在进行的工作在第 9 节单列。详细设计和历史推导见第 10 节链接的文档，决策理由见 [架构决策记录](../decisions/README.md)。本页不描述单个工具的参数，参数以 `GetToolUsage` 为准。
+本页描述 4.0 源码当前的运行架构：有哪些进程、它们怎样通信、一次调用经过哪些环节，以及每个关注点在代码中的位置。所有结论都按基线提交的源码核对过；仍在进行的工作在第 9 节单列。详细设计和历史推导见第 10 节链接的文档，决策理由见 [架构决策记录](../../../standards/decisions/README.md)。本页不描述单个工具的参数，参数以 `GetToolUsage` 为准。
 
 ## 1 一页概览
 
@@ -116,7 +116,7 @@ flowchart LR
 | 工具来源 | `LegacyHostToolRegistry`：Foundation 工具、已移植族契约、离线构建、工作台控制、生成、被动诊断、`GetToolUsage`；再由 `FoundationHostPorts` 包入 `EngineHostPipeline`，提供桥接、批次与导出句柄 | `FoundationCatalog` 合入共享 Foundation 工具与宿主声明；`SharedToolCatalog` 和 `EngineHostPipeline` 发布 full 或 lite 目录 |
 | 单个工具的准入 | `FoundationV4Tool`（参数校验、生成写栅栏、未提供能力拒绝、会话重置、就绪检查、预检、审批、Openness 通道、复核、审计） | Foundation 工具同左；引擎工具走链接进来的引擎宿主层（`McpServer.SerializedCalls` 等，顺序见第 5.2 节）；已移植族由 `PortedToolContract.Wrap` 包装 |
 | 执行位置 | 宿主本地，或经 `WorkerClient` 发 `adapter.<操作>` 到 PLC worker | 宿主本地，或经 `WorkerClient` 发 `adapter.<操作>` 到 PLC worker；V20/V21 保留版本准入与已移植族包装链 |
-| worker 调用超时 | 共享 `WorkerTimeoutPolicy`（P8-64），预算与配置见 [4.0 发布说明](../../releases/v4.0.0.md) | `WorkerTimeoutPolicy`：默认 120 秒，worker 代次的首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖 |
+| worker 调用超时 | 共享 `WorkerTimeoutPolicy`（P8-64），预算与配置见 [4.0 发布说明](../../../releases/v4.0.0.md) | `WorkerTimeoutPolicy`：默认 120 秒，worker 代次的首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖 |
 | 线程 | STA 所属线程 | 一个 MTA 所属线程，全部原生操作共用同一个 TIA 连接 |
 | 审批与审计的宿主标记 | `foundation` | 引擎工具 `engine`，共享 Foundation 工具 `foundation` |
 
@@ -401,20 +401,20 @@ stateDiagram-v2
 | 项目 | 状态 | 依据 |
 |---|---|---|
 | V20/V21 专有工具移入 Foundation 适配器 | 35 个族（B1–B12，含 B10a、B10b）已全部合并，V20/V21 的引擎实现已删除 | `PortedFamilies.cs`；[阶段 8 迁移方案](../phase8-port-plan.md) |
-| 引擎退役（P8-04） | 进行中：P8-04j2 已合并，V20/V21 默认使用 PLC worker，交付包不含引擎；引擎兼容副本由 P8-04l 删除，之后是 P8-04m、P8-04n | [重构计划](../refactor-plan.md)；[ADR 0009](../decisions/0009-port-v20-v21-tools-to-foundation-adapters.md) |
+| 引擎退役（P8-04） | 进行中：P8-04j2 已合并，V20/V21 默认使用 PLC worker，交付包不含引擎；引擎兼容副本由 P8-04l 删除，之后是 P8-04m、P8-04n | [重构计划](../refactor-plan.md)；[ADR 0009](../../../standards/decisions/0009-port-v20-v21-tools-to-foundation-adapters.md) |
 | Studio 桥接与 Studio 适配器删除（P8-21f） | 未开始；V16–V19 版本控制页用桥接只读 VCI，禁用工作区到工程的同步 | `ReadOnlyVciBridge.cs`；工作台控制设计决定 4 |
 | 工作台控制端到端验收（P8-20e） | 未完成 | 工作台控制设计第 6 节 |
 | 生成记录与发布工具（P8-31e5）、SafeV4 规则（e6，延后）、审批抽屉计划视图（h1） | 未实现 | [分阶段生成设计](../design/p8-31-staged-generation.md) 第 10 节 |
-| 真机验收 | 八版 D1 行为族、旧版启用的已移植族、V20/V21 在 Foundation 宿主上的验收（P7-07）均为 `NOT RUN`；4.0 以 GitHub 预发布交给测试者，我们在 VM 上按真机核对清单回归（2026-11-01 修订），未验证项列在预发布说明中 | 交接、真机台账；[ADR 0020](../decisions/0020-prereleases-tested-by-users.md) |
+| 真机验收 | 八版 D1 行为族、旧版启用的已移植族、V20/V21 在 Foundation 宿主上的验收（P7-07）均为 `NOT RUN`；4.0 以 GitHub 预发布交给测试者，我们在 VM 上按真机核对清单回归（2026-11-01 修订），未验证项列在预发布说明中 | 交接、真机台账；[ADR 0020](../../../standards/decisions/0020-prereleases-tested-by-users.md) |
 | `TiaSharedAdapterPaths` | 默认 `false`；引擎领域的共享原语路径在真机验收前不启用 | `src/Shared/TiaSharedAdapterPaths.props` |
-| PLC worker 调用超时 | P8-64 已消除：八版共用按类超时与配置覆盖；超预算仍为结果未知并锁定会话。预算见 [4.0 发布说明](../../releases/v4.0.0.md) | `src/FoundationHost/WorkerClient.cs`；[设计规范决定](README.md#决定摘要) |
+| PLC worker 调用超时 | P8-64 已消除：八版共用按类超时与配置覆盖；超预算仍为结果未知并锁定会话。预算见 [4.0 发布说明](../../../releases/v4.0.0.md) | `src/FoundationHost/WorkerClient.cs`；[设计规范决定](README.md#决定摘要) |
 | Foundation 绑定快照生命周期 | 观测原语已有，worker 生命周期尚未接入；旧版附着仍只凭 PID | [版本框架](../unified-version-framework.md) |
 
 ## 10 详细设计文档
 
 | 主题 | 文档 | 说明 |
 |---|---|---|
-| 当前交接与计划 | [handoff.md](../handoff.md)、[refactor-plan.md](../refactor-plan.md)、[roadmap.md](../roadmap.md) | 任务启动基线的事实与状态已刷新；以重构计划为任务状态入口 |
+| 当前交接与计划 | [handoff.md](../../../plan/progress.md)、[refactor-plan.md](../refactor-plan.md)、[roadmap.md](../roadmap.md) | 任务启动基线的事实与状态已刷新；以重构计划为任务状态入口 |
 | 阶段 7：V20/V21 改用 Foundation 宿主 | [阶段 7 宿主与 worker 拆分设计](../design/p7-host-worker-split.md) | 历史记录（已实施）；决定见 ADR 0005–0008 |
 | 阶段 8 迁移方案 | [phase8-port-plan.md](../phase8-port-plan.md) | 族、批次、闸门 |
 | 工作台控制与共享会话 | [phase8-workbench-control.md](../design/workbench-control-and-shared-session.md) | 现行设计；§1 的现状描述早于 P8-21 |
@@ -424,11 +424,11 @@ stateDiagram-v2
 | 适配器与 worker 协议 | [adapter-merge.md](../adapter-merge.md) | 协议 2 的定义仍有效；其余为阶段 4 历史 |
 | 引擎拆分 | [engine-decomposition.md](../engine-decomposition.md) | 阶段 3 历史 |
 | V4 契约 | [phase6-review.md](../phase6-review.md) | 已冻结；现行协议见 [V4 工具协议规范](v4-protocol.md) |
-| 验证与发布 | [validation.md](../validation.md)、[release-workflow.md](../release-workflow.md) | 现行，个别命令过期 |
-| 设计决策 | [架构决策记录](../decisions/README.md) | 一页一个决定，含待补写清单 |
+| 验证与发布 | [validation.md](../../../manuals/validation.md)、[release-workflow.md](../../../manuals/release.md) | 现行，个别命令过期 |
+| 设计决策 | [架构决策记录](../../../standards/decisions/README.md) | 一页一个决定，含待补写清单 |
 
 ## 版本处理与通道规范
 
-八个发布键由 `TiaVersionCatalog` 统一解释，不把原版 V14、V15 视为 SP1 或 V15.1 的别名。FoundationHost 校验所选发布键、worker 和 PublicAPI，编译特性与文档格式边界见[版本框架](../unified-version-framework.md)。已移植工具只有至少一个已实现动作能在该版官方 API 上执行时才注册，见 [ADR 0012](../decisions/0012-old-release-tool-registration.md)；具体工具和数量由目录生成，不由架构正文手写。
+八个发布键由 `TiaVersionCatalog` 统一解释，不把原版 V14、V15 视为 SP1 或 V15.1 的别名。FoundationHost 校验所选发布键、worker 和 PublicAPI，编译特性与文档格式边界见[版本框架](../unified-version-framework.md)。已移植工具只有至少一个已实现动作能在该版官方 API 上执行时才注册，见 [ADR 0012](../../../standards/decisions/0012-old-release-tool-registration.md)；具体工具和数量由目录生成，不由架构正文手写。
 
 内部帧与绑定纪元的现行定义见[worker 协议 2](worker-protocol.md)。历史适配器设计的协议对比表描述迁移过程，不再作为当前运行形态表。

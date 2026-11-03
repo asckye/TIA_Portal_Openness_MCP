@@ -2,7 +2,7 @@
 
 状态：现行 · 最后核对：2026-10-21，master `62ebf86e`（worker、交付布局与 V20/V21 切换相关段落；其余段落为 2026-10-11，`578a05ee`）
 
-[重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [响应与异常设计](response-and-errors.md) · [验证分层](validation.md)
+[重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [响应与异常设计](response-and-errors.md) · [验证分层](../../manuals/validation.md)
 
 本页记录 G7（运行时与仓库布局解耦）的现行实现和 P2-05（历史注释、`*Leftovers` 与用户可见文案语言）的清理规则。历史路径缩写：`E/` 指已删除的 `src/Engine/`（提交 `ab5a89af`）；
 `L/` = `src/Logic/`，`S/` = `src/Studio/`。
@@ -12,7 +12,7 @@ P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 
 V20/V21 宿主在 TIA 缺失、版本不匹配或 Openness 环境未就绪时仍提供诊断。需要 TIA 的调用在原生派发前返回 `RESOURCE_UNAVAILABLE`，V4 outcome 为 `rejected-before-operation`，execution 为 `not-started`。显式 CLI 动词保留各自的运行与退出码规则。
 
-八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10），并为每个 MCP 会话启动同一种 net48 worker `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`（P8-04j2 起 V20/V21 也是如此）。worker 的 owner 线程在 V20/V21 为 MTA，在 V14 SP1–V19 为 STA（[`PlcLifecyclePolicy.OwnerApartment`](../../src/Adapters/Policy/PlcLifecyclePolicy.cs)、[`src/PlcWorker/Program.cs`](../../src/PlcWorker/Program.cs)）。工具数量由以下目录块生成。
+八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10），并为每个 MCP 会话启动同一种 net48 worker `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`（P8-04j2 起 V20/V21 也是如此）。worker 的 owner 线程在 V20/V21 为 MTA，在 V14 SP1–V19 为 STA（[`PlcLifecyclePolicy.OwnerApartment`](../../../src/Adapters/Policy/PlcLifecyclePolicy.cs)、[`src/PlcWorker/Program.cs`](../../../src/PlcWorker/Program.cs)）。工具数量由以下目录块生成。
 
 <!-- generated:tool-counts:begin -->
 由 `generate-tool-counts` 从 `manifest/version-tools.json` 和 `ToolProfiles.resx` 生成。以运行时 `tools/list` 为准。
@@ -29,7 +29,7 @@ V20/V21 宿主在 TIA 缺失、版本不匹配或 Openness 环境未就绪时仍
 | V21 | 512 | 84 |
 <!-- generated:tool-counts:end -->
 
-交付包不再包含引擎：`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`、它们的 worker 文件和 `tool-catalog.json` 已从 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 的必需文件移入 `exclude` 与 `legacyCleanup` 规则，多版本打包器断言 `runtime/` 下没有引擎文件。引擎程序和私有交叉检查路线已退役；Q2 删除了剩余的非编译 `src/Engine` 源码和引擎专属检查。Q3 删除宿主中仅由测试使用的引擎客户端、冻结目录交叉检查和死编译符号；所有会话只构造 `WorkerClient`。宿主继续以退出码 64 拒绝 `--engine-*` 选项。发布记录为 `manifest/multi-version-build.json`；`manifest/release-build.json` 作为历史记录保留，不再交付。
+交付包不再包含引擎：`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`、它们的 worker 文件和 `tool-catalog.json` 已从 [`delivery-files.json`](../../../scripts/operations/delivery-files.json) 的必需文件移入 `exclude` 与 `legacyCleanup` 规则，多版本打包器断言 `runtime/` 下没有引擎文件。引擎程序和私有交叉检查路线已退役；Q2 删除了剩余的非编译 `src/Engine` 源码和引擎专属检查。Q3 删除宿主中仅由测试使用的引擎客户端、冻结目录交叉检查和死编译符号；所有会话只构造 `WorkerClient`。宿主继续以退出码 64 拒绝 `--engine-*` 选项。发布记录为 `manifest/multi-version-build.json`；`manifest/release-build.json` 作为历史记录保留，不再交付。
 
 每个 MCP 会话拥有一个独立 worker（八版相同）：stdio 为一个会话、一个 worker；HTTP 的 N 个同时存活会话对应 N 个 worker，不另设会话数量上限，部署时需按 worker 内存和 TIA 实例数限制客户端并发。HTTP 启动校验使用的短期 probe 在监听前退出，每个 worker 都绑定宿主 job object，会话结束、超时或宿主退出时终止。Disconnect 只结束当前会话的原生连接，RestartOpennessWorker 只重启调用方 worker；新 HTTP 会话从未绑定状态开始。工具桥接、审批/故障键、预演计划、暂存归属和导出句柄访问按会话隔离；导出内容仍共用进程内的 32 句柄/8,000,000 字符容量限制，避免 HTTP 并发扩大缓存上限。`/mcp/health` 无需鉴权，含 fileVersion、releaseKey 和 profile 名（V20/V21 仍为 `full-engine`，P8-04n 统一对外呈现前保持不变）；`/mcp/ready` 与 MCP 调用使用相同 Bearer 鉴权，只证明宿主已就绪。
 
@@ -43,7 +43,7 @@ runtime/v<key>/        （八个发布键相同）
     TiaMcp.Adapter.<key>.dll、TiaMcp.Adapters.Contracts.dll、TiaMcp.WorkerChannel.dll + net48 dependencies
 ```
 
-宿主按所选发布键定位 `worker/TiaMcp.PlcWorker.<key>.exe`；显式 `--worker-exe` 选择开发 worker。工具目录由宿主自身生成，V20/V21 不再读取 `tool-catalog.json`。net10 与 net48 依赖须分目录，不能混放。审批管道仍绑定同一用户 SID 与 `approval.settings` 路径；审批请求、审计和调用日志的 host 标记沿用原值：`FoundationV4Tool` 执行的工具为 `foundation`，`src/EngineHost` 宿主流程（桥接、批次及其审批路径）为 `engine`，八版相同（[`ReleaseCatalogData.cs`](../../src/EngineHost/ReleaseCatalogData.cs)）。更新器按 `scripts/operations/delivery-files.json` 校验全部必需入口，并按 `legacyCleanup` 清理旧的 V20/V21 根目录引擎文件和 `worker/` 下的引擎文件；用户数据和配置保持原位。
+宿主按所选发布键定位 `worker/TiaMcp.PlcWorker.<key>.exe`；显式 `--worker-exe` 选择开发 worker。工具目录由宿主自身生成，V20/V21 不再读取 `tool-catalog.json`。net10 与 net48 依赖须分目录，不能混放。审批管道仍绑定同一用户 SID 与 `approval.settings` 路径；审批请求、审计和调用日志的 host 标记沿用原值：`FoundationV4Tool` 执行的工具为 `foundation`，`src/EngineHost` 宿主流程（桥接、批次及其审批路径）为 `engine`，八版相同（[`ReleaseCatalogData.cs`](../../../src/EngineHost/ReleaseCatalogData.cs)）。更新器按 `scripts/operations/delivery-files.json` 校验全部必需入口，并按 `legacyCleanup` 清理旧的 V20/V21 根目录引擎文件和 `worker/` 下的引擎文件；用户数据和配置保持原位。
 
 ## G7：运行时资源定位
 
@@ -120,10 +120,10 @@ worker 在原有 owner 线程上非拥有式分离并写入 `RELEASED\n`；不�
 ### 安装根与开发输出
 
 G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需要 `.git`。交付包由
-`Package-Release.py`（历史文件，已退役） 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，
+`Package-Release.py`（历史文件，已退役） 按 [`delivery-files.json`](../../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，
 排除 `runtime/verification/`。交付包保留资源、用户文档、插件及桥接所用 Python 源码；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。
 
-[`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
+[`BundleLayout.cs`](../../../src/Shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
 维护资源相对路径和同级产品路由。公共实现由 `TiaMcp.Logic` 导出，Foundation 宿主（含命令行）与引擎兼容副本共用；
 Studio 与适配器的链接副本保留内部可见性，跨程序集通过 AppDomain 中的字符串共享启动时的选择。
 
@@ -181,13 +181,13 @@ Studio 的共享数据目录副本通过 `TIA_BUNDLE_LAYOUT_STUDIO` 使用 `Find
 根启动器仍只启动 `runtime/studio/TiaOpenness.exe`。
 
 V21 生态目录查询读取宿主程序集 `TiaMcp.EngineHost` 嵌入的 `TiaMcp.V21Ecosystem.json`（引擎兼容副本嵌入同一文件），磁盘副本缺失不影响查询。
-[`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json) 是可编辑源，修改后须重建宿主。
+[`reference/v21-ecosystem.json`](../../../reference/v21-ecosystem.json) 是可编辑源，修改后须重建宿主。
 Python 解释器由 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖；缺省环境位于用户的 `TiaMcp/ecosystem-python`。
 这些生态工具属于 V20/V21，不加入 Foundation。
 
 ### 软件自身的数据目录
 
-[`DataLocations.cs`](../../src/Shared/DataLocations.cs) 在进程首次使用时确定一个数据根，并在链接该源码的
+[`DataLocations.cs`](../../../src/Shared/DataLocations.cs) 在进程首次使用时确定一个数据根，并在链接该源码的
 程序集之间共享缓存；之后不会因环境变量或目录权限变化重新选择。顺序如下：
 
 1. 非空 `TIA_MCP_DATA_DIRECTORY`：必须为绝对路径；无效值报错，不静默回退。
@@ -238,7 +238,7 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 `TMP_EXPORT` 等已知夹具布局只在显式工作区内解释；PLC Builder 套件同时接收 fixtureDirectory 与 workspaceRoot，不从夹具反推根。
 缺输入返回 `INVALID_ARGUMENT`，CLI 语法退出 64；不猜 cwd、私人模板目录或最新报告。
 
-`runtime/tools/TiaMcp.Updater.exe` 面向 Windows 和 .NET Framework 4.8，不依赖随包 `runtime/dotnet`；启动更新/回滚前将自身和配置复制到系统临时目录，使其可以替换根启动器、运行时文件及 `runtime/tools` 下的自身。更新过程使用 Windows 扩展路径处理长路径，并在操作前检查当前包的引擎、Foundation、worker 和 Workbench 进程；列出 PID 后退出，不会终止这些进程。`-Check` 只检查版本和资产，默认调用执行更新，`-Rollback` 恢复最新备份；从包根手动运行时要传入 `-InstallRoot .`，命令行和运行方式见[配置指南](../getting-started/configuration.md#更新)。
+`runtime/tools/TiaMcp.Updater.exe` 面向 Windows 和 .NET Framework 4.8，不依赖随包 `runtime/dotnet`；启动更新/回滚前将自身和配置复制到系统临时目录，使其可以替换根启动器、运行时文件及 `runtime/tools` 下的自身。更新过程使用 Windows 扩展路径处理长路径，并在操作前检查当前包的引擎、Foundation、worker 和 Workbench 进程；列出 PID 后退出，不会终止这些进程。`-Check` 只检查版本和资产，默认调用执行更新，`-Rollback` 恢复最新备份；从包根手动运行时要传入 `-InstallRoot .`，命令行和运行方式见[配置指南](../../getting-started/configuration.md#更新)。
 
 更新器按新包的 `delivery-files.json` 接受运行资源包。备份到 `.previous` 后，使用固定 `legacyCleanup` 规则与旧包
 `manifest/release-file-hashes.json` 的交集清理已交付的开发文件；只删除哈希仍匹配的旧文件，保留用户新增或改写的内容。
@@ -273,13 +273,13 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 
 仓库模式核对代码表与跟踪文件；包模式从仓库运行校验器，按交付规则检查资源而不要求包内源码。
 检查器不证明运行时返回值、二进制完整性或西门子行为；`dotnet run --project build-tools/release -- check-repository -NoBinaries` 同时运行此检查。
-布局矩阵及调用方差分测试位于保留代码套件的 [BundleLayoutTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs)、
-[EcosystemTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs)，已退役引擎套件的历史
+布局矩阵及调用方差分测试位于保留代码套件的 [BundleLayoutTests.cs](../../../tests/KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs)、
+[EcosystemTests.cs](../../../tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs)，已退役引擎套件的历史
 [EngineBundleLayoutTests.cs](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/tests/Engine/TiaMcp.Engine.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
-[Core 布局测试](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
-[GUI 布局测试](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、
+[Core 布局测试](../../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
+[GUI 布局测试](../../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、
 空格/中文/尾分隔符、缺文件及显式覆盖。
-Foundation 的 [BundleRootTests.cs](../../tests/FoundationHost/TiaMcp.FoundationHost.Tests/BundleRootTests.cs)
+Foundation 的 [BundleRootTests.cs](../../../tests/FoundationHost/TiaMcp.FoundationHost.Tests/BundleRootTests.cs)
 覆盖八个 release-key、相邻版本文件、默认 worker、显式 `--worker-exe`，以及 V20/V21 拒绝已退役的 `--engine-*` 选项。
 
 G7-1 已将 `GetOpennessGuidance`、`GetV21EcosystemCatalog` 和 bin 布局的 `CheckProductUpdate` 加入 P0-06。
@@ -299,11 +299,11 @@ G7-5 比较了 1,921 份 Studio 重定位结果；G7-6 在 V20/V21 各完成 75 
    `python scripts/checks/Check-BundleLayout.py --self-test`、`python scripts/checks/Check-BundleLayout.py`、
    `dotnet run --project build-tools/release -- check-repository -NoBinaries` 和
    `dotnet run --project build-tools/release -- validate-bundle -Strict -NoBinaries -SkipSourceHashes`。
-   C# 变更继续按[验证分层](validation.md)执行受影响套件、构建与兼容快照。
+   C# 变更继续按[验证分层](../../manuals/validation.md)执行受影响套件、构建与兼容快照。
 
 ## 文案语言与历史清理
 
-新增 MCP 文本使用英文，工作台使用中英资源；现行政策见[V4 协议规范](design-spec/v4-protocol.md)。G7 与 P2-05 的任务表和起点统计已归档到[运行布局清理记录](../archive/development/runtime-layout-history.md)，不作为当前工具数量或未完成任务。
+新增 MCP 文本使用英文，工作台使用中英资源；现行政策见[V4 协议规范](design-spec/v4-protocol.md)。G7 与 P2-05 的任务表和起点统计已归档到[运行布局清理记录](runtime-layout-history.md)，不作为当前工具数量或未完成任务。
 
 ## 审计链与调用日志保留（P6-46）
 

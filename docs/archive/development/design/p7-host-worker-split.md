@@ -2,15 +2,15 @@
 
 状态：历史记录（已实施：P7-01–P7-08）· 最后核对：2026-10-11，master `3a227657`
 
-[设计规范索引](../design-spec/README.md) · [架构概览](../design-spec/architecture.md) · [架构决策记录](../decisions/README.md) · [重构计划](../refactor-plan.md)
+[设计规范索引](../design-spec/README.md) · [架构概览](../design-spec/architecture.md) · [架构决策记录](../../../standards/decisions/README.md) · [重构计划](../refactor-plan.md)
 
 本文是阶段 7 的评审设计（2026-10-08，原文为英文，保存在仓库外），2026-10-11 移入仓库时译为中文。设计判断保持原样，下列内容已按现状修订或注明：
 
-- 已被 P7-07a 修改：原文的“每个宿主进程一个共享 worker”改为每个 MCP 会话一个 worker（stdio 一个，HTTP 每个存活的会话一个），见 [ADR 0007](../decisions/0007-one-worker-per-mcp-session.md)。
+- 已被 P7-07a 修改：原文的“每个宿主进程一个共享 worker”改为每个 MCP 会话一个 worker（stdio 一个，HTTP 每个存活的会话一个），见 [ADR 0007](../../../standards/decisions/0007-one-worker-per-mcp-session.md)。
 - 路径与项目名已按 P7-11a 改名后的名称更新，例如 `src/Engine/WorkerMode/EngineWorkerHost.cs`、`src/Engine/TiaMcp.Engine.V20.csproj`、`src/FoundationHost/TiaMcp.FoundationHost.csproj`、`src/EngineHost/TiaMcp.EngineHost.csproj`、`tests/FoundationHost/TiaMcp.EngineHost.Tests`；原文中的行号已删除。
 - 原文列出的部分 Python 检查脚本和测试工程此后已删除，或在 P8-10 中改为 `build-tools/release` 中的 C# 实现；第 4 节保留当时的名单以说明改动面，并标出已不存在的条目。
 - lite 档的成员数已变化（以契约基线的 `liteTools` 为准）；原文“隔离时期的描述在 P7-08 中更新”已完成。
-- 文中的决定已写成 ADR：[0005](../decisions/0005-v20-v21-on-foundation-host.md)、[0006](../decisions/0006-engine-exe-as-v20-v21-worker.md)、[0007](../decisions/0007-one-worker-per-mcp-session.md)、[0008](../decisions/0008-worker-timeouts-and-faults.md)。现行运行架构见 [架构概览](../design-spec/architecture.md)。
+- 文中的决定已写成 ADR：[0005](../../../standards/decisions/0005-v20-v21-on-foundation-host.md)、[0006](../../../standards/decisions/0006-engine-exe-as-v20-v21-worker.md)、[0007](../../../standards/decisions/0007-one-worker-per-mcp-session.md)、[0008](../../../standards/decisions/0008-worker-timeouts-and-faults.md)。现行运行架构见 [架构概览](../design-spec/architecture.md)。
 
 ## 0 决定
 

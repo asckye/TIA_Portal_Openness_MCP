@@ -4,7 +4,7 @@
 
 [设计规范索引](README.md) · [C# 偏差清单](deviations/csharp.md)
 
-维护者于 2026-10-11 决定以 Microsoft 设计准则为基线编写项目自己的 C# 规范（[ADR 0015](../decisions/0015-microsoft-design-spec-baseline.md)）。新代码必须遵守本规范；现有代码与本规范不一致之处逐条列入 [C# 偏差清单](deviations/csharp.md)，每条的状态（4.0 前修改、4.0 后修改或有意偏差）已按 2026-10-11 的决定登记，4.0 前的修改由 P8-62 实施。
+维护者于 2026-10-11 决定以 Microsoft 设计准则为基线编写项目自己的 C# 规范（[ADR 0015](../../../standards/decisions/0015-microsoft-design-spec-baseline.md)）。新代码必须遵守本规范；现有代码与本规范不一致之处逐条列入 [C# 偏差清单](deviations/csharp.md)，每条的状态（4.0 前修改、4.0 后修改或有意偏差）已按 2026-10-11 的决定登记，4.0 前的修改由 P8-62 实施。
 
 度量快照：master `3a227657`（2026-10-11）。计数方法与口径见 [偏差清单 §0](deviations/csharp.md#0-度量方法)。
 
@@ -28,7 +28,7 @@
 | 顺序 | 来源 | 管辖内容 |
 |---|---|---|
 | 1 | 外部契约与安全不变量 | MCP V4 契约（工具名、参数名与类型、返回结构、错误码，以 `manifest/contracts/v4/baseline/*.json` 为准）、worker 协议 2 线格式、Siemens Openness 调用顺序/参数/线程归属、文件格式与 manifest。C# 规则不得为满足命名或风格而改变这些内容。 |
-| 2 | 仓库规则 | [CLAUDE.md](../../../CLAUDE.md)、[AGENTS.md](../../../AGENTS.md)、`docs/development/*`。本规范把其中与 C# 有关的部分收为“项目规则”，标记 **[P]**。 |
+| 2 | 仓库规则 | [CLAUDE.md](../../../../CLAUDE.md)、[AGENTS.md](../../../../AGENTS.md)、`docs/development/*`。本规范把其中与 C# 有关的部分收为“项目规则”，标记 **[P]**。 |
 | 3 | 本规范的 MUST/SHOULD/MAY 条目 | 以 Microsoft 为基线，含对 Microsoft 条目的项目化取舍（每条取舍都在偏差清单中有对应编号）。 |
 | 4 | Microsoft 来源 | 见下。 |
 | 5 | 所在文件的既有风格 | 仅作过渡：偏差处理完成前，修改既有文件时沿用该文件的风格（与 runtime 风格第 9 条及 AGENTS.md “保持周围代码的命名、注释密度和写法”一致）；**新文件必须遵守本规范**。 |
@@ -107,7 +107,7 @@ MCP 工具入口方法（带 `[McpServerTool]`）是一个独立表面：C# 方�
 | T-06 | MUST | 枚举用于封闭集合（V4 `ErrorCode`、`Outcome` 等）；开放集合（发布键、TIA 版本、对象名）用字符串或类型化值对象。普通枚举提供零值；底层类型 `int`；标志枚举用 2 的幂、加 `[Flags]`、零值 `None`；不加保留值、哨兵值。 | 防止无效值与兼容问题。 | [FDG 枚举设计](https://learn.microsoft.com/dotnet/standard/design-guidelines/enum) | CA1008、CA1027、CA1028、CA2217：suggestion |
 | T-07 | MUST NOT | 用公共嵌套类型做逻辑分组；在接口中嵌套类型。嵌套类型只用于外层类型的实现细节。 | 嵌套类型与外层强耦合，命名和使用都不便。 | [FDG 嵌套类型](https://learn.microsoft.com/dotnet/standard/design-guidelines/nested-types) | CA1034：suggestion → warning（A 级） |
 | T-08 | MUST | 跨版本边界用接口（`IOpennessAdapter` 及各 facet）；扩展面不可用时为 `null`（现有做法）。每个抽象至少有一个实现、一个使用方和测试。面向 net48 的程序集不得使用默认接口成员。给已有 facet 接口增加成员时，八个适配器与所有宿主同一提交内实现 [P]。 | 抽象必须被验证；net48 运行时不支持默认接口成员。 | [FDG 抽象](https://learn.microsoft.com/dotnet/standard/design-guidelines/abstractions-abstract-types-and-interfaces)；[FDG 接口设计](https://learn.microsoft.com/dotnet/standard/design-guidelines/interface)；[adapter-merge](../adapter-merge.md) | 编译器（CS8701） |
-| T-09 | SHOULD | 值对象与 V4 契约类型不可变：只读属性 + 构造函数校验（范例 [`src/Logic/V4/Envelope.cs`](../../../src/Logic/V4/Envelope.cs)、[`Error.cs`](../../../src/Logic/V4/Error.cs)）。线上 DTO 可按序列化器需要保留 setter（U-01）。 | 不变量集中在构造处。 | [FDG 属性设计](https://learn.microsoft.com/dotnet/standard/design-guidelines/property) | 无 |
+| T-09 | SHOULD | 值对象与 V4 契约类型不可变：只读属性 + 构造函数校验（范例 [`src/Logic/V4/Envelope.cs`](../../../../src/Logic/V4/Envelope.cs)、[`Error.cs`](../../../../src/Logic/V4/Error.cs)）。线上 DTO 可按序列化器需要保留 setter（U-01）。 | 不变量集中在构造处。 | [FDG 属性设计](https://learn.microsoft.com/dotnet/standard/design-guidelines/property) | 无 |
 | T-10 | SHOULD NOT [P] | 新增 `partial` 分部来扩大已有的大类型（`Portal` 53 个分部声明、`PlcFoundationEngine` 49 个）。`partial` 用于 XAML、生成代码和文档化的拆分步骤。 | 引擎拆分设计的目标是领域服务，而不是更多分部。 | [engine-decomposition](../engine-decomposition.md) | 无 |
 | T-11 | MUST NOT | 在两个程序集中重复定义同一 DTO、枚举或异常（例如 Studio DTO 的两份定义）。共享类型放在 A 级契约程序集中。 | 同一技术内的类型名冲突与双份维护。 | [FDG 命名空间：类型名冲突](https://learn.microsoft.com/dotnet/standard/design-guidelines/names-of-namespaces#namespaces-and-type-name-conflicts) | 无 |
 | T-12 | MUST NOT | 公共基类型以 `Base` 结尾；抽象类型提供公共构造函数。 | 名称描述职责而非实现层次。 | [FDG 抽象基类](https://learn.microsoft.com/dotnet/standard/design-guidelines/base-classes-for-implementing-abstractions)；[FDG 抽象类](https://learn.microsoft.com/dotnet/standard/design-guidelines/abstract-class) | CA1012：suggestion |
@@ -241,7 +241,7 @@ MCP 工具入口方法（带 `[McpServerTool]`）是一个独立表面：C# 方�
 | U-23 | MUST | 线上、日志、持久化时间戳用 `DateTimeOffset.UtcNow`（V4 `Meta` 已如此）；时长用 `Stopwatch`；`DateTime.Now` 只用于面向用户的本地显示或文件名。冻结的旧 meta 时间戳编码在旧族移除前不改（棘轮 `timestamp_now_assignments` 只减不增）。 | 时区与夏令时无关。 | [DateTime 与 DateTimeOffset 的选择](https://learn.microsoft.com/dotnet/standard/datetime/choosing-between-datetime) | 项目棘轮 `ratchet -Kind envelopes`（只覆盖手写赋值） |
 | U-24 | SHOULD NOT | 引入可变静态状态。必需的进程级配置钩子只在启动时设置一次并说明线程安全；可变静态字段按 N-08 命名 `s_`。 | 多会话宿主中的竞争与测试隔离。 | [托管线程最佳实践](https://learn.microsoft.com/dotnet/standard/threading/managed-threading-best-practices) | CA2211：warning（仅可见字段） |
 | U-25 | MUST | 自定义特性以 `Attribute` 结尾、`sealed`、标注 `[AttributeUsage]`。 | 查找性能与正确使用。 | [FDG 特性](https://learn.microsoft.com/dotnet/standard/design-guidelines/attributes) | CA1018：warning；CA1813：suggestion |
-| U-26 | MUST [P] | 版本条件编译只使用 [`TiaFeatures.props`](../../../src/Shared/TiaFeatures.props) 中的特性符号、SDK 框架符号（`NET`、`NETFRAMEWORK`、`NET48`）和文档化的构建角色符号；不新增临时版本宏。 | 单一特性表，由 `dotnet run --project build-tools/release -- check-tia-features` 核对。 | [unified-version-framework：编译器特性表](../unified-version-framework.md#compiler-feature-table) | `dotnet run --project build-tools/release -- check-tia-features` |
+| U-26 | MUST [P] | 版本条件编译只使用 [`TiaFeatures.props`](../../../../src/Shared/TiaFeatures.props) 中的特性符号、SDK 框架符号（`NET`、`NETFRAMEWORK`、`NET48`）和文档化的构建角色符号；不新增临时版本宏。 | 单一特性表，由 `dotnet run --project build-tools/release -- check-tia-features` 核对。 | [unified-version-framework：编译器特性表](../unified-version-framework.md#compiler-feature-table) | `dotnet run --project build-tools/release -- check-tia-features` |
 | U-27 | SHOULD | `HttpClient` 长期复用（或通过工厂），不在每次调用中新建并释放。 | 套接字耗尽与 DNS 刷新。 | [HttpClient 使用准则](https://learn.microsoft.com/dotnet/fundamentals/networking/http/httpclient-guidelines) | 无 |
 
 ---
@@ -259,7 +259,7 @@ MCP 工具入口方法（带 `[McpServerTool]`）是一个独立表面：C# 方�
 
 ## 9 线程、STA/MTA 与 Openness 调用 [P]
 
-Microsoft 基础：[托管与非托管线程（单元）](https://learn.microsoft.com/dotnet/standard/threading/managed-and-unmanaged-threading-in-windows)、[托管线程最佳实践](https://learn.microsoft.com/dotnet/standard/threading/managed-threading-best-practices)、[WPF 线程模型](https://learn.microsoft.com/dotnet/desktop/wpf/advanced/threading-model)。以下规则来自 [AGENTS.md](../../../AGENTS.md)、[adapter-merge](../adapter-merge.md)、[unified-version-framework](../unified-version-framework.md) 与当前代码。
+Microsoft 基础：[托管与非托管线程（单元）](https://learn.microsoft.com/dotnet/standard/threading/managed-and-unmanaged-threading-in-windows)、[托管线程最佳实践](https://learn.microsoft.com/dotnet/standard/threading/managed-threading-best-practices)、[WPF 线程模型](https://learn.microsoft.com/dotnet/desktop/wpf/advanced/threading-model)。以下规则来自 [AGENTS.md](../../../../AGENTS.md)、[adapter-merge](../adapter-merge.md)、[unified-version-framework](../unified-version-framework.md) 与当前代码。
 
 当前单元归属（以代码为准）：
 

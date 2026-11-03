@@ -36,7 +36,7 @@
 | CLI | `src/Engine/Cli/CliBoundary.cs`、`CliCommands.cs`、`CliToolExecution.cs` |
 | 操作类别 | `src/Logic/ModelContextProtocol/ToolTaxonomy.cs`、`ToolMetadata.cs`、`docs/reference/tool-matrix.md` |
 
-数量统计用 Python 脚本直接读取八份快照（2026-10-11）。工具并集与各发布版本的数量以[生成的版本工具目录](../../reference/version-tool-catalog.md)和[机器可读版本清单](../../../manifest/version-tools.json)为准，本页不写字面数量。响应快照共 7466 次调用，其中 3192 次只记录摘要，4263 个完整 V4 信封（含批次子信封）参与了组合统计。快照主要覆盖准入拒绝和离线调用；离线环境无法产生的原生成功、部分成功和未知结果，结论来自源码。
+数量统计用 Python 脚本直接读取八份快照（2026-10-11）。工具并集与各发布版本的数量以[生成的版本工具目录](../../../reference/version-tool-catalog.md)和[机器可读版本清单](../../../../manifest/version-tools.json)为准，本页不写字面数量。响应快照共 7466 次调用，其中 3192 次只记录摘要，4263 个完整 V4 信封（含批次子信封）参与了组合统计。快照主要覆盖准入拒绝和离线调用；离线环境无法产生的原生成功、部分成功和未知结果，结论来自源码。
 
 ### 0.2 REST 概念到 MCP/V4 的映射
 
@@ -371,7 +371,7 @@ GetExportContent 和大响应寄存以 UTF-16 码元为单位（`string.Length`�
 
 FindTools 的中间页报 `completeness: complete`。GetOpennessGuidance 的中间页（`offset 0, limit 20, total 282`）则报 `completeness: partial` 并加上 `INCOMPLETE_DATA`，原因是旧字段 `dataComplete=false`。规则尚未统一（API-31）。
 
-> **MCP 基线**：MCP 的分页（[Pagination](https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/pagination)）只适用于 `tools/list` 等列表方法：游标不透明，页大小由服务器决定，缺少 `nextCursor` 表示结束，空串也是有效游标，无效游标返回 -32602。V4 工具结果的分页属于应用层，MCP 不作规定。V4 的 cursor 模式与 MCP 的语义一致；offset 模式让客户端自己选页大小、暴露偏移量运算，最后一页的 next 字段输出 null 而不是省略（MCP-08，有意保留 offset，因为它对模型更直观）。V4 的 `tools/list` 一次返回全部工具（数量见[生成的版本工具目录](../../reference/version-tool-catalog.md)），这是允许的。
+> **MCP 基线**：MCP 的分页（[Pagination](https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/pagination)）只适用于 `tools/list` 等列表方法：游标不透明，页大小由服务器决定，缺少 `nextCursor` 表示结束，空串也是有效游标，无效游标返回 -32602。V4 工具结果的分页属于应用层，MCP 不作规定。V4 的 cursor 模式与 MCP 的语义一致；offset 模式让客户端自己选页大小、暴露偏移量运算，最后一页的 next 字段输出 null 而不是省略（MCP-08，有意保留 offset，因为它对模型更直观）。V4 的 `tools/list` 一次返回全部工具（数量见[生成的版本工具目录](../../../reference/version-tool-catalog.md)），这是允许的。
 
 ### 7.6 一致性、单位与本页完整度
 
@@ -408,7 +408,7 @@ V20/V21 worker 通道的单帧上限为 1 MiB：超限的请求在派发前以 `
 
 ### 9.1 写入分类
 
-工具描述以 `[层][域][操作]` 开头。操作类别为 UI、SESSION、READ、WRITE、FILE、OFFLINE、ONLINE、ONLINE-WRITE 和 EXECUTE；逐版数量由[工具矩阵](../../reference/tool-matrix.md)生成。显式分类登记在 `ToolMetadata` 或 `[ToolClassification]` 中。原先按名称推断的 197 个工具已按维护者 2026-10-11 的逐项复核结果登记显式分类与注解，inferred 标志清除。注解从实际服务的 descriptor 生成，包含四个明确的布尔 hint；同名 Engine/Foundation 工具按各自行为处理（MCP-02）。
+工具描述以 `[层][域][操作]` 开头。操作类别为 UI、SESSION、READ、WRITE、FILE、OFFLINE、ONLINE、ONLINE-WRITE 和 EXECUTE；逐版数量由[工具矩阵](../../../reference/tool-matrix.md)生成。显式分类登记在 `ToolMetadata` 或 `[ToolClassification]` 中。原先按名称推断的 197 个工具已按维护者 2026-10-11 的逐项复核结果登记显式分类与注解，inferred 标志清除。注解从实际服务的 descriptor 生成，包含四个明确的布尔 hint；同名 Engine/Foundation 工具按各自行为处理（MCP-02）。
 
 是否算作需要审批的写调用，由 `HostBehavior.ApprovalWrite` 判断：
 
@@ -520,7 +520,7 @@ V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventor
 
 ### 10.5 超时与取消
 
-- 八版（V14 SP1–V21）共用 worker 通道超时策略，预算与配置见 [4.0 发布说明](../../releases/v4.0.0.md)：默认 120 秒，worker 代次首次附着 300 秒，编译、上下载、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖。超时会把 worker 代次标为故障，outcome 为 unknown。
+- 八版（V14 SP1–V21）共用 worker 通道超时策略，预算与配置见 [4.0 发布说明](../../../releases/v4.0.0.md)：默认 120 秒，worker 代次首次附着 300 秒，编译、上下载、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖。超时会把 worker 代次标为故障，outcome 为 unknown。
 - PLC dispatcher 的批量、候选与移植族调用共用 `WorkerTimeoutPolicy`（P8-64）；预览与读取使用默认预算，首次实际附着按 worker 代次使用首次附着预算，Disconnect 保留有界退出等待。
 - 派发前收到取消，返回 `CANCELLED`（`tool-queue`）；审批预检中取消，返回 `CANCELLED`（`approval-precheck`）；派发后宿主忽略取消，等待真实结果。
 
@@ -532,7 +532,7 @@ V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventor
 
 2026-10-20 新开放的 `READ` 工具按纯读取标准审查：不改变绑定或会话状态，不改变工程、库或在线状态，不写文件，且执行成本有界。`READ` 工具仍可能因原生副作用、长耗时、挂起或崩溃风险、会话计划存储或导出内容分页而保持关闭。可能很慢的搜索与反射读取不会仅因标为 `READ` 就获准进入批次。4.0 未扩大 `OFFLINE`、`WRITE` 和 `FILE` 的准入范围。
 
-逐工具标志以 [`ToolMetadata` 表](../../../src/Logic/ModelContextProtocol/ToolMetadata.cs)为准。工具的版本可用性发布在[生成的版本工具目录](../../reference/version-tool-catalog.md)和[机器可读版本清单](../../../manifest/version-tools.json)中；这两份生成文件当前尚未列出 `BatchRead` 和 `BatchWrite`，不能用工具在目录中出现来判断批次准入。
+逐工具标志以 [`ToolMetadata` 表](../../../../src/Logic/ModelContextProtocol/ToolMetadata.cs)为准。工具的版本可用性发布在[生成的版本工具目录](../../../reference/version-tool-catalog.md)和[机器可读版本清单](../../../../manifest/version-tools.json)中；这两份生成文件当前尚未列出 `BatchRead` 和 `BatchWrite`，不能用工具在目录中出现来判断批次准入。
 
 - **CallTool(name, arguments)**：在完整目录中查找工具。名称 MUST 精确匹配并区分大小写，包括桥接、预览和导出寄存排除名单。目标是 CallTool 本身时返回 `INVALID_ARGUMENT`（name）。目标属于其他发布版本时返回 `UNSUPPORTED_CAPABILITY`（capability = 工具名），目标完全未知时返回 `TOOL_NOT_FOUND`（MCP-11）。
 - **PreviewToolCall(name, arguments?)**：只做校验，不执行。参数错误时仍然返回 `ok: true`，错误放在 `data.validationError(s)` 中；没有绑定工程时返回 `PROJECT_NOT_BOUND`。
@@ -576,7 +576,7 @@ TIMEOUT 仅用于宿主可证明没有派发的超时。worker 超时属于通�
 
 ### 13.1 工具名
 
-- **MUST** 是 PascalCase 的“动词 + 领域对象 + 必要限定”，只用 ASCII 字母和数字。现状：全部工具（数量见[生成的版本工具目录](../../reference/version-tool-catalog.md)）中最长的 45 个字符（`ProbeHardwareHmiConnectionWhitelistedServices`），没有连续大写的缩写，`Plc`、`Hmi`、`OpcUa`、`Db` 都写成单词形式。
+- **MUST** 是 PascalCase 的“动词 + 领域对象 + 必要限定”，只用 ASCII 字母和数字。现状：全部工具（数量见[生成的版本工具目录](../../../reference/version-tool-catalog.md)）中最长的 45 个字符（`ProbeHardwareHmiConnectionWhitelistedServices`），没有连续大写的缩写，`Plc`、`Hmi`、`OpcUa`、`Db` 都写成单词形式。
 - 动词 **MUST** 取自 `build-tools/release/CatalogData.cs` 的闭集，包含经维护者批准的 Prefill 和 Publish。生成器检查所有最终工具名，包括新增入口；`PublishGenerationRecord` 保留名称（API-38，维护者 2026-10-11）。
 - 单个对象用单数，批量操作用复数（`ExportPlcBlock` / `ExportPlcBlocks`）。`Manage*` 工具的对象单复数不统一（`ManageDeviceUsers`、`ManagePlcExternalSources`、`ManageDcbLibraries`）。
 - 名称 **MUST NOT** 暴露 `Json`、`Xml`、`Xlsx` 等序列化格式；`SimaticMl`、`Aml`、`Scl`、`FlgNet` 是领域语言名称，保留。
@@ -699,11 +699,11 @@ Microsoft REST API Guidelines 是次要基线（见文首）。本附录集中�
 
 ## 文案、行为披露与审计的来源
 
-新增 MCP 描述、参数说明、错误与警告消息使用英文；工具名、代码、TIA 原文和示例值保持原样。工作台使用中英资源，用户文档按[文档规范](documentation-style.md)维护。既有契约消息在本次文档整理中保持不变。
+新增 MCP 描述、参数说明、错误与警告消息使用英文；工具名、代码、TIA 原文和示例值保持原样。工作台使用中英资源，用户文档按[文档规范](../../../standards/documentation.md)维护。既有契约消息在本次文档整理中保持不变。
 
-D1 现行行为由生成的能力表披露。`GetToolUsage` 的空选择器返回所选发布键的 `behaviorCapabilities`，每项包含 `family`、`state`、`l5` 和 `entries`；适用的目标结果保留 `meta.behaviorPolicy` 和 `UNVERIFIED_BEHAVIOR`。桥接或批次派发前拒绝保留桥接身份，同时披露已选定的目标族。只有明确的逐版 L5 证据能切换到 `safe-v4`，见 [ADR 0002](../decisions/0002-native-behavior-by-family-acceptance.md)。候选专用参数在现行目录中不广告；保持已实现的 `confirm`、`expectedProjectFile`、计划哈希及所选版本的身份参数。已撤回的 `ConnectProject` 不作为现行参数示例。
+D1 现行行为由生成的能力表披露。`GetToolUsage` 的空选择器返回所选发布键的 `behaviorCapabilities`，每项包含 `family`、`state`、`l5` 和 `entries`；适用的目标结果保留 `meta.behaviorPolicy` 和 `UNVERIFIED_BEHAVIOR`。桥接或批次派发前拒绝保留桥接身份，同时披露已选定的目标族。只有明确的逐版 L5 证据能切换到 `safe-v4`，见 [ADR 0002](../../../standards/decisions/0002-native-behavior-by-family-acceptance.md)。候选专用参数在现行目录中不广告；保持已实现的 `confirm`、`expectedProjectFile`、计划哈希及所选版本的身份参数。已撤回的 `ConnectProject` 不作为现行参数示例。
 
-审批先预检、批准后复核，见 [ADR 0004](../decisions/0004-precheck-before-approval.md)。请求、审批决定、start/end 和结果用同一 requestId 关联。审计链在共享数据根串行追加；哈希校验只能证明保留记录间的完整性，不能证明整段日志未被删除。默认启用审批，MCP 客户端不能自批，控制通道不能审批或切换审批。目录、管道和回退规则见[运行时布局](../runtime-layout.md)。`RECOVERY_GUIDANCE` 的生成规则见[恢复指导](../../reference/recovery-guidance.md)，复用 `GetToolUsage` 的现行示例，不创建第二套参数库。
+审批先预检、批准后复核，见 [ADR 0004](../../../standards/decisions/0004-precheck-before-approval.md)。请求、审批决定、start/end 和结果用同一 requestId 关联。审计链在共享数据根串行追加；哈希校验只能证明保留记录间的完整性，不能证明整段日志未被删除。默认启用审批，MCP 客户端不能自批，控制通道不能审批或切换审批。目录、管道和回退规则见[运行时布局](../runtime-layout.md)。`RECOVERY_GUIDANCE` 的生成规则见[恢复指导](../../../reference/recovery-guidance.md)，复用 `GetToolUsage` 的现行示例，不创建第二套参数库。
 
 ### Large lists and response continuation
 

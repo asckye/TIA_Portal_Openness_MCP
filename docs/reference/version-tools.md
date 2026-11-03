@@ -47,7 +47,7 @@ V20/V21 full and lite profiles. UI tools cannot run in batches. A running local
 Workbench is required; the host never launches it. Prefill awaits a person's
 confirmation, and only Settings can change the UI control switch.
 
-The Engineering page attaches to an MCP session through the operator channel and uses the same tools, approvals and audit records. `session.source` identifies the attached MCP session; the caller attribution distinguishes a person from AI. Preserve exact project/software/block identities when locating targets. See the [control channel](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#工作台控制通道p8-20) and [examples](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md).
+The Engineering page attaches to an MCP session through the operator channel and uses the same tools, approvals and audit records. `session.source` identifies the attached MCP session; the caller attribution distinguishes a person from AI. Preserve exact project/software/block identities when locating targets. See the [control channel](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#工作台控制通道) and [examples](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md).
 
 ## 工作台 engineering
 

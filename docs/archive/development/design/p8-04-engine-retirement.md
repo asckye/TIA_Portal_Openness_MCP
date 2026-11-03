@@ -1,8 +1,8 @@
 # P8-04 引擎退役与八版统一设计
 
-状态：现行（设计）· P8-04b–k3b、j2 与 l 第 1 阶段（`287bbac2`，引擎程序删除）已合并；剩余 l2、l3、n，见[重构计划](../refactor-plan.md)与[发布计划](../../status/release-plan.md)；决定见 [ADR 0022](../decisions/0022-engine-retirement-and-eight-release-unification.md)。D8 已按 ADR 0020 取消；“检查时长”“范围”“许可”三行已被后续决定取代（ADR 0024、0025，2026-10-22 的 4.1 推迟，P8-04l） · 最后核对：2026-11-01，master `27675208`（正文为 2026-10-13，`69229795`）
+状态：现行（设计）· P8-04b–k3b、j2 与 l 第 1 阶段（`287bbac2`，引擎程序删除）已合并；剩余 l2、l3、n，见[重构计划](../refactor-plan.md)与[发布计划](../../../plan/plan.md)；决定见 [ADR 0022](../../../standards/decisions/0022-engine-retirement-and-eight-release-unification.md)。D8 已按 ADR 0020 取消；“检查时长”“范围”“许可”三行已被后续决定取代（ADR 0024、0025，2026-10-22 的 4.1 推迟，P8-04l） · 最后核对：2026-11-01，master `27675208`（正文为 2026-10-13，`69229795`）
 
-[设计规范索引](../design-spec/README.md) · [架构决策记录](../decisions/README.md) · [阶段 7 设计](p7-host-worker-split.md)（历史记录） · [阶段 8 迁移方案](../phase8-port-plan.md)
+[设计规范索引](../design-spec/README.md) · [架构决策记录](../../../standards/decisions/README.md) · [阶段 7 设计](p7-host-worker-split.md)（历史记录） · [阶段 8 迁移方案](../phase8-port-plan.md)
 
 本设计记录 2026-10-13 的两次调研及维护者的决定：
 
@@ -51,7 +51,7 @@ P8-76 的“就绪”继续表示当前登录令牌包含 Openness 组（维护�
 
 只有既有 `EnsureOpennessUserGroup` / `group.fix` 修复路径才允许提权；修复未生效时按原因返回五种结果文字（维护者 2026-10-18 批准）。实现用 `NetLocalGroupGetMembers`（本机、level 0、逐页读取、释放 NetAPI 缓冲区）查询，用系统目录的 `net.exe localgroup "Siemens TIA Openness" "当前账号" /add` 和 `runas` 提示管理员授权；不使用命令 shell、不接收其他账号或组参数。已有直接成员而令牌未生效时不再提示提权；添加后重新按同一个 SID 核对，并要求注销重登。拒绝提权、组不存在、已加入待重登和添加失败的消息区分列入 P8-76 审查决定，MCP 名称、参数和结构不变，离线字节门禁仍要求零差异。
 
-实现依据为仓库保留的 [Siemens 用户组说明](../../../reference/siemens-openness/skills/licensing-and-firewall/SKILL.md)及任务给定的公开 Openness 手册要求，以及公开 Windows [NetLocalGroupGetMembers](https://learn.microsoft.com/en-us/windows/win32/api/lmaccess/nf-lmaccess-netlocalgroupgetmembers)、[LOCALGROUP_MEMBERS_INFO_0](https://learn.microsoft.com/en-us/windows/win32/api/lmaccess/ns-lmaccess-localgroup_members_info_0)、[NetApiBufferFree](https://learn.microsoft.com/en-us/windows/win32/api/lmapibuf/nf-lmapibuf-netapibufferfree) 和 [.NET ProcessStartInfo.Verb](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.verb) 接口；不读取 Siemens.Collaboration 程序集的实现。
+实现依据为仓库保留的 [Siemens 用户组说明](../../../../reference/siemens-openness/skills/licensing-and-firewall/SKILL.md)及任务给定的公开 Openness 手册要求，以及公开 Windows [NetLocalGroupGetMembers](https://learn.microsoft.com/en-us/windows/win32/api/lmaccess/nf-lmaccess-netlocalgroupgetmembers)、[LOCALGROUP_MEMBERS_INFO_0](https://learn.microsoft.com/en-us/windows/win32/api/lmaccess/ns-lmaccess-localgroup_members_info_0)、[NetApiBufferFree](https://learn.microsoft.com/en-us/windows/win32/api/lmapibuf/nf-lmapibuf-netapibufferfree) 和 [.NET ProcessStartInfo.Verb](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.verb) 接口；不读取 Siemens.Collaboration 程序集的实现。
 
 线程模型尚未决定。PlcWorker 目前在 V14 SP1–V19 用 STA、在 V20/V21 用 MTA。八个版本的 SDK 都没有关于线程模型的说明。西门子 Openness 指南（`reference/siemens-openness/skills/threading-and-concurrency`）写明，没有消息循环的后台线程必须用 MTA。因此建议八个版本统一用 MTA，由真机验证后定案。
 

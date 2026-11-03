@@ -2,7 +2,7 @@
 
 状态：现行 · 最后核对：2026-11-02，Q2（基线 `3cfc2580`）
 
-[文档目录](../README.md) · [当前交接](handoff.md)
+[文档目录](../../README.md) · [当前交接](../../plan/progress.md)
 
 仅维护 `master`；旧版本分支记录由 Git 历史保留。
 
@@ -43,17 +43,17 @@
 | `.github` | Actions、贡献/安全/行为规范 |
 | `.claude-plugin`、`hooks` | 插件定义和 Claude Code 钩子 |
 
-运行二进制不进入 Git；使用[发布流程](release-workflow.md)生成完整交付包。
+运行二进制不进入 Git；使用[发布流程](../../manuals/release.md)生成完整交付包。
 Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八版 `TIA_V*_PublicAPI`，也可通过
 `TiaPublicApiRoot` 指定这些文件夹的父目录；单工程显式 `SiemensEngineeringDirectory` 优先。
-具体命令见[验证分层](validation.md)。SDK 不随仓库或公开交付包分发。
+具体命令见[验证分层](../../manuals/validation.md)。SDK 不随仓库或公开交付包分发。
 `bin-build`、本机输出、用户工程、客户端配置及设计交接素材不属于版本化源码。
 开发检查输出、测试结果、暂存和仓库内数据都归入 `bin-build/`；开发根有解决方案文件时，默认数据目录为
 `bin-build/data/`。安装包仍使用 `data/`。构建缓存默认放在主 checkout 的 `bin-build/cache/`，各 worktree 共用。
 
 ## 运行时资源定位
 
-引擎与 Studio 使用 [`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 从已知安装/开发输出定位
+引擎与 Studio 使用 [`BundleLayout.cs`](../../../src/Shared/BundleLayout.cs) 从已知安装/开发输出定位
 含 `manifest/package-manifest.json` 的包根。完整包放在仓库外仍可使用，无需 `.git`。
 指南、Python 桥接和 CLI 模板相对包根读取；V21 生态目录嵌入宿主程序集 `TiaMcp.EngineHost`（引擎兼容副本同样嵌入），随包 JSON 仅是参考副本。
 包根只由 `--bundle-root`、`TIA_MCP_BUNDLE_ROOT` 或已知安装锚点决定（见[运行时布局](runtime-layout.md)）；旧 `TIA_MCP_REPOSITORY_ROOT` 已删除。
@@ -80,7 +80,7 @@ NuGet 包版本统一在根目录 `Directory.Packages.props` 管理；.NET 运�
 `tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj`
 是适配器的 net10.0 离线诊断控制台测试，程序集名保留为 `TiaMcp.Adapters.Diagnostics.Tests`，沿用逻辑库的
 `InternalsVisibleTo`。运行时需要 worker bin 根目录和一个尚不存在的日志目录；命令见
-[适配器说明](../../src/Adapters/README.md#input-regression-checks)。
+[适配器说明](../../../src/Adapters/README.md#input-regression-checks)。
 
 `tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture` 是 Foundation 协议 2 的行 JSON 替身，
 由 `worker-channel`、`scripts/checks/Test-FoundationTransport.py` 使用，并由 CI 与
@@ -95,7 +95,7 @@ NuGet 包版本统一在根目录 `Directory.Packages.props` 管理；.NET 运�
 | `docs/guides` | PLC/HMI、硬件网络、版本控制与具体工作流 |
 | `docs/reference` | 版本工具矩阵、能力、API 缺口及生态参考 |
 | `docs/troubleshooting` | 错误定位、Openness 限制与诊断 |
-| `docs/development` | 当前架构、交接、验证、发布与路线图；Studio 工作台行为见 [`src/Studio/README.md`](../../src/Studio/README.md) |
+| `docs/development` | 当前架构、交接、验证、发布与路线图；Studio 工作台行为见 [`src/Studio/README.md`](../../../src/Studio/README.md) |
 | `docs/releases` | 发布记录 |
 | `docs/licenses` | 再分发组件的许可证清单和原文 |
 

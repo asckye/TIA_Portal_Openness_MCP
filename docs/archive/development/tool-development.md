@@ -2,7 +2,7 @@
 
 状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
 
-[重构计划](refactor-plan.md) · [仓库结构](repository-layout.md) · [验证分层](validation.md) · [响应与异常设计](response-and-errors.md)
+[重构计划](refactor-plan.md) · [仓库结构](repository-layout.md) · [验证分层](../../manuals/validation.md) · [响应与异常设计](response-and-errors.md)
 
 八版工具声明共用 `src/Shared` 和 `src/Shared/Host`；原生实现位于 `src/Adapters/Native`。
 新增工具时同时检查所属文件、类型化调用、版本策略和注册目录；示例、参数来源及结果解释统一维护在
@@ -27,23 +27,23 @@ MCP 响应不引入本地化层，以保持快照和确定性；本地化仅用�
 FindTools 检索关键词具有功能意义，在阶段 6 引入错误码之前不得改动。
 
 `dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text`约束中文字面量只减不增；
-[基线中的 allowlist](../../scripts/checks/mcp-text-baseline.json)逐条保存双语表、报告、TIA 数据及 CLI 输出的理由。
+[基线中的 allowlist](../../../scripts/checks/mcp-text-baseline.json)逐条保存双语表、报告、TIA 数据及 CLI 输出的理由。
 豁免是既有字面量及其出现次数，不是对文件的豁免；新增中文数据须单独审查并记录理由。
 XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授权修改已有响应字节，兼容快照仍须通过。
 
 ## 注释改写
 
-按[清理设计](../archive/development/runtime-layout-history.md#注释与-leftovers)执行；本阶段先建立门禁，注释修改随后续领域任务进行：
+按[清理设计](runtime-layout-history.md#注释与-leftovers)执行；本阶段先建立门禁，注释修改随后续领域任务进行：
 
 - 删除产品版本号、维护者归属和旧 `Phase N` / `sub-batch` 叙事，把修复经过改写为当前必须保持的不变量。
-- 原生行为证据保留，写明 TIA/PLCSIM 版本、日期和[真机验收清单](../reference/real-machine-ledger.md)链接。
+- 原生行为证据保留，写明 TIA/PLCSIM 版本、日期和[真机验收清单](../../reference/real-machine-ledger.md)链接。
 - 删除迁移墓碑、注释掉的代码和过时工具数；改写时保留原注释的语言。
 - 生成脚本字符串中的 `TODO`、注释及中文属于响应数据，不能当作 C# 注释清理。
 - `*Leftovers*` 随阶段 3 的领域迁移逐步消解，不先单独改名；步骤 15 结束时文件数应为 0。
 
 `dotnet run --project build-tools/release -- check-ratchet -Kind comments`按工程和类别报告候选，
-[注释基线](../../scripts/checks/comment-hygiene-baseline.json)按内容及重复次数守护，文件移动不会增加额度。
-具体计数口径、自检及基线收缩命令见[验证分层](validation.md#注释与-mcp-中文门禁)。
+[注释基线](../../../scripts/checks/comment-hygiene-baseline.json)按内容及重复次数守护，文件移动不会增加额度。
+具体计数口径、自检及基线收缩命令见[验证分层](../../manuals/validation.md#注释与-mcp-中文门禁)。
 
 ## 抛异常与返回失败
 
@@ -61,10 +61,10 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 
 响应兼容性包含属性顺序、null、转义、数值类型和时间戳的编码。SDK 默认选项、`BridgeJson`、
 `DisciplineJson` 与无参数 `ToJsonString()` 的事实由
-[TiaMcp.Engine.Harness 黄金数据](../../tests/Engine/TiaMcp.Engine.Harness/README.md)记录；
+[TiaMcp.Engine.Harness 黄金数据](../../../tests/Engine/TiaMcp.Engine.Harness/README.md)记录；
 修改响应代码须比较规范化快照和格式 3 原始文本哈希。`meta.error` 按维护者决策 D1 只将首行
 “类型: 消息”作为执行器黄金比较的契约，堆栈帧允许随迁移变化；这不授权改写实际返回内容。
 
 ## 现行工具归属
 
-已移植工具的声明与响应映射在 `src/Shared`，无 Openness 的宿主工具在 `src/Shared/Host`；原生实现位于 `src/Adapters/Native`。FoundationHost 和 EngineHost 链接同一份声明；`src/Engine` 残余源码已按 [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md) 删除。注册与动作范围以生成目录为准；新增声明后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，再构建与捕获。
+已移植工具的声明与响应映射在 `src/Shared`，无 Openness 的宿主工具在 `src/Shared/Host`；原生实现位于 `src/Adapters/Native`。FoundationHost 和 EngineHost 链接同一份声明；`src/Engine` 残余源码已按 [ADR 0022](../../standards/decisions/0022-engine-retirement-and-eight-release-unification.md) 删除。注册与动作范围以生成目录为准；新增声明后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，再构建与捕获。

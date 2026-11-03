@@ -40,7 +40,7 @@ worker / pipeline 持有。`GetSessionState.data.sessionState` 同时报告这�
 并由人确认结束全部会话。HTTP 重启先核对已保存的端点和受保护密钥，再启动当前包中的宿主；
 stdio 的输入输出流由 MCP 客户端持有，需在该客户端重启。operator 管道不可用时 HTTP 宿主仍保留
 注册信息。这些操作不加入 MCP、operator 握手或 Workbench-control；审批、审计和生成写栅栏不变。
-见 [ADR 0029](../decisions/0029-authoritative-session-state.md)。
+见 [ADR 0029](../../../standards/decisions/0029-authoritative-session-state.md)。
 
 ## 1 P8-21 之前的背景
 

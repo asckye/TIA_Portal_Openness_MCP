@@ -1,12 +1,12 @@
 # 验证分层
 
-状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`；2026-11-03 按 SLIM-1 更新作业清单
+状态：现行 · 最后核对：2026-11-03，master `1dfe2067`
 
 > 2026-11-01 维护者决定：合并门为本机受影响的检查，GitHub CI 不阻塞合并（[ADR 0024](../standards/decisions/0024-ci-does-not-block-merges.md)）；发布证据改为最近一次通过的 nightly 加已验证构建单元，nightly 门槛由三十分钟改为 45 分钟（[ADR 0025](../standards/decisions/0025-release-evidence-nightly-and-verified-build-units.md)）。RULES-1 负责其余证据策略；SLIM-1 round 2 已落实 nightly/release 45 分钟门槛，同提交运行采纳规则暂保持。检查可以在合并、nightly 与 CI 之间移动或按身份复用，不得未经维护者批准删除或放宽；SLIM-1 的批准删除清单见下文。
 
 > Maintainer decision 2026-11-03：日常合并使用 `dotnet run --project build-tools/release -- merge-check`，按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件；`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取 nightly、证据或结果缓存；Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。日志和各作业耗时写在 `bin-build/merge-check/`；首次冷构建及宽范围改动可能超过十分钟。`prepare` 仍在每次发布前执行完整检查，预发布后的验证由 VM 回归和测试者完成。下文旧命令暂保留作历史参考，文档整体清理随 NEW-REL-3。
 
-[文档目录](../README.md) · [发布流程](release.md) · [当前交接](../plan/progress.md)
+[文档目录](../README.md) · [发布流程](release.md) · [开发进度](../plan/progress.md)
 
 命令从仓库根目录运行。八个精确 SDK 目标和离线结果以当前构建记录为准；
 新增真实 TIA 工程验收仍为 **NOT RUN**。发布上传、发布后验包和原生验收分别记录。
@@ -376,8 +376,8 @@ dotnet run --project build-tools/release -- build-configurator -Test
 检查使用 .NET 10，但不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证 Logic/引擎调用方
 （kept-code）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
 和中文/空格/尾分隔符路径。解析器不借用祖先仓库的缺失资源，调用方仍保留到 4.0 的兼容探测；
-仓库外完整交付包的重定位检查用于排除这种回退掩盖缺文件。实际解析顺序、嵌入生态目录和证据边界见
-[运行时布局](../standards/design.md)。Markdown 本地链接及入口路径统一由
+仓库外完整交付包的重定位检查用于排除这种回退掩盖缺文件。
+Markdown 本地链接及入口路径统一由
 `dotnet run --project build-tools/release -- check-repository -NoBinaries` 检查。
 `check-repository` 同时运行 C# 吞异常门禁；offline-checks CI 还运行静态检查自检。
 门禁扫描 `src`、`src/Shared`、`src/Studio`，
@@ -388,7 +388,7 @@ dotnet run --project build-tools/release -- build-configurator -Test
 日志调用识别 `Log*` 的明确方法清单、Console/Debug/Trace 输出、常用 logger 级别方法及仓库的日志辅助，
 不把名称中偶然含有 `log` 的方法视作日志。它不证明控制流覆盖或变量绑定，新日志封装需同步检查器与自检。
 类别只取显式标记；既有普通注释不豁免，未知类别、空原因和错误位置均失败。
-标记和日志策略见[贡献约定](../../.github/CONTRIBUTING.md#repository-conventions)与[P2-03 设计](../standards/design.md)。
+标记和日志策略见[贡献约定](../../.github/CONTRIBUTING.md#repository-conventions)。
 
 首次基线统计为 535 个文件、1,389 个 catch：205 empty、194 discarding、990 有处理行为；399 个待处理 catch 均未标记。
 设计的 218 个空 catch 包含现已删除的预览协议中的 13 个，去除后与 205 完全一致。
@@ -526,7 +526,6 @@ dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text -Root <
 
 在临时副本新增 `// 3.9.99: temporary regression` 或 `throw new InvalidOperationException("新增中文错误");`
 应分别报告新 product-version / Chinese exception 并返回 1；只在 worktree 的 `bin-build` 建立及清理此类夹具。
-语言和改写规则见[工具开发](../standards/development.md)。
 
 ### 适配器输入检查
 
@@ -622,7 +621,7 @@ PLC Tools 功能检查需要现有伴随 Python 环境；可用 `TIA_MCP_PLC_TOO
 
 ## 工具契约兼容检查
 
-[重构计划](../archive/development/refactor-plan.md)的当前 V4 基线位于 `manifest/contracts/v4/baseline`，守护八版工具名称、输入与输出 schema、注解、描述哈希、行为能力及 V20/V21 lite 名单。
+当前 V4 基线位于 `manifest/contracts/v4/baseline`，守护八版工具名称、输入与输出 schema、注解、描述哈希、行为能力及 V20/V21 lite 名单。
 契约格式 2 在每个文件的 `schemas` 表中保存输出 schema，由工具的 `outputSchemaSha256` 引用；
 加载时还原完整输出 schema，捕获文件与基线仍逐字节比较。3.2.0 的 16 份原始快照已逐字节迁至 [只读归档](../../manifest/history/contracts-v3/README.md)，由 provenance.json 与 check-repository 校验清单/字节并拒绝旧目录重建；改动 C# 并重新构建运行目录后执行：
 
@@ -699,8 +698,8 @@ python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcp.Foundation
 
 ## 真实工程验收
 
-按[独立生命周期](real-machine-testing.md)和[生产 MCP 会话](real-machine-testing.md)
-分别启用原生场景。真实工程需要匹配版本/许可、当前明确的测试目标与操作范围。
+按[真机测试](real-machine-testing.md)
+启用原生场景。真实工程需要匹配版本/许可、当前明确的测试目标与操作范围。
 从可恢复工程开始，核对设备和版本，执行读取、预览、修改、回读、编译及显式保存，
 记录实际错误/警告、未支持对象和失败后的状态。
 

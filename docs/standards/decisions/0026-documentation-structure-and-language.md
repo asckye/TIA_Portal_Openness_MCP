@@ -67,3 +67,5 @@
   - 每个批次运行 `dotnet run --project build-tools/release -- check-repository -NoBinaries` 与文档方案列出的文档关卡，链接和锚点全部通过。
   - 纯搬迁提交用 `git diff -M` 确认 100% 相似。
   - 交付规则不包含新开发目录，由样例测试证明。
+
+目录部分已被 [ADR 0030](0030-documentation-and-repository-structure.md) 取代（2026-11-03）；语言规则继续有效。

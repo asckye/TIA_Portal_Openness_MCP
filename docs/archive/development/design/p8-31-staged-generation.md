@@ -1,8 +1,8 @@
 # P8-31 分阶段生成执行设计
 
-状态：现行（设计）· P8-31e1–e5 已实施（e5 `4d3818f2`）；e6、h1 随 P8-31f–i 推迟到 4.1，j1 的排期待维护者决定；任务状态以 [重构计划](../refactor-plan.md) 和[发布计划](../../status/release-plan.md)为准 · 最后核对：2026-11-01，master `27675208`
+状态：现行（设计）· P8-31e1–e5 已实施（e5 `4d3818f2`）；e6、h1 随 P8-31f–i 推迟到 4.1，j1 的排期待维护者决定；任务状态以 [重构计划](../refactor-plan.md) 和[发布计划](../../../plan/plan.md)为准 · 最后核对：2026-11-01，master `27675208`
 
-[设计规范索引](../design-spec/README.md) · [架构决策记录](../decisions/README.md) · [生成框架方案](project-generation-framework.md) · [架构概览](../design-spec/architecture.md)
+[设计规范索引](../design-spec/README.md) · [架构决策记录](../../../standards/decisions/README.md) · [生成框架方案](project-generation-framework.md) · [架构概览](../design-spec/architecture.md)
 
 本设计写于 2026-10-10，调研依据是 master `3300186b` 和 P8-31e 的实施提交 `2fc60da1`。维护者于 2026-10-10 按推荐回答了第 11 节的 Q1–Q14；e1–e4 已合并到 master（`b0f0eda9`、`6127d939`）。2026-10-11 移入仓库时删除了工作树路径、本地报告引用和以 P8-31e 工作树为准的行号，代码位置改为 master 上的文件、类型和方法名；设计判断未改写。[生成框架方案](project-generation-framework.md) §6.3、§6.5–6.7 中与本设计冲突的内容以本设计为准（修订属于 P8-31j1）。调研阶段只读：未构建、未测试，未连接 TIA、引擎或宿主进程，所有原生行为仍按 `current / NOT RUN` 处理。
 
@@ -468,7 +468,7 @@ V14 SP1 的 `generationOption` 为 `parameterless`，效果按 `observedChanges`
 
 ## 11 维护者决定（2026-10-10）
 
-维护者于 2026-10-10 按推荐回答了全部 14 个问题。其中的结构性决定（D3、写栅栏、同次运行换绑、规划只用 READ 工具、运行上限等）待写成 ADR（[架构决策记录](../decisions/README.md) 待补写清单 B26）；Q5 与 Q7 的结论待第 10.3 节的 L5 场景确认。
+维护者于 2026-10-10 按推荐回答了全部 14 个问题。其中的结构性决定（D3、写栅栏、同次运行换绑、规划只用 READ 工具、运行上限等）待写成 ADR（[架构决策记录](../../../standards/decisions/README.md) 待补写清单 B26）；Q5 与 Q7 的结论待第 10.3 节的 L5 场景确认。
 
 | # | 问题 | 选项 | 推荐 | 决定 |
 |---|---|---|---|---|

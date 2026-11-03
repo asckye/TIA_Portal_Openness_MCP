@@ -2,7 +2,7 @@
 
 状态：历史记录 · 最后核对：2026-10-11，master `578a05ee` · 现行规则见[设计规范](design-spec/README.md)
 
-[重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [适配器合并设计](adapter-merge.md) · [验证分层](validation.md)
+[重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [适配器合并设计](adapter-merge.md) · [验证分层](../../manuals/validation.md)
 
 本页是 P2-01（统一响应信封构造器）和 P2-03（审计空 `catch`）的设计结论。路径缩写：`T.` =
 `src/Engine/ModelContextProtocol/Tools/McpServer.`，`P.` =
@@ -183,7 +183,7 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
 ## V4 D1 行为能力披露（P6-35）
 
 发布行为与 V4 名称、输入类型和信封版本独立。`ToolProfiles.resx` 的 `behaviorPolicies` 从
-[真机台账](../reference/real-machine-ledger.md)的逐发布键 L5 记录生成；`BehaviorCapabilities.Select`
+[真机台账](../../reference/real-machine-ledger.md)的逐发布键 L5 记录生成；`BehaviorCapabilities.Select`
 与能力查询读取同一资源。八版的 DEVICE、IMPORT、EXPORT、SESSION、CLOSE、SOURCE、COMPILE、FALLBACK
 均为 `current / NOT RUN`，没有已启用的 safe-v4 族。空 entries 表示该宿主没有此族 MCP 入口。
 
@@ -201,4 +201,4 @@ Strict 验包与 Release 继续拒绝 `TiaMcpTestPolicy` 元数据，防止重�
 
 `Snapshot-ToolContracts.py` 从实际工具目录记录每个 `outputSchema`（未广告时显式 null）及实际查询的
 行为能力表。verify 对照生成目录，拒绝未实现的参数、遗漏输出字段或不一致的族状态。
-[功能矩阵](../../reference/version-feature-matrix.json)与台账的能力表由同一次生成产生；原生验收条目仍为 NOT RUN。
+[功能矩阵](../../../reference/version-feature-matrix.json)与台账的能力表由同一次生成产生；原生验收条目仍为 NOT RUN。

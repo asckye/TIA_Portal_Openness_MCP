@@ -2,9 +2,9 @@
 
 状态：现行 · 最后核对：2026-10-30，master `79f84dd8`
 
-[真机验收台账](../reference/real-machine-ledger.md) · [预发布真机验证清单](../guides/beta-tester-checklist.md) · [Issue 表单](../../.github/ISSUE_TEMPLATE) · [当前交接](handoff.md)
+[真机验收台账](../../reference/real-machine-ledger.md) · [预发布真机验证清单](../../guides/beta-tester-checklist.md) · [Issue 表单](../../../.github/ISSUE_TEMPLATE) · [当前交接](../../plan/progress.md)
 
-本页记录预发布测试者（和维护者自己在真机上看到的现象）的报告及处理结果。我们在 VM 上按[预发布真机验证清单](../guides/beta-tester-checklist.md)做的回归结果也记在这里（[ADR 0020](decisions/0020-prereleases-tested-by-users.md)，2026-11-01 修订），4.0 的真机信息全部来自这里。2026-10-31 至 11-01 在 V21 上测试 v4.0.0-beta.2 的结果尚待登记（[发布计划](../status/release-plan.md) FB-VM）。
+本页记录预发布测试者（和维护者自己在真机上看到的现象）的报告及处理结果。我们在 VM 上按[预发布真机验证清单](../../guides/beta-tester-checklist.md)做的回归结果也记在这里（[ADR 0020](../../standards/decisions/0020-prereleases-tested-by-users.md)，2026-11-01 修订），4.0 的真机信息全部来自这里。2026-10-31 至 11-01 在 V21 上测试 v4.0.0-beta.2 的结果尚待登记（[发布计划](../../plan/plan.md) FB-VM）。
 
 ## 为什么不写进真机验收台账
 
@@ -13,7 +13,7 @@
 - `generate-prerelease-notes` 把 `未发布改动的验收边界`、`V20/V21 host + worker acceptance (P6-54)`、`4.0 安全策略验收计划（P6-R2）`、`4.0 发布前仍需的真实机器步骤` 四节的表格行编号，写进预发布说明的 “Not verified on a real TIA Portal” 清单；发布工具测试逐字节核对已发布的 beta 说明与这份生成结果，往这些表格加行会让已发布说明的核对失败。
 - `generate-catalogs` 从台账生成逐版行为能力块，正则统计 `current | NOT RUN` 行。
 
-测试者报告未经复核，内容包括缺陷、崩溃、提问和“通过”结论，混入台账会改变生成清单，也会模糊“已验收”的含义。因此报告先记在本页；复核后证据满足台账[“新记录应包含什么”](../reference/real-machine-ledger.md#新记录应包含什么)的通过结果，再由维护者写入台账对应位置并注明本页编号。
+测试者报告未经复核，内容包括缺陷、崩溃、提问和“通过”结论，混入台账会改变生成清单，也会模糊“已验收”的含义。因此报告先记在本页；复核后证据满足台账[“新记录应包含什么”](../../reference/real-machine-ledger.md#新记录应包含什么)的通过结果，再由维护者写入台账对应位置并注明本页编号。
 
 ## 处理流程
 
@@ -47,7 +47,7 @@
 
 ## 清单项结果汇总
 
-[预发布真机验证清单](../guides/beta-tester-checklist.md)的每一项按版本记录最新结论和对应的 `FB` 编号；没有结果时写“无”。
+[预发布真机验证清单](../../guides/beta-tester-checklist.md)的每一项按版本记录最新结论和对应的 `FB` 编号；没有结果时写“无”。
 
 | 清单项 | 已收到结果 | 仍缺的版本 |
 |---|---|---|

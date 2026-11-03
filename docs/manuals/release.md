@@ -1,6 +1,6 @@
 # 完整 Release 发布流程
 
-状态：现行 · 最后核对：2026-11-01，master `27675208`（发布证据与 CI 等待的现行做法）；其余部分 2026-10-11，任务启动基线 master `578a05ee`
+状态：现行 · 最后核对：2026-11-03，master `1dfe2067`
 
 发布默认不等待 CI。准备阶段完成构建和全部检查；发布阶段验证同一个候选包，然后打 tag 和上传。CI 结果在发布后读取。
 
@@ -188,9 +188,9 @@ dotnet run --project build-tools/release -- package-test -Build -PublicApiRoot <
 
 ## 准备和执行
 
-维护者决定（2026-10-30，SPD-5）：候选包在 prep merge 准备，发布日只验证、打 tag、上传。
-先用 `release -Version X.Y.Z -BumpOnly` 更新版本，补齐 CHANGELOG 与发布说明并提交。预发布说明保留未验证清单。
-准备环境需要八版本地 PublicAPI、离线 NuGet 配置、已缓存且哈希匹配的运行时和 PLC Tools 伴随 Python。
+在 Windows 的 master 工作区操作，审查全部改动，停止该安装目录下的 MCP 和 Studio 进程。需要 .NET 10 SDK、Git、Framework 开发环境、Python 和八版 SDK。设置 TIA_MCP_PLC_TOOLS_PYTHON 指向已有 PLC Tools 伴随环境。SDK 目录结构见[构建说明](../reference/version-tools.md#build-and-package)。
+
+先写并提交 CHANGELOG.md 最新版本条目与 docs/releases/vX.Y.Z.md，更新当前说明，确保工作树（含未跟踪文件）干净；发布后在[开发进度](../plan/progress.md)和 `manifest/publication-vX.Y.Z.json` 中记录结果。发布正文写明各版范围、组件、测试结果和真实工程验收状态。英文文档和提交说明使用英文，不添加 AI 署名。
 
 ```powershell
 # 在干净的 prep 提交运行；完成后提交生成的记录，绑定这个记录提交，不创建 tag。
@@ -213,11 +213,9 @@ ZIP 只打包一次；其内部 package-manifest 保持完整计划的 `pending`
 发布器仅在完整外部凭据、包哈希、全部检查回执均通过时接受这种包；旧的独立 `publish` 仍要求包内 `passed`，不能直接发布 pending 包。
 这样检查的字节和上传的字节完全相同，检查后不再改写或重新压缩 ZIP。
 
-准备命令在所有候选检查之后仅提交精确允许的生成记录，再对该提交执行资产核验，最终候选绑定其 commit、tree、分支、
-全部工作树输入摘要、每个包内运行文件哈希、记录哈希、证据运行号及回执哈希。候选还保留经检查的 release tool 私有副本；
-发布入口若因记录提交的版本戳而重建了启动器，会在验证私有副本全部哈希后转交给原工具字节执行。
-`-NoPush -NoTag` 适用于 detached worktree 的完整演练；`release-prepare -DryRun` 运行全部本地步骤，
-不暂存、不提交、不推送、不打 tag，资产核验读取当前跟踪字节，产出的 dry-run 候选不可发布。
+1. 首先运行 `prerequisites`：汇总检查 .NET 10 SDK、Python 3.12、实际伴随环境的模块/命令目录、八版 PublicAPI、固定 SHA-512 的 .NET 缓存包、令牌、干净工作树和至少 10 GiB 空间。没有缓存时先下载并验哈希；任何缺项均在修改版本或构建前失败。随后检查 master、上游和进程。
+2. 更新 `Version.props`、插件版本、文档当前发布链接及开发计划（`docs/plan/plan.md`）标题，立即执行早期门禁：版本/CHANGELOG/发布说明/README/开发计划标题断言、仓库及链接、失效工具引用、仓库模式包验证、布局与交付集合自测、示例目录、版本目录接线、原生监督器与 MCP 安全自测、崩溃证据和写保护测试。路由选择与 PLC 名称匹配从当前生产源码提取方法并编译小型夹具运行，不需要完整引擎产物。
+3. 冷构建多版本准备产物，运行 `build-multi-version -PrepareOnly -Test`；再运行两版 `build-release` 的完整检查，最后用 `build-multi-version -CompleteOnly -Test` 核对输入、运行文件和证据并绑定交付。发布期间禁用构建缓存和旧完整构建记录的复用。
 
 发布日的记录检查只有 `compare-release-records`、`candidate-record-bindings`、`candidate-record-only-diff`：
 比较两份记录，重算 ZIP/sidecar/package-result/记录/证据及回执哈希，核对 prep 到发布提交的差异只来自精确记录清单，
@@ -364,7 +362,7 @@ dotnet run --project build-tools/release -- release -Version 4.0.0-beta.1 -Summa
   `-DryRun` 不能与 `-EarlyGatesOnly` 或 `-KillStrayEngine` 同用。演练只拒绝从本 checkout 启动的引擎/宿主进程，正式发布仍按名称拒绝所有进程。
 - 机械更新只改 `.claude-plugin/marketplace.json` 中本插件条目的版本值，其余字节保持原样；早期门禁的 `validate-bundle -PendingRelease <版本>`
   把插件与 marketplace 版本与该待发布版本精确比较（构建记录要到 build-release 才重写），不带 `-PendingRelease` 时仍与 `manifest/delivery.json` 比较。
-  包名必须正好是 `TIA_MCP_Delivery_v<完整版本>_<YYYYMMDD>`（ZIP 为同名 `.zip`）。路线图标题写作 `# 路线图与待办（v<版本>）`，机械更新按此替换。
+  包名必须正好是 `TIA_MCP_Delivery_v<完整版本>_<YYYYMMDD>`（ZIP 为同名 `.zip`）。开发计划 `docs/plan/plan.md` 的标题写作 `# 路线图与待办（v<版本>）`，机械更新按此替换。
 
 ## 分阶段与恢复
 
