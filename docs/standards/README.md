@@ -1,6 +1,6 @@
 # 本项目采用的开发规范
 
-状态：现行 · 最后核对：2026-11-03，master `1dfe2067`
+状态：现行 · 最后核对：2026-11-04，master `55f9c737`
 
 本仓库遵循[《工程开发手册》v1.1](engineering-handbook.html)（通用手册，随仓库保存供离线阅读）；本页只记录采用范围、项目偏差、外部参考和本目录的文件，外部参考一节取代了[参考资料与落地对照](../archive/development/references.md)。与手册冲突时以本页和 [ADR](decisions/README.md) 为准。
 
@@ -19,7 +19,7 @@
 | 主题 | 本项目的做法 | 依据 |
 |---|---|---|
 | 支持的版本 | TIA Portal V14 SP1、V15.1、V16–V21 八个版本，功能按各版本官方 API 注册 | [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md) |
-| 合并检查目标 | 本机 `check-all -Affected` 20 分钟以内（手册约 15–20 分钟）；夜间全量检查 30 分钟以内，上限 45 分钟不变（维护者 2026-11-03，SLIM-1） | [ADR 0024](decisions/0024-ci-does-not-block-merges.md)、[ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md) |
+| 合并与发布 | 新合并门 `merge-check`（NEW-REL-2，目标约 10 分钟）；完整检查和私有草稿提前由 `prepare` 完成，`publish-prepared` 公开的硬预算为 300 秒；取消 nightly，GitHub CI 不阻塞合并 | [ADR 0031](decisions/0031-release-path.md)；实现状态见[进度](../plan/progress.md) |
 | 工作台视觉 | EplanMcp 工作台设计系统；表格行高 36；审批按钮等权重、拒绝在左、回车不批准、拒绝后不撤销 | [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md) |
 | 用语 | 界面和文档用“服务”“项目”（TIA 的 project） | [ADR 0026](decisions/0026-documentation-structure-and-language.md) |
 | 文档目录 | 开发文档分为 `docs/standards/`、`docs/plan/`、`docs/manuals/`、`docs/archive/`，不用手册第 2.6 节的目录；ADR 在 `docs/standards/decisions/`（手册 DOC-04 写 `docs/adr/`），交接在 `docs/plan/progress.md`（手册 DOC-11 写 `handoff.md`） | [ADR 0030](decisions/0030-documentation-and-repository-structure.md) |

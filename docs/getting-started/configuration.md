@@ -102,7 +102,7 @@ worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，
 
 V20/V21 默认使用 lite 档，可用 `FindTools` / `CallTool` 访问其余工具，或向宿主传入 `--profile full`。V14 SP1–V19 发布其全部注册工具，也提供发现、桥接和批处理入口。所有版本都用 `GetToolUsage` 读取自己的参数、语言示例和调用序列。修改配置后重启服务与客户端，刷新目录缓存。
 
-Foundation 的单项软件工具接受工程树中的精确 `softwarePath`，也接受唯一的 PLC/device 别名；`plc` 参数使用同一规则。`table` 可传 `ListPlcTagTables` 返回的精确转义路径，或唯一的单段原始 `Name`（包含中文名称）。批量块/类型导出和目录导入保留精确软件路径及组路径要求。`ExportPlcBlocks` 与 `ExportPlcTypes` 的目标目录必须已存在；单项 XML 导出则使用现有目录下的新 `.xml` 文件。
+Foundation 的单项软件工具接受工程树中的精确 `softwarePath`，也接受唯一的 PLC/device 别名；`plc` 参数使用同一规则。`table` 可传 `ListPlcTagTables` 返回的精确转义路径，或唯一的单段原始 `Name`（包含中文名称）。批量块/类型导出和目录导入保留精确软件路径及组路径要求。`ExportPlcBlock`、`ExportPlcBlocks` 与 `ExportPlcTypes` 接受已有目标目录；`ExportPlcBlock` 的实际输出文件从 `data.outputFile` 读取。变量表等单项 XML 导出的路径类型不同，按当前版本的 `GetToolUsage` 核对。
 
 ## V4 结果、审批与审计
 
@@ -155,7 +155,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待工作台审批后才�
 | 连接后没有工程 | 用当前版本的连接示例明确绑定目标工程 |
 | 工具不存在 | 检查当前版本目录，V20/V21 再使用 FindTools |
 
-需要命令行诊断时使用 [CLI 指南](cli.md)。V20/V21 可选worker隔离的参数与恢复方式见[隔离指南](../guides/openness-worker-isolation.md)，工作台没有对应勾选项。
+需要命令行诊断时使用 [CLI 指南](cli.md)。八个版本都固定使用每会话一个 worker，不提供隔离开关；状态查询与故障恢复见[worker 与恢复](../guides/openness-worker-isolation.md)。
 
 作为 Claude Code 插件使用时，还会运行随包的 `runtime/tools/TiaMcp.WriteGuard.exe`；它记录审计并按环境设置控制在线写入。普通 GUI/MCP 连接不等于加载了该插件。具体工具执行参数与结果解释仍以 `GetToolUsage` 为准。
 

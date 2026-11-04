@@ -1,6 +1,6 @@
 # 开发流程
 
-状态：现行 · 最后核对：2026-11-03，master `1dfe2067`
+状态：现行 · 最后核对：2026-11-04，master `55f9c737`
 
 本文写改动从任务说明到进入 master 的项目做法，附录取代已归档的[工具规格模板](../archive/development/templates/tool-spec.md)；通用流程见[《工程开发手册》](../standards/engineering-handbook.html)第 18、19、23 节，命令见[验证分层](validation.md)，发布见[发布流程](release.md)。
 
@@ -29,23 +29,21 @@
 完成条件为手册第 23 节，另加：
 
 - 生成文件只由生成器产生：依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，迁移表变化时运行 `generate-release-migration`，各自的 `-Check` 通过。
-- 契约变化重新捕获契约与响应基线并逐项解释差异；破坏性变化写入发布说明和迁移表；新增 MCP 文本为英文。
-- 用户可见的变化写入 `CHANGELOG.md` 的 `[Unreleased]` 段；版本条目只由 `release` 命令写入，最新版本条目等于 `Version.props`。
+- 契约变化通过正式工具重新捕获工具定义快照并逐项解释差异；破坏性变化写入发布说明和迁移表；新增 MCP 文本为英文。全部八版逐工具响应捕获的移除见 [ADR 0031](../standards/decisions/0031-release-path.md)。
+- 用户可见的变化写入 `CHANGELOG.md` 的 `[Unreleased]` 段；准备发布前由维护者统一版本条目、日期、`Version.props`、插件版本与发布说明，`prepare` 只检查一致性，不改写这些输入。
 
 ## 4 验证
 
-检查只在各档与 CI 之间移动或按身份复用；删除、跳过或放宽须维护者批准。
+验证按 [ADR 0031](../standards/decisions/0031-release-path.md) 分为合并、完整准备和公开；删除、跳过或放宽检查仍须维护者批准。具体命令和保留的门槛见[验证](validation.md)。
 
-| 档 | 何时 | 命令 | 能否作为发布证据 |
+| 阶段 | 何时 | 入口 | 判定 |
 |---|---|---|---|
-| 开发自检 | 开发中、Codex 交付前 | `check-all -Affected -Quick`（报告标为 `quick`） | 否 |
-| 合并门 | 每次合并前，在主机上 | `check-all -Affected [-Base origin/master]` 加涉及的检查 | 否 |
-| nightly | 每日 03:00，无人值守 | `nightly`（完整冷全集） | 是 |
-| 发布只核对 | 发布时 | `release` | 不适用 |
+| 开发自检 | 开发中、Codex 交付前 | 按当前 AGENTS.md 运行 `check-all -Affected -Quick` 及点名套件 | 列出通过、失败、阻塞和沙箱限制，不作为可公开候选 |
+| 合并门 | 每次合并前，在主机上 | NEW-REL-2 的 `merge-check` | 普通构建、受影响的测试与生成/仓库检查通过，目标约 10 分钟；实现交付前继续按当前 AGENTS.md 验证 |
+| 完整准备 | 发布前提前运行 | `prepare -Version <版本>` | 所有注册套件与保留检查通过，包与测试字节一致，封存候选并上传私有草稿 |
+| 公开 | 维护者确认后 | 已构建工具的 `publish-prepared -Version <版本>` | 300 秒内核对候选、推送、打标签和公开；不构建、不测试、不打包 |
 
-- 合并门通过后直接推送，不等 nightly 和 GitHub CI；CI 失败按缺陷在 master 上向前修复（[ADR 0024](../standards/decisions/0024-ci-does-not-block-merges.md)）。作业选择与复用规则见[验证分层](validation.md)。目标时长：合并门 `check-all -Affected` 20 分钟以内，nightly 30 分钟以内，上限 45 分钟不变（维护者 2026-11-03，SLIM-1）。
-- nightly 失败或超时阻止后续发布，直到相关提交上有更晚的成功 nightly；计划任务由维护者手工登记。
-- 发布证据：工具现只采纳同一干净提交上的冷 nightly，门槛 30 分钟；[ADR 0025](../standards/decisions/0025-release-evidence-nightly-and-verified-build-units.md) 改为最近一次通过的 nightly 加已验证的增量构建单元、门槛 45 分钟，与机器级作业锁、`regen-all`、Codex 沙箱可跑子集、发布默认不等 CI 一起由 RULES-1 实现（[开发计划](../plan/plan.md)）。在此之前，发布显式加 `-NoWait`，不在 Codex 构建时运行完整门禁。
+没有 nightly，不等待 GitHub CI 合并。CI 失败仍按缺陷处理。完整准备由 NEW-REL-B 接入，核对时 master 尚只有构建打包部分；实施状态见[进度](../plan/progress.md)，上传和公开失败的恢复步骤见[发布流程](release.md)。
 
 ## 5 提交、发布与资源
 

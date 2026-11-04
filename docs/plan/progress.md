@@ -1,46 +1,45 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-03，master `1dfe2067`
+状态：现行 · 最后核对：2026-11-04，master `55f9c737`
 
-本页记录当前状态、进行中的分支和测试者反馈，取代原当前交接和已归档的[测试者反馈台账](../archive/development/tester-feedback.md)。
-
-范围、任务状态和放行门槛见[开发计划](plan.md)。机器地址、进程号、worktree 状态和运行中的检查从当前环境确认，不从本页推断。
+本页记录已核对的主线状态、待集成工作和测试者反馈；范围、顺序与放行门槛见[开发计划](plan.md)。
 
 ## 当前状态
 
-- 发布：最新正式版 [v3.3.0](../releases/v3.3.0.md)。4.0 预发布（GitHub 预发布，不设为最新版，3.3 更新器不提示）：[v4.0.0-beta.2](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.2)（2026-10-30，`7e9c4c65`，[说明](../releases/v4.0.0-beta.2.md)，记录 `manifest/publication-v4.0.0-beta.2.json`）；[v4.0.0-beta.1](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.1)（2026-10-22，`bc5dcc5a`，[说明](../releases/v4.0.0-beta.1.md)，记录 `manifest/publication-v4.0.0-beta.1.json`）。
-- 4.0.0-beta.3 未发布：master 已含定稿的 CHANGELOG 条目和[发布说明](../releases/v4.0.0-beta.3.md)；还差 PIPE-INT（含 SLIM-1）和 VMFIX-2 两次合并，然后 nightly、维护者确认、发布，目标 2026-11-03。
-- 架构：八个版本都用 FoundationHost，每个 MCP 会话一个 PlcWorker，一份会话状态（[ADR 0022](../standards/decisions/0022-engine-retirement-and-eight-release-unification.md)、[0029](../standards/decisions/0029-authoritative-session-state.md)）；入口 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`，worker `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`，负责线程在 V20/V21 为 MTA、在 V14 SP1–V19 为 STA（MTA-1 统一）。引擎程序已删除（`287bbac2`），宿主以退出码 64 拒绝 `--engine-*`，`src/Engine` 残留由 Q2 删除。工具按各版官方 API 注册，数量见[生成的工具目录](../reference/version-tool-catalog.md)。
-- 检查：合并门 `check-all -Affected`，完整冷全集由 `nightly` 运行，失败或超时阻止下一次发布；RULES-1 合并前发布工具只采纳同一提交的冷 nightly，代码门槛 30 分钟（ADR 0025 为 45 分钟）。上一次主机门禁 348 个作业、112 分钟，SLIM-1 目标合并门少于 20 分钟、nightly 少于 30 分钟。GitHub CI 不阻塞合并，发布加 `-NoWait`。
-- 品牌：对外名称为自动化工程工作台；程序文件名、插件 ID、MCP 服务名 `tia-portal`、交付包名和仓库地址不变，仓库改名排在 4.0 正式版（RENAME-GH）。
+- 公开版本记录：最新正式版为 [v3.3.0](../releases/v3.3.0.md)；已记录的 4.0 预发布为 [v4.0.0-beta.2](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.2)（2026-10-30，`7e9c4c65`）和 [v4.0.0-beta.1](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.1)（2026-10-22，`bc5dcc5a`）。预发布不设为 latest，3.3 更新器不提示；本次仅核对本地记录，未访问 GitHub。
+- beta.3 尚未发布。2026-11-03 的发布尝试已停止，改用全新的准备与公开流程；master 已含对应 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)。
+- PIPE-INT/SLIM-1 已合并（`eee7b372`），VMFIX-2 已合并（`93371695`、`b769d196`）。旧文档中的“仍等这两项合并”已不适用。
+- NEW-REL-A 已合并（`545e3604`、`55f9c737`）：`prepare` 构建、暂存校验并生成 ZIP。NEW-REL-C 已合并（`2db5bf1e`）：草稿上传、300 秒公开预算、重跑恢复及发布后 ZIP/sidecar 核验。核对时的 `Prepare.Run` 尚未接入完整测试、候选与自动上传，不能把它的成功视为完整发布准备通过。
+- 合并门已决定改为 NEW-REL-2 的 `merge-check`，完整检查进入 `prepare`，取消 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。这是已采纳的方向；NEW-REL-B、NEW-REL-2 和 NEW-REL-3 的实现集成仍待完成。
+- 架构：八版 FoundationHost，每个 MCP 会话一个 PLC worker；入口 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`，worker 位于同目录 `worker/`。V20/V21 使用 MTA，V14 SP1–V19 使用 STA；MTA-1 的统一仍列在后续计划。引擎运行文件已退役，源目录残留由 Q2 整理。各版工具数见[生成的目录](../reference/version-tool-catalog.md)。
+- 品牌为自动化工程工作台；程序名、插件 ID、MCP 服务名 `tia-portal`、包名和仓库地址保持原有标识。GitHub 仓库改名仍在正式版计划内，未执行。
 
-### 真机结果
+机器地址、PID、worktree 和运行中的检查必须从当前环境确认，不从本页推断。本页不以旧分支提交号证明当前分支是否完成或已验证。
 
-| 测试 | 结果 | 去向 |
+## 待集成工作
+
+以下是 2026-11-04 决定的顺序，不是完成比例；具体任务定义和状态在[计划](plan.md)。
+
+| 阶段 | 已知状态 | 下一步 |
 |---|---|---|
-| v4.0.0-beta.2，V21 VM，2026-10-31 至 11-01 | 511 个工具：通过 213、失败 93、未测 192、按设计拒绝 12；TIA 重启 4 次 | VMFIX-1、DES-1、DES-5（beta.3）；DES-2..4（beta.4） |
-| beta.3 测试包（`1dfe2067`），V21 VM，2026-11-02 至 11-03 | 512 个工具：通过 293、缺陷 103、按设计拒绝 60、不确定 1、未测 55；去重缺陷 59 个（HIGH 20）；会话中断 18 次（R1–R5），TIA 重启 2 次 | R1 由 VMFIX-2（beta.3）修复，其余由 VMFIX-3/4/5（beta.4）修复后复测 |
+| NEW-REL-B、SEC-1 | 主线尚无完整候选准备阶段；安全小修排入 beta.3 | 完成实现、审查及主机验证 |
+| Q1–Q9、CPM | 已有待集成精简栈，不能按旧 PIPE-INT 基线直接当作当前结果 | 适配新主线，迁移仍有效的测试，再按依赖集成 |
+| NEW-REL-2/3、THIRD-1、主机测试精简 | 已决定在 beta.3 前完成 | 新合并门、旧工具及八版响应基线清理、第三方裁剪和批准的测试精简 |
+| DOCS-1/2 | 本文及相邻规范、手册已在文档 worktree 整理；尚待审查集成 | 与新工具实现核对并合并 |
+| REORG-2、REORG-3、大文件拆分及长行整理 | 已决定全部先于真实发布准备 | 按顺序整理、同步路径并验证 |
+| beta.3 准备与公开 | 没有本次可公开候选或成功发布结果 | 上述整理完成后运行完整 `prepare`，维护者确认后 `publish-prepared` |
+| beta.4 | VMFIX-3/4/5、DES-INT/4、RELAY-1、UI、P8-84、N1-INT、REVIEW-1、SCORE-1、VMAUTO-1、输出根外文件写审批均在计划中 | 按整理后的路径和新验证入口更新任务说明 |
 
-原始记录在维护者本机 `bin-build/refactor/vm-test/`（不入库），待登记进下文台账（FB-VM）。离线检查守的是接口形状，不证明原生行为；做验收判断前先读[真机验收台账](../reference/real-machine-ledger.md)。
+REVIEW-1 会把漏洞扫描带入新工具；目前不能宣称新准备命令已覆盖它。APR-05 的确认词用于关闭写操作审批，不用于每次普通批准。
 
-## 进行中
+## 真机结果
 
-worktree 在 `D:\Code\TIA_wt\<编号>`，分支 `refactor/<编号>`；每项在主机上运行受影响的检查后再推送，合并后删除分支。
+| 测试 | 结果 | 处理状态 |
+|---|---|---|
+| v4.0.0-beta.2，V21 VM，2026-10-31 至 11-01 | 原记录称 511 个工具：通过 213、失败 93、未测 192、按设计拒绝 12；TIA 重启 4 次 | 分类合计为 510，与原总数相差 1，待台账核对；相关任务见计划 |
+| beta.3 测试包（`1dfe2067`），V21 VM，2026-11-02 至 11-03 | 512 个工具：通过 293、缺陷 103、按设计拒绝 60、不确定 1、未测 55；去重缺陷 59 个（HIGH 20）；会话中断 18 次，TIA 重启 2 次 | R1 对应 VMFIX-2 已合并，但这不是修复后复测结果；其余修复与复测待执行 |
 
-| 分支 | 内容 | 状态 | 下一步 |
-|---|---|---|---|
-| `refactor/PIPE-INT` | PIPE-INT 第 1–4 轮加 SLIM-1 | `92d58d94` 加未提交的 SLIM-1；两个保留测试的失败待主机确认 | 主机门禁 → 提交 → 合并（beta.3） |
-| `refactor/VMFIX-2` | R1 会话中断等 VM 修复 | `3a588b36`，第 2 轮 | 变基 → 主机门禁 → 合并 → nightly → 确认 → 发布 beta.3 |
-| `refactor/VMFIX-3` | 写入结果如实 | `867efd36`，第 4 轮运行中 | 审查；VMFIX-2 合并后变基 |
-| VMFIX-4、VMFIX-5a、VMFIX-5b | 会话生命周期；其余 HIGH 缺陷 | 任务说明已写 | VMFIX-2 合并后启动 |
-| `refactor/Q1`…`Q7`、`CPM`、`Q8` | 代码精简第一组，叠在 PIPE-INT 上（顶端 `e53590d9`） | 已提交 | beta.3 发布后按开发计划的顺序合并 |
-| `refactor/Q9` | 发布键从范围派生 | `99977ba3` | Q8 之后合并，再启动 Q6a、Q10a、Q10b |
-| `refactor/REVIEW-1` | 自动审查检查（基于 Q8） | `427456ad`，第 3 轮排队 | SLIM-1 合并后变基 |
-| `refactor/DES-INT` | DES-2、DES-3 | `5b74969a`，第 2 轮完成 | beta.4 合并，再启动 DES-4 |
-| `refactor/N1-INT`、`UI-INT`、`UI-2c`、`RELAY-1`、`P8-84` | P8-04n1；UI-2b 加 UI-2d；审批页；远程中继；进程选择器 | `5c800dc0`、`390fb6e4`、`6942199f`、`0e4f5d5c`、`e9cca2d8` | beta.4 合并 |
-| `refactor/DOCS-1` | 仓库整理批次 1 | 移动与链接已提交，内容合并进行中 | beta.3 发布后合并 |
-| `refactor/RULES-1`、`SPD-6b` | 流水线项 | `4d3704fe`、`0d9cd054` | SLIM-1 合并后变基或重新评估 |
-| `refactor/P8-10d`、`P8-10e`、`P8-10f` | 发布链 Python 改 C# | 未验证的 WIP | 随整理批次 2 |
+原始记录在维护者本机 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记。本次未连接 VM，也未新增真机结果。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
 
 ## 测试者反馈
 
@@ -66,7 +65,7 @@ worktree 在 `D:\Code\TIA_wt\<编号>`，分支 `refactor/<编号>`；每项在�
 |---|---|---|
 | T01、T02、T04–T09（每个版本） | 无 | 14sp1、15.1、16、17、18、19、20、21 |
 | T03 编译仅更改或全部重建 | 无 | 14sp1、15.1、16、17、18、19、20、21 |
-| T10 工作台工程操作页 | 无 | 14sp1、16、21 |
+| T10 工作台项目页 | 无 | 14sp1、16、21 |
 | T11 V21 原生交叉引用 | 无 | 21 |
 | T12 删除预览格式错误路径 | 无 | 19、20、21 |
 | T13 HMI 面板容器 | 无 | 19、20、21 |
@@ -78,4 +77,4 @@ worktree 在 `D:\Code\TIA_wt\<编号>`，分支 `refactor/<编号>`；每项在�
 3. [开发计划](plan.md)：各版范围、任务状态、放行门槛和待决定事项。
 4. [验证](../manuals/validation.md)和[发布流程](../manuals/release.md)：检查分层、合并门和发布步骤。
 
-修改工具示例后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，捕获契约或响应前先构建；生成器都有逐字节检查模式，生成的哈希只由正式工具写入。发布后在本页记下发布并更新 `manifest/publication-vX.Y.Z.json`。构建或离线结果都不授权连接 TIA、PLC、VM 或外部服务。
+修改工具示例后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，捕获契约或响应前先构建；生成器都有逐字节检查模式，生成的哈希只由正式工具写入。发布后在本页记下版本、标签、候选摘要与验证结果；新发布路径不再生成受跟踪的 publication 构建记录。构建或离线结果都不授权连接 TIA、PLC、VM 或外部服务。

@@ -1,16 +1,18 @@
 # 文档目录
 
-[项目首页](../README.zh-CN.md) · [English](../README.md) · [完整包下载](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
+[项目首页](../README.zh-CN.md) · [English](../README.md) · [完整包下载](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)
+
+下载 4.0 beta 时选择标有 **Pre-release** 的条目，预发布不会成为 Latest。可执行文件尚未签名，Windows SmartScreen 可能显示警告。
 
 ## 开始使用
 
-- [新手使用指南](getting-started/beginners.zh-CN.md)：安装准备、本机或虚拟机连接、选择 PLC、Studio 操作和首次 SCL 导入编译。
+- [新手使用指南](getting-started/beginners.zh-CN.md)：安装准备、本机或虚拟机连接、选择 PLC、工作台操作和首次 SCL 导入编译。
 - [配置指南](getting-started/configuration.md)：客户端、连接方式、升级和排错。
 - [Claude Code 插件安装](getting-started/plugin.md)：安装插件、共用工作台交付包和选择 TIA 版本。
 - [从 3.3 迁移到 4.0](guides/migrate-3.3-to-4.0.md)：并排安装、客户端和插件配置、数据位置、写入审批、工具改名和回退。
 - [预发布真机验证清单](guides/beta-tester-checklist.md)：在各 TIA 版本上要试的项目、证据和报告方式；收到的报告记在[测试者反馈台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/progress.md#测试者反馈)。
 - [CLI 指南](getting-started/cli.md)：八版宿主的诊断、配置、审计校验和伴随环境命令，以及已退役工程命令的替代入口。
-- [Studio](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：共享 MCP 会话的工程操作页。
+- [Studio](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：共享 MCP 会话的项目页。
 
 ## 工具、版本与示例
 

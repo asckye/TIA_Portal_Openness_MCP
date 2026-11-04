@@ -1,10 +1,10 @@
 # 自动化工程工作台
 
-[English](README.md) · [新手使用指南](docs/getting-started/beginners.zh-CN.md) · [文档目录](docs/README.md) · [下载完整包](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
+[English](README.md) · [新手使用指南](docs/getting-started/beginners.zh-CN.md) · [文档目录](docs/README.md) · [下载完整包](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)
 
 自动化工程工作台（Automation Engineering Workbench，原名 TIA Portal Openness MCP）是面向 TIA Portal Openness 的 MCP 服务器和桌面工作台，适用于 Siemens TIA Portal V14 SP1 至 V21。可执行文件、Claude Code 插件 ID `tia-portal-openness-mcp`、MCP 服务名 `tia-portal` 和仓库地址保留原名，现有配置无需修改。
 
-同一个工作台窗口提供 **MCP 与客户端** 和 **工程操作** 两个页面，支持中文和英文。配置 AI 连接、启停服务、浏览工程、导入导出和编译均在同一个主窗口内完成。
+同一个工作台窗口提供 **MCP 与客户端** 和 **项目** 两个页面，支持中文和英文。配置 AI 连接、启停服务、浏览工程、导入导出和编译均在同一个主窗口内完成。
 
 交付包包含工作台；从包根打开 `TiaOpenness.exe`。本页说明尚未发布的 4.0 源码；已下载版本以包内文档为准。
 
@@ -12,12 +12,12 @@
 
 ## 第一次使用
 
-从 Releases 下载 **TIA_MCP_Delivery** ZIP，完整解压到较短的固定目录。GitHub 的 `Source code` 压缩包只含源码。
+从 Releases 下载 **TIA_MCP_Delivery** ZIP，完整解压到较短的固定目录。GitHub 的 `Source code` 压缩包只含源码。选择标有 **Pre-release** 的 4.0 beta 条目；预发布不会出现在 Latest 中。可执行文件尚未签名，首次打开时 Windows SmartScreen 可能显示警告。
 
 交付包只包含运行文件、用户文档、模板、Claude Code 插件及生态资源；开发源码、构建脚本和验证工具保留在源码仓库。
 
 - **用 AI 操作**：双击 `TiaOpenness.exe`，在 **MCP 与客户端** 页面选择实际安装的 TIA 版本和“同一台电脑”或“虚拟机 ↔ 宿主机”，选择实际使用的 MCP 客户端，写入配置后重启客户端并新建会话。
-- **自己操作**：打开同一个 `TiaOpenness.exe`，切换到 **工程操作**，连接前选择顶部的 TIA 版本，连接工程后选择目标 PLC。工程操作页附着 MCP 会话，使用同一套工具、审批和审计；没有 AI 会话时可创建工作台所属的宿主会话。
+- **自己操作**：打开同一个 `TiaOpenness.exe`，切换到 **项目**，连接前选择顶部的 TIA 版本，连接工程后选择目标 PLC。项目页附着 MCP 会话，使用同一套工具、审批和审计；没有 AI 会话时可创建工作台所属的宿主会话。
 - **先看演示**：在包根目录运行 `TiaOpenness.exe --mock --lang zh`。演示使用模拟数据。
 
 按[新手使用指南](docs/getting-started/beginners.zh-CN.md)完成安装、连接和第一个 SCL 导入编译练习；具体客户端配置见[配置指南](docs/getting-started/configuration.md)。

@@ -23,7 +23,7 @@
 
 ## 2. 下载、解压和准备环境
 
-1. 从[发布页](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)下载交付包 ZIP 和同名 `.sha256`。GitHub 的 `Source code` 压缩包不含运行二进制。
+1. 从[发布页](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)选择标有 **Pre-release** 的 4.0 beta，下载交付包 ZIP 和同名 `.sha256`。预发布不会成为 Latest；GitHub 的 `Source code` 压缩包不含运行二进制。
 2. 完整解压，建议放在固定位置，例如 `D:\TIA-MCP`。打开后应能看见 `TiaOpenness.exe`、`runtime`、`docs`、`reference` 和 `manifest`。如果外面还有一层同名文件夹，继续进入这一层；下文的“包根目录”指能看见这些内容的文件夹。
 3. 在安装 TIA 的电脑上检查下面的依赖。不要只复制宿主或工作台的 EXE，它们需要同目录下的 DLL、适配器和示例文件。
 4. 用 TIA 打开一个练习工程，确认 TIA 自己能正常查看和编译。首次练习建议使用工程副本，并只打开这一份目标工程。
@@ -40,6 +40,8 @@
 Get-FileHash .\<下载的交付包文件名>.zip -Algorithm SHA256
 Get-Content .\<下载的交付包文件名>.sha256
 ```
+可执行文件尚未签名，首次打开时 Windows SmartScreen 可能显示警告。先核对下载来源和摘要，再决定是否继续。
+
 ### 让当前 Windows 用户能够使用 Openness
 
 在安装 TIA 的电脑上，管理员打开“计算机管理 → 本地用户和组 → 组 → Siemens TIA Openness”，把实际运行 TIA 和本程序的 Windows 用户加入该组，然后注销 Windows 并重新登录。首次连接 TIA 时，按 TIA 的 Openness 访问提示允许本程序访问。只有更改用户组等系统设置时才需要管理员权限。
@@ -50,7 +52,7 @@ Get-Content .\<下载的交付包文件名>.sha256
 
 选择这次实际运行的 TIA 版本。V14 必须是 **V14 SP1**，V15 必须是 **V15.1**。版本选择用于加载对应 API，不会把旧工程自动转换为新工程。需要升级工程时，先在对应 TIA 中完成转换，再连接转换后的工程。
 
-V14 SP1–V19 提供 PLC 基础工具；V20/V21 提供V20/V21，包含更多 HMI、驱动及选件相关工具。安装多个版本时，一次会话使用一个准确版本。完整清单见[版本工具说明](../reference/version-tools.md)。
+八个版本按各自官方 API 提供工具；V20/V21 包含更多 HMI、驱动及选件相关工具。安装多个版本时，一次会话使用一个准确版本。完整清单见[版本工具说明](../reference/version-tools.md)。
 
 ## 3. 让 AI 连接 TIA
 
@@ -120,7 +122,8 @@ V4 工具返回 `ok`、`data`、`error` 和 `meta`；先检查 `meta.outcome`。
 1. 先完成上一节，选择一个含 S7 PLC 的练习工程及准确 PLC 路径，并在 TIA 中结束工程内所有设备的在线连接后再编译。
 2. 确认工程中还没有自己的 `FC_Add`，避免覆盖同名程序。
 3. 找到示例文件的实际完整路径，例如 `D:\TIA-MCP\reference\tool-examples\languages\FC_Add.scl`。文件必须在**运行 TIA/MCP 的电脑**上；虚拟机模式不能直接读取宿主机的同名路径。
-4. 把下面的提示词发给 AI，替换版本、PLC 路径及文件路径：
+4. 在运行 TIA/MCP 的电脑上，打开同一交付目录的工作台，保持 **写操作审批** 开启；如配置了数据根，让工作台与服务使用同一个数据根。保持窗口打开以接收审批请求。
+5. 把下面的提示词发给 AI，替换版本、PLC 路径及文件路径：
 
 ```text
 请在 [TIA V21] 的练习工程中，对 PLC [上一步返回的准确 PLC 路径] 完成一次 SCL 导入练习。
@@ -132,6 +135,8 @@ D:\TIA-MCP\reference\tool-examples\languages\FC_Add.scl
 报告实际生成结果、编译错误数、警告数和嵌套诊断，不要把预览或工具返回成功直接当成编译通过。
 这次先不保存项目，不下载 PLC。
 ```
+实际写入请求出现后，在工作台打开待批请求，核对项目、工具及参数，再选择 **批准执行** 或 **拒绝**。拒绝时客户端收到 `CONFIRMATION_REQUIRED`，`error.details.reason` 为 `denied`；超时或工作台不可用也返回该错误，操作不会开始。需要继续时先解决原因，再重新发起已核对的请求；不能让 AI 自行批准或为此关闭审批。预览不会弹出写入审批。
+
 如果 AI 客户端没有创建或访问文件的能力，把已经解压的示例文件放在上述位置即可；导入工具读取现有文件，不会自动把对话中的代码变成磁盘文件。V14 SP1–V19 的基础源导入目前接受 ASCII；第一次使用包内原始示例，不要先加入中文注释。
 
 完成后应能找到实际生成的 `FC_Add`，接口包含两个 `Int` 输入和一个 `Int` 返回值，编译结果的错误数为 0。有警告时，让 AI 逐条解释。编译通过不等于函数已运行：此练习没有在调用块中调用它，也没有进行在线运行或下载。
@@ -216,6 +221,6 @@ V20/V21 MCP 服务即使没有检测到 TIA、安装版本与宿主不匹配，�
 
 worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消；派发后等待真实结果，超时或通道故障不会重放原生操作。
 
-用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。发生结果未知时先检查 TIA 工程及调用日志，再用 `DisconnectPortal` 恢复：空闲 worker 干净分离，忙碌或丢失的 worker 结束后须重启 TIA。也可显式使用 `RestartOpennessWorker` 重启当前会话的 worker；重新连接后必须再次绑定工程。详见[worker 与恢复](../guides/openness-worker-isolation.md)。
+用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。遇到 `OUTCOME_UNKNOWN` 或 `SESSION_RESET_REQUIRED` 时，先在 TIA 中检查项目实际状态并查看调用日志，再调用 `DisconnectPortal`。若返回 `requiresTiaRestart` 或提示租约不确定，先按需保存并重启该 TIA 实例；随后新建 MCP 会话，重新调用 `ConnectPortal` 和 `AttachOpenProject`，读回会话状态。不要重放失败的写请求。也可按[worker 与恢复](../guides/openness-worker-isolation.md)显式重启 worker；这不会重放原操作。
 
 八版 MCP 均由 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` 启动。宿主自动使用 `worker/` 子目录中的 PLC worker，保持完整解压包即可。

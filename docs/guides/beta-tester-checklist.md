@@ -29,7 +29,7 @@
 | T02 | 错误后会话可用：用不存在的块名调用 `GetPlcBlockInfo`，再调用 `ListPlcBlocks` | 第一次返回错误且说明原因，第二次仍成功；会话没有被锁定 |
 | T03 | 编译行为：`CompilePlcSoftware` 对应 TIA 的“仅更改”还是“全部重建”，步骤见下文 | 记录结论、两种 TIA 编译各自涉及的块数和 MCP 结果中的块数 |
 | T04 | 编译诊断：一个只有警告的编译，以及一个故意制造错误的编译，分别用 `CompilePlcSoftware` 和 `CompilePlcDiagnostics` | 只有警告时成功；有错误时返回 `COMPILE_ERRORS`，带错误数、警告数和最多十条带对象路径的叶级错误；与 TIA“信息 > 编译”对照并记录差异 |
-| T05 | 导出导入往返：`ExportPlcBlock` 导出到已有目录中的新 `.xml` 文件；`ImportPlcBlock` 以 `overwrite: false` 导回 | 导出文件存在；同名对象存在时导入在 TIA 调用前被拒绝；预览后以 `overwrite: true` 执行并批准，对象被替换，再次导出内容一致 |
+| T05 | 导出导入往返：`ExportPlcBlock` 的 `exportPath` 指向已有目录，从返回的 `data.outputFile` 取得 XML 文件路径；`ImportPlcBlock` 以 `overwrite: false` 导回 | 导出文件存在；同名对象存在时导入在 TIA 调用前被拒绝；预览后以 `overwrite: true` 执行并批准，对象被替换，再次导出内容一致 |
 | T06 | 审批：任选一个写工具，先预览，再实际执行；第一次在工作台拒绝，第二次批准 | 预览不等待审批；拒绝时返回 `CONFIRMATION_REQUIRED` 且工程没有变化；批准后执行；**审计日志** 页出现同一个 `requestId`，`tia audit verify` 通过 |
 | T07 | 保存和断开：修改后调用 `SaveProject` 并批准，再调用 `DisconnectPortal` | 保存需要批准；断开不保存、不关闭工程；任务管理器中本次的 worker 进程退出 |
 | T08 | worker 重启：空闲时调用 `RestartOpennessWorker`，再调用 `ConnectPortal` 和 `AttachOpenProject` | 新 worker 启动；重新绑定后 `GetProjectTree` 正常；TIA 不需要重启 |
@@ -39,7 +39,7 @@
 
 | TIA 版本 | 补充检查 |
 |---|---|
-| V14 SP1、V16、V21 | T10 工作台工程操作页 |
+| V14 SP1、V16、V21 | T10 工作台项目页 |
 | V15.1 | 绑定 `.ap15_1` 工程（T01 使用该工程即可） |
 | V14 SP1、V15.1 | 导出一个块后查看 SimaticML 文件头中 TIA 写入的版本写法（例如 “V14 SP1”、“V15.1”），附在报告中 |
 | V15.1–V21 | 受 UMAC 保护的工程：`OpenProject` 分别用正确、错误和缺少的 `umacUserName` / `umacPassword` 打开；缺少凭据时应返回 `PRECONDITION_FAILED` 并指出缺少的参数，密码不出现在日志、审批和审计中 |
@@ -63,9 +63,9 @@
 5. 再次修改同一个块，在 TIA 中执行“仅更改”，记录列出的块；然后执行“全部重建”，再记录一次。
 6. 对比三次结果，判断 `CompilePlcSoftware` 与哪一种一致。时间允许时对 `CompilePlcDiagnostics` 重复一次。
 
-### T10 工作台工程操作页（V14 SP1、V16、V21）
+### T10 工作台项目页（V14 SP1、V16、V21）
 
-1. 从新目录启动 `TiaOpenness.exe`，选择该版本，在 **工程操作** 页连接 TIA、打开工程副本、读取块列表。
+1. 从新目录启动 `TiaOpenness.exe`，选择该版本，在 **项目** 页连接 TIA、打开工程副本、读取块列表。
 2. 导出一个块到一个已有文件夹，确认文件生成。
 3. 再导出到一个不存在的目录：界面应显示原始错误文本，之后再次读取块列表仍正常。
 4. 断开并关闭工作台，在任务管理器中确认工作台为本次连接启动的后台进程都已退出，记录残留的进程名。

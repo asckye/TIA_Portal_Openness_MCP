@@ -1,35 +1,53 @@
 # 路线图与待办（v4.0.0-beta.3）
 
-状态：现行 · 最后核对：2026-11-03，master `1dfe2067`
+状态：现行 · 最后核对：2026-11-04，master `55f9c737`
 
 本页是开发计划：按版本记录范围、任务状态、放行门槛和待维护者决定，取代已归档的[路线图](../archive/development/roadmap.md)和[重构计划](../archive/development/refactor-plan.md)（阶段 0–8 的 P0–P8 任务表、历史目标和风险留在那里）。
 
 当前状态和进行中的分支见[开发进度](progress.md)，决定见 [ADR](../standards/decisions/README.md)。`bin-build/refactor/tasks/followups.md`（不入库）只是收件箱，条目在决定当天转写到本页或 ADR；任务说明只引用本页的编号。
 
-4.0 的方向：八个版本使用 FoundationHost 加每会话一个 PLC worker，除工具集合和官方 API 差异外共用一套逻辑（[ADR 0022](../standards/decisions/0022-engine-retirement-and-eight-release-unification.md)、[ADR 0014](../standards/decisions/0014-tool-counts-follow-official-api.md)）；真机可靠性优先，每批修复在 VM 上复测；补齐对照 T-IA 和官方 API 的小缺口；流程变简单：合并看受影响的检查，完整检查放 nightly，发布只核对、打包和上传。离线通过不证明原生行为，未在真实 TIA Portal 上验证的项写进发布说明。
+4.0 的方向：八个版本使用 FoundationHost 加每会话一个 PLC worker，除工具集合和官方 API 差异外共用一套逻辑（[ADR 0022](../standards/decisions/0022-engine-retirement-and-eight-release-unification.md)、[ADR 0014](../standards/decisions/0014-tool-counts-follow-official-api.md)）；真机可靠性优先，每批修复在 VM 上复测；补齐对照 T-IA 和官方 API 的小缺口；流程变简单：合并看受影响的检查，完整检查和打包在 `prepare`，确认后 `publish-prepared` 只核对、推送、打标签并公开草稿。离线通过不证明原生行为，未在真实 TIA Portal 上验证的项写进发布说明。
 
-状态取值：已合并（带提交号）· 待合并（分支已完成，等合并窗口）· 进行中 · 排队（任务说明已写，等前置任务）· 未开始 · 推迟 · 取消 · 并入（由另一任务完成）。新任务用主题编号（VMFIX、DES、SPD、Q 等），已有的 P8 编号不变（D-P12）。
+状态取值：已合并（带提交号）· 待合并（分支已完成，等合并窗口）· 进行中 · 排队（任务说明已写，等前置任务）· 未开始 · 推迟 · 取消 · 提议（待维护者决定）· 并入（由另一任务完成）。新任务用主题编号（VMFIX、DES、SPD、Q 等），已有的 P8 编号不变（D-P12）。
 
 ## 放行门槛
 
 | 关口 | 门槛 | 依据 |
 |---|---|---|
-| 合并 | 本机 `check-all -Affected` 加受影响的检查通过（SLIM-1 目标：少于 20 分钟）；每个 Codex 交付先经独立 AI 审查（Opus，高强度），再由 Claude 审查和主机测试；REVIEW-1 合并后由 `check-loosening` 拦截未经批准的放宽；GitHub CI 不阻塞合并 | [ADR 0024](../standards/decisions/0024-ci-does-not-block-merges.md)；维护者 2026-11-02、11-03 |
-| 预发布 `4.0.0-beta.N` | GitHub 预发布，不设为最新版，3.3 更新器不提示；说明附 “Not verified on a real TIA Portal” 清单；测试者按[预发布真机验证清单](../guides/beta-tester-checklist.md)报告，我们在 VM 上按同一清单回归；每次发布前维护者确认，发布期间不改代码 | [ADR 0020](../standards/decisions/0020-prereleases-tested-by-users.md) |
-| 发布证据 | 最近一次通过的 nightly 加已验证的增量构建单元；nightly 门槛 45 分钟，SLIM-1 目标少于 30 分钟（RULES-1 合并前发布工具仍只采纳同一提交的冷 nightly，代码门槛 30 分钟）；nightly 失败或超时阻止下一次发布；发布不等 CI（`-NoWait`）；发布需要 7 天内通过的 GitHub CI 依赖漏洞扫描，离线“未运行”不使 nightly 失败 | [ADR 0025](../standards/decisions/0025-release-evidence-nightly-and-verified-build-units.md)；维护者 2026-11-02 |
-| 4.0 正式版 | 全部 4.0 任务合并；check-all 通过，CI 结果在维护者确认前另行核对；没有未决的 blocker 报告（D-P1）；由发布链生成 rc；维护者确认。不设公测期，不要求连续 20 次通过；起初不向 3.3 更新器提供 | [ADR 0023](../standards/decisions/0023-release-4-0-final-criteria.md)（D-P1 已补记） |
+| 合并 | 本机 `merge-check`：普通 `dotnet build`、受影响的 `dotnet test` 与生成/仓库检查，目标约 10 分钟，由 NEW-REL-2 交付；交付前继续遵守当前 AGENTS.md。任务说明先经独立 AI 审查，交付后经审查与主机验证；GitHub CI 不阻塞合并 | [ADR 0031](../standards/decisions/0031-release-path.md)；维护者 2026-11-03 |
+| 预发布 `4.0.0-beta.N` | GitHub 预发布，不设为最新版，3.3 更新器不提示；发布说明附未验收清单；发布后测试者按[清单](../guides/beta-tester-checklist.md)报告，维护者做 VM 回归；每次公开前维护者确认，确认后保持候选提交不变 | [ADR 0020](../standards/decisions/0020-prereleases-tested-by-users.md) |
+| 发布准备与公开 | `prepare` 完整构建、所有注册套件与保留检查通过后封存候选并提前上传草稿；`publish-prepared` 不构建或测试，300 秒内完成公开。没有 nightly，也不采纳旧收据。发布后只校验 ZIP 与 sidecar | [ADR 0031](../standards/decisions/0031-release-path.md) |
+| 4.0 正式版 | 全部 4.0 任务合并、完整准备通过、rc 经验证、没有未决 blocker、维护者确认；正式版公开规则须先实现。起初不向 3.3 更新器提供，不设固定公测期或连续通过次数 | [ADR 0023](../standards/decisions/0023-release-4-0-final-criteria.md)、[0031](../standards/decisions/0031-release-path.md) |
 
-检查、测试、断言、超时和阈值只有维护者批准后才能删除、跳过或放宽；2026-11-03 批准的删除清单见 SLIM-1。预先授权的例行决定（2026-11-01）：测试计时接缝（产品代码不变）、工作台设计值断言跟随新设计、带差异说明的正式重新生成。
+检查、测试、断言、超时和阈值只有维护者批准后才能删除、跳过或放宽；已经批准的移除范围见[验证](../manuals/validation.md#已批准移除的检查机制)。REVIEW-1 的漏洞扫描须迁入新工具，排 beta.4；新 `prepare` 当前没有该扫描，不把旧扫描规则写成已实现的门禁。
 
 ## 4.0.0-beta.3（未发布）
 
-master `1dfe2067` 已含定稿的 CHANGELOG `[4.0.0-beta.3]` 条目和[发布说明](../releases/v4.0.0-beta.3.md)（`dbe12b88`）。范围按 2026-11-01 23:50 的裁剪（批次 1、批次 2、UI-2a、FIXTURE-CRASH、DEP-1），2026-11-02 加入 VMFIX-2，2026-11-03 加入 SLIM-1。发布顺序：PIPE-INT（含 SLIM-1）主机门禁 → 合并 → VMFIX-2 变基并把其 CHANGELOG 行移入 beta.3 → 主机门禁 → 合并 → nightly → 维护者确认 → 发布，目标 2026-11-03。
+master `55f9c737` 已含 beta.3 的 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)，以及 PIPE-INT/SLIM-1、VMFIX-2 和新发布路径的 A、C 两部分。beta.3 尚未发布。2026-11-04 维护者决定：全部整理先完成，再真实运行 `prepare`，确认后公开。
+
+### 发布前顺序
+
+| 顺序 | 任务 | 内容与状态 |
+|---|---|---|
+| 1 | NEW-REL-B、SEC-1 | NEW-REL-B 接入所有套件、保留检查、候选和自动草稿上传；SEC-1 修补审批设置保护、文件写入与 Git 调用的小范围安全问题（调查 S1/S2）。均待集成；输出根以外写文件的完整审批另排 beta.4 |
+| 2 | Q1–Q9、CPM | 集成已有精简栈：Q1/Q5 → Q2 → Q3/Q4 → Q7 → Q8/CPM → Q9；清理引擎残留、重复检查、SafeV4 候选，集中包版本、压缩契约公共 schema、派生发布键。重新变基到新工具；迁移仍有意义的审批与回滚测试后再删除旧测试目录 |
+| 3 | NEW-REL-2、NEW-REL-3、THIRD-1、主机测试精简 | 新合并门；删除旧发布工具和全部八版响应捕获/基线；第三方裁剪；准入测试去重及隔离改进。保留功能、协议、审批、写安全、故障恢复测试及各数量门槛；任务说明与主机验证待完成 |
+| 4 | DOCS-1、DOCS-2 | 文档分目录、归并规范和手册；按新发布路径与调查刷新文档。本分支工作，待审查集成；[ADR 0030](../standards/decisions/0030-documentation-and-repository-structure.md) 与 [0031](../standards/decisions/0031-release-path.md) |
+| 5 | REORG-2 | 整理数据与脚本：`schemas/` 并入 `reference/`、`hooks/` 并入 `plugin/`、运行布局并入设计规范、一个 `.slnx`、输出到 `bin-build`；清理旧记录和 LibraryRenameProbe，核对交付清单与许可文件引用；待实施 |
+| 6 | REORG-3 | 整理源码、测试和交付包路径，更新所有引用、注册与交付规则；待实施 |
+| 7 | 大文件拆分、长行整理 | 在路径整理后拆分大文件、整理长行，保留行为；与中文段落不在句中换行的文档规范协调；待任务说明与验证 |
+| 8 | 实际准备 | 在最终干净 master 上运行完整 `prepare`，审查全部结果、ZIP、候选与草稿；尚未执行 |
+| 9 | 确认与公开 | 维护者明确确认后运行 `publish-prepared`，随后 VM 回归与测试者验证；尚未执行 |
+
+THIRD-1 保留交付源码、每个项目的 README、LICENSE、UPSTREAM.json、NOTICE 中的来源，以及 `third_party/simaticml-decoder/docs/SIMATICML_READING_GUIDE.md`。裁剪上游测试、示例、其他文档与 Studio 上游归档，并同步修复保留文件的链接和生态检查；不删除本项目自己的桥接测试。
+
+### 已集成的 beta.3 工作
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
 | beta3-rename | 对外名称改为自动化工程工作台，维护者版权行，西门子商标声明 | 已合并（`77bdf060`、`1f37ab3d`、`1cad1df2`） | 2026-10-30 |
 | beta3-docs | 3.3 到 4.0 迁移指南、预发布真机验证清单、测试者反馈台账、Issue 表单 | 已合并（`f6bf1dea`） | 2026-10-30 |
-| SPD-1、SPD-2、SPD-4 | 重复工作只做一次、派生子集、`-Affected`、nightly 复用与阻断发布、`-FailFast` | 已合并（`a6ced5da`、`b7db27a0`、`bf04b534`、`c68c31d3`） | 2026-10-30 |
+| SPD-1、SPD-2、SPD-4 | 旧检查链的增量与派生子集，已由新发布路径取代；此行仅记录历史集成 | 已合并（`a6ced5da`、`b7db27a0`、`bf04b534`、`c68c31d3`） | 2026-10-30 |
 | PREFLIGHT | 发布前检查伴随 Python 与跟踪文件的规范化字节；主机注册文件容忍并发读取 | 已合并（`7830383b`、`e57b64c5`） | 2026-10-30 |
 | XREF | 原生交叉引用 V14 SP1–V20 默认允许、V21 工作台会话开关、`AnalyzePlcCrossReferences` | 已合并（`4b17a042`、`f51c9f20`） | 2026-10-30 |
 | HMI-B3 | HMI 复核 B6–B8、D6：`PropertyName` 选择接口项、旧 Ensure/Apply/Bind 默认预览、路径预校验 | 已合并（`e5c3d365`） | 2026-10-27 |
@@ -43,38 +61,34 @@ master `1dfe2067` 已含定稿的 CHANGELOG `[4.0.0-beta.3]` 条目和[发布说
 | DEP-1 | Microsoft.Extensions、System.Text.Json 等从 10.0.0-preview.4 改为 10.0.12；MCP C# SDK 在 4.0 保持 0.3.0-preview.4（D-P10） | 已合并（`d5d94583`） | 2026-11-01 |
 | HANDBOOK | 采用通用《工程开发手册》v1.1，记录项目档位与偏差（[标准说明](../standards/README.md)） | 已合并（`f176e938`） | 2026-11-02 |
 | BATCH2 | 批次 2 的正式重新生成与门禁修复，CHANGELOG 与发布说明定稿 | 已合并（`030f1660`、`dbe12b88`、`757ce94d`、`c6c1d99c`、`34e85560`、`1dfe2067`） | 2026-11-02 |
-| PIPE-INT | SPD-3/3b/3c/3d、SPD-5、SPD-7 并到 master：可复现构建、已验证构建单元、按哈希发布已封存的候选、可用的 `-Affected` 与 nightly 复用；保留第 1–4 轮（缓存键、解码器 Python、快速门禁、声明的输入、内存峰值） | 进行中（`refactor/PIPE-INT` `92d58d94`，与 SLIM-1 一起过主机门禁） | 2026-11-02 |
-| SLIM-1 | 整套精简（取代 PIPE-INT 第 9 轮）：删除延迟门禁与基准作业、HTTP 稳定性作业和独占静默阶段；删除 `suite-output-parity`；每个套件只按交付配置跑一次（删除 `studio-*-true/false`、`offline-v20`、`kept-code-v20` 等重复变体）；V14 SP1–V19 删除逐调用响应捕获和 transport-usage（契约快照保留）；冷构建提速。目标：合并门少于 20 分钟，nightly 少于 30 分钟 | 进行中（已交回，待主机验收） | 2026-11-03 |
-| VMFIX-2 | beta.3 测试包 V21 VM 测试的 R1 会话中断：扩展族（报警、OPC UA、SiVArc、Startdrive/DCC、Safety）回复校验，Unified 结构化读取范围，事件脚本代码，分组设备的 HMI 探测，HMI 运行状态原因；第 2 轮修复 `ManagePlcProtection` 回复被新校验拒绝的回归 | 进行中（`refactor/VMFIX-2` `3a588b36`，第 2 轮） | 2026-11-02 |
+| PIPE-INT、SLIM-1 | 旧检查链精简；已批准的延迟门槛、HTTP 稳定性、静默阶段、套件输出对照及重复变体清理；后续由新工具接替 | 已合并（`eee7b372`） | 2026-11-03 |
+| VMFIX-2 | 扩展族回复校验、Unified 读取范围和脚本、HMI 探测与状态原因；第二轮修复安全管理回复回归 | 已合并（`93371695`、`b769d196`） | 2026-11-03 |
+| NEW-REL-A | 全新 `prepare` 的构建、暂存校验和打包；尚不含 B 阶段完整检查 | 已合并（`545e3604`、`55f9c737`） | 2026-11-04 |
+| NEW-REL-C | 预上传草稿、300 秒公开预算、重跑恢复；发布后 ZIP 与 sidecar 校验 | 已合并（`2db5bf1e`） | 2026-11-04 |
 
 ## 4.0.0-beta.4
 
-范围按 2026-11-01 23:50 的裁剪，加上 2026-11-02 批准的代码精简（Q 系列）、VM 修复和审查链，以及 2026-11-03 的评分卡和仓库整理。Q 系列合并顺序：PIPE-INT → Q1‖Q5 → Q2 → Q3‖Q4 → Q7 → Q8‖CPM → Q9 → Q6a → Q10a → Q10b。VMFIX-3/4/5 在 VMFIX-2 合并后启动；DES-4 在 DES-INT 之后。设计细节见已归档的 [P8-04 引擎退役设计](../archive/development/design/p8-04-engine-retirement.md)和[工作台控制设计](../archive/development/design/workbench-control-and-shared-session.md)。
+以下在 beta.3 后集成。VMFIX-3/4/5 和 DES-INT 必须适配整理后的代码及新验证入口；DES-4 在 DES-INT 之后。旧引擎测试迁移到仍在使用的测试工程，不恢复将删除的响应基线。
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
-| Q1–Q5、Q7 | Q1 生成器不再读 `src/Engine`，不再在运行时改写 3.x 工具名；Q2 删除 `src/Engine` 和只测引擎的测试、夹具、脚本（取代 P8-04l2）；Q3 删除宿主引擎交叉检查路径和死编译符号；Q4 Windows 主机只跑 `foundation-api`，删除 `kept-code-v20`；Q5 删除已有 C# 实现的 Python 检查及其对照作业；Q7 打标签 `archive/safev4-candidates` 后删除 SafeV4 候选代码，修订 ADR 0002，取消 P8-04l3 | 待合并（`refactor/Q1`…`refactor/Q7`，叠在 PIPE-INT 上） | 2026-11-02 |
-| CPM、Q8、Q9 | 集中包版本（`Directory.Packages.props`）；契约基线格式 2（公共输出 schema 每个文件存一次，按 SHA-256 引用，比较仍逐字节）；发布键数组从版本范围派生 | 待合并（`295acbc5`、`e53590d9`、`99977ba3`） | 2026-11-02 |
 | Q6a | 已移植工具一条调用管线：V20/V21 也经 `FoundationV4Tool`，15 个调用流程旗标合并为一个档案；吸收 Q6b，取代 P8-04n2；合并后在 VM 上复测 V20/V21 | 排队（Q9 之后） | 2026-11-02 |
 | Q10a、Q10b | 声明式工具清单：读（手写工具表导出到 `reference/tool-catalog/tools.json`）、写（由清单生成各表，删除正则解析副本）；Q6c（宿主工具改走 `FoundationV4Tool`）在 Q10b 后评估 | 排队（Q6a 之后；Q10b 任务说明待写） | 2026-11-02 |
 | DES-INT（DES-2、DES-3） | DES-2：一项功能一个实现（L2 工具转到 Foundation 实现），安全移块：导出并核实 → 删除源块 → 导入目标组 → 核实，失败时把备份恢复到原组；DES-3：写入工具默认预览（`dryRun` 默认 true）并绑定 `expectedProjectFile`，多步写入失败时回滚；工具描述去掉“引擎”说法，批处理准入按 BatchRead/BatchWrite 描述；`ReleaseUnifiedReadCursor` 移出只读批处理（D-P7） | 待合并（`refactor/DES-INT` `5b74969a`，第 2 轮完成） | 2026-11-01 |
-| DES-4 | 统一参数模型（先写 ADR），参数错误指出具体字段，返回去敏的原生消息与诊断编号（`innererror`），按请求号查调用日志 | 排队（DES-INT 之后） | 2026-11-01 |
-| VMFIX-3 | 写入结果如实（R2/R4）：确定的结果不报 `OUTCOME_UNKNOWN`、不要求会话重置；独占访问；`ImportDeviceAml` 只在 V21 移出独占访问；已批准 `HmiDryRunTests`、`PortedPortalAdmissionTests` 的断言修改；与 Q2 相遇时 `HonestOutcomeMappingTests` 移到 KeptCode/FoundationHost 测试，`EngineWorkerHost` 的修改随 `src/Engine` 删除 | 进行中（`refactor/VMFIX-3` `867efd36`，第 4 轮，基于 VMFIX-2） | 2026-11-02 |
-| VMFIX-4 | 会话生命周期与恢复（R3/R5）：重新绑定纪元、是否重启 TIA 的判断、读超时取消、重置关口、日志过滤 | 排队（VMFIX-2 合并后） | 2026-11-02 |
-| VMFIX-5a、VMFIX-5b | 其余 HIGH 缺陷：5a 结果映射、去敏和宿主诊断；5b V21 的 PLC 服务、工艺对象和 Unified HMI；两者可并行 | 排队（VMFIX-2 合并后） | 2026-11-02 |
+| DES-4 | 统一参数模型（先写 ADR），字段级参数错误、去敏原生消息和按请求号查日志；补入 B21、B27、B28、B30 的明确处理与验收 | 排队（DES-INT 之后） | 2026-11-01 |
+| VMFIX-3 | 写入结果如实（R2/R4）：确定的结果不报 `OUTCOME_UNKNOWN`、不要求会话重置；独占访问；`ImportDeviceAml` 只在 V21 移出独占访问；已批准 `HmiDryRunTests`、`PortedPortalAdmissionTests` 的断言修改；与 Q2 相遇时 `HonestOutcomeMappingTests` 移到 KeptCode/FoundationHost 测试，`EngineWorkerHost` 的修改随 `src/Engine` 删除 | 进行中（`refactor/VMFIX-3` `867efd36`，原分支待适配整理后的主线） | 2026-11-02 |
+| VMFIX-4 | 会话生命周期与恢复（R3/R5）：重新绑定纪元、是否重启 TIA 的判断、读超时取消、重置关口、日志过滤 | 排队（整理后的主线可用后） | 2026-11-02 |
+| VMFIX-5a、VMFIX-5b | 其余 HIGH 缺陷：5a 结果映射、去敏和宿主诊断；5b V21 的 PLC 服务、工艺对象和 Unified HMI；两者可并行 | 排队（整理后的主线可用后） | 2026-11-02 |
 | RELAY-1 | 代理安全的远程连接：随包本地 stdio 中继，私网地址绕过 HTTP(S)_PROXY，其他地址遵守 NO_PROXY，令牌只在工作台数据目录；环境检查“代理与远程连接”及一键修复 | 待合并（`refactor/RELAY-1` `0e4f5d5c`，第 2 轮完成） | 2026-11-01 |
-| UI-v2：UI-2b、UI-2d、UI-2c | UI-2b 外壳（232/64 侧栏、工具栏、合并的安全横幅、设置与审批成为页面）与 UI-2d 各页面重绘合在 UI-INT；UI-2c 审批改为列表加详情页，宿主计算风险等级，写入决定按钮等权重，破坏性操作默认拒绝 | 待合并（`refactor/UI-INT` `390fb6e4`、`refactor/UI-2c` `6942199f`） | 2026-11-01 |
+| UI-v2：UI-2b、UI-2d、UI-2c | UI-2b 外壳（232/64 侧栏、工具栏、合并的安全横幅、设置与审批成为页面）与 UI-2d 各页面重绘合在 UI-INT；UI-2c 审批改为列表加详情页，宿主计算风险等级，写入决定按钮等权重，破坏性操作默认拒绝；APR-05 关闭写操作审批须输入确认词，普通审批不加输入框 | 待合并（`refactor/UI-INT` `390fb6e4`、`refactor/UI-2c` `6942199f`） | 2026-11-01 |
 | P8-04n1（N1-INT） | 八版统一对外呈现：精简清单默认启用、服务器说明、档案名、目录呈现（P8-04n 的后半 P8-04n2 由 Q6a 承担） | 待合并（`refactor/N1-INT` `5c800dc0`） | 2026-11-01 |
 | P8-84 | 工作台 TIA 进程选择器：多个 TIA 进程时由用户选择，按 PID 精确附着 | 待合并（`refactor/P8-84` `e9cca2d8`） | 2026-10-21 |
 | P8-21f | 删除工作台重复的 TIA 适配代码：Studio 改用共享适配器（P4-03 第 G3 步，删除 `StudioOpenness.V*`），VCI 平铺工作区与 MCP `UngroupedDevices` 对齐 | 未开始 | 2026-10-08 |
 | FB-VM | beta.2 VM 发现和 beta.3 测试包 V21 VM 测试（59 个去重缺陷）登记进[测试者反馈台账](progress.md)；VMFIX-2..5 合并后按复测计划复测（45 项 R1 复测、VMFIX-3/4/5 的待确认项、约 40 次回归抽样）；含 P8-20 端到端验收（清单 T10） | 未开始（VM 会话等主机门禁空闲后的信号） | 2026-11-01 |
-| REVIEW-1 | 自动审查：`check-loosening`（合并门，阻断）、.NET 安全分析器加棘轮基线与依赖漏洞扫描、复杂度报告（不阻断）；已知检测盲区写进文档后不再追加 | 排队（第 3 轮；基于 Q8，SLIM-1 合并后变基） | 2026-11-02 |
-| SCORE-1 | 质量评分卡：发布工具 `scorecard` 命令，14 个维度各 0–5 分加性能趋势，只读已有数据，每个发布一张，附在发布证据中 | 排队（REVIEW-1、SLIM-1 合并后） | 2026-11-03 |
-| RULES-1 | 三档验证、发布证据按 ADR 0025、机器级重型作业锁、`regen-all`、Codex 沙箱可跑子集、发布默认不等 CI；第 2 轮：实时相关测试只在 nightly 和受影响时运行，纯文档改动只跑文档与仓库检查；理顺 nightly 门槛（代码 30 分钟，ADR 45 分钟） | 排队（流水线项，不阻塞发布；`refactor/RULES-1` `4d3704fe`，SLIM-1 合并后变基） | 2026-11-01 |
-| SPD-6、SPD-6b | 按用例成本分片，压缩 nightly | 排队（流水线项；SLIM-1 合并后重新评估是否仍需要） | 2026-11-01 |
-| DOCS-1 | 仓库整理批次 1：文档分为 `standards/`、`plan/`、`manuals/`、`archive/`，用户文档路径不变；共用规则写在 `AGENTS.md`，`CLAUDE.md` 引用它；[ADR 0030](../standards/decisions/0030-documentation-and-repository-structure.md) 取代 ADR 0026 的目录部分（语言规则保留）；收尾 P8-63、P8-04m 和 P7-11b 的文档剩余项 | 进行中（`refactor/DOCS-1`，beta.3 发布后合并） | 2026-11-03 |
-| REORG-2 | 仓库整理批次 2（数据与脚本）：`schemas/` 并入 `reference/`，`hooks/` 并入 `plugin/`，`runtime/` 说明并入设计规范，一个 `.slnx`，输出写到 `bin-build`；决定 `manifest/release-build.json` 去留；删除 LibraryRenameProbe 及其历史记录；归档 `docs/development/evidence/*.json`（待核对）；交付清单移除 `JetBrainsMono-OFL.txt`、`NotoSansSC-OFL.txt`；与 P8-10d/e/f 同批 | 排队（Q 系列之后） | 2026-11-03 |
-| REORG-3 | 仓库整理批次 3：源码、测试和交付包路径 | 排队（最后） | 2026-11-03 |
+| REVIEW-1 | 将未经批准的检查放宽检测、安全分析器与棘轮、依赖漏洞扫描移植到新工具；复杂度仅报告 | 待重做（面向 `merge-check` / `prepare`，不复用旧发布链） | 2026-11-02 |
+| SCORE-1 | 质量评分卡与性能趋势，只读新工具的实际结果，每个版本一张；删除对旧发布证据链的依赖 | 待适配新工具（REVIEW-1 后） | 2026-11-03 |
+| VMAUTO-1 | 扩展 `scripts/diagnostics/campaign`，读取维护的调用与序列；串行读取/预览后执行序列，区分通过、缺陷、应拒绝和待人工判断；发布后在获授权的 VM 与项目副本运行 | 已决定，待任务说明 | 2026-11-03 |
+| FILE-APPROVAL | 文件写入目标在会话输出根以外时须审批；定义输出根与例外范围，补安全验收 | 已决定，待任务说明 | 2026-11-04 |
 | COV-V21 | 更正 [Openness 覆盖](../reference/openness-coverage.md)中的 V21 数字（直接引用 1,748，待复核 2,575）和复现命令（`build-multi-version` 后运行 `audit-version-tools`） | 未开始 | 2026-11-02 |
 
 ## 4.0.0-beta.5
@@ -102,11 +116,9 @@ beta.4 合并后开始。V21 API 的 6 个 P1 缺口按 API 先行注册，带�
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
-| P8-10d/e/f | 发布链 Python 改 C#（快照、打包、验包），重新移植 10-21 以来的发布链修复（含更新器哈希绑定），rc 证明字节一致；方案见已归档的 [Python 改 C# 方案](../archive/development/phase8-python-plan.md) | 进行中（`refactor/P8-10d`、`P8-10e`、`P8-10f` 只有未验证的 WIP；随 REORG-2） | 2026-10-22 |
-| P8-93b、P8-94b | 未被 check-all 覆盖的发布链检查并入 check-all（SLIM-1 后按新作业清单重新确定范围，（待核对））；TiaMcp.Logic 统一构建属性；package-test 报告退役文件、排除日志 | 未开始 | 2026-10-22 |
 | ADR-0023 | ADR 0023 补写 D-P1 一行（没有未决的 blocker 报告） | 并入 DOCS-1 | 2026-11-01 |
 | RENAME-GH | GitHub 仓库改名为 automation-engineering-workbench，同步 README、NOTICE、插件和发布工具中的仓库地址（执行前再次确认） | 未开始 | 2026-10-30 |
-| RC | 用完整发布链生成 rc；定稿 [4.0 发布说明](../releases/v4.0.0.md)；4.0 起初不向 3.3 更新器提供 | 未开始 | 2026-10-30 |
+| RC | 用完整 `prepare` 生成 rc；定稿 [4.0 发布说明](../releases/v4.0.0.md)；4.0 起初不向 3.3 更新器提供 | 未开始 | 2026-10-30 |
 
 ## 4.1
 
@@ -122,11 +134,45 @@ beta.4 合并后开始。V21 API 的 6 个 P1 缺口按 API 先行注册，带�
 | MTA-1 收尾 | 删除隐藏的 STA 回退开关 | 推迟 | 2026-11-01 |
 | 其他 | 托盘与开机启动；非 Studio 命名空间统一 | 推迟 | 2026-10-22 |
 
+## 调查提议（待维护者决定）
+
+下列来自 2026-11-03 只读调查，均没有已确认负责人或版本承诺；调查中的推测仍需复现。编号是调查编号，不等于已批准任务。涉及接口、安全或测试范围时先决定方案，再写任务说明；不因登记而授权修改检查。
+
+| 编号 | 发现与提议 | 状态 |
+|---|---|---|
+| P2 | 原调查列出 31 个无任务的 VM 缺陷：B22、B23、B25、B27、B29–B33、B37、B38、B40、B41、B42–B59；需逐项认领。B27/B30 已要求补入 DES-4，余项仍待分配；B21/B28 同时补入 DES-4 | 提议，待维护者核对剩余清单及负责人 |
+| T3 | 全目录审批拒绝零写入、预览无原生写入、`dryRun.effective`、B33 与回滚读回的安全测试缺口；迁移仍有效的旧审批/回滚测试 | 提议，待维护者决定 |
+| T2 | 夹具手写回复、跳过派发环节、只测注入故障导致真实缺陷漏检；从契约序列化回复，用真实包装器和记录 worker 检查维护的示例 | 提议，待维护者决定 |
+| U2 | 工具清单与 `GetToolUsage` 输出过大；评估共享错误 schema 和短索引 | 提议，待维护者决定 |
+| U3 | 参数描述为空或只有通用占位文字；维护具体参数含义 | 提议，待维护者决定 |
+| U4 | `FindTools` 示例与自身 schema 不符；复用维护的调用示例 | 提议，待维护者决定 |
+| U5 | 搜索排序与中文检索缺口；评估相关性与中文词汇 | 提议，待维护者决定 |
+| U6 | 非插件客户端缺少连接顺序、审批和不重放规则；统一首次使用引导 | 提议，待维护者决定 |
+| U10 | 反馈入口分散、支持页 issue 类型不符、清单未标状态、发布说明计数空位及 `GenerateErrorReport` 文档缺口 | 提议，待维护者决定 |
+| C1 | 统一结果映射，处理各族写入 NotFound/Unknown 的不同语义 | 提议，待维护者决定 |
+| C2 | wire DTO 手工复制易漂移，读取失败可能污染会话；从契约派生并核对故障边界 | 提议，待维护者决定 |
+| C3 | 重复遍历设备、属性和块列表；评估按绑定纪元缓存 | 提议，待维护者决定 |
+| C4 | 原生层大量 catch-all 与吞异常；统一可观察的探测失败语义 | 提议，待维护者决定 |
+| C5 | 操作事实分散维护；统一读取/写入及故障后的会话处理规则 | 提议，待维护者决定 |
+| C6 | 适配器与逻辑层重复规则、重复动态辅助代码；合并纯逻辑 | 提议，待维护者决定 |
+| C7 | 简化 `PortedToolContract` 工厂选择 | 提议，待维护者决定 |
+| C8 | 静态发布键与导出池跨会话状态；核对并隔离 HTTP 会话 | 提议，待维护者决定 |
+| C9 | 版本旗标及重复分支；统一能力档案，先评估状态形状影响 | 提议，待维护者决定 |
+| C10 | 不可达与无引用代码；核实后删除 | 提议，待维护者决定 |
+| S3 | 更新器仅凭同源摘要验证；决定是否采用固定信任密钥与包签名 | 提议，待维护者决定 |
+| S4 | 发布令牌权限及生命周期；评估细粒度短期令牌、分支和标签规则 | 提议，待维护者决定 |
+| S5 | 局域网明文 HTTP 的令牌及密码；决定 TLS 或回环加隧道方案 | 提议，待维护者决定 |
+| S8 | UNC 文件目标可能外传项目；决定路径限制与兼容范围 | 提议，待维护者决定 |
+| S9 | 调用日志、写入守卫和错误映射的脱敏规则不一致；统一脱敏策略 | 提议，待维护者决定 |
+
 ## 待维护者决定
 
 | 编号 | 事项 |
 |---|---|
-| D-P8 | `docs/reference/capabilities.md` 是否为预发布增加条目（发布命令会打印 WARNING） |
+| S7（4.0 前） | 决定如何处理旧公开标签和 3.x 资产中的 Siemens DLL；当前树与 4.0 包未携带它们，不代表历史分发问题已解决 |
+| 旧版支持（4.0 前） | 收到测试者反馈后决定 V14 SP1、V15.1 是否继续作为 4.0 支持版本 |
+| 正式版发布（4.0 前） | 定义并实现 `publish-prepared` 的正式版规则；当前只接受预发布，需决定 latest 与 3.3 更新器的关系 |
+| D-P8 | `docs/reference/capabilities.md` 是否为预发布增加条目（旧发布流程曾打印 WARNING，新流程需另行决定） |
 | D-P9 | HMI 审查遗留的 D2、D5、D7；B2、B9 是否已随 HMI-B3 完成 |
 | D-P13 | 长操作（编译、下载、导入、导出）的 MCP 进度上报经 PLC worker 通道实现（Q3 发现 `WorkerClient` 未实现进度接口），排 beta.4 还是 beta.5 |
 | D-Q11 | 代码精简计划其余批次的批准与排期：Q6c、Q11（worker 回复携带 V4 结果字段）、Q12a–e（一个 ResultMapper）、Q13（重复源码合并）、Q14（SafeXml 与路径策略）、Q15（命名）、Q16（开发文档从源生成） |
@@ -137,7 +183,7 @@ beta.4 合并后开始。V21 API 的 6 个 P1 缺口按 API 先行注册，带�
 已决定（2026-11-01）：
 
 - D-P1：4.0 正式版门槛加“没有未决的 blocker 报告”，已补记到 ADR 0023（DOCS-1）。
-- D-P6：`transport-usage-v18` 每次应答 15 秒的预算不变；SLIM-1 删除 V14 SP1–V19 的 transport-usage 作业后不再适用。
+- D-P6：旧 `transport-usage-v18` 预算决定已随相应作业移除失去适用对象，不能据此放宽其他功能检查。
 - D-P7：`ReleaseUnifiedReadCursor` 移出只读批处理，随 DES-3。
 - D-P10：八版 worker 改为 MTA（MTA-1，beta.5）；Microsoft.Extensions 等改用稳定版（DEP-1）；MCP C# SDK 在 4.0 保持 0.3.0-preview.4，4.1 迁到 2.x。
 - D-P12：新任务用主题编号，已有的 P8 编号不变。

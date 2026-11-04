@@ -1,10 +1,12 @@
 # 0025 发布证据采用最近一次通过的 nightly 与已验证的增量构建单元
 
+2026-11-04 补记：nightly 与增量构建单元的发布证据规则已由 [ADR 0031](0031-release-path.md) 的本地候选和预上传流程取代；下文保留原决定历史。
+
 - 状态：已采纳（实现见任务 RULES-1）
 - 日期：2026-10-30（增量证据）；2026-11-01（nightly 门槛与采纳规则）
 - 决策者：维护者
 - 置信度：中
-- 相关：[ADR 0019](0019-incremental-check-all.md)、[0024](0024-ci-does-not-block-merges.md)；[验证分层](../../manuals/validation.md)；[发布流程](../../manuals/release.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)；任务 SPD-3、SPD-5、SPD-6、RULES-1
+- 相关：[ADR 0019](0019-incremental-check-all.md)、[0024](0024-ci-does-not-block-merges.md)；[验证分层](../../manuals/validation.md)；[发布流程](../../manuals/release.md)；任务 SPD-3、SPD-5、SPD-6、RULES-1
 
 ## 背景
 
