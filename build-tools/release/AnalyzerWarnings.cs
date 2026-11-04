@@ -203,9 +203,8 @@ internal static class AnalyzerWarnings
                 throw new ReleaseException("Analyzer compilation context missing: " + inputs);
             var project = Relative(contextParts[1]);
             project = Regex.Replace(project, @"_[^/]+_wpftmp\.csproj$", ".csproj");
-            var buildKind = rows.Skip(1).Any(row => row.Replace('\\', '/').Contains("/obj/check-all/", StringComparison.Ordinal))
-                ? "variants" : "ordinary";
-            var context = buildKind + "|" + project + "|" + contextParts[2] + "|" + string.Join(",", contextParts[3].Split(',').Order(StringComparer.Ordinal));
+            // Keep the existing context format; every compilation uses the ordinary identity.
+            var context = "ordinary|" + project + "|" + contextParts[2] + "|" + string.Join(",", contextParts[3].Split(',').Order(StringComparer.Ordinal));
             foreach (var row in rows.Skip(1))
             {
                 var parts = row.Split('|');
@@ -293,7 +292,6 @@ internal static class AnalyzerWarnings
     internal static List<string> Compare(string root, AnalyzerWarningCollection current, AnalyzerWarning[] baseline, bool complete)
     {
         var errors = new List<string>();
-        var kinds = BuildKinds(current);
         foreach (var entry in baseline)
         {
             if (RepositoryPath(root, entry.Path) != entry.Path || string.IsNullOrWhiteSpace(entry.Reason))
@@ -319,15 +317,12 @@ internal static class AnalyzerWarnings
                 if (!File.Exists(Path.Combine(root, entry.Path)) || current.Sources.Contains(entry.Path) &&
                     (current.Coverage == null || entry.Contexts?.Any(context => current.Coverage[entry.Path].Contains(context)) == true))
                     errors.Add($"STALE {entry.Rule} {entry.Path}:{entry.Line}: remove the reviewed entry with -UpdateBaseline");
-                else if (complete && current.Sources.Contains(entry.Path) && entry.Contexts?.Any(context => kinds.Contains(context.Split('|')[0])) == true)
+                else if (complete && current.Sources.Contains(entry.Path))
                     errors.Add("Analyzer baseline warning context was not built: " + entry.Path);
             }
         }
         return errors.Distinct(StringComparer.Ordinal).ToList();
     }
-
-    private static HashSet<string> BuildKinds(AnalyzerWarningCollection collection) => collection.Coverage?.Values.SelectMany(contexts => contexts)
-        .Select(context => context.Split('|')[0]).ToHashSet(StringComparer.Ordinal) ?? [];
 
     internal static int Run(string root, Options options)
     {
@@ -371,9 +366,6 @@ internal static class AnalyzerWarnings
                 // Growth and incomplete builds never write the baseline. Only
                 // disappearance is accepted, preserving all review annotations.
                 if (!options.Has("Complete")) throw new ReleaseException("-UpdateBaseline requires -Complete", 64);
-                var missingKinds = baseline.SelectMany(entry => entry.Contexts ?? []).Select(context => context.Split('|')[0])
-                    .Distinct().Except(BuildKinds(current)).ToArray();
-                if (missingKinds.Length != 0) throw new ReleaseException("-UpdateBaseline requires reports for every reviewed build kind: " + string.Join(", ", missingKinds), 64);
                 var blockers = issues.Where(issue => !issue.StartsWith("STALE ", StringComparison.Ordinal)).ToList();
                 if (blockers.Count != 0) return SourceCheck.Report("Analyzer warnings", blockers);
                 var counts = current.Entries.GroupBy(e => e.Fingerprint).ToDictionary(group => group.Key, group => group.Count());

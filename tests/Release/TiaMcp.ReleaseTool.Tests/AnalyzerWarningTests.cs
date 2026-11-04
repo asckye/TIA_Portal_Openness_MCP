@@ -81,15 +81,28 @@ public sealed class AnalyzerWarningTests
     }
 
     [Fact]
-    public void CompleteVariantBuildDoesNotClaimAnOrdinaryCompilerMessageDisappeared()
+    public void CompleteBuildRequiresTheReviewedCompilationContext()
     {
         using var tree = new StaticTree(); tree.Write("src/C.cs", Source);
-        var entry = Warning(tree) with { Reason = "test-fixture", Contexts = ["ordinary|C"] };
-        var variants = new AnalyzerWarningCollection([], new HashSet<string> { "src/C.cs" },
-            new Dictionary<string, HashSet<string>> { ["src/C.cs"] = ["variants|C"] });
-        Assert.Empty(AnalyzerWarnings.Compare(tree.Root, variants, [entry], true));
-        var ordinary = variants with { Coverage = new() { ["src/C.cs"] = ["ordinary|C"] } };
-        Assert.Contains(AnalyzerWarnings.Compare(tree.Root, ordinary, [entry], true), issue => issue.StartsWith("STALE "));
+        var entry = Warning(tree) with { Reason = "test-fixture", Contexts = ["ordinary|C|net10.0|NET"] };
+        var other = new AnalyzerWarningCollection([], new HashSet<string> { "src/C.cs" },
+            new Dictionary<string, HashSet<string>> { ["src/C.cs"] = ["ordinary|Other|net10.0|NET"] });
+        Assert.Empty(AnalyzerWarnings.Compare(tree.Root, other, [entry], false));
+        Assert.Contains(AnalyzerWarnings.Compare(tree.Root, other, [entry], true),
+            issue => issue == "Analyzer baseline warning context was not built: src/C.cs");
+        var covered = other with { Coverage = new() { ["src/C.cs"] = ["ordinary|C|net10.0|NET"] } };
+        Assert.Contains(AnalyzerWarnings.Compare(tree.Root, covered, [entry], true), issue => issue.StartsWith("STALE "));
+    }
+
+    [Fact]
+    public void LegacyIntermediateDirectoryUsesTheSameCompilationContext()
+    {
+        using var tree = new StaticTree(); var reports = Reports(tree); Reports(tree, suffix: "b");
+        var generated = tree.Write("obj/check-all/fixture.g.cs", "// generated\n");
+        File.AppendAllText(Path.Combine(reports, "b.inputs"), generated + "|" + FileHash.Sha256(generated) + "\n");
+        var collected = AnalyzerWarnings.Collect(tree.Root, reports);
+        Assert.Equal(new[] { "ordinary|C.csproj|net10.0|NET" }, Assert.Single(collected.Entries).Contexts);
+        Assert.Equal(new[] { "ordinary|C.csproj|net10.0|NET" }, collected.Coverage!["src/C.cs"]);
     }
 
     [Theory]
@@ -330,6 +343,29 @@ public sealed class AnalyzerWarningTests
         Assert.Equal(1, Run("-UpdateBaseline", "-Complete"));
         Assert.Equal(bytes, File.ReadAllBytes(baseline));
         Assert.Equal(64, Run("-Check", "-UpdateBaseline", "-Complete"));
+    }
+
+    [Fact]
+    public void OrdinaryOnlyBaselinePassesCheckAndStillRefusesGrowth()
+    {
+        using var tree = new StaticTree(); var reports = Reports(tree);
+        var entry = AnalyzerWarnings.Collect(tree.Root, reports).Entries.Single() with { Reason = "test-fixture", Retirement = "review-note" };
+        Assert.Equal(new[] { "ordinary|C.csproj|net10.0|NET" }, entry.Contexts);
+        var json = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
+        var baseline = tree.Write("baseline.json", JsonSerializer.Serialize(new AnalyzerWarningBaseline(1, [entry]), json));
+        string[] arguments = ["-Root", tree.Root, "-DiagnosticsDirectory", reports, "-Baseline", baseline];
+        int Run(params string[] args) => StaticCheckVectorTests.RunCommand("check-analyzer-warnings", [.. arguments, .. args]).ExitCode;
+        var bytes = File.ReadAllBytes(baseline);
+        Assert.Equal(0, Run("-Check", "-Complete"));
+        Assert.Equal(64, Run("-UpdateBaseline"));
+        Assert.Equal(bytes, File.ReadAllBytes(baseline));
+        Reports(tree, suffix: "b");
+        var path = Path.Combine(reports, "b.sarif");
+        var data = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path))!;
+        data["runs"]![0]!["results"]![0]!["ruleId"] = "CA2202";
+        File.WriteAllText(path, data.ToJsonString());
+        Assert.Equal(1, Run("-UpdateBaseline", "-Complete"));
+        Assert.Equal(bytes, File.ReadAllBytes(baseline));
     }
 
     [Theory]
