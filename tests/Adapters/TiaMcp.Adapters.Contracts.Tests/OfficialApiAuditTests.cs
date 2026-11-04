@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using System.Reflection;
 using System.Reflection.Emit;
 using TiaMcp.Adapters.Contracts;
@@ -137,7 +138,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
         public void Master_copy_screen_entry_has_no_heuristic_invocation_or_existing_item_write_path()
         {
             var root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
-            var source = File.ReadAllText(Path.Combine(root, "src/Adapters/Native/Libraries/LibraryService.cs"));
+            var source = SourceFamily.Read(Path.Combine(root, "src/Adapters/Native/Libraries/LibraryService.cs"));
             foreach (var forbidden in new[] { "TryImportMasterCopyIntoScreen", "TryImportMasterCopyViaExtensionMethods",
                 "IsMasterCopyImportMethodName", "TryBuildMasterCopyImportArgs", "ResolveImportedReadbackName", "LibraryTrySetProperty" })
                 Assert.DoesNotContain(forbidden, source);

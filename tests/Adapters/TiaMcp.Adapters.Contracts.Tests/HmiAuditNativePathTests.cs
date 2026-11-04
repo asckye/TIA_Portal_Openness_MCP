@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using Xunit;
 
 namespace TiaMcp.Adapters.Contracts.Tests;
@@ -44,6 +45,6 @@ public sealed class HmiAuditNativePathTests
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (!File.Exists(Path.Combine(root.FullName, "CLAUDE.md")))
             root = root.Parent ?? throw new InvalidOperationException("Repository root not found.");
-        return File.ReadAllText(Path.Combine(root.FullName, relative)).Replace("\r\n", "\n", StringComparison.Ordinal);
+        return SourceFamily.Read(Path.Combine(root.FullName, relative)).Replace("\r\n", "\n", StringComparison.Ordinal);
     }
 }

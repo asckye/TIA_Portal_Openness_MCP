@@ -9,6 +9,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Shared/SourceFamily.cs" Link="Shared/SourceFamily.cs" />
     <ProjectReference Include="../../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <ProjectReference Include="../../../scripts/diagnostics/TiaMcp.DiagnosticClients/TiaMcp.DiagnosticClients.csproj" />
     <None Update="Vectors/*.json" CopyToOutputDirectory="PreserveNewest" />

@@ -10,6 +10,8 @@ internal static class ReleaseCommandTable
 
     internal static readonly IReadOnlyList<ReleaseCommandSpec> Entries =
     [
+        new("wrap-long-lines", "wrap-long-lines -Path <file-or-dir> [-MaxLength 160] [-Check] [-Root <dir>]", "wrap-long-lines.log", "token/comment proof; idempotent output", "wrapLongLines"),
+        new("dump-il", "dump-il -Output <dir> [-Assembly <path>] [-Root <dir>]", "dump-il.log", "normalized, order-independent IL", "ilDump"),
         new("build-solutions", "build-solutions -PublicApiRoot <SDK-root>", "solutions.log", "both solutions; exit 0", "developerSolutions"),
         new("build-file-programs", "build-file-programs", "file-programs.log", "all in-scope file apps; exit 0", "filePrograms"),
         new("publish-vci-watch", "publish-vci-watch", "vci-watch-publish.log", "WinExe in bin-build/vci-watch; exit 0", "vciWatchPublish"),

@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using System;
 using System.IO;
 using TiaMcpServer.ModelContextProtocol;
@@ -88,9 +89,9 @@ namespace TiaMcp.Engine.Tests
                 return;
             }
 
-            var portal = File.ReadAllText(portalSource);
-            var tool = File.ReadAllText(toolSource);
-            var policy = File.ReadAllText(policySource);
+            var portal = SourceFamily.Read(portalSource);
+            var tool = SourceFamily.Read(toolSource);
+            var policy = SourceFamily.Read(policySource);
 
             // 签名钉在方法声明本身上，别的方法凑巧带同样的尾巴不算数。async 不传就不改（P8-81e F6）。
             const string portalMethod = "public HmiMessage SetUnifiedHmiButtonEventScriptCode(";

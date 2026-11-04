@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -200,7 +201,7 @@ namespace TiaMcp.Engine.Tests
             var directory = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
             while (directory != null && !System.IO.File.Exists(System.IO.Path.Combine(directory.FullName, "AGENTS.md"))) directory = directory.Parent;
             Assert.NotNull(directory);
-            string source = System.IO.File.ReadAllText(System.IO.Path.Combine(directory!.FullName, "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs"));
+            string source = SourceFamily.Read(System.IO.Path.Combine(directory!.FullName, "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs"));
             int start = source.IndexOf("private static string ValidateUnifiedHmiDesignProperty", StringComparison.Ordinal);
             int end = source.IndexOf("private bool TrySetEngineeringAttribute", start, StringComparison.Ordinal);
             string method = source.Substring(start, end - start);

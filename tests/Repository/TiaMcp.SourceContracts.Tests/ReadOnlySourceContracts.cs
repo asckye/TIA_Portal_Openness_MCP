@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -10,7 +11,7 @@ public sealed class ReadOnlySourceContracts
 {
     private static readonly string Root = Repository.FindRoot(AppContext.BaseDirectory);
     private static readonly EngineSources Sources = new(Root);
-    private static string Read(string path) => Repository.ReadSource(Path.Combine(Root, path));
+    private static string Read(string path) => SourceFamily.Read(Path.Combine(Root, path));
     private static void Contains(string source, params string[] values) { foreach (var value in values) Assert.Contains(value, source, StringComparison.Ordinal); }
     private static void Excludes(string source, params string[] values) { foreach (var value in values) Assert.DoesNotContain(value, source, StringComparison.Ordinal); }
     private static void Count(string source, string value, int expected) => Assert.Equal(expected, Regex.Matches(source, Regex.Escape(value)).Count);
@@ -97,7 +98,7 @@ public sealed class ReadOnlySourceContracts
         Contains(source, "private static string WithV4Rules", "ListPortalProcessProjects", "ConnectPortal with that row's processId, then AttachOpenProject", "schemaVersion 4 envelope", "OUTCOME_UNKNOWN", "D1 native behavior remains current", "L5 is NOT RUN", "Do not save or close a project unless the user explicitly requested that action", "Workbench approval before dispatch", "data/logs/audit", "tia audit verify");
         Excludes(source, "EnsureOpennessUserGroup", "fbBlockJson", "designJson", "ConnectPortal — attach to a running", "meta.success / meta.operationSuccess", "SaveProject — save any pending changes first", "ConnectProject");
         string[] tools = ["ListPortalProcessProjects", "ConnectPortal", "AttachOpenProject", "GetSessionState", "OpenProject", "GetProjectTree", "CloseProject", "SaveProject", "DisconnectPortal", "CreateProject", "SearchHardwareCatalog", "CreateHardwareDevice", "CreateHardwareCatalogDevice", "ConnectDeviceNodesToProfinetSubnet", "GetSoftwareTree", "ExportPlcBlocks", "ExportPlcTypes", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments", "BuildAndImportPlcArtifact", "CompilePlcDiagnostics", "EnsureUnifiedHmiConnection", "EnsureUnifiedHmiScreen", "EnsureUnifiedHmiTagTable", "EnsureUnifiedHmiTag", "EnsureUnifiedHmiScreenItem", "ApplyUnifiedHmiScreenDesign", "EnsureUnifiedHmiDynamization", "SetUnifiedHmiRuntimeState", "BuildUnifiedHmiLayoutDesign", "ApplyUnifiedHmiLayout", "BuildClassicHmiScreen", "WriteClassicHmiMinimalPackageFiles", "ValidateClassicHmiMinimalPackageFiles", "ImportHmiScreen", "ImportHmiTagTable", "PlanOnlineReadOnlyMonitoring", "ProbePlcMonitorOnlineCapabilities", "ListPlcWatchTables", "GetPlcWatchTableCurrentValuesReadOnly", "RunOfflineReleaseValidationSuite", "BuildReleaseDiagnosticReport", "BuildReleaseRunbook", "GetToolUsage"];
-        var names = Directory.EnumerateFiles(Path.Combine(Root, "manifest/contracts/v4/baseline"), "*.json").SelectMany(p => JsonNode.Parse(File.ReadAllText(p))!["tools"]!.AsArray().Select(t => t!["name"]!.GetValue<string>())).ToHashSet();
+        var names = Directory.EnumerateFiles(Path.Combine(Root, "manifest/contracts/v4/baseline"), "*.json").SelectMany(p => JsonNode.Parse(Repository.ReadSource(p))!["tools"]!.AsArray().Select(t => t!["name"]!.GetValue<string>())).ToHashSet();
         foreach (var tool in tools) Assert.Contains(tool, names);
     }
     [Fact]

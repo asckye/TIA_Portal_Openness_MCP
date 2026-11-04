@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Shared/SourceFamily.cs" Link="Shared/SourceFamily.cs" />
     <Compile Include="../../Shared/DecoderRuntimeFixture.cs" Link="Shared/DecoderRuntimeFixture.cs" />
     <None Update="Vectors/*.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Fixtures/adopted-multi-version.json" CopyToOutputDirectory="PreserveNewest" />

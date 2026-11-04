@@ -17,6 +17,8 @@ internal static partial class ReleaseCommands
 
     internal static int Run(string command, Options options) => command switch
     {
+        "wrap-long-lines" => WrapLongLines.Run(Root, options),
+        "dump-il" => IlDump.Run(Root, options),
         "prepare" => Prepare.Run(Root, options),
         "merge-check" => MergeCheck.Run(Root, options),
         "generate-tool-counts" or "generate-catalogs" or "generate-tool-usage" or "generate-release-migration" or "audit-version-tools" or "audit-tool-usage" or "check-tools-list" or "generate-prerelease-notes" => GeneratorCommand(command, options),

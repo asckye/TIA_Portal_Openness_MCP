@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using TiaMcp.BuildCommon;
 using Xunit;
 
@@ -7,7 +8,7 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class PlcSoftwareAuditWiring
 {
     private static readonly string ROOT = Repository.FindRoot(AppContext.BaseDirectory);
-    private static string Read(string path) => Repository.ReadSource(Path.Combine(ROOT, path));
+    private static string Read(string path) => SourceFamily.Read(Path.Combine(ROOT, path));
     private static readonly string EXCHANGE = Read("src/Adapters/Native/Plc/PlcArtifactExchange.cs");
     private static readonly string ORGANISATION = Read("src/Adapters/Native/Plc/PlcOrganisationAdapter.cs");
     private static int Find(string source, string value, int start = 0)
