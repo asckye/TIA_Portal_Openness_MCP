@@ -12,7 +12,7 @@
 dotnet run --project build-tools/release -- merge-check
 ```
 
-命令按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件；`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取证据或结果缓存；Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。日志和各作业耗时写在 `bin-build/merge-check/`；首次冷构建及宽范围改动可能超过十分钟。
+命令按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件；`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取证据或结果缓存；Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。日志和各作业耗时写在 `bin-build/merge-check/`；首次冷构建及宽范围改动可能超过十分钟。 传输检查始终使用 `full` 档，每次最多并行检查 4 个版本，并遵循合并门的 `-MaxParallelism` 设置（设为 1 时串行检查）。
 
 GitHub CI 保留独立检查，但不阻塞合并，也不代替本机检查。不再设置 nightly；每个发布候选前由主机手动运行 `merge-check -All`，覆盖全部 38 个注册套件及源码检查。审查时核对实际运行的项目、失败与阻塞项，而非只看命令退出或旧结果缓存。
 

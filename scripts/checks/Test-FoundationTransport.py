@@ -1,6 +1,7 @@
 """Exercise real MCP STDIO/HTTP hosts against a separate synthetic worker. No TIA calls."""
 from offline_fixtures import verify_owned_process_image
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
 import ctypes
 try:
@@ -15,18 +16,19 @@ from pathlib import Path
 from ported_families import RELEASES
 import queue
 import re
-import socket
 import subprocess
+import sys
 import tempfile
 import threading
 import time
+import traceback
 from call_latency import Samples
 import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
 KEYS = list(RELEASES)
-USAGE_REPORTS = []
+USAGE_REPORTS = {}
 LATENCIES = None
 CHECK_PROFILE = 'full'
 INIT = {'protocolVersion': '2025-03-26', 'capabilities': {}, 'clientInfo': {'name': 'foundation-transport-test', 'version': '1'}}
@@ -133,7 +135,7 @@ def exercise(client, key, logfile, expected_before):
     # check_usage reads the V4 envelope (Foundation plan fields are camelCase since P6-59).
     # The release's usage audit requires every receipt to have retrieved and hash-checked the source texts, as Test-ToolUsage.py does.
     if CHECK_PROFILE != 'merge' or isinstance(client, Http):
-        USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key, verify_documents=True))
+        USAGE_REPORTS[key].append(check_usage(lambda name, args: tool(client, name, args), tools, key, verify_documents=True))
     assert 'CallTool' in names and 'Bootstrap' not in names and 'Connect' not in names
     for name in names:
         refused = client.call('tools/call', {'name': name, 'arguments': {'__invalid': True}})
@@ -298,8 +300,7 @@ class SharedStdio:
         pass
 
 
-def plc_transport_inputs(args, key, temp):
-    workers = resources_helper_overrides(args.plc_sdk_worker)
+def plc_transport_inputs(args, key, temp, workers):
     full = key in ('20', '21')
     if full:
         assert key in workers and args.public_api_root, '20/21 require an explicit SDK fixture worker and PublicAPI root'
@@ -319,11 +320,31 @@ def resources_helper_overrides(values):
     return contracts.engine_overrides(values, '--plc-sdk-worker')
 
 
+def run_releases(releases, max_parallel, check):
+    """Wait for every release and propagate failure after all results have been observed."""
+    failures = []
+    with ThreadPoolExecutor(max_workers=max_parallel) as pool:
+        futures = [(key, pool.submit(check, key)) for key in releases]
+        for key, future in futures:
+            try:
+                future.result()
+            except Exception as error:
+                print(f'FAILED release {key}:', file=sys.stderr)
+                traceback.print_exception(error, file=sys.stderr)
+                failures.append(error)
+    if failures:
+        raise failures[0]
+
+
 def plc_transports(args, temp, counts):
     """All eight releases use the same launcher, transports and session lifetime checks."""
     evidence = {}
-    for key in args.releases:
-        worker, api, full = plc_transport_inputs(args, key, temp)
+    workers = resources_helper_overrides(args.plc_sdk_worker)
+
+    def check_release(key):
+        worker, api, full = plc_transport_inputs(args, key, temp, workers)
+        evidence_directory = args.output / key
+        evidence_directory.mkdir(exist_ok=True)
         host = (args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()
         logfile = temp / f'{key}.jsonl'
         data = temp / ('data-' + key)
@@ -341,7 +362,7 @@ def plc_transports(args, temp, counts):
         for ready in ((False, True) if full else (False,)):
             owned = []
             with resources.server(host, portal, key, 'stdio', 'full', public_api=api, plc_worker=worker,
-                                  sdk_ready=ready, env_overrides=env, evidence_directory=args.output,
+                                  sdk_ready=ready, env_overrides=env, evidence_directory=evidence_directory,
                                   rpc_timeout=15, startup_timeout=60, stdio_exit_timeout=15,
                                   process_observer=owned.append, sdk_installation=full) as (rpc, _, stderr_lines):
                 client = SharedStdio(rpc)
@@ -360,7 +381,7 @@ def plc_transports(args, temp, counts):
             assert [r['Id'] for r in calls] == [1, 2, 3], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
         if args.stdio_only:
-            continue
+            return
         if full:
             unready = []
             with resources.server(host, api, key, 'http', 'full', public_api=api, plc_worker=worker,
@@ -383,7 +404,7 @@ def plc_transports(args, temp, counts):
         owned = []
         with resources.server(host, portal, key, 'http', 'full', public_api=api, plc_worker=worker,
                               sdk_ready=full, env_overrides=env, process_observer=owned.append,
-                              evidence_directory=args.output, rpc_timeout=15, startup_timeout=60,
+                              evidence_directory=evidence_directory, rpc_timeout=15, startup_timeout=60,
                               sdk_installation=full) as (_, _, _):
             process = owned[0]
             command = process.args
@@ -446,11 +467,12 @@ def plc_transports(args, temp, counts):
                 starts = [json.loads(line) for line in logfile.read_text('utf-8').splitlines() if '"start"' in line]
                 assert len(starts) == 2 and starts[0]['pid'] != starts[1]['pid']
                 assert starts[0]['args'][3] != starts[1]['args'][3]
-    return evidence
+    run_releases(args.releases, args.max_parallel, check_release)
+    return {key: evidence[key] for key in args.releases if key in evidence}
 
 
 def main():
-    global LATENCIES, CHECK_PROFILE
+    global LATENCIES, CHECK_PROFILE, USAGE_REPORTS
     parser = argparse.ArgumentParser()
     parser.add_argument('--fixture', type=Path)
     parser.add_argument('--plc-worker', action='store_true', help='Exercise opt-in PLC workers on 20/21 as well as all six old releases')
@@ -462,7 +484,12 @@ def main():
     parser.add_argument('--host-exe', type=Path, help='Fresh worktree Foundation host used for each exact release')
     parser.add_argument('--stdio-only', action='store_true', help='Run no HTTP/socket checks when network services are prohibited')
     parser.add_argument('--check-profile', choices=('merge', 'full'), default='full')
+    parser.add_argument('--max-parallel', type=int, default=4, help='Maximum concurrent releases (default: 4)')
     args = parser.parse_args()
+    if args.max_parallel < 1:
+        parser.error('--max-parallel must be at least 1')
+    # Each worker owns one release's list; flatten only after all workers have finished.
+    USAGE_REPORTS = {key: [] for key in args.releases}
     CHECK_PROFILE = args.check_profile
     LATENCIES = Samples('transport', CHECK_PROFILE)
     # P8-04l: V20/V21 run only on the PLC worker (the engine transport branch is retired).
@@ -477,9 +504,12 @@ def main():
         temp = Path(temp)
         if args.plc_worker:
             worker_evidence = plc_transports(args, temp, counts)
-        for key in (key for key in args.releases if key not in ('20', '21') and not args.plc_worker):
+        releases = [key for key in args.releases if key not in ('20', '21') and not args.plc_worker]
+
+        def check_stdio(key):
+            (temp / ('data-' + key)).mkdir()
             logfile = temp / f'{key}.jsonl'
-            env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
+            env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile), TIA_MCP_DATA_DIRECTORY=str(temp / ('data-' + key)))
             command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
             with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
                 client = Stdio(command, env, stderr)
@@ -500,12 +530,13 @@ def main():
             calls = [r for r in records if r['stage'] == 'call']
             assert [r['Id'] for r in calls] == [1, 2, 3], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
-        for key in (key for key in args.releases if key not in ('20', '21') and not args.stdio_only and not args.plc_worker):
-            with socket.socket() as port:
-                port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
+        run_releases(releases, args.max_parallel, check_stdio)
+
+        def check_http(key):
+            number = resources.allocate_http_port()
             url = f'http://127.0.0.1:{number}'
             logfile = temp / f'http-{key}.jsonl'
-            env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
+            env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile), TIA_MCP_DATA_DIRECTORY=str(temp / ('data-' + key)))
             command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
             with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
                 p = subprocess.Popen(command, env=env, cwd=temp, stderr=stderr, stdout=stderr)
@@ -548,7 +579,11 @@ def main():
                 finally:
                     verify_owned_process_image(p)
                     p.terminate(); p.wait(10)
-    (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')
+        if not args.stdio_only:
+            run_releases(releases, args.max_parallel, check_http)
+    usage_reports = [report for key in args.releases for report in USAGE_REPORTS[key]]
+    counts = {key: counts[key] for key in args.releases}
+    (args.output / 'tool-usage.json').write_text(json.dumps(usage_reports, indent=2) + '\n', encoding='utf-8')
     report = {'stdioToolCounts': counts, 'httpSessions': 0 if args.stdio_only else len(args.releases) * 2,
               'unicodeRoundTrip': True, 'workerProtocol': 2,
               'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}

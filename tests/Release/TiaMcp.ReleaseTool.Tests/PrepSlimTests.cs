@@ -85,6 +85,27 @@ public sealed class PrepSlimTests
     }
 
     [Theory]
+    [InlineData(false, 1, "1")]
+    [InlineData(false, 16, "4")]
+    [InlineData(true, 1, "1")]
+    [InlineData(true, 16, "4")]
+    public void TransportChecksRespectParallelismAndKeepFullProfile(bool all, int parallelism, string expected)
+    {
+        const string path = "src/WorkerChannel/Channel.cs";
+        var plan = MergeCheck.Select([path], all, new JsonObject(),
+            new Dictionary<string, HashSet<string>> { ["worker-channel"] = new() { path } },
+            (_, _) => false, [], "dotnet", "python", "sdk", "output", parallelism);
+        foreach (var name in new[] { "foundation-transport", "foundation-transport-plc" })
+        {
+            var job = Assert.Single(plan.Checks, job => job.Name == name);
+            Assert.DoesNotContain("--check-profile", job.Arguments);
+            var index = Array.IndexOf(job.Arguments, "--max-parallel");
+            Assert.InRange(index, 0, job.Arguments.Length - 2);
+            Assert.Equal(expected, job.Arguments[index + 1]);
+        }
+    }
+
+    [Theory]
     [InlineData("src/WorkerChannel/channel.cs", true)]
     [InlineData("src/Adapters/Native/tool.cs", true)]
     [InlineData("reference/tool-catalog/tools.json", true)]

@@ -21,6 +21,21 @@ from mcp_results import envelope, successful
 from offline_fixtures import fixture_directory
 from tool_usage_checks import check_usage, unwrap_usage
 
+_HTTP_PORT_LOCK = threading.Lock()
+_HTTP_PORTS = set()
+
+
+def allocate_http_port():
+    """Never hand two hosts in this process the same loopback port."""
+    with _HTTP_PORT_LOCK:
+        while True:
+            with socket.socket() as sock:
+                sock.bind(('127.0.0.1', 0))
+                port = sock.getsockname()[1]
+            if port not in _HTTP_PORTS:
+                _HTTP_PORTS.add(port)
+                return port
+
 
 def require(condition, message):
     if not condition:
@@ -131,9 +146,7 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
     if portal_root is not None: portal_root = Path(portal_root).resolve()
     port = 0
     if transport == 'http':
-        with socket.socket() as sock:
-            sock.bind(('127.0.0.1', 0))
-            port = sock.getsockname()[1]
+        port = allocate_http_port()
     endpoint = f'http://127.0.0.1:{port}/mcp'
     key = secrets.token_urlsafe(24)
     foundation = True

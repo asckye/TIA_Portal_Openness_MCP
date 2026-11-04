@@ -117,7 +117,8 @@ internal static class MergeCheck
     }
 
     internal static Plan Select(string[] changes, bool all, JsonObject catalog, IReadOnlyDictionary<string, HashSet<string>> closures,
-        Func<string, string, bool> mentions, IEnumerable<string> filePrograms, string dotnet, string python, string api, string output)
+        Func<string, string, bool> mentions, IEnumerable<string> filePrograms, string dotnet, string python, string api, string output,
+        int parallelism = 4)
     {
         var plan = new Plan { DocsOnly = !all && changes.All(Documentation) };
         void Tool(string name, params string[] args) => plan.Checks.Add(new(name, dotnet, [typeof(Program).Assembly.Location, name, .. args]));
@@ -194,7 +195,7 @@ internal static class MergeCheck
         foreach (var program in filePrograms.Where(program => plan.Wide || changes.Contains(program, StringComparer.OrdinalIgnoreCase)))
             Reason(plan.Builds, "file:" + program, plan.Wide ? "wide change" : program);
         AddChecks(plan, changes, dotnet, python, api, output);
-        AddWorkerChecks(plan, changes, dotnet, python, api, output);
+        AddWorkerChecks(plan, changes, parallelism, dotnet, python, api, output);
         return plan;
     }
 
@@ -253,7 +254,7 @@ internal static class MergeCheck
     internal const string AdapterDiagnosticsProject = "tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj";
     internal const string CampaignProgram = "scripts/checks/Test-CampaignInputs.cs";
 
-    private static void AddWorkerChecks(Plan plan, string[] changes, string dotnet, string python, string api, string output)
+    private static void AddWorkerChecks(Plan plan, string[] changes, int parallelism, string dotnet, string python, string api, string output)
     {
         bool transport = plan.Wide || changes.Any(path =>
             new[] { "src/FoundationHost", "src/EngineHost", "src/WorkerChannel", "src/PlcWorker", "src/Shared",
@@ -278,11 +279,12 @@ internal static class MergeCheck
         if (transport)
         {
             Reason(plan.Builds, TransportFixtureProject, reason);
+            var maxParallel = Math.Min(4, parallelism).ToString(CultureInfo.InvariantCulture);
             const string fixture = "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe";
-            Py("foundation-transport", "Test-FoundationTransport.py", true, "--host-exe", host, "--fixture", fixture,
+            Py("foundation-transport", "Test-FoundationTransport.py", true, "--max-parallel", maxParallel, "--host-exe", host, "--fixture", fixture,
                 "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--temp-root", Path.Combine(output, "transport-temp"),
                 "--output", Path.Combine(output, "transport"));
-            Py("foundation-transport-plc", "Test-FoundationTransport.py", true, "--host-exe", host, "--fixture", fixture,
+            Py("foundation-transport-plc", "Test-FoundationTransport.py", true, "--max-parallel", maxParallel, "--host-exe", host, "--fixture", fixture,
                 "--plc-worker", "--releases", "14sp1", "15.1", "16", "17", "18", "19", "20", "21",
                 "--plc-sdk-worker", "20=" + ReleaseCommands.ReleasePlcFixture(output, "20"),
                 "--plc-sdk-worker", "21=" + ReleaseCommands.ReleasePlcFixture(output, "21"),
@@ -410,7 +412,7 @@ internal static class MergeCheck
             return paths.Any(path => Under(path, directory) || Under(path, "tests/Shared"));
         }
         var plan = Select(changes, options.Has("All"), catalog, closures, Mentions,
-            docsOnly ? [] : FileBasedPrograms.Discover(root), dotnet, python, api, output);
+            docsOnly ? [] : FileBasedPrograms.Discover(root), dotnet, python, api, output, parallelism);
         Console.Write(Describe(plan, table));
         if (options.Has("DryRun")) return 0;
         PrepareBuild.RequireOwnedTree(root, output);
