@@ -9,7 +9,7 @@ internal static class ParallelPipeline
     internal static IReadOnlyList<PipelineResult> Run(
         IReadOnlyList<(string Name, Func<PipelineResult> Run)> pipelines,
         string logDirectory,
-        int maxParallelism = int.MaxValue)
+        int maxParallelism = int.MaxValue, bool continueOnFailure = false)
     {
         if (pipelines.Count == 0) throw new ReleaseException("At least one version pipeline is required.");
         if (pipelines.Select(pipeline => pipeline.Name).Distinct(StringComparer.Ordinal).Count() != pipelines.Count)
@@ -35,7 +35,7 @@ internal static class ParallelPipeline
                 timer.Stop();
                 elapsed[index] = timer.Elapsed.TotalSeconds;
                 results[index] = result;
-                if (result.ExitCode != 0) Interlocked.Exchange(ref stopStarting, 1);
+                if (result.ExitCode != 0 && !continueOnFailure) Interlocked.Exchange(ref stopStarting, 1);
             }
         })).ToArray();
         Task.WhenAll(workers).GetAwaiter().GetResult();
@@ -55,7 +55,7 @@ internal static class ParallelPipeline
         }
 
         var failures = completed.Where(result => result.ExitCode != 0).Select(result => result.Name).ToArray();
-        if (failures.Length != 0)
+        if (failures.Length != 0 && !continueOnFailure)
             throw new ReleaseException("Pipelines failed: " + string.Join(", ", failures) + "; all started and skipped jobs have logs");
         return completed;
     }

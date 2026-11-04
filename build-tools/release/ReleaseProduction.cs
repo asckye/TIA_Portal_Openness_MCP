@@ -44,7 +44,7 @@ internal static partial class ReleaseCommands
             var testLogs = Path.Combine(Root, "bin-build/release-runs", DateTime.Now.ToString("yyyyMMdd-HHmmss-fff", System.Globalization.CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..8]);
             Directory.CreateDirectory(testLogs);
             Console.WriteLine("TEST STAGE ONLY: " + testLogs);
-            RunReleaseTestStage(options, publicApiRoot, testLogs, Path.Combine(testLogs, "temp"), python, nugetConfig);
+            RunReleaseTestStage(options, publicApiRoot, testLogs, CreateReleaseTempRoot(), python, nugetConfig);
             return 0;
         }
 

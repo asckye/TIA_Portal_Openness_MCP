@@ -244,9 +244,11 @@ marketplace 版本、发布文档、伴随 Python 的依赖导入、Git 规范�
 
 1. 重新构建分析器报告，再运行分析器 ratchet 与源码/文档早期检查；旧报告不能阻断这次发布。
 2. `build-multi-version -PrepareOnly`、`build-release -DeferTests`、`build-multi-version -CompleteOnly -DeferTests` 保留所有产物及二进制/审批安全检查，生产器不执行套件。
-3. 执行 `tests/test-suites.json` 的全部 44 个注册套件，逐套件检查原有 `minimumPassed` 和 `maximumSkipped`。
-   先完成所有套件、配置器、PLC file app 及行为对等夹具的构建，再启动测试池；不同编译参数的变体保留各自输出，同项目测试串行执行。
-   FoundationHost 同时只有一个 testhost，不分片；`updater`、`studio-gui` 独占运行，native-diagnostics 与 ecosystem-assembly harness 也在池排空后逐项独占执行。
+3. 保留 `tests/test-suites.json` 的全部 44 个注册套件门槛，逐套件检查原有 `minimumPassed` 和 `maximumSkipped`。
+   先完成普通套件、配置器、PLC file app 及行为对等夹具的构建，再启动测试池；不同编译参数的变体保留各自输出，同项目普通测试串行执行。
+   池排空后，`foundation-api` 独占调用已有的 `FastSuites.Run` 分片执行器，沿用 `FoundationApiSuiteArguments`、成本分片、合并和门槛检查，不使用 worker copies。
+   同次合并 TRX 经批准的 SPD 派生规则生成 `foundation`、`worker-robustness`、`workbench-control-host`、`shared-pipeline`、`shared-lifecycle-plc`，保留各自门槛，并在全部六份结果中记录 `exitCode`。
+   `updater`、`studio-gui` 独占运行，native-diagnostics 与 ecosystem-assembly harness 也在池排空后逐项独占执行。
    其余独立项目受核心数及 `-MaxParallelism` 限制。各进程使用独立的 `FastSuites.EnvironmentFor` 环境。
 4. Python 自测、V20/V21 主机行为对等、配置器控制台测试，以及 PLC 功能、合同与响应捕获继续执行。
    V20/V21 响应保留两种布局、两种传输及逐字节比较。稳定性 campaign 和计时/延迟门槛不在此发布路径中。
@@ -266,6 +268,8 @@ dotnet run --project build-tools/release -- release -Version 4.0.0-beta.3 -TestS
 `-TestStageOnly` 保留本地版本、文档、依赖及 SDK 前置检查，只准备所选测试需要的夹具和测试程序集，然后复用相同调度。
 省略 `-Only` 执行完整测试阶段；提供时接受注册套件名、Python 检查名、`configuration-page`、`plc-v20`、`plc-v21`、独占 `harness-*` 作业名及上述三个后置作业名。
 未知或空作业名在启动测试前报错并列出可选名称。每个执行作业打印 `PASS`/`FAIL`，日志写入新的 `bin-build/release-runs/<run>/tests`。
+选择任一 Foundation 派生套件会运行 `foundation-api` 及全部五个派生门槛。诊断模式和正式发布均使用仓库外的临时根目录。
+测试阶段会运行完所有可执行作业，再列出全部失败并返回失败；前一个套件或作业失败不会掩盖后续作业。
 此诊断模式不重跑生产器，不更新或绑定发布记录，不打包、提交、打 tag 或上传；其结果不能作为完成发布的记录。
 测试子进程清除发布器的禁用构建缓存标记，独立编译输出通过 `TIA_MCP_TEST_REGISTERED_OUTPUT` 映射到项目的正常测试输出目录。
 

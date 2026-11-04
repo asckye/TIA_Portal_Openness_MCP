@@ -297,6 +297,167 @@ public sealed class ReleaseSingleStageTests
         Assert.Throws<ReleaseException>(() => new ReleaseTestSelection(Options.Parse(["-Only", "x"], new HashSet<string>()), ["x"]));
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("foundation-api")]
+    [InlineData("foundation")]
+    public void FoundationUsesOneExclusiveShardedJobAndNoIndependentSubsetProcesses(string? only)
+    {
+        using var tree = new StaticTree();
+        var catalog = new JsonObject { ["ordinary"] = Suite("ordinary.csproj", 1, 0), ["studio-gui"] = Suite("gui.csproj", 1, 0) };
+        foreach (var name in ReleaseFoundationStage.Names) catalog[name] = Suite("Foundation.csproj", 1, 0);
+        var events = new List<string>();
+        CommandResult Process(string _, IEnumerable<string> arguments, string root, IDictionary<string, string?>? environment)
+        {
+            var args = arguments.ToArray();
+            Assert.DoesNotContain(Path.Combine(tree.Root, "Foundation.csproj"), args);
+            if (args[0] == "test") { events.Add(Path.GetFileName(args[Array.IndexOf(args, "--results-directory") + 1])); WriteTrx(args, 1, 0); }
+            return new(0, "passed", "");
+        }
+        var selection = only is null ? null : new ReleaseTestSelection(Options.Parse(["-TestStageOnly", "-Only", only], new HashSet<string> { "TestStageOnly" }), catalog.Select(pair => pair.Key));
+        var results = ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 1, Process,
+            selection: selection, foundationRun: () =>
+            {
+                if (only is null) Assert.Equal(new[] { "ordinary" }, events);
+                else Assert.Empty(events);
+                events.Add("sharded-foundation-api");
+                return ReleaseFoundationStage.Names.ToDictionary(name => name, _ => new CommandResult(0, "passed", ""));
+            });
+        Assert.Equal(only is null ? new[] { "ordinary", "sharded-foundation-api", "studio-gui" } : new[] { "sharded-foundation-api" }, events);
+        Assert.All(ReleaseFoundationStage.Names, name => Assert.Equal(0, results[name].ExitCode));
+    }
+
+    [Theory]
+    [InlineData("none")]
+    [InlineData("minimum")]
+    [InlineData("skip")]
+    [InlineData("source")]
+    public void ShardedFoundationDerivesAllFiveGatesAndStampsEveryExitCode(string failure)
+    {
+        using var tree = new StaticTree();
+        var root = TiaMcp.BuildCommon.Repository.FindRoot();
+        var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root);
+        var output = Path.Combine(tree.Root, "results");
+        var invoked = 0;
+        var results = ReleaseFoundationStage.Run(tree.Root, catalog, output, "sdk", "dotnet", "offline.config", 6, _ => { },
+            (options, selected, process) =>
+            {
+                invoked++;
+                Assert.Equal(new[] { "foundation-api" }, options.All("Suite"));
+                Assert.Equal("8", options.Get("Shards")); Assert.Equal("6", options.Get("MaxParallelism"));
+                Assert.Equal("sdk", options.Get("PublicApiRoot")); Assert.Equal("offline.config", options.Get("NuGetConfig"));
+                Assert.Equal(Path.Combine(output, "foundation-api"), options.Get("ResultsDirectory"));
+                Assert.False(options.Has("NoBuild")); Assert.False(options.Has("RuntimeManifest"));
+                Assert.True(DerivedSuiteGates.FilterContains(selected["foundation-api"]!.AsObject(), selected["foundation"]!.AsObject()));
+                var directory = options.Get("ResultsDirectory")!; Directory.CreateDirectory(directory);
+                var trx = Path.Combine(directory, "fixture.trx");
+                WriteFoundationTrx(trx, failure);
+                var merged = SuiteSharding.Merge("foundation-api", selected["foundation-api"]!.AsObject(), [trx], directory);
+                return failure == "source" ? merged with { ExitCode = 1 } : merged;
+            });
+        Assert.Equal(1, invoked);
+        Assert.Equal(6, results.Count);
+        foreach (var name in ReleaseFoundationStage.Names)
+        {
+            var row = JsonNode.Parse(File.ReadAllText(Path.Combine(output, name, name + ".json")))!;
+            Assert.Equal(results[name].ExitCode, (int)row["exitCode"]!);
+            Assert.Equal((int)catalog[name]!["minimumPassed"]!, (int)row["minimumPassed"]!);
+            Assert.Equal((int)catalog[name]!["maximumSkipped"]!, (int)row["maximumSkipped"]!);
+            if (name != "foundation-api") Assert.Equal("foundation-api", (string?)row["derivedFrom"]);
+        }
+        Assert.Equal(failure == "source" ? 1 : 0, results["foundation-api"].ExitCode);
+        Assert.Equal(failure is "minimum" or "skip" ? 1 : 0, results["shared-pipeline"].ExitCode);
+        if (failure == "none")
+        {
+            Assert.All(results.Values, result => Assert.Equal(0, result.ExitCode));
+            var derived = JsonNode.Parse(File.ReadAllText(Path.Combine(output, "foundation/foundation.json")))!;
+            Assert.Equal(32129, (int)derived["passed"]!);
+        }
+    }
+
+    private static void WriteFoundationTrx(string path, string failure)
+    {
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var rows = new List<(string Class, string Method, string Display, string Outcome)>();
+        void Add(string cls, int count)
+        {
+            for (int index = 0; index < count; index++) rows.Add((cls, "Check", cls + ".Check(" + index + ")", "Passed"));
+        }
+        Add("FoundationChecks", 31409); Add("WorkerRobustnessTests", 570); Add("WorkbenchControlHostTests", 98);
+        Add("SharedPipelineTests", failure == "minimum" ? 5 : 6); Add("PlcSharedLifecycleTests", 46); Add("ApiMetadataChecks", 2459);
+        foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (var kind in new[] { "UDT", "GlobalDB" })
+            rows.Add(("FoundationChecks", "Check", "FoundationChecks.Check(row: OfflineXmlBuilderTests #1: " + key + " " + kind + " official interface XSD: )", "Passed"));
+        if (failure == "skip")
+        {
+            var index = rows.FindIndex(row => row.Class == "SharedPipelineTests");
+            var row = rows[index]; rows[index] = (row.Class, row.Method, row.Display, "NotExecuted");
+        }
+        new XDocument(new XElement(ns + "TestRun",
+            new XElement(ns + "Results", rows.Select((row, index) => new XElement(ns + "UnitTestResult", new XAttribute("testId", "test" + index),
+                new XAttribute("executionId", "run" + index), new XAttribute("testName", row.Display), new XAttribute("outcome", row.Outcome)))),
+            new XElement(ns + "TestDefinitions", rows.Select((row, index) => new XElement(ns + "UnitTest", new XAttribute("id", "test" + index),
+                new XElement(ns + "TestMethod", new XAttribute("className", row.Class), new XAttribute("name", row.Method))))),
+            new XElement(ns + "ResultSummary", new XAttribute("outcome", "Completed"), new XElement(ns + "Counters",
+                new XAttribute("total", rows.Count), new XAttribute("executed", rows.Count(row => row.Outcome == "Passed")),
+                new XAttribute("passed", rows.Count(row => row.Outcome == "Passed")), new XAttribute("failed", 0),
+                new XAttribute("notExecuted", rows.Count(row => row.Outcome == "NotExecuted")))))).Save(path);
+    }
+
+    [Fact]
+    public void FailedJobsDoNotHideLaterSuitesExclusiveJobsOrPostSuiteJobs()
+    {
+        using var tree = new StaticTree();
+        var events = new List<string>();
+        var catalog = new JsonObject { ["first"] = Suite("shared.csproj", 1, 0), ["second"] = Suite("shared.csproj", 1, 0),
+            ["updater"] = Suite("updater.csproj", 1, 0), ["studio-gui"] = Suite("gui.csproj", 1, 0) };
+        CommandResult Process(string _, IEnumerable<string> arguments, string root, IDictionary<string, string?>? environment)
+        {
+            var args = arguments.ToArray();
+            if (args[0] == "build") return new(0, "built", "");
+            var name = Path.GetFileName(args[Array.IndexOf(args, "--results-directory") + 1]);
+            events.Add(name); WriteTrx(args, 1, 0); return new(name == "first" ? 1 : 0, "completed", "");
+        }
+        (string, Func<PipelineResult>) Job(string name, bool fail) => (name, () =>
+        {
+            events.Add(name);
+            if (fail) throw new ReleaseException("fixture failure " + name);
+            return new(name, 0, "passed", "");
+        });
+        var error = Assert.Throws<ReleaseException>(() => ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 1, Process,
+            additionalJobs: [Job("pool-failed", true), Job("pool-later", false)],
+            exclusiveJobs: [Job("exclusive-failed", true), Job("exclusive-later", false)],
+            postSuiteJobs: [Job("post-failed", true), Job("post-later", false)]));
+        Assert.Equal(new[] { "first", "second", "pool-failed", "pool-later", "exclusive-failed", "exclusive-later", "updater", "studio-gui", "post-failed", "post-later" }, events);
+        foreach (var name in new[] { "first", "pool-failed", "exclusive-failed", "post-failed" }) Assert.Contains(name, error.Message);
+    }
+
+    [Fact]
+    public void FailedCompilationStillReportsItsDependentsAndRunsOtherProjects()
+    {
+        using var tree = new StaticTree();
+        var catalog = new JsonObject { ["first"] = Suite("broken.csproj", 1, 0), ["same-build"] = Suite("broken.csproj", 1, 0), ["later"] = Suite("later.csproj", 1, 0) };
+        var executed = new List<string>();
+        CommandResult Process(string _, IEnumerable<string> arguments, string root, IDictionary<string, string?>? environment)
+        {
+            var args = arguments.ToArray();
+            if (args[0] == "build") return new(args[1].EndsWith("broken.csproj", StringComparison.Ordinal) ? 1 : 0, "build completed", "");
+            executed.Add(Path.GetFileName(args[Array.IndexOf(args, "--results-directory") + 1])); WriteTrx(args, 1, 0); return new(0, "passed", "");
+        }
+        var error = Assert.Throws<ReleaseException>(() => ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 1, Process));
+        Assert.Equal(new[] { "later" }, executed);
+        Assert.Contains("first", error.Message); Assert.Contains("same-build", error.Message);
+    }
+
+    [Fact]
+    public void TestStageOnlyUsesTheSameExternalTempRootAsProduction()
+    {
+        var source = File.ReadAllText(Path.Combine(TiaMcp.BuildCommon.Repository.FindRoot(), "build-tools/release/ReleaseProduction.cs"));
+        var start = source.IndexOf("if (options.Has(\"TestStageOnly\"))", StringComparison.Ordinal);
+        var end = source.IndexOf("if (options.Has(\"EarlyGatesOnly\"))", start, StringComparison.Ordinal);
+        Assert.Contains("RunReleaseTestStage(options, publicApiRoot, testLogs, CreateReleaseTempRoot(), python, nugetConfig)", source[start..end]);
+    }
+
     private static JsonObject Suite(string project, int minimum, int maximum) => new()
     {
         ["project"] = project, ["minimumPassed"] = minimum, ["maximumSkipped"] = maximum, ["arguments"] = new JsonArray()
@@ -334,11 +495,12 @@ public sealed class ReleaseSingleStageTests
     }
 
     [Fact]
-    public void FullReleaseRunsEveryRegistrationWithoutDerivedSubsets()
+    public void FullReleaseRetainsEveryGateWithOnlyApprovedFoundationDerivations()
     {
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(TiaMcp.BuildCommon.Repository.FindRoot(), "tests/test-suites.json"), TiaMcp.BuildCommon.Repository.FindRoot());
         var groups = ReleaseSuiteStage.Groups(catalog);
         Assert.Equal(44, groups.SelectMany(group => group).Count());
+        Assert.Equal(new[] { "foundation", "foundation-api", "shared-lifecycle-plc", "shared-pipeline", "workbench-control-host", "worker-robustness" }, ReleaseFoundationStage.Names.Order());
         Assert.Equal(catalog.Select(pair => pair.Key).Order(), groups.SelectMany(group => group).Order());
         foreach (var names in new[] { new[] { "compile-candidate", "compile-candidate-no-safety" },
             new[] { "fallback-vci-modern", "fallback-vci-initial", "fallback-vci-classic" },

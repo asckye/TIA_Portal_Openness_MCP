@@ -30,10 +30,10 @@ internal sealed class ReleaseTestSelection(Options options, IEnumerable<string> 
             Console.WriteLine((result.ExitCode == 0 ? "PASS " : "FAIL ") + name);
             return result;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             Console.WriteLine("FAIL " + name);
-            throw;
+            return new(name, 1, "", ex.ToString());
         }
     }
 }
@@ -57,12 +57,15 @@ internal static class ReleaseSuiteStage
         string dotnet, string? nuget, int parallelism, SuiteProcess? process = null, Action<IDictionary<string, string?>>? configure = null,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? additionalJobs = null, object? compilationGate = null,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? exclusiveJobs = null, ReleaseTestSelection? selection = null,
-        IReadOnlyList<(string Name, Func<PipelineResult> Run)>? postSuiteJobs = null)
+        IReadOnlyList<(string Name, Func<PipelineResult> Run)>? postSuiteJobs = null,
+        Func<Dictionary<string, CommandResult>>? foundationRun = null)
     {
         var results = new ConcurrentDictionary<string, CommandResult>(StringComparer.Ordinal);
+        var failures = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+        var buildFailures = new Dictionary<string, CommandResult>(StringComparer.Ordinal);
         var buildGate = compilationGate ?? new object();
         var prepared = new Dictionary<string, (IDictionary<string, string?> Environment, string? Output)>(StringComparer.Ordinal);
-        var groups = Groups(catalog).Select(group => group.Where(name => selection?.Includes(name) != false).ToArray()).Where(group => group.Length != 0).ToArray();
+        var groups = Groups(catalog).Select(group => group.Where(name => selection?.Includes(name) != false && (foundationRun is null || !ReleaseFoundationStage.Names.Contains(name))).ToArray()).Where(group => group.Length != 0).ToArray();
         string? Sdk(string name, JsonObject suite) => name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true ? api : null;
         string Identity(string name) => string.Join('\n', DotnetSuites.BuildArguments(catalog[name]!["arguments"]!.AsArray().Select(arg => arg!.GetValue<string>())))
             + "\n" + Sdk(name, catalog[name]!.AsObject());
@@ -100,6 +103,7 @@ internal static class ReleaseSuiteStage
                 {
                     if (sharedOutput != null) env["TIA_MCP_TEST_REGISTERED_OUTPUT"] = RegisteredOutput(root, suite);
                     prepared[name] = (env, sharedOutput);
+                    if (buildFailures.TryGetValue(names.First(other => Identity(other) == identity), out var failed)) buildFailures[name] = failed;
                     File.WriteAllText(Path.Combine(directory, "build.log"), "Uses the already compiled project/property variant.\n");
                     continue;
                 }
@@ -115,9 +119,17 @@ internal static class ReleaseSuiteStage
                 CommandResult built;
                 // Shared project references also write bin/obj. Finish every build
                 // before a suite or a PLC lane can execute those binaries.
-                lock (buildGate) built = (process ?? DotnetSuites.RunProcess)(dotnet, build, root, env);
+                var compilation = ReleaseTestSelection.RunJob("build:" + name, () =>
+                {
+                    lock (buildGate)
+                    {
+                        var result = (process ?? DotnetSuites.RunProcess)(dotnet, build, root, env);
+                        return new(name, result.ExitCode, result.StandardOutput, result.StandardError);
+                    }
+                });
+                built = new(compilation.ExitCode, compilation.StandardOutput, compilation.StandardError);
                 File.WriteAllText(Path.Combine(directory, "build.log"), built.StandardOutput + built.StandardError);
-                ProcessRunner.RequireSuccess(built, "Release suite build: " + name);
+                if (built.ExitCode != 0) buildFailures[name] = built;
                 builtVariants[identity] = compiled;
                 prepared[name] = (env, compiled);
             }
@@ -133,36 +145,124 @@ internal static class ReleaseSuiteStage
                     .. compiled != null ? new[] { "--output", compiled } : []];
                 var reported = ReleaseTestSelection.RunJob(name, () =>
                 {
-                    var tested = DotnetSuites.RunSuite(root, name, suite, directory, dotnet, arguments, env, process);
+                    var tested = buildFailures.TryGetValue(name, out var failed) ? failed
+                        : DotnetSuites.RunSuite(root, name, suite, directory, dotnet, arguments, env, process);
                     return new(name, tested.ExitCode, tested.StandardOutput, tested.StandardError);
                 });
                 var result = new CommandResult(reported.ExitCode, reported.StandardOutput, reported.StandardError);
                 File.WriteAllText(Path.Combine(directory, "test.log"), result.StandardOutput + result.StandardError);
                 results[name] = result;
-                if (result.ExitCode != 0) return new(name, result.ExitCode, result.StandardOutput, result.StandardError);
+                if (result.ExitCode != 0) failures[name] = result.StandardOutput + result.StandardError;
             }
-            return new(names[0], 0, "Registered suite gates passed.\n", "");
+            return new(names[0], names.Any(failures.ContainsKey) ? 1 : 0, "Registered suite gates completed.\n", "");
+        }
+        PipelineResult Record(string name, Func<PipelineResult> run)
+        {
+            var result = ReleaseTestSelection.RunJob(name, run);
+            if (result.ExitCode != 0) failures[name] = result.StandardOutput + result.StandardError;
+            return result;
+        }
+        void RunParallel((string Name, Func<PipelineResult> Run)[] jobs, string directory)
+        {
+            if (jobs.Length == 0) return;
+            foreach (var result in ParallelPipeline.Run(jobs, directory,
+                Math.Max(1, Math.Min(parallelism, Environment.ProcessorCount)), continueOnFailure: true))
+                if (result.ExitCode != 0) failures.TryAdd(result.Name, result.StandardOutput + result.StandardError);
         }
         var ordinary = groups.Select(group => group.Where(name => name is not ("studio-gui" or "updater")).ToArray()).Where(group => group.Length != 0);
         var parallelJobs = ordinary.Select(group => (group[0], (Func<PipelineResult>)(() => RunGroup(group))))
             .Concat((additionalJobs ?? []).Where(job => selection?.Includes(job.Name) != false)
-                .Select(job => (job.Name, (Func<PipelineResult>)(() => ReleaseTestSelection.RunJob(job.Name, job.Run))))).ToArray();
-        if (parallelJobs.Length != 0) ParallelPipeline.Run(parallelJobs, Path.Combine(output, "pipeline"),
-            Math.Max(1, Math.Min(parallelism, Environment.ProcessorCount)));
-        foreach (var job in (exclusiveJobs ?? []).Where(job => selection?.Includes(job.Name) != false))
-        {
-            var result = ReleaseTestSelection.RunJob(job.Name, job.Run);
-            if (result.ExitCode != 0) throw new ReleaseException(result.StandardOutput + result.StandardError);
-        }
+                .Select(job => (job.Name, (Func<PipelineResult>)(() => Record(job.Name, job.Run))))).ToArray();
+        RunParallel(parallelJobs, Path.Combine(output, "pipeline"));
+        var exclusive = (exclusiveJobs ?? []).ToList();
+        if (foundationRun != null && ReleaseFoundationStage.Names.Any(name => catalog.ContainsKey(name) && selection?.Includes(name) != false))
+            exclusive.Add(("foundation-api", () =>
+            {
+                var rows = foundationRun();
+                foreach (var (name, result) in rows)
+                {
+                    results[name] = result;
+                    if (result.ExitCode != 0) failures[name] = result.StandardOutput + result.StandardError;
+                }
+                return new("foundation-api", rows.Values.Any(result => result.ExitCode != 0) ? 1 : 0, "Foundation suite gates completed.\n", "");
+            }));
+        foreach (var job in exclusive.Where(job => job.Name == "foundation-api" && foundationRun != null || selection?.Includes(job.Name) != false))
+            Record(job.Name, job.Run);
         foreach (var name in new[] { "updater", "studio-gui" }.Where(name => catalog.ContainsKey(name) && selection?.Includes(name) != false))
-        {
-            var result = RunGroup([name]);
-            if (result.ExitCode != 0) throw new ReleaseException(result.StandardOutput + result.StandardError);
-        }
+            RunGroup([name]);
         var post = (postSuiteJobs ?? []).Where(job => selection?.Includes(job.Name) != false)
-            .Select(job => (job.Name, (Func<PipelineResult>)(() => ReleaseTestSelection.RunJob(job.Name, job.Run)))).ToArray();
-        if (post.Length != 0) ParallelPipeline.Run(post, Path.Combine(output, "post-suites"), Math.Max(1, Math.Min(parallelism, Environment.ProcessorCount)));
+            .Select(job => (job.Name, (Func<PipelineResult>)(() => Record(job.Name, job.Run)))).ToArray();
+        RunParallel(post, Path.Combine(output, "post-suites"));
+        if (!failures.IsEmpty) throw new ReleaseException("Release test stage failed: " + string.Join(", ", failures.Keys.Order(StringComparer.Ordinal)) +
+            "\n" + string.Join("\n", failures.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Key + ": " + pair.Value)));
         return results.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+    }
+}
+
+internal static class ReleaseFoundationStage
+{
+    internal static readonly string[] Names = ["foundation-api", .. CheckAllProfiles.Derived.Where(pair => pair.Value == "foundation-api").Select(pair => pair.Key)];
+
+    internal static Dictionary<string, CommandResult> Run(string root, JsonObject catalog, string output, string api, string dotnet,
+        string? nuget, int parallelism, Action<IDictionary<string, string?>> configure,
+        Func<Options, JsonObject, SuiteProcess, CommandResult>? run = null)
+    {
+        var plan = CheckAllProfiles.Plan(catalog, api, nuget ?? "", Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON"), dotnet);
+        foreach (var name in Names.Where(name => name != "foundation-api"))
+            if (plan.Mappings.GetValueOrDefault(name) != "foundation-api")
+                throw new ReleaseException("Foundation derivation is not approved for " + name + ": " + plan.Fallbacks.GetValueOrDefault(name));
+        var directory = Path.Combine(output, "foundation-api");
+        var options = Options.Parse([.. ReleaseCommands.FoundationApiSuiteArguments(dotnet, api, output), "-ResultsDirectory", directory,
+            "-MaxParallelism", parallelism.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            .. nuget is null ? Array.Empty<string>() : ["-NuGetConfig", nuget]], new HashSet<string>());
+        CommandResult Process(string executable, IEnumerable<string> arguments, string cwd, IDictionary<string, string?>? environment)
+        {
+            CheckAllProfiles.ApplyEnvironment(plan.Executions["foundation-api"], environment!, false);
+            configure(environment!);
+            environment!["RestoreConfigFile"] = nuget;
+            environment["TIA_MCP_OFFLINE_NUGET_CONFIG"] = nuget;
+            environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+            environment["MSBUILDDISABLENODEREUSE"] = "1";
+            environment!["TIA_MCP_PRODUCTION_RELEASE"] = null;
+            environment["TIA_MCP_BUILD_CACHE_DISABLED"] = null;
+            return DotnetSuites.RunProcess(executable, arguments, cwd, environment);
+        }
+        var reported = ReleaseTestSelection.RunJob("foundation-api", () =>
+        {
+            var result = run is null ? FastSuites.Run(root, options, catalog, Process) : run(options, catalog, Process);
+            return new("foundation-api", result.ExitCode, result.StandardOutput, result.StandardError);
+        });
+        var results = new Dictionary<string, CommandResult>(StringComparer.Ordinal);
+        results["foundation-api"] = Stamp("foundation-api", catalog["foundation-api"]!.AsObject(), directory,
+            new(reported.ExitCode, reported.StandardOutput, reported.StandardError));
+        var trx = Path.Combine(directory, "foundation-api.trx");
+        foreach (var name in Names.Where(name => name != "foundation-api"))
+        {
+            var target = Path.Combine(output, name);
+            var derived = ReleaseTestSelection.RunJob(name, () =>
+            {
+                var result = DerivedSuiteGates.Evaluate(name, catalog[name]!.AsObject(), trx, target, "foundation-api");
+                return new(name, result.ExitCode, result.StandardOutput, result.StandardError);
+            });
+            results[name] = Stamp(name, catalog[name]!.AsObject(), target, new(derived.ExitCode, derived.StandardOutput, derived.StandardError));
+        }
+        return results;
+    }
+
+    private static CommandResult Stamp(string name, JsonObject suite, string directory, CommandResult result)
+    {
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, name + ".json");
+        var row = File.Exists(path) ? JsonNode.Parse(File.ReadAllText(path))!.AsObject() : new JsonObject
+        {
+            ["suite"] = name, ["minimumPassed"] = suite["minimumPassed"]!.DeepClone(), ["maximumSkipped"] = suite["maximumSkipped"]!.DeepClone(),
+            ["errors"] = new JsonArray(result.StandardError.Length == 0 ? "Missing suite result" : result.StandardError)
+        };
+        if (!File.Exists(path) && result.ExitCode == 0) result = result with { ExitCode = 1, StandardError = "Missing suite result: " + name };
+        row["exitCode"] = result.ExitCode;
+        File.WriteAllText(path, row.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n");
+        File.WriteAllText(Path.Combine(directory, "test.log"), result.StandardOutput + result.StandardError);
+        return result;
     }
 }
 
@@ -316,7 +416,12 @@ internal static partial class ReleaseCommands
             {
                 ConfigureDecoderTestEnvironment(environment, Root, options);
                 environment[PlcReleaseSystemTempVariable] = fileAppTemp;
-            }, additionalJobs: jobs, exclusiveJobs: exclusiveJobs, selection: selection, postSuiteJobs: postSuiteJobs);
+            }, additionalJobs: jobs, exclusiveJobs: exclusiveJobs, selection: selection, postSuiteJobs: postSuiteJobs,
+            foundationRun: () => ReleaseFoundationStage.Run(Root, catalog, output, api, Dotnet, nuget, GetMaxParallelism(options), environment =>
+            {
+                ConfigureDecoderTestEnvironment(environment, Root, options);
+                environment[PlcReleaseSystemTempVariable] = fileAppTemp;
+            }));
         if (options.Has("TestStageOnly")) return results;
         foreach (var name in sharedTests) results.Checks[name] = results.Suites["release-tool"];
         RunPlc(plcJobs.Where(job => job.Executable == "test-suites"));
