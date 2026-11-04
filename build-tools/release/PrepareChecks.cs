@@ -240,7 +240,7 @@ internal static partial class ReleaseCommands
             validate: _ => PrepareChecks.RequireEvidence(Path.Combine(output, "adapter-inputs/input-results.json"))));
         producers.Add(Command("worker-isolation", Dotnet, ["run", "src/Adapters/build/Test-WorkerIsolation.cs", "--", "--evidence-directory", Path.Combine(output, "worker-isolation"), "--native-call-weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"],
             validate: _ => PrepareChecks.RequireEvidence(Path.Combine(output, "worker-isolation/worker-isolation-results.json"))));
-        producers.Add(Python("native-diagnostics", "Test-NativeDiagnostics.py", ["--fixture", "tests/Engine/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe",
+        producers.Add(Python("native-diagnostics", "Test-NativeDiagnostics.py", ["--fixture", "tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe",
             "--weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll", "--output", Path.Combine(output, "native-diagnostics")],
             validate: result =>
             {
@@ -278,7 +278,7 @@ internal static partial class ReleaseCommands
             var approval = Path.Combine(context.Logs, "approval-v" + key + "-bundle");
             jobs.Add(Python("approval-v" + key + "-bundle", "Test-ReleaseApprovalGate.py", ["--product", "engine", "--major", key,
                 "--exe", Path.Combine(bundle, $"runtime/v{key}/TiaMcp.FoundationHost.exe"), "--portal-root", api, "--public-api", api,
-                "--host-harness", Path.Combine(root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe"),
+                "--host-harness", Path.Combine(root, "tests/FoundationHost/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe"),
                 "--plc-worker", ReleasePlcFixture(context.Logs, key),
                 "--readiness-worker", Path.Combine(bundle, $"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe"),
                 "--temp-root", temp, "--output", approval], true,

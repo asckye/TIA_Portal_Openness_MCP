@@ -21,7 +21,7 @@ engine invocations used by build-release, branch-gate and release-candidate keep
 their arguments and assertions.
 
 ```powershell
-python scripts/checks/Test-PlcHarness.py --release 21 --mode hmi-snapshot-only --host src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe --worker bin-build/check-plc-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe --harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --api <PublicAPI-V21-net48> --public-api-root <SDK-root> --output bin-build/plc-harness-v21-snapshot
+python scripts/checks/Test-PlcHarness.py --release 21 --mode hmi-snapshot-only --host src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe --worker bin-build/check-plc-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe --harness tests/FoundationHost/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --api <PublicAPI-V21-net48> --public-api-root <SDK-root> --output bin-build/plc-harness-v21-snapshot
 ```
 
 The driver also retains the `concurrency-only` and `staging-sessions-only`
@@ -44,8 +44,8 @@ shutdown control are absent from the compiled runtime.
 The test HTTP listener binds only to localhost with a temporary test key.
 
 ```powershell
-dotnet build tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj -c Release
-$tests = 'tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe'
+dotnet build tests/FoundationHost/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj -c Release
+$tests = 'tests/FoundationHost/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe'
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe'
 $fileVersion = (Get-Content 'manifest/tools-list.json' -Raw | ConvertFrom-Json).fileVersion
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe' hmi-only 21 $fileVersion
@@ -154,8 +154,8 @@ every case and the complete file byte-for-byte, including BOM/newlines.
 Baseline recording is explicit, separate from verification:
 
 ```powershell
-& $tests $engine 'response-golden-record' $publicApi 'tests/Engine/TiaMcp.Engine.Harness/Golden'
-& $tests $engine 'response-golden-only' $publicApi 'tests/Engine/TiaMcp.Engine.Harness/Golden'
+& $tests $engine 'response-golden-record' $publicApi 'tests/FoundationHost/TiaMcp.Engine.Harness/Golden'
+& $tests $engine 'response-golden-only' $publicApi 'tests/FoundationHost/TiaMcp.Engine.Harness/Golden'
 ```
 
 Run verification twice for each release. Recording writes new data and must not

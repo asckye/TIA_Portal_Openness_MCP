@@ -13,13 +13,13 @@ manifest/** -text whitespace=cr-at-eol
 *.py text eol=lf
 
 # Renderer goldens are compared byte for byte; keep their LF bytes on every checkout.
-tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/** -text
+tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/** -text
 
 # Frozen 3.x contract evidence must retain its original bytes.
 manifest/history/contracts-v3/** -text
 
 # GitHub language statistics: renderer goldens are test data and the tool examples are snippets in target languages.
-tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/** linguist-generated
+tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/** linguist-generated
 reference/tool-examples/** linguist-documentation
 
 # Standard inventories and SCL golden bytes must survive Windows/Linux checkout.
@@ -33,7 +33,7 @@ scripts/diagnostics/campaign/ledger-history.json text eol=lf
 # Product generators compare raw UTF-8 bytes on Windows and Ubuntu.
 src/Shared/ToolUsageData.json text eol=lf
 src/Logic/ModelContextProtocol/ToolProfiles.resx text eol=lf
-tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json text eol=lf
+tests/FoundationHost/TiaMcp.Engine.Tests/FullEngineRejections.json text eol=lf
 reference/tool-catalog/*.json text eol=lf
 reference/version-feature-matrix.json text eol=lf
 docs/reference/version-tool-catalog.md text eol=lf

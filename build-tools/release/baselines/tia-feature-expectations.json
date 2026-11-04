@@ -841,7 +841,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "14sp1"
     },
@@ -852,7 +852,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "15.1"
     },
@@ -863,7 +863,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "16"
     },
@@ -874,7 +874,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "17"
     },
@@ -885,7 +885,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "18"
     },
@@ -897,7 +897,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "19"
     },
@@ -909,7 +909,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "20"
     },
@@ -921,7 +921,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "21"
     },
@@ -934,7 +934,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.Native.Tests/V20/TiaMcp.Engine.Native.Tests.V20.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.Native.Tests/V20/TiaMcp.Engine.Native.Tests.V20.csproj",
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
@@ -944,7 +944,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.Native.Tests/V21/TiaMcp.Engine.Native.Tests.V21.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.Native.Tests/V21/TiaMcp.Engine.Native.Tests.V21.csproj",
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [

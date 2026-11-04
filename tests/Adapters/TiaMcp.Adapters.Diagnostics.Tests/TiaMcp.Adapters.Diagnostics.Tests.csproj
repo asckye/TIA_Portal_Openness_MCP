@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="System.Text.Json" />
-    <Compile Include="../../Engine/TiaMcp.Engine.Diagnostics.Tests/InvocationJournalGoldenTests.cs" Link="InvocationJournalGoldenTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.Diagnostics.Tests/InvocationJournalGoldenTests.cs" Link="InvocationJournalGoldenTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="../../../src/Adapters/Diagnostics/InvocationJournal.cs" Link="InvocationJournal.cs" />
     <Compile Include="../../../src/Shared/NativeCallDiagnostics.Journal.cs" Link="NativeCallDiagnostics.cs" />

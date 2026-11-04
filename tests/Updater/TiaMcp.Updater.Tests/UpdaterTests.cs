@@ -56,6 +56,10 @@ namespace TiaMcp.Updater.Tests
             const string schema = "schemas/standards/v1/package.schema.json";
             const string relocated = "reference/schemas/standards/v1/package.schema.json";
             const string legacyScript = "scripts/operations/Update-Engine.ps1";
+            string[] developmentFiles = { ".editorconfig", "Directory.Build.props", "src/Shared/CodeAnalysis.props",
+                "src/Shared/DependencyVersions.props", "src/Shared/ReproducibleBuild.props" };
+            foreach (string path in developmentFiles)
+                fixture.Write(path, "previous development file: " + path);
             fixture.Write(schema, "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\"}");
             fixture.Write("runtime/README.md", "old runtime readme");
             fixture.Write("hooks/hooks.json", "{\"hooks\":{}}");
@@ -65,6 +69,8 @@ namespace TiaMcp.Updater.Tests
             Assert.False(fixture.Exists(schema));
             Assert.False(fixture.Exists("runtime/README.md"));
             Assert.False(fixture.Exists(legacyScript));
+            foreach (string path in developmentFiles)
+                Assert.False(fixture.Exists(path));
             Assert.Equal(File.ReadAllText(Path.Combine(Fixture.FindRepositoryRoot(), relocated)), fixture.Text(relocated));
             Assert.Equal(File.ReadAllText(Path.Combine(Fixture.FindRepositoryRoot(), "hooks/hooks.json")), fixture.Text("hooks/hooks.json"));
             Assert.Equal(0, fixture.Run(rollback: true));

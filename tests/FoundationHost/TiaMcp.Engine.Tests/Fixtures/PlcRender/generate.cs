@@ -1,6 +1,6 @@
 #!/usr/bin/env dotnet
 // Regenerate renderer goldens and reviewer samples; no TIA or native API is invoked.
-// Usage: dotnet run tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/generate.cs -- [-Check]
+// Usage: dotnet run tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/generate.cs -- [-Check]
 #:property PublishAot=false
 #:property NuGetAudit=false
 #:project ../../../../../src/Logic/TiaMcp.Logic.csproj
@@ -12,7 +12,7 @@ using TiaMcpServer.ModelContextProtocol;
 var check = args.Length == 1 && args[0] is "-Check" or "--check";
 if (args.Length != 0 && !check) throw new ArgumentException("Unexpected argument");
 var root = FindRoot();
-var fixtures = Path.GetFullPath(Path.Combine(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender"));
+var fixtures = Path.GetFullPath(Path.Combine(root, "tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender"));
 var artifacts = Path.GetFullPath(Path.Combine(root, "bin-build/P6-62"));
 var samples = Path.Combine(artifacts, "samples");
 Directory.CreateDirectory(samples);

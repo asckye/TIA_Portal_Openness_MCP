@@ -5,7 +5,6 @@
 **/TestResults/
 **/bin/Debug/
 **/bin/Release/
-**/bin/check-all/
 TiaMcp_Output/
 *.user
 *.suo
@@ -46,13 +45,10 @@ __pycache__/
 /TiaOpenness.exe
 
 # Per-release compile-only foundation outputs; never distribute Siemens references.
-/tests/Engine/TiaMcp.Engine.ApiCompileChecks/bin/
+/tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/bin/
 /tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/bin/
 /src/PlcWorker/bin/
 /src/Adapters/*/bin/
 
 *.ap14
 *.zap14
-/data/
-
-/staging/

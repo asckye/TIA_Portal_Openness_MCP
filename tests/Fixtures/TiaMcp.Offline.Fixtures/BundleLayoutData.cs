@@ -13,9 +13,9 @@ namespace TiaOpenness.Shared.Tests
                 foreach (string output in new[] { "bin", "bin-v20" })
                     yield return new object[] { "src/Engine/" + output + "/" + configuration + "/net48" };
                 yield return new object[] { "src/FoundationHost/bin/" + configuration + "/net10.0" };
-                yield return new object[] { "tests/Engine/TiaMcp.Engine.Harness/bin/" + configuration + "/net48" };
+                yield return new object[] { "tests/FoundationHost/TiaMcp.Engine.Harness/bin/" + configuration + "/net48" };
                 yield return new object[] { "tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/" + configuration + "/net10.0" };
-                yield return new object[] { "tests/Engine/TiaMcp.Engine.Tests/bin/" + configuration + "/net10.0" };
+                yield return new object[] { "tests/FoundationHost/TiaMcp.Engine.Tests/bin/" + configuration + "/net10.0" };
                 yield return new object[] { "src/Studio/Gui/bin/" + configuration + "/net10.0-windows" };
                 yield return new object[] { "src/Studio/Gui/bin/" + configuration + "/net10.0-windows/bridge" };
                 yield return new object[] { "src/Studio/Bridge/bin/" + configuration + "/net48" };

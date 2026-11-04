@@ -95,7 +95,7 @@
 - 审批和写调用记录在 `<数据根>/logs/audit/audit-<序号>.jsonl`，按 10 MiB 轮转，不自动删除。每条记录带上一条规范化记录的 SHA-256；`tia audit` 校验序号连续和哈希一致。
 - 限制：有效的链只能发现保留记录的篡改、缺失和插入，不能证明日志完整。
 - 实现：`src/Shared/AuditLog.cs`、`src/Shared/AuditCli.cs`。
-- 测试：`tests/Engine/TiaMcp.Engine.Diagnostics.Tests/AuditLogTests.cs`、`tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionAuditHostTests.cs`。
+- 测试：`tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/AuditLogTests.cs`、`tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionAuditHostTests.cs`。
 
 ### SEC-05 HTTP 传输
 
@@ -137,7 +137,7 @@
 - 生态工具以 `python -I -X utf8` 运行桥接脚本，参数经 stdin 以 JSON 传递；`LocalProcess` 不使用 shell，限制超时、输出大小和参数数量，并要求绝对工作目录。桥接脚本只接受固定的命令组。该工具分类为 ONLINE-WRITE，默认 `dryRun`。
 - Openness 用户组修复以 `runas` 运行 `net.exe localgroup`，不经 shell，并拒绝含引号和控制字符的账户名（[ADR 0017](decisions/0017-own-openness-group-code.md)）。
 - 实现：`src/Shared/Host/EcosystemTools.cs`、`src/Shared/LocalProcess.cs`、`scripts/ecosystem/plc_tools_bridge.py`、`src/Shared/WindowsOpennessGroup.cs`。
-- 测试：`tests/Engine/TiaMcp.Engine.Tests/McpLocalProcessTests.cs`、`tests/Engine/TiaMcp.Engine.DiagnosticMembership.Tests/WindowsOpennessGroupTests.cs`。
+- 测试：`tests/FoundationHost/TiaMcp.Engine.Tests/McpLocalProcessTests.cs`、`tests/FoundationHost/TiaMcp.Engine.DiagnosticMembership.Tests/WindowsOpennessGroupTests.cs`。
 
 ### SEC-11 更新器核对完整性
 

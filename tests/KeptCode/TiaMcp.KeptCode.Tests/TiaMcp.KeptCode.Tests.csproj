@@ -25,12 +25,12 @@
     <Compile Include="../../../src/Adapters/Native/Reflection/PropertyPathReader.cs" />
     <Compile Include="../../../src/Adapters/Policy/OpennessReleaseContract.cs" />
 
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/CodeDesignTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/McpLocalProcessTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/PlcEditingTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/SwallowedExceptionsTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/UnifiedScriptSyntaxCheckTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/V21EcosystemTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.Tests/CodeDesignTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.Tests/McpLocalProcessTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.Tests/PlcEditingTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.Tests/SwallowedExceptionsTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.Tests/UnifiedScriptSyntaxCheckTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.Tests/V21EcosystemTests.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareValues.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedCodecs.cs" />
     <Compile Include="../../../src/Updater/UpdaterText.cs" />
@@ -91,9 +91,9 @@
     <Compile Include="../../../src/Updater/UpdaterModels.cs" />
     <Compile Include="../../../src/Updater/Updater.Release.cs" />
     <Compile Include="../../../src/Updater/Updater.Files.cs" />
-    <EmbeddedResource Include="../../Engine/TiaMcp.Engine.Tests/ArgumentRulesCharacterization.json" LogicalName="ArgumentRulesCharacterization.json" />
-    <EmbeddedResource Include="../../Engine/TiaMcp.Engine.Harness/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
-    <EmbeddedResource Include="../../Engine/TiaMcp.Engine.Harness/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />
+    <EmbeddedResource Include="../../FoundationHost/TiaMcp.Engine.Tests/ArgumentRulesCharacterization.json" LogicalName="ArgumentRulesCharacterization.json" />
+    <EmbeddedResource Include="../../FoundationHost/TiaMcp.Engine.Harness/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
+    <EmbeddedResource Include="../../FoundationHost/TiaMcp.Engine.Harness/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />

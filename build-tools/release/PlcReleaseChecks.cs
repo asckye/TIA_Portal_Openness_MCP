@@ -97,7 +97,7 @@ internal static partial class ReleaseCommands
         string temp, string dotnet, string python, string? weaver = null)
     {
         var jobs = new List<PlcReleaseJob>();
-        var harness = Path.Combine(root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
+        var harness = Path.Combine(root, "tests/FoundationHost/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         weaver ??= Path.Combine(root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
         foreach (var key in new[] { "20", "21" })
         {
@@ -130,7 +130,7 @@ internal static partial class ReleaseCommands
                     suite == "foundation-api" ? FoundationApiSuiteArguments(dotnet, apiRoot, logs)
                         : ["-Suite", suite, "-Dotnet", dotnet, "-ResultsDirectory", Path.Combine(logs, suite + "-v" + key + "-plc")], Release: key));
             jobs.Add(new("native-safety-v" + key + "-plc", "offline-suites",
-                Path.Combine(root, $"tests/Engine/TiaMcp.Engine.Native.Tests/V{key}/bin/Release/net48/TiaMcp.Engine.Native.Tests.V{key}.exe"), ["--self-test"], Mode: "native-safety", Release: key));
+                Path.Combine(root, $"tests/FoundationHost/TiaMcp.Engine.Native.Tests/V{key}/bin/Release/net48/TiaMcp.Engine.Native.Tests.V{key}.exe"), ["--self-test"], Mode: "native-safety", Release: key));
             Add("worker-protocol", "plc-worker-isolation", "Test-FoundationTransport.py",
                 ["--plc-worker", "--host-exe", host, "--releases", key, "--plc-sdk-worker", key + "=" + worker,
                  "--public-api-root", apiRoot, "--temp-root", Path.Combine(temp, "transport-v" + key + "-plc"), "--output", Path.Combine(logs, "transport-v" + key + "-plc")], mode: "worker-protocol");

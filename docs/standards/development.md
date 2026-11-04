@@ -185,24 +185,25 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 ## 3 仓库结构
 
-根目录按维护者 2026-11-03 批准的整理方案组织，分批实施；尚未迁完的位置在表中注明。
+根目录按维护者 2026-11-04 确认的整理方案组织；受跟踪的根目录项仅为下表列出的目录与下文列出的文件。
 
 | 路径 | 内容 |
 |---|---|
 | `src/` | 产品源码：八个发布键共用的 FoundationHost 宿主、PlcWorker、按发布键编译的适配器及其契约、WorkerChannel、OnlineChannels、纯逻辑库 `Logic`、共享源码 `Shared`、工作台 `Studio`、Updater 和随包工具。`src/Engine` 残余源码已由 Q2 删除；`src/EngineHost` 是八版共享的宿主包装链代码，保留历史名称 |
-| `tests/` | 测试工程，按 Shared、FoundationHost、Adapters、WorkerChannel、Studio、Generation、Release、Tools、Updater 等分组，目录与工程同名；`tests/test-suites.json` 是套件注册表 |
+| `tests/` | 测试工程，按 Shared、FoundationHost、Adapters、WorkerChannel、Studio、Generation、Release、Tools、Updater 等分组；原 `tests/Engine/` 工程已移入 `tests/FoundationHost/`，保留工程名、程序集名、命名空间与套件名；`tests/test-suites.json` 是套件注册表 |
 | `build-tools/` | 全部 C# 构建、检查与发布自动化：`release`（唯一入口）、`common`、`native-call-weaver` |
 | `scripts/` | 只放随包交付的 Python 和手动诊断脚本；开发用的 Python 检查和生成器（`scripts/checks`、`scripts/generate`）正由 P8-10 移植到 `build-tools/release` |
-| `reference/` | 生成器输入和随包参考数据：`tool-examples`（调用、语言文件、结果解释、调用顺序）、`tool-catalog`、固定来源的 Siemens 官方示例与授权记录、`version-feature-matrix.json`、`v21-ecosystem.json`；根目录的 `schemas/` 以后移到这里 |
+| `reference/` | 生成器输入和随包参考数据：`tool-examples`（调用、语言文件、结果解释、调用顺序）、`tool-catalog`、固定来源的 Siemens 官方示例与授权记录、`version-feature-matrix.json`、`v21-ecosystem.json`、`schemas/standards/` |
 | `manifest/` | 版本与工具数据、契约基线 `contracts/v4/baseline`；只由正式生成器写入。准备阶段的交付清单写入暂存包，候选与日志留在 `bin-build/prepared/`，不在 Git 中记录构建或发布结果 |
 | `templates/` | 随包的编程与工程模板 |
 | `third_party/` | 固定版本的第三方组件，各自带许可证和 `UPSTREAM.json` |
-| `plugin/` | Claude Code 插件技能，引导 AI 按版本使用 `GetToolUsage` 示例；插件定义在 `.claude-plugin/`，`hooks/` 保留在根目录，避免早期安装更新后自动加载旧钩子并重复执行 |
+| `plugin/`、`.claude-plugin/`、`hooks/` | Claude Code 插件技能、插件定义与钩子，引导 AI 按版本使用 `GetToolUsage` 示例；钩子保留在根目录，避免早期安装更新后自动加载旧钩子并重复执行 |
+| `.github/` | GitHub 工作流和仓库模板 |
 | `docs/` | `standards/`（规范与 ADR）、`plan/`（计划与进展）、`manuals/`（操作手册）、`archive/`（冻结的历史）和用户文档 |
-| `bin-build/` | 检查与暂存输出：检查输出、测试结果、暂存、构建缓存（主检出的 `bin-build/cache/`，各 worktree 共用）和开发时的数据目录 `bin-build/data/`（安装包用 `data/`）；不入 Git |
-| `sdk/` | 本机的八版 Siemens PublicAPI 副本（`TIA_V*_PublicAPI`）；不入 Git，不分发 |
+| `bin-build/`（忽略） | 检查与暂存输出：检查输出、测试结果、暂存、构建缓存（主检出的 `bin-build/cache/`，各 worktree 共用）和开发时的数据目录 `bin-build/data/`（安装包用 `data/`） |
+| `sdk/`（忽略） | 本机的八版 Siemens PublicAPI 副本（`TIA_V*_PublicAPI`）；不分发 |
 
-根目录文件：`Version.props`（产品版本的唯一来源）、`Directory.Build.props`、`global.json`、`.editorconfig`、`TiaPortalOpenness.slnx`（全部开发工程）和 `TiaPortalOpenness.Offline.slnx`（不需要 Siemens 程序集的工程；整理方案改为一个 `.slnx`）。构建生成的八个运行目录和工作台目前仍输出到根目录 `runtime/`（只跟踪 README，布局与安装包相同），整理方案把运行输出改到 `bin-build/` 下（待核对）。
+受跟踪的根目录文件：`.editorconfig`、`.gitattributes`、`.gitignore`、`AGENTS.md`、`CHANGELOG.md`、`CLAUDE.md`、`Directory.Build.props`、`Directory.Packages.props`、`LICENSE`、`NOTICE.md`、`README.md`、`README.zh-CN.md`、`TiaPortalOpenness.slnx`、`Version.props`、`global.json`。`Version.props` 是产品版本的唯一来源；离线工程过滤器在 `build-tools/TiaPortalOpenness.Offline.slnf`。根目录 `runtime/`、`TiaOpenness.exe`、`TiaMcp_Output/` 和各项目 `bin`/`obj` 是保留的忽略输出；原因见[偏差登记](README.md#项目自己的取舍偏差登记)。
 
 归档的[仓库结构](../archive/development/repository-layout.md)按历史原样保留，其中 Studio 上游完整源码与历史归档已由 THIRD-1 删除；当前仅保留交付源码、README、LICENSE、UPSTREAM.json 及 NOTICE 中的来源记录。根目录 `runtime/` 与各项目 `bin`/`obj` 保留，不统一搬入 `bin-build/`。
 

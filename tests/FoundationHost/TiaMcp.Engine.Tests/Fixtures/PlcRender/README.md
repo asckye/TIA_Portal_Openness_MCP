@@ -5,7 +5,7 @@
 From the repository root, run:
 
 ```text
-dotnet run tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/generate.cs
+dotnet run tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/generate.cs
 ```
 
 The generator invokes `PlcProgramRenderer.Write` through a temporary .NET runner

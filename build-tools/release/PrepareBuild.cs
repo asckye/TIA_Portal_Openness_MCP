@@ -229,10 +229,10 @@ internal sealed class PrepareBuild
 
     private void TestProducers()
     {
-        Build("tests/Engine/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj", "diagnostics-tests");
-        Build("tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj", "api-compile-checks");
+        Build("tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj", "diagnostics-tests");
+        Build("tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj", "api-compile-checks");
         Build("tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj", "adapter-diagnostics-tests");
-        Build("tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj", "harness");
+        Build("tests/FoundationHost/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj", "harness");
         Build("tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj", "transport-fixture");
         var fixtures = new List<Project>();
         foreach (var unit in PlcWorkerFixtures.Builds(PlcWorkerFixtures.Keys))
@@ -253,7 +253,7 @@ internal sealed class PrepareBuild
                 "fixture-adapter-" + unit.Release + "-" + unit.Variant);
         }
         foreach (var key in new[] { "20", "21" })
-            Build($"tests/Engine/TiaMcp.Engine.Native.Tests/V{key}/TiaMcp.Engine.Native.Tests.V{key}.csproj", "native-tests-" + key,
+            Build($"tests/FoundationHost/TiaMcp.Engine.Native.Tests/V{key}/TiaMcp.Engine.Native.Tests.V{key}.csproj", "native-tests-" + key,
                 "-p:SiemensEngineeringDirectory=" + Path.Combine(context.PublicApiRoot, ReleaseCommands.PlcWorkerApi(key).Directory));
         // Runfile producers are serialized because their project references can share
         // outputs. The SDK rejects -m for file apps; use its normal build entry point.

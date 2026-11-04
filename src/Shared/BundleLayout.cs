@@ -74,7 +74,7 @@ namespace TiaOpenness.Shared
         public static string WorkbenchControlImagePath(string root, string baseDirectory)
         {
             foreach (var configuration in new[] { "Release", "Debug" })
-                foreach (var anchor in new[] { "src/FoundationHost/bin/", "tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/", "tests/Engine/TiaMcp.Engine.Tests/bin/" })
+                foreach (var anchor in new[] { "src/FoundationHost/bin/", "tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/", "tests/FoundationHost/TiaMcp.Engine.Tests/bin/" })
                     if (SameRoot(FromAnchor(new DirectoryInfo(Path.GetFullPath(baseDirectory)), anchor + configuration + "/net10.0"), root))
                         return Combine(root, "src/Studio/Gui/bin/" + configuration + "/net10.0-windows/TiaOpenness.exe");
             return Combine(root, "runtime/studio/TiaOpenness.exe");
@@ -226,9 +226,9 @@ namespace TiaOpenness.Shared
                         "src/FoundationHost/bin/" + configuration + "/net10.0");
                     if (foundationRoot != null) return foundationRoot;
                     foreach (var harness in new[] {
-                        "tests/Engine/TiaMcp.Engine.Harness/bin/" + configuration + "/net48",
+                        "tests/FoundationHost/TiaMcp.Engine.Harness/bin/" + configuration + "/net48",
                         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/" + configuration + "/net10.0",
-                        "tests/Engine/TiaMcp.Engine.Tests/bin/" + configuration + "/net10.0" })
+                        "tests/FoundationHost/TiaMcp.Engine.Tests/bin/" + configuration + "/net10.0" })
                     {
                         var harnessRoot = FromAnchor(directory, harness);
                         if (harnessRoot != null) return harnessRoot;

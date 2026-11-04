@@ -45,7 +45,7 @@
     "arguments": []
   },
   "version-policy": {
-    "project": "tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj",
     "minimumPassed": 10,
     "maximumSkipped": 0,
     "arguments": []
@@ -153,13 +153,13 @@
     "arguments": []
   },
   "diagnostic-membership": {
-    "project": "tests/Engine/TiaMcp.Engine.DiagnosticMembership.Tests/TiaMcp.Engine.DiagnosticMembership.Tests.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.DiagnosticMembership.Tests/TiaMcp.Engine.DiagnosticMembership.Tests.csproj",
     "minimumPassed": 10,
     "maximumSkipped": 0,
     "arguments": []
   },
   "prompt-registration": {
-    "project": "tests/Engine/TiaMcp.Engine.PromptRegistration.Tests/TiaMcp.Engine.PromptRegistration.Tests.csproj",
+    "project": "tests/FoundationHost/TiaMcp.Engine.PromptRegistration.Tests/TiaMcp.Engine.PromptRegistration.Tests.csproj",
     "minimumPassed": 195,
     "maximumSkipped": 0,
     "arguments": []
@@ -195,7 +195,7 @@
     "arguments": []
   },
   "shared-session": {
-    "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
+    "project": "tests/FoundationHost/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
     "minimumPassed": 6,
     "maximumSkipped": 0,
     "arguments": [],
@@ -222,7 +222,7 @@
     ]
   },
   "shared-lifecycle": {
-    "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
+    "project": "tests/FoundationHost/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
     "minimumPassed": 6,
     "maximumSkipped": 0,
     "arguments": [

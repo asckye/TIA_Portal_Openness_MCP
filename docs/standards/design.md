@@ -226,6 +226,19 @@ runtime/v<发布键>/        （八个发布键相同）
 
 交付包由 `prepare` 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，排除 `runtime/verification/`；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。文件清单 `manifest/multi-version-build.json` 只在暂存目录生成，不入 Git；工具范围见[版本工具矩阵](../reference/version-tools.md)。已发布的归档保留各自记录的范围。
 
+以下交付路径已冻结，不能作为仓库目录整理的一部分移动：
+
+| 路径 | 固定原因 |
+|---|---|
+| `scripts/operations/delivery-files.json` | 已安装的 Updater 在 `ApplyRelease` 中从新包读取交付规则 |
+| `manifest/delivery.json` | 已安装的 Updater、工作台和 `UpdateCheck` 读取版本信息 |
+| `runtime/tools/TiaMcp.Updater.exe`、`.exe.config` | 更新器自身路径与交付规则的 `requiredFiles` |
+| `runtime/v<发布键>/TiaMcp.FoundationHost.exe` | 用户的 MCP 客户端配置保存此绝对路径 |
+| `runtime/tools/TiaMcp.WriteGuard.exe`、`runtime/tools/TiaMcp.PluginLauncher.exe` | `hooks/hooks.json` 与 `.claude-plugin/plugin.json` 通过 `${CLAUDE_PLUGIN_ROOT}` 引用 |
+| `hooks/hooks.json` | 插件根自动加载；移动后，旧清单无法清理的副本可能重复加载 |
+| `TiaOpenness.exe` | 包根启动器与用户快捷方式 |
+| `.claude-plugin/` | Claude Code 插件约定 |
+
 ### 3.2 包根与资源定位
 
 [`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为包根标记，维护资源相对路径和同级产品路由；宿主（含命令行）、工作台和适配器使用同一解析规则。
@@ -761,7 +774,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 | 规则 | 依据 |
 |---|---|
-| MUST：标准包是“目录 + JSON 清单与分部文件”，分发时整个目录无损打成 zip；包清单与分部只用 JSON，按 [`reference/schemas/standards/v1`](../../schemas/standards/v1/README.md) 的 JSON Schema 2020-12 校验，并做静态交叉引用检查。包用 SemVer，格式用整数 `schemaVersion` | ADR 待补写 B22 |
+| MUST：标准包是“目录 + JSON 清单与分部文件”，分发时整个目录无损打成 zip；包清单与分部只用 JSON，按 [`reference/schemas/standards/v1`](../../reference/schemas/standards/v1/README.md) 的 JSON Schema 2020-12 校验，并做静态交叉引用检查。包用 SemVer，格式用整数 `schemaVersion` | ADR 待补写 B22 |
 | MUST：规则只用声明式结构（`forEach`、`when`、命名模板）和受限占位符（字段路径与白名单函数）；不执行包内代码，不用正则替换链、任意表达式或网络访问；包可以带 SCL、库文件等资源，但不运行它们。复杂逻辑放在包的 SCL 源或库类型中 | ADR 待补写 B22；SEC-08 |
 | MUST：`extends` 与 `dependsOn` 用包 id 加版本范围；派生包按条目 id 整条替换，不做深层合并；`parts.rules` 是精确文件路径列表，不展开 glob | `src/Logic/Generation/` |
 | MUST：加载限制默认 1,024 个文件、2,048 个条目、单文件 16 MiB、总量 64 MiB、压缩 zip 32 MiB；路径最多 240 个 UTF-16 单元、16 段，NFC、正斜杠，拒绝越界、链接、Windows 保留名、大小写重复和文件与目录冲突；JSON 是无 BOM 的严格 UTF-8，拒绝重复键和非法 Unicode，深度最多 64；zip 只在内存中读取，不解压 | SEC-08 |

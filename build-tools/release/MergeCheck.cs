@@ -10,7 +10,7 @@ namespace TiaMcp.ReleaseTool;
 internal static class MergeCheck
 {
     internal const string ConfigurationProject = "tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj";
-    internal const string DiagnosticsProject = "tests/Engine/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj";
+    internal const string DiagnosticsProject = "tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj";
     internal sealed record Evaluation(string[] Inputs, string[] Projects);
     internal sealed record Job(string Name, string Executable, string[] Arguments, bool Serial = false);
     internal sealed class Plan
@@ -241,7 +241,7 @@ internal static class MergeCheck
         {
             Reason(plan.Builds, DiagnosticsProject, "native-diagnostics");
             Reason(plan.Builds, "build-tools/native-call-weaver/NativeCallWeaver.csproj", "native-diagnostics");
-            plan.Checks.Add(new("native-diagnostics", python, ["scripts/checks/Test-NativeDiagnostics.py", "--fixture", "tests/Engine/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe",
+            plan.Checks.Add(new("native-diagnostics", python, ["scripts/checks/Test-NativeDiagnostics.py", "--fixture", "tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe",
                 "--weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll", "--output", Path.Combine(output, "native-diagnostics")], true));
         }
     }

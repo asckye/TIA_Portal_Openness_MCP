@@ -31,9 +31,9 @@ namespace TiaOpenness.Shared.Tests
                 foreach (string output in new[] { "bin", "bin-v20" })
                     yield return new object[] { "src/Engine/" + output + "/" + configuration + "/net48" };
                 yield return new object[] { "src/FoundationHost/bin/" + configuration + "/net10.0" };
-                yield return new object[] { "tests/Engine/TiaMcp.Engine.Harness/bin/" + configuration + "/net48" };
+                yield return new object[] { "tests/FoundationHost/TiaMcp.Engine.Harness/bin/" + configuration + "/net48" };
                 yield return new object[] { "tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/" + configuration + "/net10.0" };
-                yield return new object[] { "tests/Engine/TiaMcp.Engine.Tests/bin/" + configuration + "/net10.0" };
+                yield return new object[] { "tests/FoundationHost/TiaMcp.Engine.Tests/bin/" + configuration + "/net10.0" };
                 yield return new object[] { "src/Studio/Gui/bin/" + configuration + "/net10.0-windows" };
                 yield return new object[] { "src/Studio/Gui/bin/" + configuration + "/net10.0-windows/bridge" };
                 yield return new object[] { "src/Studio/Bridge/bin/" + configuration + "/net48" };
@@ -99,10 +99,10 @@ namespace TiaOpenness.Shared.Tests
         [InlineData("tools/other/bin/Release/net48")]
         [InlineData("custom/a/b")]
         [InlineData("tests/Other/TiaMcp.Engine.Harness/bin/Release/net48")]
-        [InlineData("tests/Engine/TiaMcp.Engine.Harness/bin/Custom/net48")]
-        [InlineData("tests/Engine/TiaMcp.Engine.Harness/bin/Release/net10.0")]
+        [InlineData("tests/FoundationHost/TiaMcp.Engine.Harness/bin/Custom/net48")]
+        [InlineData("tests/FoundationHost/TiaMcp.Engine.Harness/bin/Release/net10.0")]
         [InlineData("tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/Release/net48")]
-        [InlineData("tests/Engine/TiaMcp.Engine.Tests/bin-v20/Release/net10.0")]
+        [InlineData("tests/FoundationHost/TiaMcp.Engine.Tests/bin-v20/Release/net10.0")]
         public void Unknown_layouts_cannot_use_an_ancestor_bundle(string anchor)
         {
             Bundle(scratch);
@@ -190,7 +190,7 @@ namespace TiaOpenness.Shared.Tests
             Assert.Null(BundleLayout.FindResourceForStudio(BundleResource.DeliveryManifest, output));
             Put(scratch, "manifest/delivery.json");
             Assert.Equal(At(scratch, "manifest/delivery.json"), BundleLayout.FindResourceForStudio(BundleResource.DeliveryManifest, output));
-            foreach (string anchor in new[] { "src/FoundationHost/bin/Release/net10.0", "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48" })
+            foreach (string anchor in new[] { "src/FoundationHost/bin/Release/net10.0", "tests/FoundationHost/TiaMcp.Engine.Harness/bin/Release/net48" })
                 Assert.Null(BundleLayout.FindRootForStudio(Output(scratch, anchor)));
         }
 

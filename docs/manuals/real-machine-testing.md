@@ -37,7 +37,7 @@ python scripts/checks/Test-NativeMcpSession.py --exe '<包根>\runtime\v21\TiaMc
 
 ## 独立原生生命周期测试
 
-`tests/Engine/TiaMcp.Engine.Native.Tests` 的 V20、V21 测试程序（x64/net48）直接调用 Openness，不经 MCP 分发；`scripts/checks/Test-NativeLifecycle.py` 监督整个测试进程。
+`tests/FoundationHost/TiaMcp.Engine.Native.Tests` 的 V20、V21 测试程序（x64/net48）直接调用 Openness，不经 MCP 分发；`scripts/checks/Test-NativeLifecycle.py` 监督整个测试进程。
 
 - 场景：只建自己的 `WithoutUserInterface` 实例和唯一 scratch 目录，没有 Attach、项目路径、PLC 地址或 PID 参数。每轮建项目，提交一个设备组事务、回滚另一个，保存、关闭、重开并核对持久化，共 7 项断言；只关闭本轮的 `Project`，只释放本轮的 `TiaPortal`。
 - 判定：进程正常退出、版本与轮次和 7 项断言正确、各阶段 `BEFORE`/`RETURNED`/`THREW` 日志完全配对、清理完成，才报告 PASSED。失败保留 scratch 和证据；监督器只终止它启动的程序，超时后原生结果未知，TIA 可能仍在运行。
@@ -45,7 +45,7 @@ python scripts/checks/Test-NativeMcpSession.py --exe '<包根>\runtime\v21\TiaMc
 - 获准执行时需要匹配版本的 TIA、许可、Openness 用户组和测试 EXE 的防火墙许可，先跑 1 轮；`--timeout-seconds` 是总期限：
 
 ```powershell
-python scripts/checks/Test-NativeLifecycle.py --runner tests/Engine/TiaMcp.Engine.Native.Tests/V21/bin/Release/net48/TiaMcp.Engine.Native.Tests.V21.exe --major 21 --run-live --confirm-new-portal --output '<不存在的绝对目录>' --iterations 1 --timeout-seconds 600
+python scripts/checks/Test-NativeLifecycle.py --runner tests/FoundationHost/TiaMcp.Engine.Native.Tests/V21/bin/Release/net48/TiaMcp.Engine.Native.Tests.V21.exe --major 21 --run-live --confirm-new-portal --output '<不存在的绝对目录>' --iterations 1 --timeout-seconds 600
 ```
 
 输出 `supervisor-result.json`、`runner-output.log`、`native/native-result.json` 和 `native/native-events.jsonl`；报告缺失本身就是失败证据。依据为项目保存的 Siemens 指南 [openness-testing](../../reference/siemens-openness/skills/openness-testing/SKILL.md)、[session-and-project](../../reference/siemens-openness/skills/session-and-project/SKILL.md)、[threading-and-concurrency](../../reference/siemens-openness/skills/threading-and-concurrency/SKILL.md)；指南面向 V21+，V20 另按本地 PublicAPI 编译核对。

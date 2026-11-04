@@ -9,10 +9,10 @@
     <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="global,enginehost" />
     <!-- The host-registered tools (LegacyHostToolRegistry) are the successor subject of the engine reflection rows. -->
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" />
-    <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/PlcExchangeContractsTests.cs" Link="PlcExchangeContractsTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/HmiExchangeContractsTests.cs" Link="HmiExchangeContractsTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/P707bNativeTests.cs" Link="P707bNativeTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/P707cNativeTests.cs" Link="P707cNativeTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.PlcExchange.Tests/PlcExchangeContractsTests.cs" Link="PlcExchangeContractsTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.PlcExchange.Tests/HmiExchangeContractsTests.cs" Link="HmiExchangeContractsTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.PlcExchange.Tests/P707bNativeTests.cs" Link="P707bNativeTests.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.Engine.PlcExchange.Tests/P707cNativeTests.cs" Link="P707cNativeTests.cs" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>ExchangeRelease</_Parameter1><_Parameter2>$(EngineRelease)</_Parameter2>
     </AssemblyAttribute>

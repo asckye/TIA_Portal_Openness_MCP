@@ -36,11 +36,6 @@
       "runtime/tools/TiaMcp.WriteGuard.dll",
       "runtime/tools/TiaMcp.WriteGuard.deps.json",
       "runtime/tools/TiaMcp.WriteGuard.runtimeconfig.json",
-      ".editorconfig",
-      "Directory.Build.props",
-      "src/Shared/CodeAnalysis.props",
-      "src/Shared/DependencyVersions.props",
-      "src/Shared/ReproducibleBuild.props",
       "runtime/tools/TiaMcp.PluginLauncher.exe",
       "runtime/tools/TiaMcp.PluginLauncher.dll",
       "runtime/tools/TiaMcp.PluginLauncher.deps.json",
@@ -76,6 +71,7 @@
   },
   "exclude": {
     "files": [
+      "scripts/operations/Update-Engine.ps1",
       "runtime/v20/TiaMcp.Engine.V20.exe",
       "runtime/v20/TiaMcp.Engine.V20.exe.config",
       "runtime/v20/TiaMcp.Adapter.20.dll",
@@ -221,6 +217,11 @@
   },
   "legacyCleanup": {
     "files": [
+      ".editorconfig",
+      "Directory.Build.props",
+      "src/Shared/CodeAnalysis.props",
+      "src/Shared/DependencyVersions.props",
+      "src/Shared/ReproducibleBuild.props",
       ".gitattributes",
       ".gitignore",
       "AGENTS.md",

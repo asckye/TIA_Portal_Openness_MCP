@@ -2,7 +2,7 @@
 
 日常连接配置使用根目录 `TiaOpenness.exe`。下列脚本面向维护、诊断或 CLI 用户；示例从仓库根目录执行。
 
-独立开发者工具使用相邻的 .NET 10 C# file-based app：`dotnet run <path.cs> -- <args>`。需要反射 net48 引擎程序集的检查由 `tests/Engine/TiaMcp.Engine.Harness` 承载，调用形如 `TiaMcp.Engine.Harness.exe <engine.exe> <mode> <args>`。
+独立开发者工具使用相邻的 .NET 10 C# file-based app：`dotnet run <path.cs> -- <args>`。需要反射 net48 引擎程序集的检查由 `tests/FoundationHost/TiaMcp.Engine.Harness` 承载，调用形如 `TiaMcp.Engine.Harness.exe <engine.exe> <mode> <args>`。
 
 | 分类 | 入口 | 用途 |
 |---|---|---|

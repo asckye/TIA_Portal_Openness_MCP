@@ -126,7 +126,7 @@ public sealed class SoftwareUnitCoverageTests
     {
         string root = Path.GetFullPath(Path.Combine("bin-build", "su1-fixtures", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
-        string fixture = Path.Combine(Repository(), "tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BranchShapes.xml");
+        string fixture = Path.Combine(Repository(), "tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BranchShapes.xml");
         string path = Path.Combine(root, "BranchShapes.xml"); File.Copy(fixture, path);
         var original = File.ReadAllBytes(path);
         int importCalls = 0;

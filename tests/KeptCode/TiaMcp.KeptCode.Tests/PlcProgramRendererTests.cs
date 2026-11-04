@@ -99,7 +99,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Every_light_token_has_an_explicit_dark_counterpart_with_the_README_palette()
         {
-            string html = RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Catalog/Primer.xml", out _);
+            string html = RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Catalog/Primer.xml", out _);
             var blocks = Regex.Matches(html, @":root\{([^}]+)\}").Cast<Match>().Select(m =>
                 Regex.Matches(m.Groups[1].Value, @"--([\w]+):([^;}]+)").Cast<Match>().ToDictionary(t => t.Groups[1].Value, t => t.Groups[2].Value)).ToArray();
             Assert.Equal(2, blocks.Length);
@@ -136,7 +136,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Terminal_coils_and_boolean_box_outputs_reach_the_right_rail_on_a_640_unit_canvas()
         {
-            var primer = Svgs(RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Catalog/Primer.xml", out _));
+            var primer = Svgs(RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Catalog/Primer.xml", out _));
             foreach (var svg in primer)
             {
                 Assert.Equal("640", ((string)svg.Attribute("viewBox")!).Split(' ')[2]);
@@ -147,7 +147,7 @@ namespace TiaMcp.Engine.Tests
                 Assert.Contains(svg.Elements(), e => (string?)e.Attribute("class") == "wire" && (string?)e.Attribute("d") == $"M {coil.right} {coil.y} H 640");
                 Assert.Contains(svg.Elements(), e => (string?)e.Attribute("class") == "wire" && ((string)e.Attribute("d")!).StartsWith($"M {coil.left} {coil.y} H ", StringComparison.Ordinal));
             }
-            var boxes = Svgs(RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BoxParts.xml", out _));
+            var boxes = Svgs(RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BoxParts.xml", out _));
             foreach (var svg in boxes)
             {
                 var node = svg.Descendants().Single(e => e.Attribute("data-uid") != null);
@@ -182,7 +182,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Primer_svg_uses_contact_coil_rail_and_timer_geometry_without_losing_pins()
         {
-            string html = RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BoxParts.xml", out _);
+            string html = RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BoxParts.xml", out _);
             var svgs = Svgs(html);
             Assert.All(svgs, svg => Assert.Equal("640", (string?)svg.Attribute("width")));
             Assert.Contains("svg .symbol,svg .power-rail{stroke-width:2}", html);
@@ -194,7 +194,7 @@ namespace TiaMcp.Engine.Tests
             Assert.True((int)timer.Elements().Single(e => (string?)e.Attribute("class") == "instance").Attribute("y")! < (int)box.Attribute("y")!);
             foreach (var pin in timer.Elements().Where(e => (string?)e.Attribute("class") == "pin-name"))
                 Assert.Equal(pin.Value == "Q" || pin.Value == "ET" ? (int)box.Attribute("x")! + 142 : (int)box.Attribute("x")! + 8, (int)pin.Attribute("x")!);
-            var drawing = Svgs(RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/RoutingParts.xml", out _))[0];
+            var drawing = Svgs(RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/RoutingParts.xml", out _))[0];
             var contact = drawing.Descendants().Single(e => (string?)e.Attribute("data-uid") == "10");
             var path = (string)contact.Elements().Single(e => (string?)e.Attribute("class") == "symbol").Attribute("d")!;
             var bars = Regex.Matches(path, @"M (-?\d+) (-?\d+) V (-?\d+)").Cast<Match>().ToArray();
@@ -219,7 +219,7 @@ namespace TiaMcp.Engine.Tests
             string html = File.ReadAllText(Output());
             foreach (string input in inputs)
                 html = html.Replace(System.Net.WebUtility.HtmlEncode(Path.Combine(exports, Path.GetFileName(input))), "templates/mcp-full-e2e-verify/plc/blocks/" + Path.GetFileName(input));
-            Assert.Equal(File.ReadAllText(Path.Combine(repository.FullName, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Catalog/cookbook.html")), html);
+            Assert.Equal(File.ReadAllText(Path.Combine(repository.FullName, "tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Catalog/cookbook.html")), html);
             Assert.Contains("PROGRAM ATLAS", html);
             Assert.Contains("class=\"uncalled\"", html);
             Assert.Contains("class=\"called-by\">0 · Not called", html);
@@ -229,7 +229,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Primer_sample_keeps_mixed_networks_and_matches_generated_golden()
         {
-            string relative = "tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Catalog/Primer.xml";
+            string relative = "tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Catalog/Primer.xml";
             string html = RenderFixture(relative, out string input);
             Assert.Equal(File.ReadAllText(input + ".html"), html.Replace(System.Net.WebUtility.HtmlEncode(input), relative));
             Assert.Equal(3, Svgs(html).Length);
@@ -274,7 +274,7 @@ namespace TiaMcp.Engine.Tests
             var repository = new DirectoryInfo(AppContext.BaseDirectory);
             while (repository != null && !File.Exists(Path.Combine(repository.FullName, "Version.props"))) repository = repository.Parent;
             Assert.NotNull(repository);
-            var goldenRoot = Path.Combine(repository!.FullName, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender");
+            var goldenRoot = Path.Combine(repository!.FullName, "tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender");
             var fixtures = Directory.GetFiles(goldenRoot, "*.html");
             Assert.Equal(6, fixtures.Length);
             int index = 0;
@@ -371,7 +371,7 @@ namespace TiaMcp.Engine.Tests
         [InlineData("EdgeParts")][InlineData("BoxParts")][InlineData("RoutingParts")][InlineData("BranchShapes")]
         public void Synthetic_part_fixtures_match_complete_html_goldens(string name)
         {
-            string relative = "tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/" + name + ".xml";
+            string relative = "tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/" + name + ".xml";
             string html = RenderFixture(relative, out string input);
             Assert.Equal(File.ReadAllText(input + ".html"), html.Replace(System.Net.WebUtility.HtmlEncode(input), relative));
             Assert.DoesNotContain(">pre</text>", html);
@@ -381,7 +381,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Edge_parts_keep_memory_below_the_symbol_or_trigger_box()
         {
-            string html = RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/EdgeParts.xml", out _);
+            string html = RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/EdgeParts.xml", out _);
             var svgs = Svgs(html);
             string[] names = { "PContact", "NContact", "PCoil", "NCoil", "PBox", "NBox" };
             Assert.Equal(names.Length, svgs.Length);
@@ -411,7 +411,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Routing_parts_join_branches_without_boxes_and_pre_enters_the_visible_boolean_pin()
         {
-            var svgs = Svgs(RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/RoutingParts.xml", out _));
+            var svgs = Svgs(RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/RoutingParts.xml", out _));
             Assert.Equal(new[] { "10", "11", "12", "17" }, svgs[0].Descendants().Where(e => e.Attribute("data-uid") != null).Select(e => (string)e.Attribute("data-uid")!));
             Assert.DoesNotContain(svgs[0].Descendants(), e => e.Name.LocalName == "rect");
             AssertParallelGeometry(svgs[0]);
@@ -447,7 +447,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Routing_layout_retains_nested_groups_and_ignores_routing_part_order_and_names()
         {
-            var svgs = Svgs(RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BranchShapes.xml", out _));
+            var svgs = Svgs(RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BranchShapes.xml", out _));
             var a = SymbolBounds(svgs[0], "10"); var b = SymbolBounds(svgs[0], "11"); var c = SymbolBounds(svgs[0], "12");
             var d = SymbolBounds(svgs[0], "14"); var e = SymbolBounds(svgs[0], "15"); var coil = SymbolBounds(svgs[0], "17");
             Assert.Equal(a.left, e.left);
@@ -501,7 +501,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Boxes_keep_types_parameters_instances_and_unknown_part_notes()
         {
-            string html = RenderFixture("tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BoxParts.xml", out _);
+            string html = RenderFixture("tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/Parts/BoxParts.xml", out _);
             var svgs = Svgs(html);
             Assert.Equal(12, svgs.Length);
             Assert.Contains("FBD shown as ladder equivalent", html);
