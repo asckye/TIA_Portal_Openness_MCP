@@ -382,6 +382,8 @@ internal static class Prepare
     internal static List<string> DeliveryErrors(string stage, DeliveryRules rules)
     {
         var errors = new List<string>();
+        try { TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.Require(stage); }
+        catch (TiaMcp.Logic.ModelContextProtocol.DecoderRuntimeException ex) { errors.Add(ex.Message); }
         foreach (var path in Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories).Select(path => Path.GetRelativePath(stage, path).Replace('\\', '/')))
             if (!rules.Delivered(path) || ReleaseCommands.Excluded(path))
                 errors.Add("Non-delivery file in stage: " + path);

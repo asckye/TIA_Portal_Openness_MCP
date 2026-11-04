@@ -24,17 +24,23 @@ public sealed class Round2DecoderRuntimeTests
     }
 
     [Fact]
-    public void Bundle_validation_checks_an_existing_runtime_receipt_even_without_binaries()
+    public void Delivery_validation_checks_an_existing_runtime_receipt()
     {
         string root = Path.Combine(Repository.FindRoot(), "bin-build", "decoder-receipt-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(root, DecoderRuntime.RelativeDirectory));
         try
         {
             File.WriteAllText(Path.Combine(root, DecoderRuntime.RelativeDirectory, "runtime.json"), "{}");
-            var result = ProcessRunner.Run("dotnet", [typeof(ReleaseCommands).Assembly.Location, "validate-bundle", "-NoBinaries", "-BundleRoot", root], root,
-                new Dictionary<string, string?> { ["TIA_MCP_CHECK_RUNNER"] = "1" });
-            Assert.NotEqual(0, result.ExitCode);
-            Assert.Contains("Bundled decoder runtime is missing or invalid. Repair the installation.", result.StandardOutput);
+            Directory.CreateDirectory(Path.Combine(root, "runtime"));
+            foreach (var relative in new[] { "manifest/package-manifest.json", "templates/project-blueprints/full_plc_hmi_project.json" })
+            {
+                var path = Path.Combine(root, relative);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                File.Copy(Path.Combine(Repository.FindRoot(), relative), path);
+            }
+            Prepare.WriteJson(Path.Combine(root, Prepare.InventoryPath), new { files = Prepare.Inventory(root).Select(row => new { path = row.Key, sha256 = row.Value }) });
+            var errors = Prepare.DeliveryErrors(root, DeliveryRules.Load(Repository.FindRoot()));
+            Assert.Contains("Bundled decoder runtime is missing or invalid. Repair the installation.", errors);
         }
         finally { Directory.Delete(root, true); }
     }

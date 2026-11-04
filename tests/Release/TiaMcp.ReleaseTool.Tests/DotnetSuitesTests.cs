@@ -17,6 +17,61 @@ public class DotnetSuitesTests
     }
 
     [Fact]
+    public void HostParityBuildsUseStableRestorePropertiesWithoutAnInertDefine()
+    {
+        using var tree = new StaticTree();
+        int builds = 0;
+        HostParity.Prepare(tree.Root, tree.Root, "dotnet", "sdk", "offline.config", (_, arguments, _, _) =>
+        {
+            var args = arguments.ToArray();
+            Assert.Contains("-p:UseSharedCompilation=false", args);
+            Assert.Contains("-p:NuGetAudit=false", args);
+            Assert.Contains("-p:TiaPublicApiRoot=sdk", args);
+            Assert.Contains("-p:RestoreConfigFile=offline.config", args);
+            Assert.DoesNotContain(args, arg => arg.StartsWith("-p:DefineConstants=", StringComparison.Ordinal));
+            builds++;
+            return new(0, "", "");
+        });
+        Assert.Equal(2, builds);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ShardedBuildKeepsRestorePropertiesAndOnlyRegisteredSdkInputs(bool sdk)
+    {
+        using var tree = new StaticTree();
+        tree.Write("fixture.csproj", "<Project />");
+        var suite = new JsonObject { ["project"] = "fixture.csproj", ["arguments"] = new JsonArray(),
+            ["minimumPassed"] = 1, ["maximumSkipped"] = 0, ["publicApiRoot"] = sdk };
+        var catalog = tree.Write("catalog.json", new JsonObject { ["fixture"] = suite }.ToJsonString());
+        var options = Options.Parse(["-Suite", "fixture", "-Shards", "8", "-PublicApiRoot", "sdk", "-Catalog", catalog,
+            "-ResultsDirectory", tree.Root], Program.BooleanOptions);
+        int builds = 0;
+        var result = DotnetSuites.Run(tree.Root, options, process: (_, arguments, _, _) =>
+        {
+            var args = arguments.ToArray();
+            if (args[0] == "build")
+            {
+                Assert.Contains("-p:UseSharedCompilation=false", args);
+                Assert.Contains("-p:NuGetAudit=false", args);
+                Assert.Equal(sdk, args.Contains("-p:TiaPublicApiRoot=sdk"));
+                builds++;
+            }
+            else
+            {
+                Assert.Equal(1, builds);
+                Assert.Contains("--no-build", args);
+                var directory = args[Array.IndexOf(args, "--results-directory") + 1];
+                DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(directory, "fixture.trx"), ["Passed"]);
+            }
+            return new(0, "", "");
+        });
+        Assert.Equal(1, builds);
+        Assert.Equal(0, result.ExitCode);
+    }
+
+    [Fact]
     public void KeptSuiteKeepsItsDefineAndPlatformGates()
     {
         var root = Repository.FindRoot();
@@ -178,6 +233,8 @@ public class DotnetSuitesTests
             Assert.Equal(major, env!["TIA_MCP_PARITY_ENGINE_RELEASE"]);
             Assert.Equal("value", env["TEST_INHERITED"]);
             Assert.Equal("vstest", args.First());
+            Assert.Equal("5m", SuiteHang.Timeout);
+            Assert.Contains("--Blame:CollectHangDump;HangDumpType=mini;TestTimeout=5m", args);
             Assert.Contains(Path.Combine(fixture.DirectoryPath, "v" + major, "TiaMcp.FoundationHost.Tests.dll"), args);
             Assert.Contains("--TestCaseFilter:FullyQualifiedName~BehaviorParityTests", args);
             DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(fixture.DirectoryPath, "host-behavior-parity.trx"), Enumerable.Repeat("Passed", 103).ToArray());

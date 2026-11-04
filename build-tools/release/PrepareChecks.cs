@@ -46,6 +46,11 @@ internal sealed class PrepareTimings : IDisposable
 // their compilation/GUI/foundation ordering and registered TRX gates.
 internal static class PrepareChecks
 {
+    internal static void RequireEvidence(string path)
+    {
+        if (!File.Exists(path)) throw new ReleaseException("Missing check evidence: " + path);
+    }
+
     internal static PrepareCheckResults Run(PrepareContext context, PreparedPackage package,
         IDictionary<string, string?> environment)
     {
@@ -231,8 +236,10 @@ internal static partial class ReleaseCommands
         producers.Add(ActionJob("host-parity-build", () => parityManifest = prepareParity?.Invoke()
             ?? HostParity.Prepare(root, Path.Combine(output, "parity-build"), Dotnet, context.PublicApiRoot, context.NuGetConfig)));
 
-        producers.Add(Command("adapter-inputs", Dotnet, ["run", "src/Adapters/build/Test-AdapterInputs.cs", "--", "--source-root", "src", "--public-api-root", context.PublicApiRoot, "--evidence-directory", Path.Combine(output, "adapter-inputs")]));
-        producers.Add(Command("worker-isolation", Dotnet, ["run", "src/Adapters/build/Test-WorkerIsolation.cs", "--", "--evidence-directory", Path.Combine(output, "worker-isolation"), "--native-call-weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"]));
+        producers.Add(Command("adapter-inputs", Dotnet, ["run", "src/Adapters/build/Test-AdapterInputs.cs", "--", "--source-root", "src", "--public-api-root", context.PublicApiRoot, "--evidence-directory", Path.Combine(output, "adapter-inputs")],
+            validate: _ => PrepareChecks.RequireEvidence(Path.Combine(output, "adapter-inputs/input-results.json"))));
+        producers.Add(Command("worker-isolation", Dotnet, ["run", "src/Adapters/build/Test-WorkerIsolation.cs", "--", "--evidence-directory", Path.Combine(output, "worker-isolation"), "--native-call-weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"],
+            validate: _ => PrepareChecks.RequireEvidence(Path.Combine(output, "worker-isolation/worker-isolation-results.json"))));
         producers.Add(Python("native-diagnostics", "Test-NativeDiagnostics.py", ["--fixture", "tests/Engine/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe",
             "--weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll", "--output", Path.Combine(output, "native-diagnostics")],
             validate: result =>

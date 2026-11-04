@@ -1,4 +1,4 @@
-<!-- The host-parity run passes -p:DefineConstants=TIA_V20; keep that as the start value and still add TIA_FOUNDATION_TEST_HOST. -->
+<!-- Keep the test-host define when a caller supplies additional constants. -->
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="DefineConstants">
   <Import Project="../../Shared/Xunit.props" />
   <PropertyGroup>

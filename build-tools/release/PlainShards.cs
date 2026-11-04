@@ -30,7 +30,9 @@ internal static class PlainShards
             var directory = Path.Combine(output, name);
             var history = Path.Combine(root, "bin-build/check-timings");
             bool reserve = TimeSensitiveTests.ReserveShard(unit.Project);
-            var plan = SuiteCosts.Prepare(name, directory, history, null, FastSuites.Positive(options, "Shards", 8),
+            var api = PublicApiRoot(name, suite, options);
+            var shards = suite["minimumPassed"]!.GetValue<int>() >= 100 ? FastSuites.Positive(options, "Shards", 8) : 1;
+            var plan = SuiteCosts.Prepare(name, directory, history, null, shards,
                 reserve, reserve ? TimeSensitiveTests.ReservedShardCount(unit.Project) : 1);
             int sensitiveCount = plan.SensitivePartitions?.Length ?? 0;
             int ordinaryCount = plan.Costs.Length - sensitiveCount;
@@ -38,7 +40,7 @@ internal static class PlainShards
                 (Name: name + "-shard-" + index, Run: (Func<PipelineResult>)(() =>
                 {
                     var result = FastSuites.RunShard(root, name, suite, Path.Combine(directory, "shard-" + index),
-                        options.Get("Dotnet", "dotnet"), options.Get("PublicApiRoot"), unit, index, plan.Costs.Length,
+                        options.Get("Dotnet", "dotnet"), api, unit, index, plan.Costs.Length,
                         plan: plan.Path, reserveSensitive: reserve, process: process, sensitiveShards: sensitiveCount);
                     return new(name + "-shard-" + index, result.ExitCode, result.StandardOutput, result.StandardError);
                 }))).ToArray();
@@ -58,4 +60,8 @@ internal static class PlainShards
         }
         return new(failures.Count == 0 ? 0 : 1, string.Join("\n", messages), string.Join("\n", failures));
     }
+
+    internal static string? PublicApiRoot(string name, JsonObject suite, Options options) =>
+        name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true
+            ? options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT") : null;
 }

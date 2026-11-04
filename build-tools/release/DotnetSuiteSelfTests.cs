@@ -221,7 +221,7 @@ internal static class DotnetSuiteSelfTests
             ["maximumSkipped"] = 0, ["arguments"] = new JsonArray() };
         var unit = new SuiteBuild((string)suite["project"]!, "default", []);
         var failures = new List<string>();
-        foreach (var mode in new[] { "test", "test-shard" })
+        foreach (var mode in new[] { "test", "vstest", "test-shard" })
         foreach (var hang in new[] { false, true })
         {
             var fast = mode != "test";
@@ -242,7 +242,14 @@ internal static class DotnetSuiteSelfTests
                     File.WriteAllText(Path.Combine(output, "process.log"), result.StandardOutput + result.StandardError);
                     return result;
                 }
-                var result = fast
+                CommandResult result;
+                if (mode == "vstest")
+                {
+                    var before = SuiteHang.Begin(output, "fixture");
+                    var command = DotnetSuites.VstestArguments(Path.Combine(directory, "bin/Release/net10.0/HangFixture.dll"), [], "fixture", output);
+                    result = SuiteHang.Complete(output, "fixture", before, Process("dotnet", command, root, null));
+                }
+                else result = fast
                     ? FastSuites.RunShard(root, "fixture", suite, output, "dotnet", null, unit, 0, 1,
                         extra: mode == "test-shard" ? ["-p:NuGetAudit=false"] : null, process: Process)
                     : DotnetSuites.RunSuite(root, "fixture", suite, output, arguments: ["--no-build", "--no-restore"], process: Process);

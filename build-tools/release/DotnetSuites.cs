@@ -184,6 +184,20 @@ internal static class DotnetSuites
         return new CommandResult(errors.Count == 0 ? 0 : 1, output.ToString(), stderr);
     }
 
+    internal static List<string> VstestArguments(string assembly, IEnumerable<string> arguments, string name, string directory)
+    {
+        var source = arguments.ToArray();
+        var result = new List<string> { "vstest", assembly, "--logger:trx;LogFileName=" + name + ".trx", "--ResultsDirectory:" + directory };
+        result.Add(SuiteHang.VstestArgument);
+        for (int i = 0; i < source.Length; i++)
+        {
+            if (source[i].StartsWith("-p:", StringComparison.Ordinal)) continue; // Already represented by the exact built variant.
+            if (source[i] == "--filter" && i + 1 < source.Length) result.Add("--TestCaseFilter:" + source[++i]);
+            else throw new ReleaseException("Unsupported registered VSTest argument: " + source[i]);
+        }
+        return result;
+    }
+
     internal static CommandResult RunProcess(string executable, IEnumerable<string> arguments, string root, IDictionary<string, string?>? environment) => ProcessRunner.Run(executable, arguments, root, environment);
     // Suite arguments mix MSBuild properties (-p:...) with test-only options; a separate build takes only the properties.
     internal static IEnumerable<string> BuildArguments(IEnumerable<string> arguments)
@@ -224,8 +238,9 @@ internal static class DotnetSuites
                 if (options.Has("NoBuild")) continue;
                 var suite = catalog[name]!.AsObject();
                 List<string> build = ["build", Path.Combine(root, suite["project"]!.GetValue<string>()), "-c", "Release", "-m:1", "-nodeReuse:false",
+                    "-p:UseSharedCompilation=false", "-p:NuGetAudit=false",
                     .. BuildArguments(suite["arguments"]!.AsArray().Select(arg => arg!.GetValue<string>()))];
-                if (options.Get("PublicApiRoot") is { } api) build.Add("-p:TiaPublicApiRoot=" + api);
+                if (PlainShards.PublicApiRoot(name, suite, options) is { } api) build.Add("-p:TiaPublicApiRoot=" + api);
                 if (options.Get("NuGetConfig") is { } nuget) build.Add("-p:RestoreConfigFile=" + nuget);
                 var built = (process ?? RunProcess)(options.Get("Dotnet", "dotnet"), build, root, environment);
                 if (built.ExitCode != 0) return built;

@@ -8,15 +8,15 @@ internal static class HostParity
 {
     internal const string FoundationProject = "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj";
 
-    internal static string Prepare(string root, string directory, string dotnet, string? api, string? nuget)
+    internal static string Prepare(string root, string directory, string dotnet, string? api, string? nuget, SuiteProcess? process = null)
     {
         foreach (var major in new[] { "20", "21" })
         {
             List<string> args = ["build", Path.Combine(root, FoundationProject), "-c", "Release", "-m:1", "-nodeReuse:false",
-                "-p:DefineConstants=TIA_V" + major, "--output", Path.Combine(directory, "v" + major)];
+                "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", "--output", Path.Combine(directory, "v" + major)];
             if (api != null) args.Add("-p:TiaPublicApiRoot=" + api);
             if (nuget != null) args.Add("-p:RestoreConfigFile=" + nuget);
-            ProcessRunner.RequireSuccess(ProcessRunner.Run(dotnet, args, root), "Host parity V" + major + " build");
+            ProcessRunner.RequireSuccess((process ?? DotnetSuites.RunProcess)(dotnet, args, root, null), "Host parity V" + major + " build");
         }
         return directory;
     }
@@ -34,7 +34,7 @@ internal static class HostParity
         var before = SuiteHang.Begin(directory, "host-behavior-parity");
         var buildDirectory = options.Get("BuildDirectory") ?? throw new ReleaseException("Parity BuildDirectory is required");
         var assembly = Path.Combine(buildDirectory, "v" + major, "TiaMcp.FoundationHost.Tests.dll");
-        var command = VstestArguments(assembly, ["--filter", "FullyQualifiedName~BehaviorParityTests"], "host-behavior-parity", directory);
+        var command = DotnetSuites.VstestArguments(assembly, ["--filter", "FullyQualifiedName~BehaviorParityTests"], "host-behavior-parity", directory);
         var env = environment is null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
         env["TIA_MCP_PARITY_ENGINE_RELEASE"] = major;
         var dotnet = options.Get("Dotnet", "dotnet");
@@ -64,17 +64,4 @@ internal static class HostParity
         return new CommandResult(errors.Count == 0 ? 0 : 1, output.ToString(), result.StandardError);
     }
 
-    private static List<string> VstestArguments(string assembly, IEnumerable<string> arguments, string name, string directory)
-    {
-        var source = arguments.ToArray();
-        var result = new List<string> { "vstest", assembly, "--logger:trx;LogFileName=" + name + ".trx", "--ResultsDirectory:" + directory };
-        result.Add(SuiteHang.VstestArgument);
-        for (int i = 0; i < source.Length; i++)
-        {
-            if (source[i].StartsWith("-p:", StringComparison.Ordinal)) continue; // Already represented by the exact built variant.
-            if (source[i] == "--filter" && i + 1 < source.Length) result.Add("--TestCaseFilter:" + source[++i]);
-            else throw new ReleaseException("Unsupported registered VSTest argument: " + source[i]);
-        }
-        return result;
-    }
 }

@@ -71,6 +71,23 @@ public sealed class PrepareChecksTests
         else Assert.Throws<ReleaseException>(() => PrepareChecks.RequireResults(catalog, tree.Root, [], new Dictionary<string, string>()));
     }
 
+    [Theory]
+    [InlineData("adapter-inputs", "input-results.json")]
+    [InlineData("worker-isolation", "worker-isolation-results.json")]
+    public void SuccessfulProducerRequiresItsResultFile(string name, string file)
+    {
+        using var tree = new StaticTree();
+        var context = Context(tree.Root);
+        var plan = ReleaseCommands.PrepareCheckJobs(context, Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
+            (_, _, _, _, _) => new(0, "passed", ""));
+        var job = Assert.Single(plan.Producers, item => item.Name == name);
+        Assert.Contains(file, Assert.Throws<ReleaseException>(() => job.Run()).Message);
+        var path = Path.Combine(context.Logs, "tests", name, file);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "{}");
+        Assert.Equal(0, job.Run().ExitCode);
+    }
+
     [Fact]
     public async Task CandidateRoundTripsAndUploadFailureKeepsIt()
     {

@@ -200,7 +200,7 @@ internal static class ReleaseFoundationStage
 
     internal static Dictionary<string, CommandResult> Run(string root, JsonObject catalog, string output, string api, string dotnet,
         string? nuget, int parallelism, Action<IDictionary<string, string?>> configure,
-        Func<Options, JsonObject, SuiteProcess, CommandResult>? run = null, SuiteProcess? process = null)
+        Func<Options, JsonObject, SuiteProcess, CommandResult>? run = null, SuiteProcess? process = null, bool prebuilt = false)
     {
         DerivedSuiteGates.IncludeApprovedSubsets(catalog);
         foreach (var name in Names.Where(name => name != "foundation-api" && catalog.ContainsKey(name)))
@@ -224,8 +224,12 @@ internal static class ReleaseFoundationStage
         }
         var reported = ReleaseTestSelection.RunJob("foundation-api", () =>
         {
-            var built = Process(dotnet, ["build", Path.Combine(root, catalog["foundation-api"]!["project"]!.GetValue<string>()), "-c", "Release", "-m:1", "-nodeReuse:false", "-p:TiaPublicApiRoot=" + api], root, FastSuites.EnvironmentFor(directory, api));
-            ProcessRunner.RequireSuccess(built, "Foundation build");
+            if (!prebuilt)
+            {
+                var built = Process(dotnet, ["build", Path.Combine(root, catalog["foundation-api"]!["project"]!.GetValue<string>()), "-c", "Release", "-m:1", "-nodeReuse:false",
+                    "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", "-p:TiaPublicApiRoot=" + api], root, FastSuites.EnvironmentFor(directory, api));
+                ProcessRunner.RequireSuccess(built, "Foundation build");
+            }
             var result = run is null ? PlainShards.Run(root, options, catalog, Process) : run(options, catalog, Process);
             return new("foundation-api", result.ExitCode, result.StandardOutput, result.StandardError);
         });

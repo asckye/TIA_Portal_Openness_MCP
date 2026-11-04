@@ -29,6 +29,34 @@ public sealed class MergeCheckTests
         MergeCheck.Select(paths, all, catalog ?? Catalog(), closures ?? new(), mentions ?? ((_, _) => false),
             ["scripts/checks/a.cs"], "dotnet", "python", "sdk", "output");
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ComposedToolArgumentsParseWithTheRealOptionTable(bool docsOnly)
+    {
+        var plan = Select(docsOnly ? ["README.md"] : ["Directory.Build.props"]);
+        var jobs = plan.Checks.Where(job => job.Arguments[0] == typeof(Program).Assembly.Location).ToArray();
+        Assert.NotEmpty(jobs);
+        foreach (var job in jobs)
+        {
+            Assert.Contains(job.Arguments[1], CommandLine.Commands);
+            Options.Parse(job.Arguments[2..], Program.BooleanOptions);
+        }
+    }
+
+    [Theory]
+    [InlineData("adapter-inputs", "input-results.json")]
+    [InlineData("worker-isolation", "worker-isolation-results.json")]
+    public void SuccessfulEvidenceJobRequiresItsResultFile(string name, string file)
+    {
+        using var tree = new StaticTree();
+        var result = new CommandResult(0, "passed", "");
+        Assert.Contains(file, Assert.Throws<ReleaseException>(() => MergeCheck.CheckResult(name, result, tree.Root)).Message);
+        tree.Write(name + "/" + file, "{}");
+        Assert.Equal(result, MergeCheck.CheckResult(name, result, tree.Root));
+        Assert.Equal(7, MergeCheck.CheckResult(name, result with { ExitCode = 7 }, tree.Root).ExitCode);
+    }
+
     [Fact]
     public void ChangeSetUnionsCommittedWorkingAndUntrackedPathsAndRequiresMergeBase()
     {
@@ -55,7 +83,7 @@ public sealed class MergeCheckTests
         Assert.Empty(plan.Builds);
         Assert.Empty(plan.Suites);
         Assert.Equal(new[] { "check-repository", "check-dead-tool-references", "generate-tool-counts" }, plan.Checks.Select(job => job.Name));
-        Assert.Contains("-NoAnalyzer", plan.Checks[0].Arguments);
+        Assert.DoesNotContain("-NoAnalyzer", plan.Checks[0].Arguments);
     }
 
     [Theory]
@@ -320,6 +348,7 @@ public sealed class MergeCheckTests
         using var tree = new StaticTree();
         int calls = 0;
         var catalog = new JsonObject { ["fixture"] = Suite("tests/fixture.csproj") };
+        catalog["fixture"]!["minimumPassed"] = 100;
         var options = Options.Parse(["-Suite=fixture", "-Shards=3", "-MaxParallelism=2", "-ResultsDirectory=" + tree.Root], new HashSet<string>());
         var result = PlainShards.Run(tree.Root, options, catalog, (_, args, _, env) =>
         {
@@ -441,14 +470,16 @@ public sealed class MergeCheckTests
     }
 
     [Theory]
-    [InlineData(null, false)]
-    [InlineData(null, true)]
-    [InlineData("build", false)]
-    [InlineData("suite", false)]
-    [InlineData("suite", true)]
-    [InlineData("check", false)]
-    [InlineData("decoder", false)]
-    public void EndToEndAccountsForEachFailureAndCanSucceed(string? failure, bool variant)
+    [InlineData(null, false, false)]
+    [InlineData(null, true, false)]
+    [InlineData("build", false, false)]
+    [InlineData("suite", false, false)]
+    [InlineData("suite", true, false)]
+    [InlineData("check", false, false)]
+    [InlineData("decoder", false, false)]
+    [InlineData(null, false, true)]
+    [InlineData("suite", false, true)]
+    public void EndToEndAccountsForEachFailureAndCanSucceed(string? failure, bool variant, bool foundation)
     {
         using var tree = new StaticTree();
         foreach (var folder in new[] { "scripts", "src", "build-tools" }) Directory.CreateDirectory(Path.Combine(tree.Root, folder));
@@ -457,7 +488,7 @@ public sealed class MergeCheckTests
         tree.Write("source.cs", "public class Source {}\n");
         var catalog = new JsonObject
         {
-            ["fixture"] = Suite("tests/one.csproj", variant ? ["-p:FixtureRoot=" + tree.Root + new string('x', 240)] : []),
+            [foundation ? "foundation-api" : "fixture"] = Suite("tests/one.csproj", variant ? ["-p:FixtureRoot=" + tree.Root + new string('x', 240)] : []),
             ["source-contracts"] = Suite("tests/two.csproj")
         };
         tree.Write("tests/test-suites.json", catalog.ToJsonString());
@@ -500,6 +531,7 @@ public sealed class MergeCheckTests
         var snapshot = calls.ToArray();
         Assert.True(Array.FindIndex(snapshot, args => args.Contains("-t:Restore")) < Array.FindIndex(snapshot, args => args.Contains("-t:Build")));
         Assert.Equal(2, snapshot.Count(args => args[0] == "test"));
+        if (foundation) Assert.DoesNotContain(snapshot, args => args[0] == "build" && args[1].EndsWith("one.csproj", StringComparison.Ordinal));
         Assert.Contains(snapshot, args => args.Contains("check-tools-list"));
         Assert.Contains(snapshot, args => args.Contains("check-tia-features"));
         Assert.All(environments.Where(row => row.Kind == "build"), row => Assert.Equal(Path.GetFullPath(Path.Combine(tree.Root, "bin-build/merge-check/analyzers")), Path.GetFullPath(row.Reports!)));

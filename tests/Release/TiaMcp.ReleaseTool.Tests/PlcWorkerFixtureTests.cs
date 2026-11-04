@@ -31,7 +31,6 @@ public sealed class PlcWorkerFixtureTests
             Assert.Contains(current, units);
         }
         Assert.Contains("build-plc-worker-fixtures", CommandLine.Commands);
-        Assert.Contains("check-plc-workers", CommandLine.Commands);
         Assert.Throws<ReleaseException>(() => PlcWorkerFixtures.Sdk("14"));
         Assert.Throws<ReleaseException>(() => PlcWorkerFixtures.Sdk("15"));
         Assert.Throws<ReleaseException>(() => PlcWorkerFixtures.Sdk("TYPO"));

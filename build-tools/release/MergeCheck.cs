@@ -121,7 +121,7 @@ internal static class MergeCheck
     {
         var plan = new Plan { DocsOnly = !all && changes.All(Documentation) };
         void Tool(string name, params string[] args) => plan.Checks.Add(new(name, dotnet, [typeof(Program).Assembly.Location, name, .. args]));
-        Tool("check-repository", "-NoBinaries", "-NoAnalyzer");
+        Tool("check-repository", "-NoBinaries");
         Tool("check-dead-tool-references");
         Tool("generate-tool-counts", "-Check");
         if (plan.DocsOnly) return plan;
@@ -412,7 +412,8 @@ internal static class MergeCheck
                 var rows = ReleaseFoundationStage.Run(root, catalog, suiteOutput, api, dotnet, nuget, parallelism,
                     ConfigureTests,
                     (opts, registrations, run) => PlainShards.Run(root, Options.Parse([.. opts.Arguments(), "-NoBuild=true"], new HashSet<string>()), registrations,
-                        (exe, args, cwd, env) => Timed("foundation-shard-" + env!["TIA_MCP_TEST_SHARD_INDEX"], () => run(exe, args, cwd, env))));
+                        (exe, args, cwd, env) => Timed("foundation-shard-" + env!["TIA_MCP_TEST_SHARD_INDEX"], () => run(exe, args, cwd, env))),
+                    process: process, prebuilt: true);
                 return new(rows.Values.Any(row => row.ExitCode != 0) ? 1 : 0, string.Join('\n', rows.Values.Select(row => row.StandardOutput)),
                     string.Join('\n', rows.Where(pair => pair.Value.ExitCode != 0).Select(pair => pair.Key + ": " + pair.Value.StandardError)));
             });
@@ -444,6 +445,11 @@ internal static class MergeCheck
     internal static CommandResult CheckResult(string name, CommandResult result, string output)
     {
         if (result.ExitCode != 0) return result;
+        if (name is "adapter-inputs" or "worker-isolation")
+        {
+            var file = name == "adapter-inputs" ? "input-results.json" : "worker-isolation-results.json";
+            PrepareChecks.RequireEvidence(Path.Combine(output, name, file));
+        }
         if (name == "configuration-page")
         {
             var match = System.Text.RegularExpressions.Regex.Match(result.StandardOutput, @"(?m)^Passed: (\d+)\s*$");
