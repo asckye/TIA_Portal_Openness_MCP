@@ -45,7 +45,7 @@ internal static class ToolsListChecks
         var baseline = Read(root, "scripts/checks/write-guard-operations-v3.3.0.json")["operations"]!.AsObject(); var review = Read(root, "reference/tool-catalog/operation-review.json"); var withdrawn = review["WITHDRAWN"]!.AsObject(); var newFoundation = review["NEW_FOUNDATION_TOOLS"]!.AsObject();
         Require(Set(baseline.Select(p => p.Key).Concat(data.Additions.Select(p => p.Key).Except(data.HostOnly.Keys))).SetEquals(data.Mapping.Keys), "Frozen operations plus reviewed additions differ");
         Require(review["EXCEPTIONS"]!.AsObject().All(p => baseline.ContainsKey(p.Key)), "Unused operation exception");
-        var metadata = Source(root, "src/Logic/ModelContextProtocol/ToolMetadata.cs"); var declared = Matches(metadata, "\\[\"([^\"]+)\"\\] = new Classification\\("); CompareNames(declared, Set(expected.Concat(withdrawn.Select(p => p.Key))), "Explicit classification coverage");
+        var metadata = Source(root, "src/Logic/ModelContextProtocol/ToolMetadata.Classifications.cs"); var declared = Matches(metadata, "\\[\"([^\"]+)\"\\] = new Classification\\("); CompareNames(declared, Set(expected.Concat(withdrawn.Select(p => p.Key))), "Explicit classification coverage");
         var classify = Classifier(Source(root, "src/Logic/ModelContextProtocol/ToolTaxonomy.cs"), metadata);
         var descriptions = Set(data.Registrations.Keys.Except(data.HostOnly.Keys)); Require(descriptions.SetEquals(expected.Except(newFoundation.Select(p => p.Key)).Except(data.HostOnly.Keys).Concat(withdrawn.Select(p => p.Key))), "Engine descriptions differ from reviewed product roster");
         var seen = new HashSet<string>(); var seenNew = new HashSet<string>();

@@ -71,7 +71,7 @@ internal sealed class CatalogData
             Archives[key] = CatalogJson.Read(root, $"manifest/history/contracts-v3/baseline/{key}.json")["tools"]!.AsArray().ToDictionary(t => CatalogJson.Text(t!["name"]), t => t!.AsObject()).ToJsonObject();
         ValidateReviewedData(Additions, Renames, CatalogJson.Set(Archives.Values.SelectMany(v => v.Select(p => p.Key))));
         foreach (var name in Additions.Select(p => p.Key)) Renames.Add(name, name);
-        var metadata = CatalogJson.Source(root, "src/Logic/ModelContextProtocol/ToolMetadata.cs");
+        var metadata = CatalogJson.Source(root, "src/Logic/ModelContextProtocol/ToolMetadata.Classifications.cs");
         var workbench = CatalogJson.Source(root, "src/FoundationHost/WorkbenchControlTools.cs").Split("string[] Names = {", 2)[1].Split("};", 2)[0];
         var wbNames = CatalogJson.Matches(workbench, "\"([A-Za-z0-9]+)\"");
         CatalogJson.Require(wbNames.Length == 8 && wbNames.Distinct().Count() == 8, "Closed Workbench roster differs");
