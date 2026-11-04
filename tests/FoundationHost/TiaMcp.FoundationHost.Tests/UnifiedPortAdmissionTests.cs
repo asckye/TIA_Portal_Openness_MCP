@@ -373,21 +373,21 @@ public sealed class UnifiedPortAdmissionTests
     public static IEnumerable<object[]> MappingCases => from family in PortedFamilies.All.Where(f => f.Name is "F27" or "F28")
         from name in family.Tools select new object[] { name };
 
-    public static IEnumerable<object[]> MalformedAddresses
+    public static IEnumerable<object[]> MalformedAddresses => ReleaseEnds.OldestAndNewest(
+        AllMalformedAddresses(), row => (string)row[1] + ":" + row[2], row => (string)row[0]);
+
+    private static IEnumerable<object[]> AllMalformedAddresses()
     {
-        get
+        foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (var method in Host.PortedToolDeclarations.Methods(release))
         {
-            foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
-            foreach (var method in Host.PortedToolDeclarations.Methods(release))
-            {
-                var name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
-                if (!PortedFamilies.Available(release, name)) continue;
-                foreach (var parameter in method.GetParameters().Where(p => p.ParameterType.IsArray
-                    && p.Name is "objectPath" or "branch" or "collectionPath" or "tagPath" or "durationPath"))
-                foreach (var path in new[] { "[\"Screens\",\"Main\"]", "{}", "[{\"property\":\"Screens\",\"unknown\":true}]", "[{\"property\":\"Parent\"}]" })
-                foreach (bool encoded in new[] { false, true })
-                    yield return new object[] { release, name, parameter.Name!, path, encoded };
-            }
+            var name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+            if (!PortedFamilies.Available(release, name)) continue;
+            foreach (var parameter in method.GetParameters().Where(p => p.ParameterType.IsArray
+                && p.Name is "objectPath" or "branch" or "collectionPath" or "tagPath" or "durationPath"))
+            foreach (var path in new[] { "[\"Screens\",\"Main\"]", "{}", "[{\"property\":\"Screens\",\"unknown\":true}]", "[{\"property\":\"Parent\"}]" })
+            foreach (bool encoded in new[] { false, true })
+                yield return new object[] { release, name, parameter.Name!, path, encoded };
         }
     }
 

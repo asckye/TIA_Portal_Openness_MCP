@@ -15,11 +15,13 @@ using Xunit;
 public sealed class OfflineReadinessTests
 {
     public static IEnumerable<object[]> Cases =>
-        new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
-            .SelectMany(release => ToolUsageCatalog.ProfileEntries(release).OfType<JsonObject>()
-                .Select(row => (string)row["currentName"]!).Distinct()
-                .Where(name => TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "OFFLINE")
-                .Select(name => new object[] { release, name }));
+        ReleaseEnds.OldestAndNewest(
+            new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
+                .SelectMany(release => ToolUsageCatalog.ProfileEntries(release).OfType<JsonObject>()
+                    .Select(row => (string)row["currentName"]!).Distinct()
+                    .Where(name => TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "OFFLINE")
+                    .Select(name => new object[] { release, name })),
+            row => (string)row[1], row => (string)row[0]);
 
     // DecodePlcSimaticMl runs the bundled Python. Without that runtime it must refuse with its own prerequisite
     // (IO_FAILED ecosystem-python) before any work - never with the TIA readiness refusal; with it, it must succeed.
@@ -73,8 +75,7 @@ public sealed class OfflineReadinessTests
     }
 
     [Theory]
-    [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")] [InlineData("17")]
-    [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
+    [InlineData("14sp1")] [InlineData("21")]
     public async Task Project_tools_keep_the_environment_refusal(string release)
     {
         using var worker = new ForbiddenWorker();

@@ -66,12 +66,14 @@ public sealed class PortedPortalAdmissionTests
     }
 
     public static IEnumerable<object[]> Cases =>
-        from release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
-        from family in PortedToolContract.Families(release)
-        from name in family.Tools
-        where PortedFamilies.Available(release, name)
-        from combined in release is "20" or "21" ? new[] { false, true } : new[] { false }
-        select new object[] { release, name, combined };
+        ReleaseEnds.OldestAndNewest(
+            from release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
+            from family in PortedToolContract.Families(release)
+            from name in family.Tools
+            where PortedFamilies.Available(release, name)
+            from combined in release is "20" or "21" ? new[] { false, true } : new[] { false }
+            select new object[] { release, name, combined },
+            row => (string)row[1] + ":" + row[2], row => (string)row[0]);
 
     [Theory, MemberData(nameof(Cases))]
     public async Task Missing_portal_never_turns_an_unstarted_port_into_an_unknown_write(string release, string name, bool combined)

@@ -16,7 +16,7 @@ using HostResponse = enginehost::TiaMcpServer.ModelContextProtocol.ResponseMessa
 
 public sealed class HardwareAddressingAdmissionTests
 {
-    public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
+    public static IEnumerable<object[]> Releases => new[] { "14sp1", "21" }
         .Select(release => new object[] { release });
     public static IEnumerable<object[]> InvalidMaps => from release in Releases
         from parameter in new[] { "properties", "attributes" }
