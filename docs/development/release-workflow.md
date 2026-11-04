@@ -4,7 +4,7 @@
 
 发布默认不等待 CI。准备阶段完成构建和全部检查；发布阶段验证同一个候选包，然后打 tag 和上传。CI 结果在发布后读取。
 
-现行做法（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）：发布不等待发布提交和发布后核验的 CI；CI 照常运行，失败按缺陷处理。发布证据按 [ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md) 改为“最近一次通过的 nightly 加已验证构建单元、nightly 门槛 45 分钟”，同样由 RULES-1 实现；实现合并前，下文描述的同提交冷运行采纳规则和三十分钟门槛仍是发布工具的实际行为。新的发布检出需要 `bin-build/cache/dotnet-10.0.12/` 中的随包 .NET 运行时压缩包（下载已关闭），缺少时从已有检出复制。
+现行做法（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）：发布不等待发布提交和发布后核验的 CI；CI 照常运行，失败按缺陷处理。`release -Version` 按 NATIVE-1a 直接完成冷构建与一次完整测试阶段，不要求 nightly，也不采纳先前的验证证据。`release-prepare` 与 `-FromCandidate` 是另一个封存候选工作流，见下文。新的发布检出需要 `bin-build/cache/dotnet-10.0.12/` 中的随包 .NET 运行时压缩包（下载已关闭），缺少时从已有检出复制。
 
 交付包 `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip` 包含 V14 SP1、V15.1、V16–V21 MCP 运行文件、工作台、Studio 及八版原生适配器，以及运行资源、用户文档、模板、插件和许可证。自 3.3.0 之后的下一个版本起，交付 ZIP 不再携带开发源码及构建工具。各发布键的工具范围不同，见[版本矩阵](../reference/version-tools.md)。每次发布同时上传 .sha256；GitHub 自动生成的源码压缩包不含运行二进制。
 
@@ -17,12 +17,12 @@
 每日冷全集由 `dotnet run --project build-tools/release -- nightly -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>`
 运行，默认使用本地 `origin/master`，可用 `-Rev` 指定提交；工具打印每日 03:00 的 Task Scheduler 命令，由维护者登记。
 运行目录为 `bin-build/nightly/<date>-<sha8>`，`latest.json` 保存提交、报告路径、通过/失败、耗时和三十分钟门槛。
-`history.json` 是发布阻断历史，不随旧产物清理。release、`release -AdoptEvidence`、publish 和独立 preflight 在发布提交或上次发布之后的
+`history.json` 不随旧产物清理。独立 publish 和 preflight 在发布提交或上次发布之后的
 祖先提交存在失败/超时 nightly，且没有更晚的相关成功 nightly 时拒绝继续；没有 `-AcceptNightlyFailure` 覆盖项。
 同一干净提交的成功 nightly `release-evidence.json` 可直接采纳，仍逐项验证 tree、输入、机器与原有全量门禁。
 merge/affected/quick 报告不能用于发布；合并验证与 nightly 操作见[验证分层](validation.md)。
 
-`release`（含演练与 `-AdoptEvidence`）在任何版本改写或构建之前检查生态/伴随 Python，选定的绝对路径传给全部子检查。
+`release -Version`（含演练）在任何版本改写或构建之前检查生态/伴随 Python，选定的绝对路径传给全部子检查。
 路径按 `-EcosystemPython`、`-CompanionPython`、`TIA_MCP_PLC_TOOLS_PYTHON`、本地已准备环境的顺序选择；
 缺失时打印准确路径，先用 `tia install-plc-tools` 准备 Python 3.12+ 环境，再明确传入其 `python.exe`。
 `prerequisites` 也检查同一路径及依赖。发布、`preflight`、`prerequisites` 和 `check-release-evidence` 还比较跟踪文件的
@@ -226,67 +226,41 @@ dotnet run --project build-tools/release -- release-publication-check -Version X
 失败会阻止下一次发布，重新运行仍在 pending 时不会清除失败，只有全部成功才解除。将发布记录交给审查者提交，
 使后续 worktree 继承失败状态。发布记录还列出证据运行号、按哈希采纳的回执与本次实际运行的检查。
 
-## 采纳同一提交的 check-all 与 CI 证据（-AdoptEvidence）
+<a id="采纳同一提交的-check-all-与-ci-证据-adoptevidence"></a>
 
-`release-prepare -AdoptEvidence <release-evidence.json>` 只接受 prep 提交的完整、通过、无结果复用的证据；
-保留 P8-93 的源码/外部输入绑定、注册套件最低通过数与最大跳过数、作业覆盖和三十分钟门禁。
-SPD-3 已验证的单元证据与随机冷编译核对在准备阶段验证。准备和发布日均不等待 GitHub CI；
-未分工的本地证据无需令牌。含 CI 分工的证据仍须在线验证所有命名作业，不会当作离线完整证据。
+## release 的一次完整构建与测试
 
 ```powershell
-# 1. 准备提交：机械更新版本（只改版本文件并列出路径），写 CHANGELOG 条目和发布说明，提交并推送，CI 在该提交上运行。
-dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -BumpOnly
-# 2. 在该提交的干净工作树上运行冷的、无缓存的 check-all；输出目录中写出 release-evidence.json。
-dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -NoBuildCache -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/beta2
-# 3. 只读核对（-Ci 另读 GitHub Actions），然后演练与正式发布，参数与完整路径相同。
-dotnet run --project build-tools/release -- check-release-evidence -Evidence bin-build/check-all/beta2/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Ci
-dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -DryRun -AdoptEvidence bin-build/check-all/beta2/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <python.exe>
-dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summary "..." -AdoptEvidence bin-build/check-all/beta2/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <python.exe>
+dotnet run --project build-tools/release -- release -Version 4.0.0-beta.3 -DryRun -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>
+dotnet run --project build-tools/release -- release -Version 4.0.0-beta.3 -Summary "..." -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>
 ```
 
-- Profile：只有 `-Profile nightly` 的完整运行可采纳；默认 `merge` 的派生门禁不能作为发布证据；Studio 完整运行交付配置，已删除的 V20 重复套件不再提供计数。旧格式未记录 profile 时仍表示当时的全集。
-- 证据：每次 check-all 结束时都写 `release-evidence.json`，是否可采纳由发布判断。它在任何生成之前记录提交、Git tree id、开始时的
-  `git status`（含未跟踪文件）、全部跟踪及未忽略文件的 SHA-256 清单，PublicAPI 目录全部文件的长度与 SHA-256 摘要、离线 NuGet 配置的
-  SHA-256、`dotnet --version`、`python --version`、伴随 Python 可执行文件的 SHA-256 和机器标识（无法取得的值记为 unavailable，
-  check-all 照常运行，发布拒绝）；结束时记录运行模式（`-Clean`/`-Cold`、结果缓存、`-NoBuildCache`、
-  `-BuildOnly`）、计划的全部作业、每个作业的状态与日志 SHA-256、每个注册套件合并 TRX 的计数与摘要文件 SHA-256、构建缓存模式、
-  report.json/cpu-plan.json 的 SHA-256、退出状态、失败/复用数、源码漂移和 nightly 45 分钟门槛（merge 仍为三十分钟）。构建单元另记录输入键、全部输出哈希、冷编译验证编号及恢复来源。
-  `-NoBuildCache` 禁止恢复缓存输出，仍填充或验证冷编译条目，并随之关闭结果缓存。夜间运行 `build-reproducibility` 和完整的 `-Cold -NoBuildCache`。
-- 拒绝：另一提交或 tree；开始或现在工作树不干净；任一输入文件、PublicAPI、NuGet 配置、SDK、Python 或机器不同；部分运行（`-BuildOnly`、
-  计划作业缺结果、缺注册套件、缺发布所需的作业族、日志或摘要文件缺失或被改动）；失败运行（退出非零、任一作业失败或被阻塞、漂移、
-  超过 nightly 45 分钟门槛、套件低于注册的最低通过数或高于跳过上限）；结果复用、结果缓存开启，或构建单元证据不完整、未冷编译验证的恢复、恢复后文件哈希变化；
-  开始时间早于提交时间或完成时间在将来；Version.props 尚未是待发布版本。完整通过的已验证增量构建可作为发布证据，需使用 `-NoResultCache`。
-  采纳时重算输出哈希，默认随机冷编译一个恢复单元并比较（`-SpotCheckColdUnits N`）；旧格式证据仍要求 `-Clean`/`-Cold`、`-NoBuildCache` 且没有恢复输出。全部原因一次列出。
-  `-AdoptEvidence` 不能与 `-EarlyGatesOnly`、`-Resume` 同用，`-BumpOnly` 不能与 `-DryRun`、`-EarlyGatesOnly`、`-AdoptEvidence` 同用。
-- CI：正式发布用现有令牌读取 `repos/<repo>/actions/runs?head_sha=<提交>`，要求 `validate-bundle` 与 `offline-checks` 在 master 上由 push
-  触发的最新一次运行（最高 run number 与 attempt）已完成且结论为 success，并逐页读取该次 attempt 的全部 job，每个都必须 completed/success。
-    未分工的 `-DryRun` 不访问 GitHub，记录写明 CI 未核对；`check-release-evidence -Ci` 可在发布前只读核对。
-- 采纳的阶段：早期门禁的 source-contracts、write-guard、crash-evidence 套件；build-release 公共阶段的注册套件（计数取自证据，同样要求
-  通过数大于零且无失败、无跳过）；多版本准备与完成改为不带 `-Test`（记录因此为 `test: false`，PLC 证明只要求审批收据），即 Studio 配置/客户端/GUI
-  测试、七个多版本套件、Foundation 与 PLC 传输、PLC harness 模式（含 P8-04l 移入的 V21 路由选择与 PLC 名称夹具）、资源、生态、用法、campaign、
-  压测与准备阶段的 PLC 捕获，以及全版本用法审计（check-all 的 usage-audit-plc 与已提交的 `manifest/tool-usage-coverage.json` 逐字节比较）。
-  发布要求证据含全部注册套件的 gate、三个 Studio 作业（configuration-page、studio-core、studio-gui）、八个发布键的 contracts/usage、V20/V21 的 responses/transport-usage、V20/V21 的 harness/approval/
-  resources/ecosystem/campaign-inputs/stability c8 与 c16，以及 build-once、analyzer-warnings、tracked-tree-drift、usage-audit。
-- 仍在本地运行：早期门禁的其余检查；产品冷构建、八版 worker、Studio、Foundation 发布与目录；Foundation 默认审批和 V20/V21 PLC 审批；
-  check-all 不覆盖的 host behavior parity（V20、V21）、已安装与夹具适配器的 native-call 覆盖和 native harness 安全自检（准备之后与
-  build-release 之前，二者并行）；build-release 的产品发布、三个计数自检、用法目录检查与诊断夹具；API 审计；配置器测试；preflight、
-  严格验证、候选包、全部候选检查（含 HTTP 与已安装宿主的 PLC 捕获、Foundation 响应、打包的 no-TIA 响应、重定位、产品 smoke 与自检）、
-  最终包与资产校验，以及发布提交后的 CI 与发布后校验。
-- 记录：字段不变。`manifest/multi-version-build.json` 增加 `adoptedValidation`，写明证据文件（仓库相对路径）、SHA-256、运行号、提交、tree、
-  输入摘要、起止时间、模式、CI 运行（workflow、run id、attempt、URL、job 数）、各注册套件计数、采纳的阶段和本地补充检查的日志 SHA-256；
-  `validation.dotnetSuites` 由证据填写，`manifest/release-build.json` 的套件计数同样来自证据。运行目录另存证据副本
-  `adopted-release-evidence.json` 与 `adopted-validation.json`。
-- 发布提交只能包含 build 改写的记录（`manifest/` 与 `docs/reference/tool-matrix.md`、`docs/reference/version-tool-catalog.md`），
-  且 HEAD 仍是证据的提交；否则在暂存前拒绝（演练同样检查）。
+`release -Version` 不读取 nightly 门槛或先前 check-all 证据，拒绝 `-AdoptEvidence`。发布本身保持冷构建。
+最早检查包括版本格式、最新 CHANGELOG 正式条目（忽略 `[Unreleased]`）及真实 `yyyy-MM-dd` 日期、
+marketplace 版本、发布文档、伴随 Python 的依赖导入、Git 规范化字节和占用进程。
+正式发布保留 master/origin、令牌和干净工作树检查；`-DryRun` 允许任意分支及工作树改动，不提交、打 tag 或上传。
 
-check-all 包含 V20/V21 host-behavior-parity、已安装适配器与 SDK 夹具覆盖、JIT/诊断及 native-safety 作业。
-每个 binary receipt 绑定宿主、worker、harness 加载目录的全部 EXE/DLL/配置和结果文件；按文件名和 SHA-256 比较，新增、删除或改动依赖都会拒绝复用。
-c8/c16 的四组回执在准备时合成原有四格矩阵，继续执行原有结果验证；worker-protocol、harness 和可对应的 stdio capture 采用同一规则。
-任何依赖哈希不同或缺少对应回执时运行受影响作业；HTTP 和无对应回执的捕获照常运行。
-包内 no-TIA 捕获始终在候选检查中执行一次。`adoptedValidation.binaryChecks` 逐项记录 mode、sourceRunId、sourceJobs、依赖哈希和回退原因。
+本地阶段顺序：
 
-旧的 `release -Version ... [-AdoptEvidence ...]` 保留为重建发布回退，仍运行全部原有本地门禁，并保留 SPD-1 候选压缩数据复用。
-其 `-DryRun` 是完整本地构建演练；`release -FromCandidate -DryRun` 是快速只读验证，两者不同。
+1. 重新构建分析器报告，再运行分析器 ratchet 与源码/文档早期检查；旧报告不能阻断这次发布。
+2. `build-multi-version -PrepareOnly`、`build-release -DeferTests`、`build-multi-version -CompleteOnly -DeferTests` 保留所有产物及二进制/审批安全检查，生产器不执行套件。
+3. 执行 `tests/test-suites.json` 的全部 44 个注册套件，逐套件检查原有 `minimumPassed` 和 `maximumSkipped`。
+   先完成所有套件、配置器、PLC file app 及行为对等夹具的构建，再启动测试池；不同编译参数的变体保留各自输出，同项目测试串行执行。
+   FoundationHost 同时只有一个 testhost，不分片；`updater`、`studio-gui` 独占运行，native-diagnostics 与 ecosystem-assembly harness 也在池排空后逐项独占执行。
+   其余独立项目受核心数及 `-MaxParallelism` 限制。各进程使用独立的 `FastSuites.EnvironmentFor` 环境。
+4. Python 自测、V20/V21 主机行为对等、配置器控制台测试，以及 PLC 功能、合同与响应捕获继续执行。
+   V20/V21 响应保留两种布局、两种传输及逐字节比较。稳定性 campaign 和计时/延迟门槛不在此发布路径中。
+5. 当次 TRX、门槛和哈希写入 `adoptedValidation`（`source=release-run`）及 `validation.dotnetSuites`；这不是外部证据采纳。
+   生产器先写出 pending 的 delivery；所有功能检查成功后重新绑定记录并执行严格校验。
+   记录比较、完整 preflight、严格校验和候选打包继续执行；
+   preflight 与候选验证引用当次已通过的套件/自测结果，避免再次执行相同测试。
+6. 保留重定位、产品 smoke、包内 PLC 响应校验、提示词注册、完整 ZIP 校验与正式发布前验证。
+
+移除的 release check id 为 `plc-stability`、`plc-isolated-stability`；`http-concurrency` 是功能检查，继续保留。
+`productionRelease` 标记限定此删除范围；通用 `full`、分支检查及旧证据验证保留原来的稳定性检查。
+每段耗时写入 `bin-build/release-runs/<run>/stage-times.json`。完整演练的目标约一小时，实际时间由主机记录。
+需要清理时，只清理当前 worktree 的 bin/obj 与 runtime；不能用 `git clean -X`，它会删除伴随 Python 与 bin-build 状态。
+`release-prepare` 的独立证据封存和 `release -FromCandidate` 的快速验证流程不属于这条重构路径。
 
 ## CI 分工候选与在线采纳
 
@@ -319,7 +293,7 @@ dotnet run --project build-tools/release -- check-all -Profile merge -Clean -NoB
 另要求每条分工收据的 run/attempt 与该最新运行相同，数字 job ID、job 名、head SHA、run ID、attempt 精确一致且 completed/success，
 并在该 job 的日志中找到完全相同的门禁收据。缺少/取消/失败/运行中、其他提交、旧 attempt、日志缺失或计数不同均拒绝，不能自动退回旧成功运行。
 日志已过保留期时须重新运行 CI 并重新取得同 attempt 的收据。`release-evidence.json` 与最终 `adoptedValidation` 都保留每个分工作业和具体 CI 证明者。
-含分工的证据不能离线采纳；`check-release-evidence` 必须带 `-Ci`，`release -DryRun -AdoptEvidence` 会拒绝它。
+含分工的证据不能离线采纳；`check-release-evidence` 必须带 `-Ci`，`release-prepare -DryRun -AdoptEvidence` 会拒绝它。
 需要保持不访问 GitHub 的完整发布演练时，使用不带 `-CiCovered` 的 check-all 证据。
 
 ## 预发布（beta / rc）

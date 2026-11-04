@@ -815,5 +815,9 @@
     "plc-isolated-stability": "Four FoundationHost session-worker stdio/HTTP full/lite stability runs at concurrency 16. Runs on FoundationHost and the PLC SDK fixture worker (the engine group retired in P8-04l).",
     "plc-contracts": "Capture and compare V20/V21 contracts. Runs on FoundationHost and the PLC SDK fixture worker (the engine group retired in P8-04l).",
     "plc-responses": "V20/V21 FoundationHost responses installed, source-layout and packaged hosts. Runs on FoundationHost and the PLC SDK fixture worker (the engine group retired in P8-04l)."
-  }
+  },
+  "releaseRetiredChecks": [
+    "plc-stability",
+    "plc-isolated-stability"
+  ]
 }

@@ -250,7 +250,7 @@ internal static class ReleaseRecords
         var selectedPlan = JsonSerializer.Deserialize<ReleaseCheckPlan>(record.GetProperty("checkPlan").GetRawText(),
             new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? throw new ReleaseException("Multi-version check plan missing");
         var plan = PlcProofPlan(selectedPlan, RecordTest(record));
-        var adopted = record.TryGetProperty("adoptedValidation", out _);
+        var adopted = record.TryGetProperty("adoptedValidation", out var adoption) && GetString(adoption, "source") != "release-run";
         var files = ReadRows(record, "files").ToDictionary(row => row.Path, StringComparer.Ordinal);
         // Each receipt names a log that the record binds in validationArtifacts with the same SHA-256.
         var bound = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -516,6 +516,24 @@ internal static class ReleaseRecords
     }
 
     internal static string EngineReuseReason(string root, string release, JsonElement record, IReadOnlyList<ReleaseArtifact> sources, string requiredTier = "full")
+        => EngineRecordReason(root, release, record, sources, requiredTier, requireTests: true);
+
+    // Completion consumes an explicitly pending production record. All source,
+    // binary and audit checks still run; EngineReuseReason runs after the tests.
+    internal static string EngineProducerReason(string root, string release, JsonElement record, IReadOnlyList<ReleaseArtifact> sources)
+    {
+        try
+        {
+            var plan = JsonSerializer.Deserialize<ReleaseCheckPlan>(record.GetProperty("checkPlan").GetRawText(),
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })!;
+            if (!plan.ProductionRelease || plan.Tier != "full") return "pending producer needs the full production release plan";
+            ReleaseCheckPolicy.Load(root).ValidatePlan(plan);
+        }
+        catch { return "pending producer check plan is missing or invalid"; }
+        return EngineRecordReason(root, release, record, sources, "full", requireTests: false);
+    }
+
+    private static string EngineRecordReason(string root, string release, JsonElement record, IReadOnlyList<ReleaseArtifact> sources, string requiredTier, bool requireTests)
     {
         if (requiredTier == "full" && GetString(record, "tier") is "quick" or "package") return "non-full evidence cannot be reused for a full release";
         var selected = new HashSet<string>(StringComparer.Ordinal);
@@ -535,7 +553,7 @@ internal static class ReleaseRecords
         try
         {
             if (!record.TryGetProperty("validation", out var validation)) return "validation record missing";
-            if (includes("offline-suites") && (GetInt(validation, "offlinePassed") <= 0 || GetInt(validation, "versionPolicySdkPassed") <= 0 ||
+            if (requireTests && includes("offline-suites") && (GetInt(validation, "offlinePassed") <= 0 || GetInt(validation, "versionPolicySdkPassed") <= 0 ||
                 GetInt(validation, "keptCodePassed") <= 0 ||
                 GetInt(validation, "writeGuardPassed") < 3 || GetInt(validation, "crashEvidencePassed") < 7 || GetInt(validation, "updaterPassed") < 20 ||
                 // Formerly each engine runtime's sessionStability gate; the native MCP safety checks are release-wide.

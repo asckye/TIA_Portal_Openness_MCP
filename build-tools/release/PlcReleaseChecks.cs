@@ -61,19 +61,33 @@ internal static partial class ReleaseCommands
                 throw new ReleaseException("PLC release fixture metadata mismatch: " + key);
             Build(Path.Combine(Root, $"tests/Engine/TiaMcp.Engine.Native.Tests/V{key}/TiaMcp.Engine.Native.Tests.V{key}.csproj"), ["-p:SiemensEngineeringDirectory=" + api]);
         }
+        Environment.SetEnvironmentVariable(PlcReleaseSystemTempVariable,
+            PreparePlcReleaseFilePrograms(Root, dotnet, nuget, logs, Path.GetTempPath()));
+    }
+
+    internal static string PreparePlcReleaseFilePrograms(string root, string dotnet, string? nuget, string logs,
+        string systemTemp, SuiteProcess? process = null)
+    {
+        systemTemp = Path.GetFullPath(systemTemp);
+        Directory.CreateDirectory(systemTemp);
+        Directory.CreateDirectory(logs);
         // Test-PlcHarness.py and Test-CampaignInputs.py start their file apps with dotnet run --file --no-build, which
-        // finds the program below TEMP. Compile them below this process's TEMP and name it for the jobs, whose own
-        // TEMP is private (the check-all mechanism); a cold release chain has no other build of these file apps.
+        // finds the program below TEMP. Compile into the caller-owned cache and export the same path to jobs;
+        // their private TEMP directories may be removed before a later stage starts.
         // Same arguments as build-file-programs: a file-based build rejects -m and -nodeReuse.
         foreach (var program in PlcReleaseFilePrograms)
         {
-            var arguments = new List<string> { "build", Path.Combine(Root, program), "-c", "Release", "--nologo", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false" };
+            var arguments = new List<string> { "build", Path.Combine(root, program), "-c", "Release", "--nologo", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false" };
             if (!string.IsNullOrWhiteSpace(nuget)) arguments.Add("-p:RestoreConfigFile=" + Path.GetFullPath(nuget));
-            var built = ProcessRunner.Run(dotnet, arguments, Root, new Dictionary<string, string?> { ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0", ["MSBUILDDISABLENODEREUSE"] = "1" });
+            var built = (process ?? DotnetSuites.RunProcess)(dotnet, arguments, root, new Dictionary<string, string?>
+            {
+                ["TEMP"] = systemTemp, ["TMP"] = systemTemp, ["TMPDIR"] = systemTemp,
+                ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0", ["MSBUILDDISABLENODEREUSE"] = "1"
+            });
             WriteLog(Path.Combine(logs, Path.GetFileNameWithoutExtension(program) + "-plc-build.log"), built);
             ProcessRunner.RequireSuccess(built, "PLC file app build: " + program);
         }
-        Environment.SetEnvironmentVariable(PlcReleaseSystemTempVariable, Path.GetTempPath());
+        return systemTemp;
     }
 
     internal static readonly string[] PlcReleaseFilePrograms = ["scripts/checks/Test-PlcHarness.cs", "scripts/checks/Test-CampaignInputs.cs"];

@@ -118,6 +118,9 @@ def main():
     if record_name == layout.MULTI_RECORD:
         try:
             layout.validate_plc_record(build)
+            suite_proof = layout.release_run_validation(build)
+            if build.get('checkPlan', {}).get('productionRelease'):
+                check(suite_proof, 'Production release is missing its full release-run suite proof')
         except (ValueError, KeyError, TypeError) as error:
             check(False, 'Invalid PLC release record: ' + str(error))
     check(sha(committed('manifest/configurator-build.json')) == delivery_record['configuratorBuildSha256'], 'Configurator build record differs from delivery record')

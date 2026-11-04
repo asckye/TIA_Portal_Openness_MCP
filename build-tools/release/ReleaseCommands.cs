@@ -103,12 +103,12 @@ internal static partial class ReleaseCommands
                 "--logger", "trx;LogFileName=pipeline.trx", "--results-directory", "bin-build/test-results/preflight"])
         ];
 
-    private static int Preflight(Options options)
+    private static int Preflight(Options options, ReleaseTestResults? completed = null)
     {
         string? normalizationError = null;
         try { ReleaseEvidence.RequireNormalizedWorkingBytes(Root, options.Get("Git", "git")); }
         catch (ReleaseException error) { normalizationError = error.Message; Console.WriteLine("FAIL Git working-byte normalization: " + error.Message); }
-        NightlyRuns.RequireRelease(Root, options.Get("Git", "git"));
+        if (completed is null) NightlyRuns.RequireRelease(Root, options.Get("Git", "git"));
         if (options.Has("FromCandidate"))
             return ReleaseFromCandidate(Options.Parse([.. options.Arguments(), "-DryRun"], new HashSet<string> { "DryRun" }));
         var checks = PreflightChecks();
@@ -138,8 +138,8 @@ internal static partial class ReleaseCommands
         foreach (var check in checks)
         {
             var arguments = AddOfflineNuGetConfig(check.Exe, check.Args);
-            var result = check.Exe == "test-suites" ? DotnetSuites.Run(Root, Options.Parse(arguments, new HashSet<string> { "SelfTest" }))
-                : check.Exe.StartsWith("check-", StringComparison.Ordinal) ? RunStaticCaptured(check.Exe, arguments) : SuiteHang.RunProcess(check.Exe, arguments, Root);
+            var result = completed?.Preflight(check.Name) ?? (check.Exe == "test-suites" ? DotnetSuites.Run(Root, Options.Parse(arguments, new HashSet<string> { "SelfTest" }))
+                : check.Exe.StartsWith("check-", StringComparison.Ordinal) ? RunStaticCaptured(check.Exe, arguments) : SuiteHang.RunProcess(check.Exe, arguments, Root));
             if (result.ExitCode == 0)
             {
                 Console.WriteLine($"ok   {check.Name}");
@@ -326,12 +326,17 @@ internal static partial class ReleaseCommands
             throw new ReleaseException("-AdoptEvidence cannot be combined with -EarlyGatesOnly or -Resume; an adopted publication starts on the prep commit the evidence tested");
         var previousCache = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED");
         var previousCompanion = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
+        var previousAdoption = Environment.GetEnvironmentVariable(ReleaseEvidence.AdoptionVariable);
+        var previousProduction = Environment.GetEnvironmentVariable("TIA_MCP_PRODUCTION_RELEASE");
         Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "1");
+        Environment.SetEnvironmentVariable("TIA_MCP_PRODUCTION_RELEASE", "1");
         try { return RunReleaseProduction(options); }
         finally
         {
             Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", previousCache);
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON", previousCompanion);
+            Environment.SetEnvironmentVariable(ReleaseEvidence.AdoptionVariable, previousAdoption);
+            Environment.SetEnvironmentVariable("TIA_MCP_PRODUCTION_RELEASE", previousProduction);
         }
     }
 
@@ -1216,10 +1221,14 @@ internal static partial class ReleaseCommands
         var buildRelative = Path.GetRelativePath(Root, buildPath).Replace('\\', '/');
         using var build = JsonDocument.Parse(File.ReadAllText(buildPath));
         var fileVersion = ReleaseRecordsProperty(build.RootElement, "fileVersion");
-        var configuratorArgs = new List<string> { "build-configurator", "-Tier", ReleasePlan(options).Tier };
-        if (ReleasePlan(options).Includes("gui-tests")) configuratorArgs.Add("-Test");
-        var code = RunSelfCommand(configuratorArgs.ToArray(), "Configurator validation");
-        if (code != 0) return code;
+        var code = 0;
+        if (!options.Has("NoBuild"))
+        {
+            var configuratorArgs = new List<string> { "build-configurator", "-Tier", ReleasePlan(options).Tier };
+            if (ReleasePlan(options).Includes("gui-tests")) configuratorArgs.Add("-Test");
+            code = RunSelfCommand(configuratorArgs.ToArray(), "Configurator validation");
+            if (code != 0) return code;
+        }
         var package = $"TIA_MCP_Delivery_v{release}_{releaseDate}";
         var timestamp = DateTimeOffset.UtcNow.ToString("o");
         var delivery = new JsonObject
@@ -1253,6 +1262,11 @@ internal static partial class ReleaseCommands
         manifest["validationStatus"] = $"Delivery {release}; engine {fileVersion} validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending";
         WriteJson(manifestPath, manifest);
         if (build.RootElement.TryGetProperty("checkPlan", out _)) WriteTierRecord(ReleasePlan(options), passed: false);
+        if (options.Has("DeferTests"))
+        {
+            Console.WriteLine($"Prepared pending {package}; the release test stage binds its results and runs strict delivery validation.");
+            return 0;
+        }
         code = RunSelfCommand(["validate-bundle", "-Strict"], "Delivery validation");
         if (code != 0) return code;
         Console.WriteLine($"Prepared {package} using engine {fileVersion}. Review and commit before packaging.");
@@ -1684,7 +1698,10 @@ internal static partial class ReleaseCommands
             var engineRecordPath = Path.Combine(Root, "manifest/release-build.json");
             if (!File.Exists(engineRecordPath)) throw new ReleaseException("Release build record (manifest/release-build.json) missing; run build-release before multi-version completion");
             using var engineRecord = JsonDocument.Parse(File.ReadAllText(engineRecordPath));
-            var engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
+            string EngineReason() => options.Has("DeferTests")
+                ? ReleaseRecords.EngineProducerReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"))
+                : ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
+            var engineReuse = EngineReason();
             if (engineReuse.Length != 0)
                 throw new ReleaseException("Release build inputs, binaries or evidence do not match: " + engineReuse + "; run build-release before multi-version completion");
             // build-release recorded the updater it built and tested; the eight-release record binds the same bytes (P8-upd-bind).
@@ -1727,7 +1744,7 @@ internal static partial class ReleaseCommands
             if (!SameArtifacts(ReleaseRecords.ReadRows(pending!.RootElement, "validationInputs"), currentValidation)) throw new ReleaseException("Validation inputs changed during the build; refusing to record results");
             if (!SameArtifacts(ReleaseRecords.ReadRows(pending.RootElement, "sourceFiles"), ReleaseRecords.GetSources(Root, "multi"))) throw new ReleaseException("Multi-version inputs changed during validation; refusing to record results");
             if (!SameArtifacts(files, ReleaseRecords.GetRuntimeFiles(Root))) throw new ReleaseException("Runtime files changed during multi-version audits; refusing to record results");
-            engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
+            engineReuse = EngineReason();
             if (engineReuse.Length != 0) throw new ReleaseException("Release build inputs or evidence changed during multi-version audits: " + engineReuse);
             updaterReason = ReleaseRecords.UpdaterReason(Root, engineRecord.RootElement, package: false);
             if (updaterReason.Length != 0) throw new ReleaseException("Updater build output changed during multi-version audits: " + updaterReason);
@@ -1754,7 +1771,8 @@ internal static partial class ReleaseCommands
                 if (updaterReason.Length != 0) throw new ReleaseException("Eight-release record does not bind the tested updater: " + updaterReason);
             }
             // The package binds the eight-release record (P8-04j2): delivery is prepared here, after the record exists.
-            var prepareCode = RunSelfCommand(["prepare-delivery", "-Release", release, "-ReleaseDate", JsonString(engineRecord.RootElement, "releaseDate"), "-Tier", plan.Tier], "Eight-release delivery preparation");
+            var prepareCode = RunSelfCommand(["prepare-delivery", "-Release", release, "-ReleaseDate", JsonString(engineRecord.RootElement, "releaseDate"), "-Tier", plan.Tier,
+                .. options.Has("DeferTests") ? new[] { "-NoBuild", "-DeferTests" } : []], "Eight-release delivery preparation");
             if (prepareCode != 0) return prepareCode;
             using (var delivery = JsonDocument.Parse(File.ReadAllText(deliveryPath)))
                 if (GetJsonString(delivery.RootElement, "release") != release || GetJsonString(delivery.RootElement, "fileVersion") != releaseFileVersion ||

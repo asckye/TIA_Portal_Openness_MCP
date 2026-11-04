@@ -7,7 +7,7 @@ namespace TiaMcp.ReleaseTool;
 internal static partial class ReleaseCommands
 {
     private static void RunProductionCandidateChecks(ReleaseCheckPlan plan, Options options, string api, string logs,
-        string output, string temp, string python)
+        string output, string temp, string python, ReleaseTestResults? completed = null)
     {
         var activeLog = new AsyncLocal<string?>();
         // The PLC capture jobs of one step run side by side and append to the step's log.
@@ -67,16 +67,16 @@ internal static partial class ReleaseCommands
             ProcessRunner.RequireSuccess(result, script);
         }
         RunCandidateChecks(plan, api, logs, output, temp, Dotnet, python, GetMaxParallelism(options), Step,
-            (script, args) => Python(script, args, false), (script, args) => Python(script, args, true), Isolated);
+            (script, args) => Python(script, args, false), (script, args) => Python(script, args, true), Isolated, completed);
     }
 
     internal static void RunCandidateChecks(ReleaseCheckPlan plan, string api, string logs, string output, string releaseTemp,
         string dotnet, string python, int maxParallelism, Action<string, Action> runStep,
         Action<string, string[]> runPython, Action<string, string[]> runDefaults,
-        Func<string, string, IReadOnlyList<string>, bool, string?, CommandResult> runIsolated)
+        Func<string, string, IReadOnlyList<string>, bool, string?, CommandResult> runIsolated, ReleaseTestResults? completed = null)
     {
         var snapshotArgs = new[] { "--repo-root", Root, "--public-api-root", api };
-        if (plan.Includes("plc-responses") || plan.Includes("plc-contracts"))
+        if (completed is null && (plan.Includes("plc-responses") || plan.Includes("plc-contracts")))
         {
             foreach (var release in new[] { "20", "21" })
             {
@@ -117,7 +117,7 @@ internal static partial class ReleaseCommands
         {
             ("prompt-registration", () =>
             {
-                runStep("05-prompt-registration", () => ProcessRunner.RequireSuccess(runIsolated("prompt-registration", "test-suites",
+                runStep("05-prompt-registration", () => ProcessRunner.RequireSuccess(completed?.Suites["prompt-registration"] ?? runIsolated("prompt-registration", "test-suites",
                     ["-Suite", "prompt-registration", "-Dotnet", dotnet, "-ResultsDirectory", Path.Combine(logs, "prompt-registration-results")], false, Root), "prompt registration suite"));
                 return new PipelineResult("prompt-registration", 0, "Prompt registration passed." + Environment.NewLine, "");
             }),
@@ -164,9 +164,10 @@ internal static partial class ReleaseCommands
             {
                 // The eight captures of each group run side by side, as the preparation's PLC jobs do (P8-93): each has its own output,
                 // temp root and isolated data folder; every failure is reported and the comparisons follow in table order.
-                runStep(selected, () => RunPlcReleaseJobs(
+                if (completed is null) runStep(selected, () => RunPlcReleaseJobs(
                     PlcReleaseJobs(Root, api, logs, releaseTemp, dotnet, python).Where(job => job.Check == selected), Root, logs,
                     job => runIsolated(job.Name, job.Executable, job.Arguments, true, Root), runPython, parallelism: Math.Max(1, Math.Min(4, maxParallelism))));
+                else runStep(selected, () => ProcessRunner.RequireSuccess(completed.Checks[selected], selected));
                 if (selected == "plc-responses") runStep("09-packaged-responses-verify-plc", () =>
                     VerifyPackagedResponses(Root, output, logs, releaseTemp, runDefaults, runPython, plc: true));
                 return new PipelineResult(selected, 0, "PLC snapshots and exact comparisons passed.\n", "");
@@ -208,6 +209,15 @@ internal static partial class ReleaseCommands
         var serialSelfTests = new List<(string Name, Func<PipelineResult> Run)>();
         foreach (var test in ReleaseCheckPolicy.Load(Root).SelfTests.Where(test => plan.Includes(test.Check)))
         {
+            if (completed is not null)
+            {
+                jobs.Add((test.Check, () =>
+                {
+                    runStep(test.Check, () => ProcessRunner.RequireSuccess(completed.Checks[test.Check], test.Check));
+                    return new PipelineResult(test.Check, 0, "Passed in this release's test stage.\n", "");
+                }));
+                continue;
+            }
             if (SharesStaticSelfTests(test)) { staticSelfTests.Add(test); continue; }
             var job = (Name: test.Check, Run: (Func<PipelineResult>)(() =>
             {

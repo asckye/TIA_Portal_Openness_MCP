@@ -184,6 +184,12 @@ def check_stability(files, multi, selected, release):
         require(f'runtime/v{major}/Esprima.dll' in files, f'V{major} script parser missing')
 
 
+def check_script_parsers(files):
+    """Both shipped PLC hosts retain their script parser dependency."""
+    for major in (20, 21):
+        require(f'runtime/v{major}/Esprima.dll' in files, f'V{major} script parser missing')
+
+
 def self_test():
     import unittest
 
@@ -289,6 +295,7 @@ def main():
     parser.add_argument('--release-tool', type=Path, help='Already-built release tool assembly; child validations never build the running tool')
     parser.add_argument('--candidate-results', type=Path, help='Reuse this run\'s candidate ZIP after exact comparison with final inputs')
     parser.add_argument('--output-directory', type=Path, help='Optional new local output directory; existing archives/stages are never overwritten')
+    parser.add_argument('--candidate', action='store_true', help='Build the full cold candidate after this release run passed its registered test stage')
     parser.add_argument('--local', action='store_true', help='Build a review-only bundle from this worktree without committing; all binary and validation gates still apply')
     parser.add_argument('--dry-run', action='store_true', help='List the filtered working tree without build outputs, clean-tree checks or publication')
     parser.add_argument('--include-untracked', action='store_true', help='Dry run only: also preview new, non-ignored files awaiting review')
@@ -303,7 +310,7 @@ def main():
         return subprocess.check_output([args.git, *values], cwd=root)
 
     tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name and (root / name).is_file()]
-    if args.local:
+    if args.local or args.candidate:
         tracked += [name for name in git('ls-files', '--others', '--exclude-standard', '-z').decode('utf-8').split('\0') if name and (root / name).is_file()]
     if args.dry_run:
         if args.include_untracked:
@@ -311,8 +318,10 @@ def main():
         preview(root, tracked, rules, args.stage_directory)
         return
     require(not args.include_untracked and args.stage_directory is None, 'Preview options require --dry-run')
+    require(not args.candidate or (not args.local and args.output_directory is not None),
+            'Candidate packaging requires its own output directory and cannot use --local')
     subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py')], check=True)
-    require(args.local or not git('status', '--porcelain', '--untracked-files=normal').strip(),
+    require(args.local or args.candidate or not git('status', '--porcelain', '--untracked-files=normal').strip(),
             'Review and commit the source and manifests before packaging')
     commit = git('rev-parse', 'HEAD').decode().strip()
     files = {}
@@ -332,7 +341,9 @@ def main():
     multi = json.loads(multi_path.read_text('utf-8-sig')) if delivery.get('multiVersionBuildSha256') else None
     candidate = json.loads((root / 'manifest/package-manifest.json').read_text('utf-8-sig'))
     selected = layout.release_checks(root, candidate, metadata, multi)
-    require(args.local or (candidate['tier'] == 'full' and candidate['checkStatus'] == 'passed'), 'Publication packaging requires passed tier=full checks')
+    require((args.local or args.candidate or candidate['checkStatus'] == 'passed') and (args.local or candidate['tier'] == 'full'), 'Publication packaging requires passed tier=full checks')
+    if args.candidate or candidate.get('productionRelease'):
+        require(layout.release_run_validation(multi), 'Candidate needs all registered suites from this release run')
     require(args.local or candidate.get('buildCacheEnabled') is False, 'Publication packaging requires a cold rebuild with -NoBuildCache')
     inventory = inventory.copy()
     if multi is not None:
@@ -426,7 +437,9 @@ def main():
         require(metadata['validation']['offlinePassed'] > 0, 'No offline suite result')
         for suite, key in (('kept-code', 'keptCodePassed'),):
             require(metadata['validation'].get(key, 0) > 0, f'No {suite} suite result')
-    check_stability(files, multi, selected, release)
+    if not candidate.get('productionRelease'):
+        check_stability(files, multi, selected, release)
+    check_script_parsers(files)
     gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
     if 'gui-tests' in selected:
         require(gui['testsPassed'] > 0, 'Missing configurator test result')
@@ -510,7 +523,7 @@ def main():
     archive.with_suffix('.sha256').write_text(digest + '  ' + archive.name + '\n', encoding='ascii')
     result = {'tier': candidate['tier'], 'checkStatus': candidate['checkStatus'], 'buildCacheEnabled': candidate.get('buildCacheEnabled'), 'checksRan': candidate['checksRan'], 'checksSkipped': candidate['checksSkipped'], 'path': str(archive), 'size': archive.stat().st_size, 'sha256': digest, 'files': len(files), 'sourceCommit': commit}
     result.update(package_decision)
-    if args.local:
+    if args.local or args.candidate:
         result['sourceState'] = 'worktree; local review only, not for publication'
     (out / 'package-result.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
     print(json.dumps(result))

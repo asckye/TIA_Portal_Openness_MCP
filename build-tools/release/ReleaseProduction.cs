@@ -22,18 +22,22 @@ internal static partial class ReleaseCommands
         if (options.Has("NoReuse") && options.Has("SkipBuild")) throw new ReleaseException("-NoReuse and -SkipBuild cannot be combined");
         var git = options.Get("Git", "git");
         if (options.Has("BumpOnly")) return BumpReleaseOnly(version, git);
+        var changelog = File.ReadAllText(Path.Combine(Root, "CHANGELOG.md"));
+        var entry = ReleasePrerequisites.RequireChangelog(changelog, version);
+        ReleasePrerequisites.RequireMarketplaceVersion(Root, version);
+        TestReleaseDocumentation(version, requireNewest: true);
         var companion = ReleaseCompanionPython(options);
         var python = DecoderPythonOptions(options).Get("Python")!;
         ReleasePrerequisites.RequireEcosystemPython(companion, Path.Combine(Root, "scripts/ecosystem/plc_tools_bridge.py"), python);
+        if (options.Has("AdoptEvidence")) throw new ReleaseException("release now runs its own full test stage; -AdoptEvidence is no longer supported");
+        Environment.SetEnvironmentVariable(ReleaseEvidence.AdoptionVariable, null);
         ReleaseEvidence.RequireNormalizedWorkingBytes(Root, git);
         Environment.SetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON", companion);
-        NightlyRuns.RequireRelease(Root, git);
         var parallelism = GetMaxParallelism(options).ToString(System.Globalization.CultureInfo.InvariantCulture);
         var publicApiRoot = ResolveReleaseApiRoot(options);
         var nugetConfig = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG") ?? Environment.GetEnvironmentVariable("RestoreConfigFile");
         var v20 = ResolveReleaseApi(options.Get("V20ReferenceRoot"), publicApiRoot, 20);
         var v21 = ResolveReleaseApi(options.Get("V21ReferenceRoot"), publicApiRoot, 21);
-        var adopt = options.Get("AdoptEvidence");
 
         if (options.Has("EarlyGatesOnly"))
         {
@@ -67,10 +71,6 @@ internal static partial class ReleaseCommands
         // because a process of another worktree cannot lock this checkout's runtime folders.
         RefuseOrStopStrayEngines(options.Has("KillStrayEngine"), dryRun || preparation is not null ? Root : null);
 
-        var changelog = File.ReadAllText(Path.Combine(Root, "CHANGELOG.md"));
-        var entry = Regex.Match(changelog, "(?m)^## \\[(" + ReleaseVersions.VersionPattern + ")\\][^\\r\\n]*\\r?\\n");
-        if (!entry.Success) throw new ReleaseException("CHANGELOG.md has no \"## [x.y.z]\" entry");
-        if (entry.Groups[1].Value != version) throw new ReleaseException("newest CHANGELOG entry is " + entry.Groups[1].Value + ", not " + version + " - write the entry first");
         if (!File.Exists(Path.Combine(Root, "docs/releases", "v" + version + ".md"))) throw new ReleaseException("docs/releases/v" + version + ".md is missing - write the release note first");
         // Pre-release only: the notes carry the current generated "Not verified on a real TIA Portal" section.
         if (releaseVersion.IsPrerelease && PrereleaseNotes.CurrentError(Root, version) is { } notesError) throw new ReleaseException(notesError);
@@ -88,10 +88,6 @@ internal static partial class ReleaseCommands
         var logRoot = Path.Combine(Root, "bin-build/release-runs", DateTime.Now.ToString("yyyyMMdd-HHmmss-fff", System.Globalization.CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(logRoot);
         var clock = new ReleaseStageClock(logRoot);
-        // Adoption is verified before anything is archived, bumped or built: the evidence binds this clean commit (P8-93).
-        JsonObject? adoption = null;
-        if (adopt is not null)
-            clock.Run("adopt-evidence", () => adoption = AdoptReleaseEvidence(options, version, git, publicApiRoot, nugetConfig, python, logRoot, token, dryRun || preparation is not null));
         // Publication never trusts cached outputs or prior validation records, including -Resume.
         var archiveRecord = TryReadBuildRecord("manifest/release-build.json");
         var archiveOutput = ReleaseRecords.MovePreviousReleaseOutput(Root, version);
@@ -107,34 +103,33 @@ internal static partial class ReleaseCommands
             Console.WriteLine("WARNING docs/reference/capabilities.md does not mention " + version + " - add the release entry by hand");
         if (!File.ReadAllText(Path.Combine(Root, "docs/development/roadmap.md")).Contains(version, StringComparison.Ordinal))
             Console.WriteLine("WARNING docs/development/roadmap.md does not mention " + version + " - add the roadmap entry by hand");
-        if (adoption is not null) RequireAdoptedTreeUnchanged(git, adoption);
-        clock.Run("early-gates", () => RunReleaseEarlyGates(version, python, publicApiRoot, runTemp, nugetConfig, adoptedSuites: adoption is not null));
+        clock.Run("analyzer-refresh", () => RefreshReleaseAnalyzers(options, publicApiRoot, nugetConfig, logRoot));
+        clock.Run("early-gates", () => RunReleaseEarlyGates(version, python, publicApiRoot, runTemp, nugetConfig));
 
-        // Adopted: the preparation and completion run without -Test; the record then says so (test=false) and names the evidence.
-        string[] test = adoption is null ? ["-Test"] : [];
+        // Producers stage every runtime and keep their binary/safety checks; the full test stage follows them.
         var stages = new ReleaseBuildStages(
             Prepare: () =>
             {
                 Console.WriteLine("Preparing build-multi-version: publication requires a cold rebuild");
-                List<string> args = ["build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-PrepareOnly", .. test, "-Offline", "-MaxParallelism", parallelism];
+                List<string> args = ["build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-PrepareOnly", "-Offline", "-MaxParallelism", parallelism];
                 if (nugetConfig is not null) args.AddRange(["-NuGetConfig", nugetConfig]);
                 clock.Run("multi-version-preparation", () => RunReleaseCommand(args.ToArray(), "multi-version preparation", logRoot, runTemp, publicApiRoot));
-                if (adoption is { } adopted)
-                    clock.Run("adoption-local-checks", () => RunAdoptionLocalChecks(adopted, publicApiRoot, python, nugetConfig, logRoot, runTemp, GetMaxParallelism(options)));
             },
             BuildRelease: () =>
             {
-                var args = new List<string> { "build-release", "-V20ReferenceRoot", v20, "-V21ReferenceRoot", v21, "-Python", python, "-ReleaseDate", date, "-MaxParallelism", parallelism };
+                var args = new List<string> { "build-release", "-DeferTests", "-V20ReferenceRoot", v20, "-V21ReferenceRoot", v21, "-Python", python, "-ReleaseDate", date, "-MaxParallelism", parallelism };
                 if (nugetConfig is not null) args.AddRange(["-NuGetConfig", nugetConfig]);
                 clock.Run("build-release", () => RunReleaseCommand(args.ToArray(), "build-release", logRoot, runTemp, publicApiRoot));
             },
             Complete: () =>
             {
-                List<string> args = ["build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-CompleteOnly", .. test, "-Offline", "-MaxParallelism", parallelism];
+                List<string> args = ["build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-CompleteOnly", "-DeferTests", "-Offline", "-MaxParallelism", parallelism];
                 if (nugetConfig is not null) args.AddRange(["-NuGetConfig", nugetConfig]);
                 clock.Run("multi-version-completion", () => RunReleaseCommand(args.ToArray(), "multi-version completion", logRoot, runTemp, publicApiRoot));
             });
         ReleaseStageRunner.Invoke(stages);
+        ReleaseTestResults? tests = null;
+        clock.Run("parallel-tests", () => tests = RunReleaseTestStage(options, publicApiRoot, logRoot, runTemp, python, nugetConfig));
         var deliveryPath = Path.Combine(Root, "manifest/delivery.json");
         using (var delivery = JsonDocument.Parse(File.ReadAllText(deliveryPath)))
             if (string.IsNullOrWhiteSpace(GetJsonString(delivery.RootElement, "multiVersionBuildSha256")))
@@ -148,9 +143,9 @@ internal static partial class ReleaseCommands
         clock.Run("record-checks-and-candidate-package", () => RunReleaseParallel(
         [
             ("compare-release-records", () => clock.Run("compare-release-records", () => RunReleaseCommand(["compare-release-records"], "release record comparison", logRoot, runTemp, publicApiRoot))),
-            ("preflight", () => clock.Run("preflight", () => RunReleaseCommand(["preflight"], "release preflight", logRoot, runTemp, publicApiRoot))),
+            ("preflight", () => clock.Run("preflight", () => { if (Preflight(Options.Parse([], new HashSet<string>()), tests) != 0) throw new ReleaseException("Release preflight failed"); })),
             ("strict-delivery-validation", () => clock.Run("strict-delivery-validation", () => RunReleaseCommand(["validate-bundle", "-Strict"], "strict delivery validation", logRoot, runTemp, publicApiRoot))),
-            ("candidate-package", () => clock.Run("candidate-package", () => RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--local", "--output-directory", candidateOutput, .. ReleaseValidation.PackageToolArguments()],
+            ("candidate-package", () => clock.Run("candidate-package", () => RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--candidate", "--output-directory", candidateOutput, .. ReleaseValidation.PackageToolArguments()],
                 "candidate-package", logRoot, runTemp, publicApiRoot)))
         ], Path.Combine(logRoot, "record-checks"), 4));
         string? frozenZip = null, frozenZipHash = null;
@@ -162,7 +157,7 @@ internal static partial class ReleaseCommands
             frozenRuntimes = ReleaseCandidate.PackageInventory(frozenZip);
             ReleaseCandidate.RequireRuntimeFiles(Root, frozenRuntimes);
         }
-        clock.Run("candidate-checks", () => RunProductionCandidateChecks(plan, options, publicApiRoot, logRoot, candidateOutput, runTemp, python));
+        clock.Run("candidate-checks", () => RunProductionCandidateChecks(plan, options, publicApiRoot, logRoot, candidateOutput, runTemp, python, tests));
         if (preparation is not null)
         {
             clock.Run("candidate-runtime-bindings", () =>
@@ -170,14 +165,21 @@ internal static partial class ReleaseCommands
                 ReleaseCandidate.RequireRuntimeFiles(Root, frozenRuntimes!);
                 if (ReleaseRecords.HashFile(frozenZip!) != frozenZipHash) throw new ReleaseException("Candidate ZIP changed during its checks");
             });
-            return FinishPreparedCandidate(options, preparation, adoption, plan, logRoot, candidateOutput, clock, python, runTemp, publicApiRoot, frozenZipHash!);
+            return FinishPreparedCandidate(options, preparation, null, plan, logRoot, candidateOutput, clock, python, runTemp, publicApiRoot, frozenZipHash!);
         }
         WriteTierRecord(plan, passed: true);
-        if (adoption is not null) RequireAdoptedRecordChanges(git, adoption);
         if (dryRun)
         {
-            var code = FinishReleaseDryRun(releaseVersion, summary, candidateOutput, logRoot, git, options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"));
-            if (adoption is not null) Console.WriteLine("Adopted evidence recorded in manifest/multi-version-build.json (adoptedValidation); CI was not read in this dry run.");
+            var verifiedOutput = Path.Combine(logRoot, "verified-package");
+            clock.Run("package", () => RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--candidate",
+                "--output-directory", verifiedOutput, "--candidate-results", Path.Combine(candidateOutput, "package-result.json"),
+                .. ReleaseValidation.PackageToolArguments()], "verified-package", logRoot, runTemp, publicApiRoot));
+            using var package = JsonDocument.Parse(File.ReadAllText(Path.Combine(verifiedOutput, "package-result.json")));
+            var zip = GetJsonString(package.RootElement, "path");
+            ReleaseCheckPolicy.Load(Root).RequireFullPackage(zip);
+            clock.Run("verify-package", () => RunReleaseExternal(python, [Path.Combine(Root, "scripts/checks/Verify-ReleaseAsset.py"), zip,
+                "--working-tree", "--git", ResolveApplication(git)], "verify-package", logRoot, runTemp, publicApiRoot));
+            var code = FinishReleaseDryRun(releaseVersion, summary, verifiedOutput, logRoot, git, options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"));
             Console.WriteLine("Stage times (" + Path.Combine(logRoot, "stage-times.json") + "):");
             clock.Print();
             return code;
@@ -305,57 +307,39 @@ internal static partial class ReleaseCommands
         return GitAtRootText(root, git, ["rev-parse", "HEAD"]);
     }
 
-    private static void RunReleaseEarlyGates(string version, string python, string apiRoot, string runTemp, string? nugetConfig, bool adoptedSuites = false)
+    private static void RunReleaseEarlyGates(string version, string python, string apiRoot, string runTemp, string? nugetConfig)
     {
         TestReleaseDocumentation(version, requireNewest: true);
         var outputDirectory = Path.Combine(Root, "bin-build/release-early-gates", Guid.NewGuid().ToString("N"));
-        var cliHome = ReleaseCliHome(runTemp);
-        // These checks only read the checkout (check-all runs the same commands side by side); the ones that build follow one at a time.
+        // The fresh analyzer report is already available; these checks read the checkout.
         RunReleaseParallel(
         [
             ("repository", () => RunReleaseCommand(["check-repository", "-NoBinaries"], "repository, links, bundle layout and delivery set", outputDirectory, runTemp, apiRoot)),
             ("dead-tool-references", () => RunReleaseCommand(["check-dead-tool-references"], "dead tool references", outputDirectory, runTemp, apiRoot)),
             ("bundle-before-build", () => RunReleaseCommand(["validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes", "-PendingRelease", version], "repository bundle validation before build", outputDirectory, runTemp, apiRoot)),
             ("product-catalogs", () => RunReleaseCommand(["generate-catalogs", "-Check"], "product catalogs", outputDirectory, runTemp, apiRoot)),
-            ("tool-usage-catalog", () => RunReleaseCommand(["generate-tool-usage", "-Check"], "tool usage catalog", outputDirectory, runTemp, apiRoot)),
-            ("native-supervisor-safety", () => RunReleaseSpec("native supervisor safety", python, [Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot)),
-            ("native-mcp-safety", () => RunReleaseSpec("native MCP safety", python, [Path.Combine(Root, "scripts/checks/Test-NativeMcpSession.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot)),
-            ("approval-gate-self-test", () => RunReleaseSpec("release approval gate self-test", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot))
+            ("tool-usage-catalog", () => RunReleaseCommand(["generate-tool-usage", "-Check"], "tool usage catalog", outputDirectory, runTemp, apiRoot))
         ], Path.Combine(outputDirectory, "parallel"), 8);
-        RunReleaseCommand(["check-bundle-layout", "-SelfTest"], "bundle layout self-test", outputDirectory, runTemp, apiRoot);
-        // An adopted publication takes these three suites from the evidence of its commit (check-all and the validate-bundle workflow).
-        if (!adoptedSuites)
-        {
-            RunReleaseCommand(["test-suites", "-Suite", "source-contracts"], "version catalog wiring", outputDirectory, runTemp, apiRoot);
-            RunSuiteForReleaseGates("write-guard", python, outputDirectory, runTemp, cliHome, apiRoot, nugetConfig);
-            RunSuiteForReleaseGates("crash-evidence", python, outputDirectory, runTemp, cliHome, apiRoot, nugetConfig);
-        }
         // The V21 route-selection and PLC-name fixtures run as PLC harness jobs in the multi-version preparation (P8-04l).
     }
 
-    private static void RunSuiteForReleaseGates(string suite, string python, string output, string runTemp, string cliHome, string apiRoot, string? nugetConfig)
+    private static void RefreshReleaseAnalyzers(Options options, string api, string? nuget, string logs)
     {
-        var results = Path.Combine(output, "suites");
-        Directory.CreateDirectory(results);
-        var dotnet = Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
-        if (string.IsNullOrWhiteSpace(nugetConfig)) throw new ReleaseException("release checks require an offline NuGet config; set TIA_MCP_OFFLINE_NUGET_CONFIG");
-        var project = suite == "write-guard"
-            ? Path.Combine(Root, "tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj")
-            : Path.Combine(Root, "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj");
-        RunReleaseRaw(dotnet, ["restore", project, "--configfile", Path.GetFullPath(nugetConfig), "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"],
-            Path.Combine(output, "restore-" + suite + ".log"), runTemp, cliHome, apiRoot, nugetConfig, "restore " + suite + " suite");
-        var suiteOptions = Options.Parse(["-Suite", suite, "-Dotnet", dotnet, "-NoRestore", "-ResultsDirectory", results], new HashSet<string> { "NoRestore" });
-        var result = RunBuildIsolated(dotnet, [], Path.Combine(output, suite + ".log"), runTemp, cliHome, apiRoot, null, false, suite,
-            env => DotnetSuites.Run(Root, suiteOptions, env));
-        ProcessRunner.RequireSuccess(result, suite + " suite failed");
-        _ = ReadSuitePassed(results, suite);
+        if (string.IsNullOrWhiteSpace(nuget)) throw new ReleaseException("Release requires an offline NuGet config before building analyzer reports");
+        var output = Path.Combine(logs, "analyzer-refresh");
+        var catalog = DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root);
+        // The graph compiles to private paths so it never overwrites the running
+        // release tool. It executes no tests and does not replace the producers.
+        ProcessRunner.RequireSuccess(CheckAllBuildOnce(ReleaseAnalyzerOptions(options), CheckAllBuildInventory(catalog, api), output, Dotnet, api, nuget,
+            Math.Max(1, Math.Min(GetMaxParallelism(options), Environment.ProcessorCount))), "Fresh release analyzer build");
+        var directory = Path.Combine(output, "build/analyzer-warnings");
+        if (AnalyzerWarnings.Run(Root, Options.Parse(["-Check", "-Complete", "-DiagnosticsDirectory", directory], new HashSet<string> { "Check", "Complete" })) != 0)
+            throw new ReleaseException("Fresh release analyzer report failed the warning ratchet");
+        AnalyzerWarnings.RememberDirectory(Root, directory);
     }
 
-    private static void RunReleaseSpec(string name, string executable, IEnumerable<string> args, string output, string runTemp, string cliHome, string apiRoot)
-    {
-        var result = RunBuildIsolated(executable, args, Path.Combine(output, Regex.Replace(name, "[^A-Za-z0-9._-]", "_") + ".log"), runTemp, cliHome, apiRoot, null, false, name);
-        ProcessRunner.RequireSuccess(result, name + " failed");
-    }
+    internal static Options ReleaseAnalyzerOptions(Options options) =>
+        Options.Parse([.. options.Arguments(), "-Cold"], new HashSet<string> { "Cold" });
 
     // The run's .NET CLI home holds its fresh NuGet package folder. Under bin-build/release-runs/<run> the deepest package files
     // passed MAX_PATH (262 characters for Microsoft.Extensions.DependencyInjection.Abstractions 10.0.0-preview.4) and MSBuild could not

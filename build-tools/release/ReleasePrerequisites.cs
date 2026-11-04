@@ -9,6 +9,29 @@ internal sealed record PrerequisiteResult(string Name, bool Passed, string Detai
 
 internal static class ReleasePrerequisites
 {
+    internal static Match RequireChangelog(string changelog, string version)
+    {
+        var entry = Regex.Match(changelog, "(?m)^## \\[(" + ReleaseVersions.VersionPattern + ")\\]([^\\r\\n]*)\\r?\\n");
+        if (!entry.Success) throw new ReleaseException("CHANGELOG.md has no released version entry");
+        if (entry.Groups[1].Value != version)
+            throw new ReleaseException("newest CHANGELOG entry is " + entry.Groups[1].Value + ", not " + version + " - write the entry first");
+        var date = Regex.Match(entry.Groups[2].Value, @"^\s*-\s*(\d{4}-\d{2}-\d{2})\s*$");
+        if (!date.Success || !DateOnly.TryParseExact(date.Groups[1].Value, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out _))
+            throw new ReleaseException("Newest CHANGELOG entry must have a real ISO date (yyyy-MM-dd): " + entry.Value.Trim());
+        return entry;
+    }
+
+    internal static void RequireMarketplaceVersion(string root, string version)
+    {
+        using var plugin = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(root, ".claude-plugin/plugin.json")));
+        using var marketplace = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(root, ".claude-plugin/marketplace.json")));
+        var name = plugin.RootElement.GetProperty("name").GetString();
+        var entries = marketplace.RootElement.GetProperty("plugins").EnumerateArray().Where(row => row.GetProperty("name").GetString() == name).ToArray();
+        if (entries.Length != 1 || entries[0].GetProperty("version").GetString() != version)
+            throw new ReleaseException(".claude-plugin/marketplace.json version must match -Version before the release build: " + version);
+    }
+
     internal static IReadOnlyList<PrerequisiteResult> Evaluate(IEnumerable<PrerequisiteProbe> probes)
     {
         var results = new List<PrerequisiteResult>();
@@ -34,10 +57,10 @@ internal static class ReleasePrerequisites
         return text;
     }
 
-    internal static string RequireEcosystemPython(string executable, string bridge, string python)
+    internal static string RequireEcosystemPython(string executable, string bridge, string python, SuiteProcess? process = null)
     {
         var code = "import runpy,sys; assert sys.version_info >= (3,12); import reportlab; m=runpy.run_path(sys.argv[1]); group,errors=m['load_groups'](); assert not errors, errors; assert len(m['catalog'](group)) >= 49";
-        var result = ProcessRunner.Run(executable, ["-B", "-c", code, bridge], Path.GetDirectoryName(bridge)!);
+        var result = (process ?? DotnetSuites.RunProcess)(executable, ["-B", "-c", code, bridge], Path.GetDirectoryName(bridge)!, null);
         ProcessRunner.RequireSuccess(result, $"Ecosystem catalogue/dependencies unavailable at '{executable}'; prepare it with 'tia install-plc-tools' and pass -EcosystemPython / -CompanionPython or set TIA_MCP_PLC_TOOLS_PYTHON");
         return executable;
     }

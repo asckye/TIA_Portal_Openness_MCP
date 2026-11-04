@@ -2,13 +2,14 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
-    internal static string ReleaseCompanionPython(Options options)
+    internal static string ReleaseCompanionPython(Options options, string? root = null, Func<string, string?>? environment = null)
     {
+        root ??= Root;
         var executable = options.Get("EcosystemPython") ?? options.Get("CompanionPython")
-            ?? Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
+            ?? (environment ?? Environment.GetEnvironmentVariable)("TIA_MCP_PLC_TOOLS_PYTHON");
         if (string.IsNullOrWhiteSpace(executable))
         {
-            var roots = new[] { Root, options.Get("PublicApiRoot") is { } api ? Path.GetDirectoryName(Path.GetFullPath(api))! : Root };
+            var roots = new[] { root, options.Get("PublicApiRoot") is { } api ? Path.GetDirectoryName(Path.GetFullPath(api))! : root };
             executable = roots.Select(root => Path.Combine(root, "TiaMcp_Output/ecosystem-python/Scripts/python.exe")).FirstOrDefault(File.Exists)
                 ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TiaMcp/ecosystem-python/Scripts/python.exe");
         }

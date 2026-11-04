@@ -14,7 +14,7 @@ internal static partial class ReleaseCommands
     private static readonly IReadOnlyDictionary<string, (int Count, bool Exact)> BuildReleaseCountRules =
         new Dictionary<string, (int, bool)>(StringComparer.Ordinal)
         {
-            ["nativeMcpSafety"] = (8, false), ["diagnosticBehavior"] = (36, false), ["diagnosticRejection"] = (5, false),
+            ["nativeMcpSafety"] = (8, false), ["nativeSupervisor"] = (1, false), ["diagnosticBehavior"] = (36, false), ["diagnosticRejection"] = (5, false),
             ["nativeJournalReader"] = (3, false), ["adapterJournal"] = (8, false), ["processLeases"] = (2, false),
             ["workerProtocol"] = (58, false), ["approvalSafety"] = (7, true),
             ["softwareLookup"] = (45, false),
@@ -161,11 +161,11 @@ internal static partial class ReleaseCommands
         int writeGuardPassed = 0, crashEvidencePassed = 0, offlinePassed = 0, offlineV20Passed = 0, keptCodePassed = 0, keptCodeV20Passed = 0, versionPolicyPassed = 0, updaterPassed = 0, nativeMcpSafety = 0;
         Match lifecycleMatch = Match.Empty;
         // An adopted publication (TIA_MCP_RELEASE_ADOPTION) takes this stage's suite counts from the verified evidence of its commit.
-        var adopted = ReleaseEvidence.LoadAdoption();
+        var adopted = options.Has("DeferTests") ? null : ReleaseEvidence.LoadAdoption();
         if (plan.Includes("offline-suites") && adopted is not null)
             (writeGuardPassed, crashEvidencePassed, offlinePassed, offlineV20Passed, keptCodePassed, keptCodeV20Passed, versionPolicyPassed, updaterPassed, nativeMcpSafety, lifecycleMatch) =
                 AdoptedCommonValidation(adopted, dotnet, python, outputDirectory, runTemp, cliHome, apiRoot);
-        if (plan.Includes("offline-suites") && adopted is null)
+        if (plan.Includes("offline-suites") && adopted is null && !options.Has("DeferTests"))
         {
             RunBuildSpec("approval-gate-self-test", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
             var lifecycle = RunBuildSpec("native-supervisor", python, [Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
@@ -385,7 +385,8 @@ internal static partial class ReleaseCommands
     }
 
     private static CommandResult RunBuildIsolated(string executable, IEnumerable<string> arguments, string log, string runTemp, string cliHome,
-        string apiRoot, string? nuget, bool approval, string name, Func<IDictionary<string, string?>, CommandResult>? inProcess = null)
+        string apiRoot, string? nuget, bool approval, string name, Func<IDictionary<string, string?>, CommandResult>? inProcess = null,
+        IDictionary<string, string?>? additionalEnvironment = null)
     {
         var args = arguments.ToList();
         if (Path.GetFileNameWithoutExtension(executable).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
@@ -417,6 +418,8 @@ internal static partial class ReleaseCommands
             ["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"] = "false",
             ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0", ["MSBUILDDISABLENODEREUSE"] = "1", ["UseSharedCompilation"] = "false", ["NuGetAudit"] = "false"
         };
+        if (additionalEnvironment is not null)
+            foreach (var (key, value) in additionalEnvironment) env[key] = value;
         var result = inProcess is null ? CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env), env) : inProcess(env);
         WriteLog(log, result);
         if (result.ExitCode == 0)

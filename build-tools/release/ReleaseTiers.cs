@@ -8,10 +8,13 @@ internal sealed record ReleaseCheckRule(string Path, string[] Checks);
 internal sealed record ReleaseSelfTest(string Check, string Script, string[]? Arguments = null, string[]? Command = null);
 internal sealed record ReleaseCheckPlan(string Tier, string[] SelectedChecks, string[] SkippedChecks, string[] ChangedPaths)
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ProductionRelease { get; init; }
     internal bool Includes(string check) => SelectedChecks.Contains(check, StringComparer.Ordinal);
 }
 
-internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, ReleaseCheckRule[] Rules, ReleaseSelfTest[] SelfTests, bool IncludeSourceRoots = false)
+internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, ReleaseCheckRule[] Rules, ReleaseSelfTest[] SelfTests, bool IncludeSourceRoots = false,
+    string[]? ReleaseRetiredChecks = null)
 {
     internal static readonly string[] PackageChecks = ["preflight", "binary-build", "product-smoke", "relocation", "package", "bundle-validation"];
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -23,6 +26,19 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
         if (policy.IncludeSourceRoots) policy = policy with { Rules = [.. SourceRoots.Load(root).CheckRules(), .. policy.Rules] };
         policy.Validate();
         return policy;
+    }
+
+    internal ReleaseCheckPolicy ForProductionRelease()
+    {
+        var removed = (ReleaseRetiredChecks ?? []).ToHashSet(StringComparer.Ordinal);
+        if (!removed.SetEquals(["plc-stability", "plc-isolated-stability"]))
+            throw new ReleaseException("Production release retirements must name exactly the approved stability checks");
+        return this with
+        {
+            Checks = Checks.Where(check => !removed.Contains(check)).ToArray(),
+            Rules = Rules.Select(rule => rule with { Checks = rule.Checks.Where(check => !removed.Contains(check)).ToArray() }).ToArray(),
+            ReleaseRetiredChecks = null
+        };
     }
 
     internal void Validate()
@@ -64,6 +80,11 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
 
     internal void ValidatePlan(ReleaseCheckPlan plan)
     {
+        if (plan.ProductionRelease && ReleaseRetiredChecks is not null)
+        {
+            ForProductionRelease().ValidatePlan(plan);
+            return;
+        }
         Tier(plan.Tier);
         var all = plan.SelectedChecks.Concat(plan.SkippedChecks).ToArray();
         if (all.Length != Checks.Length || all.Distinct(StringComparer.Ordinal).Count() != all.Length ||
@@ -113,10 +134,12 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
         RequireFullRecord(record.RootElement);
         if (requireColdBuild && (!record.RootElement.TryGetProperty("buildCacheEnabled", out var cacheEnabled) || cacheEnabled.ValueKind != JsonValueKind.False))
             throw new ReleaseException("Publication requires a full cold rebuild with -NoBuildCache; cached or unknown build provenance is refused.");
+        var policy = record.RootElement.TryGetProperty("productionRelease", out var production) && production.ValueKind == JsonValueKind.True
+            ? ForProductionRelease() : this;
         var ran = record.RootElement.GetProperty("checksRan").EnumerateArray().Select(item => item.GetString()!).ToArray();
         var skipped = record.RootElement.GetProperty("checksSkipped").EnumerateArray().Select(item => item.GetString()!).ToArray();
-        if (skipped.Length != 0 || ran.Length != Checks.Length || ran.Distinct(StringComparer.Ordinal).Count() != ran.Length ||
-            Checks.Except(ran, StringComparer.Ordinal).Any()) throw new ReleaseException("Full package has incomplete release checks.");
+        if (skipped.Length != 0 || ran.Length != policy.Checks.Length || ran.Distinct(StringComparer.Ordinal).Count() != ran.Length ||
+            policy.Checks.Except(ran, StringComparer.Ordinal).Any()) throw new ReleaseException("Full package has incomplete release checks.");
     }
 
     internal static void RequireFullRecord(JsonElement record)
@@ -136,10 +159,13 @@ internal static partial class ReleaseCommands
     private static ReleaseCheckPlan ReleasePlan(Options options)
     {
         var policy = ReleaseCheckPolicy.Load(Root);
+        var production = Environment.GetEnvironmentVariable("TIA_MCP_PRODUCTION_RELEASE") == "1";
+        if (production) policy = policy.ForProductionRelease();
         var path = Environment.GetEnvironmentVariable("TIA_MCP_RELEASE_CHECK_PLAN");
         var plan = path is null ? policy.Select(ReleaseCheckPolicy.Tier(options.Get("Tier")), null)
             : JsonSerializer.Deserialize<ReleaseCheckPlan>(File.ReadAllText(path), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
                 ?? throw new ReleaseException("Release check selection is empty.");
+        if (production) plan = plan with { ProductionRelease = true };
         policy.ValidatePlan(plan);
         if (options.Get("Tier") is { } requested && requested != plan.Tier) throw new ReleaseException("Child tier differs from the candidate check plan.");
         return plan;
@@ -150,6 +176,8 @@ internal static partial class ReleaseCommands
         var path = Path.Combine(Root, "manifest/package-manifest.json");
         var record = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
         record["tier"] = plan.Tier;
+        if (plan.ProductionRelease) record["productionRelease"] = true;
+        else record.Remove("productionRelease");
         record["buildCache"] = JsonSerializer.SerializeToNode(cache ?? CacheEvents());
         record["buildCacheEnabled"] = !(cacheDisabled ?? Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") == "1");
         record["checkStatus"] = passed ? "passed" : "pending";

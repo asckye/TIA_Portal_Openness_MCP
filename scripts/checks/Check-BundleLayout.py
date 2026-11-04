@@ -34,6 +34,7 @@ def release_record(files, delivery=None):
             if any(runtime['toolsList']['sha256'] != digest for runtime in record['plcRuntimes'].values()):
                 raise ValueError('PLC tools-list changed after validation')
     updater_inventory(record)
+    release_run_validation(record)
     return name, record
 
 
@@ -103,7 +104,8 @@ def validate_plc_record(record):
     # P8-04l: a 4.x eight-release record carries no engineCompatibility; its PLC proof is the V20/V21 evidence.
     files = {row['path']: row['sha256'] for row in record_inventory(record)}
     selected = set(record['checkPlan']['selectedChecks'])
-    adopted_binary = selected & {'plc-stability', 'plc-isolated-stability', 'plc-worker-isolation'} if 'adoptedValidation' in record else set()
+    local_run = (record.get('adoptedValidation') or {}).get('source') == 'release-run'
+    adopted_binary = selected & {'plc-stability', 'plc-isolated-stability', 'plc-worker-isolation'} if 'adoptedValidation' in record and not local_run else set()
     # Without -Test the preparation runs only the PLC approval successors, and only for foundation-approval.
     if record.get('test', True) is False:
         selected = {'plc-approval'} if 'foundation-approval' in selected else set()
@@ -135,7 +137,7 @@ def validate_plc_record(record):
                     or check.get('path') != f'bin-build/multi-version/{name}.log' or bound.get(check['path']) != check['sha256']):
                 raise ValueError('Incomplete PLC check receipt: ' + name)
             binary = name.startswith(('stability-c8-', 'stability-c16-', 'worker-protocol-'))
-            if 'adoptedValidation' in record and name in required and binary:
+            if 'adoptedValidation' in record and not local_run and name in required and binary:
                 local = [row for row in record['adoptedValidation']['localChecks'] if row.get('name') == name]
                 if (len(local) != 1 or any(local[0].get(field) != check.get(field) for field in ('path', 'sha256', 'status'))
                         or any(local[0][field]['sha256'] != runtime[field]['sha256'] for field in ('worker', 'host', 'sdkWorker'))):
@@ -144,6 +146,7 @@ def validate_plc_record(record):
                 result = f'bin-build/multi-version/{directory}/result.json'
                 if not any(row['path'] == result and row['sha256'] == bound.get(result) for row in local[0]['artifacts']):
                     raise ValueError('Adopted PLC result is not bound: ' + name)
+
         for name, group in (('localStability', 'plc-stability'), ('isolatedLocalStability', 'plc-isolated-stability')):
             if group not in selected | adopted_binary:
                 continue
@@ -169,6 +172,31 @@ ADOPTED_MULTI_FLAGS = frozenset({'configurationFunctionalTestsExecuted', 'studio
                                  'foundationTransportExecuted', 'toolUsageCoverageExecuted'})
 
 
+def release_run_validation(multi, catalog=None):
+    """Validate the complete, in-place suite roster and its original count gates."""
+    local = (multi or {}).get('adoptedValidation') or {}
+    if local.get('source') != 'release-run':
+        return False
+    if catalog is None:
+        catalog = json.loads((Path(__file__).resolve().parents[2] / 'tests/test-suites.json').read_text('utf-8'))
+    suites = local.get('suites') or {}
+    if multi.get('test') is not True or multi.get('validation', {}).get('dotnetSuites') != suites:
+        raise ValueError('Release-run record must bind the executed suite results')
+    if set(suites) != set(catalog):
+        raise ValueError('Release-run suite roster differs from tests/test-suites.json')
+    artifacts = {row['path']: row['sha256'] for row in multi.get('validationArtifacts', [])}
+    for name, spec in catalog.items():
+        row = suites[name]
+        if (row.get('minimumPassed') != spec['minimumPassed'] or row.get('maximumSkipped') != spec['maximumSkipped']
+                or row.get('passed', 0) < spec['minimumPassed'] or row.get('failed') != 0
+                or row.get('skipped', spec['maximumSkipped'] + 1) > spec['maximumSkipped']
+                or row.get('exitCode') != 0 or row.get('errors') != []
+                or not _re.fullmatch('[0-9a-f]{64}', str(row.get('sha256', '')))
+                or artifacts.get(row.get('trx')) != row['sha256']):
+            raise ValueError('Incomplete release-run suite gate: ' + name)
+    return True
+
+
 def adopted_validation(multi):
     adopted = (multi or {}).get('adoptedValidation') or {}
     evidence = adopted.get('evidence') or {}
@@ -180,6 +208,13 @@ def release_checks(root, package, *records):
     policy = json.loads((root / 'build-tools/release/release-checks.json').read_text('utf-8'))
     if policy.get('includeSourceRoots'):
         policy['rules'] += source_check_rules(root)
+    if package.get('productionRelease') is True:
+        removed = set(policy.get('releaseRetiredChecks', []))
+        if removed != {'plc-stability', 'plc-isolated-stability'}:
+            raise ValueError('Production release retirements differ from the approved checks')
+        policy['checks'] = [name for name in policy['checks'] if name not in removed]
+        for rule in policy['rules']:
+            rule['checks'] = [name for name in rule['checks'] if name not in removed]
     tier = package.get('tier')
     if tier not in ('package', 'quick', 'full'):
         raise ValueError('Package needs an explicit package/quick/full tier; run run-release-build -Tier')
@@ -209,7 +244,8 @@ def release_checks(root, package, *records):
             continue
         plan = record.get('checkPlan', {})
         if (record.get('tier') != tier or plan.get('tier') != tier or plan.get('selectedChecks') != selected
-                or plan.get('skippedChecks') != skipped or plan.get('changedPaths') != package.get('changedPaths', [])):
+                or plan.get('skippedChecks') != skipped or plan.get('changedPaths') != package.get('changedPaths', [])
+                or bool(plan.get('productionRelease')) != bool(package.get('productionRelease'))):
             raise ValueError('Build record check plan differs from candidate package')
     return set(selected)
 from pathlib import Path, PurePosixPath
@@ -403,6 +439,47 @@ def check(root, tracked):
 
 
 class LayoutChecks(unittest.TestCase):
+    def test_production_policy_removes_only_the_two_approved_checks(self):
+        policy = json.loads((ROOT / 'build-tools/release/release-checks.json').read_text('utf-8'))
+        removed = {'plc-stability', 'plc-isolated-stability'}
+        selected = [name for name in policy['checks'] if name not in removed]
+        package = dict(tier='full', productionRelease=True, checksSelected=selected,
+                       checksSkipped=[], checksRan=selected, checkStatus='passed', changedPaths=[])
+        record = dict(tier='full', checkPlan=dict(tier='full', productionRelease=True,
+                      selectedChecks=selected, skippedChecks=[], changedPaths=[]))
+        self.assertEqual(set(selected), release_checks(ROOT, package, record))
+        del record['checkPlan']['productionRelease']
+        with self.assertRaises(ValueError):
+            release_checks(ROOT, package, record)
+        for name in selected:
+            incomplete = dict(package, checksSelected=[check for check in selected if check != name])
+            with self.subTest(check=name), self.assertRaises(ValueError):
+                release_checks(ROOT, incomplete)
+
+    def test_release_run_requires_the_full_roster_and_original_gates(self):
+        import copy
+        self.assertFalse(release_run_validation({}))
+        catalog = {'fixture': {'minimumPassed': 2, 'maximumSkipped': 1}}
+        row = dict(minimumPassed=2, maximumSkipped=1, passed=2, failed=0, skipped=1,
+                   exitCode=0, errors=[], trx='bin-build/run/fixture.trx', sha256='a' * 64)
+        record = dict(test=True, validation=dict(dotnetSuites={'fixture': row}),
+                      adoptedValidation=dict(source='release-run', suites={'fixture': row}),
+                      validationArtifacts=[dict(path=row['trx'], sha256=row['sha256'])])
+        self.assertTrue(release_run_validation(record, catalog))
+        for field, value in [('minimumPassed', 1), ('maximumSkipped', 2), ('passed', 1), ('failed', 1),
+                             ('skipped', 2), ('exitCode', 1), ('errors', ['failed']), ('sha256', 'b' * 64)]:
+            changed = copy.deepcopy(record)
+            changed['adoptedValidation']['suites']['fixture'][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                release_run_validation(changed, catalog)
+        changed = copy.deepcopy(record)
+        changed['adoptedValidation']['suites']['unexpected'] = row.copy()
+        with self.assertRaises(ValueError):
+            release_run_validation(changed, catalog)
+        record['adoptedValidation']['suites'].clear()
+        with self.assertRaises(ValueError):
+            release_run_validation(record, catalog)
+
     def test_openness_group_delivery_excludes_every_worker_and_host(self):
         rules = load_delivery(ROOT)
         self.assertEqual([], openness_group_delivery_errors(rules))

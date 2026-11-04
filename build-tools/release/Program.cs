@@ -7,7 +7,7 @@ internal static class Program
     private static readonly HashSet<string> BooleanOptions = new(StringComparer.OrdinalIgnoreCase)
     {
         "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
-        "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "Strict", "NoBinaries",
+        "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "DeferTests", "Strict", "NoBinaries",
         "SkipSourceHashes", "PackageMode", "UseReferenceAssemblyPackage", "Rebuild", "FunctionsOnly", "PassThru", "SkipFullEngines",
         "DraftOnly", "DeleteDraft", "NoBuildCache", "NoResultCache", "ResultCacheInventory", "CompileOnly", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "Clean", "Cold", "ProveEquivalence", "BuildOnly", "Initialize", "Complete", "GateOnly", "Build", "NoRecord", "BumpOnly", "Ci", "Affected", "Quick", "FailFast", "Reuse", "SharedLibrariesOnly", "ConfirmPublication"
     };
@@ -42,7 +42,7 @@ internal static class Program
             if (command.Equals("nightly", StringComparison.OrdinalIgnoreCase) && options.Get("Worktree") is { } nightlyRoot)
                 Environment.CurrentDirectory = Path.GetFullPath(nightlyRoot);
             if ((command.Equals("check-all", StringComparison.OrdinalIgnoreCase) || command.Equals("nightly", StringComparison.OrdinalIgnoreCase) ||
-                 command.Equals("run-release-build", StringComparison.OrdinalIgnoreCase) ||
+                 command.Equals("run-release-build", StringComparison.OrdinalIgnoreCase) || command.Equals("release", StringComparison.OrdinalIgnoreCase) ||
                  command.Equals("build-solutions", StringComparison.OrdinalIgnoreCase) ||
                  command.Equals("preflight", StringComparison.OrdinalIgnoreCase) ||
                  command.Equals("test-suites", StringComparison.OrdinalIgnoreCase) || options.Has("SelfTest")) &&
