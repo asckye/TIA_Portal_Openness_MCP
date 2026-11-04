@@ -17,8 +17,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/EngineeringExtensions.cs" Link="EngineeringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/HmiNavigator.cs" Link="HmiNavigator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessSession.cs" Link="OpennessSession.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessSession.Blocks.cs" Link="OpennessSession.Blocks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessSession.Software.cs" Link="OpennessSession.Software.cs" />
     <Compile Include="../OpennessSessionFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessVersionControl.cs" Link="OpennessVersionControl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessVersionControl.Tree.cs" Link="OpennessVersionControl.Tree.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VersionControlPrimitives.cs" Link="VersionControlPrimitives.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VciExportPolicy.cs" Link="VciExportPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcBlockPrimitives.cs" Link="PlcBlockPrimitives.cs" />

@@ -1,0 +1,411 @@
+#nullable disable
+#if STUDIO_VCI
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Siemens.Engineering;
+using Siemens.Engineering.HW;
+using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Tags;
+using Siemens.Engineering.SW.Types;
+using Siemens.Engineering.VersionControl;
+#if !STUDIO_VCI_MODERN
+using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
+#endif
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Adapters.Contracts.Studio;
+using TiaMcp.Adapters.Contracts.Studio.Errors;
+#else
+using TiaOpenness.Contracts.Models;
+using TiaOpenness.Contracts.Models.Errors;
+#endif
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using IVersionControl = TiaMcp.Adapters.Contracts.IVersionControl;
+using ITiaSession = TiaMcp.Adapters.Contracts.IStudioSession;
+#else
+using TiaOpenness.Core.Abstractions;
+#endif
+
+namespace TiaOpenness.Openness
+{
+    /// <summary>
+    /// TIA Portal's Version Control Interface over Openness.
+    ///
+    /// Three things about this API are not obvious and cost a lot of time if rediscovered:
+    ///
+    /// <list type="number">
+    /// <item>
+    /// <b>Lifetime.</b> Openness hands out COM-backed proxies whose lifetime is tied to the
+    /// parent they came from. Let the service, or an intermediate group, be collected and every
+    /// object reached through it dies with it: "Access to a disposed object of type Workspace".
+    /// So the service is cached for the life of the project and every intermediate is rooted in
+    /// <see cref="_keepAlive"/>. Lazy iterators are avoided for the same reason - a yield-return
+    /// walk lets a group be collected between MoveNext calls.
+    /// </item>
+    /// <item>
+    /// <b>Mapping is <c>ExportObject</c>, not <c>ConnectObject</c>.</b> Despite the names,
+    /// <c>ExportObject</c> is what creates a mapping: it writes the text file and registers the
+    /// object. <c>ConnectObject</c> only binds an object to files that already exist.
+    /// </item>
+    /// <item>
+    /// <b>Equal objects cannot be synchronized.</b> TIA refuses with "Synchronize cannot be
+    /// called on a workspace mapping that has a compare status of equal", so "force everything"
+    /// is not an option that exists; equal objects are skipped, never attempted.
+    /// </item>
+    /// </list>
+    /// </summary>
+    internal sealed partial class OpennessVersionControl : IVersionControl
+    {
+        public IReadOnlyList<WorkspaceInfo> ListWorkspaces()
+        {
+            return AllWorkspaces().Select(Describe).ToList();
+        }
+
+        // ---- tree walk -----------------------------------------------------
+
+        private sealed class VcNode
+        {
+            public IEngineeringObject Object;
+            /// <summary>Position in the project tree, for the report.</summary>
+            public string Label;
+            /// <summary>Name to give the file.</summary>
+            public string Name;
+            /// <summary>Folder inside the workspace; empty means the workspace root.</summary>
+            public string RelativeDirectory;
+            /// <summary>May the walk descend when VCI cannot map this node as a unit?</summary>
+            public bool Descendable;
+            public bool IsDevice;
+        }
+
+        /// <summary>
+        /// Typed children only. The reflection route (GetComposition) hands back transient proxies
+        /// that Openness disposes immediately, so anything reached that way throws on first use.
+        /// </summary>
+        private List<VcNode> Children(VcNode node)
+        {
+            var children = new List<VcNode>();
+
+            var project = node.Object as Project;
+            if (project != null)
+            {
+                foreach (var device in PlcNavigator.AllDevices(project).ToList())
+                {
+                    children.Add(Node(device, device.Name, device.Name, device.Name, true, isDevice: true));
+                }
+                return children;
+            }
+
+            var deviceNode = node.Object as Device;
+            if (deviceNode != null)
+            {
+                var software = PlcNavigator.FindPlcSoftware(deviceNode);
+                if (software != null)
+                {
+                    children.Add(Node(software, node.Label + "/Software", deviceNode.Name, node.RelativeDirectory, true));
+                }
+                return children;
+            }
+
+            var plc = node.Object as PlcSoftware;
+            if (plc != null)
+            {
+                children.Add(Node(VersionControlPrimitives.BlockGroup(plc), node.Label + "/Program blocks", "Blocks", node.RelativeDirectory, true));
+                children.Add(Node(VersionControlPrimitives.TypeGroup(plc), node.Label + "/PLC data types", "Types", node.RelativeDirectory, true));
+                children.Add(Node(VersionControlPrimitives.TagTableGroup(plc), node.Label + "/PLC tags", "Tags", node.RelativeDirectory, true));
+                return children;
+            }
+
+            var blockGroup = node.Object as PlcBlockGroup;
+            if (blockGroup != null)
+            {
+                foreach (var block in Keep(VersionControlPrimitives.Blocks(blockGroup)).ToList())
+                {
+                    children.Add(Node(Keep(block), node.Label + "/" + block.Name, block.Name, node.RelativeDirectory, false));
+                }
+                foreach (var sub in Keep(VersionControlPrimitives.BlockGroups(blockGroup)).ToList())
+                {
+                    children.Add(Node(Keep(sub), node.Label + "/" + sub.Name, sub.Name,
+                        Combine(node.RelativeDirectory, sub.Name), true));
+                }
+                return children;
+            }
+
+            var typeGroup = node.Object as PlcTypeGroup;
+            if (typeGroup != null)
+            {
+                foreach (var type in Keep(VersionControlPrimitives.Types(typeGroup)).ToList())
+                {
+                    children.Add(Node(Keep(type), node.Label + "/" + type.Name, type.Name, node.RelativeDirectory, false));
+                }
+                foreach (var sub in Keep(VersionControlPrimitives.TypeGroups(typeGroup)).ToList())
+                {
+                    children.Add(Node(Keep(sub), node.Label + "/" + sub.Name, sub.Name,
+                        Combine(node.RelativeDirectory, sub.Name), true));
+                }
+                return children;
+            }
+
+            var tagGroup = node.Object as PlcTagTableGroup;
+            if (tagGroup != null)
+            {
+                foreach (var table in Keep(VersionControlPrimitives.TagTables(tagGroup)).ToList())
+                {
+                    children.Add(Node(Keep(table), node.Label + "/" + table.Name, table.Name, node.RelativeDirectory, false));
+                }
+                foreach (var sub in Keep(VersionControlPrimitives.TagTableGroups(tagGroup)).ToList())
+                {
+                    children.Add(Node(Keep(sub), node.Label + "/" + sub.Name, sub.Name,
+                        Combine(node.RelativeDirectory, sub.Name), true));
+                }
+                return children;
+            }
+
+            return children;
+        }
+
+        private static VcNode Node(IEngineeringObject o, string label, string name, string relativeDirectory,
+            bool descendable, bool isDevice = false)
+        {
+            return new VcNode
+            {
+                Object = o,
+                Label = label,
+                Name = name,
+                RelativeDirectory = relativeDirectory ?? string.Empty,
+                Descendable = descendable,
+                IsDevice = isDevice,
+            };
+        }
+
+        private static bool SkipByFilter(VcNode node, string deviceFilter)
+        {
+            return !string.IsNullOrWhiteSpace(deviceFilter)
+                && node.IsDevice
+                && !string.Equals(node.Name, deviceFilter.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>Which formats VCI can write this object as. Empty means it cannot be mapped.</summary>
+        private IList<string> SupportedFormats(ref Workspace workspace, IEngineeringObject o)
+        {
+#if STUDIO_VCI_MODERN
+            var formats = VersionControlPrimitives.SupportedFormats(workspace, o);
+#else
+            // The old VCI API exposes individual PLC block/type/tag-table mappings only.
+            IList<string> formats = o is PlcBlock || o is PlcType || o is PlcTagTable ? new[] { "xml" } : new string[0];
+#endif
+            return formats == null ? new List<string>() : formats.ToList();
+        }
+
+        private MappedObject Existing(ref Workspace workspace, IEngineeringObject o)
+        {
+#if STUDIO_VCI_MODERN
+            return VersionControlPrimitives.Find(VersionControlPrimitives.MappedObjects(workspace), o);
+#else
+            return workspace.Mappings.Find(o);
+#endif
+        }
+
+        /// <summary>s7dcl is the reviewable text format; the others are fallbacks.</summary>
+        private static string PreferredFormat(IList<string> formats)
+        {
+            return TiaMcp.Adapters.Native.Vci.VciExportPolicy.PreferredFormat(formats)!;
+        }
+
+        // ---- service and lifetime ------------------------------------------
+
+        private VersionControlInterface Service()
+        {
+            var project = _project();
+            if (project == null)
+            {
+                Reset();
+                throw new SessionPreconditionException(SessionFailureReason.NoProjectOpen, "No project is open. Call project.open first.");
+            }
+
+            if (_service != null && ReferenceEquals(_serviceOwner, project)) return _service;
+
+            var service = VersionControlPrimitives.Service(project as IEngineeringServiceProvider);
+            if (service == null)
+            {
+                throw new NotSupportedException(
+                    "This project exposes no Version Control Interface in the current installation.");
+            }
+
+            Reset();
+            _serviceOwner = project;
+            _service = service;
+            Keep(service);
+            return service;
+        }
+
+        private void Reset()
+        {
+            _keepAlive.Clear();
+            _service = null;
+            _serviceOwner = null;
+        }
+
+        /// <summary>
+        /// Roots an Openness proxy for as long as the project is open. Letting an intermediate be
+        /// collected disposes everything reached through it.
+        /// </summary>
+        private T Keep<T>(T o) where T : class
+        {
+            if (o != null) _keepAlive.Add(o);
+            return o;
+        }
+
+        /// <summary>Nothing here is lazy: a yield-return walk lets the groups be collected mid-iteration.</summary>
+        private List<Workspace> AllWorkspaces()
+        {
+            var found = new List<Workspace>();
+            var pending = new Stack<WorkspaceGroup>();
+            pending.Push(Keep(VersionControlPrimitives.Group(Service())));
+
+            while (pending.Count > 0)
+            {
+                var group = pending.Pop();
+                foreach (var workspace in Keep(VersionControlPrimitives.Workspaces(group)).ToList()) found.Add(Keep(workspace));
+                foreach (var sub in Keep(VersionControlPrimitives.Groups(group)).ToList()) pending.Push(Keep(sub));
+            }
+            return found;
+        }
+
+        private Workspace FindWorkspace(string name)
+        {
+            var all = AllWorkspaces();
+            if (all.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "This project has no version control workspace yet. Create one first, then map the " +
+                    "project's objects into it.");
+            }
+            if (string.IsNullOrWhiteSpace(name)) return all[0];
+
+            var match = all.FirstOrDefault(w =>
+                string.Equals(SafeName(w), name.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (match == null)
+            {
+                throw new KeyNotFoundException("No workspace named '" + name + "'. Available: " +
+                    string.Join(", ", all.Select(SafeName)));
+            }
+            return match;
+        }
+
+        // ---- defensive readers ---------------------------------------------
+
+        private static WorkspaceInfo Describe(Workspace workspace)
+        {
+            var count = 0;
+            try { count = Mappings(workspace).Count(); }
+            catch (Exception) /* swallow(enumerate-optional): unreadable workspace mappings leave the descriptive mapping count at zero */ { count = 0; }
+
+            return new WorkspaceInfo
+            {
+                Name = SafeName(workspace),
+                RootPath = SafeRoot(workspace),
+                Language = SafeLanguage(workspace),
+                MappedObjectCount = count,
+            };
+        }
+
+        private static string SafeName(Workspace workspace)
+        {
+            try { return VersionControlPrimitives.Name(workspace); } catch (Exception) /* swallow(probe-optional): a stale workspace name uses the diagnostic placeholder */ { return "?"; }
+        }
+
+        private static string SafeRoot(Workspace workspace)
+        {
+            try { return VersionControlPrimitives.Root(workspace)?.FullName ?? "?"; } catch (Exception) /* swallow(probe-optional): an unavailable workspace root uses the diagnostic placeholder */ { return "?"; }
+        }
+
+        private static string SafeLanguage(Workspace workspace)
+        {
+#if STUDIO_VCI_MODERN
+            try { return VersionControlPrimitives.Language(workspace)?.ToString() ?? "-"; } catch (Exception) /* swallow(native-fallback): unreadable workspace language uses the existing dash placeholder in the workspace description */ { return "-"; }
+#else
+            return "-";
+#endif
+        }
+
+        private static string SafeObjectName(MappedObject mapped)
+        {
+#if STUDIO_VCI_MODERN
+            try { return VersionControlPrimitives.FileName(mapped) ?? "?"; } catch (Exception) /* swallow(native-fallback): unreadable mapped-object names use the question-mark label in status and sync progress results */ { return "?"; }
+#else
+            return Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath);
+#endif
+        }
+
+#if STUDIO_VCI_MODERN
+        private static string SafeFile(MappedObject mapped)
+        {
+            try
+            {
+                var directory = string.Empty;
+                try { directory = VersionControlPrimitives.Directory(mapped)?.FullName ?? string.Empty; } catch (Exception) /* swallow(native-fallback): unreadable mapping directory metadata leaves the filename-only status display available */ { }
+                var name = VersionControlPrimitives.FileName(mapped) ?? string.Empty;
+                return directory.Length == 0 ? name : Path.Combine(directory, name);
+            }
+            catch (Exception) /* swallow(native-fallback): unreadable mapping file metadata uses the question-mark placeholder in the status report */
+            {
+                return "?";
+            }
+        }
+
+        private static string SafeFormat(MappedObject mapped)
+        {
+            try { return VersionControlPrimitives.Format(mapped)?.ToString(); } catch (Exception) /* swallow(native-fallback): unreadable mapping format is omitted from the status report */ { return null; }
+        }
+
+#else
+        private static string SafeFile(MappedObject mapped)
+        {
+            var workspace = (Workspace)mapped.Parent;
+            return Path.Combine(VersionControlPrimitives.Root(workspace).FullName, mapped.RelativeWorkspacePath);
+        }
+        private static string SafeFormat(MappedObject mapped) { return "xml"; }
+#endif
+        private static IEnumerable<MappedObject> Mappings(Workspace workspace)
+        {
+#if STUDIO_VCI_MODERN
+            return VersionControlPrimitives.MappedObjects(workspace);
+#else
+            return workspace.Mappings;
+#endif
+        }
+        private static IndividualObjectCompareResult ReadStatus(MappedObject mapped)
+            => VersionControlPrimitives.ReadStatus(mapped);
+        private static void Synchronize(MappedObject mapped, SynchronizationMode mode)
+            => VersionControlPrimitives.Synchronize(mapped, mode);
+
+        private static string Combine(string parent, string child)
+        {
+            return string.IsNullOrEmpty(parent) ? child : parent + Path.DirectorySeparatorChar + child;
+        }
+
+        private static string Sanitize(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return "_";
+            var invalid = Path.GetInvalidFileNameChars();
+            var buffer = name.ToCharArray();
+            for (var i = 0; i < buffer.Length; i++)
+            {
+                if (Array.IndexOf(invalid, buffer[i]) >= 0) buffer[i] = '_';
+            }
+            return new string(buffer);
+        }
+
+        private static string Flatten(Exception ex)
+        {
+            var message = (ex.Message ?? string.Empty).Replace('\r', ' ').Replace('\n', ' ').Trim();
+            return ex.InnerException == null
+                ? message
+                : message + " || " + (ex.InnerException.Message ?? string.Empty).Replace('\r', ' ').Replace('\n', ' ').Trim();
+        }
+    }
+}
+#endif
