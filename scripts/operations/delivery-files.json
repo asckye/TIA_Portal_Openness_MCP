@@ -208,6 +208,7 @@
       "runtime/studio/Fonts/NotoSansSC-Bold.otf",
       "runtime/studio/Fonts/NotoSansSC-OFL.txt",
       "docs/licenses/MapleMono-CN-OFL.txt",
+      "scripts/operations/Update-Engine.ps1",
       "manifest/configurator-build.json"
     ],
     "prefixes": [
@@ -277,7 +278,6 @@
       "runtime/v21/worker/ModelContextProtocol.dll",
       "runtime/v21/worker/ModelContextProtocol.Core.dll",
       "manifest/release-build.json",
-      "scripts/operations/Update-Engine.ps1",
       "manifest/configurator-build.json",
       "runtime/README.md"
     ],
