@@ -62,8 +62,6 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaMcp.Updater.Tests.UpdaterTests"] = "Synthetic launcher/installed-process startup and exit bounds.",
             ["TiaMcp.SourceContracts.Tests.ScriptClientTests"] = "Five-second client cancellation completion.",
             ["TiaMcp.SourceContracts.Tests.ReadOnlySourceContracts"] = "Bounded child MSBuild evaluation.",
-            ["TiaMcp.ReleaseTool.Tests.CheckAllRound3Tests"] = "Thirty-second child/grandchild affinity probe and ten-second barriers.",
-            ["TiaMcp.ReleaseTool.Tests.CheckAllTests"] = "Concurrent scheduler peak/resource assertions around timed synthetic work.",
             ["TiaMcp.ReleaseTool.Tests.ReleaseValidationTests"] = "Five-second scheduler barriers.",
         };
 
@@ -370,30 +368,11 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaMcp.SourceContracts.Tests.ReadOnlySourceContracts"] = new[] {
                 "SupplementaryReleaseSymbols"
             },
-            ["TiaMcp.ReleaseTool.Tests.CheckAllRound3Tests"] = new[] {
-                "IsolatedLanesOverlapEvenWhenGeneralWorkIsExclusive",
-                "AffinityJobIncludesClientChildAndImmediatelySpawnedGrandchild",
-                "AffinityJobWaitsForOwnedDescendantsAfterTheirParentExits"
-            },
-            ["TiaMcp.ReleaseTool.Tests.CheckAllTests"] = new[] {
-                "SchedulerHonorsDependenciesResourcesAndExclusiveChecks"
-            },
             ["TiaMcp.ReleaseTool.Tests.ReleaseValidationTests"] = new[] {
                 "ParallelPipelinesOverlapAndWriteSeparateEvidence",
                 "ParallelPipelinesHonorSerialAndBoundedLimits",
                 "ParallelPipelineFailureStopsQueuedJobsAndWaitsForRunningJobs",
                 "ParallelPipelinesReportEveryFailureAndRetainBothLogs"
-            },
-            ["TiaMcp.ReleaseTool.Tests.CheckAllRound5Tests"] = new[] {
-                "SensitiveExclusiveLaneOverlapsBothGeneralAndStability",
-                "SensitiveWorkersHaveDisjointCpusAndDoNotSerializeEachOther",
-                "JobDeadlineFailsByNameAndStopsOwnedParentAndOrphan",
-                "EmptyJobAccountingStillWaitsForObservedProcessHandles",
-                "PythonCheckHasAnOuterJobDeadlineAndItsOwnedProcessExits",
-                "SystemProcessWithoutAWorktreeArgumentIsOwnedByItsJob",
-                "SensitiveCpuCapPreservesTheRunnersIoWorkers",
-                "ParallelMsbuildNodesKeepWorktreeOwnershipAndDrainAfterTheirParentExits",
-                "MemberExitingBetweenLookupAndObservationIsAlreadyGone"
             },
         };
 

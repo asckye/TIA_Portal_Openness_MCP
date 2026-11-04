@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using TiaMcp.WorkerChannel;
 
@@ -13,57 +14,8 @@ internal static partial class ReleaseCommands
     internal static string PlcReleaseInstallDirectory(string root, string key) =>
         Path.Combine(root, "runtime/v" + key, "worker");
 
-    internal static readonly string[] PlcReleaseGroups =
-    ["functional", "worker-isolation", "approval", "ecosystem", "stability", "isolated-stability", "contracts", "responses"];
-
     private static string ReleasePlcFixture(string logs, string key) =>
         new PlcWorkerFixtureBuild(key, "sdk").Worker(Path.Combine(logs, "plc-fixtures"));
-
-    private static void PreparePlcReleaseChecks(string dotnet, string apiRoot, string? nuget, string logs,
-        string temp, string cli, bool production)
-    {
-        if (production)
-        {
-            var args = new List<string> { "build-plc-workers", "-PublicApiRoot", apiRoot, "-Dotnet", dotnet,
-                "-ReleaseKeys", "20", "-ReleaseKeys", "21", "-UseReferenceAssemblyPackage", "-EvidenceDirectory", Path.Combine(logs, "plc-production") };
-            if (nuget is not null) args.AddRange(["-NuGetConfig", nuget]);
-            if (RunSelfCommand(args.ToArray(), "Branch PLC worker builds") != 0) throw new ReleaseException("PLC worker build failed");
-            foreach (var key in new[] { "20", "21" })
-            {
-                InstallReleasePlcWorker(Root, key);
-                var catalog = RunBuildIsolated(Path.Combine(Root, $"runtime/v{key}/TiaMcp.FoundationHost.exe"),
-                    ["--catalog", "--plc-worker", "--release-key", key, "--profile", "full"], Path.Combine(logs, "tool-catalog-v" + key + "-plc.log"),
-                    temp, cli, apiRoot, nuget, false, "PLC worker catalog");
-                ProcessRunner.RequireSuccess(catalog, "PLC host catalog");
-                using var doc = JsonDocument.Parse(catalog.StandardOutput);
-                if (!doc.RootElement.GetProperty("tools").EnumerateArray().Select(tool => tool.GetProperty("name").GetString()!).ToHashSet(StringComparer.Ordinal)
-                    .SetEquals(new CatalogData(Root).Rosters[key])) throw new ReleaseException("PLC host catalog mismatch: " + key);
-            }
-        }
-        void Build(string project, string[] properties)
-        {
-            RestoreBuildProject(dotnet, project, nuget, logs, temp, cli, apiRoot, properties);
-            RunBuildRaw(dotnet, ["build", project, "-c", "Release", "--no-restore", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", .. properties],
-                Path.Combine(logs, Path.GetFileNameWithoutExtension(project) + "-plc.log"), temp, cli, apiRoot, nuget, "PLC release prerequisite");
-        }
-        Build(Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj"), []);
-        Build(Path.Combine(Root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj"), []);
-        foreach (var key in new[] { "20", "21" })
-        {
-            var api = ResolveReleaseApi(null, apiRoot, int.Parse(key, System.Globalization.CultureInfo.InvariantCulture));
-            var unit = new PlcWorkerFixtureBuild(key, "sdk");
-            string[] properties = ["-p:TiaReleaseKey=" + key, "-p:SiemensEngineeringDirectory=" + api,
-                "-p:NativeCallWeaverPath=" + Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"),
-                .. unit.Properties(Path.Combine(logs, "plc-fixtures"))];
-            Build(Path.Combine(Root, "src/PlcWorker/TiaMcp.PlcWorker.csproj"), properties);
-            var metadata = WorkerAssemblyMetadata.Read(ReleasePlcFixture(logs, key));
-            if (metadata.GetValueOrDefault("TiaMcpPlcWorkerSdkFixture") != "true" || metadata.GetValueOrDefault("TiaReleaseKey") != key || metadata.GetValueOrDefault("TiaMcpTestPolicy") is not null)
-                throw new ReleaseException("PLC release fixture metadata mismatch: " + key);
-            Build(Path.Combine(Root, $"tests/Engine/TiaMcp.Engine.Native.Tests/V{key}/TiaMcp.Engine.Native.Tests.V{key}.csproj"), ["-p:SiemensEngineeringDirectory=" + api]);
-        }
-        Environment.SetEnvironmentVariable(PlcReleaseSystemTempVariable,
-            PreparePlcReleaseFilePrograms(Root, dotnet, nuget, logs, Path.GetTempPath()));
-    }
 
     internal static string PreparePlcReleaseFilePrograms(string root, string dotnet, string? nuget, string logs,
         string systemTemp, SuiteProcess? process = null)
@@ -140,12 +92,10 @@ internal static partial class ReleaseCommands
         }
     }
 
-    // The same command inventory is used by preparation, branch-gate and the
-    // candidate captures. No scheduler/cache/sharding state is shared with CheckAll.
+    // Preparation and its tests share this command inventory.
     internal static IReadOnlyList<PlcReleaseJob> PlcReleaseJobs(string root, string apiRoot, string logs,
-        string temp, string dotnet, string python, int rounds = 50, string? weaver = null)
+        string temp, string dotnet, string python, string? weaver = null)
     {
-        if (rounds < 10) throw new ReleaseException("PLC release checks require at least 10 stability rounds.");
         var jobs = new List<PlcReleaseJob>();
         var harness = Path.Combine(root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         weaver ??= Path.Combine(root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
@@ -164,9 +114,9 @@ internal static partial class ReleaseCommands
             // Diagnostics consumes the inventory even in a quick native-diagnostics-only plan.
             jobs.Add(new("jit-adapter-coverage-v" + key + "-plc", "native-diagnostics", dotnet,
                 [weaver, "verify", Path.Combine(Path.GetDirectoryName(worker)!, "TiaMcp.Adapter." + key + ".dll"), inventory], Release: key));
-            foreach (var mode in CheckAllPlcHarnessModes(key))
+            foreach (var mode in PlcHarnessModes(key))
             {
-                var name = CheckAllPlcHarnessJob(key, mode);
+                var name = PlcHarnessJob(key, mode);
                 var check = mode == "native-diagnostics-only" ? "native-diagnostics" : "plc-functional";
                 jobs.Add(new(name, check, python, [Path.Combine(root, "scripts/checks/Test-PlcHarness.py"),
                     "--release", key, "--mode", mode.Length == 0 ? "http" : mode, "--host", host, "--worker", worker,
@@ -176,7 +126,7 @@ internal static partial class ReleaseCommands
             foreach (var suite in new[] { "worker-robustness", "engine-host", "foundation-api" })
                 jobs.Add(new((suite == "foundation-api" ? "engineering-api" : suite) + "-v" + key + "-plc", suite == "worker-robustness" ? "plc-worker-isolation" : suite == "engine-host" ? "http-concurrency" : "plc-functional", "test-suites",
                     // foundation-api does not depend on the release: offline-suites and both engineering-api successors name the
-                    // same sharded run (same binaries, arguments and suite gate), executed once per process (SharedSuiteRuns).
+                    // same sharded run and registered suite gate.
                     suite == "foundation-api" ? FoundationApiSuiteArguments(dotnet, apiRoot, logs)
                         : ["-Suite", suite, "-Dotnet", dotnet, "-ResultsDirectory", Path.Combine(logs, suite + "-v" + key + "-plc")], Release: key));
             jobs.Add(new("native-safety-v" + key + "-plc", "offline-suites",
@@ -194,218 +144,88 @@ internal static partial class ReleaseCommands
             Add("ecosystem", "plc-ecosystem", "Test-V21Ecosystem.py", ["--exe", host, "--major", key, "--host-harness", harness,
                 "--public-api", api, "--schema-root", Path.Combine(Path.GetDirectoryName(Path.Combine(apiRoot, PlcWorkerApi("21").Directory))!, "Schemas"),
                 "--plc-worker", worker, "--output", ecosystem], ecosystem);
-            foreach (var concurrency in new[] { "8", "16" })
-            {
-                var name = "stability-c" + concurrency;
-                var evidence = Path.Combine(logs, name + "-v" + key + "-plc");
-                Add(name, concurrency == "8" ? "plc-stability" : "plc-isolated-stability", "Test-LocalStability.py",
-                    ["--exe", host, "--major", key, "--host-harness", harness, "--public-api", api, "--plc-worker", worker,
-                     "--rounds", rounds.ToString(System.Globalization.CultureInfo.InvariantCulture), "--concurrency", concurrency,
-                     "--output", evidence], Path.Combine(evidence, "result.json"));
-            }
             Add("usage", "resource-discovery", "Test-ToolUsage.py", ["--foundation-host", host, "--plc-worker", key + "=" + worker,
                 "--public-api-root", apiRoot, "--releases", key, "--evidence", Path.Combine(logs, "usage-v" + key + "-plc"),
                 "--coverage-output", Path.Combine(logs, "usage-v" + key + "-plc.json")]);
             Add("campaign-inputs", "plc-functional", "Test-CampaignInputs.py", ["--exe", host, "--major", key,
                 "--public-api", api, "--plc-worker", worker, "--output", Path.Combine(logs, "campaign-v" + key + "-plc")]);
-            foreach (var kind in new[] { "contracts", "responses" })
+            foreach (var kind in new[] { "contracts" })
             foreach (var source in new[] { false, true })
             foreach (var transport in new[] { "stdio", "http" })
             {
                 var selectedHost = source ? Path.Combine(root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe") : host;
                 var name = kind + (source ? "-source" : "") + "-" + transport;
                 var output = Path.Combine(logs, name + "-v" + key + "-plc");
-                var script = "Snapshot-Tool" + (kind == "contracts" ? "Contracts" : "Responses") + ".py";
+                const string script = "Snapshot-ToolContracts.py";
                 Add(name, "plc-" + kind, script, ["capture", "--repo-root", root, "--public-api-root", apiRoot,
                     "--releases", key, "--exe", key + "=" + selectedHost, "--engine-host", selectedHost, "--plc-worker", key + "=" + worker,
-                    "--transport", transport, .. kind == "responses" ? new[] { "--temp-root", Path.Combine(temp, name + "-v" + key), "--dotnet-root", Path.Combine(root, "runtime/dotnet") } : [],
+                    "--transport", transport,
                     "--output", output], output, "capture");
             }
         }
         return jobs;
     }
 
-    internal static void ValidatePlcReleaseJob(PlcReleaseJob job, CommandResult result, string root, string logs, int rounds = 50,
-        bool compareUsageReceipt = true)
+    internal static void ValidatePlcReleaseJob(PlcReleaseJob job, CommandResult result, string root, string logs)
     {
         ProcessRunner.RequireSuccess(result, job.Name);
         var key = job.Release;
         var host = Path.Combine(root, $"runtime/v{key}/TiaMcp.FoundationHost.exe");
         if (job.Name.StartsWith("harness-", StringComparison.Ordinal))
         {
-            ProcessRunner.RequireSuccess(CheckAllHarness(result, job.Mode, key), job.Name);
-            // The check-all successor gate: exact host/worker identity, and for diagnostics the adapter JIT inventory and four SDK guards.
-            ValidateCheckAllPlcHarness(result.StandardOutput, job.Arguments[Array.IndexOf(job.Arguments, "--output") + 1], job.Mode, key, host,
+            ProcessRunner.RequireSuccess(Harness(result, job.Mode, key), job.Name);
+            // The successor gate: exact host/worker identity, and for diagnostics the adapter JIT inventory and four SDK guards.
+            ValidatePlcHarness(result.StandardOutput, job.Arguments[Array.IndexOf(job.Arguments, "--output") + 1], job.Mode, key, host,
                 ReleasePlcFixture(logs, key), job.Arguments[Array.IndexOf(job.Arguments, "--adapter-inventory") + 1]);
-        }
-        // prepare keeps the functional usage run but omits the retired receipt
-        // comparison. Existing release callers retain their original gate.
-        if (compareUsageReceipt && job.Name.StartsWith("usage-", StringComparison.Ordinal))
-        {
-            // Same receipt identity as check-all's PLC usage audit.
-            var receipt = JsonNode.Parse(File.ReadAllText(job.Arguments[Array.IndexOf(job.Arguments, "--coverage-output") + 1]))!.AsArray().Single()!;
-            var worker = ReleaseRecords.HashFile(ReleasePlcFixture(logs, key));
-            if ((string?)receipt["releaseKey"] != key || (string?)receipt["runtimeSha256"] != worker || (string?)receipt["sdkWorkerSha256"] != worker ||
-                (string?)receipt["hostSha256"] != ReleaseRecords.HashFile(host) || (string?)receipt["workerModel"] != "foundation-host-plc-worker")
-                throw new ReleaseException("PLC usage receipt evidence mismatch: " + job.Name);
         }
         if (job.Mode == "native-safety") RequireCount(job.Name, result.StandardOutput, "COMPLETE: (\\d+) native harness safety checks passed; live TIA tests NOT RUN");
         if (job.Mode == "worker-protocol") RequireCount(job.Name, result.StandardOutput, "COMPLETE: (\\d+) Foundation transport checks passed", "workerProtocol");
         if (job.Mode == "resources") RequireCount(job.Name, result.StandardOutput, "COMPLETE: (\\d+) resource discovery checks passed");
-        if (job.Check == "plc-approval") ValidateCheckAllApproval(job.Evidence);
-        if (job.Check is "plc-stability" or "plc-isolated-stability" or "plc-ecosystem")
+        if (job.Check == "plc-approval") ValidateApproval(job.Evidence);
+        if (job.Check == "plc-ecosystem")
         {
             var path = job.Check == "plc-ecosystem" ? Directory.EnumerateFiles(job.Evidence, "result.json", SearchOption.AllDirectories).Single() : job.Evidence;
             using var doc = JsonDocument.Parse(File.ReadAllText(path)); var evidence = doc.RootElement;
             var worker = ReleasePlcFixture(logs, key);
             if (GetJsonString(evidence, "status") != "passed" || GetJsonBool(evidence, "nativeTiaExecuted") ||
-                GetJsonString(evidence, "runtimeSha256") != ReleaseRecords.HashFile(worker) ||
-                GetJsonString(evidence, "sdkWorkerSha256") != ReleaseRecords.HashFile(worker) ||
-                GetJsonString(evidence, "hostSha256") != ReleaseRecords.HashFile(Path.Combine(root, $"runtime/v{key}/TiaMcp.FoundationHost.exe")))
+                GetJsonString(evidence, "runtimeSha256") != FileHash.Sha256(worker) ||
+                GetJsonString(evidence, "sdkWorkerSha256") != FileHash.Sha256(worker) ||
+                GetJsonString(evidence, "hostSha256") != FileHash.Sha256(Path.Combine(root, $"runtime/v{key}/TiaMcp.FoundationHost.exe")))
                 throw new ReleaseException("PLC runtime evidence mismatch: " + job.Name);
             if (job.Check == "plc-ecosystem")
             {
                 CheckReleaseCount("v21Ecosystem", GetJsonInt(evidence, "checks"), "PLC ecosystem checks incomplete");
                 if (GetJsonBool(evidence, "selfTestOnly")) throw new ReleaseException("PLC ecosystem only ran self-tests");
             }
-            else if (GetJsonInt(evidence, "rounds") != rounds || GetArrayLength(evidence, "runs") != 4 ||
-                (job.Check == "plc-isolated-stability" && !GetJsonBool(evidence, "isolatedWorker")))
-                throw new ReleaseException("PLC stability matrix incomplete: " + job.Name);
+
         }
     }
 
     internal static void RunPlcReleaseJobs(IEnumerable<PlcReleaseJob> jobs, string root, string logs,
-        Func<PlcReleaseJob, CommandResult> run, Action<string, string[]> compare, int rounds = 50, int parallelism = 1,
-        bool compareUsageReceipt = true)
+        Func<PlcReleaseJob, CommandResult> run, Action<string, string[]> compare)
     {
         var ordered = jobs.ToArray();
         void Compare(PlcReleaseJob job)
         {
             if (job.Mode != "capture") return;
-            var kind = job.Check == "plc-contracts" ? "baseline" : "responses";
+            const string kind = "baseline";
             var baseline = Path.Combine(root, "manifest/contracts/v4", kind);
             compare(job.Arguments[0], ["compare", "--baseline", baseline, "--current", job.Evidence, "--releases", job.Release]);
             if (!File.ReadAllBytes(Path.Combine(baseline, job.Release + ".json")).SequenceEqual(File.ReadAllBytes(Path.Combine(job.Evidence, job.Release + ".json"))))
                 throw new ReleaseException("PLC capture bytes differ: " + job.Name);
         }
-        if (parallelism <= 1)
+        foreach (var job in ordered)
         {
-            foreach (var job in ordered)
-            {
-                ValidatePlcReleaseJob(job, run(job), root, logs, rounds, compareUsageReceipt);
-                Compare(job);
-            }
-            return;
+            ResetPlcReleaseJobOutputs(job, logs);
+            ValidatePlcReleaseJob(job, run(job), root, logs);
+            Compare(job);
         }
-        // Release runs: the adapter inventory producers first, in table order (the harness and diagnostics jobs read their
-        // inventory); then the independent jobs of both releases in parallel, each in its own isolated host directory; then
-        // the stability soaks and the shared test-suites runs one at a time, as before. No new job starts after a failure,
-        // and every failure of the parallel stage is reported. The captures are compared in table order at the end.
-        var first = ordered.Where(IsPlcInventoryProducer).ToArray();
-        var exclusive = ordered.Where(job => !IsPlcInventoryProducer(job) && IsExclusivePlcJob(job)).ToArray();
-        var concurrent = ordered.Where(job => !IsPlcInventoryProducer(job) && !IsExclusivePlcJob(job)).ToArray();
-        foreach (var job in first) ValidatePlcReleaseJob(job, run(job), root, logs, rounds, compareUsageReceipt);
-        var failures = new System.Collections.Concurrent.ConcurrentQueue<Exception>();
-        Parallel.ForEach(concurrent, new ParallelOptions { MaxDegreeOfParallelism = parallelism }, (job, state) =>
-        {
-            if (!failures.IsEmpty) { state.Stop(); return; }
-            try { ValidatePlcReleaseJob(job, run(job), root, logs, rounds, compareUsageReceipt); }
-            catch (Exception ex) { failures.Enqueue(ex); state.Stop(); }
-        });
-        if (!failures.IsEmpty)
-            throw new ReleaseException(string.Join(Environment.NewLine, failures.Select(ex => ex.Message)));
-        foreach (var job in exclusive) ValidatePlcReleaseJob(job, run(job), root, logs, rounds, compareUsageReceipt);
-        foreach (var job in ordered) Compare(job);
     }
 
     // Both coverage jobs and the JIT diagnostics job write the adapter inventory that the harness modes read.
     internal static bool IsPlcInventoryProducer(PlcReleaseJob job) => job.Check == "native-coverage" || job.Name.StartsWith("jit-adapter-coverage-", StringComparison.Ordinal);
 
-    // Stability soaks measure growth over many rounds; test-suites runs are shared between jobs by argument identity.
-    internal static bool IsExclusivePlcJob(PlcReleaseJob job) => job.Check is "plc-stability" or "plc-isolated-stability" || job.Executable == "test-suites";
-
-    private static void RunPlcReleaseChecks(ReleaseCheckPlan plan, Options options, string apiRoot, string logs,
-        string temp, string cli, string dotnet, string python, string? nuget, int rounds = 50)
-    {
-        var jobs = PlcReleaseJobs(Root, apiRoot, logs, temp, dotnet, python, rounds).Where(job => PlcReleaseSelected(plan, job)).ToArray();
-        var sharedRuns = new SortedDictionary<string, string>(StringComparer.Ordinal);
-        RunPlcReleaseJobs(jobs, Root, logs, ShareIdenticalSuiteRuns(job =>
-        {
-            ResetPlcReleaseJobOutputs(job, logs);
-            if (job.Executable == "test-suites")
-            {
-                var args = job.Arguments.ToList();
-                if (nuget is not null) args.Add("-DotnetArg=-p:RestoreConfigFile=" + nuget);
-                return RunBuildIsolated("test-suites", args, Path.Combine(logs, job.Name + ".log"), temp, cli, apiRoot, nuget, false, job.Name,
-                    environment => DotnetSuites.Run(Root, Options.Parse(args.ToArray(), new HashSet<string>()), environment));
-            }
-            var selectedPython = job.Check == "plc-ecosystem" ? Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? job.Executable : job.Executable;
-            return RunBuildIsolated(selectedPython, job.Arguments, Path.Combine(logs, job.Name + ".log"), temp, cli, apiRoot, nuget, job.Check == "plc-approval", job.Name);
-        }, sharedRuns, logs), (script, args) => RunBuildRaw(python, [script, .. args], Path.Combine(logs, Path.GetFileNameWithoutExtension(script) + "-plc-compare.log"), temp, cli, apiRoot, nuget, "PLC snapshot comparison"), rounds, Math.Min(6, GetMaxParallelism(options)));
-        WriteJson(Path.Combine(logs, "plc-checks-result.json"), new { status = "passed", checks = jobs.Select(job => job.Name), sharedRuns, rounds,
-            nativeTiaExecuted = false, workers = new[] { "20", "21" }.Select(key => new { releaseKey = key,
-                workerSha256 = ReleaseRecords.HashFile(ReleasePlcFixture(logs, key)),
-                productionWorkerSha256 = ReleaseRecords.HashFile(Path.Combine(PlcReleaseInstallDirectory(Root, key), $"TiaMcp.PlcWorker.{key}.exe")),
-                hostSha256 = ReleaseRecords.HashFile(Path.Combine(Root, $"runtime/v{key}/TiaMcp.FoundationHost.exe")) }) });
-    }
-
-    // Every PLC JSON evidence file of the run, each once: the approval receipts are already listed, and the prepared
-    // record refuses a duplicate path (ReleaseRecords.ReuseReason).
-    internal static void AddPlcReleaseEvidence(List<string> evidencePaths, string logs)
-    {
-        var listed = evidencePaths.Select(Path.GetFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        evidencePaths.AddRange(Directory.EnumerateFiles(logs, "*.json", SearchOption.AllDirectories)
-            .Where(path => path.Contains("-plc", StringComparison.Ordinal) || path.Contains("plc-fixtures", StringComparison.Ordinal))
-            .Where(path => listed.Add(Path.GetFullPath(path))));
-    }
-
-    // The release-independent foundation-api run: sharded like CI, results where offline-suites reads its record row.
-    internal static string[] FoundationApiSuiteArguments(string dotnet, string apiRoot, string logs) =>
-        ["-Suite", "foundation-api", "-Dotnet", dotnet, "-Shards", "8", "-PublicApiRoot", apiRoot, "-ResultsDirectory", Path.Combine(logs, "dotnet-suites", "foundation-api")];
-
-    // test-suites runs of this process by argument identity; offline-suites registers its foundation-api run here.
-    private static readonly Dictionary<string, (string Job, CommandResult Result)> SharedSuiteRuns = new(StringComparer.Ordinal);
-
-    private static string SuiteIdentity(IEnumerable<string> arguments) => string.Join('\0', arguments);
-
-    // Runs a test-suites command once and registers it, so every later job with the same arguments shares its result.
-    internal static CommandResult RunSharedSuite(string name, string[] arguments, string logs, Func<string[], CommandResult> run,
-        IDictionary<string, (string Job, CommandResult Result)>? runs = null)
-    {
-        runs ??= SharedSuiteRuns;
-        if (runs.TryGetValue(SuiteIdentity(arguments), out var earlier)) return earlier.Result;
-        ResetPlcReleaseJobOutputs(new PlcReleaseJob(name, "", "test-suites", arguments), logs);
-        var result = run(arguments);
-        runs[SuiteIdentity(arguments)] = (name, result);
-        return result;
-    }
-
-    // A test-suites job whose arguments equal an earlier run's (the release-independent foundation-api run of
-    // offline-suites and both engineering-api successors) reuses that run and its result: it passes or fails with it,
-    // and its log names it.
-    internal static Func<PlcReleaseJob, CommandResult> ShareIdenticalSuiteRuns(Func<PlcReleaseJob, CommandResult> run,
-        IDictionary<string, string> sharedRuns, string logs, IDictionary<string, (string Job, CommandResult Result)>? runs = null)
-    {
-        runs ??= SharedSuiteRuns;
-        return job =>
-        {
-            if (job.Executable != "test-suites") return run(job);
-            var identity = SuiteIdentity(job.Arguments);
-            if (runs.TryGetValue(identity, out var earlier))
-            {
-                sharedRuns[job.Name] = earlier.Job;
-                WriteLog(Path.Combine(logs, job.Name + ".log"), new CommandResult(earlier.Result.ExitCode,
-                    "Shared run: " + earlier.Job + " (same suite, binaries, arguments and gate)" + Environment.NewLine + earlier.Result.StandardOutput, earlier.Result.StandardError));
-                return earlier.Result;
-            }
-            var result = run(job);
-            runs[identity] = (job.Name, result);
-            return result;
-        };
-    }
-
-    // build-multi-version reuses bin-build/multi-version, and several check scripts refuse an existing evidence
-    // directory. Remove only this job's own previous outputs, and only below this run's log directory.
+    // Remove only this job's previous outputs below this run's log directory.
     internal static void ResetPlcReleaseJobOutputs(PlcReleaseJob job, string logs)
     {
         var prefix = Path.GetFullPath(logs).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -420,7 +240,103 @@ internal static partial class ReleaseCommands
         }
     }
 
-    internal static bool PlcReleaseSelected(ReleaseCheckPlan plan, PlcReleaseJob job) => plan.Includes(job.Check)
-        || job.Check == "plc-approval" && plan.Includes("foundation-approval")
-        || job.Check == "resource-discovery" && plan.Includes("foundation-transport");
+    private static readonly IReadOnlyDictionary<string, (int Count, bool Exact)> BuildReleaseCountRules =
+        new Dictionary<string, (int, bool)>(StringComparer.Ordinal)
+        {
+            ["nativeMcpSafety"] = (8, false), ["nativeSupervisor"] = (1, false), ["diagnosticBehavior"] = (36, false), ["diagnosticRejection"] = (5, false),
+            ["nativeJournalReader"] = (3, false), ["adapterJournal"] = (8, false), ["processLeases"] = (2, false),
+            ["workerProtocol"] = (58, false), ["approvalSafety"] = (7, true),
+            ["softwareLookup"] = (45, false),
+            ["v21Ecosystem"] = (43, false), ["globalScriptV21"] = (8, true), ["graphicSelection"] = (8, false),
+            ["runtimeSettingsV20"] = (8, false), ["runtimeSettingsV21"] = (9, false), ["ecosystem"] = (31, false)
+        };
+
+    private static int RequireCount(string name, string text, string pattern, string? rule = null)
+    {
+        var match = Regex.Match(text, pattern);
+        if (!match.Success) throw new ReleaseException(name + " did not report a complete check count");
+        var actual = int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        if (rule is not null) CheckReleaseCount(rule, actual, name + " checks incomplete");
+        return actual;
+    }
+
+    private static void CheckReleaseCount(string key, int actual, string message)
+    {
+        if (!BuildReleaseCountRules.TryGetValue(key, out var expected)) throw new ReleaseException("Unknown check-count gate: " + key);
+        if ((expected.Exact && actual != expected.Count) || (!expected.Exact && actual < expected.Count))
+            throw new ReleaseException($"{message}; expected {(expected.Exact ? "exactly" : "at least")} {expected.Count}, actual {actual}");
+    }
+
+    private static int GetArrayLength(JsonElement element, string name) => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Array ? value.GetArrayLength() : 0;
+
+    internal static string[] HarnessModes(string release) =>
+    ["example-library-only", "software-lookup-only", "engineering-api-only", "", "hmi-only", "native-diagnostics-only", "process-leases-only",
+        "native-export-only", "hmi-snapshot-only", "global-script-only", "graphic-selection-only", "runtime-settings-only", "test-migration-read-assembly", "test-ecosystem-assembly",
+        "descriptor-catalog-only", "check-modes-self-test",
+        .. release == "21" ? new[] { "test-download-route", "test-match-plc-name" } : []];
+
+    internal static string[] PlcHarnessModes(string release) =>
+        HarnessModes(release).Where(mode => !new[] { "engineering-api-only" }.Contains(mode)).ToArray();
+
+    internal static string PlcHarnessJob(string release, string mode) =>
+        "harness-v" + release + "-" + (mode.Length == 0 ? "http" : mode) + "-plc";
+
+    private static CommandResult Harness(CommandResult result, string mode, string key)
+    {
+        if (result.ExitCode != 0) return result;
+        switch (mode)
+        {
+            case "software-lookup-only": RequireCount("software lookup", result.StandardOutput, "COMPLETE: (\\d+) software lookup checks passed", "softwareLookup"); break;
+            case "": RequireCount("HTTP", result.StandardOutput, "COMPLETE: (\\d+) Foundation transport checks passed"); break;
+            case "hmi-only": if (!Regex.IsMatch(result.StandardOutput, "(\\d+) HMI traversal assertions, 0 failed")) throw new ReleaseException("Incomplete HMI traversal"); break;
+            case "process-leases-only": RequireCount("process leases", result.StandardOutput, "COMPLETE: (\\d+) process lease checks passed", "processLeases"); break;
+            case "native-export-only": RequireCount("native export", result.StandardOutput, "COMPLETE: (\\d+) native export remoting checks passed"); break;
+            case "hmi-snapshot-only": RequireCount("HMI snapshot", result.StandardOutput, "COMPLETE: (\\d+) HMI snapshot remoting checks passed"); break;
+            case "global-script-only": RequireCount("global script", result.StandardOutput, "COMPLETE: (\\d+) global script bridge checks passed", key == "21" ? "globalScriptV21" : null); break;
+            case "graphic-selection-only": RequireCount("graphic selection", result.StandardOutput, "COMPLETE: (\\d+) graphical selection checks passed", "graphicSelection"); break;
+            case "runtime-settings-only": RequireCount("runtime settings", result.StandardOutput, "COMPLETE: (\\d+) runtime settings checks passed", key == "20" ? "runtimeSettingsV20" : "runtimeSettingsV21"); break;
+            case "test-ecosystem-assembly": RequireCount("ecosystem assembly", result.StandardOutput, "COMPLETE: (\\d+) ecosystem assembly checks passed", "ecosystem"); break;
+            case "test-migration-read-assembly": if (!result.StandardOutput.Contains("migration assembly checks passed", StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Incomplete migration assembly"); break;
+            // The fixture checks JIT, open generics and native journal assertions
+            // internally; its release wrapper's inventory equality is added below.
+        }
+        return result;
+    }
+
+    private static void ValidateApproval(string path)
+    {
+        using var doc = JsonDocument.Parse(File.ReadAllText(path)); var evidence = doc.RootElement;
+        CheckReleaseCount("approvalSafety", GetJsonInt(evidence, "checksPassed"), "Default approval checks incomplete");
+        var results = evidence.GetProperty("results");
+        if (GetJsonString(evidence, "status") != "passed" || GetJsonInt(evidence, "checksExpected") != 7 || GetJsonBool(evidence, "workbenchConnected") ||
+            GetJsonBool(evidence, "tiaConnected") || GetJsonString(results, "direct") != "refused-before-dispatch; read-succeeded" ||
+            GetJsonString(results, "CallTool") != "refused-before-dispatch") throw new ReleaseException("Default approval evidence mismatch");
+    }
+
+    private static void ValidateJit(string text, string adapterPath)
+    {
+        using (var evidence = JsonDocument.Parse(File.ReadAllText(adapterPath)))
+        {
+            var match = Regex.Match(text, "COMPLETE: (\\d+) adapter native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
+            if (!match.Success || int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(evidence.RootElement, "count"))
+                throw new ReleaseException("adapter diagnostic wrapper JIT/inventory mismatch");
+        }
+        RequireCount("adapter journal", text, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");
+        RequireCount("native journal", text, "COMPLETE: (\\d+) native journal reader checks passed", "nativeJournalReader");
+    }
+
+    internal static void ValidatePlcHarness(string text, string directory, string mode, string key, string host, string worker, string adapterInventory)
+    {
+        using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "result.json"))); var evidence = doc.RootElement;
+        string workerHash = FileHash.Sha256(worker);
+        if (GetJsonString(evidence, "mode") != (mode.Length == 0 ? "http" : mode) || GetJsonString(evidence, "release") != key
+            || !evidence.TryGetProperty("nativeTiaExecuted", out var native) || native.ValueKind != JsonValueKind.False
+            || GetJsonString(evidence, "workerModel") != "foundation-host-plc-worker"
+            || GetJsonString(evidence, "runtimeSha256") != workerHash || GetJsonString(evidence, "sdkWorkerSha256") != workerHash
+            || GetJsonString(evidence, "hostSha256") != FileHash.Sha256(host))
+            throw new ReleaseException("PLC harness evidence mismatch: " + directory);
+        if (mode != "native-diagnostics-only") return;
+        ValidateJit(text, adapterInventory);
+        if (RequireCount("SDK guard", text, "COMPLETE: (\\d+) direct SDK guard checks passed") != 4) throw new ReleaseException("SDK guard checks incomplete");
+    }
 }

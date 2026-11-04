@@ -16,12 +16,12 @@ public sealed class DecoderDeliveryTests
         {
             string[] names = { "stdlib.zip", "python._pth", "_elementtree.pyd", "THIRD-PARTY-LICENSES.html" };
             foreach (string name in names) File.WriteAllText(Path.Combine(root, "runtime/decoder-python", name), name);
-            var before = ReleaseRecords.GetRuntimeFiles(root);
-            Assert.Equal(names.Order(), before.Select(row => Path.GetFileName(row.Path)).Order());
+            var before = Prepare.Inventory(root);
+            Assert.Equal(names.Order(), before.Select(row => Path.GetFileName(row.Key)).Order());
             File.WriteAllText(Path.Combine(root, "runtime/decoder-python/stdlib.zip"), "changed archive");
-            var after = ReleaseRecords.GetRuntimeFiles(root);
-            Assert.NotEqual(before.Single(row => row.Path.EndsWith("stdlib.zip")).Sha256,
-                after.Single(row => row.Path.EndsWith("stdlib.zip")).Sha256);
+            var after = Prepare.Inventory(root);
+            Assert.NotEqual(before.Single(row => row.Key.EndsWith("stdlib.zip")).Value,
+                after.Single(row => row.Key.EndsWith("stdlib.zip")).Value);
         }
         finally { Directory.Delete(root, true); }
     }

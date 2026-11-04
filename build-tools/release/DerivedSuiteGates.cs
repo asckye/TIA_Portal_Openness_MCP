@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace TiaMcp.ReleaseTool;
 
-// Merge extracts the same-run subset; nightly compares it with the independently executed original.
+// Extract registered subsets from a completed superset run.
 internal static class DerivedSuiteGates
 {
     internal static readonly IReadOnlyDictionary<string, string> Supersets = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -85,37 +85,6 @@ internal static class DerivedSuiteGates
         return Filter(suite).Any(term => term.All(predicate => fqn.Contains(predicate.Text, StringComparison.OrdinalIgnoreCase) == predicate.Positive));
     }
 
-    internal static Dictionary<string, int> Identities(IEnumerable<Case> rows) => rows
-        .GroupBy(row => new JsonArray(row.Class, row.Method, Normalize(row.Class, row.Display)).ToJsonString(), StringComparer.Ordinal)
-        .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
-
-    internal static string[] DifferenceClasses(IEnumerable<Case> independent, IEnumerable<Case> derived)
-    {
-        var expected = Identities(independent); var actual = Identities(derived);
-        return expected.Keys.Union(actual.Keys, StringComparer.Ordinal).Where(key => expected.GetValueOrDefault(key) != actual.GetValueOrDefault(key))
-            .Select(key => JsonNode.Parse(key)![0]!.GetValue<string>()).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
-    }
-
-    internal static CommandResult CompareSameRun(string name, JsonObject suite, string independent, string source, string output, string sourceName)
-    {
-        var result = Evaluate(name, suite, source, output, sourceName);
-        var errors = new List<string>();
-        if (result.ExitCode != 0) errors.Add(result.StandardError);
-        var original = DotnetSuites.EvaluateTrx(independent, (int)suite["minimumPassed"]!, (int)suite["maximumSkipped"]!);
-        errors.AddRange(original.Errors);
-        var classes = DifferenceClasses(Read(independent), Select(name, Read(source), suite));
-        if (classes.Length != 0) errors.Add(name + ": same-run identity multiset differs: " + string.Join(", ", classes));
-        var path = Path.Combine(output, name + ".json");
-        var summary = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
-        summary["independentTrxSha256"] = ReleaseRecords.HashFile(independent);
-        summary["differenceClasses"] = ReleaseEvidence.Strings(classes);
-        summary["errors"] = ReleaseEvidence.Strings(errors);
-        File.WriteAllText(path, summary.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n");
-        return result with { ExitCode = errors.Count == 0 ? 0 : 1,
-            StandardOutput = result.StandardOutput + $"Same-run identity proof: {name}; independent SHA-256 {summary["independentTrxSha256"]}; source SHA-256 {summary["sourceTrxSha256"]}; difference classes: {string.Join(", ", classes)}\n",
-            StandardError = string.Join("\n", errors) };
-    }
-
     internal static CommandResult Evaluate(string name, JsonObject suite, string source, string output, string sourceName)
     {
         Directory.CreateDirectory(output);
@@ -142,11 +111,28 @@ internal static class DerivedSuiteGates
         var summary = evaluated.Counts;
         summary["suite"] = name; summary["minimumPassed"] = suite["minimumPassed"]!.DeepClone();
         summary["maximumSkipped"] = suite["maximumSkipped"]!.DeepClone();
-        summary["derivedFrom"] = sourceName; summary["sourceTrxSha256"] = ReleaseRecords.HashFile(source);
-        summary["execution"] = "derived"; summary["releaseEligible"] = false;
-        summary["errors"] = ReleaseEvidence.Strings(errors);
+        summary["derivedFrom"] = sourceName; summary["sourceTrxSha256"] = FileHash.Sha256(source);
+        summary["execution"] = "derived";
+        summary["errors"] = new JsonArray(errors.Select(error => (JsonNode?)JsonValue.Create(error)).ToArray());
         File.WriteAllText(Path.Combine(output, name + ".json"), summary.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n");
         return new(errors.Count == 0 ? 0 : 1, $"{name}: {passed} passed; {failed} failed; {skipped} skipped (derived from {sourceName})\n", string.Join("\n", errors));
     }
 
+    internal static void IncludeApprovedSubsets(JsonObject catalog)
+    {
+        if (catalog["foundation-api"] is not JsonObject source) return;
+        var arguments = source["arguments"]!.AsArray();
+        int filter = Enumerable.Range(0, arguments.Count).FirstOrDefault(index => (string?)arguments[index] == "--filter", -1);
+        if (filter < 0) return; // Unfiltered already contains every approved subset.
+        var terms = ((string)arguments[filter + 1]!).Split('|').ToList();
+        foreach (var name in new[] { "worker-robustness", "workbench-control-host", "shared-pipeline", "shared-lifecycle-plc" })
+        {
+            if (catalog[name] is not JsonObject subset) continue;
+            var args = subset["arguments"]!.AsArray();
+            int index = Enumerable.Range(0, args.Count).FirstOrDefault(i => (string?)args[i] == "--filter", -1);
+            if (index >= 0) terms.AddRange(((string)args[index + 1]!).Split('|'));
+        }
+        // Expand the superset rather than assume that a subset's future method names cannot contain "Operator".
+        arguments[filter + 1] = string.Join('|', terms.Distinct(StringComparer.Ordinal));
+    }
 }

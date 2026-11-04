@@ -34,7 +34,7 @@ internal static class PlcWorkerFixtures
         using var process = Process.Start(start) ?? throw new ReleaseException("PlcWorker did not start.");
         var stderr = process.StandardError.ReadToEndAsync();
         using var channel = new ChannelClient(process.StandardOutput.BaseStream, process.StandardInput.BaseStream,
-            new ChannelIdentity(key, ReleaseRecords.HashFile(worker), ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(worker)!, $"TiaMcp.Adapter.{key}.dll")), process.Id, nonce));
+            new ChannelIdentity(key, FileHash.Sha256(worker), FileHash.Sha256(Path.Combine(Path.GetDirectoryName(worker)!, $"TiaMcp.Adapter.{key}.dll")), process.Id, nonce));
         string result = "";
         Exception? failure = null;
         try
@@ -124,7 +124,7 @@ internal static partial class ReleaseCommands
             WriteLog(Path.Combine(unit.Root(output), "verify-" + unit.Release + ".log"), verified);
             ProcessRunner.RequireSuccess(verified, "PlcWorker fixture adapter weave verify");
             string startupState = PlcWorkerFixtures.Smoke(worker, api, unit.Release).GetAwaiter().GetResult();
-            results.Add(new { unit.Release, unit.Variant, worker, workerSha256 = ReleaseRecords.HashFile(worker), startupState });
+            results.Add(new { unit.Release, unit.Variant, worker, workerSha256 = FileHash.Sha256(worker), startupState });
             Console.WriteLine($"PASS PlcWorker fixture {unit.Release}/{unit.Variant}");
         }
         WriteJson(Path.Combine(output, "summary.json"), new { results, nativeAcceptance = "NOT RUN" });

@@ -20,19 +20,18 @@ internal static class PlainShards
     internal static CommandResult Run(string root, Options options, JsonObject catalog, SuiteProcess? process = null)
     {
         var output = Path.GetFullPath(options.Get("ResultsDirectory", Path.Combine(root, "bin-build/merge-check/foundation")));
-        int parallelism = Math.Max(1, Math.Min(FastSuites.Positive(options, "MaxParallelism", Environment.ProcessorCount), Environment.ProcessorCount - 4));
+        int parallelism = FastSuites.Positive(options, "MaxParallelism", Math.Max(1, Environment.ProcessorCount - 4));
         var failures = new List<string>();
         var messages = new List<string>();
         foreach (var name in options.All("Suite").Distinct(StringComparer.Ordinal))
         {
             var suite = catalog[name]!.AsObject();
-            var project = suite["project"]!.GetValue<string>();
-            var unit = new CheckBuild(project, "default", []);
+            var unit = SuiteBuild.Suite(suite);
             var directory = Path.Combine(output, name);
             var history = Path.Combine(root, "bin-build/check-timings");
-            bool reserve = TimeSensitiveTests.ReserveShard(project);
+            bool reserve = TimeSensitiveTests.ReserveShard(unit.Project);
             var plan = SuiteCosts.Prepare(name, directory, history, null, FastSuites.Positive(options, "Shards", 8),
-                reserve, reserve ? TimeSensitiveTests.ReservedShardCount(project) : 1);
+                reserve, reserve ? TimeSensitiveTests.ReservedShardCount(unit.Project) : 1);
             int sensitiveCount = plan.SensitivePartitions?.Length ?? 0;
             int ordinaryCount = plan.Costs.Length - sensitiveCount;
             var jobs = Enumerable.Range(0, plan.Costs.Length).Select(index =>

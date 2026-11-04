@@ -26,9 +26,6 @@ internal static class DotnetSuiteSelfTests
         ("runner command report and nonzero exit", RunnerCommand),
         ("hang evidence cannot pass or reuse stale artifacts", HangEvidence),
         ("planted hang produces a mini dump in both runners", PlantedHang),
-        ("missing variant runtime row", MissingVariantRow),
-        ("missing variant fails before test process", MissingVariantProcess),
-        ("concurrent runtime manifests stay independent", ConcurrentManifests),
         ("split suite repository coverage", SplitSuiteRepositoryCoverage),
         ("split suite missing CI child is rejected", MissingSplitCi),
         ("split suite missing release child is rejected", MissingSplitRelease)
@@ -60,10 +57,8 @@ internal static class DotnetSuiteSelfTests
     {
         var root = Repository.FindRoot();
         var catalog = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "tests/test-suites.json")))!.AsObject();
-        var errors = SplitSuiteCoverageErrors(catalog, File.ReadAllText(Path.Combine(root, ".github/workflows/offline-checks.yml")), ReleaseCommandTable.OfflineSuites);
+        var errors = SplitSuiteCoverageErrors(catalog, File.ReadAllText(Path.Combine(root, ".github/workflows/offline-checks.yml")), DotnetSuites.OfflineSuites);
         if (errors.Count != 0) throw new ReleaseException(string.Join("\n", errors));
-        foreach (var name in ReleaseCommandTable.OfflineSuites)
-            Require(ReleaseCommandTable.Get(name).Command == "test-suites -Suite " + name);
     }
 
     private static void MissingSplitCi()
@@ -224,11 +219,9 @@ internal static class DotnetSuiteSelfTests
         ProcessRunner.RequireSuccess(build, "hang fixture build");
         var suite = new JsonObject { ["project"] = Path.GetRelativePath(root, project), ["minimumPassed"] = 1,
             ["maximumSkipped"] = 0, ["arguments"] = new JsonArray() };
-        var unit = CheckAllBuild.Suite(suite);
-        var manifest = Path.Combine(directory, "runtime-paths.tsv");
-        File.WriteAllText(manifest, project + "\t" + unit.Variant + "\tbin\tbin\t" + Path.Combine(directory, "bin/Release/net10.0/HangFixture.dll") + "\n");
+        var unit = new SuiteBuild((string)suite["project"]!, "default", []);
         var failures = new List<string>();
-        foreach (var mode in new[] { "test", "vstest", "test-shard" })
+        foreach (var mode in new[] { "test", "test-shard" })
         foreach (var hang in new[] { false, true })
         {
             var fast = mode != "test";
@@ -251,7 +244,7 @@ internal static class DotnetSuiteSelfTests
                 }
                 var result = fast
                     ? FastSuites.RunShard(root, "fixture", suite, output, "dotnet", null, unit, 0, 1,
-                        extra: mode == "test-shard" ? ["-p:NuGetAudit=false"] : null, manifest: manifest, process: Process)
+                        extra: mode == "test-shard" ? ["-p:NuGetAudit=false"] : null, process: Process)
                     : DotnetSuites.RunSuite(root, "fixture", suite, output, arguments: ["--no-build", "--no-restore"], process: Process);
                 // The blame collector records the limit it applied: production for the control, 2 s for the planted hang.
                 Require(AppliedHangTimeouts(output).SequenceEqual(new[] { hang ? "2s" : SuiteHang.Timeout }));
@@ -285,51 +278,4 @@ internal static class DotnetSuiteSelfTests
                 .Select(match => match.Groups[1].Value).ToArray();
         }).Distinct(StringComparer.Ordinal).ToArray();
 
-    private static void MissingVariantRow() => WithFixture((_, directory) =>
-    {
-        var manifest = Path.Combine(directory, "runtime-paths.tsv");
-        var project = Path.Combine(directory, "example.csproj");
-        foreach (var unit in new[] { new CheckBuild("example.csproj", "", ["-p:TestVciFamily=initial"]),
-            new CheckBuild("example.csproj", "custom-output", []) })
-        {
-            foreach (var row in new string?[] { null, project + "\tdefault\tbin\tbin\twrong.dll",
-                project + "\t" + unit.Variant + "\tbin\tbin\t" })
-            {
-                File.Delete(manifest);
-                if (row != null) File.WriteAllText(manifest, row + "\n");
-                try { CheckAllBuild.TestAssembly(directory, unit, manifest, "variant-suite"); }
-                catch (ReleaseException ex)
-                {
-                    Require(ex.Message.Contains("variant-suite", StringComparison.Ordinal) && ex.Message.Contains(project, StringComparison.Ordinal)
-                        && ex.Message.Contains(unit.Variant, StringComparison.Ordinal) && ex.Message.Contains(manifest, StringComparison.Ordinal));
-                    continue;
-                }
-                throw new ReleaseException("Missing variant row silently fell back");
-            }
-        }
-    });
-
-    private static void MissingVariantProcess() => WithFixture((_, directory) =>
-    {
-        var result = FastSuites.RunShard(directory, "variant-suite", Suite(), directory, "must-not-start-dotnet", null,
-            CheckAllBuild.Suite(Suite()), 0, 1, manifest: Path.Combine(directory, "missing-runtime-paths.tsv"));
-        Require(result.ExitCode == 1 && result.StandardError.Contains("Suite variant-suite: missing runtime manifest row", StringComparison.Ordinal)
-            && result.StandardError.Contains("refusing to fall back", StringComparison.Ordinal) && !File.Exists(Path.Combine(directory, "variant-suite.trx")));
-    });
-
-    private static void ConcurrentManifests() => WithFixture((_, directory) =>
-    {
-        using var barrier = new Barrier(2);
-        var unit = new CheckBuild("example.csproj", "", ["-p:TestVciFamily=initial"]);
-        void Run(string name)
-        {
-            var output = Path.Combine(directory, name, "build"); Directory.CreateDirectory(output);
-            var manifest = Path.Combine(output, "runtime-paths.tsv");
-            File.WriteAllText(manifest, Path.Combine(directory, unit.Project) + "\t" + unit.Variant + "\tbin\tbin\t" + name + ".dll\n");
-            Require(barrier.SignalAndWait(TimeSpan.FromSeconds(10)));
-            Require(CheckAllBuild.TestAssembly(directory, unit, manifest, name) == name + ".dll");
-        }
-        Parallel.Invoke(() => Run("first"), () => Run("second"));
-        Require(!File.Exists(Path.Combine(directory, "bin-build/check-all/runtime-paths.tsv")));
-    });
 }

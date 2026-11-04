@@ -18,10 +18,9 @@ public sealed partial class VersionCatalogWiring
     [Fact]
     public void SharedSourceBuildAndPackageInputs()
     {
-        var build = Read(Path.Combine(ROOT, "build-tools/release/ReleaseCommands.cs"));
-        Assert.Contains("TiaOpenness.Configuration.Tests.csproj", build); Assert.Contains("build-configurator", build);
+        var build = Read(Path.Combine(ROOT, "build-tools/release/PrepareChecks.cs"));
+        Assert.Contains("TiaOpenness.Configuration.Tests.csproj", build);
         Assert.DoesNotContain("/main:TiaMcpConfigurator.Tests", build);
-        Assert.Contains("Logic/Siemens/TiaVersionCatalog.cs", Read(Path.Combine(ROOT, "build-tools/Package-Release.py")));
         var project = XDocument.Load(Path.Combine(ROOT, "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj"));
         var linked = project.Descendants("Compile").Select(n => (n.Attribute("Include")?.Value ?? "").Replace('\\', '/')).ToArray();
         var fixture = XDocument.Load(Path.Combine(ROOT, "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props"));

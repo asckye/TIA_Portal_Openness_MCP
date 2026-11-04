@@ -28,15 +28,7 @@ internal static class SuiteSharding
         return identities;
     }
 
-    internal static void Compare(IEnumerable<string> baseline, IEnumerable<string> current, bool outcomes = false)
-    {
-        var expected = Identities(baseline, outcomes); var actual = Identities(current, outcomes);
-        var differences = expected.Keys.Union(actual.Keys).Where(key => expected.GetValueOrDefault(key) != actual.GetValueOrDefault(key)).ToArray();
-        if (differences.Length != 0)
-            throw new ReleaseException($"Test identity multiset differs ({differences.Length} identities): " + string.Join("; ", differences.Take(6)));
-    }
-
-    internal static CommandResult Merge(string name, JsonObject suite, IReadOnlyList<string> shards, string output, string? baseline = null)
+    internal static CommandResult Merge(string name, JsonObject suite, IReadOnlyList<string> shards, string output)
     {
         var errors = new List<string>();
         foreach (var shard in shards) errors.AddRange(SuiteHang.Errors(Path.GetDirectoryName(shard)!, name));
@@ -78,19 +70,9 @@ internal static class SuiteSharding
         new XDocument(root).Save(path);
         var evaluated = DotnetSuites.EvaluateTrx(path, suite["minimumPassed"]!.GetValue<int>(), suite["maximumSkipped"]!.GetValue<int>());
         errors.AddRange(evaluated.Errors);
-        bool? identitiesEqual = null, outcomesEqual = null;
-        if (baseline != null)
-        {
-            try { Compare([baseline], [path]); identitiesEqual = true; }
-            catch (Exception ex) when (ex is ReleaseException or IOException or System.Xml.XmlException) { identitiesEqual = false; errors.Add(ex.Message); }
-            try { Compare([baseline], [path], outcomes: true); outcomesEqual = true; }
-            catch (Exception ex) when (ex is ReleaseException or IOException or System.Xml.XmlException) { outcomesEqual = false; errors.Add(ex.Message); }
-        }
         var report = evaluated.Counts;
         report["suite"] = name; report["minimumPassed"] = suite["minimumPassed"]!.DeepClone(); report["maximumSkipped"] = suite["maximumSkipped"]!.DeepClone();
         report["shards"] = new JsonArray(shards.Select(p => (JsonNode?)JsonValue.Create(p)).ToArray());
-        report["identitiesEqual"] = identitiesEqual; report["outcomesEqual"] = outcomesEqual;
-        report["equivalence"] = baseline == null ? "not-measured" : identitiesEqual == true && outcomesEqual == true ? "equal" : "failed";
         report["errors"] = new JsonArray(errors.Select(e => (JsonNode?)JsonValue.Create(e)).ToArray());
         File.WriteAllText(Path.Combine(output, name + ".json"), report.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
         return new(errors.Count == 0 ? 0 : 1, $"{name}: {report["passed"]} passed; {report["failed"]} failed; {report["skipped"]} skipped\n", string.Join("\n", errors));
@@ -197,16 +179,6 @@ internal static class SuiteCosts
         Directory.CreateDirectory(Path.GetDirectoryName(classesPath)!);
         File.WriteAllText(classesPath, JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         File.AppendAllText(Path.ChangeExtension(classesPath, ".history.jsonl"), JsonSerializer.Serialize(new { atUtc = DateTime.UtcNow, classes = records }) + "\n");
-    }
-
-    internal static void ImportReport(string reportDirectory, string historyDirectory)
-    {
-        foreach (var parent in new[] { "suites", "preflight-suites" })
-        {
-            var root = Path.Combine(reportDirectory, parent); if (!Directory.Exists(root)) continue;
-            foreach (var directory in Directory.EnumerateDirectories(root))
-                Record(Path.GetFileName(directory), directory, parent == "preflight-suites" ? Path.Combine(historyDirectory, "preflight") : historyDirectory);
-        }
     }
 
     internal static (Dictionary<string, int>, double[]) Balance(IReadOnlyDictionary<string, double> costs, int count)

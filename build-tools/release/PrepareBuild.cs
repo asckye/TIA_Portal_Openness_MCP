@@ -63,7 +63,7 @@ internal sealed class PrepareBuild
             Publish("src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj", output, "write-guard", "-p:PublishAot=false", "-p:UseAppHost=true");
             Publish("src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj", output, "plugin-launcher", "-p:UseAppHost=true");
             Build("src/Updater/TiaMcp.Updater.csproj", "updater");
-            foreach (var (relative, source) in ReleaseRecords.UpdaterOutputs)
+            foreach (var (relative, source) in PrepareBuild.UpdaterOutputs)
                 File.Copy(Path.Combine(context.Root, source), Path.Combine(context.Root, relative), true);
             Launcher();
         });
@@ -229,6 +229,9 @@ internal sealed class PrepareBuild
 
     private void TestProducers()
     {
+        Build("tests/Engine/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj", "diagnostics-tests");
+        Build("tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj", "api-compile-checks");
+        Build("tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj", "adapter-diagnostics-tests");
         Build("tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj", "harness");
         Build("tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj", "transport-fixture");
         var fixtures = new List<Project>();
@@ -333,4 +336,10 @@ internal sealed class PrepareBuild
             File.Copy(file, destination, true);
         }
     }
+
+    internal static readonly IReadOnlyDictionary<string, string> UpdaterOutputs = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["runtime/tools/TiaMcp.Updater.exe"] = "bin-build/updater/TiaMcp.Updater.exe",
+        ["runtime/tools/TiaMcp.Updater.exe.config"] = "bin-build/updater/TiaMcp.Updater.exe.config"
+    };
 }

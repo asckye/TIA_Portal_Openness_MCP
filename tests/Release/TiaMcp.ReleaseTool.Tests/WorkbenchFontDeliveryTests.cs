@@ -15,8 +15,6 @@ public sealed class WorkbenchFontDeliveryTests
     {
         string root = Repository.FindRoot();
         string source = "src/Studio/Gui/Fonts/" + name;
-        var policy = SourceRoots.Load(root);
-        foreach (string consumer in new[] { "repository", "bundle", "package" }) Assert.DoesNotContain(source, policy.RequiredPaths(consumer));
         Assert.False(File.Exists(Path.Combine(root, source)));
         var rules = DeliveryRules.Load(root);
         string runtime = "runtime/studio/Fonts/" + name;

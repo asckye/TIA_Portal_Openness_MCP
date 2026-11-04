@@ -38,49 +38,6 @@ public sealed class Round3DecoderBuildTests
     }
 
     [Fact]
-    public void Reviewer_build_rejects_PATH_python_when_decoder_configuration_is_missing()
-    {
-        using var fixture = new OfflineFixtures();
-        var previous = new[] { "PYTHON", ReleaseCommands.DecoderPythonVariable, "TIA_MCP_PLC_TOOLS_PYTHON" }
-            .ToDictionary(name => name, Environment.GetEnvironmentVariable);
-        try
-        {
-            Environment.SetEnvironmentVariable("PYTHON", "python");
-            Environment.SetEnvironmentVariable(ReleaseCommands.DecoderPythonVariable, null);
-            Environment.SetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON", null);
-            var error = Assert.Throws<ReleaseException>(() => ReleaseCommands.Run("run-release-build",
-                Args("-Tier", "full", "-PublicApiRoot", fixture.DirectoryPath)));
-            Assert.Contains(ReleaseCommands.DecoderPythonVariable, error.Message);
-            Assert.Contains("No PATH fallback", error.Message);
-        }
-        finally { foreach (var (name, value) in previous) Environment.SetEnvironmentVariable(name, value); }
-    }
-
-    [Fact]
-    public void Runtime_preparation_is_an_always_run_check_build_job()
-    {
-        Assert.Single(CheckAllJobInputs.ToolJobs, name => name == "prepare-decoder-python");
-        Assert.True(CheckAllJobInputs.AlwaysRun("prepare-decoder-python"));
-        Assert.NotNull(CheckAllJobInputs.Find(new("prepare-decoder-python", () => new(0, "", ""), []), new JsonObject()));
-        Assert.Contains(ReleaseEvidence.RequiredJobs(Repository.FindRoot()), job => job.Name == "prepare-decoder-python" && job.Exact);
-        foreach (string file in DecoderRuntime.RequiredFiles.Append("runtime.json"))
-            Assert.Contains(DecoderRuntime.RelativeDirectory + "/" + file, ReleaseCommands.TestPackageProducts());
-    }
-
-    [Fact]
-    public void Affected_quick_runs_keep_decoder_preparation_and_map_its_source_inputs()
-    {
-        var job = new CheckJob("prepare-decoder-python", () => new(0, "", ""), []);
-        var catalog = new JsonObject();
-        var selection = new CheckAllAffected(["build-tools/release/DecoderPython.cs"], [], null, true);
-        selection.Map([job], catalog);
-        Assert.Null(selection.Fallback);
-        Assert.True(selection.Selected(job, CheckAllJobInputs.Find(job, catalog)));
-        Assert.Equal(job.Name, Assert.Single(selection.QuickPlan([job], catalog)).Name);
-        Assert.Contains(job, new CheckAllMergePolicy([], null).Apply([job], "merge"));
-    }
-
-    [Fact]
     public void Check_jobs_receive_the_absolute_prepared_runtime_and_selected_pin()
     {
         string root = Repository.FindRoot();
@@ -132,10 +89,10 @@ public sealed class Round3DecoderBuildTests
     public void Standalone_fixture_uses_an_existing_assembly_without_rebuilding_it()
     {
         string tool = typeof(ReleaseCommands).Assembly.Location;
-        string hash = ReleaseRecords.HashFile(tool);
+        string hash = FileHash.Sha256(tool);
         var written = File.GetLastWriteTimeUtc(tool);
         Assert.Equal(Path.GetFullPath(Path.Combine(Repository.FindRoot(), DecoderRuntime.RelativeDirectory)), DecoderRuntimeFixture.Prepare(Repository.FindRoot(), null, tool));
-        Assert.Equal(hash, ReleaseRecords.HashFile(tool));
+        Assert.Equal(hash, FileHash.Sha256(tool));
         Assert.Equal(written, File.GetLastWriteTimeUtc(tool));
     }
 

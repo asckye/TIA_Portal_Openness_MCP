@@ -9,6 +9,7 @@ namespace TiaMcp.ReleaseTool.Tests;
 internal sealed class StaticTree : IDisposable
 {
     internal string Root { get; } = Directory.CreateDirectory(Path.Combine(StaticCheckVectorTests.Root, "bin-build", "static-check-" + Guid.NewGuid().ToString("N"))).FullName;
+
     internal string Write(string name, string source)
     {
         var path = Path.Combine(Root, name);
@@ -16,18 +17,21 @@ internal sealed class StaticTree : IDisposable
         File.WriteAllText(path, source);
         return path;
     }
+
     internal void Copy(string name)
     {
         var path = Path.Combine(Root, name);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.Copy(Path.Combine(StaticCheckVectorTests.Root, name), path, true);
     }
+
     public void Dispose() => Directory.Delete(Root, true);
 }
 
 [Trait("Category", "StaticChecks")]
 public sealed class StaticPolicyTests
 {
+
     [Fact]
     public void CSharpFeatureCasesDeduplicateExactConfigurationsAndKeepDifferentProperties()
     {
@@ -48,66 +52,6 @@ public sealed class StaticPolicyTests
     }
 
     [Fact]
-    public void StagedReleaseRunsThePlcChecksAndNoEngineStepWithoutTouchingTheRecordBinding()
-    {
-        var root = Repository.FindRoot();
-        string Read(string name) => File.ReadAllText(Path.Combine(root, "build-tools/release", name));
-        var multi = Read("ReleaseCommands.cs");
-        Assert.Contains("InstallReleasePlcWorker(Root, key)", multi);
-        Assert.Contains("RunPlcReleaseChecks(plan, options", multi);
-        Assert.Contains(".. PlcWorkerFixtures.Keys", multi);
-        Assert.Contains("\"plcFoundationTransportExecuted\"", multi);
-        Assert.Contains("ReleaseRecords.EngineReuseReason", multi);
-        Assert.Contains("\"Release-wide build\"", multi);
-        Assert.DoesNotContain("engineCompatibility = ", multi);
-        Assert.Contains("\"foundationApprovalSafetyChecksPassed\"] = 30", multi);
-        var branch = Read("BranchGate.cs");
-        // P8-04l: the branch gate's engine halves are retired; the PLC plan below carries every V20/V21 check.
-        foreach (var check in new[] { "VerifyNativeJit", "VerifyEngineApproval", "VerifyStability", "VerifyHttpConcurrency", "TiaMcp.Engine.V" }) Assert.DoesNotContain(check, branch);
-        Assert.Contains("PreparePlcReleaseChecks", branch);
-        Assert.Contains("RunPlcReleaseChecks(plcPlan", branch);
-        foreach (var group in new[] { "native-coverage", "native-diagnostics", "http-concurrency", "plc-worker-isolation", "plc-approval", "plc-stability", "plc-isolated-stability", "plc-contracts", "plc-responses" }) Assert.Contains("\"" + group + "\"", branch);
-        var candidate = Read("ReleaseCandidateChecks.cs");
-        Assert.Contains("sdk-worker-build-plc-v", candidate);
-        Assert.Contains("VerifyPackagedResponses(Root", candidate);
-        Assert.DoesNotContain("07-engine-contracts-source-layout", candidate);
-        Assert.Contains("09-packaged-responses-verify-plc", candidate);
-        Assert.Contains("RunPlcReleaseJobs", candidate);
-    }
-
-    [Fact]
-    public void PlcHarnessWiringRegressionsRunWithoutNativeTiaOrEngineSubjects()
-    {
-        var root = Repository.FindRoot();
-        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3",
-            ["-X", "utf8", Path.Combine(root, "scripts/checks/Test-PlcHarnessSuccessors.py")], root,
-            new Dictionary<string, string?> { ["PYTHONDONTWRITEBYTECODE"] = "1" });
-        Assert.Equal(0, result.ExitCode); Assert.Contains("Ran 18 tests", result.StandardError); Assert.Contains("OK", result.StandardError);
-        Assert.Contains("\"plc-harness-self-tests\"", File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAllInventory.cs")));
-    }
-
-    [Fact]
-    public void PlcScriptWiringAndEvidenceRegressionsRunWithoutTia()
-    {
-        var root = Repository.FindRoot();
-        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3",
-            ["-X", "utf8", Path.Combine(root, "scripts/checks/Test-PlcScriptSuccessors.py")], root,
-            new Dictionary<string, string?> { ["PYTHONDONTWRITEBYTECODE"] = "1" });
-        Assert.Equal(0, result.ExitCode);
-        Assert.Contains("Ran 10 tests", result.StandardError);
-        Assert.Contains("OK", result.StandardError);
-        var inventory = File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAllInventory.cs"));
-        Assert.Contains("\"plc-script-self-tests\"", inventory);
-        Assert.Contains("\"campaign-validator-self-tests\"", inventory);
-        var jobs = File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAll.cs"));
-        Assert.Contains("ValidateCheckAllPlcScriptJobs(jobs)", jobs);
-        Assert.Contains("CatalogAudits.Usage(Root, recordsPath: records)", jobs);
-        Assert.Contains("tool-usage-audit-plc.json", jobs);
-        Assert.Contains("PLC usage audit differs from manifest/tool-usage-coverage.json", jobs);
-        Assert.Contains("PLC usage receipt evidence mismatch", jobs);
-    }
-
-    [Fact]
     public void Plugin_guard_repository_check_detects_a_legacy_only_matcher()
     {
         using var tree = new StaticTree();
@@ -120,21 +64,8 @@ public sealed class StaticPolicyTests
         Assert.Contains(RepositoryChecks.PluginWriteGuardErrors(tree.Root), error => error.Contains("plugin_", StringComparison.Ordinal));
     }
 
-    [Fact]
-    public void Release_version_updates_the_marketplace_cache_identity_and_is_idempotent()
-    {
-        using var tree = new StaticTree();
-        tree.Copy(".claude-plugin/plugin.json"); tree.Copy(".claude-plugin/marketplace.json");
-        ReleaseCommands.UpdateMarketplaceVersion(tree.Root, "4.0.0");
-        string path = Path.Combine(tree.Root, ".claude-plugin/marketplace.json");
-        var marketplace = JsonNode.Parse(File.ReadAllText(path))!;
-        Assert.Equal("4.0.0", (string?)marketplace["plugins"]![0]!["version"]);
-        string once = File.ReadAllText(path); ReleaseCommands.UpdateMarketplaceVersion(tree.Root, "4.0.0");
-        Assert.Equal(once, File.ReadAllText(path));
-        Assert.True(ReleaseValidation.IsReleaseManagedChange(" M .claude-plugin/marketplace.json"));
-    }
-
     private static string Root => StaticCheckVectorTests.Root;
+
     private static string Source(string name) => Repository.ReadSource(Path.Combine(Root, name));
 
     [Theory]
@@ -151,31 +82,7 @@ public sealed class StaticPolicyTests
         tree.Write("src/Adapters/Adapter.csproj", $"<Project><ItemGroup><{kind} Include=\"{name}\" /></ItemGroup></Project>");
         Assert.Equal(fails, AdapterBoundary.Check(tree.Root).Count > 0);
     }
-    [Fact]
-    public void AdapterChecksTransitiveReferencesAndSourceButIgnoresBuildHelpers()
-    {
-        using var tree = new StaticTree();
-        tree.Write("src/Adapters/Adapter.csproj", "<Project><ItemGroup><ProjectReference Include=\"$(MSBuildThisFileDirectory)Dependency.csproj\" /></ItemGroup></Project>");
-        tree.Write("src/Adapters/Dependency.csproj", "<Project><ItemGroup><PackageReference Include=\"System.Text.Json\" /></ItemGroup></Project>");
-        Assert.Single(AdapterBoundary.Check(tree.Root));
-        tree.Write("src/Adapters/Dependency.csproj", "<Project />");
-        tree.Write("src/Adapters/build/Test-AdapterInputs.cs", "using System.Text.Json;");
-        tree.Write("src/Adapters/build/Test-WorkerIsolation.cs", "using TiaMcp.Logic;");
-        tree.Write("src/Adapters/obj/Generated.cs", "using System.Text.Json;");
-        Assert.Empty(AdapterBoundary.Check(tree.Root));
-        tree.Write("src/Adapters/Native.cs", "using System.Text.Json;");
-        Assert.Single(AdapterBoundary.Check(tree.Root));
-    }
-    [Fact]
-    public void ExternalInstallerMatchesUpstreamToml()
-    {
-        var expected = Directory.EnumerateFiles(Path.Combine(Root, "third_party/siemens-plc-tools"), "pyproject.toml", SearchOption.AllDirectories).SelectMany(p => ProjectDependencies.Read(Repository.ReadSource(p))).ToHashSet();
-        var installer = Source("src/Shared/Host/InstallPlcToolsCommand.cs");
-        var actual = Regex.Match(installer, @"ExternalPackages\s*=\s*\{(.*?)\n\s*\};", RegexOptions.Singleline);
-        Assert.True(actual.Success);
-        Assert.True(expected.SetEquals(Regex.Matches(actual.Groups[1].Value, "\"([^\"\\n]+)\"").Select(m => m.Groups[1].Value)));
-        foreach (var name in new[] { "pytest", "pytest-asyncio", "pytest-cov", "reportlab" }) Assert.Contains("\"" + name + "\"", installer);
-    }
+
     [Fact]
     public void Package_cli_targets_the_host_subset_and_the_host_ships_the_installer()
     {
@@ -191,14 +98,9 @@ public sealed class StaticPolicyTests
         Assert.Contains("../Shared/Host/InstallPlcToolsCommand.cs", Source("src/FoundationHost/TiaMcp.FoundationHost.csproj"));
         foreach (var project in new[] { "src/Engine/TiaMcp.Engine.V20.csproj", "src/Engine/TiaMcp.Engine.V21.csproj" })
             Assert.False(File.Exists(Path.Combine(Root, project)));
-        Assert.Contains("CatalogGenerator.WriteHostCli(cli)", Source("build-tools/release/ReleaseCommands.cs"));
+        Assert.Contains("WriteHostCli(package[\"cli\"]!.AsObject())", Source("build-tools/release/CatalogGenerator.cs"));
     }
-    [Fact]
-    public void TomlDependencyArraysRespectQuotesCommentsExtrasAndEscapes()
-    {
-        Assert.Equal(new[] { "uvicorn[standard]>=1", "other#package", "text", "中文" }, ProjectDependencies.Read("[project]\ndependencies = [\n# reason\n'uvicorn[standard]>=1', \"other#package\", \"te\\u0078t\", 'plc-local',]\n[project.optional-dependencies]\nopcua = ['中文']\ntest = ['ignored']\n"));
-        foreach (var value in new[] { "'not an array'", "[42]", "['a' 'b']", "[\"unterminated]", "['''multiline''']" }) Assert.Throws<ReleaseException>(() => ProjectDependencies.Read("[project]\ndependencies=" + value));
-    }
+
     [Theory]
     [InlineData("third_party/TiaGitAddIn.Core/LICENSE", "TiaGitAddIn.Core-LICENSE.txt")]
     [InlineData("third_party/SiemensOpcUaModelled/LICENSE.md", "SiemensOpcUaModelled-LICENSE.md")]
@@ -206,6 +108,7 @@ public sealed class StaticPolicyTests
     [InlineData("third_party/tia-openness-studio/LICENSE", "TiaOpennessStudio-LICENSE.txt")]
     [InlineData("reference/siemens-code-snippets/LICENSE.md", "SiemensCodeSnippets-LICENSE.md")]
     public void ShippedLicensesMatchSources(string source, string copy) => Assert.Equal(Source(source), Source("docs/licenses/" + copy));
+
     [Fact]
     public void RetiredWorkbenchFontLicenceIsAbsentAndExcluded()
     {
@@ -221,18 +124,16 @@ public sealed class StaticPolicyTests
     public void SharedThemeDictionariesAreRequiredWithoutPrivateFonts()
     {
         string[] names = ["Themes/Primer.xaml", "Themes/Shell.xaml", "Themes/Approvals.xaml", "Themes/Pages.xaml", "Themes/Palette.HighContrast.xaml", "Themes/Palette.Light.xaml", "Themes/Palette.Dark.xaml", "Controls/WorkbenchLogView.cs", "Controls/WorkbenchMessageBox.cs", "Controls/ResultPresentation.cs", "Controls/LogTailView.cs"];
-        var policy = SourceRoots.Load(Root);
         foreach (var name in names)
         {
             Assert.True(File.Exists(Path.Combine(Root, "src/Studio/Gui", name)));
-            foreach (var consumer in new[] { "bundle", "package", "repository" }) Assert.Contains("src/Studio/Gui/" + name, policy.RequiredPaths(consumer));
         }
         Assert.False(Directory.Exists(Path.Combine(Root, "src/Studio/Gui/Fonts"))
             && Directory.EnumerateFiles(Path.Combine(Root, "src/Studio/Gui/Fonts")).Any());
-        Assert.DoesNotContain(policy.RequiredFiles, row => row.Path.StartsWith("src/Studio/Gui/Fonts/", StringComparison.Ordinal));
         Assert.False(File.Exists(Path.Combine(Root, "docs/licenses/MapleMono-CN-OFL.txt")));
         Assert.False(File.Exists(Path.Combine(Root, "docs/licenses/Manrope-OFL.txt")));
     }
+
     [Theory]
     [InlineData("TiaOpenness.exe", true)]
     [InlineData("runtime/v21/TiaMcp.FoundationHost.exe", true)]
@@ -272,6 +173,7 @@ public sealed class StaticPolicyTests
     [InlineData("runtime\\file.dll", false)]
     [InlineData("scripts/operations/Update-Engine.ps1", false)]
     public void DeliverySentinels(string name, bool expected) => Assert.Equal(expected, DeliveryRules.Load(Root).Delivered(name));
+
     [Fact]
     public void BundleTableValidatorAndLauncherRejectUnreviewedMutations()
     {
@@ -288,6 +190,7 @@ public sealed class StaticPolicyTests
         Assert.Throws<ReleaseException>(() => BundleLayoutChecks.ResourcePaths(layout.Replace("\"manifest/package-manifest.json\"", "ComputePath()")));
         Assert.Throws<ReleaseException>(() => BundleLayoutChecks.ValidatedPaths(validator.Replace("=> BundleResourcePaths", "=> Array.Empty<string>()")));
     }
+
     [Fact]
     public void MissingUntrackedAndUnvalidatedResourcesFail()
     {
@@ -307,6 +210,7 @@ public sealed class StaticPolicyTests
         tracked.Add("runtime/source.cs");
         Assert.Contains("Shipped runtime/hook tree contains source: runtime/source.cs", BundleLayoutChecks.Check(tree.Root, tracked).Errors);
     }
+
     [Fact]
     public void RepositoryProductArchiveChangelogAndLinkSentinels()
     {
@@ -336,6 +240,7 @@ public sealed class StaticPolicyTests
         tree.Write("manifest/contracts/baseline/21.json", "{}"); Assert.NotEmpty(RepositoryChecks.ArchiveErrors(tree.Root));
         tree.Write("manifest/history/contracts-v3/provenance.json", "{}"); Assert.NotEmpty(RepositoryChecks.ArchiveErrors(tree.Root));
     }
+
     [Theory]
     [InlineData("CallTool(\"missing\", new {});", 1)]
     [InlineData("await client.CallToolAsync(\"missing\", args);", 1)]
@@ -348,6 +253,7 @@ public sealed class StaticPolicyTests
     [InlineData("Call(\"{\\\"jsonrpc\\\":\\\"2.0\\\"}\", args);", 0)]
     [InlineData("// Call(\"missing\", args);\nCall(\"known\", args);", 0)]
     public void CSharpScriptCallsRejectLiteralUnknownTools(string source, int count) => Assert.Equal(count, ScriptToolCalls.Check("scripts/example.cs", source, new HashSet<string> { "known" }).Count);
+
     [Theory]
     [InlineData("call('RemovedTool', {})")]
     [InlineData("call('removedtool', {})")]
@@ -408,6 +314,7 @@ public sealed class StaticPolicyTests
         tree.Write("scripts/probe." + extension, source.Replace("RemovedTool", "GetSessionState", StringComparison.Ordinal));
         Assert.Equal(0, ScriptToolCalls.Run(tree.Root));
     }
+
     [Fact]
     public void ScriptJsonPlansAndHistoricalAllowlist()
     {
@@ -415,66 +322,5 @@ public sealed class StaticPolicyTests
         Assert.Single(ScriptToolCalls.Check("scripts/plans/example.json", source, new HashSet<string> { "known" }));
         Assert.Empty(ScriptToolCalls.Check(ScriptToolCalls.DataAllowlist[0], source, new HashSet<string>()));
     }
-    [Fact]
-    public void PackageModeHonorsOldTagDeliveryWithoutRequiringCurrentAssets()
-    {
-        using var tree = new StaticTree();
-        tree.Write("scripts/operations/delivery-files.json", "{\"schemaVersion\":1,\"include\":{\"files\":[\"README.md\"],\"prefixes\":[\"scripts/operations/\",\"manifest/\",\"templates/\",\"runtime/\"]},\"exclude\":{\"files\":[],\"prefixes\":[]},\"legacyCleanup\":{\"files\":[],\"prefixes\":[]},\"requiredFiles\":[\"README.md\"]}");
-        tree.Write("README.md", "Old package");
-        tree.Write("scripts/operations/Start-Legacy.cmd", "legacy entrypoint");
-        var package = new JsonObject { ["entrypoints"] = new JsonObject { ["mcpServer"] = "runtime/v21/TiaMcp" + "Server.exe", ["mcpServerArgs"] = new JsonArray() }, ["cli"] = new JsonObject { ["exe"] = "runtime/v21/TiaMcp" + "Server.exe" }, ["capabilities"] = new JsonObject { ["mcpToolCount"] = 0 } };
-        tree.Write("manifest/package-manifest.json", package.ToJsonString());
-        tree.Write("manifest/tools-list.json", "{\"toolCount\":0,\"tools\":[]}");
-        tree.Write("templates/project-blueprints/full_plc_hmi_project.json", "{\"requiredBundleFiles\":[]}");
-        Assert.Empty(RepositoryChecks.Check(tree.Root, true, true).Errors);
-        File.Delete(Path.Combine(tree.Root, "README.md"));
-        Assert.NotEmpty(RepositoryChecks.Check(tree.Root, true, true).Errors);
-        tree.Write("README.md", "Old package");
-        package["capabilities"]!["mcpToolCount"] = 1;
-        tree.Write("manifest/package-manifest.json", package.ToJsonString());
-        Assert.Contains("Tool inventory count/uniqueness differs from package metadata", RepositoryChecks.Check(tree.Root, true, true).Errors);
-        package["capabilities"]!["mcpToolCount"] = 0;
-        package["entrypoints"]!["mcpServer"] = "runtime/v21/TiaMcp.Engine.V21.exe";
-        tree.Write("manifest/package-manifest.json", package.ToJsonString());
-        Assert.Contains("package entry mcpServerArgs: expected the default release key", RepositoryChecks.Check(tree.Root, true, true).Errors);
-        Assert.Contains(RepositoryChecks.Check(tree.Root, true, true).Errors, e => e.StartsWith("bundle resource:"));
-        Assert.Contains("Forbidden tracked script file: scripts/operations/Start-Legacy.cmd", RepositoryChecks.Check(tree.Root, true, true).Errors);
-    }
-    [Fact]
-    public void SelfTestCommandsAcceptCSharpAndRejectInvalidDispatch()
-    {
-        ReleaseCheckPolicy Policy(ReleaseSelfTest test) => new(["review"], ["review"], [new("docs/", ["review"])], [test]);
-        Policy(new("review", "build-tools/release/RepositoryChecks.cs", Command: ["check-repository", "-SelfTest"])).Validate();
-        Policy(new("review", "build-tools/release/DotnetSuites.cs", Command: ["test-suites", "-SelfTest"])).Validate();
-        Policy(new("review", "scripts/checks/Test-CampaignInputs.py", ["--self-test"])).Validate();
-        foreach (var command in new[] { System.Array.Empty<string>(), new[] { "release" }, new[] { "check-unknown" }, new[] { "dotnet" } }) Assert.Throws<ReleaseException>(() => Policy(new("review", "build-tools/release/RepositoryChecks.cs", Command: command)).Validate());
-        Assert.Throws<ReleaseException>(() => Policy(new("review", "../outside.cs", Command: ["check-repository"])).Validate());
-        using var tree = new StaticTree();
-        var calls = new List<string>();
-        ReleaseCommands.RunCandidateChecks(new("quick", ["repository-self-test", "dotnetsuites-self-test"], [], []),
-            tree.Root, tree.Root, tree.Root, tree.Root, "dotnet-test-double", "python-test-double", 1,
-            (name, action) => { if (name != "11-product-smoke") action(); },
-            (_, _) => throw new InvalidOperationException("C# check dispatched to Python"),
-            (_, _) => throw new InvalidOperationException("Unexpected product check"),
-            (name, executable, arguments, defaults, cwd) =>
-            {
-                calls.Add(name);
-                Assert.False(defaults);
-                if (name == "static-check-self-tests")
-                {
-                    Assert.Equal("dotnet-test-double", executable);
-                    var results = Path.Combine(tree.Root, "static-checks-results");
-                    Assert.Equal(ReleaseCommands.StaticSelfTestArguments(results), arguments);
-                    DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(results, "static-checks.trx"), Enumerable.Repeat("Passed", 331).ToArray());
-                }
-                else
-                {
-                    Assert.Equal("test-suites", executable);
-                    Assert.Equal(["-SelfTest"], arguments);
-                }
-                return new CommandResult(0, "", "");
-            });
-        Assert.Equal(["dotnetsuites-self-test", "static-check-self-tests"], calls.Order(StringComparer.Ordinal));
-        Assert.Equal("repository-self-test", (string)JsonNode.Parse(File.ReadAllText(Path.Combine(tree.Root, "repository-self-test.shared-result.json")))!["name"]!);
-    }
+
 }

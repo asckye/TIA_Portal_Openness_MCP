@@ -143,7 +143,7 @@ schema 5 的条目按仓库相对路径保存本项目及实际构建的所有 P
 拒绝 package、quick、pending、缺少任一 full 检查，以及缓存启用或缺少冷构建来源的包。
 需要独立 publish 的候选用 `run-release-build -Tier full -NoBuildCache` 生成；记录中的 `buildCacheEnabled=false` 是必需证据。
 
-[`release-checks.json`](../../build-tools/release/release-checks.json) 是路径到检查的映射；quick 使用最具体的匹配规则。
+已退役的 `release-checks.json` 是路径到检查的映射；quick 使用最具体的匹配规则。
 Studio 视图只选择 GUI 检查，不选择引擎压测；文档路径只运行必需项，示例路径追加用法/响应检查。
 构建依赖由缓存的实际 MSBuild 输入决定，文档/示例变化不会使无关 worker 或适配器失效。
 未映射路径或缺少可信 baseline 继续选择全部检查。

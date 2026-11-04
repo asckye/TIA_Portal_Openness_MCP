@@ -50,7 +50,6 @@ public sealed class PackageDependencyTests
         File.WriteAllBytes(path, AssemblyBytes(entry, [], null));
         File.WriteAllText(Path.Combine(Path.GetDirectoryName(path)!, "Siemens.Collaboration.Net.dll"), "synthetic sidecar");
         Assert.Throws<ReleaseException>(() => OpennessGroupRuntime.Inspect(path).RequireClean());
-        Assert.Throws<ReleaseException>(() => ReleaseRecords.GetRuntimeFiles(fixture.DirectoryPath));
     }
 
     [Fact]

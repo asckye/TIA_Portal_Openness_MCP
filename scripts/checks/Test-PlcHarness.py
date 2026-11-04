@@ -312,13 +312,9 @@ def suites(args):
         return
     tool = (getattr(args, 'release_tool', None) or ROOT / 'build-tools/release/bin/Release/net10.0/TiaMcp.ReleaseTool.dll').resolve()
     resources.require(tool.is_relative_to(ROOT) and tool.is_file(), 'Release tool must be built in this worktree: ' + str(tool))
-    manifest = getattr(args, 'runtime_manifest', None)
-    if manifest is not None:
-        manifest = manifest.resolve()
-        resources.require(owns_evidence(manifest) and manifest.is_file(), 'Runtime manifest must belong to this worktree: ' + str(manifest))
     print(run(['dotnet', tool, 'test-suites',
                '-Suite', 'engine-host', '-NoBuild', '-Shards', '1', '-MaxParallelism', '1',
-               '-ResultsDirectory', args.output / 'engine-host', *(['-RuntimeManifest', manifest] if manifest else [])]), end='')
+               '-ResultsDirectory', args.output / 'engine-host']), end='')
 
 
 def reference_engine_host(args):

@@ -11,6 +11,8 @@ internal delegate CommandResult SuiteProcess(string executable, IEnumerable<stri
 
 internal static class DotnetSuites
 {
+    internal static readonly string[] OfflineSuites = ["kept-code"];
+
     private static readonly XNamespace Ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 
     internal static (JsonObject Counts, List<string> Errors) ReadTrx(string path)
@@ -215,10 +217,24 @@ internal static class DotnetSuites
         names = WithCompanions(names, catalog);
         var unknown = names.Where(name => !catalog.ContainsKey(name)).Distinct().Order(PythonStringComparer.Instance).ToArray();
         if (unknown.Length != 0) throw new ReleaseException("Unknown suites: " + string.Join(", ", unknown), 64);
-        if (options.Has("Shards") || options.Has("MaxParallelism") || options.Has("NoBuild") || options.Has("ProveEquivalence")
-            || options.Has("RunnerIndex") || options.Has("RunnerCount") || options.Has("GateOnly"))
+        if (options.Has("Shards") || options.Has("MaxParallelism") || options.Has("NoBuild"))
         {
-            var fast = FastSuites.Run(root, options, catalog, process);
+            foreach (var name in names)
+            {
+                if (options.Has("NoBuild")) continue;
+                var suite = catalog[name]!.AsObject();
+                List<string> build = ["build", Path.Combine(root, suite["project"]!.GetValue<string>()), "-c", "Release", "-m:1", "-nodeReuse:false",
+                    .. BuildArguments(suite["arguments"]!.AsArray().Select(arg => arg!.GetValue<string>()))];
+                if (options.Get("PublicApiRoot") is { } api) build.Add("-p:TiaPublicApiRoot=" + api);
+                if (options.Get("NuGetConfig") is { } nuget) build.Add("-p:RestoreConfigFile=" + nuget);
+                var built = (process ?? RunProcess)(options.Get("Dotnet", "dotnet"), build, root, environment);
+                if (built.ExitCode != 0) return built;
+            }
+            // Companion suites use the same sharded execution path and their own count gates.
+            var args = options.Arguments().ToList();
+            foreach (var name in names.Except(options.All("Suite"), StringComparer.Ordinal)) args.Add("-Suite=" + name);
+            var shardOptions = Options.Parse(args.ToArray(), new HashSet<string>());
+            var fast = PlainShards.Run(root, shardOptions, catalog, process);
             return fast with { StandardOutput = output + fast.StandardOutput };
         }
         var arguments = options.All("DotnetArg").Concat(options.Has("NoRestore") ? new[] { "--no-restore" } : []).ToArray();

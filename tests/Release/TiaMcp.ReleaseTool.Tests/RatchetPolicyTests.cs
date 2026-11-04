@@ -8,7 +8,7 @@ namespace TiaMcp.ReleaseTool.Tests;
 [Trait("Category", "StaticChecks")]
 public sealed class RatchetPolicyTests
 {
-    private static CommandResult Run(StaticTree tree, string kind, params string[] args) => ReleaseCommands.RunStaticCaptured("check-ratchet", ["-Root", tree.Root, "-Kind", kind, "-Baseline", Path.Combine(tree.Root, "baseline.json"), .. args]);
+    private static CommandResult Run(StaticTree tree, string kind, params string[] args) => StaticCheckVectorTests.RunCommand("check-ratchet", ["-Root", tree.Root, "-Kind", kind, "-Baseline", Path.Combine(tree.Root, "baseline.json"), .. args]);
     private static void Roots(StaticTree tree) { foreach (var name in SourceCheck.Roots) Directory.CreateDirectory(Path.Combine(tree.Root, name)); }
     [Theory]
     [InlineData("swallowed", "try { A(); } catch { }")]

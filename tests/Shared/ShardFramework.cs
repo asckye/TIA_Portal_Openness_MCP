@@ -33,8 +33,7 @@ namespace TiaMcp.Engine.Tests.Shared
 
         public static bool SplitCases(string className) =>
             className == "PortedPortalAdmissionTests" || className == "BehaviorParityTests" ||
-            className == "BehaviorCapabilityTests" ||
-            className == "TiaMcp.ReleaseTool.Tests.BuildOutputCacheTests";
+            className == "BehaviorCapabilityTests";
 
         public static string CostKey(string className, string method, string displayName, bool lateTheory) =>
             lateTheory ? "M:" + className + "." + method : "T:" + displayName;

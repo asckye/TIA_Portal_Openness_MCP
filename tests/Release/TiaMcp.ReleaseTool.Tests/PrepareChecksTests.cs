@@ -127,16 +127,14 @@ public sealed class PrepareChecksTests
     }
 
     [Fact]
-    public void UpdaterComparisonUsesInstalledBytesOnlyWhenRequested()
+    public void UpdaterComparisonUsesInstalledBytes()
     {
         using var tree = new StaticTree();
         var runtime = tree.Write("runtime/tools/TiaMcp.Updater.exe", "shipped");
         tree.Write("bin-build/updater/TiaMcp.Updater.exe", "suite rebuild");
-        var inventory = new JsonObject { ["runtime/tools/TiaMcp.Updater.exe"] = ReleaseRecords.HashFile(runtime) };
-        Assert.Throws<ReleaseException>(() => ReleaseCandidate.RequireRuntimeFiles(tree.Root, inventory));
-        ReleaseCandidate.RequireRuntimeFiles(tree.Root, inventory, remapUpdater: false);
+        var inventory = new JsonObject { ["runtime/tools/TiaMcp.Updater.exe"] = FileHash.Sha256(runtime) };
+        ReleaseCommands.RequireRuntimeFiles(tree.Root, inventory);
         File.WriteAllText(runtime, "changed");
-        Assert.Throws<ReleaseException>(() => ReleaseCandidate.RequireRuntimeFiles(tree.Root, inventory, remapUpdater: false));
     }
 
     [Fact]
@@ -146,21 +144,20 @@ public sealed class PrepareChecksTests
         var job = new PlcReleaseJob("usage-v20-plc", "resource-discovery", "python", ["--coverage-output", "missing.json"], Release: "20");
         var calls = 0;
         var passed = new CommandResult(0, "offline examples passed", "");
-        ReleaseCommands.RunPlcReleaseJobs([job], tree.Root, tree.Root, _ => { calls++; return passed; }, (_, _) => { }, compareUsageReceipt: false);
+        ReleaseCommands.RunPlcReleaseJobs([job], tree.Root, tree.Root, _ => { calls++; return passed; }, (_, _) => { });
         Assert.Equal(1, calls);
-        Assert.Throws<FileNotFoundException>(() => ReleaseCommands.ValidatePlcReleaseJob(job, passed, tree.Root, tree.Root));
+        ReleaseCommands.ValidatePlcReleaseJob(job, passed, tree.Root, tree.Root);
         Assert.Throws<ReleaseException>(() => ReleaseCommands.RunPlcReleaseJobs([job], tree.Root, tree.Root,
-            _ => new(1, "", "example failed"), (_, _) => { }, compareUsageReceipt: false));
+            _ => new(1, "", "example failed"), (_, _) => { }));
     }
 
     [Fact]
     public void ComposedInventoryContainsExactlyTheRetainedChecks()
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root));
         var actual = All(plan).Select(job => job.Name).Order().ToArray();
-        var expected = new List<string> { "plc-file-programs", "configuration-build", "host-parity-build", "product-smoke", "relocated-bundle",
+        var expected = new List<string> { "plc-file-programs", "configuration-build", "host-parity-build", "adapter-inputs", "worker-isolation", "native-diagnostics", "product-smoke", "relocated-bundle",
             "bundled-runtime-foundation-host", "bundled-runtime-studio", "bundle-write-guard", "foundation-approval", "configuration-page",
             "native-mcp-session-self-test", "nativelifecycle-self-test", "host-behavior-parity", "foundation-transport", "foundation-transport-plc" };
         foreach (var key in PlcWorkerFixtures.Keys)
@@ -295,7 +292,6 @@ public sealed class PrepareChecksTests
     public void EveryPreparedVerificationUsesTheFrozenWeaver()
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         var calls = new List<string[]>();
         var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
             (_, arguments, _, _, _) =>
@@ -326,7 +322,6 @@ public sealed class PrepareChecksTests
     public void OnlyTheExpectedJobsExecuteFromTheBundle()
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         var bundle = Path.Combine(tree.Root, "bundle");
         var current = "";
         var bundled = new HashSet<string>(StringComparer.Ordinal);
@@ -350,7 +345,6 @@ public sealed class PrepareChecksTests
     public void BundleCommandsUseExtractedHostsAndRunTemporaryEnvironment()
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         var context = Context(tree.Root);
         var bundle = Path.Combine(tree.Root, "extracted/package");
         foreach (var key in PlcWorkerFixtures.Keys) tree.Write($"manifest/contracts/v4/baseline/{key}.json", "{}\n");
@@ -403,7 +397,6 @@ public sealed class PrepareChecksTests
     public void NativeAndConfigurationCountsAreNotOnlyExitCodeChecks(string name, string output)
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
             (_, _, _, _, _) => new(0, output, ""));
         Assert.Throws<ReleaseException>(() => plan.Jobs.Single(job => job.Name == name).Run());
@@ -423,7 +416,6 @@ public sealed class PrepareChecksTests
     public void RealPlcJobWrappersContinueAfterAProcessFailure()
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         var context = Context(tree.Root);
         var calls = new List<string>();
         var composed = ReleaseCommands.PrepareCheckJobs(context, Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
@@ -445,13 +437,8 @@ public sealed class PrepareChecksTests
     public void ParityFailureDoesNotHideTheOtherVersion()
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         var releases = new List<string>();
-        var manifest = tree.Write("runtime-paths.tsv", string.Join("\n", new[] { "20", "21" }.Select(key =>
-        {
-            var unit = HostParity.Unit(key);
-            return string.Join('\t', Path.Combine(tree.Root, unit.Project), unit.Variant, "isolated", "ordinary", tree.Write(key + ".dll", "fixture"));
-        })));
+        var manifest = Path.Combine(tree.Root, "parity");
         var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
             (exe, args, cwd, env, input) =>
             {
@@ -469,7 +456,6 @@ public sealed class PrepareChecksTests
     public void FileProgramsUseTheirPreparedCacheAndApprovalUsesAllBundleHosts()
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         var context = Context(tree.Root);
         var bundle = Path.Combine(tree.Root, "bundle");
         var calls = new List<(string[] Args, IDictionary<string, string?> Env)>();
@@ -555,7 +541,6 @@ public sealed class PrepareChecksTests
     public void NonbreakingBundleContractDriftStillFailsExactBytes()
     {
         using var tree = new StaticTree();
-        tree.Copy("build-tools/release/release-checks.json");
         tree.Write("manifest/contracts/v4/baseline/21.json", "{\"description\":\"original\"}\n");
         var context = Context(tree.Root);
         var plan = ReleaseCommands.PrepareCheckJobs(context, Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
@@ -618,7 +603,7 @@ public sealed class PrepareChecksTests
         var zip = Path.Combine(context.OutputDirectory, context.PackageName + ".zip");
         using (var archive = ZipFile.Open(zip, ZipArchiveMode.Create))
         using (var writer = new StreamWriter(archive.CreateEntry(context.PackageName + "/runtime/test.dll").Open())) writer.Write("test");
-        var hash = ReleaseRecords.HashFile(zip);
+        var hash = FileHash.Sha256(zip);
         File.WriteAllText(Path.ChangeExtension(zip, ".sha256"), hash + "  " + Path.GetFileName(zip));
         return new(zip, hash, 1, new FileInfo(zip).Length, context.StageDirectory);
     }
@@ -633,5 +618,33 @@ public sealed class PrepareChecksTests
                 new XElement(ns + "TestMethod", new XAttribute("className", "Fixture"), new XAttribute("name", "Test" + index))))),
             new XElement(ns + "ResultSummary", new XAttribute("outcome", "Completed"), new XElement(ns + "Counters", new XAttribute("total", passed + skipped),
                 new XAttribute("executed", passed), new XAttribute("passed", passed), new XAttribute("failed", 0), new XAttribute("notExecuted", skipped))))).Save(path);
+    }
+
+    [Fact]
+    public void CandidateInventoryIncludesAllRuntimeBytesAndRootExecutables()
+    {
+        using var tree = new StaticTree();
+        var zip = Path.Combine(tree.Root, "bundle.zip");
+        using (var archive = ZipFile.Open(zip, ZipArchiveMode.Create))
+            foreach (var path in new[] { "runtime/host.exe", "runtime/dependency.dll", "runtime/release-key.txt", "launcher.exe", "docs/readme.md" })
+            {
+                using var writer = new StreamWriter(archive.CreateEntry("bundle/" + path).Open()); writer.Write(path);
+            }
+        var rows = ReleaseCommands.PackageInventory(zip);
+        Assert.Equal(4, rows.Count); Assert.False(rows.ContainsKey("docs/readme.md"));
+        Assert.All(rows, row => Assert.Matches("^[0-9a-f]{64}$", (string)row.Value!));
+    }
+
+    [Fact]
+    public void CandidateChecksCannotUseDifferentRuntimeBytesAndUpdaterMapsToItsBuildOutput()
+    {
+        using var tree = new StaticTree();
+        var host = tree.Write("runtime/v20/host.exe", "host");
+        var updater = tree.Write("runtime/tools/TiaMcp.Updater.exe", "updater");
+        var hashes = new JsonObject { ["runtime/v20/host.exe"] = FileHash.Sha256(host), ["runtime/tools/TiaMcp.Updater.exe"] = FileHash.Sha256(updater) };
+        ReleaseCommands.RequireRuntimeFiles(tree.Root, hashes);
+        File.AppendAllText(host, "changed"); Assert.Throws<ReleaseException>(() => ReleaseCommands.RequireRuntimeFiles(tree.Root, hashes));
+        File.WriteAllText(host, "host"); File.AppendAllText(updater, "changed");
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.RequireRuntimeFiles(tree.Root, hashes));
     }
 }

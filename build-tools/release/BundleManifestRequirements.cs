@@ -25,8 +25,7 @@ internal static class BundleManifestRequirements
     };
 
     internal static IEnumerable<string> GuiRequiredPaths(string root) =>
-        new[] { "TiaOpenness.exe", "docs/getting-started/configuration.md" }
-            .Concat(SourceRoots.Load(root).RequiredPaths("bundle"));
+        new[] { "TiaOpenness.exe", "docs/getting-started/configuration.md" };
 
     internal static IReadOnlyList<string> MissingBundleResources(string root, bool package, bool noBinaries) => BundleResourcePaths
         .Where(resource => !File.Exists(Path.Combine(root, resource.Replace('/', Path.DirectorySeparatorChar))) &&

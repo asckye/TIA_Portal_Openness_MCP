@@ -12,7 +12,7 @@ using TiaMcp.BuildCommon;
 namespace TiaMcp.ReleaseTool;
 
 internal sealed record PrepareContext(string Root, string Version, string PublicApiRoot, string? NuGetConfig,
-    string Python, string CompanionPython, string OutputDirectory, DateOnly ReleaseDate, int MaxParallelism = 6)
+    string Python, string CompanionPython, string OutputDirectory, DateOnly ReleaseDate, int MaxParallelism = 6, int TestParallelism = 0)
 {
     internal string PackageName => $"TIA_MCP_Delivery_v{Version}_" + ReleaseDate.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
     internal string StageDirectory => Path.Combine(OutputDirectory, PackageName);
@@ -46,21 +46,21 @@ internal static class Prepare
     {
         var context = Timed("prerequisites", () => CreateContext(root, options));
         var tracked = Repository.GitFiles(root);
-        var before = tracked.ToDictionary(path => path, path => ReleaseRecords.HashFile(Path.Combine(root, path)), StringComparer.Ordinal);
-        return WithRunEnvironment(context, () => RequireUnchanged(root, before), environment =>
+        var before = tracked.ToDictionary(path => path, path => FileHash.Sha256(Path.Combine(root, path)), StringComparer.Ordinal);
+        return WithRunEnvironment(context, () => RequireUnchanged(root, before, options.Has("BuildOnly")), environment =>
         {
             new PrepareBuild(context, environment).Run();
-            RequireUnchanged(root, before);
+            RequireUnchanged(root, before, options.Has("BuildOnly"));
             Timed("stage", () => Stage(context, tracked, environment));
             Timed("delivery-check", () =>
             {
                 var errors = DeliveryErrors(context.StageDirectory, DeliveryRules.Load(root));
                 if (errors.Count != 0) throw new ReleaseException("Prepared delivery failed:\n  " + string.Join("\n  ", errors));
             });
-            RequireUnchanged(root, before);
+            RequireUnchanged(root, before, options.Has("BuildOnly"));
             var package = Timed("zip", () => Archive(context));
             Console.WriteLine($"Package: {package.ZipPath}\nSHA-256: {package.Sha256}\nFiles: {package.FileCount}\nSize: {package.Size} bytes");
-            return Complete(context, package, options, environment, () => RequireUnchanged(root, before));
+            return Complete(context, package, options, environment, () => RequireUnchanged(root, before, options.Has("BuildOnly")));
         });
     });
 
@@ -181,8 +181,8 @@ internal static class Prepare
     {
         root = Path.GetFullPath(root);
         var version = ReleaseVersions.Require(options.Get("Version"), "prepare requires -Version X.Y.Z[-beta.N|-rc.N]").Label;
-        RequireRepository(Git(root, "status", "--porcelain=v1", "--untracked-files=all"), Git(root, "branch", "--show-current"));
-        ReleaseEvidence.RequireNormalizedWorkingBytes(root, "git");
+        RequireRepository(Git(root, "status", "--porcelain=v1", "--untracked-files=all"), Git(root, "branch", "--show-current"), options.Has("BuildOnly"));
+        GitWorkingBytes.RequireNormalizedWorkingBytes(root, "git");
         var date = RequireVersion(root, version);
         RequireNotes(root, version);
         var api = Path.GetFullPath(options.Get("PublicApiRoot") ?? Path.Combine(root, "sdk"));
@@ -205,13 +205,13 @@ internal static class Prepare
         var parallelism = 6;
         if (options.Get("MaxParallelism") is { } value && (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out parallelism) || parallelism < 1))
             throw new ReleaseException("MaxParallelism must be a positive integer");
-        return new(root, version, api, nuget, python, companion, output, date, parallelism);
+        return new(root, version, api, nuget, python, companion, output, date, parallelism, options.Has("MaxParallelism") ? parallelism : Math.Max(1, Environment.ProcessorCount - 4));
     }
 
-    internal static void RequireRepository(string status, string branch)
+    internal static void RequireRepository(string status, string branch, bool buildOnly = false)
     {
         if (!string.IsNullOrWhiteSpace(status)) throw new ReleaseException("prepare requires a clean working tree; commit or preserve changes before preparing");
-        if (branch.Trim() != "master") throw new ReleaseException("prepare requires master; current branch is " + branch.Trim());
+        if (!buildOnly && branch.Trim() != "master") throw new ReleaseException("prepare requires master; current branch is " + branch.Trim());
     }
 
     internal static DateOnly RequireVersion(string root, string version)
@@ -238,6 +238,10 @@ internal static class Prepare
             throw new ReleaseException(PrereleaseNotes.NotesPath(version) + " is missing");
         if (ReleaseVersions.Require(version, "Invalid release version").IsPrerelease && PrereleaseNotes.CurrentError(root, version) is { } error)
             throw new ReleaseException(error);
+        if (!File.ReadAllText(Path.Combine(root, "docs/README.md")).Contains($"[当前版本说明](releases/v{version}.md)", StringComparison.Ordinal))
+            throw new ReleaseException("docs/README.md current release link is stale");
+        if (!Regex.IsMatch(File.ReadAllText(Path.Combine(root, "docs/development/roadmap.md")), "(?m)^# .*" + Regex.Escape(version)))
+            throw new ReleaseException("Roadmap title is stale");
     }
 
     internal static void RequirePublicApi(string root, string apiRoot)
@@ -262,20 +266,20 @@ internal static class Prepare
         return result.StandardOutput.Trim();
     }
 
-    private static void RequireUnchanged(string root, IReadOnlyDictionary<string, string> before)
+    private static void RequireUnchanged(string root, IReadOnlyDictionary<string, string> before, bool buildOnly)
     {
-        var changed = before.Where(row => !File.Exists(Path.Combine(root, row.Key)) || ReleaseRecords.HashFile(Path.Combine(root, row.Key)) != row.Value)
+        var changed = before.Where(row => !File.Exists(Path.Combine(root, row.Key)) || FileHash.Sha256(Path.Combine(root, row.Key)) != row.Value)
             .Select(row => row.Key).ToArray();
         if (changed.Length != 0) throw new ReleaseException("Tracked bytes changed during prepare: " + string.Join(", ", changed));
-        RequireRepository(Git(root, "status", "--porcelain=v1", "--untracked-files=all"), Git(root, "branch", "--show-current"));
+        RequireRepository(Git(root, "status", "--porcelain=v1", "--untracked-files=all"), Git(root, "branch", "--show-current"), buildOnly);
     }
 
     internal static bool IsBuildRecord(string path) => path.StartsWith("manifest/", StringComparison.Ordinal) && path.EndsWith("-build.json", StringComparison.Ordinal);
 
     internal static SortedDictionary<string, string> Contents(string root, IEnumerable<string> tracked, DeliveryRules rules)
     {
-        var files = ReleaseCommands.TestPackageContents(root, tracked, rules.Delivered);
-        foreach (var path in files.Keys.Where(path => IsBuildRecord(path) || GeneratedPaths.Contains(path) || path == ReleaseCommands.TestPackageMarker).ToArray())
+        var files = ReleaseCommands.Contents(root, tracked, rules.Delivered);
+        foreach (var path in files.Keys.Where(path => IsBuildRecord(path) || GeneratedPaths.Contains(path) || path == "TEST-PACKAGE.txt").ToArray())
             files.Remove(path);
         return files;
     }
@@ -365,7 +369,7 @@ internal static class Prepare
     internal static SortedDictionary<string, string> Inventory(string stage) => new(
         Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories)
             .Select(path => (Path: Path.GetRelativePath(stage, path).Replace('\\', '/'), Source: path))
-            .Where(row => row.Path != InventoryPath).ToDictionary(row => row.Path, row => ReleaseRecords.HashFile(row.Source), StringComparer.Ordinal), StringComparer.Ordinal);
+            .Where(row => row.Path != InventoryPath).ToDictionary(row => row.Path, row => FileHash.Sha256(row.Source), StringComparer.Ordinal), StringComparer.Ordinal);
 
     internal static List<string> InventoryErrors(string stage)
     {
@@ -385,9 +389,9 @@ internal static class Prepare
     {
         var errors = new List<string>();
         foreach (var path in Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories).Select(path => Path.GetRelativePath(stage, path).Replace('\\', '/')))
-            if (!rules.Delivered(path) || ReleaseCommands.TestPackageExcluded(path) || IsBuildRecord(path) && path != InventoryPath)
+            if (!rules.Delivered(path) || ReleaseCommands.Excluded(path) || IsBuildRecord(path) && path != InventoryPath)
                 errors.Add("Non-delivery file in stage: " + path);
-        foreach (var path in ReleaseCommands.TestPackageRequiredPaths(stage, rules).Where(path => !IsBuildRecord(path) || path == InventoryPath))
+        foreach (var path in ReleaseCommands.RequiredPaths(stage, rules).Where(path => !IsBuildRecord(path) || path == InventoryPath))
             if (!File.Exists(Path.Combine(stage, path)) && !Directory.Exists(Path.Combine(stage, path))) errors.Add("Missing delivery path: " + path);
         errors.AddRange(BundleManifestRequirements.MissingBundleResources(stage, package: true, noBinaries: false).Select(path => "Missing bundle resource: " + path));
         errors.AddRange(ReleaseCommands.TestPolicyAssemblyErrors(stage));
@@ -404,7 +408,7 @@ internal static class Prepare
         var inventoryErrors = InventoryErrors(context.StageDirectory);
         if (inventoryErrors.Count != 0) throw new ReleaseException(string.Join("\n", inventoryErrors));
         var files = Inventory(context.StageDirectory);
-        files.Add(InventoryPath, ReleaseRecords.HashFile(Path.Combine(context.StageDirectory, InventoryPath)));
+        files.Add(InventoryPath, FileHash.Sha256(Path.Combine(context.StageDirectory, InventoryPath)));
         var zipPath = Path.Combine(context.OutputDirectory, context.PackageName + ".zip");
         if (File.Exists(zipPath) || File.Exists(Path.ChangeExtension(zipPath, ".sha256")))
             throw new IOException("Prepared package already exists: " + zipPath);
@@ -423,7 +427,7 @@ internal static class Prepare
                     throw new ReleaseException("ZIP bytes differ from stage: " + path);
             }
         }
-        var sha = ReleaseRecords.HashFile(zipPath);
+        var sha = FileHash.Sha256(zipPath);
         File.WriteAllText(Path.ChangeExtension(zipPath, ".sha256"), sha + "  " + Path.GetFileName(zipPath) + "\n", Encoding.ASCII);
         return new(zipPath, sha, files.Count, new FileInfo(zipPath).Length, context.StageDirectory);
     }

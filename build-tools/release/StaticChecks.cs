@@ -4,35 +4,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
-    internal static bool SharesStaticSelfTests(ReleaseSelfTest test) => test.Arguments is null or { Length: 0 } &&
-        test.Command is { Length: > 1 } command && command[0] is
-            ("check-adapter-boundary" or "check-bundle-layout" or "check-envelope-rewrite" or "check-repository" or
-             "check-script-tool-calls" or "check-dead-tool-references" or "check-ratchet") &&
-        (command.Skip(1).SequenceEqual(new[] { "-SelfTest" }) || command[0] == "check-ratchet" && command.Length == 4 &&
-         command[1] == "-Kind" && command[2] is ("comments" or "mcp-text" or "swallowed" or "envelopes") && command[3] == "-SelfTest");
 
-    internal static string[] StaticSelfTestArguments(string directory) =>
-        ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release",
-         "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=StaticChecks",
-         "--logger", "trx;LogFileName=static-checks.trx", "--results-directory", directory, .. SuiteHang.TestArguments];
-
-    private static readonly object StaticOutputLock = new();
-    internal static CommandResult RunStaticCaptured(string command, string[] arguments)
-    {
-        lock (StaticOutputLock)
-        {
-            var stdout = Console.Out; var stderr = Console.Error;
-            using var output = new StringWriter(); using var error = new StringWriter();
-            try
-            {
-                Console.SetOut(output); Console.SetError(error);
-                var code = StaticCheck(command, Options.Parse(arguments, new HashSet<string>(["SelfTest", "NoBinaries", "PackageMode", "UpdateBaseline", "AllowGrowth", "Fix", "NoBuild", "Check", "Initialize", "Complete"], StringComparer.OrdinalIgnoreCase)));
-                return new CommandResult(code, output.ToString(), error.ToString());
-            }
-            catch (ReleaseException ex) { return new CommandResult(ex.ExitCode, output.ToString(), error + ex.Message); }
-            finally { Console.SetOut(stdout); Console.SetError(stderr); }
-        }
-    }
     internal static int StaticCheck(string command, Options options)
     {
         if (options.Has("SelfTest"))

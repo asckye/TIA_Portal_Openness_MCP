@@ -23,8 +23,8 @@ public class DotnetSuitesTests
         var windows = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "windows");
         var linux = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "linux");
         var features = TiaFeatures.ProjectCases(root);
-        Assert.Equal(new[] { "kept-code" }, ReleaseCommandTable.OfflineSuites);
-        foreach (var name in ReleaseCommandTable.OfflineSuites)
+        Assert.Equal(new[] { "kept-code" }, DotnetSuites.OfflineSuites);
+        foreach (var name in DotnetSuites.OfflineSuites)
         {
             int Minimum(JsonObject catalog, string name) => catalog[name]!["minimumPassed"]!.GetValue<int>();
             Assert.Equal(5155, Minimum(windows, name));
@@ -51,26 +51,6 @@ public class DotnetSuitesTests
     }
 
     [Fact]
-    public void SplitSuiteSourcesAndFixturesKeepReleaseInventoriesAndCheckSelection()
-    {
-        var root = Repository.FindRoot();
-        var policy = SourceRoots.Load(root);
-        var original = policy.Roots.Single(row => row.Path == "tests/Engine");
-        foreach (var path in new[] { "tests/KeptCode", "tests/Fixtures" })
-        {
-            var moved = policy.Roots.Single(row => row.Path == path);
-            Assert.Equal(original.Inventories, moved.Inventories);
-            Assert.Equal(original.Checks, moved.Checks);
-            Assert.Contains("offline-suites", ReleaseCheckPolicy.Load(root).Select("quick", [path + "/Example.cs"]).SelectedChecks);
-        }
-        var sources = ReleaseRecords.GetSources(root, "engine").Select(row => row.Path).ToHashSet(StringComparer.Ordinal);
-        Assert.Contains("tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj", sources);
-        Assert.Contains("tests/Fixtures/TiaMcp.Offline.Fixtures/ToolBridgeFixture.cs", sources);
-        foreach (var path in new[] { ".github/workflows/offline-checks.yml", "tests/test-suites.json" })
-            Assert.Contains("dotnetsuites-self-test", ReleaseCheckPolicy.Load(root).Select("quick", [path]).SelectedChecks);
-    }
-
-    [Fact]
     public void Retired_engine_parents_leave_their_PlcWorker_successors_registered_with_their_gates()
     {
         string root = Repository.FindRoot();
@@ -83,18 +63,15 @@ public class DotnetSuitesTests
             Assert.Null(catalog[retired]);
             Assert.Equal(new[] { successor }, DotnetSuites.WithCompanions(new[] { successor }, catalog));
             Assert.Equal(0, (int?)catalog[successor]!["maximumSkipped"]);
-            Assert.NotNull(ReleaseCommandTable.Get(successor));
         }
         foreach (var pair in new[] { ("shared-session", "shared-lifecycle-plc"), ("shared-lifecycle", "shared-lifecycle-plc") })
         {
             Assert.Equal(new[] { pair.Item1, pair.Item2 }, DotnetSuites.WithCompanions(new[] { pair.Item1 }, catalog));
             Assert.Equal(0, (int?)catalog[pair.Item2]!["maximumSkipped"]);
-            Assert.NotNull(ReleaseCommandTable.Get(pair.Item2));
         }
         Assert.Equal(new[] { "shared-session", "shared-lifecycle-plc", "shared-lifecycle" },
             DotnetSuites.WithCompanions(new[] { "shared-session", "shared-lifecycle", "shared-lifecycle-plc" }, catalog));
-        Assert.Contains("offline-suites", ReleaseCheckPolicy.Load(root).Select("quick",
-            ["tests/FoundationHost/TiaMcp.PlcExchange.Tests/PlcExchangeTarget.cs"]).SelectedChecks);
+
     }
 
     [Fact]
@@ -119,7 +96,7 @@ public class DotnetSuitesTests
     public void CommandsAndLegacyOptionSpellingsAreRegistered()
     {
         Assert.Contains("test-suites", CommandLine.Commands);
-        Assert.Contains("host-parity", CommandLine.Commands);
+        Assert.DoesNotContain("host-parity", CommandLine.Commands);
         var options = Options.Parse(["--suite", "kept-code", "-Suite", "version-policy", "--no-restore", "--dotnet-arg=--no-build", "--results-directory", "results"], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "NoRestore" });
         Assert.Equal(new[] { "kept-code", "version-policy" }, options.All("Suite"));
         Assert.True(options.Has("NoRestore"));
@@ -194,16 +171,15 @@ public class DotnetSuitesTests
     public void HostParityPreservesCommandsEnvironmentAndSummary(string major, bool noBuild)
     {
         using var fixture = new OfflineFixtures();
-        var options = Options.Parse(["-EngineMajor", major, "-ResultsDirectory", fixture.DirectoryPath, "-NoBuild", noBuild.ToString()], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "NoBuild" });
+        var options = Options.Parse(["-EngineMajor", major, "-ResultsDirectory", fixture.DirectoryPath, "-BuildDirectory", fixture.DirectoryPath, "-NoBuild", noBuild.ToString()], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "NoBuild" });
         var environment = new Dictionary<string, string?> { ["TEST_INHERITED"] = "value" };
         var result = HostParity.Run(Repository.FindRoot(), options, environment, (_, args, _, env) =>
         {
             Assert.Equal(major, env!["TIA_MCP_PARITY_ENGINE_RELEASE"]);
             Assert.Equal("value", env["TEST_INHERITED"]);
-            Assert.Equal(noBuild, args.Contains("--no-build"));
-            Assert.Equal(noBuild, args.Contains("--no-restore"));
-            Assert.Equal(!noBuild && major == "20", args.Contains("-p:DefineConstants=TIA_V20"));
-            Assert.Contains("--disable-build-servers", args);
+            Assert.Equal("vstest", args.First());
+            Assert.Contains(Path.Combine(fixture.DirectoryPath, "v" + major, "TiaMcp.FoundationHost.Tests.dll"), args);
+            Assert.Contains("--TestCaseFilter:FullyQualifiedName~BehaviorParityTests", args);
             DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(fixture.DirectoryPath, "host-behavior-parity.trx"), Enumerable.Repeat("Passed", 103).ToArray());
             return new CommandResult(0, "", "");
         });
@@ -223,7 +199,7 @@ public class DotnetSuitesTests
         using var fixture = new OfflineFixtures();
         var path = Path.Combine(fixture.DirectoryPath, "host-behavior-parity.trx");
         DotnetSuiteSelfTests.SyntheticTrx(path, Enumerable.Repeat("Passed", 103).ToArray());
-        var options = Options.Parse(["-ResultsDirectory", fixture.DirectoryPath], new HashSet<string>());
+        var options = Options.Parse(["-ResultsDirectory", fixture.DirectoryPath, "-BuildDirectory", fixture.DirectoryPath], new HashSet<string>());
         var result = HostParity.Run(Repository.FindRoot(), options, process: (_, _, _, _) =>
         {
             if (writeTrx) DotnetSuiteSelfTests.SyntheticTrx(path, ["Passed"]);

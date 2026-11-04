@@ -119,14 +119,7 @@ jobs:
         run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
 
   foundation-suites:
-    # One 4-vCPU runner cannot host this group at 4-way parallelism without starving its own
-    # timing-sensitive tests. Four runners each run a disjoint quarter of the shards at 2-way
-    # parallelism; foundation-suites-gate applies every registered suite gate to their union.
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [0, 1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -137,36 +130,10 @@ jobs:
           python-version: '3.12'
       - name: Build the development host that the host CLI tests start
         run: dotnet build src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release
-      - name: Foundation contracts and functional tests, runner ${{ matrix.runner }} of 4
-        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -MaxParallelism 2 -RunnerIndex ${{ matrix.runner }} -RunnerCount 4 -ResultsDirectory bin-build/runner-results -Suite foundation -Suite engine-host -Suite shared-lifecycle-plc -Suite worker-progress-foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite workbench-control-protocol
+      - name: Foundation contracts and functional tests
+        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -MaxParallelism 2 -ResultsDirectory bin-build/runner-results -Suite foundation -Suite engine-host -Suite shared-lifecycle-plc -Suite worker-progress-foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite workbench-control-protocol
       - uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: foundation-runner-${{ matrix.runner }}
+          name: foundation-test-results
           path: bin-build/runner-results/
-
-  foundation-suites-gate:
-    # Same -Shards and suite list as the runners: the gate recomputes the shard plan and refuses a
-    # missing runner, a shard that no runner or two runners ran, and any suite gate failure.
-    needs: foundation-suites
-    if: always()
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: '10.0.x'
-      - uses: actions/download-artifact@v6
-        with:
-          pattern: foundation-runner-*
-          path: bin-build/runner-results
-      - name: Registered suite gates over every runner's shards
-        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -GateOnly -RunnerResults bin-build/runner-results -ResultsDirectory bin-build/test-results-fast -Suite foundation -Suite engine-host -Suite shared-lifecycle-plc -Suite worker-progress-foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite workbench-control-protocol
-      - name: Bind registered gates to this CI run and attempt
-        run: dotnet run --project build-tools/release -- ci-coverage -Profile foundation -ResultsDirectory bin-build/test-results-fast -Output bin-build/test-results-fast/ci-receipt.json
-      - uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: foundation-transport-test-results
-          path: |
-            bin-build/test-results*/

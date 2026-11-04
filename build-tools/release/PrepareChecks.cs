@@ -100,20 +100,20 @@ internal static class PrepareChecks
         try
         {
             Prepare.Timed("suites-and-checks", () => ReleaseSuiteStage.Run(context.Root, catalog, output,
-                context.PublicApiRoot, ReleaseCommands.Dotnet, context.NuGetConfig, context.MaxParallelism,
+                context.PublicApiRoot, ReleaseCommands.Dotnet, context.NuGetConfig, context.TestParallelism > 0 ? context.TestParallelism : context.MaxParallelism,
                 process: SuiteProcess, configure: Configure, additionalJobs: plan.Jobs.Select(Wrap).ToArray(),
                 exclusiveJobs: plan.Exclusive.Select(Wrap).ToArray(), postSuiteJobs: plan.PostSuites.Select(Wrap).ToArray(),
                 foundationRun: foundation ?? (() => ReleaseFoundationStage.Run(context.Root, catalog, output, context.PublicApiRoot,
-                    ReleaseCommands.Dotnet, context.NuGetConfig, context.MaxParallelism, Configure,
-                    (options, selected, run) => FastSuites.Run(context.Root, options, selected,
-                        (exe, args, cwd, env) => Prepare.Timed("foundation-" + args.First(), () => run(exe, args, cwd, env)))))));
+                    ReleaseCommands.Dotnet, context.NuGetConfig, context.TestParallelism > 0 ? context.TestParallelism : context.MaxParallelism, Configure,
+                    (options, selected, run) => PlainShards.Run(context.Root, options, selected,
+                        (exe, args, cwd, env) => Prepare.Timed("foundation-" + args.First(), () => run(exe, args, cwd, env))), process: SuiteProcess))));
         }
         catch (Exception error) { failures["suites-and-checks"] = error.Message; }
         // Always check the actual shipped payload, including the installed updater.
         RunJob(new("runtime-bytes", () =>
         {
             if (runtimeCheck is not null) runtimeCheck();
-            else ReleaseCandidate.RequireRuntimeFiles(context.Root, ReleaseCandidate.PackageInventory(package.ZipPath), remapUpdater: false);
+            else ReleaseCommands.RequireRuntimeFiles(context.Root, ReleaseCommands.PackageInventory(package.ZipPath));
             return new("runtime-bytes", 0, "Tested runtime equals packaged runtime.\n", "");
         }));
         foreach (var (name, seconds) in times.OrderByDescending(row => row.Value))
@@ -151,7 +151,7 @@ internal static class PrepareChecks
         string? commit = null)
     {
         // A check must not be able to replace the archive after extraction.
-        var digest = ReleaseRecords.HashFile(package.ZipPath);
+        var digest = FileHash.Sha256(package.ZipPath);
         if (digest != package.Sha256 || new FileInfo(package.ZipPath).Length != package.Size)
             throw new ReleaseException("Prepared ZIP changed during checks");
         if (commit is null)
@@ -231,6 +231,17 @@ internal static partial class ReleaseCommands
         producers.Add(ActionJob("host-parity-build", () => parityManifest = prepareParity?.Invoke()
             ?? HostParity.Prepare(root, Path.Combine(output, "parity-build"), Dotnet, context.PublicApiRoot, context.NuGetConfig)));
 
+        producers.Add(Command("adapter-inputs", Dotnet, ["run", "src/Adapters/build/Test-AdapterInputs.cs", "--", "--source-root", "src", "--public-api-root", context.PublicApiRoot, "--evidence-directory", Path.Combine(output, "adapter-inputs")]));
+        producers.Add(Command("worker-isolation", Dotnet, ["run", "src/Adapters/build/Test-WorkerIsolation.cs", "--", "--evidence-directory", Path.Combine(output, "worker-isolation"), "--native-call-weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"]));
+        producers.Add(Python("native-diagnostics", "Test-NativeDiagnostics.py", ["--fixture", "tests/Engine/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe",
+            "--weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll", "--output", Path.Combine(output, "native-diagnostics")],
+            validate: result =>
+            {
+                var report = JsonNode.Parse(File.ReadAllText(Path.Combine(output, "native-diagnostics/result.json")))!;
+                CheckReleaseCount("diagnosticBehavior", (int?)report["behaviorChecks"] ?? 0, "Diagnostic behavior checks incomplete");
+                CheckReleaseCount("diagnosticRejection", (int?)report["rejectionChecks"] ?? 0, "Diagnostic rejection checks incomplete");
+                if ((bool?)report["nativeTiaExecuted"] != false) throw new ReleaseException("Native diagnostics executed TIA");
+            }));
         jobs.Add(Python("product-smoke", "Test-ReleaseSmoke.py", ["--runtime-root", Path.Combine(bundle, "runtime"), "--public-api-root", context.PublicApiRoot,
             "--temp-root", temp, "--output", Path.Combine(context.Logs, "smoke.json")], bundled: true));
         jobs.Add(Python("relocated-bundle", "Test-RelocatedBundle.py", ["--bundle-root", bundle, "--public-api-root", context.PublicApiRoot], bundled: true));
@@ -264,7 +275,7 @@ internal static partial class ReleaseCommands
                 "--plc-worker", ReleasePlcFixture(context.Logs, key),
                 "--readiness-worker", Path.Combine(bundle, $"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe"),
                 "--temp-root", temp, "--output", approval], true,
-                _ => ValidateCheckAllApproval(Path.Combine(approval, "result.json"))));
+                _ => ValidateApproval(Path.Combine(approval, "result.json"))));
         }
         foreach (var key in PlcWorkerFixtures.Keys)
         {
@@ -285,8 +296,9 @@ internal static partial class ReleaseCommands
                     throw new ReleaseException("Bundle contract bytes differ: V" + key);
             }));
         }
-        foreach (var test in ReleaseCheckPolicy.Load(root).SelfTests.Where(test => test.Check is "native-mcp-session-self-test" or "nativelifecycle-self-test"))
-            jobs.Add(Python(test.Check, Path.GetFileName(test.Script), test.Arguments ?? [], validate: result =>
+        foreach (var test in new[] { (Check: "native-mcp-session-self-test", Script: "Test-NativeMcpSession.py"),
+            (Check: "nativelifecycle-self-test", Script: "Test-NativeLifecycle.py") })
+            jobs.Add(Python(test.Check, test.Script, ["--self-test"], validate: result =>
                 RequireCount(test.Check, result.StandardOutput, test.Check == "native-mcp-session-self-test"
                     ? "COMPLETE: (\\d+) native MCP safety checks passed" : "COMPLETE: (\\d+) native supervisor checks passed; live TIA tests NOT RUN",
                     test.Check == "native-mcp-session-self-test" ? "nativeMcpSafety" : "nativeSupervisor")));
@@ -306,8 +318,7 @@ internal static partial class ReleaseCommands
                 }
                 ResetPlcReleaseJobOutputs(selected, context.Logs);
                 return Run(selected.Name, selected.Check == "plc-ecosystem" ? context.CompanionPython : selected.Executable, selected.Arguments);
-            }, (script, args) => ProcessRunner.RequireSuccess(Run(job.Name + "-compare", context.Python, [script, .. args]), job.Name),
-                compareUsageReceipt: false));
+            }, (script, args) => ProcessRunner.RequireSuccess(Run(job.Name + "-compare", context.Python, [script, .. args]), job.Name)));
             if (IsPlcInventoryProducer(job)) producers.Add(check);
             else if (job.Executable == "test-suites") post.Add(check);
             else if (ReleasePlcExclusive(job)) exclusive.Add(check);
@@ -319,7 +330,7 @@ internal static partial class ReleaseCommands
             foreach (var key in new[] { "20", "21" })
             {
                 var directory = Path.Combine(output, "host-behavior-parity-v" + key);
-                var options = Options.Parse(["-Dotnet", Dotnet, "-EngineMajor", key, "-ResultsDirectory", directory, "-NoBuild", "-RuntimeManifest", parityManifest], new HashSet<string> { "NoBuild" });
+                var options = Options.Parse(["-Dotnet", Dotnet, "-EngineMajor", key, "-ResultsDirectory", directory, "-NoBuild", "-BuildDirectory", parityManifest], new HashSet<string> { "NoBuild" });
                 var env = FastSuites.EnvironmentFor(directory, context.PublicApiRoot);
                 env["RestoreConfigFile"] = context.NuGetConfig;
                 env[PlcReleaseSystemTempVariable] = fileApps;
@@ -348,7 +359,7 @@ internal static partial class ReleaseCommands
 
     internal static PlcReleaseJob[] PreparedPlcJobs(string root, string api, string logs, string temp, string dotnet, string python) =>
         PlcReleaseJobs(root, api, logs, temp, dotnet, python, weaver: Path.Combine(root, "runtime/verification/NativeCallWeaver.dll"))
-            .Where(job => job.Check is not ("plc-approval" or "plc-stability" or "plc-isolated-stability" or "plc-responses")).ToArray();
+            .Where(job => job.Check != "plc-approval").ToArray();
 
     private static void RequirePreparedFoundationApproval(string path)
     {
@@ -363,5 +374,42 @@ internal static partial class ReleaseCommands
                 GetJsonString(release.Value, "stagingWrite") != "approval-refused-before-filesystem-write" || GetJsonString(release.Value, "read") != "succeeded" ||
                 GetJsonString(release.Value, "CallTool") != "refused-before-dispatch")
                 throw new ReleaseException("Foundation approval incomplete: " + release.Name);
+    }
+
+    internal static JsonObject PackageInventory(string zip)
+    {
+        using var archive = ZipFile.OpenRead(zip);
+        var rows = new JsonObject();
+        foreach (var entry in archive.Entries.Where(entry => !entry.FullName.EndsWith('/')))
+        {
+            var slash = entry.FullName.IndexOf('/');
+            if (slash < 0) throw new ReleaseException("Candidate archive lacks its package root");
+            var relative = entry.FullName[(slash + 1)..];
+            if (!relative.StartsWith("runtime/", StringComparison.Ordinal) && Path.GetExtension(relative) is not (".exe" or ".dll")) continue;
+            using var stream = entry.Open();
+            if (rows.ContainsKey(relative)) throw new ReleaseException("Duplicate candidate binary: " + relative);
+            rows[relative] = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(stream));
+        }
+        if (rows.Count == 0) throw new ReleaseException("Candidate has no runtime files");
+        return rows;
+    }
+
+    internal static void RequireRuntimeFiles(string root, JsonObject hashes)
+    {
+        foreach (var (relative, digest) in hashes)
+        {
+            var path = Resolve(root, relative);
+            if (!File.Exists(path) || FileHash.Sha256(path) != (digest?.GetValue<string>() ?? ""))
+                throw new ReleaseException("Candidate checks used changed package runtime bytes: " + relative);
+        }
+    }
+
+    internal static string Resolve(string root, string relative)
+    {
+        if (Path.IsPathRooted(relative) || relative.Contains('\\') || relative.Split('/').Any(part => part is "" or "." or ".."))
+            throw new ReleaseException("Unsafe candidate path: " + relative);
+        var path = Path.GetFullPath(Path.Combine(root, relative));
+        PrepareBuild.RequireOwnedTree(root, path);
+        return path;
     }
 }

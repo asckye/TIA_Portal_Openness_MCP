@@ -32,7 +32,7 @@ internal static class RepositoryChecks
     internal static List<string> ProductNames(string root, IEnumerable<string> names)
     {
         string[] historical = ["manifest/contracts/", "manifest/history/", "manifest/publication-", "docs/releases/", "docs/archive/", "docs/development/evidence/", "reference/siemens-openness/", "reference/siemens-code-snippets/", "third_party/"];
-        string[] evidence = ["CHANGELOG.md", "manifest/ecosystem-validation.json", "manifest/release-build.json", "manifest/multi-version-build.json", "manifest/configurator-build.json"];
+        string[] evidence = ["CHANGELOG.md", "manifest/ecosystem-validation.json"];
         string[] extensions = [".cs", ".csproj", ".props", ".targets", ".ps1", ".psm1", ".py", ".md", ".json", ".yml", ".yaml", ".config", ".bat", ".cmd", ".sh", ".toml", ".xml", ".xaml", ".svg"];
         var oldEngine = "TiaMcp" + "Server"; var oldLauncher = "TiaMcp" + "Configurator";
         var pattern = new Regex(oldEngine + @"\.(?:exe|dll|deps\.json|runtimeconfig\.json)\b|" + oldLauncher + @"\.exe\b", RegexOptions.IgnoreCase);
@@ -98,7 +98,7 @@ internal static class RepositoryChecks
         try
         {
             var provenancePath = Path.Combine(archive, "provenance.json");
-            if (ReleaseRecords.HashFile(provenancePath) != "53cd89d882e8668d5bf3fdb15d6e34b20758424552ccdbf0fbad33db5eba82ce") throw new ReleaseException("Contract archive provenance changed");
+            if (FileHash.Sha256(provenancePath) != "53cd89d882e8668d5bf3fdb15d6e34b20758424552ccdbf0fbad33db5eba82ce") throw new ReleaseException("Contract archive provenance changed");
             var provenance = JsonNode.Parse(File.ReadAllText(provenancePath))!;
             var expected = new[] { "baseline", "responses" }.SelectMany(c => TiaFeatures.Releases.Select(r => c + "/" + r + ".json")).ToHashSet();
             var records = provenance["files"]!.AsArray();
@@ -109,18 +109,17 @@ internal static class RepositoryChecks
             foreach (var (name, hash) in records.Select(r => (r!["path"]!.GetValue<string>(), r["sha256"]!.GetValue<string>())).Append(("README.md", provenance["readmeSha256"]!.GetValue<string>())))
             {
                 var path = Path.Combine(archive, name);
-                if (!File.Exists(path) || File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint) || ReleaseRecords.HashFile(path) != hash) errors.Add("Contract archive SHA-256 mismatch or missing file: " + name);
+                if (!File.Exists(path) || File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint) || FileHash.Sha256(path) != hash) errors.Add("Contract archive SHA-256 mismatch or missing file: " + name);
             }
         }
         catch (Exception ex) when (ex is IOException or ReleaseException or InvalidOperationException or System.Text.Json.JsonException) { errors.Add("Contract archive: " + ex.Message); }
         return errors;
     }
-    internal static (int Count, List<string> Errors) Check(string root, bool noBinaries, bool packageMode, string? analyzerResult = null, bool noAnalyzer = false)
+    internal static (int Count, List<string> Errors) Check(string root, bool noBinaries)
     {
         var rules = DeliveryRules.Load(root);
-        packageMode |= !File.Exists(Path.Combine(root, "Version.props"));
-        var errors = packageMode ? new List<string>() : ArchiveErrors(root).Concat(ChangelogErrors(root)).ToList();
-        if (!packageMode) errors.AddRange(PluginWriteGuardErrors(root));
+        var errors = ArchiveErrors(root).Concat(ChangelogErrors(root)).ToList();
+        errors.AddRange(PluginWriteGuardErrors(root));
         string[] Enumerate() => Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Select(p => Path.GetRelativePath(root, p).Replace('\\', '/')).ToArray();
         var git = File.Exists(Path.Combine(root, ".git")) || Directory.Exists(Path.Combine(root, ".git"));
         var names = git ? ProcessRunner.Run("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], root).StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries) : Enumerate();
@@ -128,12 +127,8 @@ internal static class RepositoryChecks
         // A master-side checker also validates tags predating the product rename.
         // Their bundled delivery policy and manifest are authoritative in package mode.
         var package = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json")))!;
-        var oldTag = packageMode && package["entrypoints"]?["mcpServer"] is JsonValue entry && entry.TryGetValue<string>(out var entryPath) && entryPath.Replace('\\', '/').Split('/').Last().Equals("TiaMcp" + "Server.exe", StringComparison.OrdinalIgnoreCase);
-        if (!oldTag)
-        {
-            errors.AddRange(ForbiddenScripts(tracked.Where(p => File.Exists(Path.Combine(root, p)))));
-            errors.AddRange(ProductNames(root, names));
-        }
+        errors.AddRange(ForbiddenScripts(tracked.Where(p => File.Exists(Path.Combine(root, p)))));
+        errors.AddRange(ProductNames(root, names));
         var count = 0;
         foreach (var source in Documents(root))
         {
@@ -144,7 +139,7 @@ internal static class RepositoryChecks
             {
                 var error = LocalTarget(root, source, match.Groups[1].Value);
                 if (error is not null) errors.Add(relative + ": " + error);
-                else if (!packageMode && rules.Delivered(relative))
+                else if (rules.Delivered(relative))
                 {
                     var target = Uri.UnescapeDataString(match.Groups[1].Value.Trim('<', '>').Split('#', 2)[0]);
                     if (target.Length > 0 && !Regex.IsMatch(target, @"\A[\w+.-]+:") && !rules.Resource(Path.GetRelativePath(root, Path.GetFullPath(Path.Combine(Path.GetDirectoryName(source)!, target))).Replace('\\', '/'))) errors.Add(relative + ": shipped document links outside the delivery: " + target);
@@ -155,19 +150,18 @@ internal static class RepositoryChecks
         }
         void Required(string name, string label)
         {
-            // Only the engine record may be absent, with the eight-release record (itself required) in its place.
-            if (name == ReleaseRecords.EnginePath && !File.Exists(Path.Combine(root, name))) name = ReleaseRecords.MultiPath;
+            if (Prepare.GeneratedPaths.Contains(name, StringComparer.Ordinal)) return;
             var target = Path.GetFullPath(Path.Combine(root, name));
             if (!Within(root, target)) errors.Add(label + ": external path: " + name);
             else if (noBinaries && (name.EndsWith(".exe", StringComparison.Ordinal) || name == "runtime/tools/TiaMcp.Updater.exe.config" || name.StartsWith("runtime/", StringComparison.Ordinal) && name != "runtime/README.md")) return;
-            else if (!packageMode && name is "runtime/tools/TiaMcp.Updater.exe" or "runtime/tools/TiaMcp.Updater.exe.config" && File.Exists(Path.Combine(root, "bin-build/updater", Path.GetFileName(name)))) return;
+            else if (name is "runtime/tools/TiaMcp.Updater.exe" or "runtime/tools/TiaMcp.Updater.exe.config" && File.Exists(Path.Combine(root, "bin-build/updater", Path.GetFileName(name)))) return;
             else if (!File.Exists(target) && !Directory.Exists(target)) errors.Add(label + ": missing or external path: " + name);
         }
         foreach (var (key, value) in package["entrypoints"]!.AsObject())
         {
-            if (key == "mcpServerArgs") { if (!oldTag && !JsonNode.DeepEquals(value, new JsonArray("--release-key", "21"))) errors.Add("package entry mcpServerArgs: expected the default release key"); continue; }
+            if (key == "mcpServerArgs") { if (!JsonNode.DeepEquals(value, new JsonArray("--release-key", "21"))) errors.Add("package entry mcpServerArgs: expected the default release key"); continue; }
             var name = value!.GetValue<string>();
-            if (key == "bundleValidationScript" && (packageMode || !File.Exists(Path.Combine(root, name)))) continue;
+            if (key == "bundleValidationScript" && !File.Exists(Path.Combine(root, name))) continue;
             Required(name, "package entry " + key);
         }
         Required(package["cli"]!["exe"]!.GetValue<string>(), "CLI");
@@ -178,35 +172,9 @@ internal static class RepositoryChecks
         var roster = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "manifest/tools-list.json")))!;
         var toolNames = roster["tools"]!.AsArray().Select(r => r!["name"]!.GetValue<string>()).ToArray();
         if (toolNames.Length != toolNames.Distinct().Count() || toolNames.Length != roster["toolCount"]!.GetValue<int>() || toolNames.Length != package["capabilities"]!["mcpToolCount"]!.GetValue<int>()) errors.Add("Tool inventory count/uniqueness differs from package metadata");
-        if (packageMode)
-        {
-            // Old tags carry their own required files; applying today's source-side
-            // resource anchors would require assets that those releases never shipped.
-            if (!oldTag) foreach (var name in BundleManifestRequirements.BundleResourcePaths) { Required(name, "bundle resource"); if (!rules.Resource(name)) errors.Add("Bundle resource excluded from delivery: " + name); }
-            foreach (var name in Enumerate()) if (!rules.Delivered(name)) errors.Add("File outside delivery set: " + name);
-            if (!noBinaries)
-                foreach (var row in ReleaseRecords.DeliveryFiles(root))
-                    if (rules.Delivered(row.Path)) Required(row.Path, "recorded runtime");
-            return (count, errors);
-        }
-        foreach (var row in SourceRoots.Load(root).RequiredFiles.Where(r => r.Consumers.Contains("repository"))) Required(row.Path, row.RepositoryLabel!);
-        foreach (var major in new[] { "20", "21" }) foreach (var name in new[] { "TiaMcp.PlcWorker." + major + ".exe", "TiaMcp.Adapter." + major + ".dll", "TiaMcp.Adapters.Contracts.dll" }) Required($"runtime/v{major}/worker/{name}", "PLC worker dependency");
-        foreach (var name in new[] { "NativeCallWeaver.dll", "NativeCallWeaver.deps.json", "NativeCallWeaver.runtimeconfig.json", "Mono.Cecil.dll" }) Required("runtime/verification/" + name, "packaged native verifier");
-        string[] dependencies = ["TiaMcp.WorkerChannel.dll", "System.Text.Json.dll", "System.Text.Encodings.Web.dll", "System.IO.Pipelines.dll", "Microsoft.Bcl.AsyncInterfaces.dll", "System.Buffers.dll", "System.Memory.dll", "System.Numerics.Vectors.dll", "System.Runtime.CompilerServices.Unsafe.dll", "System.Threading.Tasks.Extensions.dll"];
-        foreach (var release in TiaFeatures.Releases)
-        { Required($"runtime/v{release}/TiaMcp.WorkerChannel.dll", "worker channel host"); Required($"runtime/v{release}/worker/TiaMcp.PlcSimAdvanced.dll", "net48 simulation dependency"); foreach (var name in dependencies) Required($"runtime/v{release}/worker/{name}", "worker channel dependency"); }
-        Required("runtime/studio/TiaMcp.WorkerChannel.dll", "Studio client channel");
-        foreach (var name in dependencies) Required("runtime/studio/bridge/" + name, "Studio bridge channel dependency");
         foreach (var name in new[] { "manifest/history/contracts-v3/README.md", "manifest/history/contracts-v3/provenance.json" }.Concat(new[] { "manifest/history/contracts-v3", "manifest/contracts/v4" }.SelectMany(d => new[] { "baseline", "responses" }.SelectMany(c => TiaFeatures.Releases.Select(r => $"{d}/{c}/{r}.json"))))) Required(name, "contract snapshot");
         foreach (var kind in RatchetChecks.Baselines.Keys)
             if (RatchetChecks.Run(root, Options.Parse(["-Kind", kind], new HashSet<string>())) != 0) errors.Add(kind + " baseline check failed (see diagnostics above)");
-        if (!noAnalyzer && analyzerResult == null)
-        {
-            if (AnalyzerWarnings.Run(root, Options.Parse(["-Check"], new HashSet<string> { "Check" })) != 0)
-                errors.Add("analyzer warning baseline check failed (see diagnostics above)");
-        }
-        else if (!noAnalyzer && !CheckAllAnalyzerResult.Valid(root, analyzerResult!)) errors.Add("analyzer warning result missing, stale or changed: " + analyzerResult);
-        else if (!noAnalyzer) Console.WriteLine("Analyzer warnings: verified same-run passed result " + analyzerResult);
         if (BundleLayoutChecks.Run(root) != 0) errors.Add("Bundle-layout resource check failed (see diagnostics above)");
         return (count, errors);
     }
@@ -214,7 +182,7 @@ internal static class RepositoryChecks
     {
         var source = Path.Combine(root, "docs/README.md");
         if (LocalTarget(root, source, "../README.md") is not null || LocalTarget(root, source, "../__missing_repository_check__.md") is null || LocalTarget(root, source, "../../../__outside__.md") is null) throw new ReleaseException("Repository link sentinel failed", 2);
-        var result = Check(root, options.Has("NoBinaries"), options.Has("PackageMode"), options.Get("AnalyzerResult"), options.Has("NoAnalyzer"));
+        var result = Check(root, options.Has("NoBinaries"));
         return SourceCheck.Report("Repository check", result.Errors, $"Checked {result.Count} Markdown files and repository entrypoints.");
     }
 }

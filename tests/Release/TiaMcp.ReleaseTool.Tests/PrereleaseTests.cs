@@ -124,24 +124,11 @@ public sealed class PrereleaseTests
         finally { Directory.Delete(directory, true); }
     }
 
-    [Theory]
-    [InlineData("4.0.0-beta.1", "3.3.0", true, true, true)]
-    [InlineData("4.0.0-beta.1", "3.3.0", false, true, false)]
-    [InlineData("4.0.0", "4.0.0-rc.1", true, true, true)]
-    [InlineData("4.0.0-beta.1", "4.0.0", true, true, false)]
-    [InlineData("4.0.0-beta.2", "4.0.0-beta.1", true, true, true)]
-    [InlineData("4.0.0-beta.1", "4.0.0-beta.1", false, false, true)]
-    [InlineData("4.0.0-alpha.1", "3.3.0", true, true, false)]
-    public void ChangelogVersionUsesPrecedenceForPrereleases(string newest, string released, bool repositoryOnly, bool noteExists, bool expected) =>
-        Assert.Equal(expected, ReleaseValidation.ChangelogVersion(newest, released, repositoryOnly, noteExists));
-
     [Fact]
     public void PlainReleaseRequestBodiesAreUnchanged()
     {
         Assert.Equal("{\"tag_name\":\"v4.0.0\",\"target_commitish\":\"abc\",\"name\":\"v4.0.0\",\"body\":\"notes\",\"draft\":true,\"prerelease\":false,\"make_latest\":\"false\"}",
             JsonSerializer.Serialize(ReleaseRequestBodies.Draft("v4.0.0", "abc", "notes", prerelease: false)));
-        Assert.Equal("{\"name\":\"v4.0.0\",\"body\":\"notes\",\"draft\":false,\"prerelease\":false,\"make_latest\":\"true\"}",
-            JsonSerializer.Serialize(ReleaseRequestBodies.Publish("v4.0.0", "notes", prerelease: false)));
     }
 
     [Fact]
@@ -149,28 +136,6 @@ public sealed class PrereleaseTests
     {
         Assert.Equal("{\"tag_name\":\"v4.0.0-beta.1\",\"target_commitish\":\"abc\",\"name\":\"v4.0.0-beta.1\",\"body\":\"notes\",\"draft\":true,\"prerelease\":true,\"make_latest\":\"false\"}",
             JsonSerializer.Serialize(ReleaseRequestBodies.Draft("v4.0.0-beta.1", "abc", "notes", prerelease: true)));
-        Assert.Equal("{\"name\":\"v4.0.0-beta.1\",\"body\":\"notes\",\"draft\":false,\"prerelease\":true,\"make_latest\":\"false\"}",
-            JsonSerializer.Serialize(ReleaseRequestBodies.Publish("v4.0.0-beta.1", "notes", prerelease: true)));
-    }
-
-    [Theory]
-    [InlineData("4.0.0-alpha.1")]
-    [InlineData("4.0.0-beta")]
-    [InlineData("4.0")]
-    [Trait("Category", "ReleaseParity")]
-    public void ReleaseRejectsOtherSuffixesBeforeAnyEffect(string version)
-    {
-        var options = Options.Parse(["-Tier", "full", "-Version", version, "-DryRun"], new HashSet<string>(["DryRun"]));
-        Assert.Contains("-Version must be", Assert.Throws<ReleaseException>(() => ReleaseCommands.Run("release", options)).Message);
-    }
-
-    [Fact]
-    [Trait("Category", "ReleaseParity")]
-    public void ReleaseAcceptsAPrereleaseVersion()
-    {
-        // The version passes validation; the conflicting switches are then refused before any effect.
-        var options = Options.Parse(["-Tier", "full", "-Version", "4.0.0-beta.1", "-DryRun", "-EarlyGatesOnly"], new HashSet<string>(["DryRun", "EarlyGatesOnly"]));
-        Assert.Contains("cannot be combined", Assert.Throws<ReleaseException>(() => ReleaseCommands.Run("release", options)).Message);
     }
 
     private const string Ledger = "# Ledger\n\n## 未发布改动的验收边界\n\nintro\n\n| 改动 | 验收 |\n|---|---|\n| A item | **NOT RUN**；check A |\n\n" +
@@ -215,100 +180,6 @@ public sealed class PrereleaseTests
         Assert.Null(PrereleaseNotes.Apply(PrereleaseNotes.Begin + PrereleaseNotes.End + PrereleaseNotes.Begin + PrereleaseNotes.End, "x"));
         Assert.True(PrereleaseNotes.HasSection(updated!.Replace("new", PrereleaseNotes.Heading, StringComparison.Ordinal)));
         Assert.False(PrereleaseNotes.HasSection(updated));
-    }
-
-    [Theory]
-    [InlineData("TIA_MCP_Delivery_v4.0.0-beta.1_20261021", "4.0.0-beta.1", true)]
-    [InlineData("TIA_MCP_Delivery_v4.0.0_20261021", "4.0.0", true)]
-    [InlineData("TIA_MCP_Delivery_v4.0.0-beta.1_20261021", "4.0.0", false)]
-    [InlineData("TIA_MCP_Delivery_v4.0.0_20261021", "4.0.0-beta.1", false)]
-    [InlineData("TIA_MCP_Delivery_v4.0.0-fork_20261021", "4.0.0", false)]
-    [InlineData("TIA_MCP_Delivery_v4.0.0_2026102", "4.0.0", false)]
-    [InlineData("TIA_MCP_Delivery_v4.0.0_20261341", "4.0.0", false)]
-    [InlineData("TIA_MCP_Delivery_v4.0.0_20261021.zip", "4.0.0", false)]
-    [InlineData("Other_v4.0.0_20261021", "4.0.0", false)]
-    [InlineData("TIA_MCP_Delivery_v4x0x0_20261021", "4.0.0", false)]
-    public void PackageNameIsExactlyTheDeliveryPattern(string packageName, string version, bool valid) =>
-        Assert.Equal(valid, ReleaseValidation.PackageNameError(packageName, version) is null);
-
-    [Fact]
-    public void RepositoryPackageManifestNameMatchesItsBundleVersion()
-    {
-        using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, "manifest/package-manifest.json")));
-        Assert.Null(ReleaseValidation.PackageNameError(manifest.RootElement.GetProperty("packageName").GetString()!, manifest.RootElement.GetProperty("bundleVersion").GetString()!));
-    }
-
-    [Fact]
-    public void PluginVersionsCompareWithTheDeliveryRecordOrThePendingRelease()
-    {
-        var directory = Directory.CreateTempSubdirectory("p890-plugin-").FullName;
-        try
-        {
-            Directory.CreateDirectory(Path.Combine(directory, ".claude-plugin"));
-            Directory.CreateDirectory(Path.Combine(directory, "manifest"));
-            void Write(string plugin, string marketplace, string delivery)
-            {
-                File.WriteAllText(Path.Combine(directory, ".claude-plugin/plugin.json"), "{\"name\":\"p\",\"version\":\"" + plugin + "\"}");
-                File.WriteAllText(Path.Combine(directory, ".claude-plugin/marketplace.json"), "{\"plugins\":[{\"name\":\"other\",\"version\":\"9.9.9\"},{\"name\":\"p\",\"version\":\"" + marketplace + "\"}]}");
-                File.WriteAllText(Path.Combine(directory, "manifest/delivery.json"), "{\"release\":\"" + delivery + "\"}");
-            }
-            // Without -PendingRelease: exactly the delivery record, as before.
-            Write("3.3.0", "3.3.0", "3.3.0");
-            Assert.Null(ReleaseCommands.PluginVersionError(directory, null));
-            Write("4.0.0-beta.1", "4.0.0-beta.1", "3.3.0");
-            Assert.Equal("Plugin version differs from release version", ReleaseCommands.PluginVersionError(directory, null));
-            Write("3.3.0", "4.0.0", "3.3.0");
-            Assert.Equal("Marketplace plugin version differs from release version", ReleaseCommands.PluginVersionError(directory, null));
-            // With -PendingRelease (pre-build gate after the mechanical bump): exactly the pending version, not the delivery record.
-            Write("4.0.0-beta.1", "4.0.0-beta.1", "3.3.0");
-            Assert.Null(ReleaseCommands.PluginVersionError(directory, "4.0.0-beta.1"));
-            Assert.Equal("Plugin version differs from release version", ReleaseCommands.PluginVersionError(directory, "4.0.0"));
-            Write("3.3.0", "3.3.0", "3.3.0");
-            Assert.Equal("Plugin version differs from release version", ReleaseCommands.PluginVersionError(directory, "4.0.0-beta.1"));
-            Write("4.0.0-beta.1", "3.3.0", "3.3.0");
-            Assert.Equal("Marketplace plugin version differs from release version", ReleaseCommands.PluginVersionError(directory, "4.0.0-beta.1"));
-            Assert.NotNull(ReleaseCommands.PluginVersionError(directory, "4.0.0-alpha.1"));
-        }
-        finally { Directory.Delete(directory, true); }
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void MarketplaceVersionUpdateKeepsEveryOtherByte(bool bom)
-    {
-        var directory = Directory.CreateTempSubdirectory("p890-marketplace-").FullName;
-        try
-        {
-            Directory.CreateDirectory(Path.Combine(directory, ".claude-plugin"));
-            File.WriteAllText(Path.Combine(directory, ".claude-plugin/plugin.json"), "{ \"name\": \"tia\", \"version\": \"3.3.0\" }");
-            const string before = "{\r\n  \"name\": \"tia\",\r\n  \"owner\": { \"name\": \"asckye\" },\r\n  \"plugins\": [\r\n    { \"name\": \"other\", \"version\": \"3.3.0\" },\r\n" +
-                "    {\r\n      \"name\": \"tia\",\r\n      \"version\": \"3.3.0\",\r\n      \"source\": { \"name\": \"tia\", \"version\": \"keep\" },\r\n      \"description\": \"MCP — runtimes \\u2014 kept\"\r\n    }\r\n  ]\r\n}";
-            byte[] prefix = bom ? [0xEF, 0xBB, 0xBF] : [];
-            var path = Path.Combine(directory, ".claude-plugin/marketplace.json");
-            File.WriteAllBytes(path, [.. prefix, .. System.Text.Encoding.UTF8.GetBytes(before)]);
-
-            ReleaseCommands.UpdateMarketplaceVersion(directory, "4.0.0-beta.1");
-
-            var expected = before.Replace("\"tia\",\r\n      \"version\": \"3.3.0\"", "\"tia\",\r\n      \"version\": \"4.0.0-beta.1\"", StringComparison.Ordinal);
-            Assert.NotEqual(before, expected);
-            byte[] expectedBytes = [.. prefix, .. System.Text.Encoding.UTF8.GetBytes(expected)];
-            Assert.Equal(expectedBytes, File.ReadAllBytes(path));
-            ReleaseCommands.UpdateMarketplaceVersion(directory, "4.0.0-beta.1");
-            Assert.Equal(expectedBytes, File.ReadAllBytes(path));
-            File.WriteAllText(path, "{\"plugins\":[{\"name\":\"tia\"}]}");
-            Assert.Throws<ReleaseException>(() => ReleaseCommands.UpdateMarketplaceVersion(directory, "4.0.0"));
-        }
-        finally { Directory.Delete(directory, true); }
-    }
-
-    [Fact]
-    public void RepositoryMarketplaceVersionIsFoundInPlace()
-    {
-        var bytes = File.ReadAllBytes(Path.Combine(Root, ".claude-plugin/marketplace.json"));
-        using var plugin = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, ".claude-plugin/plugin.json")));
-        var (start, length) = ReleaseCommands.MarketplaceVersionSpan(bytes, plugin.RootElement.GetProperty("name").GetString()!);
-        Assert.Equal("\"" + plugin.RootElement.GetProperty("version").GetString() + "\"", System.Text.Encoding.UTF8.GetString(bytes, start, length));
     }
 
     [Theory]

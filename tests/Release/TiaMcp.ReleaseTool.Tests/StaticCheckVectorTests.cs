@@ -70,4 +70,21 @@ public sealed class StaticCheckVectorTests
         => Assert.Equal(0, DeadToolReferences.Run(Root, false));
     [Fact]
     public void GenericDictionaryUsesPythonMappingSemantics() => Assert.Equal("{\"a\": 1}", PythonJson.Dumps(new Dictionary<string, int> { ["a"] = 1 }));
+
+    internal static CommandResult RunCommand(string command, string[] arguments)
+    {
+        var options = Options.Parse(arguments, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "UpdateBaseline", "AllowGrowth", "Check", "Initialize", "Complete", "SelfTest" });
+        string root = options.Get("Root", Root);
+        try
+        {
+            int code = command switch
+            {
+                "check-ratchet" => RatchetChecks.Run(root, options),
+                "check-analyzer-warnings" => AnalyzerWarnings.Run(root, options),
+                _ => throw new InvalidOperationException(command)
+            };
+            return new(code, "", "");
+        }
+        catch (ReleaseException error) { return new(error.ExitCode, "", error.Message); }
+    }
 }

@@ -125,7 +125,7 @@ internal static partial class ReleaseCommands
         WriteJson(receipt, new JsonObject { ["tag"] = tag, ["version"] = string.Join(".", version), ["architecture"] = "x64",
             ["license"] = "LICENSE.txt", ["interpreterSha256"] = DecoderRuntime.InterpreterSha256,
             ["files"] = new JsonObject(Directory.EnumerateFiles(target).Where(p => p != receipt)
-                .Order(StringComparer.Ordinal).Select(p => new KeyValuePair<string, JsonNode?>(Path.GetFileName(p), JsonValue.Create(ReleaseRecords.HashFile(p))))) });
+                .Order(StringComparer.Ordinal).Select(p => new KeyValuePair<string, JsonNode?>(Path.GetFileName(p), JsonValue.Create(FileHash.Sha256(p))))) });
         var smoke = ProcessRunner.Run(DecoderRuntime.Require(bundleRoot), ["-I", "-S", "-B", "-X", "utf8", "-c",
             "import json,xml.etree.ElementTree,pathlib; print('decoder-runtime-ok')"], target);
         ProcessRunner.RequireSuccess(smoke, "Relocatable decoder runtime smoke failed");

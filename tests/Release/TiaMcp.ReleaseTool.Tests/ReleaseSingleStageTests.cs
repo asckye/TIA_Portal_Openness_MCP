@@ -24,17 +24,6 @@ public sealed class ReleaseSingleStageTests
     }
 
     [Fact]
-    public void AnalyzerRefreshForcesFreshCompilationWithoutChangingCallerOptions()
-    {
-        var options = Options.Parse(["-Cold=false", "-MaxParallelism", "2", "-NuGetConfig", "offline.config"], new HashSet<string> { "Cold" });
-        var refresh = ReleaseCommands.ReleaseAnalyzerOptions(options);
-        Assert.True(refresh.Has("Cold"));
-        Assert.False(options.Has("Cold"));
-        Assert.Equal("2", refresh.Get("MaxParallelism"));
-        Assert.Equal("offline.config", refresh.Get("NuGetConfig"));
-    }
-
-    [Fact]
     public void MissingCompanionDependenciesFailBeforeAnyBuild()
     {
         var invoked = false;
@@ -49,16 +38,6 @@ public sealed class ReleaseSingleStageTests
             }));
         Assert.True(invoked);
         Assert.Contains("dependencies unavailable", error.Message);
-    }
-
-    [Fact]
-    public void MarketplaceVersionMismatchFailsBeforeMechanicalBump()
-    {
-        using var tree = new StaticTree();
-        tree.Write(".claude-plugin/plugin.json", "{\"name\":\"fixture\"}");
-        tree.Write(".claude-plugin/marketplace.json", "{\"plugins\":[{\"name\":\"fixture\",\"version\":\"4.0.0-beta.2\"}]}");
-        Assert.Throws<ReleaseException>(() => ReleasePrerequisites.RequireMarketplaceVersion(tree.Root, "4.0.0-beta.3"));
-        ReleasePrerequisites.RequireMarketplaceVersion(tree.Root, "4.0.0-beta.2");
     }
 
     [Theory]
@@ -231,13 +210,13 @@ public sealed class ReleaseSingleStageTests
             });
         Assert.Equal(Path.GetFullPath(temp), result);
         Assert.Equal(ReleaseCommands.PlcReleaseFilePrograms.Select(program => Path.Combine(tree.Root, program)), commands);
-        var source = File.ReadAllText(Path.Combine(TiaMcp.BuildCommon.Repository.FindRoot(), "build-tools/release/ReleaseTestStage.cs"));
-        var stage = source[source.IndexOf("private static ReleaseTestResults RunReleaseTestStage", StringComparison.Ordinal)..];
-        var scheduling = stage.IndexOf("var jobs =", StringComparison.Ordinal);
-        Assert.InRange(stage.IndexOf("PreparePlcReleaseFilePrograms(", StringComparison.Ordinal), 0, scheduling - 1);
-        Assert.InRange(stage.IndexOf("HostParity.Prepare(", StringComparison.Ordinal), 0, scheduling - 1);
-        Assert.Contains("additionalEnvironment: stageEnvironment", stage);
-        Assert.Contains("environment[PlcReleaseSystemTempVariable] = fileAppTemp", stage);
+        var root = TiaMcp.BuildCommon.Repository.FindRoot();
+        var source = File.ReadAllText(Path.Combine(root, "build-tools/release/PrepareChecks.cs"));
+        Assert.Contains("producers.Add(ActionJob(\"plc-file-programs\"", source);
+        Assert.Contains("producers.Add(ActionJob(\"host-parity-build\"", source);
+        Assert.Contains("foreach (var job in plan.Producers) RunJob(job)", source);
+        Assert.Contains("env[ReleaseCommands.PlcReleaseSystemTempVariable] = fileApps", source);
+
     }
 
     [Fact]
@@ -251,57 +230,8 @@ public sealed class ReleaseSingleStageTests
         Assert.All(exclusive, job => Assert.StartsWith("harness-", job.Name));
     }
 
-    [Theory]
-    [InlineData("suite")]
-    [InlineData("ordinary")]
-    [InlineData("exclusive")]
-    [InlineData("post")]
-    public void TestStageOnlyRunsTheNamedJobWithoutWritingRecords(string lane)
-    {
-        using var tree = new StaticTree();
-        var record = tree.Write("manifest/configurator-build.json", "{\"testsPassed\":0}");
-        var before = File.ReadAllBytes(record);
-        var options = Options.Parse(["-TestStageOnly", "-Only", "x"], new HashSet<string> { "TestStageOnly" });
-        var selection = new ReleaseTestSelection(options, ["x", "unselected"]);
-        var executed = new List<string>();
-        var catalog = new JsonObject { [lane == "suite" ? "x" : "unselected"] = Suite("fixture.csproj", 1, 0) };
-        CommandResult Process(string _, IEnumerable<string> arguments, string root, IDictionary<string, string?>? environment)
-        {
-            var args = arguments.ToArray();
-            Assert.Equal("suite", lane);
-            if (args[0] == "test") { executed.Add("x"); WriteTrx(args, 1, 0); }
-            return new(0, "passed", "");
-        }
-        (string Name, Func<PipelineResult> Run) Job(string candidate) =>
-            (lane == candidate ? "x" : "unselected", () =>
-            {
-                Assert.Equal(lane, candidate); executed.Add("x"); return new("x", 0, "passed", "");
-            });
-        ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 1, Process,
-            additionalJobs: [Job("ordinary")], exclusiveJobs: [Job("exclusive")], selection: selection, postSuiteJobs: [Job("post")]);
-        Assert.Equal(new[] { "x" }, executed);
-        Assert.Equal(before, File.ReadAllBytes(record));
-        Assert.Single(Directory.GetFiles(Path.Combine(tree.Root, "manifest")));
-        var source = File.ReadAllText(Path.Combine(TiaMcp.BuildCommon.Repository.FindRoot(), "build-tools/release/ReleaseTestStage.cs"));
-        Assert.True(source.IndexOf("if (options.Has(\"TestStageOnly\")) return results;", StringComparison.Ordinal)
-            < source.IndexOf("configuration[\"testsPassed\"] =", StringComparison.Ordinal));
-    }
-
-    [Theory]
-    [InlineData("missing")]
-    [InlineData(",")]
-    public void TestStageOnlyRejectsUnknownOrEmptySelections(string only)
-    {
-        var options = Options.Parse(["-TestStageOnly", "-Only", only], new HashSet<string> { "TestStageOnly" });
-        Assert.Throws<ReleaseException>(() => new ReleaseTestSelection(options, ["x"]));
-        Assert.Throws<ReleaseException>(() => new ReleaseTestSelection(Options.Parse(["-Only", "x"], new HashSet<string>()), ["x"]));
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("foundation-api")]
-    [InlineData("foundation")]
-    public void FoundationUsesOneExclusiveShardedJobAndNoIndependentSubsetProcesses(string? only)
+    [Fact]
+    public void FoundationUsesOneExclusiveShardedJobAndNoIndependentSubsetProcesses()
     {
         using var tree = new StaticTree();
         var catalog = new JsonObject { ["ordinary"] = Suite("ordinary.csproj", 1, 0), ["studio-gui"] = Suite("gui.csproj", 1, 0) };
@@ -314,16 +244,14 @@ public sealed class ReleaseSingleStageTests
             if (args[0] == "test") { events.Add(Path.GetFileName(args[Array.IndexOf(args, "--results-directory") + 1])); WriteTrx(args, 1, 0); }
             return new(0, "passed", "");
         }
-        var selection = only is null ? null : new ReleaseTestSelection(Options.Parse(["-TestStageOnly", "-Only", only], new HashSet<string> { "TestStageOnly" }), catalog.Select(pair => pair.Key));
         var results = ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 1, Process,
-            selection: selection, foundationRun: () =>
+            foundationRun: () =>
             {
-                if (only is null) Assert.Equal(new[] { "ordinary" }, events);
-                else Assert.Empty(events);
+                Assert.Equal(new[] { "ordinary" }, events);
                 events.Add("sharded-foundation-api");
                 return ReleaseFoundationStage.Names.ToDictionary(name => name, _ => new CommandResult(0, "passed", ""));
             });
-        Assert.Equal(only is null ? new[] { "ordinary", "sharded-foundation-api", "studio-gui" } : new[] { "sharded-foundation-api" }, events);
+        Assert.Equal(new[] { "ordinary", "sharded-foundation-api", "studio-gui" }, events);
         Assert.All(ReleaseFoundationStage.Names, name => Assert.Equal(0, results[name].ExitCode));
     }
 
@@ -347,14 +275,14 @@ public sealed class ReleaseSingleStageTests
                 Assert.Equal("8", options.Get("Shards")); Assert.Equal("6", options.Get("MaxParallelism"));
                 Assert.Equal("sdk", options.Get("PublicApiRoot")); Assert.Equal("offline.config", options.Get("NuGetConfig"));
                 Assert.Equal(Path.Combine(output, "foundation-api"), options.Get("ResultsDirectory"));
-                Assert.False(options.Has("NoBuild")); Assert.False(options.Has("RuntimeManifest"));
+                Assert.True(options.Has("NoBuild"));
                 Assert.True(DerivedSuiteGates.FilterContains(selected["foundation-api"]!.AsObject(), selected["foundation"]!.AsObject()));
                 var directory = options.Get("ResultsDirectory")!; Directory.CreateDirectory(directory);
                 var trx = Path.Combine(directory, "fixture.trx");
                 WriteFoundationTrx(trx, failure);
                 var merged = SuiteSharding.Merge("foundation-api", selected["foundation-api"]!.AsObject(), [trx], directory);
                 return failure == "source" ? merged with { ExitCode = 1 } : merged;
-            });
+            }, process: (_, _, _, _) => new(0, "built", ""));
         Assert.Equal(1, invoked);
         Assert.Equal(6, results.Count);
         foreach (var name in ReleaseFoundationStage.Names)
@@ -449,15 +377,6 @@ public sealed class ReleaseSingleStageTests
         Assert.Contains("first", error.Message); Assert.Contains("same-build", error.Message);
     }
 
-    [Fact]
-    public void TestStageOnlyUsesTheSameExternalTempRootAsProduction()
-    {
-        var source = File.ReadAllText(Path.Combine(TiaMcp.BuildCommon.Repository.FindRoot(), "build-tools/release/ReleaseProduction.cs"));
-        var start = source.IndexOf("if (options.Has(\"TestStageOnly\"))", StringComparison.Ordinal);
-        var end = source.IndexOf("if (options.Has(\"EarlyGatesOnly\"))", start, StringComparison.Ordinal);
-        Assert.Contains("RunReleaseTestStage(options, publicApiRoot, testLogs, CreateReleaseTempRoot(), python, nugetConfig)", source[start..end]);
-    }
-
     private static JsonObject Suite(string project, int minimum, int maximum) => new()
     {
         ["project"] = project, ["minimumPassed"] = minimum, ["maximumSkipped"] = maximum, ["arguments"] = new JsonArray()
@@ -477,125 +396,5 @@ public sealed class ReleaseSingleStageTests
             new XElement(ns + "ResultSummary", new XAttribute("outcome", "Completed"), new XElement(ns + "Counters",
                 new XAttribute("total", passed + skipped), new XAttribute("executed", passed), new XAttribute("passed", passed), new XAttribute("failed", 0), new XAttribute("notExecuted", skipped)))))
             .Save(Path.Combine(directory, file));
-    }
-
-    [Theory]
-    [InlineData("2026-11-0X")]
-    [InlineData("2026-02-30")]
-    [InlineData("")]
-    public void ReleaseRefusesPlaceholderOrImpossibleChangelogDates(string date) =>
-        Assert.Throws<ReleaseException>(() => ReleasePrerequisites.RequireChangelog("## [Unreleased]\n\n## [4.0.0-beta.3] - " + date + "\n", "4.0.0-beta.3"));
-
-    [Fact]
-    public void ChangelogSkipsUnreleasedAndRequiresRequestedVersion()
-    {
-        const string changelog = "## [Unreleased]\n\n## [4.0.0-beta.3] - 2026-11-03\n";
-        Assert.True(ReleasePrerequisites.RequireChangelog(changelog, "4.0.0-beta.3").Success);
-        Assert.Throws<ReleaseException>(() => ReleasePrerequisites.RequireChangelog(changelog, "4.0.0-beta.2"));
-    }
-
-    [Fact]
-    public void FullReleaseRetainsEveryGateWithOnlyApprovedFoundationDerivations()
-    {
-        var catalog = DotnetSuites.LoadCatalog(Path.Combine(TiaMcp.BuildCommon.Repository.FindRoot(), "tests/test-suites.json"), TiaMcp.BuildCommon.Repository.FindRoot());
-        var groups = ReleaseSuiteStage.Groups(catalog);
-        Assert.Equal(38, groups.SelectMany(group => group).Count());
-        Assert.Equal(new[] { "foundation", "foundation-api", "shared-lifecycle-plc", "shared-pipeline", "workbench-control-host", "worker-robustness" }, ReleaseFoundationStage.Names.Order());
-        Assert.Equal(catalog.Select(pair => pair.Key).Order(), groups.SelectMany(group => group).Order());
-        foreach (var names in new[] { new[] { "plc-exchange-worker-v20", "plc-exchange-worker-v21" },
-            new[] { "foundation", "foundation-api", "operator-host", "worker-robustness", "shared-lifecycle-plc" } })
-            Assert.Contains(groups, group => names.All(group.Contains));
-    }
-
-    [Fact]
-    public void ProductionPolicyRetiresOnlyApprovedChecksAndKeepsEveryOtherFullGate()
-    {
-        var policy = ReleaseCheckPolicy.Load(TiaMcp.BuildCommon.Repository.FindRoot());
-        var production = policy.ForProductionRelease();
-        Assert.Equal(new[] { "plc-isolated-stability", "plc-stability" }, policy.Checks.Except(production.Checks).Order());
-        var plan = production.Select("full", null) with { ProductionRelease = true };
-        policy.ValidatePlan(plan);
-        Assert.Throws<ReleaseException>(() => policy.ValidatePlan(plan with
-        {
-            SelectedChecks = plan.SelectedChecks.Where(check => check != "plc-approval").ToArray(),
-            SkippedChecks = ["plc-approval"]
-        }));
-        Assert.Contains("plc-stability", policy.Select("full", null).SelectedChecks);
-    }
-
-    [Fact]
-    public void PendingProducerKeepsBinaryProofAndCannotSatisfyTheCompletedTestGate()
-    {
-        using var tree = new StaticTree();
-        var repository = TiaMcp.BuildCommon.Repository.FindRoot();
-        tree.Write("build-tools/release/release-checks.json", File.ReadAllText(Path.Combine(repository, "build-tools/release/release-checks.json")));
-        tree.Write("Version.props", "<Project />");
-        var binary = tree.Write("runtime/tools/fixture.dll", "producer bytes");
-        var policy = ReleaseCheckPolicy.Load(tree.Root);
-        var plan = policy.ForProductionRelease().Select("full", null) with { ProductionRelease = true };
-        var validation = new JsonObject();
-        var record = new JsonObject
-        {
-            ["tier"] = "full", ["checkPlan"] = JsonSerializer.SerializeToNode(plan, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }),
-            ["release"] = "4.0.0", ["fileVersion"] = "4.0.0.0", ["validation"] = validation,
-            ["runtimeFiles"] = new JsonArray(new JsonObject { ["path"] = "runtime/tools/fixture.dll", ["sha256"] = ReleaseRecords.HashFile(binary) }),
-            ["validationArtifacts"] = new JsonArray(),
-            ["sourceFiles"] = JsonSerializer.SerializeToNode(ReleaseRecords.GetSources(tree.Root, "engine").Select(row => new { path = row.Path, sha256 = row.Sha256 })),
-            ["validationInputs"] = JsonSerializer.SerializeToNode(ReleaseRecords.GetValidationInputs(tree.Root, "engine").Select(row => new { path = row.Path, sha256 = row.Sha256 }))
-        };
-        string Reason(bool pending)
-        {
-            using var parsed = JsonDocument.Parse(record.ToJsonString());
-            return pending ? ReleaseRecords.EngineProducerReason(tree.Root, "4.0.0", parsed.RootElement, ReleaseRecords.GetSources(tree.Root, "engine"))
-                : ReleaseRecords.EngineReuseReason(tree.Root, "4.0.0", parsed.RootElement, ReleaseRecords.GetSources(tree.Root, "engine"));
-        }
-        Assert.Equal("", Reason(pending: true));
-        Assert.Equal("offline validation missing", Reason(pending: false));
-        File.WriteAllText(binary, "changed");
-        Assert.Contains("binary changed", Reason(pending: true));
-        File.WriteAllText(binary, "producer bytes");
-        foreach (var (name, count) in new[] { ("versionPolicySdkPassed", 10), ("keptCodePassed", 5155),
-            ("writeGuardPassed", 8), ("crashEvidencePassed", 7), ("updaterPassed", 33), ("nativeMcpSafetyPassed", 8) }) validation[name] = count;
-        Assert.Equal("", Reason(pending: false));
-        record["checkPlan"]!["productionRelease"] = false;
-        Assert.Contains("full production release plan", Reason(pending: true));
-    }
-
-    [Fact]
-    public void PendingProducerPackageCannotPassTheProductionGate()
-    {
-        using var tree = new StaticTree();
-        var policy = ReleaseCheckPolicy.Load(TiaMcp.BuildCommon.Repository.FindRoot());
-        var checks = policy.ForProductionRelease().Checks;
-        var package = Path.Combine(tree.Root, "candidate.zip");
-        void Write(string status, IEnumerable<string> ran)
-        {
-            using var archive = new ZipArchive(File.Create(package), ZipArchiveMode.Create);
-            using var writer = new StreamWriter(archive.CreateEntry("fixture/manifest/package-manifest.json").Open());
-            writer.Write(new JsonObject { ["tier"] = "full", ["productionRelease"] = true, ["checkStatus"] = status,
-                ["checksRan"] = new JsonArray(ran.Select(name => (JsonNode?)JsonValue.Create(name)).ToArray()), ["checksSkipped"] = new JsonArray() }.ToJsonString());
-        }
-        Write("pending", []);
-        Assert.Throws<ReleaseException>(() => policy.RequireFullPackage(package));
-        Write("passed", checks);
-        policy.RequireFullPackage(package);
-        Write("passed", checks.Where(name => name != "plc-approval"));
-        Assert.Throws<ReleaseException>(() => policy.RequireFullPackage(package));
-    }
-
-    [Fact]
-    public void ReleasePathHasNoNightlyOrEvidenceAdoptionAndDryRunReturnsBeforePublication()
-    {
-        var root = TiaMcp.BuildCommon.Repository.FindRoot();
-        var source = File.ReadAllText(Path.Combine(root, "build-tools/release/ReleaseProduction.cs"));
-        var production = source[..source.IndexOf("// The rehearsal ends", StringComparison.Ordinal)];
-        Assert.DoesNotContain("NightlyRuns.RequireRelease", production);
-        Assert.DoesNotContain("AdoptReleaseEvidence", production);
-        Assert.DoesNotContain("\"--local\"", production);
-        Assert.True(production.IndexOf("if (dryRun)", StringComparison.Ordinal) < production.IndexOf("CommitReleaseChanges", StringComparison.Ordinal));
-        var policy = ReleaseCheckPolicy.Load(root).ForProductionRelease();
-        Assert.DoesNotContain("plc-stability", policy.Checks);
-        Assert.DoesNotContain("plc-isolated-stability", policy.Checks);
-        Assert.Contains("http-concurrency", policy.Checks);
     }
 }

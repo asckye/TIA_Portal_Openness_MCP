@@ -216,7 +216,7 @@ public sealed class PrepareTests
         var context = Context(tree.Root);
         Prepare.GenerateManifests(context);
         var result = Prepare.Archive(context);
-        Assert.Equal(ReleaseRecords.HashFile(result.ZipPath), result.Sha256);
+        Assert.Equal(FileHash.Sha256(result.ZipPath), result.Sha256);
         Assert.Equal(new FileInfo(result.ZipPath).Length, result.Size);
         Assert.Equal(context.StageDirectory, result.StageDirectory);
         Assert.Equal(result.Sha256 + "  " + Path.GetFileName(result.ZipPath) + "\n", File.ReadAllText(Path.ChangeExtension(result.ZipPath, ".sha256")));
@@ -464,7 +464,7 @@ public sealed class PrepareTests
         Assert.All(inventory[filesName]!.AsArray(), row =>
         {
             Assert.True(File.Exists(Path.Combine(context.StageDirectory, (string)row![pathName]!)));
-            Assert.Equal(ReleaseRecords.HashFile(Path.Combine(context.StageDirectory, (string)row[pathName]!)), (string?)row[hashName]);
+            Assert.Equal(FileHash.Sha256(Path.Combine(context.StageDirectory, (string)row[pathName]!)), (string?)row[hashName]);
         });
     }
 
@@ -530,6 +530,8 @@ public sealed class PrepareTests
         tree.Write(".claude-plugin/plugin.json", "{\"version\":\"4.0.0-beta.3\"}");
         tree.Write(".claude-plugin/marketplace.json", "{\"plugins\":[{\"version\":\"4.0.0-beta.3\"}]}");
         tree.Write("CHANGELOG.md", "## [Unreleased]\n\n## [4.0.0-beta.3] - 2026-11-02\n\n## [3.0.0] - 2025-11-02\n");
+        tree.Write("docs/README.md", "[当前版本说明](releases/v4.0.0-beta.3.md)");
+        tree.Write("docs/development/roadmap.md", "# Roadmap 4.0.0-beta.3\n");
         return tree;
     }
 
@@ -546,5 +548,61 @@ public sealed class PrepareTests
         tree.Write(Path.GetRelativePath(tree.Root, Path.Combine(context.StageDirectory, "manifest/tools-list.json")),
             File.ReadAllText(Path.Combine(tree.Root, "manifest/tools-list.json")));
         return tree;
+    }
+
+    [Fact]
+    public void ContentsAreTheDeliverySetWithoutVerifierSymbolsOrPublicApi()
+    {
+        using var tree = new StaticTree();
+        var rules = DeliveryRules.Load(StaticCheckVectorTests.Root);
+        string[] tracked = ["README.md", "docs/guides/a.md", "src/Logic/Code.cs", "AGENTS.md", "runtime/README.md", "docs/guides/deleted.md"];
+        foreach (var name in tracked.Where(name => name != "docs/guides/deleted.md")) tree.Write(name, name);
+        foreach (var name in new[]
+        {
+            "runtime/v16/TiaMcp.FoundationHost.dll", "runtime/v16/TiaMcp.FoundationHost.pdb", "runtime/v16/worker/Siemens.Engineering.dll", "runtime/v16/Siemens.Simatic.S7.Webserver.API.dll",
+            "runtime/v16/Siemens.Collaboration.Net.dll", "runtime/verification/NativeCallWeaver.dll", "runtime/studio/TiaOpenness.exe",
+            "runtime/tools/TiaMcp.Updater.exe", "bin-build/updater/TiaMcp.Updater.exe", "bin-build/updater/TiaMcp.Updater.exe.config",
+            "bin-build/updater/TiaMcp.Updater.pdb", "TiaOpenness.exe", "TiaOpenness.pdb", "bin-build/other/file.dll", "src/Logic/bin/Release/x.dll"
+        }) tree.Write(name, name);
+
+        var contents = ReleaseCommands.Contents(tree.Root, tracked, rules.Delivered);
+
+        Assert.Equal(
+        [
+            "README.md", "TiaOpenness.exe", "docs/guides/a.md", "runtime/README.md", "runtime/studio/TiaOpenness.exe",
+            "runtime/tools/TiaMcp.Updater.exe", "runtime/tools/TiaMcp.Updater.exe.config", "runtime/v16/Siemens.Simatic.S7.Webserver.API.dll",
+            "runtime/v16/TiaMcp.FoundationHost.dll"
+        ], contents.Keys);
+        // The updater is the build output in bin-build/updater, never a stale copy under runtime/tools.
+        Assert.Equal(Path.Combine(tree.Root, "bin-build", "updater", "TiaMcp.Updater.exe"), contents["runtime/tools/TiaMcp.Updater.exe"]);
+        Assert.All(contents.Keys, name => Assert.True(rules.Delivered(name)));
+        Assert.True(ReleaseCommands.Excluded("runtime/verification/Mono.Cecil.dll"));
+        Assert.True(ReleaseCommands.Excluded("runtime/studio/TiaOpenness.PDB"));
+        Assert.True(ReleaseCommands.Excluded("runtime/v21/worker/Siemens.Engineering.Base.dll"));
+        Assert.False(ReleaseCommands.Excluded("runtime/v21/worker/TiaMcp.Siemens.Helpers.dll"));
+        // The redistributable Webserver API the hosts load and the Siemens licence texts ship as in a release.
+        Assert.False(ReleaseCommands.Excluded("runtime/v21/Siemens.Simatic.S7.Webserver.API.dll"));
+        Assert.False(ReleaseCommands.Excluded("docs/licenses/Siemens.Collaboration.Net.md"));
+        Assert.False(rules.Delivered("runtime/v16/Siemens.Collaboration.Net.dll"));
+    }
+
+    [Fact]
+    public void RequiredPathsIncludeTheBinariesThatTheNoBinariesValidationSkips()
+    {
+        var root = StaticCheckVectorTests.Root;
+        var paths = ReleaseCommands.RequiredPaths(root, DeliveryRules.Load(root));
+        foreach (var path in new[] { "TiaOpenness.exe", "runtime", "runtime/v21/TiaMcp.FoundationHost.exe", "runtime/tools/TiaMcp.Updater.exe", "runtime/tools/TiaMcp.Updater.exe.config", "runtime/tools/TiaMcp.WriteGuard.exe", "manifest/multi-version-build.json", "templates" })
+            Assert.Contains(path, paths);
+        Assert.DoesNotContain("manifest/release-build.json", paths);
+    }
+
+    [Fact]
+    public void TestPolicyAssembliesAreRejected()
+    {
+        using var tree = new StaticTree();
+        tree.Write("runtime/v16/Clean.dll", "MZ ordinary assembly");
+        Assert.Empty(ReleaseCommands.TestPolicyAssemblyErrors(tree.Root));
+        tree.Write("runtime/v16/worker/Policy.dll", "MZ TiaMcpTestPolicy P6-DEVICE:safe-v4");
+        Assert.Single(ReleaseCommands.TestPolicyAssemblyErrors(tree.Root), error => error.EndsWith("Policy.dll", StringComparison.Ordinal));
     }
 }

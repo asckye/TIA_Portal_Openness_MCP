@@ -13,11 +13,9 @@
     <!-- Use the installed SDK parser; no additional analyzer or NuGet package. -->
     <Reference Include="Microsoft.CodeAnalysis" HintPath="$(MSBuildBinPath)/Roslyn/bincore/Microsoft.CodeAnalysis.dll" />
     <Reference Include="Microsoft.CodeAnalysis.CSharp" HintPath="$(MSBuildBinPath)/Roslyn/bincore/Microsoft.CodeAnalysis.CSharp.dll" />
-    <Compile Remove="check-build/**" />
     <Compile Include="../../tests/Shared/FixtureExit.cs" Link="FixtureExit.cs" />
     <Compile Include="../../tests/Shared/TimeSensitiveTests.cs" Link="TimeSensitiveTests.cs" />
     <Compile Include="../../src/Tools/WriteGuard/ToolNames.cs" Link="Plugin/ToolNames.cs" />
-    <ProjectReference Include="check-build/TiaMcp.CheckBuild.csproj" OutputItemType="_CheckBuildTask" />
     <EmbeddedResource Include="dead-reference-policy.json" />
     <ProjectReference Include="../common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <ProjectReference Include="../../src/Logic/TiaMcp.Logic.csproj" />
@@ -29,7 +27,4 @@
       <_Parameter1>TiaMcp.SourceContracts.Tests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-  <Target Name="CopyCheckBuildTask" AfterTargets="Build">
-    <Copy SourceFiles="@(_CheckBuildTask)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
-  </Target>
 </Project>

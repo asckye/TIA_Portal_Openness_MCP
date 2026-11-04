@@ -6,39 +6,12 @@ namespace TiaMcp.ReleaseTool;
 internal static class FastSuites
 {
     private static readonly string SystemTemp = System.Environment.GetEnvironmentVariable("TIA_MCP_CHECK_SYSTEM_TEMP_ROOT") ?? Path.GetTempPath();
+
     internal static int Positive(Options options, string name, int fallback)
     {
         if (options.Get(name) is not { } text) return fallback;
         if (!int.TryParse(text, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value) || value < 1) throw new ReleaseException("-" + name + " must be a positive integer", 64);
         return value;
-    }
-
-    internal static int CpuParallelism(string root, Options options)
-    {
-        if (options.Has("CpuParallelism")) return Positive(options, "CpuParallelism", 1);
-        if (options.Has("MaxParallelism")) return Positive(options, "MaxParallelism", System.Environment.ProcessorCount);
-        var path = Path.Combine(root, "bin-build/check-timings/cpu-budget.json");
-        int measured = System.Environment.ProcessorCount;
-        if (File.Exists(path))
-        {
-            var profile = JsonNode.Parse(File.ReadAllText(path))!;
-            if ((bool?)profile["representativeIdleMeasurement"] == true && (int?)profile["logicalCores"] == System.Environment.ProcessorCount && (int?)profile["parallelism"] is > 0)
-                measured = (int)profile["parallelism"]!;
-        }
-        return Math.Min(measured, Positive(options, "MaxParallelism", measured));
-    }
-
-    internal static int GeneralCapacity(int requested, int cores, bool explicitLimit) =>
-        explicitLimit ? requested : Math.Min(requested, cores);
-
-    internal static int CheckAllParallelism(Options options, int generalCores) =>
-        options.Has("CpuParallelism") ? Positive(options, "CpuParallelism", generalCores)
-        : Positive(options, "MaxParallelism", generalCores);
-
-    internal static int SensitiveCoreBudget(ulong available, IReadOnlyList<CheckJob> jobs)
-    {
-        int groups = jobs.Where(job => job.Exclusive).Select(job => job.SensitiveGroup ?? job.Name).Distinct(StringComparer.Ordinal).Count();
-        return groups == 0 ? 0 : Math.Min(CheckAffinity.DefaultSensitiveCores(available), 4 * Math.Min(2, groups));
     }
 
     internal static string TemporaryDirectory() => Path.Combine(SystemTemp, "p8s", Guid.NewGuid().ToString("N")[..8]);
@@ -56,7 +29,6 @@ internal static class FastSuites
         return EnvironmentValues(isolation, Guid.NewGuid().ToString("N"), api);
     }
 
-    // The scheduler also evaluates this exact template with symbolic private roots/scopes when proving derivations.
     internal static Dictionary<string, string?> EnvironmentValues(string isolation, string pipeScope, string? api) =>
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -70,71 +42,11 @@ internal static class FastSuites
             ["NuGetAudit"] = "false", ["TIA_MCP_CHECK_SYSTEM_TEMP_ROOT"] = SystemTemp
         };
 
-    internal static void AddJobs(List<CheckJob> jobs, string root, string name, JsonObject suite, string output, string dotnet,
-        int shards, string? api, string[] dependencies, string? baseline = null, bool prove = false, string[]? extra = null, string? history = null, string? jobPrefix = null, string? manifest = null,
-        SuiteProcess? process = null, bool diagnostics = false, SuiteWorkerCopies? workerCopies = null)
-    {
-        var unit = CheckAllBuild.Suite(suite);
-        var directory = Path.Combine(output, name);
-        history ??= Path.Combine(root, "bin-build/check-timings");
-        bool reserveSensitive = TimeSensitiveTests.ReserveShard(unit.Project);
-        int sensitiveShards = reserveSensitive ? TimeSensitiveTests.ReservedShardCount(unit.Project) : 0;
-        var plan = SuiteCosts.Prepare(name, directory, history, baseline, shards, reserveSensitive, sensitiveShards); shards = plan.Costs.Length;
-        sensitiveShards = plan.SensitivePartitions?.Length ?? sensitiveShards;
-        // Costs set deadlines only when the history covers at least the registered minimum number of cases.
-        bool measuredPlan = plan.MeasuredCases >= (suite["minimumPassed"]?.GetValue<int>() ?? int.MaxValue);
-        var paths = Enumerable.Range(0, shards).Select(i => Path.Combine(directory, "shard-" + i, name + ".trx")).ToArray();
-        var sequential = baseline;
-        if (prove)
-        {
-            sequential = Path.Combine(directory, "sequential", name + ".trx");
-            var jobName = jobPrefix + name + "-sequential";
-            var group = workerCopies?.Register(jobName, unit, Path.GetDirectoryName(sequential)!, unit.Project) ?? unit.Project;
-            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest, process: process, diagnostics: diagnostics, runtime: workerCopies?.ForJob(jobName)), dependencies, Exclusive: true) {
-                SensitiveGroup = group, GlobalExclusive = name == "updater", EstimatedSeconds = measuredPlan ? plan.Costs.Sum() + 5 : ColdShardSeconds * shards });
-        }
-        var shardNames = new List<string>();
-        for (int i = 0; i < shards; i++)
-        {
-            var index = i; var jobName = jobPrefix + name + "-shard-" + i; shardNames.Add(jobName);
-            var group = reserveSensitive && index >= shards - sensitiveShards &&
-                plan.SensitivePartitions![index - (shards - sensitiveShards)] > 0 ? unit.Project + "#portal-lane" : unit.Project;
-            group = workerCopies?.Register(jobName, unit, Path.GetDirectoryName(paths[index])!, group) ?? group;
-            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, process, sensitiveShards, diagnostics, workerCopies?.ForJob(jobName)), dependencies,
-                Exclusive: reserveSensitive && index >= shards - sensitiveShards) { EstimatedSeconds = measuredPlan ? plan.Costs[index] + 5 : ColdShardSeconds,
-                    ResultInputs = new("suite", new JsonObject { ["suite"] = name, ["registration"] = suite.DeepClone(),
-                        ["project"] = unit.Project, ["variant"] = unit.Variant, ["index"] = index, ["count"] = shards,
-                        ["api"] = api, ["extra"] = new JsonArray((extra ?? []).Select(arg => (JsonNode?)JsonValue.Create(arg)).ToArray()),
-                        ["reserveSensitive"] = reserveSensitive, ["sensitiveShards"] = sensitiveShards }.ToJsonString(),
-                        Path.GetDirectoryName(paths[index]), Path.GetFileName(paths[index]), plan.Path,
-                        suite["maximumSkipped"]!.GetValue<int>(), prove || baseline != null ? "equivalence proof" : null),
-                    SensitiveGroup = group, GlobalExclusive = name == "updater" });
-        }
-        // Merge runs even after a failed test process, so partial totals/failures remain
-        // reviewable. The caller schedules merges in a second wave without prerequisites.
-        jobs.Add(new(jobPrefix + name + "-gate", () => { SuiteCosts.Record(name, directory, history); return SuiteSharding.Merge(name, suite, paths, output, sequential); }, shardNames.ToArray()) { AllowFailedDependencies = true, Priority = 1 });
-    }
-
-    // Without timing history a shard has no estimate; three times this allowance (one hour) bounds it instead of the
-    // 300-second floor, which a cold 29,000-case suite in four shards exceeds on CI (P8-72 host/CI evidence 2026-10-19).
-    internal const double ColdShardSeconds = 1200;
-
-    // Every job gets its estimate-based deadline, also on a runner whose share holds no sensitive-lane shard
-    // (otherwise the 5-minute CheckJob default applies; CI runner evidence 2026-10-20).
-    internal static List<CheckJob> WithTimeouts(IEnumerable<CheckJob> jobs) =>
-        jobs.Select(job => job with { Timeout = CheckScheduler.JobTimeout(job, new Dictionary<string, double>()) }).ToList();
-
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
-        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1, bool diagnostics = false, SuiteWorkerRuntime? runtime = null, bool registeredOutput = false)
+        SuiteBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, SuiteProcess? process = null, int sensitiveShards = 1, bool diagnostics = false)
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
-        if (runtime != null)
-        {
-            if (extra is { Length: > 0 }) throw new ReleaseException("Isolated Foundation copies require direct VSTest execution; refusing shared MSBuild writes.");
-            environment["TIA_MCP_TEST_WORKER_FIXTURE_ROOT"] = runtime.Fixtures;
-            environment["TIA_MCP_TEST_REGISTERED_OUTPUT"] = Path.GetDirectoryName(runtime.RegisteredOutput);
-        }
         if (unit.Project.StartsWith("tests/Studio/", StringComparison.Ordinal)) environment["TIA_MCP_BUNDLE_ROOT"] = root;
         environment["TIA_MCP_TEST_SHARD_COUNT"] = count.ToString(); environment["TIA_MCP_TEST_SHARD_INDEX"] = index.ToString();
         environment["TIA_MCP_TEST_SHARD_ASSEMBLY"] = Path.GetFileNameWithoutExtension(unit.Project);
@@ -148,22 +60,12 @@ internal static class FastSuites
         var trx = Path.Combine(directory, name + ".trx"); File.Delete(trx);
         var before = SuiteHang.Begin(directory, name);
         environment["TIA_MCP_TEST_PHASE_TIMINGS"] = Path.Combine(directory, "phase-timings.json");
-        string? assembly;
-        try { assembly = runtime?.Assembly ?? (registeredOutput ? CheckAllBuild.RegisteredTestAssembly(root, unit, manifest, name) : CheckAllBuild.TestAssembly(root, unit, manifest, name)); }
-        catch (ReleaseException ex) { return new(1, "", ex.Message + "\n"); }
-        List<string> args;
-        if (assembly != null && (extra == null || extra.Length == 0))
-            args = VstestArguments(assembly, suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>()), name, directory);
-        else
-        {
-            args = ["test", Path.Combine(root, unit.Project), "-c", "Release", "--no-build", "--no-restore", "--nologo", "--disable-build-servers", "-m:1", "-nodeReuse:false"];
-            args.AddRange(suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>()));
-            if (assembly != null) args.Add("-p:TargetPath=" + assembly);
-            if (api != null) args.Add("-p:TiaPublicApiRoot=" + api);
-            if (extra != null) args.AddRange(extra);
-            args.AddRange(["--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", directory]);
-            args.AddRange(SuiteHang.TestArguments);
-        }
+        List<string> args = ["test", Path.Combine(root, unit.Project), "-c", "Release", "--no-build", "--no-restore", "--nologo", "--disable-build-servers", "-m:1", "-nodeReuse:false"];
+        args.AddRange(suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>()));
+        if (api != null) args.Add("-p:TiaPublicApiRoot=" + api);
+        if (extra != null) args.AddRange(extra);
+        args.AddRange(["--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", directory]);
+        args.AddRange(SuiteHang.TestArguments);
         if (diagnostics)
         {
             var diagnostic = Path.Combine(directory, name + ".vstest.log") + ";TraceLevel=Info";
@@ -175,117 +77,13 @@ internal static class FastSuites
         if (errors.Count > 0) return result with { ExitCode = 1, StandardError = result.StandardError + "\n" + string.Join("\n", errors) };
         return result;
     }
+}
 
-    internal static List<string> VstestArguments(string assembly, IEnumerable<string> arguments, string name, string directory)
+internal sealed record SuiteBuild(string Project, string Variant, string[] Properties)
+{
+    internal static SuiteBuild Suite(JsonObject suite)
     {
-        var source = arguments.ToArray();
-        var result = new List<string> { "vstest", assembly, "--logger:trx;LogFileName=" + name + ".trx", "--ResultsDirectory:" + directory };
-        result.Add(SuiteHang.VstestArgument);
-        for (int i = 0; i < source.Length; i++)
-        {
-            if (source[i].StartsWith("-p:", StringComparison.Ordinal)) continue; // Already represented by the exact built variant.
-            if (source[i] == "--filter" && i + 1 < source.Length) result.Add("--TestCaseFilter:" + source[++i]);
-            else throw new ReleaseException("Unsupported registered VSTest argument: " + source[i]);
-        }
-        return result;
-    }
-
-    internal static CommandResult Run(string root, Options options, JsonObject catalog, SuiteProcess? process = null)
-    {
-        var output = Path.GetFullPath(options.Get("ResultsDirectory", Path.Combine(root, "bin-build/test-results-fast")));
-        var dotnet = options.Get("Dotnet", "dotnet");
-        var partition = SuiteRunners.Parse(options);
-        bool gateOnly = options.Has("GateOnly");
-        if (gateOnly && options.Get("RunnerResults") is null) throw new ReleaseException("-GateOnly requires -RunnerResults <directory with each runner's results>", 64);
-        if (gateOnly && options.Has("ProveEquivalence")) throw new ReleaseException("-ProveEquivalence runs a sequential baseline that runners do not produce; omit it with -GateOnly", 64);
-        Directory.CreateDirectory(output);
-        using var load = CheckLoad.Current == null ? CheckLoad.Start(Path.Combine(output, "process-load.json")) : null;
-        int parallelism = CpuParallelism(root, options);
-        int count = Positive(options, "Shards", 8);
-        var names = DotnetSuites.WithCompanions(options.All("Suite"), catalog);
-        var manifestPath = Path.GetFullPath(options.Get("RuntimeManifest", Path.Combine(output, "build/runtime-paths.tsv")));
-        bool build = !options.Has("NoBuild") && !gateOnly;
-        string? manifest = build ? Path.Combine(output, "build/runtime-paths.tsv") : options.Has("RuntimeManifest") || File.Exists(manifestPath) ? manifestPath : null;
-        var jobs = new List<CheckJob>();
-        var jobSuites = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var name in names)
-        {
-            var suite = catalog[name]!.AsObject();
-            string? api = name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true
-                ? options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT") : null;
-            int first = jobs.Count;
-            AddJobs(jobs, root, name, suite, output, dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? count : 1, api, [],
-                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), options.All("DotnetArg").ToArray(), manifest: manifest, process: process);
-            foreach (var job in jobs.Skip(first)) jobSuites.Add(job.Name, name);
-        }
-        if (gateOnly) return Gate(root, options, names, count, jobs, jobSuites, output, parallelism);
-        if (partition != null)
-        {
-            var assigned = SuiteRunners.Assign(jobs, partition.Count).Where(pair => pair.Value == partition.Index).Select(pair => pair.Key).ToHashSet(StringComparer.Ordinal);
-            // Each runner records its share before it builds, so the gate can name a runner that failed to report.
-            jobs = jobs.Where(job => assigned.Contains(job.Name)).ToList();
-            SuiteRunners.WriteManifest(output, SuiteRunners.Manifest(partition, count, names, jobSuites, jobs.Select(job => job.Name), output));
-        }
-        if (build)
-        {
-            var suites = names.Where(name => jobs.Any(job => jobSuites[job.Name] == name));
-            var builds = CheckAllBuild.WithTestFixtures(suites.Select(name => CheckAllBuild.Suite(catalog[name]!.AsObject()))).ToArray();
-            var result = builds.Length == 0 ? new CommandResult(0, "", "") : CheckAllBuild.Run(root, builds, Path.Combine(output, "build"), dotnet,
-                options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT"), options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG"), Positive(options, "BuildParallelism", parallelism), false);
-            if (result.ExitCode != 0)
-            {
-                File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
-                { exitCode = result.ExitCode, build = "failed", error = result.StandardError, output = result.StandardOutput }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
-                return result;
-            }
-            if (builds.Length != 0) ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest!);
-        }
-        if (options.Has("SensitiveCores")) _ = Positive(options, "SensitiveCores", 1);
-        if (options.Has("SensitiveParallelism")) _ = Positive(options, "SensitiveParallelism", 1);
-        var lanes = new Dictionary<string, int> { ["general"] = parallelism };
-        jobs = WithTimeouts(jobs);
-        if (OperatingSystem.IsWindows() && jobs.Any(job => job.Exclusive))
-        {
-            using var current = System.Diagnostics.Process.GetCurrentProcess();
-            var available = unchecked((ulong)current.ProcessorAffinity.ToInt64());
-            var masks = CheckAffinity.SplitSensitive(available, Positive(options, "SensitiveCores", SensitiveCoreBudget(available, jobs)));
-            parallelism = GeneralCapacity(parallelism, System.Numerics.BitOperations.PopCount(masks.General), options.Has("MaxParallelism") || options.Has("CpuParallelism"));
-            lanes["general"] = parallelism;
-            jobs = jobs.Select(job => job with { Lane = job.Exclusive ? "sensitive" : "general", Affinity = job.Exclusive ? masks.Stability : masks.General }).ToList();
-            foreach (var lane in CheckAffinity.AssignSensitiveLanes(jobs, masks.Stability, Positive(options, "SensitiveParallelism", 2)))
-                lanes[lane.Key] = lane.Value;
-            File.WriteAllText(Path.Combine(output, "cpu-plan.json"), System.Text.Json.JsonSerializer.Serialize(new {
-                sensitiveMask = masks.Stability.ToString("X"), generalMask = masks.General.ToString("X"),
-                sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, lanes,
-                checks = jobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds })
-            }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
-        }
-        var rows = CheckScheduler.Run(jobs.Where(job => !job.Name.EndsWith("-gate", StringComparison.Ordinal)).ToArray(), parallelism, Path.Combine(output, "logs"), lanes);
-        var gates = CheckScheduler.Run(jobs.Where(job => job.Name.EndsWith("-gate", StringComparison.Ordinal)).Select(job => job with { Dependencies = [] }).ToArray(), parallelism, Path.Combine(output, "gates"));
-        File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
-        { passed = gates.Count(row => row.Status == "passed"), failed = gates.Count(row => row.Status != "passed"), checks = rows.Concat(gates) }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
-        if (partition != null)
-            return new(rows.All(row => row.Status == "passed") ? 0 : 1, $"Runner {partition.Index} of {partition.Count}: {rows.Count(row => row.Status == "passed")} shards passed; "
-                + $"{rows.Count(row => row.Status != "passed")} failed. The suite gates run in test-suites -GateOnly over every runner's results. Evidence: {output}\n", "");
-        return new(rows.Concat(gates).All(row => row.Status == "passed") ? 0 : 1, $"Suites: {gates.Count(row => row.Status == "passed")} passed; {gates.Count(row => row.Status != "passed")} failed. Evidence: {output}\n", "");
-    }
-
-    // Runs only the registered suite gates over shard results that other test-suites -RunnerIndex invocations produced.
-    private static CommandResult Gate(string root, Options options, IReadOnlyList<string> names, int count,
-        List<CheckJob> jobs, IReadOnlyDictionary<string, string> jobSuites, string output, int parallelism)
-    {
-        var resultsRoot = Path.GetFullPath(options.Get("RunnerResults")!, root);
-        if (resultsRoot.StartsWith(output + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || string.Equals(resultsRoot, output, StringComparison.OrdinalIgnoreCase))
-            throw new ReleaseException("-RunnerResults must not be inside -ResultsDirectory", 64);
-        var coverage = SuiteRunners.Collect(resultsRoot, output, count, names, jobSuites);
-        var gates = CheckScheduler.Run(jobs.Where(SuiteRunners.IsGate).Select(job => job with { Dependencies = [] }).ToArray(), parallelism, Path.Combine(output, "gates"));
-        File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
-        { passed = gates.Count(row => row.Status == "passed"), failed = gates.Count(row => row.Status != "passed"), runnerResults = resultsRoot, coverageErrors = coverage, checks = gates },
-            new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
-        var text = new System.Text.StringBuilder();
-        foreach (var error in coverage) text.Append("FAIL coverage: ").Append(error).Append('\n');
-        foreach (var gate in gates.Where(row => row.Status != "passed")) text.Append("FAIL ").Append(gate.Name).Append(": ").Append(gate.Error).Append('\n');
-        return new(coverage.Count == 0 && gates.All(row => row.Status == "passed") ? 0 : 1,
-            $"Suites: {gates.Count(row => row.Status == "passed")} passed; {gates.Count(row => row.Status != "passed")} failed; {coverage.Count} coverage errors. Evidence: {output}\n", text.ToString());
+        var properties = DotnetSuites.BuildArguments(suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>())).ToArray();
+        return new(suite["project"]!.GetValue<string>(), "default", properties);
     }
 }

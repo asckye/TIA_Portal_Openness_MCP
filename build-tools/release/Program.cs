@@ -6,22 +6,16 @@ internal static class Program
 {
     private static readonly HashSet<string> BooleanOptions = new(StringComparer.OrdinalIgnoreCase)
     {
-        "All", "NoAnalyzer", "NoDraftUpload", "TestStageOnly", "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
-        "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "DeferTests", "Strict", "NoBinaries",
-        "SkipSourceHashes", "PackageMode", "UseReferenceAssemblyPackage", "Rebuild", "FunctionsOnly", "PassThru", "SkipFullEngines",
-        "DraftOnly", "DeleteDraft", "NoBuildCache", "NoResultCache", "ResultCacheInventory", "CompileOnly", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "Clean", "Cold", "ProveEquivalence", "BuildOnly", "Initialize", "Complete", "GateOnly", "Build", "NoRecord", "BumpOnly", "Ci", "Affected", "Quick", "FailFast", "Reuse", "SharedLibrariesOnly", "ConfirmPublication"
+        "NoDraftUpload", "DryRun", "SelfTest", "NoBinaries", "UseReferenceAssemblyPackage", "NoRestore", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "BuildOnly", "Initialize", "Complete", "ConfirmPublication", "Reuse", "All", "Offline"
     };
 
     public static int Main(string[] args)
     {
-        CheckAffinity.EnsureRunnerJob();
         // Every run uses fresh DOTNET_CLI_HOME folders; the SDK's first run would append each one's
         // tools folder to the user's persistent PATH until cmd.exe can no longer resolve dotnet.
         Environment.SetEnvironmentVariable("DOTNET_ADD_GLOBAL_TOOLS_TO_PATH", "false");
         Environment.SetEnvironmentVariable("DOTNET_NOLOGO", "1");
         Environment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1");
-        if (args is ["--check-process"] && Environment.GetEnvironmentVariable("TIA_MCP_CHECK_CHILD") == "1") return CheckAffinity.Child();
-        if (args is ["--check-probe", var probePath] && Environment.GetEnvironmentVariable("TIA_MCP_CHECK_PROBE") == "1") return CheckAffinity.Probe(probePath);
         if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
         {
             PrintUsage();
@@ -39,13 +33,8 @@ internal static class Program
         try
         {
             var options = Options.Parse(args[1..], BooleanOptions);
-            if (command.Equals("nightly", StringComparison.OrdinalIgnoreCase) && options.Get("Worktree") is { } nightlyRoot)
-                Environment.CurrentDirectory = Path.GetFullPath(nightlyRoot);
-            if ((command.Equals("check-all", StringComparison.OrdinalIgnoreCase) || command.Equals("nightly", StringComparison.OrdinalIgnoreCase) ||
-                 command.Equals("run-release-build", StringComparison.OrdinalIgnoreCase) || command.Equals("release", StringComparison.OrdinalIgnoreCase) ||
-                 command.Equals("build-solutions", StringComparison.OrdinalIgnoreCase) || command.Equals("prepare", StringComparison.OrdinalIgnoreCase) ||
-                 command.Equals("preflight", StringComparison.OrdinalIgnoreCase) || command.Equals("merge-check", StringComparison.OrdinalIgnoreCase) ||
-                 command.Equals("test-suites", StringComparison.OrdinalIgnoreCase) || options.Has("SelfTest")) &&
+            if ((command.Equals("build-solutions", StringComparison.OrdinalIgnoreCase) || command.Equals("prepare", StringComparison.OrdinalIgnoreCase) ||
+                 command.Equals("merge-check", StringComparison.OrdinalIgnoreCase) || command.Equals("test-suites", StringComparison.OrdinalIgnoreCase)) &&
                 Environment.GetEnvironmentVariable("TIA_MCP_CHECK_RUNNER") != "1")
             {
                 // The traversal also compiles this tool. Execute a private copy so
@@ -96,10 +85,7 @@ internal static class CommandLine
 {
     internal static readonly string[] Commands =
     [
-        "merge-check", "prepare", "release", "build-release", "build-multi-version", "compare-release-records", "run-release-build", "branch-gate", "check-all", "nightly", "check-release-evidence", "ci-coverage", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish", "publish-prepared", "upload-draft", "build-reproducibility", "release-prepare", "release-publication-check", "wrap-long-lines", "dump-il",
-        "build-studio", "build-configurator", "build-plc-workers", "build-plc-worker-fixtures", "check-plc-workers", "build-solutions", "build-file-programs", "publish-vci-watch", "prepare-delivery", "prepare-decoder-python", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity",
-        "check-analyzer-warnings", "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls",
-        "generate-tool-counts", "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list", "generate-prerelease-notes", "package-test"
+        "merge-check", "prepare", "publish-prepared", "upload-draft", "build-plc-worker-fixtures", "build-solutions", "build-file-programs", "publish-vci-watch", "prepare-decoder-python", "get-bundled-dotnet", "test-suites", "check-analyzer-warnings", "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls", "generate-tool-counts", "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list", "generate-prerelease-notes"
     ];
 }
 
@@ -155,52 +141,20 @@ internal sealed record CommandResult(int ExitCode, string StandardOutput, string
 
 internal static class ProcessRunner
 {
-    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false, bool waitForDescendants = false, Action? afterExit = null)
+    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false)
     {
-        CheckAffinity.EnsureRunnerJob();
-        var requestedExecutable = executable;
-        var deadline = CheckScheduler.Deadline;
-        var started = DateTime.UtcNow;
-        var end = timeoutMilliseconds is { } milliseconds ? started.AddMilliseconds(milliseconds) : DateTime.MaxValue;
-        if (deadline is { } budget && budget.Deadline < end) end = budget.Deadline;
-        if (end <= started) throw new ReleaseException("Check job timed out: " + deadline?.Name);
+        var end = timeoutMilliseconds is { } milliseconds ? DateTime.UtcNow.AddMilliseconds(milliseconds) : DateTime.MaxValue;
         var commandArguments = arguments.ToArray();
-        var affinity = CheckAffinity.Current;
-        if (OperatingSystem.IsWindows() && affinity == null && (deadline != null || waitForDescendants || timeoutMilliseconds != null))
-        {
-            using var current = Process.GetCurrentProcess(); affinity = unchecked((ulong)current.ProcessorAffinity.ToInt64());
-        }
-        waitForDescendants |= OperatingSystem.IsWindows() && (deadline != null || timeoutMilliseconds != null);
-        string? jobName = waitForDescendants ? "Local\\TIA-Check-" + Guid.NewGuid().ToString("N") : null;
-        string? childInput = null;
-        if (affinity != null)
-        {
-            var childEnvironment = environment == null ? new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase) : new Dictionary<string, string?>(environment, StringComparer.OrdinalIgnoreCase);
-            childEnvironment[CheckAffinity.CommandJobVariable] = jobName;
-            childEnvironment["MSBUILDDISABLENODEREUSE"] = "1";
-            CheckAffinity.ConfigureRuntime(childEnvironment, affinity.Value);
-            childInput = System.Text.Json.JsonSerializer.Serialize(new CheckChild(executable, commandArguments, workingDirectory,
-                childEnvironment, standardInput, jobName));
-            executable = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
-            commandArguments = [typeof(Program).Assembly.Location, "--check-process"];
-        }
         var start = new ProcessStartInfo(executable)
         {
             WorkingDirectory = workingDirectory,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            RedirectStandardInput = standardInput is not null || childInput != null,
+            RedirectStandardInput = standardInput is not null,
             CreateNoWindow = true
         };
         foreach (var argument in commandArguments) start.ArgumentList.Add(argument);
-        if (affinity is { } cpuMask)
-        {
-            start.Environment["TIA_MCP_CHECK_CHILD"] = "1";
-            // Convey the actual CPU budget before CLR startup as well as imposing
-            // the job limit. Otherwise runtime thread/GC sizing can use all cores.
-            CheckAffinity.ConfigureRuntime(start.Environment, cpuMask);
-        }
         foreach (var key in new[] { "TIA_MCP_TEST_SHARD_COUNT", "TIA_MCP_TEST_SHARD_INDEX", "TIA_MCP_TEST_SHARD_ASSEMBLY", "TIA_MCP_TEST_SHARD_PLAN", "TIA_MCP_TEST_CASE_TIMINGS", "TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD" }) start.Environment.Remove(key);
         if (environment is not null)
             foreach (var (key, value) in environment)
@@ -210,11 +164,6 @@ internal static class ProcessRunner
         using var process = new Process { StartInfo = start };
         try { process.Start(); }
         catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
-        CheckLoad.Current?.Register(process.Id);
-        using var affinityJob = affinity is { } mask ? CheckAffinity.Assign(process, mask, jobName) : null;
-        using var resourceObservation = CheckResourceMeter.Observe(affinityJob);
-        using var ownedChildren = waitForDescendants ? CheckAffinity.CompleteOnDispose(
-            affinityJob ?? throw new ReleaseException("Descendant cleanup requires an owned affinity job"), CheckAffinity.OwnershipRoot) : null;
         StreamWriter? logWriter = null;
         if (logPath != null)
         {
@@ -236,34 +185,20 @@ internal static class ProcessRunner
         }
         var stdout = logPath != null || forwardOutput ? Read(process.StandardOutput, Console.Out) : process.StandardOutput.ReadToEndAsync();
         var stderr = logPath != null || forwardOutput ? Read(process.StandardError, Console.Error) : process.StandardError.ReadToEndAsync();
-        if (standardInput is not null || childInput != null)
+        if (standardInput is not null)
         {
-            try
-            {
-                if (childInput != null) process.StandardInput.WriteLine(childInput); else process.StandardInput.Write(standardInput);
-                process.StandardInput.Close();
-            }
-            catch (IOException) when (childInput != null && process.WaitForExit(1000))
-            {
-                Task.WhenAll(stdout, stderr).Wait(1000);
-                throw new ReleaseException("Check launcher exited before accepting " + requestedExecutable + ": " + process.ExitCode + "; " +
-                    (stderr.IsCompletedSuccessfully ? stderr.Result : "stderr incomplete"));
-            }
+            process.StandardInput.Write(standardInput);
+            process.StandardInput.Close();
         }
+
         int Remaining() => end == DateTime.MaxValue ? Timeout.Infinite : (int)Math.Clamp((end - DateTime.UtcNow).TotalMilliseconds, 0, int.MaxValue);
         void TimedOut()
         {
-            var evidence = logPath == null ? Path.Combine(CheckScheduler.EvidenceDirectory ?? Path.Combine(CheckAffinity.OwnershipRoot, "bin-build/process-jobs"),
-                Guid.NewGuid().ToString("N") + ".timeout.json") : logPath + ".timeout.json";
-            if (affinityJob != null) CheckAffinity.StopAndWait(affinityJob, CheckAffinity.OwnershipRoot, grace: false, evidence: evidence);
-            else CheckAffinity.StopOwnedProcess(process, CheckAffinity.OwnershipRoot);
+            process.Kill(entireProcessTree: true);
             process.WaitForExit();
-            throw new ReleaseException(deadline != null ? "Check job timed out: " + deadline.Value.Name + " (" + requestedExecutable + ")"
-                : $"{requestedExecutable} timed out after {timeoutMilliseconds} ms.");
+            throw new ReleaseException($"{executable} timed out after {timeoutMilliseconds} ms.");
         }
         if (!process.WaitForExit(Remaining())) TimedOut();
-        afterExit?.Invoke();
-        if (waitForDescendants) CheckAffinity.StopAndWait(affinityJob!, CheckAffinity.OwnershipRoot);
         if (!Task.WhenAll(stdout, stderr).Wait(Remaining())) TimedOut();
         var output = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();

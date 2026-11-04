@@ -308,7 +308,7 @@ internal static class MergeCheck
         int parallelism = FastSuites.Positive(options, "MaxParallelism", Math.Max(1, Environment.ProcessorCount - 4));
         var output = Path.Combine(root, "bin-build/merge-check");
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root);
-        CheckAllProfiles.IncludeApprovedSubsets(catalog);
+        DerivedSuiteGates.IncludeApprovedSubsets(catalog);
         var context = new PrepareContext(root, "", api, nuget, python, python, output, DateOnly.FromDateTime(DateTime.Today), parallelism);
         var table = docsOnly ? [] : PrepareBuild.VersionProjects(context).Select(row => row with { Path = Normalize(Path.GetRelativePath(root, row.Path)) }).ToArray();
         var closures = docsOnly ? new Dictionary<string, HashSet<string>>()
