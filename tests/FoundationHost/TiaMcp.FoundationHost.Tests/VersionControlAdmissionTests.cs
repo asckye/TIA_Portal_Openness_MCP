@@ -166,6 +166,7 @@ public sealed class VersionControlAdmissionTests
         using var fixture = new FileToolFixture(release);
         string settings = TiaOpenness.Shared.ApprovalSettings.SettingsPath;
         byte[]? previous = File.Exists(settings) ? File.ReadAllBytes(settings) : null;
+        string? createdLink = null;
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(settings)!);
@@ -178,8 +179,9 @@ public sealed class VersionControlAdmissionTests
                 Assert.NotEqual(0u, GetShortPathName(settings, shortName, (uint)shortName.Capacity));
                 paths.Add(shortName.ToString());
                 Console.WriteLine("Approval settings short path: " + shortName);
-                string link = Path.Combine(fixture.Root, "settings-link.scl");
+                string link = Path.Combine(Path.GetDirectoryName(settings)!, "settings-link.scl");
                 Assert.True(CreateHardLink(link, settings, IntPtr.Zero), "Hard link error: " + Marshal.GetLastWin32Error());
+                createdLink = link;
                 paths.Add(link);
             }
             foreach (string path in paths)
@@ -199,6 +201,7 @@ public sealed class VersionControlAdmissionTests
         }
         finally
         {
+            if (createdLink != null) File.Delete(createdLink);
             if (previous == null) File.Delete(settings); else File.WriteAllBytes(settings, previous);
         }
         Assert.Equal(0, fixture.Worker.Calls);
