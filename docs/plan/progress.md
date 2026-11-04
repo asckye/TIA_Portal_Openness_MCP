@@ -6,11 +6,11 @@
 
 ## 当前状态
 
-- 公开版本记录：最新正式版为 [v3.3.0](../releases/v3.3.0.md)；已记录的 4.0 预发布为 [v4.0.0-beta.2](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.2)（2026-10-30，`7e9c4c65`）和 [v4.0.0-beta.1](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.1)（2026-10-22，`bc5dcc5a`）。预发布不设为 latest，3.3 更新器不提示；本次仅核对本地记录，未访问 GitHub。
-- beta.3 尚未发布。2026-11-03 的发布尝试已停止，改用全新的准备与公开流程；master 已含对应 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)。
+- 公开版本记录：最新正式版为 [v3.3.0](../releases/v3.3.0.md)；最新预发布为 [v4.0.0-beta.3](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.3)（2026-11-04，`1d57c277`），此前为 [v4.0.0-beta.2](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.2)（2026-10-30，`7e9c4c65`）和 [v4.0.0-beta.1](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.1)（2026-10-22，`bc5dcc5a`）。预发布不设为 latest，3.3 更新器不提示。
+- beta.3 已发布，CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)已更新。GitHub CI 的修复（CI-FIX、CI-FIX2）在发布之后合并，结果以最新一次 CI 为准。
 - PIPE-INT/SLIM-1 已合并（`eee7b372`），VMFIX-2 已合并（`93371695`、`b769d196`）。旧文档中的“仍等这两项合并”已不适用。
-- NEW-REL-A 已合并（`545e3604`、`55f9c737`）：`prepare` 构建、暂存校验并生成 ZIP。NEW-REL-C 已合并（`2db5bf1e`）：草稿上传、300 秒公开预算、重跑恢复及发布后 ZIP/sidecar 核验。NEW-REL-B 已合并（`0ae4b1e8`、`1af64ce7`）：`prepare` 接入全部注册套件、保留检查、`candidate.json` 和自动草稿上传；真实 `prepare` 尚未运行。
-- 合并门为 NEW-REL-2 的 `merge-check`（`90be875b`、`9485a33b`），完整检查进入 `prepare`，取消 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。NEW-REL-3 已删除旧调度器、构建缓存、证据、旧发布链和全部八版响应捕获（`bce6994c`、`6a489b47`、`3b66a7be`、`090ebab1`）；主机准入测试精简 1,810 例（`3e343bd6`），引擎删除后注册表保留 38 个套件（`2b524f6a`）。
+- `prepare` 只构建、打包并检查 ZIP（PREP-SLIM），2026-11-04 实测约 6 分钟；`publish-prepared` 公开已封存的候选，beta.3 实测 6.9 秒。
+- 合并门为 `merge-check`：普通 `dotnet` 构建和测试，含 38 个注册套件和两组传输检查；涉及共享代码的合并在 2026-11-04 实测约 22 分钟。PLC 模拟检查已删除，发布候选前手动运行 `merge-check -All`；没有 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。
 - 架构：八版 FoundationHost，每个 MCP 会话一个 PLC worker；入口 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`，worker 位于同目录 `worker/`。V20/V21 使用 MTA，V14 SP1–V19 使用 STA；MTA-1 的统一仍列在后续计划。引擎运行文件已退役，源目录残留已由 Q2/Q3 删除。各版工具数见[生成的目录](../reference/version-tool-catalog.md)。
 - 品牌为自动化工程工作台；程序名、插件 ID、MCP 服务名 `tia-portal`、包名和仓库地址保持原有标识。GitHub 仓库改名仍在正式版计划内，未执行。
 
@@ -22,12 +22,13 @@
 
 | 阶段 | 已知状态 | 下一步 |
 |---|---|---|
-| NEW-REL-B、SEC-1 | 已合并（提交见[计划](plan.md)） | 随真实 `prepare` 验证 |
+| NEW-REL-B、SEC-1 | 已合并（提交见[计划](plan.md)） | 无 |
 | Q1–Q9、CPM | 已合并（提交见[计划](plan.md)） | 无 |
 | NEW-REL-2/3、THIRD-1、主机测试精简 | 已合并（提交见[计划](plan.md)） | 无 |
-| DOCS-1 → DOCS-2 → DOCS-3 | 文档链已重基到包含 NEW-REL-3 的 master；DOCS-3 核对事实与指令，尚待审查集成 | 在 NEW-REL-3 后按文档链顺序合并 |
-| REORG-2、REORG-3、TIDY-1–6 | TIDY-1 工具已合并（`0f2ffd29`）；其余 beta.3 整理先于真实发布准备，根目录 `runtime/` 和项目 `bin`/`obj` 保留，`hooks/` 不搬迁 | 按顺序整理、同步路径并验证 |
-| beta.3 准备与公开 | 没有本次可公开候选或成功发布结果 | 上述整理完成后运行完整 `prepare`，维护者确认后 `publish-prepared` |
+| DOCS-1 → DOCS-2 → DOCS-3 | 已合并（`edbf4ef8`） | 无 |
+| REORG-2、REORG-3、TIDY-1–6 | 已合并（`b0b4d9a7`、`edbf4ef8`） | 无 |
+| beta.3 准备与公开 | 已发布（`1d57c277`） | 无 |
+| PREP-SLIM、CI-FIX、CI-FIX2、TRANSPORT-FAST | 已合并（提交见[计划](plan.md)） | 看 GitHub CI 结果 |
 | beta.4 | VMFIX-3/4/5、DES-INT/4、RELAY-1、UI、P8-84、N1-INT、REVIEW-1、SCORE-1、VMAUTO-1、输出根外文件写审批均在计划中；产品分支合并后执行 TIDY-7、`src/EngineHost` 改名和 `wrap-long-lines -Check` 合并门；HANG-GUARD 待任务说明 | 按整理后的路径和新验证入口更新任务说明 |
 
 REVIEW-1 会把漏洞扫描带入新工具；目前不能宣称新准备命令已覆盖它。APR-05 的确认词用于关闭写操作审批，不用于每次普通批准。
