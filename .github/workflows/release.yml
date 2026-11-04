@@ -1,18 +1,8 @@
 name: Verify published release
 run-name: Verify ${{ github.event.release.tag_name || inputs.tag }}
 
-# Since 2.8.1 the delivery ZIP is built and uploaded from the maintainer's machine by the C# release tool
-# (the engine cannot be compiled on hosted runners: Siemens PublicAPI is not redistributable, and the binaries are
-# not tracked in Git). This workflow is the independent check that runs when a release is published:
-#   - the tag equals "v" + manifest/delivery.json release and points at master HEAD;
-#   - the ZIP + .sha256 assets download, the digest matches;
-#   - the ZIP holds the delivery-filtered tag files byte-for-byte, the runtimes with the hashes recorded in
-#     manifest/release-build.json and the configurator with manifest/configurator-build.json
-#     (scripts/checks/Verify-ReleaseAsset.py), and the unpacked package passes the C# validate-bundle command.
-# A red run means the published asset does not match the reviewed source: fix and re-release (new patch version);
-# nothing here modifies the release. Run workflow (workflow_dispatch) re-verifies an existing tag with the current
-# checks; then the tag only has to be an ancestor of master instead of master HEAD.
-
+# Preparation verifies the package before it is uploaded to a private draft.
+# Publication verifies the actual assets without depending on tracked delivery records.
 on:
   release:
     types: [published]
@@ -33,30 +23,9 @@ jobs:
     env:
       tag: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
-      # master supplies the checks (so a re-verification uses the current scripts); the tag's tree is compared
-      - uses: actions/checkout@v7
-        with:
-          ref: master
-          fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Tag must match manifest/delivery.json and sit on master (HEAD for a fresh release, an ancestor on re-verification)
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin "refs/tags/${tag}:refs/tags/${tag}" --quiet
-          tag_commit=$(git rev-list -n 1 "$tag")
-          master=$(git rev-parse HEAD)
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            test "$tag_commit" = "$master" || { echo "Tag $tag points at $tag_commit but master HEAD is $master" >&2; exit 1; }
-          else
-            git merge-base --is-ancestor "$tag_commit" "$master" || { echo "Tag $tag ($tag_commit) is not on master" >&2; exit 1; }
-          fi
-          git worktree add tagtree "$tag_commit" --quiet
-          readarray -t delivery < <(python -c 'import json; d=json.load(open("tagtree/manifest/delivery.json", encoding="utf-8-sig")); print(d["release"]); print(d["package"])' | tr -d '\r')
-          test "$tag" = "v${delivery[0]}" || { echo "Tag $tag does not match manifest release ${delivery[0]}" >&2; exit 1; }
-          echo "package=${delivery[1]}" >> "$GITHUB_ENV"
       - name: Download the ZIP and its .sha256 from the release
         shell: bash
         env:
@@ -64,27 +33,30 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p assets
-          gh release download "$tag" --repo ${{ github.repository }} --dir assets --pattern "$package.zip" --pattern "$package.sha256"
-          ls -l assets
-          test -f "assets/$package.zip" -a -f "assets/$package.sha256" || { echo "release $tag lacks its ZIP or .sha256" >&2; exit 1; }
-      - name: ZIP equals the filtered tag tree plus the validated runtime binaries
-        run: python scripts/checks/Verify-ReleaseAsset.py "assets/${{ env.package }}.zip" --root tagtree
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: '10.0.x'
-      - name: Unpacked package passes the strict bundle validation
-        # Release-only IL verification runs before packaging; extracted checks use records and hashes.
+          gh release download "$tag" --repo "${{ github.repository }}" --dir assets --pattern '*.zip' --pattern '*.sha256'
+      - name: Verify the published ZIP against its SHA-256 sidecar
         shell: bash
         run: |
           set -euo pipefail
-          python -c 'import pathlib, sys, zipfile; z=zipfile.ZipFile(sys.argv[1]); root=pathlib.Path("unpacked").resolve(); [(root / n).parent.mkdir(parents=True, exist_ok=True) for n in z.namelist()]; [z.extract(n, root) for n in z.namelist()]' "assets/$package.zip"
-          dotnet run --project build-tools/release -- validate-bundle -BundleRoot "unpacked/$package" -Strict -PackageMode
-          dotnet run --project build-tools/release -- check-repository -Root "unpacked/$package" -PackageMode
-      - name: Summary
-        shell: bash
-        run: |
-          set -euo pipefail
-          digest=$(sha256sum "assets/$package.zip" | cut -d ' ' -f 1)
-          tag_commit=$(git rev-list -n 1 "$tag")
-          master=$(git rev-parse HEAD)
-          printf '## %s verified\n\n%s.zip - SHA-256 %s - matches the tree of %s (checks from master %s)\n' "$tag" "$package" "$digest" "$tag_commit" "$master" >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import hashlib
+          import os
+          import pathlib
+          import re
+
+          assets = pathlib.Path('assets')
+          zips = list(assets.glob('*.zip'))
+          sidecars = list(assets.glob('*.sha256'))
+          if len(zips) != 1 or len(sidecars) != 1 or sidecars[0] != zips[0].with_suffix('.sha256'):
+              raise SystemExit('Release must have one ZIP and its matching .sha256')
+          archive, sidecar = zips[0], sidecars[0]
+          match = re.fullmatch(r'([0-9a-fA-F]{64})  (.+)', sidecar.read_text(encoding='utf-8').strip())
+          if match is None or match[2] != archive.name:
+              raise SystemExit('Invalid SHA-256 sidecar or mismatched ZIP name')
+          with archive.open('rb') as stream:
+              digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+          if digest != match[1].lower():
+              raise SystemExit('Published ZIP SHA-256 differs from sidecar')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write(f'## {os.environ["tag"]} verified\n\n{archive.name} — SHA-256 `{digest}` matches its published sidecar.\n')
+          PY

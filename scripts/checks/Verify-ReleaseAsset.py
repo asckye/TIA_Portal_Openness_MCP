@@ -5,7 +5,7 @@ recorded runtime binaries, excluding runtime/verification/, plus exactly the upd
 record binds in updaterFiles. No generated extras are allowed.
 The sidecar, tracked bytes, binary hashes and delivery package name are checked independently.
 
-Run locally by the .NET release tool before upload and by the "Verify published release" workflow after it.
+Run locally before upload; the "Verify published release" workflow only checks the published ZIP against its SHA-256 sidecar.
 Exit code 0 = verified; anything else prints the first mismatch and exits 1.
 """
 import argparse

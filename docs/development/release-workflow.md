@@ -365,6 +365,35 @@ dotnet run --project build-tools/release -- release -Version 4.0.0-beta.1 -Summa
 
 已公开的 Release、tag 和资产不改写；发现问题应修正并发布新补丁版本。发布不自动更新运行中的服务或虚拟机。
 
+## 预上传候选的快速发布
+
+准备阶段将 ZIP、同名 `.sha256` 和 `candidate.json` 放在 `bin-build/prepared/<版本>/`。
+候选记录包含 `version`、`commit`、`zip`、`zipSha256`、`zipSize`、`fileCount`、`suites`、`checks` 和 `finishedUtc`；
+`zip` 可为该目录内的文件名或仓库相对路径。准备程序调用 `ReleasePublisher.UploadDraftAsync`，
+以 `target_commitish=master` 建立或复用私有草稿；发布说明来自 `docs/releases/v<版本>.md`，
+必须含生成的“Not verified on a real TIA Portal”节，链接指向候选提交，并附文件数、大小和 SHA-256。
+草稿只保留 ZIP 与 sidecar；已验证的资产复用，失败的上传可重试，成功后回写 `draftReleaseId`、`draftAssetId`。
+令牌依次来自 `-Token`、`GITHUB_TOKEN`、Git Credential Manager。
+
+使用准备阶段已经构建的 Debug 工具。上传失败时保留候选，用 `upload-draft` 重试，无需重新准备；维护者确认后发布：
+
+```powershell
+dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0.0-beta.3
+dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0-beta.3
+```
+
+两个命令只接受预发布版本。发布前核对候选、HEAD、干净工作树、ZIP/sidecar、远端资产大小和 digest，
+并解析已有标签（包括 annotated tag）；标签指向其他提交时在推送前拒绝。
+随后推送候选提交到 `origin/master`，按需创建标签，将草稿公开为预发布（`make_latest=false`）。
+创建标签的响应丢失时重新读取标签；翻转最多尝试 3 次，间隔 5 秒；下载确认最多尝试 5 次，间隔 3 秒。
+下载 URL 取自发布响应的资产列表，不能复用草稿的 `untagged-*` URL。
+
+发布命令从进程启动起硬限时 300 秒，HTTP 请求超时 30 秒；超过 150 秒不再开始标签步骤。
+标签步骤后第一次翻转必定尝试，其余请求和等待均受剩余时间限制。所有结果都会输出总秒数；
+失败时说明“标签存在或状态未知、草稿可能尚未公开”或“已公开、下载未确认”，重跑同一命令即可恢复。
+若已公开且标签及两个资产仍与候选匹配，则只确认当前下载地址，不再推送、创建标签或 PATCH。
+发布阶段不启动构建、测试或打包；发布工作流只校验公开 ZIP 与 sidecar 的 SHA-256。
+
 ## 独立检查与并发资源
 
 ```powershell
@@ -388,7 +417,7 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -EarlyGatesOn
 
 ## GitHub 与原生验收
 
-托管 runner 无法取得全部 Siemens SDK 重建引擎，因此由本机构建上传。推送 CI 检查源码、构建记录、Studio/WPF 及无 Siemens 依赖的基础引擎协议；发布工作流下载实际 ZIP，核对 tag、提交、文件集合和运行文件哈希，再在解包目录执行严格验证。
+托管 runner 无法取得全部 Siemens SDK 重建引擎，因此由本机构建上传。推送 CI 检查源码、构建记录、Studio/WPF 及无 Siemens 依赖的基础引擎协议；发布工作流下载实际 ZIP，核对其公开 `.sha256`。包内容的严格验证在准备阶段完成。
 
 真实 TIA 工程导入、生成、编译、读回与设备操作须在明确指定的版本和工程上单独验收。构建、XSD、离线功能与公开资产验证不能代替原生验收。
 

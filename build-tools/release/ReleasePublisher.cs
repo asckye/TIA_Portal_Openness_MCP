@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace TiaMcp.ReleaseTool;
@@ -24,6 +26,154 @@ internal static class ReleaseRequestBodies
 
 internal static class ReleasePublisher
 {
+    internal static GitHubApi PreparedApi(string root, PublishOptions options, HttpClient http, int? timeout = null)
+    {
+        var token = ReleasePrerequisites.GetToken(options.Token, options.GitExecutable, root, localOnly: false, timeoutMilliseconds: timeout);
+        if (string.IsNullOrWhiteSpace(token)) throw new ReleaseException("No GitHub token: pass -Token, set GITHUB_TOKEN, or sign in with Git Credential Manager; token value is never printed");
+        return new(http, new Uri(options.ApiBaseUrl.TrimEnd('/') + "/"), "repos/" + options.Repository.Trim('/'), token);
+    }
+
+    internal static async Task UploadDraftAsync(string root, string candidatePath, PublishOptions options,
+        HttpClient? client = null, CancellationToken cancellationToken = default)
+    {
+        PublishPrepared.RequirePrerelease(options.Version);
+        var version = ReleaseVersions.Require(options.Version, "Invalid prepared version");
+        var package = PreparedPackage.Read(root, candidatePath, options.Version);
+        await package.VerifyAsync(cancellationToken);
+        var notes = await File.ReadAllTextAsync(Path.Combine(root, "docs/releases", version.Tag + ".md"), cancellationToken);
+        if (!PrereleaseNotes.HasSection(notes))
+            throw new ReleaseException(version.Tag + " needs the generated Not verified on a real TIA Portal section (generate-prerelease-notes)");
+        using var ownedClient = client is null ? new HttpClient { Timeout = Timeout.InfiniteTimeSpan } : null;
+        var api = PreparedApi(root, options, client ?? ownedClient!);
+        var releases = "repos/" + api.Repository + "/releases";
+        JsonElement? existing = null;
+        for (var page = 1; ; page++)
+        {
+            using var list = await api.GetRequiredAsync(releases + "?per_page=100&page=" + page.ToString(CultureInfo.InvariantCulture), cancellationToken);
+            existing = FindRelease(list.RootElement, version.Tag);
+            if (existing is not null || list.RootElement.GetArrayLength() < 100) break;
+        }
+        if (existing is { } published && !JsonBool(published, "draft")) throw new ReleaseException("release is already published; published releases are never changed");
+        var webBase = options.ApiBaseUrl.StartsWith("https://api.github.com", StringComparison.OrdinalIgnoreCase)
+            ? "https://github.com" : options.ApiBaseUrl.TrimEnd('/');
+        var notesBody = ComposeBody(notes, webBase, options.Repository, package.Commit, Path.GetFileName(package.Zip),
+            package.Candidate["fileCount"]!.GetValue<long>(), package.Size, package.Digest);
+        // The prepared SHA need not exist on origin yet. A draft targets the existing master branch.
+        var body = ReleaseRequestBodies.Draft(version.Tag, "master", notesBody, prerelease: true);
+        using var draft = await api.SendJsonRequiredAsync(existing is null ? HttpMethod.Post : HttpMethod.Patch,
+            releases + (existing is null ? "" : "/" + JsonLong(existing.Value, "id").ToString(CultureInfo.InvariantCulture)), body, cancellationToken);
+        var id = JsonLong(draft.RootElement, "id");
+        var assetsPath = releases + "/" + id.ToString(CultureInfo.InvariantCulture) + "/assets?per_page=100";
+        var unexpected = new List<long>();
+        for (var page = 1; ; page++)
+        {
+            using var assets = await api.GetRequiredAsync(assetsPath + "&page=" + page.ToString(CultureInfo.InvariantCulture), cancellationToken);
+            unexpected.AddRange(assets.RootElement.EnumerateArray()
+                .Where(asset => JsonString(asset, "name") != Path.GetFileName(package.Zip) && JsonString(asset, "name") != Path.GetFileName(package.Sidecar))
+                .Select(asset => JsonLong(asset, "id")));
+            if (assets.RootElement.GetArrayLength() < 100) break;
+        }
+        foreach (var assetId in unexpected)
+            await api.DeleteAsync(releases + "/assets/" + assetId.ToString(CultureInfo.InvariantCulture), cancellationToken);
+        var upload = JsonString(draft.RootElement, "upload_url").Replace("{?name,label}", "", StringComparison.Ordinal);
+        await UploadAndVerifyAsync(api, assetsPath, upload, await File.ReadAllBytesAsync(package.Zip, cancellationToken),
+            Path.GetFileName(package.Zip), "application/zip", options, cancellationToken);
+        await UploadAndVerifyAsync(api, assetsPath, upload, await File.ReadAllBytesAsync(package.Sidecar, cancellationToken),
+            Path.GetFileName(package.Sidecar), "text/plain", options, cancellationToken);
+        using var finalAssets = await api.GetRequiredAsync(assetsPath, cancellationToken);
+        var zipId = JsonLong(FindAssets(finalAssets.RootElement, Path.GetFileName(package.Zip)).Single(), "id");
+        await ReadPreparedReleaseAsync(api, package with { ReleaseId = id, AssetId = zipId }, cancellationToken);
+        package.Candidate["draftReleaseId"] = id;
+        package.Candidate["draftAssetId"] = zipId;
+        await File.WriteAllTextAsync(candidatePath, package.Candidate.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n",
+            new UTF8Encoding(false), cancellationToken);
+    }
+
+    internal sealed record PreparedRelease(bool Public, JsonElement ZipAsset);
+
+    internal static async Task<PreparedRelease> ReadPreparedReleaseAsync(GitHubApi api, PreparedPackage package, CancellationToken cancellationToken)
+    {
+        var path = "repos/" + api.Repository + "/releases/" + package.ReleaseId.ToString(CultureInfo.InvariantCulture);
+        using var release = await api.GetReleaseByTagOrNullAsync(path, cancellationToken);
+        if (release is null || JsonString(release.RootElement, "tag_name") != "v" + package.Version)
+            throw new ReleaseException("no draft or public release for prepared version");
+        var assets = release.RootElement.GetProperty("assets");
+        var zip = FindAssets(assets, Path.GetFileName(package.Zip)).ToArray();
+        var sidecar = FindAssets(assets, Path.GetFileName(package.Sidecar)).ToArray();
+        var sidecarBytes = await File.ReadAllBytesAsync(package.Sidecar, cancellationToken);
+        bool Matches(JsonElement asset, long size, string digest) => JsonString(asset, "state") == "uploaded" &&
+            JsonLong(asset, "size") == size && JsonString(asset, "digest").Equals("sha256:" + digest, StringComparison.OrdinalIgnoreCase);
+        if (assets.GetArrayLength() != 2 || zip.Length != 1 || sidecar.Length != 1 || JsonLong(zip[0], "id") != package.AssetId ||
+            !Matches(zip[0], package.Size, package.Digest) || !Matches(sidecar[0], sidecarBytes.LongLength, Sha256Digest(sidecarBytes)))
+            throw new ReleaseException("release asset size or digest differs from prepared ZIP or .sha256");
+        return new(!JsonBool(release.RootElement, "draft"), zip[0].Clone());
+    }
+
+    internal static async Task<bool> PreparedTagExistsAsync(GitHubApi api, PreparedPackage package, CancellationToken cancellationToken)
+    {
+        using var reference = await api.GetReleaseByTagOrNullAsync("repos/" + api.Repository + "/git/ref/tags/" + Uri.EscapeDataString("v" + package.Version), cancellationToken);
+        if (reference is null) return false;
+        var target = reference.RootElement.GetProperty("object");
+        if (JsonString(target, "type") == "tag")
+        {
+            using var annotated = await api.GetRequiredAsync("repos/" + api.Repository + "/git/tags/" + Uri.EscapeDataString(JsonString(target, "sha")), cancellationToken);
+            target = annotated.RootElement.GetProperty("object").Clone();
+        }
+        if (JsonString(target, "type") != "commit" || JsonString(target, "sha") != package.Commit)
+            throw new ReleaseException("tag does not point at the prepared commit");
+        return true;
+    }
+
+    internal static async Task PublishPreparedDraftAsync(GitHubApi api, PreparedPackage package, HttpClient http, PublicationBudget budget)
+    {
+        JsonElement published = default;
+        for (var attempt = 1; attempt <= 3; attempt++)
+        {
+            try
+            {
+                // The first flip always runs after tagging; the 150-second entry limit leaves room for it.
+                using var deadline = budget.BeginAttempt(firstFlip: attempt == 1);
+                using var response = await api.SendJsonRequiredAsync(HttpMethod.Patch,
+                    "repos/" + api.Repository + "/releases/" + package.ReleaseId.ToString(CultureInfo.InvariantCulture),
+                    new { draft = false, prerelease = true, make_latest = "false", target_commitish = package.Commit }, deadline.Token);
+                if (JsonBool(response.RootElement, "draft") || !JsonBool(response.RootElement, "prerelease"))
+                    throw new ReleaseException("draft did not become a published pre-release");
+                budget.State = PublicationBudget.PublicState;
+                published = response.RootElement.Clone();
+                break;
+            }
+            catch (Exception error) when (attempt < 3 && error is ReleaseException or HttpRequestException or OperationCanceledException)
+            {
+                await budget.DelayAsync(TimeSpan.FromSeconds(5));
+            }
+        }
+        var zip = FindAssets(published.GetProperty("assets"), Path.GetFileName(package.Zip))
+            .SingleOrDefault(asset => JsonLong(asset, "id") == package.AssetId);
+        if (zip.ValueKind == JsonValueKind.Undefined) throw new ReleaseException("published response has no prepared ZIP asset");
+        await ConfirmPreparedDownloadAsync(http, zip, budget);
+    }
+
+    internal static async Task ConfirmPreparedDownloadAsync(HttpClient http, JsonElement zipAsset, PublicationBudget budget)
+    {
+        for (var attempt = 1; attempt <= 5; attempt++)
+        {
+            try
+            {
+                using var deadline = budget.BeginAttempt();
+                using var request = new HttpRequestMessage(HttpMethod.Get, JsonString(zipAsset, "browser_download_url"));
+                request.Headers.Range = new RangeHeaderValue(0, 0);
+                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, deadline.Token);
+                if (!response.IsSuccessStatusCode) throw new ReleaseException("download returned " + (int)response.StatusCode);
+                budget.RemainingMilliseconds();
+                return;
+            }
+            catch (Exception error) when (attempt < 5 && error is ReleaseException or HttpRequestException or OperationCanceledException)
+            {
+                await budget.DelayAsync(TimeSpan.FromSeconds(3));
+            }
+        }
+    }
+
     internal static async Task<int> PublishAsync(string root, PublishOptions options, HttpClient? client = null, CancellationToken cancellationToken = default)
     {
         var version = ReleaseVersions.Require(options.Version, "-Version must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N");
@@ -166,12 +316,15 @@ internal static class ReleasePublisher
         for (var attempt = 1; attempt <= options.RetryCount; attempt++)
         {
             using var assets = await api.GetRequiredAsync(assetsPath, cancellationToken);
+            JsonElement? verified = null;
             foreach (var stale in FindAssets(assets.RootElement, name).ToArray())
             {
-                if (JsonString(stale, "state") == "uploaded" && JsonLong(stale, "size") == bytes.LongLength && JsonString(stale, "digest") == expected)
-                    return;
-                await api.DeleteAsync("repos/" + api.Repository + "/releases/assets/" + JsonLong(stale, "id"), cancellationToken);
+                if (verified is null && JsonString(stale, "state") == "uploaded" && JsonLong(stale, "size") == bytes.LongLength && JsonString(stale, "digest") == expected)
+                    verified = stale;
+                else
+                    await api.DeleteAsync("repos/" + api.Repository + "/releases/assets/" + JsonLong(stale, "id"), cancellationToken);
             }
+            if (verified is not null) return;
             JsonDocument uploaded;
             try
             {
@@ -215,7 +368,7 @@ internal static class ReleasePublisher
     private static string HashFile(string path) => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)));
     private static string Sha256Digest(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
 
-    private sealed class GitHubApi(HttpClient client, Uri apiBase, string repositoryPath, string token)
+    internal sealed class GitHubApi(HttpClient client, Uri apiBase, string repositoryPath, string token)
     {
         internal string Repository => repositoryPath["repos/".Length..];
 

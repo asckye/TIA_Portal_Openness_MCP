@@ -68,7 +68,7 @@ internal static class ReleasePrerequisites
     internal static string RequireToken(string token) =>
         !string.IsNullOrWhiteSpace(token) ? "available (value hidden)" : throw new ReleaseException("GitHub token unavailable (value never printed)");
 
-    internal static string GetToken(string value, string gitExecutable, string root, bool localOnly)
+    internal static string GetToken(string value, string gitExecutable, string root, bool localOnly, int? timeoutMilliseconds = null)
     {
         if (!string.IsNullOrWhiteSpace(value)) return value;
         var environment = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
@@ -76,7 +76,7 @@ internal static class ReleasePrerequisites
         if (localOnly) return "";
         var result = ProcessRunner.Run(gitExecutable, ["credential", "fill"], root,
             new Dictionary<string, string?> { ["GIT_TERMINAL_PROMPT"] = "0", ["GCM_INTERACTIVE"] = "Never" },
-            standardInput: "protocol=https\nhost=github.com\n\n");
+            standardInput: "protocol=https\nhost=github.com\n\n", timeoutMilliseconds: timeoutMilliseconds);
         if (result.ExitCode != 0) return "";
         var match = Regex.Match(result.StandardOutput, "(?m)^password=(.+)$");
         return match.Success ? match.Groups[1].Value.Trim() : "";

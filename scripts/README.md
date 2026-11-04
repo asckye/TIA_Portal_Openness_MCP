@@ -15,7 +15,7 @@
 | 构建 | `dotnet run --project build-tools/release -- build-multi-version` / [Package-MultiVersion.py](../build-tools/Package-MultiVersion.py) | 八版本构建、功能验证和 API 对照；正式发布调用该构建，Package-MultiVersion 另用于本地开发包 |
 | 构建 | `dotnet run --project build-tools/release -- build-studio` | 构建 Studio、本地 Bridge 和八版本原生适配器；`-Test` 运行客户端及 WPF 功能测试，不启动 TIA |
 | 测试包 | `dotnet run --project build-tools/release -- package-test [-Build]` | 从当前 checkout 几分钟内打出可安装的测试包：不发布、不写发布记录、不运行测试；`-Build` 先增量构建产物（见[测试包](../docs/development/release-workflow.md#测试包package-test)） |
-| 检查 | `dotnet run --project build-tools/release -- check-repository`、`dotnet run --project build-tools/release -- validate-bundle`、[Verify-ReleaseAsset.py](checks/Verify-ReleaseAsset.py) | 文档/路径与交付内容校验（`-NoBinaries` / `--no-binaries` 用于没有二进制的源码 checkout）；ZIP 与提交树 + 清单哈希逐文件比对（本机上传前、`Verify published release` 工作流发布后各跑一次） |
+| 检查 | `dotnet run --project build-tools/release -- check-repository`、`dotnet run --project build-tools/release -- validate-bundle`、[Verify-ReleaseAsset.py](checks/Verify-ReleaseAsset.py) | 文档/路径与交付内容校验（`-NoBinaries` / `--no-binaries` 用于没有二进制的源码 checkout）；ZIP 与提交树 + 清单哈希逐文件比对在本机上传前执行；`Verify published release` 工作流发布后仅核对 ZIP 与其 `.sha256` |
 | 检查 | `dotnet run --project build-tools/release -- check-dead-tool-references` | 工具描述死引用检查 |
 | 手动检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py) | lite 清单专项检查，需已构建引擎与测试 harness；默认 CI/发布链不执行 |
 | 检查 | [Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，发布链执行；需相应环境或测试 harness |

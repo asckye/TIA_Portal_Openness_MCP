@@ -52,9 +52,24 @@ internal static partial class ReleaseCommands
         "build-multi-version" => BuildMultiVersion(options),
         "compare-release-records" => CompareReleaseRecords(options),
         "publish" => Publish(options),
+        "publish-prepared" => PublishPrepared.RunAsync(Root, PreparedPublishOptions(options)).GetAwaiter().GetResult(),
+        "upload-draft" => UploadPreparedDraft(options),
         "package-test" => PackageTest(options),
         _ => throw new ReleaseException($"Unknown release command '{command}'.", 64)
     };
+
+    private static PublishOptions PreparedPublishOptions(Options options) => new(
+        options.Get("Version") ?? throw new ReleaseException("-Version is required"), options.Get("Token", ""),
+        options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), options.Get("ApiBaseUrl", "https://api.github.com"),
+        false, false, GitExecutable: options.Get("Git", "git"));
+
+    private static int UploadPreparedDraft(Options options)
+    {
+        var publish = PreparedPublishOptions(options);
+        PublishPrepared.RequirePrerelease(publish.Version);
+        ReleasePublisher.UploadDraftAsync(Root, Path.Combine(Root, "bin-build/prepared", publish.Version, "candidate.json"), publish).GetAwaiter().GetResult();
+        return 0;
+    }
 
     internal static int CompareReleaseRecords(Options options)
     {

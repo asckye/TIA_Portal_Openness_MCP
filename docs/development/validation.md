@@ -133,7 +133,7 @@ check-all 的合并和 nightly 构建统一设置 `TiaCheckBuild=true` 与固定
 | offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
 | offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 17 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
 | validate-bundle / validate-bundle，Windows | release-tool、generation-model、generation-planning、crash-evidence、write-guard、source-contracts；repository、bundle、bundle-self-tests、release-documentation、release-dry-run、native-lifecycle、native-mcp-session、tia-features、match-plc-name-source | release profile 可采纳六套件及除 repository/bundle 外的七个精确命令；repository/bundle 含实际已收集 analyzer 报告的核对，CI 缺少本机完整 SDK 构建的报告，继续本机执行。release-tool 改用完整注册入口，新增原有最低通过/跳过门禁；preflight 仍本机汇总。build-configurator -Test 是较大的构建/测试入口，不当成 configuration-page 的单独收据 |
-| Verify published release / verify，release 或 workflow_dispatch | 无 check-all 等价项 | 检查发布后 tag/ZIP/摘要、过滤树与包模式验证；时点、输入和二进制模式均不同，继续独立执行 |
+| Verify published release / verify，release 或 workflow_dispatch | 无 check-all 等价项 | 只校验已发布 ZIP 与其 `.sha256`；包内容与过滤树的严格验证在本机准备阶段完成，继续独立执行 |
 
 每个 profile 的完整套件清单、静态作业清单、Windows 注册定义（含过滤与构建属性）和 workflow 文件 SHA-256 都写入收据并在采纳时比较。
 CI 命令仍执行全部检查；本机分片数量无需等于 CI，但 CI 的 runner gate 必须证明整个注册套件，不能凭某个分片或最低计数代替覆盖检查。
