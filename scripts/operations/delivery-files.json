@@ -71,7 +71,6 @@
   },
   "exclude": {
     "files": [
-      "scripts/operations/Update-Engine.ps1",
       "runtime/v20/TiaMcp.Engine.V20.exe",
       "runtime/v20/TiaMcp.Engine.V20.exe.config",
       "runtime/v20/TiaMcp.Adapter.20.dll",
