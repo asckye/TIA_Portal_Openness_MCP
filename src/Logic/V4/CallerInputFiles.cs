@@ -64,12 +64,15 @@ namespace TiaMcp.Logic.V4
         {
             if (node is JsonObject obj) return obj.Any(pair => AdministrativePath(pair.Key, pair.Value));
             if (node is JsonArray array) return array.Any(item => AdministrativePath(parameter, item));
+            // XPath selectors can start with //, but never identify a caller file.
+            if (parameter.Equals("xpath", StringComparison.OrdinalIgnoreCase)) return false;
             bool fileArgument = parameter.EndsWith("Path", StringComparison.OrdinalIgnoreCase)
                 || parameter.EndsWith("Directory", StringComparison.OrdinalIgnoreCase)
+                || parameter.EndsWith("Dir", StringComparison.OrdinalIgnoreCase)
                 || parameter is "dir" or "directory" or "files" or "fileName" or "output" or "destination";
             if (node is not JsonValue value || !value.TryGetValue<string>(out var path)) return false;
             path = path.Trim();
-            if (!fileArgument && (path.Any(char.IsControl) || !Path.IsPathRooted(path))) return false;
+            if (!fileArgument && (path.Any(character => character < 0x20) || !Path.IsPathRooted(path))) return false;
             foreach (string component in path.Split(new[] { '/', '\\' }))
             {
                 string name = component.Length >= 2 && component[1] == ':' ? component.Substring(2) : component;

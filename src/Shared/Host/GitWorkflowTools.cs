@@ -45,7 +45,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var path in paths)
                     if (string.IsNullOrWhiteSpace(path) || Path.IsPathRooted(path) || !Path.GetFullPath(Path.Combine(root, path)).StartsWith(root, StringComparison.OrdinalIgnoreCase) || Directory.Exists(Path.Combine(root, path))) throw new ArgumentException("Select individual repository-relative files, no directories/traversal.");
                 var prefix = new[] { "--no-pager", "--literal-pathspecs", "-c", "color.ui=false", "-c", "core.quotepath=false",
-                    "-c", "core.fsmonitor=false", "-c", "core.hooksPath=NUL", "-c", "commit.gpgsign=false" };
+                    "-c", "core.fsmonitor=false", "-c", "core.hooksPath=NUL", "-c", "commit.gpgsign=false",
+                    "-c", "safe.bareRepository=explicit" };
                 var args = new List<string>(prefix); string? input = null;
                 switch (action)
                 {

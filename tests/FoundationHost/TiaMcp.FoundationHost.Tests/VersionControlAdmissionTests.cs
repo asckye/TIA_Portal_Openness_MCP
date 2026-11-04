@@ -18,6 +18,149 @@ public sealed class VersionControlAdmissionTests
     [Theory]
     [InlineData("19")]
     [InlineData("21")]
+    public async Task XPath_rules_are_not_treated_as_file_paths_with_approval_settings_present(string release)
+    {
+        using var fixture = new FileToolFixture(release);
+        using var settings = new HumanSettingsFile();
+        File.WriteAllText(Path.Combine(fixture.Root, "rule.xml"), "<A><B /></A>");
+        var result = await fixture.Call("AuditEngineeringExports", new { directoryPath = fixture.Root,
+            rules = new[] { new { id = "has-b", xpath = "//A/B", minCount = 1 } } });
+        Succeeded(result);
+        TiaMcp.Logic.V4.CallerInputFiles.RefuseHumanSettingsTargets(new JsonObject {
+            ["rules"] = new JsonArray(new JsonObject { ["xpath"] = "//A/approval.settings" }) });
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    [Theory]
+    [InlineData(53)]
+    [InlineData(67)]
+    [InlineData(161)]
+    public void Unavailable_network_and_invalid_path_identities_are_missing(int error)
+    {
+        var missing = typeof(TiaOpenness.Shared.ApprovalSettings).GetMethod("MissingIdentity", BindingFlags.Static | BindingFlags.NonPublic)!;
+        Assert.True((bool)missing.Invoke(null, new object[] { error })!);
+        Assert.False((bool)missing.Invoke(null, new object[] { 5 })!);
+    }
+
+    [Theory]
+    [InlineData("CON")]
+    [InlineData("NUL")]
+    public void Bare_device_names_are_not_human_settings_targets(string name)
+    {
+        using var settings = new HumanSettingsFile();
+        foreach (string path in new[] { name, @"\\.\" + name })
+        {
+            Assert.False(TiaOpenness.Shared.ApprovalSettings.IsAdministrativeTarget(path));
+            Assert.False(TiaOpenness.Shared.ApprovalSettings.IsNativeCrossReferenceTarget(path));
+            foreach (string parameter in new[] { "blockPath", "groupPath" })
+                TiaMcp.Logic.V4.CallerInputFiles.Validate("GetPlcBlockInfo", new JsonObject { [parameter] = path });
+        }
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("21")]
+    public async Task Missing_settings_file_cannot_be_created_as_a_parent_directory(string release)
+    {
+        using var fixture = new FileToolFixture(release);
+        using var settings = new HumanSettingsFile(present: false);
+        string target = Path.Combine(settings.Path, "x.scl");
+        try
+        {
+            Refused(await fixture.Call("WritePlcSclSourceFile", new { outputPath = target,
+                sclContent = "FUNCTION Test : Void\nEND_FUNCTION" }));
+            Assert.False(Directory.Exists(settings.Path));
+            Assert.False(File.Exists(target));
+        }
+        finally
+        {
+            // Only the pre-fix writer can create this exact file and its initially absent parent.
+            if (File.Exists(target)) File.Delete(target);
+            if (Directory.Exists(settings.Path)) Directory.Delete(settings.Path);
+        }
+    }
+
+    [Fact]
+    public void Existing_consent_directory_and_relative_exportDir_remain_human_only()
+    {
+        using var settings = new HumanSettingsFile();
+        string sessions = settings.Path + ".sessions";
+        bool existed = Directory.Exists(sessions);
+        Directory.CreateDirectory(sessions);
+        try
+        {
+            Assert.True(TiaOpenness.Shared.ApprovalSettings.IsNativeCrossReferenceTarget(sessions));
+            Assert.True(TiaOpenness.Shared.ApprovalSettings.IsAdministrativeTarget(sessions));
+            foreach (string path in new[] { sessions, "approval.settings", ".git/config" })
+                Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                    TiaMcp.Logic.V4.CallerInputFiles.RefuseHumanSettingsTargets(new JsonObject { ["exportDir"] = path }));
+        }
+        finally { if (!existed) Directory.Delete(sessions); }
+    }
+
+    [Fact]
+    public void Delete_character_in_a_rooted_filename_does_not_bypass_settings_protection()
+    {
+        using var settings = new HumanSettingsFile();
+        string target = Path.Combine(System.IO.Path.GetDirectoryName(settings.Path)!, "valid\u007f", "approval.settings");
+        Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+            TiaMcp.Logic.V4.CallerInputFiles.RefuseHumanSettingsTargets(new JsonObject { ["target"] = target }));
+        TiaMcp.Logic.V4.CallerInputFiles.RefuseHumanSettingsTargets(new JsonObject { ["text"] = "// header\n/approval.settings" });
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("21")]
+    public async Task Git_refuses_an_implicitly_discovered_bare_repository_inside_a_working_tree(string release)
+    {
+        using var fixture = new FileToolFixture(release);
+        await Git(fixture.Root, "init");
+        await Git(fixture.Root, "config", "user.name", "SEC-1 fixture");
+        await Git(fixture.Root, "config", "user.email", "sec1@example.invalid");
+        File.WriteAllText(Path.Combine(fixture.Root, "Test.scl"), "FUNCTION Test : Void\nEND_FUNCTION");
+        Succeeded(await fixture.Call("ManagePlcGitRepository", new { repositoryPath = fixture.Root, action = "commit",
+            files = new[] { "Test.scl" }, message = "Bare repository fixture", dryRun = false }));
+        string bare = Path.Combine(fixture.Root, "evil");
+        string metadata = Path.Combine(fixture.Root, ".git");
+        Directory.CreateDirectory(bare);
+        foreach (string directory in Directory.EnumerateDirectories(metadata, "*", SearchOption.AllDirectories))
+            Directory.CreateDirectory(Path.Combine(bare, Path.GetRelativePath(metadata, directory)));
+        foreach (string file in Directory.EnumerateFiles(metadata, "*", SearchOption.AllDirectories))
+            File.Copy(file, Path.Combine(bare, Path.GetRelativePath(metadata, file)));
+        await Git(fixture.Root, "--git-dir=" + bare, "config", "core.bare", "true");
+        Assert.True(File.Exists(Path.Combine(bare, "HEAD")));
+        Assert.True(File.Exists(Path.Combine(bare, "config")));
+        Assert.True(Directory.Exists(Path.Combine(bare, "objects")));
+        Assert.True(Directory.Exists(Path.Combine(bare, "refs")));
+        Assert.Contains("Bare repository fixture", await Git(bare, "log", "-1", "--format=%s"));
+        var result = await fixture.Call("ManagePlcGitRepository", new { repositoryPath = bare, action = "history" });
+        Assert.True(result.IsError, result.StructuredContent?.ToJsonString());
+        Assert.Contains("safe.bareRepository", result.StructuredContent!.ToJsonString(), StringComparison.OrdinalIgnoreCase);
+        Succeeded(await fixture.Call("ManagePlcGitRepository", new { repositoryPath = fixture.Root, action = "history" }));
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    private sealed class HumanSettingsFile : IDisposable
+    {
+        internal string Path => TiaOpenness.Shared.ApprovalSettings.SettingsPath;
+        private readonly byte[]? previous;
+        internal HumanSettingsFile(bool present = true)
+        {
+            Assert.False(Directory.Exists(Path));
+            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
+            previous = File.Exists(Path) ? File.ReadAllBytes(Path) : null;
+            if (present) File.WriteAllText(Path, "enabled=true\ntimeoutSeconds=120\n");
+            else File.Delete(Path);
+        }
+        public void Dispose()
+        {
+            if (previous == null) File.Delete(Path); else File.WriteAllBytes(Path, previous);
+        }
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("21")]
     public async Task File_tools_refuse_approval_settings_including_aliases_and_nested_calls(string release)
     {
         using var fixture = new FileToolFixture(release);

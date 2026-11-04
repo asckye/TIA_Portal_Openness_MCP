@@ -17,18 +17,16 @@ namespace TiaOpenness.Shared
         {
             if (string.IsNullOrWhiteSpace(path)) return false;
             path = Path.GetFullPath(path.Trim());
-            // A directory cannot be a settings file; opening it without backup semantics would fail closed.
-            if (Directory.Exists(path)) return false;
             string normalized = path.Replace('\\', '/');
-            string name = normalized.Substring(normalized.LastIndexOf('/') + 1);
-            if (name.Length >= 2 && name[1] == ':') name = name.Substring(2);
-            int stream = name.IndexOf(':'); if (stream >= 0) name = name.Substring(0, stream);
-            name = name.TrimEnd(' ', '.');
+            if (IsBareDevicePath(normalized)) return false;
+            if (normalized.IndexOf("approval.settings.sessions", StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            // A directory cannot be a settings file; the human-only session directory is protected above.
+            if (Directory.Exists(path)) return false;
+            string name = TargetName(normalized.Substring(normalized.LastIndexOf('/') + 1));
             if (System.Text.RegularExpressions.Regex.IsMatch(name, @"^native-cross-references-[a-f0-9]{32}\.settings$",
                     System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)
                 || System.Text.RegularExpressions.Regex.IsMatch(name, @"^NATIVE~[0-9]+\.SET$",
-                    System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)
-                || normalized.IndexOf("approval.settings.sessions", StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)) return true;
             if (Environment.OSVersion.Platform == PlatformID.Win32NT && Directory.Exists(SettingsPath + ".sessions"))
             {
                 foreach (var consent in Directory.EnumerateFiles(SettingsPath + ".sessions", "native-cross-references-*.settings"))
@@ -50,17 +48,18 @@ namespace TiaOpenness.Shared
         internal static bool IsAdministrativeTarget(string path)
         {
             if (string.IsNullOrWhiteSpace(path)) return false;
-            if (IsNativeCrossReferenceTarget(path)) return true;
             path = Path.GetFullPath(path.Trim());
-            if (Directory.Exists(path)) return false;
             string normalized = path.Replace('\\', '/');
-            string name = normalized.Substring(normalized.LastIndexOf('/') + 1);
-            if (name.Length >= 2 && name[1] == ':') name = name.Substring(2);
-            int stream = name.IndexOf(':'); if (stream >= 0) name = name.Substring(0, stream);
-            name = name.TrimEnd(' ', '.');
-            if (name.Equals("approval.settings", StringComparison.OrdinalIgnoreCase)
-                || System.Text.RegularExpressions.Regex.IsMatch(name, @"^APPROV~[0-9]+\.SET$",
-                    System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)) return true;
+            if (IsBareDevicePath(normalized)) return false;
+            if (IsNativeCrossReferenceTarget(path)) return true;
+            foreach (string component in normalized.Split('/'))
+            {
+                string name = TargetName(component);
+                if (name.Equals("approval.settings", StringComparison.OrdinalIgnoreCase)
+                    || System.Text.RegularExpressions.Regex.IsMatch(name, @"^APPROV~[0-9]+\.SET$",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)) return true;
+            }
+            if (Directory.Exists(path)) return false;
             if (Environment.OSVersion.Platform != PlatformID.Win32NT || string.IsNullOrWhiteSpace(path)) return false;
             // File IDs also cover short names, junctions and existing hard links. An
             // unreadable identity is refused; there is no write probe or native TIA call.
@@ -75,7 +74,15 @@ namespace TiaOpenness.Shared
                 }
             }
         }
-        private static bool MissingIdentity(int error) => error == 2 || error == 3 || error == 123;
+        private static string TargetName(string name)
+        {
+            if (name.Length >= 2 && name[1] == ':') name = name.Substring(2);
+            int stream = name.IndexOf(':'); if (stream >= 0) name = name.Substring(0, stream);
+            return name.TrimEnd(' ', '.');
+        }
+        private static bool IsBareDevicePath(string normalized) => normalized.StartsWith("//./", StringComparison.Ordinal)
+            && normalized.IndexOf('/', 4) < 0;
+        private static bool MissingIdentity(int error) => error == 2 || error == 3 || error == 53 || error == 67 || error == 123 || error == 161;
         [StructLayout(LayoutKind.Sequential)] private struct FileIdentity
         { internal uint Attributes, CreationLow, CreationHigh, AccessLow, AccessHigh, WriteLow, WriteHigh, Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow; }
         [DllImport("kernel32.dll", EntryPoint = "CreateFileW", CharSet = CharSet.Unicode, SetLastError = true)]
