@@ -17,6 +17,7 @@ internal static partial class ReleaseCommands
 
     internal static int Run(string command, Options options) => command switch
     {
+        "prepare" => Prepare.Run(Root, options),
         "generate-tool-counts" or "generate-catalogs" or "generate-tool-usage" or "generate-release-migration" or "audit-version-tools" or "audit-tool-usage" or "check-tools-list" or "generate-prerelease-notes" => GeneratorCommand(command, options),
         "check-analyzer-warnings" or "check-ratchet" or "check-envelope-rewrite" or "check-adapter-boundary" or "check-bundle-layout" or "check-repository" or "check-dead-tool-references" or "check-tia-features" or "check-script-tool-calls" => StaticCheck(command, options),
         "preflight" => Preflight(options),

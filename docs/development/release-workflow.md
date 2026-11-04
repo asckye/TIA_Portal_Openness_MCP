@@ -14,6 +14,18 @@
 
 ## 交付清单与两种校验模式
 
+### 独立准备流程（NEW-REL-A）
+
+`dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3 -BuildOnly -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <pinned-python.exe>`
+从干净的 master 提前构建交付包，默认 MSBuild 并行度为 6（可用 `-MaxParallelism` 指定）。版本文件、插件、marketplace、最新 CHANGELOG 版本和有效日期、发布说明及生成的未验证清单必须一致；工作区字节必须符合 Git 规范化规则。
+伴随 Python 按 `-CompanionPython`、`TIA_MCP_PLC_TOOLS_PYTHON`、本地 `TiaMcp_Output/ecosystem-python/Scripts/python.exe` 解析并检查依赖。
+
+输出保留在 `bin-build/prepared/<version>/`：stage、逐阶段日志、唯一 ZIP 和 `.sha256`。每次运行先核对并清理该版本的旧输出目录，再清理 `runtime/`（保留 README），通过普通 MSBuild/dotnet 构建；同版本的新提交可重新准备，不使用 nightly、证据或旧发布编排，不写跟踪文件，不发布。
+TEMP、TMP、TMPDIR 和 `DOTNET_CLI_HOME` 使用仓库外的短 `tmr-<8位标识>` 目录，运行结束后删除；占用中的文件导致清理失败时保留目录并打印警告。
+四份清单及工具矩阵只在 stage 生成。`multi-version-build.json` 是更新器所需的 `{files:[{path,sha256}]}` 文件库存（不包含它自身）；旧构建记录和 `TEST-PACKAGE.txt` 不交付。ZIP 解压后的逐文件哈希必须与 stage 相同；同一次运行内不覆盖 ZIP。
+
+本批只实现构建、交付检查和打包；`-BuildOnly` 用于此阶段。后续 NEW-REL-B 接入测试，NEW-REL-C 接入发布。下面的旧命令及其记录格式仍保持原行为。
+
 每日冷全集由 `dotnet run --project build-tools/release -- nightly -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>`
 运行，默认使用本地 `origin/master`，可用 `-Rev` 指定提交；工具打印每日 03:00 的 Task Scheduler 命令，由维护者登记。
 运行目录为 `bin-build/nightly/<date>-<sha8>`，`latest.json` 保存提交、报告路径、通过/失败、耗时和三十分钟门槛。
