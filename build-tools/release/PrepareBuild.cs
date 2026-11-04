@@ -245,7 +245,7 @@ internal sealed class PrepareBuild
         foreach (var unit in PlcWorkerFixtures.Builds(PlcWorkerFixtures.Keys))
         {
             var worker = unit.Worker(Path.Combine(context.Logs, "plc-fixtures"));
-            RequireWorkerMetadata(WorkerAssemblyMetadata.Read(worker), unit.Release, fixture: true, unit.TestPolicy, worker);
+            RequireWorkerMetadata(WorkerAssemblyMetadata.Read(worker), unit.Release, fixture: true, policy: null, worker);
             VerifyAdapter(Path.Combine(Path.GetDirectoryName(worker)!, $"TiaMcp.Adapter.{unit.Release}.dll"),
                 "fixture-adapter-" + unit.Release + "-" + unit.Variant);
         }

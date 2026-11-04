@@ -45,7 +45,7 @@ public sealed class SuiteWorkerCopiesTests
         var evidence = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "suite-worker-copies.json")))!;
         Assert.Equal(5, evidence["assignments"]!.AsArray().Count);
         Assert.Equal(5, evidence["assignments"]!.AsArray().Select(row => (string)row!["results"]!).Distinct().Count());
-        Assert.Equal(48, evidence["files"]!.AsArray().Count);
+        Assert.Equal(36, evidence["files"]!.AsArray().Count); // Q3 deleted the engine worker fault fixture (approved 2026-11-02).
         foreach (var row in evidence["files"]!.AsArray())
         {
             string source = (string)row!["source"]!, destination = (string)row["destination"]!;

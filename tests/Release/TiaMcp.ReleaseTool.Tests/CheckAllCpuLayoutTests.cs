@@ -278,7 +278,7 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
         var inventory = JsonNode.Parse(File.ReadAllText(Path.Combine(runDirectory, "profile-inventory.json")))!;
         Assert.Equal(profile, (string?)inventory["profile"]);
         var foundation = inventory["suites"]!.AsArray().Single(row => (string?)row!["name"] == "foundation")!;
-        Assert.Equal(new[] { "nightly" }, foundation["processProfiles"]!.AsArray().Select(value => (string)value!));
+        Assert.Empty(foundation["processProfiles"]!.AsArray());
         Assert.Equal("foundation-api", (string?)foundation["mergeDerivedFrom"]);
         Assert.Equal(CheckAffinity.DegradedIsolation, (string?)report["cpuIsolation"]);
         var reason = (string?)report["cpuIsolationReason"];

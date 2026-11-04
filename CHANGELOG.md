@@ -2,9 +2,9 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
 
-- Remove retired host engine cross-check clients, fixtures and dead compile symbols; keep all eight releases on PlcWorker with unchanged MCP contracts.
-
 ## [Unreleased]
+
+- Remove retired host engine cross-check clients, fixtures and dead compile symbols; keep all eight releases on PlcWorker with unchanged MCP contracts.
 
 - 新增可恢复的 `upload-draft` / `publish-prepared` 预发布路径：复用已验证的草稿资产，核对候选和标签后发布；发布阶段不构建、测试或打包，硬限时 300 秒，失败后重跑恢复。
 

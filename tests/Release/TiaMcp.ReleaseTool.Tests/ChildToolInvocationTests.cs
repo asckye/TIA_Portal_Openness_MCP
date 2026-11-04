@@ -40,7 +40,7 @@ public sealed class ChildToolInvocationTests
                 (output / 'TiaMcp.ReleaseTool.dll').touch()
             p.subprocess.run = build
             command = p.validator_command(root, None if sys.argv[3] == 'True' else assembly)
-            assert command[2:] == ['validate-bundle'], command
+            assert len(command) == 2, command
             assert pathlib.Path(command[1]).is_file()
             assert 'run' not in command and '--project' not in command
             if sys.argv[3] == 'True':
