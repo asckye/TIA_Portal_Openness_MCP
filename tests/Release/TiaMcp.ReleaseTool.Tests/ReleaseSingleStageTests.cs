@@ -193,7 +193,7 @@ public sealed class ReleaseSingleStageTests
     }
 
     [Fact]
-    public void ParentBuildsBothPlcFileAppsInTheExportedCacheBeforeSchedulingReaders()
+    public void ParentBuildsCampaignFileAppInTheExportedCacheBeforeSchedulingReaders()
     {
         using var tree = new StaticTree();
         var commands = new List<string>();
@@ -210,24 +210,7 @@ public sealed class ReleaseSingleStageTests
             });
         Assert.Equal(Path.GetFullPath(temp), result);
         Assert.Equal(ReleaseCommands.PlcReleaseFilePrograms.Select(program => Path.Combine(tree.Root, program)), commands);
-        var root = TiaMcp.BuildCommon.Repository.FindRoot();
-        var source = File.ReadAllText(Path.Combine(root, "build-tools/release/PrepareChecks.cs"));
-        Assert.Contains("producers.Add(ActionJob(\"plc-file-programs\"", source);
-        Assert.DoesNotContain("host-parity-build", source);
-        Assert.Contains("foreach (var job in plan.Producers) RunJob(job)", source);
-        Assert.Contains("env[ReleaseCommands.PlcReleaseSystemTempVariable] = fileApps", source);
 
-    }
-
-    [Fact]
-    public void OnlyTheTwoScratchAndDiagnosticsHarnessModesUseTheExclusiveLane()
-    {
-        var root = TiaMcp.BuildCommon.Repository.FindRoot();
-        var jobs = ReleaseCommands.PlcReleaseJobs(root, root, Path.Combine(root, "bin-build/fixture"), root, "dotnet", "python");
-        var exclusive = jobs.Where(ReleaseCommands.ReleasePlcExclusive).ToArray();
-        Assert.Equal(4, exclusive.Length);
-        Assert.Equal(new[] { "native-diagnostics-only", "test-ecosystem-assembly" }, exclusive.Select(job => job.Mode).Distinct().Order());
-        Assert.All(exclusive, job => Assert.StartsWith("harness-", job.Name));
     }
 
     [Fact]

@@ -123,21 +123,6 @@ internal static partial class Program
     private static string Request(object id) => Json.Serialize(new { jsonrpc = "2.0", id, method = "tools/call", @params = new { name = "GetSessionState" } });
     private static string Reply(object id, object value) => Json.Serialize(new { jsonrpc = "2.0", id, result = value });
     private static void Check(bool ok, string message) { if (!ok) throw new Exception(message); }
-    private static Dictionary<string, object> GetToolUsage(string toolName = "", string query = "", string language = "",
-        string exampleId = "", string exampleKind = "all")
-    {
-        var result = HostPortRunner.Call(Server, "GetToolUsage", new System.Text.Json.Nodes.JsonObject {
-            ["toolName"] = toolName, ["query"] = query, ["language"] = language,
-            ["exampleId"] = exampleId, ["exampleKind"] = exampleKind, ["limit"] = 80
-        });
-        return Json.Deserialize<Dictionary<string, object>>(result.ToJsonString())!;
-    }
-    private static Dictionary<string, object> AsObject(object value) => (Dictionary<string, object>)value;
-    // JavaScriptSerializer returns object[] or ArrayList depending on the target type.
-    private static object[] AsArray(object value) => value as object[] ?? ((System.Collections.IEnumerable)value).Cast<object>().ToArray();
-    private static bool IsV4ForRelease(Dictionary<string, object> envelope, string release)
-        => Convert.ToInt32(envelope["schemaVersion"]) == 4 && AsObject(envelope["meta"])["releaseKey"].ToString() == release
-            && envelope.ContainsKey("data");
     private static async Task<T> Bounded<T>(Task<T> task, int ms = 5000)
     { if (await Task.WhenAny(task, Task.Delay(ms)) != task) throw new Exception("Test operation hung"); return await task; }
     private static async Task Fault(Task task, Type type)
@@ -159,11 +144,7 @@ internal static partial class Program
         // which emits a UTF-8 BOM when the console code page is 65001 and the engine has not replaced it.
         try { Console.InputEncoding = new System.Text.UTF8Encoding(false); } catch (IOException) { }
         try {
-            if (args.Length > 0 && args[0] == "--plc") return await RunPlcHarness(args);
-            if (args.Length > 0 && args[0] == "--plc-lease-holder") {
-                Server = Assembly.LoadFrom(Path.GetFullPath(args[1]));
-                return LeaseFixture(new[] { args[1], "lease-holder", args[2], args[3] });
-            }
+
             if(args.Length > 0 && args[0] == "stdin-hex-fixture") {
                 using var input = Console.OpenStandardInput();
                 using var bytes = new MemoryStream();
@@ -192,25 +173,15 @@ internal static partial class Program
                 Console.WriteLine("Exported engine worker catalog: " + Path.GetFullPath(args[3]));
                 return 0;
             }
-            if (args.Length >= 2 && args[1] == "descriptor-catalog-only") {
-                ToolDescriptorChecks.Run(Server, (ok, message) => { Check(ok, message); Passed++; });
-                Console.WriteLine("COMPLETE: " + Passed + " descriptor catalog checks passed");
-                return 0;
-            }
-            if (args.Length >= 2 && args[1] == "check-modes-self-test")
-                return CheckModeSelfTests.Run(Server);
+
             if (args.Length >= 2 && new[] { "host-build-no-tia", "packaged-start-no-tia", "http-start-no-tia" }.Contains(args[1]))
                 return FoundationHostChecks.Run(Server, args[1] == "packaged-start-no-tia");
             if (args.Length >= 2 && new[] { "concurrency-only", "staging-sessions-only" }.Contains(args[1]))
                 return FoundationHostChecks.Suites("engine-host");
-            if(args.Length > 1 && args[1] == "test-download-route")
-                return DeveloperChecks.DownloadRoute(Server, args.Length > 2 ? args[2] : "");
+
             if(args.Length > 1 && args[1] == "test-match-plc-name")
                 return DeveloperChecks.MatchPlcName(Server);
-            if(args.Length > 2 && args[1] == "test-migration-read-assembly")
-                return DeveloperChecks.MigrationReadAssembly(Server, args[2]);
-            if(args.Length > 2 && args[1] == "test-ecosystem-assembly")
-                return DeveloperChecks.EcosystemAssembly(Server, args[2], args.Skip(3).ToArray());
+
             if(args.Length > 2 && args[1] == "generate-tools-list")
                 return DeveloperChecks.GenerateToolsList(Server, args[2], args.Length > 3 ? args[3] : "", args.Length > 4 ? args[4] : "",
                     args.Length > 5 ? args[5] : "", args.Length > 6 ? args[6] : "");
@@ -230,78 +201,9 @@ internal static partial class Program
                 return 0;
             }
             if(args.Length > 1 && args[1] == "child-stdin-only") { await ChildStdinTests(); return 0; }
-            if (args.Length > 1 && args[1] == "example-library-only") {
-                void Counted(bool ok, string message) { Check(ok, message); Passed++; }
-                string release = args.Length > 2 ? args[2] : FindServerType(Server, "TiaMcpServer.Siemens.EngineRouter")
-                    .GetField("CompiledTiaMajorVersion", All)!.GetValue(null)!.ToString()!;
-                var index = GetToolUsage();
-                var parsePatch = FindServerType(Server, "TiaMcpServer.ModelContextProtocol.McpServer")
-                    .GetMethod("ParsePatchSpec", All)!;
-                foreach (string invalidSpec in new[] { "null", "{" })
-                {
-                    try
-                    {
-                        parsePatch.Invoke(null, new object[] { invalidSpec });
-                        Counted(false, "Patch spec must reject invalid JSON before any native call.");
-                    }
-                    catch (TargetInvocationException error)
-                    {
-                        string expectedType = invalidSpec == "null"
-                            ? "System.Text.Json.JsonException" : "System.Text.Json.JsonReaderException";
-                        Counted(error.InnerException?.GetType().FullName == expectedType,
-                            "Patch spec rejects null and malformed JSON with JsonException.");
-                    }
-                }
-                Counted(IsV4ForRelease(index, release), "GetToolUsage index has the selected release V4 envelope");
-                var indexData = AsObject(index["data"]);
-                Counted(Convert.ToInt32(indexData["toolCount"]) > 0 && AsArray(indexData["tools"]).Length > 0,
-                    "GetToolUsage index returns registered tools");
 
-                foreach (var languageCode in new[] { "scl", "scl-sd", "lad", "fbd", "mixed", "db", "udt", "s7res", "stl", "graph", "hmi-javascript", "hmi-vbscript", "csharp" })
-                {
-                    var library = GetToolUsage(language: languageCode);
-                    var data = AsObject(library["data"]);
-                    Counted(IsV4ForRelease(library, release)
-                        && (AsArray(data["examples"]).Length > 0 || data.ContainsKey("sourceDocuments")),
-                        "GetToolUsage loads " + languageCode + " examples for the selected engine");
-                }
-
-                var perTool = GetToolUsage(toolName: "CreateDevice"); // a registered tool whose example has arguments on both engines
-                Counted(IsV4ForRelease(perTool, release), "GetToolUsage per-tool result has the selected release");
-                var example = AsObject(AsObject(perTool["data"])["example"]);
-                var arguments = AsObject(AsObject(AsObject(example["request"])["params"])["arguments"]);
-                Counted(example["kind"].ToString() == "parameterized-call-example" && arguments.Count > 0,
-                    "GetToolUsage returns typed arguments for a registered tool");
-
-                var language = GetToolUsage(language: "scl", exampleKind: "language");
-                Counted(IsV4ForRelease(language, release) && AsArray(AsObject(language["data"])["examples"])
-                    .Select(AsObject).Any(row => Convert.ToBoolean(row["releaseMatches"]) && Convert.ToBoolean(row["profileMatches"])),
-                    "GetToolUsage lists an SCL example matching the selected release");
-                var source = GetToolUsage(exampleId: "scl-add", exampleKind: "language");
-                var sourceRow = AsObject(AsArray(AsObject(source["data"])["examples"]).First());
-                Counted(IsV4ForRelease(source, release) && Convert.ToBoolean(sourceRow["releaseMatches"])
-                    && Convert.ToBoolean(sourceRow["profileMatches"]) && AsArray(sourceRow["files"]).Length > 0,
-                    "GetToolUsage returns the complete release-matched language source");
-
-                var sequenceId = "sequence/plc-scl-block";
-                var sequence = GetToolUsage(exampleId: sequenceId, exampleKind: "sequence");
-                var sequenceRow = AsObject(AsArray(AsObject(sequence["data"])["examples"]).First());
-                Counted(IsV4ForRelease(sequence, release) && Convert.ToBoolean(sequenceRow["releaseMatches"])
-                    && Convert.ToBoolean(sequenceRow["available"]) && AsArray(sequenceRow["steps"]).Length > 0,
-                    "GetToolUsage returns a registered sequence for the selected engine release");
-
-                var search = GetToolUsage(query: "openness-base");
-                Counted(IsV4ForRelease(search, release) && AsArray(AsObject(search["data"])["matches"])
-                    .Select(AsObject).Any(row => row["id"].ToString() == "guides/skills/openness-base/SKILL.md"),
-                    "GetToolUsage official-document search is scoped to the selected release");
-                Console.WriteLine("COMPLETE: " + Passed + " GetToolUsage index/example/language/sequence/reference checks; no native calls");
-                return 0;
-            }
-            if (args.Length >= 3 && args[1] == "native-diagnostics-only") { NativeDiagnosticsJit(args[2]); return 0; }
-            if (args.Length > 1 && args[1] == "lease-holder") return LeaseFixture(args);
-            if (args.Length > 1 && args[1] == "process-leases-only") { await ProcessLeaseTests(); return 0; }
             if(args.Length > 1 && args[1] == "worker-supervisor-only") return FoundationHostChecks.Suites("worker-robustness");
-            if(args.Length >= 3 && (args[1] == "software-lookup-only" || args[1] == "engineering-api-only" || args[1] == "hardware-contracts-only")) {
+            if(args.Length >= 3 && (args[1] == "engineering-api-only" || args[1] == "hardware-contracts-only")) {
                 string api=Path.GetFullPath(args[2]);
                 AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
                     string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
@@ -348,9 +250,6 @@ internal static partial class Program
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }
-                SoftwareLookupRuntimeTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
-                Console.WriteLine("COMPLETE: " + Passed + " software lookup checks passed");
-                return 0;
             }
             if(args.Length >= 4 && args[1] == "offline-contracts-only") {
                 string api=Path.GetFullPath(args[2]);
@@ -375,58 +274,7 @@ internal static partial class Program
                 Console.WriteLine("COMPLETE: " + Passed + " V4 usage contract checks passed");
                 return 0;
             }
-            if(args.Length >= 3 && args[1] == "runtime-settings-only") {
-                string api=Path.GetFullPath(args[2]);
-                AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
-                    string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
-                    return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
-                };
-                RuntimeSettingsRuntimeTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
-                Console.WriteLine("COMPLETE: " + Passed + " runtime settings checks passed");
-                return 0;
-            }
-            if(args.Length >= 3 && args[1] == "graphic-selection-only") {
-                string api=Path.GetFullPath(args[2]);
-                AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
-                    string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
-                    return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
-                };
-                GraphicSelectionRuntimeTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
-                Console.WriteLine("COMPLETE: " + Passed + " graphical selection checks passed");
-                return 0;
-            }
-            if(args.Length >= 3 && args[1] == "global-script-only") {
-                string api=Path.GetFullPath(args[2]);
-                AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
-                    string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
-                    return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
-                };
-                GlobalScriptBridgeTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
-                Console.WriteLine("COMPLETE: " + Passed + " global script bridge checks passed");
-                return 0;
-            }
-            if(args.Skip(1).Contains("hmi-snapshot-only")) {
-                HmiSnapshotRemotingTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
-                Console.WriteLine("COMPLETE: " + Passed + " HMI snapshot remoting checks passed");
-                return 0;
-            }
-            if(args.Skip(1).Contains("native-export-only")) {
-                NativeExportRemotingTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
-                Console.WriteLine("COMPLETE: " + Passed + " native export remoting checks passed");
-                return 0;
-            }
-            if(args.Skip(1).Contains("hmi-only")) {
-                var refs=Server.GetReferencedAssemblies().Where(x=>x.Name!.StartsWith("Siemens.Engineering")).ToArray();
-                int major = int.Parse(args[2]);
-                Check(refs.Length>0 && refs.All(x=>x.Version!.Major==major),"Wrong TIA reference version");
-                Check(System.Diagnostics.FileVersionInfo.GetVersionInfo(exe).FileVersion==args[3],"Wrong fixed file version");
-                TiaMcpServer.Siemens.HmiScreenTraversal.EngineType=Server.GetType("TiaMcpServer.Siemens.HmiScreenTraversal",true)!;
-                int failures=0;
-                TiaMcp.Engine.Tests.HmiScreenTraversalTests.Run((ok,name)=>{if(ok)Passed++;else{failures++;Console.Error.WriteLine("FAIL "+name);}});
-                Check(failures==0 && Passed==18,"HMI traversal regression failed");
-                Console.WriteLine("PASS actual V" + major + " EXE " + args[3] + ": 18 HMI traversal assertions, 0 failed");
-                return 0;
-            }
+
             await ChildStdinTests();
             return FoundationHostChecks.Run(Server);
         } catch(Exception ex) { Console.Error.WriteLine(ex); return 1; }

@@ -229,13 +229,9 @@ internal sealed class PrepareBuild
 
     private void TestProducers()
     {
-        Build("tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj", "diagnostics-tests");
-        Build("tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj", "api-compile-checks");
-        Build("tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj", "adapter-diagnostics-tests");
         Build("tests/FoundationHost/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj", "harness");
-        Build("tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj", "transport-fixture");
         var fixtures = new List<Project>();
-        foreach (var unit in PlcWorkerFixtures.Builds(PlcWorkerFixtures.Keys))
+        foreach (var unit in PlcWorkerFixtures.Builds(["20", "21"]))
         {
             var props = string.Join(';', new[] { "TiaReleaseKey=" + unit.Release,
                 "SiemensEngineeringDirectory=" + Path.Combine(context.PublicApiRoot, ReleaseCommands.PlcWorkerApi(unit.Release).Directory) }
@@ -245,21 +241,13 @@ internal sealed class PrepareBuild
             fixtures.Add(project);
         }
         BuildTable("plc-fixtures", fixtures);
-        foreach (var unit in PlcWorkerFixtures.Builds(PlcWorkerFixtures.Keys))
+        foreach (var unit in PlcWorkerFixtures.Builds(["20", "21"]))
         {
             var worker = unit.Worker(Path.Combine(context.Logs, "plc-fixtures"));
             RequireWorkerMetadata(WorkerAssemblyMetadata.Read(worker), unit.Release, fixture: true, policy: null, worker);
             VerifyAdapter(Path.Combine(Path.GetDirectoryName(worker)!, $"TiaMcp.Adapter.{unit.Release}.dll"),
                 "fixture-adapter-" + unit.Release + "-" + unit.Variant);
         }
-        foreach (var key in new[] { "20", "21" })
-            Build($"tests/FoundationHost/TiaMcp.Engine.Native.Tests/V{key}/TiaMcp.Engine.Native.Tests.V{key}.csproj", "native-tests-" + key,
-                "-p:SiemensEngineeringDirectory=" + Path.Combine(context.PublicApiRoot, ReleaseCommands.PlcWorkerApi(key).Directory));
-        // Runfile producers are serialized because their project references can share
-        // outputs. The SDK rejects -m for file apps; use its normal build entry point.
-        foreach (var program in FileBasedPrograms.Discover(context.Root))
-            RunDotnet("file-" + Path.GetFileNameWithoutExtension(program), ["build", Path.Combine(context.Root, program), "-c", "Release", "--nologo",
-                "-p:TiaMcpCollectFileBasedPrograms=true", .. properties]);
     }
 
     internal static void RequireWorkerMetadata(IReadOnlyDictionary<string, string?> metadata, string key, bool fixture, string? policy, string worker)

@@ -9,83 +9,51 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class PrepareChecksTests
 {
     [Theory]
-    [InlineData("suite")]
     [InlineData("check")]
     [InlineData("plc")]
-    [InlineData("producer")]
     public void FailureRunsLaterJobsAndNeverWritesCandidate(string failure)
     {
         using var tree = new StaticTree();
         var context = Context(tree.Root);
         var package = Package(context);
-        var events = new List<string>();
-        var catalog = new JsonObject { ["first"] = Suite(), ["later"] = Suite() };
-        tree.Write("fixture.csproj", "<Project />");
+        var events = new System.Collections.Concurrent.ConcurrentBag<string>();
         PrepareCheckJob Job(string name) => new(name, () =>
         {
             events.Add(name);
             if (name == failure) throw new ReleaseException("failed " + name);
             return new(name, 0, "passed", "");
         });
-        var plan = new PrepareCheckPlan([Job("producer")], [Job("check"), Job("plc"), Job("plc-later")],
-            [Job("exclusive")], [Job("post")]);
-        CommandResult Process(string exe, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
-        {
-            var args = arguments.ToArray();
-            Assert.Equal(context.CompanionPython, env!["TIA_MCP_PLC_TOOLS_PYTHON"]);
-            Assert.NotEqual(Path.Combine(tree.Root, "temp"), env["TEMP"]);
-            if (args[0] == "build") return new(0, "", "");
-            var directory = args[Array.IndexOf(args, "--results-directory") + 1];
-            var name = Path.GetFileName(directory);
-            events.Add(name);
-            WriteTrx(Path.Combine(directory, name + ".trx"), 2, 0);
-            return new(failure == "suite" && name == "first" ? 1 : 0, "finished", "");
-        }
+        var plan = new PrepareCheckPlan([Job("check"), Job("plc"), Job("later")]);
         var error = Assert.Throws<ReleaseException>(() => Prepare.Complete(context, package, Options(), Environment(tree.Root),
             () => throw new InvalidOperationException("clean-tree must not run after failure"),
-            () => PrepareChecks.Execute(context, package, Environment(tree.Root), plan, catalog, Process,
-                runtimeCheck: () => events.Add("runtime-bytes")),
+            () => PrepareChecks.Execute(context, package, plan, runtimeCheck: () => events.Add("runtime-bytes")),
             _ => throw new InvalidOperationException("upload must not run")));
-        Assert.Contains(failure == "suite" ? "first" : failure, error.Message);
-        foreach (var name in new[] { "producer", "first", "later", "check", "plc", "plc-later", "exclusive", "post", "runtime-bytes" })
-            Assert.Contains(name, events);
-        Assert.True(events.IndexOf("producer") < events.IndexOf("first"));
+        Assert.Contains(failure, error.Message);
+        foreach (var name in new[] { "check", "plc", "later", "runtime-bytes" }) Assert.Contains(name, events);
         Assert.False(File.Exists(Path.Combine(context.OutputDirectory, "candidate.json")));
     }
 
-    [Theory]
-    [InlineData(1, 0, false)]
-    [InlineData(2, 1, false)]
-    [InlineData(2, 0, true)]
-    public void CandidateRequiresRegisteredPassedAndSkippedGates(int passed, int skipped, bool success)
+    [Fact]
+    public void NoComposedCommandStartsASuite()
     {
         using var tree = new StaticTree();
-        var catalog = new JsonObject { ["fixture"] = Suite() };
-        WriteTrx(tree.Write("fixture/fixture.trx", ""), passed, skipped);
-        if (success)
+        var calls = new List<(string Exe, string[] Args)>();
+        var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
+            (exe, arguments, _, _, _) =>
+            {
+                calls.Add((exe, arguments.ToArray()));
+                return new(1, "", "injected process failure");
+            });
+        foreach (var job in plan.Jobs) Assert.Throws<ReleaseException>(() => job.Run());
+        // The write guard checks both the denied write and the allowed read.
+        Assert.Equal(plan.Jobs.Length + 1, calls.Count);
+        Assert.All(calls, call =>
         {
-            var result = PrepareChecks.RequireResults(catalog, tree.Root, ["a"], new Dictionary<string, string>());
-            Assert.Equal(passed, (int)result.Suites["fixture"]!["passed"]!);
-            Assert.Equal(skipped, (int)result.Suites["fixture"]!["skipped"]!);
-        }
-        else Assert.Throws<ReleaseException>(() => PrepareChecks.RequireResults(catalog, tree.Root, [], new Dictionary<string, string>()));
-    }
-
-    [Theory]
-    [InlineData("adapter-inputs", "input-results.json")]
-    [InlineData("worker-isolation", "worker-isolation-results.json")]
-    public void SuccessfulProducerRequiresItsResultFile(string name, string file)
-    {
-        using var tree = new StaticTree();
-        var context = Context(tree.Root);
-        var plan = ReleaseCommands.PrepareCheckJobs(context, Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
-            (_, _, _, _, _) => new(0, "passed", ""));
-        var job = Assert.Single(plan.Producers, item => item.Name == name);
-        Assert.Contains(file, Assert.Throws<ReleaseException>(() => job.Run()).Message);
-        var path = Path.Combine(context.Logs, "tests", name, file);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, "{}");
-        Assert.Equal(0, job.Run().ExitCode);
+            Assert.NotEqual("test-suites", call.Exe);
+            Assert.DoesNotContain("test-suites", call.Args);
+            Assert.DoesNotContain("test", call.Args);
+            Assert.DoesNotContain("build", call.Args);
+        });
     }
 
     [Fact]
@@ -96,7 +64,7 @@ public sealed class PrepareChecksTests
         var package = Package(context);
         var clean = false;
         var uploaded = false;
-        var checks = new PrepareCheckResults(new JsonObject { ["fixture"] = new JsonObject { ["passed"] = 2, ["skipped"] = 0 } }, ["product-smoke"]);
+        var checks = new PrepareCheckResults(["product-smoke"]);
         Assert.Equal(1, Prepare.Complete(context, package, Options(), Environment(tree.Root), () => clean = true,
             () => checks, path => { uploaded = true; Assert.True(clean); Assert.True(File.Exists(path)); throw new IOException("offline fixture"); }));
         Assert.True(uploaded);
@@ -105,7 +73,7 @@ public sealed class PrepareChecksTests
         Assert.Equal(package.Sha256, read.Digest);
         Assert.Equal(package.Size, read.Size);
         Assert.Equal(package.FileCount, (int)read.Candidate["fileCount"]!);
-        Assert.True(JsonNode.DeepEquals(checks.Suites, read.Candidate["suites"]));
+        Assert.False(read.Candidate.ContainsKey("suites"));
         Assert.Equal("product-smoke", (string?)read.Candidate["checks"]![0]);
         Assert.True(DateTimeOffset.TryParse((string?)read.Candidate["finishedUtc"], out _));
         await read.VerifyAsync(default);
@@ -123,7 +91,7 @@ public sealed class PrepareChecksTests
         var clean = 0;
         var options = Options(buildOnly ? "-BuildOnly" : "-NoDraftUpload");
         Assert.Equal(0, Prepare.Complete(context, package, options, Environment(tree.Root), () => clean++,
-            () => { checks++; return new(new JsonObject(), []); }, _ => throw new InvalidOperationException("No upload expected")));
+            () => { checks++; return new([]); }, _ => throw new InvalidOperationException("No upload expected")));
         Assert.Equal(buildOnly ? 0 : 1, checks);
         Assert.Equal(buildOnly ? 0 : 1, clean);
         Assert.Equal(!buildOnly, File.Exists(Path.Combine(context.OutputDirectory, "candidate.json")));
@@ -135,7 +103,7 @@ public sealed class PrepareChecksTests
         using var tree = new StaticTree();
         var context = Context(tree.Root);
         var package = Package(context);
-        var checks = new PrepareCheckResults(new JsonObject(), []);
+        var checks = new PrepareCheckResults([]);
         Assert.Throws<ReleaseException>(() => Prepare.Complete(context, package, Options("-NoDraftUpload"), Environment(tree.Root),
             () => throw new ReleaseException("dirty"), () => checks));
         File.AppendAllText(package.ZipPath, "changed");
@@ -155,51 +123,15 @@ public sealed class PrepareChecksTests
     }
 
     [Fact]
-    public void PrepareKeepsUsageExecutionWithoutRequiringAnOldReceipt()
-    {
-        using var tree = new StaticTree();
-        var job = new PlcReleaseJob("usage-v20-plc", "resource-discovery", "python", ["--coverage-output", "missing.json"], Release: "20");
-        var calls = 0;
-        var passed = new CommandResult(0, "offline examples passed", "");
-        ReleaseCommands.RunPlcReleaseJobs([job], tree.Root, tree.Root, _ => { calls++; return passed; }, (_, _) => { });
-        Assert.Equal(1, calls);
-        ReleaseCommands.ValidatePlcReleaseJob(job, passed, tree.Root, tree.Root);
-        Assert.Throws<ReleaseException>(() => ReleaseCommands.RunPlcReleaseJobs([job], tree.Root, tree.Root,
-            _ => new(1, "", "example failed"), (_, _) => { }));
-    }
-
-    [Fact]
     public void ComposedInventoryContainsExactlyTheRetainedChecks()
     {
         using var tree = new StaticTree();
         var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root));
-        var actual = All(plan).Select(job => job.Name).Order().ToArray();
-        var expected = new List<string> { "plc-file-programs", "configuration-build", "adapter-inputs", "worker-isolation", "native-diagnostics", "product-smoke", "relocated-bundle",
-            "bundled-runtime-foundation-host", "bundled-runtime-studio", "bundle-write-guard", "foundation-approval", "configuration-page",
-            "native-mcp-session-self-test", "nativelifecycle-self-test", "foundation-transport", "foundation-transport-plc" };
-        foreach (var key in PlcWorkerFixtures.Keys)
-            expected.AddRange(["weave-v" + key + "-bundle", "contracts-v" + key]);
-        foreach (var key in new[] { "20", "21" })
-        {
-            expected.Add("approval-v" + key + "-bundle");
-            foreach (var name in new[] { "native-coverage", "adapter-native-coverage", "jit-adapter-coverage", "worker-robustness", "engine-host", "engineering-api",
-                "native-safety", "worker-protocol", "resources", "ecosystem", "usage", "campaign-inputs", "contracts-stdio", "contracts-http", "contracts-source-stdio", "contracts-source-http" })
-                expected.Add(name + "-v" + key + "-plc");
-            foreach (var mode in new[] { "example-library-only", "software-lookup-only", "http", "hmi-only", "native-diagnostics-only", "process-leases-only",
-                "native-export-only", "hmi-snapshot-only", "global-script-only", "graphic-selection-only", "runtime-settings-only", "test-migration-read-assembly",
-                "test-ecosystem-assembly", "descriptor-catalog-only", "check-modes-self-test" })
-                expected.Add("harness-v" + key + "-" + mode + "-plc");
-            if (key == "21") expected.AddRange(["harness-v21-test-download-route-plc", "harness-v21-test-match-plc-name-plc"]);
-        }
-        Assert.Equal(expected.Order(), actual);
-        Assert.Equal(actual.Length, actual.Distinct().Count());
-        Assert.All(plan.Producers.Where(job => job.Name.Contains("coverage", StringComparison.Ordinal)), job => Assert.DoesNotContain(job, plan.Jobs));
-        var catalog = DotnetSuites.LoadCatalog(Path.Combine(Repository.FindRoot(), "tests/test-suites.json"), Repository.FindRoot());
-        Assert.Equal(38, catalog.Count);
-        var concurrentNames = ReleaseSuiteStage.Groups(catalog)
-            .Select(group => group.Where(name => name is not ("studio-gui" or "updater") && !ReleaseFoundationStage.Names.Contains(name)).ToArray())
-            .Where(group => group.Length != 0).Select(group => group[0]).Concat(plan.Jobs.Select(job => job.Name)).ToArray();
-        Assert.Equal(concurrentNames.Length, concurrentNames.Distinct(StringComparer.Ordinal).Count());
+        var expected = new[] { "product-smoke", "relocated-bundle", "bundled-runtime-foundation-host", "bundled-runtime-studio",
+            "bundle-write-guard", "foundation-approval", "approval-v20-bundle", "approval-v21-bundle", "native-mcp-session-self-test", "nativelifecycle-self-test" }
+            .Concat(PlcWorkerFixtures.Keys.SelectMany(key => new[] { "weave-v" + key + "-bundle", "contracts-v" + key }));
+        Assert.Equal(expected.Order(), All(plan).Select(job => job.Name).Order());
+        Assert.Equal(38, DotnetSuites.LoadCatalog(Path.Combine(Repository.FindRoot(), "tests/test-suites.json"), Repository.FindRoot()).Count);
     }
 
     [Fact]
@@ -216,15 +148,15 @@ public sealed class PrepareChecksTests
             Console.SetOut(output);
             Console.SetError(output);
             var plan = new PrepareCheckPlan(
-                [new("producer", () => new("producer", 1, "producer reason\nproducer details", ""))],
-                [new("check", () => throw new ReleaseException("check reason\ncheck details"))], [], []);
+                [new("producer", () => new("producer", 1, "producer reason\nproducer details", "")),
+                 new("check", () => throw new ReleaseException("check reason\ncheck details"))]);
             Assert.Equal(1, Prepare.RunWithTimings(() =>
             {
                 PrepareTimings.Record("slow", 9);
                 PrepareTimings.Record("fast", 1);
                 try
                 {
-                    PrepareChecks.Execute(context, package, Environment(tree.Root), plan, new JsonObject(),
+                    PrepareChecks.Execute(context, package, plan,
                         runtimeCheck: () => throw new IOException("runtime reason\nruntime details"));
                     return 0;
                 }
@@ -239,8 +171,7 @@ public sealed class PrepareChecksTests
         Assert.True(Array.IndexOf(timingLines, "PREPARE timing slow: 9.0 s") < Array.IndexOf(timingLines, "PREPARE timing fast: 1.0 s"));
         Assert.True(Array.IndexOf(lines, "cleanup complete") < Array.IndexOf(lines, timingLines[0]));
         Assert.Equal(new[] { "PREPARE failed jobs:", "FAIL check: TiaMcp.ReleaseTool.ReleaseException: check reason",
-            "FAIL producer: producer reason", "FAIL runtime-bytes: System.IO.IOException: runtime reason",
-            "FAIL suites-and-checks: Release test stage failed: check" }, lines.TakeLast(5));
+            "FAIL producer: producer reason", "FAIL runtime-bytes: System.IO.IOException: runtime reason" }, lines.TakeLast(4));
     }
 
     [Theory]
@@ -272,40 +203,6 @@ public sealed class PrepareChecksTests
     }
 
     [Fact]
-    public void FailedSuiteIsReportedEvenWhenItsTrxPasses()
-    {
-        using var tree = new StaticTree();
-        tree.Write("fixture.csproj", "<Project />");
-        var context = Context(tree.Root);
-        var package = Package(context);
-        var savedOut = Console.Out;
-        var savedError = Console.Error;
-        using var output = new StringWriter();
-        try
-        {
-            Console.SetOut(output);
-            Console.SetError(output);
-            Assert.Equal(1, Prepare.RunWithTimings(() =>
-            {
-                PrepareChecks.Execute(context, package, Environment(tree.Root), new([], [], [], []),
-                    new JsonObject { ["first"] = Suite() }, (_, arguments, _, _) =>
-                    {
-                        var args = arguments.ToArray();
-                        if (args[0] == "build") return new(0, "", "");
-                        var directory = args[Array.IndexOf(args, "--results-directory") + 1];
-                        WriteTrx(Path.Combine(directory, "first.trx"), 2, 0);
-                        return new(1, "suite reason\nfull suite details", "");
-                    }, runtimeCheck: () => { });
-                return 0;
-            }));
-        }
-        finally { Console.SetOut(savedOut); Console.SetError(savedError); }
-        var summary = output.ToString().Split("PREPARE failed jobs:", StringSplitOptions.None)[1];
-        Assert.Contains("FAIL suite-first-test: suite reason" + System.Environment.NewLine, summary);
-        Assert.DoesNotContain("full suite details", summary);
-    }
-
-    [Fact]
     public void EveryPreparedVerificationUsesTheFrozenWeaver()
     {
         using var tree = new StaticTree();
@@ -321,18 +218,14 @@ public sealed class PrepareChecksTests
             || job.Name.StartsWith("adapter-native-coverage-", StringComparison.Ordinal)
             || job.Name.StartsWith("jit-adapter-coverage-", StringComparison.Ordinal)))
             Assert.Throws<ReleaseException>(() => job.Run());
-        Assert.Equal(14, calls.Count);
+        Assert.Equal(8, calls.Count);
         Assert.All(calls, args =>
         {
             Assert.Equal("verify", args[1]);
             Assert.Equal(Path.Combine(tree.Root, "runtime/verification/NativeCallWeaver.dll"), args[0]);
             Assert.DoesNotContain("bin/Release", args[0]);
         });
-        var legacy = ReleaseCommands.PlcReleaseJobs(tree.Root, "sdk", "logs", "temp", "dotnet", "python")
-            .Where(job => job.Arguments.Contains("verify")).ToArray();
-        Assert.Equal(6, legacy.Length);
-        Assert.All(legacy, job => Assert.Equal(Path.Combine(tree.Root,
-            "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"), job.Arguments[0]));
+
     }
 
     [Fact]
@@ -410,8 +303,7 @@ public sealed class PrepareChecksTests
     [Theory]
     [InlineData("native-mcp-session-self-test", "COMPLETE: 7 native MCP safety checks passed")]
     [InlineData("nativelifecycle-self-test", "COMPLETE: 0 native supervisor checks passed; live TIA tests NOT RUN")]
-    [InlineData("configuration-page", "Passed: 156")]
-    public void NativeAndConfigurationCountsAreNotOnlyExitCodeChecks(string name, string output)
+    public void NativeSelfTestCountsAreNotOnlyExitCodeChecks(string name, string output)
     {
         using var tree = new StaticTree();
         var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
@@ -430,37 +322,15 @@ public sealed class PrepareChecksTests
     }
 
     [Fact]
-    public void RealPlcJobWrappersContinueAfterAProcessFailure()
-    {
-        using var tree = new StaticTree();
-        var context = Context(tree.Root);
-        var calls = new List<string>();
-        var composed = ReleaseCommands.PrepareCheckJobs(context, Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
-            (exe, args, cwd, env, input) =>
-            {
-                calls.Add(string.Join(" ", args));
-                return new(1, "", "injected PLC process failure");
-            });
-        var jobs = composed.Jobs.Where(job => job.Name is "native-safety-v20-plc" or "native-safety-v21-plc").ToArray();
-        Assert.Equal(2, jobs.Length);
-        var error = Assert.Throws<ReleaseException>(() => PrepareChecks.Execute(context, Package(context), Environment(tree.Root),
-            new([], jobs, [], []), new JsonObject(), runtimeCheck: () => { }));
-        Assert.Equal(2, calls.Count);
-        Assert.Contains("native-safety-v20-plc", error.Message);
-        Assert.Contains("native-safety-v21-plc", error.Message);
-    }
-
-    [Fact]
     public void RetiredHostParityJobsAreNotScheduled()
     {
         using var tree = new StaticTree();
         var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root));
-        Assert.DoesNotContain(plan.Producers, job => job.Name == "host-parity-build");
-        Assert.DoesNotContain(plan.Producers.Concat(plan.Jobs).Concat(plan.Exclusive).Concat(plan.PostSuites), job => job.Name == "host-behavior-parity");
+        Assert.DoesNotContain(plan.Jobs, job => job.Name is "host-parity-build" or "host-behavior-parity");
     }
 
     [Fact]
-    public void FileProgramsUseTheirPreparedCacheAndApprovalUsesAllBundleHosts()
+    public void ApprovalUsesAllBundleHostsAndPreparedWorkers()
     {
         using var tree = new StaticTree();
         var context = Context(tree.Root);
@@ -471,13 +341,9 @@ public sealed class PrepareChecksTests
             calls.Add((args.ToArray(), new Dictionary<string, string?>(env)));
             return new(1, "", "stop before fixture validation");
         });
-        // The fake fails the first compiler invocation; its environment must still
-        // name the same cache the later harness processes read.
-        Assert.Throws<ReleaseException>(() => plan.Producers.Single(job => job.Name == "plc-file-programs").Run());
-        Assert.Equal(Path.Combine(tree.Root, "temp", "file-apps"), calls[0].Env["TEMP"]);
         foreach (var name in new[] { "foundation-approval", "approval-v20-bundle", "approval-v21-bundle" })
             Assert.Throws<ReleaseException>(() => plan.Jobs.Single(job => job.Name == name).Run());
-        var foundation = calls[1];
+        var foundation = calls[0];
         Assert.Contains("foundation", foundation.Args);
         Assert.Contains(Path.Combine(bundle, "runtime"), foundation.Args);
         foreach (var key in new[] { "20", "21" })
@@ -566,38 +432,26 @@ public sealed class PrepareChecksTests
     }
 
     [Fact]
-    public void SuiteTimingNamesAndLocalOnlyNextCommandIdentifyTheRealWork()
+    public void PackageChecksDoNotReadOrStartSuitesAndLocalOnlyNamesUploadCommand()
     {
         using var tree = new StaticTree();
         var context = Context(tree.Root);
-        tree.Write("fixture.csproj", "<Project />");
-        var catalog = new JsonObject { ["first"] = Suite(), ["later"] = Suite() };
+        var package = Package(context);
         var saved = Console.Out;
         using var output = new StringWriter();
         try
         {
             Console.SetOut(output);
-            Assert.Equal(0, Prepare.Complete(context, Package(context), Options("-NoDraftUpload"), Environment(tree.Root), () => { },
-                () => PrepareChecks.Execute(context, Package(context with { OutputDirectory = Path.Combine(tree.Root, "other") }), Environment(tree.Root),
-                    new([], [], [], []), catalog, (_, arguments, _, _) =>
-                    {
-                        var args = arguments.ToArray();
-                        if (args[0] == "test")
-                        {
-                            var directory = args[Array.IndexOf(args, "--results-directory") + 1];
-                            WriteTrx(Path.Combine(directory, Path.GetFileName(directory) + ".trx"), 2, 0);
-                        }
-                        return new(0, "", "");
-                    }, runtimeCheck: () => { })));
+            Assert.Equal(0, Prepare.Complete(context, package, Options("-NoDraftUpload"), Environment(tree.Root), () => { },
+                () => PrepareChecks.Execute(context, package, new([new("fixture", () => new("fixture", 0, "passed", ""))]), runtimeCheck: () => { })));
         }
         finally { Console.SetOut(saved); }
-        Assert.Contains("PREPARE suite-first-test:", output.ToString());
-        Assert.Contains("PREPARE suite-later-test:", output.ToString());
         Assert.Contains("dotnet run --no-build --project build-tools/release -- upload-draft -Version " + context.Version, output.ToString());
+        Assert.DoesNotContain("suite-", output.ToString());
         Assert.DoesNotContain("publish-prepared", output.ToString());
     }
 
-    private static IEnumerable<PrepareCheckJob> All(PrepareCheckPlan plan) => plan.Producers.Concat(plan.Jobs).Concat(plan.Exclusive).Concat(plan.PostSuites);
+    private static IEnumerable<PrepareCheckJob> All(PrepareCheckPlan plan) => plan.Jobs;
     private static PrepareContext Context(string root) => new(root, "4.0.0-beta.3", Path.Combine(root, "sdk"), null,
         "python", "companion-python", Path.Combine(root, "prepared"), new(2026, 11, 3), 1);
     private static Dictionary<string, string?> Environment(string root) => new() { ["TEMP"] = Path.Combine(root, "temp") };

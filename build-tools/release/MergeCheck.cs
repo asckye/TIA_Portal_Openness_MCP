@@ -12,7 +12,7 @@ internal static class MergeCheck
     internal const string ConfigurationProject = "tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj";
     internal const string DiagnosticsProject = "tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj";
     internal sealed record Evaluation(string[] Inputs, string[] Projects);
-    internal sealed record Job(string Name, string Executable, string[] Arguments, bool Serial = false);
+    internal sealed record Job(string Name, string Executable, string[] Arguments, bool Serial = false, bool PostSuite = false, bool Isolated = false);
     internal sealed class Plan
     {
         internal bool DocsOnly { get; set; }
@@ -194,6 +194,7 @@ internal static class MergeCheck
         foreach (var program in filePrograms.Where(program => plan.Wide || changes.Contains(program, StringComparer.OrdinalIgnoreCase)))
             Reason(plan.Builds, "file:" + program, plan.Wide ? "wide change" : program);
         AddChecks(plan, changes, dotnet, python, api, output);
+        AddWorkerChecks(plan, changes, dotnet, python, api, output);
         return plan;
     }
 
@@ -244,6 +245,89 @@ internal static class MergeCheck
             plan.Checks.Add(new("native-diagnostics", python, ["scripts/checks/Test-NativeDiagnostics.py", "--fixture", "tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe",
                 "--weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll", "--output", Path.Combine(output, "native-diagnostics")], true));
         }
+    }
+
+    internal const string SourceHostProject = "src/FoundationHost/TiaMcp.FoundationHost.csproj";
+    internal const string TransportFixtureProject = "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj";
+    internal const string ApiCompileProject = "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj";
+    internal const string AdapterDiagnosticsProject = "tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj";
+    internal const string CampaignProgram = "scripts/checks/Test-CampaignInputs.cs";
+
+    private static void AddWorkerChecks(Plan plan, string[] changes, string dotnet, string python, string api, string output)
+    {
+        bool transport = plan.Wide || changes.Any(path =>
+            new[] { "src/FoundationHost", "src/EngineHost", "src/WorkerChannel", "src/PlcWorker", "src/Shared",
+                "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture" }.Any(dir => Under(path, dir))
+            || path == "scripts/checks/Test-FoundationTransport.py");
+        bool worker = plan.Wide || changes.Any(path =>
+            new[] { "src/PlcWorker", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/EngineHost", "src/FoundationHost",
+                "src/Shared", "reference/tool-catalog", "reference/tool-examples", "build-tools/native-call-weaver", "tests/FoundationHost/TiaMcp.Engine.Native.Tests",
+                "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks", "tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests" }.Any(dir => Under(path, dir))
+            || path is "scripts/checks/Test-ToolUsage.py" or "scripts/checks/tool_usage_checks.py"
+                or "scripts/checks/Test-CampaignInputs.py" or CampaignProgram
+                or "build-tools/release/CatalogGenerator.cs" or "build-tools/release/CatalogData.cs"
+                or "build-tools/release/ToolUsageGenerator.cs" or "build-tools/release/ToolCountGenerator.cs");
+        if (!transport && !worker) return;
+        var reason = plan.Wide ? "wide change" : string.Join(", ", changes);
+        Reason(plan.Builds, "eight-release-table", reason);
+        Reason(plan.Builds, SourceHostProject, reason);
+        Reason(plan.Builds, "plc-fixtures", reason);
+        var host = "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe";
+        void Py(string name, string script, bool post, params string[] args) =>
+            plan.Checks.Add(new(name, python, ["scripts/checks/" + script, .. args], PostSuite: post, Isolated: true));
+        if (transport)
+        {
+            Reason(plan.Builds, TransportFixtureProject, reason);
+            const string fixture = "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe";
+            Py("foundation-transport", "Test-FoundationTransport.py", true, "--host-exe", host, "--fixture", fixture,
+                "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--temp-root", Path.Combine(output, "transport-temp"),
+                "--output", Path.Combine(output, "transport"));
+            Py("foundation-transport-plc", "Test-FoundationTransport.py", true, "--host-exe", host, "--fixture", fixture,
+                "--plc-worker", "--releases", "14sp1", "15.1", "16", "17", "18", "19", "20", "21",
+                "--plc-sdk-worker", "20=" + ReleaseCommands.ReleasePlcFixture(output, "20"),
+                "--plc-sdk-worker", "21=" + ReleaseCommands.ReleasePlcFixture(output, "21"),
+                "--public-api-root", api, "--temp-root", Path.Combine(output, "transport-plc-temp"), "--output", Path.Combine(output, "transport-plc"));
+        }
+        if (!worker) return;
+        Reason(plan.Builds, ApiCompileProject, reason);
+        Reason(plan.Builds, AdapterDiagnosticsProject, reason);
+        Reason(plan.Builds, "campaign-file-program", reason);
+        foreach (var key in new[] { "20", "21" })
+        {
+            var native = $"tests/FoundationHost/TiaMcp.Engine.Native.Tests/V{key}/TiaMcp.Engine.Native.Tests.V{key}.csproj";
+            Reason(plan.Builds, native, reason);
+            plan.Checks.Add(new("native-safety-v" + key + "-plc",
+                $"tests/FoundationHost/TiaMcp.Engine.Native.Tests/V{key}/bin/Release/net48/TiaMcp.Engine.Native.Tests.V{key}.exe",
+                ["--self-test"], Isolated: true));
+            Py("usage-v" + key + "-plc", "Test-ToolUsage.py", false, "--foundation-host", host,
+                "--plc-worker", key + "=" + ReleaseCommands.ReleasePlcFixture(output, key), "--public-api-root", api,
+                "--releases", key, "--evidence", Path.Combine(output, "usage-v" + key + "-plc"),
+                "--coverage-output", Path.Combine(output, "usage-v" + key + "-plc.json"));
+            Py("campaign-inputs-v" + key + "-plc", "Test-CampaignInputs.py", false, "--exe", host, "--major", key,
+                "--public-api", Path.Combine(api, ReleaseCommands.PlcWorkerApi(key).Directory),
+                "--plc-worker", ReleaseCommands.ReleasePlcFixture(output, key), "--output", Path.Combine(output, "campaign-v" + key + "-plc"));
+        }
+    }
+
+    internal static IDictionary<string, string?> CheckEnvironment(Job job, string output, string api,
+        IDictionary<string, string?> environment)
+    {
+        var result = new Dictionary<string, string?>(environment, StringComparer.OrdinalIgnoreCase);
+        if (!job.Isolated) return result;
+        var directory = Path.GetFullPath(Path.Combine(output, "checks", job.Name));
+        foreach (var child in new[] { "config", "temp", "local-app-data", "app-data" }) Directory.CreateDirectory(Path.Combine(directory, child));
+        File.WriteAllText(Path.Combine(directory, "config/approval.settings"), "enabled=true\ntimeoutSeconds=120\n");
+        result["TIA_MCP_DATA_DIRECTORY"] = directory;
+        result["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(directory, "diagnostics");
+        result["TEMP"] = result["TMP"] = result["TMPDIR"] = Path.Combine(directory, "temp");
+        result["LOCALAPPDATA"] = Path.Combine(directory, "local-app-data");
+        result["APPDATA"] = Path.Combine(directory, "app-data");
+        result["TIA_MCP_RELEASE_TEMP_ROOT"] = Path.GetFullPath(output);
+        result["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api;
+        result["TIA_MCP_WRITE_GUARD"] = "1";
+        result["TIA_MCP_BUNDLE_ROOT"] = result["CLAUDE_PLUGIN_ROOT"] = null;
+        result[ReleaseCommands.PlcReleaseSystemTempVariable] = Path.GetFullPath(Path.Combine(output, "file-apps"));
+        return result;
     }
 
     internal static XDocument Traversal(IEnumerable<string> projects) => new(new XElement("Project",
@@ -381,6 +465,23 @@ internal static class MergeCheck
                     Exec("build-" + kind, dotnet, ["msbuild", path, "-t:Build", "-m:" + parallelism, "-nodeReuse:false", .. properties]);
                 }
             }
+            if (plan.Builds.ContainsKey("plc-fixtures"))
+                foreach (var unit in PlcWorkerFixtures.Builds(["20", "21"]))
+                {
+                    string[] fixtureProperties = [.. unit.Properties(Path.Combine(output, "plc-fixtures")),
+                        "-p:TiaReleaseKey=" + unit.Release,
+                        "-p:SiemensEngineeringDirectory=" + Path.Combine(api, ReleaseCommands.PlcWorkerApi(unit.Release).Directory)];
+                    Exec("fixture-restore-" + unit.Release, dotnet, ["restore", "src/PlcWorker/TiaMcp.PlcWorker.csproj", "-m:1", "-nodeReuse:false", .. properties, .. fixtureProperties]);
+                    Exec("fixture-build-" + unit.Release, dotnet, ["build", "src/PlcWorker/TiaMcp.PlcWorker.csproj", "--no-restore",
+                        "-p:BuildProjectReferences=false", "-m:1", "-nodeReuse:false", .. properties, .. fixtureProperties]);
+                }
+            if (plan.Builds.ContainsKey("campaign-file-program"))
+                Timed("plc-file-programs", () =>
+                {
+                    ReleaseCommands.PreparePlcReleaseFilePrograms(root, dotnet, nuget, Path.Combine(output, "file-app-builds"),
+                        Path.Combine(output, "file-apps"), process);
+                    return new(0, "Campaign validator built.", "");
+                });
             var files = plan.Builds.Keys.Where(key => key.StartsWith("file:", StringComparison.Ordinal)).Select(key => key[5..]);
             var groups = FileBasedPrograms.BuildGroups(root, files);
             if (groups.Length != 0) ParallelPipeline.Run(groups.Select((group, index) => ("file-group-" + index, (Func<PipelineResult>)(() =>
@@ -392,13 +493,13 @@ internal static class MergeCheck
         }
         CommandResult Check(Job job) => Timed(job.Name, () =>
         {
-            var checkEnvironment = new Dictionary<string, string?>(environment, StringComparer.OrdinalIgnoreCase);
+            var checkEnvironment = CheckEnvironment(job, output, api, environment);
             ConfigureTests(checkEnvironment);
             var result = process(job.Executable, job.Arguments, root, checkEnvironment);
             return CheckResult(job.Name, result, output);
         });
         foreach (var job in plan.Checks.Where(job => job.Serial)) Check(job);
-        var additional = plan.Checks.Where(job => !job.Serial).Select(job => (job.Name, (Func<PipelineResult>)(() =>
+        var additional = plan.Checks.Where(job => !job.Serial && !job.PostSuite).Select(job => (job.Name, (Func<PipelineResult>)(() =>
         {
             var result = Check(job); return new(job.Name, result.ExitCode, result.StandardOutput, result.StandardError);
         }))).ToList();
@@ -433,6 +534,10 @@ internal static class MergeCheck
         {
             ReleaseSuiteStage.Run(root, suites, suiteOutput, api, dotnet, nuget, parallelism, SuiteRun,
                 ConfigureTests, additional,
+                postSuiteJobs: plan.Checks.Where(job => job.PostSuite).Select(job => (job.Name, (Func<PipelineResult>)(() =>
+                {
+                    var result = Check(job); return new(job.Name, result.ExitCode, result.StandardOutput, result.StandardError);
+                }))).ToArray(),
                 prebuilt: plan.Builds.Keys.Where(key => key.EndsWith(".csproj", StringComparison.Ordinal)).ToHashSet(StringComparer.OrdinalIgnoreCase));
             return new(0, "", "");
         });
@@ -450,6 +555,9 @@ internal static class MergeCheck
             var file = name == "adapter-inputs" ? "input-results.json" : "worker-isolation-results.json";
             PrepareChecks.RequireEvidence(Path.Combine(output, name, file));
         }
+        if (name.StartsWith("native-safety-", StringComparison.Ordinal)
+            && !System.Text.RegularExpressions.Regex.IsMatch(result.StandardOutput, @"COMPLETE: (\d+) native harness safety checks passed; live TIA tests NOT RUN"))
+            return result with { ExitCode = 1, StandardError = "Native safety check count missing." };
         if (name == "configuration-page")
         {
             var match = System.Text.RegularExpressions.Regex.Match(result.StandardOutput, @"(?m)^Passed: (\d+)\s*$");

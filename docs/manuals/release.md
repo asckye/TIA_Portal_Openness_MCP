@@ -4,7 +4,7 @@
 
 本文说明维护者如何提前构建、检查和上传候选，再在确认后公开预发布，依据 [ADR 0031](../standards/decisions/0031-release-path.md)。
 
-发布分为两个阶段：`prepare` 完成所有耗时工作；`publish-prepared` 使用已上传的候选，在 300 秒内核对、推送提交、打标签并公开。发布阶段不构建、不测试、不打包。
+每个发布候选前，先在主机手动运行 `dotnet run --project build-tools/release -- merge-check -All`，完成全部 38 个注册套件和源码检查；数量门槛保持不变。发布分为两个阶段：`prepare` 完成所有耗时工作；`publish-prepared` 使用已上传的候选，在 300 秒内核对、推送提交、打标签并公开。发布阶段不构建、不测试、不打包。
 
 实施状态：master 已含 NEW-REL-A 的构建打包、NEW-REL-B 的完整检查与候选、NEW-REL-C 的上传和公开命令。`prepare -BuildOnly` 只得到 ZIP，不能视为可发布候选，也不能手工补候选记录。
 
@@ -29,11 +29,11 @@
 dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3
 ```
 
-完整准备按顺序完成构建、暂存校验、ZIP 和摘要生成、全部注册套件与发布检查，然后写候选记录并上传私有草稿。检查范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
+完整准备按顺序完成构建、暂存校验、ZIP 和摘要生成，再对提取的 ZIP 运行交付检查，然后写候选记录并上传私有草稿，目标约 15 分钟。注册套件、传输、配置页、原生安全、工具用法与活动输入检查由 `merge-check` 执行，范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 在 `merge-check` 中随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
 
 | 选项 | 用途与边界 |
 |---|---|
-| `-BuildOnly` | 只构建、暂存校验和打包，不运行完整套件与发布检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
+| `-BuildOnly` | 只构建、暂存校验和打包，不运行交付包检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
 | `-NoDraftUpload` | 完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |
 | `-Python`、`-CompanionPython` | 分别指定解码器和 PLC Tools 的解释器绝对路径 |
@@ -42,7 +42,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3
 成功产物位于 `bin-build/prepared/<版本>/`：
 
 - `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip` 和同名 `.sha256`，只生成一次，检查和上传使用相同字节。
-- `candidate.json`：版本、提交、ZIP 路径、SHA-256、大小、文件数、套件通过/跳过数、检查名称和完成时间；上传成功后还含草稿与资产 ID。
+- `candidate.json`：版本、提交、ZIP 路径、SHA-256、大小、文件数、检查名称和完成时间；上传成功后还含草稿与资产 ID。
 - 暂存包及 `logs/`。候选记录和日志留在本机，不提交 Git。
 
 交付文件按 `scripts/operations/delivery-files.json` 过滤，包括八版宿主、worker 和适配器、工作台、工具、用户文档、模板、插件及许可证。暂存阶段生成 `manifest/package-manifest.json`、`delivery.json`、`tools-list.json` 和文件清单 `multi-version-build.json`。旧构建收据不进入新包；`runtime/verification/`、源码、SDK 和私人数据不交付。

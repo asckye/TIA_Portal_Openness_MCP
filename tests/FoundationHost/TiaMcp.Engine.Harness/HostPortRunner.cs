@@ -106,7 +106,6 @@ internal static class HostPortRunner
 
     private static JsonObject Run(Assembly server, string command, JsonObject arguments)
     {
-        if (PlcHarnessChecks.Active) return PlcHarnessChecks.HostCall(command, arguments);
         string root = RepositoryRoot();
         string host = PrivateHost(Environment.GetEnvironmentVariable("TIA_MCP_TEST_HOST_PATH")
             ?? Path.Combine(root, "src", "FoundationHost", "bin", "Release", "net10.0", "TiaMcp.FoundationHost.exe"));

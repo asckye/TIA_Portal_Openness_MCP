@@ -8,10 +8,9 @@ using TiaMcp.BuildCommon;
 
 namespace TiaMcp.ReleaseTool;
 
-internal sealed record PrepareCheckResults(JsonObject Suites, string[] Checks);
+internal sealed record PrepareCheckResults(string[] Checks);
 internal sealed record PrepareCheckJob(string Name, Func<PipelineResult> Run);
-internal sealed record PrepareCheckPlan(PrepareCheckJob[] Producers, PrepareCheckJob[] Jobs,
-    PrepareCheckJob[] Exclusive, PrepareCheckJob[] PostSuites);
+internal sealed record PrepareCheckPlan(PrepareCheckJob[] Jobs);
 internal delegate CommandResult PrepareProcess(string executable, IEnumerable<string> arguments, string directory,
     IDictionary<string, string?> environment, string? input);
 
@@ -42,8 +41,7 @@ internal sealed class PrepareTimings : IDisposable
     }
 }
 
-// Owns only this run's checks and local candidate. The existing suite stages retain
-// their compilation/GUI/foundation ordering and registered TRX gates.
+// Checks the extracted package and records only this run's local candidate.
 internal static class PrepareChecks
 {
     internal static void RequireEvidence(string path)
@@ -58,16 +56,13 @@ internal static class PrepareChecks
         Prepare.Timed("extract", () => ZipFile.ExtractToDirectory(package.ZipPath, extract));
         var bundle = Path.Combine(extract, context.PackageName);
         if (!Directory.Exists(bundle)) throw new ReleaseException("Extracted package root missing: " + bundle);
-        var catalog = DotnetSuites.LoadCatalog(Path.Combine(context.Root, "tests/test-suites.json"), context.Root);
         var plan = ReleaseCommands.PrepareCheckJobs(context, bundle, environment);
-        return Execute(context, package, environment, plan, catalog);
+        return Execute(context, package, plan);
     }
 
     internal static PrepareCheckResults Execute(PrepareContext context, PreparedPackage package,
-        IDictionary<string, string?> environment, PrepareCheckPlan plan, JsonObject catalog,
-        SuiteProcess? process = null, Func<Dictionary<string, CommandResult>>? foundation = null, Action? runtimeCheck = null)
+        PrepareCheckPlan plan, Action? runtimeCheck = null)
     {
-        var output = Path.Combine(context.Logs, "tests");
         var failures = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
         var passed = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
         var times = new ConcurrentDictionary<string, double>(StringComparer.Ordinal);
@@ -81,39 +76,10 @@ internal static class PrepareChecks
             else passed[job.Name] = 0;
             return result;
         }
-        (string, Func<PipelineResult>) Wrap(PrepareCheckJob job) => (job.Name, () => RunJob(job));
-        CommandResult SuiteProcess(string exe, IEnumerable<string> arguments, string cwd, IDictionary<string, string?>? env)
-        {
-            var args = arguments.ToArray();
-            var resultsIndex = Array.IndexOf(args, "--results-directory");
-            var label = resultsIndex >= 0 ? Path.GetFileName(args[resultsIndex + 1]) : Path.GetFileNameWithoutExtension(args[1]);
-            var name = "suite-" + label + "-" + args[0];
-            var result = Prepare.Timed(name, () => (process ?? DotnetSuites.RunProcess)(exe, args, cwd, env));
-            if (result.ExitCode != 0) PrepareTimings.RecordFailure(name, result.StandardOutput + result.StandardError);
-            return result;
-        }
-        // Inventory writers and file-app builds finish before any consumer starts.
-        foreach (var job in plan.Producers) RunJob(job);
-        var fileApps = Path.Combine(environment["TEMP"]!, "file-apps");
-        void Configure(IDictionary<string, string?> env)
-        {
-            // FastSuites owns each suite's TEMP; only propagate functional inputs.
-            env["TIA_MCP_PLC_TOOLS_PYTHON"] = context.CompanionPython;
-            env["TIA_MCP_DECODER_PYTHON"] = context.Python;
-            env[ReleaseCommands.PlcReleaseSystemTempVariable] = fileApps;
-        }
-        try
-        {
-            Prepare.Timed("suites-and-checks", () => ReleaseSuiteStage.Run(context.Root, catalog, output,
-                context.PublicApiRoot, ReleaseCommands.Dotnet, context.NuGetConfig, context.TestParallelism > 0 ? context.TestParallelism : context.MaxParallelism,
-                process: SuiteProcess, configure: Configure, additionalJobs: plan.Jobs.Select(Wrap).ToArray(),
-                exclusiveJobs: plan.Exclusive.Select(Wrap).ToArray(), postSuiteJobs: plan.PostSuites.Select(Wrap).ToArray(),
-                foundationRun: foundation ?? (() => ReleaseFoundationStage.Run(context.Root, catalog, output, context.PublicApiRoot,
-                    ReleaseCommands.Dotnet, context.NuGetConfig, context.TestParallelism > 0 ? context.TestParallelism : context.MaxParallelism, Configure,
-                    (options, selected, run) => PlainShards.Run(context.Root, options, selected,
-                        (exe, args, cwd, env) => Prepare.Timed("foundation-" + args.First(), () => run(exe, args, cwd, env))), process: SuiteProcess))));
-        }
-        catch (Exception error) { failures["suites-and-checks"] = error.Message; }
+        Prepare.Timed("package-checks", () => ParallelPipeline.Run(plan.Jobs
+            .Select(job => (job.Name, (Func<PipelineResult>)(() => RunJob(job)))).ToArray(),
+            Path.Combine(context.Logs, "package-checks"),
+            Math.Max(1, context.TestParallelism > 0 ? context.TestParallelism : context.MaxParallelism), continueOnFailure: true));
         // Always check the actual shipped payload, including the installed updater.
         RunJob(new("runtime-bytes", () =>
         {
@@ -123,33 +89,16 @@ internal static class PrepareChecks
         }));
         foreach (var (name, seconds) in times.OrderByDescending(row => row.Value))
             Console.WriteLine($"PREPARE job {name}: {seconds:F1} s");
-        return RequireResults(catalog, output, passed.Keys, failures);
+        return RequireResults(passed.Keys, failures);
     }
 
-    internal static PrepareCheckResults RequireResults(JsonObject catalog, string output, IEnumerable<string> checks,
+    internal static PrepareCheckResults RequireResults(IEnumerable<string> checks,
         IReadOnlyDictionary<string, string> failures)
     {
-        var errors = failures.Select(row => row.Key + ": " + row.Value).ToList();
         foreach (var (name, reason) in failures) PrepareTimings.RecordFailure(name, reason);
-        var suites = new JsonObject();
-        foreach (var (name, registration) in catalog)
-        {
-            try
-            {
-                var path = Path.Combine(output, name, name + ".trx");
-                var gate = DotnetSuites.EvaluateTrx(path, (int)registration!["minimumPassed"]!, (int)registration["maximumSkipped"]!);
-                errors.AddRange(gate.Errors.Select(error => name + ": " + error));
-                if (gate.Errors.Count != 0) PrepareTimings.RecordFailure(name, string.Join("; ", gate.Errors));
-                suites[name] = new JsonObject { ["passed"] = gate.Counts["passed"]!.DeepClone(), ["skipped"] = gate.Counts["skipped"]!.DeepClone() };
-            }
-            catch (Exception error)
-            {
-                errors.Add(name + ": " + error.Message);
-                PrepareTimings.RecordFailure(name, error.Message);
-            }
-        }
-        if (errors.Count != 0) throw new ReleaseException("Prepare checks failed:\n" + string.Join("\n", errors));
-        return new(suites, checks.Order(StringComparer.Ordinal).ToArray());
+        if (failures.Count != 0) throw new ReleaseException("Prepare checks failed:\n" +
+            string.Join("\n", failures.Select(row => row.Key + ": " + row.Value)));
+        return new(checks.Order(StringComparer.Ordinal).ToArray());
     }
 
     internal static string WriteCandidate(PrepareContext context, PreparedPackage package, PrepareCheckResults results,
@@ -169,7 +118,7 @@ internal static class PrepareChecks
         {
             ["version"] = context.Version, ["commit"] = commit, ["zip"] = Path.GetFileName(package.ZipPath),
             ["zipSha256"] = digest, ["zipSize"] = package.Size, ["fileCount"] = package.FileCount,
-            ["suites"] = results.Suites.DeepClone(), ["checks"] = JsonSerializer.SerializeToNode(results.Checks),
+            ["checks"] = JsonSerializer.SerializeToNode(results.Checks),
             ["finishedUtc"] = DateTimeOffset.UtcNow.ToString("o")
         };
         var path = Path.Combine(context.OutputDirectory, "candidate.json");
@@ -196,10 +145,7 @@ internal static partial class ReleaseCommands
         var temp = environment["TEMP"]!;
         var output = Path.Combine(context.Logs, "tests");
         var fileApps = Path.Combine(temp, "file-apps");
-        var producers = new List<PrepareCheckJob>();
         var jobs = new List<PrepareCheckJob>();
-        var exclusive = new List<PrepareCheckJob>();
-        var post = new List<PrepareCheckJob>();
         CommandResult Run(string name, string executable, IEnumerable<string> arguments, string? input = null, bool bundled = false,
             IDictionary<string, string?>? overrides = null)
         {
@@ -228,24 +174,6 @@ internal static partial class ReleaseCommands
             ActionJob(name, () => { var result = Run(name, executable, args, bundled: bundled); ProcessRunner.RequireSuccess(result, name); validate?.Invoke(result); });
         PrepareCheckJob Python(string name, string script, string[] args, bool bundled = false, Action<CommandResult>? validate = null) =>
             Command(name, context.Python, [Path.Combine(root, "scripts/checks", script), .. args], bundled, validate);
-        const string configurationProject = "tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj";
-        producers.Add(ActionJob("plc-file-programs", () => PreparePlcReleaseFilePrograms(root, Dotnet, context.NuGetConfig,
-            Path.Combine(output, "file-app-builds"), fileApps, (exe, args, cwd, env) => Run("file-" + Path.GetFileNameWithoutExtension(args.Skip(1).First()), exe, args, overrides: env))));
-        producers.Add(Command("configuration-build", Dotnet, ["build", configurationProject, "-c", "Release", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false"]));
-
-        producers.Add(Command("adapter-inputs", Dotnet, ["run", "src/Adapters/build/Test-AdapterInputs.cs", "--", "--source-root", "src", "--public-api-root", context.PublicApiRoot, "--evidence-directory", Path.Combine(output, "adapter-inputs")],
-            validate: _ => PrepareChecks.RequireEvidence(Path.Combine(output, "adapter-inputs/input-results.json"))));
-        producers.Add(Command("worker-isolation", Dotnet, ["run", "src/Adapters/build/Test-WorkerIsolation.cs", "--", "--evidence-directory", Path.Combine(output, "worker-isolation"), "--native-call-weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"],
-            validate: _ => PrepareChecks.RequireEvidence(Path.Combine(output, "worker-isolation/worker-isolation-results.json"))));
-        producers.Add(Python("native-diagnostics", "Test-NativeDiagnostics.py", ["--fixture", "tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe",
-            "--weaver", "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll", "--output", Path.Combine(output, "native-diagnostics")],
-            validate: result =>
-            {
-                var report = JsonNode.Parse(File.ReadAllText(Path.Combine(output, "native-diagnostics/result.json")))!;
-                CheckReleaseCount("diagnosticBehavior", (int?)report["behaviorChecks"] ?? 0, "Diagnostic behavior checks incomplete");
-                CheckReleaseCount("diagnosticRejection", (int?)report["rejectionChecks"] ?? 0, "Diagnostic rejection checks incomplete");
-                if ((bool?)report["nativeTiaExecuted"] != false) throw new ReleaseException("Native diagnostics executed TIA");
-            }));
         jobs.Add(Python("product-smoke", "Test-ReleaseSmoke.py", ["--runtime-root", Path.Combine(bundle, "runtime"), "--public-api-root", context.PublicApiRoot,
             "--temp-root", temp, "--output", Path.Combine(context.Logs, "smoke.json")], bundled: true));
         jobs.Add(Python("relocated-bundle", "Test-RelocatedBundle.py", ["--bundle-root", bundle, "--public-api-root", context.PublicApiRoot], bundled: true));
@@ -306,42 +234,10 @@ internal static partial class ReleaseCommands
                 RequireCount(test.Check, result.StandardOutput, test.Check == "native-mcp-session-self-test"
                     ? "COMPLETE: (\\d+) native MCP safety checks passed" : "COMPLETE: (\\d+) native supervisor checks passed; live TIA tests NOT RUN",
                     test.Check == "native-mcp-session-self-test" ? "nativeMcpSafety" : "nativeSupervisor")));
-        jobs.Add(Command("configuration-page", Dotnet, ["run", "--project", configurationProject, "-c", "Release", "--no-build", "--no-restore", "--", Path.Combine(output, "configuration")],
-            validate: result => { if (RequireCount("configuration", result.StandardOutput, "(?m)^Passed: (\\d+)\\s*$") < 157) throw new ReleaseException("Configurator tests did not report at least 157 checks"); }));
-        var plcJobs = PreparedPlcJobs(root, context.PublicApiRoot, context.Logs, temp, Dotnet, context.Python);
-        foreach (var job in plcJobs)
-        {
-            var check = ActionJob(job.Name, () => RunPlcReleaseJobs([job], root, context.Logs, selected =>
-            {
-                if (selected.Executable == "test-suites")
-                {
-                    var name = selected.Arguments[Array.IndexOf(selected.Arguments, "-Suite") + 1];
-                    var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root);
-                    var gate = DotnetSuites.EvaluateTrx(Path.Combine(output, name, name + ".trx"), (int)catalog[name]!["minimumPassed"]!, (int)catalog[name]!["maximumSkipped"]!);
-                    return new(gate.Errors.Count == 0 ? 0 : 1, "Registered suite: " + name, string.Join("\n", gate.Errors));
-                }
-                ResetPlcReleaseJobOutputs(selected, context.Logs);
-                return Run(selected.Name, selected.Check == "plc-ecosystem" ? context.CompanionPython : selected.Executable, selected.Arguments);
-            }, (script, args) => ProcessRunner.RequireSuccess(Run(job.Name + "-compare", context.Python, [script, .. args]), job.Name)));
-            if (IsPlcInventoryProducer(job)) producers.Add(check);
-            else if (job.Executable == "test-suites") post.Add(check);
-            else if (ReleasePlcExclusive(job)) exclusive.Add(check);
-            else jobs.Add(check);
-        }
-        var fixture = Path.Combine(root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe");
-        post.Add(Python("foundation-transport", "Test-FoundationTransport.py", ["--fixture", fixture, "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--output", Path.Combine(context.Logs, "transport")]));
-        post.Add(Python("foundation-transport-plc", "Test-FoundationTransport.py", ["--plc-worker", "--fixture", fixture,
-            "--host-exe", Path.Combine(root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe"), "--releases", .. PlcWorkerFixtures.Keys,
-            "--plc-sdk-worker", "20=" + ReleasePlcFixture(context.Logs, "20"), "--plc-sdk-worker", "21=" + ReleasePlcFixture(context.Logs, "21"),
-            "--public-api-root", context.PublicApiRoot, "--temp-root", Path.Combine(temp, "transport-plc"), "--output", Path.Combine(context.Logs, "transport-plc")]));
-        return new(producers.ToArray(), jobs.ToArray(), exclusive.ToArray(), post.ToArray());
+        return new(jobs.ToArray());
     }
 
     private static CommandResult ToCommand(PipelineResult result) => new(result.ExitCode, result.StandardOutput, result.StandardError);
-
-    internal static PlcReleaseJob[] PreparedPlcJobs(string root, string api, string logs, string temp, string dotnet, string python) =>
-        PlcReleaseJobs(root, api, logs, temp, dotnet, python, weaver: Path.Combine(root, "runtime/verification/NativeCallWeaver.dll"))
-            .Where(job => job.Check != "plc-approval").ToArray();
 
     private static void RequirePreparedFoundationApproval(string path)
     {

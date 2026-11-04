@@ -14,7 +14,7 @@ dotnet run --project build-tools/release -- merge-check
 
 命令按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件；`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取证据或结果缓存；Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。日志和各作业耗时写在 `bin-build/merge-check/`；首次冷构建及宽范围改动可能超过十分钟。
 
-GitHub CI 保留独立检查，但不阻塞合并，也不代替本机检查。不再设置 nightly；发布前的全集由 `prepare` 执行。审查时核对实际运行的项目、失败与阻塞项，而非只看命令退出或旧结果缓存。
+GitHub CI 保留独立检查，但不阻塞合并，也不代替本机检查。不再设置 nightly；每个发布候选前由主机手动运行 `merge-check -All`，覆盖全部 38 个注册套件及源码检查。审查时核对实际运行的项目、失败与阻塞项，而非只看命令退出或旧结果缓存。
 
 Codex 沙箱只构建受影响的 Debug 项目并运行涉及的测试类；例如把 `<测试类全名>` 替换为实际改动的类名：
 
@@ -25,13 +25,13 @@ dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.
 
 主导代理在主机运行 `merge-check`、`prepare`、解决方案构建和注册套件；注册套件的正式运行使用 `test-suites -Suite <名称>`，保留注册的参数、平台差异、最低通过数和最大跳过数。未迁移的控制台工程使用 `dotnet run --project <工程> -c Release`；`dotnet test` 不执行其控制台断言。需要 Siemens 程序集的单工程构建传入该版 `-p:SiemensEngineeringDirectory=<绝对路径>`；不要给八版工程统一传入某一版 SDK。
 
-## 发布前完整检查
+## 发布前交付包检查
 
-完整入口是 `prepare`，步骤见[发布流程](release.md)。它构建八版交付物、生成 ZIP，在隔离目录测试提取包，并对 checkout 的运行文件与 ZIP 做字节核对。任一套件或检查失败都不得写入可发布候选；每项作业运行到底并汇总结果，不因先前失败漏掉后续作业。
+交付包入口是 `prepare`，步骤见[发布流程](release.md)，目标约 15 分钟。它构建八版交付物、生成 ZIP，在隔离目录测试提取包，并对 checkout 的运行文件与 ZIP 做字节核对。它不构建或运行注册套件。任一交付检查失败都不得写入可发布候选；每项作业运行到底并汇总结果，不因先前失败漏掉后续作业。
 
 ### 注册套件与数量门槛
 
-套件名称、项目、过滤条件、构建属性及数量门槛的权威来源是 [`tests/test-suites.json`](../../tests/test-suites.json)。`prepare` 读取全部条目，Foundation 使用现有分片执行器；所有结果要求零失败、通过数达到 `minimumPassed`、跳过数不超过 `maximumSkipped`。平台例外只采用注册表已声明的值，不临时放宽。
+套件名称、项目、过滤条件、构建属性及数量门槛的权威来源是 [`tests/test-suites.json`](../../tests/test-suites.json)。`merge-check -All` 读取全部条目，Foundation 使用现有分片执行器；所有结果要求零失败、通过数达到 `minimumPassed`、跳过数不超过 `maximumSkipped`。平台例外只采用注册表已声明的值，不临时放宽。
 
 下表直接摘录核对的 master 注册表，共 38 个套件。经批准的测试精简会更新注册表，本表不授权删减或调整门槛。
 
@@ -76,7 +76,7 @@ dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.
 | `studio-core` | 553 | 0 |
 | `studio-gui` | 2,958 | 4 |
 
-### 其他保留检查
+### 保留检查的执行位置
 
 | 范围 | 检查与判定 |
 |---|---|
@@ -84,16 +84,16 @@ dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.
 | 捆绑运行时 | 宿主与工作台确实加载随包 .NET；不借用开发机器上的运行时证明交付完整 |
 | 写入保护 | 随包 `TiaMcp.WriteGuard.exe` 拒绝未知 V4 工具，读工具通过；默认审批对八个版本均在派发前拒绝无工作台的写请求 |
 | 原生边界 | 八版适配器的 weaver 校验；`native-mcp-session-self-test` 至少 8 项，`nativelifecycle-self-test` 至少 1 项（必须大于 0），保留现有判定 |
-| 适配器输入与 worker 隔离 | `src/Adapters/build/Test-AdapterInputs.cs`、`Test-WorkerIsolation.cs`：核对八版输入选择与 worker 隔离，必须产生通过的结果记录 |
-| 原生诊断夹具 | `Test-NativeDiagnostics.py --fixture <诊断测试程序>`：行为检查至少 36 项、拒绝检查至少 5 项，`nativeTiaExecuted` 必须为 false |
-| V20/V21 worker | `PlcReleaseJobs` 中保留的目录、编排、调用输入、协议、离线拒绝、原生诊断、生命周期与故障夹具；先产出清单，再逐项检查并报告所有失败 |
-| 传输与行为 | `foundation-transport`、`foundation-transport-plc`；HTTP 使用本机回环合成服务，不连接 TIA 或外部服务 |
-| 工作台配置与生态 | `configuration-page` 控制台检查保留至少 157 项；生态检查保留解码器、PDF 及伴随 PLC Tools 依赖 |
+| 合并门：适配器输入与 worker 隔离 | `src/Adapters/build/Test-AdapterInputs.cs`、`Test-WorkerIsolation.cs`：核对八版输入选择与 worker 隔离，必须产生通过的结果记录 |
+| 合并门：原生诊断夹具 | `Test-NativeDiagnostics.py --fixture <诊断测试程序>`：行为检查至少 36 项、拒绝检查至少 5 项，`nativeTiaExecuted` 必须为 false |
+| 合并门：V20/V21 worker | `native-safety`、`usage`（`check_usage`）和 `campaign-inputs`；构建 ApiCompileChecks、Adapters.Diagnostics.Tests 与 Native.Tests。Worker、适配器、工具目录或相应检查变更以及宽范围计划时选择 |
+| 合并门：传输与行为 | `foundation-transport`、`foundation-transport-plc` 在套件之后运行，使用源码宿主、独立数据目录和 V20/V21 SDK worker 夹具。FoundationHost、EngineHost、WorkerChannel、PlcWorker、Shared、传输脚本或夹具变更，以及宽范围计划时选择；HTTP 使用本机回环合成服务 |
+| 合并门：工作台配置与生态 | `configuration-page` 控制台检查保留至少 157 项；`Test-V21Ecosystem.py --self-test` 保留解码器、PDF 及伴随 PLC Tools 依赖 |
 | 契约与交付字节 | 八版 `Snapshot-ToolContracts.py` 实际捕获后比较工具定义；核对测试过的 `runtime/` 与 ZIP 中的文件一致，包括随包更新器 |
 | 暂存布局 | 交付规则、必需文件、包资源、测试策略程序集拒绝、Openness 用户组运行时及程序集依赖闭包 |
 | 分析器 | 使用本次构建的报告运行分析器棘轮，不接受新增警告或过期报告 |
 
-仓库 lint 和检查工具自身的测试属于合并门，不重复加入发布全集。以上保留项没有因迁移而获准降低通过数、增加跳过数或过滤失败。
+仓库 lint 和检查工具自身的测试属于合并门，不重复加入交付包检查。审批和契约所需的 harness 与 V20/V21 SDK worker 夹具仍由 `prepare` 构建；`runtime/verification` 的冻结 weaver 仍用于八版包内适配器检查。以上保留项没有因迁移而获准降低通过数、增加跳过数或过滤失败。
 
 ## 已批准移除的检查机制
 
@@ -107,6 +107,8 @@ dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.
 - nightly、旧证据采纳、构建收据和哈希链比较。准备阶段仍验证源码未漂移、包摘要和测试字节一致。
 
 维护者在 2026-11-04 批准移除 `host-behavior-parity` 作业及其最低通过数门槛。该作业重复运行已退役引擎路径的比较；`BehaviorParityTests` 仍由 `foundation-api` 套件执行，使用保留的夹具与 Foundation 路径，不运行已退役的引擎程序。
+
+维护者在 2026-11-04 通过 PREP-SLIM 批准删除 `PlcReleaseJobs` 中的 PLC 模拟作业及专用 harness 模式、覆盖率、资源、生态和重复 PLC 契约捕获；这些作业不迁到合并门。八版包内契约捕获、审批、注册套件及数量门槛保留，真实行为在发布后验证。
 
 主机测试精简仅限维护者批准的重复准入用例：版本重复的准入类用最旧与最新版本覆盖；审批、写安全、worker 故障恢复及协议测试保留完整覆盖。`StagedGeneration` 属于写安全，不能按普通准入用例裁减。迁移引擎测试时先保留仍有产品意义的安全与回滚测试。
 

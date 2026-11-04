@@ -269,9 +269,6 @@ internal static class ReleaseFoundationStage
 
 internal static partial class ReleaseCommands
 {
-    internal static bool ReleasePlcExclusive(PlcReleaseJob job) =>
-        job.Mode is "native-diagnostics-only" or "test-ecosystem-assembly";
-
     internal static string[] FoundationApiSuiteArguments(string dotnet, string apiRoot, string logs) =>
         ["-Suite", "foundation-api", "-Dotnet", dotnet, "-Shards", "8", "-PublicApiRoot", apiRoot, "-ResultsDirectory", Path.Combine(logs, "dotnet-suites", "foundation-api")];
 }

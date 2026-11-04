@@ -538,6 +538,61 @@ public sealed class MergeCheckTests
         Assert.All(environments.Where(row => row.Kind != "build"), row => Assert.Null(row.Reports));
     }
 
+    [Fact]
+    public void WorkerChecksBuildFixturesAfterTheTableAndRunTransportAfterSuites()
+    {
+        using var tree = new StaticTree();
+        foreach (var folder in new[] { "scripts", "src", "build-tools" }) Directory.CreateDirectory(Path.Combine(tree.Root, folder));
+        var sdk = WriteSdk(tree);
+        var python = tree.Write("python.exe", "fixture");
+        const string source = "src/WorkerChannel/Channel.cs";
+        tree.Write("tests/one.csproj", "<Project />");
+        tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
+        var calls = new ConcurrentQueue<string[]>();
+        CommandResult Process(string exe, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
+        {
+            var args = arguments.ToArray(); calls.Enqueue(args);
+            if (args.Any(arg => arg.StartsWith("-getItem:", StringComparison.Ordinal)))
+                return new(0, new JsonObject
+                {
+                    ["Items"] = new JsonObject { ["Compile"] = args[1].EndsWith("one.csproj", StringComparison.Ordinal)
+                        ? new JsonArray(new JsonObject { ["FullPath"] = Path.Combine(root, source) }) : new JsonArray() },
+                    ["Properties"] = new JsonObject { ["MSBuildAllProjects"] = "" }
+                }.ToJsonString(), "");
+            if (args[0] == "test")
+            {
+                var directory = args[Array.IndexOf(args, "--results-directory") + 1];
+                WriteTrx(Path.Combine(directory, "fixture.trx"), ["Fixture"]);
+            }
+            if (args[0].EndsWith("Test-FoundationTransport.py", StringComparison.Ordinal))
+            {
+                Assert.Contains("--host-exe", args);
+                Assert.Equal("src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe", args[Array.IndexOf(args, "--host-exe") + 1]);
+                Assert.StartsWith(Path.GetFullPath(Path.Combine(tree.Root, "bin-build/merge-check/checks/foundation-transport")), env!["TIA_MCP_DATA_DIRECTORY"]);
+                Assert.True(File.Exists(Path.Combine(env["TIA_MCP_DATA_DIRECTORY"]!, "config/approval.settings")));
+                Assert.Equal(env["TEMP"], env["TMP"]);
+                Assert.Null(env["TIA_MCP_BUNDLE_ROOT"]);
+            }
+            return new(0, args.SequenceEqual(new[] { "--self-test" })
+                ? "COMPLETE: 1 native harness safety checks passed; live TIA tests NOT RUN" : "", "");
+        }
+        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" && args[^1] == "HEAD" ? source + "\0" : "", "");
+        var result = MergeCheck.Run(tree.Root, Options.Parse(["-PublicApiRoot", sdk, "-Python", python], Program.BooleanOptions), Process, Git, (_, _) => 0);
+        Assert.True(result == 0, string.Join("\n", Directory.EnumerateFiles(Path.Combine(tree.Root, "bin-build/merge-check"), "*.log")
+            .Select(File.ReadAllText).Where(text => text.Contains("Exit code: 1", StringComparison.Ordinal))));
+        var snapshot = calls.ToArray();
+        int table = Array.FindIndex(snapshot, args => args.Any(arg => arg.EndsWith("table-Worker.proj", StringComparison.Ordinal)));
+        var fixtures = snapshot.Select((args, index) => (args, index)).Where(row => row.args.Contains("-p:BuildProjectReferences=false")).ToArray();
+        Assert.Equal(2, fixtures.Length);
+        Assert.All(fixtures, row => Assert.True(row.index > table));
+        Assert.Equal(new[] { "20", "21" }, fixtures.Select(row => row.args.Single(arg => arg.StartsWith("-p:TiaReleaseKey=", StringComparison.Ordinal))[17..]));
+        int suite = Array.FindLastIndex(snapshot, args => args[0] == "test");
+        var transports = snapshot.Select((args, index) => (args, index))
+            .Where(row => row.args[0].EndsWith("Test-FoundationTransport.py", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(2, transports.Length);
+        Assert.All(transports, row => Assert.True(row.index > suite));
+    }
+
     private static void WriteTrx(string path, string[] classes)
     {
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
