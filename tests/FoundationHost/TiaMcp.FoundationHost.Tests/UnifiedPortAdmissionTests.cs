@@ -14,6 +14,114 @@ using Xunit;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class UnifiedPortAdmissionTests
 {
+    [Theory]
+    [InlineData("GetUnifiedScreenBranch")]
+    [InlineData("GetUnifiedGlobalScript")]
+    [InlineData("GetUnifiedGraphicSelection")]
+    [InlineData("GetUnifiedLibraryType")]
+    [InlineData("ListUnifiedTagDefinitions")]
+    [InlineData("ListUnifiedGlobalScripts")]
+    [InlineData("ListUnifiedLibraryFolderEntries")]
+    [InlineData("GetUnifiedFaceplateInstance")]
+    public async Task Catalogue_reads_use_only_host_decoded_inputs(string name)
+    {
+        using var release = new ReleaseState("21");
+        using var worker = new DecodedCatalogueReader();
+        using var sessionWorker = new ApprovalWorker();
+        using var lifetime = new Host.ImportStagingHostLifetime();
+        var catalog = new ApprovalCatalog("21");
+        using var context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new enginehost::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker) { Catalog = catalog,
+                Invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, sessionWorker, lifetime) });
+        var tool = new FoundationTool(worker, "21", Method(name), name).ValidatedTool();
+        var arguments = Arguments(name);
+        arguments["softwarePath"] = "HMI";
+        arguments["expectedProject"] = "Project_A";
+        if (arguments.ContainsKey("screenPath")) arguments["screenPath"] = "/Main";
+        if (arguments.ContainsKey("moduleName")) arguments["moduleName"] = "Navigation";
+        if (arguments.ContainsKey("cursor")) arguments["cursor"] = "";
+        if (name == "GetUnifiedFaceplateInstance") arguments["typePath"] = "/FixtureType";
+        if (name == "GetUnifiedScreenBranch") arguments["branch"] = new JsonArray(new JsonObject { ["property"] = "ScreenItems" });
+        var raw = arguments.DeepClone().AsObject();
+        raw["undecodedInput"] = DecodedCatalogueReader.Undecoded;
+        var rejected = await tool.InvokeAsync(Request(name, raw));
+        Assert.Equal("INVALID_ARGUMENT", (string?)rejected.StructuredContent?["error"]?["code"]);
+        Assert.Empty(worker.Requests);
+
+        var result = await tool.InvokeAsync(Request(name, arguments));
+        var body = result.StructuredContent!.AsObject();
+        Assert.DoesNotContain("Structured input was not decoded", body.ToJsonString(), StringComparison.Ordinal);
+        Assert.True((bool?)body["ok"] == true, body.ToJsonString());
+        Assert.NotNull(body["data"]?["scope"]);
+        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+        var received = Assert.Single(worker.Requests);
+        Assert.Equal(name, received.Operation);
+        Assert.Equal("HMI", received.SoftwarePath);
+        Assert.Equal("Project_A", received.ExpectedProject);
+        Assert.DoesNotContain(DecodedCatalogueReader.Undecoded, JsonSerializer.Serialize(received), StringComparison.Ordinal);
+        foreach (var property in typeof(UnifiedRequest).GetProperties().Where(p => p.Name.EndsWith("Json", StringComparison.Ordinal)))
+        {
+            var text = (string)property.GetValue(received)!;
+            Assert.True(received.Inputs.ContainsKey(text), property.Name);
+            if (text.Length == 0) Assert.NotNull(received.Inputs[text].Error);
+            else Assert.Null(received.Inputs[text].Error);
+        }
+        if (name == "GetUnifiedScreenBranch")
+        {
+            var step = Assert.Single(received.Inputs[received.BranchJson].Items);
+            Assert.Equal("ScreenItems", step.Properties["property"].Text);
+        }
+        if (name == "GetUnifiedGraphicSelection")
+            Assert.Equal(arguments["itemNames"]!.AsArray().Select(item => (string)item!),
+                received.Inputs[received.ItemNamesJson].Items.Select(item => item.Text));
+    }
+
+    // Keep the real host decoder and native cursor store on either side of this
+    // worker boundary. The synthetic records require no Siemens object or engine fixture.
+    private sealed class DecodedCatalogueReader : IFoundationWorker
+    {
+        internal const string Undecoded = "[{\"property\":\"NeverDecodedByHost\"}]";
+        internal List<UnifiedRequest> Requests { get; } = new();
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            if (operation == "ReadState")
+                return Task.FromResult(JsonSerializer.SerializeToNode(new { ProjectFile = "C:/Fixture.ap21", IsAttached = true }));
+            var request = arguments["request"]!.Deserialize<UnifiedRequest>()!;
+            Requests.Add(request);
+            Assert.Equal(PortedFamilies.ForTool(request.Operation).OperationPrefix + ".ExecuteUnified", operation);
+            var previousInputs = UnifiedRequestValues.Inputs;
+            var previousDecoder = UnifiedRequestValues.Decoder;
+            var previousRenderer = HmiValues.Renderer;
+            try
+            {
+                UnifiedRequestValues.Decoder = null;
+                UnifiedRequestValues.Inputs = request.Inputs.ToDictionary(p => p.Key, p => UnifiedRequestValues.Decode(p.Value));
+                HmiValues.Renderer = value => JsonSerializer.Serialize(value);
+                Assert.Throws<ArgumentException>(() => UnifiedRequestValues.Parse(Undecoded));
+                var scope = new HmiObject { ["tool"] = request.Operation, ["softwarePath"] = request.SoftwarePath,
+                    ["expectedProject"] = request.ExpectedProject };
+                if (request.Operation == "GetUnifiedScreenBranch")
+                    scope["branch"] = UnifiedRequestValues.Parse(request.BranchJson);
+                if (request.Operation == "GetUnifiedGraphicSelection")
+                    scope["itemNames"] = UnifiedRequestValues.Parse(request.ItemNamesJson);
+                using var pages = new MigrationPages();
+                var page = pages.Read(new object(), scope, request.Cursor, request.PageSize, request.BudgetMs,
+                    () => new[] { new HmiObject { ["path"] = "/fixture", ["kind"] = "value", ["status"] = "ok" } });
+                page["success"] = page["apiCallSuccess"];
+                page["operationSuccess"] = page["apiCallSuccess"];
+                return Task.FromResult(JsonSerializer.SerializeToNode(new HmiReply {
+                    Value = new HmiMessage { Message = "Read-only fixture collection.", Meta = page } }));
+            }
+            finally
+            {
+                UnifiedRequestValues.Inputs = previousInputs;
+                UnifiedRequestValues.Decoder = previousDecoder;
+                HmiValues.Renderer = previousRenderer;
+            }
+        }
+        public void Dispose() { }
+    }
+
     [Fact]
     public void Refusal_examples_use_Unified_roots_and_keep_optional_domains_separate()
     {
