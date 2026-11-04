@@ -112,6 +112,8 @@ public sealed class ReleaseSingleStageTests
             Interlocked.Exchange(ref poolStarted, 1);
             name = Path.GetFileName(directory);
             Assert.Null(env!["TIA_MCP_TEST_SHARD_COUNT"]);
+            Assert.Null(env["TIA_MCP_BUILD_CACHE_DISABLED"]);
+            Assert.Null(env["TIA_MCP_PRODUCTION_RELEASE"]);
             Assert.Equal("prepared", env["TIA_MCP_DECODER_RUNTIME"]);
             roots.Add(env["TIA_MCP_DATA_DIRECTORY"]!);
             var count = Interlocked.Increment(ref active);
@@ -126,7 +128,12 @@ public sealed class ReleaseSingleStageTests
             return new(0, "passed", "");
         }
         var results = ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 2, Process,
-            configure: environment => environment["TIA_MCP_DECODER_RUNTIME"] = "prepared",
+            configure: environment =>
+            {
+                environment["TIA_MCP_DECODER_RUNTIME"] = "prepared";
+                environment["TIA_MCP_BUILD_CACHE_DISABLED"] = "1";
+                environment["TIA_MCP_PRODUCTION_RELEASE"] = "1";
+            },
             additionalJobs: [("extra", () => { order.Enqueue("extra"); return new("extra", 0, "passed", ""); })], compilationGate: compilationGate);
         Assert.Equal(4, results.Count);
         Assert.Equal(4, roots.Distinct().Count());
@@ -176,6 +183,7 @@ public sealed class ReleaseSingleStageTests
     public void AllVariantsBuildBeforeReadersAndRetainTheirOwnBinaries()
     {
         using var tree = new StaticTree();
+        tree.Write("shared.csproj", "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
         var first = Suite("shared.csproj", 1, 0); first["arguments"] = new JsonArray("-p:Variant=first");
         var second = Suite("shared.csproj", 1, 0); second["arguments"] = new JsonArray("-p:Variant=second");
         var catalog = new JsonObject { ["first"] = first, ["second"] = second };
@@ -194,6 +202,7 @@ public sealed class ReleaseSingleStageTests
             else
             {
                 readersStarted = true; Assert.Equal(2, builds.Count);
+                Assert.Equal(Path.Combine(tree.Root, "bin", "Release", "net10.0"), env!["TIA_MCP_TEST_REGISTERED_OUTPUT"]);
                 Assert.Equal(builds[variant], output);
                 Assert.Equal(variant, File.ReadAllText(Path.Combine(output, "compiled.txt")));
                 WriteTrx(args, 1, 0);
@@ -240,6 +249,52 @@ public sealed class ReleaseSingleStageTests
         Assert.Equal(4, exclusive.Length);
         Assert.Equal(new[] { "native-diagnostics-only", "test-ecosystem-assembly" }, exclusive.Select(job => job.Mode).Distinct().Order());
         Assert.All(exclusive, job => Assert.StartsWith("harness-", job.Name));
+    }
+
+    [Theory]
+    [InlineData("suite")]
+    [InlineData("ordinary")]
+    [InlineData("exclusive")]
+    [InlineData("post")]
+    public void TestStageOnlyRunsTheNamedJobWithoutWritingRecords(string lane)
+    {
+        using var tree = new StaticTree();
+        var record = tree.Write("manifest/configurator-build.json", "{\"testsPassed\":0}");
+        var before = File.ReadAllBytes(record);
+        var options = Options.Parse(["-TestStageOnly", "-Only", "x"], new HashSet<string> { "TestStageOnly" });
+        var selection = new ReleaseTestSelection(options, ["x", "unselected"]);
+        var executed = new List<string>();
+        var catalog = new JsonObject { [lane == "suite" ? "x" : "unselected"] = Suite("fixture.csproj", 1, 0) };
+        CommandResult Process(string _, IEnumerable<string> arguments, string root, IDictionary<string, string?>? environment)
+        {
+            var args = arguments.ToArray();
+            Assert.Equal("suite", lane);
+            if (args[0] == "test") { executed.Add("x"); WriteTrx(args, 1, 0); }
+            return new(0, "passed", "");
+        }
+        (string Name, Func<PipelineResult> Run) Job(string candidate) =>
+            (lane == candidate ? "x" : "unselected", () =>
+            {
+                Assert.Equal(lane, candidate); executed.Add("x"); return new("x", 0, "passed", "");
+            });
+        ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 1, Process,
+            additionalJobs: [Job("ordinary")], exclusiveJobs: [Job("exclusive")], selection: selection, postSuiteJobs: [Job("post")]);
+        Assert.Equal(new[] { "x" }, executed);
+        Assert.Equal(before, File.ReadAllBytes(record));
+        Assert.Single(Directory.GetFiles(Path.Combine(tree.Root, "manifest")));
+        var source = File.ReadAllText(Path.Combine(TiaMcp.BuildCommon.Repository.FindRoot(), "build-tools/release/ReleaseTestStage.cs"));
+        Assert.True(source.IndexOf("if (options.Has(\"TestStageOnly\")) return results;", StringComparison.Ordinal)
+            < source.IndexOf("configuration[\"testsPassed\"] =", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("missing")]
+    [InlineData(",")]
+    public void TestStageOnlyRejectsUnknownOrEmptySelections(string only)
+    {
+        var options = Options.Parse(["-TestStageOnly", "-Only", only], new HashSet<string> { "TestStageOnly" });
+        Assert.Throws<ReleaseException>(() => new ReleaseTestSelection(options, ["x"]));
+        Assert.Throws<ReleaseException>(() => new ReleaseTestSelection(Options.Parse(["-Only", "x"], new HashSet<string>()), ["x"]));
     }
 
     private static JsonObject Suite(string project, int minimum, int maximum) => new()

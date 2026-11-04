@@ -39,6 +39,15 @@ internal static partial class ReleaseCommands
         var v20 = ResolveReleaseApi(options.Get("V20ReferenceRoot"), publicApiRoot, 20);
         var v21 = ResolveReleaseApi(options.Get("V21ReferenceRoot"), publicApiRoot, 21);
 
+        if (options.Has("TestStageOnly"))
+        {
+            var testLogs = Path.Combine(Root, "bin-build/release-runs", DateTime.Now.ToString("yyyyMMdd-HHmmss-fff", System.Globalization.CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..8]);
+            Directory.CreateDirectory(testLogs);
+            Console.WriteLine("TEST STAGE ONLY: " + testLogs);
+            RunReleaseTestStage(options, publicApiRoot, testLogs, Path.Combine(testLogs, "temp"), python, nugetConfig);
+            return 0;
+        }
+
         if (options.Has("EarlyGatesOnly"))
         {
             var releaseTemp = CreateReleaseTempRoot();

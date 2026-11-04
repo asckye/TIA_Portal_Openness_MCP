@@ -198,6 +198,27 @@ public sealed class ReleaseRecordConsumerTests
         => ReleaseCommands.ValidateBuildRecords(TiaMcp.BuildCommon.Repository.FindRoot(), package: false, noBinaries: true, skipSourceHashes: true);
 
     [Theory]
+    [InlineData("pending", true)]
+    [InlineData("passed", false)]
+    public void DeferredConfiguratorResultIsAcceptedOnlyWhilePending(string status, bool valid)
+    {
+        using var tree = new StaticTree();
+        PrepRecords(tree, "4.0.0-beta.3", "4.0.0-beta.3");
+        var configuration = JsonNode.Parse(File.ReadAllText(Path.Combine(tree.Root, "manifest/configurator-build.json")))!;
+        configuration["testsPassed"] = 0;
+        var configPath = tree.Write("manifest/configurator-build.json", configuration.ToJsonString());
+        var delivery = JsonNode.Parse(File.ReadAllText(Path.Combine(tree.Root, "manifest/delivery.json")))!;
+        delivery["configuratorBuildSha256"] = ReleaseRecords.HashFile(configPath);
+        tree.Write("manifest/delivery.json", delivery.ToJsonString());
+        var manifest = JsonNode.Parse(File.ReadAllText(Path.Combine(tree.Root, "manifest/package-manifest.json")))!;
+        manifest["checkStatus"] = status;
+        tree.Write("manifest/package-manifest.json", manifest.ToJsonString());
+        void Validate() => ReleaseCommands.ValidateBuildRecords(tree.Root, package: false, noBinaries: true, skipSourceHashes: true);
+        if (valid) Validate();
+        else Assert.Equal("Configurator test result missing", Assert.Throws<ReleaseException>(Validate).Message);
+    }
+
+    [Theory]
     [InlineData("4.0.0-beta.1", "4.0.0-beta.2", "4.0.0-beta.1", true, true)]
     [InlineData("4.0.0-beta.1", "4.1.0", "4.0.0-beta.1", true, true)]
     [InlineData("4.0.0-beta.1", "4.0.0-beta.3", "4.0.0-beta.2", true, false)]

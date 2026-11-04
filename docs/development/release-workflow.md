@@ -256,6 +256,19 @@ marketplace 版本、发布文档、伴随 Python 的依赖导入、Git 规范�
    preflight 与候选验证引用当次已通过的套件/自测结果，避免再次执行相同测试。
 6. 保留重定位、产品 smoke、包内 PLC 响应校验、提示词注册、完整 ZIP 校验与正式发布前验证。
 
+若工作树已有生产器暂存的产物，可单独复核测试阶段：
+
+```powershell
+dotnet run --project build-tools/release -- release -Version 4.0.0-beta.3 -TestStageOnly -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>
+dotnet run --project build-tools/release -- release -Version 4.0.0-beta.3 -TestStageOnly -Only updater,studio-gui,host-behavior-parity,foundation-transport,foundation-transport-plc -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>
+```
+
+`-TestStageOnly` 保留本地版本、文档、依赖及 SDK 前置检查，只准备所选测试需要的夹具和测试程序集，然后复用相同调度。
+省略 `-Only` 执行完整测试阶段；提供时接受注册套件名、Python 检查名、`configuration-page`、`plc-v20`、`plc-v21`、独占 `harness-*` 作业名及上述三个后置作业名。
+未知或空作业名在启动测试前报错并列出可选名称。每个执行作业打印 `PASS`/`FAIL`，日志写入新的 `bin-build/release-runs/<run>/tests`。
+此诊断模式不重跑生产器，不更新或绑定发布记录，不打包、提交、打 tag 或上传；其结果不能作为完成发布的记录。
+测试子进程清除发布器的禁用构建缓存标记，独立编译输出通过 `TIA_MCP_TEST_REGISTERED_OUTPUT` 映射到项目的正常测试输出目录。
+
 移除的 release check id 为 `plc-stability`、`plc-isolated-stability`；`http-concurrency` 是功能检查，继续保留。
 `productionRelease` 标记限定此删除范围；通用 `full`、分支检查及旧证据验证保留原来的稳定性检查。
 每段耗时写入 `bin-build/release-runs/<run>/stage-times.json`。完整演练的目标约一小时，实际时间由主机记录。

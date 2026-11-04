@@ -303,6 +303,9 @@ internal static partial class ReleaseCommands
 
     private static int Release(Options options)
     {
+        if (options.Has("Only") && !options.Has("TestStageOnly")) throw new ReleaseException("-Only requires -TestStageOnly", 64);
+        if (options.Has("TestStageOnly") && new[] { "FromCandidate", "SelfTest", "DocumentationOnly", "BumpOnly", "DryRun", "EarlyGatesOnly", "Resume", "KillStrayEngine", "AdoptEvidence" }.Any(options.Has))
+            throw new ReleaseException("-TestStageOnly cannot be combined with another release mode or process termination", 64);
         if (options.Has("FromCandidate")) return ReleaseFromCandidate(options);
         if (options.Has("SelfTest"))
             return RunChild(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "--filter", "Category=ReleaseParity"], Root, "Release reuse/archive tests");
@@ -859,7 +862,7 @@ internal static partial class ReleaseCommands
         var packageName = JsonString(manifest.RootElement, "packageName");
         if (ReleaseValidation.PackageNameError(packageName, newest) is { } packageError) throw new ReleaseException(packageError);
         if (StrictRecordHash(root, delivery, "manifest/configurator-build.json", "configuratorBuildSha256") is { } configHash) throw new ReleaseException(configHash);
-        if (IntValue(configurator, "testsPassed") <= 0 && (!build.TryGetProperty("checkPlan", out _) || ReleasePlanFromRecord(build).Includes("gui-tests"))) throw new ReleaseException("Configurator test result missing");
+        if (JsonString(manifest.RootElement, "checkStatus") != "pending" && IntValue(configurator, "testsPassed") <= 0 && (!build.TryGetProperty("checkPlan", out _) || ReleasePlanFromRecord(build).Includes("gui-tests"))) throw new ReleaseException("Configurator test result missing");
         var executable = configurator.GetProperty("executable");
         if (!noBinaries && ReleaseRecords.HashFile(Path.Combine(root, JsonString(executable, "path"))) != JsonString(executable, "sha256")) throw new ReleaseException("Configurator EXE changed after validation");
         if (!package && !skipSourceHashes)

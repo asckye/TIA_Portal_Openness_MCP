@@ -1,8 +1,42 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 
 namespace TiaMcp.ReleaseTool;
+
+// Selection is diagnostic only; it never changes the publication inventory.
+internal sealed class ReleaseTestSelection(Options options, IEnumerable<string> available)
+{
+    private readonly HashSet<string>? names = Parse(options, available);
+    internal bool Includes(string name) => names is null || names.Contains(name);
+
+    private static HashSet<string>? Parse(Options options, IEnumerable<string> available)
+    {
+        if (!options.Has("Only")) return null;
+        if (!options.Has("TestStageOnly")) throw new ReleaseException("-Only requires -TestStageOnly", 64);
+        var requested = options.Get("Only")!.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToHashSet(StringComparer.Ordinal);
+        var unknown = requested.Except(available, StringComparer.Ordinal).ToArray();
+        if (requested.Count == 0 || unknown.Length != 0)
+            throw new ReleaseException("Unknown or empty test-stage job selection: " + string.Join(", ", unknown) + ". Available: " + string.Join(", ", available.Order()), 64);
+        return requested;
+    }
+
+    internal static PipelineResult RunJob(string name, Func<PipelineResult> run)
+    {
+        try
+        {
+            var result = run();
+            Console.WriteLine((result.ExitCode == 0 ? "PASS " : "FAIL ") + name);
+            return result;
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("FAIL " + name);
+            throw;
+        }
+    }
+}
 
 // Compile before starting any reader. Distinct property variants retain separate
 // outputs; registrations sharing an assembly still own one serial test lane.
@@ -12,15 +46,23 @@ internal static class ReleaseSuiteStage
         .GroupBy(pair => pair.Value!["project"]!.GetValue<string>(), StringComparer.OrdinalIgnoreCase)
         .Select(group => group.Select(pair => pair.Key).ToArray()).ToArray();
 
+    private static string RegisteredOutput(string root, JsonObject suite)
+    {
+        var project = Path.GetFullPath(Path.Combine(root, suite["project"]!.GetValue<string>()));
+        var framework = XDocument.Load(project).Descendants("TargetFramework").Single().Value;
+        return Path.Combine(Path.GetDirectoryName(project)!, "bin", "Release", framework);
+    }
+
     internal static Dictionary<string, CommandResult> Run(string root, JsonObject catalog, string output, string api,
         string dotnet, string? nuget, int parallelism, SuiteProcess? process = null, Action<IDictionary<string, string?>>? configure = null,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? additionalJobs = null, object? compilationGate = null,
-        IReadOnlyList<(string Name, Func<PipelineResult> Run)>? exclusiveJobs = null)
+        IReadOnlyList<(string Name, Func<PipelineResult> Run)>? exclusiveJobs = null, ReleaseTestSelection? selection = null,
+        IReadOnlyList<(string Name, Func<PipelineResult> Run)>? postSuiteJobs = null)
     {
         var results = new ConcurrentDictionary<string, CommandResult>(StringComparer.Ordinal);
         var buildGate = compilationGate ?? new object();
         var prepared = new Dictionary<string, (IDictionary<string, string?> Environment, string? Output)>(StringComparer.Ordinal);
-        var groups = Groups(catalog);
+        var groups = Groups(catalog).Select(group => group.Where(name => selection?.Includes(name) != false).ToArray()).Where(group => group.Length != 0).ToArray();
         string? Sdk(string name, JsonObject suite) => name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true ? api : null;
         string Identity(string name) => string.Join('\n', DotnetSuites.BuildArguments(catalog[name]!["arguments"]!.AsArray().Select(arg => arg!.GetValue<string>())))
             + "\n" + Sdk(name, catalog[name]!.AsObject());
@@ -40,6 +82,7 @@ internal static class ReleaseSuiteStage
                 env["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
                 env["MSBUILDDISABLENODEREUSE"] = "1";
                 env["TIA_MCP_PRODUCTION_RELEASE"] = null;
+                env["TIA_MCP_BUILD_CACHE_DISABLED"] = null;
                 if (CheckAllProfiles.StudioSuites.Contains(name))
                 {
                     env["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api;
@@ -55,11 +98,13 @@ internal static class ReleaseSuiteStage
                 var identity = Identity(name);
                 if (builtVariants.TryGetValue(identity, out var sharedOutput))
                 {
+                    if (sharedOutput != null) env["TIA_MCP_TEST_REGISTERED_OUTPUT"] = RegisteredOutput(root, suite);
                     prepared[name] = (env, sharedOutput);
                     File.WriteAllText(Path.Combine(directory, "build.log"), "Uses the already compiled project/property variant.\n");
                     continue;
                 }
                 var compiled = variants ? Path.Combine(output, "compiled", name) : null;
+                if (compiled != null) env["TIA_MCP_TEST_REGISTERED_OUTPUT"] = RegisteredOutput(root, suite);
                 List<string> build = ["build", Path.Combine(root, suite["project"]!.GetValue<string>()), "-c", "Release", "-v:q",
                     "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false",
                     .. DotnetSuites.BuildArguments(suite["arguments"]!.AsArray().Select(arg => arg!.GetValue<string>()))];
@@ -86,8 +131,12 @@ internal static class ReleaseSuiteStage
                 var (env, compiled) = prepared[name];
                 string[] arguments = ["--no-build", "--no-restore", "-m:1", "-nodeReuse:false",
                     .. compiled != null ? new[] { "--output", compiled } : []];
-                var result = DotnetSuites.RunSuite(root, name, suite, directory, dotnet,
-                    arguments, env, process);
+                var reported = ReleaseTestSelection.RunJob(name, () =>
+                {
+                    var tested = DotnetSuites.RunSuite(root, name, suite, directory, dotnet, arguments, env, process);
+                    return new(name, tested.ExitCode, tested.StandardOutput, tested.StandardError);
+                });
+                var result = new CommandResult(reported.ExitCode, reported.StandardOutput, reported.StandardError);
                 File.WriteAllText(Path.Combine(directory, "test.log"), result.StandardOutput + result.StandardError);
                 results[name] = result;
                 if (result.ExitCode != 0) return new(name, result.ExitCode, result.StandardOutput, result.StandardError);
@@ -96,19 +145,23 @@ internal static class ReleaseSuiteStage
         }
         var ordinary = groups.Select(group => group.Where(name => name is not ("studio-gui" or "updater")).ToArray()).Where(group => group.Length != 0);
         var parallelJobs = ordinary.Select(group => (group[0], (Func<PipelineResult>)(() => RunGroup(group))))
-            .Concat(additionalJobs ?? []).ToArray();
+            .Concat((additionalJobs ?? []).Where(job => selection?.Includes(job.Name) != false)
+                .Select(job => (job.Name, (Func<PipelineResult>)(() => ReleaseTestSelection.RunJob(job.Name, job.Run))))).ToArray();
         if (parallelJobs.Length != 0) ParallelPipeline.Run(parallelJobs, Path.Combine(output, "pipeline"),
             Math.Max(1, Math.Min(parallelism, Environment.ProcessorCount)));
-        foreach (var job in exclusiveJobs ?? [])
+        foreach (var job in (exclusiveJobs ?? []).Where(job => selection?.Includes(job.Name) != false))
         {
-            var result = job.Run();
+            var result = ReleaseTestSelection.RunJob(job.Name, job.Run);
             if (result.ExitCode != 0) throw new ReleaseException(result.StandardOutput + result.StandardError);
         }
-        foreach (var name in new[] { "updater", "studio-gui" }.Where(catalog.ContainsKey))
+        foreach (var name in new[] { "updater", "studio-gui" }.Where(name => catalog.ContainsKey(name) && selection?.Includes(name) != false))
         {
             var result = RunGroup([name]);
             if (result.ExitCode != 0) throw new ReleaseException(result.StandardOutput + result.StandardError);
         }
+        var post = (postSuiteJobs ?? []).Where(job => selection?.Includes(job.Name) != false)
+            .Select(job => (job.Name, (Func<PipelineResult>)(() => ReleaseTestSelection.RunJob(job.Name, job.Run)))).ToArray();
+        if (post.Length != 0) ParallelPipeline.Run(post, Path.Combine(output, "post-suites"), Math.Max(1, Math.Min(parallelism, Environment.ProcessorCount)));
         return results.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
     }
 }
@@ -139,16 +192,26 @@ internal static partial class ReleaseCommands
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root);
         var multiLogs = Path.Combine(Root, "bin-build/multi-version");
         var cli = ReleaseCliHome(temp);
-        var fileAppTemp = PreparePlcReleaseFilePrograms(Root, Dotnet, nuget, Path.Combine(output, "file-app-builds"), Path.Combine(temp, "file-apps"));
+        var policy = ReleaseCheckPolicy.Load(Root);
+        var plan = ReleasePlan(options);
+        var plcJobs = PlcReleaseJobs(Root, api, multiLogs, temp, Dotnet, python)
+            .Where(job => PlcReleaseSelected(plan, job) && job.Check != "plc-approval").ToArray();
+        var selection = new ReleaseTestSelection(options, catalog.Select(pair => pair.Key)
+            .Concat(policy.SelfTests.Where(test => test.Command is null).Select(test => test.Check))
+            .Concat(ReleasePythonTests.Select(test => test.Name))
+            .Concat(plcJobs.Where(ReleasePlcExclusive).Select(job => job.Name))
+            .Concat(["configuration-page", "plc-v20", "plc-v21", "host-behavior-parity", "foundation-transport", "foundation-transport-plc"]));
+        var fileAppTemp = Path.Combine(temp, "file-apps");
+        if (selection.Includes("plc-v20") || selection.Includes("plc-v21") || plcJobs.Where(ReleasePlcExclusive).Any(job => selection.Includes(job.Name)))
+            fileAppTemp = PreparePlcReleaseFilePrograms(Root, Dotnet, nuget, Path.Combine(output, "file-app-builds"), fileAppTemp);
         var stageEnvironment = new Dictionary<string, string?> { [PlcReleaseSystemTempVariable] = fileAppTemp };
         CommandResult Run(string name, string executable, IEnumerable<string> args, bool approval = false) =>
             RunBuildIsolated(executable, args, Path.Combine(output, name + ".log"), temp, cli, api, nuget, approval, name,
                 additionalEnvironment: stageEnvironment);
         const string configurationProject = "tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj";
-        ProcessRunner.RequireSuccess(Run("configuration-build", Dotnet, ["build", configurationProject, "-c", "Release",
+        if (selection.Includes("configuration-page")) ProcessRunner.RequireSuccess(Run("configuration-build", Dotnet, ["build", configurationProject, "-c", "Release",
             "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false"]), "Configuration fixture build");
-        var parityManifest = HostParity.Prepare(Root, Path.Combine(output, "parity-build"), Dotnet, api, nuget);
-        var policy = ReleaseCheckPolicy.Load(Root);
+        var parityManifest = selection.Includes("host-behavior-parity") ? HostParity.Prepare(Root, Path.Combine(output, "parity-build"), Dotnet, api, nuget) : "";
         var jobs = new List<(string Name, Func<PipelineResult> Run)>();
         var postSuiteJobs = new List<(string Name, Func<PipelineResult> Run)>();
         var sharedTests = new List<string>();
@@ -205,9 +268,6 @@ internal static partial class ReleaseCommands
         }));
         // Approval already ran inside preparation. Every other functional PLC job
         // now runs once; registered suite aliases use the exact completed TRX gate.
-        var plan = ReleasePlan(options);
-        var plcJobs = PlcReleaseJobs(Root, api, multiLogs, temp, Dotnet, python)
-            .Where(job => PlcReleaseSelected(plan, job) && job.Check != "plc-approval").ToArray();
         void RunPlc(IEnumerable<PlcReleaseJob> selected) => RunPlcReleaseJobs(selected, Root, multiLogs, job =>
         {
             ResetPlcReleaseJobOutputs(job, multiLogs);
@@ -233,16 +293,6 @@ internal static partial class ReleaseCommands
             RunPlc([job]);
             return new(job.Name, 0, "Exclusive PLC harness passed.\n", "");
         }))).ToArray();
-        results.Suites = ReleaseSuiteStage.Run(Root, catalog, output, api, Dotnet, nuget, GetMaxParallelism(options),
-            configure: environment =>
-            {
-                ConfigureDecoderTestEnvironment(environment, Root, options);
-                environment[PlcReleaseSystemTempVariable] = fileAppTemp;
-            }, additionalJobs: jobs, exclusiveJobs: exclusiveJobs);
-        foreach (var name in sharedTests) results.Checks[name] = results.Suites["release-tool"];
-        RunPlc(plcJobs.Where(job => job.Executable == "test-suites"));
-        foreach (var group in plcJobs.Select(job => job.Check).Distinct(StringComparer.Ordinal))
-            results.Checks[group] = new(0, "Passed in the current release test stage: " + group + "\n", "");
         postSuiteJobs.Add(("foundation-transport", () =>
         {
             var transport = Run("foundation-transport", python, [Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py"),
@@ -261,7 +311,17 @@ internal static partial class ReleaseCommands
             ProcessRunner.RequireSuccess(plcTransport, "Eight-release PLC transport");
             return new("foundation-transport-plc", 0, plcTransport.StandardOutput, plcTransport.StandardError);
         }));
-        ParallelPipeline.Run(postSuiteJobs, Path.Combine(output, "post-suites"), Math.Max(1, Math.Min(GetMaxParallelism(options), Environment.ProcessorCount)));
+        results.Suites = ReleaseSuiteStage.Run(Root, catalog, output, api, Dotnet, nuget, GetMaxParallelism(options),
+            configure: environment =>
+            {
+                ConfigureDecoderTestEnvironment(environment, Root, options);
+                environment[PlcReleaseSystemTempVariable] = fileAppTemp;
+            }, additionalJobs: jobs, exclusiveJobs: exclusiveJobs, selection: selection, postSuiteJobs: postSuiteJobs);
+        if (options.Has("TestStageOnly")) return results;
+        foreach (var name in sharedTests) results.Checks[name] = results.Suites["release-tool"];
+        RunPlc(plcJobs.Where(job => job.Executable == "test-suites"));
+        foreach (var group in plcJobs.Select(job => job.Check).Distinct(StringComparer.Ordinal))
+            results.Checks[group] = new(0, "Passed in the current release test stage: " + group + "\n", "");
         var configurationPath = Path.Combine(Root, "manifest/configurator-build.json");
         var configuration = JsonNode.Parse(File.ReadAllText(configurationPath))!.AsObject();
         configuration["testsPassed"] = configurationPassed; WriteJson(configurationPath, configuration);
