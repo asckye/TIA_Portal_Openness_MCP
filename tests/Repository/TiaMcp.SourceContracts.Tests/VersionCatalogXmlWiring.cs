@@ -18,7 +18,7 @@ public sealed partial class VersionCatalogWiring
     [Fact]
     public void SharedSourceBuildAndPackageInputs()
     {
-        var build = Read(Path.Combine(ROOT, "build-tools/release/PrepareChecks.cs"));
+        var build = Read(Path.Combine(ROOT, "build-tools/release/MergeCheck.cs"));
         Assert.Contains("TiaOpenness.Configuration.Tests.csproj", build);
         Assert.DoesNotContain("/main:TiaMcpConfigurator.Tests", build);
         var project = XDocument.Load(Path.Combine(ROOT, "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj"));

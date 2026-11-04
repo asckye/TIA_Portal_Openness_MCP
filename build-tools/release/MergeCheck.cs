@@ -495,7 +495,9 @@ internal static class MergeCheck
         {
             var checkEnvironment = CheckEnvironment(job, output, api, environment);
             ConfigureTests(checkEnvironment);
-            var result = process(job.Executable, job.Arguments, root, checkEnvironment);
+            var executable = Path.GetDirectoryName(job.Executable) is { Length: > 0 }
+                ? Path.GetFullPath(job.Executable, root) : job.Executable;
+            var result = process(executable, job.Arguments, root, checkEnvironment);
             return CheckResult(job.Name, result, output);
         });
         foreach (var job in plan.Checks.Where(job => job.Serial)) Check(job);

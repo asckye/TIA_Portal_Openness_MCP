@@ -25,6 +25,7 @@ public sealed class PrepSlimTests
     [InlineData("scripts/checks/Test-FoundationTransport.py", false, true)]
     [InlineData("tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/Program.cs", false, true)]
     [InlineData("docs/manuals/release.md", false, false)]
+    [InlineData("src/Studio/Gui/View.cs", false, false)]
     [InlineData("Directory.Build.props", false, true)]
     [InlineData("", true, true)]
     public void TransportSelectionIncludesItsBuilds(string path, bool all, bool selected)
@@ -51,23 +52,24 @@ public sealed class PrepSlimTests
     }
 
     [Theory]
-    [InlineData("src/WorkerChannel/channel.cs")]
-    [InlineData("src/Adapters/Native/tool.cs")]
-    [InlineData("reference/tool-catalog/tools.json")]
-    [InlineData("build-tools/release/ToolUsageGenerator.cs")]
-    [InlineData("Directory.Build.props")]
-    public void WorkerChecksKeepNativeSafetyUsageAndCampaignInputs(string path)
+    [InlineData("src/WorkerChannel/channel.cs", true)]
+    [InlineData("src/Adapters/Native/tool.cs", true)]
+    [InlineData("reference/tool-catalog/tools.json", true)]
+    [InlineData("build-tools/release/ToolUsageGenerator.cs", true)]
+    [InlineData("Directory.Build.props", true)]
+    [InlineData("src/Studio/Gui/View.cs", false)]
+    public void WorkerChecksKeepNativeSafetyUsageAndCampaignInputs(string path, bool selected)
     {
         var plan = MergeCheck.Select([path], false, new JsonObject(),
             new Dictionary<string, HashSet<string>> { ["worker-channel"] = new() { path } },
             (_, _) => false, [], "dotnet", "python", "sdk", "output");
-        Assert.Contains(MergeCheck.ApiCompileProject, plan.Builds.Keys);
-        Assert.Contains(MergeCheck.AdapterDiagnosticsProject, plan.Builds.Keys);
+        Assert.Equal(selected, plan.Builds.ContainsKey(MergeCheck.ApiCompileProject));
+        Assert.Equal(selected, plan.Builds.ContainsKey(MergeCheck.AdapterDiagnosticsProject));
         foreach (var key in new[] { "20", "21" })
         {
-            Assert.Contains($"tests/FoundationHost/TiaMcp.Engine.Native.Tests/V{key}/TiaMcp.Engine.Native.Tests.V{key}.csproj", plan.Builds.Keys);
+            Assert.Equal(selected, plan.Builds.ContainsKey($"tests/FoundationHost/TiaMcp.Engine.Native.Tests/V{key}/TiaMcp.Engine.Native.Tests.V{key}.csproj"));
             foreach (var name in new[] { "native-safety", "usage", "campaign-inputs" })
-                Assert.Contains(plan.Checks, job => job.Name == name + "-v" + key + "-plc");
+                Assert.Equal(selected, plan.Checks.Any(job => job.Name == name + "-v" + key + "-plc"));
         }
     }
 }

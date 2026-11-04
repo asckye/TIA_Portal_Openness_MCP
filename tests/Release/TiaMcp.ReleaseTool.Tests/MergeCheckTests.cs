@@ -389,6 +389,20 @@ public sealed class MergeCheckTests
         Assert.Equal(1, MergeCheck.CheckResult("native-diagnostics", success, tree.Root).ExitCode);
     }
 
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void NativeSafetyRequiresCompletionLineEvenWithSuccessfulExit(string key)
+    {
+        using var tree = new StaticTree();
+        var success = new CommandResult(0, "Process finished without its completion count.", "");
+        Assert.Equal(1, MergeCheck.CheckResult("native-safety-v" + key + "-plc", success, tree.Root).ExitCode);
+        Assert.Equal(0, MergeCheck.CheckResult("native-safety-v" + key + "-plc", success with
+        {
+            StandardOutput = "COMPLETE: 1 native harness safety checks passed; live TIA tests NOT RUN"
+        }, tree.Root).ExitCode);
+    }
+
     private static string WriteSdk(StaticTree tree, string directory = "sdk")
     {
         foreach (var key in PlcWorkerFixtures.Keys)
@@ -559,6 +573,12 @@ public sealed class MergeCheckTests
                         ? new JsonArray(new JsonObject { ["FullPath"] = Path.Combine(root, source) }) : new JsonArray() },
                     ["Properties"] = new JsonObject { ["MSBuildAllProjects"] = "" }
                 }.ToJsonString(), "");
+            if (args.SequenceEqual(new[] { "--self-test" }))
+            {
+                Assert.True(Path.IsPathFullyQualified(exe));
+                Assert.StartsWith(Path.GetFullPath(tree.Root) + Path.DirectorySeparatorChar, exe);
+                Assert.NotEqual(Path.GetFullPath(tree.Root), Path.GetFullPath(Environment.CurrentDirectory));
+            }
             if (args[0] == "test")
             {
                 var directory = args[Array.IndexOf(args, "--results-directory") + 1];
