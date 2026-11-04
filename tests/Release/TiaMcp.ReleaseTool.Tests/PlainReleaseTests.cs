@@ -10,6 +10,31 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class PlainReleaseTests
 {
     [Theory]
+    [InlineData("tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj")]
+    [InlineData("tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj")]
+    public void StudioShardsLeaveBundleSelectionToTheFixture(string project)
+    {
+        using var tree = new StaticTree();
+        var suite = new JsonObject { ["arguments"] = new JsonArray() };
+        var previous = Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT");
+        try
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", tree.Root);
+            var result = FastSuites.RunShard(tree.Root, "studio", suite, tree.Root, "dotnet", null,
+                new(project, "", []), 0, 1, process: (_, _, _, environment) =>
+                {
+                    Assert.True(environment!.ContainsKey("TIA_MCP_BUNDLE_ROOT"));
+                    Assert.Null(environment["TIA_MCP_BUNDLE_ROOT"]);
+                    DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(tree.Root, "studio.trx"), ["Passed"]);
+                    return new(0, "passed", "");
+                });
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal(tree.Root, Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT"));
+        }
+        finally { Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", previous); }
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void FoundationBuildRunsOnlyWhenNotAlreadyBuilt(bool prebuilt)
@@ -168,9 +193,24 @@ public sealed class PlainReleaseTests
     }
 
     [Fact]
+    public void ProcessFixtureCleanupToleratesAnImageStillOpenAfterExit()
+    {
+        var tree = new StaticTree(tolerateLockedCleanup: true);
+        var image = tree.Write("FixtureExit.exe", "fixture image");
+        try
+        {
+            using var reader = new FileStream(image, FileMode.Open, FileAccess.Read, FileShare.Read);
+            tree.Dispose();
+            if (OperatingSystem.IsWindows()) Assert.True(File.Exists(image));
+        }
+        finally { if (Directory.Exists(tree.Root)) tree.Dispose(); }
+        Assert.False(Directory.Exists(tree.Root));
+    }
+
+    [Fact]
     public void TimeoutTerminatesTheOwnedParentAndChild()
     {
-        using var tree = new StaticTree();
+        using var tree = new StaticTree(tolerateLockedCleanup: true);
         var project = tree.Write("FixtureExit/FixtureExit.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings></PropertyGroup></Project>");
         tree.Write("NuGet.Config", "<configuration><packageSources><clear /></packageSources></configuration>");
         tree.Write("FixtureExit/Program.cs", """

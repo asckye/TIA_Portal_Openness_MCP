@@ -7,7 +7,7 @@ using Xunit;
 
 namespace TiaMcp.ReleaseTool.Tests;
 
-internal sealed class StaticTree : IDisposable
+internal sealed class StaticTree(bool tolerateLockedCleanup = false) : IDisposable
 {
     internal string Root { get; } = Directory.CreateDirectory(Path.Combine(StaticCheckVectorTests.Root, "bin-build", "static-check-" + Guid.NewGuid().ToString("N"))).FullName;
 
@@ -26,7 +26,24 @@ internal sealed class StaticTree : IDisposable
         File.Copy(Path.Combine(StaticCheckVectorTests.Root, name), path, true);
     }
 
-    public void Dispose() => Directory.Delete(Root, true);
+    public void Dispose()
+    {
+        for (int attempt = 0; ; attempt++)
+        {
+            try { Directory.Delete(Root, true); return; }
+            catch (Exception error) when (tolerateLockedCleanup && (error is IOException || error is UnauthorizedAccessException))
+            {
+                // The process-exit fixture has already asserted termination. A scanner
+                // can keep its executable open briefly after both processes exit.
+                if (attempt == 9)
+                {
+                    Console.Error.WriteLine("Process fixture cleanup left locked files at " + Root + ": " + error.Message);
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+        }
+    }
 }
 
 [Trait("Category", "StaticChecks")]

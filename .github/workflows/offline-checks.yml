@@ -129,6 +129,11 @@ jobs:
           architecture: 'x64'
       - name: Export the pinned decoder interpreter
         run: '"TIA_MCP_DECODER_PYTHON=${{ steps.decoder-python.outputs.python-path }}" >> $env:GITHUB_ENV'
+      - name: Prepare the pinned decoder runtime
+        run: |
+          dotnet run --project build-tools/release -- prepare-decoder-python
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "TIA_MCP_DECODER_RUNTIME=$env:GITHUB_WORKSPACE/runtime/decoder-python" >> $env:GITHUB_ENV
       - name: Build the development host that the host CLI tests start
         run: dotnet build src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release
       - name: Foundation contracts and functional tests

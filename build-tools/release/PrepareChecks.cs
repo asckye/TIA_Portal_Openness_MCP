@@ -144,6 +144,7 @@ internal static partial class ReleaseCommands
         var root = context.Root;
         var temp = environment["TEMP"]!;
         var output = Path.Combine(context.Logs, "tests");
+        Directory.CreateDirectory(output);
         var fileApps = Path.Combine(temp, "file-apps");
         var jobs = new List<PrepareCheckJob>();
         CommandResult Run(string name, string executable, IEnumerable<string> arguments, string? input = null, bool bundled = false,

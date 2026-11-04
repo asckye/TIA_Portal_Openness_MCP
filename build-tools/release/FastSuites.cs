@@ -47,7 +47,9 @@ internal static class FastSuites
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
-        if (unit.Project.StartsWith("tests/Studio/", StringComparison.Ordinal)) environment["TIA_MCP_BUNDLE_ROOT"] = root;
+        // Studio fixtures resolve their own bundles; a process-wide root overrides
+        // their temporary installations and even the deliberate no-bundle cases.
+        if (unit.Project.StartsWith("tests/Studio/", StringComparison.Ordinal)) environment["TIA_MCP_BUNDLE_ROOT"] = null;
         environment["TIA_MCP_TEST_SHARD_COUNT"] = count.ToString(); environment["TIA_MCP_TEST_SHARD_INDEX"] = index.ToString();
         environment["TIA_MCP_TEST_SHARD_ASSEMBLY"] = Path.GetFileNameWithoutExtension(unit.Project);
         environment["TIA_MCP_TEST_SHARD_PLAN"] = plan;

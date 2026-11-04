@@ -5,6 +5,39 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class PrepSlimTests
 {
+    [Theory]
+    [InlineData("foundation-host", "runtime/v14sp1/TiaMcp.FoundationHost.exe")]
+    [InlineData("studio", "runtime/studio/TiaOpenness.exe")]
+    public void BundledRuntimeJobsWorkWithAFreshLogsDirectory(string name, string executable)
+    {
+        using var tree = new StaticTree();
+        var context = new PrepareContext(tree.Root, "4.0.0-beta.3", "sdk", null, "python", "companion",
+            Path.Combine(tree.Root, "prepared"), new(2026, 11, 4), 1);
+        Directory.CreateDirectory(context.Logs);
+        var output = Path.Combine(context.Logs, "tests");
+        Assert.False(Directory.Exists(output));
+        var bundle = Path.Combine(tree.Root, "bundle");
+        int calls = 0;
+        var plan = ReleaseCommands.PrepareCheckJobs(context, bundle,
+            new Dictionary<string, string?> { ["TEMP"] = Path.Combine(tree.Root, "temp") },
+            (file, _, cwd, environment, _) =>
+            {
+                calls++;
+                Assert.Equal(Path.Combine(bundle, executable), file);
+                Assert.Equal(bundle, cwd);
+                Assert.Equal("1", environment["COREHOST_TRACE"]);
+                File.WriteAllText(environment["COREHOST_TRACEFILE"]!, "Resolved fxr ["
+                    + Path.GetFullPath(Path.Combine(bundle, "runtime/dotnet/host/fxr"))
+                    + Path.DirectorySeparatorChar + "10.0.0/hostfxr.dll]");
+                return new(0, "", "");
+            });
+
+        var job = Assert.Single(plan.Jobs, job => job.Name == "bundled-runtime-" + name);
+        Assert.Equal(0, job.Run().ExitCode);
+        Assert.Equal(1, calls);
+        Assert.True(File.Exists(Path.Combine(output, "corehost-" + name + ".txt")));
+    }
+
     [Fact]
     public void PrepareHasExactlyThePackageChecks()
     {
