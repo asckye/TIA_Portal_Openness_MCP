@@ -16,25 +16,6 @@ public class DotnetSuitesTests
         DotnetSuiteSelfTests.Cases[index].Run();
     }
 
-    [Fact]
-    public void HostParityBuildsUseStableRestorePropertiesWithoutAnInertDefine()
-    {
-        using var tree = new StaticTree();
-        int builds = 0;
-        HostParity.Prepare(tree.Root, tree.Root, "dotnet", "sdk", "offline.config", (_, arguments, _, _) =>
-        {
-            var args = arguments.ToArray();
-            Assert.Contains("-p:UseSharedCompilation=false", args);
-            Assert.Contains("-p:NuGetAudit=false", args);
-            Assert.Contains("-p:TiaPublicApiRoot=sdk", args);
-            Assert.Contains("-p:RestoreConfigFile=offline.config", args);
-            Assert.DoesNotContain(args, arg => arg.StartsWith("-p:DefineConstants=", StringComparison.Ordinal));
-            builds++;
-            return new(0, "", "");
-        });
-        Assert.Equal(2, builds);
-    }
-
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -219,51 +200,5 @@ public class DotnetSuitesTests
         Assert.Equal(0, result.ExitCode);
     }
 
-    [Theory]
-    [InlineData("20", false)]
-    [InlineData("21", false)]
-    [InlineData("20", true)]
-    public void HostParityPreservesCommandsEnvironmentAndSummary(string major, bool noBuild)
-    {
-        using var fixture = new OfflineFixtures();
-        var options = Options.Parse(["-EngineMajor", major, "-ResultsDirectory", fixture.DirectoryPath, "-BuildDirectory", fixture.DirectoryPath, "-NoBuild", noBuild.ToString()], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "NoBuild" });
-        var environment = new Dictionary<string, string?> { ["TEST_INHERITED"] = "value" };
-        var result = HostParity.Run(Repository.FindRoot(), options, environment, (_, args, _, env) =>
-        {
-            Assert.Equal(major, env!["TIA_MCP_PARITY_ENGINE_RELEASE"]);
-            Assert.Equal("value", env["TEST_INHERITED"]);
-            Assert.Equal("vstest", args.First());
-            Assert.Equal("5m", SuiteHang.Timeout);
-            Assert.Contains("--Blame:CollectHangDump;HangDumpType=mini;TestTimeout=5m", args);
-            Assert.Contains(Path.Combine(fixture.DirectoryPath, "v" + major, "TiaMcp.FoundationHost.Tests.dll"), args);
-            Assert.Contains("--TestCaseFilter:FullyQualifiedName~BehaviorParityTests", args);
-            DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(fixture.DirectoryPath, "host-behavior-parity.trx"), Enumerable.Repeat("Passed", 103).ToArray());
-            return new CommandResult(0, "", "");
-        });
-        Assert.Equal(0, result.ExitCode);
-        Assert.False(environment.ContainsKey("TIA_MCP_PARITY_ENGINE_RELEASE"));
-        var summary = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.DirectoryPath, "host-behavior-parity.json")))!;
-        Assert.Equal(major, summary["engineRelease"]!.GetValue<string>());
-        Assert.Equal(103, summary["passed"]!.GetValue<int>());
-        Assert.Equal(3, summary["paths"]!.AsArray().Count);
-    }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void HostParityCannotReuseStaleSuccess(bool writeTrx)
-    {
-        using var fixture = new OfflineFixtures();
-        var path = Path.Combine(fixture.DirectoryPath, "host-behavior-parity.trx");
-        DotnetSuiteSelfTests.SyntheticTrx(path, Enumerable.Repeat("Passed", 103).ToArray());
-        var options = Options.Parse(["-ResultsDirectory", fixture.DirectoryPath, "-BuildDirectory", fixture.DirectoryPath], new HashSet<string>());
-        var result = HostParity.Run(Repository.FindRoot(), options, process: (_, _, _, _) =>
-        {
-            if (writeTrx) DotnetSuiteSelfTests.SyntheticTrx(path, ["Passed"]);
-            return new CommandResult(1, "", "");
-        });
-        Assert.Equal(1, result.ExitCode);
-        Assert.Contains("dotnet test exited 1", result.StandardOutput);
-        Assert.Contains(writeTrx ? "below minimum" : "missing TRX", result.StandardOutput);
-    }
 }

@@ -221,7 +221,7 @@ internal static class DotnetSuiteSelfTests
             ["maximumSkipped"] = 0, ["arguments"] = new JsonArray() };
         var unit = new SuiteBuild((string)suite["project"]!, "default", []);
         var failures = new List<string>();
-        foreach (var mode in new[] { "test", "vstest", "test-shard" })
+        foreach (var mode in new[] { "test", "test-shard" })
         foreach (var hang in new[] { false, true })
         {
             var fast = mode != "test";
@@ -231,25 +231,18 @@ internal static class DotnetSuiteSelfTests
                 CommandResult Process(string executable, IEnumerable<string> arguments, string working, IDictionary<string, string?>? environment)
                 {
                     var args = arguments.ToArray();
-                    Require(mode == "vstest" ? args.Contains(SuiteHang.VstestArgument) : SuiteHang.TestArguments.All(args.Contains));
+                    Require(SuiteHang.TestArguments.All(args.Contains));
                     // Only the planted hang uses a short limit; production has no override. The normal control runs with the
                     // production blame-hang settings: the 2-s limit also covers test-host start-up, which took up to 2.0 s here.
                     if (hang) args = args.Select(a => a == SuiteHang.Timeout ? "2s" : a.Replace("TestTimeout=" + SuiteHang.Timeout, "TestTimeout=2s", StringComparison.Ordinal)).ToArray();
-                    args = mode == "vstest" ? [.. args, "--Diag:" + Path.Combine(output, "vstest.log")] : [.. args, "--diag", Path.Combine(output, "vstest.log")];
+                    args = [.. args, "--diag", Path.Combine(output, "vstest.log")];
                     var env = environment == null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
                     env["TIA_MCP_PLANTED_HANG"] = hang ? "1" : null;
                     var result = ProcessRunner.Run(executable, args, working, env);
                     File.WriteAllText(Path.Combine(output, "process.log"), result.StandardOutput + result.StandardError);
                     return result;
                 }
-                CommandResult result;
-                if (mode == "vstest")
-                {
-                    var before = SuiteHang.Begin(output, "fixture");
-                    var command = DotnetSuites.VstestArguments(Path.Combine(directory, "bin/Release/net10.0/HangFixture.dll"), [], "fixture", output);
-                    result = SuiteHang.Complete(output, "fixture", before, Process("dotnet", command, root, null));
-                }
-                else result = fast
+                var result = fast
                     ? FastSuites.RunShard(root, "fixture", suite, output, "dotnet", null, unit, 0, 1,
                         extra: mode == "test-shard" ? ["-p:NuGetAudit=false"] : null, process: Process)
                     : DotnetSuites.RunSuite(root, "fixture", suite, output, arguments: ["--no-build", "--no-restore"], process: Process);

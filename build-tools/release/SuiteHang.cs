@@ -13,7 +13,6 @@ internal static class SuiteHang
     // suites run as separate test cases; the timeout applies per test case.
     internal const string Timeout = "5m";
     internal static string[] TestArguments => ["--blame-hang", "--blame-hang-timeout", Timeout, "--blame-hang-dump-type", "mini"];
-    internal static string VstestArgument => "--Blame:CollectHangDump;HangDumpType=mini;TestTimeout=" + Timeout;
 
     internal static CommandResult RunProcess(string executable, IEnumerable<string> arguments, string root, IDictionary<string, string?>? environment = null)
     {

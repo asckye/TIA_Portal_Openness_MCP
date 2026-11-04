@@ -29,7 +29,7 @@
 dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3
 ```
 
-完整准备按顺序完成构建、暂存校验、ZIP 和摘要生成、全部注册套件与发布检查，然后写候选记录并上传私有草稿。检查范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。
+完整准备按顺序完成构建、暂存校验、ZIP 和摘要生成、全部注册套件与发布检查，然后写候选记录并上传私有草稿。检查范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
 
 | 选项 | 用途与边界 |
 |---|---|

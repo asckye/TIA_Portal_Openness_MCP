@@ -190,13 +190,12 @@ internal static class PrepareChecks
 internal static partial class ReleaseCommands
 {
     internal static PrepareCheckPlan PrepareCheckJobs(PrepareContext context, string bundle,
-        IDictionary<string, string?> environment, PrepareProcess? process = null, Func<string>? prepareParity = null)
+        IDictionary<string, string?> environment, PrepareProcess? process = null)
     {
         var root = context.Root;
         var temp = environment["TEMP"]!;
         var output = Path.Combine(context.Logs, "tests");
         var fileApps = Path.Combine(temp, "file-apps");
-        var parityManifest = "";
         var producers = new List<PrepareCheckJob>();
         var jobs = new List<PrepareCheckJob>();
         var exclusive = new List<PrepareCheckJob>();
@@ -233,8 +232,6 @@ internal static partial class ReleaseCommands
         producers.Add(ActionJob("plc-file-programs", () => PreparePlcReleaseFilePrograms(root, Dotnet, context.NuGetConfig,
             Path.Combine(output, "file-app-builds"), fileApps, (exe, args, cwd, env) => Run("file-" + Path.GetFileNameWithoutExtension(args.Skip(1).First()), exe, args, overrides: env))));
         producers.Add(Command("configuration-build", Dotnet, ["build", configurationProject, "-c", "Release", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false"]));
-        producers.Add(ActionJob("host-parity-build", () => parityManifest = prepareParity?.Invoke()
-            ?? HostParity.Prepare(root, Path.Combine(output, "parity-build"), Dotnet, context.PublicApiRoot, context.NuGetConfig)));
 
         producers.Add(Command("adapter-inputs", Dotnet, ["run", "src/Adapters/build/Test-AdapterInputs.cs", "--", "--source-root", "src", "--public-api-root", context.PublicApiRoot, "--evidence-directory", Path.Combine(output, "adapter-inputs")],
             validate: _ => PrepareChecks.RequireEvidence(Path.Combine(output, "adapter-inputs/input-results.json"))));
@@ -331,28 +328,6 @@ internal static partial class ReleaseCommands
             else if (ReleasePlcExclusive(job)) exclusive.Add(check);
             else jobs.Add(check);
         }
-        post.Add(ActionJob("host-behavior-parity", () =>
-        {
-            var failures = new List<string>();
-            foreach (var key in new[] { "20", "21" })
-            {
-                var directory = Path.Combine(output, "host-behavior-parity-v" + key);
-                var options = Options.Parse(["-Dotnet", Dotnet, "-EngineMajor", key, "-ResultsDirectory", directory, "-NoBuild", "-BuildDirectory", parityManifest], new HashSet<string> { "NoBuild" });
-                var env = FastSuites.EnvironmentFor(directory, context.PublicApiRoot);
-                env["RestoreConfigFile"] = context.NuGetConfig;
-                env[PlcReleaseSystemTempVariable] = fileApps;
-                env["TIA_MCP_PLC_TOOLS_PYTHON"] = context.CompanionPython;
-                var name = "host-behavior-parity-v" + key;
-                var result = ReleaseTestSelection.RunJob(name, () =>
-                {
-                    var tested = Prepare.Timed(name, () => HostParity.Run(root, options, env,
-                        process is null ? null : (exe, args, cwd, values) => process(exe, args, cwd, values!, null)));
-                    return new(name, tested.ExitCode, tested.StandardOutput, tested.StandardError);
-                });
-                if (result.ExitCode != 0) failures.Add(name + ": " + result.StandardOutput + result.StandardError);
-            }
-            if (failures.Count != 0) throw new ReleaseException(string.Join("\n", failures));
-        }));
         var fixture = Path.Combine(root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe");
         post.Add(Python("foundation-transport", "Test-FoundationTransport.py", ["--fixture", fixture, "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--output", Path.Combine(context.Logs, "transport")]));
         post.Add(Python("foundation-transport-plc", "Test-FoundationTransport.py", ["--plc-worker", "--fixture", fixture,

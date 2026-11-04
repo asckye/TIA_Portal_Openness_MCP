@@ -174,9 +174,9 @@ public sealed class PrepareChecksTests
         using var tree = new StaticTree();
         var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root));
         var actual = All(plan).Select(job => job.Name).Order().ToArray();
-        var expected = new List<string> { "plc-file-programs", "configuration-build", "host-parity-build", "adapter-inputs", "worker-isolation", "native-diagnostics", "product-smoke", "relocated-bundle",
+        var expected = new List<string> { "plc-file-programs", "configuration-build", "adapter-inputs", "worker-isolation", "native-diagnostics", "product-smoke", "relocated-bundle",
             "bundled-runtime-foundation-host", "bundled-runtime-studio", "bundle-write-guard", "foundation-approval", "configuration-page",
-            "native-mcp-session-self-test", "nativelifecycle-self-test", "host-behavior-parity", "foundation-transport", "foundation-transport-plc" };
+            "native-mcp-session-self-test", "nativelifecycle-self-test", "foundation-transport", "foundation-transport-plc" };
         foreach (var key in PlcWorkerFixtures.Keys)
             expected.AddRange(["weave-v" + key + "-bundle", "contracts-v" + key]);
         foreach (var key in new[] { "20", "21" })
@@ -451,22 +451,12 @@ public sealed class PrepareChecksTests
     }
 
     [Fact]
-    public void ParityFailureDoesNotHideTheOtherVersion()
+    public void RetiredHostParityJobsAreNotScheduled()
     {
         using var tree = new StaticTree();
-        var releases = new List<string>();
-        var manifest = Path.Combine(tree.Root, "parity");
-        var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
-            (exe, args, cwd, env, input) =>
-            {
-                releases.Add(env["TIA_MCP_PARITY_ENGINE_RELEASE"]!);
-                return new(1, "", "parity failure");
-            }, prepareParity: () => manifest);
-        plan.Producers.Single(job => job.Name == "host-parity-build").Run();
-        var error = Assert.Throws<ReleaseException>(() => plan.PostSuites.Single(job => job.Name == "host-behavior-parity").Run());
-        Assert.Equal(new[] { "20", "21" }, releases);
-        Assert.Contains("host-behavior-parity-v20", error.Message);
-        Assert.Contains("host-behavior-parity-v21", error.Message);
+        var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root));
+        Assert.DoesNotContain(plan.Producers, job => job.Name == "host-parity-build");
+        Assert.DoesNotContain(plan.Producers.Concat(plan.Jobs).Concat(plan.Exclusive).Concat(plan.PostSuites), job => job.Name == "host-behavior-parity");
     }
 
     [Fact]

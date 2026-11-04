@@ -213,7 +213,7 @@ public sealed class ReleaseSingleStageTests
         var root = TiaMcp.BuildCommon.Repository.FindRoot();
         var source = File.ReadAllText(Path.Combine(root, "build-tools/release/PrepareChecks.cs"));
         Assert.Contains("producers.Add(ActionJob(\"plc-file-programs\"", source);
-        Assert.Contains("producers.Add(ActionJob(\"host-parity-build\"", source);
+        Assert.DoesNotContain("host-parity-build", source);
         Assert.Contains("foreach (var job in plan.Producers) RunJob(job)", source);
         Assert.Contains("env[ReleaseCommands.PlcReleaseSystemTempVariable] = fileApps", source);
 

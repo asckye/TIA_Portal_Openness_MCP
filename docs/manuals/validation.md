@@ -87,7 +87,7 @@ dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.
 | 适配器输入与 worker 隔离 | `src/Adapters/build/Test-AdapterInputs.cs`、`Test-WorkerIsolation.cs`：核对八版输入选择与 worker 隔离，必须产生通过的结果记录 |
 | 原生诊断夹具 | `Test-NativeDiagnostics.py --fixture <诊断测试程序>`：行为检查至少 36 项、拒绝检查至少 5 项，`nativeTiaExecuted` 必须为 false |
 | V20/V21 worker | `PlcReleaseJobs` 中保留的目录、编排、调用输入、协议、离线拒绝、原生诊断、生命周期与故障夹具；先产出清单，再逐项检查并报告所有失败 |
-| 传输与行为 | `foundation-transport`、`foundation-transport-plc`、`host-behavior-parity`；HTTP 使用本机回环合成服务，不连接 TIA 或外部服务 |
+| 传输与行为 | `foundation-transport`、`foundation-transport-plc`；HTTP 使用本机回环合成服务，不连接 TIA 或外部服务 |
 | 工作台配置与生态 | `configuration-page` 控制台检查保留至少 157 项；生态检查保留解码器、PDF 及伴随 PLC Tools 依赖 |
 | 契约与交付字节 | 八版 `Snapshot-ToolContracts.py` 实际捕获后比较工具定义；核对测试过的 `runtime/` 与 ZIP 中的文件一致，包括随包更新器 |
 | 暂存布局 | 交付规则、必需文件、包资源、测试策略程序集拒绝、Openness 用户组运行时及程序集依赖闭包 |
@@ -102,9 +102,11 @@ dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.
 - 延迟、耗时及性能增长门槛；性能数据用于趋势报告。功能测试的短时限后续改为防挂起保护，由计划中的 HANG-GUARD 任务实施，不能自行放宽现有断言。
 - HTTP 稳定性压测（包括 c8/c16 和重复轮次）。普通 HTTP 功能、传输、审批及故障恢复检查保留。
 - 独占静默阶段及围绕它的 CPU/内存调度。
-- 套件普通输出与隔离输出的 `suite-output-parity` 比较；`host-behavior-parity` 功能检查保留。
+- 套件普通输出与隔离输出的 `suite-output-parity` 比较。
 - 全部八版逐工具响应捕获、响应基线及 `response-verify`。工具定义契约快照和功能测试保留，不能把删除响应捕获解释成允许改变 MCP 契约。
 - nightly、旧证据采纳、构建收据和哈希链比较。准备阶段仍验证源码未漂移、包摘要和测试字节一致。
+
+维护者在 2026-11-04 批准移除 `host-behavior-parity` 作业及其最低通过数门槛。该作业重复运行已退役引擎路径的比较；`BehaviorParityTests` 仍由 `foundation-api` 套件执行，使用保留的夹具与 Foundation 路径，不运行已退役的引擎程序。
 
 主机测试精简仅限维护者批准的重复准入用例：版本重复的准入类用最旧与最新版本覆盖；审批、写安全、worker 故障恢复及协议测试保留完整覆盖。`StagedGeneration` 属于写安全，不能按普通准入用例裁减。迁移引擎测试时先保留仍有产品意义的安全与回滚测试。
 
