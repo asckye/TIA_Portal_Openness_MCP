@@ -117,7 +117,7 @@ public sealed class PlainReleaseTests
     public void OnlyTheRetainedCommandsArePublic()
     {
         string[] expected = ["prepare", "publish-prepared", "upload-draft", "merge-check", "generate-catalogs", "generate-tool-usage",
-            "generate-tool-counts", "generate-release-migration", "generate-prerelease-notes", "check-tools-list", "audit-version-tools",
+            "generate-tool-capability-matrix", "generate-tool-counts", "generate-release-migration", "generate-prerelease-notes", "check-tools-list", "audit-version-tools",
             "audit-tool-usage", "check-analyzer-warnings", "check-ratchet", "check-adapter-boundary", "check-bundle-layout", "check-repository",
             "check-dead-tool-references", "check-tia-features", "check-script-tool-calls", "check-envelope-rewrite", "test-suites",
             "build-file-programs", "build-solutions", "build-plc-worker-fixtures", "prepare-decoder-python", "get-bundled-dotnet", "publish-vci-watch", "wrap-long-lines", "dump-il"];
