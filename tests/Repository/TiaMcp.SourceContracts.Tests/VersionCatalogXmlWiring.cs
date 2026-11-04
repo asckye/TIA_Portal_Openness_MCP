@@ -6,6 +6,15 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed partial class VersionCatalogWiring
 {
     [Fact]
+    public void FaultFixtureDoesNotPropagateSdkFixturePropertyToWorkerChannel()
+    {
+        var project = XDocument.Load(Path.Combine(ROOT, "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/TiaMcp.PlcWorker.FaultFixture.csproj"));
+        var reference = Assert.Single(project.Descendants("ProjectReference"), node =>
+            (node.Attribute("Include")?.Value ?? "").Replace('\\', '/').EndsWith("/WorkerChannel/TiaMcp.WorkerChannel.csproj", StringComparison.Ordinal));
+        Assert.Equal("TiaMcpPlcWorkerSdkFixture", reference.Attribute("GlobalPropertiesToRemove")?.Value);
+    }
+
+    [Fact]
     public void ConfiguratorUsesKeysNotIndices()
     {
         var source = Read(Path.Combine(ROOT, "src/Studio/Gui/Configuration/ConfigurationView.xaml.cs"));

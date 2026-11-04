@@ -5,7 +5,7 @@
     <AppConfig>../../../src/PlcWorker/App.config</AppConfig>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
+    <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="TiaMcpPlcWorkerSdkFixture" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
     <Compile Include="../../../src/PlcWorker/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
     <Compile Include="../../../src/Shared/WindowsOpennessGroup.cs" Link="WindowsOpennessGroup.cs" />
