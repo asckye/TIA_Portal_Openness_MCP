@@ -1,7 +1,7 @@
 # SimaticML Reading Guide
 
 > **Technical format reference.** This guide records schema and sample observations; it is not a
-> support matrix. See [CAPABILITIES.md](CAPABILITIES.md) for current implementation and
+> support matrix. See [CAPABILITIES.md](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/docs/CAPABILITIES.md) for current implementation and
 > qualification status.
 
 This guide describes how to read SimaticML block exports from TIA Portal.

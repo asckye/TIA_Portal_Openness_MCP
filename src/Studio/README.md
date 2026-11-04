@@ -20,7 +20,7 @@ The latest published package is v3.3.0; the 4.0 source is unreleased.
 
 Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT,
 copyright 2026 asckye. See [LICENSE](../../third_party/tia-openness-studio/LICENSE) and [file provenance](../../third_party/tia-openness-studio/UPSTREAM.json).
-The complete original tree and Git history remain under `../../third_party/tia-openness-studio/upstream/` as reference archives.
+The [provenance record](../../third_party/tia-openness-studio/UPSTREAM.json) retains the original file and archive hashes; the original tree and history are available in the [upstream repository](https://github.com/asckye/tia-openness-studio/tree/87099c576fbc06e6b6ac523ddbf763fe0aa2ce02).
 
 For a first installation and a step-by-step desktop walkthrough, see the [beginner guide (Chinese)](../../docs/getting-started/beginners.zh-CN.md).
 

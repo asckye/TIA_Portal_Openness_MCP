@@ -6,6 +6,7 @@
 
 - Remove retired host engine cross-check clients, fixtures and dead compile symbols; keep all eight releases on PlcWorker with unchanged MCP contracts.
 
+- 精简第三方目录：移除未交付的上游测试、文档和 Studio 参考归档，保留交付源码、许可、来源记录及本项目生态桥接检查。
 - 新增可恢复的 `upload-draft` / `publish-prepared` 预发布路径：复用已验证的草稿资产，核对候选和标签后发布；发布阶段不构建、测试或打包，硬限时 300 秒，失败后重跑恢复。
 
 - 发布测试阶段复用 Foundation 分片执行器及已批准的套件派生门槛，收集全部作业失败后统一返回；诊断模式使用仓库外临时目录。

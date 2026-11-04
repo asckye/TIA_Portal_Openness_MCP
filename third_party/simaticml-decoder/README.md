@@ -47,7 +47,7 @@ fixture declares FBD or FBD_IEC. These areas are therefore **implemented, not co
 
 SIMATIC SD is preserved or diagnosed but not decoded. GRAPH/SFC and STL semantic translation,
 complex unobserved access forms, recompilable output, and live TIA Openness integration are
-unsupported or deferred. See [Current capabilities](docs/CAPABILITIES.md) for the authoritative
+unsupported or deferred. See [Current capabilities](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/docs/CAPABILITIES.md) for the authoritative
 matrix and evidence vocabulary.
 
 ## Fixture provenance and compatibility
@@ -92,7 +92,7 @@ basenames only, and single-line bounded detail; they do not expose absolute
 paths, raw parser output, or control characters. Folding/emission failures are
 also isolated so another file in the same batch can continue.
 
-See [`SECURITY.md`](SECURITY.md) for the full security model and vulnerability reporting.
+See [`SECURITY.md`](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/SECURITY.md) for the full security model and vulnerability reporting.
 
 ## Install
 
@@ -127,7 +127,7 @@ platform-specific smoke test for the native, handle-anchored directory walk;
 see "Untrusted-input policy" above), matching the versions declared in
 `pyproject.toml`'s classifiers.
 
-Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for development setup, the fixture policy, and the pull request workflow.
+Please see [`CONTRIBUTING.md`](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/CONTRIBUTING.md) for development setup, the fixture policy, and the pull request workflow.
 
 ## Usage
 
@@ -173,18 +173,18 @@ corpus described above (see "Fixture provenance and compatibility") -- it demons
 that project-scale discovery/indexing runs against a real V21 export tree, not that
 project-mode feature coverage itself is validated against a licensed corpus.
 
-See [`docs/PROJECT_INPUT_CONTRACT.md`](docs/PROJECT_INPUT_CONTRACT.md) for the full
+See [`docs/PROJECT_INPUT_CONTRACT.md`](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/docs/PROJECT_INPUT_CONTRACT.md) for the full
 input contract: the V21-only compatibility profile, `--library-root` semantics, every
 default budget, the diagnostic-code vocabulary, exit-code behavior, determinism, and
 the explicit non-re-importability of the output.
 
 ## Documentation
 
-- [Documentation index](docs/README.md) — current guides, contracts, architecture, and history
-- [Current capabilities](docs/CAPABILITIES.md) — evidence-qualified support matrix and limitations
-- [Architecture](docs/ARCHITECTURE.md) — block decode, project index, and input-safety design
-- [Roadmap](ROADMAP.md) — directional priorities
-- [Advanced translation roadmap](docs/roadmap/advanced-translation.md) — detailed phase boundaries
+- [Documentation index](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/docs/README.md) — current guides, contracts, architecture, and history
+- [Current capabilities](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/docs/CAPABILITIES.md) — evidence-qualified support matrix and limitations
+- [Architecture](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/docs/ARCHITECTURE.md) — block decode, project index, and input-safety design
+- [Roadmap](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/ROADMAP.md) — directional priorities
+- [Advanced translation roadmap](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/docs/roadmap/advanced-translation.md) — detailed phase boundaries
 
 ## Layout
 
@@ -197,7 +197,7 @@ tests/                   authored separately; run by CI
 
 ## Future
 
-Priorities are maintained in [ROADMAP.md](ROADMAP.md). The next evidence gate is a sanitized,
+Priorities are maintained in [ROADMAP.md](https://github.com/Czarnak/simaticml-decoder/blob/2f100023c2d6f4e7a4df02cbd04975de48f5d207/ROADMAP.md). The next evidence gate is a sanitized,
 redistributable V21 corpus, followed by native FBD/FBD_IEC qualification. The V21-specific SIMATIC
 SD adapter and a separate future GRAPH front end remain planned work.
 

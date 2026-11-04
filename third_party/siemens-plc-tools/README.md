@@ -38,7 +38,7 @@ The root package also exposes capability extras (`core`, `code`, `iol`,
 
 ## Quickstart
 
-See [`examples/demo-project/`](examples/demo-project/) for a runnable example:
+See `examples/demo-project/` for a runnable example:
 
 ```bash
 cd examples/demo-project
@@ -63,4 +63,4 @@ plc code layout Probe.s7dcl --types "PLC data types"   # byte/bit offsets of a n
 Built with MkDocs (`uv run mkdocs serve`).
 
 ## Contributing
-See [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under the [MIT License](LICENSE).
+See CONTRIBUTING.md. Licensed under the [MIT License](LICENSE).

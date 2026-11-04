@@ -327,7 +327,6 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 | 命令（仓库根目录） | 何时运行 |
 |---|---|
 | `dotnet run scripts/checks/Test-FoundationProxyIdentity.cs -- -WorkDir bin-build/proxy-identity` | 修改外部源规划、删除、批量导入身份检查后；编译实际生产方法，以新建但值相等的 API 代理验证身份语义，不需要 TIA/SDK |
-| `python -X utf8 scripts/checks/Test-Ecosystem.py` | 更新固定的 siemens-plc-tools 来源或 Python 桥接后；使用已装离线依赖的 Python，运行 plc-code、plc-iol、plc-trace 上游单元测试，不配置 live 端点 |
 | `python scripts/checks/Test-ToolUsage.py --foundation-host <host> --plc-worker 20=<PlcWorker 20 夹具> --plc-worker 21=<PlcWorker 21 夹具> --public-api-root <SDK-root> --evidence <新的仓库内目录> --coverage-output <json>` | 按 CLAUDE.md，在 `reference/tool-examples` 改动并运行生成器后，使用已构建的八版运行包检查用法检索和功能；完整八版范围必需，不连接 TIA。V20/V21 的 PlcWorker SDK 夹具由 `dotnet run --project build-tools/release -- build-plc-worker-fixtures -PublicApiRoot <SDK-root>` 生成，默认位于 `bin-build/plc-worker-fixtures/sdk/bin/<发布键>/Release/net48/TiaMcp.PlcWorker.<发布键>.exe`；`--evidence` 必须是仓库内的新目录 |
 
 旧 LegacyOffline/Passive Python 检查由 `foundation` xUnit 套件中的
@@ -752,7 +751,7 @@ dotnet run --project build-tools/release -- publish-vci-watch -NuGetConfig <offl
 dotnet run tests/Studio/Test-BridgeSmoke.cs -- --bridge <Bridge.exe> --public-api-root <SDK-root>
 ```
 
-`Test-BridgeSmoke.cs` 只验证 hello、未绑定的 session.state/ping/doctor.run 和退出，不创建原生会话。`Test-Ecosystem.py` 保留在生态测试部分：它需要伴随 Python 的 pytest 与上游源码优先级，默认不配置 live 端点，命令仍为 `bin-build/ecosystem-python/Scripts/python.exe -X utf8 scripts/checks/Test-Ecosystem.py`。其运行环境与开发工具的 Python 迁移分别维护。
+`Test-BridgeSmoke.cs` 只验证 hello、未绑定的 session.state/ping/doctor.run 和退出，不创建原生会话。生态桥接继续由 `Test-V21Ecosystem.py` 和 `test-ecosystem-assembly` 检查；上游单元测试及其独立启动脚本已移除。
 
 历史 `ledger` 渲染与旧 Python 输出逐字节一致（UTF-8 无 BOM、LF）；使用 `--output <file>`。现行 `real-machine-ledger.md` 含 L5 输入和 `generate-catalogs` 能力块，历史表生成器拒绝覆盖它，能力块仍须保留。`vm_ledger.json` 是冻结数据，不再扫描机器会话记录。
 

@@ -77,7 +77,7 @@ F28 迁移后的 V19/V20/V21 PLC worker 也使用下表的 Esprima 3.0.5 和 Yam
 - Source: [asckye/tia-openness-studio](https://github.com/asckye/tia-openness-studio), commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, v2.4.0.
 - Copyright (c) 2026 asckye; [MIT license](TiaOpennessStudio-LICENSE.txt).
 - Integrated WPF UI, contracts, typed client, mock, inspection/diff helpers and tests. The integrated desktop now uses a direct Openness bridge with eight version-specific adapters and no MCP transport. No upstream native DLL or Siemens SDK is included in the desktop build.
-- [Provenance and archive hashes](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/UPSTREAM.json); [integration and behavior](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md). The full original source and complete Git history are retained as reference archives.
+- [Provenance and archive hashes](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/UPSTREAM.json); [integration and behavior](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md). The full original source and complete Git history are available in the [upstream repository](https://github.com/asckye/tia-openness-studio/tree/87099c576fbc06e6b6ac523ddbf763fe0aa2ce02); the archive hashes remain in the provenance record.
 - Runtime NuGet dependency: Newtonsoft.Json 13.0.3, MIT (already listed in this repository). Test-only: Microsoft.NET.Test.Sdk 17.12.0, xUnit 2.9.2 and Visual Studio runner 2.8.2.
 
 ## Workbench desktop fonts
