@@ -42,8 +42,12 @@ internal static class MergeCheck
 
     private static string Normalize(string path) => path.Replace('\\', '/');
     private static bool Under(string path, string directory) => path.StartsWith(directory + "/", StringComparison.OrdinalIgnoreCase);
+    private static bool CatalogDocument(string path) => path is "docs/reference/version-tool-catalog.md" or "docs/reference/tool-matrix.md"
+        or "docs/reference/real-machine-ledger.md" or "docs/releases/v4.0.0-tool-migration.md";
     internal static bool Documentation(string path) => (Under(path, "docs") || !path.Contains('/') && path.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
-        && path is not ("docs/reference/version-tool-catalog.md" or "docs/reference/tool-matrix.md" or "docs/reference/real-machine-ledger.md" or "docs/releases/v4.0.0-tool-migration.md");
+        && !CatalogDocument(path);
+    private static bool RuleSixPath(string path) => CatalogDocument(path) || new[] { "reference", "manifest", "schemas", "templates", "hooks", "plugin", ".claude-plugin", "third_party", "scripts/ecosystem", "scripts/operations" }
+        .Any(directory => Under(path, directory));
     private static bool WidePath(string path) => path is "Directory.Packages.props" or "global.json" or "NuGet.Config" or ".editorconfig" or "Version.props" or "tests/test-suites.json"
         || !path.Contains('/') && (path.StartsWith("Directory.Build.", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("TiaPortalOpenness", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".slnx", StringComparison.OrdinalIgnoreCase))
@@ -53,7 +57,7 @@ internal static class MergeCheck
     internal static Evaluation Evaluate(string root, string project, string[] properties, SuiteProcess process, string dotnet)
     {
         var result = process(dotnet, ["msbuild", Path.Combine(root, project), "-nologo", "-nodeReuse:false",
-            "-getItem:Compile,EmbeddedResource,None,Content,ProjectReference", "-getProperty:MSBuildAllProjects", .. properties], root,
+            "-getItem:Compile,EmbeddedResource,None,Content,Page,ApplicationDefinition,Resource,ProjectReference", "-getProperty:MSBuildAllProjects", .. properties], root,
             new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null });
         ProcessRunner.RequireSuccess(result, "Evaluate " + project);
         int start = result.StandardOutput.IndexOf('{');
@@ -70,6 +74,7 @@ internal static class MergeCheck
                 if (item.Name == "ProjectReference") projects.Add(path); else inputs.Add(path);
                 if (row.TryGetProperty("DefiningProjectFullPath", out var defining)) inputs.Add(Relative(defining.GetString()!));
             }
+        // This property is only a partial import list; an absent import remains unmapped and selects the wide plan.
         inputs.AddRange(document.RootElement.GetProperty("Properties").GetProperty("MSBuildAllProjects").GetString()!
             .Split(';', StringSplitOptions.RemoveEmptyEntries).Select(Relative));
         return new(inputs.Distinct(StringComparer.OrdinalIgnoreCase).ToArray(), projects.ToArray());
@@ -130,7 +135,7 @@ internal static class MergeCheck
             Reason(plan.Builds, DiagnosticsProject, path);
         }
         if (all) Everything("-All");
-        foreach (var path in changes.Where(WidePath)) Everything(path);
+        foreach (var path in changes.Where(path => WidePath(path) || RuleSixPath(path))) Everything(path);
         foreach (var path in plan.Wide ? Array.Empty<string>() : changes)
         {
             if (Documentation(path)) continue;
@@ -160,7 +165,6 @@ internal static class MergeCheck
             foreach (var group in catalog.GroupBy(pair => Path.GetDirectoryName(pair.Value!["project"]!.GetValue<string>())!.Replace('\\', '/')))
                 if (mentions(Path.GetFileName(path), group.Key))
                 {
-                    mapped = true;
                     foreach (var suite in group) Suite(suite.Key, path);
                 }
             if (Under(path, "scripts") && !Under(path, "scripts/ecosystem") && !Under(path, "scripts/operations")) { mapped = true; Suite("release-tool", path); }
@@ -219,6 +223,9 @@ internal static class MergeCheck
         if (Changed("Test-V21Ecosystem.py")) Py("ecosystem-self-test", "Test-V21Ecosystem.py", "--self-test", "--output", Path.Combine(output, "ecosystem"));
         if (Changed("Test-CampaignInputs.py", "Test-CampaignInputs.cs"))
         {
+            foreach (var path in changes.Where(path => path is "scripts/checks/Test-CampaignInputs.py" or "scripts/checks/Test-CampaignInputs.cs"))
+                Reason(plan.Builds, "file:scripts/checks/Test-CampaignInputs.cs", path);
+            if (plan.Wide) Reason(plan.Builds, "file:scripts/checks/Test-CampaignInputs.cs", "wide change");
             Py("campaign-self-test", "Test-CampaignInputs.py", "--self-test");
             Py("campaign-validator-self-test", "Test-CampaignInputs.py", "--validator-self-test");
         }
@@ -251,7 +258,42 @@ internal static class MergeCheck
         + $"\nTotal: {seconds.ToString("F3", CultureInfo.InvariantCulture)} s\n"
         + string.Join('\n', timings.Where(row => row.Result.ExitCode != 0).Select(row => "FAIL " + row.Name + ": exit " + row.Result.ExitCode + "; " + row.Result.StandardOutput + row.Result.StandardError)) + "\n";
 
-    internal static int Run(string root, Options options, SuiteProcess? process = null, Func<string[], CommandResult>? git = null)
+    internal sealed record Prerequisites(string Api, string Python, string? NuGet);
+
+    internal static Prerequisites RequirePrerequisites(string root, Options options, Func<string[], CommandResult> git,
+        Func<string, string?>? environment = null)
+    {
+        environment ??= Environment.GetEnvironmentVariable;
+        var api = options.Get("PublicApiRoot") ?? environment("TIA_MCP_TEST_PUBLIC_API_ROOT");
+        if (api == null)
+        {
+            api = Path.Combine(root, "sdk");
+            if (!Directory.Exists(api))
+            {
+                var common = git(["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+                if (common.ExitCode != 0 || string.IsNullOrWhiteSpace(common.StandardOutput))
+                    throw new ReleaseException("PublicAPI SDK is missing; pass -PublicApiRoot <SDK-root>. " + common.StandardError);
+                api = Path.Combine(Directory.GetParent(Path.GetFullPath(Path.Combine(root, common.StandardOutput.Trim())))!.FullName, "sdk");
+            }
+        }
+        api = Path.GetFullPath(Path.Combine(root, api));
+        try { Prepare.RequirePublicApi(root, api); }
+        catch (ReleaseException ex) { throw new ReleaseException("PublicAPI SDK is missing or incomplete; pass -PublicApiRoot <SDK-root>. " + ex.Message); }
+        var python = ReleaseCommands.DecoderPythonOptions(options, environment).Get("Python")!;
+        if (!Path.IsPathFullyQualified(python) || !File.Exists(python))
+            throw new ReleaseException("Decoder Python is missing; pass -Python <absolute-python.exe> or set TIA_MCP_DECODER_PYTHON");
+        var nuget = options.Get("NuGetConfig") ?? environment("TIA_MCP_OFFLINE_NUGET_CONFIG") ?? environment("RestoreConfigFile");
+        if (nuget != null)
+        {
+            nuget = Path.GetFullPath(Path.Combine(root, nuget));
+            if (!File.Exists(nuget)) throw new ReleaseException("NuGet config is missing: " + nuget);
+            if (ReleaseValidation.OfflineNuGetError(nuget) is { } error) throw new ReleaseException(error);
+        }
+        return new(api, python, nuget);
+    }
+
+    internal static int Run(string root, Options options, SuiteProcess? process = null, Func<string[], CommandResult>? git = null,
+        Func<Options, string, int>? prepareDecoder = null)
     {
         var total = Stopwatch.StartNew();
         var dotnet = ReleaseCommands.Dotnet;
@@ -259,16 +301,17 @@ internal static class MergeCheck
         git ??= args => process("git", args, root, null);
         var changes = ChangeSet(options.Get("Base", "master"), git);
         Console.WriteLine($"Selecting from {changes.Length} changed paths.");
-        var api = options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT") ?? Path.Combine(root, "sdk");
-        var python = options.Get("Python") ?? Environment.GetEnvironmentVariable(ReleaseCommands.DecoderPythonVariable) ?? "python";
-        var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG");
+        bool docsOnly = !options.Has("All") && changes.All(Documentation);
+        var prerequisites = docsOnly ? new Prerequisites("", "", null) : RequirePrerequisites(root, options, git);
+        var (api, python, nuget) = prerequisites;
+        if (!docsOnly) options = Options.Parse([.. options.Arguments(), "-Python=" + python], new HashSet<string>());
         int parallelism = FastSuites.Positive(options, "MaxParallelism", Math.Max(1, Environment.ProcessorCount - 4));
         var output = Path.Combine(root, "bin-build/merge-check");
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root);
         CheckAllProfiles.IncludeApprovedSubsets(catalog);
         var context = new PrepareContext(root, "", api, nuget, python, python, output, DateOnly.FromDateTime(DateTime.Today), parallelism);
-        var table = PrepareBuild.VersionProjects(context).Select(row => row with { Path = Normalize(Path.GetRelativePath(root, row.Path)) }).ToArray();
-        var closures = !options.Has("All") && changes.All(Documentation) ? new Dictionary<string, HashSet<string>>()
+        var table = docsOnly ? [] : PrepareBuild.VersionProjects(context).Select(row => row with { Path = Normalize(Path.GetRelativePath(root, row.Path)) }).ToArray();
+        var closures = docsOnly ? new Dictionary<string, HashSet<string>>()
             : Closures(catalog, table, api, (project, properties) => Evaluate(root, project, properties, process, dotnet));
         var textReferences = new Dictionary<string, string[]>(StringComparer.Ordinal);
         var testDirectories = catalog.Select(pair => Normalize(Path.GetDirectoryName(pair.Value!["project"]!.GetValue<string>())!)).Distinct().ToArray();
@@ -283,7 +326,7 @@ internal static class MergeCheck
             return paths.Any(path => Under(path, directory) || Under(path, "tests/Shared"));
         }
         var plan = Select(changes, options.Has("All"), catalog, closures, Mentions,
-            !options.Has("All") && changes.All(Documentation) ? [] : FileBasedPrograms.Discover(root), dotnet, python, api, output);
+            docsOnly ? [] : FileBasedPrograms.Discover(root), dotnet, python, api, output);
         Console.Write(Describe(plan, table));
         if (options.Has("DryRun")) return 0;
         PrepareBuild.RequireOwnedTree(root, output);
@@ -345,7 +388,7 @@ internal static class MergeCheck
                 var rows = group.Select(file => Exec("file-" + file.Replace('/', '_'), dotnet, ["build", Path.Combine(root, file), "-c", "Release", "-p:TiaMcpCollectFileBasedPrograms=true", .. properties])).ToArray();
                 return new("file-group-" + index, rows.Any(row => row.ExitCode != 0) ? 1 : 0, "", "");
             }))).ToArray(), Path.Combine(output, "file-builds"), parallelism, continueOnFailure: true);
-            Timed("decoder-python", () => new(ReleaseCommands.PrepareDecoderPython(Options.Parse(["-Python=" + python, "-Reuse=true"], new HashSet<string>()), root), "", ""));
+            Timed("decoder-python", () => new((prepareDecoder ?? ReleaseCommands.PrepareDecoderPython)(Options.Parse(["-Python=" + python, "-Reuse=true"], new HashSet<string>()), root), "", ""));
         }
         CommandResult Check(Job job) => Timed(job.Name, () =>
         {

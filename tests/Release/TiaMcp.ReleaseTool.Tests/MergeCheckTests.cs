@@ -60,15 +60,24 @@ public sealed class MergeCheckTests
 
     [Theory]
     [InlineData("reference/x.md")]
+    [InlineData("reference/tool-examples/metadata.json")]
+    [InlineData("manifest/contracts/v4/responses/example.json")]
+    [InlineData("manifest/package-manifest.json")]
+    [InlineData("hooks/hooks.json")]
+    [InlineData("schemas/input.json")]
+    [InlineData("plugin/entry.json")]
+    [InlineData(".claude-plugin/plugin.json")]
+    [InlineData("third_party/library/source.cs")]
+    [InlineData("scripts/ecosystem/tool.py")]
+    [InlineData("scripts/operations/tool.py")]
     [InlineData("templates/standards/tiamcp.basic/README.md")]
     [InlineData("docs/reference/real-machine-ledger.md")]
     [InlineData("docs/reference/version-tool-catalog.md")]
     [InlineData("docs/reference/tool-matrix.md")]
     [InlineData("docs/releases/v4.0.0-tool-migration.md")]
-    [InlineData("new-top-level/file.cs")]
     public void UnmappedAndGeneratedDocumentsSelectEverythingAndNameTheirReason(string path)
     {
-        var plan = Select([path]);
+        var plan = Select([path], closures: new() { ["release-tool"] = new() { path } }, mentions: (_, _) => true);
         Assert.False(plan.DocsOnly);
         Assert.True(plan.Wide);
         Assert.Equal(Catalog().Count, plan.Suites.Count);
@@ -125,19 +134,84 @@ public sealed class MergeCheckTests
     }
 
     [Fact]
-    public void EvaluationReadsEveryInputKindAndProjectImports()
+    public void RealUnmappedPropsFileStaysWideDespiteTextMentions()
+    {
+        const string path = "src/Studio/Directory.Build.props";
+        Assert.True(File.Exists(Path.Combine(StaticCheckVectorTests.Root, path)));
+        var plan = Select([path], mentions: (_, _) => true);
+        Assert.True(plan.Wide);
+        Assert.Equal(Catalog().Count, plan.Suites.Count);
+        Assert.Contains(path, plan.Builds["eight-release-table"]);
+    }
+
+    [Theory]
+    [InlineData("src/DeletedGlobbedSource.cs")]
+    [InlineData("src/Studio/Gui/RenamedAway.xaml")]
+    [InlineData("new-top-level/file.cs")]
+    public void TextMentionsCannotMapAnOtherwiseUnknownPath(string path)
+    {
+        var plan = Select([path], mentions: (_, _) => true);
+        Assert.True(plan.Wide);
+        Assert.Equal(Catalog().Count, plan.Suites.Count);
+        Assert.Contains(path, plan.Builds["eight-release-table"]);
+    }
+
+    [Fact]
+    public void TextMentionsAddSuitesWhenAClosureAlreadyMapsThePath()
+    {
+        var catalog = new JsonObject { ["one"] = Suite("tests/one/a.csproj"), ["two"] = Suite("tests/two/b.csproj"), ["three"] = Suite("tests/three/c.csproj") };
+        var plan = Select(["src/shared.cs"], catalog, new() { ["one"] = new() { "src/shared.cs" } },
+            mentions: (name, directory) => name == "shared.cs" && directory == "tests/two");
+        Assert.False(plan.Wide);
+        Assert.Equal(new[] { "one", "two" }, plan.Suites.Keys.Order());
+    }
+
+    [Fact]
+    public void EvaluationReadsEveryItemKindIncludingWpfInputs()
     {
         using var tree = new StaticTree();
         var items = new JsonObject();
-        foreach (var kind in new[] { "Compile", "EmbeddedResource", "None", "Content", "ProjectReference" })
-            items[kind] = new JsonArray(new JsonObject { ["FullPath"] = Path.Combine(tree.Root, kind), ["DefiningProjectFullPath"] = Path.Combine(tree.Root, "import.props") });
+        string[] kinds = ["Compile", "EmbeddedResource", "None", "Content", "Page", "ApplicationDefinition", "Resource", "ProjectReference"];
+        foreach (var kind in kinds)
+            items[kind] = new JsonArray(new JsonObject { ["FullPath"] = Path.Combine(tree.Root, kind), ["DefiningProjectFullPath"] = Path.Combine(tree.Root, "test.csproj") });
         var result = MergeCheck.Evaluate(tree.Root, "test.csproj", [], (_, args, _, _) =>
         {
-            Assert.Contains("-getItem:Compile,EmbeddedResource,None,Content,ProjectReference", args);
-            return new(0, new JsonObject { ["Items"] = items, ["Properties"] = new JsonObject { ["MSBuildAllProjects"] = Path.Combine(tree.Root, "all.props") } }.ToJsonString(), "");
+            Assert.Contains("-getItem:Compile,EmbeddedResource,None,Content,Page,ApplicationDefinition,Resource,ProjectReference", args);
+            return new(0, new JsonObject { ["Items"] = items, ["Properties"] = new JsonObject { ["MSBuildAllProjects"] = "" } }.ToJsonString(), "");
         }, "dotnet");
         Assert.Equal(new[] { "ProjectReference" }, result.Projects);
-        Assert.Equal(new[] { "Compile", "Content", "EmbeddedResource", "None", "all.props", "import.props", "test.csproj" }, result.Inputs.Order(StringComparer.Ordinal));
+        Assert.Equal(kinds.Where(kind => kind != "ProjectReference").Append("test.csproj").Order(StringComparer.Ordinal), result.Inputs.Order(StringComparer.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("Page", "src/Studio/Gui/Views/Pane.xaml")]
+    [InlineData("ApplicationDefinition", "src/Studio/Gui/App.xaml")]
+    [InlineData("Resource", "src/Studio/Gui/Resources/Icon.png")]
+    public void WpfItemsSelectTheirOwningSuiteWithoutGoingWide(string kind, string path)
+    {
+        using var tree = new StaticTree();
+        var catalog = new JsonObject { ["gui"] = Suite("tests/gui.csproj"), ["other"] = Suite("tests/other.csproj") };
+        var closures = MergeCheck.Closures(catalog, [], "sdk", (project, properties) => MergeCheck.Evaluate(tree.Root, project, properties,
+            (_, _, _, _) => new(0, new JsonObject
+            {
+                ["Items"] = new JsonObject { [kind] = project == "tests/gui.csproj" ? new JsonArray(new JsonObject { ["FullPath"] = Path.Combine(tree.Root, path) }) : new JsonArray() },
+                ["Properties"] = new JsonObject { ["MSBuildAllProjects"] = "" }
+            }.ToJsonString(), ""), "dotnet"));
+        var plan = Select([path], catalog, closures);
+        Assert.False(plan.Wide);
+        Assert.Equal(new[] { "gui" }, plan.Suites.Keys);
+    }
+
+    [Theory]
+    [InlineData("scripts/checks/Test-CampaignInputs.py")]
+    [InlineData("scripts/checks/Test-CampaignInputs.cs")]
+    public void CampaignSelfTestsAlwaysBuildTheValidator(string path)
+    {
+        var plan = Select([path]);
+        Assert.False(plan.Wide);
+        Assert.Contains(path, plan.Builds["file:scripts/checks/Test-CampaignInputs.cs"]);
+        Assert.Contains(plan.Checks, job => job.Name == "campaign-self-test");
+        Assert.Contains(plan.Checks, job => job.Name == "campaign-validator-self-test");
     }
 
     [Theory]
@@ -160,7 +234,8 @@ public sealed class MergeCheckTests
         Assert.True(Select(["src/Logic/a.cs"], closures: new() { ["foundation-api"] = new() { "src/Logic/a.cs" } }).Table);
         Assert.True(Select(["src/Shared/BundleLayout.cs"], closures: new() { ["table:0"] = new() { "src/Shared/BundleLayout.cs" } }).Table);
         var plan = Select(["named-source.cs"], mentions: (name, _) => name == "named-source.cs");
-        Assert.False(plan.Wide);
+        Assert.True(plan.Wide);
+        Assert.Equal(Catalog().Count, plan.Suites.Count);
         Assert.Contains("kept-code", plan.Suites.Keys);
     }
 
@@ -285,13 +360,101 @@ public sealed class MergeCheckTests
         Assert.Equal(1, MergeCheck.CheckResult("native-diagnostics", success, tree.Root).ExitCode);
     }
 
+    private static string WriteSdk(StaticTree tree, string directory = "sdk")
+    {
+        foreach (var key in PlcWorkerFixtures.Keys)
+        {
+            var relative = $"src/Adapters/{PrepareBuild.AdapterFolder(key)}/Release.props";
+            var source = File.ReadAllText(Path.Combine(StaticCheckVectorTests.Root, relative));
+            tree.Write(relative, source);
+            foreach (var api in XDocument.Parse(source).Descendants("AdapterApi"))
+            {
+                var name = ((string)api.Attribute("Include")!).Replace('\\', '/').Split('/')[^1];
+                tree.Write(Path.Combine(directory, ReleaseCommands.PlcWorkerApi(key).Directory, name), "existence-only SDK fixture");
+            }
+        }
+        return Path.Combine(tree.Root, directory);
+    }
+
+    [Fact]
+    public void WorktreeSdkFallsBackToTheCommonCheckoutAndExplicitPathsWin()
+    {
+        using var tree = new StaticTree();
+        var sdk = WriteSdk(tree, "checkout/sdk");
+        var python = tree.Write("python.exe", "fixture");
+        var common = Path.Combine(tree.Root, "checkout/.git");
+        CommandResult Git(string[] args)
+        {
+            Assert.Equal(new[] { "rev-parse", "--path-format=absolute", "--git-common-dir" }, args);
+            return new(0, common, "");
+        }
+        var found = MergeCheck.RequirePrerequisites(tree.Root, Options.Parse(["-Python", python], new HashSet<string>()), Git, _ => null);
+        Assert.Equal(Path.GetFullPath(sdk), found.Api);
+        Assert.Equal(python, found.Python);
+        var local = WriteSdk(tree);
+        var localFound = MergeCheck.RequirePrerequisites(tree.Root, Options.Parse(["-Python", python], new HashSet<string>()), _ => throw new InvalidOperationException("Local SDK needs no fallback"), _ => null);
+        Assert.Equal(Path.GetFullPath(local), localFound.Api);
+        var explicitFound = MergeCheck.RequirePrerequisites(tree.Root, Options.Parse(["-PublicApiRoot", sdk, "-Python", python], new HashSet<string>()),
+            _ => throw new InvalidOperationException("Explicit SDK needs no fallback"), name => name == "TIA_MCP_TEST_PUBLIC_API_ROOT" ? local : null);
+        Assert.Equal(Path.GetFullPath(sdk), explicitFound.Api);
+    }
+
+    [Fact]
+    public void MissingPrerequisitesFailBeforeEvaluationOrBuild()
+    {
+        using var tree = new StaticTree();
+        var sdk = WriteSdk(tree);
+        var python = tree.Write("python.exe", "fixture");
+        var badSdk = Assert.Throws<ReleaseException>(() => MergeCheck.RequirePrerequisites(tree.Root,
+            Options.Parse(["-PublicApiRoot", Path.Combine(tree.Root, "missing"), "-Python", python], new HashSet<string>()), _ => throw new InvalidOperationException(), _ => null));
+        Assert.Contains("PublicAPI SDK", badSdk.Message);
+        var missingPython = Assert.Throws<ReleaseException>(() => MergeCheck.RequirePrerequisites(tree.Root,
+            Options.Parse(["-PublicApiRoot", sdk], new HashSet<string>()), _ => throw new InvalidOperationException(), _ => null));
+        Assert.Contains("-Python", missingPython.Message);
+        var envFound = MergeCheck.RequirePrerequisites(tree.Root, Options.Parse([], new HashSet<string>()), _ => throw new InvalidOperationException(),
+            name => name == "TIA_MCP_TEST_PUBLIC_API_ROOT" ? sdk : name == ReleaseCommands.DecoderPythonVariable ? python : null);
+        Assert.Equal(python, envFound.Python);
+        tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
+        tree.Write("tests/one.csproj", "<Project />");
+        Assert.Throws<ReleaseException>(() => MergeCheck.Run(tree.Root,
+            Options.Parse(["-PublicApiRoot", sdk, "-Python", "python"], new HashSet<string>()),
+            (_, _, _, _) => throw new InvalidOperationException("No process should run before validation"),
+            args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" ? "source.cs\0" : "", ""), (_, _) => 0));
+        Assert.False(Directory.Exists(Path.Combine(tree.Root, "bin-build/merge-check")));
+    }
+
+    [Fact]
+    public void DocsOnlyRunNeedsNeitherSdkNorPython()
+    {
+        using var tree = new StaticTree();
+        tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
+        tree.Write("tests/one.csproj", "<Project />");
+        var commands = new ConcurrentQueue<string>();
+        var result = MergeCheck.Run(tree.Root, Options.Parse([], new HashSet<string>()), (_, arguments, _, _) =>
+        {
+            commands.Enqueue(arguments.ElementAt(1));
+            return new(0, "", "");
+        }, args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" ? "README.md\0" : "", ""),
+            (_, _) => throw new InvalidOperationException("No decoder preparation for docs"));
+        Assert.Equal(0, result);
+        Assert.Equal(new[] { "check-dead-tool-references", "check-repository", "generate-tool-counts" }, commands.Order());
+    }
+
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void EndToEndContinuesAfterBuildSuiteAndCheckFailures(bool variant)
+    [InlineData(null, false)]
+    [InlineData(null, true)]
+    [InlineData("build", false)]
+    [InlineData("suite", false)]
+    [InlineData("suite", true)]
+    [InlineData("check", false)]
+    [InlineData("decoder", false)]
+    public void EndToEndAccountsForEachFailureAndCanSucceed(string? failure, bool variant)
     {
         using var tree = new StaticTree();
         foreach (var folder in new[] { "scripts", "src", "build-tools" }) Directory.CreateDirectory(Path.Combine(tree.Root, folder));
+        var sdk = WriteSdk(tree);
+        var python = tree.Write("python.exe", "fixture");
+        tree.Write("source.cs", "public class Source {}\n");
         var catalog = new JsonObject
         {
             ["fixture"] = Suite("tests/one.csproj", variant ? ["-p:FixtureRoot=" + tree.Root + new string('x', 240)] : []),
@@ -308,18 +471,32 @@ public sealed class MergeCheckTests
             var kind = args[0] == "test" ? "test" : args[0] == "build" || args.Contains("-t:Build") || args.Contains("-t:Restore") ? "build" : "check";
             environments.Enqueue((kind, env is not null && env.TryGetValue("TIA_MCP_ANALYZER_REPORT_DIRECTORY", out var reports) ? reports : null));
             if (args.Any(arg => arg.StartsWith("-getItem:", StringComparison.Ordinal)))
-                return new(0, new JsonObject { ["Items"] = new JsonObject { ["Compile"] = new JsonArray(new JsonObject { ["FullPath"] = Path.Combine(root, "source.cs") }) }, ["Properties"] = new JsonObject { ["MSBuildAllProjects"] = "" } }.ToJsonString(), "");
+                return new(0, new JsonObject
+                {
+                    ["Items"] = new JsonObject { ["Compile"] = args[1].EndsWith("one.csproj", StringComparison.Ordinal) || args[1].EndsWith("two.csproj", StringComparison.Ordinal)
+                        ? new JsonArray(new JsonObject { ["FullPath"] = Path.Combine(root, "source.cs") }) : new JsonArray() },
+                    ["Properties"] = new JsonObject { ["MSBuildAllProjects"] = "" }
+                }.ToJsonString(), "");
             if (args[0] == "test")
             {
                 var directory = args[Array.IndexOf(args, "--results-directory") + 1];
                 var name = args.Single(arg => arg.StartsWith("trx;LogFileName=", StringComparison.Ordinal))[16..];
                 WriteTrx(Path.Combine(directory, name), ["Fixture"]);
-                return new(args[1].EndsWith("one.csproj", StringComparison.Ordinal) ? 1 : 0, "", "suite fixture");
+                return new(failure == "suite" && args[1].EndsWith("one.csproj", StringComparison.Ordinal) ? 1 : 0, "", "");
             }
-            return new(args.Contains("-t:Build") || args.Contains("check-tools-list") ? 1 : 0, "", "fixture");
+            return new(failure == "build" && args.Contains("-t:Build") || failure == "check" && args.Contains("check-tools-list") ? 1 : 0, "", "");
         }
         CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" && args[^1] == "HEAD" ? "source.cs\0" : "", "");
-        Assert.Equal(1, MergeCheck.Run(tree.Root, Options.Parse([], new HashSet<string>()), Process, Git));
+        int decoderCalls = 0;
+        var result = MergeCheck.Run(tree.Root, Options.Parse(["-PublicApiRoot", sdk, "-Python", python], new HashSet<string>()), Process, Git,
+            (options, root) =>
+            {
+                decoderCalls++;
+                Assert.True(options.Has("Reuse")); Assert.Equal(python, options.Get("Python")); Assert.Equal(tree.Root, root);
+                return failure == "decoder" ? 1 : 0;
+            });
+        Assert.Equal(failure == null ? 0 : 1, result);
+        Assert.Equal(1, decoderCalls);
         var snapshot = calls.ToArray();
         Assert.True(Array.FindIndex(snapshot, args => args.Contains("-t:Restore")) < Array.FindIndex(snapshot, args => args.Contains("-t:Build")));
         Assert.Equal(2, snapshot.Count(args => args[0] == "test"));
