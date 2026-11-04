@@ -57,7 +57,7 @@ namespace TiaMcp.Logic.V4
         {
             foreach (var pair in arguments)
                 if (AdministrativePath(pair.Key, pair.Value))
-                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Human-only Workbench settings cannot be targeted by a tool or approval.", pair.Key, false);
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Human-only Workbench settings and Git metadata cannot be targeted by a tool or approval.", pair.Key, false);
         }
 
         private static bool AdministrativePath(string parameter, JsonNode? node)
@@ -67,8 +67,19 @@ namespace TiaMcp.Logic.V4
             bool fileArgument = parameter.EndsWith("Path", StringComparison.OrdinalIgnoreCase)
                 || parameter.EndsWith("Directory", StringComparison.OrdinalIgnoreCase)
                 || parameter is "dir" or "directory" or "files" or "fileName" or "output" or "destination";
-            return node is JsonValue value && value.TryGetValue<string>(out var path)
-                && (fileArgument || Path.IsPathRooted(path)) && ApprovalSettings.IsNativeCrossReferenceTarget(path);
+            if (node is not JsonValue value || !value.TryGetValue<string>(out var path)) return false;
+            path = path.Trim();
+            if (!fileArgument && (path.Any(char.IsControl) || !Path.IsPathRooted(path))) return false;
+            foreach (string component in path.Split(new[] { '/', '\\' }))
+            {
+                string name = component.Length >= 2 && component[1] == ':' ? component.Substring(2) : component;
+                int stream = name.IndexOf(':');
+                name = (stream < 0 ? name : name.Substring(0, stream)).TrimEnd(' ', '.');
+                if (name.Equals(".git", StringComparison.OrdinalIgnoreCase)
+                    || System.Text.RegularExpressions.Regex.IsMatch(name, @"^GIT~[0-9]+$",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)) return true;
+            }
+            return ApprovalSettings.IsAdministrativeTarget(path);
         }
 
         private static (string Parameter, string[] Extensions, bool Output)? NativeFile(string tool, JsonObject arguments)

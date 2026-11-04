@@ -15,7 +15,10 @@ namespace TiaOpenness.Shared
         internal static string SettingsPath => Path.Combine(DataLocations.Current.ConfigDirectory, "approval.settings");
         internal static bool IsNativeCrossReferenceTarget(string path)
         {
-            path = path.Trim();
+            if (string.IsNullOrWhiteSpace(path)) return false;
+            path = Path.GetFullPath(path.Trim());
+            // A directory cannot be a settings file; opening it without backup semantics would fail closed.
+            if (Directory.Exists(path)) return false;
             string normalized = path.Replace('\\', '/');
             string name = normalized.Substring(normalized.LastIndexOf('/') + 1);
             if (name.Length >= 2 && name[1] == ':') name = name.Substring(2);
@@ -46,8 +49,10 @@ namespace TiaOpenness.Shared
         }
         internal static bool IsAdministrativeTarget(string path)
         {
+            if (string.IsNullOrWhiteSpace(path)) return false;
             if (IsNativeCrossReferenceTarget(path)) return true;
-            path = path.Trim();
+            path = Path.GetFullPath(path.Trim());
+            if (Directory.Exists(path)) return false;
             string normalized = path.Replace('\\', '/');
             string name = normalized.Substring(normalized.LastIndexOf('/') + 1);
             if (name.Length >= 2 && name[1] == ':') name = name.Substring(2);

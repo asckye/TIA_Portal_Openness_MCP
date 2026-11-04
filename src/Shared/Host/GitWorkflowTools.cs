@@ -13,7 +13,7 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     public sealed class GitWorkflowTools
     {
-        [McpServerTool(Name = "ManagePlcGitRepository"), Description("[L2][VersionControl][FILE] Git workflow for a local PLC export/VCI repository: status, history, diff, show, stage or commit. Calls git.exe directly without a shell. Read actions never fetch/pull/push or change branches. show requires a revision and exactly one relative file path. stage/commit require an explicit files array and dryRun=false; commit includes only selected files using --only, never unrelated staged content. A commit can run repository Git hooks; commit failure may leave selected paths staged. No remote publication or TIA actions. For graphical comparison export two revisions to files and use RenderPlcVisualDiff.")]
+        [McpServerTool(Name = "ManagePlcGitRepository"), Description("[L2][VersionControl][FILE] Git workflow for a local PLC export/VCI repository: status, history, diff, show, stage or commit. Calls git.exe directly without a shell. Read actions never fetch/pull/push or change branches. show requires a revision and exactly one relative file path. stage/commit require an explicit files array and dryRun=false; commit includes only selected files using --only, never unrelated staged content. Hooks, fsmonitor and commit signing are ignored; commit failure may leave selected paths staged. No remote publication or TIA actions. For graphical comparison export two revisions to files and use RenderPlcVisualDiff.")]
         public Task<CallToolResult> ManagePlcGitRepositoryV4(
             [Description("Existing absolute Git working tree directory for exported PLC files.")] string repositoryPath,
             [Description("status | history | diff | show | stage | commit. status/history/diff/show/stage/commit.")] string action = "status",
@@ -44,7 +44,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 string root = Path.GetFullPath(repositoryPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
                 foreach (var path in paths)
                     if (string.IsNullOrWhiteSpace(path) || Path.IsPathRooted(path) || !Path.GetFullPath(Path.Combine(root, path)).StartsWith(root, StringComparison.OrdinalIgnoreCase) || Directory.Exists(Path.Combine(root, path))) throw new ArgumentException("Select individual repository-relative files, no directories/traversal.");
-                var prefix = new[] { "--no-pager", "--literal-pathspecs", "-c", "color.ui=false", "-c", "core.quotepath=false" };
+                var prefix = new[] { "--no-pager", "--literal-pathspecs", "-c", "color.ui=false", "-c", "core.quotepath=false",
+                    "-c", "core.fsmonitor=false", "-c", "core.hooksPath=NUL", "-c", "commit.gpgsign=false" };
                 var args = new List<string>(prefix); string? input = null;
                 switch (action)
                 {

@@ -79,19 +79,32 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "WritePlcSclSourceFile"), Description("[L1][PLC-Software][OFFLINE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: 'Cannot create SW.Blocks.CompileUnit... token not supported'): the user imports the .scl manually in TIA via project tree → 'External source files' → 'Add new external file', then right-clicks the source → 'Generate blocks from source'. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult WritePlcSclSourceFileV4(
             [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim.")] string sclContent,
-            [Description("outputPath: target .scl file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath = "")
+            [Description("outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath = "")
         {
             return PlcExchangeContract.Run("WritePlcSclSourceFile", () => WritePlcSclSourceFile(sclContent, outputPath), write: true, current: true);
         }
 
         public ResponseMessage WritePlcSclSourceFile(
             [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim.")] string sclContent,
-            [Description("outputPath: target .scl file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath = "")
+            [Description("outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath = "")
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(sclContent))
                     throw new McpException("sclContent is empty — provide the full SCL source text to write.", McpErrorCode.InvalidParams);
+
+                if (!string.IsNullOrWhiteSpace(outputPath))
+                {
+                    int drivePrefix = outputPath.Length >= 2 && char.IsLetter(outputPath[0]) && outputPath[1] == ':' ? 2 : 0;
+                    if (outputPath.IndexOf(':', drivePrefix) >= 0 || outputPath.EndsWith(".", StringComparison.Ordinal)
+                        || outputPath.EndsWith(" ", StringComparison.Ordinal))
+                        throw new McpException("outputPath must be .scl only; alternate streams and trailing dots or spaces are not allowed.", McpErrorCode.InvalidParams);
+                    bool directory = Directory.Exists(outputPath) || outputPath.EndsWith("\\", StringComparison.Ordinal)
+                        || outputPath.EndsWith("/", StringComparison.Ordinal);
+                    string extension = Path.GetExtension(outputPath);
+                    if (!directory && extension.Length != 0 && !extension.Equals(".scl", StringComparison.OrdinalIgnoreCase))
+                        throw new McpException("outputPath must be .scl only, a directory, or a path without an extension.", McpErrorCode.InvalidParams);
+                }
 
                 // Derive a default file name from the first block declaration in the source.
                 var nameMatch = Regex.Match(sclContent,

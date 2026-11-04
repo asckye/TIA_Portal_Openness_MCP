@@ -15481,7 +15481,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "843d35a1f5f4431d4fdf3774a6e1b4231b3cf49d98ebf55f404999e956f7921f",
+      "descriptionSha256": "fd1ab817dc371742b6c4d31579bb642545acf218cb534ae2238f4a73b14a72e1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20383,7 +20383,7 @@
         "properties": {
           "outputPath": {
             "default": "",
-            "description": "outputPath: target .scl file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.",
+            "description": "outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.",
             "examples": [
               "C:\\Temp\\FC_Add.scl"
             ],

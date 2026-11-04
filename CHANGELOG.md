@@ -31,6 +31,7 @@
 
 ### 行为变化（测试者须知）
 
+- 文件工具拒绝定位审批设置及 `.git` 元数据；SCL 写入只接受 `.scl`、目录或无扩展名路径，并拒绝备用数据流及末尾点或空格。`ManagePlcGitRepository` 不再运行 hooks，且忽略 fsmonitor 和提交签名。
 - 设备白名单已移除：设备创建不再只限两颗示例 CPU 和 S7-1200/S7-1500 系列，同一次目录读取中的任何精确目录行都可以创建，精确 OrderNumber、版本、重名检查、预览哈希、确认、工程文件身份和创建后回读照旧。
 - `expectedProject` 是工程名称（`Project.Name`），不是文件路径；像路径的值在任何 TIA 调用前以 INVALID_ARGUMENT 拒绝，需要文件身份的工具继续使用 `expectedProjectFile`（绝对路径）。
 - `ListPlcBlocks` 默认分页：每页 4 项（`limit` 1–100），把返回的 `meta.paging.nextCursor` 作为 `cursor` 传入直到 `complete` 为真，块清单变化后旧游标被拒绝、须从空游标重新开始。
