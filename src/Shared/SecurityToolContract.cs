@@ -58,9 +58,15 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (knownFailure)
             { outcome = Outcome.Failed; execution = Execution.Completed; error = NativeFailure(nativeMessage); }
             else if (success != true && knownFile)
-            { outcome = Outcome.Partial; execution = Execution.Partial; error = new Error("A verified output file remains after the operation failed.", new PartialFailureDetails(1, 1, 0)); }
+            {
+                outcome = Outcome.Partial; execution = Execution.Partial; error =
+                    new Error("A verified output file remains after the operation failed.", new PartialFailureDetails(1, 1, 0));
+            }
             else if (status == "HmiReadSessionBlocked")
-            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("security-session")); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
+                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("security-session"));
+            }
             else if (success != true && status == "InvalidState")
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
@@ -71,7 +77,9 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (success != true && (status == "NotSupportedOnVersion" || status == "NotFound" || status == "AccessDenied"))
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
-                error = status == "NotSupportedOnVersion" ? new Error(nativeMessage ?? "The requested security capability is unavailable.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null))
+                error = status == "NotSupportedOnVersion"
+                    ? new Error(nativeMessage ?? "The requested security capability is unavailable.",
+                        new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null))
                     : status == "NotFound" ? new Error("The requested security target was not found.", new NotFoundDetails(null))
                     : new Error("Access to the security operation was denied.", new AccessDeniedDetails(tool, null));
             }
@@ -85,11 +93,17 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (success == true)
             { outcome = Outcome.Succeeded; execution = readOnly ? Execution.ReadOnly : Execution.Completed; }
             else if (HostBehavior.UnchangedNativeFailure(data, success))
-            { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error = NativeFailure(nativeMessage); }
+            {
+                outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
+                    NativeFailure(nativeMessage);
+            }
             else if (readOnly)
             { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = NativeFailure(nativeMessage); }
             else if (Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") != true)
-            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("Security operation preconditions were not satisfied.", new PreconditionFailedDetails("security-before-write", null)); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
+                    new Error("Security operation preconditions were not satisfied.", new PreconditionFailedDetails("security-before-write", null));
+            }
             else
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
 
@@ -105,8 +119,12 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (string key in new[] { "timestamp", "tool", "success", "offset", "limit", "nextOffset" }) data.Remove(key);
             string action = data["action"]?.ToString() ?? "";
             if (outcome == Outcome.Succeeded && readOnly && Flag(data, "dryRun") == true
-                && !new[] { "read", "list", "template", "checkValidity", "checkTraceValidity", "checkConsistency", "listServerProjects", "readLockState", "listLocalSessions" }.Contains(action))
-                data["plan"] = new JsonObject { ["action"] = action, ["executed"] = false, ["summary"] = "Preview completed; no requested change was executed." };
+                && !new[] {
+                    "read", "list", "template", "checkValidity", "checkTraceValidity", "checkConsistency", "listServerProjects", "readLockState",
+                        "listLocalSessions"
+                }.Contains(action))
+                data["plan"] = new JsonObject { ["action"] = action, ["executed"] = false, ["summary"] = "Preview completed; no requested change was executed."
+                };
             // Comparison tools already carry a structured summary; retain it.
             if (outcome == Outcome.Succeeded && !data.ContainsKey("summary")) data["summary"] = response.Message;
             Sanitize(data, secrets);
@@ -153,17 +171,23 @@ namespace TiaMcpServer.ModelContextProtocol
             return text;
         }
 
-        private static Error NativeFailure(string? nativeMessage = null) => new Error(nativeMessage ?? "The security operation did not establish a successful result.",
+        private static Error NativeFailure(string? nativeMessage = null) =>
+            new Error(nativeMessage ?? "The security operation did not establish a successful result.",
             new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
-        private static Error UnknownFailure() => new Error("The security operation outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
+        private static Error UnknownFailure() =>
+            new Error("The security operation outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
             new OutcomeUnknownDetails("security-operation", new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,
             Completeness completeness, bool current, Paging? paging = null, bool reset = false)
         {
             var warnings = new List<Warning>();
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The security observation covers only the reported scope and available fields.", new Dictionary<string, JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
+                        new Dictionary<string, JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The security observation covers only the reported scope and available fields.",
+                        new Dictionary<string, JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 reset || outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);

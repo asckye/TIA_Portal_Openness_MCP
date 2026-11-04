@@ -16,9 +16,13 @@ internal sealed class OptionalProductsPortService
         _port = new OptionalProductPort(call, identity);
     }
     public ResponseMessage ManageSinumerikArchive(string action, string filePath, string devicePathJson = "[]", string itemPathJson = "[]",
-            string modifiedDevicePathJson = "[]", string modifiedItemPathJson = "[]", string mode = "HardwareAndAllProgramBlocks", string comment = "", string author = "", string password = "", bool dryRun = true)
+            string modifiedDevicePathJson = "[]", string modifiedItemPathJson = "[]", string mode = "HardwareAndAllProgramBlocks", string comment = "",
+                string author = "", string password = "", bool dryRun = true)
     {
-        var request = new OptionalProductRequest { Operation = "ManageSinumerikArchive", Action = action, FilePath = filePath, Mode = mode, Comment = comment, Author = author, Password = password, DryRun = dryRun };
+        var request = new OptionalProductRequest {
+            Operation = "ManageSinumerikArchive", Action = action, FilePath = filePath, Mode = mode, Comment = comment, Author = author, Password = password,
+                DryRun = dryRun
+        };
         return _port.Invoke(request, () =>
         {
             request.DevicePathJson = JsonSerializer.Deserialize<string[]>(devicePathJson) ?? Array.Empty<string>();
@@ -36,9 +40,11 @@ internal sealed class OptionalProductsPortService
             request.FilesJson = JsonSerializer.Deserialize<string[]>(filesJson) ?? Array.Empty<string>();
         });
     }
-    public ResponseMessage ManageSinumerikSafetyMode(string devicePathJson, string action = "read", string mode = "", bool dryRun = true, bool confirmSafetyChange = false)
+    public ResponseMessage ManageSinumerikSafetyMode(string devicePathJson, string action = "read", string mode = "", bool dryRun = true,
+            bool confirmSafetyChange = false)
     {
-        var request = new OptionalProductRequest { Operation = "ManageSinumerikSafetyMode", Action = action, Mode = mode, DryRun = dryRun, ConfirmSafetyChange = confirmSafetyChange };
+        var request = new OptionalProductRequest {
+            Operation = "ManageSinumerikSafetyMode", Action = action, Mode = mode, DryRun = dryRun, ConfirmSafetyChange = confirmSafetyChange };
         return _port.Invoke(request, () =>
         {
             request.DevicePathJson = JsonSerializer.Deserialize<string[]>(devicePathJson) ?? Array.Empty<string>();

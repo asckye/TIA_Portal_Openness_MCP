@@ -20,7 +20,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var root = JsonNode.Parse(packageJson) as JsonObject
                 ?? throw new ArgumentException("Classic HMI package JSON root must be an object.", nameof(packageJson));
-            var screenDesign = root["ScreenDesign"] as JsonObject ?? root["screenDesign"] as JsonObject ?? root["Screen"] as JsonObject ?? root["screen"] as JsonObject
+            var screenDesign = root["ScreenDesign"] as JsonObject ?? root["screenDesign"] as JsonObject ?? root["Screen"] as JsonObject
+                ?? root["screen"] as JsonObject
                 ?? throw new ArgumentException("Classic HMI package requires ScreenDesign.");
             var tagTable = root["TagTable"] as JsonObject ?? root["tagTable"] as JsonObject
                 ?? throw new ArgumentException("Classic HMI package requires TagTable.");
@@ -44,9 +45,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["tia"] = "Offline package generation only; TIA Portal is not connected.",
                     ["write"] = "No project, reference project, or delivery package content is modified.",
                     ["binding"] = "PLC-side symbols and Classic HMI imports are not verified until a temporary TIA project import/readback succeeds.",
-                    ["apply"] = "Import tag table first, then screen XML in a temporary Classic/Basic HMI project. Read back HMI tags, screen items, connections, controller tags, and compile/diagnose before using a real project."
+                    ["apply"] =
+                        "Import tag table first, then screen XML in a temporary Classic/Basic HMI project. Read back HMI tags, screen items, connections, " +
+                        "controller tags, and compile/diagnose before using a real project."
                 },
-                ["importOrder"] = new JsonArray("Build/import HMI tag table XML", "Build/import HMI screen XML", "Read back HMI tags and screen items", "Compile/diagnose Classic HMI", "Save only after successful readback and diagnostics"),
+                ["importOrder"] =
+                    new JsonArray("Build/import HMI tag table XML", "Build/import HMI screen XML", "Read back HMI tags and screen items",
+                        "Compile/diagnose Classic HMI", "Save only after successful readback and diagnostics"),
                 ["readiness"] = readiness,
                 ["tagTable"] = tagResult,
                 ["screen"] = screenResult
@@ -62,7 +67,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var package = BuildFromJson(packageJson);
             // Output filenames must honour packageName. Real-project observation: all packages were named Classic_HMI_Minimal_Package_*.
             var requestedName = (JsonNode.Parse(packageJson) as JsonObject)?["packageName"]?.ToString();
-            var packageName = SanitizeFileName(!string.IsNullOrWhiteSpace(requestedName) ? requestedName! : package["packageName"]?.ToString() ?? "Classic_HMI_Minimal_Package");
+            var packageName =
+                SanitizeFileName(!string.IsNullOrWhiteSpace(requestedName) ? requestedName! : package["packageName"]?.ToString()
+                    ?? "Classic_HMI_Minimal_Package");
             var tagTablePath = Path.Combine(outputDirectory, packageName + "_TagTable.xml");
             var screenPath = Path.Combine(outputDirectory, packageName + "_Screen.xml");
             var manifestPath = Path.Combine(outputDirectory, packageName + "_manifest.json");

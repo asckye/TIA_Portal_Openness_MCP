@@ -15,7 +15,8 @@ namespace TiaMcpServer.Siemens
         public static void AnalyzeBlock(XDocument doc, string blockName, string blockPath, string normTag, string displayTag,
             JsonArray writeSites, JsonArray readSites, HashSet<string> allConditions)
         {
-            var writes = writeSites.OfType<JsonObject>().Select(w => (object?)new Dictionary<string, object?> { ["block"] = (string?)w["block"], ["network"] = (int?)w["network"] }).ToList();
+            var writes = writeSites.OfType<JsonObject>()
+                .Select(w => (object?)new Dictionary<string, object?> { ["block"] = (string?)w["block"], ["network"] = (int?)w["network"] }).ToList();
             int previousWrites = writes.Count;
             var reads = new List<object?>();
             PlcCausalTraceParser.AnalyzeBlock(doc, blockName, blockPath, normTag, displayTag, writes, reads, allConditions);

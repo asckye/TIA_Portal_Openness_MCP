@@ -67,7 +67,9 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 if (IsProjectNull())
                 {
-                    throw new PortalException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+                    throw new PortalException("InvalidState",
+                            "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                            "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
                 }
 
 
@@ -120,7 +122,9 @@ namespace TiaMcp.Adapters.Native.Plc
                             exchange.StartWrite("document-export");
                             var result = Documents.ExportOptional(group, exportPath, blockName);
 
-                            exchange.ObserveNativeResult(result?.State.ToString(), false, result == null ? null : DocumentMessages(result.Messages), exportPath, blockName);
+                            exchange
+                                .ObserveNativeResult(result?.State.ToString(), false, result == null ? null : DocumentMessages(result.Messages), exportPath,
+                                    blockName);
                             if (result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)))
                             {
                                 exchange.ConfirmWrite();
@@ -257,7 +261,8 @@ namespace TiaMcp.Adapters.Native.Plc
                         continue;
                     }
 
-                    exchange.ObserveNativeResult(Documents.State(result).ToString(), false, DocumentMessages(result.Messages), exportPath, Documents.Name(block));
+                    exchange
+                        .ObserveNativeResult(Documents.State(result).ToString(), false, DocumentMessages(result.Messages), exportPath, Documents.Name(block));
                     if (TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)))
                     {
                         exchange.ConfirmWrite();
@@ -314,7 +319,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             if (!File.Exists(Path.Combine(importPath, fileNameWithoutExtension + ".s7dcl")))
             {
-                throw new PortalException("InvalidParams", $"No '{fileNameWithoutExtension}.s7dcl' found under {importPath}. importPath is the DIRECTORY holding the .s7dcl/.s7res, and fileNameWithoutExtension omits the extension.");
+                throw new PortalException("InvalidParams",
+                        $"No '{fileNameWithoutExtension}.s7dcl' found under {importPath}. importPath is the DIRECTORY holding the .s7dcl/.s7res, and fileNameWithoutExtension omits the extension.");
             }
 
             // Resolve the target group. Empty path = root. A non-empty path that does NOT resolve is a
@@ -344,37 +350,49 @@ namespace TiaMcp.Adapters.Native.Plc
             try
             {
                 exchange.StartWrite("document-import");
-                result = InvocationJournal.Native("ImportFromDocuments.import", () => Documents.Import(Documents.Blocks(targetGroup), dir, fileNameWithoutExtension, option));
+                result = InvocationJournal
+                    .Native("ImportFromDocuments.import", () => Documents.Import(Documents.Blocks(targetGroup), dir, fileNameWithoutExtension, option));
             }
             catch (EngineeringNotSupportedException ex)
             {
-                throw new PortalException("NotSupportedOnVersion", $"ImportPlcBlockDocuments not supported for '{fileNameWithoutExtension}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.", null, ex);
+                throw new PortalException("NotSupportedOnVersion",
+                        $"ImportPlcBlockDocuments not supported for '{fileNameWithoutExtension}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.",
+                        null, ex);
             }
             catch (EngineeringTargetInvocationException ex)
             {
-                throw new PortalException("ImportFailed", $"ImportPlcBlockDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically. Check the .s7dcl syntax (types/attributes) and that .s7res matches the S7_MLC ids.", null, ex);
+                throw new PortalException("ImportFailed",
+                        $"ImportPlcBlockDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically. Check the .s7dcl syntax (types/attributes) and that .s7res matches the S7_MLC ids.",
+                        null, ex);
             }
             catch (Exception ex)
             {
-                throw new PortalException("ImportFailed", $"ImportPlcBlockDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.", null, ex);
+                throw new PortalException("ImportFailed",
+                        $"ImportPlcBlockDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.",
+                        null, ex);
             }
 
             try
             {
-                exchange.ObserveNativeResult(Documents.OptionalState(result)?.ToString(), true, result == null ? null : DocumentMessages(result.Messages), dir.FullName, fileNameWithoutExtension);
+                exchange
+                    .ObserveNativeResult(Documents.OptionalState(result)?.ToString(), true, result == null ? null : DocumentMessages(result.Messages), dir
+                        .FullName, fileNameWithoutExtension);
                 if (result == null || !TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)) || Documents.ImportedBlocks(result) == null)
                 {
                     throw new PortalException("ImportFailed",
-                        $"PlcBlockComposition.ImportFromDocuments returned state '{Documents.OptionalState(result)?.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
+                        $"PlcBlockComposition.ImportFromDocuments returned state '{Documents.OptionalState(result)?.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically."
+                            + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
                 }
                 try
                 {
-                    LastImportedDocumentBlocks = Documents.ImportedBlocks(result) == null ? Array.Empty<string>() : PlcGroupOperations.Items(Documents.ImportedBlocks(result)).Cast<PlcBlock>().Select(b => Documents.Name(b)).ToArray();
+                    LastImportedDocumentBlocks = Documents.ImportedBlocks(result) == null ? Array.Empty<string>() : PlcGroupOperations
+                        .Items(Documents.ImportedBlocks(result)).Cast<PlcBlock>().Select(b => Documents.Name(b)).ToArray();
                 }
                 catch (Exception ex)
                 {
                     throw new PortalException("ImportFailed",
-                        $"Native import reported Success but imported-name readback failed: {ex.Message}. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result), null, ex);
+                        $"Native import reported Success but imported-name readback failed: {ex.Message}. The project may have changed; do not retry automatically."
+                            + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result), null, ex);
                 }
 
                 // Legacy Override-only post-import writes; preservation is best-effort, not verified.
@@ -465,7 +483,9 @@ namespace TiaMcp.Adapters.Native.Plc
             return null;
         }
 
-        public IEnumerable<PlcBlock>? ImportBlocksFromDocuments(string softwarePath, string groupPath, string importPath, string regexName, ImportDocumentOptions option, bool preservePath = false)
+        public IEnumerable<PlcBlock>
+            ? ImportBlocksFromDocuments(string softwarePath, string groupPath, string importPath, string regexName, ImportDocumentOptions option,
+                bool preservePath = false)
         {
             var failures = new List<string>();
             LastImportFromDocumentsFailures = failures;
@@ -506,10 +526,13 @@ namespace TiaMcp.Adapters.Native.Plc
                     LastImportFromDocumentsAttempted++;
                     exchange.StartWrite("document-import");
                     result = InvocationJournal.Native("ImportBlocksFromDocuments.import", () => Documents.Import(Documents.Blocks(group), dir, name, option));
-                    exchange.ObserveNativeResult(Documents.OptionalState(result)?.ToString(), true, result == null ? null : DocumentMessages(result.Messages), dir.FullName, name);
+                    exchange
+                        .ObserveNativeResult(Documents.OptionalState(result)?.ToString(), true, result == null ? null : DocumentMessages(result.Messages), dir
+                            .FullName, name);
                     if (result == null || !TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)) || Documents.ImportedBlocks(result) == null)
                     {
-                        failures.Add($"{name}: native state={Documents.OptionalState(result)?.ToString() ?? "null"}. The project may have changed; batch stopped, remaining files not attempted. Do not retry automatically."
+                        failures
+                            .Add($"{name}: native state={Documents.OptionalState(result)?.ToString() ?? "null"}. The project may have changed; batch stopped, remaining files not attempted. Do not retry automatically."
                             + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
                         LastImportFromDocumentsStopped = true;
                         break;
@@ -522,7 +545,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 catch (Exception ex)
                 {
-                    failures.Add($"{name}: {ex.Message}. Native import was attempted; the project may have changed. Batch stopped, remaining files not attempted. Do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
+                    failures
+                        .Add($"{name}: {ex.Message}. Native import was attempted; the project may have changed. Batch stopped, remaining files not attempted. Do not retry automatically."
+                            + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
                     LastImportFromDocumentsStopped = true;
                     break;
                 }

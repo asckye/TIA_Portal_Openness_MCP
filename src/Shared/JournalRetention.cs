@@ -53,7 +53,9 @@ namespace TiaOpenness.Shared
             using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
             using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
             {
-                writer.Write("fileSizeMb=" + FileSizeMb.ToString(CultureInfo.InvariantCulture) + "\ncopies=" + Copies.ToString(CultureInfo.InvariantCulture) + "\n");
+                writer
+                    .Write("fileSizeMb=" + FileSizeMb.ToString(CultureInfo.InvariantCulture) + "\ncopies=" + Copies.ToString(CultureInfo.InvariantCulture)
+                        + "\n");
                 writer.Flush(); stream.Flush(true);
             }
         }
@@ -65,7 +67,11 @@ namespace TiaOpenness.Shared
             if (File.Exists(previous))
             { if (File.Exists(path + ".1")) File.Delete(previous); else File.Move(previous, path + ".1"); }
             foreach (string file in Directory.GetFiles(Path.GetDirectoryName(path)!, Path.GetFileName(path) + ".*"))
-                if (file.StartsWith(path + ".", StringComparison.OrdinalIgnoreCase) && int.TryParse(file.Substring(path.Length + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int copy) && copy >= Copies) File.Delete(file);
+                if (file.StartsWith(path + ".", StringComparison.OrdinalIgnoreCase) && int
+                        .TryParse(file.Substring(path.Length + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                            out int copy)
+                        && copy >= Copies)
+                    File.Delete(file);
             if (!File.Exists(path) || new FileInfo(path).Length == 0 || new FileInfo(path).Length + nextBytes <= (long)FileSizeMb * 1024 * 1024) return;
             for (int copy = Copies - 1; copy >= 1; copy--)
             {
@@ -106,7 +112,8 @@ namespace TiaOpenness.Shared
         private static bool IsJournal(string path)
         {
             string suffix = Path.GetFileName(path).Split(new[] { ".jsonl" }, StringSplitOptions.None).Last();
-            return suffix.Length == 0 || suffix == ".previous" || suffix.StartsWith(".", StringComparison.Ordinal) && int.TryParse(suffix.Substring(1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out _);
+            return suffix.Length == 0 || suffix == ".previous" || suffix.StartsWith(".", StringComparison.Ordinal) && int
+                .TryParse(suffix.Substring(1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out _);
         }
         private static bool Timestamp(string row, out DateTimeOffset time)
         {
@@ -114,7 +121,8 @@ namespace TiaOpenness.Shared
             int start = row.IndexOf(key, StringComparison.Ordinal);
             int end = start < 0 ? -1 : row.IndexOf('"', start + key.Length);
             time = default;
-            return end >= 0 && row.EndsWith("}", StringComparison.Ordinal) && DateTimeOffset.TryParseExact(row.Substring(start + key.Length, end - start - key.Length),
+            return end >= 0 && row.EndsWith("}", StringComparison.Ordinal) && DateTimeOffset
+                .TryParseExact(row.Substring(start + key.Length, end - start - key.Length),
                 "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
         }
 

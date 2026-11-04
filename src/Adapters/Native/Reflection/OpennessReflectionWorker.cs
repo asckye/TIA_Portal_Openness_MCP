@@ -26,12 +26,18 @@ namespace TiaMcp.Adapters
             {
                 reply.Observation = request.Operation switch {
                     "DescribeObject" => service.DescribeObject(request.ObjectKind, request.ObjectPath, request.SoftwarePath, request.Limit),
-                    "DescribeObjectProperty" => service.DescribeObjectProperty(request.ObjectKind, request.ObjectPath, request.PropertyPath, request.SoftwarePath, request.Limit),
+                    "DescribeObjectProperty" => service
+                        .DescribeObjectProperty(request.ObjectKind, request.ObjectPath, request.PropertyPath, request.SoftwarePath, request.Limit),
                     "GetObjectProperty" => service.GetObjectProperty(request.ObjectKind, request.ObjectPath, request.PropertyPath, request.SoftwarePath),
-                    "ListObjectChildren" => service.ListObjectChildren(request.ObjectKind, request.ObjectPath, request.PropertyPath, request.SoftwarePath, request.Limit),
-                    "DescribeService" => service.DescribeService(request.ObjectKind, request.ObjectPath, request.ServiceTypeSuffix, request.SoftwarePath, request.Limit),
-                    "InvokeObject" => service.InvokeObject(request.ObjectKind, request.ObjectPath, request.MethodName, request.Arguments, request.SoftwarePath, request.AllowWrite),
-                    "InvokeService" => service.InvokeService(request.ObjectKind, request.ObjectPath, request.ServiceTypeSuffix, request.MethodName, request.Arguments, request.SoftwarePath, request.AllowWrite),
+                    "ListObjectChildren" => service
+                        .ListObjectChildren(request.ObjectKind, request.ObjectPath, request.PropertyPath, request.SoftwarePath, request.Limit),
+                    "DescribeService" => service
+                        .DescribeService(request.ObjectKind, request.ObjectPath, request.ServiceTypeSuffix, request.SoftwarePath, request.Limit),
+                    "InvokeObject" => service
+                        .InvokeObject(request.ObjectKind, request.ObjectPath, request.MethodName, request.Arguments, request.SoftwarePath, request.AllowWrite),
+                    "InvokeService" => service
+                        .InvokeService(request.ObjectKind, request.ObjectPath, request.ServiceTypeSuffix, request.MethodName, request.Arguments, request
+                            .SoftwarePath, request.AllowWrite),
                     _ => throw new ArgumentException("Unregistered reflection operation: " + request.Operation)
                 };
                 if (reply.Observation.Value != null)
@@ -43,7 +49,8 @@ namespace TiaMcp.Adapters
             }
             catch (Exception error) when (error.GetBaseException() is not NonRecoverableException)
             {
-                reply.Failure = EngineeringReflectionFailure != null ? EngineeringReflectionFailure(error) : new PlcSoftwareFailure { Code = error is PlcSoftwareException native ? native.Code : error.GetType().Name,
+                reply.Failure = EngineeringReflectionFailure != null ? EngineeringReflectionFailure(error) : new PlcSoftwareFailure {
+                    Code = error is PlcSoftwareException native ? native.Code : error.GetType().Name,
                     Message = error.Message, Candidates = (error as PlcSoftwareException)?.Candidates?.ToArray() };
             }
             return reply;

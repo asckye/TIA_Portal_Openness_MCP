@@ -17,7 +17,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     return new HmiObject
                     {
                         ["valueClass"] = "NullableDateTime", ["granularity"] = dateTime.DateTimeValues.ToString(),
-                        ["year"] = dateTime.Year, ["month"] = dateTime.Month, ["day"] = dateTime.Day, ["hour"] = dateTime.Hour, ["minute"] = dateTime.Minute, ["second"] = dateTime.Second,
+                        ["year"] = dateTime.Year, ["month"] = dateTime.Month, ["day"] = dateTime.Day, ["hour"] = dateTime.Hour, ["minute"] = dateTime.Minute,
+                            ["second"] = dateTime.Second,
                         ["text"] = dateTime.ToString()
                     };
                 default: return null;

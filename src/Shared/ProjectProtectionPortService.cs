@@ -13,7 +13,8 @@ internal sealed class ProjectProtectionPortService
     public ResponseMessage ReadProjectProtection()
     {
         if (!hasProject()) return JsonSerializer.Deserialize<ResponseMessage>(HardwarePortPreconditions.NoProject("GetProjectProtection").ToJsonString())!;
-        var reply = call("project-security.ReadProjectProtection", new JsonObject()) ?? throw new InvalidOperationException("Missing project protection worker reply.");
+        var reply = call("project-security.ReadProjectProtection", new JsonObject())
+            ?? throw new InvalidOperationException("Missing project protection worker reply.");
         return JsonSerializer.Deserialize<ResponseMessage>(reply.ToJsonString())!;
     }
 }

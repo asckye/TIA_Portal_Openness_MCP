@@ -31,7 +31,8 @@ public static class OptionalEngineeringCapabilities
             || request.Operation == "ManageDriveTelegrams" && request.Action != "read"))
             return "V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence.";
         if (major == 14 && request.Operation == "ManageDriveTelegrams"
-            && (request.Action is not ("read" or "erase") || request.Action == "erase" && request.TelegramType is not ("MainTelegram" or "SupplementaryTelegram")))
+            && (request.Action is not ("read" or "erase") || request.Action == "erase" && request
+                    .TelegramType is not ("MainTelegram" or "SupplementaryTelegram")))
             return "V14 SP1 supports telegram read/erase only; the modern insertion/change overloads and telegram types are unavailable.";
         if (major < 20 && request.DriveObjectNumber != 0)
             return "DriveObjectNumber requires V20 or later; select driveObjectIndex on this release.";
@@ -55,7 +56,8 @@ public static class OptionalEngineeringCapabilities
             return "The requested DCC chart creation overload requires V18 or later.";
         if (major < 18 && request.Operation == "ManageDccChart" && request.Action == "readSequence" && !string.IsNullOrEmpty(request.ChartName))
             return "Chart-level GetRunSequence requires V18 or later; container-level sequence reads are available.";
-        if (major == 15 && request.Operation == "GenerateSivarc" && request.Inputs.TryGetValue(request.AdditionalHmiDeviceNamesJson, out var devices) && devices.Items.Length != 0)
+        if (major == 15 && request.Operation == "GenerateSivarc" && request.Inputs.TryGetValue(request.AdditionalHmiDeviceNamesJson, out var devices) && devices
+                .Items.Length != 0)
             return "The multiple-HMI generation overload requires V16 or later.";
         if (major < 20 && request.Category == "advancedTags") return "AdvancedTagRules requires V20 or later.";
         if (major < 18 && request.Operation == "ManageSivarcRuleContainer")
@@ -63,7 +65,8 @@ public static class OptionalEngineeringCapabilities
         if (major < 18 && request.Operation is "ListSivarcRules" or "ManageSivarcRule")
         {
             string path = request.Operation == "ListSivarcRules" ? request.ObjectPathJson : request.CollectionPathJson;
-            if (request.Inputs.TryGetValue(path, out var steps) && steps.Items.Any(step => step.Properties.TryGetValue("property", out var property) && property.Text is "Tables" or "Folders"))
+            if (request.Inputs.TryGetValue(path, out var steps) && steps.Items
+                    .Any(step => step.Properties.TryGetValue("property", out var property) && property.Text is "Tables" or "Folders"))
                 return "SiVArc table/folder addressing requires V18 or later; root Rules/Groups are available.";
         }
         if (major < 18 && request.Operation == "ManageDccChart" && (request.SequenceIndex >= 0
@@ -99,9 +102,11 @@ public static class OptionalEngineeringCapabilities
         }
         if (major < 18 && request.Operation == "ManageDccChart" && request.Action == "showEditor")
             return "DriveControlChart.ShowDccEditor requires V18 or later.";
-        if (major < 20 && request.Operation == "ManageDriveFunctions" && request.Action is "activateFunction" or "deactivateFunction" or "setSIAxisType" or "setMotorCode")
+        if (major < 20 && request.Operation == "ManageDriveFunctions" && request
+                .Action is "activateFunction" or "deactivateFunction" or "setSIAxisType" or "setMotorCode")
             return "The requested drive function requires V20 or later.";
-        if (major < 19 && request.Operation == "ManageDriveFunctions" && request.Action is "setEncoderType" or "setEquivalentCircuitDiagramData" or "updateCheckSums")
+        if (major < 19 && request.Operation == "ManageDriveFunctions" && request
+                .Action is "setEncoderType" or "setEquivalentCircuitDiagramData" or "updateCheckSums")
             return "The requested drive configuration/safety checksum function requires V19 or later.";
         if (major < 20 && request.Operation == "ManageTechnologyExtensions" && request.Action == "installAndGetIdentifier")
             return "InstallAndGetIdentifier requires V20 or later.";

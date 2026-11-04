@@ -157,7 +157,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var itemsType = itemsComp.GetType();
                 var createSigs = itemsType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                     .Where(m => m.Name.StartsWith("Create", StringComparison.OrdinalIgnoreCase))
-                    .Select(m => $"{m.Name}({string.Join(", ", m.GetParameters().Select(p => p.ParameterType.FullName + " " + p.Name))}) -> {m.ReturnType.FullName}")
+                    .Select(m =>
+                            $"{m.Name}({string.Join(", ", m.GetParameters().Select(p => p.ParameterType.FullName + " " + p.Name))}) -> {m.ReturnType.FullName}")
                     .ToArray();
                 Step("screenItems.CreateSignatures", true, string.Join(" | ", createSigs));
 
@@ -177,7 +178,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 void WriteRequiredProperty(object target, string property, object value)
                 {
                     if (property == "Item")
-                        throw new NotSupportedException("Multilingual captions require an explicit culture; use SetUnifiedMultilingualProperty. No Item property is written.");
+                        throw new NotSupportedException("Multilingual captions require an explicit culture; use SetUnifiedMultilingualProperty. No Item " +
+                            "property is written.");
                     var edits = UnifiedUiModelLogic.PrepareNested(target.GetType(), new HmiObject {
                         [property] = value is Color color ? UnifiedUiModelLogic.ColorText(color) : value });
                     UnifiedUiModelLogic.ApplyNested(target, edits, meta);
@@ -430,7 +432,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             return changes;
         }
 
-        public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "", string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
+        public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "",
+                string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
         {
             UnifiedHmiInputValidation.PlcBinding(plcName, plcTag);
             return _session.RunHmiStepTool("EnsureUnifiedHmiTag", meta => _session.Capture(meta, _ =>
@@ -481,12 +484,15 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiDescribe EnsureUnifiedHmiConnection(string hmiSoftwarePath, string connectionName = "HMI_Connection_1", string plcName = "PLC_1")
         {
-            if (string.IsNullOrWhiteSpace(hmiSoftwarePath) || string.IsNullOrWhiteSpace(connectionName) || string.IsNullOrWhiteSpace(plcName)) throw new ArgumentException("Explicit nonempty hmiSoftwarePath, connectionName and plcName required.");
+            if (string.IsNullOrWhiteSpace(hmiSoftwarePath) || string.IsNullOrWhiteSpace(connectionName) || string.IsNullOrWhiteSpace(plcName))
+                throw new ArgumentException("Explicit nonempty hmiSoftwarePath, connectionName and plcName required.");
             var sw = _session.ExactUnifiedRoot(hmiSoftwarePath);
             var connections = TryGetPropertyValue(sw, "Connections") ?? throw new NotSupportedException("Unified Connections unavailable.");
             var connection = HmiExchangePolicy.Find(connections, connectionName);
             if (connection == null)
-                throw new NotSupportedException("Automatic Unified connection creation requires verified CommunicationDriver and InitialAddress values. Configure the connection in TIA or use ManageUnifiedEngineeringObject with documented properties, then read it back. DriverProperties and Partner/Station/Node are not written; driver-specific values require VM confirmation.");
+                throw new NotSupportedException("Automatic Unified connection creation requires verified CommunicationDriver and InitialAddress values. " +
+                    "Configure the connection in TIA or use ManageUnifiedEngineeringObject with documented properties, then read it back. DriverProperties " +
+                    "and Partner/Station/Node are not written; driver-specific values require VM confirmation.");
             var partner = _session.GetSoftwareContainer(plcName)?.Parent as DeviceItem
                 ?? throw new PlcSoftwareException("NotFound", "Exact PLC software partner not found: " + plcName);
             var expectedPartner = partner.Name;
@@ -499,7 +505,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             };
         }
 
-        public HmiMessage EnsureUnifiedHmiScreenItem(string hmiSoftwarePath, string screenName, string itemName, string itemType = "Button", int left = 0, int top = 0, uint width = 120, uint height = 40, string text = "")
+        public HmiMessage EnsureUnifiedHmiScreenItem(string hmiSoftwarePath, string screenName, string itemName, string itemType = "Button", int left = 0,
+                int top = 0, uint width = 120, uint height = 40, string text = "")
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiScreenItem", meta => _session.Capture(meta, _ =>
             {
@@ -510,7 +517,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                 var itemClrType = ResolveUnifiedScreenItemType(itemType);
                 var item = _session.FindExistingByName(items, itemName);
-                if (item != null && item.GetType() != itemClrType) throw new InvalidOperationException("Type conflict for " + itemName + ": existing " + item.GetType().FullName + ", requested " + itemClrType.FullName);
+                if (item != null && item.GetType() != itemClrType)
+                    throw new InvalidOperationException("Type conflict for " + itemName + ": existing " + item.GetType().FullName + ", requested " + itemClrType
+                        .FullName);
                 var action = "exists";
                 if (item == null)
                 {
@@ -600,7 +609,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                         var itemClrType = ResolveUnifiedScreenItemType(typeHint!);
                         var item = _session.FindExistingByName(items, name!);
-                        if (item != null && item.GetType() != itemClrType) throw new InvalidOperationException("Type conflict for " + name + ": existing " + item.GetType().FullName + ", requested " + itemClrType.FullName);
+                        if (item != null && item.GetType() != itemClrType)
+                            throw new InvalidOperationException("Type conflict for " + name + ": existing " + item.GetType().FullName + ", requested "
+                                + itemClrType.FullName);
                         var action = "updated";
                         if (item == null)
                         {
@@ -613,14 +624,22 @@ namespace TiaMcp.Adapters.Native.Hmi
                         if (item == null) throw new InvalidOperationException($"Create/find returned null for '{name}'.");
 
                         if (hasText)
-                            UnifiedMultilingualText.Validate(item, HmiString(itemNode, "textProperty") is string tp && !string.IsNullOrWhiteSpace(tp) ? tp : "Text",
+                            UnifiedMultilingualText
+                                .Validate(item, HmiString(itemNode, "textProperty") is string tp && !string.IsNullOrWhiteSpace(tp) ? tp : "Text",
                                 HmiString(itemNode, "culture") ?? "zh-CN");
 
                         itemStatus["mayHaveChanged"] = true;
-                        if (itemNode["left"] != null) ApplyJsonProperties(item, new HmiObject { ["Left"] = itemNode["left"] }, failed, writeResults, name!, allowAttributeFallback: false);
-                        if (itemNode["top"] != null) ApplyJsonProperties(item, new HmiObject { ["Top"] = itemNode["top"] }, failed, writeResults, name!, allowAttributeFallback: false);
-                        if (itemNode["width"] != null) ApplyJsonProperties(item, new HmiObject { ["Width"] = itemNode["width"] }, failed, writeResults, name!, allowAttributeFallback: false);
-                        if (itemNode["height"] != null) ApplyJsonProperties(item, new HmiObject { ["Height"] = itemNode["height"] }, failed, writeResults, name!, allowAttributeFallback: false);
+                        if (itemNode["left"] != null)
+                            ApplyJsonProperties(item, new HmiObject { ["Left"] = itemNode["left"] }, failed, writeResults, name!, allowAttributeFallback
+                                : false);
+                        if (itemNode["top"] != null)
+                            ApplyJsonProperties(item, new HmiObject { ["Top"] = itemNode["top"] }, failed, writeResults, name!, allowAttributeFallback: false);
+                        if (itemNode["width"] != null)
+                            ApplyJsonProperties(item, new HmiObject { ["Width"] = itemNode["width"] }, failed, writeResults, name!, allowAttributeFallback
+                                : false);
+                        if (itemNode["height"] != null)
+                            ApplyJsonProperties(item, new HmiObject { ["Height"] = itemNode["height"] }, failed, writeResults, name!, allowAttributeFallback
+                                : false);
 
                         if (itemNode["properties"] is HmiObject props)
                         {
@@ -666,12 +685,15 @@ namespace TiaMcp.Adapters.Native.Hmi
                     catch (Exception ex)
                     {
                         itemStatus["error"] = (ex.InnerException ?? ex).Message;
-                        failed.Add($"{name} (textProperty={HmiString(itemNode, "textProperty") ?? "Text"}, culture={HmiString(itemNode, "culture") ?? "zh-CN"}): {ex.GetType().Name}: {ex.Message}");
+                        failed
+                            .Add($"{name} (textProperty={HmiString(itemNode, "textProperty") ?? "Text"}, culture={HmiString(itemNode, "culture") ?? "zh-CN"}): {ex.GetType().Name}: {ex.Message}");
                     }
                 }
 
                 meta["changed"] = changed;
-                meta["changedMeaning"] = "Items that reached the end of processing; not a guarantee of no other changes. Inspect itemResults and textReadback, including on failure.";
+                meta["changedMeaning"] =
+                    "Items that reached the end of processing; not a guarantee of no other changes. Inspect itemResults and textReadback, including on " +
+                    "failure.";
                 meta["failed"] = failed;
                 meta["strict"] = strict;
                 meta["operationSuccess"] = failed.Count == 0;
@@ -716,7 +738,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["propertyBound"] = bound;
                 if (!bound)
                 {
-                    meta["availableProperties"] = string.Join(", ", existing.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => $"{p.Name}:{p.PropertyType.Name}"));
+                    meta["availableProperties"] = string
+                        .Join(", ", existing.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                            .Select(p => $"{p.Name}:{p.PropertyType.Name}"));
                 }
 
                 return bound
@@ -784,7 +808,8 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                 var enumType = create.GetParameters()[0].ParameterType;
                 if (!Enum.GetNames(enumType).Any(n => string.Equals(n, eventType, StringComparison.OrdinalIgnoreCase)))
-                    throw new ArgumentException("Invalid event name: " + eventType + " (valid for " + enumType.Name + ": " + string.Join("/", Enum.GetNames(enumType)) + "; a WinCC Unified button click is 'Tapped').");
+                    throw new ArgumentException("Invalid event name: " + eventType + " (valid for " + enumType.Name + ": " + string
+                            .Join("/", Enum.GetNames(enumType)) + "; a WinCC Unified button click is 'Tapped').");
                 var enumValue = Enum.Parse(enumType, eventType, ignoreCase: true);
 
                 object? handler = null;
@@ -814,7 +839,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             static string eventValueToText(object value) => value.ToString() ?? string.Empty;
         }
 
-        public HmiDescribe DescribeUnifiedHmiButtonEventScript(string hmiSoftwarePath, string screenName, string buttonName, string eventType, int maxMembers = 200)
+        public HmiDescribe DescribeUnifiedHmiButtonEventScript(string hmiSoftwarePath, string screenName, string buttonName, string eventType, int maxMembers =
+                200)
         {
             try
             {
@@ -840,7 +866,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     {
                         Name = "ScriptProperty",
                         Kind = "Info",
-                        Type = scriptProp == null ? "missing" : $"{scriptProp.PropertyType.FullName}; CanRead={scriptProp.CanRead}; CanWrite={scriptProp.CanWrite}",
+                        Type = scriptProp == null ? "missing"
+                            : $"{scriptProp.PropertyType.FullName}; CanRead={scriptProp.CanRead}; CanWrite={scriptProp.CanWrite}",
                         Signature = null
                     },
                     new OpennessMember
@@ -923,7 +950,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
         }
 
-        public HmiMessage SetUnifiedHmiButtonEventScriptCode(string hmiSoftwarePath, string screenName, string buttonName, string eventType, string scriptCode, string? globalDefinitionAreaScriptCode = null, bool? async = null, bool syntaxCheck = false)
+        public HmiMessage SetUnifiedHmiButtonEventScriptCode(string hmiSoftwarePath, string screenName, string buttonName, string eventType, string scriptCode,
+                string? globalDefinitionAreaScriptCode = null, bool? async = null, bool syntaxCheck = false)
         {
             return _session.RunHmiStepTool("SetUnifiedHmiButtonEventScriptCode", meta => _session.Capture(meta, _ =>
             {
@@ -1006,7 +1034,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             }));
         }
 
-        public HmiMessage EnsureUnifiedHmiDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string dynamizationType = "")
+        public HmiMessage EnsureUnifiedHmiDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName,
+                string dynamizationType = "")
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiDynamization", meta => _session.Capture(meta, _ =>
             {
@@ -1019,7 +1048,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var existing = find?.Invoke(dynamizations, new object[] { propertyName });
                 if (existing != null)
                 {
-                    if (existing.GetType() != candidates.Single()) throw new NotSupportedException("Existing dynamization has a different documented kind; no replacement was attempted.");
+                    if (existing.GetType() != candidates.Single())
+                        throw new NotSupportedException("Existing dynamization has a different documented kind; no replacement was attempted.");
                     meta["action"] = "exists";
                     meta["dynamizationType"] = existing.GetType().FullName;
                     meta["members"] = string.Join(" | ", _session.DescribeMembers(existing, 100).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
@@ -1027,7 +1057,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
 
                 var createMethods = dynamizations.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(m => m.Name == "Create" && m.IsGenericMethodDefinition && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string))
+                    .Where(m => m.Name == "Create" && m.IsGenericMethodDefinition && m.GetParameters().Length == 1 && m.GetParameters()[0]
+                            .ParameterType == typeof(string))
                     .ToList();
                 if (!createMethods.Any())
                 {
@@ -1075,7 +1106,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             return true;
         }
 
-        public HmiMessage BindUnifiedHmiTagDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string tagName, string dataType = "Bool", string plcTag = "", string address = "")
+        public HmiMessage BindUnifiedHmiTagDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string tagName,
+                string dataType = "Bool", string plcTag = "", string address = "")
         {
             return _session.RunHmiStepTool("BindUnifiedHmiTagDynamization", meta =>
             {
@@ -1092,7 +1124,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (tagDynType == null) throw new InvalidOperationException("TagDynamization type not found.");
 
                     var create = dynamizations.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                        .FirstOrDefault(m => m.Name == "Create" && m.IsGenericMethodDefinition && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string));
+                        .FirstOrDefault(m => m.Name == "Create" && m.IsGenericMethodDefinition && m.GetParameters().Length == 1 && m.GetParameters()[0]
+                                .ParameterType == typeof(string));
                     if (create == null) throw new InvalidOperationException($"Create<T>(string) not found on {dynamizations.GetType().FullName}.");
 
                     dyn = create.MakeGenericMethod(tagDynType).Invoke(dynamizations, new object[] { propertyName });
@@ -1116,7 +1149,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (string.IsNullOrWhiteSpace(address)) meta["setAddress"] = "skipped";
                 meta["members"] = string.Join(" | ", _session.DescribeMembers(dyn, 120).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
                 meta["after"] = UnifiedRequestScalar.Read(dyn);
-                if (results.Any(r => r!.Field("verified") is not true)) throw new InvalidOperationException("Tag dynamization write/readback failed; inspect writeResults. Partial edits are not rolled back.");
+                if (results.Any(r => r!.Field("verified") is not true))
+                    throw new InvalidOperationException("Tag dynamization write/readback failed; inspect writeResults. Partial edits are not rolled back.");
 
                 return $"Tag dynamization for '{itemName}.{propertyName}' bound to '{tagName}'.";
             });
@@ -1140,7 +1174,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             return item;
         }
 
-        private object ResolveHmiButtonEventHandlerOrThrow(string hmiSoftwarePath, string screenName, string buttonName, string eventType, bool createIfMissing = true)
+        private object ResolveHmiButtonEventHandlerOrThrow(string hmiSoftwarePath, string screenName, string buttonName, string eventType,
+                bool createIfMissing = true)
         {
             var button = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, buttonName);
             var handlers = button.GetType().GetProperty("EventHandlers")?.GetValue(button)
@@ -1278,7 +1313,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 return string.Empty;
             }
 
-            var readback = _session.SummarizeHmiObjectReadback(tag, "Connection", "AccessMode", "TagType", "PlcName", "PlcTag", "Address", "DataType", "HmiDataType");
+            var readback = _session
+                .SummarizeHmiObjectReadback(tag, "Connection", "AccessMode", "TagType", "PlcName", "PlcTag", "Address", "DataType", "HmiDataType");
             var connection = Attr("Connection");
             var accessMode = Attr("AccessMode");
             var symbol = Attr("PlcTag");
@@ -1319,7 +1355,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 };
             }
 
-            var status = string.IsNullOrWhiteSpace(connection) || connection.IndexOf("internal", StringComparison.OrdinalIgnoreCase) >= 0 || connection.IndexOf("内部", StringComparison.OrdinalIgnoreCase) >= 0
+            var status = string.IsNullOrWhiteSpace(connection) || connection.IndexOf("internal", StringComparison.OrdinalIgnoreCase) >= 0 || connection
+                .IndexOf("内部", StringComparison.OrdinalIgnoreCase) >= 0
                 ? "InternalOnly"
                 : "Unverified";
             return new UnifiedHmiTagBindingReadback
@@ -1327,7 +1364,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 Status = status,
                 Verified = false,
                 Readback = readback,
-                Guidance = "Pass connectionName plus a verified PLC symbol or absolute address, then read back Connection/AccessMode/PlcTag/Address. Internal HMI tags are not accepted by the stable project-generation path."
+                Guidance =
+                    "Pass connectionName plus a verified PLC symbol or absolute address, then read back Connection/AccessMode/PlcTag/Address. Internal HMI " +
+                    "tags are not accepted by the stable project-generation path."
             };
         }
 
@@ -1343,13 +1382,15 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             foreach (var pair in root)
             {
-                if (pair.Key.Equals("Name", StringComparison.OrdinalIgnoreCase) && !(item && pair.Key == "name")) throw new ArgumentException("Renaming through screen design is refused; use an explicit rename operation.");
+                if (pair.Key.Equals("Name", StringComparison.OrdinalIgnoreCase) && !(item && pair.Key == "name"))
+                    throw new ArgumentException("Renaming through screen design is refused; use an explicit rename operation.");
                 if (pair.Value is HmiObject nested) RejectDesignRenames(nested);
                 else if (pair.Value is HmiArray items) foreach (var child in items.OfType<HmiObject>()) RejectDesignRenames(child, pair.Key == "items");
             }
         }
 
-        private void ApplyJsonProperties(object target, HmiObject props, HmiArray failed, HmiArray writeResults, string path, string typeHint = "", bool allowAttributeFallback = true)
+        private void ApplyJsonProperties(object target, HmiObject props, HmiArray failed, HmiArray writeResults, string path, string typeHint = "",
+                bool allowAttributeFallback = true)
         {
             foreach (var kv in props)
             {
@@ -1362,7 +1403,8 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                 var value = HmiObjectValue(kv.Value);
                 var result = UnifiedUiModelLogic.VerifiedWrite(target, kv.Key, value,
-                    () => _session.TrySetProperty(target, kv.Key, value), allowAttributeFallback ? () => TrySetEngineeringAttribute(target, kv.Key, value) : (Func<bool>?)null);
+                    () => _session.TrySetProperty(target, kv.Key, value), allowAttributeFallback ? () => TrySetEngineeringAttribute(target, kv.Key, value)
+                        : (Func<bool>?)null);
                 result["path"] = path; writeResults.Add(result);
                 if (result["verified"] is not true) failed.Add($"{path}.{kv.Key}: {result["error"]}");
             }
@@ -1384,7 +1426,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     prop.Equals("Content", StringComparison.OrdinalIgnoreCase) ||
                     prop.Equals("Padding", StringComparison.OrdinalIgnoreCase))
                 {
-                    return "unsupported on Rectangle. Use a separate HmiText item for text/foreground/font, and keep Rectangle for BackColor/BorderColor/BorderWidth.";
+                    return "unsupported on Rectangle. Use a separate HmiText item for text/foreground/font, and keep Rectangle for " +
+                        "BackColor/BorderColor/BorderWidth.";
                 }
             }
 
@@ -1396,7 +1439,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     "BackColor", "ForeColor", "BorderColor", "BorderWidth", "Visible", "Enabled", "Name"
                 };
                 if (!stable.Contains(prop))
-                    return "not in the stable IOField property set for generated screens. Bind runtime values with BindUnifiedHmiTagDynamization instead of ad-hoc ProcessValue properties.";
+                    return "not in the stable IOField property set for generated screens. Bind runtime values with BindUnifiedHmiTagDynamization instead of " +
+                        "ad-hoc ProcessValue properties.";
             }
 
             return string.Empty;

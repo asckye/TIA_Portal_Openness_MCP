@@ -32,7 +32,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["tia"] = "Offline XML generation only; TIA Portal is not connected.",
                     ["write"] = "No project, reference project, or delivery package content is modified.",
                     ["binding"] = "ControllerTag is a requested PLC symbolic binding; it is not verified until read back from TIA.",
-                    ["apply"] = "Import only into a temporary Classic/Basic HMI project first, then read back tags, connections, controller tags, and compile/diagnose."
+                    ["apply"] =
+                        "Import only into a temporary Classic/Basic HMI project first, then read back tags, connections, controller tags, and compile/diagnose."
                 },
                 ["ok"] = analysis["ok"]?.GetValue<bool>() == true,
                 ["analysis"] = analysis,
@@ -46,7 +47,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (string.IsNullOrWhiteSpace(tableName))
                 throw new ArgumentException("Classic HMI tag table name is required.");
             if (tableName.IndexOfAny(new[] { '/', '\\' }) >= 0)
-                throw new ArgumentException("Classic HMI tag table Name must be a single name without path separators. Select absolute /Group/Sub with folderPath when importing Table; paths do not belong in the XML Name.");
+                throw new ArgumentException("Classic HMI tag table Name must be a single name without path separators. Select absolute /Group/Sub with " +
+                    "folderPath when importing Table; paths do not belong in the XML Name.");
             var tags = (root["Tags"] as JsonArray ?? root["tags"] as JsonArray ?? new JsonArray())
                 .OfType<JsonObject>()
                 .ToArray();

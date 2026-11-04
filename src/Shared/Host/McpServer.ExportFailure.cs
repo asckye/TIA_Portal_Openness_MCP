@@ -19,12 +19,14 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 data["mayHaveChanged"] = true;
                 return V4Result(tool, data, new Error("The export failed and its target may have changed. " + export.NativeMessage,
-                    new OutcomeUnknownDetails("export-file", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: true);
+                    new OutcomeUnknownDetails("export-file", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
+                        current: true);
             }
             data["mayHaveChanged"] = false; data["mayHaveWrittenFiles"] = false;
             if (data["evidence"] is JsonObject evidence) { evidence["mayHaveChanged"] = false; evidence["mayHaveWrittenFiles"] = false; }
             return V4Result(tool, data, new Error("The native export failed without writing its target. " + export.NativeMessage,
-                new NativeOperationFailedDetails(null, export.NativeMessage, new Dictionary<string, JsonElement>())), Outcome.Failed, Execution.Completed, Completeness.Complete, current: true);
+                new NativeOperationFailedDetails(null, export.NativeMessage, new Dictionary<string, JsonElement>())), Outcome.Failed, Execution.Completed,
+                    Completeness.Complete, current: true);
         }
 
     }

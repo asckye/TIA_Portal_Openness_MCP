@@ -18,10 +18,12 @@ internal sealed class ProjectLifecycleProjectTools
 {
     private readonly ProjectLifecyclePortService _service;
     public ProjectLifecycleProjectTools(ProjectLifecyclePortService service) => _service = service;
-        [McpServerTool(Name = "BuildProjectScaffold"), Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Each device is created exactly as specified with one DeviceComposition.CreateWithItem call: no family default device, firmware-version stepping, alternative model or renaming; a TIA refusal is reported with the hardware-catalog candidates (V18+). Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500, label only); plcMlfb(required: exact article number with its spaces, or the full TypeIdentifier from SearchHardwareCatalog); plcVersion?(exact catalog version; empty with a full TypeIdentifier); hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC, label only); hmiMlfb/hmiVersion(required with hmiName, same rules); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (device type keys, PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
+        [McpServerTool(Name = "BuildProjectScaffold"),
+                Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Each device is created exactly as specified with one DeviceComposition.CreateWithItem call: no family default device, firmware-version stepping, alternative model or renaming; a TIA refusal is reported with the hardware-catalog candidates (V18+). Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500, label only); plcMlfb(required: exact article number with its spaces, or the full TypeIdentifier from SearchHardwareCatalog); plcVersion?(exact catalog version; empty with a full TypeIdentifier); hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC, label only); hmiMlfb/hmiVersion(required with hmiName, same rules); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (device type keys, PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
         public CallToolResult BuildProjectScaffoldV4(
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
-            [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun = true)
+            [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun =
+                true)
         {
             ScaffoldStep? refused;
             try
@@ -72,7 +74,8 @@ internal sealed class ProjectLifecycleProjectTools
 
         public ResponseScaffold ScaffoldProject(
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
-            [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun = true)
+            [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun =
+                true)
         {
             var resp = new ResponseScaffold { Ok = true };
             void Step(string name, string status, string? detail = null)
@@ -92,7 +95,8 @@ internal sealed class ProjectLifecycleProjectTools
                 throw new McpException("BuildProjectScaffold: 'projectName' is required", McpErrorCode.InvalidParams);
             var directoryPath = S("directoryPath");
             if (string.IsNullOrWhiteSpace(directoryPath))
-                directoryPath = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_scaffold_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+                directoryPath = System.IO.Path
+                    .Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_scaffold_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
             var plcName = S("plcName", "PLC_1");
             var plcFamily = S("plcFamily", "S7-1500");
             var plcMlfb = S("plcMlfb");
@@ -126,7 +130,10 @@ internal sealed class ProjectLifecycleProjectTools
                 foreach (var pair in new[] { ("udt", "udt"), ("globalDb", "globaldb"), ("tagTable", "tagtable") })
                     foreach (var item in Arr(pair.Item1))
                     {
-                        try { _service.PlcBuild.PlcBuildAndImport(plcName, pair.Item2, item!.ToJsonString(), "", "", "", false, true); Step(pair.Item2, "ok", "dryRun: XML built"); }
+                        try {
+                            _service.PlcBuild.PlcBuildAndImport(plcName, pair.Item2, item!.ToJsonString(), "", "", "", false, true);
+                            Step(pair.Item2, "ok", "dryRun: XML built");
+                        }
                         catch (Exception ex) { Step(pair.Item2, "failed", ex.Message); resp.Ok = false; }
                     }
                 foreach (var item in Arr("sclSourceFiles"))
@@ -140,8 +147,10 @@ internal sealed class ProjectLifecycleProjectTools
                 {
                     if (!ProjectScaffoldCapabilities.Supports(_service.ReleaseKey, "lad")) continue;
                     var importPath = IS(item, "importPath"); var name = IS(item, "name");
-                    bool exists = !string.IsNullOrWhiteSpace(importPath) && !string.IsNullOrWhiteSpace(name) && System.IO.File.Exists(System.IO.Path.Combine(importPath, name + ".s7dcl"));
-                    Step("lad", exists ? "ok" : "failed", exists ? $"{name} (.s7dcl found)" : $"MISSING .s7dcl under {importPath} for {name}"); if (!exists) resp.Ok = false;
+                    bool exists = !string.IsNullOrWhiteSpace(importPath) && !string.IsNullOrWhiteSpace(name) && System.IO.File
+                        .Exists(System.IO.Path.Combine(importPath, name + ".s7dcl"));
+                    Step("lad", exists ? "ok" : "failed", exists ? $"{name} (.s7dcl found)" : $"MISSING .s7dcl under {importPath} for {name}"); if (!exists)
+                        resp.Ok = false;
                 }
                 foreach (var item in Arr("hmiScreens"))
                 {
@@ -153,22 +162,30 @@ internal sealed class ProjectLifecycleProjectTools
                 var okN = resp.Steps.Count(s => s.Status == "ok");
                 var failN = resp.Steps.Count(s => s.Status == "failed");
                 resp.Message = $"BuildProjectScaffold dryRun '{projectName}': {okN} ok, {failN} failed (offline validation, nothing created)." +
-                    (failN == 0 ? " Spec is valid — call BuildProjectScaffold again with dryRun=false to actually create the project." : " Fix the failed steps, then re-run.");
+                    (failN == 0 ? " Spec is valid — call BuildProjectScaffold again with dryRun=false to actually create the project."
+                            : " Fix the failed steps, then re-run.");
                 resp.Meta = ResponseMeta.Basic(DateTime.Now, resp.Ok, ("dryRun", true));
                 return resp;
             }
 
             // ---- critical: connect + create project + PLC device ----
-            if (plcDeviceProblem != null) throw new McpException("BuildProjectScaffold refused before connect: " + plcDeviceProblem, McpErrorCode.InvalidParams);
+            if (plcDeviceProblem != null)
+                throw new McpException("BuildProjectScaffold refused before connect: " + plcDeviceProblem, McpErrorCode.InvalidParams);
             try
             {
                 if (!_service.IsConnected) { _service.Primitive<ResponseConnect>("connect"); Step("connect", "ok"); }
                 else Step("connect", "skipped", "already connected");
             }
-            catch (Exception ex) { Step("connect", "failed", ex.Message); resp.Ok = false; throw new McpException($"BuildProjectScaffold aborted at connect: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
+            catch (Exception ex) {
+                Step("connect", "failed", ex.Message); resp.Ok = false;
+                throw new McpException($"BuildProjectScaffold aborted at connect: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
 
             try { _service.Primitive<ResponseMessage>("createProject", directoryPath, projectName); Step("createProject", "ok", directoryPath); }
-            catch (Exception ex) { Step("createProject", "failed", ex.Message); resp.Ok = false; throw new McpException($"BuildProjectScaffold aborted at createProject: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
+            catch (Exception ex) {
+                Step("createProject", "failed", ex.Message); resp.Ok = false;
+                throw new McpException($"BuildProjectScaffold aborted at createProject: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
 
             try
             {
@@ -177,7 +194,10 @@ internal sealed class ProjectLifecycleProjectTools
                 else throw new McpException($"PLC device add failed: {d.Error}", McpErrorCode.InternalError);
             }
             catch (McpException) { Step("addDevicePlc", "failed", "see error"); resp.Ok = false; throw; }
-            catch (Exception ex) { Step("addDevicePlc", "failed", ex.Message); resp.Ok = false; throw new McpException($"BuildProjectScaffold aborted at addDevicePlc: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
+            catch (Exception ex) {
+                Step("addDevicePlc", "failed", ex.Message); resp.Ok = false;
+                throw new McpException($"BuildProjectScaffold aborted at addDevicePlc: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
 
             // ---- optional HMI device ----
             bool hmiDeviceOk = false;
@@ -225,13 +245,19 @@ internal sealed class ProjectLifecycleProjectTools
 
             var okCount = resp.Steps.Count(s => s.Status == "ok");
             var failCount = resp.Steps.Count(s => s.Status == "failed");
-            resp.Message = $"BuildProjectScaffold '{projectName}': {okCount} ok, {failCount} failed; compile state={resp.CompileState ?? "(skipped)"} errors={resp.CompileErrorCount}.";
+            resp.Message =
+                $"BuildProjectScaffold '{projectName}': {okCount} ok, {failCount} failed; compile state={resp.CompileState ?? "(skipped)"} errors={resp.CompileErrorCount}.";
             resp.Meta = ResponseMeta.Basic(DateTime.Now, resp.Ok);
             return resp;
         }
 
 
-        [McpServerTool(Name = "SaveProjectCopy"), Description("[L2][Project][SESSION] TIA Save As via Project.SaveAs: the open project and MCP binding switch to the new location. Unsaved changes are saved into the new copy; the original project file keeps its last saved state. Requires Workbench approval before dispatch, like SaveProject and CloseProject. Ordinary projects only; local sessions are refused. The result reports previousProjectFile and newProjectFile from the cached binding; confirm the new location with GetSessionState. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "SaveProjectCopy"),
+                Description("[L2][Project][SESSION] TIA Save As via Project.SaveAs: the open project and MCP binding switch to the new location. Unsaved " +
+                "changes are saved into the new copy; the original project file keeps its last saved state. Requires Workbench approval before dispatch, " +
+                "like SaveProject and CloseProject. Ordinary projects only; local sessions are refused. The result reports previousProjectFile and " +
+                "newProjectFile from the cached binding; confirm the new location with GetSessionState. Native behaviorPolicy=current; V4 native acceptance " +
+                "is pending.")]
         public CallToolResult SaveProjectCopyV4(
             [Description("newProjectPath: destination project directory for TIA Save As; switches the open project and MCP binding.")] string newProjectPath)
             => SessionToolContract.Run("SaveProjectCopy", true, true, () => SaveAsProject(newProjectPath), () => !!_service.HasProject);
@@ -256,7 +282,8 @@ internal sealed class ProjectLifecycleProjectTools
                             ?? throw new InvalidOperationException("Save As returned without a refreshed project binding.");
                         return new ResponseSaveAsProject
                         {
-                            Message = $"TIA Save As switched the open project and MCP binding from '{previousProjectFile}' to '{newProjectFile}'. Unsaved changes were saved into the new copy; the original file keeps its last saved state.",
+                            Message =
+                                $"TIA Save As switched the open project and MCP binding from '{previousProjectFile}' to '{newProjectFile}'. Unsaved changes were saved into the new copy; the original file keeps its last saved state.",
                             PreviousProjectFile = previousProjectFile, NewProjectFile = newProjectFile,
                             Meta = ResponseMeta.Unstamped(true, ("binding", binding))
                         };
@@ -270,7 +297,8 @@ internal sealed class ProjectLifecycleProjectTools
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error saving local project/session as '{newProjectPath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error saving local project/session as '{newProjectPath}': {ex.Message}{McpHints.Recovery(ex)}", ex,
+                        McpErrorCode.InternalError);
             }
         }
 

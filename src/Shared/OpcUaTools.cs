@@ -29,7 +29,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetPlcOpcUaConfiguration"), Description(
             "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject]" +
-            " Read the full OPC UA server configuration for a PLC: server interfaces, SIMATIC interfaces, and reference namespaces — each with their Name, Enabled state, and key properties." +
+            " Read the full OPC UA server configuration for a PLC: server interfaces, SIMATIC interfaces, and reference namespaces — each with their Name, Enabled state, and key properties."
+                +
             " Use this to audit what OPC UA interfaces exist before enabling or exporting them." +
             " Enabled=true means the interface is active and will be downloaded to the CPU. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult GetOpcUaConfigV4(
@@ -45,15 +46,21 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ManageOpcUaInterface"), Description(
-            "[L2][Category:PLC-OpcUA][WRITE] Read or delete ONE OPC UA server interface, SIMATIC interface or reference namespace of a PLC (ServerInterfaceGroup.ServerInterfaces / SimaticInterfaces / ReferenceNamespaces, native Delete with readback)." +
-            " Use it to remove an interface that blocks compilation (an empty server interface makes the whole PLC fail with 'The OPC UA server interface ... is empty or does not contain unique nodes'). Default preview; dryRun=false deletes; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+            "[L2][Category:PLC-OpcUA][WRITE] Read or delete ONE OPC UA server interface, SIMATIC interface or reference namespace of a PLC " +
+                "(ServerInterfaceGroup.ServerInterfaces / SimaticInterfaces / ReferenceNamespaces, native Delete with readback)."
+                +
+            " Use it to remove an interface that blocks compilation (an empty server interface makes the whole PLC fail with 'The OPC UA server interface " +
+                "... is empty or does not contain unique nodes'). Default preview; dryRun=false deletes; no save/compile/download. Current native policy; V4 " +
+                "safety behavior is not yet accepted.")]
         public CallToolResult ManageOpcUaInterfaceV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("interfaceName: exact name as shown in GetPlcOpcUaConfiguration")] string interfaceName,
             [Description("read | delete. action: read (default) or delete")] string action = "read",
             [Description("interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'")] string interfaceType = "ServerInterface",
             [Description("dryRun: true (default) previews; false deletes")] bool dryRun = true)
-            => EngineeringToolContract.Run("ManageOpcUaInterface", !dryRun && action != "read" && action != "list", () => ManageOpcUaInterface(softwarePath, interfaceName, action, interfaceType, dryRun));
+            => EngineeringToolContract
+                .Run("ManageOpcUaInterface", !dryRun && action != "read" && action != "list", () =>
+                    ManageOpcUaInterface(softwarePath, interfaceName, action, interfaceType, dryRun));
 
         public ResponseMessage ManageOpcUaInterface(
             string softwarePath,
@@ -74,7 +81,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("interfaceName: exact name of the interface as shown in GetPlcOpcUaConfiguration")] string interfaceName,
             [Description("enabled: true to enable, false to disable")] bool enabled,
             [Description("interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'")] string interfaceType = "ServerInterface")
-            => EngineeringToolContract.Run("SetOpcUaInterfaceEnabled", true, () => SetOpcUaInterfaceEnabled(softwarePath, interfaceName, enabled, interfaceType));
+            => EngineeringToolContract
+                .Run("SetOpcUaInterfaceEnabled", true, () => SetOpcUaInterfaceEnabled(softwarePath, interfaceName, enabled, interfaceType));
 
         public ResponseMessage SetOpcUaInterfaceEnabled(
             string softwarePath,
@@ -84,14 +92,18 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try { return _service.SetOpcUaInterfaceEnabled(softwarePath, interfaceName, enabled, interfaceType); }
             catch (Exception ex) when (ex is not McpException)
-            { throw new McpException($"Unexpected error setting OPC UA interface enabled state: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
+            {
+                throw new McpException($"Unexpected error setting OPC UA interface enabled state: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
+            }
         }
 
         [McpServerTool(Name = "ExportOpcUaInterface"), Description(
             "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject]" +
             " Export an OPC UA server interface or reference namespace to an XML file." +
             " The exported XML can be inspected, modified, and re-imported." +
-            " interfaceType: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted.")]
+            " interfaceType: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet " +
+                "accepted.")]
         public CallToolResult ExportOpcUaInterfaceV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("interfaceName: exact name of the interface to export")] string interfaceName,
@@ -133,19 +145,51 @@ namespace TiaMcpServer.ModelContextProtocol
             { throw new McpException($"Unexpected error importing OPC UA interface: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
         }
 
-        [McpServerTool(Name = "GenerateOpcUaModelledInterface"), Description("[L2][PLC-OpcUA][FILE] Generate a user-modelled OPC UA NodeSet XML from one PLC or exact software unit using the Siemens MIT generator source: exported data types, accessible tags, global/instance DBs, optional project folders and empty DBs. Default dryRun=true validates targets/options without exporting. accessLevels maps Inputs/Outputs/Memory/Counters/Timers/GlobalDBs/InstanceDBs/SafetyGlobalDBs/SafetyInstanceDBs to 0 exclude, 1 read, 2 write, 3 read/write, 4 project permissions; safety allows only 0/1, default 1, other areas default 4. NEW absolute .xml output. Optimized nodes, string IDs only; nested FB member access remains unsupported upstream. Reports skipped nodes/warnings. Exports native data to isolated scratch files; no UI, project import, save, compile or download. Use existing ImportOpcUaInterface separately; output not live-validated yet. Current native policy; V4 safety behavior is not yet accepted.")]
-        public CallToolResult GenerateOpcUaModelledInterfaceV4([Description("Exact PLC software path in the bound project.")] string softwarePath, [Description("Name for the generated OPC UA interface, 1..128 characters.")] string interfaceName, [Description("Absolute OPC UA namespace URI, for example urn:company:machine.")] string namespaceUri, [Description("New absolute output file; existing files are refused.")] string outputPath,
-            [Description("Optional exact software unit name; empty selects the PLC scope.")] string unitName = "", [Description("Include project folders in the generated address space.")] bool keepFolderStructure = false, [Description("Retain data blocks without accessible variables.")] bool keepEmptyDataBlocks = false, [Description("Area-to-level map; see tool description; safety permits only 0 or 1.")] AttributeMap<int> accessLevels = null!, [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true)
-            => EngineeringToolContract.Run("GenerateOpcUaModelledInterface", !dryRun, () => GenerateOpcUaModelledInterface(softwarePath, interfaceName, namespaceUri, outputPath, unitName, keepFolderStructure, keepEmptyDataBlocks, EngineeringToolContract.Json(accessLevels), dryRun));
+        [McpServerTool(Name = "GenerateOpcUaModelledInterface"),
+                Description("[L2][PLC-OpcUA][FILE] Generate a user-modelled OPC UA NodeSet XML from one PLC or exact software unit using the Siemens MIT " +
+                "generator source: exported data types, accessible tags, global/instance DBs, optional project folders and empty DBs. Default dryRun=true " +
+                "validates targets/options without exporting. accessLevels maps " +
+                "Inputs/Outputs/Memory/Counters/Timers/GlobalDBs/InstanceDBs/SafetyGlobalDBs/SafetyInstanceDBs to 0 exclude, 1 read, 2 write, 3 read/write, " +
+                "4 project permissions; safety allows only 0/1, default 1, other areas default 4. NEW absolute .xml output. Optimized nodes, string IDs " +
+                "only; nested FB member access remains unsupported upstream. Reports skipped nodes/warnings. Exports native data to isolated scratch files; " +
+                "no UI, project import, save, compile or download. Use existing ImportOpcUaInterface separately; output not live-validated yet. Current " +
+                "native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GenerateOpcUaModelledInterfaceV4([Description("Exact PLC software path in the bound project.")] string softwarePath,
+                [Description("Name for the generated OPC UA interface, 1..128 characters.")] string interfaceName,
+                [Description("Absolute OPC UA namespace URI, for example urn:company:machine.")] string namespaceUri,
+                [Description("New absolute output file; existing files are refused.")] string outputPath,
+            [Description("Optional exact software unit name; empty selects the PLC scope.")] string unitName = "",
+                [Description("Include project folders in the generated address space.")] bool keepFolderStructure = false,
+                [Description("Retain data blocks without accessible variables.")] bool keepEmptyDataBlocks = false,
+                [Description("Area-to-level map; see tool description; safety permits only 0 or 1.")] AttributeMap<int> accessLevels = null!,
+                [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true)
+            => EngineeringToolContract
+                .Run("GenerateOpcUaModelledInterface", !dryRun, () =>
+                    GenerateOpcUaModelledInterface(softwarePath, interfaceName, namespaceUri, outputPath, unitName, keepFolderStructure, keepEmptyDataBlocks,
+                        EngineeringToolContract.Json(accessLevels), dryRun));
 
         public ResponseMessage GenerateOpcUaModelledInterface(string softwarePath, string interfaceName, string namespaceUri, string outputPath,
             string unitName = "", bool keepFolderStructure = false, bool keepEmptyDataBlocks = false, string accessLevelsJson = "{}", bool dryRun = true)
         {
-            try { return new ResponseMessage { Message = dryRun ? "Generation preview." : "Model XML generated; inspect warnings and validate by separate import/compile.", Meta = _service.GenerateOpcUaModelledInterface(softwarePath, interfaceName, namespaceUri, outputPath, unitName, keepFolderStructure, keepEmptyDataBlocks, accessLevelsJson, dryRun) }; }
-            catch (Exception ex) { return new ResponseMessage { Message = "Generation failed: " + ex.Message, Meta = new JsonObject { ["success"] = false, ["error"] = ex.Message, ["mayHaveWrittenFiles"] = !dryRun, ["imported"] = false } }; }
+            try {
+                return new ResponseMessage {
+                    Message = dryRun ? "Generation preview." : "Model XML generated; inspect warnings and validate by separate import/compile.", Meta = _service
+                        .GenerateOpcUaModelledInterface(softwarePath, interfaceName, namespaceUri, outputPath, unitName, keepFolderStructure,
+                            keepEmptyDataBlocks, accessLevelsJson, dryRun)
+                };
+            }
+            catch (Exception ex) {
+                return new ResponseMessage {
+                    Message = "Generation failed: " + ex.Message, Meta = new JsonObject {
+                        ["success"] = false, ["error"] = ex.Message, ["mayHaveWrittenFiles"] = !dryRun, ["imported"] = false }
+                };
+            }
         }
 
-        [McpServerTool(Name="GetOpcUaAccessControl"), Description("[L2][PLC-OpcUA][READ] Read the PLC OPC UA server access control (ServerInterfaceGroup.AccessControl): section roles (RoleMappings with per-namespace permissions) or restrictions (NamespaceAccessRestrictions). Exact softwarePath; offset/limit pagination. NotSupported on TIA V20. No secrets, nothing modified. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name="GetOpcUaAccessControl"),
+                Description("[L2][PLC-OpcUA][READ] Read the PLC OPC UA server access control (ServerInterfaceGroup.AccessControl): section roles " +
+                "(RoleMappings with per-namespace permissions) or restrictions (NamespaceAccessRestrictions). Exact softwarePath; offset/limit pagination. " +
+                "NotSupported on TIA V20. No secrets, nothing modified. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ReadOpcUaAccessControlV4(
             string softwarePath,
             [Description("section: roles | restrictions.")] string section="roles",
@@ -160,10 +204,16 @@ namespace TiaMcpServer.ModelContextProtocol
             int limit=100)
             => _service.ReadOpcUaAccessControl(softwarePath,section,offset,limit);
 
-        [McpServerTool(Name="ManageOpcUaAccessControl"), Description("[L2][PLC-OpcUA][WRITE] Modify PLC OPC UA server access control: createRole (roleName, definedInNamespace), addStandardRole (roleName), deleteRole (roleName), setProjectRole (roleName, projectRole), setPermission (roleName, exact namespaceUri, permission Browse|Read|Write|Call|ReceiveEvents|ReadRolePermissions, enabled), setRestriction (exact namespaceUri, properties of scalar properties). Exact names only; ambiguity refused. Real run needs confirmChange=true, Offline PLC and exclusive access; readback verified. NotSupported on TIA V20. Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name="ManageOpcUaAccessControl"),
+                Description("[L2][PLC-OpcUA][WRITE] Modify PLC OPC UA server access control: createRole (roleName, definedInNamespace), addStandardRole " +
+                "(roleName), deleteRole (roleName), setProjectRole (roleName, projectRole), setPermission (roleName, exact namespaceUri, permission " +
+                "Browse|Read|Write|Call|ReceiveEvents|ReadRolePermissions, enabled), setRestriction (exact namespaceUri, properties of scalar properties). " +
+                "Exact names only; ambiguity refused. Real run needs confirmChange=true, Offline PLC and exclusive access; readback verified. NotSupported " +
+                "on TIA V20. Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ManageOpcUaAccessControlV4(
             string softwarePath,
-            [Description("action: the operation to perform - createRole | addStandardRole | deleteRole | setProjectRole | setPermission | setRestriction.")] string action,
+            [Description("action: the operation to perform - createRole | addStandardRole | deleteRole | setProjectRole | setPermission | " +
+                "setRestriction.")] string action,
             [Description("roleName: exact role name.")] string roleName="",
             [Description("definedInNamespace: namespace URI in which the role is defined.")] string definedInNamespace="",
             [Description("projectRole: exact project role name.")] string projectRole="",
@@ -173,7 +223,10 @@ namespace TiaMcpServer.ModelContextProtocol
             AttributeMap<Scalar> properties = null!,
             bool confirmChange=false,
             bool dryRun=true)
-            => EngineeringToolContract.Run("ManageOpcUaAccessControl", !dryRun && action != "read" && action != "list", () => ManageOpcUaAccessControl(softwarePath, action, roleName, definedInNamespace, projectRole, namespaceUri, permission, enabled, EngineeringToolContract.Json(properties), confirmChange, dryRun));
+            => EngineeringToolContract
+                .Run("ManageOpcUaAccessControl", !dryRun && action != "read" && action != "list", () =>
+                    ManageOpcUaAccessControl(softwarePath, action, roleName, definedInNamespace, projectRole, namespaceUri, permission, enabled,
+                        EngineeringToolContract.Json(properties), confirmChange, dryRun));
 
         public ResponseMessage ManageOpcUaAccessControl(
             string softwarePath,
@@ -187,6 +240,8 @@ namespace TiaMcpServer.ModelContextProtocol
             string propertiesJson="{}",
             bool confirmChange=false,
             bool dryRun=true)
-            => _service.ManageOpcUaAccessControl(softwarePath,action,roleName,definedInNamespace,projectRole,namespaceUri,permission,enabled,propertiesJson,confirmChange,dryRun);
+            => _service
+                .ManageOpcUaAccessControl(softwarePath,action,roleName,definedInNamespace,projectRole,namespaceUri,permission,enabled,propertiesJson,
+                    confirmChange,dryRun);
     }
 }

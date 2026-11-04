@@ -44,7 +44,8 @@ namespace TiaMcp.Logic.Generation
                     {
                         if (property.Value is JsonArray incoming)
                         {
-                            var byId = (merged[property.Key] as JsonArray ?? new JsonArray()).Select(n => n!.AsObject()).ToDictionary(n => n["id"]!.GetValue<string>(), n => n, StringComparer.Ordinal);
+                            var byId = (merged[property.Key] as JsonArray ?? new JsonArray()).Select(n => n!.AsObject())
+                                .ToDictionary(n => n["id"]!.GetValue<string>(), n => n, StringComparer.Ordinal);
                             foreach (var entry in incoming.Select(n => n!.AsObject())) byId[entry["id"]!.GetValue<string>()] = entry;
                             merged[property.Key] = new JsonArray(byId.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Value.DeepClone()).ToArray());
                         }
@@ -72,11 +73,14 @@ namespace TiaMcp.Logic.Generation
                 rulePaths.Add(path); resources.Add(path, CanonicalJson.Encode(CanonicalJson.Parse(rule.Value.ToJsonString())));
             }
             references["rules"] = rulePaths; manifest["parts"] = references;
-            manifest["files"] = new JsonArray(resources.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => (JsonNode)new JsonObject { ["path"] = p.Key, ["sha256"] = CanonicalJson.HashBytes(p.Value) }).ToArray());
+            manifest["files"] =
+                new JsonArray(resources.OrderBy(p => p.Key, StringComparer.Ordinal)
+                    .Select(p => (JsonNode)new JsonObject { ["path"] = p.Key, ["sha256"] = CanonicalJson.HashBytes(p.Value) }).ToArray());
             resources.Add("package.json", CanonicalJson.Encode(CanonicalJson.Parse(manifest.ToJsonString())));
             using var stream = new MemoryStream();
             using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, true))
-                foreach (var resource in resources) { using var entry = zip.CreateEntry(resource.Key).Open(); entry.Write(resource.Value, 0, resource.Value.Length); }
+                foreach (var resource in resources) {
+                    using var entry = zip.CreateEntry(resource.Key).Open(); entry.Write(resource.Value, 0, resource.Value.Length); }
             stream.Position = 0;
             return StandardPackageLoader.LoadZip(stream);
 
@@ -86,8 +90,10 @@ namespace TiaMcp.Logic.Generation
                 if (item.Manifest.Extends != null)
                 {
                     var reference = item.Manifest.Extends;
-                    var matches = available.Where(p => p.Manifest.Id == reference.Package && GenerationPlanner.VersionMatches(reference.Version, p.Manifest.Version)).ToArray();
-                    if (matches.Length != 1) throw CanonicalJson.Failure("/extends", "reference", "Supply exactly one pinned parent satisfying " + reference.Package + " " + reference.Version + ".");
+                    var matches = available
+                        .Where(p => p.Manifest.Id == reference.Package && GenerationPlanner.VersionMatches(reference.Version, p.Manifest.Version)).ToArray();
+                    if (matches.Length != 1) throw CanonicalJson
+                        .Failure("/extends", "reference", "Supply exactly one pinned parent satisfying " + reference.Package + " " + reference.Version + ".");
                     Visit(matches[0]);
                 }
                 chain.Add(item);
@@ -100,11 +106,14 @@ namespace TiaMcp.Logic.Generation
                     foreach (var property in value.EnumerateObject()) result[property.Name] = Rewrite(property.Value, owner, prefix, property.Name);
                     return result;
                 }
-                if (value.ValueKind == JsonValueKind.Array) return new JsonArray(value.EnumerateArray().Select(v => Rewrite(v, owner, prefix, field)).ToArray());
+                if (value.ValueKind == JsonValueKind.Array)
+                    return new JsonArray(value.EnumerateArray().Select(v => Rewrite(v, owner, prefix, field)).ToArray());
                 if (value.ValueKind == JsonValueKind.String)
                 {
                     var text = value.GetString()!;
-                    if ((field == "template" || field == "files" || field == "fileNames" || owner.Manifest.Files.Any(f => f.Path == text)) && owner.FileNames.Contains(text)) text = prefix + text;
+                    if ((field == "template" || field == "files" || field == "fileNames" || owner.Manifest.Files.Any(f => f.Path == text)) && owner.FileNames
+                            .Contains(text))
+                        text = prefix + text;
                     if (text.StartsWith("lib:", StringComparison.Ordinal))
                     {
                         var slash = text.IndexOf('/');

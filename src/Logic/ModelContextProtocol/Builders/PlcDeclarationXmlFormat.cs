@@ -8,7 +8,9 @@ namespace TiaMcpServer.ModelContextProtocol
     public sealed class PlcDeclarationXmlFormat
     {
         public static IReadOnlyList<string> ReleaseKeys { get; } = Array.AsReadOnly(TiaMcp.Adapters.Contracts.ReleaseRange.All);
-        public const string Warning = "Candidate declaration XML. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready; the supplied PublicAPI XSD covers interface fragments, not the whole document or CPU/type semantics.";
+        public const string Warning =
+            "Candidate declaration XML. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready; the supplied PublicAPI XSD covers " +
+            "interface fragments, not the whole document or CPU/type semantics.";
 
         public string ReleaseKey { get; }
         public string EngineeringVersion { get; }

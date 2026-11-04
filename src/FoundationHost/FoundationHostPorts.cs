@@ -56,7 +56,8 @@ internal static class FoundationHostPorts
         internal Func<IReadOnlyList<McpServerTool>> Roster = () => Array.Empty<McpServerTool>();
         internal Action ResetExports = () => { };
         private readonly object sessionKey = new();
-        public bool Faulted => worker is IEngineWorker engine ? engine.Faulted : worker is WorkerClient client ? client.WorkerFaulted : worker is IFoundationSessionWorker { Poisoned: true };
+        public bool Faulted => worker is IEngineWorker engine ? engine.Faulted : worker is WorkerClient client ? client.WorkerFaulted
+            : worker is IFoundationSessionWorker { Poisoned: true };
         public object SessionKey => worker is IEngineWorker engine ? engine.SessionKey : worker is WorkerClient client ? client.HostSessionKey : sessionKey;
         public JsonNode? Binding => Snapshot()["binding"]?.DeepClone();
         internal JsonObject OperatorSnapshot()
@@ -127,7 +128,8 @@ internal static class FoundationHostPorts
             var profile = ReleaseCatalogData.Releases[release];
             bool useLocalReadiness = profile.NativeObservations && (bool?)ready["ready"] == false
                 && ready["environment"]?["tiaInstallPath"] == null;
-            if (!profile.ObservationSet.Contains(operation)) throw new NotSupportedException("This observation is unavailable on release " + release + ": " + operation);
+            if (!profile.ObservationSet.Contains(operation))
+                throw new NotSupportedException("This observation is unavailable on release " + release + ": " + operation);
             if (operation == "tool-names") return new JsonArray((profile.ObservationToolNames.Count == 0
                 ? Roster().Select(t => t.ProtocolTool.Name) : profile.ObservationToolNames).Select(name => (JsonNode?)JsonValue.Create(name)).ToArray());
             async Task<JsonNode?> ReadFacts()
@@ -137,21 +139,28 @@ internal static class FoundationHostPorts
                 if (operation == "session.ListPortalProcessProjects")
                 {
                     var projects = await worker.Call("ReadPortalProcessProjects", arguments, token);
-                    return new JsonArray((projects?["Processes"]?.AsArray() ?? new JsonArray()).Select(p => (JsonNode?)JsonValue.Create(p!.ToJsonString())).ToArray());
+                    return new JsonArray((projects?["Processes"]?.AsArray() ?? new JsonArray()).Select(p => (JsonNode?)JsonValue.Create(p!.ToJsonString()))
+                            .ToArray());
                 }
                 try { return worker is WorkerClient plc ? await plc.Observe(operation, arguments, token)
                     : await worker.Call("HostObserve", new JsonObject { ["operation"] = operation, ["arguments"] = arguments.DeepClone() }, token); }
                 catch (WorkerOperationException error) when (error.Outcome == "read-failed")
-                { throw new TiaMcp.WorkerChannel.ChannelFailureException(error.Message, error.Code, TiaMcp.WorkerChannel.ChannelOutcome.ReadFailed, error.EvidenceJson); }
+                {
+                    throw new TiaMcp.WorkerChannel
+                        .ChannelFailureException(error.Message, error.Code, TiaMcp.WorkerChannel.ChannelOutcome.ReadFailed, error.EvidenceJson);
+                }
             }
             switch (operation)
             {
                 case "environment":
                     if (profile.NativeObservations && !useLocalReadiness) return await ReadFacts();
                     return new JsonArray(new JsonObject { ["Id"] = "tia-install", ["Ok"] = ready["environment"]?["tiaInstallPath"] != null,
-                        ["NameEn"] = "TIA Portal installation", ["NameZh"] = "TIA Portal installation", ["DetailEn"] = ready["cause"]?.DeepClone() ?? JsonValue.Create("Matching release API files found."),
-                        ["DetailZh"] = ready["cause"]?.DeepClone(), ["FixEn"] = ready["recommendedFix"]?.DeepClone(), ["FixZh"] = ready["recommendedFixZh"]?.DeepClone() });
-                case "group": return profile.NativeObservations && !useLocalReadiness ? await ReadFacts() : ready["environment"]?["opennessGroupOk"]?.DeepClone() ?? JsonValue.Create(false);
+                        ["NameEn"] = "TIA Portal installation", ["NameZh"] = "TIA Portal installation", ["DetailEn"] = ready["cause"]?.DeepClone() ?? JsonValue
+                            .Create("Matching release API files found."),
+                        ["DetailZh"] = ready["cause"]?.DeepClone(), ["FixEn"] = ready["recommendedFix"]?.DeepClone(), ["FixZh"] = ready["recommendedFixZh"]?
+                            .DeepClone() });
+                case "group": return profile.NativeObservations && !useLocalReadiness ? await ReadFacts() : ready["environment"]?["opennessGroupOk"]?
+                    .DeepClone() ?? JsonValue.Create(false);
                 case "group.fix":
                     if (profile.NativeObservations) return await ReadFacts();
                     throw new NotSupportedException("Use Windows administration to configure the Siemens TIA Openness group on this release.");
@@ -166,12 +175,15 @@ internal static class FoundationHostPorts
                         }
                     return assemblies;
                 case "tool-names": return new JsonArray(Roster().Select(t => (JsonNode?)JsonValue.Create(t.ProtocolTool.Name)).ToArray());
-                case "reflection": return profile.NativeObservations ? await ReadFacts() : new JsonObject { ["guard"] = true, ["DescribeService"] = false, ["InvokeService"] = false, ["InvokeObject"] = false };
-                case "reflection-deny": return profile.NativeObservations ? await ReadFacts() : JsonValue.Create((string?)arguments["method"] == "GetAttribute" ? null : "Reflection writes are not registered on this release.");
+                case "reflection": return profile.NativeObservations ? await ReadFacts() : new JsonObject {
+                    ["guard"] = true, ["DescribeService"] = false, ["InvokeService"] = false, ["InvokeObject"] = false };
+                case "reflection-deny": return profile.NativeObservations ? await ReadFacts() : JsonValue
+                    .Create((string?)arguments["method"] == "GetAttribute" ? null : "Reflection writes are not registered on this release.");
                 case "session.GetState":
                     if (profile.NativeObservations && !useLocalReadiness) return await ReadFacts();
                     var state = useLocalReadiness ? Snapshot()["session"] : (await Status(token))["session"];
-                    return new JsonObject { ["IsConnected"] = state?["isConnected"]?.DeepClone() ?? JsonValue.Create(false), ["Project"] = state?["project"]?.DeepClone() };
+                    return new JsonObject {
+                        ["IsConnected"] = state?["isConnected"]?.DeepClone() ?? JsonValue.Create(false), ["Project"] = state?["project"]?.DeepClone() };
                 case "session.ListPortalProcessProjects":
                     if (profile.NativeObservations) return await ReadFacts();
                     var query = await worker.Call("ReadPortalProcessProjects", arguments, token);

@@ -42,8 +42,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["quickStartCommands"] = new JsonArray
                 {
                     "dotnet build \"" + workspaceRoot + "\\TiaPortalOpenness.slnx\" -c Release",
-                    "dotnet run --project \"" + workspaceRoot + "\\src\\Engine\\TiaMcp.Engine.V21.csproj\" -c Release -- --tia-major-version 21 --run-offline-release-suite --offline-release-suite-report-directory \"" + workspaceRoot + "\\reports\\offline_release_suite\"",
-                    "dotnet run --project \"" + workspaceRoot + "\\src\\Engine\\TiaMcp.Engine.V21.csproj\" -c Release -- --tia-major-version 21 --run-online-monitoring-safety-self-test"
+                    "dotnet run --project \"" + workspaceRoot
+                        + "\\src\\Engine\\TiaMcp.Engine.V21.csproj\" -c Release -- --tia-major-version 21 --run-offline-release-suite " +
+                        "--offline-release-suite-report-directory \""
+                        + workspaceRoot + "\\reports\\offline_release_suite\"",
+                    "dotnet run --project \"" + workspaceRoot
+                        + "\\src\\Engine\\TiaMcp.Engine.V21.csproj\" -c Release -- --tia-major-version 21 --run-online-monitoring-safety-self-test"
                 },
                 ["handoffChecklist"] = new JsonArray
                 {
@@ -78,7 +82,9 @@ namespace TiaMcpServer.ModelContextProtocol
             md.AppendLine("JSON: " + jsonPath);
             md.AppendLine();
             md.AppendLine("## Purpose");
-            md.AppendLine("This runbook is for a first-time agent or engineer receiving the package. It explains the verified entry points, safety redlines, and current known blocks without needing prior chat context.");
+            md
+                .AppendLine("This runbook is for a first-time agent or engineer receiving the package. It explains the verified entry points, safety " +
+                "redlines, and current known blocks without needing prior chat context.");
             md.AppendLine();
             md.AppendLine("## Start Here");
             md.AppendLine("- Workspace: " + runbook["workspaceRoot"]);

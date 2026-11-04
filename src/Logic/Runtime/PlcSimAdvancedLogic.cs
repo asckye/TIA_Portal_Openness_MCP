@@ -22,8 +22,10 @@ namespace TiaMcpServer.Runtime
         public const int MaxScenarioSteps = 500;
         public const int MaxTagsPerCall = 500;
 
-        public static readonly IReadOnlyList<string> InstanceActions = Array.AsReadOnly(new string[] { "register", "powerOn", "run", "stop", "powerOff", "memoryReset", "unregister" });
-        public static readonly IReadOnlyList<string> PrimitiveTypes = Array.AsReadOnly(new string[] { "Bool", "Int8", "Int16", "Int32", "Int64", "UInt8", "UInt16", "UInt32", "UInt64", "Float", "Double", "Char", "WChar" });
+        public static readonly IReadOnlyList<string> InstanceActions = Array
+            .AsReadOnly(new string[] { "register", "powerOn", "run", "stop", "powerOff", "memoryReset", "unregister" });
+        public static readonly IReadOnlyList<string> PrimitiveTypes = Array
+            .AsReadOnly(new string[] { "Bool", "Int8", "Int16", "Int32", "Int64", "UInt8", "UInt16", "UInt32", "UInt64", "Float", "Double", "Char", "WChar" });
 
         // ------------------------------------------------------------------ API location
 
@@ -32,7 +34,8 @@ namespace TiaMcpServer.Runtime
         /// then every versioned folder under the given API roots, newest version first. Pure: takes the
         /// directory listing as input so it can be unit-tested without a PLCSIM Advanced installation.
         /// </summary>
-        public static List<string> CandidateApiPaths(string? explicitPath, string? environmentValue, IEnumerable<KeyValuePair<string, IEnumerable<string>>> rootsWithVersionFolders)
+        public static List<string> CandidateApiPaths(string? explicitPath, string? environmentValue, IEnumerable<KeyValuePair<string,
+                IEnumerable<string>>> rootsWithVersionFolders)
         {
             var result = new List<string>();
             void Add(string? p)
@@ -83,10 +86,12 @@ namespace TiaMcpServer.Runtime
             if (wanted.Equals("TCPIP", StringComparison.OrdinalIgnoreCase))
             {
                 var current = (currentNetworkMode ?? "").Trim();
-                var keep = NetworkModes.FirstOrDefault(m => m.Equals(current, StringComparison.OrdinalIgnoreCase) && m.StartsWith("TCPIP", StringComparison.Ordinal));
+                var keep = NetworkModes
+                    .FirstOrDefault(m => m.Equals(current, StringComparison.OrdinalIgnoreCase) && m.StartsWith("TCPIP", StringComparison.Ordinal));
                 return keep ?? "TCPIPMultipleAdapter";
             }
-            throw new ArgumentException("communicationInterface '" + communicationInterface + "' cannot be mapped to a network mode; valid: TCPIP, " + string.Join(", ", NetworkModes) + ".");
+            throw new ArgumentException("communicationInterface '" + communicationInterface + "' cannot be mapped to a network mode; valid: TCPIP, " + string
+                    .Join(", ", NetworkModes) + ".");
         }
 
         // Real-machine observation, PLCSIM Advanced 8.0, 2026-09-21 (docs/reference/real-machine-ledger.md):
@@ -115,7 +120,8 @@ namespace TiaMcpServer.Runtime
             var n = (name ?? "").Trim();
             if (n.Length == 0) throw new ArgumentException("instanceName is empty.");
             // Explicit set: Path.GetInvalidFileNameChars() differs per OS and the offline suite also runs on Linux.
-            if (n.Length > 64 || n.IndexOfAny(new[] { '\\', '/', ':', '*', '?', '"', '<', '>', '|', '\0' }) >= 0) throw new ArgumentException("instanceName must be 1..64 characters without path separators or wildcard characters.");
+            if (n.Length > 64 || n.IndexOfAny(new[] { '\\', '/', ':', '*', '?', '"', '<', '>', '|', '\0' }) >= 0)
+                throw new ArgumentException("instanceName must be 1..64 characters without path separators or wildcard characters.");
             return n;
         }
 
@@ -137,7 +143,8 @@ namespace TiaMcpServer.Runtime
             {
                 foreach (var item in arr)
                 {
-                    if (!(item is JsonObject o) || o["name"] == null) throw new ArgumentException(parameterName + " array items must be {\"name\":..., \"value\":...}.");
+                    if (!(item is JsonObject o) || o["name"] == null)
+                        throw new ArgumentException(parameterName + " array items must be {\"name\":..., \"value\":...}.");
                     list.Add(new KeyValuePair<string, JsonNode?>(o["name"]!.ToString().Trim(), o["value"]));
                 }
             }
@@ -158,7 +165,8 @@ namespace TiaMcpServer.Runtime
                 JsonNode? node;
                 try { node = JsonNode.Parse(trimmed); }
                 catch (JsonException ex) { throw new ArgumentException(parameterName + " is not valid JSON: " + ex.Message); }
-                names = (node as JsonArray ?? throw new ArgumentException(parameterName + " must be a JSON array of names.")).Select(n => n?.ToString().Trim() ?? "").ToList();
+                names = (node as JsonArray ?? throw new ArgumentException(parameterName + " must be a JSON array of names."))
+                    .Select(n => n?.ToString().Trim() ?? "").ToList();
             }
             else names = trimmed.Split(',').Select(s => s.Trim()).ToList();
             names = names.Where(n => n.Length > 0).ToList();
@@ -186,8 +194,10 @@ namespace TiaMcpServer.Runtime
                 case "UInt16": return checked((ushort)ParseULong(text, "UInt16"));
                 case "UInt32": return checked((uint)ParseULong(text, "UInt32"));
                 case "UInt64": return ParseULong(text, "UInt64");
-                case "Float": return float.TryParse(text, NumberStyles.Float, inv, out var f) ? f : throw new ArgumentException("Float value expected, got '" + text + "'.");
-                case "Double": return double.TryParse(text, NumberStyles.Float, inv, out var d) ? d : throw new ArgumentException("Double value expected, got '" + text + "'.");
+                case "Float": return float.TryParse(text, NumberStyles.Float, inv, out var f) ? f
+                    : throw new ArgumentException("Float value expected, got '" + text + "'.");
+                case "Double": return double.TryParse(text, NumberStyles.Float, inv, out var d) ? d
+                    : throw new ArgumentException("Double value expected, got '" + text + "'.");
                 case "Char": return text.Length == 1 ? (object)(sbyte)text[0] : throw new ArgumentException("Char value must be one character.");
                 case "WChar": return text.Length == 1 ? (object)text[0] : throw new ArgumentException("WChar value must be one character.");
                 default: throw new ArgumentException("Unsupported PLCSIM primitive type '" + primitiveType + "' (structs/arrays must be written per element).");
@@ -201,7 +211,8 @@ namespace TiaMcpServer.Runtime
         private static long ParseLong(string text, string type)
         {
             if (long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v)) return v;
-            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) && Math.Abs(d - Math.Round(d)) < 1e-9) return (long)Math.Round(d);
+            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) && Math.Abs(d - Math.Round(d)) < 1e-9) return (long)Math
+                .Round(d);
             if (text.StartsWith("16#", StringComparison.OrdinalIgnoreCase)) return Convert.ToInt64(text.Substring(3).Replace("_", ""), 16);
             throw new ArgumentException(type + " value expected, got '" + text + "'.");
         }
@@ -243,7 +254,8 @@ namespace TiaMcpServer.Runtime
                     return bool.TryParse(expected.ToString(), out var eb) ? eb == b : expected.ToString() == (b ? "1" : "0");
                 case float _:
                 case double _:
-                    return double.TryParse(expected.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var ed) && Math.Abs(Convert.ToDouble(actual, CultureInfo.InvariantCulture) - ed) <= Math.Max(tolerance, 0);
+                    return double.TryParse(expected.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var ed) && Math
+                        .Abs(Convert.ToDouble(actual, CultureInfo.InvariantCulture) - ed) <= Math.Max(tolerance, 0);
                 case char c:
                     return expected.ToString() == c.ToString();
                 default:
@@ -290,7 +302,8 @@ namespace TiaMcpServer.Runtime
             var obj = node as JsonObject ?? throw new ArgumentException("scenarioJson must be a JSON object.");
             var s = new Scenario { Instance = RequireInstanceName(obj["instance"]?.ToString()) };
             var mode = obj["mode"]?.ToString() ?? "singleStep";
-            if (!mode.Equals("singleStep", StringComparison.OrdinalIgnoreCase) && !mode.Equals("default", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("mode must be singleStep or default.");
+            if (!mode.Equals("singleStep", StringComparison.OrdinalIgnoreCase) && !mode.Equals("default", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("mode must be singleStep or default.");
             s.Mode = mode.Equals("default", StringComparison.OrdinalIgnoreCase) ? "default" : "singleStep";
             if (obj["stopOnFailure"] is JsonValue sof) s.StopOnFailure = sof.GetValue<bool>();
             var steps = obj["steps"] as JsonArray ?? throw new ArgumentException("scenarioJson.steps must be an array.");
@@ -306,10 +319,18 @@ namespace TiaMcpServer.Runtime
                 var kinds = new List<string>();
                 if (o["write"] != null) { kinds.Add("write"); step.Values = ParseValueMap(o["write"]!.ToJsonString(), "steps[" + index + "].write"); }
                 if (o["assert"] != null) { kinds.Add("assert"); step.Values = ParseValueMap(o["assert"]!.ToJsonString(), "steps[" + index + "].assert"); }
-                if (o["cycles"] != null) { kinds.Add("cycles"); step.Count = o["cycles"]!.GetValue<int>(); if (step.Count < 1 || step.Count > 100000) throw new ArgumentException("Step " + index + ": cycles must be 1..100000."); }
-                if (o["waitMs"] != null) { kinds.Add("wait"); step.Count = o["waitMs"]!.GetValue<int>(); if (step.Count < 1 || step.Count > 60000) throw new ArgumentException("Step " + index + ": waitMs must be 1..60000."); }
+                if (o["cycles"] != null) {
+                    kinds.Add("cycles"); step.Count = o["cycles"]!.GetValue<int>(); if (step.Count < 1 || step.Count > 100000)
+                        throw new ArgumentException("Step " + index + ": cycles must be 1..100000.");
+                }
+                if (o["waitMs"] != null) {
+                    kinds.Add("wait"); step.Count = o["waitMs"]!.GetValue<int>(); if (step.Count < 1 || step.Count > 60000)
+                        throw new ArgumentException("Step " + index + ": waitMs must be 1..60000.");
+                }
                 foreach (var k in new[] { "powerOn", "run", "stop" }) if (o[k] != null) kinds.Add(k);
-                if (kinds.Count != 1) throw new ArgumentException("Step " + index + " must contain exactly one of write, assert, cycles, waitMs, powerOn, run, stop (found " + kinds.Count + ").");
+                if (kinds.Count != 1)
+                    throw new ArgumentException("Step " + index + " must contain exactly one of write, assert, cycles, waitMs, powerOn, run, stop (found "
+                        + kinds.Count + ").");
                 step.Kind = kinds[0];
                 s.Steps.Add(step);
             }
@@ -326,7 +347,9 @@ namespace TiaMcpServer.Runtime
             ["asserts"] = s.Steps.Count(x => x.Kind == "assert"),
             ["cycles"] = s.Steps.Where(x => x.Kind == "cycles").Sum(x => x.Count),
             ["waitMs"] = s.Steps.Where(x => x.Kind == "wait").Sum(x => x.Count),
-            ["modeChanges"] = new JsonArray(s.Steps.Where(x => x.Kind == "powerOn" || x.Kind == "run" || x.Kind == "stop").Select(x => (JsonNode)(x.Index + ":" + x.Kind)).ToArray())
+            ["modeChanges"] =
+                new JsonArray(s.Steps.Where(x => x.Kind == "powerOn" || x.Kind == "run" || x.Kind == "stop").Select(x => (JsonNode)(x.Index + ":" + x.Kind))
+                    .ToArray())
         };
 
         // IInstance.PowerOn() / PowerOn(UINT32) return ERuntimeErrorCode (PowerOff, Run, Stop and MemoryReset return void). OK and

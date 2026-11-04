@@ -33,7 +33,8 @@ namespace TiaMcp.Adapters.Hardware
         internal static object Call(object target, string method, Type[] types, params object[] args)
         {
             var info = target.GetType().GetMethod(method, types)
-                ?? target.GetType().GetInterfaces().Where(i => i.FullName == "Siemens.Engineering.IEngineeringObject").Select(i => i.GetMethod(method, types)).FirstOrDefault(m => m != null)
+                ?? target.GetType().GetInterfaces().Where(i => i.FullName == "Siemens.Engineering.IEngineeringObject").Select(i => i.GetMethod(method, types))
+                    .FirstOrDefault(m => m != null)
                 ?? throw new NotSupportedException(target.GetType().FullName + "." + method + " signature is unavailable.");
             try { return info.Invoke(target, args)!; }
             catch (TargetInvocationException ex) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw(); throw; }
@@ -53,7 +54,8 @@ namespace TiaMcp.Adapters.Hardware
         internal static Dictionary<string, object?> Manage(object root, string path, string action, string newName, bool dryRun,
             string contents, string firstGroups = "Groups")
         {
-            if (action != "create" && action != "rename" && action != "deleteEmpty") throw new ArgumentException("action must be create, rename or deleteEmpty.");
+            if (action != "create" && action != "rename" && action != "deleteEmpty")
+                throw new ArgumentException("action must be create, rename or deleteEmpty.");
             var parts = Parts(path);
             if (action == "create")
             {
@@ -87,7 +89,8 @@ namespace TiaMcp.Adapters.Hardware
                     result["mayHaveChanged"] = true;
                     if (dynamicName) Call(target, "SetAttribute", new[] { typeof(string), typeof(object) }, "Name", newName);
                     else property!.SetValue(target, newName);
-                    if (!string.Equals(Get(target, "Name").ToString(), newName, StringComparison.Ordinal)) throw new InvalidOperationException("Rename returned but readback differs.");
+                    if (!string.Equals(Get(target, "Name").ToString(), newName, StringComparison.Ordinal))
+                        throw new InvalidOperationException("Rename returned but readback differs.");
                     result["changed"] = true;
                 }
             }
@@ -101,7 +104,8 @@ namespace TiaMcp.Adapters.Hardware
                 {
                     result["mayHaveChanged"] = true;
                     Call(target, "Delete", Type.EmptyTypes);
-                    if (Find(siblings, parts.Last()) != null) throw new InvalidOperationException("Delete returned but target is still present; do not blindly retry.");
+                    if (Find(siblings, parts.Last()) != null)
+                        throw new InvalidOperationException("Delete returned but target is still present; do not blindly retry.");
                     result["changed"] = true;
                 }
             }

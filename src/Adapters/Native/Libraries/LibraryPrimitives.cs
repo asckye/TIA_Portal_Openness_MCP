@@ -17,7 +17,8 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
-        private static readonly TiaMcp.Adapters.Reflection.ReflectionSession LibraryReflectionValues = new TiaMcp.Adapters.Reflection.ReflectionSession((_, __, ___, ____) => null, () => null);
+        private static readonly TiaMcp.Adapters.Reflection.ReflectionSession LibraryReflectionValues = new TiaMcp.Adapters.Reflection
+            .ReflectionSession((_, __, ___, ____) => null, () => null);
         public Func<string, object>? ResolveEngineeringLibraryDevice { get; set; }
         private object ResolveLibraryDevice(string path, string[] names)
             => ResolveEngineeringLibraryDevice != null ? ResolveEngineeringLibraryDevice(path)
@@ -69,7 +70,8 @@ namespace TiaMcp.Adapters
         private object? LibraryValue(object? value) => value == null ? null : RenderEngineeringValue != null ? RenderEngineeringValue(value)
             : DefaultLibraryValue(value);
         private static object? DefaultLibraryValue(object value)
-            => HardwareScalarEvidence.Scalar(value.GetType()) ? HardwareAddressingPolicy.ScalarValue(value) : HardwareOfficialService.Result(value)["nativeResult"];
+            => HardwareScalarEvidence.Scalar(value.GetType()) ? HardwareAddressingPolicy.ScalarValue(value) : HardwareOfficialService
+                .Result(value)["nativeResult"];
         private static List<object?> LibraryList(IEnumerable<string> values) => values.Cast<object?>().ToList();
         private static object? FindExistingByName(object collection, string name)
         {
@@ -94,7 +96,10 @@ namespace TiaMcp.Adapters
         private List<(PropertyInfo Property, object? Value)> LibraryPrepare(Type type, Dictionary<string, HardwareScalar> changes)
         {
             if (changes.Count > 50) throw new ArgumentException("At most 50 properties per request.");
-            LibraryPolicy.GuardKnownTypeWrites(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), type, changes.Keys);
+            LibraryPolicy
+                .GuardKnownTypeWrites(int
+                    .Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), type,
+                    changes.Keys);
             var result = new List<(PropertyInfo, object?)>();
             foreach (var change in changes)
             {
@@ -107,7 +112,10 @@ namespace TiaMcp.Adapters
         }
         private void LibraryApply(object target, List<(PropertyInfo Property, object? Value)> changes, Dictionary<string, object?> meta)
         {
-            LibraryPolicy.GuardKnownTypeWrites(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), target.GetType(), changes.Select(p => p.Property.Name));
+            LibraryPolicy
+                .GuardKnownTypeWrites(int
+                    .Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), target
+                    .GetType(), changes.Select(p => p.Property.Name));
             HardwareScalarEvidence.Apply(target, changes, meta);
         }
         private static Dictionary<string, object?> LibraryObjectAddress(object target)
@@ -117,7 +125,8 @@ namespace TiaMcp.Adapters
             foreach (var p in target.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetIndexParameters().Length == 0))
                 properties.Add(new Dictionary<string, object?> { ["name"] = p.Name, ["type"] = p.PropertyType.FullName,
                     ["readable"] = p.GetMethod?.IsPublic == true, ["writable"] = p.SetMethod?.IsPublic == true,
-                    ["backlink"] = new[] { "Parent", "Owner", "Project", "Portal", "Site", "Container", "Device", "AssignedHmiDevice" }.Contains(p.Name, StringComparer.OrdinalIgnoreCase) });
+                    ["backlink"] = new[] { "Parent", "Owner", "Project", "Portal", "Site", "Container", "Device", "AssignedHmiDevice" }
+                        .Contains(p.Name, StringComparer.OrdinalIgnoreCase) });
             result["propertySchema"] = properties;
             return result;
         }
@@ -143,26 +152,33 @@ namespace TiaMcp.Adapters
         {
             var parts = PlcGroupOperations.Parts(typePath);
             var folder = EngineeringLibraryFolder(library, string.Join("/", parts.Take(parts.Length - 1)), "TypeFolder");
-            return (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last()) ?? throw new PlcSoftwareException("NotFound", "Exact library type not found: " + typePath));
+            return (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last())
+                    ?? throw new PlcSoftwareException("NotFound", "Exact library type not found: " + typePath));
         }
         private static LibraryTypeVersion ExactTypeVersion(LibraryType type, string version)
         {
-            var matches = PlcGroupOperations.Items(type.Versions).Cast<LibraryTypeVersion>().Where(v => v.VersionNumber?.ToString() == version).Take(2).ToArray();
-            if (matches.Length != 1) throw new PlcSoftwareException("NotFound", "Expected exactly one version '" + version + "' on type '" + type.Name + "', found " + matches.Length + ".");
+            var matches = PlcGroupOperations.Items(type.Versions).Cast<LibraryTypeVersion>().Where(v => v.VersionNumber?.ToString() == version).Take(2)
+                .ToArray();
+            if (matches.Length != 1)
+                throw new PlcSoftwareException("NotFound", "Expected exactly one version '" + version + "' on type '" + type.Name + "', found " + matches
+                    .Length + ".");
             return matches[0];
         }
         private MasterCopy ExactMasterCopy(string libraryName,string path) {
             var parts=PlcGroupOperations.Parts(path);
             var folder=EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName),string.Join("/",parts.Take(parts.Length-1)),"MasterCopyFolder");
-            return (MasterCopy)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder,"MasterCopies"),parts.Last()) ?? throw new InvalidOperationException("Exact master copy not found."));
+            return (MasterCopy)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder,"MasterCopies"),parts.Last())
+                    ?? throw new InvalidOperationException("Exact master copy not found."));
         }
         private static object EngineeringLibraryFolder(object library, string folderPath, string rootProperty)
         {
             // SystemGlobalLibrary.TypeFolder is null (observed on TIA V21): say so instead of the generic "unavailable".
             var folder = library.GetType().GetProperty(rootProperty)?.GetValue(library)
-                ?? throw new PlcSoftwareException("NotFound", LibraryPolicy.NoTypeFolderMessage(library.GetType().Name, "resolving '" + folderPath + "' under " + rootProperty));
+                ?? throw new PlcSoftwareException("NotFound", LibraryPolicy
+                        .NoTypeFolderMessage(library.GetType().Name, "resolving '" + folderPath + "' under " + rootProperty));
             foreach (var part in PlcGroupOperations.Parts(folderPath, true))
-                folder = PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Folders"), part) ?? throw new InvalidOperationException("Library folder not found: " + part);
+                folder = PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Folders"), part)
+                    ?? throw new InvalidOperationException("Library folder not found: " + part);
             return folder;
         }
         private object ExactMasterCopyPlcSource(string softwarePath, string sourcePath, bool block)
@@ -172,14 +188,16 @@ namespace TiaMcp.Adapters
             var root = block ? (object)plc.BlockGroup : plc.TypeGroup;
             var group = PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)));
             return PlcGroupOperations.Find(PlcGroupOperations.Get(group, block ? "Blocks" : "Types"), parts.Last())
-                ?? throw new PlcSoftwareException("NotFound", "Exact PLC " + (block ? "block" : "type") + " not found: " + sourcePath + " (path under " + (block ? "Program blocks" : "PLC data types") + ", groups separated by '/', see GetSoftwareTree).");
+                ?? throw new PlcSoftwareException("NotFound", "Exact PLC " + (block ? "block" : "type") + " not found: " + sourcePath + " (path under "
+                        + (block ? "Program blocks" : "PLC data types") + ", groups separated by '/', see GetSoftwareTree).");
         }
         private static IEnumerable<string> LibraryInterestingAttributes(object target)
         {
             var result = new List<string>();
             var methods = target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
             var getInfos = methods.FirstOrDefault(m => m.Name == "GetAttributeInfos" && m.GetParameters().Length == 0);
-            var getAttr = methods.FirstOrDefault(m => m.Name == "GetAttribute" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string));
+            var getAttr = methods
+                .FirstOrDefault(m => m.Name == "GetAttribute" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string));
             if (getInfos == null || getAttr == null)
                 return result;
 

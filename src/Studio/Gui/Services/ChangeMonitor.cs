@@ -28,7 +28,9 @@ internal sealed class ChangeMonitor : IDisposable
             void Changed(object? sender, FileSystemEventArgs e)
             {
                 if (e.FullPath.EndsWith(".lock", StringComparison.OrdinalIgnoreCase)) return;
-                if (e.FullPath.StartsWith(path, StringComparison.OrdinalIgnoreCase) || path.StartsWith(e.FullPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) Request();
+                if (e.FullPath.StartsWith(path, StringComparison.OrdinalIgnoreCase) || path
+                        .StartsWith(e.FullPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    Request();
             }
             watcher.Changed += Changed; watcher.Created += Changed; watcher.Deleted += Changed;
             watcher.Renamed += (sender, e) => { Changed(sender, e); if (e.OldFullPath.StartsWith(path, StringComparison.OrdinalIgnoreCase)) Request(); };

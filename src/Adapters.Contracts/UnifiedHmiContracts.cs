@@ -8,7 +8,8 @@ namespace TiaMcp.Adapters.Contracts
         public static void PlcBinding(string plcName, string plcTag)
         {
             if (string.IsNullOrWhiteSpace(plcName) || string.IsNullOrWhiteSpace(plcTag))
-                throw new ArgumentException("EnsureUnifiedHmiTag requires explicit nonempty plcName and plcTag. Read the exact PLC software and tag names first; no PLC_1 or same-name default is used.");
+                throw new ArgumentException("EnsureUnifiedHmiTag requires explicit nonempty plcName and plcTag. Read the exact PLC software and tag names " +
+                    "first; no PLC_1 or same-name default is used.");
         }
 
         public static bool ContainerType(string itemType)
@@ -27,10 +28,13 @@ namespace TiaMcp.Adapters.Contracts
             if (ContainerType(itemType))
             {
                 if (string.IsNullOrWhiteSpace(containedType) || containedType.Length > 4096 || containedType.Any(char.IsControl))
-                    throw new ArgumentException("containedType is required for " + itemType + ": pass the exact value read from an existing container (1..4096 characters, no control characters). The server does not compose it.");
+                    throw new ArgumentException("containedType is required for " + itemType
+                            + ": pass the exact value read from an existing container (1..4096 characters, no control characters). The server does not " +
+                            "compose it.");
             }
             else if (!string.IsNullOrEmpty(containedType))
-                throw new ArgumentException("containedType is only accepted for HmiFaceplateContainer, HmiCustomWebControlContainer and HmiCustomWidgetContainer.");
+                throw new ArgumentException("containedType is only accepted for HmiFaceplateContainer, HmiCustomWebControlContainer and " +
+                    "HmiCustomWidgetContainer.");
         }
 
         public static bool LegacyWrite(string operation) => new[] { "EnsureUnifiedHmiScreen", "EnsureUnifiedHmiTagTable", "EnsureUnifiedHmiTag",
@@ -71,14 +75,20 @@ namespace TiaMcp.Adapters.Contracts
                 EngineeringInputValidation.HmiGroupPath(request.GroupPath);
                 EngineeringInputValidation.Action(request.Action, "create", "rename", "deleteEmpty");
                 if (request.Family != "screens" && request.Family != "tags") throw new ArgumentException("family must be screens or tags.");
-                if (request.Action == "rename" && (string.IsNullOrWhiteSpace(request.NewName) || request.NewName == "." || request.NewName == ".." || request.NewName.IndexOfAny(new[] { '/', '\\' }) >= 0)) throw new ArgumentException("newName must be one nonempty segment.");
+                if (request.Action == "rename"
+                        && (string.IsNullOrWhiteSpace(request.NewName) || request.NewName == "." || request.NewName == ".." || request.NewName
+                            .IndexOfAny(new[] { '/', '\\' }) >= 0))
+                    throw new ArgumentException("newName must be one nonempty segment.");
             }
             if (request.Operation == "ApplyUnifiedHmiScreenDesign" && request.Inputs.TryGetValue(request.DesignJson, out var design))
             {
                 Design(design);
-                if (!design.Properties.TryGetValue("items", out var items) || items.Kind != "array") throw new ArgumentException("Design items must be an array.");
+                if (!design.Properties.TryGetValue("items", out var items) || items.Kind != "array")
+                    throw new ArgumentException("Design items must be an array.");
             }
-            if (request.Operation == "EnsureUnifiedHmiConnection" && (string.IsNullOrWhiteSpace(request.HmiSoftwarePath) || string.IsNullOrWhiteSpace(request.ConnectionName) || string.IsNullOrWhiteSpace(request.PlcName)))
+            if (request.Operation == "EnsureUnifiedHmiConnection"
+                    && (string.IsNullOrWhiteSpace(request.HmiSoftwarePath) || string.IsNullOrWhiteSpace(request.ConnectionName) || string
+                        .IsNullOrWhiteSpace(request.PlcName)))
                 throw new ArgumentException("Explicit nonempty hmiSoftwarePath, connectionName and plcName required.");
             if (request.Operation == "EnsureUnifiedHmiTag") PlcBinding(request.PlcName, request.PlcTag);
             if (request.Operation == "ManageUnifiedScreenItem")

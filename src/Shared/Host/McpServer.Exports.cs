@@ -58,7 +58,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public static int ResolvedMaxResponseChars()
         {
             var raw = Environment.GetEnvironmentVariable("TIA_MCP_MAX_RESPONSE_CHARS");
-            if (!string.IsNullOrWhiteSpace(raw) && int.TryParse(raw.Trim(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var v)) return v;
+            if (!string.IsNullOrWhiteSpace(raw) && int
+                    .TryParse(raw.Trim(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var v))
+                return v;
             return DefaultMaxResponseChars;
         }
 
@@ -206,7 +208,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 && (string?)pageResult["meta"]?["paging"]?["mode"] == "cursor") return result;
             if (result == null) return result!;
             if (!force && result.StructuredContent is JsonObject structured && structured["data"] is JsonObject parkedData
-                && parkedData["export"] is JsonObject parkedExport && parkedExport["id"] != null && structured["meta"] is JsonObject parkedMeta && parkedMeta["paging"] != null)
+                && parkedData["export"] is JsonObject parkedExport && parkedExport["id"] != null && structured["meta"] is JsonObject parkedMeta
+                    && parkedMeta["paging"] != null)
                 return result;
 
             // 错误结果不动：它们本来就短，而且是模型自我纠正最需要看全的东西。
@@ -244,7 +247,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     var data = new JsonObject {
                         ["continuation"] = new JsonObject { ["name"] = "GetExportContent",
                             ["arguments"] = new JsonObject { ["exportId"] = id, ["offset"] = page.NextOffset, ["limit"] = ExportStore.MaxSliceChars },
-                            ["hint"] = "Invoke GetExportContent directly or through CallTool with these arguments. Concatenate data.text from this page and each GetExportContent page, following meta.paging.nextOffset until complete=true, then parse the full original response. SaveExportContent(raw=true) saves it in one call. Handles last 24 hours in this session." },
+                            ["hint"] =
+                                "Invoke GetExportContent directly or through CallTool with these arguments. Concatenate data.text from this page and each " +
+                                "GetExportContent page, following meta.paging.nextOffset until complete=true, then parse the full original response. " +
+                                "SaveExportContent(raw=true) saves it in one call. Handles last 24 hours in this session."
+                            },
                         ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text };
                     var m = original.Meta;
                     var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ExportStore.MaxSliceChars), page.NextOffset, null, null,

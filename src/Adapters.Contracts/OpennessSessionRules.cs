@@ -17,7 +17,8 @@ namespace TiaMcp.Adapters.Contracts
 
         public const string FirewallGuidance = "Allow this application in the TIA Portal Openness access dialog (Yes, or Yes to all), "
             + "or have an administrator add the worker executable to HKLM\\SOFTWARE\\Siemens\\Automation\\Openness\\AllowList "
-            + "(the Workbench environment check 'Openness AllowList' shows the expected entries); the Windows user must also be a member of 'Siemens TIA Openness'.";
+            + "(the Workbench environment check 'Openness AllowList' shows the expected entries); the Windows user must also be a member of 'Siemens TIA " +
+                "Openness'.";
 
         public static string Message(string code, string operation, bool credentialsGiven, string? nativeMessage)
         {
@@ -27,30 +28,45 @@ namespace TiaMcp.Adapters.Contracts
                 case AccessDenied:
                     text = operation == "open" || operation == "retrieve"
                         ? (credentialsGiven
-                            ? "TIA Portal refused access to the protected project with the given UMAC credentials (EngineeringSecurityException). Check umacUserName, umacPassword and umacUserType (Project or Global). "
-                            : "TIA Portal refused access (EngineeringSecurityException). If the project is protected by UMAC user management, pass umacUserName and umacPassword (and umacUserType Project or Global); the password is converted to SecureString and never logged or echoed. ")
+                            ? "TIA Portal refused access to the protected project with the given UMAC credentials (EngineeringSecurityException). Check " +
+                                "umacUserName, umacPassword and umacUserType (Project or Global). "
+                            : "TIA Portal refused access (EngineeringSecurityException). If the project is protected by UMAC user management, pass " +
+                                "umacUserName and umacPassword (and umacUserType Project or Global); the password is converted to SecureString and never " +
+                                "logged or echoed. ")
                             + "Otherwise the Openness firewall denied this application: " + FirewallGuidance
                         : "TIA Portal Openness denied access to this application (EngineeringSecurityException). " + FirewallGuidance;
                     break;
                 case MissingProducts:
-                    text = "TIA Portal lacks a mandatory product, optional product or support package that this project needs (MissingProductsException). Install the products the project lists in TIA Portal, then retry.";
+                    text =
+                        "TIA Portal lacks a mandatory product, optional product or support package that this project needs (MissingProductsException). " +
+                        "Install the products the project lists in TIA Portal, then retry.";
                     break;
                 case LicenseNotFound:
-                    text = "TIA Portal found no licence for this operation (LicenseNotFoundException). Install or activate the licence it names (Automation License Manager), then retry.";
+                    text =
+                        "TIA Portal found no licence for this operation (LicenseNotFoundException). Install or activate the licence it names (Automation " +
+                        "License Manager), then retry.";
                     break;
                 case MultiuserRefused:
-                    text = "The multiuser server refused the request (MultiuserException). Check the server alias, the server project, its locks and the local session, then retry.";
+                    text =
+                        "The multiuser server refused the request (MultiuserException). Check the server alias, the server project, its locks and the local " +
+                        "session, then retry.";
                     break;
                 case UmacCredentialsRequired:
-                    text = "The project is protected by UMAC user management and TIA Portal asked for credentials. Pass umacUserName and umacPassword (umacUserType Project or Global); the password is converted to SecureString and never logged or echoed.";
+                    text =
+                        "The project is protected by UMAC user management and TIA Portal asked for credentials. Pass umacUserName and umacPassword " +
+                        "(umacUserType Project or Global); the password is converted to SecureString and never logged or echoed.";
                     break;
                 case ProjectNotVisible:
-                    text = "The selected TIA Portal process reports this project path, but its Projects composition is empty. TIA Portal hides a project from Openness when products the project needs are missing; check the products installed in TIA Portal.";
+                    text =
+                        "The selected TIA Portal process reports this project path, but its Projects composition is empty. TIA Portal hides a project from " +
+                        "Openness when products the project needs are missing; check the products installed in TIA Portal.";
                     break;
                 default: throw new ArgumentException("Unknown Openness refusal code: " + code, nameof(code));
             }
             string suffix = code == ProjectNotVisible ? ""
-                : operation == "retrieve" ? " TIA Portal reported the refusal: no project was opened and this session stays usable; the new destination directory may hold files written before the refusal."
+                : operation == "retrieve"
+                    ? " TIA Portal reported the refusal: no project was opened and this session stays usable; the new destination directory may hold files " +
+                    "written before the refusal."
                 : " TIA Portal reported the refusal, so nothing was changed and this session stays usable.";
             return text + suffix + (string.IsNullOrWhiteSpace(nativeMessage) ? "" : " TIA: " + Bound(nativeMessage!));
         }

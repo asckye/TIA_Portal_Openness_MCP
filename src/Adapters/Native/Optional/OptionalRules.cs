@@ -72,7 +72,8 @@ namespace TiaMcp.Adapters.Native.Optional
         internal static void RequireKeys(HmiObject properties, string[] allowed, string parameter)
         {
             var unknown = properties.Select(p => p.Key).Where(k => !allowed.Contains(k, StringComparer.Ordinal)).ToArray();
-            if (unknown.Length > 0) throw new ArgumentException(parameter + " accepts only " + string.Join(" / ", allowed) + "; unknown: " + string.Join(", ", unknown));
+            if (unknown.Length > 0)
+                throw new ArgumentException(parameter + " accepts only " + string.Join(" / ", allowed) + "; unknown: " + string.Join(", ", unknown));
         }
 
         internal static void RequireAbsolutePath(string path, string message)
@@ -114,8 +115,10 @@ namespace TiaMcp.Adapters.Native.Optional
                 if (obj.Count > 50) throw new ArgumentException(parameter + ": at most 50 entries.");
                 foreach (var pair in obj)
                 {
-                    if (string.IsNullOrWhiteSpace(pair.Key) || !pair.Key.All(c => char.IsLetterOrDigit(c) || c == '_')) throw new ArgumentException(parameter + ": invalid key '" + pair.Key + "'.");
-                    if (pair.Value is HmiObject || pair.Value is HmiArray) throw new ArgumentException(parameter + ": only scalar values are supported (" + pair.Key + ").");
+                    if (string.IsNullOrWhiteSpace(pair.Key) || !pair.Key.All(c => char.IsLetterOrDigit(c) || c == '_'))
+                        throw new ArgumentException(parameter + ": invalid key '" + pair.Key + "'.");
+                    if (pair.Value is HmiObject || pair.Value is HmiArray)
+                        throw new ArgumentException(parameter + ": only scalar values are supported (" + pair.Key + ").");
                 }
             }
             return obj;

@@ -34,17 +34,29 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["comparison"] = JsonNode.Parse(JsonSerializer.Serialize(diff)),
                 ["layouts"] = JsonNode.Parse(JsonSerializer.Serialize(pairs)),
                 ["documentDiff"] = structural, ["dataComplete"] = structural["dataComplete"]?.GetValue<bool>() == true,
-                ["scope"] = "Offline exported-document comparison. LAD visualization is simplified; raw structural diff remains available. No TIA compilation or project modification."
+                ["scope"] =
+                    "Offline exported-document comparison. LAD visualization is simplified; raw structural diff remains available. No TIA compilation or " +
+                    "project modification."
             };
-            var b = new StringBuilder("<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>PLC comparison</title><style>body{font:15px system-ui;margin:24px;background:#f6f8fa;color:#182433}h1{font-size:24px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.side{overflow:auto;background:white;border:1px solid #ccd4dd;padding:12px}svg text{font:12px monospace}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:16px}.legend{margin:20px 0}summary{cursor:pointer}svg{min-width:100%}@media(max-width:800px){.pair{grid-template-columns:1fr}}</style><h1>");
-            b.Append(E(left.Blocks[0].Name)).Append(" → ").Append(E(right.Blocks[0].Name)).Append("</h1><p>Exported PLC document review</p><div class=\"legend\">Green: added · Red: removed · Amber: changed / rewired · Grey: unchanged</div>");
+            var b =
+                new StringBuilder("<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" " +
+                "content=\"width=device-width\"><title>PLC comparison</title><style>body{font:15px " +
+                "system-ui;margin:24px;background:#f6f8fa;color:#182433}h1{font-size:24px}.pair{display:grid;grid-template-columns:1fr " +
+                "1fr;gap:16px}.side{overflow:auto;background:white;border:1px solid #ccd4dd;padding:12px}svg text{font:12px " +
+                "monospace}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:16px}.legend{margin:20px " +
+                "0}summary{cursor:pointer}svg{min-width:100%}@media(max-width:800px){.pair{grid-template-columns:1fr}}</style><h1>");
+            b.Append(E(left.Blocks[0].Name)).Append(" → ").Append(E(right.Blocks[0].Name))
+                .Append("</h1><p>Exported PLC document review</p><div class=\"legend\">Green: added · Red: removed · Amber: changed / rewired · Grey: unchanged</div>");
             foreach (var pair in pairs)
             {
-                b.Append("<h2>Network ").Append(pair.NetworkNumber).Append(" — ").Append(E(pair.Title)).Append("</h2><div class=\"pair\"><section class=\"side\"><h3>Before</h3>")
-                    .Append(PlcLadderDrawing.Svg(pair.Left)).Append("</section><section class=\"side\"><h3>After</h3>").Append(PlcLadderDrawing.Svg(pair.Right)).Append("</section></div>");
+                b.Append("<h2>Network ").Append(pair.NetworkNumber).Append(" — ").Append(E(pair.Title))
+                    .Append("</h2><div class=\"pair\"><section class=\"side\"><h3>Before</h3>")
+                    .Append(PlcLadderDrawing.Svg(pair.Left)).Append("</section><section class=\"side\"><h3>After</h3>").Append(PlcLadderDrawing.Svg(pair.Right))
+                        .Append("</section></div>");
             }
             if (!graphical) b.Append("<p>LAD graphics are unavailable for this language; inspect the structural comparison below.</p>");
-            b.Append("<details open><summary>Interface and document changes</summary><pre>").Append(E(structural.ToJsonString(new JsonSerializerOptions { WriteIndented = true })))
+            b.Append("<details open><summary>Interface and document changes</summary><pre>")
+                .Append(E(structural.ToJsonString(new JsonSerializerOptions { WriteIndented = true })))
                 .Append("</pre></details><p>Simplified layout; validate engineering changes with the TIA compiler.</p></html>");
             html = b.ToString();
             return data;

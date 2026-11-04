@@ -98,8 +98,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 || success == false && nativeKnown && (data["file"] is JsonObject || data["output"] is JsonObject);
             Outcome outcome = unknown ? Outcome.Unknown : rejection != null ? Outcome.RejectedBeforeOperation
                 : success == true ? Outcome.Succeeded : knownPartial ? Outcome.Partial
-                : writes && (nativeKnown || unchangedFailure) || verificationFailed ? Outcome.Failed : writes && !notStarted ? Outcome.Unknown : Outcome.ReadFailed;
-            string failureMessage = HostBehavior.SafeDiagnostic(response.Message) ?? (outcome == Outcome.RejectedBeforeOperation && rejection == "UNSUPPORTED_CAPABILITY"
+                : writes && (nativeKnown || unchangedFailure) || verificationFailed ? Outcome.Failed : writes && !notStarted ? Outcome.Unknown : Outcome
+                    .ReadFailed;
+            string failureMessage = HostBehavior.SafeDiagnostic(response.Message)
+                ?? (outcome == Outcome.RejectedBeforeOperation && rejection == "UNSUPPORTED_CAPABILITY"
                 && (tool == "ExchangeCfcCharts" || tool == "ManageCfcChartProtection") && data["unsupportedReason"] is JsonValue reason
                 && reason.TryGetValue<string>(out var guardReason) ? guardReason : "The optional-package operation did not establish success.");
             Error? error = outcome == Outcome.Succeeded ? null : new Error(failureMessage,
@@ -107,7 +109,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 : outcome == Outcome.Partial ? new PartialFailureDetails(imported, imported > 0 ? 1 : 0, 0)
                 : outcome == Outcome.RejectedBeforeOperation ? Rejection(rejection!, tool)
                 : new NativeOperationFailedDetails(null, HostBehavior.SafeDiagnostic(response.Message), new Dictionary<string, JsonElement>()));
-            bool incomplete = Incomplete(data) || tool == "ExchangeCfcCharts" && (data["action"]?.ToString() == "import" || data["action"]?.ToString() == "export")
+            bool incomplete = Incomplete(data) || tool == "ExchangeCfcCharts"
+                && (data["action"]?.ToString() == "import" || data["action"]?.ToString() == "export")
                 || data.ContainsKey("contentVerified") && Flag(data, "contentVerified") != true;
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None
                 : outcome == Outcome.Unknown || outcome == Outcome.ReadFailed ? Completeness.Unknown
@@ -116,7 +119,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (offset.HasValue && limit.HasValue && data["expectedCount"] is JsonValue count && count.TryGetValue<int>(out var total)
                 && offset >= 0 && limit > 0) paging = McpServer.OffsetPage(offset.Value, limit.Value, total);
             Clean(data);
-            if (NativeResultState.TryUnsuccessful(data, writes, out var nativeOutcome, out var nativeError, tool)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+            if (NativeResultState.TryUnsuccessful(data, writes, out var nativeOutcome, out var nativeError, tool)) {
+                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
             if (outcome == Outcome.Succeeded) data["summary"] = response.Message;
             if (data["records"] is JsonArray records) { data.Remove("records"); data["items"] = records; }
             var warnings = new List<Warning> { new Warning(WarningCode.UnverifiedBehavior,
@@ -125,7 +129,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Only the reported fields and native evidence were observed; content semantics are not asserted.", new Dictionary<string, JsonElement>()));
             warnings.AddRange(NativeResultState.Warnings(data, tool));
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
-                : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution.ReadOnly : Execution.Completed;
+                : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
+                    .ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
                 execution, reset || outcome == Outcome.Unknown, BehaviorPolicy.Current, completeness, paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
@@ -160,8 +165,10 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var pair in obj.ToArray())
             {
                 if (pair.Key == "timestamp" || pair.Key == "tool" || pair.Key == "messageData" || pair.Key == "detailMessageData" || pair.Key == "lastFailure"
-                    || pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.IndexOf("password", StringComparison.OrdinalIgnoreCase) >= 0) obj.Remove(pair.Key);
-                else if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] = "Native diagnostic details are retained in the server log.";
+                    || pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key
+                        .IndexOf("password", StringComparison.OrdinalIgnoreCase) >= 0) obj.Remove(pair.Key);
+                else if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] =
+                    "Native diagnostic details are retained in the server log.";
                 else Clean(pair.Value);
             }
         }

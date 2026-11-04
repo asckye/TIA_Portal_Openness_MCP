@@ -251,7 +251,9 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
         foreach (var message in Flatten(result.Messages).Where(m => m.Severity != CompileSeverity.Information))
         {
-            _activity.AppendDiagnostic(message.Target, message.Description, message.Severity == CompileSeverity.Error ? WorkbenchActivity.Severity.Error : WorkbenchActivity.Severity.Warning);
+            _activity
+                .AppendDiagnostic(message.Target, message.Description, message.Severity == CompileSeverity.Error ? WorkbenchActivity.Severity.Error
+                    : WorkbenchActivity.Severity.Warning);
         }
 
         _activity.SetStatus("Status.CompileResult",

@@ -137,10 +137,12 @@ namespace TiaOpenness.Shared
         // Public-to-the-host API for P6-44; no approval decision or channel is implemented here.
         internal void Approval(string requestId, string host, string release, string tool, string decision, string? planHash = null, string? actor = null)
         {
-            if (decision != "granted" && decision != "denied" && decision != "timeout") throw new ArgumentException("Invalid approval decision.", nameof(decision));
+            if (decision != "granted" && decision != "denied" && decision != "timeout")
+                throw new ArgumentException("Invalid approval decision.", nameof(decision));
             Append("approval-" + decision, requestId, host, release, tool, planHash: planHash, actor: actor ?? ActorScope.Actor);
         }
-        internal void ApprovalSwitch(string host, bool enabled) => Append("approval-switch", "", host, "", "", approvalEnabled: enabled, actor: ActorScope.Workbench);
+        internal void ApprovalSwitch(string host, bool enabled) =>
+            Append("approval-switch", "", host, "", "", approvalEnabled: enabled, actor: ActorScope.Workbench);
 
         internal AuditVerificationReport Verify()
         {
@@ -161,7 +163,8 @@ namespace TiaOpenness.Shared
                                 long index = (long)report.Count + 1;
                                 AuditRecord row;
                                 try { row = Parse(line); }
-                                catch (Exception ex) when (ex is JsonException || ex is FormatException || ex is InvalidDataException || ex is OverflowException)
+                                catch (Exception ex) when (ex is JsonException || ex is FormatException || ex is InvalidDataException
+                                        || ex is OverflowException)
                                 { return Broken(report, index, file, "invalid-record"); }
                                 if (row.Index != index) return Broken(report, index, file, "index");
                                 if (row.PreviousHash != previous) return Broken(report, index, file, "previous-hash");
@@ -189,7 +192,9 @@ namespace TiaOpenness.Shared
                         catch (Exception ex) when (ex is JsonException || ex is FormatException || ex is InvalidDataException || ex is OverflowException)
                         {
                             // Keep an addressable row so the Workbench can jump to a malformed record.
-                            rows.Add(new AuditRecord { Index = rows.Count + 1L, Event = "end", Outcome = "invalid-record", Utc = DateTimeOffset.MinValue.ToString("O") });
+                            rows
+                                .Add(new AuditRecord {
+                                    Index = rows.Count + 1L, Event = "end", Outcome = "invalid-record", Utc = DateTimeOffset.MinValue.ToString("O") });
                         }
                     }
                 return rows;
@@ -217,14 +222,16 @@ namespace TiaOpenness.Shared
                         if (!ActorScope.IsValid(row.Actor)) throw new InvalidDataException("Invalid audit actor.");
                         writer.WriteString("actor", row.Actor);
                     }
-                    if (row.ApprovalEnabled.HasValue) writer.WriteBoolean("approvalEnabled", row.ApprovalEnabled.Value); else writer.WriteNull("approvalEnabled");
+                    if (row.ApprovalEnabled.HasValue) writer.WriteBoolean("approvalEnabled", row.ApprovalEnabled.Value); else writer
+                        .WriteNull("approvalEnabled");
                     if (row.PlanId != null)
                     {
                         writer.WriteString("parentRequestId", row.ParentRequestId); writer.WriteString("planId", row.PlanId);
                         writer.WriteString("runId", row.RunId); writer.WriteString("stepId", row.StepId);
                     }
                     writer.WriteString("event", row.Event); writer.WriteString("host", row.Host); writer.WriteNumber("index", row.Index);
-                    writer.WriteString("outcome", row.Outcome); writer.WriteString("planHash", row.PlanHash); writer.WriteString("previousHash", row.PreviousHash);
+                    writer.WriteString("outcome", row.Outcome); writer.WriteString("planHash", row.PlanHash); writer
+                        .WriteString("previousHash", row.PreviousHash);
                     writer.WriteNumber("processId", row.ProcessId); writer.WriteString("release", row.Release); writer.WriteString("requestId", row.RequestId);
                     writer.WriteString("tool", row.Tool); writer.WriteString("utc", row.Utc);
                     writer.WriteEndObject(); writer.Flush();
@@ -241,7 +248,8 @@ namespace TiaOpenness.Shared
                 int count = root.EnumerateObject().Count();
                 bool generation = root.TryGetProperty("planId", out _);
                 if (generation) count -= 4;
-                if ((count != 12 && count != 13) || root.EnumerateObject().Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != count + (generation ? 4 : 0)
+                if ((count != 12 && count != 13) || root.EnumerateObject().Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != count
+                        + (generation ? 4 : 0)
                     || (count == 13 && !root.TryGetProperty("actor", out _)))
                     throw new InvalidDataException("Invalid audit record fields.");
                 string Required(string key) => root.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String
@@ -249,9 +257,12 @@ namespace TiaOpenness.Shared
                 string? Optional(string key) => root.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.Null ? null : Required(key);
                 string? actor = root.TryGetProperty("actor", out _) ? Required("actor") : null;
                 if (actor != null && !ActorScope.IsValid(actor)) throw new InvalidDataException("Invalid audit actor.");
-                if (!root.TryGetProperty("index", out var index) || index.ValueKind != JsonValueKind.Number || !index.TryGetInt64(out long number) || number < 1 ||
-                    !root.TryGetProperty("processId", out var process) || process.ValueKind != JsonValueKind.Number || !process.TryGetInt32(out int pid) || pid < 1 ||
-                    !root.TryGetProperty("approvalEnabled", out var enabled) || !(enabled.ValueKind == JsonValueKind.Null || enabled.ValueKind == JsonValueKind.True || enabled.ValueKind == JsonValueKind.False))
+                if (!root.TryGetProperty("index", out var index) || index.ValueKind != JsonValueKind.Number || !index.TryGetInt64(out long number)
+                        || number < 1 ||
+                    !root.TryGetProperty("processId", out var process) || process.ValueKind != JsonValueKind.Number || !process.TryGetInt32(out int pid)
+                        || pid < 1 ||
+                    !root.TryGetProperty("approvalEnabled", out var enabled)
+                        || !(enabled.ValueKind == JsonValueKind.Null || enabled.ValueKind == JsonValueKind.True || enabled.ValueKind == JsonValueKind.False))
                     throw new InvalidDataException("Invalid audit number or switch.");
                 string utc = Required("utc"), kind = Required("event"), hash = Required("previousHash");
                 if (!DateTimeOffset.TryParseExact(utc, "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out _) || !Events.Contains(kind)
@@ -259,7 +270,8 @@ namespace TiaOpenness.Shared
                     throw new InvalidDataException("Invalid audit metadata.");
                 return new AuditRecord { Index = number, Utc = utc, Event = kind, RequestId = Required("requestId"), Host = Required("host"),
                     Release = Required("release"), Tool = Required("tool"), Outcome = Optional("outcome"), PlanHash = Optional("planHash"),
-                    ApprovalEnabled = enabled.ValueKind == JsonValueKind.Null ? (bool?)null : enabled.GetBoolean(), ProcessId = pid, PreviousHash = hash, Actor = actor,
+                    ApprovalEnabled = enabled.ValueKind == JsonValueKind.Null ? (bool?)null : enabled.GetBoolean(), ProcessId = pid, PreviousHash = hash,
+                        Actor = actor,
                     PlanId = generation ? Required("planId") : null, StepId = generation ? Required("stepId") : null,
                     RunId = generation ? Required("runId") : null, ParentRequestId = generation ? Required("parentRequestId") : null };
             }

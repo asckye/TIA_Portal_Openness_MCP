@@ -24,7 +24,8 @@ namespace TiaMcp.Adapters.Contracts
         // Actions that need accessLevel / password / newPassword. unprotectMasterSecret takes the password only when one is configured.
         public static readonly string[] LevelActions = { "setAccessLevel", "setAccessPassword", "resetAccessPassword" };
         public static readonly string[] PasswordActions = { "setAccessPassword", "protectMasterSecret", "changeMasterSecret" };
-        public static readonly string[] MasterSecretActions = { "protectMasterSecret", "changeMasterSecret", "unprotectMasterSecret", "resetMasterSecret", "protectAllConfiguration", "unprotectAllConfiguration" };
+        public static readonly string[] MasterSecretActions = {
+            "protectMasterSecret", "changeMasterSecret", "unprotectMasterSecret", "resetMasterSecret", "protectAllConfiguration", "unprotectAllConfiguration" };
 
         public static string NormalizeAction(string? action)
         {
@@ -38,7 +39,9 @@ namespace TiaMcp.Adapters.Contracts
         {
             var value = (accessLevel ?? "").Trim();
             var hit = AccessLevels.FirstOrDefault(x => x.Equals(value, StringComparison.OrdinalIgnoreCase));
-            if (hit == null) throw new ArgumentException("accessLevel must be one of: " + string.Join(", ", AccessLevels) + " (TIA UI: Full access (no protection) / Read access / HMI access / No access / Full access incl. fail-safe - F-CPUs only).");
+            if (hit == null)
+                throw new ArgumentException("accessLevel must be one of: " + string.Join(", ", AccessLevels)
+                    + " (TIA UI: Full access (no protection) / Read access / HMI access / No access / Full access incl. fail-safe - F-CPUs only).");
             return hit;
         }
 
@@ -52,9 +55,11 @@ namespace TiaMcp.Adapters.Contracts
             if (act == "changeMasterSecret" && string.IsNullOrEmpty(newPassword))
                 throw new ArgumentException("changeMasterSecret needs newPassword besides password (the current master secret).");
             if (act == "setAccessPassword" && level == "FullAccessIncludingFailsafe")
-                throw new ArgumentException("No password exists for FullAccessIncludingFailsafe (it is the unprotected level of an F-CPU); passwords belong to FullAccess / ReadAccess / HMIAccess.");
+                throw new ArgumentException("No password exists for FullAccessIncludingFailsafe (it is the unprotected level of an F-CPU); passwords belong " +
+                    "to FullAccess / ReadAccess / HMIAccess.");
             if (act == "setAccessPassword" && level == "NoAccess")
-                throw new ArgumentException("No password exists for NoAccess (complete protection has no login of its own); set the password for FullAccess / ReadAccess / HMIAccess.");
+                throw new ArgumentException("No password exists for NoAccess (complete protection has no login of its own); set the password for FullAccess " +
+                    "/ ReadAccess / HMIAccess.");
             return (act, level);
         }
 
@@ -70,7 +75,8 @@ namespace TiaMcp.Adapters.Contracts
             var current = Strictness(currentLevel); var target = Strictness(passwordLevel);
             if (current < 0 || target < 0) return null;
             return target >= current
-                ? "TIA only accepts passwords for levels less strict than the selected access level (" + currentLevel + "); '" + passwordLevel + "' is expected to be refused with 'Cannot set password for the access level'."
+                ? "TIA only accepts passwords for levels less strict than the selected access level (" + currentLevel + "); '" + passwordLevel
+                    + "' is expected to be refused with 'Cannot set password for the access level'."
                 : null;
         }
 
@@ -79,7 +85,8 @@ namespace TiaMcp.Adapters.Contracts
         public static string[] ExpectedMasterSecretStates(string action, bool withPassword) => action switch
         {
             "protectMasterSecret" => new[] { "WithPassword", "WithPasswordAllDataProtection" },
-            "protectAllConfiguration" => withPassword ? new[] { "WithPasswordAllDataProtection" } : new[] { "WithPasswordAllDataProtection", "WithoutPassword", "WithPassword" },
+            "protectAllConfiguration" => withPassword ? new[] { "WithPasswordAllDataProtection" } : new[] {
+                "WithPasswordAllDataProtection", "WithoutPassword", "WithPassword" },
             "unprotectMasterSecret" => new[] { "None" },
             "unprotectAllConfiguration" => new[] { "WithPassword", "WithoutPassword", "None" },
             "resetMasterSecret" => new[] { "None", "WithoutPassword" },

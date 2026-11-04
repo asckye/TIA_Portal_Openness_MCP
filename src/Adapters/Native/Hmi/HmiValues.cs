@@ -25,10 +25,12 @@ namespace TiaMcp.Adapters.Native.Hmi
         [ThreadStatic] internal static Func<Dictionary<string, object?>, string>? Renderer;
         [ThreadStatic] internal static Action<Exception>? ExportFailure;
         [ThreadStatic] internal static Action<string, string>? TraceWriter;
-        internal static string Serialize(Dictionary<string, object?> value) => (Renderer ?? throw new InvalidOperationException("HMI evidence serializer unavailable."))(value);
+        internal static string Serialize(Dictionary<string, object?> value) =>
+            (Renderer ?? throw new InvalidOperationException("HMI evidence serializer unavailable."))(value);
         internal static object? Value<T>(T value) => value;
         internal static T GetValue<T>(this object value) => (T)value;
-        internal static object? Field(this object value, string key) => value is IDictionary<string, object?> fields && fields.TryGetValue(key, out var item) ? item : null;
+        internal static object? Field(this object value, string key) => value is IDictionary<string, object?> fields && fields.TryGetValue(key, out var item)
+            ? item : null;
         internal static List<object?> Array(this object value) => value is List<object?> array ? array : ((IEnumerable)value).Cast<object?>().ToList();
         internal static object? DeepClone(this object value)
         {

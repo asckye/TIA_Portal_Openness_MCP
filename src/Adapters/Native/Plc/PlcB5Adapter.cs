@@ -21,7 +21,8 @@ namespace TiaMcp.Adapters.Native.Plc
         private readonly PlcFoundationEngine engine;
         private readonly PlcB5Request request;
         internal bool MayHaveChanged { get; private set; }
-        private int Version => _session.ReleaseKey == "14sp1" ? 14 : _session.ReleaseKey == "15.1" ? 15 : int.Parse(_session.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
+        private int Version => _session.ReleaseKey == "14sp1" ? 14 : _session.ReleaseKey == "15.1" ? 15 : int
+            .Parse(_session.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
         internal PlcB5Adapter(IPlcOrganisationSession session, PlcFoundationEngine engine, PlcB5Request request)
         { _session = session; this.engine = engine; this.request = request; }
         private PlcB5Reply RunTool(string tool, Func<Dictionary<string, object?>, string> action)
@@ -45,7 +46,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 finally { MayHaveChanged |= meta.TryGetValue("mayHaveChanged", out var changed) && changed is true; }
             });
-            return new PlcB5Reply { Message = reply.Message, Meta = reply.Meta, MayHaveChanged = reply.MayHaveChanged, RequiresSessionReset = reply.RequiresSessionReset };
+            return new PlcB5Reply {
+                Message = reply.Message, Meta = reply.Meta, MayHaveChanged = reply.MayHaveChanged, RequiresSessionReset = reply.RequiresSessionReset };
         }
         private void ValidateRequest() { if (request.ValidationError != null) throw new ArgumentException(request.ValidationError); }
         private bool ValidatedWriting() { ValidateRequest(); return request.ValidatedWriting; }
@@ -77,15 +79,25 @@ namespace TiaMcp.Adapters.Native.Plc
             return null;
 #endif
         }
-        private static void ValidateUnitKind(string kind) { if (kind != "unit" && kind != "safety") throw new ArgumentException("unitKind must be unit or safety."); }
+        private static void ValidateUnitKind(string kind) {
+            if (kind != "unit" && kind != "safety") throw new ArgumentException("unitKind must be unit or safety."); }
         private static void RequireOneOf(string value, string[] allowed, string parameter)
-        { if (!allowed.Contains(value, StringComparer.Ordinal)) throw new ArgumentException(parameter + " must be one of: " + string.Join("/", allowed) + " (case-sensitive)."); }
+        {
+            if (!allowed.Contains(value, StringComparer.Ordinal))
+                throw new ArgumentException(parameter + " must be one of: " + string.Join("/", allowed) + " (case-sensitive).");
+        }
         private static void RequireAction(string action, string[] allowed)
         { if (!allowed.Contains(action)) throw new ArgumentException("action must be one of: " + string.Join("/", allowed) + "."); }
         private static void RequireName(string value, string parameter)
-        { if (string.IsNullOrWhiteSpace(value) || value.Length > 256 || value.IndexOfAny(new[] { '/', '\\' }) >= 0) throw new ArgumentException("Exact " + parameter + " (single nonempty segment) required."); }
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Length > 256 || value.IndexOfAny(new[] { '/', '\\' }) >= 0)
+                throw new ArgumentException("Exact " + parameter + " (single nonempty segment) required.");
+        }
         private static void RequireExactName(string value, string parameter)
-        { if (string.IsNullOrWhiteSpace(value) || value.Length > 256 || value.Trim() != value) throw new ArgumentException(parameter + " must be an exact nonempty name without surrounding whitespace."); }
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Length > 256 || value.Trim() != value)
+                throw new ArgumentException(parameter + " must be an exact nonempty name without surrounding whitespace.");
+        }
         private static void ValidatePagination(int offset, int limit)
         { if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset>=0, limit 1..500 required."); }
         private static void RequirePagination(int offset, int limit)
@@ -93,7 +105,10 @@ namespace TiaMcp.Adapters.Native.Plc
         private static void RequireConfirmation(bool confirmed, string parameter, bool dryRun)
         { if (!dryRun && !confirmed) throw new ArgumentException(parameter + "=true is required for real execution; preview does not need it."); }
         private static PlcB5Object PageMeta(int total, int offset, int limit, int returned)
-            => new PlcB5Object { ["expectedCount"] = total, ["actualCount"] = returned, ["offset"] = offset, ["limit"] = limit, ["nextOffset"] = offset + returned < total ? offset + returned : (int?)null, ["truncated"] = offset + returned < total };
+            => new PlcB5Object {
+                ["expectedCount"] = total, ["actualCount"] = returned, ["offset"] = offset, ["limit"] = limit, ["nextOffset"] = offset + returned < total
+                    ? offset + returned : (int?)null, ["truncated"] = offset + returned < total
+            };
         private static (int Skip, int Take) Paginate(Dictionary<string, object?> meta, int total, int offset, int limit)
         {
             ValidatePagination(offset, limit); int actual = Math.Max(0, Math.Min(limit, total - offset));
@@ -115,13 +130,20 @@ namespace TiaMcp.Adapters.Native.Plc
             if (!file.Exists || file.Length == 0) throw new FileNotFoundException(parameter + " does not exist or is empty.", path);
             return file;
         }
-        private static HashSet<string> SnapshotDirectory(string path) => new HashSet<string>(Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly), StringComparer.OrdinalIgnoreCase);
+        private static HashSet<string> SnapshotDirectory(string path) =>
+            new HashSet<string>(Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly), StringComparer.OrdinalIgnoreCase);
         private static PlcB5Array NewFilesSince(string path, HashSet<string> before)
-            => new PlcB5Array(Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly).Where(f => !before.Contains(f)).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).Select(f => (object)PlcSourceFileOutput.Row(new FileInfo(f))).ToArray());
+            =>
+                new PlcB5Array(Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly).Where(f => !before.Contains(f))
+                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).Select(f => (object)PlcSourceFileOutput.Row(new FileInfo(f))).ToArray());
         private static string? ProDiagRefusal(string language, bool consistent)
-            => language != "ProDiag" ? "ExportProDIAGInfo needs a ProDiag FB; the block language is " + language + "." : consistent ? null : "The ProDiag FB is inconsistent; compile first.";
+            => language != "ProDiag" ? "ExportProDIAGInfo needs a ProDiag FB; the block language is " + language + "." : consistent ? null
+                : "The ProDiag FB is inconsistent; compile first.";
         private static bool ExactNamesPresent(IEnumerable<string> imported, IEnumerable<string> current)
-        { var names = imported.ToArray(); var present = new HashSet<string>(current, StringComparer.Ordinal); return names.Length > 0 && names.All(present.Contains); }
+        {
+            var names = imported.ToArray(); var present = new HashSet<string>(current, StringComparer.Ordinal); return names.Length > 0 && names
+                .All(present.Contains);
+        }
         private static IEnumerable<(string Name, string Kind, object? Unit)> PlcScopes(PlcSoftware plc)
         {
             yield return ("", "root", null);
@@ -137,7 +159,8 @@ namespace TiaMcp.Adapters.Native.Plc
         private static IEnumerable<(string Path, object Value)> ScopedObjects(object group, string collection, string prefix = "", int depth = 0)
         {
             if (depth > 64) throw new InvalidOperationException("Group depth exceeds 64; result is incomplete.");
-            foreach (var value in PlcGroupOperations.Items(PlcGroupOperations.Get(group, collection))) yield return (prefix + PlcGroupOperations.Get(value, "Name"), value);
+            foreach (var value in PlcGroupOperations.Items(PlcGroupOperations.Get(group, collection)))
+                yield return (prefix + PlcGroupOperations.Get(value, "Name"), value);
             foreach (var sub in PlcGroupOperations.Items(PlcGroupOperations.Get(group, "Groups")))
                 foreach (var item in ScopedObjects(sub, collection, prefix + PlcGroupOperations.Get(sub, "Name") + "/", depth + 1)) yield return item;
             var system = group.GetType().GetProperty("SystemBlockGroups");
@@ -146,43 +169,62 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 #if PLC_DOCUMENT_EXPORT
         private static PlcB5Array DocumentMessages(DocumentResultMessageComposition? messages)
-            => messages == null ? new PlcB5Array() : new PlcB5Array(PlcGroupOperations.Items(messages).Cast<DocumentResultMessage>().Select(m => (object)m.Message).ToArray());
-        private static PlcB5Array Names(object values) => new PlcB5Array(PlcGroupOperations.Items(values).Select(v => (object?)PlcGroupOperations.Get(v, "Name").ToString()).ToArray());
+            => messages == null ? new PlcB5Array()
+                : new PlcB5Array(PlcGroupOperations.Items(messages).Cast<DocumentResultMessage>().Select(m => (object)m.Message).ToArray());
+        private static PlcB5Array Names(object values) =>
+            new PlcB5Array(PlcGroupOperations.Items(values).Select(v => (object?)PlcGroupOperations.Get(v, "Name").ToString()).ToArray());
         private static PlcB5Object DocumentExportRow(DocumentExportResult result)
-            => new PlcB5Object { ["state"] = result.State.ToString(), ["exportedDocuments"] = new PlcB5Array((result.ExportedDocuments ?? Enumerable.Empty<FileInfo>()).Select(f => (object)PlcSourceFileOutput.Row(f)).ToArray()), ["messages"] = DocumentMessages(result.Messages) };
+            => new PlcB5Object {
+                ["state"] = result.State.ToString(), ["exportedDocuments"] =
+                    new PlcB5Array((result.ExportedDocuments ?? Enumerable.Empty<FileInfo>()).Select(f => (object)PlcSourceFileOutput.Row(f)).ToArray()),
+                    ["messages"] = DocumentMessages(result.Messages)
+            };
         private static PlcB5Object DocumentImportRow(DocumentImportResult result, PlcB5Array names)
             => new PlcB5Object { ["state"] = result.State.ToString(), ["imported"] = names, ["messages"] = DocumentMessages(result.Messages) };
-        private object DocumentPreflight(string file) => (engine.PlcB5DocumentPreflight ?? throw new InvalidOperationException("Missing document preflight."))(File.ReadAllText(file));
+        private object DocumentPreflight(string file) =>
+            (engine.PlcB5DocumentPreflight ?? throw new InvalidOperationException("Missing document preflight."))(File.ReadAllText(file));
         private LibraryType ExactLibraryType(object library, string path)
         {
             var parts = PlcGroupOperations.Parts(path); var folder = PlcGroupOperations.Get(library, "TypeFolder");
-            foreach (var part in parts.Take(parts.Length - 1)) folder = PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Folders"), part) ?? throw new PlcSoftwareException("NotFound", "Library folder not found.");
-            return (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last()) ?? throw new PlcSoftwareException("NotFound", "Exact library type not found: " + path));
+            foreach (var part in parts.Take(parts.Length - 1)) folder = PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Folders"), part)
+                ?? throw new PlcSoftwareException("NotFound", "Library folder not found.");
+            return (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last())
+                    ?? throw new PlcSoftwareException("NotFound", "Exact library type not found: " + path));
         }
         private static LibraryTypeVersion ExactTypeVersion(LibraryType type, string version)
         {
-            var matches = PlcGroupOperations.Items(type.Versions).Cast<LibraryTypeVersion>().Where(v => v.VersionNumber?.ToString() == version).Take(2).ToArray();
-            if (matches.Length != 1) throw new PlcSoftwareException("NotFound", "Expected exactly one version '" + version + "' on type '" + type.Name + "', found " + matches.Length + ".");
+            var matches = PlcGroupOperations.Items(type.Versions).Cast<LibraryTypeVersion>().Where(v => v.VersionNumber?.ToString() == version).Take(2)
+                .ToArray();
+            if (matches.Length != 1)
+                throw new PlcSoftwareException("NotFound", "Expected exactly one version '" + version + "' on type '" + type.Name + "', found " + matches
+                    .Length + ".");
             return matches[0];
         }
 #endif
         private const string SupervisionProvider = "Siemens.Engineering.SW.Supervision.SupervisionProvider";
         private const string SupervisionSettingsProvider = "Siemens.Engineering.SW.Supervision.SupervisionSettingsProvider";
-        private static readonly string[] SupervisionActions = { "read", "readComposition", "createEntry", "deleteEntry", "setAttributes", "exportSettings", "importSettings" };
+        private static readonly string[] SupervisionActions = {
+            "read", "readComposition", "createEntry", "deleteEntry", "setAttributes", "exportSettings", "importSettings" };
         private static readonly string[] OpcUaActions = { "createRole", "addStandardRole", "deleteRole", "setProjectRole", "setPermission", "setRestriction" };
         private static readonly string[] OpcUaPermissionNames = { "Browse", "Read", "Write", "Call", "ReceiveEvents", "ReadRolePermissions" };
-        private static object? OptionalOfficialService(object owner, string type, out string state) => PlcOrganisationAdapter.ResolveMotionOfficialService(owner, type, out state);
-        private static object RequireOfficialService(object owner, string type, string? assembly = null) => PlcOrganisationAdapter.RequireMotionOfficialService(owner, type);
+        private static object? OptionalOfficialService(object owner, string type, out string state) => PlcOrganisationAdapter
+            .ResolveMotionOfficialService(owner, type, out state);
+        private static object RequireOfficialService(object owner, string type, string? assembly = null) => PlcOrganisationAdapter
+            .RequireMotionOfficialService(owner, type);
         private static void AttachResult(Dictionary<string, object?> meta, object? result)
         => HardwareOfficialService.AttachResult(meta, result);
         private static void RecordOptionalFailure(Dictionary<string, object?> meta, Exception error)
         {
             var cause = error.GetBaseException(); meta["failureType"] = cause.GetType().Name;
-            if (new[] { "mayHaveChanged", "mayHaveWrittenFiles", "mayHaveExternalEffects", "operationStarted" }.Any(k => meta.TryGetValue(k, out var flag) && flag is true)) return;
+            if (new[] { "mayHaveChanged", "mayHaveWrittenFiles", "mayHaveExternalEffects", "operationStarted" }
+                    .Any(k => meta.TryGetValue(k, out var flag) && flag is true))
+                return;
             meta["operationNotStarted"] = true;
             string? code = cause is PlcSoftwareException portal ? portal.Code switch {
-                "InvalidParams" => "INVALID_ARGUMENT", "NotFound" => "NOT_FOUND", "NotSupportedOnVersion" => "UNSUPPORTED_CAPABILITY", "InvalidState" => "PRECONDITION_FAILED", _ => null }
-                : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT" : cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
+                "InvalidParams" => "INVALID_ARGUMENT", "NotFound" => "NOT_FOUND", "NotSupportedOnVersion" => "UNSUPPORTED_CAPABILITY", "InvalidState" =>
+                    "PRECONDITION_FAILED", _ => null }
+                : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT" : cause is NotSupportedException
+                    ? "UNSUPPORTED_CAPABILITY"
                 : cause is FileNotFoundException || cause is DirectoryNotFoundException ? "NOT_FOUND"
                 : cause is IOException ? "IO_FAILED" : cause is InvalidOperationException ? "PRECONDITION_FAILED" : null;
             if (code != null) meta["rejectionCode"] = code;

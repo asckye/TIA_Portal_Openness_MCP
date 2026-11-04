@@ -9,7 +9,10 @@ namespace TiaMcpServer.Siemens
     // Pure validation/paging/tree logic for the ProjectSecurity family. No Siemens.Engineering dependency.
     internal static class ProjectSecurityLogic
     {
-        internal static readonly string[] ReadCategories = { "users", "anonymousUser", "systemRoles", "customRoles", "engineeringRights", "customDeviceRights", "umcUsers", "umcUserGroups", "passwordPolicy", "deviceRights", "roleDeviceRights" };
+        internal static readonly string[] ReadCategories = {
+            "users", "anonymousUser", "systemRoles", "customRoles", "engineeringRights", "customDeviceRights", "umcUsers", "umcUserGroups", "passwordPolicy",
+                "deviceRights", "roleDeviceRights"
+        };
         internal static readonly string[] DeviceCategories = { "deviceRights", "roleDeviceRights" };
 
         internal sealed class UserManagementRequest
@@ -40,12 +43,19 @@ namespace TiaMcpServer.Siemens
         }.ToDictionary(x => x.Action, StringComparer.Ordinal);
         internal static IEnumerable<string> UserActionNames => UserActions.Keys;
 
-        internal static UserManagementRequest ValidateUserManagement(string action, string name, string password, string roleName, string rightName, string group, string devicePathJson)
+        internal static UserManagementRequest ValidateUserManagement(string action, string name, string password, string roleName, string rightName,
+                string group, string devicePathJson)
         {
-            if (action == null || !UserActions.TryGetValue(action, out var request)) throw new ArgumentException("action must be one of: " + string.Join(", ", UserActions.Keys));
-            if (request.NoName) { if (!string.IsNullOrEmpty(name)) throw new ArgumentException(action + " takes no name (there is a single anonymous user per protected project)."); }
-            else if (string.IsNullOrWhiteSpace(name) || name.Length > 256) throw new ArgumentException("Exact nonempty " + request.Target + " name required (max 256 chars).");
-            if (request.NeedsPassword && string.IsNullOrEmpty(password)) throw new ArgumentException("password required for " + action + "; it is passed to the API as SecureString and never logged.");
+            if (action == null || !UserActions.TryGetValue(action, out var request))
+                throw new ArgumentException("action must be one of: " + string.Join(", ", UserActions.Keys));
+            if (request.NoName) {
+                if (!string.IsNullOrEmpty(name))
+                    throw new ArgumentException(action + " takes no name (there is a single anonymous user per protected project).");
+            }
+            else if (string.IsNullOrWhiteSpace(name) || name.Length > 256)
+                throw new ArgumentException("Exact nonempty " + request.Target + " name required (max 256 chars).");
+            if (request.NeedsPassword && string.IsNullOrEmpty(password))
+                throw new ArgumentException("password required for " + action + "; it is passed to the API as SecureString and never logged.");
             if (!request.NeedsPassword && !string.IsNullOrEmpty(password)) throw new ArgumentException("password is not accepted for " + action + ".");
             if (request.NeedsRole && string.IsNullOrWhiteSpace(roleName)) throw new ArgumentException("Exact roleName required for " + action + ".");
             if (request.NeedsRight && string.IsNullOrWhiteSpace(rightName)) throw new ArgumentException("Exact rightName required for " + action + ".");
@@ -59,11 +69,13 @@ namespace TiaMcpServer.Siemens
             try { names = JsonNode.Parse(devicePathJson ?? "") as JsonArray; }
             catch (System.Text.Json.JsonException ex) { throw new ArgumentException("devicePathJson must be a JSON array of exact names: " + ex.Message); }
             if (names == null) throw new ArgumentException("devicePathJson must be a JSON array of exact names.");
-            if (names.Count < 1 || names.Count > 64 || names.Any(n => n is not JsonValue || string.IsNullOrWhiteSpace(n!.GetValue<string>()))) throw new ArgumentException("devicePathJson needs 1-64 exact nonempty names.");
+            if (names.Count < 1 || names.Count > 64 || names.Any(n => n is not JsonValue || string.IsNullOrWhiteSpace(n!.GetValue<string>())))
+                throw new ArgumentException("devicePathJson needs 1-64 exact nonempty names.");
         }
         internal static void ValidateCategory(string category)
         {
-            if (!ReadCategories.Contains(category, StringComparer.Ordinal)) throw new ArgumentException("category must be one of: " + string.Join(", ", ReadCategories));
+            if (!ReadCategories.Contains(category, StringComparer.Ordinal))
+                throw new ArgumentException("category must be one of: " + string.Join(", ", ReadCategories));
         }
         internal static SecureString Secure(string password)
         {
@@ -95,32 +107,42 @@ namespace TiaMcpServer.Siemens
             meta["truncated"] = offset + pageCount < total;
         }
 
-        internal static readonly string[] MultiuserActions = { "read", "listServerProjects", "readLockState", "listLocalSessions", "connectServer", "disconnectServer", "commit" };
+        internal static readonly string[] MultiuserActions = {
+            "read", "listServerProjects", "readLockState", "listLocalSessions", "connectServer", "disconnectServer", "commit" };
         internal static readonly string[] MultiuserMutations = { "connectServer", "disconnectServer", "commit" };
-        internal static bool ValidateMultiuser(string action, string serverName, string projectName, string protocol, string host, int port, string commitComment, bool confirmChange, bool dryRun)
+        internal static bool ValidateMultiuser(string action, string serverName, string projectName, string protocol, string host, int port,
+                string commitComment, bool confirmChange, bool dryRun)
         {
-            if (!MultiuserActions.Contains(action, StringComparer.Ordinal)) throw new ArgumentException("action must be one of: " + string.Join(", ", MultiuserActions));
+            if (!MultiuserActions.Contains(action, StringComparer.Ordinal))
+                throw new ArgumentException("action must be one of: " + string.Join(", ", MultiuserActions));
             bool mutation = MultiuserMutations.Contains(action, StringComparer.Ordinal);
-            if (mutation && !dryRun && !confirmChange) throw new ArgumentException("Real multiuser changes require confirmChange=true together with dryRun=false.");
-            if (action != "read" && action != "commit" && string.IsNullOrWhiteSpace(serverName)) throw new ArgumentException("Exact serverName (server alias) required for " + action + ".");
-            if ((action == "readLockState" || action == "listLocalSessions") && string.IsNullOrWhiteSpace(projectName)) throw new ArgumentException("Exact server projectName required for " + action + ".");
+            if (mutation && !dryRun && !confirmChange)
+                throw new ArgumentException("Real multiuser changes require confirmChange=true together with dryRun=false.");
+            if (action != "read" && action != "commit" && string.IsNullOrWhiteSpace(serverName))
+                throw new ArgumentException("Exact serverName (server alias) required for " + action + ".");
+            if ((action == "readLockState" || action == "listLocalSessions") && string.IsNullOrWhiteSpace(projectName))
+                throw new ArgumentException("Exact server projectName required for " + action + ".");
             if (action == "connectServer")
             {
                 if (protocol != "Https" && protocol != "Http") throw new ArgumentException("protocol must be Https or Http.");
                 if (string.IsNullOrWhiteSpace(host)) throw new ArgumentException("host required for connectServer.");
                 if (port < 1 || port > 65535) throw new ArgumentException("port 1..65535 required for connectServer.");
             }
-            if (action == "commit" && string.IsNullOrWhiteSpace(commitComment)) throw new ArgumentException("Nonempty commitComment required; CloseAndCommit closes the bound local session.");
+            if (action == "commit" && string.IsNullOrWhiteSpace(commitComment))
+                throw new ArgumentException("Nonempty commitComment required; CloseAndCommit closes the bound local session.");
             return mutation;
         }
 
         internal static void ValidateLibraryPair(string leftLibraryName, string rightLibraryName)
         {
-            if (string.IsNullOrEmpty(leftLibraryName) && string.IsNullOrEmpty(rightLibraryName)) throw new ArgumentException("Comparing the project library to itself is refused; name at least one open global library.");
-            if (string.Equals(leftLibraryName, rightLibraryName, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Left and right library must differ.");
+            if (string.IsNullOrEmpty(leftLibraryName) && string.IsNullOrEmpty(rightLibraryName))
+                throw new ArgumentException("Comparing the project library to itself is refused; name at least one open global library.");
+            if (string.Equals(leftLibraryName, rightLibraryName, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Left and right library must differ.");
         }
         internal static readonly string[] CompareKinds = { "software", "softwareToLibrary", "hardware" };
-        internal static void ValidateCompareRequest(string kind, string softwarePath, string devicePathJson, string targetProjectName, string targetSoftwarePath, string targetDevicePathJson)
+        internal static void ValidateCompareRequest(string kind, string softwarePath, string devicePathJson, string targetProjectName,
+                string targetSoftwarePath, string targetDevicePathJson)
         {
             if (!CompareKinds.Contains(kind, StringComparer.Ordinal)) throw new ArgumentException("kind must be one of: " + string.Join(", ", CompareKinds));
             if (kind == "hardware") { ValidateDevicePath(devicePathJson); ValidateDevicePath(targetDevicePathJson); }
@@ -129,16 +151,22 @@ namespace TiaMcpServer.Siemens
             {
                 bool other = !string.IsNullOrWhiteSpace(targetProjectName);
                 if (other) ValidateDevicePath(targetDevicePathJson);
-                else if (string.IsNullOrWhiteSpace(targetSoftwarePath)) throw new ArgumentException("targetSoftwarePath (same project) or targetProjectName + targetDevicePathJson/targetItemPathJson (other open project) required.");
-                else if (string.Equals(softwarePath, targetSoftwarePath, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Source and target software must differ.");
+                else if (string.IsNullOrWhiteSpace(targetSoftwarePath))
+                    throw new ArgumentException("targetSoftwarePath (same project) or targetProjectName + targetDevicePathJson/targetItemPathJson (other " +
+                    "open project) required.");
+                else if (string.Equals(softwarePath, targetSoftwarePath, StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("Source and target software must differ.");
             }
-            if (kind == "hardware" && string.IsNullOrWhiteSpace(targetProjectName) && devicePathJson == targetDevicePathJson) throw new ArgumentException("Source and target device paths must differ unless targetProjectName names another open project (item paths are compared natively).");
+            if (kind == "hardware" && string.IsNullOrWhiteSpace(targetProjectName) && devicePathJson == targetDevicePathJson)
+                throw new ArgumentException("Source and target device paths must differ unless targetProjectName names another open project (item paths are " +
+                "compared natively).");
         }
 
         private static readonly string[] IdenticalStates = { "ObjectsIdentical", "ContainerContentsIdentical", "FolderContentsIdentical", "CompareIrrelevant" };
         internal static bool IsIdentical(string? state) => state != null && IdenticalStates.Contains(state, StringComparer.Ordinal);
         // Depth-first flatten with path/depth/childCount. Bounded; sets truncated instead of silently dropping.
-        internal static List<JsonObject> FlattenCompareTree(object? root, Func<object, IEnumerable<object>> children, Func<object, JsonObject> describe, int maxDepth, int maxRows, out bool truncated)
+        internal static List<JsonObject> FlattenCompareTree(object? root, Func<object, IEnumerable<object>> children, Func<object, JsonObject> describe,
+                int maxDepth, int maxRows, out bool truncated)
         {
             var rows = new List<JsonObject>(); truncated = false;
             if (root == null) return rows;
@@ -163,7 +191,8 @@ namespace TiaMcpServer.Siemens
         internal static JsonObject Summarize(IEnumerable<JsonObject> rows)
         {
             var summary = new JsonObject();
-            foreach (var group in rows.GroupBy(r => r["comparisonResult"]?.GetValue<string>() ?? "Unknown").OrderBy(g => g.Key, StringComparer.Ordinal)) summary[group.Key] = group.Count();
+            foreach (var group in rows.GroupBy(r => r["comparisonResult"]?.GetValue<string>() ?? "Unknown").OrderBy(g => g.Key, StringComparer.Ordinal))
+                summary[group.Key] = group.Count();
             return summary;
         }
     }

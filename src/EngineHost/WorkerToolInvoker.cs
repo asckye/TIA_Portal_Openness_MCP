@@ -32,7 +32,8 @@ namespace TiaMcp.FoundationHost
             local = new[] { typeof(McpServer), typeof(XmlBuilderTools), typeof(OfflineSuiteTools), typeof(TemplateTools),
                 typeof(ExportTools), typeof(ImportStagingTools), typeof(ImportOrderTools), typeof(ToolUsageTools),
                 typeof(EcosystemTools), typeof(V21EcosystemTools), typeof(EngineeringDiagnosticsTools), typeof(OfflineAnalysisTools),
-                typeof(HostMetaTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(GitWorkflowTools),
+                typeof(HostMetaTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools),
+                    typeof(GitWorkflowTools),
                 typeof(RuntimeTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools) }
                 .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
                 .Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
@@ -67,8 +68,10 @@ namespace TiaMcp.FoundationHost
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var property in arguments.Json.EnumerateObject())
                 if (!seen.Add(property.Name)) return McpServer.InvalidInput("arguments");
-            string problem = ReleaseCatalogData.Releases[McpServer.ReleaseKey].WrapPortedTools && tool.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                || TiaMcp.Adapters.Contracts.PortedFamilies.Available(McpServer.ReleaseKey, name)) ? "" : McpServer.VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value) ? value.ToString()
+            string problem = ReleaseCatalogData.Releases[McpServer.ReleaseKey].WrapPortedTools && tool.Execution == "foundation"
+                && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                || TiaMcp.Adapters.Contracts.PortedFamilies.Available(McpServer.ReleaseKey, name)) ? "" : McpServer
+                    .VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value) ? value.ToString()
                 : tool.Parameters.FirstOrDefault(p => p.Name == key)?.DefaultText);
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
             var error = ValidateArguments(tool, arguments.Json, tool.Tool.InputSchema);
@@ -111,7 +114,10 @@ namespace TiaMcp.FoundationHost
             {
                 var type = ParameterType(parameter.ClrType);
                 if (type == null || !arguments.TryGetProperty(parameter.Name, out var value)) continue;
-                try { JsonSerializer.Deserialize(value.GetRawText(), type, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }); }
+                try {
+                    JsonSerializer
+                        .Deserialize(value.GetRawText(), type, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false });
+                }
                 catch (InputRejectionException rejection) { return rejection.ToError(parameter.Name); }
                 catch (Exception error) when (error is JsonException or ArgumentException or InvalidOperationException or OverflowException or NotSupportedException)
                 { return McpServer.InvalidInput(parameter.Name); }
@@ -135,9 +141,11 @@ namespace TiaMcp.FoundationHost
             if (tool.Execution == "foundation")
             {
                 var request = new RequestContext<CallToolRequestParams>(McpServer.CurrentCallServer!) {
-                    Params = new CallToolRequestParams { Name = tool.Name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.Json.GetRawText()) }
+                    Params = new CallToolRequestParams {
+                        Name = tool.Name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.Json.GetRawText()) }
                 };
-                return new ToolInvocationResult(await shared[tool.Name].InvokeAsync(request, McpServer.WorkerDispatchCancellation).ConfigureAwait(false), false);
+                return new ToolInvocationResult(await shared[tool.Name].InvokeAsync(request, McpServer.WorkerDispatchCancellation).ConfigureAwait(false),
+                        false);
             }
             if (tool.Execution == "worker")
             {
@@ -151,7 +159,8 @@ namespace TiaMcp.FoundationHost
                 InvocationJournal.Write(id, "worker:" + tool.Name, "BEFORE");
                 try
                 {
-                    var reply = await worker.Invoke(id, tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token).ConfigureAwait(false);
+                    var reply = await worker.Invoke(id, tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token)
+                        .ConfigureAwait(false);
                     if (reply.NativeCallIssued) InvocationJournal.NativeCallStarted();
                     McpServer.ObserveWorkerReply(tool.Name, reply);
                     phase = "RETURNED";
@@ -181,7 +190,8 @@ namespace TiaMcp.FoundationHost
         private sealed class CatalogTool(WorkerToolInvoker owner, ToolDescriptor tool) : McpServerTool
         {
             public override Tool ProtocolTool => tool.Tool;
-            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
+                    default)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 return (await owner.DispatchAsync(tool, new ToolArguments(JsonSerializer.SerializeToElement(

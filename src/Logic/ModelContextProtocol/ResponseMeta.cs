@@ -89,7 +89,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["bridgeSuccess"] = bridgeSuccess,
                 ["operationSuccess"] = operationSuccess,
                 ["success"] = bridgeSuccess ? operationSuccess : false,
-                ["operationStatus"] = !bridgeSuccess ? "notCompleted" : operationSuccess == true ? "succeeded" : operationSuccess == false ? "failed" : "unknown"
+                ["operationStatus"] = !bridgeSuccess ? "notCompleted" : operationSuccess == true ? "succeeded" : operationSuccess == false ? "failed"
+                    : "unknown"
             };
         }
 

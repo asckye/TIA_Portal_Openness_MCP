@@ -50,7 +50,8 @@ namespace TiaMcp.Adapters.Native.Plc
 
 #if PLC_DOCUMENT_EXPORT
         public PlcB5Reply ManagePlcBlockDocuments(string softwarePath, string action, string name = "", string groupPath = "",
-            string unitName = "", string unitKind = "unit", string directoryPath = "", string importOption = "Override", bool dryRun = true, bool verifyDocumentReadback = false)
+            string unitName = "", string unitKind = "unit", string directoryPath = "", string importOption = "Override", bool dryRun = true,
+                bool verifyDocumentReadback = false)
             => RunTool("ManagePlcBlockDocuments", meta => {
                 ValidateUnitKind(unitKind);
                 if (!new[] { "list", "read", "export", "import" }.Contains(action)) throw new ArgumentException("action: list/read/export/import.");
@@ -65,13 +66,16 @@ namespace TiaMcp.Adapters.Native.Plc
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 if (action == "list")
                 {
-                    meta["blocks"] = new PlcB5Array(EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>().Select(b => (object)new PlcB5Object { ["name"] = b.Name, ["isConsistent"] = b.IsConsistent }).ToArray());
+                    meta["blocks"] =
+                        new PlcB5Array(EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>()
+                            .Select(b => (object)new PlcB5Object { ["name"] = b.Name, ["isConsistent"] = b.IsConsistent }).ToArray());
                     return "Exact group blocks listed.";
                 }
                 var block = group.Blocks.Find(name);
                 if (action != "import" && block == null) throw new PortalException("NotFound", "Exact block not found: " + name);
                 if (action == "read") { meta["block"] = EngineeringScalarProperties.Read(block!); return "Exact block properties read."; }
-                if (!Path.IsPathRooted(directoryPath) || !Directory.Exists(directoryPath)) throw new ArgumentException("directoryPath must be an existing absolute directory on the server.");
+                if (!Path.IsPathRooted(directoryPath) || !Directory.Exists(directoryPath))
+                    throw new ArgumentException("directoryPath must be an existing absolute directory on the server.");
                 var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directoryPath));
                 if (action == "export")
                 {
@@ -81,8 +85,11 @@ namespace TiaMcp.Adapters.Native.Plc
                     var exported = InvocationJournal.Native("ScopedBlock.ExportAsDocuments", () => block!.ExportAsDocuments(directory, name));
                     meta["result"] = DocumentExportRow(exported);
                     NativeResultState.Record(meta, exported.State, false, messages: DocumentMessages(exported.Messages));
-                    meta["targetFiles"] = new PlcB5Array(new[] { ".s7dcl", ".s7res" }.Select(ext => (object)NativeResultState.FileRow(Path.Combine(directory.FullName, name + ext))).ToArray());
-                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(exported.State)) throw new PortalException("ExportFailed", "Document export did not return Success.");
+                    meta["targetFiles"] =
+                        new PlcB5Array(new[] { ".s7dcl", ".s7res" }
+                            .Select(ext => (object)NativeResultState.FileRow(Path.Combine(directory.FullName, name + ext))).ToArray());
+                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(exported.State))
+                        throw new PortalException("ExportFailed", "Document export did not return Success.");
                     return "Exact scoped block exported as SIMATIC SD; format limitations apply.";
                 }
                 var declaration = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directoryPath, name + ".s7dcl")));
@@ -94,28 +101,36 @@ namespace TiaMcp.Adapters.Native.Plc
                 var result = InvocationJournal.Native("ScopedBlock.ImportFromDocuments", () => group.Blocks.ImportFromDocuments(directory, name, option));
                 meta["result"] = DocumentImportRow(result, Names(result.ImportedPlcBlocks));
                 NativeResultState.Record(meta, result.State, true, messages: DocumentMessages(result.Messages));
-                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State)) throw new PortalException("ImportFailed", "Document import did not return Success; may have changed, inspect the native messages before retrying.");
+                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State))
+                    throw new PortalException("ImportFailed",
+                        "Document import did not return Success; may have changed, inspect the native messages before retrying.");
                 var imported = EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Select(b => b.Name).ToArray();
                 meta["existsVerified"] = ExactNamesPresent(imported, EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>().Select(b => b.Name));
                 if (meta["existsVerified"]!.GetValue<bool>() != true) throw new InvalidOperationException("Import returned but exact target readback failed.");
                 meta["contentVerified"] = null;
                 if (verifyDocumentReadback)
                 {
-                    if (imported.Length != 1) throw new InvalidOperationException("Import succeeded; automatic document comparison supports one native imported block only. Inspect all returned names.");
+                    if (imported.Length != 1)
+                        throw new InvalidOperationException("Import succeeded; automatic document comparison supports one native imported block only. " +
+                        "Inspect all returned names.");
                     var readbackDir = Directory.CreateDirectory(Path.Combine(directoryPath, "tia-readback-" + Guid.NewGuid().ToString("N")));
                     meta["mayHaveWrittenFiles"] = true; meta["readbackDirectory"] = readbackDir.FullName;
-                    var readback = InvocationJournal.Native("ScopedBlock.verifyExport", () => group.Blocks.Find(imported[0]).ExportAsDocuments(readbackDir, name));
+                    var readback = InvocationJournal
+                        .Native("ScopedBlock.verifyExport", () => group.Blocks.Find(imported[0]).ExportAsDocuments(readbackDir, name));
                     meta["verificationResult"] = DocumentExportRow(readback);
-                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(readback.State)) throw new InvalidOperationException("Import succeeded, but verification export failed.");
+                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(readback.State))
+                        throw new InvalidOperationException("Import succeeded, but verification export failed.");
                     var comparisons = new PlcB5Array(); bool equal = true;
                     foreach (var extension in new[] { ".s7dcl", ".s7res" })
                     {
                         string input = Path.Combine(directoryPath, name + extension), output = Path.Combine(readbackDir.FullName, name + extension);
-                        bool match = File.Exists(input) == File.Exists(output) && (!File.Exists(input) || NormalizeDocument(File.ReadAllText(input)) == NormalizeDocument(File.ReadAllText(output)));
+                        bool match = File.Exists(input) == File.Exists(output)
+                            && (!File.Exists(input) || NormalizeDocument(File.ReadAllText(input)) == NormalizeDocument(File.ReadAllText(output)));
                         comparisons.Add(new PlcB5Object { ["extension"] = extension, ["matches"] = match }); equal &= match;
                     }
                     meta["documentComparison"] = comparisons; meta["sdDocumentsMatch"] = equal;
-                    meta["comparisonScope"] = "Exact text after line-ending normalization; excludes properties not represented by SIMATIC SD. Readback files retained for review.";
+                    meta["comparisonScope"] =
+                        "Exact text after line-ending normalization; excludes properties not represented by SIMATIC SD. Readback files retained for review.";
                 }
                 return "Block documents imported into the exact root/unit group; existence verified; project not saved or compiled.";
             });

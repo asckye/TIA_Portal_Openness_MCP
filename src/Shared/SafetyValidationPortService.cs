@@ -45,7 +45,8 @@ internal sealed class SafetyValidationService
     private ResponseMessage Invoke(SafetyValidationRequest request)
     {
         if (request.Faults.Count != 0) request.Plan.Writes = OptionalEngineeringMutations.Writes(request);
-        var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = !(request.Plan.Writes || request.Plan.WritesFile) };
+        var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = !(request.Plan.Writes || request.Plan.WritesFile)
+        };
         if (request.Plan.Writes || request.Plan.WritesFile)
         {
             arguments["confirm"] = true;
@@ -54,37 +55,76 @@ internal sealed class SafetyValidationService
         var reply = _call("plc-safety.ExecuteSafetyValidation", arguments) ?? throw new InvalidOperationException("Missing Safety Validation worker reply.");
         return JsonSerializer.Deserialize<ResponseMessage>(reply.ToJsonString())!;
     }
-    public ResponseMessage ReadSafetyActivationTests(string groupPathJson = "[]", string name = "", bool includeSafetyFunctions = false, bool includeConditions = false, int offset = 0, int limit = 100)
+    public ResponseMessage ReadSafetyActivationTests(string groupPathJson = "[]", string name = "", bool includeSafetyFunctions = false,
+            bool includeConditions = false, int offset = 0, int limit = 100)
     {
-        var request = new SafetyValidationRequest { Operation = "ListSafetyActivationTests", Name = name, IncludeSafetyFunctions = includeSafetyFunctions, IncludeConditions = includeConditions, Offset = offset, Limit = limit };
+        var request = new SafetyValidationRequest {
+            Operation = "ListSafetyActivationTests", Name = name, IncludeSafetyFunctions = includeSafetyFunctions, IncludeConditions = includeConditions,
+                Offset = offset, Limit = limit
+        };
         Capture(request, "group", () => request.GroupPath = SafetyValidationLogic.ParseGroupPath(groupPathJson));
         return Invoke(request);
     }
-    public ResponseMessage ManageSafetyActivationTest(string name, string action = "read", string groupPathJson = "[]", string evaluationDeviceName = "", string sourceName = "", string masterCopyPath = "", string libraryName = "", string newValue = "", string filePath = "", string exportOptions = "", string documentInfoOptions = "", string importOptions = "", bool confirmDelete = false, bool dryRun = true)
+    public ResponseMessage ManageSafetyActivationTest(string name, string action = "read", string groupPathJson = "[]", string evaluationDeviceName = "",
+            string sourceName = "", string masterCopyPath = "", string libraryName = "", string newValue = "", string filePath = "", string exportOptions = "",
+            string documentInfoOptions = "", string importOptions = "", bool confirmDelete = false, bool dryRun = true)
     {
-        var request = new SafetyValidationRequest { Operation = "ManageSafetyActivationTest", Name = name, Action = action, EvaluationDeviceName = evaluationDeviceName, SourceName = sourceName, MasterCopyPath = masterCopyPath, LibraryName = libraryName, NewValue = newValue, FilePath = filePath, ExportOptions = exportOptions, DocumentInfoOptions = documentInfoOptions, ImportOptions = importOptions, ConfirmDelete = confirmDelete, DryRun = dryRun };
-        Capture(request, "plan", () => { var plan = SafetyValidationLogic.ValidateActivationTestRequest(action, name, evaluationDeviceName, sourceName, masterCopyPath, newValue, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun); request.Plan = Plan(plan); });
+        var request = new SafetyValidationRequest {
+            Operation = "ManageSafetyActivationTest", Name = name, Action = action, EvaluationDeviceName = evaluationDeviceName, SourceName = sourceName,
+                MasterCopyPath = masterCopyPath, LibraryName = libraryName, NewValue = newValue, FilePath = filePath, ExportOptions = exportOptions,
+                DocumentInfoOptions = documentInfoOptions, ImportOptions = importOptions, ConfirmDelete = confirmDelete, DryRun = dryRun
+        };
+        Capture(request, "plan", () => {
+                var plan = SafetyValidationLogic
+                    .ValidateActivationTestRequest(action, name, evaluationDeviceName, sourceName, masterCopyPath, newValue, filePath, exportOptions,
+                        documentInfoOptions, importOptions, confirmDelete, dryRun);
+                request.Plan = Plan(plan);
+            });
         Capture(request, "group", () => request.GroupPath = SafetyValidationLogic.ParseGroupPath(groupPathJson));
         return Invoke(request);
     }
-    public ResponseMessage ManageSafetyActivationTestGroup(string action = "read", string groupPathJson = "[]", string name = "", string masterCopyPath = "", string libraryName = "", string newName = "", bool confirmDelete = false, bool dryRun = true)
+    public ResponseMessage ManageSafetyActivationTestGroup(string action = "read", string groupPathJson = "[]", string name = "", string masterCopyPath = "",
+            string libraryName = "", string newName = "", bool confirmDelete = false, bool dryRun = true)
     {
-        var request = new SafetyValidationRequest { Operation = "ManageSafetyActivationTestGroup", Action = action, Name = name, MasterCopyPath = masterCopyPath, LibraryName = libraryName, NewName = newName, ConfirmDelete = confirmDelete, DryRun = dryRun };
-        Capture(request, "plan", () => { var plan = SafetyValidationLogic.ValidateGroupRequest(action, name, masterCopyPath, newName, confirmDelete, dryRun); request.Plan = Plan(plan); });
+        var request = new SafetyValidationRequest {
+            Operation = "ManageSafetyActivationTestGroup", Action = action, Name = name, MasterCopyPath = masterCopyPath, LibraryName = libraryName, NewName =
+                newName, ConfirmDelete = confirmDelete, DryRun = dryRun
+        };
+        Capture(request, "plan", () => {
+                var plan = SafetyValidationLogic.ValidateGroupRequest(action, name, masterCopyPath, newName, confirmDelete, dryRun); request.Plan = Plan(plan);
+            });
         Capture(request, "group", () => request.GroupPath = SafetyValidationLogic.ParseGroupPath(groupPathJson));
         return Invoke(request);
     }
-    public ResponseMessage ManageSafetyFunction(string activationTest, string action = "read", string groupPathJson = "[]", string name = "", string sourceName = "", string propertiesJson = "{}", string filePath = "", string exportOptions = "", string documentInfoOptions = "", string importOptions = "", bool confirmDelete = false, bool dryRun = true)
+    public ResponseMessage ManageSafetyFunction(string activationTest, string action = "read", string groupPathJson = "[]", string name = "",
+            string sourceName = "", string propertiesJson = "{}", string filePath = "", string exportOptions = "", string documentInfoOptions = "",
+            string importOptions = "", bool confirmDelete = false, bool dryRun = true)
     {
-        var request = new SafetyValidationRequest { Operation = "ManageSafetyFunction", ActivationTest = activationTest, Action = action, Name = name, SourceName = sourceName, FilePath = filePath, ExportOptions = exportOptions, DocumentInfoOptions = documentInfoOptions, ImportOptions = importOptions, ConfirmDelete = confirmDelete, DryRun = dryRun };
-        Capture(request, "plan", () => { var plan = SafetyValidationLogic.ValidateSafetyFunctionRequest(action, name, sourceName, propertiesJson, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun); request.Plan = Plan(plan, plan.Properties); });
+        var request = new SafetyValidationRequest {
+            Operation = "ManageSafetyFunction", ActivationTest = activationTest, Action = action, Name = name, SourceName = sourceName, FilePath = filePath,
+                ExportOptions = exportOptions, DocumentInfoOptions = documentInfoOptions, ImportOptions = importOptions, ConfirmDelete = confirmDelete, DryRun =
+                dryRun
+        };
+        Capture(request, "plan", () => {
+                var plan = SafetyValidationLogic
+                    .ValidateSafetyFunctionRequest(action, name, sourceName, propertiesJson, filePath, exportOptions, documentInfoOptions, importOptions,
+                        confirmDelete, dryRun);
+                request.Plan = Plan(plan, plan.Properties);
+            });
         Capture(request, "group", () => request.GroupPath = SafetyValidationLogic.ParseGroupPath(groupPathJson));
         return Invoke(request);
     }
-    public ResponseMessage ManageSafetyFunctionCondition(string activationTest, string safetyFunction, string action = "read", string groupPathJson = "[]", int index = -1, string deviceName = "", string signalUsage = "", string signalName = "", string propertiesJson = "{}", bool dryRun = true)
+    public ResponseMessage ManageSafetyFunctionCondition(string activationTest, string safetyFunction, string action = "read", string groupPathJson = "[]",
+            int index = -1, string deviceName = "", string signalUsage = "", string signalName = "", string propertiesJson = "{}", bool dryRun = true)
     {
-        var request = new SafetyValidationRequest { Operation = "ManageSafetyFunctionCondition", ActivationTest = activationTest, SafetyFunction = safetyFunction, Action = action, Index = index, DeviceName = deviceName, SignalUsage = signalUsage, SignalName = signalName, DryRun = dryRun };
-        Capture(request, "plan", () => { var plan = SafetyValidationLogic.ValidateConditionRequest(action, index, deviceName, signalUsage, signalName, propertiesJson, dryRun); request.Plan = Plan(plan, plan.Properties); });
+        var request = new SafetyValidationRequest {
+            Operation = "ManageSafetyFunctionCondition", ActivationTest = activationTest, SafetyFunction = safetyFunction, Action = action, Index = index,
+                DeviceName = deviceName, SignalUsage = signalUsage, SignalName = signalName, DryRun = dryRun
+        };
+        Capture(request, "plan", () => {
+                var plan = SafetyValidationLogic.ValidateConditionRequest(action, index, deviceName, signalUsage, signalName, propertiesJson, dryRun); request
+                    .Plan = Plan(plan, plan.Properties);
+            });
         Capture(request, "group", () => request.GroupPath = SafetyValidationLogic.ParseGroupPath(groupPathJson));
         return Invoke(request);
     }

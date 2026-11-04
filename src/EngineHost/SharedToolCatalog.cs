@@ -31,7 +31,8 @@ namespace TiaMcp.FoundationHost
         {
             BehaviorCapabilities = engine.BehaviorCapabilities;
             var all = engine.All.Where(p => !SharedToolPolicy.Removed.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
-            var unavailable = engine.IncludingUnavailable.Where(p => !SharedToolPolicy.Removed.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
+            var unavailable = engine.IncludingUnavailable.Where(p => !SharedToolPolicy.Removed.Contains(p.Key))
+                .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
             foreach (var implementation in shared)
             {
                 var tool = implementation.ProtocolTool;
@@ -45,7 +46,8 @@ namespace TiaMcp.FoundationHost
                     continue;
                 }
                 var required = tool.InputSchema.TryGetProperty("required", out var requiredSchema)
-                    ? requiredSchema.EnumerateArray().Select(n => n.GetString()!).ToHashSet(StringComparer.Ordinal) : new HashSet<string>(StringComparer.Ordinal);
+                    ? requiredSchema.EnumerateArray().Select(n => n.GetString()!).ToHashSet(StringComparer.Ordinal)
+                        : new HashSet<string>(StringComparer.Ordinal);
                 var parameters = tool.InputSchema.GetProperty("properties").EnumerateObject().Select(p => {
                     string type = p.Value.TryGetProperty("type", out var t) ? t.GetString()! : "object";
                     string? fallback = p.Value.TryGetProperty("default", out var d) ? d.GetRawText() : null;
@@ -53,7 +55,8 @@ namespace TiaMcp.FoundationHost
                         "string" => typeof(string).FullName!, "integer" => typeof(int).FullName!, "boolean" => typeof(bool).FullName!,
                         "array" => typeof(JsonElement).FullName!,
                         _ => typeof(TiaMcp.Logic.V4.Inputs.ToolArguments).FullName! }, required.Contains(p.Name), fallback,
-                        fallback == null ? null : d.ToString(), p.Value.TryGetProperty("description", out var description) ? description.GetString()! : "", false,
+                        fallback == null ? null : d.ToString(), p.Value.TryGetProperty("description", out var description) ? description.GetString()! : "",
+                            false,
                         p.Value.TryGetProperty("enum", out var values) ? values.EnumerateArray().Select(v => v.ToString()).ToArray() : Array.Empty<string>());
                 }).ToArray();
                 var descriptor = new ToolDescriptor(tool.Name, tool.Description ?? "", tool, SharedClassification(tool),

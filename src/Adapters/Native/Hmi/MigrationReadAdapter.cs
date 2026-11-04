@@ -40,7 +40,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     var projectName = MigrationRead.Get(project, "Name")?.ToString();
                     if (projectName != expectedProject) throw new InvalidOperationException("Exact expectedProject mismatch; collection was not started.");
                     var hmi = _session.ResolveHmiSoftwareOrThrow(softwarePath);
-                    if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Resolved software is not WinCC Unified HmiSoftware: " + hmi.GetType().FullName);
+                    if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware")
+                        throw new NotSupportedException("Resolved software is not WinCC Unified HmiSoftware: " + hmi.GetType().FullName);
                     result = _session.MigrationPages.Read(project, scope, cursor, pageSize, budgetMs, () => read(hmi), expectedCount);
                 }
             }
@@ -59,58 +60,87 @@ namespace TiaMcp.Adapters.Native.Hmi
                 result["connectionUnavailable"] = true; result["remoteInspectionStopped"] = true;
                 _session.RecordHmiReadFault(result);
             }
-            return new HmiMessage { Message = "Read-only collection. apiCallSuccess and dataComplete are separate; inspect failures and nextCursor.", Meta = result };
+            return new HmiMessage {
+                Message = "Read-only collection. apiCallSuccess and dataComplete are separate; inspect failures and nextCursor.", Meta = result };
         }
         public HmiMessage ListUnifiedGlobalScripts(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => MigrationPage("ListUnifiedGlobalScripts", softwarePath, expectedProject, new HmiObject(), cursor, pageSize, budgetMs, UnifiedNativeRead.ListScripts);
-        public HmiMessage ReadUnifiedGlobalScript(string softwarePath, string expectedProject, string moduleName, string cursor = "", int pageSize = 50, int budgetMs = 5000)
-            => MigrationPage("ReadUnifiedGlobalScript", softwarePath, expectedProject, new HmiObject { ["moduleName"] = moduleName }, cursor, pageSize, budgetMs, hmi => UnifiedNativeRead.Script(hmi, moduleName));
+            =>
+                MigrationPage("ListUnifiedGlobalScripts", softwarePath, expectedProject, new HmiObject(), cursor, pageSize, budgetMs, UnifiedNativeRead
+                    .ListScripts);
+        public HmiMessage ReadUnifiedGlobalScript(string softwarePath, string expectedProject, string moduleName, string cursor = "", int pageSize = 50,
+                int budgetMs = 5000)
+            =>
+                MigrationPage("ReadUnifiedGlobalScript", softwarePath, expectedProject, new HmiObject { ["moduleName"] = moduleName }, cursor, pageSize,
+                    budgetMs, hmi => UnifiedNativeRead.Script(hmi, moduleName));
         public HmiMessage ReadUnifiedTagDefinitions(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => MigrationPage("ReadUnifiedTagDefinitions", softwarePath, expectedProject, new HmiObject(), cursor, pageSize, budgetMs, UnifiedTagDefinitions.Read);
-        public HmiMessage ReadUnifiedScreenBranch(string softwarePath, string expectedProject, string screenPath, string itemName = "", string branchJson = "[]", string cursor = "", int pageSize = 100, int budgetMs = 5000)
+            =>
+                MigrationPage("ReadUnifiedTagDefinitions", softwarePath, expectedProject, new HmiObject(), cursor, pageSize, budgetMs, UnifiedTagDefinitions
+                    .Read);
+        public HmiMessage ReadUnifiedScreenBranch(string softwarePath, string expectedProject, string screenPath, string itemName = "", string branchJson =
+                "[]", string cursor = "", int pageSize = 100, int budgetMs = 5000)
         {
             MigrationRead.ParseBranch(branchJson);
-            return MigrationPage("ReadUnifiedScreenBranch", softwarePath, expectedProject, new HmiObject { ["screenPath"] = screenPath, ["itemName"] = itemName, ["branch"] = branchJson }, cursor, pageSize, budgetMs,
+            return MigrationPage("ReadUnifiedScreenBranch", softwarePath, expectedProject, new HmiObject {
+                    ["screenPath"] = screenPath, ["itemName"] = itemName, ["branch"] = branchJson }, cursor, pageSize, budgetMs,
                 hmi => ScreenBranch(hmi, screenPath, itemName, branchJson));
         }
         private static IEnumerable<HmiObject> ScreenBranch(object hmi, string screenPath, string itemName, string branchJson)
         {
             object root = MigrationRead.Screen(hmi, screenPath);
             var path = "/Screens" + screenPath;
-            if (!string.IsNullOrEmpty(itemName)) { root = MigrationRead.Named(MigrationRead.Get(root, "ScreenItems")!, itemName); path += "/ScreenItems/" + MigrationRead.Segment(itemName); }
+            if (!string.IsNullOrEmpty(itemName)) {
+                root = MigrationRead.Named(MigrationRead.Get(root, "ScreenItems")!, itemName); path += "/ScreenItems/" + MigrationRead.Segment(itemName); }
             var branch = MigrationRead.Branch(root, branchJson);
-            yield return new HmiObject { ["path"] = path, ["kind"] = "branchSelection", ["status"] = "ok", ["branch"] = UnifiedRequestValues.Parse(branchJson), ["evidenceRoot"] = path + "/$selected" };
+            yield return new HmiObject {
+                ["path"] = path, ["kind"] = "branchSelection", ["status"] = "ok", ["branch"] = UnifiedRequestValues.Parse(branchJson), ["evidenceRoot"] = path
+                    + "/$selected"
+            };
             foreach (var row in MigrationRead.Graph(branch, path + "/$selected")) yield return row;
-            if (branch != null && branch.GetType().Name == "HmiFaceplateContainer") yield return UnifiedNativeRead.InstanceLink(branch, path + "/$libraryVersion");
+            if (branch != null && branch.GetType().Name == "HmiFaceplateContainer") yield return UnifiedNativeRead
+                .InstanceLink(branch, path + "/$libraryVersion");
         }
-        public HmiMessage ReadUnifiedLibraryType(string softwarePath, string expectedProject, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => MigrationPage("ReadUnifiedLibraryType", softwarePath, expectedProject, new HmiObject { ["typePath"] = typePath, ["version"] = version }, cursor, pageSize, budgetMs,
+        public HmiMessage ReadUnifiedLibraryType(string softwarePath, string expectedProject, string typePath, string version, string cursor = "",
+                int pageSize = 100, int budgetMs = 5000)
+            =>
+                MigrationPage("ReadUnifiedLibraryType", softwarePath, expectedProject, new HmiObject { ["typePath"] = typePath, ["version"] = version }, cursor,
+                    pageSize, budgetMs,
                 hmi => UnifiedNativeRead.LibraryType(MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, typePath, version));
-        public HmiMessage ListUnifiedLibraryFolder(string softwarePath, string expectedProject, string folderPath = "/", string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => MigrationPage("ListUnifiedLibraryFolder", softwarePath, expectedProject, new HmiObject { ["folderPath"] = folderPath }, cursor, pageSize, budgetMs,
+        public HmiMessage ListUnifiedLibraryFolder(string softwarePath, string expectedProject, string folderPath = "/", string cursor = "", int pageSize = 100,
+                int budgetMs = 5000)
+            =>
+                MigrationPage("ListUnifiedLibraryFolder", softwarePath, expectedProject, new HmiObject { ["folderPath"] = folderPath }, cursor, pageSize,
+                    budgetMs,
                 hmi => LibraryFolder(MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, folderPath));
         private static IEnumerable<HmiObject> LibraryFolder(object library, string path)
         {
             EngineeringInputValidation.AbsoluteHmiPath(path, rootAllowed: true);
             var folder = MigrationRead.Get(library, "TypeFolder")!;
-            if (path != "/") foreach (var name in path.Substring(1).Split('/')) folder = MigrationRead.Named(MigrationRead.Get(folder, "Folders")!, Uri.UnescapeDataString(name));
+            if (path != "/") foreach (var name in path.Substring(1).Split('/')) folder = MigrationRead
+                .Named(MigrationRead.Get(folder, "Folders")!, Uri.UnescapeDataString(name));
             foreach (var prop in new[] { "Folders", "Types" })
                 foreach (var row in MigrationRead.Property(folder, prop, "/ProjectLibrary" + path.TrimEnd('/') + "/" + prop,
                     (v, p) => MigrationRead.Collection(v!, p, (item, q) => LibraryIdentity(item, q)))) yield return row;
         }
         private static IEnumerable<HmiObject> LibraryIdentity(object item, string path)
         {
-            yield return new HmiObject { ["path"] = path, ["kind"] = "libraryInventory", ["status"] = "ok", ["name"] = MigrationRead.Get(item, "Name")?.ToString(), ["type"] = item.GetType().FullName };
+            yield return new HmiObject {
+                ["path"] = path, ["kind"] = "libraryInventory", ["status"] = "ok", ["name"] = MigrationRead.Get(item, "Name")?.ToString(), ["type"] = item
+                    .GetType().FullName
+            };
             if (item.GetType().GetProperty("Versions") != null)
-                foreach (var row in MigrationRead.Property(item, "Versions", path + "/Versions", (v, p) => MigrationRead.Collection(v!, p, VersionIdentity))) yield return row;
+                foreach (var row in MigrationRead.Property(item, "Versions", path + "/Versions", (v, p) => MigrationRead.Collection(v!, p, VersionIdentity)))
+                    yield return row;
         }
         private static IEnumerable<HmiObject> VersionIdentity(object version, string path)
         {
             foreach (var name in new[] { "VersionNumber", "Guid", "State" })
                 foreach (var row in MigrationRead.Property(version, name, path + "/" + name, (v, p) => MigrationRead.Graph(v, p))) yield return row;
         }
-        public HmiMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath = "", string version = "", string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => MigrationPage("ReadUnifiedFaceplateInstance", softwarePath, expectedProject, new HmiObject { ["screenPath"] = screenPath, ["itemName"] = itemName, ["typePath"] = typePath, ["version"] = version }, cursor, pageSize, budgetMs,
+        public HmiMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath = "",
+                string version = "", string cursor = "", int pageSize = 100, int budgetMs = 5000)
+            =>
+                MigrationPage("ReadUnifiedFaceplateInstance", softwarePath, expectedProject, new HmiObject {
+                    ["screenPath"] = screenPath, ["itemName"] = itemName, ["typePath"] = typePath, ["version"] = version }, cursor, pageSize, budgetMs,
                 hmi => FaceplateInstance(hmi, MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, screenPath, itemName, typePath, version));
         private static IEnumerable<HmiObject> FaceplateInstance(object hmi, object library, string screenPath, string itemName, string typePath, string version)
         {
@@ -131,12 +161,16 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ["instancePath"] = path, ["interfaceAssignmentsPath"] = path + "/Interface", ["typePath"] = string.IsNullOrEmpty(typePath) ? null : typePath,
                 ["typeName"] = link["typeName"], ["typeGuid"] = link["typeGuid"], ["version"] = link["version"],
                 ["typeVersionGuid"] = selectedGuid, ["instanceVersionVerified"] = matched,
-                ["reason"] = matched ? null : linkedVersion == null ? link["reason"] ?? link["error"] : "Optional typePath/version constraint differs from the instance's connected library version; internals were not exported.",
+                ["reason"] = matched ? null : linkedVersion == null ? link["reason"] ?? link["error"]
+                    : "Optional typePath/version constraint differs from the instance's connected library version; internals were not exported.",
                 ["bindingResolution"] = "Raw interface values and native internal binding paths; dynamic expressions require resolution." };
             if (!matched) yield break;
             foreach (var row in UnifiedNativeRead.LibraryVersion(linkedVersion!, path + "/$connectedLibraryVersion")) yield return row;
         }
         public HmiMessage ReleaseUnifiedReadCursor(string cursor)
-            => new HmiMessage { Message = "Collection state released; no TIA project or process was closed.", Meta = HmiMeta.Unstamped(true, ("readOnly", true), ("released", _session.MigrationPages.Cancel(cursor))) };
+            => new HmiMessage {
+                Message = "Collection state released; no TIA project or process was closed.", Meta = HmiMeta
+                    .Unstamped(true, ("readOnly", true), ("released", _session.MigrationPages.Cancel(cursor)))
+            };
     }
 }

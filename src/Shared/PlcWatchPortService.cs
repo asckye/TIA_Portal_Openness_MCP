@@ -14,7 +14,8 @@ namespace TiaMcpServer.Siemens.Services
         {
             var report = reply["Report"]!.AsObject();
             return new ResponseJsonReport { Ok = (bool?)report["Ok"], Message = (string?)report["Message"], Data = report["Data"]?.DeepClone() as JsonObject,
-                Meta = report["Meta"]?.DeepClone() as JsonObject, Warnings = report["Warnings"] == null ? null : JsonSerializer.Deserialize<string[]>(report["Warnings"]!.ToJsonString()) };
+                Meta = report["Meta"]?.DeepClone() as JsonObject, Warnings = report["Warnings"] == null ? null : JsonSerializer
+                    .Deserialize<string[]>(report["Warnings"]!.ToJsonString()) };
         }
         public List<string>? GetPlcForceTables(string softwarePath)
         {
@@ -27,25 +28,42 @@ namespace TiaMcpServer.Siemens.Services
         private string forceTablePathsSuffix = "";
         public string ForceTablePathsSuffix() => forceTablePathsSuffix;
         public ResponseImportBatch ExportPlcWatchTablesToDirectory(string softwarePath, string dir, string regexName = "")
-            => TechnologyBatch(Invoke(new PlcSoftwareRequest { Operation = "ExportPlcWatchTablesToDirectory", SoftwarePath = softwarePath, FilePath = dir, RegexName = regexName }));
+            =>
+                TechnologyBatch(Invoke(new PlcSoftwareRequest {
+                        Operation = "ExportPlcWatchTablesToDirectory", SoftwarePath = softwarePath, FilePath = dir, RegexName = regexName }));
         public ResponseMessage EnsureWatchTableEntry(string softwarePath, string tableName, string address, string modifyValue, string trigger = "Permanent")
-            => OrganisationStep(new PlcSoftwareRequest { Operation = "SetPlcWatchTableModifyValue", SoftwarePath = softwarePath, Path = tableName, AddressOrValue = address, Value = new HardwareScalar { Kind = "string", Text = modifyValue }, GenerateOption = trigger, DryRun = false });
+            =>
+                OrganisationStep(new PlcSoftwareRequest {
+                    Operation = "SetPlcWatchTableModifyValue", SoftwarePath = softwarePath, Path = tableName, AddressOrValue = address, Value =
+                        new HardwareScalar { Kind = "string", Text = modifyValue }, GenerateOption = trigger, DryRun = false
+                });
         public ResponseMessage ImportPlcWatchTableOffline(string softwarePath, string filePath, string groupPath = "", bool dryRun = true)
-            => OrganisationStep(new PlcSoftwareRequest { Operation = "ImportPlcWatchTableOffline", SoftwarePath = softwarePath, FilePath = filePath, GroupPath = groupPath, DryRun = dryRun });
-        public ResponseMessage ManagePlcTableEntries(string softwarePath, string tableKind, string tablePath, string action = "read", int entryIndex = -1, bool confirmDelete = false, bool dryRun = true, int offset = 0, int limit = 200)
-            => OrganisationStep(new PlcSoftwareRequest { Operation = "ManagePlcTableEntries", SoftwarePath = softwarePath, Kind = tableKind, Path = tablePath, Action = action, EntryIndex = entryIndex, Confirm = confirmDelete, DryRun = dryRun, Offset = offset, Limit = limit });
+            =>
+                OrganisationStep(new PlcSoftwareRequest {
+                    Operation = "ImportPlcWatchTableOffline", SoftwarePath = softwarePath, FilePath = filePath, GroupPath = groupPath, DryRun = dryRun });
+        public ResponseMessage ManagePlcTableEntries(string softwarePath, string tableKind, string tablePath, string action = "read", int entryIndex = -1,
+                bool confirmDelete = false, bool dryRun = true, int offset = 0, int limit = 200)
+            =>
+                OrganisationStep(new PlcSoftwareRequest {
+                    Operation = "ManagePlcTableEntries", SoftwarePath = softwarePath, Kind = tableKind, Path = tablePath, Action = action, EntryIndex =
+                        entryIndex, Confirm = confirmDelete, DryRun = dryRun, Offset = offset, Limit = limit
+                });
         public ResponseJsonReport ReadPlcWatchTableCurrentValuesReadOnly(string softwarePath, string watchTableName, int maxEntries = 50)
-            => WatchReport(Invoke(new PlcSoftwareRequest { Operation = "GetPlcWatchTableCurrentValuesReadOnly", SoftwarePath = softwarePath, Path = watchTableName, Limit = maxEntries }));
+            =>
+                WatchReport(Invoke(new PlcSoftwareRequest {
+                        Operation = "GetPlcWatchTableCurrentValuesReadOnly", SoftwarePath = softwarePath, Path = watchTableName, Limit = maxEntries }));
         public ResponseJsonReport ProbePlcMonitorOnlineCapabilities(string softwarePath)
             => WatchReport(Invoke(new PlcSoftwareRequest { Operation = "ProbePlcMonitorOnlineCapabilities", SoftwarePath = softwarePath }));
         public ResponseJsonReport TraceTagCause(string softwarePath, string tag, string blockScope = "")
             => WatchReport(Invoke(new PlcSoftwareRequest { Operation = "TraceTagCause", SoftwarePath = softwarePath, Name = tag, RegexName = blockScope }));
-        public ResponseJsonReport MonitorWatchTableLiveS7(string softwarePath, string watchTableName, string ip, int rack = 0, int slot = 1, string expectModuleContains = "")
+        public ResponseJsonReport MonitorWatchTableLiveS7(string softwarePath, string watchTableName, string ip, int rack = 0, int slot = 1,
+                string expectModuleContains = "")
         {
             var reply = Invoke(new PlcSoftwareRequest { Operation = "MonitorPlcWatchTableS7", SoftwarePath = softwarePath, Path = watchTableName, Ip = ip });
             var report = WatchReport(reply); if (report.Ok != true || report.Data == null || report.Message != null) return report;
             var data = report.Data;
-            var rows = JsonSerializer.Deserialize<PlcWatchRow[]>(reply["Report"]!["Rows"]!.ToJsonString())!.Select(r => (name: r.Name, address: r.Address, fmt: r.Format)).ToList();
+            var rows = JsonSerializer.Deserialize<PlcWatchRow[]>(reply["Report"]!["Rows"]!.ToJsonString())!
+                .Select(r => (name: r.Name, address: r.Address, fmt: r.Format)).ToList();
             // Build S7 specs for resolvable absolute addresses.
             var specs = new List<string>();
             var specToRow = new Dictionary<string, (string name, string address)>();
@@ -55,7 +73,9 @@ namespace TiaMcpServer.Siemens.Services
                 string? spec = S7LiveReader.TiaAddressToSpec(r.address, r.fmt);
                 if (spec == null)
                 {
-                    unresolved.Add(new JsonObject { ["name"] = r.name, ["address"] = r.address, ["reason"] = "symbolic / optimized / no absolute address — use OPC UA" });
+                    unresolved
+                        .Add(new JsonObject {
+                            ["name"] = r.name, ["address"] = r.address, ["reason"] = "symbolic / optimized / no absolute address — use OPC UA" });
                     continue;
                 }
                 if (!specToRow.ContainsKey(spec)) { specs.Add(spec); specToRow[spec] = (r.name, r.address); }

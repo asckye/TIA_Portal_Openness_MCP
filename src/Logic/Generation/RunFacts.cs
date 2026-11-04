@@ -23,16 +23,20 @@ namespace TiaMcp.Logic.Generation
             }
         }
         public JsonNode? Resolve(string key) => values.TryGetValue(key, out var value) ? value?.DeepClone() : null;
-        public string[] Sources(string software) => sources.TryGetValue(software, out var set) ? set.OrderBy(s => s, StringComparer.Ordinal).ToArray() : Array.Empty<string>();
-        public string[] Objects(string software) => objects.TryGetValue(software, out var set) ? set.OrderBy(s => s, StringComparer.Ordinal).ToArray() : Array.Empty<string>();
+        public string[] Sources(string software) => sources.TryGetValue(software, out var set) ? set.OrderBy(s => s, StringComparer.Ordinal).ToArray() : Array
+            .Empty<string>();
+        public string[] Objects(string software) => objects.TryGetValue(software, out var set) ? set.OrderBy(s => s, StringComparer.Ordinal).ToArray() : Array
+            .Empty<string>();
         public string? SourceIdentity(string software, string source) => identities.TryGetValue(software + "/" + source, out var value) ? value : null;
-        public bool Imported(string software, string source) => values.Any(v => v.Key.EndsWith(".imported", StringComparison.Ordinal) && v.Value?.ToString() == software + "/" + source);
+        public bool Imported(string software, string source) => values
+            .Any(v => v.Key.EndsWith(".imported", StringComparison.Ordinal) && v.Value?.ToString() == software + "/" + source);
         public JsonObject CapturePreview(GenerationPlanStepsItem step, JsonObject projection)
         {
             var added = new JsonObject();
             if (step.Review?.Rule == StepReviewRules.Generate)
             {
-                string software = (string)projection["softwarePath"]!, source = (string)projection["sourceName"]!, identity = (string)projection["sourceIdentity"]!;
+                string software = (string)projection["softwarePath"]!, source = (string)projection["sourceName"]!, identity =
+                    (string)projection["sourceIdentity"]!;
                 identities[software + "/" + source] = identity;
                 Put("sourceIdentity", JsonValue.Create(identity));
             }

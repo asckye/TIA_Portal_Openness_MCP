@@ -21,7 +21,9 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ListVersionControlWorkspaces"), Description(
             "[L1][VersionControl] List this project's version control (VCI) workspaces: name, folder on disk, " +
             "language, and how many objects are mapped. A workspace is the plain-text mirror of the project " +
-            "that Git can actually diff and commit. Read-only. Workspace and mapping deletion, user-group creation and library-property configuration are not exposed. Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
+            "that Git can actually diff and commit. Read-only. Workspace and mapping deletion, user-group creation and library-property configuration are " +
+                "not exposed. Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending."
+                + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ListVersionControlWorkspacesV4()
             => LibraryToolContract.Run("ListVersionControlWorkspaces", false, true, () =>
             {
@@ -36,10 +38,12 @@ namespace TiaMcpServer.ModelContextProtocol
             "tree of a Git repository, so every synchronized export lands where Git can commit it. " +
             "Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace " +
             "afterwards to map the whole project (or one device) automatically. Workspace-language selection at creation is not exposed. " +
-            "Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
+            "Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending."
+                + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateVersionControlWorkspaceV4(
             [Description("workspaceName: name shown in the TIA project tree, e.g. 'git'.")] string workspaceName,
-            [Description("folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working tree.")] string folderPath)
+            [Description("folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working " +
+                "tree.")] string folderPath)
             => LibraryToolContract.Run("CreateVersionControlWorkspace", true, true, () =>
             {
                 return CreateVersionControlWorkspace(workspaceName, folderPath);
@@ -54,7 +58,9 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L1][VersionControl] Per-object status of a VCI workspace: which mapped objects differ between the " +
             "TIA project and the text files on disk. This is the input for a change log — it names exactly what " +
             "changed before you commit. Read-only, changes nothing. Hierarchical child status and InitializeStatus are not exposed. " +
-            "Status values: Equal (in sync), Unequal (project and file differ), WorkspaceFileMissing (never exported), Unknown. Current native policy; V4 native acceptance is pending." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
+            "Status values: Equal (in sync), Unequal (project and file differ), WorkspaceFileMissing (never exported), Unknown. Current native policy; V4 " +
+                "native acceptance is pending."
+                + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GetVersionControlStatusV4(
             [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",
             [Description("changedOnly: default true — list only objects that are NOT in sync. false lists every mapped object.")] bool changedOnly = true)
@@ -77,7 +83,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("direction: 'ProjectToWorkspace' exports; this build refuses 'WorkspaceToProject'.")] string direction = "ProjectToWorkspace",
             [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",
             [Description("dryRun: DEFAULT true — only reports what would change. Pass false to actually synchronize.")] bool dryRun = true,
-            [Description("changedOnly: default true — synchronize only objects whose status is not Equal. false forces every mapped object.")] bool changedOnly = true)
+            [Description("changedOnly: default true — synchronize only objects whose status is not Equal. false forces every mapped object.")] bool changedOnly =
+                true)
             => LibraryToolContract.Run("SynchronizeVersionControlWorkspace", !dryRun, true, () =>
             {
                 return SyncVersionControlWorkspace(direction, workspaceName, dryRun, changedOnly);
@@ -93,7 +100,9 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ConnectProjectToWorkspace"), Description(
             "[L2][VersionControl] Put a WHOLE project under version control automatically - no TIA UI clicks. " +
             "Walks the project tree; V20+ queries Workspace.GetSupportedFileFormats, while V16-V19 maps PLC blocks/types/tag tables. " +
-            "Maps supported objects using Workspace.ExportObject at the workspace root on V20+; V16-V19 uses WorkspaceMapping.Create. Connecting existing files with ConnectObject is not exposed. COARSE-FIRST: when a device or PLC " +
+            "Maps supported objects using Workspace.ExportObject at the workspace root on V20+; V16-V19 uses WorkspaceMapping.Create. Connecting existing " +
+                "files with ConnectObject is not exposed. COARSE-FIRST: when a device or PLC "
+                +
             "software object is mappable as one unit it is mapped whole and its children are not visited, so you " +
             "get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware " +
             "configuration) are reported, never silently dropped. " +
@@ -101,7 +110,9 @@ namespace TiaMcpServer.ModelContextProtocol
             "name is localized); a root-level device or device group that already uses that folder name is refused before anything is " +
             "mapped, and an ungrouped device that VCI refuses is reported as a failure. " +
             "DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. " +
-            "After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native acceptance is pending." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
+            "After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native " +
+                "acceptance is pending."
+                + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectProjectToWorkspaceV4(
             [Description("workspaceName: which workspace to map into. Empty = the first one in the project.")] string workspaceName = "",
             [Description("dryRun: DEFAULT true - reports what would be mapped and changes nothing. Pass false to actually map.")] bool dryRun = true,

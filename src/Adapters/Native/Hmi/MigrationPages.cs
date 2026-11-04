@@ -54,8 +54,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (string.IsNullOrEmpty(cursor))
                 {
                     if (sessions.Values.Count(p => p.Iterator != null) >= ActiveCapacity)
-                        throw new InvalidOperationException("CursorCapacity: 16 collections are still active. Complete or release an unfinished collection; completed replay caches do not consume active capacity.");
-                    s = new Session { Project = project, ProjectIdentity = new WeakReference(project), Scope = scopeKey, Id = Guid.NewGuid().ToString("N"), Used = now(), Expected = expected };
+                        throw new InvalidOperationException("CursorCapacity: 16 collections are still active. Complete or release an unfinished collection; " +
+                            "completed replay caches do not consume active capacity.");
+                    s = new Session {
+                        Project = project, ProjectIdentity = new WeakReference(project), Scope = scopeKey, Id = Guid.NewGuid().ToString("N"), Used = now(),
+                            Expected = expected
+                    };
                     // The factory must be lazy; no traversal before the first page.
                     s.Iterator = factory().GetEnumerator(); sessions.Add(s.Id, s);
                 }
@@ -103,7 +107,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     ["readFailureCount"] = s.ReadFailures, ["classificationFailureCount"] = s.ClassificationFailures,
                     ["traversalComplete"] = finished && !aborted, ["truncated"] = !finished || aborted,
                     ["expectedCount"] = s.Expected.HasValue ? HmiValues.Value(s.Expected.Value) : null,
-                    ["countUnit"] = "evidence records (not tags or screens)", ["expectedCountReason"] = s.Expected.HasValue ? "known before traversal" : "unknown until traversal completes; collection records carry local counts",
+                    ["countUnit"] = "evidence records (not tags or screens)", ["expectedCountReason"] = s.Expected.HasValue ? "known before traversal"
+                        : "unknown until traversal completes; collection records carry local counts",
                     ["actualCount"] = rows.Count, ["cumulativeCount"] = s.Total,
                     ["failureCount"] = s.Failures, ["failures"] = failures,
                     ["nextCursor"] = finished ? null : s.Id + ":" + (s.Sequence + 1),
@@ -111,18 +116,22 @@ namespace TiaMcp.Adapters.Native.Hmi
                     ["consistency"] = "live read; not an atomic snapshot; do not edit the project during collection",
                     ["budgetNote"] = "Time budget is checked between reads; a synchronous Openness call cannot be interrupted.",
                     ["releaseCursor"] = s.Id,
-                    ["cursorPolicy"] = "ReleaseUnifiedReadCursor(releaseCursor) after persisting all pages. Active: 16 collections / 30 min idle. Completed: latest page only, 32 collections LRU / 10 min idle; may be evicted earlier for capacity. Expired cursors never silently restart.",
+                    ["cursorPolicy"] =
+                        "ReleaseUnifiedReadCursor(releaseCursor) after persisting all pages. Active: 16 collections / 30 min idle. Completed: latest page " +
+                        "only, 32 collections LRU / 10 min idle; may be evicted earlier for capacity. Expired cursors never silently restart.",
                     ["records"] = rows
                 };
                 s.Sequence++; s.Last = (HmiObject)result.DeepClone(); s.Used = now(); s.Access = ++access;
-                foreach (var id in sessions.Values.Where(p => p.Iterator == null).OrderByDescending(p => p.Access).Skip(ReplayCapacity).Select(p => p.Id).ToArray())
+                foreach (var id in sessions.Values.Where(p => p.Iterator == null).OrderByDescending(p => p.Access).Skip(ReplayCapacity).Select(p => p.Id)
+                        .ToArray())
                     sessions.Remove(id);
                 return result;
             }
         }
         private void Expire()
         {
-            foreach (var id in sessions.Where(p => now() - p.Value.Used > (p.Value.Iterator == null ? ReplayLifetime : ActiveLifetime)).Select(p => p.Key).ToArray())
+            foreach (var id in sessions.Where(p => now() - p.Value.Used > (p.Value.Iterator == null ? ReplayLifetime : ActiveLifetime)).Select(p => p.Key)
+                    .ToArray())
             { Release(sessions[id]); sessions.Remove(id); }
         }
         internal bool Cancel(string cursor)

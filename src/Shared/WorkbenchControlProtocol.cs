@@ -10,7 +10,10 @@ namespace TiaOpenness.Shared
     internal enum WorkbenchControlOperation { DisplayPage, DisplayBlock, DisplayCall, DisplayLadder, DisplayAtlas, ReadState, ReadSelection, PrefillForm }
     internal enum WorkbenchPage { Overview, Blocks, VersionControl, Calls, Audit, Environment, Log }
     internal enum WorkbenchControlStatus { Done, Refused, Failed }
-    internal enum WorkbenchControlError { ResourceUnavailable, AccessDenied, UnsupportedCapability, PreconditionFailed, IdentityMismatch, NotFound, TargetAmbiguous, Timeout, InternalError, InvalidArgument }
+    internal enum WorkbenchControlError {
+        ResourceUnavailable, AccessDenied, UnsupportedCapability, PreconditionFailed, IdentityMismatch, NotFound, TargetAmbiguous, Timeout, InternalError,
+            InvalidArgument
+    }
     internal enum WorkbenchPrefillForm { InspectionRules, BlockFilter, BlockSelection, ConnectProject, ExportBlocks, ImportBlocks }
     internal enum WorkbenchPrefillMode { Set, Clear }
     internal enum WorkbenchSessionSource { WorkbenchBridge, SharedMcpSession }
@@ -225,11 +228,17 @@ namespace TiaOpenness.Shared
         {
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow, MaxDepth = 32 };
-            options.Converters.Add(new WorkbenchClosedEnum<WorkbenchControlOperation>("display.page", "display.block", "display.call", "display.ladder", "display.atlas", "read.state", "read.selection", "prefill.form"));
+            options.Converters
+                .Add(new WorkbenchClosedEnum<WorkbenchControlOperation>("display.page", "display.block", "display.call", "display.ladder", "display.atlas",
+                        "read.state", "read.selection", "prefill.form"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchPage>("overview", "blocks", "versionControl", "calls", "audit", "environment", "log"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchControlStatus>("done", "refused", "failed"));
-            options.Converters.Add(new WorkbenchClosedEnum<WorkbenchControlError>("RESOURCE_UNAVAILABLE", "ACCESS_DENIED", "UNSUPPORTED_CAPABILITY", "PRECONDITION_FAILED", "IDENTITY_MISMATCH", "NOT_FOUND", "TARGET_AMBIGUOUS", "TIMEOUT", "INTERNAL_ERROR", "INVALID_ARGUMENT"));
-            options.Converters.Add(new WorkbenchClosedEnum<WorkbenchPrefillForm>("inspectionRules", "blockFilter", "blockSelection", "connectProject", "exportBlocks", "importBlocks"));
+            options.Converters
+                .Add(new WorkbenchClosedEnum<WorkbenchControlError>("RESOURCE_UNAVAILABLE", "ACCESS_DENIED", "UNSUPPORTED_CAPABILITY", "PRECONDITION_FAILED",
+                        "IDENTITY_MISMATCH", "NOT_FOUND", "TARGET_AMBIGUOUS", "TIMEOUT", "INTERNAL_ERROR", "INVALID_ARGUMENT"));
+            options.Converters
+                .Add(new WorkbenchClosedEnum<WorkbenchPrefillForm>("inspectionRules", "blockFilter", "blockSelection", "connectProject", "exportBlocks",
+                        "importBlocks"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchPrefillMode>("set", "clear"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchSessionSource>("workbench-bridge", "shared-mcp-session"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchControlNotificationKind>("stateChanged"));
@@ -282,15 +291,18 @@ namespace TiaOpenness.Shared
                     Require(Text(ladder.SoftwarePath) && Text(ladder.BlockPath));
                     ValidateArtifact(ladder.RenderRequestId, ladder.Artifact, WorkbenchRenderKind.Ladder);
                 }
-                if (request.Arguments is WorkbenchDisplayAtlasArguments atlas) ValidateArtifact(atlas.RenderRequestId, atlas.Artifact, WorkbenchRenderKind.Atlas);
-                if (request.Arguments is WorkbenchReadSelectionArguments selection) Require(selection.Offset >= 0 && selection.Limit >= 1 && selection.Limit <= 256);
+                if (request.Arguments is WorkbenchDisplayAtlasArguments atlas)
+                    ValidateArtifact(atlas.RenderRequestId, atlas.Artifact, WorkbenchRenderKind.Atlas);
+                if (request.Arguments is WorkbenchReadSelectionArguments selection)
+                    Require(selection.Offset >= 0 && selection.Limit >= 1 && selection.Limit <= 256);
                 if (request.Arguments is WorkbenchPrefillArguments prefill) ValidatePrefill(prefill);
             }
             else if (frame is WorkbenchControlResponse response)
             {
                 Require(response.Protocol == Name && response.Version == Version && IsHex(response.RequestId, 32) && response.Workbench != null);
                 ValidateInfo(response.Workbench!);
-                Require(response.Status == WorkbenchControlStatus.Done ? response.Data != null && response.Refusal == null : response.Data == null && response.Refusal != null);
+                Require(response.Status == WorkbenchControlStatus.Done ? response.Data != null && response.Refusal == null : response.Data == null && response
+                        .Refusal != null);
                 if (response.Refusal != null) Require(response.Refusal.Condition != null && response.Refusal.Target != null
                     && response.Refusal.Candidates != null && response.Refusal.Candidates.Length <= 16 && response.Refusal.Candidates.All(Text));
                 if (response.Data != null) ValidateData(response.Data);
@@ -403,7 +415,8 @@ namespace TiaOpenness.Shared
             var wire = JsonSerializer.Deserialize<Wire>(ref reader, options)!;
             return new WorkbenchControlRequest { Protocol = wire.Protocol, Version = wire.Version, RequestId = wire.RequestId,
                 DeadlineUtc = wire.DeadlineUtc, Origin = wire.Origin, Operation = wire.Operation,
-                Arguments = (WorkbenchControlArguments)JsonSerializer.Deserialize(wire.Arguments.GetRawText(), WorkbenchControlProtocol.ArgumentType(wire.Operation), options)! };
+                Arguments = (WorkbenchControlArguments)JsonSerializer
+                    .Deserialize(wire.Arguments.GetRawText(), WorkbenchControlProtocol.ArgumentType(wire.Operation), options)! };
         }
         public override void Write(Utf8JsonWriter writer, WorkbenchControlRequest value, JsonSerializerOptions options)
         {
@@ -411,7 +424,8 @@ namespace TiaOpenness.Shared
             writer.WriteString("requestId", value.RequestId); writer.WriteString("deadlineUtc", value.DeadlineUtc);
             writer.WritePropertyName("origin"); JsonSerializer.Serialize(writer, value.Origin, options);
             writer.WritePropertyName("operation"); JsonSerializer.Serialize(writer, value.Operation, options);
-            writer.WritePropertyName("arguments"); JsonSerializer.Serialize(writer, value.Arguments, WorkbenchControlProtocol.ArgumentType(value.Operation), options);
+            writer.WritePropertyName("arguments"); JsonSerializer
+                .Serialize(writer, value.Arguments, WorkbenchControlProtocol.ArgumentType(value.Operation), options);
             writer.WriteEndObject();
         }
     }
@@ -427,7 +441,8 @@ namespace TiaOpenness.Shared
         {
             var wire = JsonSerializer.Deserialize<Wire>(ref reader, options)!;
             return new WorkbenchPrefillArguments { Form = wire.Form, Mode = wire.Mode,
-                Fields = (WorkbenchPrefillFields)JsonSerializer.Deserialize(wire.Fields.GetRawText(), WorkbenchControlProtocol.FieldType(wire.Form), options)! };
+                Fields = (WorkbenchPrefillFields)JsonSerializer.Deserialize(wire.Fields.GetRawText(), WorkbenchControlProtocol.FieldType(wire.Form), options)!
+                };
         }
         public override void Write(Utf8JsonWriter writer, WorkbenchPrefillArguments value, JsonSerializerOptions options)
         {
@@ -449,7 +464,8 @@ namespace TiaOpenness.Shared
         {
             var wire = JsonSerializer.Deserialize<Wire>(ref reader, options)!;
             return new WorkbenchPrefillState { Form = wire.Form, Origin = wire.Origin,
-                Fields = (WorkbenchPrefillFields)JsonSerializer.Deserialize(wire.Fields.GetRawText(), WorkbenchControlProtocol.FieldType(wire.Form), options)! };
+                Fields = (WorkbenchPrefillFields)JsonSerializer.Deserialize(wire.Fields.GetRawText(), WorkbenchControlProtocol.FieldType(wire.Form), options)!
+                };
         }
         public override void Write(Utf8JsonWriter writer, WorkbenchPrefillState value, JsonSerializerOptions options)
         {

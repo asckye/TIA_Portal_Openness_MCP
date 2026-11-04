@@ -15,7 +15,16 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public CertificateManagementTools(CertificateManagementPortService service) => _service = service;
 
-        [McpServerTool(Name="ManagePlcCertificate"), Description("[L2][Security][WRITE] Offline engineering certificates of the exact PLC DeviceItem (LocalCertificateManager.LocalCertificateStore): list, read, template (default CertificateTemplate for usage Tls/WebServer/OpcUaServer/OpcUaClient/OpcUaClientServer: Signature, SubjectCommonName, Usage, ValidFrom, ValidUntil, SubjectAlternativeNames), create (usage + template properties Signature Sha1RSA/Sha256RSA, SubjectCommonName, ValidFrom/ValidUntil ISO dates + subjectAlternativeNames [{type Dns/Email/IP/Uri, value}] via SubjectAlternativeNameComposition.Create), import (filePath; optional password for protected files via Import(file, SecureString), never echoed), export (new file), delete (by exact certificateId), assign/unassign refuse until exact attribute names, owner, type and unassignment semantics are documented or VM-verified. EnableGlobalCertificatesStore is read only in this tool; changing it is not covered in 4.0. dryRun=true default; no download/save; export refuses overwrite; private keys are never exported.")]
+        [McpServerTool(Name="ManagePlcCertificate"),
+                Description("[L2][Security][WRITE] Offline engineering certificates of the exact PLC DeviceItem " +
+                "(LocalCertificateManager.LocalCertificateStore): list, read, template (default CertificateTemplate for usage " +
+                "Tls/WebServer/OpcUaServer/OpcUaClient/OpcUaClientServer: Signature, SubjectCommonName, Usage, ValidFrom, ValidUntil, " +
+                "SubjectAlternativeNames), create (usage + template properties Signature Sha1RSA/Sha256RSA, SubjectCommonName, ValidFrom/ValidUntil ISO " +
+                "dates + subjectAlternativeNames [{type Dns/Email/IP/Uri, value}] via SubjectAlternativeNameComposition.Create), import (filePath; optional " +
+                "password for protected files via Import(file, SecureString), never echoed), export (new file), delete (by exact certificateId), " +
+                "assign/unassign refuse until exact attribute names, owner, type and unassignment semantics are documented or VM-verified. " +
+                "EnableGlobalCertificatesStore is read only in this tool; changing it is not covered in 4.0. dryRun=true default; no download/save; export " +
+                "refuses overwrite; private keys are never exported.")]
         public CallToolResult ManagePlcCertificate(
             string[] devicePath,
             string[] itemPath,
@@ -27,10 +36,15 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("assignment: assignment kind as the read action lists it.")] string assignment="",
             bool dryRun=true,
             [Description("assignmentItemPath: array of exact device-item names; omission uses the selected owner.")] string[] assignmentItemPath=null!,
-            [Description("subjectAlternativeNames: up to 64 closed {type, value} entries; type is Dns, Email, IP or Uri and value has 1..255 characters. Duplicate values of the same type are refused case-insensitively.")] SubjectAlternativeName[] subjectAlternativeNames=null!,
+            [Description("subjectAlternativeNames: up to 64 closed {type, value} entries; type is Dns, Email, IP or Uri and value has 1..255 characters. " +
+                "Duplicate values of the same type are refused case-insensitively.")] SubjectAlternativeName[] subjectAlternativeNames=
+                null!,
             string password="")
             => SecurityToolContract.Invoke("ManagePlcCertificate", dryRun || action == "list" || action == "read" || action == "template", false,
-                () => _service.ManagePlcCertificate(SecurityToolContract.Path(devicePath),SecurityToolContract.Path(itemPath),action,certificateId,filePath,usage,SecurityToolContract.Map(properties),assignment,dryRun,
-                    assignmentItemPath == null ? "" : SecurityToolContract.Path(assignmentItemPath),V4Json.Serialize(subjectAlternativeNames ?? Array.Empty<SubjectAlternativeName>()),password), password);
+                () => _service
+                    .ManagePlcCertificate(SecurityToolContract.Path(devicePath),SecurityToolContract.Path(itemPath),action,certificateId,filePath,usage,
+                        SecurityToolContract.Map(properties),assignment,dryRun,
+                    assignmentItemPath == null ? "" : SecurityToolContract.Path(assignmentItemPath),V4Json
+                        .Serialize(subjectAlternativeNames ?? Array.Empty<SubjectAlternativeName>()),password), password);
     }
 }

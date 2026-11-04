@@ -13,9 +13,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                 throw new ArgumentException("One exact tagName is required; patterns are refused.");
             if (!dryRun && !confirmDelete) throw new ArgumentException("Actual deletion requires confirmDelete=true.");
             if (tablePath == "") return Array.Empty<string>(); // Unified device-root Tags only.
-            if (!tablePath.StartsWith("/", StringComparison.Ordinal)) throw new ArgumentException("tagTablePath must be absolute within HMI, e.g. /Folder/Table.");
+            if (!tablePath.StartsWith("/", StringComparison.Ordinal))
+                throw new ArgumentException("tagTablePath must be absolute within HMI, e.g. /Folder/Table.");
             string[] parts = tablePath.Substring(1).Split('/');
-            if (parts.Length > 64 || parts.Any(p => string.IsNullOrWhiteSpace(p) || p == "." || p == ".." || p.Any(char.IsControl) || p.IndexOfAny(new[] { '*', '?', '\\' }) >= 0))
+            if (parts.Length > 64 || parts
+                    .Any(p => string.IsNullOrWhiteSpace(p) || p == "." || p == ".." || p.Any(char.IsControl) || p.IndexOfAny(new[] { '*', '?', '\\' }) >= 0))
                 throw new ArgumentException("Invalid exact tag table path; no patterns, escaping or recursive search.");
             return parts;
         }
@@ -23,7 +25,9 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             object target = find() ?? throw new PlcSoftwareException("NotFound", "Exact HMI tag not found.");
             meta["exists"] = true; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-            meta["referencesChecked"] = false; meta["referencesNote"] = "No cross-reference query. Usage in screens/scripts/alarms/logging is unknown; deletion may break references or remove dependent configuration.";
+            meta["referencesChecked"] = false; meta["referencesNote"] =
+                "No cross-reference query. Usage in screens/scripts/alarms/logging is unknown; deletion may break references or remove dependent " +
+                "configuration.";
             if (dryRun) return "Preview only; the exact HMI tag exists and has not been deleted.";
             meta["mayHaveChanged"] = true;
             delete(target);

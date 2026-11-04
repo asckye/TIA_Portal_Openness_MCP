@@ -61,7 +61,8 @@ namespace TiaMcp.Adapters.Native.Optional
                     Rules = x => x switch { ScreenRuleTable t => t.Rules, ScreenRuleGroup g => g.Rules, _ => throw SivarcShape(x) },
                     CreateFolder = (c, n) => ((ScreenRuleFolderComposition)c).Create(n), CreateTable = (c, n) => ((ScreenRuleTableComposition)c).Create(n),
                     CreateTableFromType = (c, v) => ((ScreenRuleTableComposition)c).CreateFrom((ScreenRuleTableTypeVersion)v),
-                    CreateGroup = (c, n) => ((ScreenRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((ScreenRuleGroupComposition)c).CreateFrom(m, o),
+                    CreateGroup = (c, n) => ((ScreenRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((ScreenRuleGroupComposition)c)
+                        .CreateFrom(m, o),
                     CreateRule = (c, n) => ((ScreenRuleComposition)c).Create(n), CreateRuleFrom = (c, m, o) => ((ScreenRuleComposition)c).CreateFrom(m, o)
                 },
                 new SivarcFamily
@@ -73,7 +74,8 @@ namespace TiaMcp.Adapters.Native.Optional
                     Rules = x => x switch { TagRuleTable t => t.Rules, TagRuleGroup g => g.Rules, _ => throw SivarcShape(x) },
                     CreateFolder = (c, n) => ((TagRuleFolderComposition)c).Create(n), CreateTable = (c, n) => ((TagRuleTableComposition)c).Create(n),
                     CreateTableFromType = (c, v) => ((TagRuleTableComposition)c).CreateFrom((TagRuleTableTypeVersion)v),
-                    CreateGroup = (c, n) => ((TagRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((TagRuleGroupComposition)c).CreateFrom(m, o),
+                    CreateGroup = (c, n) => ((TagRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((TagRuleGroupComposition)c)
+                        .CreateFrom(m, o),
                     CreateRule = (c, n) => ((TagRuleComposition)c).Create(n), CreateRuleFrom = (c, m, o) => ((TagRuleComposition)c).CreateFrom(m, o)
                 },
                 new SivarcFamily
@@ -83,10 +85,13 @@ namespace TiaMcp.Adapters.Native.Optional
                     Tables = x => x switch { AdvancedTagRules a => a.Tables, AdvancedTagRuleFolder f => f.Tables, _ => throw SivarcShape(x) },
                     Groups = x => x switch { AdvancedTagRuleTable t => t.Groups, AdvancedTagRuleGroup g => g.Groups, _ => throw SivarcShape(x) },
                     Rules = x => x switch { AdvancedTagRuleTable t => t.Rules, AdvancedTagRuleGroup g => g.Rules, _ => throw SivarcShape(x) },
-                    CreateFolder = (c, n) => ((AdvancedTagRuleFolderComposition)c).Create(n), CreateTable = (c, n) => ((AdvancedTagRuleTableComposition)c).Create(n),
+                    CreateFolder = (c, n) => ((AdvancedTagRuleFolderComposition)c).Create(n), CreateTable = (c, n) => ((AdvancedTagRuleTableComposition)c)
+                        .Create(n),
                     CreateTableFromType = (c, v) => ((AdvancedTagRuleTableComposition)c).CreateFrom((AdvancedTagRuleTableTypeVersion)v),
-                    CreateGroup = (c, n) => ((AdvancedTagRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((AdvancedTagRuleGroupComposition)c).CreateFrom(m, o),
-                    CreateRule = (c, n) => ((AdvancedTagRuleComposition)c).Create(n), CreateRuleFrom = (c, m, o) => ((AdvancedTagRuleComposition)c).CreateFrom(m, o)
+                    CreateGroup = (c, n) => ((AdvancedTagRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((AdvancedTagRuleGroupComposition)c)
+                        .CreateFrom(m, o),
+                    CreateRule = (c, n) => ((AdvancedTagRuleComposition)c).Create(n), CreateRuleFrom = (c, m, o) => ((AdvancedTagRuleComposition)c)
+                        .CreateFrom(m, o)
                 },
                 new SivarcFamily
                 {
@@ -97,7 +102,8 @@ namespace TiaMcp.Adapters.Native.Optional
                     Rules = x => x switch { AlarmRuleTable t => t.Rules, AlarmRuleGroup g => g.Rules, _ => throw SivarcShape(x) },
                     CreateFolder = (c, n) => ((AlarmRuleFolderComposition)c).Create(n), CreateTable = (c, n) => ((AlarmRuleTableComposition)c).Create(n),
                     CreateTableFromType = (c, v) => ((AlarmRuleTableComposition)c).CreateFrom((AlarmRuleTableTypeVersion)v),
-                    CreateGroup = (c, n) => ((AlarmRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((AlarmRuleGroupComposition)c).CreateFrom(m, o),
+                    CreateGroup = (c, n) => ((AlarmRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((AlarmRuleGroupComposition)c)
+                        .CreateFrom(m, o),
                     CreateRule = (c, n) => ((AlarmRuleComposition)c).Create(n), CreateRuleFrom = (c, m, o) => ((AlarmRuleComposition)c).CreateFrom(m, o)
                 },
                 new SivarcFamily
@@ -109,7 +115,8 @@ namespace TiaMcp.Adapters.Native.Optional
                     Rules = x => x switch { CopyRuleTable t => t.Rules, CopyRuleGroup g => g.Rules, _ => throw SivarcShape(x) },
                     CreateFolder = (c, n) => ((CopyRuleFolderComposition)c).Create(n), CreateTable = (c, n) => ((CopyRuleTableComposition)c).Create(n),
                     CreateTableFromType = (c, v) => ((CopyRuleTableComposition)c).CreateFrom((CopyRuleTableTypeVersion)v),
-                    CreateGroup = (c, n) => ((CopyRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((CopyRuleGroupComposition)c).CreateFrom(m, o),
+                    CreateGroup = (c, n) => ((CopyRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((CopyRuleGroupComposition)c)
+                        .CreateFrom(m, o),
                     CreateRule = (c, n) => ((CopyRuleComposition)c).Create(n), CreateRuleFrom = (c, m, o) => ((CopyRuleComposition)c).CreateFrom(m, o)
                 },
                 new SivarcFamily
@@ -121,16 +128,20 @@ namespace TiaMcp.Adapters.Native.Optional
                     Rules = x => x switch { TextlistRuleTable t => t.Rules, TextlistRuleGroup g => g.Rules, _ => throw SivarcShape(x) },
                     CreateFolder = (c, n) => ((TextlistRuleFolderComposition)c).Create(n), CreateTable = (c, n) => ((TextlistRuleTableComposition)c).Create(n),
                     CreateTableFromType = (c, v) => ((TextlistRuleTableComposition)c).CreateFrom((TextlistRuleTableTypeVersion)v),
-                    CreateGroup = (c, n) => ((TextlistRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((TextlistRuleGroupComposition)c).CreateFrom(m, o),
+                    CreateGroup = (c, n) => ((TextlistRuleGroupComposition)c).Create(n), CreateGroupFrom = (c, m, o) => ((TextlistRuleGroupComposition)c)
+                        .CreateFrom(m, o),
                     CreateRule = (c, n) => ((TextlistRuleComposition)c).Create(n), CreateRuleFrom = (c, m, o) => ((TextlistRuleComposition)c).CreateFrom(m, o)
                 }
             };
         }
-        internal static Exception SivarcShape(object x) => new NotSupportedException("Unexpected SiVArc object " + x.GetType().FullName + " at this tree position.");
-        internal static SivarcFamily Family(string category) { Logic.AnchorProperty(category); return SivarcFamilyCache.Values.Single(f => f.Category == category); }
+        internal static Exception SivarcShape(object x) =>
+            new NotSupportedException("Unexpected SiVArc object " + x.GetType().FullName + " at this tree position.");
+        internal static SivarcFamily Family(string category) {
+            Logic.AnchorProperty(category); return SivarcFamilyCache.Values.Single(f => f.Category == category); }
 
         internal Sivarc RequireSivarc()
-            => CurrentProject!.GetService<Sivarc>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SiVArc service unavailable on this project (SiVArc option package not installed).");
+            => CurrentProject!.GetService<Sivarc>()
+                ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SiVArc service unavailable on this project (SiVArc option package not installed).");
 
     }
 }

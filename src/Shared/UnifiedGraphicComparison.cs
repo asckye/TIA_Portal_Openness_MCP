@@ -22,7 +22,9 @@ namespace TiaMcpServer.Siemens.Services
         {
             number = 0;
             var evidence = row["fields"]?[field];
-            if (evidence?["status"]?.ToString() != "ok" || !decimal.TryParse(evidence["value"]?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number)) return false;
+            if (evidence?["status"]?.ToString() != "ok" || !decimal
+                    .TryParse(evidence["value"]?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number))
+                return false;
             return (field != "Width" && field != "Height") || number >= 0;
         }
         private static JsonObject? Envelope(IReadOnlyList<JsonObject> rows)
@@ -30,9 +32,17 @@ namespace TiaMcpServer.Siemens.Services
             if (rows.Count == 0 || rows.Any(r => !Geometry.All(f => Number(r, f, out _)))) return null;
             try
             {
-                var rectangles = rows.Select(r => { Number(r, "Left", out var l); Number(r, "Top", out var t); Number(r, "Width", out var w); Number(r, "Height", out var h); return new[] { l, t, checked(l + w), checked(t + h) }; }).ToArray();
+                var rectangles = rows
+                    .Select(r => {
+                        Number(r, "Left", out var l); Number(r, "Top", out var t); Number(r, "Width", out var w); Number(r, "Height", out var h); return new[] {
+                            l, t, checked(l + w), checked(t + h) };
+                    })
+                    .ToArray();
                 var left = rectangles.Min(r => r[0]); var top = rectangles.Min(r => r[1]);
-                return new JsonObject { ["left"] = left, ["top"] = top, ["width"] = checked(rectangles.Max(r => r[2]) - left), ["height"] = checked(rectangles.Max(r => r[3]) - top), ["nativeGroupBounds"] = false };
+                return new JsonObject {
+                    ["left"] = left, ["top"] = top, ["width"] = checked(rectangles.Max(r => r[2]) - left), ["height"] =
+                        checked(rectangles.Max(r => r[3]) - top), ["nativeGroupBounds"] = false
+                };
             }
             catch (OverflowException) /* swallow(parse-fallback): overflowed persisted coordinates cannot provide approximate selection bounds */ { return null; }
         }
@@ -73,7 +83,8 @@ namespace TiaMcpServer.Siemens.Services
         internal static JsonObject Compare(string beforePagesJson, string afterPagesJson)
         {
             var before = Decode(beforePagesJson); var after = Decode(afterPagesJson);
-            if (!JsonNode.DeepEquals(before.scope, after.scope)) throw new ArgumentException("Both snapshots must have exactly the same project, HMI, screen and itemNames scope.");
+            if (!JsonNode.DeepEquals(before.scope, after.scope))
+                throw new ArgumentException("Both snapshots must have exactly the same project, HMI, screen and itemNames scope.");
             var changes = new JsonArray(); int changed = 0;
             foreach (var entry in before.items)
             {
@@ -95,7 +106,10 @@ namespace TiaMcpServer.Siemens.Services
                 ["coverage"] = "raw Left/Top/Width/Height comparison only", ["expectedCount"] = before.items.Count, ["actualCount"] = changes.Count,
                 ["changedObjectCount"] = changed, ["truncated"] = false, ["nextCursor"] = null, ["failureCount"] = 0, ["failures"] = new JsonArray(),
                 ["nativeGroupVerified"] = false, ["causalityEstablished"] = false,
-                ["limitation"] = "Matching names/paths/types do not prove persistent object identity across deletion/recreation. Coordinate changes alone do not establish grouping, layout constraints or who caused a change.", ["objects"] = changes };
+                ["limitation"] =
+                    "Matching names/paths/types do not prove persistent object identity across deletion/recreation. Coordinate changes alone do not " +
+                    "establish grouping, layout constraints or who caused a change.",
+                    ["objects"] = changes };
         }
     }
 }

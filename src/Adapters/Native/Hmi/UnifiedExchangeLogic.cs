@@ -19,7 +19,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         // Exports go to a NEW absolute directory (native Export overwrites silently); imports read an existing one.
         internal static DirectoryInfo ValidateDirectory(string directory, bool forExport)
         {
-            if (string.IsNullOrWhiteSpace(directory) || !Path.IsPathRooted(directory)) throw new ArgumentException("Absolute directory on the MCP server required.");
+            if (string.IsNullOrWhiteSpace(directory) || !Path.IsPathRooted(directory))
+                throw new ArgumentException("Absolute directory on the MCP server required.");
             var dir = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory));
             if (forExport && dir.Exists) throw new InvalidOperationException("Use a new export directory; overwrites refused: " + dir.FullName);
             if (forExport && dir.Parent?.Exists != true) throw new DirectoryNotFoundException("Export parent directory must exist: " + dir.FullName);
@@ -32,7 +33,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             var name = (fileName ?? "").Trim();
             if (name.Length == 0) return "";
-            if (name.Length > 128 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || name.IndexOfAny(new[] { '/', '\\' }) >= 0 || name == "." || name == "..")
+            if (name.Length > 128 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || name.IndexOfAny(new[] { '/', '\\' }) >= 0 || name == "."
+                    || name == "..")
                 throw new ArgumentException("fileName must be a plain file name without path separators.");
             return name;
         }
@@ -41,15 +43,19 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             if (string.IsNullOrWhiteSpace(json) || json.Trim() == "[]") return Array.Empty<string>();
             var array = UnifiedRequestValues.Parse(json) as HmiArray ?? throw new ArgumentException("expectedNamesJson must be a JSON array of exact names.");
-            var names = array.Select(n => n is object v && v.TryGetValue<string>(out var s) ? s : throw new ArgumentException("Every expected name must be a string.")).ToArray();
-            if (names.Length > max || names.Any(string.IsNullOrWhiteSpace) || names.Distinct(StringComparer.OrdinalIgnoreCase).Count() != names.Length) throw new ArgumentException("Provide up to " + max + " distinct nonempty names.");
+            var names = array
+                .Select(n => n is object v && v.TryGetValue<string>(out var s) ? s : throw new ArgumentException("Every expected name must be a string."))
+                .ToArray();
+            if (names.Length > max || names.Any(string.IsNullOrWhiteSpace) || names.Distinct(StringComparer.OrdinalIgnoreCase).Count() != names.Length)
+                throw new ArgumentException("Provide up to " + max + " distinct nonempty names.");
             return names;
         }
 
         internal static string ValidateXmlPath(string xmlPath)
         {
             if (string.IsNullOrWhiteSpace(xmlPath) || !Path.IsPathRooted(xmlPath)) throw new ArgumentException("Absolute xmlPath on the MCP server required.");
-            if (!string.Equals(Path.GetExtension(xmlPath), ".xml", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("OpcUaAlarm.Import reads an .xml file.");
+            if (!string.Equals(Path.GetExtension(xmlPath), ".xml", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("OpcUaAlarm.Import reads an .xml file.");
             return Path.GetFullPath(xmlPath);
         }
 
@@ -59,15 +65,21 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static readonly string[] NativeExtensions = { ".hmi.yml", ".hmi.js", ".yml", ".js", ".xlsx", ".xml" };
         internal static HmiArray VerifyNativeFiles(object nativeResult, DirectoryInfo dir)
         {
-            if (nativeResult is not IEnumerable sequence || nativeResult is string) throw new InvalidOperationException("Native Export returned no file sequence.");
+            if (nativeResult is not IEnumerable sequence || nativeResult is string)
+                throw new InvalidOperationException("Native Export returned no file sequence.");
             var records = new HmiArray(); string prefix = dir.FullName.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             foreach (var item in sequence)
             {
                 var reported = item as FileInfo ?? throw new InvalidOperationException("Unexpected native output entry; export not complete.");
-                if (!reported.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Native export file outside the export directory: " + reported.FullName);
-                var file = ResolveReportedFile(reported, dir) ?? throw new InvalidOperationException("Native export file missing or empty: " + reported.FullName);
+                if (!reported.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Native export file outside the export directory: " + reported.FullName);
+                var file = ResolveReportedFile(reported, dir)
+                    ?? throw new InvalidOperationException("Native export file missing or empty: " + reported.FullName);
                 using var sha = SHA256.Create(); using var stream = file.OpenRead();
-                var row = new HmiObject { ["path"] = file.FullName, ["bytes"] = file.Length, ["sha256"] = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant() };
+                var row = new HmiObject {
+                    ["path"] = file.FullName, ["bytes"] = file.Length, ["sha256"] = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "")
+                        .ToLowerInvariant()
+                };
                 if (!string.Equals(file.FullName, reported.FullName, StringComparison.OrdinalIgnoreCase)) row["reportedPath"] = reported.FullName;
                 records.Add(row);
             }
@@ -84,7 +96,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (candidate.Exists && candidate.Length > 0) return candidate;
             }
             var stem = reported.Name + ".";
-            return dir.Exists ? dir.EnumerateFiles().Where(f => f.Name.StartsWith(stem, StringComparison.OrdinalIgnoreCase) && f.Length > 0).OrderBy(f => f.Name, StringComparer.Ordinal).FirstOrDefault() : null;
+            return dir.Exists ? dir.EnumerateFiles().Where(f => f.Name.StartsWith(stem, StringComparison.OrdinalIgnoreCase) && f.Length > 0)
+                .OrderBy(f => f.Name, StringComparer.Ordinal).FirstOrDefault() : null;
         }
         // Everything TIA left in the export directory, so side files (NameData.yml, *.def.hmi.yml) are visible even when the native result omits them.
         internal static HmiArray DirectoryListing(DirectoryInfo dir)
@@ -99,7 +112,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static HmiArray ListImportCandidates(DirectoryInfo dir, string[] extensions)
         {
             var rows = new HmiArray();
-            foreach (var file in dir.EnumerateFiles().Where(f => extensions.Any(e => f.Name.EndsWith(e, StringComparison.OrdinalIgnoreCase))).OrderBy(f => f.Name, StringComparer.Ordinal).Take(200))
+            foreach (var file in dir.EnumerateFiles().Where(f => extensions.Any(e => f.Name.EndsWith(e, StringComparison.OrdinalIgnoreCase)))
+                    .OrderBy(f => f.Name, StringComparer.Ordinal).Take(200))
                 rows.Add(new HmiObject { ["name"] = file.Name, ["bytes"] = file.Length });
             return rows;
         }

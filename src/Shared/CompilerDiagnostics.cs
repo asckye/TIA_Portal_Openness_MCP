@@ -33,7 +33,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var nativeUnknown = TiaMcp.Adapters.Contracts.NativeResultStates.Classify(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, rootState)
                     == TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected;
                 var state = nativeUnknown ? rootState : errors ? "Error" : incomplete ? "Unknown" : HasWarning || rootWarnings > 0 ? "Warning" : rootState;
-                var success = !errors && !incomplete && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, state);
+                var success = !errors && !incomplete && TiaMcp.Adapters.Contracts.NativeResultStates
+                    .Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, state);
                 var summary = new JsonObject {
                     ["success"] = success, ["operationSuccess"] = success, ["effectiveState"] = state,
                     ["rootState"] = rootState, ["rootCounts"] = new JsonObject { ["errors"] = rootErrors, ["warnings"] = rootWarnings },
@@ -84,7 +85,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         if (result.Nodes.Count >= result.MaxNodes || watch.ElapsedMilliseconds >= 30000) { result.Truncated = true; return; }
                         if (!seen.Add(message)) { result.CollectFailures.Add(treePath + ": repeated object/cycle"); continue; }
                         var node = new JsonObject { ["treePath"] = treePath, ["parentPath"] = parent, ["depth"] = depth };
-                        foreach (var property in new[] { "State", "Description", "Path", "ObjectPath", "DateTime", "ErrorCount", "WarningCount", "Line", "Column", "ErrorCode" })
+                        foreach (var property in new[] {
+                                "State", "Description", "Path", "ObjectPath", "DateTime", "ErrorCount", "WarningCount", "Line", "Column", "ErrorCode" })
                         {
                             var value = Read(message, property, treePath);
                             if (value != null) node[property] = value.ToString();
@@ -107,7 +109,9 @@ namespace TiaMcpServer.ModelContextProtocol
                             error |= Count(declared, "errors") > 0;
                             warning |= Count(declared, "warnings") > 0;
                         }
-                        var cap = Regex.IsMatch(desc, @"(?i)(maximum|maximal|limit|truncat|最多|最大|上限|超过).{0,100}(1[,.]?000|display|显示|messages|meldungen)|1[,.]?000.{0,60}(maximum|limit|最多|最大)");
+                        var cap = Regex
+                            .IsMatch(desc,
+                                @"(?i)(maximum|maximal|limit|truncat|最多|最大|上限|超过).{0,100}(1[,.]?000|display|显示|messages|meldungen)|1[,.]?000.{0,60}(maximum|limit|最多|最大)");
                         if (cap) { node["upstreamLimitNotice"] = true; result.Truncated = true; }
                         result.HasError |= error; result.HasWarning |= warning;
                         if (error) result.Errors.Add(line); else if (warning) result.Warnings.Add(line); else result.Info.Add(line);

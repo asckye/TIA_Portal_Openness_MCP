@@ -24,7 +24,8 @@ namespace TiaMcp.Adapters.Native.Plc
             string version, string parameter, HardwareScalar value, string valueError, bool dryRun = true)
             => _session.RunHmiStepTool("ManageTechnologyObject", meta => {
                 meta["mayHaveChanged"] = false;
-                if (!new[] { "read", "create", "delete", "setParameter" }.Contains(action)) throw new ArgumentException("action must be read/create/delete/setParameter.");
+                if (!new[] { "read", "create", "delete", "setParameter" }.Contains(action))
+                    throw new ArgumentException("action must be read/create/delete/setParameter.");
                 var parts = PlcGroupOperations.Parts(objectPath);
                 bool writing = action != "read" && !dryRun;
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
@@ -40,7 +41,9 @@ namespace TiaMcp.Adapters.Native.Plc
                     // Validate the technology version before parsing. Native observation: 1515F FW V2.9 uses TO V6.0.
                     // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                     if (!Version.TryParse(version, out var apiVersion) || apiVersion.Major < 1)
-                        throw new ArgumentException("version must be the technology object version as 'major.minor', e.g. \"6.0\" (TIA V17 / FW 2.9), \"7.0\" (FW 3.0), \"8.0\" (FW 3.1); got '" + version + "'. TIA rejects a version the CPU firmware does not support.");
+                        throw new ArgumentException("version must be the technology object version as 'major.minor', e.g. \"6.0\" (TIA V17 / FW 2.9), " +
+                            "\"7.0\" (FW 3.0), \"8.0\" (FW 3.1); got '"
+                                + version + "'. TIA rejects a version the CPU firmware does not support.");
                     meta["typeIdentifier"] = typeIdentifier; meta["version"] = version;
                     if (writing)
                     {
@@ -49,12 +52,15 @@ namespace TiaMcp.Adapters.Native.Plc
                         if (collection is TechnologicalInstanceDBComposition typedCollection)
                         {
                             TechnologicalInstanceDB created = WatchNative.Create(typedCollection, parts.Last(), typeIdentifier, apiVersion);
-                            if (WatchNative.Find(typedCollection, parts.Last()) == null) throw new InvalidOperationException("Technology object not found by readback after Create.");
+                            if (WatchNative.Find(typedCollection, parts.Last()) == null)
+                                throw new InvalidOperationException("Technology object not found by readback after Create.");
                             target = created; meta["after"] = TechnologyObjectRow(created);
                         }
                         else
                         {
-                            target = PlcGroupOperations.Call(collection, "Create", new[] { typeof(string), typeof(string), typeof(Version) }, parts.Last(), typeIdentifier, apiVersion);
+                            target = PlcGroupOperations
+                                .Call(collection, "Create", new[] { typeof(string), typeof(string), typeof(Version) }, parts.Last(), typeIdentifier,
+                                    apiVersion);
                             meta["after"] = HardwareScalarEvidence.Read(target);
                         }
                     }
@@ -81,14 +87,17 @@ namespace TiaMcp.Adapters.Native.Plc
                         if (string.IsNullOrEmpty(parameter))
                         {
                             if (action == "setParameter") throw new ArgumentException("Exact parameter name required.");
-                            var all = PlcGroupOperations.Items(parameters).Select(x => x is TechnologicalParameter tp ? ParameterRow(tp) : HardwareScalarEvidence.Read(x)).ToArray();
+                            var all = PlcGroupOperations.Items(parameters)
+                                .Select(x => x is TechnologicalParameter tp ? ParameterRow(tp) : HardwareScalarEvidence.Read(x)).ToArray();
                             meta["parameters"] = all.Cast<object?>().ToArray();
-                            meta["actualCount"] = all.Length; meta["dataComplete"] = all.All(x => (x.TryGetValue("dataComplete", out var complete) ? complete as bool? : null) ?? !x.ContainsKey("valueError"));
+                            meta["actualCount"] = all.Length; meta["dataComplete"] = all
+                                .All(x => (x.TryGetValue("dataComplete", out var complete) ? complete as bool? : null) ?? !x.ContainsKey("valueError"));
                         }
                         else
                         {
                             // Typed TechnologicalParameterComposition.Find(name) with the reflective lookup as fallback.
-                            var p = (typedParameters != null ? WatchNative.Find(typedParameters, parameter) : null) ?? PlcGroupOperations.Find(parameters, parameter) ?? throw new InvalidOperationException("Parameter not found: " + parameter);
+                            var p = (typedParameters != null ? WatchNative.Find(typedParameters, parameter) : null) ?? PlcGroupOperations
+                                .Find(parameters, parameter) ?? throw new InvalidOperationException("Parameter not found: " + parameter);
                             meta["before"] = p is TechnologicalParameter typedBefore ? ParameterRow(typedBefore) : HardwareScalarEvidence.Read(p);
                             if (action == "setParameter")
                             {
@@ -98,12 +107,16 @@ namespace TiaMcp.Adapters.Native.Plc
                                 if (existingValue != null && edits[0].Property.PropertyType == typeof(object))
                                     edits[0] = (edits[0].Property, HardwareAddressingPolicy.ConvertValue(value, existingValue.GetType()));
                                 meta["requestedValue"] = HardwareAddressingPolicy.ConvertValue(value, typeof(object));
-                                if (writing) { MutationStarted = true; HardwareScalarEvidence.Apply(p, edits, meta); meta["after"] = p is TechnologicalParameter typedAfter ? ParameterRow(typedAfter) : HardwareScalarEvidence.Read(p); }
+                                if (writing) {
+                                    MutationStarted = true; HardwareScalarEvidence.Apply(p, edits, meta); meta["after"] =
+                                        p is TechnologicalParameter typedAfter ? ParameterRow(typedAfter) : HardwareScalarEvidence.Read(p);
+                                }
                             }
                         }
                     }
                 }
-                return writing ? "Native technology object operation completed; no save/compile/download." : "Technology object read/preview completed; no changes.";
+                return writing ? "Native technology object operation completed; no save/compile/download."
+                    : "Technology object read/preview completed; no changes.";
             });
 
         // ---- ReadTechnologyObjectTree ---------------------------------------------------------------------------------------------------
@@ -116,15 +129,23 @@ namespace TiaMcp.Adapters.Native.Plc
 #else
             int groupCount = 0;
 #endif
-            var row = new Dictionary<string, object?> { ["name"] = WatchNative.Name(group), ["groupClass"] = group.GetType().Name, ["objectCount"] = WatchNative.Count(objects), ["groupCount"] = groupCount };
+            var row = new Dictionary<string, object?> {
+                ["name"] = WatchNative.Name(group), ["groupClass"] = group.GetType().Name, ["objectCount"] = WatchNative.Count(objects), ["groupCount"] =
+                    groupCount
+            };
             row["technologicalObjects"] = PlcGroupOperations.Items(objects).Cast<TechnologicalInstanceDB>().Take(200).Select(db =>
             {
                 var o = TechnologyObjectRow(db);
-                if (includeParameters) Safe(o, "parameters", () => { TechnologicalParameterComposition parameters = WatchNative.Parameters(db); return PlcGroupOperations.Items(parameters).Cast<TechnologicalParameter>().Take(500).Select(p => (object?)ParameterRow(p)).ToArray(); });
+                if (includeParameters)
+                    Safe(o, "parameters", () => {
+                        TechnologicalParameterComposition parameters = WatchNative.Parameters(db); return PlcGroupOperations.Items(parameters)
+                            .Cast<TechnologicalParameter>().Take(500).Select(p => (object?)ParameterRow(p)).ToArray();
+                    });
                 return (object?)o;
             }).ToArray();
 #if PLC_TECH_GROUP_READ
-            if (depth < maxDepth) row["groups"] = PlcGroupOperations.Items(groups).Cast<TechnologicalInstanceDBUserGroup>().Select(g => (object?)TechnologyGroupRow(g, includeParameters, depth + 1, maxDepth)).ToArray();
+            if (depth < maxDepth) row["groups"] = PlcGroupOperations.Items(groups).Cast<TechnologicalInstanceDBUserGroup>()
+                .Select(g => (object?)TechnologyGroupRow(g, includeParameters, depth + 1, maxDepth)).ToArray();
             else row["groupsTruncated"] = WatchNative.Count(groups) > 0;
 #else
             if (depth < maxDepth) row["groups"] = Array.Empty<object?>();
@@ -133,7 +154,8 @@ namespace TiaMcp.Adapters.Native.Plc
 #endif
             return row;
         }
-        public HardwareAddressingReply ReadTechnologyObjectTree(string softwarePath, string groupPath = "", bool includeParameters = false, bool includeMotionView = false, int maxDepth = 4)
+        public HardwareAddressingReply ReadTechnologyObjectTree(string softwarePath, string groupPath = "", bool includeParameters = false,
+                bool includeMotionView = false, int maxDepth = 4)
             => _session.RunHmiStepTool("GetTechnologyObjectTree", meta => {
                 meta["mayHaveChanged"] = false;
                 if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
@@ -147,11 +169,16 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (includeMotionView)
                 {
                     var views = new Dictionary<string, object?>();
-                    foreach (TechnologicalInstanceDB db in PlcGroupOperations.Items(WatchNative.Objects(root)).Cast<TechnologicalInstanceDB>().Take(50)) Safe(views, WatchNative.Name(db), () => TypedMotionView(db));
+                    foreach (TechnologicalInstanceDB db in PlcGroupOperations.Items(WatchNative.Objects(root)).Cast<TechnologicalInstanceDB>().Take(50))
+                        Safe(views, WatchNative.Name(db), () => TypedMotionView(db));
                     meta["motionViews"] = views;
                 }
                 meta["apiCallSuccess"] = true;
-                meta["scope"] = "TechnologicalInstanceDBGroup Name / TechnologicalObjects (TechnologicalInstanceDB Name, Number, OfSystemLibElement, OfSystemLibVersion, IsConsistent, parameter count) / Groups recursive to maxDepth; includeParameters adds TechnologicalParameter Name / Value (first 500 per object); includeMotionView adds the typed hardware interfaces, master values and mappings of the root group's objects (first 50). No modification.";
+                meta["scope"] =
+                    "TechnologicalInstanceDBGroup Name / TechnologicalObjects (TechnologicalInstanceDB Name, Number, OfSystemLibElement, OfSystemLibVersion, " +
+                    "IsConsistent, parameter count) / Groups recursive to maxDepth; includeParameters adds TechnologicalParameter Name / Value (first 500 " +
+                    "per object); includeMotionView adds the typed hardware interfaces, master values and mappings of the root group's objects (first 50). " +
+                    "No modification.";
                 return "Technology object tree read; no modification.";
             });
     }

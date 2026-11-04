@@ -32,7 +32,8 @@ namespace TiaMcp.Adapters
                 { CheckDevices(groupDevices(group)); CheckGroups(children(group),depth+1); }
             }
             CheckDevices(devices); CheckDevices(ungrouped); CheckGroups(groups,0);
-            if(count==0) throw new AdapterPreconditionException("An empty device inventory cannot establish all-device offline coverage.","offline-state",false);
+            if(count==0)
+                throw new AdapterPreconditionException("An empty device inventory cannot establish all-device offline coverage.","offline-state",false);
         }
         // Shared traversal/policy exercised with fake graphs; native service adapters
         // remain separately subject to real SDK builds and native acceptance.
@@ -74,12 +75,14 @@ namespace TiaMcp.Adapters
         internal static void RequireDocumentedRelease(string release)
         {
             if(!ReleaseKeys.Contains(release))
-                throw new AdapterPreconditionException("Offline-state workflow evidence is incomplete for release "+release+"; execution remains blocked.","offline-state",false);
+                throw new AdapterPreconditionException("Offline-state workflow evidence is incomplete for release "+release+"; execution remains blocked.",
+                        "offline-state",false);
         }
         internal static bool CheckCompileStates(IEnumerable<string?> states,bool plcCoverageComplete,string scope)
         {
             var observed=states.ToArray();
-            if(!plcCoverageComplete) throw new AdapterPreconditionException("A PLC in "+scope+" has no observable online-state provider.","offline-state",false);
+            if(!plcCoverageComplete)
+                throw new AdapterPreconditionException("A PLC in "+scope+" has no observable online-state provider.","offline-state",false);
             // OnlineProvider is a PLC service. HMI/passive devices may expose none;
             // report that limitation rather than treating absence as Online or Offline.
             if(observed.Length==0) return false;
@@ -90,9 +93,11 @@ namespace TiaMcp.Adapters
         {
             var values=states.ToArray();
             if(!coverageComplete || values.Length==0)
-                throw new AdapterPreconditionException("Offline-state coverage is unknown for "+scope+"; missing services are not evidence of Offline.","offline-state",false);
+                throw new AdapterPreconditionException("Offline-state coverage is unknown for "+scope+"; missing services are not evidence of Offline.",
+                        "offline-state",false);
             if(values.Any(s=>!string.Equals(s,"Offline",StringComparison.Ordinal)))
-                throw new AdapterPreconditionException("Every observed connection must be exactly Offline for "+scope+"; no connection state is changed automatically.","offline-state",false);
+                throw new AdapterPreconditionException("Every observed connection must be exactly Offline for "+scope
+                        +"; no connection state is changed automatically.","offline-state",false);
         }
     }
 }

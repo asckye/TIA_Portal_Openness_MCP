@@ -13,14 +13,18 @@ internal static class V17ProjectEnvelope
         else if(shape=="ProjectMutation" || shape=="Bind") response=V17MutationEnvelope.Wrap(tool,"Mutation",result,shape=="Bind" ? false : dryRun);
         else if(shape=="ProjectTree")
         {
-            if(result is not JsonValue value || !value.TryGetValue<string>(out var tree) || string.IsNullOrWhiteSpace(tree)) throw new IOException("Project tree result is missing.");
-            response=new JsonObject { [Wire("Message")]="Project tree retrieved",[Wire("Tree")]="```\n"+tree+"\n```",[Wire("Meta")]=new JsonObject { ["success"]=true } };
+            if(result is not JsonValue value || !value.TryGetValue<string>(out var tree) || string.IsNullOrWhiteSpace(tree))
+                throw new IOException("Project tree result is missing.");
+            response=new JsonObject {
+                [Wire("Message")]="Project tree retrieved",[Wire("Tree")]="```\n"+tree+"\n```",[Wire("Meta")]=new JsonObject { ["success"]=true } };
         }
         else
         {
-            if(result is not JsonObject state || state["Stage"]?.GetValue<string>()!="attached" || state["OwnsPortal"]?.GetValue<bool>()!=false || state["AttemptedPids"] is not JsonArray pids || pids.Count!=1 || pids[0]!.GetValue<int>()<=0)
+            if(result is not JsonObject state || state["Stage"]?.GetValue<string>()!="attached" || state["OwnsPortal"]?.GetValue<bool>()!=false
+                    || state["AttemptedPids"] is not JsonArray pids || pids.Count!=1 || pids[0]!.GetValue<int>()<=0)
                 throw new IOException("Explicit attachment outcome is missing or invalid.");
-            response=new JsonObject { [Wire("Message")]="Attached to the selected existing TIA process",[Wire("Meta")]=new JsonObject { ["success"]=true,["ownsPortal"]=false } };
+            response=new JsonObject {
+                [Wire("Message")]="Attached to the selected existing TIA process",[Wire("Meta")]=new JsonObject { ["success"]=true,["ownsPortal"]=false } };
             if ((bool?)state["PreviousOwnerEndedIdle"] == true) response["previousOwnerEndedIdle"] = true;
             foreach(var name in new[]{"Stage","Strategy","AttemptedPids","LaunchMode"}) response[Wire(name)]=state[name]?.DeepClone();
         }

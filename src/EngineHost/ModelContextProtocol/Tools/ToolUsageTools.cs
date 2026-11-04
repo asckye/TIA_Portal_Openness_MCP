@@ -13,7 +13,11 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     public sealed class ToolUsageTools
     {
-        [McpServerTool(Name = "GetToolUsage"), Description("[L0][Guide][READ] Unified examples for every tool and operation in this release: exact arguments, parameter sources, result fields, programming files and call sequences. Select toolName + optional operation; language lists programming examples; exampleId returns full files/steps. query/documentId searches/reads embedded official source. Empty selectors list tools, languages and examples. Reads embedded data only.")]
+        [McpServerTool(Name = "GetToolUsage"),
+                Description("[L0][Guide][READ] Unified examples for every tool and operation in this release: exact arguments, parameter sources, result " +
+                "fields, programming files and call sequences. Select toolName + optional operation; language lists programming examples; exampleId returns " +
+                "full files/steps. query/documentId searches/reads embedded official source. Empty selectors list tools, languages and examples. Reads " +
+                "embedded data only.")]
         public CallToolResult GetToolUsage(
             [Description("Exact available tool name, including non-lite tools. Empty searches/lists references.")] string toolName = "",
             [Description("Space-separated words matched against official source text; empty lists documents.")] string query = "",
@@ -21,7 +25,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Zero-based document list or line offset.")] int offset = 0,
             [Description("Page size 1..200, default 80. Continue with nextOffset until null.")] int limit = 80,
             [Description("Exact action/operation from this tool's operations list.")] string operation = "",
-            [Description("Programming language/format, e.g. scl, scl-sd, lad, fbd, db, udt, s7res, stl, graph, hmi-javascript, hmi-vbscript, csharp.")] string language = "",
+            [Description("Programming language/format, e.g. scl, scl-sd, lad, fbd, db, udt, s7res, stl, graph, hmi-javascript, hmi-vbscript, " +
+                "csharp.")] string language =
+                "",
             [Description("Example ID from the examples list; returns complete source files or ordered calls.")] string exampleId = "",
             [Description("Example filter: all/sequence/language; default all.")] string exampleKind = "all")
         {
@@ -52,7 +58,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         methods.Keys, UsageResultContract(name),
                         args => Siemens.ToolVersionPolicy.CallProblem(release, name, key => args[key]?.ToString()));
                     if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
-                        usage["examples"] = ToolUsageCatalog.Examples(release, "engine-source", methods.Keys, language, exampleId, name, exampleKind)["examples"]!.DeepClone();
+                        usage["examples"] = ToolUsageCatalog
+                            .Examples(release, "engine-source", methods.Keys, language, exampleId, name, exampleKind)["examples"]!.DeepClone();
                 }
                 else if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
                     usage = ToolUsageCatalog.Examples(release, "engine-source", methods.Keys, language, exampleId, exampleKind: exampleKind);
@@ -88,9 +95,13 @@ namespace TiaMcpServer.ModelContextProtocol
         private static JsonObject UsageResultContract(string toolName)
         {
             if (toolName == "CallTool") return new JsonObject { ["type"] = "TargetResult",
-                ["status"] = "Returns the target tool's own result unchanged. Bridge admission failures use the V4 envelope. Read GetToolUsage for the target's result contract." };
+                ["status"] =
+                    "Returns the target tool's own result unchanged. Bridge admission failures use the V4 envelope. Read GetToolUsage for the target's " +
+                    "result contract."
+                };
             return new JsonObject { ["type"] = "Envelope", ["schemaVersion"] = 4,
-                ["status"] = "Read ok, error and meta.outcome/execution/completeness. Paging is in meta.paging; batch data.items retain each target's result." };
+                ["status"] = "Read ok, error and meta.outcome/execution/completeness. Paging is in meta.paging; batch data.items retain each target's result."
+                };
         }
     }
 }

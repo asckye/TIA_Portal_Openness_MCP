@@ -67,7 +67,10 @@ namespace TiaMcpServer.ModelContextProtocol
         // separately compiled adapter assemblies; step H will supply the engine's sink and id.
         internal static void ConfigureOutput(Action<string>? write, Func<string>? correlation = null)
         {
-            lock (Sync) { (sink as IDisposable)?.Dispose(); sink = write == null ? (IJournalSink)new FileJournalSink() : new CallbackJournalSink(write); correlationSource = correlation; }
+            lock (Sync) {
+                (sink as IDisposable)?.Dispose(); sink = write == null ? (IJournalSink)new FileJournalSink() : new CallbackJournalSink(write);
+                correlationSource = correlation;
+            }
         }
         internal static void ConfigureCorrelation(Func<string> correlation)
         { lock (Sync) correlationSource = correlation; }
@@ -92,7 +95,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 string path = Path.Combine(root, "calls-" + ProcessKey + ".jsonl");
                 string text = row();
                 RequireDiskFlush(text, ref flush);
-                if (text.IndexOf("\"tool\":\"native:", StringComparison.Ordinal) >= 0 || text.IndexOf("\"nativeCallId\":", StringComparison.Ordinal) >= 0) flush = true;
+                if (text.IndexOf("\"tool\":\"native:", StringComparison.Ordinal) >= 0 || text.IndexOf("\"nativeCallId\":", StringComparison.Ordinal) >= 0)
+                    flush = true;
                 long now = Stopwatch.GetTimestamp();
                 bool checkRetention = settingsRead == 0 || now - settingsRead >= Stopwatch.Frequency;
                 if (checkRetention)
@@ -101,7 +105,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 // The size check reads the open handle, so a file changed outside this writer still rotates on time.
                 bool rotate = currentPath != path || checkRetention || !File.Exists(path);
                 FileStream? stream = rotate ? null : new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
-                if (stream != null && stream.Length + bytes.Length > (long)retention.FileSizeMb * 1024 * 1024) { stream.Dispose(); stream = null; rotate = true; }
+                if (stream != null && stream.Length + bytes.Length > (long)retention.FileSizeMb * 1024 * 1024) {
+                    stream.Dispose(); stream = null; rotate = true; }
                 if (rotate)
                 {
                     retention.Rotate(path, bytes.Length);
@@ -125,7 +130,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             lock (Sync) return new JsonLineObject().Number("failedWrites", failedWrites).String("lastFailure", lastWriteFailure)
                 .String("durability", "best-effort; successful writes flushed to disk")
-                .String("nativeBoundaryCoverage", typeof(InvocationJournal).Assembly.GetType("TiaMcpServer.Diagnostics.GeneratedNativeCalls", false) != null ? "build-instrumented" : "not-instrumented");
+                .String("nativeBoundaryCoverage", typeof(InvocationJournal).Assembly.GetType("TiaMcpServer.Diagnostics.GeneratedNativeCalls", false) != null
+                        ? "build-instrumented" : "not-instrumented");
         }
         internal static string NewId(string? correlation = null)
             => Guid.TryParseExact(correlation ?? correlationSource?.Invoke(), "N", out var parsed) ? parsed.ToString("N") : Guid.NewGuid().ToString("N");
@@ -143,10 +149,13 @@ namespace TiaMcpServer.ModelContextProtocol
             NativeCallStarted();
             WriteRow(id, "native:" + stage, "BEFORE", objectType, objectPath);
             try { T result = call(); WriteRow(id, "native:" + stage, "RETURNED", objectType, objectPath); return result; }
-            catch (Exception ex) { _ = PortalFailureClassifier.IsPortalProcessLost(ex); WriteRow(id, "native:" + stage, "THREW", objectType, objectPath); throw; }
+            catch (Exception ex) {
+                _ = PortalFailureClassifier.IsPortalProcessLost(ex); WriteRow(id, "native:" + stage, "THREW", objectType, objectPath); throw; }
         }
-        internal static void Native(string stage, Action call, string? objectType = null, string? objectPath = null) => Native(stage, () => { call(); return true; }, objectType, objectPath);
-        internal static void WriteRow(string id, string name, string phase, string? objectType = null, string? objectPath = null, Func<JsonLineObject?>? details = null)
+        internal static void Native(string stage, Action call, string? objectType = null, string? objectPath = null) =>
+            Native(stage, () => { call(); return true; }, objectType, objectPath);
+        internal static void WriteRow(string id, string name, string phase, string? objectType = null, string? objectPath = null, Func<JsonLineObject?>
+                ? details = null)
             => Emit(() => FormatRow(DateTime.UtcNow, id, name, phase, ProcessId, objectType, objectPath,
                 ReadBinding(), Thread.CurrentThread.ManagedThreadId, Thread.CurrentThread.GetApartmentState().ToString(), details?.Invoke()));
         internal static void WriteLine(string row) => Emit(() => row);

@@ -10,11 +10,15 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         private static string RequireChoice(string value, string[] allowed, string parameter)
         {
-            if (string.IsNullOrWhiteSpace(value) || !Enumerable.Contains(allowed, value, StringComparer.Ordinal)) throw new ArgumentException(parameter + " must be one of: " + string.Join("/", allowed) + " (case-sensitive).");
+            if (string.IsNullOrWhiteSpace(value) || !Enumerable.Contains(allowed, value, StringComparer.Ordinal))
+                throw new ArgumentException(parameter + " must be one of: " + string.Join("/", allowed) + " (case-sensitive).");
             return value;
         }
         private static void RequireText(string value, string parameter, int max)
-        { if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace)."); }
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value)
+                throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
+        }
         private static void Reject(string value, string parameter, string reason)
         { if (!string.IsNullOrEmpty(value)) throw new ArgumentException(parameter + " " + reason); }
         internal static string RequireOneOf(string value, string[] allowed, string parameter) => RequireChoice(value, allowed, parameter);
@@ -23,7 +27,8 @@ namespace TiaMcp.Adapters.Native.Plc
         private static void Refuse(string value, string parameter, string reason)
             => Reject(value, parameter, reason);
         // ---- external sources (PlcExternalSourceSystemGroup / PlcExternalSourceUserGroup / PlcExternalSource) ---------------------
-        internal static readonly string[] ExternalSourceActions = { "list", "read", "createFromFile", "createFromMasterCopy", "delete", "generateBlocks", "createGroup", "renameGroup", "deleteGroup" };
+        internal static readonly string[] ExternalSourceActions = {
+            "list", "read", "createFromFile", "createFromMasterCopy", "delete", "generateBlocks", "createGroup", "renameGroup", "deleteGroup" };
         internal static readonly string[] GenerateBlockOptions = { "None", "KeepOnError" };
         internal static readonly string[] GenerateTargetKinds = { "block", "type" };
         internal static readonly string[] MasterCopyModes = new[] { "ThrowIfExists", "Rename", "Replace" };
@@ -35,7 +40,8 @@ namespace TiaMcp.Adapters.Native.Plc
             => path.Length >= 3 && char.IsLetter(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/')
                 || path.StartsWith("\\\\", StringComparison.Ordinal) || path.StartsWith("//", StringComparison.Ordinal);
 
-        internal static bool ValidateExternalSourceRequest(string action, string name, string unitName, string unitKind, string filePath, string libraryName, string masterCopyPath, string copyMode,
+        internal static bool ValidateExternalSourceRequest(string action, string name, string unitName, string unitKind, string filePath, string libraryName,
+                string masterCopyPath, string copyMode,
             string generateOption, string targetKind, string targetGroupPath, string newName, bool confirmDelete, bool dryRun)
         {
             RequireOneOf(action, ExternalSourceActions, "action");
@@ -46,8 +52,11 @@ namespace TiaMcp.Adapters.Native.Plc
             else RequireName(name, group ? "name (the user group)" : "name (the external source, with extension)");
             if (action == "createFromFile")
             {
-                if (string.IsNullOrWhiteSpace(filePath) || !FullyQualified(filePath)) throw new ArgumentException("createFromFile needs the fully qualified filePath (drive or UNC) of an existing source file on the TIA Portal machine.");
-                if (!ExternalSourceExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant())) throw new ArgumentException("filePath must be an ASCII source file (" + string.Join(" / ", ExternalSourceExtensions) + ").");
+                if (string.IsNullOrWhiteSpace(filePath) || !FullyQualified(filePath))
+                    throw new ArgumentException("createFromFile needs the fully qualified filePath (drive or UNC) of an existing source file on the TIA " +
+                    "Portal machine.");
+                if (!ExternalSourceExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant()))
+                    throw new ArgumentException("filePath must be an ASCII source file (" + string.Join(" / ", ExternalSourceExtensions) + ").");
             }
             else Refuse(filePath, "filePath", "applies to createFromFile only.");
             if (action == "createFromMasterCopy")
@@ -55,7 +64,11 @@ namespace TiaMcp.Adapters.Native.Plc
                 RequireName(masterCopyPath, "masterCopyPath", 1024);
                 if (!string.IsNullOrEmpty(copyMode)) RequireOneOf(copyMode, MasterCopyModes, "copyMode");
             }
-            else { Refuse(masterCopyPath, "masterCopyPath", "applies to createFromMasterCopy only."); Refuse(copyMode, "copyMode", "applies to createFromMasterCopy only."); Refuse(libraryName, "libraryName", "applies to createFromMasterCopy only (empty = project library)."); }
+            else {
+                Refuse(masterCopyPath, "masterCopyPath", "applies to createFromMasterCopy only.");
+                Refuse(copyMode, "copyMode", "applies to createFromMasterCopy only.");
+                Refuse(libraryName, "libraryName", "applies to createFromMasterCopy only (empty = project library).");
+            }
             if (action == "generateBlocks")
             {
                 RequireOneOf(generateOption, GenerateBlockOptions, "generateOption");
@@ -67,13 +80,16 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             else
             {
-                if (!string.IsNullOrEmpty(generateOption) && generateOption != "None") throw new ArgumentException("generateOption applies to generateBlocks only.");
-                Refuse(targetKind, "targetKind", "applies to generateBlocks only."); Refuse(targetGroupPath, "targetGroupPath", "applies to generateBlocks only.");
+                if (!string.IsNullOrEmpty(generateOption) && generateOption != "None")
+                    throw new ArgumentException("generateOption applies to generateBlocks only.");
+                Refuse(targetKind, "targetKind", "applies to generateBlocks only.");
+                Refuse(targetGroupPath, "targetGroupPath", "applies to generateBlocks only.");
             }
             if (action == "createGroup" || action == "renameGroup") RequireName(newName, "newName");
             else Refuse(newName, "newName", "applies to createGroup / renameGroup only.");
             bool writing = action != "list" && action != "read" && !dryRun;
-            if ((action == "delete" || action == "deleteGroup") && writing && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
+            if ((action == "delete" || action == "deleteGroup") && writing && !confirmDelete)
+                throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
             return writing;
         }
 

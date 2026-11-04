@@ -47,7 +47,8 @@ internal sealed class WorkbenchControlSession
                     if (Current.Sources.Count >= 1024) Current.Sources.Clear();
                     Current.Sources[Path.GetFullPath(path)] = new(project, software, block, Hash(path));
                 }
-                if (tool == "ExportPlcBlock") SourceFile((string?)(data?["outputPath"] ?? data?["outputFile"] ?? data?["exportPath"]) ?? Text("exportPath"), Text("blockPath"));
+                if (tool == "ExportPlcBlock")
+                    SourceFile((string?)(data?["outputPath"] ?? data?["outputFile"] ?? data?["exportPath"]) ?? Text("exportPath"), Text("blockPath"));
                 else if (data?["items"] is JsonArray items)
                     foreach (var item in items)
                     {
@@ -79,7 +80,8 @@ internal sealed class WorkbenchControlSession
     internal (WorkbenchRenderArtifact? Artifact, Error? Error) Resolve(string id, WorkbenchRenderKind kind,
         string? software = null, string? block = null)
     {
-        if (!Current.Renders.TryGetValue(id, out var render)) return (null, new("Render artifact is not registered in this MCP session.", new NotFoundDetails("render-artifact")));
+        if (!Current.Renders.TryGetValue(id, out var render))
+            return (null, new("Render artifact is not registered in this MCP session.", new NotFoundDetails("render-artifact")));
         if (render.Artifact.Kind != kind || render.Project == null || !string.Equals(render.Project, Project, StringComparison.OrdinalIgnoreCase)
             || kind == WorkbenchRenderKind.Ladder && (render.Software != software || render.Block != block))
             return (null, new("Render artifact does not match the bound project and exact target.", new IdentityMismatchDetails("render-artifact", id, null)));

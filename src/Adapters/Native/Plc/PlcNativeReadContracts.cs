@@ -44,7 +44,8 @@ namespace TiaMcp.Adapters
             Depth(depth); path=Child(path,item.Name);
             text.AppendLine(new string(' ',depth*2)+"Item: "+item.Name);
             var container=((IEngineeringServiceProvider)item).GetService<SoftwareContainer>();
-            if(container?.Software!=null) text.AppendLine(new string(' ',(depth+1)*2)+container.Software.GetType().Name+": "+container.Software.Name+" [softwarePath="+path+"]");
+            if(container?.Software!=null) text
+                .AppendLine(new string(' ',(depth+1)*2)+container.Software.GetType().Name+": "+container.Software.Name+" [softwarePath="+path+"]");
             foreach(var child in item.DeviceItems) ProjectTreeItem(text,child,path,depth+1);
         }
         private PlcSoftware ReadPlc(string softwarePath) => ReadSelection(softwarePath).Value;
@@ -72,11 +73,14 @@ namespace TiaMcp.Adapters
             path=Child(path,device.Name);
             foreach(var item in device.DeviceItems) ReadItemCandidates(item,device.Name,groups,path,result,0,device);
         }
-        private static void ReadItemCandidates(DeviceItem item,string device,string[] groups,string path,List<PlcReadCandidate<PlcSoftware>> result,int depth,Device deviceContext)
+        private static void ReadItemCandidates(DeviceItem item,string device,string[] groups,string path,List<PlcReadCandidate<PlcSoftware>> result,int depth,
+                Device deviceContext)
         {
             Depth(depth); path=Child(path,item.Name);
             var container=((IEngineeringServiceProvider)item).GetService<SoftwareContainer>();
-            if(container?.Software is PlcSoftware plc) result.Add(new PlcReadCandidate<PlcSoftware> { Value=plc,ExactPath=path,Groups=groups,Device=device,Host=item.Name,Context=item,DeviceContext=deviceContext });
+            if(container?.Software is PlcSoftware plc) result
+                .Add(new PlcReadCandidate<PlcSoftware> {
+                    Value=plc,ExactPath=path,Groups=groups,Device=device,Host=item.Name,Context=item,DeviceContext=deviceContext });
             foreach(var child in item.DeviceItems) ReadItemCandidates(child,device,groups,path,result,depth+1,deviceContext);
         }
         private static PlcAttributeValue[] ReadAttributes(IEngineeringObject item)
@@ -92,7 +96,8 @@ namespace TiaMcp.Adapters
                     if (!(type.IsPrimitive || type.IsEnum || value is string || value is decimal || value is DateTime || value is TimeSpan || value is Guid))
                     { try { value = value.ToString(); } catch /* swallow(native-fallback): an attribute value that cannot render as text is represented by its type name in the read result */ { value = "<" + type.Name + ">"; } }
                 }
-                return new PlcAttributeValue { Name = info.Name, Value = value, AccessMode = Enum.GetName(typeof(EngineeringAttributeAccessMode), info.AccessMode) };
+                return new PlcAttributeValue {
+                    Name = info.Name, Value = value, AccessMode = Enum.GetName(typeof(EngineeringAttributeAccessMode), info.AccessMode) };
             }).ToArray();
         }
         private static string? OptionalNamespace(object value)
@@ -114,7 +119,8 @@ namespace TiaMcp.Adapters
             Name=t.Name, TypeName=t.GetType().Name, Namespace=OptionalNamespace(t), IsConsistent=t.IsConsistent,
             ModifiedDate=t.ModifiedDate, IsKnowHowProtected=t.IsKnowHowProtected, Attributes=ReadAttributes(t), Description=t.ToString()
         };
-        private static Regex? NameFilter(string regexName) => string.IsNullOrEmpty(regexName) ? null : new Regex(regexName, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+        private static Regex? NameFilter(string regexName) => string.IsNullOrEmpty(regexName) ? null
+            : new Regex(regexName, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
         // Root external sources only, matching the historical V17 profile. No
         // generation, import, deletion, external-file read or software-unit traversal.
         public string[] ReadExternalSourceNames(string softwarePath) =>
@@ -122,7 +128,8 @@ namespace TiaMcp.Adapters
         public PlcBlockDetails[] ReadBlocks(string softwarePath, string regexName = "")
         {
             var filter=NameFilter(regexName);
-            return BlockGroups(ReadPlc(softwarePath).BlockGroup).SelectMany(g=>g.Value.Blocks).Where(b=>filter==null || filter.IsMatch(b.Name)).Select(BlockDetails).ToArray();
+            return BlockGroups(ReadPlc(softwarePath).BlockGroup).SelectMany(g=>g.Value.Blocks).Where(b=>filter==null || filter.IsMatch(b.Name))
+                .Select(BlockDetails).ToArray();
         }
         private string blockPagingSession = Guid.NewGuid().ToString("N");
         private object? blockPagingProject;
@@ -162,7 +169,8 @@ namespace TiaMcp.Adapters
         public PlcTypeDetails[] ReadTypes(string softwarePath, string regexName = "")
         {
             var filter=NameFilter(regexName);
-            return TypeGroups(ReadPlc(softwarePath).TypeGroup).SelectMany(g=>g.Value.Types).Where(t=>filter==null || filter.IsMatch(t.Name)).Select(TypeDetails).ToArray();
+            return TypeGroups(ReadPlc(softwarePath).TypeGroup).SelectMany(g=>g.Value.Types).Where(t=>filter==null || filter.IsMatch(t.Name)).Select(TypeDetails)
+                .ToArray();
         }
         // V17 ResolvePlcTagTablesCollection selects root TagTableGroup.TagTables only.
         public string[] ReadTagTableNames(string softwarePath) => ReadPlc(softwarePath).TagTableGroup.TagTables.Select(t=>t.Name).ToArray();
@@ -170,7 +178,8 @@ namespace TiaMcp.Adapters
         private static PlcBlockHierarchy Hierarchy(PlcBlockGroup group,int depth)
         {
             Depth(depth);
-            return new PlcBlockHierarchy { Name=group.Name, Blocks=group.Blocks.Select(BlockDetails).ToArray(), Groups=group.Groups.Select(g=>Hierarchy(g,depth+1)).ToArray() };
+            return new PlcBlockHierarchy {
+                Name=group.Name, Blocks=group.Blocks.Select(BlockDetails).ToArray(), Groups=group.Groups.Select(g=>Hierarchy(g,depth+1)).ToArray() };
         }
     }
 }

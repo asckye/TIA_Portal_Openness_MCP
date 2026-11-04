@@ -15,7 +15,8 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class PlcDocumentationTools
     {
-        [McpServerTool(Name = "RenderPlcBlockDocument"), Description("[L2][Validation][READ] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards; this native export branch retains behaviorPolicy=current pending V4 native acceptance). mermaidDirection LR (default) or TD. Returns the Markdown in data.markdown (truncated to maxChars, default 60000, full length in data.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded.")]
+        [McpServerTool(Name = "RenderPlcBlockDocument"),
+                Description("[L2][Validation][READ] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards; this native export branch retains behaviorPolicy=current pending V4 native acceptance). mermaidDirection LR (default) or TD. Returns the Markdown in data.markdown (truncated to maxChars, default 60000, full length in data.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded.")]
         public CallToolResult RenderPlcBlockDocumentV4(
             [Description("filePath: See the operation description and its bounds.")] string filePath = "",
             [Description("softwarePath: See the operation description and its bounds.")] string softwarePath = "",
@@ -23,7 +24,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("mermaidDirection: direction of the generated Mermaid diagram - TB or LR.")] string mermaidDirection = "LR",
             [Description("outputPath: See the operation description and its bounds.")] string outputPath = "",
             [Description("maxChars: cap on characters rendered.")] int maxChars = 60000)
-            => OfflineContracts.Run("RenderPlcBlockDocument", () => RenderPlcBlockDocument(filePath, softwarePath, blockPath, mermaidDirection, outputPath, maxChars), writes: !string.IsNullOrWhiteSpace(outputPath) || !string.IsNullOrWhiteSpace(blockPath), current: !string.IsNullOrWhiteSpace(blockPath));
+            => OfflineContracts
+                .Run("RenderPlcBlockDocument", () => RenderPlcBlockDocument(filePath, softwarePath, blockPath, mermaidDirection, outputPath, maxChars), writes
+                    : !string.IsNullOrWhiteSpace(outputPath) || !string.IsNullOrWhiteSpace(blockPath), current: !string.IsNullOrWhiteSpace(blockPath));
 
         public ResponseMessage RenderPlcBlockDocument(
             string filePath = "",
@@ -54,12 +57,15 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         var export = HostToolServices.ExportBlockDocument(softwarePath, blockPath);
                         temp = export.TempDir; path = export.XmlPath;
-                        meta["source"] = new JsonObject { ["mode"] = "block", ["softwarePath"] = softwarePath, ["blockPath"] = blockPath, ["tempExportDeleted"] = true };
+                        meta["source"] = new JsonObject {
+                            ["mode"] = "block", ["softwarePath"] = softwarePath, ["blockPath"] = blockPath, ["tempExportDeleted"] = true };
                     }
                     var rendered = PlcDocumentationLogic.RenderFile(path, mermaidDirection ?? "LR");
                     var md = rendered.Markdown;
-                    meta["blockName"] = rendered.Document.BlockName; meta["blockType"] = rendered.Document.BlockType; meta["language"] = rendered.Document.Language;
-                    meta["networkCount"] = rendered.Networks.Count; meta["graphicalNetworks"] = rendered.GraphicalNetworks; meta["textNetworks"] = rendered.TextNetworks;
+                    meta["blockName"] = rendered.Document.BlockName; meta["blockType"] = rendered.Document.BlockType; meta["language"] = rendered.Document
+                        .Language;
+                    meta["networkCount"] = rendered.Networks.Count; meta["graphicalNetworks"] = rendered.GraphicalNetworks; meta["textNetworks"] = rendered
+                        .TextNetworks;
                     meta["interfaceMembers"] = rendered.Document.Members.Count;
                     meta["markdownLength"] = md.Length;
                     meta["markdown"] = md.Length > maxChars ? md.Substring(0, maxChars) : md;
@@ -71,20 +77,27 @@ namespace TiaMcpServer.ModelContextProtocol
                         meta["mayHaveWrittenFiles"] = true;
                     }
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = md.Length <= maxChars || output != null;
-                    return "Rendered " + rendered.Document.BlockType + " '" + rendered.Document.BlockName + "': " + rendered.Networks.Count + " network(s) (" + rendered.GraphicalNetworks + " graphical, " + rendered.TextNetworks + " text), " + md.Length + " Markdown characters" + (output != null ? ", written to " + output.FullName : "") + ".";
+                    return "Rendered " + rendered.Document.BlockType + " '" + rendered.Document.BlockName + "': " + rendered.Networks.Count + " network(s) ("
+                        + rendered.GraphicalNetworks + " graphical, " + rendered.TextNetworks + " text), " + md.Length + " Markdown characters"
+                        + (output != null ? ", written to " + output.FullName : "") + ".";
                 }
                 finally { OfflineToolExecution.DeleteAnalysisTempDir(temp); }
             });
 
-        [McpServerTool(Name = "GeneratePlcDocumentation"), Description("[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportPlcBlocksDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded.")]
+        [McpServerTool(Name = "GeneratePlcDocumentation"),
+                Description("[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportPlcBlocksDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded.")]
         public CallToolResult GeneratePlcDocumentationV4(
             [Description("directory: See the operation description and its bounds.")] string directory,
             [Description("outputPath: See the operation description and its bounds.")] string outputPath,
             [Description("title: document title.")] string title = "",
             [Description("recursive: true also scans subfolders.")] bool recursive = true,
-            [Description("extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]? extensions = null,
+            [Description("extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]
+                ? extensions = null,
             [Description("mermaidDirection: direction of the generated Mermaid diagram - TB or LR.")] string mermaidDirection = "LR")
-            => OfflineContracts.Run("GeneratePlcDocumentation", () => GeneratePlcDocumentation(directory, outputPath, title, recursive, OfflineContracts.Names(extensions, ""), mermaidDirection), writes: true, current: false);
+            => OfflineContracts
+                .Run("GeneratePlcDocumentation", () =>
+                    GeneratePlcDocumentation(directory, outputPath, title, recursive, OfflineContracts.Names(extensions, ""), mermaidDirection), writes: true,
+                    current: false);
 
         public ResponseMessage GeneratePlcDocumentation(
             string directory,
@@ -101,7 +114,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 File.WriteAllText(output.FullName, hb.Markdown, new UTF8Encoding(false));
                 meta["directory"] = directory; meta["recursive"] = recursive;
                 meta["documentCount"] = hb.Entries.Count; meta["renderedBlocks"] = hb.Entries.Count - hb.Failed; meta["failedDocuments"] = hb.Failed;
-                meta["failures"] = new JsonArray(hb.Entries.Where(e => e.Block == null).Select(e => (JsonNode)new JsonObject { ["file"] = e.File, ["error"] = e.Error }).ToArray());
+                meta["failures"] =
+                    new JsonArray(hb.Entries.Where(e => e.Block == null).Select(e => (JsonNode)new JsonObject { ["file"] = e.File, ["error"] = e.Error })
+                        .ToArray());
                 meta["blocks"] = new JsonArray(hb.Entries.Where(e => e.Block != null).Select(e => (JsonNode)new JsonObject
                 {
                     ["name"] = e.Block!.Document.BlockName, ["type"] = e.Block.Document.BlockType, ["language"] = e.Block.Document.Language,
@@ -110,16 +125,29 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["output"] = NativeFileOutput.Verify(output);
                 meta["markdownLength"] = hb.Markdown.Length;
                 meta["mayHaveWrittenFiles"] = true; meta["apiCallSuccess"] = true; meta["dataComplete"] = hb.Failed == 0;
-                return "Documented " + (hb.Entries.Count - hb.Failed) + " block(s) from " + hb.Entries.Count + " document(s)" + (hb.Failed > 0 ? " (" + hb.Failed + " failed to parse)" : "") + " into " + output.FullName + ".";
+                return "Documented " + (hb.Entries.Count - hb.Failed) + " block(s) from " + hb.Entries.Count + " document(s)"
+                    + (hb.Failed > 0 ? " (" + hb.Failed + " failed to parse)" : "") + " into " + output.FullName + ".";
             });
 
-        [McpServerTool(Name = "AnalyzePlcSclSource"), Description("[L2][Validation][OFFLINE] Heuristic pre-check of SCL source BEFORE ImportPlcBlocksDocuments / WritePlcSclSourceFile: block keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText OR filePath (absolute .scl/.txt; UTF-8). rules optional, e.g. {\"disabled\":[\"SCL007\",\"SCL008\"],\"maxLineLength\":120,\"maxNesting\":5,\"markers\":[\"TODO\"]}. Returns findings {rule, severity error|warning|info, line, message, text} sorted by line, counts per severity and the rule catalog. Heuristics only: 'data.ok' means no finding, NOT that TIA will compile the source; the TIA compiler (CompilePlcSoftware) remains the verdict. Nothing is saved, compiled or downloaded.")]
+        [McpServerTool(Name = "AnalyzePlcSclSource"),
+                Description("[L2][Validation][OFFLINE] Heuristic pre-check of SCL source BEFORE ImportPlcBlocksDocuments / WritePlcSclSourceFile: block " +
+                "keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, " +
+                "VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE " +
+                "TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText " +
+                "OR filePath (absolute .scl/.txt; UTF-8). rules optional, e.g. " +
+                "{\"disabled\":[\"SCL007\",\"SCL008\"],\"maxLineLength\":120,\"maxNesting\":5,\"markers\":[\"TODO\"]}. Returns findings {rule, severity " +
+                "error|warning|info, line, message, text} sorted by line, counts per severity and the rule catalog. Heuristics only: 'data.ok' means no " +
+                "finding, NOT that TIA will compile the source; the TIA compiler (CompilePlcSoftware) remains the verdict. Nothing is saved, compiled or " +
+                "downloaded.")]
         public CallToolResult LintPlcSclSourceV4(
             [Description("sourceText: the SCL source text to lint.")] string sourceText = "",
             [Description("filePath: See the operation description and its bounds.")] string filePath = "",
-            [Description("rules: LintRules. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] LintRules? rules = null,
+            [Description("rules: LintRules. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] LintRules? rules =
+                null,
             [Description("limit: See the operation description and its bounds.")] int limit = 500)
-            => OfflineContracts.Run("AnalyzePlcSclSource", () => LintPlcSclSource(sourceText, filePath, OfflineContracts.Domain(rules, "{}"), limit), writes: false, current: false);
+            => OfflineContracts
+                .Run("AnalyzePlcSclSource", () => LintPlcSclSource(sourceText, filePath, OfflineContracts.Domain(rules, "{}"), limit), writes: false, current
+                    : false);
 
         public ResponseMessage LintPlcSclSource(
             [Description("sourceText: the SCL source text to lint.")] string sourceText = "",

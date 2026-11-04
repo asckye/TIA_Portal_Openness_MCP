@@ -149,7 +149,8 @@ namespace TiaOpenness.Core
                 string display = Text("phase") == "BEFORE" ? "executing" : "unknown";
                 if (outcome.Length > 0 && execution.Length > 0 && completeness.Length > 0)
                     display = EngineToolResult.Classify(Flag("ok"), V4Json.Deserialize<Outcome>(JsonSerializer.Serialize(outcome)),
-                        V4Json.Deserialize<Execution>(JsonSerializer.Serialize(execution)), V4Json.Deserialize<Completeness>(JsonSerializer.Serialize(completeness)));
+                        V4Json.Deserialize<Execution>(JsonSerializer.Serialize(execution)), V4Json
+                            .Deserialize<Completeness>(JsonSerializer.Serialize(completeness)));
                 string arguments = Text("arguments"), result = Text("result");
                 bool argumentsCut = Flag("argumentsTruncated"), resultCut = Flag("resultTruncated");
                 // A truncated JSON prefix cannot safely be parsed again. Only producer-marked previews are retained.
@@ -158,16 +159,19 @@ namespace TiaOpenness.Core
                 {
                     Identity = value.GetProperty("mcpProcessId").GetInt32().ToString(CultureInfo.InvariantCulture) + ":" + Text("id") + ":" + Text("tool"),
                     RequestId = Text("requestId"), Time = DateTimeOffset.Parse(Text("startedUtc"), CultureInfo.InvariantCulture),
-                    Updated = DateTimeOffset.Parse(Text("utc"), CultureInfo.InvariantCulture), Host = Text("host"), Release = Text("releaseKey"), Tool = Text("tool"),
+                    Updated = DateTimeOffset.Parse(Text("utc"), CultureInfo.InvariantCulture), Host = Text("host"), Release = Text("releaseKey"), Tool =
+                        Text("tool"),
                     IsWrite = Flag("isWrite"), Outcome = outcome, Execution = execution, Completeness = completeness, DisplayOutcome = display,
-                    DurationMs = value.TryGetProperty("durationMs", out var duration) && duration.ValueKind == JsonValueKind.Number && duration.TryGetInt32(out int milliseconds) ? milliseconds : (int?)null,
+                    DurationMs = value.TryGetProperty("durationMs", out var duration) && duration.ValueKind == JsonValueKind.Number && duration
+                        .TryGetInt32(out int milliseconds) ? milliseconds : (int?)null,
                     Target = CallJournalPayload.Bound(Text("target")), Arguments = Preview(arguments, argumentsCut), Result = Preview(result, resultCut),
                     ArgumentsTruncated = argumentsCut, ResultTruncated = resultCut, ErrorCode = Text("errorCode"),
                     Actor = Text("actor"), McpSession = Text("mcpSession")
                 };
                 return row.RequestId.Length > 0 && row.Tool.Length > 0;
             }
-            catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is FormatException || ex is OverflowException)
+            catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is FormatException
+                    || ex is OverflowException)
             { return false; }
         }
 

@@ -37,9 +37,12 @@ namespace TiaMcp.Adapters.Native.Optional
     internal sealed partial class OptionalSession
     {
         internal DeviceItem ExactDriveItem(string devicePathJson, string itemPathJson)
-            => ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("itemPathJson must select a device item (the drive unit / control unit), not the device itself.");
+            => ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem
+                ?? throw new ArgumentException("itemPathJson must select a device item (the drive unit / control unit), not the device itself.");
         internal DriveObjectContainer ExactDriveContainer(DeviceItem item)
-            => item.GetService<DriveObjectContainer>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveObjectContainer unavailable on device item '" + item.Name + "' (not a Startdrive drive object host, or Startdrive not installed).");
+            => item.GetService<DriveObjectContainer>()
+                ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveObjectContainer unavailable on device item '" + item.Name
+                    + "' (not a Startdrive drive object host, or Startdrive not installed).");
         internal static ushort? SafeDriveObjectNumber(DriveObject drive) { try { return drive.DriveObjectNumber; } catch { /* swallow(probe-optional): G120C may not expose DriveObjectNumber; the selector also supports composition index. */ return null; } }
         internal static DriveObject ExactDriveObject(DriveObjectContainer container, Logic.DriveSelector selector)
         {
@@ -47,14 +50,19 @@ namespace TiaMcp.Adapters.Native.Optional
             if (selector.ByNumber)
             {
                 var matches = objects.Where(o => SafeDriveObjectNumber(o) == selector.Number).Take(2).ToArray();
-                if (matches.Length != 1) throw new PlcSoftwareException("NotFound", "Exactly one drive object with " + selector.Label + " expected, found " + matches.Length + " (use driveObjectIndex when DriveObjectNumber is unavailable on this drive).");
+                if (matches.Length != 1)
+                    throw new PlcSoftwareException("NotFound", "Exactly one drive object with " + selector.Label + " expected, found " + matches.Length
+                        + " (use driveObjectIndex when DriveObjectNumber is unavailable on this drive).");
                 return matches[0];
             }
-            if (selector.Index >= objects.Count) throw new PlcSoftwareException("NotFound", selector.Label + " out of range: the container has " + objects.Count + " drive object(s).");
+            if (selector.Index >= objects.Count)
+                throw new PlcSoftwareException("NotFound", selector.Label + " out of range: the container has " + objects.Count + " drive object(s).");
             return objects[selector.Index];
         }
         internal DriveObject ExactDriveObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, int driveObjectIndex)
-            => ExactDriveObject(ExactDriveContainer(ExactDriveItem(devicePathJson, itemPathJson)), Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex));
+            =>
+                ExactDriveObject(ExactDriveContainer(ExactDriveItem(devicePathJson, itemPathJson)), Logic
+                    .ParseDriveSelector(driveObjectNumber, driveObjectIndex));
     }
 }
 

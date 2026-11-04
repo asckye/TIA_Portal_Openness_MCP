@@ -15,7 +15,15 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class OfflineAnalysisTools
     {
-        [McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]
+        [McpServerTool(Name = "ComparePlcBlockDocuments"),
+                Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling " +
+                ".s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO " +
+                "timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact " +
+                "block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted " +
+                "afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, " +
+                "network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block " +
+                "is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain " +
+                "behaviorPolicy=current pending V4 native acceptance.")]
         public CallToolResult ComparePlcBlockDocumentsV4(
             [Description("leftFilePath: full path of the left document on the TIA machine.")] string leftFilePath = "",
             [Description("rightFilePath: full path of the right document on the TIA machine.")] string rightFilePath = "",
@@ -25,7 +33,11 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("offset: See the operation description and its bounds.")] int offset = 0,
             [Description("limit: See the operation description and its bounds.")] int limit = 100,
             [Description("contextLines: lines of context around each difference.")] int contextLines = 2)
-            => OfflineContracts.Run("ComparePlcBlockDocuments", () => ComparePlcBlockDocuments(leftFilePath, rightFilePath, softwarePath, leftBlockPath, rightBlockPath, offset, limit, contextLines), writes: !string.IsNullOrWhiteSpace(leftBlockPath) || !string.IsNullOrWhiteSpace(rightBlockPath), current: !string.IsNullOrWhiteSpace(leftBlockPath) || !string.IsNullOrWhiteSpace(rightBlockPath), offset: offset, limit: limit);
+            => OfflineContracts
+                .Run("ComparePlcBlockDocuments", () =>
+                    ComparePlcBlockDocuments(leftFilePath, rightFilePath, softwarePath, leftBlockPath, rightBlockPath, offset, limit, contextLines), writes
+                    : !string.IsNullOrWhiteSpace(leftBlockPath) || !string.IsNullOrWhiteSpace(rightBlockPath), current: !string
+                    .IsNullOrWhiteSpace(leftBlockPath) || !string.IsNullOrWhiteSpace(rightBlockPath), offset: offset, limit: limit);
 
         public ResponseMessage ComparePlcBlockDocuments(
             [Description("leftFilePath: full path of the left document on the TIA machine.")] string leftFilePath = "",
@@ -52,7 +64,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     var structural = result["structural"]?["differenceCount"]?.GetValue<int>() ?? 0;
                     return identical
                         ? "Documents are identical after normalization."
-                        : "Documents differ: " + result["hunkCount"] + " hunk(s), " + structural + " structural difference(s). Page offset=" + offset + " limit=" + limit + ".";
+                        : "Documents differ: " + result["hunkCount"] + " hunk(s), " + structural + " structural difference(s). Page offset=" + offset
+                            + " limit=" + limit + ".";
                 }
                 finally
                 {
@@ -61,16 +74,28 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             });
 
-        [McpServerTool(Name = "ScanPlcSourceAnnotations"), Description("[L2][Validation][FILE] Scan exported PLC documents in a directory (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]) for annotation markers in comments, block/network titles and network comments. markers default [\"TODO\",\"FIXME\",\"HACK\",\"XXX\",\"NOTE\",\"BUG\"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded.")]
+        [McpServerTool(Name = "ScanPlcSourceAnnotations"),
+                Description("[L2][Validation][FILE] Scan exported PLC documents in a directory (absolute path; recursive by default; extensions default " +
+                "[\".xml\",\".s7dcl\",\".scl\"]) for annotation markers in comments, block/network titles and network comments. markers default " +
+                "[\"TODO\",\"FIXME\",\"HACK\",\"XXX\",\"NOTE\",\"BUG\"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, " +
+                "SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling " +
+                ".s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all " +
+                "rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded.")]
         public CallToolResult ScanPlcSourceAnnotationsV4(
             [Description("directory: See the operation description and its bounds.")] string directory,
             [Description("recursive: true also scans subfolders.")] bool recursive = true,
-            [Description("extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]? extensions = null,
-            [Description("markers: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]? markers = null,
+            [Description("extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]
+                ? extensions = null,
+            [Description("markers: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]
+                ? markers = null,
             [Description("offset: See the operation description and its bounds.")] int offset = 0,
             [Description("limit: See the operation description and its bounds.")] int limit = 200,
             [Description("csvPath: full path of the CSV file to write ('' = no CSV).")] string csvPath = "")
-            => OfflineContracts.Run("ScanPlcSourceAnnotations", () => ScanPlcSourceAnnotations(directory, recursive, OfflineContracts.Names(extensions, ""), OfflineContracts.Names(markers, ""), offset, limit, csvPath), writes: !string.IsNullOrWhiteSpace(csvPath), current: false, offset: offset, limit: limit);
+            => OfflineContracts
+                .Run("ScanPlcSourceAnnotations", () =>
+                    ScanPlcSourceAnnotations(directory, recursive, OfflineContracts.Names(extensions, ""), OfflineContracts.Names(markers, ""), offset, limit,
+                        csvPath),
+                    writes: !string.IsNullOrWhiteSpace(csvPath), current: false, offset: offset, limit: limit);
 
         public ResponseMessage ScanPlcSourceAnnotations(
             string directory,
@@ -114,17 +139,28 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["csv"] = NativeFileOutput.Verify(csv);
                     meta["csv"]!["rowsWritten"] = rows.Count;
                 }
-                return rows.Count + " annotation(s) in " + files.Count + " file(s)" + (failures.Count > 0 ? " (" + failures.Count + " file(s) failed to parse)" : "") + (csv != null ? "; CSV written to " + csv.FullName : "") + ".";
+                return rows.Count + " annotation(s) in " + files.Count + " file(s)"
+                    + (failures.Count > 0 ? " (" + failures.Count + " file(s) failed to parse)" : "") + (csv != null ? "; CSV written to " + csv.FullName : "")
+                    + ".";
             });
 
-        [McpServerTool(Name = "ExtractPlcBlockMetrics"), Description("[L2][Validation][READ] Derive per-block metrics from exported PLC documents (path = absolute file or directory; recursive; extensions default [\".xml\",\".s7dcl\",\".scl\"]): network count and titles/comments, interface members per section, block calls (CallInfo / quoted calls / #instance calls), instructions (LAD/FBD Parts, SCL functions), SCL source lines, comment lines and ratio, and max IF/CASE/FOR/WHILE/REPEAT nesting where SCL text is available (null otherwise). Graphical networks contribute no source lines. The numbers describe the export only; they are NOT a Siemens quality verdict and do not replace TIA compile diagnostics or the programming guidelines. Paginated rows. No TIA Portal connection, nothing is saved, compiled or downloaded.")]
+        [McpServerTool(Name = "ExtractPlcBlockMetrics"),
+                Description("[L2][Validation][READ] Derive per-block metrics from exported PLC documents (path = absolute file or directory; recursive; " +
+                "extensions default [\".xml\",\".s7dcl\",\".scl\"]): network count and titles/comments, interface members per section, block calls (CallInfo " +
+                "/ quoted calls / #instance calls), instructions (LAD/FBD Parts, SCL functions), SCL source lines, comment lines and ratio, and max " +
+                "IF/CASE/FOR/WHILE/REPEAT nesting where SCL text is available (null otherwise). Graphical networks contribute no source lines. The numbers " +
+                "describe the export only; they are NOT a Siemens quality verdict and do not replace TIA compile diagnostics or the programming guidelines. " +
+                "Paginated rows. No TIA Portal connection, nothing is saved, compiled or downloaded.")]
         public CallToolResult ExtractPlcBlockMetricsV4(
             [Description("path: absolute path of an exported document file or of a directory of exports on the TIA machine.")] string path,
             [Description("recursive: true also scans subfolders.")] bool recursive = true,
-            [Description("extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]? extensions = null,
+            [Description("extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]
+                ? extensions = null,
             [Description("offset: See the operation description and its bounds.")] int offset = 0,
             [Description("limit: See the operation description and its bounds.")] int limit = 100)
-            => OfflineContracts.Run("ExtractPlcBlockMetrics", () => ExtractPlcBlockMetrics(path, recursive, OfflineContracts.Names(extensions, ""), offset, limit), writes: false, current: false, offset: offset, limit: limit);
+            => OfflineContracts
+                .Run("ExtractPlcBlockMetrics", () => ExtractPlcBlockMetrics(path, recursive, OfflineContracts.Names(extensions, ""), offset, limit), writes
+                    : false, current: false, offset: offset, limit: limit);
 
         public ResponseMessage ExtractPlcBlockMetrics(
             [Description("path: absolute path of an exported document file or of a directory of exports on the TIA machine.")] string path,
@@ -137,7 +173,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 OfflineAnalysisLogic.ValidatePage(offset, limit);
                 if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) throw new ArgumentException("Absolute file or directory path required.");
                 var extensions = OfflineAnalysisLogic.ParseExtensions(extensionsJson);
-                var files = File.Exists(path) ? new System.Collections.Generic.List<string> { path } : OfflineAnalysisLogic.EnumerateDocuments(path, recursive, extensions);
+                var files = File.Exists(path) ? new System.Collections.Generic.List<string> { path } : OfflineAnalysisLogic
+                    .EnumerateDocuments(path, recursive, extensions);
                 var failures = new JsonArray();
                 var rows = new JsonArray();
                 var index = 0;
@@ -160,7 +197,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     "Metrics are derived from the exported document only and are not a Siemens quality verdict.",
                     "sourceLines/commentLines/commentRatio cover SCL text (and all body lines of .s7dcl/.scl); SimaticML graphical networks contribute none.",
                     "maxNesting counts IF/CASE/FOR/WHILE/REPEAT depth in SCL text; null when not derivable.");
-                return rows.Count + " block metric row(s) from " + files.Count + " file(s)" + (failures.Count > 0 ? " (" + failures.Count + " failed to parse)" : "") + ".";
+                return rows.Count + " block metric row(s) from " + files.Count + " file(s)"
+                    + (failures.Count > 0 ? " (" + failures.Count + " failed to parse)" : "") + ".";
             });
 
     }

@@ -14,7 +14,9 @@ internal static class OfflineCompositionBuilders
     internal const int MaxItems = 1000;
     internal const int MaxStringCharacters = 4096;
     internal const string StructuredTextNamespace = "http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4";
-    internal const string Warning = "V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed.";
+    internal const string Warning =
+        "V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or " +
+        "PLC program correctness is claimed.";
 
     internal static JsonObject Build(string name, string outputReleaseKey, string json, bool innerOnly = false)
     {
@@ -41,7 +43,8 @@ internal static class OfflineCompositionBuilders
                     writable = value.GetBoolean();
                 }
                 return new PlcDbMemberDefinition(Text(row, true, "name"), Text(row, true, "datatype", "dataType"),
-                    writable, OptionalElementText(Text(row, false, "commentZhCn", "comment", "commentZh")), OptionalElementText(Text(row, false, "startValue")));
+                    writable, OptionalElementText(Text(row, false, "commentZhCn", "comment", "commentZh")),
+                        OptionalElementText(Text(row, false, "startValue")));
             }).ToArray();
             xml = PlcGlobalDbXmlBuilder.BuildXml(dbName, number, members, outputReleaseKey);
             mode = "plc-build-global-db-xml";
@@ -57,7 +60,8 @@ internal static class OfflineCompositionBuilders
             foreach (var op in operations)
             {
                 // Validate object and all keys before interpreting an operation.
-                Properties(op, "op", "kind", "type", "indent", "condition", "conditionVariable", "variable", "target", "source", "fromSymbol", "literalValue", "value", "text", "count", "name", "items");
+                Properties(op, "op", "kind", "type", "indent", "condition", "conditionVariable", "variable", "target", "source", "fromSymbol", "literalValue",
+                        "value", "text", "count", "name", "items");
                 var kind = Text(op, true, "op", "kind", "type").Trim().ToLowerInvariant();
                 switch (kind)
                 {
@@ -95,12 +99,14 @@ internal static class OfflineCompositionBuilders
                         if (Indent(op) > 0) builder.Blank(Indent(op));
                         if (kind == "global")
                         {
-                            if (symbol.Contains('"') || symbol.Contains('#') || symbol.Split('.').Any(string.IsNullOrWhiteSpace)) throw new ArgumentException("Unsupported global path.");
+                            if (symbol.Contains('"') || symbol.Contains('#') || symbol.Split('.').Any(string.IsNullOrWhiteSpace))
+                                throw new ArgumentException("Unsupported global path.");
                             builder.GlobalVariable(symbol.Split('.'));
                         }
                         else if (kind == "local")
                         {
-                            if (symbol != symbol.Trim() || symbol.Contains('.') || symbol.Contains('#') || symbol.Contains('"')) throw new ArgumentException("Single local name required.");
+                            if (symbol != symbol.Trim() || symbol.Contains('.') || symbol.Contains('#') || symbol.Contains('"'))
+                                throw new ArgumentException("Single local name required.");
                             builder.LocalVariable(symbol);
                         }
                         else builder.Symbol(SymbolText(symbol));
@@ -136,7 +142,8 @@ internal static class OfflineCompositionBuilders
             }
             xml = innerOnly ? builder.BuildInnerXml() : builder.BuildStructuredTextXml();
             mode = "plc-build-structured-text-xml";
-            scope = innerOnly ? "bounded input and fragment XML well-formedness in original StructuredText/v4 namespace context only" : "bounded input and StructuredText fragment XML well-formedness only";
+            scope = innerOnly ? "bounded input and fragment XML well-formedness in original StructuredText/v4 namespace context only"
+                : "bounded input and StructuredText fragment XML well-formedness only";
             summary = new JsonObject { ["innerOnly"] = innerOnly, ["operationCount"] = operations.Length, ["fragmentNamespace"] = StructuredTextNamespace };
         }
         else throw new ArgumentException("Unknown builder.");
@@ -150,7 +157,8 @@ internal static class OfflineCompositionBuilders
         var parsed = XDocument.Load(reader);
         if (name == "BuildPlcGlobalDb")
         {
-            if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != format!.EngineeringVersion) throw new InvalidOperationException("Unexpected document format.");
+            if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != format!.EngineeringVersion)
+                throw new InvalidOperationException("Unexpected document format.");
         }
         else if (parsed.Root?.Name != XName.Get("StructuredText", StructuredTextNamespace)) throw new InvalidOperationException("Unexpected fragment format.");
         var data = new JsonObject
@@ -159,7 +167,8 @@ internal static class OfflineCompositionBuilders
             ["schemaValidated"] = false, ["importValidated"] = false, ["programSemanticsValidated"] = false, ["outputReleaseKey"] = outputReleaseKey,
             ["interfaceNamespace"] = format?.InterfaceNamespace.NamespaceName, ["interfaceSchemaFile"] = format?.InterfaceSchemaFile,
             ["error"] = null, ["xml"] = xml, ["summary"] = summary,
-            ["safetyPolicy"] = new JsonObject { ["tia"] = "No connection, import or project modification.", ["write"] = "Returns XML in memory only; no files are read or written." }
+            ["safetyPolicy"] = new JsonObject {
+                ["tia"] = "No connection, import or project modification.", ["write"] = "Returns XML in memory only; no files are read or written." }
         };
         return new JsonObject
         {
@@ -168,7 +177,9 @@ internal static class OfflineCompositionBuilders
             {
                 ["success"] = true, ["offlineOnly"] = true, ["outputReleaseKey"] = outputReleaseKey, ["schemaValidated"] = false,
                 ["importValidated"] = false, ["programSemanticsValidated"] = false, ["nativeAcceptance"] = "NOT RUN",
-                ["provenance"] = format != null ? "Flat GlobalDB generation with the target release interface schema and object attributes; not an XML converter" : "Existing V21 StructuredText generator; no version conversion", ["validationScope"] = scope
+                ["provenance"] = format != null
+                    ? "Flat GlobalDB generation with the target release interface schema and object attributes; not an XML converter"
+                    : "Existing V21 StructuredText generator; no version conversion", ["validationScope"] = scope
             },
             ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] = new JsonArray(format != null ? PlcDeclarationXmlFormat.Warning : Warning),
             ["OutputPath"] = null, ["OutputFiles"] = null, ["Xml"] = xml
@@ -186,7 +197,8 @@ internal static class OfflineCompositionBuilders
         if (value.ValueKind != JsonValueKind.Object) throw new ArgumentException("Object required.");
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var property in value.EnumerateObject())
-            if (!seen.Add(property.Name) || !allowed.Contains(property.Name, StringComparer.Ordinal)) throw new ArgumentException("Duplicate or unknown property.");
+            if (!seen.Add(property.Name) || !allowed.Contains(property.Name, StringComparer.Ordinal))
+                throw new ArgumentException("Duplicate or unknown property.");
     }
     private static JsonElement? Alias(JsonElement root, bool required, params string[] aliases)
     {
@@ -214,7 +226,8 @@ internal static class OfflineCompositionBuilders
     {
         var value = Alias(root, !fallback.HasValue, aliases);
         if (!value.HasValue) return fallback!.Value;
-        if (value.Value.ValueKind != JsonValueKind.Number || !value.Value.TryGetInt32(out var number) || number < min || number > max) throw new ArgumentException("Invalid integer.");
+        if (value.Value.ValueKind != JsonValueKind.Number || !value.Value.TryGetInt32(out var number) || number < min || number > max)
+            throw new ArgumentException("Invalid integer.");
         return number;
     }
     private static string AttributeText(string value)
@@ -242,10 +255,12 @@ internal static class OfflineCompositionBuilders
         var text = value.StartsWith('#') ? value[1..] : value;
         if (text.Contains('"'))
         {
-            if (value.StartsWith('#') || text.Length < 3 || text[0] != '"' || text[^1] != '"' || text.Count(c => c == '"') != 2) throw new ArgumentException("Unsupported quoted path.");
+            if (value.StartsWith('#') || text.Length < 3 || text[0] != '"' || text[^1] != '"' || text.Count(c => c == '"') != 2)
+                throw new ArgumentException("Unsupported quoted path.");
             text = text[1..^1];
         }
-        if (text.Split('.').Any(segment => string.IsNullOrWhiteSpace(segment) || segment != segment.Trim())) throw new ArgumentException("Invalid symbol path.");
+        if (text.Split('.').Any(segment => string.IsNullOrWhiteSpace(segment) || segment != segment.Trim()))
+            throw new ArgumentException("Invalid symbol path.");
         return value;
     }
 }

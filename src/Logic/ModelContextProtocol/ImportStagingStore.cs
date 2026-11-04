@@ -58,7 +58,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
         {
             string attempted = error is BundleResourceUnavailableException missing ? missing.Resource : AppContext.BaseDirectory;
             return Envelope.Create(new JsonObject { ["attemptedPath"] = attempted },
-                new Error("The installed bundle could not be resolved for staging; attempted path: " + attempted, new IoFailedDetails("bundle-staging", attempted)),
+                new Error("The installed bundle could not be resolved for staging; attempted path: " + attempted,
+                        new IoFailedDetails("bundle-staging", attempted)),
                 new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), Outcome.RejectedBeforeOperation, Execution.NotStarted,
                     false, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>()));
         }
@@ -68,7 +69,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
         {
             string session = owner.SessionId;
             TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(release);
-            if (!Path.IsPathRooted(bundleRoot) || !Guid.TryParseExact(session, "N", out _)) throw new ArgumentException("An absolute bundle root and server session identity are required.");
+            if (!Path.IsPathRooted(bundleRoot) || !Guid.TryParseExact(session, "N", out _))
+                throw new ArgumentException("An absolute bundle root and server session identity are required.");
             this.release = release;
             this.session = session;
             this.owner = owner;
@@ -86,26 +88,37 @@ namespace TiaMcp.Logic.ModelContextProtocol
         private static void Safe(string path)
         {
             for (var current = new DirectoryInfo(Path.GetDirectoryName(path)!); current != null; current = current.Parent)
-                if (current.Exists && (current.Attributes & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Staging ancestry contains a link/reparse point.", "files");
-            if (File.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Staging file is a link/reparse point.", "files");
+                if (current.Exists && (current.Attributes & FileAttributes.ReparsePoint) != 0)
+                    throw new ArgumentException("Staging ancestry contains a link/reparse point.", "files");
+            if (File.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                throw new ArgumentException("Staging file is a link/reparse point.", "files");
         }
         private byte[] Validate(StagedTextFile file)
         {
             if (file == null || string.IsNullOrWhiteSpace(file.FileName) || file.FileName.Length > 128 || file.FileName.Trim() != file.FileName
-                || file.FileName.Equals(ManifestName, StringComparison.OrdinalIgnoreCase) || file.FileName.Contains("..") || file.FileName.EndsWith(".", StringComparison.Ordinal)
-                || file.FileName.Any(c => char.IsControl(c) || "\\/:*?\"<>|".Contains(c))) throw new ArgumentException("Use a safe filename without separators, traversal, trailing spaces/dots or control characters.", "files");
+                || file.FileName.Equals(ManifestName, StringComparison.OrdinalIgnoreCase) || file.FileName.Contains("..") || file.FileName
+                    .EndsWith(".", StringComparison.Ordinal)
+                || file.FileName
+                    .Any(c => char.IsControl(c) || "\\/:*?\"<>|"
+                        .Contains(c))) throw new ArgumentException("Use a safe filename without separators, traversal, trailing spaces/dots or control characters.",
+                        "files");
             var stem = file.FileName.Split('.')[0].TrimEnd(' ').ToUpperInvariant();
             if (new[] { "CON", "PRN", "AUX", "NUL", "CLOCK$", "CONIN$", "CONOUT$" }.Contains(stem)
-                || System.Text.RegularExpressions.Regex.IsMatch(stem, @"^(COM|LPT)[0-9¹²³]$")) throw new ArgumentException("Reserved filenames are refused.", "files");
+                || System.Text.RegularExpressions.Regex
+                    .IsMatch(stem, @"^(COM|LPT)[0-9¹²³]$")) throw new ArgumentException("Reserved filenames are refused.", "files");
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             bool xml = file.Kind == "simaticml" || file.Kind == "tagtable" || file.Kind == "udt" && extension == ".xml";
             bool source = file.Kind == "scl" && extension == ".scl" || file.Kind == "udt" && (extension == ".scl" || extension == ".udt")
                 || file.Kind == "s7dcl" && extension == ".s7dcl" && (release == "20" || release == "21");
             bool resource = file.Kind == "s7res" && extension == ".s7res" && (release == "20" || release == "21");
-            if (!(xml && extension == ".xml") && !source && !resource) throw new ArgumentException("Filename extension/kind is not supported on this release.", "files");
-            if (string.IsNullOrWhiteSpace(file.Content) || file.Content.Length > MaximumFileBytes) throw new ArgumentException("Content must be nonempty and at most 4 MiB.", "files");
+            if (!(xml && extension == ".xml") && !source && !resource)
+                throw new ArgumentException("Filename extension/kind is not supported on this release.", "files");
+            if (string.IsNullOrWhiteSpace(file.Content) || file.Content.Length > MaximumFileBytes)
+                throw new ArgumentException("Content must be nonempty and at most 4 MiB.", "files");
             if (file.Content.Any(c => c == '\0' || c == '\ufeff' || char.IsControl(c) && c != '\t' && c != '\r' && c != '\n')
-                || source && file.Content.Any(c => c > 127)) throw new ArgumentException("External sources require ASCII without BOM; document control characters are refused.", "files");
+                || source && file.Content
+                    .Any(c => c > 127)) throw new ArgumentException("External sources require ASCII without BOM; document control characters are refused.",
+                        "files");
             byte[] bytes = Utf8.GetBytes(file.Content);
             if (bytes.LongLength > MaximumFileBytes) throw new ArgumentException("UTF-8 file size exceeds 4 MiB.", "files");
             if (xml)
@@ -116,9 +129,11 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 XDocument document;
                 using (var reader = XmlReader.Create(new StringReader(file.Content), settings)) document = XDocument.Load(reader);
                 if (document.Root?.Name != XName.Get("Document")) throw new ArgumentException("XML requires the Openness Document root.", "files");
-                if (document.Declaration?.Encoding != null && !document.Declaration.Encoding.Equals("utf-8", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("XML encoding declaration must be UTF-8.", "files");
+                if (document.Declaration?.Encoding != null && !document.Declaration.Encoding.Equals("utf-8", StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("XML encoding declaration must be UTF-8.", "files");
                 if (file.Kind == "tagtable" && !document.Root.Elements("SW.Tags.PlcTagTable").Any()
-                    || file.Kind == "udt" && !document.Root.Elements("SW.Types.PlcStruct").Any()) throw new ArgumentException("XML root object does not match the requested kind.", "files");
+                    || file.Kind == "udt" && !document.Root.Elements("SW.Types.PlcStruct")
+                        .Any()) throw new ArgumentException("XML root object does not match the requested kind.", "files");
             }
             return bytes;
         }
@@ -136,21 +151,25 @@ namespace TiaMcp.Logic.ModelContextProtocol
                     if (total > MaximumBytes) throw new ArgumentException("Batch staging byte quota exceeded.", nameof(files));
                     bytes.Add(content);
                 }
-                if (files.Select(f => f.FileName).Distinct(StringComparer.OrdinalIgnoreCase).Count() != files.Length) throw new ArgumentException("Case-insensitive duplicate filenames are refused.", nameof(files));
+                if (files.Select(f => f.FileName).Distinct(StringComparer.OrdinalIgnoreCase).Count() != files.Length)
+                    throw new ArgumentException("Case-insensitive duplicate filenames are refused.", nameof(files));
                 foreach (var disk in Discover(root).Where(b => (bool?)b["identified"] == true))
                     batches[(string)disk["batchId"]!] = disk;
                 foreach (var id in batches.Keys.Where(id => !Directory.Exists(Path.Combine(root, id))).ToArray()) batches.Remove(id);
                 long retained = batches.Values.Sum(b => b["byteLength"]!.GetValue<long>());
                 int count = batches.Values.Sum(b => b["files"]!.AsArray().Count);
-                if (batches.Count >= MaximumBatches || count + files.Length > MaximumFiles || retained + total > MaximumBytes) throw new ArgumentException("Session staging quota exceeded; review and clean up staged batches.", nameof(files));
+                if (batches.Count >= MaximumBatches || count + files.Length > MaximumFiles || retained + total > MaximumBytes)
+                    throw new ArgumentException("Session staging quota exceeded; review and clean up staged batches.", nameof(files));
                 CheckWritable();
                 // Only Windows hosts hand staged paths to net48 workers and engines.
                 foreach (var file in files)
                     if (Path.DirectorySeparatorChar == '\\' && Path.Combine(root, new string('0', 32), file.FileName).Length >= 260)
-                        throw new ArgumentException("Staged import path exceeds the net48 MAX_PATH limit; use a shorter bundle path or filename.", nameof(files));
+                        throw new ArgumentException("Staged import path exceeds the net48 MAX_PATH limit; use a shorter bundle path or filename.",
+                                nameof(files));
                 var entries = new JsonArray();
                 for (int i = 0; i < files.Length; i++) entries.Add(new JsonObject { ["fileName"] = files[i].FileName, ["kind"] = files[i].Kind,
-                    ["encoding"] = files[i].Kind == "scl" || files[i].Kind == "s7dcl" || files[i].Kind == "udt" && !Path.GetExtension(files[i].FileName).Equals(".xml", StringComparison.OrdinalIgnoreCase) ? "ascii" : "utf-8",
+                    ["encoding"] = files[i].Kind == "scl" || files[i].Kind == "s7dcl" || files[i].Kind == "udt" && !Path.GetExtension(files[i].FileName)
+                        .Equals(".xml", StringComparison.OrdinalIgnoreCase) ? "ascii" : "utf-8",
                     ["byteLength"] = bytes[i].LongLength, ["sha256"] = Hash(bytes[i]) });
                 var result = new JsonObject { ["executed"] = !dryRun, ["stagingDirectory"] = root, ["byteLength"] = total, ["files"] = entries };
                 if (dryRun) return result;
@@ -180,12 +199,16 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 }
                 catch (Exception error) when (error is ArgumentException || error is IOException || error is UnauthorizedAccessException)
                 { result["partial"] = true; var failure = new IOException("Staging publication failed after batch reservation: " + error.Message, error);
-                    failure.Data["stagingMutationStarted"] = Directory.Exists(folder); failure.Data["batchId"] = batchId; failure.Data["attemptedPath"] = folder;
+                    failure.Data["stagingMutationStarted"] = Directory.Exists(folder); failure.Data["batchId"] = batchId; failure.Data["attemptedPath"] =
+                        folder;
                     failure.Data["succeeded"] = (int)result["writtenFileCount"]!; failure.Data["total"] = files.Length; throw failure; }
                 return result.DeepClone().AsObject();
             }
         }
-        private static readonly string[] ManifestKeys = { "manifestVersion", "sessionId", "mcpSessionId", "hostInstanceId", "releaseKey", "batchId", "createdUtc", "hostPid", "hostStartedUtc", "writtenFileCount", "partial" };
+        private static readonly string[] ManifestKeys = {
+            "manifestVersion", "sessionId", "mcpSessionId", "hostInstanceId", "releaseKey", "batchId", "createdUtc", "hostPid", "hostStartedUtc",
+                "writtenFileCount", "partial"
+        };
         private static readonly string[] FileKeys = { "fileName", "kind", "encoding", "byteLength", "sha256" };
         private void AtomicWrite(string path, byte[] bytes)
         {
@@ -233,13 +256,17 @@ namespace TiaMcp.Logic.ModelContextProtocol
             if (stream.Length < 1 || stream.Length > 128 * 1024) return null;
             var input = JsonNode.Parse(stream)?.AsObject();
             if (input != null && ((string?)input["sessionId"] != owner || (string?)input["batchId"] != id)) throw new ManifestIdentityException();
-            if ((int?)input?["manifestVersion"] is not (1 or 2) || !DateTimeOffset.TryParse((string?)input?["createdUtc"], System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _) || input?["files"] is not JsonArray files
+            if ((int?)input?["manifestVersion"] is not (1 or 2) || !DateTimeOffset
+                    .TryParse((string?)input?["createdUtc"], System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _)
+                    || input?["files"] is not JsonArray files
                 || files.Count > MaximumFiles || (int?)input["writtenFileCount"] is not int written || written < 0 || written > files.Count) return null;
             if ((string?)input["releaseKey"] is not string releaseKey || !ReleaseKeys.Contains(releaseKey)) return null;
             if ((int?)input["manifestVersion"] == 2 && ((string?)input["mcpSessionId"] is not string mcp || string.IsNullOrWhiteSpace(mcp) || mcp.Length > 256
                 || !Guid.TryParseExact((string?)input["hostInstanceId"], "N", out _))) return null;
             if (input["hostPid"] != null && (input["hostPid"] is not JsonValue pidValue || !pidValue.TryGetValue<int>(out var pid) || pid < 1)
-                || input["hostStartedUtc"] != null && (input["hostStartedUtc"] is not JsonValue startValue || !startValue.TryGetValue<string>(out var started) || !DateTimeOffset.TryParse(started, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
+                || input["hostStartedUtc"] != null
+                    && (input["hostStartedUtc"] is not JsonValue startValue || !startValue.TryGetValue<string>(out var started) || !DateTimeOffset
+                        .TryParse(started, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
                 || input["partial"] != null && (input["partial"] is not JsonValue partialValue || !partialValue.TryGetValue<bool>(out _))) return null;
             // Persisted JSON is untrusted; publish only the schema we own.
             var batch = new JsonObject(); foreach (string key in ManifestKeys) batch[key] = input[key]?.DeepClone();
@@ -248,10 +275,13 @@ namespace TiaMcp.Logic.ModelContextProtocol
             {
                 if (item is not JsonObject entry) return null;
                 string? leaf = (string?)entry["fileName"], hash = (string?)entry["sha256"];
-                if ((string?)entry["kind"] is not ("scl" or "simaticml" or "tagtable" or "udt" or "s7dcl" or "s7res") || (string?)entry["encoding"] is not ("ascii" or "utf-8")) return null;
+                if ((string?)entry["kind"] is not ("scl" or "simaticml" or "tagtable" or "udt" or "s7dcl" or "s7res")
+                        || (string?)entry["encoding"] is not ("ascii" or "utf-8"))
+                    return null;
                 if (leaf == null || leaf.Length < 1 || leaf.Length > 128 || leaf != Path.GetFileName(leaf) || leaf.Contains("..")
                     || leaf.Any(c => char.IsControl(c) || "\\/:*?\"<>|".Contains(c)) || leaf.Trim() != leaf || leaf.EndsWith(".", StringComparison.Ordinal)
-                    || leaf.Equals(ManifestName, StringComparison.OrdinalIgnoreCase) || leaf.Equals(CompanionName, StringComparison.OrdinalIgnoreCase) || !names.Add(leaf)
+                    || leaf.Equals(ManifestName, StringComparison.OrdinalIgnoreCase) || leaf.Equals(CompanionName, StringComparison.OrdinalIgnoreCase) || !names
+                        .Add(leaf)
                     || hash == null || hash.Length != 64 || hash.Any(c => !Uri.IsHexDigit(c))
                     || (long?)entry["byteLength"] is not long size || size < 0 || size > MaximumFileBytes) return null;
                 total += size; if (total > MaximumBytes) return null;
@@ -260,7 +290,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
             }
             batch["files"] = outputFiles; batch["directory"] = folder; batch["stagingDirectory"] = Path.GetDirectoryName(folder);
             batch["byteLength"] = total; batch["executed"] = true; batch["identified"] = true; batch["currentSession"] = owner == session
-                && ((int?)batch["manifestVersion"] == 1 || (string?)batch["hostInstanceId"] == this.owner.HostInstanceId && (string?)batch["mcpSessionId"] == this.owner.McpSessionId);
+                && ((int?)batch["manifestVersion"] == 1 || (string?)batch["hostInstanceId"] == this.owner.HostInstanceId
+                        && (string?)batch["mcpSessionId"] == this.owner.McpSessionId);
             batch["ownerState"] = OwnerState(batch);
             return batch;
         }
@@ -286,7 +317,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 catch (FileNotFoundException) { /* swallow(probe-optional): absent owned leaves need no deletion */ }
                 catch (Exception error) when (ProbeFailure(error)) { reasons[leaf] = "unreadable-or-unsafe-file"; }
             }
-            var entries = Directory.GetFileSystemEntries(folder).Select(Path.GetFileName).Where(name => !known.Contains(name!)).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+            var entries = Directory.GetFileSystemEntries(folder).Select(Path.GetFileName).Where(name => !known.Contains(name!))
+                .OrderBy(x => x, StringComparer.Ordinal).ToArray();
             batch["unknownEntryReasons"] = reasons;
             return new JsonArray(entries.Select(name => (JsonNode?)JsonValue.Create(name)).ToArray());
         }
@@ -355,9 +387,11 @@ namespace TiaMcp.Logic.ModelContextProtocol
         {
             lock (gate)
             {
-                var found = Discover().OrderByDescending(b => (string?)b["createdUtc"] ?? "", StringComparer.Ordinal).ThenBy(b => (string?)b["directory"], StringComparer.Ordinal).ToArray();
+                var found = Discover().OrderByDescending(b => (string?)b["createdUtc"] ?? "", StringComparer.Ordinal)
+                    .ThenBy(b => (string?)b["directory"], StringComparer.Ordinal).ToArray();
                 return new JsonObject { ["batches"] = new JsonArray(found.Take(MaximumListedBatches).Select(b => (JsonNode?)b).ToArray()),
-                    ["totalBatches"] = found.Length, ["returnedBatches"] = Math.Min(found.Length, MaximumListedBatches), ["truncated"] = found.Length > MaximumListedBatches,
+                    ["totalBatches"] = found.Length, ["returnedBatches"] = Math.Min(found.Length, MaximumListedBatches), ["truncated"] = found
+                        .Length > MaximumListedBatches,
                     ["stagingDirectory"] = Path.Combine(bundleRoot, "staging"), ["sessionId"] = session,
                     ["maximumFiles"] = MaximumFiles, ["maximumBytes"] = MaximumBytes };
             }
@@ -383,11 +417,14 @@ namespace TiaMcp.Logic.ModelContextProtocol
         {
             lock (gate)
             {
-                if (!Guid.TryParseExact(batchId, "N", out _)) throw new ArgumentException("Select an identified batchId from ListStagedImportFiles.", nameof(batchId));
+                if (!Guid.TryParseExact(batchId, "N", out _))
+                    throw new ArgumentException("Select an identified batchId from ListStagedImportFiles.", nameof(batchId));
                 var matches = Discover().Where(b => (string?)b["batchId"] == batchId).ToArray();
-                if (matches.Length != 1 || (bool?)matches[0]["identified"] != true) throw new ArgumentException("Batch is unknown or ambiguous; a valid staging manifest is required for cleanup.", nameof(batchId));
+                if (matches.Length != 1 || (bool?)matches[0]["identified"] != true)
+                    throw new ArgumentException("Batch is unknown or ambiguous; a valid staging manifest is required for cleanup.", nameof(batchId));
                 var batch = matches[0]; string folder = (string)batch["directory"]!;
-                if ((string?)batch["ownerState"] is not ("current" or "ended")) throw new ArgumentException("The batch belongs to another live or uninspectable MCP session; cleanup refused.", nameof(batchId));
+                if ((string?)batch["ownerState"] is not ("current" or "ended"))
+                    throw new ArgumentException("The batch belongs to another live or uninspectable MCP session; cleanup refused.", nameof(batchId));
                 Safe(Path.Combine(folder, "probe"));
                 try { NativeExportPolicy.CheckWritableDirectory(folder, WriteAccessForTests); }
                 catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)
@@ -439,27 +476,38 @@ namespace TiaMcp.Logic.ModelContextProtocol
             Outcome outcome = Outcome.Succeeded; Execution execution = dryRun || tool == "ListStagedImportFiles" ? Execution.ReadOnly : Execution.Completed;
             try { data = tool == "StageImportFiles" ? Stage(files!, dryRun) : tool == "CleanupStagedImportFiles" ? Cleanup(batchId, dryRun) : List(); }
             catch (Exception ex) when (ex is ArgumentException || ex is XmlException || ex is EncoderFallbackException)
-            { error = new Error(ex.Message, new InvalidArgumentDetails(tool == "CleanupStagedImportFiles" ? "batchId" : "files", Array.Empty<string>())); outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; }
+            {
+                error = new Error(ex.Message, new InvalidArgumentDetails(tool == "CleanupStagedImportFiles" ? "batchId" : "files", Array.Empty<string>()));
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
+            }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 string attemptedPath = ex.Data["attemptedPath"] as string ?? root;
-                data = new JsonObject { ["attemptedPath"] = attemptedPath, ["batchId"] = ex.Data["batchId"] as string ?? batchId, ["parameter"] = tool == "CleanupStagedImportFiles" ? "batchId" : "files", ["reason"] = ex.Message };
+                data = new JsonObject {
+                    ["attemptedPath"] = attemptedPath, ["batchId"] = ex.Data["batchId"] as string ?? batchId, ["parameter"] =
+                        tool == "CleanupStagedImportFiles" ? "batchId" : "files", ["reason"] = ex.Message
+                };
                 bool partial = !dryRun && ex.Data["stagingMutationStarted"] is true;
                 int kept = ex.Data["succeeded"] is int succeeded ? succeeded : 0;
                 int count = ex.Data["total"] is int total ? total : 1;
-                error = new Error("Staging IO failed for " + (tool == "CleanupStagedImportFiles" ? "batchId " + batchId : "files") + ": " + ex.Message + " Attempted path: " + attemptedPath,
-                    partial ? (ErrorDetails)new PartialFailureDetails(kept, 1, Math.Max(0, count - kept - 1)) : new IoFailedDetails("import-staging", attemptedPath));
+                error =
+                    new Error("Staging IO failed for " + (tool == "CleanupStagedImportFiles" ? "batchId " + batchId : "files") + ": " + ex.Message
+                        + " Attempted path: " + attemptedPath,
+                    partial ? (ErrorDetails)new PartialFailureDetails(kept, 1, Math.Max(0, count - kept - 1))
+                        : new IoFailedDetails("import-staging", attemptedPath));
                 outcome = partial ? Outcome.Partial : Outcome.RejectedBeforeOperation; execution = partial ? Execution.Partial : Execution.NotStarted;
             }
             // A list bounded to the newest batches is a partial observation, and the V4 envelope requires its warning: without it
             // every list failed once more than MaximumListedBatches batches existed (P8-stab-1).
             if (error == null && (bool?)data?["truncated"] == true) warnings.Add(new Warning(WarningCode.IncompleteData,
-                "Only the newest " + MaximumListedBatches + " staging batches are listed; totalBatches counts all of them.", new Dictionary<string, JsonElement>()));
+                "Only the newest " + MaximumListedBatches + " staging batches are listed; totalBatches counts all of them.", new Dictionary<string,
+                    JsonElement>()));
             if ((bool?)data?["folderRetained"] == true) warnings.Add(new Warning(WarningCode.StagingFolderRetained,
                 "The batch folder is retained because it contains unknown entries; only staging-owned files are deleted.",
                 new Dictionary<string, JsonElement> { ["unknownEntries"] = JsonSerializer.SerializeToElement(data["unknownEntries"]) }));
             return Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), outcome, execution,
-                false, BehaviorPolicy.NotApplicable, error == null ? ((bool?)data?["truncated"] == true ? Completeness.Partial : Completeness.Complete) : execution == Execution.NotStarted ? Completeness.None : Completeness.Partial, null, warnings));
+                false, BehaviorPolicy.NotApplicable, error == null ? ((bool?)data?["truncated"] == true ? Completeness.Partial : Completeness.Complete)
+                    : execution == Execution.NotStarted ? Completeness.None : Completeness.Partial, null, warnings));
         }
     }
 }

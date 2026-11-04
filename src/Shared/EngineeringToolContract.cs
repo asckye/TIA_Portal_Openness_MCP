@@ -59,7 +59,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         : portal.Code == PortalErrorCode.InvalidParams ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
                         : portal.Code == PortalErrorCode.NotSupportedOnVersion ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                         : new PreconditionFailedDetails("engineering-session", null);
-                    return Result(tool, null, new Error(HostBehavior.SafeDiagnostic(cause.Message) ?? "The engineering prerequisites were not satisfied.", details), Outcome.RejectedBeforeOperation, Completeness.None);
+                    return Result(tool, null,
+                            new Error(HostBehavior.SafeDiagnostic(cause.Message) ?? "The engineering prerequisites were not satisfied.", details), Outcome
+                            .RejectedBeforeOperation, Completeness.None);
                 }
                 if (cause is PortalException { Code: PortalErrorCode.OpennessError }
                     && (!writes || cause.Data["foundationKnownNoMutation"] is true))
@@ -73,7 +75,10 @@ namespace TiaMcpServer.ModelContextProtocol
             var arguments = new JsonObject { ["exportPath"] = path };
             try { CallerInputFiles.ValidateNativeFile(tool, arguments); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
-            { return Result(tool, null, new Error(error.Message, new InvalidArgumentDetails("exportPath", Array.Empty<string>())), Outcome.RejectedBeforeOperation, Completeness.None); }
+            {
+                return Result(tool, null, new Error(error.Message, new InvalidArgumentDetails("exportPath", Array.Empty<string>())), Outcome
+                        .RejectedBeforeOperation, Completeness.None);
+            }
             using var export = CallerInputFiles.ObserveExport(tool, arguments);
             return McpServer.ExportFailureResult(tool, Run(tool, true, operation), export);
         }
@@ -118,7 +123,10 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (projectMissing)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "HmiReadSessionBlocked")
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("engineering-session")); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; error =
+                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("engineering-session"));
+            }
             else if (success == true) outcome = Outcome.Succeeded;
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
@@ -133,7 +141,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else if (!writes) { outcome = Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
             else if (succeeded > 0)
-            { outcome = Outcome.Partial; error = new Error("Some engineering operations did not complete.", new PartialFailureDetails(succeeded, Math.Max(1, failed), 0)); }
+            {
+                outcome = Outcome.Partial; error =
+                    new Error("Some engineering operations did not complete.", new PartialFailureDetails(succeeded, Math.Max(1, failed), 0));
+            }
             else { outcome = Outcome.Failed; error = NativeFailure(nativeMessage); }
             bool incomplete = Incomplete(data) || Flag(evidence, "supported") == false;
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None
@@ -145,7 +156,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 && (evidence["total"] ?? evidence["totalCount"]) is JsonValue total && total.TryGetValue<int>(out var count)
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
             Clean(data);
-            if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+            if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)) {
+                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
             if (outcome != Outcome.Succeeded) data.Remove("summary");
             return Result(tool, data, error, outcome, completeness, writes, paging, reset);
         }
@@ -158,9 +170,12 @@ namespace TiaMcpServer.ModelContextProtocol
             return Flag(obj, "dataComplete") == false || Flag(obj, "incomplete") == true || Flag(obj, "truncated") == true
                 || Flag(obj, "groupsTruncated") == true || obj.ContainsKey("nameNote")
                 || MissingRows("objectCount", "technologicalObjects") || MissingRows("parameterCount", "parameters")
-                || obj["motionViews"] is JsonObject views && obj["tree"]?["objectCount"] is JsonValue objects && objects.TryGetValue<int>(out var objectCount) && views.Count < objectCount
+                || obj["motionViews"] is JsonObject views && obj["tree"]?["objectCount"] is JsonValue objects && objects.TryGetValue<int>(out var objectCount)
+                    && views.Count < objectCount
                 // Unit content lists have a fixed 200-name observation budget and no total.
-                || obj.Any(p => p.Value is JsonArray names && names.Count == 200 && new[] { "blocks", "types", "groups", "documents", "tagTables", "externalSources", "system", "user", "systemBlockGroups" }.Contains(p.Key))
+                || obj
+                    .Any(p => p.Value is JsonArray names && names.Count == 200 && new[] {
+                        "blocks", "types", "groups", "documents", "tagTables", "externalSources", "system", "user", "systemBlockGroups" }.Contains(p.Key))
                 || obj.Any(p => p.Key.EndsWith("Error", StringComparison.Ordinal) && p.Value != null || Incomplete(p.Value));
         }
         private static void Clean(JsonNode? node)
@@ -170,22 +185,31 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var pair in obj.ToArray())
             {
                 if (pair.Key == "timestamp" || pair.Key == "messageData" || pair.Key == "detailMessageData" || pair.Key == "lastFailure"
-                    || pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
-                else if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] = "Native diagnostic details are retained in the server log.";
+                    || pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key
+                        .Equals("password", StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
+                else if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] =
+                    "Native diagnostic details are retained in the server log.";
                 else Clean(pair.Value);
             }
         }
-        private static Error NativeFailure(string? nativeMessage = null) => new Error(nativeMessage ?? "The engineering operation did not establish success.", new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
-        private static Error Unknown() => new Error("The write outcome is unknown. Inspect the retained evidence and reset the session before further writes.", new OutcomeUnknownDetails("engineering-operation", new Dictionary<string, JsonElement>()));
+        private static Error NativeFailure(string? nativeMessage = null) =>
+            new Error(nativeMessage ?? "The engineering operation did not establish success.",
+                new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
+        private static Error Unknown() =>
+            new Error("The write outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
+                new OutcomeUnknownDetails("engineering-operation", new Dictionary<string, JsonElement>()));
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,
             bool writes = false, Paging? paging = null, bool reset = false)
         {
             var warnings = new List<Warning> { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) };
             if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation covers only the reported scope and available fields.", new Dictionary<string, JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The observation covers only the reported scope and available fields.", new Dictionary<string,
+                        JsonElement>()));
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
-                : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution.ReadOnly : Execution.Completed;
+                : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
+                    .ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
                 execution, reset || outcome == Outcome.Unknown, BehaviorPolicy.Current, completeness, paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));

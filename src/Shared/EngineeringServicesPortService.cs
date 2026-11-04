@@ -26,11 +26,14 @@ namespace TiaMcpServer.Siemens.Services
         {
             private readonly EngineeringServicesPortService owner; private readonly string id; private bool disposed;
             internal WorkerTransaction(EngineeringServicesPortService owner, string id) { this.owner = owner; this.id = id; }
-            private bool Read(string member) => owner.call("engineering-services.ReadEngineeringTransaction", new JsonObject { ["id"] = id, ["member"] = member })!.GetValue<bool>();
+            private bool Read(string member) => owner
+                .call("engineering-services.ReadEngineeringTransaction", new JsonObject { ["id"] = id, ["member"] = member })!.GetValue<bool>();
             public bool CanCommit => Read("CanCommit");
             public bool CommitRequested => Read("CommitRequested");
             public bool IsCancellationRequested => Read("IsCancellationRequested");
-            public void Commit() => owner.call("engineering-services.CommitEngineeringTransaction", new JsonObject { ["id"] = id, ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = owner.identity() });
+            public void Commit() => owner
+                .call("engineering-services.CommitEngineeringTransaction", new JsonObject {
+                    ["id"] = id, ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = owner.identity() });
             public void Dispose()
             {
                 if (disposed) return; disposed = true;
@@ -39,7 +42,8 @@ namespace TiaMcpServer.Siemens.Services
         }
         private ResponseMessage Invoke(EngineeringServicesRequest request)
         {
-            var unavailable = EngineeringServicesCapabilities.Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Kind, request.CustomIdentityKey, request.CompilationSettings.Keys);
+            var unavailable = EngineeringServicesCapabilities
+                .Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Kind, request.CustomIdentityKey, request.CompilationSettings.Keys);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
             if (!request.DryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = identity(); }
@@ -51,29 +55,63 @@ namespace TiaMcpServer.Siemens.Services
             => Invoke(new EngineeringServicesRequest { Operation = "ManageProjectLanguage", Action = action, Culture = culture, DryRun = dryRun });
 
         public ResponseMessage ExportProjectTexts(string filePath, string sourceCulture, string targetCulture, bool dryRun = true)
-            => Invoke(new EngineeringServicesRequest { Operation = "ExportProjectTexts", FilePath = filePath, SourceCulture = sourceCulture, TargetCulture = targetCulture, DryRun = dryRun });
+            =>
+                Invoke(new EngineeringServicesRequest {
+                    Operation = "ExportProjectTexts", FilePath = filePath, SourceCulture = sourceCulture, TargetCulture = targetCulture, DryRun = dryRun });
 
         public ResponseMessage ImportProjectTexts(string filePath, bool updateSourceLanguage, bool dryRun = true)
-            => Invoke(new EngineeringServicesRequest { Operation = "ImportProjectTexts", FilePath = filePath, UpdateSourceLanguage = updateSourceLanguage, DryRun = dryRun });
+            =>
+                Invoke(new EngineeringServicesRequest {
+                    Operation = "ImportProjectTexts", FilePath = filePath, UpdateSourceLanguage = updateSourceLanguage, DryRun = dryRun });
 
-        public ResponseMessage ReadObjectIdentifier(string kind = "device", string devicePathJson = "[]", string itemPathJson = "[]", string softwarePath = "", string objectPath = "", string identifier = "")
-            => Invoke(new EngineeringServicesRequest { Operation = "GetObjectIdentifier", Kind = kind, DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!, ItemPath = JsonSerializer.Deserialize<string[]>(itemPathJson)!, SoftwarePath = softwarePath, ObjectPath = objectPath, Identifier = identifier });
+        public ResponseMessage ReadObjectIdentifier(string kind = "device", string devicePathJson = "[]", string itemPathJson = "[]", string softwarePath = "",
+                string objectPath = "", string identifier = "")
+            =>
+                Invoke(new EngineeringServicesRequest {
+                    Operation = "GetObjectIdentifier", Kind = kind, DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!, ItemPath =
+                        JsonSerializer.Deserialize<string[]>(itemPathJson)!, SoftwarePath = softwarePath, ObjectPath = objectPath, Identifier = identifier
+                });
 
-        public ResponseMessage ShowObjectInEditor(string kind = "device", string devicePathJson = "[]", string itemPathJson = "[]", string softwarePath = "", string objectPath = "", bool dryRun = true)
-            => Invoke(new EngineeringServicesRequest { Operation = "ShowObjectInEditor", Kind = kind, DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!, ItemPath = JsonSerializer.Deserialize<string[]>(itemPathJson)!, SoftwarePath = softwarePath, ObjectPath = objectPath, DryRun = dryRun });
+        public ResponseMessage ShowObjectInEditor(string kind = "device", string devicePathJson = "[]", string itemPathJson = "[]", string softwarePath = "",
+                string objectPath = "", bool dryRun = true)
+            =>
+                Invoke(new EngineeringServicesRequest {
+                    Operation = "ShowObjectInEditor", Kind = kind, DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!, ItemPath = JsonSerializer
+                        .Deserialize<string[]>(itemPathJson)!, SoftwarePath = softwarePath, ObjectPath = objectPath, DryRun = dryRun
+                });
 
-        public ResponseMessage CompareLibraries(string leftLibraryName = "", string rightLibraryName = "", bool includeIdentical = false, int maxDepth = 8, int offset = 0, int limit = 100)
-            => Invoke(new EngineeringServicesRequest { Operation = "CompareLibraries", LeftLibraryName = leftLibraryName, RightLibraryName = rightLibraryName, IncludeIdentical = includeIdentical, MaxDepth = maxDepth, Offset = offset, Limit = limit });
+        public ResponseMessage CompareLibraries(string leftLibraryName = "", string rightLibraryName = "", bool includeIdentical = false, int maxDepth = 8,
+                int offset = 0, int limit = 100)
+            =>
+                Invoke(new EngineeringServicesRequest {
+                    Operation = "CompareLibraries", LeftLibraryName = leftLibraryName, RightLibraryName = rightLibraryName, IncludeIdentical = includeIdentical,
+                        MaxDepth = maxDepth, Offset = offset, Limit = limit
+                });
 
-        public ResponseMessage CompareProjects(string kind, string softwarePath = "", string devicePathJson = "[]", string itemPathJson = "[]", string targetProjectName = "", string targetSoftwarePath = "",
-            string targetDevicePathJson = "[]", string targetItemPathJson = "[]", string targetLibraryName = "", bool includeIdentical = false, int maxDepth = 8, int offset = 0, int limit = 100)
-            => Invoke(new EngineeringServicesRequest { Operation = "CompareProjects", SameDevicePaths = devicePathJson == targetDevicePathJson, Kind = kind, SoftwarePath = softwarePath, DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!, ItemPath = JsonSerializer.Deserialize<string[]>(itemPathJson)!, TargetProjectName = targetProjectName, TargetSoftwarePath = targetSoftwarePath, TargetDevicePath = JsonSerializer.Deserialize<string[]>(targetDevicePathJson)!, TargetItemPath = JsonSerializer.Deserialize<string[]>(targetItemPathJson)!, TargetLibraryName = targetLibraryName, IncludeIdentical = includeIdentical, MaxDepth = maxDepth, Offset = offset, Limit = limit });
+        public ResponseMessage CompareProjects(string kind, string softwarePath = "", string devicePathJson = "[]", string itemPathJson = "[]",
+                string targetProjectName = "", string targetSoftwarePath = "",
+            string targetDevicePathJson = "[]", string targetItemPathJson = "[]", string targetLibraryName = "", bool includeIdentical = false, int maxDepth =
+                8, int offset = 0, int limit = 100)
+            =>
+                Invoke(new EngineeringServicesRequest {
+                    Operation = "CompareProjects", SameDevicePaths = devicePathJson == targetDevicePathJson, Kind = kind, SoftwarePath = softwarePath,
+                        DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!, ItemPath = JsonSerializer.Deserialize<string[]>(itemPathJson)!,
+                        TargetProjectName = targetProjectName, TargetSoftwarePath = targetSoftwarePath, TargetDevicePath = JsonSerializer
+                        .Deserialize<string[]>(targetDevicePathJson)!, TargetItemPath = JsonSerializer.Deserialize<string[]>(targetItemPathJson)!,
+                        TargetLibraryName = targetLibraryName, IncludeIdentical = includeIdentical, MaxDepth = maxDepth, Offset = offset, Limit = limit
+                });
 
         public ResponseMessage ReadProjectSettings(string folderPath = "", string customIdentityKey = "", int offset = 0, int limit = 100)
-            => Invoke(new EngineeringServicesRequest { Operation = "GetProjectSettings", FolderPath = folderPath, CustomIdentityKey = customIdentityKey, Offset = offset, Limit = limit });
+            =>
+                Invoke(new EngineeringServicesRequest {
+                    Operation = "GetProjectSettings", FolderPath = folderPath, CustomIdentityKey = customIdentityKey, Offset = offset, Limit = limit });
 
         public ResponseMessage ManageProjectCompilationSettings(string action = "read", string propertiesJson = "{}", bool dryRun = true)
-            => Invoke(new EngineeringServicesRequest { Operation = "ManageProjectCompilationSettings", Action = action, CompilationSettings = SoftwareUnitDeepLogic.ValidateCompilationSettingsRequest(action, propertiesJson, dryRun).Values, DryRun = dryRun });
+            =>
+                Invoke(new EngineeringServicesRequest {
+                    Operation = "ManageProjectCompilationSettings", Action = action, CompilationSettings = SoftwareUnitDeepLogic
+                        .ValidateCompilationSettingsRequest(action, propertiesJson, dryRun).Values, DryRun = dryRun
+                });
 
     }
 }

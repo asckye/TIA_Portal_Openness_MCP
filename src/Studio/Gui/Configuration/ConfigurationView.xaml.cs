@@ -44,7 +44,8 @@ namespace TiaMcpConfigurator
             get
             {
                 string address = Text("ServerAddress");
-                return !Remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":" + Text("ServerPort");
+                return !Remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":"
+                    + Text("ServerPort");
             }
         }
         public string SelectedReleaseKey
@@ -64,7 +65,8 @@ namespace TiaMcpConfigurator
         private string lastTestResult;
         private bool lastTestFailed;
         private bool busy, closing;
-        private T Find<T>(string name) where T : FrameworkElement { return (T)(FindName(name) ?? Window.FindName(name) ?? ((TiaOpenness.Gui.Views.SettingsView)Window.FindName("SettingsContent")).FindName(name)); }
+        private T Find<T>(string name) where T : FrameworkElement {
+            return (T)(FindName(name) ?? Window.FindName(name) ?? ((TiaOpenness.Gui.Views.SettingsView)Window.FindName("SettingsContent")).FindName(name)); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
         private string SelectedVersion
         {
@@ -97,9 +99,14 @@ namespace TiaMcpConfigurator
             var choices = Find<ListBox>("ClientChoices");
             var cards = preview?.Clients ?? ClientProfiles.All(); choices.ItemsSource = cards;
             int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
-            Append(Loc.Current.T("Config.ClientDetection", string.Join(Loc.Current["Config.ClientListSeparator"], cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –")))));
+            Append(Loc.Current
+                    .T("Config.ClientDetection", string
+                        .Join(Loc.Current["Config.ClientListSeparator"], cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –")))));
             choices.SelectionChanged += delegate { UpdateInstructions(); };
-            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate { TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, clientInstructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); };
+            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate {
+                TiaOpenness.Gui.Controls.WorkbenchMessageBox
+                    .Show(Window, clientInstructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
+            };
             Find<PasswordBox>("Key").PasswordChanged += delegate { UpdateKeyPlaceholder(); };
             Find<TextBox>("KeyVisible").TextChanged += delegate { UpdateKeyPlaceholder(); };
             Find<CheckBox>("ShowKey").Click += delegate {
@@ -116,24 +123,35 @@ namespace TiaMcpConfigurator
             Find<TextBox>("ServerAddress").TextChanged += delegate { UpdateLink(); };
             Find<TextBox>("ServerPort").TextChanged += delegate { UpdateLink(); };
             Click("BrowseTia", delegate {
-                using (var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = Loc.Current.T("Config.BrowseTiaDescription", SelectedVersion), SelectedPath = Text("TiaPath") })
+                using (var dialog = new System.Windows.Forms.FolderBrowserDialog {
+                        Description = Loc.Current.T("Config.BrowseTiaDescription", SelectedVersion), SelectedPath = Text("TiaPath") })
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
             Click("DetectTia", delegate { DetectTiaPath(true); });
-            Click("GenerateKey", delegate { byte[] bytes = new byte[24]; using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(bytes); SetSecret(Convert.ToBase64String(bytes)); });
+            Click("GenerateKey", delegate {
+                    byte[] bytes = new byte[24]; using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(bytes); SetSecret(Convert.ToBase64String(bytes));
+                });
             Click("SaveBoth", OnSaveBoth);
             Click("StartServer", OnStartServer);
             ClickAsync("StopServer", OnStopServer);
             Click("Network", async delegate { await OnNetwork(); });
             Click("TestClient", async delegate { await OnTestClient(); });
             Click("SaveClient", delegate { SaveClients(Remote); });
-            Click("ClearLog", delegate { while (pendingLog.TryDequeue(out _)) { } activityLog = ""; ActivityLog.LogText = ""; logEntries = 0; UpdateLogCount(); });
+            Click("ClearLog", delegate { while (pendingLog.TryDequeue(out _)) { } activityLog = ""; ActivityLog.LogText = ""; logEntries = 0; UpdateLogCount();
+                });
             Click("CheckUpdate", async delegate { await OnCheckUpdate(true); });
             Click("RunUpdate", OnRunUpdate);
-            Click("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
-            Click("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true }); });
+            Click("OpenReleases", delegate {
+                    Process
+                        .Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck
+                                .ReleasePageUrl(UpdateCheck.Repository)) {
+                            UseShellExecute = true });
+                });
+            Click("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true });
+                });
             ShowInstalledVersion();
-            Find<ComboBox>("Version").SelectionChanged += delegate { Guard(delegate { LoadServer(loadExisting); }); UpdateLink(); ReleaseChanged?.Invoke(this, EventArgs.Empty); };
+            Find<ComboBox>("Version").SelectionChanged += delegate {
+                Guard(delegate { LoadServer(loadExisting); }); UpdateLink(); ReleaseChanged?.Invoke(this, EventArgs.Empty); };
             if (loadExisting && preview == null)
             {
                 Window.Width = Math.Max(Window.MinWidth, Math.Min(Window.Width, SystemParameters.WorkArea.Width - 32));
@@ -142,7 +160,12 @@ namespace TiaMcpConfigurator
                 if (Text("ServerAddress").Length == 0) Guard(LoadClient);
                 var ignored = OnCheckUpdate(false);   // background; the band reports the outcome, nothing blocks
             }
-            else if (preview == null) { Find<TextBox>("TiaPath").Text = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog.Get(SelectedVersion).InstallFolder); DetectTiaPath(false); }
+            else if (preview == null) {
+                Find<TextBox>("TiaPath").Text = Path
+                    .Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog
+                        .Get(SelectedVersion).InstallFolder);
+                DetectTiaPath(false);
+            }
             else
             {
                 versions.SelectedValue = preview.ReleaseKey;
@@ -214,7 +237,8 @@ namespace TiaMcpConfigurator
         { Find<TextBlock>("LogCount").Text = Loc.Current.T(logEntries == 1 ? "Config.Entry" : "Config.Entries", logEntries); }
 
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
-        private void ClickAsync(string name, Func<Task> action) { Find<Button>(name).Click += async (_, _) => { try { await action(); } catch (Exception ex) { Report(ex); } }; }
+        private void ClickAsync(string name, Func<Task> action) {
+            Find<Button>(name).Click += async (_, _) => { try { await action(); } catch (Exception ex) { Report(ex); } }; }
         private void Guard(Action action) { try { action(); } catch (Exception ex) { Report(ex); } }
         private void SetStatus(string key, params object[] args) { SetLocalizedText("Status", TextBlock.TextProperty, key, args); }
         private void ServiceStatus(bool active)
@@ -245,7 +269,9 @@ namespace TiaMcpConfigurator
         private void OnClientGuidanceKey(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key is not (System.Windows.Input.Key.Enter or System.Windows.Input.Key.Space)) return;
-            TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, (string)ClientSelection.ToolTip, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
+            TiaOpenness.Gui.Controls.WorkbenchMessageBox
+                .Show(Window, (string)ClientSelection.ToolTip, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage
+                    .Information);
             e.Handled = true;
         }
         private void UpdateLink()
@@ -257,7 +283,8 @@ namespace TiaMcpConfigurator
             Find<TextBlock>("LinkServer").Text = Loc.Current.T("Common.McpPortal", TiaVersionCatalog.Get(SelectedVersion).DisplayName);
             bool running = DisplayRunning;
             string address = Text("ServerAddress");
-            Find<TextBlock>("LinkEndpoint").Text = !remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":" + Text("ServerPort");
+            Find<TextBlock>("LinkEndpoint").Text = !remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"]
+                : address + ":" + Text("ServerPort");
             Find<TextBlock>("LinkState").Text = Loc.Current[!remote ? "Config.Local" : running ? "Config.Running" : "Config.Idle"];
             ServiceStatusText.Text = LinkState.Text;
             ServiceStateChip.Tag = running ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
@@ -269,10 +296,14 @@ namespace TiaMcpConfigurator
         private void UpdateInstructions()
         {
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            Find<TextBlock>("ClientSelection").Text = Loc.Current.T("Mcp.ClientCounts", selected.Count, ClientChoices.Items.Cast<ClientProfile>().Count(x => x.Detected));
+            Find<TextBlock>("ClientSelection").Text = Loc.Current
+                .T("Mcp.ClientCounts", selected.Count, ClientChoices.Items.Cast<ClientProfile>().Count(x => x.Detected));
             WriteTargets.Text = Loc.Current["Mcp.WillWrite"] + " " + string.Join("; ", selected.Select(x => x.DisplayName + " → " + x.Path));
             clientInstructions = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
-                string.Join("\n", selected.Select(x => Loc.Current.T(x.Detected ? "Config.ClientInstructionsDetected" : "Config.ClientInstructionsNotDetected", x.Name, x.Hint, x.Evidence)));
+                string
+                    .Join("\n", selected
+                        .Select(x => Loc.Current
+                            .T(x.Detected ? "Config.ClientInstructionsDetected" : "Config.ClientInstructionsNotDetected", x.Name, x.Hint, x.Evidence)));
             Find<TextBlock>("ClientSelection").ToolTip = clientInstructions;
             UpdateLink();
         }
@@ -315,7 +346,8 @@ namespace TiaMcpConfigurator
                 if (response != null) response.Close();
             }
             string secret = Secret(); if (!string.IsNullOrEmpty(secret)) message = message.Replace(secret, "[redacted]");
-            SetStatus("Config.NeedsAttention"); Append(message); TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, message, Loc.Current["Config.NeedsAttention"], MessageBoxButton.OK, MessageBoxImage.Warning);
+            SetStatus("Config.NeedsAttention"); Append(message); TiaOpenness.Gui.Controls.WorkbenchMessageBox
+                .Show(Window, message, Loc.Current["Config.NeedsAttention"], MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         // 自动探测安装目录：环境变量 → 注册表 → 默认目录（与引擎同一顺序）。explicit=false 时只在探测成功才覆盖文本框，找不到保持原值不打扰。
         private void DetectTiaPath(bool explicitRequest)
@@ -324,18 +356,22 @@ namespace TiaMcpConfigurator
             var found = ConfigCore.DetectTia(SelectedVersion);
             tiaDetected = found.Key != null; UpdateDetectionLabel();
             Find<TextBlock>("DetectionSource").ToolTip = found.Value;
-            if (found.Key != null) { Find<TextBox>("TiaPath").Text = found.Key; Append(Loc.Current.T("Config.TiaDetected", SelectedVersion, found.Value, found.Key)); }
+            if (found.Key != null) {
+                Find<TextBox>("TiaPath").Text = found.Key; Append(Loc.Current.T("Config.TiaDetected", SelectedVersion, found.Value, found.Key)); }
             else if (explicitRequest) Append(Loc.Current.T("Config.TiaNotDetected", found.Value, SelectedVersion));
         }
         private void LoadServer(bool loadExisting)
         {
-            Find<TextBox>("TiaPath").Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog.Get(SelectedVersion).InstallFolder);
+            Find<TextBox>("TiaPath").Text = Path
+                .Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog.Get(SelectedVersion)
+                    .InstallFolder);
             Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765"; SetSecret("");
             if (!loadExisting || !File.Exists(StatePath)) { DetectTiaPath(false); return; }
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
             ConfigCore.Prefix(settings.Address, settings.Port);
             if (settings.EffectiveReleaseKey != SelectedVersion) throw new InvalidDataException(Loc.Current["Config.SavedReleaseMismatch"]);
-            Find<TextBox>("TiaPath").Text = settings.TiaPath; Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString();
+            Find<TextBox>("TiaPath").Text = settings.TiaPath; Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text =
+                settings.Port.ToString();
             SetSecret(ConfigCore.Unprotect(settings.ProtectedKey)); Append(Loc.Current.T("Config.ServerLoaded", SelectedVersion));
         }
         // 宿主机上没有服务端配置，用上次填写的连接信息补齐同一组字段。
@@ -345,13 +381,17 @@ namespace TiaMcpConfigurator
             if (!File.Exists(path)) return;
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(path));
             ConfigCore.Prefix(settings.Address, settings.Port);
-            Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString(); SetSecret(ConfigCore.Unprotect(settings.ProtectedKey));
+            Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString();
+            SetSecret(ConfigCore.Unprotect(settings.ProtectedKey));
         }
         private ServerSettings Settings()
         {
             int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); ConfigCore.Prefix(Text("ServerAddress"), port);
             ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion);
-            return new ServerSettings { Version = TiaVersionCatalog.Get(SelectedVersion).MajorVersion, ReleaseKey = SelectedVersion, Address = Text("ServerAddress"), Port = port, TiaPath = Text("TiaPath"), ProtectedKey = ConfigCore.Protect(Secret()) };
+            return new ServerSettings {
+                Version = TiaVersionCatalog.Get(SelectedVersion).MajorVersion, ReleaseKey = SelectedVersion, Address = Text("ServerAddress"), Port = port,
+                    TiaPath = Text("TiaPath"), ProtectedKey = ConfigCore.Protect(Secret())
+            };
         }
         // 一页两侧，所以保存也是两侧：客户端侧的连接信息总能保存；服务端配置只在本机确实装了
         // TIA 和引擎时才写，宿主机上校验失败不算错误，只记一行说明。
@@ -359,7 +399,9 @@ namespace TiaMcpConfigurator
         {
             int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); string ip = Text("ServerAddress"), secret = Secret();
             ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret);
-            ConfigCore.AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings { Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
+            ConfigCore
+                .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
+                    Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
             Append(Loc.Current["Config.ClientConnectionSaved"]);
             try { ConfigCore.AtomicJson(StatePath, Settings()); Append(Loc.Current["Config.ServerSaved"]); }
             catch (Exception ex) { Append(Loc.Current.T("Config.ClientOnlySaved", ex.GetBaseException().Message)); }
@@ -371,7 +413,10 @@ namespace TiaMcpConfigurator
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
             if (selected.Count == 0) throw new InvalidOperationException(Loc.Current["Config.SelectClientsFirst"]);
             string engine = null, ip = null, secret = null; int port = 0;
-            if (remote) { ip = Text("ServerAddress"); port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); secret = Secret(); ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret); }
+            if (remote) {
+                ip = Text("ServerAddress"); port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); secret = Secret();
+                ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret);
+            }
             else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }
             // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
             var targets = selected.GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
@@ -379,9 +424,12 @@ namespace TiaMcpConfigurator
                     Change = ClientProfiles.PrepareSave(g.First(), remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")) }).ToList();
             string message = Loc.Current["Config.WriteClientsPrompt"] + string.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path));
             if (targets.Any(x => x.Change.RequiresMigration))
-                message += "\n\n" + Loc.Current["Config.MigrateClientsPrompt"] + "\n" + string.Join("\n", targets.Where(x => x.Change.RequiresMigration).Select(x => x.Profile.Path + " → " + x.Change.TargetCommand));
+                message += "\n\n" + Loc.Current["Config.MigrateClientsPrompt"] + "\n" + string
+                    .Join("\n", targets.Where(x => x.Change.RequiresMigration).Select(x => x.Profile.Path + " → " + x.Change.TargetCommand));
             message += Loc.Current["Config.WriteClientsContinue"];
-            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, message, Loc.Current["Config.Write"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
+            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox
+                    .Show(Window, message, Loc.Current["Config.Write"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK)
+                return;
             int saved = 0; var errors = new List<string>();
             foreach (var target in targets)
             {
@@ -392,7 +440,9 @@ namespace TiaMcpConfigurator
                 }
                 catch (Exception ex) { errors.Add(Loc.Current.T("Config.ClientSaveError", target.Names, ex.Message)); }
             }
-            if (remote && saved > 0) ConfigCore.AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings { Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
+            if (remote && saved > 0) ConfigCore
+                .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
+                    Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
             SetStatus("Config.ClientsConfigured", saved);
             Append(Loc.Current.T("Config.RestartClients", remote ? "tia-portal-vm" : "tia-portal"));
             if (errors.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.SomeClientsNotSaved", string.Join("\n", errors)));
@@ -409,12 +459,16 @@ namespace TiaMcpConfigurator
             Find<TextBlock>("PackageText").Text = TiaOpenness.Gui.Views.SettingsView.ReadPackageName(root);
             if (preview != null)
             {
-                SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", TiaOpenness.Gui.ViewModels.MainViewModel.AppVersion.TrimStart('v'));
+                SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", TiaOpenness.Gui.ViewModels.MainViewModel.AppVersion
+                        .TrimStart('v'));
                 SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.NotChecked");
                 return;
             }
             string installed = UpdateCheck.Installed(root);
-            if (installed == null) { SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Config.EngineOutsideBundle"); Find<Button>("CheckUpdate").IsEnabled = false; return; }
+            if (installed == null) {
+                SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Config.EngineOutsideBundle"); Find<Button>("CheckUpdate").IsEnabled = false;
+                return;
+            }
             SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", installed);
             if (UpdateCheck.IsSourceRepository(root))
             {
@@ -447,7 +501,8 @@ namespace TiaMcpConfigurator
                 }
                 else
                 {
-                    SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.UpToDate", info.Tag); Find<Button>("RunUpdate").Visibility = Visibility.Collapsed;
+                    SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.UpToDate", info.Tag); Find<Button>("RunUpdate").Visibility = Visibility
+                        .Collapsed;
                     Find<Button>("RunUpdate").IsEnabled = false;
                     Append(Loc.Current.T("Config.UpToDateLog", installed, info.Source));
                 }
@@ -466,11 +521,16 @@ namespace TiaMcpConfigurator
             if (UpdateCheck.IsSourceRepository(root)) throw new InvalidOperationException(Loc.Current["Config.CannotUpdateSource"]);
             if (server != null && !server.HasExited) throw new InvalidOperationException(Loc.Current["Config.StopServiceBeforeUpdate"]);
             var running = UpdateCheck.RunningEngines(root);
-            if (running.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.EnginesStillRunning", string.Join(Loc.Current["Config.ReasonSeparator"], running)));
+            if (running.Count > 0)
+                throw new InvalidOperationException(Loc.Current.T("Config.EnginesStillRunning", string.Join(Loc.Current["Config.ReasonSeparator"], running)));
             string updater = UpdateCheck.UpdaterPath(root);
             if (!File.Exists(updater)) throw new InvalidOperationException(Loc.Current.T("Config.UpdaterMissing", updater));
             string target = latest != null && latest.UpdateAvailable ? latest.Latest : Loc.Current["Config.LatestVersion"];
-            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, Loc.Current.T("Config.RunUpdatePrompt", root, target), Loc.Current["Config.RunUpdateCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK) return;
+            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox
+                    .Show(Window, Loc.Current.T("Config.RunUpdatePrompt", root, target), Loc.Current["Config.RunUpdateCaption"], MessageBoxButton.OKCancel,
+                        MessageBoxImage.Question) != MessageBoxResult
+                    .OK)
+                return;
             Process.Start(UpdateCheck.Launch(root, Process.GetCurrentProcess().Id));
             Append(Loc.Current["Config.UpdaterStarted"]);
             Window.Close();
@@ -480,7 +540,8 @@ namespace TiaMcpConfigurator
             if (busy) return;
             try
             {
-                string ip = Text("ServerAddress"), secret = Secret(); int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture);
+                string ip = Text("ServerAddress"), secret = Secret(); int port = int
+                    .Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture);
                 SetBusy(true); SetStatus("Config.Testing");
                 string result = await Task.Run(() => ConfigCore.TestRemote(ip, port, secret));
                 lastTestResult = result; lastTestFailed = false; UpdateLastTest();
@@ -494,10 +555,16 @@ namespace TiaMcpConfigurator
             if (busy) return;
             try
             {
-                string ip = Text("ServerAddress"); int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); ConfigCore.Prefix(ip, port);
-                if (TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, Loc.Current["Config.NetworkPrompt"], Loc.Current["Config.Network"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
+                string ip = Text("ServerAddress"); int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); ConfigCore
+                    .Prefix(ip, port);
+                if (TiaOpenness.Gui.Controls.WorkbenchMessageBox
+                        .Show(Window, Loc.Current["Config.NetworkPrompt"], Loc.Current["Config.Network"], MessageBoxButton.OKCancel, MessageBoxImage
+                            .Information) != MessageBoxResult
+                        .OK)
+                    return;
                 var args = new[] { "--network", ip, port.ToString(), WindowsIdentity.GetCurrent().User.Value };
-                var info = new ProcessStartInfo(Process.GetCurrentProcess().MainModule.FileName, string.Join(" ", args.Select(ConfigCore.Quote))) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden };
+                var info = new ProcessStartInfo(Process.GetCurrentProcess().MainModule.FileName, string.Join(" ", args.Select(ConfigCore.Quote))) {
+                    UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden };
                 SetBusy(true); SetStatus("Config.ConfiguringNetwork");
                 using (var process = Process.Start(info))
                 {
@@ -529,7 +596,11 @@ namespace TiaMcpConfigurator
                 try { exitCode = process.ExitCode; }
                 catch (InvalidOperationException) /* swallow(teardown): the window already released the service process while closing */ { }
                 if (exitCode.HasValue) Append(Loc.Current.T("Config.ServiceExited", exitCode.Value));
-                if (!closing) Window.Dispatcher.BeginInvoke(new Action(delegate { if (closing) return; Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false; Find<ComboBox>("Version").IsEnabled = true; SetStatus("Config.ServiceStopped"); ServiceStatus(false); }));
+                if (!closing) Window.Dispatcher
+                    .BeginInvoke(new Action(delegate {
+                            if (closing) return; Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false;
+                            Find<ComboBox>("Version").IsEnabled = true; SetStatus("Config.ServiceStopped"); ServiceStatus(false);
+                        }));
             };
             try { if (!process.Start()) throw new InvalidOperationException(Loc.Current["Config.ServiceNotStarted"]); }
             catch { process.Dispose(); throw; }
@@ -548,7 +619,11 @@ namespace TiaMcpConfigurator
                 ?? new VisibleHost(process.Id, process.StartTime.ToUniversalTime().Ticks, SelectedVersion, process.StartInfo.FileName,
                     root, "http", null, null, true, false);
             if (identity.CallInProgress) throw new InvalidOperationException(Loc.Current["Hosts.Busy"]);
-            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
+            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox
+                    .Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage
+                        .Warning) != MessageBoxResult
+                    .OK)
+                return;
             SetBusy(true);
             try
             {

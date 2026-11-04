@@ -29,7 +29,8 @@ namespace TiaMcp.Adapters.Contracts
                     return "HmiTextLists/HmiSystemTextLists require the V20 PublicAPI.";
                 if (request.Operation == "GetUnifiedAuditSettings" && request.Category == "alarmAuditClasses")
                     return "HmiSoftware.HmiAlarmAuditClass requires the V20 PublicAPI.";
-                if (request.Operation == "ManageUnifiedDynamization" && (request.DynamizationKind == "Expression" || request.DynamizationKind == "TagParameter"))
+                if (request.Operation == "ManageUnifiedDynamization"
+                        && (request.DynamizationKind == "Expression" || request.DynamizationKind == "TagParameter"))
                     return "ExpressionDynamization and TagParameterDynamization require the V20 PublicAPI.";
             }
             if (request.Operation == "ManageUnifiedListEntries" && request.Action != "read")
@@ -40,7 +41,8 @@ namespace TiaMcp.Adapters.Contracts
                 if (request.Inputs.TryGetValue(raw, out var input) && input.Error == null)
                 {
                     var fields = input.Kind == "array" ? input.Items.Select(v => v.Text) : input.Properties.Keys;
-                    var missing = release == "19" ? new[] { "CentralInputHint", "CentralPanning", "CentralZooming", "EnableLanguageCompatibleFontFamilies", "GeneralESIGCommentsStrategy" }
+                    var missing = release == "19" ? new[] {
+                        "CentralInputHint", "CentralPanning", "CentralZooming", "EnableLanguageCompatibleFontFamilies", "GeneralESIGCommentsStrategy" }
                         : release == "20" ? new[] { "CentralInputHint", "CentralPanning", "CentralZooming" } : Array.Empty<string>();
                     var field = fields.FirstOrDefault(f => missing.Contains(f, StringComparer.Ordinal));
                     if (field != null) return "HmiRuntimeSetting." + field + " is not exposed by the V" + release + " PublicAPI.";
@@ -50,7 +52,8 @@ namespace TiaMcp.Adapters.Contracts
                 foreach (var step in input.Items.Where(v => v.Kind == "object" && v.Properties.ContainsKey("property")))
                 {
                     var property = step.Properties["property"].Text;
-                    if (property == "HmiGraphicLists" && release != "21" || release == "19" && (property == "HmiTextLists" || property == "HmiSystemTextLists" || property == "HmiAlarmAuditClass"))
+                    if (property == "HmiGraphicLists" && release != "21" || release == "19"
+                            && (property == "HmiTextLists" || property == "HmiSystemTextLists" || property == "HmiAlarmAuditClass"))
                         return "HmiSoftware." + property + " is not exposed by the V" + release + " PublicAPI.";
                 }
             return null;

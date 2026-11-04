@@ -14,13 +14,17 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public SpecializedExchangeTools(SpecializedExchangeService specializedExchange) => _specializedExchange = specializedExchange;
 
-        [McpServerTool(Name="ExchangePlcSupervisions"), Description("[L2][PLC-Software][WRITE] ProDiag XLSX export/import/importSettings, explicit native options and diagnostic state. Import requires offline PLC; output is new and hashed. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ExchangePlcSupervisions"),
+                Description("[L2][PLC-Software][WRITE] ProDiag XLSX export/import/importSettings, explicit native options and diagnostic state. Import " +
+                "requires offline PLC; output is new and hashed. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native " +
+                "acceptance is pending.")]
         public CallToolResult ExchangePlcSupervisions(
             string softwarePath,
             [Description("action: the operation to perform - export | import | importSettings.")] string action,
             [Description("filePath: absolute XLSX file for native ProDiag supervision exchange; new output or existing import file.")] string filePath,
             string importOptions="None",
             bool dryRun=true)
-            => OptionalPackageContract.Run("ExchangePlcSupervisions", !dryRun, () => _specializedExchange.ExchangePlcSupervisions(softwarePath,action,filePath,importOptions,dryRun));
+            => OptionalPackageContract
+                .Run("ExchangePlcSupervisions", !dryRun, () => _specializedExchange.ExchangePlcSupervisions(softwarePath,action,filePath,importOptions,dryRun));
     }
 }

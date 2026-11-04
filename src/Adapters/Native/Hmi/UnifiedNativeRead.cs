@@ -46,24 +46,36 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static HmiObject InstanceLink(object item, string path, out object? linkedVersion)
         {
             linkedVersion = null;
-            var serviceType = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("Siemens.Engineering.Library.Types.LibraryTypeInstanceInfo", false)).FirstOrDefault(t => t != null);
-            if (serviceType == null) return MigrationRead.Failure(path, "Unsupported", reason: "LibraryTypeInstanceInfo is not available in the loaded official API.");
+            var serviceType = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("Siemens.Engineering.Library.Types.LibraryTypeInstanceInfo", false))
+                .FirstOrDefault(t => t != null);
+            if (serviceType == null) return MigrationRead
+                .Failure(path, "Unsupported", reason: "LibraryTypeInstanceInfo is not available in the loaded official API.");
             try
             {
                 var provider = item.GetType().GetInterface("Siemens.Engineering.IEngineeringServiceProvider");
-                var method = (provider?.GetMethods() ?? item.GetType().GetMethods()).FirstOrDefault(m => m.Name == "GetService" && m.IsGenericMethodDefinition && m.GetParameters().Length == 0);
+                var method = (provider?.GetMethods() ?? item.GetType().GetMethods())
+                    .FirstOrDefault(m => m.Name == "GetService" && m.IsGenericMethodDefinition && m.GetParameters().Length == 0);
                 var info = method?.MakeGenericMethod(serviceType).Invoke(item, Array.Empty<object>());
-                if (info == null) return MigrationRead.Failure(path, "Unsupported", reason: "This object does not expose a connected library version via LibraryTypeInstanceInfo. ContainedType alone is not proof of a version.");
+                if (info == null) return MigrationRead
+                    .Failure(path, "Unsupported", reason
+                        : "This object does not expose a connected library version via LibraryTypeInstanceInfo. ContainedType alone is not proof of a " +
+                        "version.");
                 var version = MigrationRead.Get(info, "LibraryTypeVersion");
-                if (version == null) return MigrationRead.Failure(path, "Unsupported", reason: "LibraryTypeInstanceInfo.LibraryTypeVersion is null; the connected version is unavailable.");
+                if (version == null) return MigrationRead
+                    .Failure(path, "Unsupported", reason: "LibraryTypeInstanceInfo.LibraryTypeVersion is null; the connected version is unavailable.");
                 var type = MigrationRead.Get(version, "TypeObject");
-                if (type == null) return MigrationRead.Failure(path, "Unsupported", reason: "The connected LibraryTypeVersion.TypeObject is null; type identity is unavailable.");
+                if (type == null) return MigrationRead
+                    .Failure(path, "Unsupported", reason: "The connected LibraryTypeVersion.TypeObject is null; type identity is unavailable.");
                 foreach (var field in new[] { "VersionNumber", "Guid" })
                     if (string.IsNullOrWhiteSpace(MigrationRead.Get(version, field)?.ToString()))
-                        return MigrationRead.Failure(path, "Unsupported", reason: "Connected LibraryTypeVersion." + field + " is unavailable; the version identity cannot be verified.");
+                        return MigrationRead
+                            .Failure(path, "Unsupported", reason: "Connected LibraryTypeVersion." + field
+                                + " is unavailable; the version identity cannot be verified.");
                 foreach (var field in new[] { "Name", "Guid" })
                     if (string.IsNullOrWhiteSpace(MigrationRead.Get(type, field)?.ToString()))
-                        return MigrationRead.Failure(path, "Unsupported", reason: "Connected LibraryTypeVersion.TypeObject." + field + " is unavailable; the type identity cannot be verified.");
+                        return MigrationRead
+                            .Failure(path, "Unsupported", reason: "Connected LibraryTypeVersion.TypeObject." + field
+                                + " is unavailable; the type identity cannot be verified.");
                 linkedVersion = version;
                 return new HmiObject { ["path"] = path, ["kind"] = "libraryInstanceLink", ["status"] = "ok",
                     ["version"] = MigrationRead.Get(version, "VersionNumber")?.ToString(), ["versionGuid"] = MigrationRead.Get(version, "Guid")?.ToString(),
@@ -75,13 +87,16 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static IEnumerable<HmiObject> LibraryType(object library, string typePath, string versionNumber)
         {
             var type = ExactType(library, typePath); var version = ExactVersion(type, versionNumber);
-            foreach (var row in LibraryVersion(version, "/ProjectLibrary" + typePath + "/Versions/" + MigrationRead.Segment(versionNumber), type)) yield return row;
+            foreach (var row in LibraryVersion(version, "/ProjectLibrary" + typePath + "/Versions/" + MigrationRead.Segment(versionNumber), type))
+                yield return row;
         }
         internal static IEnumerable<HmiObject> LibraryVersion(object version, string path, object? type = null)
         {
             type ??= MigrationRead.Get(version, "TypeObject") ?? throw new NotSupportedException("Connected LibraryTypeVersion.TypeObject unavailable.");
-            yield return new HmiObject { ["path"] = path, ["kind"] = "libraryTypeVersion", ["status"] = "ok", ["typeName"] = MigrationRead.Get(type, "Name")?.ToString(),
-                ["version"] = MigrationRead.Get(version, "VersionNumber")?.ToString(), ["versionGuid"] = MigrationRead.Get(version, "Guid")?.ToString(), ["type"] = type.GetType().FullName };
+            yield return new HmiObject {
+                ["path"] = path, ["kind"] = "libraryTypeVersion", ["status"] = "ok", ["typeName"] = MigrationRead.Get(type, "Name")?.ToString(),
+                ["version"] = MigrationRead.Get(version, "VersionNumber")?.ToString(), ["versionGuid"] = MigrationRead.Get(version, "Guid")?.ToString(),
+                    ["type"] = type.GetType().FullName };
             foreach (var name in new[] { "State", "OriginalLibrary" })
                 foreach (var row in MigrationRead.Property(version, name, path + "/" + name, (v, p) => MigrationRead.Graph(v, p))) yield return row;
             // Only identifiers of direct dependencies, never recurse into their types.
@@ -90,11 +105,16 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         private static IEnumerable<HmiObject> Dependencies(object? value, string path)
         {
-            if (value is not IEnumerable enumerable) { yield return MigrationRead.Failure(path, "Unsupported", reason: "Dependencies is not enumerable."); yield break; }
+            if (value is not IEnumerable enumerable) {
+                yield return MigrationRead.Failure(path, "Unsupported", reason: "Dependencies is not enumerable."); yield break; }
             int index = 0;
             foreach (var dependency in enumerable)
             {
-                if (index >= 1000) { yield return MigrationRead.Failure(path, "DependencyLimit", reason: "Direct dependency list exceeds 1000; dependencies were not recursively followed."); yield break; }
+                if (index >= 1000) {
+                    yield return MigrationRead
+                        .Failure(path, "DependencyLimit", reason: "Direct dependency list exceeds 1000; dependencies were not recursively followed.");
+                    yield break;
+                }
                 var p = path + "/[" + index++ + "]";
                 foreach (var name in new[] { "Guid", "VersionNumber" })
                     foreach (var row in MigrationRead.Property(dependency, name, p + "/" + name, (v, q) => MigrationRead.Graph(v, q))) yield return row;
@@ -102,7 +122,9 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         internal static IEnumerable<HmiObject> Export(object target, string scope, bool libraryVersion)
         {
-            var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-read-" + Guid.NewGuid().ToString("N"))));
+            var directory =
+                new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy
+                    .FullPath(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-read-" + Guid.NewGuid().ToString("N"))));
             directory.Create();
             try
             {
@@ -126,7 +148,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     error = null;
                     try { candidates.Add(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path))); }
-                    catch (Exception ex) { error = MigrationRead.Failure(scope + "/ExportedDocuments", "NativeFileLocationRejected", ex); error["reportedPath"] = path; }
+                    catch (Exception ex) {
+                        error = MigrationRead.Failure(scope + "/ExportedDocuments", "NativeFileLocationRejected", ex); error["reportedPath"] = path; }
                     if (error != null) { complete = false; yield return error; }
                 }
                 error = null;
@@ -137,14 +160,26 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     error = null;
                     try { CheckExportFile(directory, file); exported[file.FullName] = file; }
-                    catch (Exception ex) { error = MigrationRead.Failure(scope + "/ExportedDocuments", "NativeFileLocationRejected", ex); error["reportedPath"] = file.FullName; }
+                    catch (Exception ex) {
+                        error = MigrationRead.Failure(scope + "/ExportedDocuments", "NativeFileLocationRejected", ex); error["reportedPath"] = file.FullName; }
                     if (error != null) { complete = false; yield return error; }
                 }
                 yield return new HmiObject { ["path"] = scope, ["kind"] = "nativeFileInventory", ["status"] = "ok", ["outputDirectory"] = directory.FullName,
                     ["exportAttempted"] = capture.ExportAttempted, ["countScope"] = "local native files only; not a count of internal objects or tags",
                     ["reportedCount"] = reported.Count, ["actualCount"] = exported.Count,
-                    ["files"] = new HmiArray(exported.Values.Select(f => (object?)new HmiObject { ["relativePath"] = RelativeFile(directory, f), ["reportedByApi"] = reported.Any(r => string.Equals(r, f.FullName, StringComparison.OrdinalIgnoreCase)) }).ToArray()) };
-                if (exported.Count == 0) { complete = false; if (capture.ExportAttempted) yield return MigrationRead.Failure(scope, "NativeExportEmpty", reason: "Export was invoked but no native file was found. This is not evidence that the selected type has no internal objects or tags."); }
+                    ["files"] =
+                        new HmiArray(exported.Values
+                            .Select(f => (object?)new HmiObject {
+                                ["relativePath"] = RelativeFile(directory, f), ["reportedByApi"] = reported
+                                    .Any(r => string.Equals(r, f.FullName, StringComparison.OrdinalIgnoreCase))
+                            })
+                            .ToArray())
+                    };
+                if (exported.Count == 0) {
+                    complete = false; if (capture.ExportAttempted) yield return MigrationRead
+                        .Failure(scope, "NativeExportEmpty", reason
+                            : "Export was invoked but no native file was found. This is not evidence that the selected type has no internal objects or tags.");
+                }
                 int scripts = 0, filesRead = 0;
                 foreach (var file in exported.Values)
                 {
@@ -152,11 +187,16 @@ namespace TiaMcp.Adapters.Native.Hmi
                     string? raw = null, sha256 = null; long byteLength = 0; error = null;
                     try
                     {
-                        if (file.Length > 1024 * 1024) throw new NotSupportedException("Native file exceeds 1 MiB per-file limit; original export cannot fit the bounded response store with AST evidence. Explicit gap, not a truncated success.");
+                        if (file.Length > 1024 * 1024)
+                            throw new NotSupportedException("Native file exceeds 1 MiB per-file limit; original export cannot fit the bounded response store " +
+                            "with AST evidence. Explicit gap, not a truncated success.");
                         using var input = file.OpenRead();
                         if (input.Length > 1024 * 1024) throw new NotSupportedException("Native file exceeds 1 MiB per-file limit.");
                         var bytes = new byte[(int)input.Length]; int offset = 0;
-                        while (offset < bytes.Length) { int read = input.Read(bytes, offset, bytes.Length - offset); if (read == 0) throw new EndOfStreamException("Native file changed during acquisition."); offset += read; }
+                        while (offset < bytes.Length) {
+                            int read = input.Read(bytes, offset, bytes.Length - offset); if (read == 0)
+                                throw new EndOfStreamException("Native file changed during acquisition."); offset += read;
+                        }
                         if (input.ReadByte() != -1) throw new IOException("Native file changed during acquisition.");
                         byteLength = bytes.Length;
                         using var hash = SHA256.Create(); sha256 = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
@@ -171,12 +211,20 @@ namespace TiaMcp.Adapters.Native.Hmi
                     { scripts++; var row = UnifiedCodecs.AnalyzeScript(raw!, path); if (Failed(row)) complete = false; yield return row; }
                     else foreach (var row in Document(raw!, path, file.Extension)) { if (Failed(row)) complete = false; yield return row; }
                 }
-                if (script && scripts == 0) { complete = false; yield return MigrationRead.Failure(scope, "ScriptBodyNotExported", reason: "Native export returned no readable .js file; module names or YAML alone are not body-read success."); }
+                if (script && scripts == 0) {
+                    complete = false; yield return MigrationRead
+                        .Failure(scope, "ScriptBodyNotExported", reason
+                            : "Native export returned no readable .js file; module names or YAML alone are not body-read success.");
+                }
                 bool nativeFilesComplete = complete;
                 if (capture.LibraryXml && filesRead > 0)
                 {
                     complete = false;
-                    yield return MigrationRead.Failure(scope, "LibraryXmlContentUnverified", reason: "The official library XML was read and retained. This action can export version information alone; XML presence or metadata is not proof of internal interfaces, objects, bindings, events or scripts. Review the raw XML evidence before treating internal migration coverage as complete.");
+                    yield return MigrationRead
+                        .Failure(scope, "LibraryXmlContentUnverified", reason
+                            : "The official library XML was read and retained. This action can export version information alone; XML presence or metadata is " +
+                            "not proof of internal interfaces, objects, bindings, events or scripts. Review the raw XML evidence before treating internal " +
+                            "migration coverage as complete.");
                 }
                 yield return new HmiObject { ["path"] = scope, ["kind"] = "nativeExportSummary", ["status"] = complete ? "ok" : "failed",
                     ["operationId"] = capture.OperationId, ["apiCallSuccess"] = callSuccess, ["dataComplete"] = complete, ["nativeState"] = state,
@@ -187,7 +235,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     ["connectionUnavailable"] = capture.ConnectionUnavailable,
                     ["fileCount"] = exported.Count, ["filesRead"] = filesRead, ["scriptFileCount"] = scripts,
                     ["bodyReadSuccess"] = script ? HmiValues.Value(scripts > 0) : null,
-                    ["completenessScope"] = "selected native export and its parsed evidence; not proof of transitive dependencies or a complete migration mapping" };
+                    ["completenessScope"] =
+                        "selected native export and its parsed evidence; not proof of transitive dependencies or a complete migration mapping" };
             }
             finally
             {
@@ -208,7 +257,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         private static void ScanFiles(DirectoryInfo current, List<FileInfo> files, int depth = 0)
         {
-            if (depth > 64 || (current.Attributes & FileAttributes.ReparsePoint) != 0) throw new NotSupportedException("Native directory depth or reparse-point limit reached.");
+            if (depth > 64 || (current.Attributes & FileAttributes.ReparsePoint) != 0)
+                throw new NotSupportedException("Native directory depth or reparse-point limit reached.");
             foreach (var file in current.EnumerateFiles())
             { if (files.Count >= 8192) throw new NotSupportedException("Native file scan limit reached; explicit gap."); files.Add(file); }
             foreach (var child in current.EnumerateDirectories()) ScanFiles(child, files, depth + 1);

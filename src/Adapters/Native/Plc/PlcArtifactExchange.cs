@@ -30,7 +30,9 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 if (_session.IsProjectNull())
                 {
-                    throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+                    throw new PlcSoftwareException("InvalidState",
+                            "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                            "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
                 }
 
                 var block = _session.GetBlock(softwarePath, blockPath) ?? throw new PlcSoftwareException("NotFound", "Block not found: '" + blockPath + "'");
@@ -39,7 +41,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 exportPath = ResolveExportFile(exportPath, block.Name, blockGroupPath, preservePath);
 
                 // TIA Portal never exports inconsistent blocks
-                TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks", block.IsConsistent ? Array.Empty<string>() : new[] { blockPath }, "blockPath");
+                TiaOpenness.Shared.NativeExportPolicy
+                    .RequireConsistent("blocks", block.IsConsistent ? Array.Empty<string>() : new[] { blockPath }, "blockPath");
 
                 if (File.Exists(exportPath))
                 {
@@ -85,7 +88,9 @@ namespace TiaMcp.Adapters.Native.Plc
             bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
             if (hasBom) return prepared;
             var tmp = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_import_" + Guid.NewGuid().ToString("N") + ".xml");
-            File.WriteAllText(tmp, TiaOpenness.Shared.NativeInputPolicy.Read(parameter, () => File.ReadAllText(path, Encoding.UTF8)), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            File
+                .WriteAllText(tmp, TiaOpenness.Shared.NativeInputPolicy.Read(parameter, () => File.ReadAllText(path, Encoding.UTF8)),
+                    new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
             prepared.Path = tmp;
             return prepared;
         }
@@ -93,14 +98,18 @@ namespace TiaMcp.Adapters.Native.Plc
         // overwrite=false (the default of every tool): an existing object of the same name gives a typed refusal before the native
         // import, which then runs with ImportOptions.None ("Throw if exists"). overwrite=true uses ImportOptions.Override; an existing
         // object in another group is refused because Siemens documents that such an import is cancelled ("Importing configuration data").
-        private static void RequireImportTarget(string noun, string name, IEnumerable<(object Parent, string Name)> existing, object destination, bool overwrite)
+        private static void RequireImportTarget(string noun, string name, IEnumerable<(object Parent, string Name)> existing, object destination,
+                bool overwrite)
         {
             var hits = existing.Where(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)).ToArray();
             if (hits.Length == 0) return;
             if (!overwrite)
-                throw new AdapterPreconditionException("The PLC " + noun + " '" + name + "' already exists and overwrite=false; nothing was imported. Pass overwrite=true to replace it (ImportOptions.Override).", "overwrite", false);
+                throw new AdapterPreconditionException("The PLC " + noun + " '" + name
+                        + "' already exists and overwrite=false; nothing was imported. Pass overwrite=true to replace it (ImportOptions.Override).",
+                        "overwrite", false);
             if (hits.Any(h => !ReferenceEquals(h.Parent, destination) && !object.Equals(h.Parent, destination)))
-                throw new AdapterPreconditionException("The PLC " + noun + " '" + name + "' exists in another group; TIA cancels an Override import into a different group. Nothing was imported.", "groupPath", false);
+                throw new AdapterPreconditionException("The PLC " + noun + " '" + name
+                        + "' exists in another group; TIA cancels an Override import into a different group. Nothing was imported.", "groupPath", false);
         }
 
         private static IEnumerable<(object Parent, string Name)> ExistingTypes(PlcTypeGroup group, int depth = 0)
@@ -128,7 +137,8 @@ namespace TiaMcp.Adapters.Native.Plc
         {
             bool isType = prepared.Kind == "PlcStruct", isTable = prepared.Kind == "PlcTagTable";
             if (block ? isType || isTable : type ? !isType : !isTable)
-                throw new AdapterPreconditionException("The import file holds a " + prepared.Kind + ", not a " + (block ? "block" : type ? "PLC data type" : "PLC tag table") + ".", parameter);
+                throw new AdapterPreconditionException("The import file holds a " + prepared.Kind + ", not a "
+                        + (block ? "block" : type ? "PLC data type" : "PLC tag table") + ".", parameter);
         }
 
         public bool ImportBlock(string softwarePath, string groupPath, string importPath, bool overwrite)
@@ -138,7 +148,9 @@ namespace TiaMcp.Adapters.Native.Plc
             try
             {
                 if (_session.IsProjectNull())
-                    throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+                    throw new PlcSoftwareException("InvalidState",
+                            "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                            "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
                 var softwareContainer = _session.GetSoftwareContainer(softwarePath);
                 if (softwareContainer?.Software is not PlcSoftware plcSoftware)
@@ -208,7 +220,9 @@ namespace TiaMcp.Adapters.Native.Plc
             try
             {
                 if (_session.IsProjectNull())
-                    throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+                    throw new PlcSoftwareException("InvalidState",
+                            "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                            "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
                 var softwareContainer = _session.GetSoftwareContainer(softwarePath);
                 if (softwareContainer?.Software is not PlcSoftware plcSoftware)
@@ -239,7 +253,8 @@ namespace TiaMcp.Adapters.Native.Plc
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
-                var pex = ex as PlcSoftwareException ?? new PlcSoftwareException("ImportFailed", "Import failed: " + UnwrapImportError(ex) + ImportOptionsNote, null, ex);
+                var pex = ex as PlcSoftwareException
+                    ?? new PlcSoftwareException("ImportFailed", "Import failed: " + UnwrapImportError(ex) + ImportOptionsNote, null, ex);
                 pex.Data["softwarePath"] = softwarePath;
                 pex.Data["groupPath"] = groupPath;
                 pex.Data["importPath"] = importPath;
@@ -251,7 +266,10 @@ namespace TiaMcp.Adapters.Native.Plc
         // Groups.Find path; a folderPath that does not resolve is refused, never redirected to the root group.
         public void ImportPlcTagTable(string softwarePath, string folderPath, string importPath, bool overwrite)
         {
-            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (_session.IsProjectNull())
+                throw new PlcSoftwareException("InvalidState",
+                    "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                    "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var plc = _session.ResolvePlc(softwarePath, true);
             if (plc == null) throw new PlcSoftwareException("NotFound", $"PlcSoftware not found at '{softwarePath}'" + _session.AvailablePlcPathsSuffix());
@@ -281,7 +299,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             catch (Exception ex)
             {
-                throw new PlcSoftwareException("ImportFailed", ex.GetBaseException().GetType().FullName + ": " + ex.GetBaseException().Message + ImportOptionsNote, null, ex);
+                throw new PlcSoftwareException("ImportFailed", ex.GetBaseException().GetType().FullName + ": " + ex.GetBaseException().Message
+                        + ImportOptionsNote, null, ex);
             }
         }
 

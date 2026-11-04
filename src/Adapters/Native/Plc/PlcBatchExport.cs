@@ -18,7 +18,8 @@ namespace TiaMcp.Adapters
             if(inventory.Length>1024) throw new AdapterPreconditionException("Group inventory exceeds the bounded batch scope.",parameter);
             return PlcExchangePolicy.Exact(inventory,x=>x.Path,path,parameter).Value;
         }
-        public PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true, string unitName = "")
+        public PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
+                string expectedInventoryHash="",bool dryRun=true, string unitName = "")
         {
             var selected=ReadSelection(softwarePath);
             var unit=PlcUnitScope.Optional(selected.Value,unitName);
@@ -29,12 +30,19 @@ namespace TiaMcp.Adapters
             var group=BatchGroup(BlockGroups(PlcUnitScope.Blocks(selected.Value,unit)),path,"groupPath");
             var groups=recursive ? BlockGroups(group,path) : new[]{new Located<PlcBlockGroup>(path,group)};
             var sources=BatchGroupsBounded(groups).SelectMany(g=>PlcNative.Blocks(g.Value).Select(b=>new PlcBatchExportSource {
-                Path=Child(g.Path,PlcNative.Name(b)),Consistent=PlcNative.IsConsistent(b),Capability=PlcBlockXmlPolicy.Export(ReleaseKey,PlcNative.Language(b).ToString(),b.IsKnowHowProtected),
-                Export=f=>{ RequireTargetOffline(selected); if(!PlcNative.IsConsistent(b)) throw new InvalidOperationException("Block is no longer consistent."); PlcNative.Export(b,f,ExportOptions.None); }
+                Path=Child(g.Path,PlcNative.Name(b)),Consistent=PlcNative.IsConsistent(b),Capability=PlcBlockXmlPolicy
+                    .Export(ReleaseKey,PlcNative.Language(b).ToString(),b.IsKnowHowProtected),
+                Export=f=>{
+                    RequireTargetOffline(selected); if(!PlcNative.IsConsistent(b)) throw new InvalidOperationException("Block is no longer consistent.");
+                    PlcNative.Export(b,f,ExportOptions.None);
+                }
             }));
-            return PlcBatchExportPolicy.Run("blocks",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>RequireTargetOffline(selected),unitName:unitName);
+            return PlcBatchExportPolicy
+                .Run("blocks",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>
+                    RequireTargetOffline(selected),unitName:unitName);
         }
-        public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true, string unitName = "")
+        public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
+                string expectedInventoryHash="",bool dryRun=true, string unitName = "")
         {
             var selected=ReadSelection(softwarePath);
             var unit=PlcUnitScope.Optional(selected.Value,unitName);
@@ -46,14 +54,20 @@ namespace TiaMcp.Adapters
             var groups=recursive ? TypeGroups(group,path) : new[]{new Located<PlcTypeGroup>(path,group)};
             var sources=BatchGroupsBounded(groups).SelectMany(g=>PlcNative.Types(g.Value).Select(t=>new PlcBatchExportSource {
                 Path=Child(g.Path,PlcNative.Name(t)),Consistent=t.IsConsistent,
-                Export=f=>{ RequireTargetOffline(selected); if(!t.IsConsistent) throw new InvalidOperationException("Type is no longer consistent."); t.Export(f,ExportOptions.None); }
+                Export=f=>{
+                    RequireTargetOffline(selected); if(!t.IsConsistent) throw new InvalidOperationException("Type is no longer consistent."); t
+                        .Export(f,ExportOptions.None);
+                }
             }));
-            return PlcBatchExportPolicy.Run("types",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>RequireTargetOffline(selected),unitName:unitName);
+            return PlcBatchExportPolicy
+                .Run("types",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>
+                    RequireTargetOffline(selected),unitName:unitName);
         }
         private static IEnumerable<Located<T>> BatchGroupsBounded<T>(IEnumerable<Located<T>> groups)
         {
             int count=0;
-            foreach(var group in groups) { if(++count>1024) throw new AdapterPreconditionException("Group inventory exceeds the bounded batch scope.","groupPath"); yield return group; }
+            foreach(var group in groups) {
+                if(++count>1024) throw new AdapterPreconditionException("Group inventory exceeds the bounded batch scope.","groupPath"); yield return group; }
         }
     }
 }

@@ -42,7 +42,8 @@ namespace TiaMcpServer.Siemens
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
                 new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(releaseKey).EngineeringVersion)),
+                    new XElement("Engineering",
+                            new XAttribute("version", TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(releaseKey).EngineeringVersion)),
                     new XElement(TableElement, new XAttribute("ID", "0"),
                         new XElement("AttributeList", new XElement("Name", tableName)),
                         new XElement("ObjectList"))));
@@ -66,7 +67,8 @@ namespace TiaMcpServer.Siemens
                 var list = entry.Element("AttributeList");
                 var value = list?.Element(attribute)?.Value ?? "";
                 if (value.Length == 0) continue;
-                if (attribute == "Address" ? string.Equals(value, address.Trim(), StringComparison.OrdinalIgnoreCase) : SameSymbol(value, address)) return entry;
+                if (attribute == "Address" ? string.Equals(value, address.Trim(), StringComparison.OrdinalIgnoreCase) : SameSymbol(value, address))
+                    return entry;
             }
             return null;
         }
@@ -82,7 +84,8 @@ namespace TiaMcpServer.Siemens
             {
                 var objects = Table(doc).Element("ObjectList");
                 if (objects == null) { objects = new XElement("ObjectList"); Table(doc).Add(objects); }
-                entry = new XElement(EntryElement, new XAttribute("ID", NextId(doc)), new XAttribute("CompositionName", "Entries"), new XElement("AttributeList"));
+                entry =
+                    new XElement(EntryElement, new XAttribute("ID", NextId(doc)), new XAttribute("CompositionName", "Entries"), new XElement("AttributeList"));
                 objects.Add(entry);
                 action = "appended";
             }

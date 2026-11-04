@@ -133,7 +133,8 @@ namespace TiaMcpServer.Runtime
         }
 
         // preview=true: only reads the current values (no PlcProgram.Write is ever sent).
-        public static S7WebWriteResult WriteVars(string host, string username, string password, List<RuntimeWriteItem> writes, bool ignoreCertificateErrors, int timeoutMs, bool preview)
+        public static S7WebWriteResult WriteVars(string host, string username, string password, List<RuntimeWriteItem> writes, bool ignoreCertificateErrors,
+                int timeoutMs, bool preview)
         {
             var result = new S7WebWriteResult();
             Run(host, username, password, ignoreCertificateErrors, timeoutMs, result, async (h, ct) =>
@@ -175,7 +176,8 @@ namespace TiaMcpServer.Runtime
                     if (after.Error != null) { item.Error = "Readback failed after write: " + after.Error; break; }
                     item.Verified = RuntimeChannelsLogic.ValuesMatch(item.Requested, item.After);
                     if (!item.Verified)
-                        item.Error = $"Readback differs from the requested value (requested {item.Requested?.ToJsonString()}, read {item.After?.ToJsonString()}); the PLC program may overwrite this variable cyclically.";
+                        item.Error =
+                            $"Readback differs from the requested value (requested {item.Requested?.ToJsonString()}, read {item.After?.ToJsonString()}); the PLC program may overwrite this variable cyclically.";
                 }
                 result.Ok = result.Items.All(i => i.Error == null);
             }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms);
@@ -210,7 +212,8 @@ namespace TiaMcpServer.Runtime
 
         // preview=true: reads the current mode only. Otherwise sends Plc.RequestChangeOperatingMode
         // and polls Plc.ReadOperatingMode until the requested mode is observed or the budget ends.
-        public static S7WebModeChangeResult ChangeOperatingMode(string host, string username, string password, string mode, bool ignoreCertificateErrors, int timeoutMs, bool preview)
+        public static S7WebModeChangeResult ChangeOperatingMode(string host, string username, string password, string mode, bool ignoreCertificateErrors,
+                int timeoutMs, bool preview)
         {
             var result = new S7WebModeChangeResult();
             var target = mode == "run" ? ApiPlcOperatingMode.Run : ApiPlcOperatingMode.Stop;
@@ -237,7 +240,8 @@ namespace TiaMcpServer.Runtime
                     if (RuntimeChannelsLogic.OperatingModeSatisfies(mode, result.After)) { result.Verified = true; break; }
                 } while (DateTime.UtcNow < deadline);
                 if (!result.Verified)
-                    result.Error = $"Mode change was accepted but readback still reports '{result.After}' after {result.PollCount} polls; check the CPU (mode selector, startup errors).";
+                    result.Error =
+                        $"Mode change was accepted but readback still reports '{result.After}' after {result.PollCount} polls; check the CPU (mode selector, startup errors).";
                 result.Ok = result.Verified;
             }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms);
             return result;
@@ -285,7 +289,8 @@ namespace TiaMcpServer.Runtime
             while (ex is AggregateException ae && ae.InnerException != null) ex = ae.InnerException;
             // HttpClient reports its own timeout as a cancelled task; say what it means.
             if (ex is OperationCanceledException)
-                return "Timeout: no answer from the CPU web server within the request timeout (web server disabled, wrong host/port, https blocked, or CPU unreachable).";
+                return "Timeout: no answer from the CPU web server within the request timeout (web server disabled, wrong host/port, https blocked, or CPU " +
+                    "unreachable).";
             string text = ex.Message;
             for (var inner = ex.InnerException; inner != null; inner = inner.InnerException)
                 text += " <- " + inner.Message;
@@ -356,7 +361,8 @@ namespace TiaMcpServer.Runtime
             finally { gate.Release(); }
         }
 
-        private static async Task<(Session session, bool reused)> AcquireAsync(string key, string host, string username, string password, bool ignoreCert, int budget, bool forceNew)
+        private static async Task<(Session session, bool reused)> AcquireAsync(string key, string host, string username, string password, bool ignoreCert,
+                int budget, bool forceNew)
         {
             Session? existing;
             lock (Gate) { Sessions.TryGetValue(key, out existing); }

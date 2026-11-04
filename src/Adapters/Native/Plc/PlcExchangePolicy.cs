@@ -10,7 +10,8 @@ namespace TiaMcp.Adapters
         internal static T Exact<T>(System.Collections.Generic.IEnumerable<T> items,Func<T,string> path,string selected,string parameter="path")
         {
             var matches=items.Where(item=>string.Equals(path(item),selected,StringComparison.Ordinal)).Take(2).ToArray();
-            if(matches.Length!=1) throw new AdapterPreconditionException((matches.Length==0 ? "Object not found at exact path: " : "Ambiguous object path: ")+selected,parameter);
+            if(matches.Length!=1)
+                throw new AdapterPreconditionException((matches.Length==0 ? "Object not found at exact path: " : "Ambiguous object path: ")+selected,parameter);
             return matches[0];
         }
         internal static T SelectTable<T>(System.Collections.Generic.IEnumerable<T> tables,string selected,Func<T,string> path,Func<T,string> name)
@@ -29,11 +30,13 @@ namespace TiaMcp.Adapters
         internal static string ObjectPath(string path,bool allowRoot=false,string parameter="groupPath")
         {
             if(path=="" && allowRoot) return "";
-            if(string.IsNullOrWhiteSpace(path) || path.Contains("\\")) throw new AdapterPreconditionException("Use a nonempty slash-separated object path.",parameter);
+            if(string.IsNullOrWhiteSpace(path) || path.Contains("\\"))
+                throw new AdapterPreconditionException("Use a nonempty slash-separated object path.",parameter);
             return string.Join("/",path.Split('/').Select(segment=>
             {
                 var name=Uri.UnescapeDataString(segment);
-                if(string.IsNullOrWhiteSpace(name) || name=="." || name=="..") throw new AdapterPreconditionException("Empty and traversal object path segments are refused.",parameter);
+                if(string.IsNullOrWhiteSpace(name) || name=="." || name=="..")
+                    throw new AdapterPreconditionException("Empty and traversal object path segments are refused.",parameter);
                 return Uri.EscapeDataString(name);
             }));
         }
@@ -46,7 +49,8 @@ namespace TiaMcp.Adapters
             var relative=preservePath ? Path.Combine(segments) : segments.Last();
             var file=Path.GetFullPath(Path.Combine(root.FullName,relative+".xml"));
             var prefix=root.FullName.TrimEnd('\\','/')+Path.DirectorySeparatorChar;
-            if(!file.StartsWith(prefix,StringComparison.OrdinalIgnoreCase)) throw new AdapterPreconditionException("Export target escapes the selected directory.","exportPath");
+            if(!file.StartsWith(prefix,StringComparison.OrdinalIgnoreCase))
+                throw new AdapterPreconditionException("Export target escapes the selected directory.","exportPath");
             // Preview never creates directories or removes an existing export.
             return PlcFoundationPolicy.XmlOutput(file);
         }

@@ -19,7 +19,10 @@ public static class OptionalProductFailures
         if (fileName.IndexOf(',') >= 0)
         {
             // CLR load failures use a display identity; reject malformed names without swallowing parser exceptions.
-            var identity = Regex.Match(fileName, @"\A(?<name>[^,]+),\s*Version=(?<version>[0-9]+(?:\.[0-9]+){1,3})(?:,\s*Culture=(?:neutral|[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*))?(?:,\s*PublicKeyToken=(?:null|[0-9a-fA-F]{16}))?\z", RegexOptions.CultureInvariant);
+            var identity = Regex
+                .Match(fileName,
+                    @"\A(?<name>[^,]+),\s*Version=(?<version>[0-9]+(?:\.[0-9]+){1,3})(?:,\s*Culture=(?:neutral|[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*))?(?:,\s*PublicKeyToken=(?:null|[0-9a-fA-F]{16}))?\z",
+                    RegexOptions.CultureInvariant);
             if (!identity.Success || !Version.TryParse(identity.Groups["version"].Value, out _)) return false;
             name = identity.Groups["name"].Value;
         }

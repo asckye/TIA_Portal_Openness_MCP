@@ -48,10 +48,14 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly HashSet<string> VolatileElements = new HashSet<string>(StringComparer.Ordinal)
             { "DocumentInfo", "Engineering", "Created", "Modified", "CompileDate", "ModifiedDate", "CreationDate", "LastModified" };
 
-        private static readonly Regex GuidRegex = new Regex(@"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b", RegexOptions.Compiled);
-        private static readonly Regex TimestampRegex = new Regex(@"\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?\b", RegexOptions.Compiled);
+        private static readonly Regex GuidRegex =
+            new Regex(@"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b", RegexOptions.Compiled);
+        private static readonly Regex TimestampRegex =
+            new Regex(@"\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?\b", RegexOptions.Compiled);
         private static readonly Regex MlcRegex = new Regex(@"\bMLC_[A-Za-z0-9]+\b", RegexOptions.Compiled);
-        private static readonly Regex DeclarationRegex = new Regex(@"^(FUNCTION_BLOCK|FUNCTION|ORGANIZATION_BLOCK|DATA_BLOCK|TYPE)\s+""([^""]+)""(\s*:\s*([^\s{]+))?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex DeclarationRegex =
+            new Regex(@"^(FUNCTION_BLOCK|FUNCTION|ORGANIZATION_BLOCK|DATA_BLOCK|TYPE)\s+""([^""]+)""(\s*:\s*([^\s{]+))?", RegexOptions.Compiled | RegexOptions
+                .IgnoreCase);
         private static readonly Regex MemberRegex = new Regex(@"^(""[^""]+""|[A-Za-z_][\w]*)\s*(\{[^}]*\})?\s*:\s*(.+?)\s*$", RegexOptions.Compiled);
         private static readonly Regex AttributePairRegex = new Regex(@"([A-Za-z_][\w]*)\s*:=\s*(""[^""]*""|'[^']*'|[^;,}]+)", RegexOptions.Compiled);
         private static readonly Regex QuotedCallRegex = new Regex(@"""([^""]+)""\s*(\{[^}]*\})?\s*\(", RegexOptions.Compiled);
@@ -128,7 +132,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static BlockDocument ParseFile(string path)
         {
-            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) throw new ArgumentException("Absolute document file path required: '" + path + "'.");
+            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path))
+                throw new ArgumentException("Absolute document file path required: '" + path + "'.");
             if (Directory.Exists(path)) throw new ArgumentException("Path is a directory, a document file is required: '" + path + "'.");
             if (!File.Exists(path)) throw new FileNotFoundException("Document not found: " + path, path);
             var text = File.ReadAllText(path, Encoding.UTF8);
@@ -144,7 +149,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var ext = Path.GetExtension(sourcePath ?? "").ToLowerInvariant();
             BlockDocument doc;
             if (LooksLikeXml(body)) doc = ParseSimaticMl(body);
-            else doc = ParseTextSource(body, ReadS7Res(s7resText), ext == ".scl" ? "SCL" : ext == ".s7dcl" ? "S7DCL" : (body.IndexOf("NETWORK", StringComparison.Ordinal) >= 0 ? "S7DCL" : "SCL"));
+            else doc =
+                ParseTextSource(body, ReadS7Res(s7resText), ext == ".scl" ? "SCL" : ext == ".s7dcl" ? "S7DCL"
+                    : (body.IndexOf("NETWORK", StringComparison.Ordinal) >= 0 ? "S7DCL" : "SCL"));
             doc.SourcePath = sourcePath ?? "";
             return doc;
         }
@@ -276,7 +283,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         var blockType = (string?)call.Attribute("BlockType") ?? "";
                         if (callName.Length > 0 && Local(source) != "StructuredText") doc.BlockCalls.Add(blockType + ":" + callName);
                     }
-                    foreach (var part in source.Descendants().Where(e => Local(e) == "Part" || (Local(e) == "Instruction" && Local(source) != "StructuredText")))
+                    foreach (var part in source.Descendants()
+                            .Where(e => Local(e) == "Part" || (Local(e) == "Instruction" && Local(source) != "StructuredText")))
                     {
                         var partName = (string?)part.Attribute("Name") ?? "";
                         if (partName.Length > 0) doc.Instructions.Add(partName);
@@ -411,7 +419,8 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var volatileChild in element.Descendants().Where(e => VolatileElements.Contains(Local(e))).ToList()) volatileChild.Remove();
             foreach (var e in element.DescendantsAndSelf())
             {
-                foreach (var attr in e.Attributes().Where(a => VolatileAttributes.Contains(a.Name.LocalName) || a.IsNamespaceDeclaration).ToList()) attr.Remove();
+                foreach (var attr in e.Attributes().Where(a => VolatileAttributes.Contains(a.Name.LocalName) || a.IsNamespaceDeclaration).ToList()) attr
+                    .Remove();
                 e.Name = XName.Get(e.Name.LocalName);
             }
         }
@@ -452,7 +461,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (current != null && (hasComment || codeTrim.Length > 0))
                 {
                     if (!codeTrim.StartsWith("END_NETWORK", StringComparison.OrdinalIgnoreCase)
-                        && !(implicitBody && (codeTrim.StartsWith("END_FUNCTION", StringComparison.OrdinalIgnoreCase) || codeTrim.StartsWith("END_ORGANIZATION", StringComparison.OrdinalIgnoreCase) || codeTrim.StartsWith("END_DATA_BLOCK", StringComparison.OrdinalIgnoreCase))))
+                        && !(implicitBody
+                                && (codeTrim.StartsWith("END_FUNCTION", StringComparison.OrdinalIgnoreCase) || codeTrim
+                                    .StartsWith("END_ORGANIZATION", StringComparison.OrdinalIgnoreCase) || codeTrim
+                                    .StartsWith("END_DATA_BLOCK", StringComparison.OrdinalIgnoreCase))))
                     {
                         current.SourceLines.Add(raw.Trim());
                         doc.SourceLines++;
@@ -489,7 +501,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         doc.BlockName = decl.Groups[2].Value;
                         doc.BlockType = decl.Groups[1].Value.ToUpperInvariant() switch
                         {
-                            "FUNCTION_BLOCK" => "FB", "FUNCTION" => "FC", "ORGANIZATION_BLOCK" => "OB", "DATA_BLOCK" => "GlobalDB", "TYPE" => "PlcStruct", _ => decl.Groups[1].Value
+                            "FUNCTION_BLOCK" => "FB", "FUNCTION" => "FC", "ORGANIZATION_BLOCK" => "OB", "DATA_BLOCK" => "GlobalDB", "TYPE" => "PlcStruct", _ =>
+                                decl.Groups[1].Value
                         };
                         if (doc.BlockType == "FC" && decl.Groups[4].Success)
                             doc.Members.Add(new InterfaceMember { Section = "Return", Path = "Ret_Val", Datatype = decl.Groups[4].Value.Trim() });
@@ -508,8 +521,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     var newSection = SectionFor(upper, doc.BlockType);
                     if (newSection != null) { section = newSection; structPrefix.Clear(); continue; }
-                    if (upper.StartsWith("END_VAR", StringComparison.Ordinal) || (upper.StartsWith("END_STRUCT", StringComparison.Ordinal) && structPrefix.Count == 0)) { section = null; continue; }
-                    if (upper.StartsWith("END_STRUCT", StringComparison.Ordinal) && structPrefix.Count > 0) { structPrefix.RemoveAt(structPrefix.Count - 1); continue; }
+                    if (upper.StartsWith("END_VAR", StringComparison.Ordinal)
+                            || (upper.StartsWith("END_STRUCT", StringComparison.Ordinal) && structPrefix.Count == 0))
+                        { section = null; continue; }
+                    if (upper.StartsWith("END_STRUCT", StringComparison.Ordinal) && structPrefix.Count > 0) {
+                        structPrefix.RemoveAt(structPrefix.Count - 1); continue; }
                     if (section != null)
                     {
                         var m = MemberRegex.Match(codeTrim);
@@ -522,7 +538,9 @@ namespace TiaMcpServer.ModelContextProtocol
                             typeText = typeText.Trim().TrimEnd(';').Trim();
                             var path = structPrefix.Count == 0 ? name : string.Join(".", structPrefix) + "." + name;
                             doc.Members.Add(new InterfaceMember { Section = section, Path = path, Datatype = typeText });
-                            if (typeText.Equals("Struct", StringComparison.OrdinalIgnoreCase) || typeText.EndsWith(" of Struct", StringComparison.OrdinalIgnoreCase)) structPrefix.Add(name);
+                            if (typeText.Equals("Struct", StringComparison.OrdinalIgnoreCase) || typeText
+                                    .EndsWith(" of Struct", StringComparison.OrdinalIgnoreCase))
+                                structPrefix.Add(name);
                         }
                         continue;
                     }
@@ -538,7 +556,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (upper == "NETWORK" || upper.StartsWith("NETWORK ", StringComparison.Ordinal))
                 {
-                    if (implicitBody && current != null && current.SourceLines.Count == 0) { doc.Networks.Remove(current); networkIndex--; implicitBody = false; }
+                    if (implicitBody && current != null && current.SourceLines.Count == 0) {
+                        doc.Networks.Remove(current); networkIndex--; implicitBody = false; }
                     current = new NetworkInfo { Index = ++networkIndex };
                     pendingAttributes.TryGetValue("S7_NetworkTitle", out var title);
                     pendingAttributes.TryGetValue("S7_NetworkComment", out var netComment);
@@ -549,7 +568,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     continue;
                 }
                 if (upper.StartsWith("END_NETWORK", StringComparison.Ordinal)) { current = null; continue; }
-                if (implicitBody && (upper.StartsWith("END_FUNCTION", StringComparison.Ordinal) || upper.StartsWith("END_ORGANIZATION", StringComparison.Ordinal) || upper.StartsWith("END_DATA_BLOCK", StringComparison.Ordinal))) { current = null; implicitBody = false; }
+                if (implicitBody
+                        && (upper.StartsWith("END_FUNCTION", StringComparison.Ordinal) || upper.StartsWith("END_ORGANIZATION", StringComparison.Ordinal)
+                            || upper.StartsWith("END_DATA_BLOCK", StringComparison.Ordinal)))
+                    { current = null; implicitBody = false; }
             }
 
             if (!declared) doc.Warnings.Add("No FUNCTION/FUNCTION_BLOCK/ORGANIZATION_BLOCK/DATA_BLOCK/TYPE declaration found.");
@@ -583,7 +605,8 @@ namespace TiaMcpServer.ModelContextProtocol
             return null;
         }
 
-        private static void ApplyAttributeBlock(string block, BlockDocument doc, Dictionary<string, string> pending, bool declared, bool insideNetwork, Func<string, string> resolve)
+        private static void ApplyAttributeBlock(string block, BlockDocument doc, Dictionary<string, string> pending, bool declared, bool insideNetwork,
+                Func<string, string> resolve)
         {
             if (insideNetwork) return; // S7_Templates etc. inside rungs are part of the source, not metadata
             foreach (Match m in AttributePairRegex.Matches(block))
@@ -853,7 +876,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["normalizationRules"] = new JsonArray(NormalizationRules.Select(r => (JsonNode)r).ToArray()),
             };
             if (!string.Equals(left.Format, right.Format, StringComparison.Ordinal))
-                result["warning"] = "Documents have different formats (" + left.Format + " vs " + right.Format + "); the line diff compares different canonical renderings, rely on the structural section.";
+                result["warning"] = "Documents have different formats (" + left.Format + " vs " + right.Format
+                    + "); the line diff compares different canonical renderings, rely on the structural section.";
             return result;
         }
 
@@ -864,14 +888,18 @@ namespace TiaMcpServer.ModelContextProtocol
             ["warnings"] = new JsonArray(doc.Warnings.Select(w => (JsonNode)w).ToArray()),
         };
 
-        private static JsonObject Pair(string l, string r) => new JsonObject { ["left"] = l, ["right"] = r, ["equal"] = string.Equals(l, r, StringComparison.Ordinal) };
+        private static JsonObject Pair(string l, string r) => new JsonObject {
+            ["left"] = l, ["right"] = r, ["equal"] = string.Equals(l, r, StringComparison.Ordinal) };
 
         public static JsonObject CompareStructure(BlockDocument left, BlockDocument right)
         {
             var differences = 0;
             var sameFormat = string.Equals(left.Format, right.Format, StringComparison.Ordinal);
             var result = new JsonObject();
-            foreach (var (key, l, r) in new[] { ("blockName", left.BlockName, right.BlockName), ("blockType", left.BlockType, right.BlockType), ("language", left.Language, right.Language), ("title", left.Title, right.Title), ("comment", left.Comment, right.Comment) })
+            foreach (var (key, l, r) in new[] {
+                    ("blockName", left.BlockName, right.BlockName), ("blockType", left.BlockType, right.BlockType), ("language", left.Language, right.Language),
+                        ("title", left.Title, right.Title), ("comment", left.Comment, right.Comment)
+                })
             {
                 result[key] = Pair(l, r);
                 if (!string.Equals(l, r, StringComparison.Ordinal)) differences++;
@@ -882,7 +910,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (right.Attributes.TryGetValue(kv.Key, out var rv))
                 {
-                    if (!string.Equals(kv.Value, rv, StringComparison.Ordinal)) { changed.Add(new JsonObject { ["name"] = kv.Key, ["left"] = kv.Value, ["right"] = rv }); differences++; }
+                    if (!string.Equals(kv.Value, rv, StringComparison.Ordinal)) {
+                        changed.Add(new JsonObject { ["name"] = kv.Key, ["left"] = kv.Value, ["right"] = rv }); differences++; }
                 }
                 else { onlyLeft.Add(kv.Key); if (sameFormat) differences++; }
             }
@@ -895,7 +924,10 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var kv in leftMembers)
             {
                 if (!rightMembers.TryGetValue(kv.Key, out var rm)) { removed.Add(MemberJson(kv.Value)); differences++; continue; }
-                if (!SameType(kv.Value.Datatype, rm.Datatype)) { typeChanged.Add(new JsonObject { ["section"] = rm.Section, ["path"] = rm.Path, ["left"] = kv.Value.Datatype, ["right"] = rm.Datatype }); differences++; }
+                if (!SameType(kv.Value.Datatype, rm.Datatype)) {
+                    typeChanged.Add(new JsonObject { ["section"] = rm.Section, ["path"] = rm.Path, ["left"] = kv.Value.Datatype, ["right"] = rm.Datatype });
+                    differences++;
+                }
             }
             foreach (var kv in rightMembers.Where(kv => !leftMembers.ContainsKey(kv.Key))) { added.Add(MemberJson(kv.Value)); differences++; }
             var leftSections = left.Members.Select(m => m.Section).Distinct().ToList();
@@ -913,14 +945,18 @@ namespace TiaMcpServer.ModelContextProtocol
             for (var i = 0; i < common; i++)
             {
                 var ln = left.Networks[i]; var rn = right.Networks[i];
-                if (!string.Equals(ln.Title, rn.Title, StringComparison.Ordinal)) { titlesChanged.Add(new JsonObject { ["index"] = ln.Index, ["left"] = ln.Title, ["right"] = rn.Title }); differences++; }
-                if (!string.Equals(ln.Comment, rn.Comment, StringComparison.Ordinal)) { commentsChanged.Add(new JsonObject { ["index"] = ln.Index, ["left"] = ln.Comment, ["right"] = rn.Comment }); differences++; }
-                if (!string.Equals(ln.Language, rn.Language, StringComparison.OrdinalIgnoreCase)) { languagesChanged.Add(new JsonObject { ["index"] = ln.Index, ["left"] = ln.Language, ["right"] = rn.Language }); differences++; }
+                if (!string.Equals(ln.Title, rn.Title, StringComparison.Ordinal)) {
+                    titlesChanged.Add(new JsonObject { ["index"] = ln.Index, ["left"] = ln.Title, ["right"] = rn.Title }); differences++; }
+                if (!string.Equals(ln.Comment, rn.Comment, StringComparison.Ordinal)) {
+                    commentsChanged.Add(new JsonObject { ["index"] = ln.Index, ["left"] = ln.Comment, ["right"] = rn.Comment }); differences++; }
+                if (!string.Equals(ln.Language, rn.Language, StringComparison.OrdinalIgnoreCase)) {
+                    languagesChanged.Add(new JsonObject { ["index"] = ln.Index, ["left"] = ln.Language, ["right"] = rn.Language }); differences++; }
             }
             if (left.Networks.Count != right.Networks.Count) differences++;
             result["networks"] = new JsonObject
             {
-                ["count"] = new JsonObject { ["left"] = left.Networks.Count, ["right"] = right.Networks.Count, ["equal"] = left.Networks.Count == right.Networks.Count },
+                ["count"] = new JsonObject {
+                    ["left"] = left.Networks.Count, ["right"] = right.Networks.Count, ["equal"] = left.Networks.Count == right.Networks.Count },
                 ["added"] = new JsonArray(right.Networks.Skip(common).Select(n => (JsonNode)n.Index).ToArray()),
                 ["removed"] = new JsonArray(left.Networks.Skip(common).Select(n => (JsonNode)n.Index).ToArray()),
                 ["titlesChanged"] = titlesChanged, ["commentsChanged"] = commentsChanged, ["languagesChanged"] = languagesChanged,
@@ -950,13 +986,16 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (string.IsNullOrWhiteSpace(markersJson)) return DefaultMarkers.ToArray();
             JsonNode? node;
-            try { node = JsonNode.Parse(markersJson); } catch (JsonException ex) { throw new ArgumentException("markersJson must be a JSON string array: " + ex.Message); }
-            if (node is not JsonArray array || array.Count == 0) throw new ArgumentException("markersJson must be a non-empty JSON string array, e.g. [\"TODO\",\"FIXME\"].");
+            try { node = JsonNode.Parse(markersJson); } catch (JsonException ex) {
+                throw new ArgumentException("markersJson must be a JSON string array: " + ex.Message); }
+            if (node is not JsonArray array || array.Count == 0)
+                throw new ArgumentException("markersJson must be a non-empty JSON string array, e.g. [\"TODO\",\"FIXME\"].");
             var markers = new List<string>();
             foreach (var item in array)
             {
                 var value = item?.GetValue<string>()?.Trim() ?? "";
-                if (value.Length == 0 || !Regex.IsMatch(value, @"^[A-Za-z0-9_]+$")) throw new ArgumentException("Marker '" + value + "' must be a plain word (letters, digits, underscore).");
+                if (value.Length == 0 || !Regex.IsMatch(value, @"^[A-Za-z0-9_]+$"))
+                    throw new ArgumentException("Marker '" + value + "' must be a plain word (letters, digits, underscore).");
                 if (!markers.Contains(value, StringComparer.Ordinal)) markers.Add(value);
             }
             return markers.ToArray();
@@ -966,8 +1005,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (string.IsNullOrWhiteSpace(extensionsJson)) return DefaultExtensions.ToArray();
             JsonNode? node;
-            try { node = JsonNode.Parse(extensionsJson); } catch (JsonException ex) { throw new ArgumentException("extensionsJson must be a JSON string array: " + ex.Message); }
-            if (node is not JsonArray array || array.Count == 0) throw new ArgumentException("extensionsJson must be a non-empty JSON string array, e.g. [\".xml\",\".s7dcl\"].");
+            try { node = JsonNode.Parse(extensionsJson); } catch (JsonException ex) {
+                throw new ArgumentException("extensionsJson must be a JSON string array: " + ex.Message); }
+            if (node is not JsonArray array || array.Count == 0)
+                throw new ArgumentException("extensionsJson must be a non-empty JSON string array, e.g. [\".xml\",\".s7dcl\"].");
             var list = new List<string>();
             foreach (var item in array)
             {
@@ -981,7 +1022,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static List<string> EnumerateDocuments(string directory, bool recursive, string[] extensions)
         {
-            if (string.IsNullOrWhiteSpace(directory) || !Path.IsPathRooted(directory)) throw new ArgumentException("Absolute directory path required: '" + directory + "'.");
+            if (string.IsNullOrWhiteSpace(directory) || !Path.IsPathRooted(directory))
+                throw new ArgumentException("Absolute directory path required: '" + directory + "'.");
             if (!Directory.Exists(directory)) throw new DirectoryNotFoundException("Directory not found: " + directory);
             return Directory.EnumerateFiles(directory, "*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
                 .Where(f => extensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
@@ -1012,7 +1054,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var xdoc = XDocument.Parse(xml, LoadOptions.SetLineInfo);
             var root = xdoc.Root;
             if (root == null) return rows;
-            var block = root.Elements().FirstOrDefault(e => Local(e).StartsWith("SW.", StringComparison.Ordinal)) ?? (Local(root).StartsWith("SW.", StringComparison.Ordinal) ? root : null);
+            var block = root.Elements().FirstOrDefault(e => Local(e).StartsWith("SW.", StringComparison.Ordinal))
+                ?? (Local(root).StartsWith("SW.", StringComparison.Ordinal) ? root : null);
             var blockName = Child(Child(block, "AttributeList"), "Name")?.Value.Trim() ?? "";
             var units = new Dictionary<XElement, int>();
             if (block != null) foreach (var unit in block.Descendants().Where(e => Local(e) == "SW.Blocks.CompileUnit")) units[unit] = units.Count + 1;
@@ -1077,11 +1120,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else if (upper.StartsWith("END_NETWORK", StringComparison.Ordinal)) inNetwork = false;
                 else if (upper == "BEGIN" && networkIndex == 0) { networkIndex = 1; inNetwork = true; implicitBody = true; }
-                else if (implicitBody && (upper.StartsWith("END_FUNCTION", StringComparison.Ordinal) || upper.StartsWith("END_ORGANIZATION", StringComparison.Ordinal) || upper.StartsWith("END_DATA_BLOCK", StringComparison.Ordinal))) { inNetwork = false; implicitBody = false; }
+                else
+                    if (implicitBody
+                        && (upper.StartsWith("END_FUNCTION", StringComparison.Ordinal) || upper.StartsWith("END_ORGANIZATION", StringComparison.Ordinal)
+                            || upper.StartsWith("END_DATA_BLOCK", StringComparison.Ordinal)))
+                    { inNetwork = false; implicitBody = false; }
 
                 int? network = inNetwork ? networkIndex : (int?)null;
                 foreach (Match m in regex.Matches(comment))
-                    rows.Add(new AnnotationRow { File = filePath, BlockName = blockName, Network = network, Line = i + 1, Marker = m.Groups[1].Value, Text = Clip(CollapseWhitespace(comment)), Kind = "sourceComment" });
+                    rows
+                        .Add(new AnnotationRow {
+                            File = filePath, BlockName = blockName, Network = network, Line = i + 1, Marker = m.Groups[1].Value, Text =
+                                Clip(CollapseWhitespace(comment)), Kind = "sourceComment"
+                        });
 
                 foreach (Match mlc in MlcRegex.Matches(code))
                 {
@@ -1092,7 +1143,11 @@ namespace TiaMcpServer.ModelContextProtocol
                         : code.IndexOf("S7_BlockComment", StringComparison.Ordinal) >= 0 ? "blockComment" : "resourceText";
                     var pendingNetwork = kind.StartsWith("network", StringComparison.Ordinal) && !inNetwork ? networkIndex + 1 : network;
                     foreach (Match m in regex.Matches(resolved))
-                        rows.Add(new AnnotationRow { File = filePath, BlockName = blockName, Network = pendingNetwork, Line = i + 1, Marker = m.Groups[1].Value, Text = Clip(CollapseWhitespace(resolved)), Kind = kind });
+                        rows
+                            .Add(new AnnotationRow {
+                                File = filePath, BlockName = blockName, Network = pendingNetwork, Line = i + 1, Marker = m.Groups[1].Value, Text =
+                                    Clip(CollapseWhitespace(resolved)), Kind = kind
+                            });
                 }
             }
             return rows;
@@ -1111,7 +1166,12 @@ namespace TiaMcpServer.ModelContextProtocol
             var sb = new StringBuilder();
             sb.AppendLine("file,blockName,network,line,marker,kind,text");
             foreach (var r in rows)
-                sb.AppendLine(string.Join(",", new[] { r.File, r.BlockName, r.Network?.ToString(CultureInfo.InvariantCulture) ?? "", r.Line.ToString(CultureInfo.InvariantCulture), r.Marker, r.Kind, r.Text }.Select(CsvField)));
+                sb
+                    .AppendLine(string
+                        .Join(",", new[] {
+                            r.File, r.BlockName, r.Network?.ToString(CultureInfo.InvariantCulture) ?? "", r.Line.ToString(CultureInfo.InvariantCulture), r
+                                .Marker, r.Kind, r.Text
+                        }.Select(CsvField)));
             return sb.ToString();
         }
 
@@ -1127,21 +1187,28 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var sections = new JsonObject();
             var total = 0;
-            foreach (var g in doc.Members.GroupBy(m => m.Section).OrderBy(g => g.Key, StringComparer.Ordinal)) { sections[g.Key] = g.Count(); total += g.Count(); }
+            foreach (var g in doc.Members.GroupBy(m => m.Section).OrderBy(g => g.Key, StringComparer.Ordinal)) {
+                sections[g.Key] = g.Count(); total += g.Count(); }
             sections["total"] = total;
 
             var calls = new JsonArray();
-            foreach (var g in doc.BlockCalls.GroupBy(c => c, StringComparer.Ordinal).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal))
+            foreach (var g in doc.BlockCalls.GroupBy(c => c, StringComparer.Ordinal).OrderByDescending(g => g.Count())
+                    .ThenBy(g => g.Key, StringComparer.Ordinal))
             {
                 var colon = g.Key.IndexOf(':');
-                calls.Add(new JsonObject { ["kind"] = colon > 0 ? g.Key.Substring(0, colon) : "", ["name"] = colon > 0 ? g.Key.Substring(colon + 1) : g.Key, ["count"] = g.Count() });
+                calls
+                    .Add(new JsonObject {
+                        ["kind"] = colon > 0 ? g.Key.Substring(0, colon) : "", ["name"] = colon > 0 ? g.Key.Substring(colon + 1) : g.Key, ["count"] = g.Count()
+                    });
             }
             var instructions = new JsonArray();
-            var instructionGroups = doc.Instructions.GroupBy(c => c, StringComparer.Ordinal).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal).ToList();
+            var instructionGroups = doc.Instructions.GroupBy(c => c, StringComparer.Ordinal).OrderByDescending(g => g.Count())
+                .ThenBy(g => g.Key, StringComparer.Ordinal).ToList();
             foreach (var g in instructionGroups.Take(25)) instructions.Add(new JsonObject { ["name"] = g.Key, ["count"] = g.Count() });
 
             var languages = new JsonObject();
-            foreach (var g in doc.Networks.GroupBy(n => n.Language.Length == 0 ? "(unknown)" : n.Language).OrderBy(g => g.Key, StringComparer.Ordinal)) languages[g.Key] = g.Count();
+            foreach (var g in doc.Networks.GroupBy(n => n.Language.Length == 0 ? "(unknown)" : n.Language).OrderBy(g => g.Key, StringComparer.Ordinal))
+                languages[g.Key] = g.Count();
 
             var sclCode = doc.Format == "SCL" || doc.Networks.Any(n => n.Language.Equals("SCL", StringComparison.OrdinalIgnoreCase));
             return new JsonObject

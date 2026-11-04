@@ -18,18 +18,27 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class ImportOrderTools
     {
-        [McpServerTool(Name = "PlanArtifactImportOrder"), Description("[L2][Validation][READ] Offline dependency-first import order for 1..256 PLC/HMI artifacts, shared across all release profiles. Input is an array of id, target, priority and dependencies. Explicit dependencies override numeric priority (lower first). Reports missing dependencies and cycles with no executable order. Does not infer dependencies from source, inspect TIA, validate native import formats or import files. Reuses the MIT EidoTiaWorkbench planner.")]
+        [McpServerTool(Name = "PlanArtifactImportOrder"),
+                Description("[L2][Validation][READ] Offline dependency-first import order for 1..256 PLC/HMI artifacts, shared across all release profiles. " +
+                "Input is an array of id, target, priority and dependencies. Explicit dependencies override numeric priority (lower first). Reports missing " +
+                "dependencies and cycles with no executable order. Does not infer dependencies from source, inspect TIA, validate native import formats or " +
+                "import files. Reuses the MIT EidoTiaWorkbench planner.")]
         public CallToolResult PlanArtifactImportOrderV4(
-            [Description("artifacts: Artifact[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] Artifact[] artifacts)
-            => OfflineContracts.Run("PlanArtifactImportOrder", () => PlanArtifactImportOrder(OfflineContracts.Domain(artifacts)), writes: false, current: false);
+            [Description("artifacts: Artifact[]. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] Artifact[] artifacts)
+            => OfflineContracts
+                .Run("PlanArtifactImportOrder", () => PlanArtifactImportOrder(OfflineContracts.Domain(artifacts)), writes: false, current: false);
 
         public ResponseMessage PlanArtifactImportOrder(
-            [Description("JSON array, e.g. [{\"Id\":\"UDT_A\"},{\"Id\":\"FB_A\",\"Dependencies\":[\"UDT_A\"]}]. IDs are unique ignoring case; dependency IDs must be included. Optional Target and integer Priority order independent artifacts.")] string artifactsJson)
+            [Description("JSON array, e.g. [{\"Id\":\"UDT_A\"},{\"Id\":\"FB_A\",\"Dependencies\":[\"UDT_A\"]}]. IDs are unique ignoring case; dependency IDs " +
+                "must be included. Optional Target and integer Priority order independent artifacts.")] string artifactsJson)
             => OfflineToolExecution.RunOfflineAnalysisTool("PlanArtifactImportOrder", meta => {
                 if (artifactsJson == null || artifactsJson.Length > 1024 * 1024) throw new ArgumentException("Provide at most one MiB of JSON.");
-                var plan = ImportDependencyPlanner.Build(JsonSerializer.Deserialize<ImportOrderItem[]>(artifactsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }));
+                var plan = ImportDependencyPlanner
+                    .Build(JsonSerializer.Deserialize<ImportOrderItem[]>(artifactsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }));
                 meta["plan"] = JsonSerializer.SerializeToNode(plan);
-                return plan.Valid ? "Dependency order calculated; native import remains separate." : "Import order unavailable: resolve the reported missing or cyclic dependencies.";
+                return plan.Valid ? "Dependency order calculated; native import remains separate."
+                    : "Import order unavailable: resolve the reported missing or cyclic dependencies.";
             });
     }
 
@@ -79,7 +88,8 @@ namespace TiaMcpServer.ModelContextProtocol
             return workspaceRoot;
         }
 
-        internal static CallToolResult Run(string tool, Func<ResponseMessage> action, bool writes = false, bool current = false, int? offset = null, int? limit = null)
+        internal static CallToolResult Run(string tool, Func<ResponseMessage> action, bool writes = false, bool current = false, int? offset = null, int
+                ? limit = null)
         {
             try
             {
@@ -104,7 +114,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var cause = error.InnerException ?? error;
             if (cause is TiaMcp.Logic.ModelContextProtocol.DecoderRuntimeException)
-                return Result(tool, null, new Error(cause.Message, new IoFailedDetails("decoder-runtime", TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.RelativeDirectory)),
+                return Result(tool, null,
+                        new Error(cause.Message, new IoFailedDetails("decoder-runtime", TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.RelativeDirectory)),
                     Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (cause is DataLocationIOException)
                 return Result(tool, null, new Error("The local tool dependency is unavailable.", new IoFailedDetails("local-tool-dependency", null)),
@@ -126,7 +137,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!writes && (cause is ArgumentException || cause is JsonException))
                 return Result(tool, null, McpServer.InvalidInput("arguments"), Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (!writes && (cause is FileNotFoundException || cause is DirectoryNotFoundException))
-                return Result(tool, null, new Error("Input resource was not found.", new NotFoundDetails(null)), Outcome.RejectedBeforeOperation, Completeness.None, current);
+                return Result(tool, null, new Error("Input resource was not found.", new NotFoundDetails(null)), Outcome.RejectedBeforeOperation, Completeness
+                        .None, current);
             // The legacy writer can throw after its first side effect. A thrown
             // exception supplies no evidence that a write was not dispatched.
             return Result(tool, null, writes ? Unknown(new JsonObject()) : new Error("The operation could not be completed.",
@@ -184,7 +196,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (unknown || writes && success != true && (succeeded == 0 && mayWrite || response is ResponsePlcProgramImport && succeeded == 0))
                 return Result(tool, data, Unknown(data), Outcome.Unknown, Completeness.Unknown, current);
             if (succeeded > 0 || success == true && failed > 0)
-                return Result(tool, data, new Error("Some items failed or were not completed.", new PartialFailureDetails(Math.Max(1, succeeded), Math.Max(1, failed), 0)),
+                return Result(tool, data,
+                        new Error("Some items failed or were not completed.", new PartialFailureDetails(Math.Max(1, succeeded), Math.Max(1, failed), 0)),
                     Outcome.Partial, Completeness.Partial, current);
             string? status = (string?)evidence["status"];
             Error? rejection = status == "InvalidParams" ? McpServer.InvalidInput((string?)evidence["parameter"] ?? "arguments")
@@ -204,15 +217,23 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error Unknown(JsonObject evidence) => new Error("The dispatched operation's outcome is unknown; do not replay it.",
             new OutcomeUnknownDetails("operation", new Dictionary<string, JsonElement> { ["result"] = JsonSerializer.SerializeToElement(evidence) }));
 
-        private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness, bool current, bool writes = false, Paging? paging = null)
+        private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness, bool current,
+                bool writes = false, Paging? paging = null)
         {
             var warnings = new List<Warning>();
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The retained result is incomplete; inspect the per-item evidence.", new Dictionary<string, JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
+                        new Dictionary<string, JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The retained result is incomplete; inspect the per-item evidence.", new Dictionary<string,
+                        JsonElement>()));
             if (data != null && (data.ContainsKey("xml") || data.ContainsKey("applyDesign")))
-                warnings.Add(new Warning(WarningCode.CandidateOnly, "Constructed content is a candidate; native import and program semantics remain unverified.", new Dictionary<string, JsonElement>()));
+                warnings
+                    .Add(new Warning(WarningCode.CandidateOnly, "Constructed content is a candidate; native import and program semantics remain unverified.",
+                            new Dictionary<string, JsonElement>()));
             var execution = outcome == Outcome.Unknown ? Execution.Unknown : outcome == Outcome.Partial ? Execution.Partial
-                : outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.ReadFailed || !writes && outcome == Outcome.Succeeded ? Execution.ReadOnly : Execution.Completed;
+                : outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.ReadFailed || !writes && outcome == Outcome.Succeeded
+                    ? Execution.ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));

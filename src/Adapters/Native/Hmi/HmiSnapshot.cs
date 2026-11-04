@@ -23,7 +23,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             string? lastAttempted = null, lastCompleted = null, failurePath = null;
             Walk(root, "$", 0);
             return new HmiObject { ["kind"] = "InspectionSnapshot", ["restorableBackup"] = false,
-                ["coverage"] = "Public readable properties/collections within limits; Parent/indexers excluded; quarantined getters explicitly reported; no hidden attributes or library internals promised",
+                ["coverage"] =
+                    "Public readable properties/collections within limits; Parent/indexers excluded; quarantined getters explicitly reported; no hidden " +
+                    "attributes or library internals promised",
                 ["apiCallSuccess"] = !aborted, ["dataComplete"] = !incomplete,
                 ["completenessScope"] = "The declared public-property snapshot scope only; not the entire HMI project or faceplate internals",
                 ["incomplete"] = incomplete, ["truncated"] = limited || aborted, ["traversalComplete"] = !limited && !aborted,

@@ -13,7 +13,10 @@ internal static class OfflineSymbolManifest
     internal const string ExpectedOrigin = "caller-owned-immutable-export-snapshot";
     internal const string InterfaceNamespace = "http://www.siemens.com/automation/Openness/SW/Interface/v5";
     private static readonly HashSet<string> ElementaryTypes = new(StringComparer.OrdinalIgnoreCase)
-    { "Bool", "Byte", "Word", "DWord", "LWord", "SInt", "Int", "DInt", "LInt", "USInt", "UInt", "UDInt", "ULInt", "Real", "LReal", "Char", "WChar", "Time", "LTime", "Date", "Time_Of_Day", "LTime_Of_Day", "Date_And_Time", "DTL", "String", "WString" };
+    {
+        "Bool", "Byte", "Word", "DWord", "LWord", "SInt", "Int", "DInt", "LInt", "USInt", "UInt", "UDInt", "ULInt", "Real", "LReal", "Char", "WChar", "Time",
+            "LTime", "Date", "Time_Of_Day", "LTime_Of_Day", "Date_And_Time", "DTL", "String", "WString"
+    };
 
     internal static JsonObject Build(string inputRoot, IReadOnlyList<string> files, string expectedOrigin, CancellationToken cancellationToken = default)
     {
@@ -23,9 +26,14 @@ internal static class OfflineSymbolManifest
             ["format"] = "tia-plc-symbol-manifest-bounded-v1", ["offlineOnly"] = true,
             ["wholeXmlSchemaValidated"] = false, ["importValidated"] = false, ["programSemanticsValidated"] = false,
             ["nativeCertified"] = false, ["referencesResolved"] = false, ["symbolInventoryComplete"] = false,
-            ["warnings"] = new JsonArray("Declaration extraction only; exports may omit defaults. Array subelements and external type definitions are not expanded. Dot-joined display names are not certified TIA binding identities."), ["symbols"] = symbols, ["files"] = sources,
+            ["warnings"] =
+                new JsonArray("Declaration extraction only; exports may omit defaults. Array subelements and external type definitions are not expanded. " +
+                "Dot-joined display names are not certified TIA binding identities."),
+                ["symbols"] = symbols, ["files"] = sources,
             ["unresolvedReferences"] = references, ["errors"] = errors,
-            ["scope"] = "Explicit files in a caller-owned immutable snapshot. Paths are not a sandbox against concurrent filesystem mutation. No directory enumeration, imports, writes, network or worker calls."
+            ["scope"] =
+                "Explicit files in a caller-owned immutable snapshot. Paths are not a sandbox against concurrent filesystem mutation. No directory " +
+                "enumeration, imports, writes, network or worker calls."
         };
         try
         {
@@ -44,11 +52,15 @@ internal static class OfflineSymbolManifest
                 // Portable slash-only spelling prevents platform-specific aliases, ADS, traversal and case collisions.
                 Require(!relative!.Any(c => c < 32 || "\\:*?\"<>|".Contains(c)), "invalid-relative-path");
                 var parts = relative!.Split('/');
-                Require(parts.Length <= 16 && parts.All(p => p.Length > 0 && p != "." && p != ".." && p == p.Trim() && !p.EndsWith('.')), "invalid-relative-path");
+                Require(parts.Length <= 16 && parts.All(p => p.Length > 0 && p != "." && p != ".." && p == p.Trim() && !p.EndsWith('.')),
+                        "invalid-relative-path");
                 Require(relative.EndsWith(".xml", StringComparison.OrdinalIgnoreCase), "xml-extension-required");
                 Require(names.Add(relative), "duplicate-or-case-colliding-path");
                 var full = Path.GetFullPath(Path.Combine(root, relative));
-                Require(full.StartsWith(root + Path.DirectorySeparatorChar, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal), "path-outside-root");
+                Require(full
+                        .StartsWith(root + Path.DirectorySeparatorChar, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison
+                            .Ordinal),
+                        "path-outside-root");
                 CheckChain(full);
                 Require(File.Exists(full) && (File.GetAttributes(full) & (FileAttributes.Directory | FileAttributes.Device)) == 0, "regular-file-required");
                 selected.Add((relative, full));
@@ -78,13 +90,16 @@ internal static class OfflineSymbolManifest
                     }
                     CheckChain(file.Full);
                     var after = new FileInfo(file.Full);
-                    Require(buffer.Length == initialLength && stream.Length == initialLength && after.Length == initialLength && after.LastWriteTimeUtc == initialWrite, "source-changed-during-read");
-                    var bytes = buffer.ToArray(); source["sha256"] = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(); source["bytes"] = bytes.Length;
+                    Require(buffer.Length == initialLength && stream.Length == initialLength && after.Length == initialLength && after
+                            .LastWriteTimeUtc == initialWrite, "source-changed-during-read");
+                    var bytes = buffer.ToArray(); source["sha256"] = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(); source["bytes"] = bytes
+                        .Length;
                     var document = Parse(bytes, cancellationToken);
                     var extracted = Extract(document, file.Relative);
                     Require(symbols.Count + extracted.Symbols.Count <= MaxSymbols, "symbol-count-limit");
                     source["engineeringVersion"] = extracted.Version;
-                    source["engineeringVersionStatus"] = new[] { "V14", "V14 SP1", "V15", "V15.1", "V16", "V17", "V18", "V19", "V20", "V21" }.Contains(extracted.Version) ? "recognized-marker-only" : "unknown-or-missing-marker";
+                    source["engineeringVersionStatus"] = new[] { "V14", "V14 SP1", "V15", "V15.1", "V16", "V17", "V18", "V19", "V20", "V21" }
+                        .Contains(extracted.Version) ? "recognized-marker-only" : "unknown-or-missing-marker";
                     source["interfaceNamespace"] = extracted.InterfaceNamespace;
                     source["versionCompatibility"] = "not-evaluated; observed metadata only";
                     foreach (var symbol in extracted.Symbols) symbols.Add(symbol);
@@ -100,7 +115,8 @@ internal static class OfflineSymbolManifest
                 if (total > MaxTotalBytes) break;
             }
             // Preserve every occurrence. Even identical duplicates are visible and make the manifest non-unique.
-            foreach (var group in symbols.OfType<JsonObject>().GroupBy(x => x["symbol"]!.GetValue<string>(), StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
+            foreach (var group in symbols.OfType<JsonObject>().GroupBy(x => x["symbol"]!.GetValue<string>(), StringComparer.OrdinalIgnoreCase)
+                    .Where(g => g.Count() > 1))
                 errors.Add(new JsonObject { ["code"] = "duplicate-or-case-colliding-symbol", ["symbol"] = group.Key, ["occurrences"] = group.Count() });
         }
         catch (OperationCanceledException) { throw; }
@@ -119,7 +135,10 @@ internal static class OfflineSymbolManifest
     }
     private static XDocument Parse(byte[] bytes, CancellationToken cancellationToken)
     {
-        var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxTextCharacters, MaxCharactersFromEntities = 1, IgnoreComments = false, IgnoreProcessingInstructions = false };
+        var settings = new XmlReaderSettings {
+            DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxTextCharacters, MaxCharactersFromEntities = 1,
+                IgnoreComments = false, IgnoreProcessingInstructions = false
+        };
         // The bounded first pass checks depth/node/attribute limits before allocating an XDocument tree.
         using (var stream = new MemoryStream(bytes))
         using (var reader = XmlReader.Create(stream, settings))
@@ -130,13 +149,15 @@ internal static class OfflineSymbolManifest
                 cancellationToken.ThrowIfCancellationRequested();
                 Require(reader.Depth <= MaxDepth && ++nodes <= MaxNodes && reader.AttributeCount <= 64, "xml-complexity-limit");
                 Require(reader.Value.Length <= 16384, "xml-text-limit");
-                if (reader.HasAttributes) { while (reader.MoveToNextAttribute()) Require(reader.Value.Length <= 1024, "xml-attribute-limit"); reader.MoveToElement(); }
+                if (reader.HasAttributes) {
+                    while (reader.MoveToNextAttribute()) Require(reader.Value.Length <= 1024, "xml-attribute-limit"); reader.MoveToElement(); }
             }
         }
         using var input = new MemoryStream(bytes); using var bounded = XmlReader.Create(input, settings);
         return XDocument.Load(bounded, LoadOptions.None);
     }
-    private static (List<JsonObject> Symbols, List<JsonObject> References, List<string> Warnings, string Version, string InterfaceNamespace) Extract(XDocument document, string file)
+    private static (List<JsonObject> Symbols, List<JsonObject> References, List<string> Warnings, string Version,
+            string InterfaceNamespace) Extract(XDocument document, string file)
     {
         var root = document.Root; Require(root?.Name == XName.Get("Document"), "unsupported-document-root");
         var versionNodes = root!.Elements("Engineering").ToArray(); Require(versionNodes.Length <= 1, "ambiguous-engineering-version");
@@ -150,20 +171,26 @@ internal static class OfflineSymbolManifest
         {
             Require(output.Count < MaxSymbols, "symbol-count-limit");
             Require(!string.IsNullOrWhiteSpace(type), "missing-datatype");
-            var symbol = new JsonObject { ["symbol"] = Field(name), ["dataType"] = Field(type), ["sourceKind"] = kind, ["sourceFile"] = file, ["logicalAddress"] = Field(address) }; output.Add(symbol);
+            var symbol = new JsonObject {
+                ["symbol"] = Field(name), ["dataType"] = Field(type), ["sourceKind"] = kind, ["sourceFile"] = file, ["logicalAddress"] = Field(address) };
+            output.Add(symbol);
             if (value != null) symbol["value"] = Field(value);
             if (!ElementaryTypes.Contains(type) && !string.Equals(type, "Struct", StringComparison.OrdinalIgnoreCase))
-                references.Add(new JsonObject { ["symbol"] = name, ["dataType"] = type, ["sourceFile"] = file, ["status"] = "unresolved-type-or-compound-declaration" });
+                references
+                    .Add(new JsonObject { ["symbol"] = name, ["dataType"] = type, ["sourceFile"] = file, ["status"] = "unresolved-type-or-compound-declaration"
+                    });
         }
         foreach (var obj in objects)
         {
             if (obj.Name == "SW.Tags.PlcTagTable")
             {
-                Require(obj.Elements().All(x => x.Name == "AttributeList" || x.Name == "ObjectList") && obj.Elements("AttributeList").Count() <= 1, "unsupported-tag-table-shape");
+                Require(obj.Elements().All(x => x.Name == "AttributeList" || x.Name == "ObjectList") && obj.Elements("AttributeList").Count() <= 1,
+                        "unsupported-tag-table-shape");
                 // A native export of an empty table has no ObjectList at all (V14 SP1 VM sample), not an empty one.
                 Require(obj.Elements("ObjectList").Count() <= 1, "missing-ambiguous-or-unsupported-structure");
                 var list = obj.Element("ObjectList") ?? new XElement("ObjectList");
-                Require(list.Elements().All(x => x.Name == "SW.Tags.PlcTag" || x.Name == "SW.Tags.PlcUserConstant" || x.Name == "SW.Tags.PlcSystemConstant"), "unsupported-tag-list-shape");
+                Require(list.Elements().All(x => x.Name == "SW.Tags.PlcTag" || x.Name == "SW.Tags.PlcUserConstant" || x.Name == "SW.Tags.PlcSystemConstant"),
+                        "unsupported-tag-list-shape");
                 int skippedSystemConstants = 0;
                 foreach (var declaration in list.Elements())
                 {
@@ -176,14 +203,17 @@ internal static class OfflineSymbolManifest
                     var attrs = Single(declaration, "AttributeList");
                     if (declaration.Name == "SW.Tags.PlcTag")
                     {
-                        var tagFields = new HashSet<string>(new[] { "Name", "DataTypeName", "LogicalAddress", "ExternalAccessible", "ExternalVisible", "ExternalWritable" }, StringComparer.Ordinal);
+                        var tagFields =
+                            new HashSet<string>(new[] { "Name", "DataTypeName", "LogicalAddress", "ExternalAccessible", "ExternalVisible", "ExternalWritable" },
+                                StringComparer.Ordinal);
                         Require(attrs.Elements().All(x => tagFields.Contains(x.Name.LocalName) && !x.HasElements), "unsupported-tag-field");
                         Require(attrs.Elements().GroupBy(x => x.Name).All(g => g.Count() == 1), "duplicate-tag-field");
                         Add(Symbol(Single(attrs, "Name").Value), Single(attrs, "DataTypeName").Value, "PlcTag", attrs.Element("LogicalAddress")?.Value ?? "");
                     }
                     else
                     {
-                        Require(attrs.Elements().All(x => (x.Name == "Name" || x.Name == "DataTypeName" || x.Name == "Value") && !x.HasElements), "unsupported-user-constant-field");
+                        Require(attrs.Elements().All(x => (x.Name == "Name" || x.Name == "DataTypeName" || x.Name == "Value") && !x.HasElements),
+                                "unsupported-user-constant-field");
                         Require(attrs.Elements().GroupBy(x => x.Name).All(g => g.Count() == 1), "duplicate-user-constant-field");
                         Add(Symbol(Single(attrs, "Name").Value), Single(attrs, "DataTypeName").Value, "PlcUserConstant", value: Single(attrs, "Value").Value);
                     }
@@ -196,16 +226,21 @@ internal static class OfflineSymbolManifest
                 Require(!dbNameElement.HasElements, "unsupported-db-name-shape");
                 var dbName = Symbol(dbNameElement.Value);
                 var iface = Single(attrs, "Interface");
-                Require(iface.Elements().Count() == 1 && iface.Elements().Single().Name == XName.Get("Sections", InterfaceNamespace), "unsupported-interface-namespace-or-version");
+                Require(iface.Elements().Count() == 1 && iface.Elements().Single().Name == XName.Get("Sections", InterfaceNamespace),
+                        "unsupported-interface-namespace-or-version");
                 var sections = iface.Elements().Single(); observedNamespace = InterfaceNamespace;
                 Require(sections.Descendants().All(x => x.Name.NamespaceName == InterfaceNamespace), "unsupported-interface-namespace");
-                Require(sections.Elements().Count() == 1 && sections.Elements().Single().Name == XName.Get("Section", InterfaceNamespace) && (string?)sections.Elements().Single().Attribute("Name") == "Static", "unsupported-or-nonstatic-section");
+                Require(sections.Elements().Count() == 1 && sections.Elements().Single().Name == XName.Get("Section", InterfaceNamespace) && (string?)sections
+                        .Elements().Single().Attribute("Name") == "Static", "unsupported-or-nonstatic-section");
                 var section = sections.Elements().Single(); consumedDeclarations.Add(section);
                 Require(section.Elements().All(x => x.Name == XName.Get("Member", InterfaceNamespace)), "unsupported-static-member-shape");
                 void Member(XElement member, string prefix)
                 {
                     consumedDeclarations.Add(member);
-                    Require(member.Elements().All(x => x.Name == XName.Get("Member", InterfaceNamespace) || x.Name == XName.Get("AttributeList", InterfaceNamespace) || x.Name == XName.Get("StartValue", InterfaceNamespace) || x.Name == XName.Get("Comment", InterfaceNamespace)), "unsupported-nested-member-shape");
+                    Require(member.Elements()
+                            .All(x => x.Name == XName.Get("Member", InterfaceNamespace) || x.Name == XName.Get("AttributeList", InterfaceNamespace) || x
+                                .Name == XName.Get("StartValue", InterfaceNamespace) || x.Name == XName.Get("Comment", InterfaceNamespace)),
+                            "unsupported-nested-member-shape");
                     var name = Symbol(member.Attribute("Name")?.Value ?? ""); var path = prefix + "." + name;
                     Add(path, member.Attribute("Datatype")?.Value ?? "", "GlobalDBMember");
                     foreach (var child in member.Elements(XName.Get("Member", InterfaceNamespace))) Member(child, path);
@@ -214,8 +249,12 @@ internal static class OfflineSymbolManifest
             }
         }
         // Declaration-like nodes hidden in metadata, wrappers or wrong-case names cannot disappear silently.
-        var declarationNames = new HashSet<string>(new[] { "SW.Tags.PlcTagTable", "SW.Tags.PlcTag", "SW.Tags.PlcUserConstant", "SW.Tags.PlcSystemConstant", "SW.Blocks.GlobalDB", "Member", "Section" }, StringComparer.OrdinalIgnoreCase);
-        Require(root.Descendants().Where(x => declarationNames.Contains(x.Name.LocalName)).All(consumedDeclarations.Contains), "unsupported-hidden-declaration");
+        var declarationNames =
+            new HashSet<string>(new[] {
+                "SW.Tags.PlcTagTable", "SW.Tags.PlcTag", "SW.Tags.PlcUserConstant", "SW.Tags.PlcSystemConstant", "SW.Blocks.GlobalDB", "Member", "Section" },
+                StringComparer.OrdinalIgnoreCase);
+        Require(root.Descendants().Where(x => declarationNames.Contains(x.Name.LocalName)).All(consumedDeclarations.Contains),
+                "unsupported-hidden-declaration");
         return (output, references, warnings, version, observedNamespace);
     }
     private static XElement Single(XElement parent, XName name)

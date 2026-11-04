@@ -49,7 +49,8 @@ internal sealed class HostSession : IHostSession
     private FileStream? nativeConsent;
     private readonly string? nativeConsentDirectory;
     internal string NativeCrossReferenceSessionSecret { get; } = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.CreateSecret();
-    internal string NativeCrossReferenceSessionFile => Path.Combine(nativeConsentDirectory ?? ApprovalSettings.SettingsPath + ".sessions", "native-cross-references-" + SessionKey + ".settings");
+    internal string NativeCrossReferenceSessionFile => Path
+        .Combine(nativeConsentDirectory ?? ApprovalSettings.SettingsPath + ".sessions", "native-cross-references-" + SessionKey + ".settings");
     public string Instructions { get; }
     public bool OperatorOwned { get; }
     public CancellationToken Closed => closedToken;
@@ -138,7 +139,8 @@ internal sealed class HostSession : IHostSession
                 ["owner"] = OperatorOwned ? "workbench" : "mcp", ["endedBy"] = endedBy, ["endReason"] = endReason,
                 ["participants"] = new JsonObject { ["mcpClient"] = clientName, ["mcpClientVerified"] = false, ["workbench"] = operators },
                 ["worker"] = new JsonObject { ["pid"] = worker["pid"]?.DeepClone(), ["generation"] = worker["generation"]?.DeepClone(),
-                    ["state"] = hostStopping || (bool?)worker["stopping"] == true ? "stopping" : disconnected ? "disconnected" : locked ? "poisoned" : activeCalls > 0 || lane != null ? "busy" : "idle" },
+                    ["state"] = hostStopping || (bool?)worker["stopping"] == true ? "stopping" : disconnected ? "disconnected" : locked ? "poisoned"
+                        : activeCalls > 0 || lane != null ? "busy" : "idle" },
                 ["callInProgress"] = activeCalls > 0 || lane != null,
                 ["lane"] = lane?.DeepClone(), ["binding"] = worker["binding"]?.DeepClone(), ["sessionLocked"] = locked,
                 ["sessionState"] = sessionState,
@@ -215,8 +217,10 @@ internal sealed class HostSession : IHostSession
     {
         if (!workbench) BindAi(request.Server);
         string id = Guid.NewGuid().ToString("N"), actor = workbench ? ActorScope.Workbench : ActorScope.Mcp;
-        using var crossReferenceSession = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.EnterSession(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret);
-        using var attribution = workbench ? ActorScope.EnterWorkbench(mcpSessionId ?? SessionKey, id) : ActorScope.EnterCall(mcpSessionId ?? SessionKey, request.Server);
+        using var crossReferenceSession = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent
+            .EnterSession(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret);
+        using var attribution = workbench ? ActorScope.EnterWorkbench(mcpSessionId ?? SessionKey, id) : ActorScope
+            .EnterCall(mcpSessionId ?? SessionKey, request.Server);
         using var observation = HostSessionCall.Enter(LaneChanged, Ended, inner.ProtocolTool.Name, actor, id);
         var elapsed = Stopwatch.StartNew();
         CallToolResult? result = null;
@@ -226,7 +230,8 @@ internal sealed class HostSession : IHostSession
             lock (sync)
             {
                 calls.Enqueue(new JsonObject { ["requestId"] = (string?)result?.StructuredContent?["meta"]?["requestId"] ?? id,
-                    ["tool"] = inner.ProtocolTool.Name, ["actor"] = actor, ["outcome"] = (string?)result?.StructuredContent?["meta"]?["outcome"] ?? "unknown", ["ms"] = elapsed.ElapsedMilliseconds });
+                    ["tool"] = inner.ProtocolTool.Name, ["actor"] = actor, ["outcome"] = (string?)result?.StructuredContent?["meta"]?["outcome"] ?? "unknown",
+                        ["ms"] = elapsed.ElapsedMilliseconds });
                 while (calls.Count > 20) calls.Dequeue();
                 activeCalls--; markRecorded();
             }

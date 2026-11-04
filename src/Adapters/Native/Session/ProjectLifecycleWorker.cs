@@ -50,7 +50,8 @@ public sealed partial class PlcFoundationEngine
         if (ProjectConnectionCreated == null)
             throw new InvalidOperationException("The shared process lease owner is unavailable for isolated creation.");
         ProjectClearConnectError?.Invoke();
-        portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => OpennessRefusalMapping.Run("start", false, () => new TiaPortal(ProjectLaunchWithUserInterface
+        portal = InvocationJournal
+            .Native("TiaPortal.CreateIsolated", () => OpennessRefusalMapping.Run("start", false, () => new TiaPortal(ProjectLaunchWithUserInterface
             ? TiaPortalMode.WithUserInterface : TiaPortalMode.WithoutUserInterface)));
         ObservePortal(portal);
         // This worker started the instance: Disconnect may dispose it once no project is open in it (F1).
@@ -62,7 +63,8 @@ public sealed partial class PlcFoundationEngine
             Message = connected ? ProjectLaunchWithUserInterface
                 ? "Connected to isolated TIA Portal with user interface (no existing TIA window or project was touched)."
                 : "Connected to isolated headless TIA Portal (no existing TIA window or project was touched)."
-                : "Unverified: ConnectIsolatedPortal returned without an error, but the portal handle could not be read. Whether the isolated instance started is unknown. Inspect GetSessionState before continuing.",
+                : "Unverified: ConnectIsolatedPortal returned without an error, but the portal handle could not be read. Whether the isolated instance " +
+                    "started is unknown. Inspect GetSessionState before continuing.",
             Meta = HmiMeta.Basic(connected, ("verified", connected), ("isolated", true))
         };
     }
@@ -165,7 +167,8 @@ public sealed partial class PlcFoundationEngine
 #if PROJECT_MULTIUSER
                 || portal.LocalSessions.Any()
 #endif
-                ) throw new InvalidOperationException("Use a connected Portal with no open project/session. Existing projects will never be closed automatically.");
+                ) throw new InvalidOperationException("Use a connected Portal with no open project/session. Existing projects will never be closed " +
+                    "automatically.");
             var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(request.ArchivePath));
             if (!file.Exists) throw new FileNotFoundException("Archive not found.");
             if (!Path.IsPathRooted(request.DestinationDirectory)) throw new ArgumentException("Absolute destination required.");

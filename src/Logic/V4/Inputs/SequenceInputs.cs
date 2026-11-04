@@ -136,11 +136,13 @@ namespace TiaMcp.Logic.V4.Inputs
             {
                 var names = current.Properties.Where(p => p.Value.PublicReadable && !p.Value.IsIndexer
                     && !BackLinks.Contains(p.Key, StringComparer.OrdinalIgnoreCase) && InputGuard.Identifier(p.Key)).Select(p => p.Key).ToArray();
-                var properties = new Dictionary<string, InputSchema> { ["property"] = InputSchema.String(minLength: 1, allowed: names), ["name"] = InputSchema.String(minLength: 1) };
+                var properties = new Dictionary<string, InputSchema> {
+                    ["property"] = InputSchema.String(minLength: 1, allowed: names), ["name"] = InputSchema.String(minLength: 1) };
                 if (current.AllowIndex) properties["index"] = InputSchema.Integer(0, current.MaximumIndex ?? int.MaxValue);
                 var shape = InputSchema.Object(properties, new[] { "property" });
                 return new InputSchema(V4Json.Data(new Dictionary<string, object?> {
-                    ["allOf"] = new[] { shape.Json, V4Json.Deserialize<System.Text.Json.JsonElement>("{\"not\":{\"required\":[\"name\",\"index\"]}}") } })!.Value);
+                    ["allOf"] = new[] { shape.Json, V4Json.Deserialize<System.Text.Json.JsonElement>("{\"not\":{\"required\":[\"name\",\"index\"]}}") } })!
+                        .Value);
             }
             // Different steps may have different SDK owners; express the union of
             // admitted spellings, then validate the actual transition graph below.

@@ -31,7 +31,9 @@ namespace TiaMcp.Adapters.Native.Optional
                 foreach (var pair in refusal.Meta) meta[pair.Key] = pair.Value;
         }
         internal static HmiArray Names(object composition, int max = 200)
-            => new HmiArray(EngineeringGroupOperations.Items(composition).Take(max).Select(x => (object)EngineeringGroupOperations.Get(x, "Name").ToString()!).ToArray());
+            =>
+                new HmiArray(EngineeringGroupOperations.Items(composition).Take(max).Select(x => (object)EngineeringGroupOperations.Get(x, "Name").ToString()!)
+                    .ToArray());
         internal static void Safe(HmiObject row, string key, Func<object?> read)
         {
             try { row[key] = read(); }
@@ -39,7 +41,9 @@ namespace TiaMcp.Adapters.Native.Optional
         }
 
         internal static HmiArray Names(object collection)
-            => new HmiArray(EngineeringGroupOperations.Items(collection).Select(x => (object)HmiValues.Value(EngineeringGroupOperations.Get(x, "Name").ToString())!).ToArray());
+            =>
+                new HmiArray(EngineeringGroupOperations.Items(collection)
+                    .Select(x => (object)HmiValues.Value(EngineeringGroupOperations.Get(x, "Name").ToString())!).ToArray());
 
         internal static HmiObject Page(object[] all, int offset, int limit, HmiObject meta)
         {

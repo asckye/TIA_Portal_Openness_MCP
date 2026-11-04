@@ -32,14 +32,21 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult PlcBuildAndImportV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.")] string softwarePath,
             [Description("kind: udt|tagtable|globaldb|fc|fb")] string kind,
-            [Description("spec: PlcArtifactSpec(kind). Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] PlcArtifactSpec spec,
+            [Description("spec: PlcArtifactSpec(kind). Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] PlcArtifactSpec spec,
             [Description("typeGroupPath: PLC data type group path for kind=udt.")] string typeGroupPath = "",
             [Description("tagFolderPath: PLC tag table group path for kind=tagtable.")] string tagFolderPath = "",
             [Description("blockGroupPath: PLC block group path for kind=globaldb|fc.")] string blockGroupPath = "",
             [Description("compileAfter: compile PLC after import when dryRun=false.")] bool compileAfter = true,
             [Description("dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.")] bool dryRun = true,
-            [Description("overwrite: false (default) refuses an existing object of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).")] bool overwrite = false)
-            => OfflineContracts.Run("BuildAndImportPlcArtifact", () => PlcBuildAndImport(softwarePath, kind, OfflineContracts.Artifact(kind, spec, "spec"), typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, dryRun, overwrite), writes: true, current: true);
+            [Description("overwrite: false (default) refuses an existing object of the same name before the import; true replaces it " +
+                "(Siemens.Engineering.ImportOptions.Override).")] bool overwrite =
+                false)
+            => OfflineContracts
+                .Run("BuildAndImportPlcArtifact", () =>
+                    PlcBuildAndImport(softwarePath, kind, OfflineContracts.Artifact(kind, spec, "spec"), typeGroupPath, tagFolderPath, blockGroupPath,
+                        compileAfter, dryRun, overwrite),
+                    writes: true, current: true);
 
         public ResponsePlcProgramImport PlcBuildAndImport(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.")] string softwarePath,
@@ -67,7 +74,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 var xml = build["xml"]?.ToString() ?? "";
                 ConstructionAdapter.VerifyOutput(xml, false);
                 var objectName = ResolveBuiltPlcObjectName(xml);
-                var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_plc_build_import_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
+                var tempDir = Path
+                    .Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_plc_build_import_" + DateTime.Now
+                        .ToString("yyyyMMdd_HHmmss_fff"));
                 Directory.CreateDirectory(tempDir);
                 var fileName = EngineeringFileNames.MakeSafeFileName(string.IsNullOrWhiteSpace(objectName) ? normalizedKind : objectName) + ".xml";
                 var xmlPath = Path.Combine(tempDir, fileName);
@@ -84,7 +93,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 var discoveredBlocks = classifiedKind == "block" ? new List<string> { classifiedObjectName } : new List<string>();
 
                 if (!dryRun && failed.Count == 0)
-                    compile = PlcBuildAndImportApply(softwarePath, typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, xmlPath, classifiedKind, classifiedObjectName, importedTypes, importedTagTables, importedBlocks, failed, overwrite);
+                    compile =
+                        PlcBuildAndImportApply(softwarePath, typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, xmlPath, classifiedKind,
+                            classifiedObjectName, importedTypes, importedTagTables, importedBlocks, failed, overwrite);
 
                 var response = PlcProgramImport.BuildPlcProgramImportResponse(
                     tempDir,
@@ -117,7 +128,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 response.Meta["recommendedNextActions"] = new JsonArray(capability.NextActions.Select(x => (JsonNode)x).ToArray());
                 return response;
             }
-            catch (Exception ex) when (ex is not McpException && ex is not NotSupportedException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException)
+            catch (Exception ex) when (ex is not McpException && ex is not NotSupportedException && ex is not TiaMcp.Adapters.Contracts
+                    .AdapterPreconditionException)
             {
                 throw new McpException($"Unexpected error running BuildAndImportPlcArtifact: {ex.Message}", ex, McpErrorCode.InvalidParams);
             }
@@ -236,7 +248,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (root?["structuredTextInnerXml"] != null || root?["structuredTextXml"] != null || root?["sclInnerXml"] != null)
                 {
                     result.Decision = "raw-structuredtext-xml";
-                    result.Warnings.Add("Raw StructuredText XML was supplied. This path is only safe when cloned from a TIA export or generated by a verified builder.");
+                    result.Warnings
+                        .Add("Raw StructuredText XML was supplied. This path is only safe when cloned from a TIA export or generated by a verified builder.");
                     result.NextActions.Add("Dry-run first, import into a disposable project, then require CompilePlcDiagnostics errors=0.");
                 }
                 return result;
@@ -257,8 +270,11 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 result.Decision = "external-scl-recommended";
                 result.Warnings.Add("The PLC XML DSL is intentionally narrow. Complex SCL expressions were detected: " + string.Join("; ", risky.Take(8)));
-                result.NextActions.Add("Prefer a native .scl/.s7dcl external source and import via ImportPlcBlockDocuments/ImportPlcBlocksDocuments, or use a verified SCL template from templates/plc/scl-examples.");
-                result.NextActions.Add("If you still use XML DSL, split expressions into verified primitive operations and run dryRun=true plus CompilePlcDiagnostics.");
+                result.NextActions
+                    .Add("Prefer a native .scl/.s7dcl external source and import via ImportPlcBlockDocuments/ImportPlcBlocksDocuments, or use a verified SCL " +
+                    "template from templates/plc/scl-examples.");
+                result.NextActions
+                    .Add("If you still use XML DSL, split expressions into verified primitive operations and run dryRun=true plus CompilePlcDiagnostics.");
             }
             else
             {

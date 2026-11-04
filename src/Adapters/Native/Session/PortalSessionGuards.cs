@@ -157,13 +157,15 @@ namespace TiaMcp.Adapters
                 ["event"] = "Confirmation", ["utc"] = DateTimeOffset.UtcNow.ToString("O"), ["caption"] = e.Caption, ["text"] = e.Text,
                 ["detailText"] = e.DetailText, ["choices"] = offered, ["answer"] = refusal ?? "unanswered",
                 ["rule"] = refusal != null ? "refused by default; no approved plan answers TIA confirmations" : "no refusing choice offered; TIA decides" });
-            Console.Error.WriteLine("TIA confirmation " + (refusal != null ? "refused (" + refusal + ")" : "left unanswered") + ": " + e.Caption + " - " + e.Text);
+            Console.Error
+                .WriteLine("TIA confirmation " + (refusal != null ? "refused (" + refusal + ")" : "left unanswered") + ": " + e.Caption + " - " + e.Text);
         }
 
         private void OnPortalNotification(object? sender, NotificationEventArgs e)
         {
             PortalDialogPolicy.Record(portalDialogs, new Dictionary<string, object?> {
-                ["event"] = "Notification", ["utc"] = DateTimeOffset.UtcNow.ToString("O"), ["caption"] = e.Caption, ["text"] = e.Text, ["detailText"] = e.DetailText });
+                ["event"] = "Notification", ["utc"] = DateTimeOffset.UtcNow.ToString("O"), ["caption"] = e.Caption, ["text"] = e.Text, ["detailText"] = e
+                    .DetailText });
             Console.Error.WriteLine("TIA notification: " + e.Caption + " - " + e.Text);
         }
 
@@ -185,7 +187,10 @@ namespace TiaMcp.Adapters
             TiaPortalProcess? process;
             try { process = TiaPortal.GetProcess(processId, ProcessLookupTimeout); }
             catch (Exception error) when (!(error is AdapterPreconditionException))
-            { throw new AdapterPreconditionException("Selected TIA process was not found by this release's API (TiaPortal.GetProcess): " + error.Message, "processId", true, error); }
+            {
+                throw new AdapterPreconditionException("Selected TIA process was not found by this release's API (TiaPortal.GetProcess): " + error.Message,
+                        "processId", true, error);
+            }
             return process ?? throw new AdapterPreconditionException("Selected TIA process was not found by this release's API.", "processId");
         }
 
@@ -198,7 +203,9 @@ namespace TiaMcp.Adapters
 #endif
                 )
                 throw new AdapterPreconditionException(operation + " needs a TIA Portal instance without an open project or local session. "
-                    + "Bind the open one explicitly (AttachOpenProject), or close it in TIA Portal first; open projects are never closed or replaced automatically.", isArgument: false);
+                    + "Bind the open one explicitly (AttachOpenProject), or close it in TIA Portal first; open projects are never closed or replaced " +
+                        "automatically.",
+                        isArgument: false);
         }
 
         // F4: the process names a project, but the composition is empty (TIA hides projects whose products are missing).

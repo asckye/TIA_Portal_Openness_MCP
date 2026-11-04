@@ -52,12 +52,17 @@ internal sealed class WorkbenchMessageBox : Window
         panel.Children.Add(title);
         // Ant's footer: the buttons are added in visual order, safe choices first and the affirmative
         // action last, so it sits on the right and Tab follows what the user sees.
-        var actions = new WrapPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
+        var actions = new WrapPanel {
+            Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
         DockPanel.SetDock(actions, Dock.Bottom);
         panel.Children.Add(actions);
         var message = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, LineHeight = 22 };
         message.SetResourceReference(ForegroundProperty, "Primer.text");
-        panel.Children.Add(new ScrollViewer { Content = message, MaxHeight = MaxHeight - 160, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Margin = new Thickness(mark != null ? 34 : 0, 0, 0, 0) });
+        panel.Children
+            .Add(new ScrollViewer {
+                Content = message, MaxHeight = MaxHeight - 160, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Margin =
+                    new Thickness(mark != null ? 34 : 0, 0, 0, 0)
+            });
         var choices = labels?.Detach == true ? new[] { MessageBoxResult.OK, MessageBoxResult.No, MessageBoxResult.Cancel } : buttons switch
         {
             MessageBoxButton.OK => new[] { MessageBoxResult.OK },
@@ -82,7 +87,8 @@ internal sealed class WorkbenchMessageBox : Window
                 MessageBoxResult.No => TrExtension.CreateBinding("Dialog.No"), _ => TrExtension.CreateBinding("Dialog.Cancel"),
             };
             var safe = buttons == MessageBoxButton.OK ? MessageBoxResult.OK : buttons == MessageBoxButton.YesNo ? MessageBoxResult.No : MessageBoxResult.Cancel;
-            var button = new Button { MinWidth = 84, Margin = new Thickness(actions.Children.Count == 0 ? 0 : 8, 0, 0, 0), IsDefault = choice == safe, IsCancel = choice == safe };
+            var button = new Button {
+                MinWidth = 84, Margin = new Thickness(actions.Children.Count == 0 ? 0 : 8, 0, 0, 0), IsDefault = choice == safe, IsCancel = choice == safe };
             button.SetBinding(ContentControl.ContentProperty, label);
             button.SetBinding(System.Windows.Automation.AutomationProperties.NameProperty, TrExtension.NameBinding(label));
             // Ant: the affirmative action is the primary button, or the danger button when the dialog warns;
@@ -112,7 +118,8 @@ internal sealed class WorkbenchMessageBox : Window
     internal static MessageBoxResult Show(string text, string caption, MessageBoxButton buttons, MessageBoxImage icon, Services.ConfirmationLabels labels)
         => Show(Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive), text, caption, buttons, icon, labels);
 
-    internal static MessageBoxResult Show(Window? owner, string text, string caption, MessageBoxButton buttons, MessageBoxImage icon, Services.ConfirmationLabels? labels = null)
+    internal static MessageBoxResult Show(Window? owner, string text, string caption, MessageBoxButton buttons, MessageBoxImage icon, Services
+            .ConfirmationLabels? labels = null)
     {
         var dialog = new WorkbenchMessageBox(text, caption, buttons, icon, labels);
         if (owner?.IsVisible == true) dialog.Owner = owner;

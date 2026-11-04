@@ -101,7 +101,8 @@ namespace TiaMcp.Logic.Generation
         {
             path = System.IO.Path.GetFullPath(path);
             Reject(path);
-            for (var directory = new DirectoryInfo(System.IO.Path.GetDirectoryName(path)!); directory != null; directory = directory.Parent) Reject(directory.FullName);
+            for (var directory = new DirectoryInfo(System.IO.Path.GetDirectoryName(path)!); directory != null; directory = directory.Parent)
+                Reject(directory.FullName);
             void Reject(string item)
             {
                 FileAttributes attributes;

@@ -106,7 +106,9 @@ namespace TiaMcp.Adapters.Native.Plc
         public static PlcTypeUserGroup Create(PlcTypeUserGroupComposition value, string name) => value.Create(name);
         public static DocumentExportResult ExportDocuments(PlcBlock value, DirectoryInfo directory, string name) => value.ExportAsDocuments(directory, name);
         public static DocumentResultState State(DocumentExportResult value) => value.State;
-        public static DocumentImportResultForBlocks ImportDocuments(PlcBlockComposition value, DirectoryInfo directory, string name, ImportDocumentOptions options) => value.ImportFromDocuments(directory, name, options);
+        public static DocumentImportResultForBlocks ImportDocuments(PlcBlockComposition value, DirectoryInfo directory, string name,
+                ImportDocumentOptions options) =>
+            value.ImportFromDocuments(directory, name, options);
         public static DocumentResultState State(DocumentImportResult value) => value.State;
         public static CrossReferenceService CrossReferences(IEngineeringServiceProvider value) => value.GetService<CrossReferenceService>();
         public static CrossReferenceResult CrossReferences(CrossReferenceService value, CrossReferenceFilter filter) => value.GetCrossReferences(filter);

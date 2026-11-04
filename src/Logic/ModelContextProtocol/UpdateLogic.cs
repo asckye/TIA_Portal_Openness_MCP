@@ -32,10 +32,13 @@ namespace TiaMcpServer.ModelContextProtocol
             public bool Prerelease { get; set; }
             public bool Draft { get; set; }
             public List<Asset> Assets { get; } = new List<Asset>();
-            public Asset? Zip => Assets.FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v" + DeliveryVersionPattern + @"_\d{8}\.zip$", RegexOptions.IgnoreCase));
-            public Asset? Sha256 => Assets.FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v" + DeliveryVersionPattern + @"_\d{8}\.sha256$", RegexOptions.IgnoreCase));
+            public Asset? Zip => Assets
+                .FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v" + DeliveryVersionPattern + @"_\d{8}\.zip$", RegexOptions.IgnoreCase));
+            public Asset? Sha256 => Assets
+                .FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v" + DeliveryVersionPattern + @"_\d{8}\.sha256$", RegexOptions.IgnoreCase));
             /// <summary>X.Y.Z of the tag (X.Y.Z-beta.N / X.Y.Z-rc.N for a pre-release tag), or null when the tag is not a release tag.</summary>
-            public string? Version => ParseVersion(Tag) is int[] v ? string.Join(".", v) : ProductReleaseVersion.TryParseTag(Tag.Trim(), out var label) && label != null ? label.Label : null;
+            public string? Version => ParseVersion(Tag) is int[] v ? string.Join(".", v) : ProductReleaseVersion.TryParseTag(Tag.Trim(), out var label)
+                && label != null ? label.Label : null;
             /// <summary>GitHub marks it a pre-release, or its tag carries a pre-release label.</summary>
             public bool IsPrerelease => Prerelease || ProductReleaseVersion.IsPrereleaseText(Tag);
         }
@@ -51,7 +54,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (string.IsNullOrWhiteSpace(text)) return null;
             var m = VersionPattern.Match(text!.Trim());
             if (!m.Success) return null;
-            return new[] { int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture) };
+            return new[] {
+                int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int
+                    .Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture), int
+                    .Parse(m.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture)
+            };
         }
 
         /// <summary>Negative when a &lt; b, zero when equal, positive when a &gt; b; null when either does not parse.
@@ -79,7 +86,8 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>The version an install reports: the informational version when it is a pre-release of the same numeric version,
         /// otherwise the numeric MAJOR.MINOR.PATCH.</summary>
         public static string InstalledVersion(string numeric, string? informational)
-            => ProductReleaseVersion.TryParse(informational, out var label) && label != null && label.IsPrerelease && label.Core == numeric ? label.Label : numeric;
+            => ProductReleaseVersion.TryParse(informational, out var label) && label != null && label.IsPrerelease && label.Core == numeric ? label.Label
+                : numeric;
 
         /// <summary>A plain install reads GitHub's latest release, which never is a pre-release or a draft. An install whose own version
         /// is a pre-release reads the releases list and is offered the newest release by Semantic Versioning precedence.</summary>
@@ -88,7 +96,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public static string ReleasesListUrl(string repository) => "https://api.github.com/repos/" + repository.Trim() + "/releases?per_page=100";
 
         /// <summary>The API endpoint for an install of this version: releases/latest, or the releases list for a pre-release install.</summary>
-        public static string UpdateApiUrl(string repository, string? installed) => UsesPrereleaseChannel(installed) ? ReleasesListUrl(repository) : LatestReleaseUrl(repository);
+        public static string UpdateApiUrl(string repository, string? installed) => UsesPrereleaseChannel(installed) ? ReleasesListUrl(repository)
+            : LatestReleaseUrl(repository);
 
         /// <summary>Parses the GitHub REST releases list (an array of release objects); entries without a tag are skipped.</summary>
         public static IReadOnlyList<Release> ParseReleaseList(string json)
@@ -121,7 +130,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>owner/name only - the value is interpolated into an api.github.com path.</summary>
         public static bool IsValidRepository(string? repository)
-            => !string.IsNullOrWhiteSpace(repository) && Regex.IsMatch(repository!.Trim(), @"^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$") && !repository!.Contains("..");
+            => !string.IsNullOrWhiteSpace(repository) && Regex.IsMatch(repository!.Trim(), @"^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$")
+                && !repository!.Contains("..");
 
         public static string LatestReleaseUrl(string repository) => "https://api.github.com/repos/" + repository.Trim() + "/releases/latest";
         public static string ReleasePageUrl(string repository) => "https://github.com/" + repository.Trim() + "/releases/latest";
@@ -181,14 +191,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 // "<span ...>15.2 MB</span>" follows the link within the same row.
                 var after = html!.Substring(m.Index, Math.Min(1500, html.Length - m.Index));
                 var sm = Regex.Match(after, @"(?<n>\d+(?:\.\d+)?)\s*(?<u>Bytes|KB|MB|GB)\b");
-                if (sm.Success && double.TryParse(sm.Groups["n"].Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var n))
-                    size = (long)Math.Round(n * (sm.Groups["u"].Value == "GB" ? 1073741824.0 : sm.Groups["u"].Value == "MB" ? 1048576.0 : sm.Groups["u"].Value == "KB" ? 1024.0 : 1.0));
-                r.Assets.Add(new Asset { Name = name, Url = "https://github.com/" + repository.Trim() + "/releases/download/" + tag + "/" + m.Groups["name"].Value, Size = size });
+                if (sm.Success && double
+                        .TryParse(sm.Groups["n"].Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var n))
+                    size = (long)Math
+                        .Round(n * (sm.Groups["u"].Value == "GB" ? 1073741824.0 : sm.Groups["u"].Value == "MB" ? 1048576.0 : sm.Groups["u"].Value == "KB"
+                                ? 1024.0 : 1.0));
+                r.Assets
+                    .Add(new Asset {
+                        Name = name, Url = "https://github.com/" + repository.Trim() + "/releases/download/" + tag + "/" + m.Groups["name"].Value, Size = size
+                    });
             }
             return r;
         }
 
-        private static string Text(JsonElement e, string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? (v.GetString() ?? "") : "";
+        private static string Text(JsonElement e, string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String
+            ? (v.GetString() ?? "") : "";
         private static bool Flag(JsonElement e, string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.True;
 
         /// <summary>The manual command line; the engine never replaces its own files.</summary>
@@ -198,8 +215,11 @@ namespace TiaMcpServer.ModelContextProtocol
             var root = installRoot ?? "<bundle-root>";
             return new[]
             {
-                "1. Stop every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe / TiaMcp.PlcWorker.<key>.exe and TiaOpenness.exe for this bundle. The updater lists PIDs and never kills processes.",
-                "2. On the TIA machine (which needs access to github.com), run \"" + updater + "\" -InstallRoot \"" + root + "\" -Check to inspect the release, or run it without -Check to update. It verifies the ZIP SHA-256, backs up the install to .previous, and replaces delivery files. Use -Rollback to restore the newest backup.",
+                "1. Stop every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe / TiaMcp.PlcWorker.<key>.exe and TiaOpenness.exe " +
+                    "for this bundle. The updater lists PIDs and never kills processes.",
+                "2. On the TIA machine (which needs access to github.com), run \"" + updater + "\" -InstallRoot \"" + root
+                    + "\" -Check to inspect the release, or run it without -Check to update. It verifies the ZIP SHA-256, backs up the install to .previous, " +
+                    "and replaces delivery files. Use -Rollback to restore the newest backup.",
                 "3. Start the engine again and call InitializeEnvironment - serverVersion must show the new version.",
             };
         }
@@ -209,7 +229,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (latest == null) return "Engine " + current + "; the latest release could not be determined.";
             var v = latest.Version ?? latest.Tag;
             if (comparison == null) return "Engine " + current + "; latest release tag '" + latest.Tag + "' is not a version tag.";
-            if (comparison < 0) return "Update available: engine " + current + " -> " + v + " (" + latest.Tag + ", published " + latest.PublishedAt + "). Stop every process from this bundle, then run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root>.";
+            if (comparison < 0) return "Update available: engine " + current + " -> " + v + " (" + latest.Tag + ", published " + latest.PublishedAt
+                + "). Stop every process from this bundle, then run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root>.";
             if (comparison == 0) return "Engine " + current + " is the latest release (" + latest.Tag + ").";
             return "Engine " + current + " is newer than the latest published release " + v + " (local build).";
         }

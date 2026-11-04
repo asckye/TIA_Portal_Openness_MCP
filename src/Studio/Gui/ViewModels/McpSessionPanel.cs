@@ -54,9 +54,17 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
         this.client = client; this.release = release; this.activity = activity; this.apply = apply;
         state = client.State;
         Cancel = new AsyncCommand(() => { client.CancelPending(); return Task.CompletedTask; });
-        Refresh = new(() => Guard(async () => { Selected = null; Sessions.Clear(); foreach (var session in await client.DiscoverAsync(release(), lifetime.Token)) Sessions.Add(session); }), () => !activity.Busy);
-        Attach = new(() => Guard(async () => { await client.AttachAsync(Selected!, lifetime.Token); await apply(client.State); Raise(null); }), () => !activity.Busy && Selected != null);
-        Create = new(() => Guard(async () => { await client.CreateAsync(release(), lifetime.Token); await apply(client.State); Raise(null); }), () => !activity.Busy);
+        Refresh =
+            new(() =>
+                Guard(async () => {
+                    Selected = null; Sessions.Clear(); foreach (var session in await client.DiscoverAsync(release(), lifetime.Token)) Sessions.Add(session); }),
+                () => !activity.Busy);
+        Attach =
+            new(() => Guard(async () => { await client.AttachAsync(Selected!, lifetime.Token); await apply(client.State); Raise(null); }), () => !activity.Busy
+                && Selected != null);
+        Create =
+            new(() => Guard(async () => { await client.CreateAsync(release(), lifetime.Token); await apply(client.State); Raise(null); }), () => !activity
+                .Busy);
         Detach = new(() => Guard(async () => { await client.DetachAsync(); await apply(null); Raise(null); }), () => Attached);
         client.StateChanged += Changed; client.Detached += Detached;
         activity.PropertyChanged += ActivityChanged;
@@ -85,5 +93,8 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
         Refresh.RaiseCanExecuteChanged(); Attach.RaiseCanExecuteChanged(); Create.RaiseCanExecuteChanged();
     }
     public void Dispose()
-    { disposed = true; lifetime.Cancel(); client.StateChanged -= Changed; client.Detached -= Detached; activity.PropertyChanged -= ActivityChanged; Loc.Current.LanguageChanged -= LanguageChanged; lifetime.Dispose(); }
+    {
+        disposed = true; lifetime.Cancel(); client.StateChanged -= Changed; client.Detached -= Detached; activity.PropertyChanged -= ActivityChanged; Loc
+            .Current.LanguageChanged -= LanguageChanged; lifetime.Dispose();
+    }
 }

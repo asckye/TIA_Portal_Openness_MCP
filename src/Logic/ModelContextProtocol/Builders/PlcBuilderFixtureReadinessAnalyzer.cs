@@ -27,7 +27,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 new[] { Path.Combine("Limit_Protect_roundtrip.xml", "Limit_Protect.xml") },
                 "LAD/FlgNet 金样本",
                 new[] { "SW.Blocks.FC", "FlgNet" }),
-            new FixtureRule("global-db", Path.Combine("Sim_Data_roundtrip.xml", "Sim_Data.xml"), Array.Empty<string>(), "全局 DB 金样本", new[] { "SW.Blocks.GlobalDB" })
+            new FixtureRule("global-db", Path.Combine("Sim_Data_roundtrip.xml", "Sim_Data.xml"), Array.Empty<string>(), "全局 DB 金样本", new[] {
+                    "SW.Blocks.GlobalDB" })
         };
 
         public static JsonObject Analyze(string fixtureDirectory)
@@ -104,8 +105,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     md.AppendLine("- " + node["id"] + " / " + node["title"] + ": " + node["status"]);
                     md.AppendLine("  - path: " + node["path"]);
-                    md.AppendLine("  - required markers: " + string.Join(", ", (node["requiredMarkers"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString())));
-                    md.AppendLine("  - detected markers: " + string.Join(", ", (node["detectedMarkers"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString())));
+                    md
+                        .AppendLine("  - required markers: " + string
+                            .Join(", ", (node["requiredMarkers"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString())));
+                    md
+                        .AppendLine("  - detected markers: " + string
+                            .Join(", ", (node["detectedMarkers"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString())));
                     if (!string.IsNullOrWhiteSpace(node["error"]?.ToString()))
                     {
                         md.AppendLine("  - error: " + node["error"]);

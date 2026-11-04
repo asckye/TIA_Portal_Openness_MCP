@@ -53,7 +53,8 @@ If the intended process is not connected, use ListPortalProcessProjects and the 
         }
 
         [McpServerPrompt(Name = "CreateProjectWithDevices"), Description("Create a project with selected PLC and HMI devices")]
-        public static string CreateProjectWithDevices(string projectDirectory, string projectName, string plcFamily, string plcDeviceName, string hmiKeyword, string hmiDeviceName)
+        public static string CreateProjectWithDevices(string projectDirectory, string projectName, string plcFamily, string plcDeviceName, string hmiKeyword,
+                string hmiDeviceName)
         {
             return WithV4Rules($@"Create project {projectName} in {projectDirectory} with the requested PLC family {plcFamily} ({plcDeviceName}) and HMI {hmiKeyword} ({hmiDeviceName}). First bind the explicitly selected TIA process using ListPortalProcessProjects and the release-specific connector described in the V4 rules. Call CreateProject with object arguments directoryPath={projectDirectory} and projectName={projectName}. Use SearchHardwareCatalog to identify exact catalog choices, then GetToolUsage for CreateHardwareDevice or CreateHardwareCatalogDevice and supply their schema-typed arguments. Call GetProjectTree to obtain exact root paths, then ConnectDeviceNodesToProfinetSubnet with firstRootPath and secondRootPath strings. Report each result. Save only if separately requested.");
         }

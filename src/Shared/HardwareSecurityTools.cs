@@ -26,12 +26,20 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly DeviceUserPortService _hardware;
         public HardwareSecurityTools(DeviceUserPortService hardware) => _hardware = hardware;
-        [McpServerTool(Name="ManageDeviceUsers"), Description("[L2][Hardware][WRITE] Users of the exact hardware object's official services: family=webserver (CPU WebserverUserManagement.WebserverUsers: read, create with permissions flag names such as [\"ReadTag\",\"DoDiagnosis\"] and password, delete, setPermissions, setPassword), family=simpleWebserver (SIWAREX SimpleWebserverUserManagement: fixed user slots; setActive, rename via newName, setPermissions None/ReadOnly/ReadWrite, setPassword) and family=opcUa (OpcUaUserManagement.OpcUaUsers: read, create with password, delete, setPassword). Passwords are converted to SecureString and never echoed; TIA refuses writes while the web server / OPC UA authentication is disabled. Deletes need confirmDelete. The orphan WebserverUserPermissions2 enum (V18/V19) has no documented consuming member and is not exposed. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageDeviceUsers"),
+                Description("[L2][Hardware][WRITE] Users of the exact hardware object's official services: family=webserver (CPU " +
+                "WebserverUserManagement.WebserverUsers: read, create with permissions flag names such as [\"ReadTag\",\"DoDiagnosis\"] and password, " +
+                "delete, setPermissions, setPassword), family=simpleWebserver (SIWAREX SimpleWebserverUserManagement: fixed user slots; setActive, rename " +
+                "via newName, setPermissions None/ReadOnly/ReadWrite, setPassword) and family=opcUa (OpcUaUserManagement.OpcUaUsers: read, create with " +
+                "password, delete, setPassword). Passwords are converted to SecureString and never echoed; TIA refuses writes while the web server / OPC UA " +
+                "authentication is disabled. Deletes need confirmDelete. The orphan WebserverUserPermissions2 enum (V18/V19) has no documented consuming " +
+                "member and is not exposed. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageDeviceUsers(
             string[] devicePath,
             string[] itemPath,
             [Description("family: webserver | simpleWebserver | opcUa.")] string family,
-            [Description("action: the operation to perform - read | create | delete | setPassword | setPermissions | setActive | rename.")] string action="read",
+            [Description("action: the operation to perform - read | create | delete | setPassword | setPermissions | setActive | rename.")] string action=
+                "read",
             [Description("userName: user name.")] string userName="",
             string password="",
             [Description("permissions: array of permission names (see the tool description).")] string[] permissions = null!,
@@ -49,7 +57,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     HardwareNetworkLogic.ValidateUserRequest(family, action, userName, password, permissions ?? Array.Empty<string>(), newName);
                     if (action == "delete") HardwareToolContract.Confirm(dryRun, confirmDelete);
                 });
-                return _hardware.ManageDeviceUsers(devicePathJson,itemPathJson,family,action,userName,password,permissionsJson,active,newName,confirmDelete,dryRun);
+                return _hardware
+                    .ManageDeviceUsers(devicePathJson,itemPathJson,family,action,userName,password,permissionsJson,active,newName,confirmDelete,dryRun);
             });
     }
 }

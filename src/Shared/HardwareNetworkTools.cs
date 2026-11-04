@@ -63,22 +63,29 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (ArgumentException) /* swallow(privacy): legacy validators can include input values in their messages */
             { throw new InputFailureException(McpServer.InvalidInput("arguments")); }
             catch (NotSupportedException) /* swallow(privacy): keep capability refusals separate from parser diagnostics */
-            { throw new InputFailureException(new Error("The requested hardware operation is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "hardware", null))); }
+            {
+                throw new InputFailureException(new Error("The requested hardware operation is unavailable.",
+                            new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "hardware", null)));
+            }
         }
 
         internal static void Confirm(bool dryRun, bool confirmed)
         {
             if (!dryRun && !confirmed)
-                throw new InputFailureException(new Error("Explicit confirmation is required for this hardware change.", new ConfirmationRequiredDetails(null)));
+                throw new InputFailureException(new Error("Explicit confirmation is required for this hardware change.",
+                            new ConfirmationRequiredDetails(null)));
         }
 
         internal static CallToolResult Unsupported(string tool, string release, string? action)
-            => Result(tool, null, new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(release, tool, action)), Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, true);
+            =>
+                Result(tool, null, new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(release, tool, action)), Outcome
+                    .RejectedBeforeOperation, Execution.NotStarted, Completeness.None, true);
 
         internal static CallToolResult Invoke(string tool, bool readOnly, bool current, Func<ResponseMessage> operation)
         {
             try { return MapResult(tool, operation(), readOnly, current); }
-            catch (InputFailureException failure) { return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current); }
+            catch (InputFailureException failure) {
+                return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current); }
             catch (Exception) /* swallow(privacy): an escaped native error has no confirmed write outcome; never publish exception text */
             {
                 return Result(tool, null, readOnly ? NativeFailure() : UnknownFailure(), readOnly ? Outcome.ReadFailed : Outcome.Unknown,
@@ -104,7 +111,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 && CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) is Error compileError)
             {
                 data["evidence"] = evidence;
-                return Result(tool, data, compileError, Outcome.Failed, Execution.Completed, Incomplete(evidence) ? Completeness.Partial : Completeness.Complete, current);
+                return Result(tool, data, compileError, Outcome.Failed, Execution.Completed, Incomplete(evidence) ? Completeness.Partial : Completeness
+                        .Complete, current);
             }
 
             // The topology lists root, grouped and ungrouped devices; an empty list
@@ -114,13 +122,15 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool == "SetPlcPutGetAccess" && Flag(evidence, "writeOutcomeKnown") != true
                 && Flag(evidence, "mayHaveChanged") == true) success = null;
             if (tool == "CompileDevice" && evidence["effectiveState"] != null)
-                success = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, evidence["effectiveState"]!.ToString());
+                success = TiaMcp.Adapters.Contracts.NativeResultStates
+                    .Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, evidence["effectiveState"]!.ToString());
 
             bool issued = Flag(evidence, "mayHaveChanged") == true || Flag(evidence, "mayHaveWrittenFiles") == true;
             bool nestedUnknown = evidence["ensureSubnet"] is JsonObject ensure && Flag(ensure, "mayHaveChanged") == true && Flag(ensure, "success") != true;
             if (!readOnly && (Flag(evidence, "requiresSessionReset") == true || Flag(evidence, "requiresExplicitRebind") == true)
                 && issued) nestedUnknown = true;
-            bool nestedCompleted = evidence["ensureSubnet"] is JsonObject completed && Flag(completed, "mayHaveChanged") == true && Flag(completed, "success") == true;
+            bool nestedCompleted = evidence["ensureSubnet"] is JsonObject completed && Flag(completed, "mayHaveChanged") == true
+                && Flag(completed, "success") == true;
             bool knownFailure = tool == "CompileDevice" && Flag(evidence, "nativeCompleted") == true && evidence["effectiveState"]?.ToString() == "Error"
                 || tool == "SetPlcPutGetAccess" && Flag(evidence, "writeOutcomeKnown") == true;
             bool knownPartial = nestedCompleted && Flag(evidence, "mayHaveChanged") == false
@@ -128,22 +138,36 @@ namespace TiaMcpServer.ModelContextProtocol
             string status = evidence["failureCode"]?.ToString() ?? evidence["status"]?.ToString() ?? "";
             Outcome outcome; Execution execution; Error? error = null;
             if (tool == "ConnectDeviceNodesToProfinetSubnet" && status == "PROJECT_NOT_BOUND" && !issued)
-            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
-            else if (nestedUnknown || !readOnly && success != true && !knownFailure && !knownPartial && (issued || tool == "ConnectDeviceNodesToProfinetSubnet"))
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
+                    new Error("No project is bound.", new ProjectNotBoundDetails());
+            }
+            else
+                if (nestedUnknown || !readOnly && success != true && !knownFailure && !knownPartial && (issued || tool == "ConnectDeviceNodesToProfinetSubnet"))
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
             else if (!readOnly && success != true && knownPartial)
-            { outcome = Outcome.Partial; execution = Execution.Partial; error = new Error("A confirmed hardware side effect remains after the operation failed.", new PartialFailureDetails(0, 0, 0)); }
+            {
+                outcome = Outcome.Partial; execution = Execution.Partial; error =
+                    new Error("A confirmed hardware side effect remains after the operation failed.", new PartialFailureDetails(0, 0, 0));
+            }
             else if (!readOnly && success != true && knownFailure)
             { outcome = Outcome.Failed; execution = Execution.Completed; error = NativeFailure(); }
             else if (status == "PROJECT_NOT_BOUND" || status == "InvalidState")
-            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
+                    new Error("No project is bound.", new ProjectNotBoundDetails());
+            }
             else if (status == "HmiReadSessionBlocked")
-            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("hardware-session")); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
+                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("hardware-session"));
+            }
             else if (status == "NOT_FOUND" || status == "UNSUPPORTED_CAPABILITY" || status == "INVALID_ARGUMENT")
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
                 error = status == "NOT_FOUND" ? new Error("The hardware target was not found.", new NotFoundDetails((string?)evidence["target"]))
-                    : status == "UNSUPPORTED_CAPABILITY" ? new Error("The hardware capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
+                    : status == "UNSUPPORTED_CAPABILITY"
+                        ? new Error("The hardware capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
                     : McpServer.InvalidInput("arguments");
             }
             else if (success == true)
@@ -151,18 +175,23 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (readOnly)
             { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = NativeFailure(); }
             else if (Flag(evidence, "mayHaveChanged") == false)
-            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("Hardware preconditions were not satisfied.", new PreconditionFailedDetails("hardware-before-write", null)); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
+                    new Error("Hardware preconditions were not satisfied.", new PreconditionFailedDetails("hardware-before-write", null));
+            }
             else
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
 
-            if (response is ResponseStringList list) data["items"] = new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
+            if (response is ResponseStringList list) data["items"] =
+                new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
             if (response is ResponseNetworkInfo network)
             {
                 data["deviceItemName"] = network.DeviceItemName;
                 data["attributes"] = JsonNode.Parse(V4Json.Serialize(network.Attributes));
             }
             foreach (var pair in evidence)
-                if (!data.ContainsKey(pair.Key) && pair.Key != "timestamp" && pair.Key != "tool" && pair.Key != "success") data[pair.Key] = pair.Value?.DeepClone();
+                if (!data.ContainsKey(pair.Key) && pair.Key != "timestamp" && pair.Key != "tool" && pair.Key != "success") data[pair.Key] = pair.Value?
+                    .DeepClone();
             data.Remove("message");
             if (outcome == Outcome.Succeeded) data["summary"] = response.Message;
             bool incomplete = Incomplete(data) || tool == "GetProjectTopology" || tool == "GetDeviceItemNetworkInfo"
@@ -175,7 +204,8 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (string key in new[] { "timestamp", "tool", "success", "offset", "limit", "nextOffset" }) data.Remove(key);
             Sanitize(data);
             if (NativeResultState.TryUnsuccessful(evidence, !readOnly, out var nativeOutcome, out var nativeError, tool))
-                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : readOnly ? Execution.ReadOnly : Execution.Completed,
+                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : readOnly ? Execution.ReadOnly
+                        : Execution.Completed,
                     nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current);
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None
                 : outcome == Outcome.Unknown || outcome == Outcome.ReadFailed ? Completeness.Unknown
@@ -199,7 +229,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!(node is JsonObject obj)) return;
             foreach (var pair in obj.ToArray())
             {
-                if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] = "Native observation failed; details are available in the local diagnostic log.";
+                if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] =
+                    "Native observation failed; details are available in the local diagnostic log.";
                 else if (pair.Key == "messageData" || pair.Key == "detailMessageData" || pair.Key == "lastFailure") obj.Remove(pair.Key);
                 else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text))
                     obj[pair.Key] = Regex.Replace(text, @"(?m)\r?\n[ \t]+(?:at |\p{Lo} ).*$", "");
@@ -209,19 +240,26 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static Error NativeFailure() => new Error("The hardware operation did not establish a successful result.",
             new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
-        private static Error UnknownFailure() => new Error("The hardware write outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
+        private static Error UnknownFailure() =>
+            new Error("The hardware write outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
             new OutcomeUnknownDetails("hardware-operation", new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,
             Completeness completeness, bool current, Paging? paging = null)
         {
-            if (HardwareContract.ReleaseKey != "20" && HardwareContract.ReleaseKey != "21" && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current = true;
+            if (HardwareContract.ReleaseKey != "20" && HardwareContract.ReleaseKey != "21" && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current =
+                true;
             var warnings = new List<Warning>();
             if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The hardware observation covers only the reported scope and available fields.", new Dictionary<string, JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
+                        new Dictionary<string, JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The hardware observation covers only the reported scope and available fields.",
+                        new Dictionary<string, JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
+                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+                    completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
@@ -235,7 +273,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public HardwareNetworkTools(HardwareNetworkPortService hardware) => _hardware = hardware;
 
-        [McpServerTool(Name="ListIoSystems"), Description("[L2][Hardware][READ] Official IoSystem rows (Name, Number, Subnet, ConnectedIoDevices owner paths, HwIdentifiers, dynamic MultipleUseIoSystem/UseIoSystemNameAsDeviceNameExtension/MaxNumberIWlanLinksPerSegment/IsochronousTiTo*) scoped by exact subnetName (Subnet.IoSystems) or by the interface device item (devicePath + itemPath: NetworkInterface.IoControllers[].IoSystem and IoConnectors[].ConnectedToIoSystem, with IoController SyncRole/PnDeviceNumber/Addresses and IoConnector PnUpdateTime*/PnWatchdog*/RtClass/SyncRole rows). Attribute failures are listed per name. Paginated, no modification.")]
+        [McpServerTool(Name="ListIoSystems"),
+                Description("[L2][Hardware][READ] Official IoSystem rows (Name, Number, Subnet, ConnectedIoDevices owner paths, HwIdentifiers, dynamic MultipleUseIoSystem/UseIoSystemNameAsDeviceNameExtension/MaxNumberIWlanLinksPerSegment/IsochronousTiTo*) scoped by exact subnetName (Subnet.IoSystems) or by the interface device item (devicePath + itemPath: NetworkInterface.IoControllers[].IoSystem and IoConnectors[].ConnectedToIoSystem, with IoController SyncRole/PnDeviceNumber/Addresses and IoConnector PnUpdateTime*/PnWatchdog*/RtClass/SyncRole rows). Attribute failures are listed per name. Paginated, no modification.")]
         public CallToolResult ListIoSystems(string subnetName="", string[] devicePath = null!, string[] itemPath = null!, int offset=0, int limit=100)
             => HardwareToolContract.Invoke("ListIoSystems", true, false, () =>
             {
@@ -249,7 +288,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ReadIoSystems(subnetName,devicePathJson,itemPathJson,offset,limit);
             });
 
-        [McpServerTool(Name="ManageIoSystem"), Description("[L2][Hardware][WRITE] Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default; a name already used by an IO system of the project is refused because CreateIoSystem would attach to it silently; verified as one new IO system on the interface's subnet), delete (IoSystem.Delete, needs confirmDelete), update (properties Name/Number + attributes dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageIoSystem"),
+                Description("[L2][Hardware][WRITE] Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default; a name already used by an IO system of the project is refused because CreateIoSystem would attach to it silently; verified as one new IO system on the interface's subnet), delete (IoSystem.Delete, needs confirmDelete), update (properties Name/Number + attributes dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageIoSystem(
             string[] devicePath,
             string[] itemPath,
@@ -272,10 +312,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     HardwareNetworkLogic.ValidateIoSystemRequest(action, name, subnetName, ioSystemName);
                     if (action == "delete") HardwareToolContract.Confirm(dryRun, confirmDelete);
                 });
-                return _hardware.ManageIoSystem(devicePathJson,itemPathJson,action,name,subnetName,ioSystemName,propertiesJson,attributesJson,confirmDelete,dryRun);
+                return _hardware
+                    .ManageIoSystem(devicePathJson,itemPathJson,action,name,subnetName,ioSystemName,propertiesJson,attributesJson,confirmDelete,dryRun);
             });
 
-        [McpServerTool(Name="ListNetworkDomains"), Description("[L2][Hardware][READ] Domain management of one exact subnet: SyncDomainOwner.SyncDomains (Name, ConvertedName, IsDefault, participants, dynamic HighPerformanceActive/FastForwardingActive), MrpDomainOwner.MrpDomains (Name, participants, dynamic IsDefault/ManagerOutsideOfProjectActive) and the MrpInstances (ConnectedMrpDomain, RingPort1/2) of the subnet's interface items. Owner availability is reported; no modification.")]
+        [McpServerTool(Name="ListNetworkDomains"),
+                Description("[L2][Hardware][READ] Domain management of one exact subnet: SyncDomainOwner.SyncDomains (Name, ConvertedName, IsDefault, participants, dynamic HighPerformanceActive/FastForwardingActive), MrpDomainOwner.MrpDomains (Name, participants, dynamic IsDefault/ManagerOutsideOfProjectActive) and the MrpInstances (ConnectedMrpDomain, RingPort1/2) of the subnet's interface items. Owner availability is reported; no modification.")]
         public CallToolResult ListNetworkDomains(string subnetName, int offset=0, int limit=100)
             => HardwareToolContract.Invoke("ListNetworkDomains", true, false, () =>
             {
@@ -287,7 +329,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ReadNetworkDomains(subnetName,offset,limit);
             });
 
-        [McpServerTool(Name="ManageNetworkDomain"), Description("[L2][Hardware][WRITE] kind=sync/mrp on one exact subnet: create (SyncDomainComposition/MrpDomainComposition.Create(name)), delete (needs confirmDelete), update (properties Name/IsDefault + attributes dynamic attributes, read back) and addParticipant (DomainParticipants.Add of the NetworkInterface at participantDevicePath/participantItemPath; the API exposes no removal). Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageNetworkDomain"),
+                Description("[L2][Hardware][WRITE] kind=sync/mrp on one exact subnet: create (SyncDomainComposition/MrpDomainComposition.Create(name)), delete (needs confirmDelete), update (properties Name/IsDefault + attributes dynamic attributes, read back) and addParticipant (DomainParticipants.Add of the NetworkInterface at participantDevicePath/participantItemPath; the API exposes no removal). Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageNetworkDomain(
             string subnetName,
             [Description("kind: sync | mrp.")] string kind,
@@ -311,10 +354,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (action == "delete") HardwareToolContract.Confirm(dryRun, confirmDelete);
                     if (action == "addParticipant" && participantDevicePathJson == "[]") throw new ArgumentException();
                 });
-                return _hardware.ManageNetworkDomain(subnetName,kind,action,name,propertiesJson,attributesJson,participantDevicePathJson,participantItemPathJson,confirmDelete,dryRun);
+                return _hardware
+                    .ManageNetworkDomain(subnetName,kind,action,name,propertiesJson,attributesJson,participantDevicePathJson,participantItemPathJson,
+                        confirmDelete,dryRun);
             });
 
-        [McpServerTool(Name="ListTransferAreas"), Description("[L2][Hardware][READ] NetworkInterface.TransferAreas (I-device / DP slave / CP 16xx / PN/PN coupler: Name, Type, Direction, PositionNumber, ExtendedPositionNumber, LocalToPartnerLength, PartnerToLocalLength, LocalAddresses/PartnerAddresses rows, TransferAreaMappingRules, dynamic Comment/TransferUpdateTime/SharedDeviceAccessConfigured/UpdateAlarm/RecordIndex) and MulticastableTransferAreas (CCDX: DataLength, Comment, PartnerTransferAreas) of the exact interface device item; positionNumber[/extendedPositionNumber] uses native Find. Paginated, no modification.")]
+        [McpServerTool(Name="ListTransferAreas"),
+                Description("[L2][Hardware][READ] NetworkInterface.TransferAreas (I-device / DP slave / CP 16xx / PN/PN coupler: Name, Type, Direction, PositionNumber, ExtendedPositionNumber, LocalToPartnerLength, PartnerToLocalLength, LocalAddresses/PartnerAddresses rows, TransferAreaMappingRules, dynamic Comment/TransferUpdateTime/SharedDeviceAccessConfigured/UpdateAlarm/RecordIndex) and MulticastableTransferAreas (CCDX: DataLength, Comment, PartnerTransferAreas) of the exact interface device item; positionNumber[/extendedPositionNumber] uses native Find. Paginated, no modification.")]
         public CallToolResult ListTransferAreas(
             string[] devicePath,
             string[] itemPath,
@@ -334,14 +380,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ReadTransferAreas(devicePathJson,itemPathJson,positionNumber,extendedPositionNumber,offset,limit);
             });
 
-        [McpServerTool(Name="ManageTransferArea"), Description("[L2][Hardware][WRITE] Transfer areas of the exact interface device item. kind=standard: create (TransferAreaComposition.Create(name, type[, positionNumber]); type is an official TransferAreaType such as IN/OUT/MS/CD/TM/F_PS and cannot be changed later), delete, update (properties Name/Direction/LocalToPartnerLength/PartnerToLocalLength + attributes), createMappingRule/updateMappingRule/deleteMappingRule (TransferAreaMappingRules: Begin/End/IoType/Offset via properties, Target via targetDevicePath/targetItemPath, ruleIndex for update/delete). kind=multicast (CCDX, DDX): create on the sender interface toward partnerDevicePath/partnerItemPath (optional name, length), createReceiver for senderName, delete (sender deletes all receivers), update (Name/Comment/DataLength). Target by exact name or positionNumber. Deletes need confirmDelete. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageTransferArea"),
+                Description("[L2][Hardware][WRITE] Transfer areas of the exact interface device item. kind=standard: create (TransferAreaComposition.Create(name, type[, positionNumber]); type is an official TransferAreaType such as IN/OUT/MS/CD/TM/F_PS and cannot be changed later), delete, update (properties Name/Direction/LocalToPartnerLength/PartnerToLocalLength + attributes), createMappingRule/updateMappingRule/deleteMappingRule (TransferAreaMappingRules: Begin/End/IoType/Offset via properties, Target via targetDevicePath/targetItemPath, ruleIndex for update/delete). kind=multicast (CCDX, DDX): create on the sender interface toward partnerDevicePath/partnerItemPath (optional name, length), createReceiver for senderName, delete (sender deletes all receivers), update (Name/Comment/DataLength). Target by exact name or positionNumber. Deletes need confirmDelete. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageTransferArea(
             string[] devicePath,
             string[] itemPath,
             [Description("create | delete | update | createMappingRule | updateMappingRule | deleteMappingRule | createReceiver. ")] string action,
             [Description("kind: standard | multicast.")] string kind="standard",
             string name="",
-            [Description("type: None | MS | CD | F_PS | TM | IN | OUT | MSI | MSO | MSO_LOCAL | RECORD_WRITE_STO | RECORD_WRITE_PUB | RECORD_READ_STO | RECORD_READ_PUB | MSI_MSO | IN_OUT | LOCAL_RECORD_STO | LOCAL_RECORD_PUB | SUB_MSI | SUB_MSO | SUB_LOCAL_RECORD_STO_READ | SUB_LOCAL_RECORD_PUB_READ | PROFISAFE_IN12_OUT6 | PROFISAFE_IN6_OUT12 | F_Proxy_CD | DDX | ISOC_STATUS_CONTROL | ISOCHRON_IN | ISOCHRON_OUT | F_CD.")] string type="",
+            [Description("type: None | MS | CD | F_PS | TM | IN | OUT | MSI | MSO | MSO_LOCAL | RECORD_WRITE_STO | RECORD_WRITE_PUB | RECORD_READ_STO | RECORD_READ_PUB | MSI_MSO | IN_OUT | LOCAL_RECORD_STO | LOCAL_RECORD_PUB | SUB_MSI | SUB_MSO | SUB_LOCAL_RECORD_STO_READ | SUB_LOCAL_RECORD_PUB_READ | PROFISAFE_IN12_OUT6 | PROFISAFE_IN6_OUT12 | F_Proxy_CD | DDX | ISOC_STATUS_CONTROL | ISOCHRON_IN | ISOCHRON_OUT | F_CD.")] string type=
+                "",
             [Description("positionNumber: slot / position number of the module or item (-1 = not given).")] int positionNumber=-1,
             [Description("extendedPositionNumber: extended position number within the slot (-1 = not given).")] int extendedPositionNumber=-1,
             string[] partnerDevicePath = null!,
@@ -370,10 +418,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     HardwareNetworkLogic.ValidateTransferAreaRequest(kind, action, name, type, positionNumber, extendedPositionNumber, length, ruleIndex);
                     if (action == "delete" || action == "deleteMappingRule") HardwareToolContract.Confirm(dryRun, confirmDelete);
                 });
-                return _hardware.ManageTransferArea(devicePathJson,itemPathJson,action,kind,name,type,positionNumber,extendedPositionNumber,partnerDevicePathJson,partnerItemPathJson,senderName,length,propertiesJson,attributesJson,ruleIndex,targetDevicePathJson,targetItemPathJson,confirmDelete,dryRun);
+                return _hardware
+                    .ManageTransferArea(devicePathJson,itemPathJson,action,kind,name,type,positionNumber,extendedPositionNumber,partnerDevicePathJson,
+                        partnerItemPathJson,senderName,length,propertiesJson,attributesJson,ruleIndex,targetDevicePathJson,targetItemPathJson,confirmDelete,
+                        dryRun);
             });
 
-        [McpServerTool(Name="ListDeviceItemChannels"), Description("[L2][Hardware][READ] DeviceItem.Channels of the exact module: Number, Type (Analog/Digital/Technology), IoType (Input/Output/Complex), the attribute names from GetAttributeInfos and the values of ChannelAddress/ChannelWidth plus any attributeNames (failures listed per name). channelType+channelIoType+channelNumber together select one channel through native ChannelComposition.Find. Paginated, no modification. includeLinkedTags=true adds linkedTags per channel (PlcTagProvider.GetLinkedTags, V21: tag name, data type, logical address, tag table; V20 answers null with a note).")]
+        [McpServerTool(Name="ListDeviceItemChannels"),
+                Description("[L2][Hardware][READ] DeviceItem.Channels of the exact module: Number, Type (Analog/Digital/Technology), IoType (Input/Output/Complex), the attribute names from GetAttributeInfos and the values of ChannelAddress/ChannelWidth plus any attributeNames (failures listed per name). channelType+channelIoType+channelNumber together select one channel through native ChannelComposition.Find. Paginated, no modification. includeLinkedTags=true adds linkedTags per channel (PlcTagProvider.GetLinkedTags, V21: tag name, data type, logical address, tag table; V20 answers null with a note).")]
         public CallToolResult ListDeviceItemChannels(
             string[] devicePath,
             string[] itemPath,
@@ -394,10 +446,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     HardwareServicesLogic.ValidatePagination(offset, limit);
                     HardwareNetworkLogic.ChannelIdentityGiven(channelType, channelIoType, channelNumber);
                 });
-                return _hardware.ReadDeviceItemChannels(devicePathJson,itemPathJson,channelType,channelIoType,channelNumber,attributeNamesJson,offset,limit,includeLinkedTags);
+                return _hardware
+                    .ReadDeviceItemChannels(devicePathJson,itemPathJson,channelType,channelIoType,channelNumber,attributeNamesJson,offset,limit,
+                        includeLinkedTags);
             });
 
-        [McpServerTool(Name="SetDeviceItemChannel"), Description("[L2][Hardware][WRITE] SetAttribute on one exact channel (ChannelComposition.Find(channelType, channelIoType, channelNumber)) for the dynamic attributes in attributes; the CLR type is taken from the current value and every write is read back. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="SetDeviceItemChannel"),
+                Description("[L2][Hardware][WRITE] SetAttribute on one exact channel (ChannelComposition.Find(channelType, channelIoType, channelNumber)) for the dynamic attributes in attributes; the CLR type is taken from the current value and every write is read back. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SetDeviceItemChannel(
             string[] devicePath,
             string[] itemPath,
@@ -419,7 +474,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.UpdateDeviceItemChannel(devicePathJson,itemPathJson,channelType,channelIoType,channelNumber,attributesJson,dryRun);
             });
 
-        [McpServerTool(Name="ManageDeviceUserGroup"), Description("[L2][Hardware][WRITE] Project device user groups (Project.DeviceGroups, DeviceUserGroup.Groups/Devices, UngroupedDevicesGroup): read (empty groupPath lists root devices, top-level groups and the ungrouped system group; a path lists that group), create (DeviceUserGroupComposition.Create, missing parents created), rename (one segment) and deleteEmpty. groupPath is an exact relative nested path. CreateFrom(MasterCopy) is not exposed. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageDeviceUserGroup"),
+                Description("[L2][Hardware][WRITE] Project device user groups (Project.DeviceGroups, DeviceUserGroup.Groups/Devices, UngroupedDevicesGroup): read (empty groupPath lists root devices, top-level groups and the ungrouped system group; a path lists that group), create (DeviceUserGroupComposition.Create, missing parents created), rename (one segment) and deleteEmpty. groupPath is an exact relative nested path. CreateFrom(MasterCopy) is not exposed. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageDeviceUserGroup(
             string groupPath="",
             [Description("action: the operation to perform - read | create | rename | deleteEmpty.")] string action="read",
@@ -436,7 +492,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name="ManagePortInterconnection"), Description("[L2][Hardware][WRITE] Topology of one exact port device item (NetworkPort service): read lists ConnectedPorts with owner paths; connect/disconnect call NetworkPort.ConnectToPort/DisconnectFromPort with the partner port at partnerDevicePath/partnerItemPath and verify the ConnectedPorts count. TIA refuses ports of the same interface and second partners on ports without alternative partners. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManagePortInterconnection"),
+                Description("[L2][Hardware][WRITE] Topology of one exact port device item (NetworkPort service): read lists ConnectedPorts with owner paths; connect/disconnect call NetworkPort.ConnectToPort/DisconnectFromPort with the partner port at partnerDevicePath/partnerItemPath and verify the ConnectedPorts count. TIA refuses ports of the same interface and second partners on ports without alternative partners. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManagePortInterconnection(
             string[] devicePath,
             string[] itemPath,
@@ -458,7 +515,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ManagePortInterconnection(devicePathJson,itemPathJson,action,partnerDevicePathJson,partnerItemPathJson,dryRun);
             });
 
-        [McpServerTool(Name = "GetDeviceItemNetworkInfo"), Description("[L2][Hardware]Get network-related attributes for a device item (best-effort heuristic filter)")]
+        [McpServerTool(Name = "GetDeviceItemNetworkInfo"),
+                Description("[L2][Hardware]Get network-related attributes for a device item (best-effort heuristic filter)")]
         public CallToolResult GetDeviceItemNetworkInfo(
             [Description("deviceItemPath: path in the project structure to the device item")] string deviceItemPath)
             => HardwareToolContract.Invoke("GetDeviceItemNetworkInfo", true, false, () =>
@@ -466,7 +524,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return GetDeviceItemNetworkInfoCore(deviceItemPath);
             });
 
-        [McpServerTool(Name = "ConnectDeviceNodesToProfinetSubnet"), Description("[L1][Hardware] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices and connects both to subnetName: an existing subnet of that name in Project.Subnets is joined explicitly, otherwise it is created on the first node (Node.CreateAndConnectToSubnet). A node already attached to another subnet is refused before any write; success is the Node.ConnectedSubnet read-back of both nodes, and the HMI connections are read from the HMI software under the second root. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ConnectDeviceNodesToProfinetSubnet"),
+                Description("[L1][Hardware] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices and connects both to subnetName: an existing subnet of that name in Project.Subnets is joined explicitly, otherwise it is created on the first node (Node.CreateAndConnectToSubnet). A node already attached to another subnet is refused before any write; success is the Node.ConnectedSubnet read-back of both nodes, and the HMI connections are read from the HMI software under the second root. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectDeviceNodesToProfinetSubnet(
             [Description("firstRootPath: first device/device-item root, usually PLC root, e.g. 'PLC_1'")] string firstRootPath,
             [Description("secondRootPath: second device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'")] string secondRootPath,
@@ -476,7 +535,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return ConnectDeviceNodesToProfinetSubnetCore(firstRootPath, secondRootPath, subnetName);
             });
 
-        [McpServerTool(Name = "PlanHardwareNetworkConfiguration"), Description("[L2][Hardware][OFFLINE] Validate a hardware network operation plan without connecting to TIA Portal or modifying a project. Use this before EnsureSubnet/AttachDeviceNodeToSubnet/SetPlcCpuSettings; rejects guessed paths, unsafe subnet types, invalid IP/mask/gateway, and CPU settings without exactAttributes.")]
+        [McpServerTool(Name = "PlanHardwareNetworkConfiguration"),
+                Description("[L2][Hardware][OFFLINE] Validate a hardware network operation plan without connecting to TIA Portal or modifying a project. Use this before EnsureSubnet/AttachDeviceNodeToSubnet/SetPlcCpuSettings; rejects guessed paths, unsafe subnet types, invalid IP/mask/gateway, and CPU settings without exactAttributes.")]
         public CallToolResult PlanHardwareNetworkConfiguration(
             [Description("plan: NetworkPlan with an operations array. Supported operation types: EnsureSubnet, AttachDeviceNodeToSubnet, SetPlcCpuSettings. This is offline-only and performs validation only.")] NetworkPlan plan)
             => HardwareToolContract.Invoke("PlanHardwareNetworkConfiguration", true, false, () =>
@@ -485,7 +545,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return PlanHardwareNetworkConfigurationCore(planJson);
             });
 
-        [McpServerTool(Name = "EnsureSubnet"), Description("[L2][Hardware] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. An existing subnet of that name in Project.Subnets is reported without changes; otherwise the anchor's free IE node creates it (Node.CreateAndConnectToSubnet). An anchor node attached to another subnet is refused. Returns readback evidence (Project.Subnets, Node.ConnectedSubnet, node path, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "EnsureSubnet"),
+                Description("[L2][Hardware] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. An existing subnet of that name in Project.Subnets is reported without changes; otherwise the anchor's free IE node creates it (Node.CreateAndConnectToSubnet). An anchor node attached to another subnet is refused. Returns readback evidence (Project.Subnets, Node.ConnectedSubnet, node path, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult EnsureSubnet(
             [Description("anchorDeviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree; used to create/reuse the subnet from its first PROFINET node.")] string anchorDeviceItemPath,
             [Description("subnetType: IndustrialEthernet/PROFINET/PN/IE only.")] string subnetType,
@@ -495,28 +556,33 @@ namespace TiaMcpServer.ModelContextProtocol
                 return EnsureSubnetCore(anchorDeviceItemPath, subnetType, subnetName);
             });
 
-        [McpServerTool(Name = "AttachDeviceNodeToSubnet"), Description("[L2][Hardware] Attach one real device network node to an existing PROFINET subnet (found in Project.Subnets) with Node.ConnectToSubnet and verify Node.ConnectedSubnet. A node already on that subnet is left unchanged; a node attached to another subnet is refused (no implicit disconnect). deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "AttachDeviceNodeToSubnet"),
+                Description("[L2][Hardware] Attach one real device network node to an existing PROFINET subnet (found in Project.Subnets) with Node.ConnectToSubnet and verify Node.ConnectedSubnet. A node already on that subnet is left unchanged; a node attached to another subnet is refused (no implicit disconnect). deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult AttachDeviceNodeToSubnet(
             [Description("deviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree.")] string deviceItemPath,
             [Description("interfaceIndex: zero-based index among discovered Industrial Ethernet/PROFINET nodes under deviceItemPath.")] int interfaceIndex,
             [Description("subnetName: existing subnet name to attach to.")] string subnetName,
-            [Description("anchorDeviceItemPath: optional real device-item path used to EnsureSubnet first when subnetName is not found.")] string anchorDeviceItemPath = "")
+            [Description("anchorDeviceItemPath: optional real device-item path used to EnsureSubnet first when subnetName is not found.")] string anchorDeviceItemPath =
+                "")
             => HardwareToolContract.Invoke("AttachDeviceNodeToSubnet", false, true, () =>
             {
                 return AttachDeviceNodeToSubnetCore(deviceItemPath, interfaceIndex, subnetName, anchorDeviceItemPath);
             });
 
-        [McpServerTool(Name = "ProbeHardwareHmiConnectionOwnerCandidates"), Description("[L2][Hardware]Enumerate candidate owner objects for hardware HMI connection creation without calling GetService on each high-level object.")]
+        [McpServerTool(Name = "ProbeHardwareHmiConnectionOwnerCandidates"),
+                Description("[L2][Hardware]Enumerate candidate owner objects for hardware HMI connection creation without calling GetService on each high-level object.")]
         public CallToolResult ProbeHardwareHmiConnectionOwnerCandidatesV4(
             [Description("plcRootPath: PLC device/device-item root, e.g. 'PLC_1'")] string plcRootPath,
             [Description("hmiRootPath: HMI device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'")] string hmiRootPath,
-            [Description("deepScan: when true include ancestor/project/device-level candidates; when false only direct node/interface/device-item candidates")] bool deepScan = true)
+            [Description("deepScan: when true include ancestor/project/device-level candidates; when false only direct node/interface/device-item candidates")] bool deepScan =
+                true)
             => HardwareToolContract.Invoke("ProbeHardwareHmiConnectionOwnerCandidates", true, false, () =>
             {
                 return ProbeHardwareHmiConnectionOwnerCandidates(plcRootPath, hmiRootPath, deepScan);
             });
 
-        [McpServerTool(Name = "ProbeHardwareHmiConnectionWhitelistedServices"), Description("[L2][Hardware]Read-only scan of whitelisted services on safe hardware HMI connection owner candidates. Does not create connections and skips high-level project/composition objects to avoid hangs.")]
+        [McpServerTool(Name = "ProbeHardwareHmiConnectionWhitelistedServices"),
+                Description("[L2][Hardware]Read-only scan of whitelisted services on safe hardware HMI connection owner candidates. Does not create connections and skips high-level project/composition objects to avoid hangs.")]
         public CallToolResult ProbeHardwareHmiConnectionWhitelistedServicesV4(
             [Description("plcRootPath: PLC device/device-item root, e.g. 'PLC_1'")] string plcRootPath,
             [Description("hmiRootPath: HMI device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'")] string hmiRootPath,
@@ -528,7 +594,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetProjectTopology"), Description(
             "[L1][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +
-            " One-shot, read-only project topology from Openness: every device (root, device groups and ungrouped devices, with groupPath) with its network nodes (IP, subnet, node type)." +
+            " One-shot, read-only project topology from Openness: every device (root, device groups and ungrouped devices, with groupPath) with its network nodes (IP, subnet, node type)."
+                +
             " Call this early to understand the project's devices and subnets at a glance, instead of probing S7 or parsing AML.")]
         public CallToolResult GetProjectTopology()
             => HardwareToolContract.Invoke("GetProjectTopology", true, false, () =>
@@ -558,7 +625,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving network info from '{deviceItemPath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error retrieving network info from '{deviceItemPath}': {ex.Message}{McpHints.Recovery(ex)}", ex,
+                        McpErrorCode.InternalError);
             }
         }
 
@@ -600,7 +668,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error connecting device nodes to PROFINET subnet: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error connecting device nodes to PROFINET subnet: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
@@ -622,7 +691,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error validating hardware network plan: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error validating hardware network plan: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
@@ -645,7 +715,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("deviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree.")] string deviceItemPath,
             [Description("interfaceIndex: zero-based index among discovered Industrial Ethernet/PROFINET nodes under deviceItemPath.")] int interfaceIndex,
             [Description("subnetName: existing subnet name to attach to.")] string subnetName,
-            [Description("anchorDeviceItemPath: optional real device-item path used to EnsureSubnet first when subnetName is not found.")] string anchorDeviceItemPath = "")
+            [Description("anchorDeviceItemPath: optional real device-item path used to EnsureSubnet first when subnetName is not found.")] string anchorDeviceItemPath =
+                "")
         {
             try
             {
@@ -653,14 +724,16 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error attaching device node to subnet '{subnetName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error attaching device node to subnet '{subnetName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
         public ResponseStringList ProbeHardwareHmiConnectionOwnerCandidates(
             [Description("plcRootPath: PLC device/device-item root, e.g. 'PLC_1'")] string plcRootPath,
             [Description("hmiRootPath: HMI device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'")] string hmiRootPath,
-            [Description("deepScan: when true include ancestor/project/device-level candidates; when false only direct node/interface/device-item candidates")] bool deepScan = true)
+            [Description("deepScan: when true include ancestor/project/device-level candidates; when false only direct node/interface/device-item candidates")] bool deepScan =
+                true)
         {
             try
             {
@@ -675,7 +748,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error probing hardware HMI connection owner candidates: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error probing hardware HMI connection owner candidates: {ex.Message}{McpHints.Recovery(ex)}", ex,
+                        McpErrorCode.InternalError);
             }
         }
 
@@ -697,7 +771,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error scanning hardware HMI connection whitelisted services: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error scanning hardware HMI connection whitelisted services: {ex.Message}{McpHints.Recovery(ex)}", ex,
+                        McpErrorCode.InternalError);
             }
         }
 

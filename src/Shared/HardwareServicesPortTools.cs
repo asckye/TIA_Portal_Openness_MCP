@@ -26,7 +26,10 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly HardwareServicesPortService _hardware;
         public HardwareServicesPortTools(HardwareServicesPortService hardware) => _hardware = hardware;
-        [McpServerTool(Name="ListCommunicationConnections"), Description("[L2][Hardware][READ] List Siemens.Engineering.HW.CommunicationConnections (S7/ISO/ISO-on-TCP/TCP/UDP/FDL/PtP/HMI) owned by one exact hardware object (devicePath/itemPath name arrays, e.g. the CPU). Scalar properties (LocalConnectionName, TSAPs, addresses, ports) plus local/partner target and interface names; offset/limit pagination. NotSupported on TIA V20. Nothing modified.")]
+        [McpServerTool(Name="ListCommunicationConnections"),
+                Description("[L2][Hardware][READ] List Siemens.Engineering.HW.CommunicationConnections (S7/ISO/ISO-on-TCP/TCP/UDP/FDL/PtP/HMI) owned by one " +
+                "exact hardware object (devicePath/itemPath name arrays, e.g. the CPU). Scalar properties (LocalConnectionName, TSAPs, addresses, ports) " +
+                "plus local/partner target and interface names; offset/limit pagination. NotSupported on TIA V20. Nothing modified.")]
         public CallToolResult ListCommunicationConnections(
             [Description("devicePath: array naming the station, e.g. [\"PLC_1\"].")] string[] devicePath,
             [Description("itemPath: array of device-item names down to the item with the service; [] = the station.")] string[] itemPath = null!,
@@ -43,14 +46,24 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ReadCommunicationConnections(devicePathJson,itemPathJson,offset,limit);
             });
 
-        [McpServerTool(Name="ManageCommunicationConnection"), Description("[L2][Hardware][WRITE] Create or delete one communication connection on an exact owner DeviceItem. create: connectionType is one exact kind (S7Connection/IsoConnection/IsoOnTcpConnection/TcpConnection/UdpConnection/FdlConnection/PtpConnection/HmiConnection), localInterfaceItemPath + localNodeName (required when the interface has several nodes), partnerDevicePath/partnerItemPath (partner DeviceItem) and partnerInterfaceItemPath/partnerNodeName; optional connectionName is written to LocalConnectionName and verified. delete: exact LocalConnectionName (ambiguous names refused) and confirmDelete=true. Default preview; real run needs exclusive access. NotSupported on TIA V20. No save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageCommunicationConnection"),
+                Description("[L2][Hardware][WRITE] Create or delete one communication connection on an exact owner DeviceItem. create: connectionType is one " +
+                "exact kind (S7Connection/IsoConnection/IsoOnTcpConnection/TcpConnection/UdpConnection/FdlConnection/PtpConnection/HmiConnection), " +
+                "localInterfaceItemPath + localNodeName (required when the interface has several nodes), partnerDevicePath/partnerItemPath (partner " +
+                "DeviceItem) and partnerInterfaceItemPath/partnerNodeName; optional connectionName is written to LocalConnectionName and verified. delete: " +
+                "exact LocalConnectionName (ambiguous names refused) and confirmDelete=true. Default preview; real run needs exclusive access. NotSupported " +
+                "on TIA V20. No save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageCommunicationConnection(
             [Description("devicePath: array naming the station that owns the connections, e.g. [\"PLC_1\"].")] string[] devicePath,
-            [Description("itemPath: array of device-item names down to the item carrying the CommunicationConnections service (usually the CPU); [] = the station.")] string[] itemPath,
+            [Description("itemPath: array of device-item names down to the item carrying the CommunicationConnections service (usually the CPU); [] = the " +
+                "station.")] string[] itemPath,
             [Description("action: create | delete.")] string action,
-            [Description("connectionType: for create - S7Connection | IsoConnection | IsoOnTcpConnection | TcpConnection | UdpConnection | FdlConnection | PtpConnection | HmiConnection.")] string connectionType="",
+            [Description("connectionType: for create - S7Connection | IsoConnection | IsoOnTcpConnection | TcpConnection | UdpConnection | FdlConnection | " +
+                "PtpConnection | HmiConnection.")] string connectionType=
+                "",
             [Description("connectionName: name of the connection to create or delete.")] string connectionName="",
-            [Description("localInterfaceItemPath: array path of the local interface item, e.g. [\"PROFINET interface_1\"].")] string[] localInterfaceItemPath = null!,
+            [Description("localInterfaceItemPath: array path of the local interface item, e.g. [\"PROFINET interface_1\"].")] string[] localInterfaceItemPath =
+                null!,
             [Description("localNodeName: name of the local node on that interface.")] string localNodeName="",
             [Description("partnerDevicePath: array naming the partner station.")] string[] partnerDevicePath = null!,
             [Description("partnerItemPath: array of device-item names on the partner.")] string[] partnerItemPath = null!,
@@ -62,20 +75,28 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 string devicePathJson = HardwareToolContract.Path(devicePath, "devicePath", rootAllowed: false, optional: false);
                 string itemPathJson = HardwareToolContract.Path(itemPath, "itemPath", rootAllowed: true, optional: false);
-                string localInterfaceItemPathJson = HardwareToolContract.Path(localInterfaceItemPath, "localInterfaceItemPath", rootAllowed: true, optional: true);
+                string localInterfaceItemPathJson = HardwareToolContract
+                    .Path(localInterfaceItemPath, "localInterfaceItemPath", rootAllowed: true, optional: true);
                 string partnerDevicePathJson = HardwareToolContract.Path(partnerDevicePath, "partnerDevicePath", rootAllowed: true, optional: true);
                 string partnerItemPathJson = HardwareToolContract.Path(partnerItemPath, "partnerItemPath", rootAllowed: true, optional: true);
-                string partnerInterfaceItemPathJson = HardwareToolContract.Path(partnerInterfaceItemPath, "partnerInterfaceItemPath", rootAllowed: true, optional: true);
+                string partnerInterfaceItemPathJson = HardwareToolContract
+                    .Path(partnerInterfaceItemPath, "partnerInterfaceItemPath", rootAllowed: true, optional: true);
                 HardwareToolContract.Check(() =>
                 {
                     HardwareServicesLogic.RequireOneOf(action, new[] { "create", "delete" }, "action");
                     if (action == "delete") HardwareToolContract.Confirm(dryRun, confirmDelete);
                     if (action == "create") HardwareServicesLogic.ConnectionTypeName(connectionType);
                 });
-                return _hardware.ManageCommunicationConnection(devicePathJson,itemPathJson,action,connectionType,connectionName,localInterfaceItemPathJson,localNodeName,partnerDevicePathJson,partnerItemPathJson,partnerInterfaceItemPathJson,partnerNodeName,confirmDelete,dryRun);
+                return _hardware
+                    .ManageCommunicationConnection(devicePathJson,itemPathJson,action,connectionType,connectionName,localInterfaceItemPathJson,localNodeName,
+                        partnerDevicePathJson,partnerItemPathJson,partnerInterfaceItemPathJson,partnerNodeName,confirmDelete,dryRun);
             });
 
-        [McpServerTool(Name="ExchangeSystemDiagnosticsSettings"), Description("[L2][Hardware][FILE] Export/import system diagnostics settings via SystemdiagnosticsSettingsDataProvider (project-level by default; optional exact devicePath/itemPath owner). export writes a NEW absolute file and returns its sha256; import needs an existing absolute file and confirmImport=true. Native result state attached; Error state fails the tool. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ExchangeSystemDiagnosticsSettings"),
+                Description("[L2][Hardware][FILE] Export/import system diagnostics settings via SystemdiagnosticsSettingsDataProvider (project-level by " +
+                "default; optional exact devicePath/itemPath owner). export writes a NEW absolute file and returns its sha256; import needs an existing " +
+                "absolute file and confirmImport=true. Native result state attached; Error state fails the tool. Default preview; no save/compile/download. " +
+                "Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExchangeSystemDiagnosticsSettings(
             [Description("action: the operation to perform - export | import.")] string action,
             string filePath,
@@ -95,7 +116,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ExchangeSystemDiagnosticsSettings(action,filePath,devicePathJson,itemPathJson,confirmImport,dryRun);
             });
 
-        [McpServerTool(Name="GetHardwareFeatures"), Description("[L2][Hardware][READ] Probe every Siemens.Engineering.HW.Features.* service from the V21 API catalog on one exact hardware object (devicePath/itemPath): reports advertised services, present/absent per feature and public scalar values (credential-related features report presence only). offset/limit pagination. Read-only.")]
+        [McpServerTool(Name="GetHardwareFeatures"),
+                Description("[L2][Hardware][READ] Probe every Siemens.Engineering.HW.Features.* service from the V21 API catalog on one exact hardware " +
+                "object (devicePath/itemPath): reports advertised services, present/absent per feature and public scalar values (credential-related features " +
+                "report presence only). offset/limit pagination. Read-only.")]
         public CallToolResult GetHardwareFeatures(string[] devicePath,string[] itemPath = null!,int offset=0,int limit=100)
             => HardwareToolContract.Invoke("GetHardwareFeatures", true, false, () =>
             {
@@ -108,7 +132,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ReadHardwareFeatures(devicePathJson,itemPathJson,offset,limit);
             });
 
-        [McpServerTool(Name="ManageDeviceServiceObjects"), Description("[L2][Hardware][WRITE] Typed objects behind three PLC services of the exact hardware object. family=webApplications (DefaultWebPagesFeature.WebApplicationConfigurations: read Name/ApplicationType/IsDefault, setDefault name). family=telecontrolDataPoints (TelecontrolManagement.TelecontrolDataPoints: read Name/DataPointType and DNP3/IEC DataPointIndex/MasterFunction or WDC DataPointIndex, update name + properties, delete, export/import filePath via ExportDataPoints/ImportDataPoints). family=certificateServices (CertificateManagementConfiguration, PLC families V3.0+: read Usage TIAPortal/Runtime, CertificateExpirationEventActivated, RemainingCertificateLifetime 10..90 % and CertificateSupportedServices Id/ServiceType/ServiceGroupName/ApplicationUri/Guid; update properties; setServiceGroupName name=<Id or Guid> properties {ServiceGroupName<=64}; createService; deleteService name=<Id or Guid>). Real changes need confirmChange with dryRun=false; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageDeviceServiceObjects"),
+                Description("[L2][Hardware][WRITE] Typed objects behind three PLC services of the exact hardware object. family=webApplications " +
+                "(DefaultWebPagesFeature.WebApplicationConfigurations: read Name/ApplicationType/IsDefault, setDefault name). family=telecontrolDataPoints " +
+                "(TelecontrolManagement.TelecontrolDataPoints: read Name/DataPointType and DNP3/IEC DataPointIndex/MasterFunction or WDC DataPointIndex, " +
+                "update name + properties, delete, export/import filePath via ExportDataPoints/ImportDataPoints). family=certificateServices " +
+                "(CertificateManagementConfiguration, PLC families V3.0+: read Usage TIAPortal/Runtime, CertificateExpirationEventActivated, " +
+                "RemainingCertificateLifetime 10..90 % and CertificateSupportedServices Id/ServiceType/ServiceGroupName/ApplicationUri/Guid; update " +
+                "properties; setServiceGroupName name=<Id or Guid> properties {ServiceGroupName<=64}; createService; deleteService name=<Id or Guid>). Real " +
+                "changes need confirmChange with dryRun=false; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageDeviceServiceObjects(
             string[] devicePath,
             string[] itemPath,
@@ -126,21 +158,33 @@ namespace TiaMcpServer.ModelContextProtocol
                 string propertiesJson = HardwareToolContract.Map(properties, "properties", optional: true);
                 HardwareToolContract.Check(() =>
                 {
-                    DeviceServiceObjectRules.ValidateServiceObjectRequest(family, action, name, JsonNode.Parse(propertiesJson)!.AsObject(), filePath, confirmChange, dryRun);
+                    DeviceServiceObjectRules
+                        .ValidateServiceObjectRequest(family, action, name, JsonNode.Parse(propertiesJson)!.AsObject(), filePath, confirmChange, dryRun);
                 });
                 return _hardware.ManageDeviceServiceObjects(devicePathJson,itemPathJson,family,action,name,propertiesJson,filePath,confirmChange,dryRun);
             });
 
-        [McpServerTool(Name="ManageHardwareUtilities"), Description("[L2][Hardware][FILE] Project.HwUtilities: list (Identifier + class), findModuleTypes / findContainerTypes / normalizeTypeIdentifier (ModuleInformationProvider on a typeIdentifier), exportOpcUa (OpcUaExportProvider.Export(PLC DeviceItem, new .xml file)), exportCardReaderPsc (CardReaderPscProvider.Export(Device, new .psc file[, password] - creates the card image; f-activated devices refuse on V18 and below, encryption needs CPU V40.0+). Exports refuse to overwrite; default dryRun=true; the password is never echoed. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageHardwareUtilities"),
+                Description("[L2][Hardware][FILE] Project.HwUtilities: list (Identifier + class), findModuleTypes / findContainerTypes / " +
+                "normalizeTypeIdentifier (ModuleInformationProvider on a typeIdentifier), exportOpcUa (OpcUaExportProvider.Export(PLC DeviceItem, new .xml " +
+                "file)), exportCardReaderPsc (CardReaderPscProvider.Export(Device, new .psc file[, password] - creates the card image; f-activated devices " +
+                "refuse on V18 and below, encryption needs CPU V40.0+). Exports refuse to overwrite; default dryRun=true; the password is never echoed. " +
+                "Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageHardwareUtilities(
-            [Description("action: the operation to perform - list | findModuleTypes | findContainerTypes | normalizeTypeIdentifier | exportOpcUa | exportCardReaderPsc.")] string action="list",
-            [Description("typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).")] string typeIdentifier="",
+            [Description("action: the operation to perform - list | findModuleTypes | findContainerTypes | normalizeTypeIdentifier | exportOpcUa | " +
+                "exportCardReaderPsc.")] string action=
+                "list",
+            [Description("typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / " +
+                "ManageHardwareUtilities normalizeTypeIdentifier).")] string typeIdentifier=
+                "",
             string[] devicePath = null!,
             string[] itemPath = null!,
             string filePath="",
             string password="",
             bool dryRun=true)
-            => HardwareToolContract.Invoke("ManageHardwareUtilities", dryRun || !action.StartsWith("export", StringComparison.Ordinal), action.StartsWith("export", StringComparison.Ordinal), () =>
+            => HardwareToolContract
+                .Invoke("ManageHardwareUtilities", dryRun || !action.StartsWith("export", StringComparison.Ordinal), action
+                    .StartsWith("export", StringComparison.Ordinal), () =>
             {
                 string devicePathJson = HardwareToolContract.Path(devicePath, "devicePath", rootAllowed: true, optional: true);
                 string itemPathJson = HardwareToolContract.Path(itemPath, "itemPath", rootAllowed: true, optional: true);

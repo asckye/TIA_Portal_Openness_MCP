@@ -22,12 +22,16 @@ namespace TiaMcp.Logic.Generation
         {
             if (action != "list" && action != "cleanup") throw new ArgumentException("Choose list or cleanup.", nameof(action));
             if (action == "list" && artifactId.Length != 0) throw new ArgumentException("list has no artifactId.", nameof(artifactId));
-            if (action == "cleanup" && !Regex.IsMatch(artifactId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Exact artifactId returned by list required.", nameof(artifactId));
+            if (action == "cleanup" && !Regex.IsMatch(artifactId, @"\Agen-[0-9a-f]{64}\z"))
+                throw new ArgumentException("Exact artifactId returned by list required.", nameof(artifactId));
             GenerationRecordFile.RejectLinks(Staging);
             var entries = List();
-            var selected = action == "list" ? entries : new JsonArray(entries.OfType<JsonObject>().Where(e => (string?)e["artifactId"] == artifactId).Select(e => (JsonNode?)e.DeepClone()).ToArray());
+            var selected = action == "list" ? entries
+                : new JsonArray(entries.OfType<JsonObject>().Where(e => (string?)e["artifactId"] == artifactId).Select(e => (JsonNode?)e.DeepClone())
+                    .ToArray());
             if (action == "cleanup" && selected.Count != 1) throw new ArgumentException("Unknown artifactId.", nameof(artifactId));
-            if (action == "cleanup" && selected[0]!["runs"]!.AsArray().Any(r => (bool?)r!["active"] == true)) throw new ArgumentException("Artifacts referenced by an active/interrupted run must be retained.", nameof(artifactId));
+            if (action == "cleanup" && selected[0]!["runs"]!.AsArray().Any(r => (bool?)r!["active"] == true))
+                throw new ArgumentException("Artifacts referenced by an active/interrupted run must be retained.", nameof(artifactId));
             var data = new JsonObject { ["action"] = action, ["items"] = selected, ["wouldChange"] = action == "cleanup", ["executed"] = false };
             string hash = CanonicalJson.Hash(CanonicalJson.Parse(data.ToJsonString())).Substring(7);
             data["planHash"] = hash;
@@ -48,7 +52,8 @@ namespace TiaMcp.Logic.Generation
             {
                 string directory = (string)entry["directory"]!;
                 var modified = Directory.GetLastWriteTimeUtc(directory);
-                if (entry["files"]!.AsArray().Any()) modified = entry["files"]!.AsArray().Select(f => File.GetLastWriteTimeUtc(Path.Combine(directory, (string)f!["path"]!))).Append(modified).Max();
+                if (entry["files"]!.AsArray().Any()) modified = entry["files"]!.AsArray()
+                    .Select(f => File.GetLastWriteTimeUtc(Path.Combine(directory, (string)f!["path"]!))).Append(modified).Max();
                 if (new DateTimeOffset(modified, TimeSpan.Zero).AddMinutes(10).AddHours(24) >= now) continue;
                 var preview = Manage("cleanup", (string)entry["artifactId"]!, true, "");
                 Manage("cleanup", (string)entry["artifactId"]!, false, (string)preview["planHash"]!);
@@ -61,7 +66,8 @@ namespace TiaMcp.Logic.Generation
             GenerationRecordFile.RejectLinks(Staging);
             var runsPath = Path.Combine(root, "runs");
             var store = new GenerationRunStore(runsPath);
-            var runs = Directory.Exists(runsPath) ? Directory.GetFiles(runsPath, "*.jsonl").Select(p => store.Read(Path.GetFileNameWithoutExtension(p))).ToArray() : Array.Empty<JsonObject>();
+            var runs = Directory.Exists(runsPath) ? Directory.GetFiles(runsPath, "*.jsonl").Select(p => store.Read(Path.GetFileNameWithoutExtension(p)))
+                .ToArray() : Array.Empty<JsonObject>();
             foreach (string directory in Directory.GetDirectories(Staging).OrderBy(p => p, StringComparer.Ordinal))
             {
                 string id = Path.GetFileName(directory);
@@ -73,13 +79,17 @@ namespace TiaMcp.Logic.Generation
                 {
                     GenerationRecordFile.RejectLinks(file);
                     string name = Path.GetFileName(file);
-                    if (!Regex.IsMatch(name, @"\Asource_[0-9a-f]{16}_[0-9a-f]{16}\.scl\z")) throw new IOException("Unrecognized generation artifact; retain for inspection.");
+                    if (!Regex.IsMatch(name, @"\Asource_[0-9a-f]{16}_[0-9a-f]{16}\.scl\z"))
+                        throw new IOException("Unrecognized generation artifact; retain for inspection.");
                     files.Add(new JsonObject { ["path"] = name, ["sha256"] = CanonicalJson.HashBytes(File.ReadAllBytes(file)) });
                 }
                 string prefix = "staging/" + id + "/";
-                var references = runs.Where(r => r["plan"]?["artifacts"] is JsonArray artifacts && artifacts.Any(a => ((string?)a!["path"])?.StartsWith(prefix, StringComparison.Ordinal) == true));
+                var references = runs
+                    .Where(r => r["plan"]?["artifacts"] is JsonArray artifacts && artifacts
+                        .Any(a => ((string?)a!["path"])?.StartsWith(prefix, StringComparison.Ordinal) == true));
                 result.Add(new JsonObject { ["artifactId"] = id, ["directory"] = directory, ["files"] = files,
-                    ["runs"] = new JsonArray(references.Select(r => (JsonNode?)new JsonObject { ["runId"] = (string)r["runId"]!, ["status"] = (string)r["status"]!,
+                    ["runs"] =
+                        new JsonArray(references.Select(r => (JsonNode?)new JsonObject { ["runId"] = (string)r["runId"]!, ["status"] = (string)r["status"]!,
                         ["active"] = !r["events"]!.AsArray().Any(e => (string?)e!["event"] == "end") }).ToArray()) });
             }
             return result;
@@ -87,7 +97,8 @@ namespace TiaMcp.Logic.Generation
         private void Remove(JsonObject entry)
         {
             string directory = Path.GetFullPath((string)entry["directory"]!);
-            if (!string.Equals(Path.GetDirectoryName(directory), Path.GetFullPath(Staging), StringComparison.OrdinalIgnoreCase)) throw new IOException("Artifact cleanup escaped staging.");
+            if (!string.Equals(Path.GetDirectoryName(directory), Path.GetFullPath(Staging), StringComparison.OrdinalIgnoreCase))
+                throw new IOException("Artifact cleanup escaped staging.");
             GenerationRecordFile.RejectLinks(directory);
             int deleted = 0;
             try

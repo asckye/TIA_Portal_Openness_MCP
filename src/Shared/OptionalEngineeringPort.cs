@@ -29,7 +29,8 @@ internal sealed class OptionalEngineeringPort
     private static OptionalEngineeringValue Value(JsonElement value)
     {
         return value.ValueKind switch {
-            JsonValueKind.Object => new OptionalEngineeringValue { Kind = "object", Properties = value.EnumerateObject().ToDictionary(p => p.Name, p => Value(p.Value)) },
+            JsonValueKind.Object => new OptionalEngineeringValue {
+                Kind = "object", Properties = value.EnumerateObject().ToDictionary(p => p.Name, p => Value(p.Value)) },
             JsonValueKind.Array => new OptionalEngineeringValue { Kind = "array", Items = value.EnumerateArray().Select(Value).ToArray() },
             JsonValueKind.String => new OptionalEngineeringValue { Kind = "string", Text = value.GetString()! },
             JsonValueKind.Number => new OptionalEngineeringValue { Kind = "number", Text = value.GetRawText() },

@@ -24,7 +24,8 @@ public sealed partial class PlcFoundationEngine
 #endif
 #if !SAFETY_GLOBAL_FULL
         if (request.Action is "createRuntimeGroup" or "deleteRuntimeGroup" or "generateGlobalFIOStatusBlock"
-            || request.Operation == "ManageSafetyGlobalSettings" && request.Action == "update" && request.Scalars.Keys.Any(k => k is "GenerationOfDefaultFailsafeProgram" or "ManagementOfFailsafeInSoftwareUnitsEnvironment"))
+            || request.Operation == "ManageSafetyGlobalSettings" && request.Action == "update" && request.Scalars.Keys
+                .Any(k => k is "GenerationOfDefaultFailsafeProgram" or "ManagementOfFailsafeInSoftwareUnitsEnvironment"))
             throw new NotSupportedException("The requested Safety action requires V18 or later.");
 #endif
 #if !SAFETY_GLOBAL_READ
@@ -37,8 +38,10 @@ public sealed partial class PlcFoundationEngine
 #if SAFETY_PROGRAM
             case "ManagePlcSafety": return adapter.ManagePlcSafety(request.SoftwarePath, request.Action, request.RuntimeGroup, "{}", request.DryRun,
                 request.Password, request.ConfirmSafetyChange, request.MainSafetyBlockPath, request.MainSafetyInstanceDbPath);
-            case "GetSafetyBlockSignatures": return adapter.ReadSafetyBlockSignatures(request.SoftwarePath, request.BlockPath, request.IncludeProgramSignatures, request.Offset, request.Limit);
-            case "ExportSafetyPrintout": return adapter.ExportSafetyPrintout(request.SoftwarePath, request.FilePath, request.Printer, request.Option, request.DocumentLayout, request.DryRun);
+            case "GetSafetyBlockSignatures": return adapter
+                .ReadSafetyBlockSignatures(request.SoftwarePath, request.BlockPath, request.IncludeProgramSignatures, request.Offset, request.Limit);
+            case "ExportSafetyPrintout": return adapter
+                .ExportSafetyPrintout(request.SoftwarePath, request.FilePath, request.Printer, request.Option, request.DocumentLayout, request.DryRun);
 #endif
         }
 #endif
@@ -51,16 +54,28 @@ public sealed partial class PlcFoundationEngine
     private HardwareAddressingReply ExecuteSafetyValidationCore(SafetyValidationRequest request, bool dryRun)
     {
         Check();
-        if ((request.Plan.Writes || request.Plan.WritesFile) != OptionalEngineeringMutations.Writes(request) || (request.Plan.Writes || request.Plan.WritesFile) == dryRun) throw new ArgumentException("Conflicting Safety Validation preview mode.");
+        if ((request.Plan.Writes || request.Plan.WritesFile) != OptionalEngineeringMutations.Writes(request)
+                || (request.Plan.Writes || request.Plan.WritesFile) == dryRun)
+            throw new ArgumentException("Conflicting Safety Validation preview mode.");
 #if SAFETY_V21
         var adapter = new SafetyValidationAdapter(new SafetyValidationSession(this, request));
         switch (request.Operation)
         {
-            case "ListSafetyActivationTests": return adapter.ReadSafetyActivationTests("[]", request.Name, request.IncludeSafetyFunctions, request.IncludeConditions, request.Offset, request.Limit);
-            case "ManageSafetyActivationTest": return adapter.ManageSafetyActivationTest(request.Name, request.Action, "[]", request.EvaluationDeviceName, request.SourceName, request.MasterCopyPath, request.LibraryName, request.NewValue, request.FilePath, request.ExportOptions, request.DocumentInfoOptions, request.ImportOptions, request.ConfirmDelete, request.DryRun);
-            case "ManageSafetyActivationTestGroup": return adapter.ManageSafetyActivationTestGroup(request.Action, "[]", request.Name, request.MasterCopyPath, request.LibraryName, request.NewName, request.ConfirmDelete, request.DryRun);
-            case "ManageSafetyFunction": return adapter.ManageSafetyFunction(request.ActivationTest, request.Action, "[]", request.Name, request.SourceName, "{}", request.FilePath, request.ExportOptions, request.DocumentInfoOptions, request.ImportOptions, request.ConfirmDelete, request.DryRun);
-            case "ManageSafetyFunctionCondition": return adapter.ManageSafetyFunctionCondition(request.ActivationTest, request.SafetyFunction, request.Action, "[]", request.Index, request.DeviceName, request.SignalUsage, request.SignalName, "{}", request.DryRun);
+            case "ListSafetyActivationTests": return adapter
+                .ReadSafetyActivationTests("[]", request.Name, request.IncludeSafetyFunctions, request.IncludeConditions, request.Offset, request.Limit);
+            case "ManageSafetyActivationTest": return adapter
+                .ManageSafetyActivationTest(request.Name, request.Action, "[]", request.EvaluationDeviceName, request.SourceName, request.MasterCopyPath,
+                    request.LibraryName, request.NewValue, request.FilePath, request.ExportOptions, request.DocumentInfoOptions, request.ImportOptions, request
+                    .ConfirmDelete, request.DryRun);
+            case "ManageSafetyActivationTestGroup": return adapter
+                .ManageSafetyActivationTestGroup(request.Action, "[]", request.Name, request.MasterCopyPath, request.LibraryName, request.NewName, request
+                    .ConfirmDelete, request.DryRun);
+            case "ManageSafetyFunction": return adapter
+                .ManageSafetyFunction(request.ActivationTest, request.Action, "[]", request.Name, request.SourceName, "{}", request.FilePath, request
+                    .ExportOptions, request.DocumentInfoOptions, request.ImportOptions, request.ConfirmDelete, request.DryRun);
+            case "ManageSafetyFunctionCondition": return adapter
+                .ManageSafetyFunctionCondition(request.ActivationTest, request.SafetyFunction, request.Action, "[]", request.Index, request.DeviceName, request
+                    .SignalUsage, request.SignalName, "{}", request.DryRun);
         }
 #endif
         throw new NotSupportedException("Safety Validation Assistant requires V21.");

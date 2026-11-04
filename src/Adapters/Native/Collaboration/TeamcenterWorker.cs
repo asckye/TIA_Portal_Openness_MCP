@@ -20,9 +20,15 @@ public sealed partial class PlcFoundationEngine
         {
             return request.Operation switch
             {
-                "ManageTeamcenterConnection" => adapter.ManageTeamcenterConnection(request.Action, request.UserName, request.Password, request.Group, request.Role, request.HostUrl, request.Instance, request.LoginUrl, request.ApplicationId, request.DryRun),
-                "ManageTeamcenterDataset" => adapter.ManageTeamcenterDataset(request.Action, request.ItemId, request.RevisionId, request.DatasetType, request.DatasetName, request.ItemType, request.TiaObjectName, request.ItemName, request.LocalCacheOption, request.DryRun),
-                "ManageTeamcenterWorkflow" => adapter.ManageTeamcenterWorkflow(request.Action, request.Target, request.LibraryName, request.ItemType, request.ItemId, request.RevisionId, request.LocalCacheOption, "{}", "{}", "{}", request.ConfirmSave, request.DryRun),
+                "ManageTeamcenterConnection" => adapter
+                    .ManageTeamcenterConnection(request.Action, request.UserName, request.Password, request.Group, request.Role, request.HostUrl, request
+                        .Instance, request.LoginUrl, request.ApplicationId, request.DryRun),
+                "ManageTeamcenterDataset" => adapter
+                    .ManageTeamcenterDataset(request.Action, request.ItemId, request.RevisionId, request.DatasetType, request.DatasetName, request.ItemType,
+                        request.TiaObjectName, request.ItemName, request.LocalCacheOption, request.DryRun),
+                "ManageTeamcenterWorkflow" => adapter
+                    .ManageTeamcenterWorkflow(request.Action, request.Target, request.LibraryName, request.ItemType, request.ItemId, request.RevisionId, request
+                        .LocalCacheOption, "{}", "{}", "{}", request.ConfirmSave, request.DryRun),
                 _ => throw new ArgumentException("Unregistered Teamcenter operation: " + request.Operation)
             };
         }

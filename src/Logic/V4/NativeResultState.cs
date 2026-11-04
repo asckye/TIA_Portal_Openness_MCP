@@ -54,7 +54,10 @@ namespace TiaMcp.Logic.V4
         }
 
         public static string? State(JsonObject evidence)
-            => (evidence["nativeState"] ?? evidence["state"] ?? evidence["effectiveState"] ?? evidence["downloadState"] ?? evidence["uploadState"] ?? evidence["transferResultState"] ?? evidence["result"]?["state"])?.ToString();
+            =>
+                (evidence["nativeState"] ?? evidence["state"] ?? evidence["effectiveState"] ?? evidence["downloadState"] ?? evidence["uploadState"]
+                    ?? evidence["transferResultState"] ?? evidence["result"]?["state"])
+                ?.ToString();
 
         public static NativeStateKind Classify(JsonObject evidence, string? tool = null)
             => NativeResultStates.Classify(EnumType(evidence, tool), State(evidence));
@@ -105,7 +108,10 @@ namespace TiaMcp.Logic.V4
 
         private static Dictionary<string, JsonElement> Evidence(JsonObject evidence, string? tool = null)
         {
-            var keys = new[] { "nativeState", "nativeStateType", "nativeResultReturned", "mayHaveChanged", "logFilePath", "nativeMessages", "targetFile", "targetFiles", "recoveryDirectory" };
+            var keys = new[] {
+                "nativeState", "nativeStateType", "nativeResultReturned", "mayHaveChanged", "logFilePath", "nativeMessages", "targetFile", "targetFiles",
+                    "recoveryDirectory"
+            };
             var details = keys.Where(evidence.ContainsKey).ToDictionary(k => k, k => JsonSerializer.SerializeToElement(evidence[k]), StringComparer.Ordinal);
             if (!details.ContainsKey("nativeStateType") && EnumType(evidence, tool) is string type)
                 details["nativeStateType"] = JsonSerializer.SerializeToElement(type);
@@ -139,8 +145,10 @@ namespace TiaMcp.Logic.V4
             if (changesProject) outcome = Outcome.Unknown;
             var details = Evidence(evidence, tool);
             error = changesProject
-                ? new Error("The native operation returned " + state + "; partial project changes are possible. Inspect the evidence and reset the session.", new OutcomeUnknownDetails("native-result-state", details))
-                : new Error("The native operation returned " + state + ". The project was unchanged; inspect the file and log evidence.", new NativeOperationFailedDetails(state, null, details));
+                ? new Error("The native operation returned " + state + "; partial project changes are possible. Inspect the evidence and reset the session.",
+                        new OutcomeUnknownDetails("native-result-state", details))
+                : new Error("The native operation returned " + state + ". The project was unchanged; inspect the file and log evidence.",
+                        new NativeOperationFailedDetails(state, null, details));
             return true;
         }
     }

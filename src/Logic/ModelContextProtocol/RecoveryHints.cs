@@ -13,13 +13,19 @@ namespace TiaMcp.Logic.ModelContextProtocol
             switch (code)
             {
                 case "NOT_FOUND": return Tip("verify the exact target names with GetProjectTree / GetSoftwareTree / ListPlcBlocks before another call.");
-                case "INVALID_ARGUMENT": return Tip("read GetToolUsage and the tool input schema, then correct the argument without issuing the operation again automatically.");
+                case "INVALID_ARGUMENT"
+                    : return Tip("read GetToolUsage and the tool input schema, then correct the argument without issuing the operation again automatically.");
                 case "UNSUPPORTED_CAPABILITY": return Tip("check this release's capabilities with GetToolUsage; do not substitute an unverified operation.");
                 case "ACCESS_DENIED": return Tip("check the required permissions; do not bypass the access restriction.");
-                case "OFFLINE_REQUIRED": return Tip("the affected target must be offline; verify its state and obtain explicit authorization before changing the online connection.");
-                case "OUTCOME_UNKNOWN": return Tip("verify the actual target state and reset the session before continuing; do not replay the write automatically.");
-                case "PRECONDITION_FAILED": return Tip("read GetToolUsage, verify the target and the stated preconditions, then review a new preview before another call.");
-                case "SESSION_RESET_REQUIRED": return Tip("reset the session and verify the actual target state before continuing; do not replay the write automatically.");
+                case "OFFLINE_REQUIRED"
+                    : return Tip("the affected target must be offline; verify its state and obtain explicit authorization before changing the online " +
+                    "connection.");
+                case "OUTCOME_UNKNOWN"
+                    : return Tip("verify the actual target state and reset the session before continuing; do not replay the write automatically.");
+                case "PRECONDITION_FAILED"
+                    : return Tip("read GetToolUsage, verify the target and the stated preconditions, then review a new preview before another call.");
+                case "SESSION_RESET_REQUIRED"
+                    : return Tip("reset the session and verify the actual target state before continuing; do not replay the write automatically.");
                 case "CONFIRMATION_REQUIRED": return Tip("read GetToolUsage, review the preview and obtain Workbench confirmation before a new apply request.");
                 default: return "";
             }
@@ -50,9 +56,11 @@ namespace TiaMcp.Logic.ModelContextProtocol
             var details = new JsonObject { ["getToolUsage"] = query, ["releaseKey"] = release,
                 ["exampleArguments"] = bounded ? compact : null, ["exampleOmitted"] = !bounded,
                 ["validation"] = verified?["validation"]?.DeepClone(),
-                ["bindingMeaning"] = "Example values are placeholders and sample targets. Resolve and review them against this session; this hint does not authorize a write." };
+                ["bindingMeaning"] =
+                    "Example values are placeholders and sample targets. Resolve and review them against this session; this hint does not authorize a write." };
             var guidance = new TiaMcp.Logic.V4.Warning(TiaMcp.Logic.V4.WarningCode.RecoveryGuidance, RecoveryCode(code).Trim(),
-                System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>>(details.ToJsonString())!);
+                System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, System.Text.Json
+                    .JsonElement>>(details.ToJsonString())!);
             if (body["schemaVersion"]?.GetValue<int?>() != 4)
             {
                 warnings.Add(JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(guidance)));

@@ -104,7 +104,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 summary = $"INCONCLUSIVE: none of {codeBlocks.Count} code block(s) could be exported/parsed (see warnings); no trace was performed.";
             }
             else if (writeSites.Count == 0)
-                summary = $"No block writes '{tag}'. It may be set by HMI, an instruction's output, an indirect/optimized access this parser does not resolve, or the name differs from the project symbol.";
+                summary =
+                    $"No block writes '{tag}'. It may be set by HMI, an instruction's output, an indirect/optimized access this parser does not resolve, or the name differs from the project symbol.";
             else
                 summary = $"'{tag}' is written at {writeSites.Count} site(s). {allConditions.Count} distinct gating condition operand(s) found. " +
                           "Live-read those with GetPlcLiveValuesS7 to see which is currently driving the value.";
@@ -165,7 +166,8 @@ namespace TiaMcp.Adapters.Native.Plc
         {
             var plc = _session.GetPlcSoftware(softwarePath);
             return (plc == null ? new Dictionary<string, (string name, string address, string dataType)>() : BuildPlcTagAddressMap(plc))
-                .ToDictionary(p => p.Key, p => new PlcTagAddress { Name = p.Value.name, Address = p.Value.address, DataType = p.Value.dataType }, StringComparer.Ordinal);
+                .ToDictionary(p => p.Key, p => new PlcTagAddress { Name = p.Value.name, Address = p.Value.address, DataType = p.Value.dataType }, StringComparer
+                        .Ordinal);
         }
     }
 }

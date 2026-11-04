@@ -7,7 +7,8 @@ namespace TiaMcp.Adapters.Native.Plc
 {
     internal static class PlcSourceFileOutput
     {
-        private static string Hash(Stream stream) { using var hash = SHA256.Create(); return BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", "").ToLowerInvariant(); }
+        private static string Hash(Stream stream) {
+            using var hash = SHA256.Create(); return BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", "").ToLowerInvariant(); }
         internal static Dictionary<string, object?> Row(FileInfo file)
         {
             file.Refresh();

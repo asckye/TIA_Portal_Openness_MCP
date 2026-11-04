@@ -45,7 +45,9 @@ namespace TiaOpenness.Core.Environment
         public static string AdministratorSteps(IEnumerable<KeyValuePair<string, AllowListEntry>> entries)
         {
             var text = new StringBuilder();
-            text.AppendLine("An administrator can allow the workers permanently: answer the TIA Portal Openness dialog once with 'Yes to all', or import this .reg file with administrator rights (regedit). Any rebuilt or updated worker needs new values.");
+            text
+                .AppendLine("An administrator can allow the workers permanently: answer the TIA Portal Openness dialog once with 'Yes to all', or import " +
+                "this .reg file with administrator rights (regedit). Any rebuilt or updated worker needs new values.");
             text.AppendLine("Windows Registry Editor Version 5.00");
             foreach (var entry in entries)
             {

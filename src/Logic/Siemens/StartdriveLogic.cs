@@ -21,14 +21,16 @@ namespace TiaMcpServer.Siemens
             => ArgumentRules.ParseObject(json, parameter);
 
         // ---- official enum names (pinned member by member by StartdriveShapeChecks) ---------------------------------------------
-        internal static readonly string[] TelegramTypes = { "MainTelegram", "SupplementaryTelegram", "AdditionalTelegram", "SafetyTelegram", "TorqueTelegram", "EdgeTelegram" };
+        internal static readonly string[] TelegramTypes = {
+            "MainTelegram", "SupplementaryTelegram", "AdditionalTelegram", "SafetyTelegram", "TorqueTelegram", "EdgeTelegram" };
         internal static readonly string[] Directions = { "Input", "Output" };                                  // HW.AddressIoType subset a telegram channel has
         internal static readonly string[] ActivationStates = { "Deactivate", "Activate", "DeactivateAndNotPresent" };
         internal static readonly string[] FunctionKeys = { "BasicPositioner", "TechnologyController" };
         internal static readonly string[] RotaryLinearFlags = { "Rotary", "Linear" };
         internal static readonly string[] AbsoluteIncrementalFlags = { "Absolute", "Incremental" };
         internal static readonly string[] EncoderInterfaces = { "None", "Terminal", "DSub", "DriveCliQ", "HTL", "SSI" };
-        internal static readonly string[] EncoderTypes = { "NoEncoder", "Resolver", "HTLTTL", "SSIProtocoll", "SinCos", "EnDat", "HTL", "SSIProtocollAndHTLTTL", "SSIProtocollAndSinCos", "DriveCliQ" };
+        internal static readonly string[] EncoderTypes = {
+            "NoEncoder", "Resolver", "HTLTTL", "SSIProtocoll", "SinCos", "EnDat", "HTL", "SSIProtocollAndHTLTTL", "SSIProtocollAndSinCos", "DriveCliQ" };
         internal static readonly string[] MotorTypes =
         {
             "NoMotor", "InductionMotor", "SynchronousMotor", "NoCodeNumber1LE1InductionMotor", "NoCodeNumber1LG6InductionMotor",
@@ -37,8 +39,10 @@ namespace TiaMcpServer.Siemens
             "InductionMotor1PH8", "NoEncoder1FG1GearedSynchronousMotor", "NoEncoder1FK7SynchronousMotor", "DriveCliqMotor", "DriveCliqMotorDataSet"
         };
         internal static readonly string[] ResetModes = { "ParameterReset", "SafetyParameterReset" };
-        internal static readonly string[] FileOperations = { "None", "Overwrite" };                              // V21 SafetyAcceptanceTestReport.CreateProtocol
-        internal static readonly string[] ConnectOptions = { "Default", "AllowAllModules" };                       // V20 MC.Drives.Enums / V21 Motion.ConnectOption
+        internal static readonly string[] FileOperations = { "None", "Overwrite"
+        };                              // V21 SafetyAcceptanceTestReport.CreateProtocol
+        internal static readonly string[] ConnectOptions = { "Default", "AllowAllModules"
+        };                       // V20 MC.Drives.Enums / V21 Motion.ConnectOption
         internal static readonly string[] InterfaceKinds = { "actor", "sensor", "torque", "encoder" };
 
         // ---- drive object selection ----------------------------------------------------------------------------------------------
@@ -75,7 +79,8 @@ namespace TiaMcpServer.Siemens
             };
         }
 
-        internal static readonly string[] ParameterSources = { "read", "write" };                                 // ReadParameters (offline / online read view) or Parameters (writable view)
+        internal static readonly string[] ParameterSources = { "read", "write"
+        };                                 // ReadParameters (offline / online read view) or Parameters (writable view)
         internal sealed class ParameterSelector
         {
             public string[] Names = Array.Empty<string>();
@@ -86,18 +91,27 @@ namespace TiaMcpServer.Siemens
         internal static ParameterSelector ParseParameterSelector(string namesJson, string numbersJson)
         {
             var selector = new ParameterSelector();
-            var names = (string.IsNullOrWhiteSpace(namesJson) ? new JsonArray() : JsonNode.Parse(namesJson) as JsonArray) ?? throw new ArgumentException("namesJson must be a JSON array of parameter names.");
+            var names = (string.IsNullOrWhiteSpace(namesJson) ? new JsonArray() : JsonNode.Parse(namesJson) as JsonArray)
+                ?? throw new ArgumentException("namesJson must be a JSON array of parameter names.");
             selector.Names = names.Select(n => n?.GetValue<string>() ?? "").ToArray();
-            if (selector.Names.Any(n => string.IsNullOrWhiteSpace(n) || n.Length > 64) || selector.Names.Distinct(StringComparer.Ordinal).Count() != selector.Names.Length) throw new ArgumentException("namesJson needs distinct nonempty parameter names such as p1000[0], r47 or p2080[0].6.");
-            var numbers = (string.IsNullOrWhiteSpace(numbersJson) ? new JsonArray() : JsonNode.Parse(numbersJson) as JsonArray) ?? throw new ArgumentException("numbersJson must be a JSON array of {number, arrayIndex} objects.");
+            if (selector.Names.Any(n => string.IsNullOrWhiteSpace(n) || n.Length > 64) || selector.Names.Distinct(StringComparer.Ordinal).Count() != selector
+                    .Names.Length)
+                throw new ArgumentException("namesJson needs distinct nonempty parameter names such as p1000[0], r47 or p2080[0].6.");
+            var numbers = (string.IsNullOrWhiteSpace(numbersJson) ? new JsonArray() : JsonNode.Parse(numbersJson) as JsonArray)
+                ?? throw new ArgumentException("numbersJson must be a JSON array of {number, arrayIndex} objects.");
             var list = new List<(int, int)>();
             foreach (var node in numbers)
             {
                 var o = node as JsonObject ?? throw new ArgumentException("numbersJson entries must be objects {number, arrayIndex}.");
-                foreach (var pair in o) if (pair.Key != "number" && pair.Key != "arrayIndex") throw new ArgumentException("Unknown numbersJson key: " + pair.Key);
-                if (o["number"] is not JsonValue nv || !nv.TryGetValue<int>(out var number) || number < 0 || number > 65535) throw new ArgumentException("numbersJson number must be 0..65535.");
+                foreach (var pair in o) if (pair.Key != "number" && pair.Key != "arrayIndex")
+                    throw new ArgumentException("Unknown numbersJson key: " + pair.Key);
+                if (o["number"] is not JsonValue nv || !nv.TryGetValue<int>(out var number) || number < 0 || number > 65535)
+                    throw new ArgumentException("numbersJson number must be 0..65535.");
                 int arrayIndex = -1;
-                if (o.ContainsKey("arrayIndex")) { if (o["arrayIndex"] is not JsonValue av || !av.TryGetValue<int>(out arrayIndex) || arrayIndex < -1 || arrayIndex > 0x7FFF) throw new ArgumentException("numbersJson arrayIndex must be -1 (no array) or 0..32767."); }
+                if (o.ContainsKey("arrayIndex")) {
+                    if (o["arrayIndex"] is not JsonValue av || !av.TryGetValue<int>(out arrayIndex) || arrayIndex < -1 || arrayIndex > 0x7FFF)
+                        throw new ArgumentException("numbersJson arrayIndex must be -1 (no array) or 0..32767.");
+                }
                 list.Add((number, arrayIndex));
             }
             selector.Numbers = list.ToArray();
@@ -118,7 +132,10 @@ namespace TiaMcpServer.Siemens
             if (name[0] != 'p' && name[0] != 'r' && name[0] != 'P' && name[0] != 'R') return false;
             int i = 1; while (i < name.Length && char.IsDigit(name[i])) i++;
             if (i == 1) return false;
-            if (i < name.Length && name[i] == '[') { int close = name.IndexOf(']', i); if (close < 0 || close == i + 1 || !name.Substring(i + 1, close - i - 1).All(char.IsDigit)) return false; i = close + 1; }
+            if (i < name.Length && name[i] == '[') {
+                int close = name.IndexOf(']', i); if (close < 0 || close == i + 1 || !name.Substring(i + 1, close - i - 1).All(char.IsDigit)) return false; i =
+                    close + 1;
+            }
             if (i < name.Length && name[i] == '.') { if (i + 1 >= name.Length || !name.Substring(i + 1).All(char.IsDigit)) return false; i = name.Length; }
             return i == name.Length;
         }
@@ -141,7 +158,8 @@ namespace TiaMcpServer.Siemens
         internal static void ValidateParameterWriteRequest(string parameter, string action)
         {
             if (action != "read" && action != "write") throw new ArgumentException("action must be read/write.");
-            if (!LooksLikeParameterName(parameter)) throw new ArgumentException("Exact parameter name such as p1000[0], r47 or p2080[0].6 required (no fuzzy matching).");
+            if (!LooksLikeParameterName(parameter))
+                throw new ArgumentException("Exact parameter name such as p1000[0], r47 or p2080[0].6 required (no fuzzy matching).");
         }
 
         // ---- telegrams -----------------------------------------------------------------------------------------------------------
@@ -152,18 +170,23 @@ namespace TiaMcpServer.Siemens
             public int TelegramNumber = -1, InputSize = -1, OutputSize = -1, Size = -1, SensorIndex; public bool KeepOriginalAddress, HasConnectOption;
             public bool Writes;
         }
-        internal static TelegramRequest ValidateTelegramRequest(string action, string telegramType, int telegramNumber, int inputSize, int outputSize, string direction, int size, bool keepOriginalAddress,
+        internal static TelegramRequest ValidateTelegramRequest(string action, string telegramType, int telegramNumber, int inputSize, int outputSize,
+                string direction, int size, bool keepOriginalAddress,
             string softwarePath, string objectPath, string interfaceKind, int sensorIndex, string connectOption, bool dryRun)
         {
             RequireOneOf(action, TelegramActions, "action");
-            var r = new TelegramRequest { Action = action, TelegramNumber = telegramNumber, InputSize = inputSize, OutputSize = outputSize, Size = size, KeepOriginalAddress = keepOriginalAddress, SensorIndex = sensorIndex };
+            var r = new TelegramRequest {
+                Action = action, TelegramNumber = telegramNumber, InputSize = inputSize, OutputSize = outputSize, Size = size, KeepOriginalAddress =
+                    keepOriginalAddress, SensorIndex = sensorIndex
+            };
             bool additional = action == "insert" && telegramType == "AdditionalTelegram";
             if (action != "read") r.TelegramType = RequireOneOf(telegramType, TelegramTypes, "telegramType");
             if (action == "insert" || action == "check")
             {
                 if (additional || (action == "check" && telegramType == "AdditionalTelegram"))
                 {
-                    if (inputSize < 0 || outputSize < 0 || inputSize + outputSize == 0) throw new ArgumentException("AdditionalTelegram needs inputSize / outputSize (words, one of them may be 0).");
+                    if (inputSize < 0 || outputSize < 0 || inputSize + outputSize == 0)
+                        throw new ArgumentException("AdditionalTelegram needs inputSize / outputSize (words, one of them may be 0).");
                 }
                 else if (telegramNumber < 0) throw new ArgumentException(action + " needs telegramNumber (999 = free telegram).");
             }
@@ -179,9 +202,13 @@ namespace TiaMcpServer.Siemens
                 RequireText(softwarePath, "softwarePath"); RequireText(objectPath, "objectPath", 1024); EngineeringPath.Parts(objectPath);
                 r.SoftwarePath = softwarePath; r.ObjectPath = objectPath; r.InterfaceKind = RequireOneOf(interfaceKind, InterfaceKinds, "interfaceKind");
                 if (sensorIndex < 0 || sensorIndex > 15) throw new ArgumentException("sensorIndex 0..15 required.");
-                r.HasConnectOption = !string.IsNullOrEmpty(connectOption); if (r.HasConnectOption) r.ConnectOption = RequireOneOf(connectOption, ConnectOptions, "connectOption");
+                r.HasConnectOption = !string.IsNullOrEmpty(connectOption); if (r.HasConnectOption) r.ConnectOption =
+                    RequireOneOf(connectOption, ConnectOptions, "connectOption");
             }
-            else { Refuse(softwarePath, "softwarePath", "applies to action connectTechnologyObject only."); Refuse(objectPath, "objectPath", "applies to action connectTechnologyObject only."); }
+            else {
+                Refuse(softwarePath, "softwarePath", "applies to action connectTechnologyObject only.");
+                Refuse(objectPath, "objectPath", "applies to action connectTechnologyObject only.");
+            }
             r.Writes = action != "read" && action != "check" && !dryRun;
             return r;
         }
@@ -189,13 +216,16 @@ namespace TiaMcpServer.Siemens
         // ---- drive function interface --------------------------------------------------------------------------------------------
         internal static readonly string[] FunctionActions =
         {
-            "read", "changeDriveObjectType", "changeActivationState", "activateFunction", "deactivateFunction", "setSIAxisType", "setMotorCode", "setSimoGearMlfb", "updateCheckSums",
-            "setMotorType", "readMotorConfiguration", "projectMotorConfiguration", "setEquivalentCircuitDiagramData", "setEncoder", "readEncoderConfiguration", "setEncoderType", "projectEncoderConfiguration"
+            "read", "changeDriveObjectType", "changeActivationState", "activateFunction", "deactivateFunction", "setSIAxisType", "setMotorCode",
+                "setSimoGearMlfb", "updateCheckSums",
+            "setMotorType", "readMotorConfiguration", "projectMotorConfiguration", "setEquivalentCircuitDiagramData", "setEncoder", "readEncoderConfiguration",
+                "setEncoderType", "projectEncoderConfiguration"
         };
         internal static readonly string[] OnlineFunctionActions = { "read", "performFactoryReset", "performRamToRomCopy", "changeActivationState" };
         internal sealed class FunctionRequest
         {
-            public string Action = "", DriveObjectType = "", ActivationState = "", FunctionKey = "", RotaryLinear = "", AbsoluteIncremental = "", Mlfb = "", MotorType = "", EncoderInterface = "", EncoderType = "";
+            public string Action = "", DriveObjectType = "", ActivationState = "", FunctionKey = "", RotaryLinear = "", AbsoluteIncremental = "", Mlfb = "",
+                MotorType = "", EncoderInterface = "", EncoderType = "";
             public int MotorCode = -1, MotorDataSet = -1, DataSet, EncoderNumber = 1; public bool EquivalentCircuitDiagram, HasAbsoluteIncremental;
             public Dictionary<string, JsonNode?> Entries = new Dictionary<string, JsonNode?>(StringComparer.Ordinal);
             public bool Writes;
@@ -209,13 +239,15 @@ namespace TiaMcpServer.Siemens
             string Str(string key, bool required, string[]? allowed = null)
             {
                 if (!o.ContainsKey(key)) { if (required) throw new ArgumentException(action + " needs valueJson." + key + "."); return ""; }
-                var s = o[key]?.GetValue<string>() ?? ""; if (string.IsNullOrWhiteSpace(s)) throw new ArgumentException("valueJson." + key + " must be a nonempty string.");
+                var s = o[key]?.GetValue<string>() ?? ""; if (string.IsNullOrWhiteSpace(s))
+                    throw new ArgumentException("valueJson." + key + " must be a nonempty string.");
                 return allowed == null ? s : RequireOneOf(s, allowed, "valueJson." + key);
             }
             int Int(string key, bool required, int min, int max, int fallback)
             {
                 if (!o.ContainsKey(key)) { if (required) throw new ArgumentException(action + " needs valueJson." + key + "."); return fallback; }
-                if (o[key] is not JsonValue v || !v.TryGetValue<int>(out var i) || i < min || i > max) throw new ArgumentException("valueJson." + key + " must be an integer " + min + ".." + max + ".");
+                if (o[key] is not JsonValue v || !v.TryGetValue<int>(out var i) || i < min || i > max)
+                    throw new ArgumentException("valueJson." + key + " must be an integer " + min + ".." + max + ".");
                 return i;
             }
             var allowedKeys = new List<string>();
@@ -224,43 +256,59 @@ namespace TiaMcpServer.Siemens
                 case "read": break;
                 case "changeDriveObjectType": allowedKeys.Add("driveObjectType"); r.DriveObjectType = Str("driveObjectType", true); break;
                 case "changeActivationState": allowedKeys.Add("activationState"); r.ActivationState = Str("activationState", true, ActivationStates); break;
-                case "activateFunction": case "deactivateFunction": allowedKeys.Add("functionKey"); r.FunctionKey = Str("functionKey", true, FunctionKeys); break;
+                case "activateFunction": case "deactivateFunction": allowedKeys.Add("functionKey"); r.FunctionKey = Str("functionKey", true, FunctionKeys);
+                break;
                 case "setSIAxisType": allowedKeys.Add("rotaryLinear"); r.RotaryLinear = Str("rotaryLinear", true, RotaryLinearFlags); break;
-                case "setMotorCode": allowedKeys.AddRange(new[] { "motorCode", "motorDataSet" }); r.MotorCode = Int("motorCode", true, 0, int.MaxValue, -1); r.MotorDataSet = Int("motorDataSet", false, 0, 65535, 0); break;
+                case "setMotorCode": allowedKeys.AddRange(new[] { "motorCode", "motorDataSet" }); r.MotorCode = Int("motorCode", true, 0, int.MaxValue, -1); r
+                    .MotorDataSet = Int("motorDataSet", false, 0, 65535, 0); break;
                 case "setSimoGearMlfb": allowedKeys.Add("mlfb"); r.Mlfb = Str("mlfb", true); break;
                 case "updateCheckSums": break;
-                case "setMotorType": allowedKeys.AddRange(new[] { "motorType", "dataSet" }); r.MotorType = Str("motorType", true, MotorTypes); r.DataSet = Int("dataSet", false, 0, 65535, 0); break;
+                case "setMotorType": allowedKeys.AddRange(new[] { "motorType", "dataSet" }); r.MotorType = Str("motorType", true, MotorTypes); r.DataSet =
+                    Int("dataSet", false, 0, 65535, 0); break;
                 case "readMotorConfiguration": case "setEquivalentCircuitDiagramData": case "projectMotorConfiguration":
                     allowedKeys.AddRange(new[] { "dataSet", "entries", "equivalentCircuitDiagram" }); r.DataSet = Int("dataSet", false, 0, 65535, 0);
-                    if (action == "setEquivalentCircuitDiagramData") { if (o["equivalentCircuitDiagram"] is not JsonValue b || !b.TryGetValue<bool>(out r.EquivalentCircuitDiagram)) throw new ArgumentException("setEquivalentCircuitDiagramData needs valueJson.equivalentCircuitDiagram (bool)."); }
-                    else Refuse(o.ContainsKey("equivalentCircuitDiagram") ? "x" : "", "valueJson.equivalentCircuitDiagram", "applies to setEquivalentCircuitDiagramData only.");
-                    if (action == "projectMotorConfiguration") ReadEntries(o, r); else if (o.ContainsKey("entries")) throw new ArgumentException("valueJson.entries applies to projectMotorConfiguration / projectEncoderConfiguration only.");
+                    if (action == "setEquivalentCircuitDiagramData") {
+                        if (o["equivalentCircuitDiagram"] is not JsonValue b || !b.TryGetValue<bool>(out r.EquivalentCircuitDiagram))
+                            throw new ArgumentException("setEquivalentCircuitDiagramData needs valueJson.equivalentCircuitDiagram (bool).");
+                    }
+                    else
+                        Refuse(o.ContainsKey("equivalentCircuitDiagram") ? "x" : "", "valueJson.equivalentCircuitDiagram",
+                            "applies to setEquivalentCircuitDiagramData only.");
+                    if (action == "projectMotorConfiguration") ReadEntries(o, r); else if (o.ContainsKey("entries"))
+                        throw new ArgumentException("valueJson.entries applies to projectMotorConfiguration / projectEncoderConfiguration only.");
                     break;
                 case "setEncoder":
                     allowedKeys.AddRange(new[] { "encoderInterface", "encoderType", "absoluteIncremental", "rotaryLinear", "encoderNumber" });
                     r.EncoderInterface = Str("encoderInterface", true, EncoderInterfaces); r.EncoderType = Str("encoderType", true, EncoderTypes);
-                    r.AbsoluteIncremental = Str("absoluteIncremental", true, AbsoluteIncrementalFlags); r.RotaryLinear = Str("rotaryLinear", true, RotaryLinearFlags); r.EncoderNumber = Int("encoderNumber", false, 0, 65535, 1);
+                    r.AbsoluteIncremental = Str("absoluteIncremental", true, AbsoluteIncrementalFlags); r.RotaryLinear =
+                        Str("rotaryLinear", true, RotaryLinearFlags); r.EncoderNumber = Int("encoderNumber", false, 0, 65535, 1);
                     break;
                 case "readEncoderConfiguration": case "projectEncoderConfiguration":
                     allowedKeys.AddRange(new[] { "encoderNumber", "entries" }); r.EncoderNumber = Int("encoderNumber", false, 0, 65535, 1);
-                    if (action == "projectEncoderConfiguration") ReadEntries(o, r); else if (o.ContainsKey("entries")) throw new ArgumentException("valueJson.entries applies to projectEncoderConfiguration only.");
+                    if (action == "projectEncoderConfiguration") ReadEntries(o, r); else if (o.ContainsKey("entries"))
+                        throw new ArgumentException("valueJson.entries applies to projectEncoderConfiguration only.");
                     break;
                 case "setEncoderType":
-                    allowedKeys.AddRange(new[] { "encoderNumber", "rotaryLinear", "absoluteIncremental" }); r.EncoderNumber = Int("encoderNumber", false, 0, 65535, 1);
-                    r.RotaryLinear = Str("rotaryLinear", true, RotaryLinearFlags); r.HasAbsoluteIncremental = o.ContainsKey("absoluteIncremental"); if (r.HasAbsoluteIncremental) r.AbsoluteIncremental = Str("absoluteIncremental", true, AbsoluteIncrementalFlags);
+                    allowedKeys.AddRange(new[] { "encoderNumber", "rotaryLinear", "absoluteIncremental" }); r.EncoderNumber =
+                        Int("encoderNumber", false, 0, 65535, 1);
+                    r.RotaryLinear = Str("rotaryLinear", true, RotaryLinearFlags); r.HasAbsoluteIncremental = o.ContainsKey("absoluteIncremental");
+                    if (r.HasAbsoluteIncremental) r.AbsoluteIncremental = Str("absoluteIncremental", true, AbsoluteIncrementalFlags);
                     break;
             }
-            foreach (var pair in o) if (!allowedKeys.Contains(pair.Key)) throw new ArgumentException("valueJson key " + pair.Key + " does not apply to action " + action + ".");
+            foreach (var pair in o) if (!allowedKeys.Contains(pair.Key))
+                throw new ArgumentException("valueJson key " + pair.Key + " does not apply to action " + action + ".");
             r.Writes = action != "read" && action != "readMotorConfiguration" && action != "readEncoderConfiguration" && !dryRun;
             return r;
         }
         private static void ReadEntries(JsonObject o, FunctionRequest r)
         {
-            var entries = o["entries"] as JsonObject ?? throw new ArgumentException("valueJson.entries must be an object {\"p305\": 20, ...} of configuration entry names (or numbers) and scalar values.");
+            var entries = o["entries"] as JsonObject
+                ?? throw new ArgumentException("valueJson.entries must be an object {\"p305\": 20, ...} of configuration entry names (or numbers) and scalar values.");
             if (entries.Count == 0 || entries.Count > 200) throw new ArgumentException("valueJson.entries needs 1..200 entries.");
             foreach (var pair in entries)
             {
-                if (string.IsNullOrWhiteSpace(pair.Key)) throw new ArgumentException("valueJson.entries keys must be entry names such as p305 or numbers such as 305.");
+                if (string.IsNullOrWhiteSpace(pair.Key))
+                    throw new ArgumentException("valueJson.entries keys must be entry names such as p305 or numbers such as 305.");
                 if (pair.Value is JsonObject || pair.Value is JsonArray) throw new ArgumentException("valueJson.entries values must be scalars.");
                 r.Entries[pair.Key] = pair.Value;
             }
@@ -268,9 +316,12 @@ namespace TiaMcpServer.Siemens
         internal static string ValidateOnlineFunctionRequest(string action, string resetMode, string activationState, bool confirmOnline)
         {
             RequireOneOf(action, OnlineFunctionActions, "action");
-            if (action == "performFactoryReset") RequireOneOf(resetMode, ResetModes, "resetMode"); else Refuse(resetMode, "resetMode", "applies to performFactoryReset only.");
-            if (action == "changeActivationState") RequireOneOf(activationState, ActivationStates, "activationState"); else Refuse(activationState, "activationState", "applies to changeActivationState only.");
-            if (action != "read" && !confirmOnline) throw new ArgumentException("confirmOnline=true is required: " + action + " changes the connected drive, not the project.");
+            if (action == "performFactoryReset") RequireOneOf(resetMode, ResetModes, "resetMode"); else
+                Refuse(resetMode, "resetMode", "applies to performFactoryReset only.");
+            if (action == "changeActivationState") RequireOneOf(activationState, ActivationStates, "activationState"); else
+                Refuse(activationState, "activationState", "applies to changeActivationState only.");
+            if (action != "read" && !confirmOnline)
+                throw new ArgumentException("confirmOnline=true is required: " + action + " changes the connected drive, not the project.");
             return action;
         }
 
@@ -279,35 +330,45 @@ namespace TiaMcpServer.Siemens
         internal static bool ValidateSecurityRequest(string action, string password, bool dryRun)
         {
             RequireOneOf(action, SecurityActions, "action");
-            if (action == "activateEncryption" || action == "deactivateEncryption") { if (string.IsNullOrEmpty(password)) throw new ArgumentException(action + " needs password (the DDE password; never logged)."); }
+            if (action == "activateEncryption" || action == "deactivateEncryption") {
+                if (string.IsNullOrEmpty(password)) throw new ArgumentException(action + " needs password (the DDE password; never logged)."); }
             else if (!string.IsNullOrEmpty(password)) throw new ArgumentException("password applies to activateEncryption / deactivateEncryption only.");
             return action != "read" && !dryRun;
         }
 
         // ---- technology extensions -----------------------------------------------------------------------------------------------
-        internal static readonly string[] TechnologyExtensionActions = { "read", "activate", "deactivate", "readPackages", "install", "installAndGetIdentifier", "uninstall" };
+        internal static readonly string[] TechnologyExtensionActions = {
+            "read", "activate", "deactivate", "readPackages", "install", "installAndGetIdentifier", "uninstall" };
         internal static bool ValidateTechnologyExtensionRequest(string action, string identifier, string filePath, bool confirmUninstallInUse, bool dryRun)
         {
             RequireOneOf(action, TechnologyExtensionActions, "action");
             bool portal = action == "readPackages" || action == "install" || action == "installAndGetIdentifier" || action == "uninstall";
-            if (action == "activate" || action == "deactivate" || action == "uninstall") RequireText(identifier, "identifier"); else Refuse(identifier, "identifier", "applies to activate / deactivate / uninstall only.");
+            if (action == "activate" || action == "deactivate" || action == "uninstall") RequireText(identifier, "identifier"); else
+                Refuse(identifier, "identifier", "applies to activate / deactivate / uninstall only.");
             if (action == "install" || action == "installAndGetIdentifier")
             {
                 RequireText(filePath, "filePath", 1024);
-                if (!string.Equals(Path.GetExtension(filePath), ".tec", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("filePath must be a .tec technology extension package.");
+                if (!string.Equals(Path.GetExtension(filePath), ".tec", StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("filePath must be a .tec technology extension package.");
             }
             else Refuse(filePath, "filePath", "applies to install / installAndGetIdentifier only.");
             if (action == "uninstall" && !confirmUninstallInUse && !dryRun) { /* allowed: TIA refuses itself when the package is in use */ }
             return portal ? action != "readPackages" && !dryRun : action != "read" && !dryRun;
         }
-        internal static bool IsPortalScopedExtensionAction(string action) => TiaMcp.Adapters.Contracts.OptionalEngineeringMutations.IsPortalScopedExtensionAction(action);
+        internal static bool IsPortalScopedExtensionAction(string action) => TiaMcp.Adapters.Contracts.OptionalEngineeringMutations
+            .IsPortalScopedExtensionAction(action);
 
         // ---- hardware modules (V21 DriveItemHardwareModule) + module access point --------------------------------------------------
         internal static readonly string[] HardwareModuleActions = { "read", "changeType", "setPositionNumber" };
         internal static bool ValidateHardwareModuleRequest(string action, string typeIdentifier, int positionNumber, bool dryRun)
         {
             RequireOneOf(action, HardwareModuleActions, "action");
-            if (action == "changeType") { RequireText(typeIdentifier, "typeIdentifier"); if (!typeIdentifier.StartsWith("OrderNumber:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("GSD:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("System:", StringComparison.Ordinal)) throw new ArgumentException("typeIdentifier must be an official TypeIdentifier such as OrderNumber:6SL3120-2TE21-8Axx//10014."); }
+            if (action == "changeType") {
+                RequireText(typeIdentifier, "typeIdentifier");
+                if (!typeIdentifier.StartsWith("OrderNumber:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("GSD:", StringComparison.Ordinal)
+                        && !typeIdentifier.StartsWith("System:", StringComparison.Ordinal))
+                    throw new ArgumentException("typeIdentifier must be an official TypeIdentifier such as OrderNumber:6SL3120-2TE21-8Axx//10014.");
+            }
             else Refuse(typeIdentifier, "typeIdentifier", "applies to action changeType only.");
             if (action == "setPositionNumber") { if (positionNumber < 0) throw new ArgumentException("setPositionNumber needs positionNumber >= 0."); }
             else if (positionNumber >= 0) throw new ArgumentException("positionNumber applies to action setPositionNumber only.");
@@ -321,7 +382,10 @@ namespace TiaMcpServer.Siemens
             RequireOneOf(action, SafetyTestActions, "action");
             if (action == "setActive") RequireText(identifier, "identifier"); else Refuse(identifier, "identifier", "applies to action setActive only.");
             if (action == "createProtocol") { RequireText(filePath, "filePath", 1024); RequireOneOf(fileOperation, FileOperations, "fileOperation"); }
-            else { Refuse(filePath, "filePath", "applies to action createProtocol only."); Refuse(fileOperation, "fileOperation", "applies to action createProtocol only."); }
+            else {
+                Refuse(filePath, "filePath", "applies to action createProtocol only.");
+                Refuse(fileOperation, "fileOperation", "applies to action createProtocol only.");
+            }
             return action != "read" && !dryRun;
         }
     }

@@ -11,31 +11,41 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public UnifiedEngineeringAdapter(IUnifiedSession session) => _session = session;
 
-        public HmiMessage ImportUnifiedEngineeringList(string softwarePath, string category, string filePath, string expectedNamesJson, bool dryRun = true, bool overwrite = false)
+        public HmiMessage ImportUnifiedEngineeringList(string softwarePath, string category, string filePath, string expectedNamesJson, bool dryRun = true,
+                bool overwrite = false)
             => _session.RunHmiStepTool("ImportUnifiedEngineeringList", meta => {
                 if (category != "textLists" && category != "graphicLists") throw new ArgumentException("category must be textLists or graphicLists.");
-                var names = UnifiedRequestValues.Parse(expectedNamesJson)?.Array().Select(n => n!.GetValue<string>()).ToArray() ?? throw new ArgumentException("expectedNamesJson must be an array.");
-                if (names.Length == 0 || names.Length > 500 || names.Any(string.IsNullOrWhiteSpace) || names.Distinct(StringComparer.OrdinalIgnoreCase).Count() != names.Length) throw new ArgumentException("Provide 1..500 unique exact expected list names for readback.");
-                var file = new System.IO.FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!file.Exists) throw new System.IO.FileNotFoundException("Native list import file not found.", filePath);
+                var names = UnifiedRequestValues.Parse(expectedNamesJson)?.Array().Select(n => n!.GetValue<string>()).ToArray()
+                    ?? throw new ArgumentException("expectedNamesJson must be an array.");
+                if (names.Length == 0 || names.Length > 500 || names.Any(string.IsNullOrWhiteSpace) || names.Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Count() != names.Length)
+                    throw new ArgumentException("Provide 1..500 unique exact expected list names for readback.");
+                var file = new System.IO.FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!file.Exists) throw new System.IO
+                    .FileNotFoundException("Native list import file not found.", filePath);
                 var collectionName = _session.UnifiedCollection(category);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var hmi = _session.ResolveHmiSoftwareOrThrow(softwarePath);
                 if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Unified HMI required.");
                 var collection = PlcGroupOperations.Get(hmi, collectionName);
-                if (collection.GetType().GetMethod("Import", new[] { typeof(System.IO.DirectoryInfo), typeof(string) }) == null) throw new NotSupportedException("Native list Import(DirectoryInfo,string) unavailable.");
+                if (collection.GetType().GetMethod("Import", new[] { typeof(System.IO.DirectoryInfo), typeof(string) }) == null)
+                    throw new NotSupportedException("Native list Import(DirectoryInfo,string) unavailable.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["expectedCount"] = names.Length;
-                meta["scope"] = "Native file import; expected list-name presence only. File can also affect other lists. Full entries/bindings are not independently verified.";
+                meta["scope"] =
+                    "Native file import; expected list-name presence only. File can also affect other lists. Full entries/bindings are not independently " +
+                    "verified.";
                 HmiExchangePolicy.BeforeOpaqueImport(collection, overwrite, meta);
                 if (dryRun) return "Native text/graphic list import preview; no changes.";
                 meta["mayHaveChanged"] = true;
                 var ok = PlcGroupOperations.Call(collection, "Import", new[] { typeof(System.IO.DirectoryInfo), typeof(string) }, file.Directory!, file.Name);
                 meta["nativeSuccess"] = ok is bool result && result;
-                if (ok is not bool success || !success) throw new InvalidOperationException("Native list Import did not return true; project may have changed.");
+                if (ok is not bool success || !success)
+                    throw new InvalidOperationException("Native list Import did not return true; project may have changed.");
                 var missing = names.Where(n => PlcGroupOperations.Find(collection, n) == null).ToArray();
                 meta["missingNames"] = new HmiArray(missing.Select(n => (object)HmiValues.Value(n)!).ToArray());
                 meta["actualCount"] = names.Length - missing.Length; meta["fullContentVerified"] = false;
                 if (missing.Length != 0) throw new InvalidOperationException("Expected list names absent after import.");
-                return "Native list import returned true and expected names are present. Full content verification remains separate; no explicit save or download.";
+                return "Native list import returned true and expected names are present. Full content verification remains separate; no explicit save or " +
+                    "download.";
             });
 
         public HmiMessage ReadUnifiedEngineeringObjects(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
@@ -52,7 +62,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["nextOffset"] = offset + rows.Count < items.Length ? offset + rows.Count : (int?)null;
                 meta["truncated"] = offset + rows.Count < items.Length;
                 meta["dataComplete"] = offset == 0 && rows.Count == items.Length && rows.All(x => x!.Field("dataComplete")!.GetValue<bool>());
-                meta["scope"] = "Scalar properties of selected collection; complex bindings/entries require ReadUnifiedScreenBranch or dedicated readers. Pagination is live, not a frozen snapshot.";
+                meta["scope"] =
+                    "Scalar properties of selected collection; complex bindings/entries require ReadUnifiedScreenBranch or dedicated readers. Pagination is " +
+                    "live, not a frozen snapshot.";
                 return "Unified engineering objects read; inspect scope and pagination, not a full object export.";
             });
 
@@ -60,7 +72,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             string propertiesJson = "{}", bool dryRun = true)
             => _session.RunHmiStepTool("ManageUnifiedEngineeringObject", meta => {
                 if (action != "create" && action != "update" && action != "delete") throw new ArgumentException("action must be create, update or delete.");
-                if (category == "systemTags" || category == "systemTextLists") throw new NotSupportedException("System collections are read-only in this adapter.");
+                if (category == "systemTags" || category == "systemTextLists")
+                    throw new NotSupportedException("System collections are read-only in this adapter.");
                 if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Exact name required.");
                 var changes = UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if (changes.ContainsKey("Name")) throw new ArgumentException("Name changes are not supported here; supply the exact name parameter.");

@@ -34,7 +34,8 @@ namespace TiaMcp.Adapters
                     if(!fields.Same(source.ReadFields())) return BindingObservation.Unknown("BindingChangedDuringObservation");
                     return new BindingObservation(BindingObservationState.Unbound,BindingIdentityStrength.None,null,null,null,"DetachedFieldsObserved");
                 }
-                if(!fields.ProcessId.HasValue || fields.ProcessId.Value<=0 || fields.HasProject!=(fields.ProjectFile!=null) || (!fields.HasProject && fields.IsLocalSession))
+                if(!fields.ProcessId.HasValue || fields.ProcessId.Value<=0 || fields.HasProject!=(fields.ProjectFile!=null)
+                        || (!fields.HasProject && fields.IsLocalSession))
                     return BindingObservation.Unknown("InconsistentBoundFields");
                 int pid=fields.ProcessId.Value;
                 var before=processes.Read(pid);
@@ -135,7 +136,8 @@ namespace TiaMcp.Adapters
             if(faulted || pending.HasValue || observing || accepted==null || !Enum.IsDefined(typeof(BindingLifecycleChange),change))
             { faulted=true; throw new InvalidOperationException("Binding lifecycle is not ready."); }
             bool attached=accepted.ProcessId.HasValue, bound=accepted.State==BindingObservationState.Bound;
-            bool valid=change==BindingLifecycleChange.Attach ? !attached : change==BindingLifecycleChange.Bind ? attached&&!bound : change==BindingLifecycleChange.Unbind ? bound : attached;
+            bool valid=change==BindingLifecycleChange.Attach ? !attached : change==BindingLifecycleChange.Bind ? attached&&!bound
+                : change==BindingLifecycleChange.Unbind ? bound : attached;
             if(!valid || epoch==long.MaxValue) { faulted=true; throw new InvalidOperationException("Binding lifecycle transition refused."); }
             epoch++; pending=change;
         }
@@ -145,7 +147,8 @@ namespace TiaMcp.Adapters
             if(faulted || !pending.HasValue || observing || !current.AllowsV2Admission) return Fail("BindingLifecycleCompletionUnknown");
             bool attached=current.ProcessId.HasValue, bound=current.State==BindingObservationState.Bound;
             var change=pending.Value;
-            bool valid=change==BindingLifecycleChange.Attach ? attached&&!bound : change==BindingLifecycleChange.Bind ? attached&&bound : change==BindingLifecycleChange.Unbind ? attached&&!bound : !attached&&!bound;
+            bool valid=change==BindingLifecycleChange.Attach ? attached&&!bound : change==BindingLifecycleChange.Bind ? attached&&bound
+                : change==BindingLifecycleChange.Unbind ? attached&&!bound : !attached&&!bound;
             if(change==BindingLifecycleChange.Bind || change==BindingLifecycleChange.Unbind)
                 valid=valid && accepted!.ProcessId==current.ProcessId && accepted.ProcessStartUtcTicks==current.ProcessStartUtcTicks;
             if(!valid) return Fail("UnexpectedBindingLifecycleResult");

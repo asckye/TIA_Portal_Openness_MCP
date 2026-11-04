@@ -58,7 +58,8 @@ internal sealed class SafetyManagementService
         if (HardwareContract.ReleaseKey != "21" && request.Action == "generateBaseId")
             return Unsupported("SafetyBaseIdProvider requires V21.");
         if (request.Operation == "ManageSafetyGlobalSettings" && HardwareContract.ReleaseKey is "16" or "17"
-            && request.Action == "update" && request.Scalars.Keys.Any(k => k is "GenerationOfDefaultFailsafeProgram" or "ManagementOfFailsafeInSoftwareUnitsEnvironment"))
+            && request.Action == "update" && request.Scalars.Keys
+                .Any(k => k is "GenerationOfDefaultFailsafeProgram" or "ManagementOfFailsafeInSoftwareUnitsEnvironment"))
             return Unsupported("The requested GlobalSettings setter requires V18 or later.");
         bool writing = !request.DryRun && request.Action != "read";
         var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = !writing };
@@ -74,11 +75,13 @@ internal sealed class SafetyManagementService
     private static ResponseMessage Unsupported(string message) => new ResponseMessage { Message = message,
         Meta = JsonSerializer.SerializeToNode(OptionalEngineeringCapabilities.Refusal(message).Meta)!.AsObject() };
 
-    public ResponseMessage ManagePlcSafety(string softwarePath, string action = "read", string runtimeGroup = "", string propertiesJson = "{}", bool dryRun = true,
+    public ResponseMessage ManagePlcSafety(string softwarePath, string action = "read", string runtimeGroup = "", string propertiesJson = "{}", bool dryRun =
+            true,
         string password = "", bool confirmSafetyChange = false, string mainSafetyBlockPath = "", string mainSafetyInstanceDbPath = "")
     {
         var request = new SafetyRequest { Operation = "ManagePlcSafety", SoftwarePath = softwarePath, Action = action, RuntimeGroup = runtimeGroup,
-            DryRun = dryRun, Password = password, ConfirmSafetyChange = confirmSafetyChange, MainSafetyBlockPath = mainSafetyBlockPath, MainSafetyInstanceDbPath = mainSafetyInstanceDbPath };
+            DryRun = dryRun, Password = password, ConfirmSafetyChange = confirmSafetyChange, MainSafetyBlockPath = mainSafetyBlockPath,
+                MainSafetyInstanceDbPath = mainSafetyInstanceDbPath };
         Changes(request, propertiesJson);
         return Invoke(request);
     }
@@ -90,11 +93,13 @@ internal sealed class SafetyManagementService
         return Invoke(request);
     }
 
-    public ResponseMessage ReadSafetyBlockSignatures(string softwarePath, string blockPath = "", bool includeProgramSignatures = true, int offset = 0, int limit = 100)
+    public ResponseMessage ReadSafetyBlockSignatures(string softwarePath, string blockPath = "", bool includeProgramSignatures = true, int offset = 0,
+            int limit = 100)
         => Invoke(new SafetyRequest { Operation = "GetSafetyBlockSignatures", SoftwarePath = softwarePath, BlockPath = blockPath,
             IncludeProgramSignatures = includeProgramSignatures, Offset = offset, Limit = limit });
 
-    public ResponseMessage ExportSafetyPrintout(string softwarePath, string filePath, string printer = "MicrosoftPrintToPdf", string option = "All", string documentLayout = "", bool dryRun = true)
+    public ResponseMessage ExportSafetyPrintout(string softwarePath, string filePath, string printer = "MicrosoftPrintToPdf", string option = "All",
+            string documentLayout = "", bool dryRun = true)
         => Invoke(new SafetyRequest { Operation = "ExportSafetyPrintout", SoftwarePath = softwarePath, Action = "export", FilePath = filePath,
             Printer = printer, Option = option, DocumentLayout = documentLayout, DryRun = dryRun });
 }

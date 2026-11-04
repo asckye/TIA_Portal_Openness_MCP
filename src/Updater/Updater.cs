@@ -98,7 +98,8 @@ namespace TiaMcp.Updater
 
     public static class UpdaterEngine
     {
-        private static readonly Regex ZipPattern = new Regex(@"^TIA_MCP_Delivery_v\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?_\d{8}\.zip$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex ZipPattern =
+            new Regex(@"^TIA_MCP_Delivery_v\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?_\d{8}\.zip$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private const string UpdaterPath = "runtime/tools/TiaMcp.Updater.exe";
         private const string UpdaterConfigPath = UpdaterPath + ".config";
 
@@ -106,19 +107,25 @@ namespace TiaMcp.Updater
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (say == null) say = _ => { };
-            string root = Path.GetFullPath(options.InstallRoot ?? AppDomain.CurrentDomain.BaseDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string root = Path.GetFullPath(options.InstallRoot ?? AppDomain.CurrentDomain.BaseDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             options.InstallRoot = root;
             if (options.TimeoutSeconds < 1 || options.TimeoutSeconds > 3600) throw new InvalidOperationException("TimeoutSeconds must be between 1 and 3600.");
             if (!IsValidRepository(options.Repository)) throw new InvalidOperationException("Repository must be owner/name.");
-            if (options.Version != null && options.Version.Length > 0 && !IsVersion(options.Version)) throw new InvalidOperationException("-Version must be vX.Y.Z, or vX.Y.Z-beta.N / vX.Y.Z-rc.N for a pre-release.");
-            if (IsSourceCheckout(root)) throw new InvalidOperationException("This folder is a source checkout or worktree. The updater only changes an installed delivery.");
+            if (options.Version != null && options.Version.Length > 0 && !IsVersion(options.Version))
+                throw new InvalidOperationException("-Version must be vX.Y.Z, or vX.Y.Z-beta.N / vX.Y.Z-rc.N for a pre-release.");
+            if (IsSourceCheckout(root))
+                throw new InvalidOperationException("This folder is a source checkout or worktree. The updater only changes an installed delivery.");
 
             string deliveryFile = Combine(root, "manifest/delivery.json");
             if (!ExistsFile(deliveryFile)) throw new InvalidOperationException("Not a TIA MCP delivery: manifest/delivery.json is missing.");
             DeliveryManifest installed = ReadJson<DeliveryManifest>(deliveryFile);
-            if (installed == null || string.IsNullOrWhiteSpace(installed.Release) || string.IsNullOrWhiteSpace(installed.Package)) throw new InvalidOperationException("manifest/delivery.json has no release/package fields.");
-            if (!Regex.IsMatch(installed.Package, @"^[A-Za-z0-9_.-]+$")) throw new InvalidOperationException("manifest/delivery.json has an unsafe package name.");
-            say(UpdaterText.Bilingual("InstallRoot", "install root") + ": " + root + "; " + UpdaterText.Bilingual("InstalledVersion", "installed") + ": " + installed.Release + " (" + installed.Package + ")");
+            if (installed == null || string.IsNullOrWhiteSpace(installed.Release) || string.IsNullOrWhiteSpace(installed.Package))
+                throw new InvalidOperationException("manifest/delivery.json has no release/package fields.");
+            if (!Regex.IsMatch(installed.Package, @"^[A-Za-z0-9_.-]+$"))
+                throw new InvalidOperationException("manifest/delivery.json has an unsafe package name.");
+            say(UpdaterText.Bilingual("InstallRoot", "install root") + ": " + root + "; " + UpdaterText.Bilingual("InstalledVersion", "installed") + ": "
+                    + installed.Release + " (" + installed.Package + ")");
             WaitForProcess(options, say);
 
             string backupRoot = Combine(root, ".previous");
@@ -128,9 +135,13 @@ namespace TiaMcp.Updater
             string latest = NormalizeVersion(release.Tag);
             // A plain install is never offered a pre-release; only an explicit -Version selects one.
             if (string.IsNullOrEmpty(options.Version) && !UsesPrereleaseChannel(installed.Release) && (release.Prerelease || IsPrerelease(latest)))
-                throw new InvalidOperationException("The latest release " + release.Tag + " is a pre-release; a plain install is never offered one. Pass -Version to choose a release.");
+                throw new InvalidOperationException("The latest release " + release.Tag
+                        + " is a pre-release; a plain install is never offered one. Pass -Version to choose a release.");
             // Say so before anything is downloaded or replaced.
-            if (IsPrerelease(latest)) say(UpdaterText.Bilingual("PrereleaseTarget", "the selected release is a pre-release, not verified on a real TIA Portal; see its release notes") + ": " + release.Tag);
+            if (IsPrerelease(latest))
+                say(UpdaterText
+                    .Bilingual("PrereleaseTarget", "the selected release is a pre-release, not verified on a real TIA Portal; see its release notes") + ": "
+                    + release.Tag);
             int comparison = CompareVersions(latest, installed.Release);
             if (comparison > 0) say(UpdaterText.Bilingual("UpdateAvailable", "UPDATE AVAILABLE") + ": " + installed.Release + " -> " + latest);
             else if (comparison == 0) say(UpdaterText.Bilingual("UpToDate", "UP TO DATE") + ": " + installed.Release);
@@ -158,8 +169,10 @@ namespace TiaMcp.Updater
             {
                 string path = directory.FullName;
                 if (Directory.Exists(Path.Combine(path, ".git")) || File.Exists(Path.Combine(path, ".git"))
-                    || (File.Exists(Path.Combine(path, "CLAUDE.md")) && File.Exists(Path.Combine(path, "Version.props")) && Directory.Exists(Path.Combine(path, "src")))
-                    || (File.Exists(Path.Combine(path, "Version.props")) && File.Exists(Path.Combine(path, "src", "Studio", "Gui", "TiaOpenness.Gui.csproj")))) return true;
+                    || (File.Exists(Path.Combine(path, "CLAUDE.md")) && File.Exists(Path.Combine(path, "Version.props")) && Directory
+                            .Exists(Path.Combine(path, "src")))
+                    || (File.Exists(Path.Combine(path, "Version.props")) && File
+                            .Exists(Path.Combine(path, "src", "Studio", "Gui", "TiaOpenness.Gui.csproj")))) return true;
             }
             return false;
         }
@@ -175,7 +188,8 @@ namespace TiaMcp.Updater
         public static string NormalizeVersion(string value)
         {
             ProductReleaseVersion version;
-            if (!ProductReleaseVersion.TryParseTag(value, out version) || version == null) throw new InvalidOperationException("Release tag is not a version: " + value);
+            if (!ProductReleaseVersion.TryParseTag(value, out version) || version == null)
+                throw new InvalidOperationException("Release tag is not a version: " + value);
             return version.Label;
         }
 
@@ -183,12 +197,14 @@ namespace TiaMcp.Updater
         public static int CompareVersions(string left, string right)
         {
             ProductReleaseVersion a, b;
-            if (!ProductReleaseVersion.TryParseTag(NormalizeVersion(left), out a) || !ProductReleaseVersion.TryParseTag(NormalizeVersion(right), out b) || a == null || b == null)
+            if (!ProductReleaseVersion.TryParseTag(NormalizeVersion(left), out a) || !ProductReleaseVersion.TryParseTag(NormalizeVersion(right), out b)
+                    || a == null || b == null)
                 throw new InvalidOperationException("Version comparison received an invalid version.");
             return Math.Sign(a.CompareTo(b));
         }
 
-        public static bool IsVersion(string value) { ProductReleaseVersion version; return ProductReleaseVersion.TryParseTag(value, out version) && version != null; }
+        public static bool IsVersion(string value) {
+            ProductReleaseVersion version; return ProductReleaseVersion.TryParseTag(value, out version) && version != null; }
         public static bool IsPrerelease(string value) { return ProductReleaseVersion.IsPrereleaseText(value); }
 
         /// <summary>An install whose own version is a pre-release reads the releases list; a plain install reads releases/latest.</summary>
@@ -201,7 +217,8 @@ namespace TiaMcp.Updater
             ReleaseInfo best = null;
             foreach (ReleaseInfo release in releases ?? Enumerable.Empty<ReleaseInfo>())
             {
-                if (release == null || release.Draft || !IsVersion(release.Tag) || SelectAsset(release, true) == null || SelectAsset(release, false) == null) continue;
+                if (release == null || release.Draft || !IsVersion(release.Tag) || SelectAsset(release, true) == null || SelectAsset(release, false) == null)
+                    continue;
                 if (best == null || CompareVersions(release.Tag, best.Tag) > 0) best = release;
             }
             return best;
@@ -213,14 +230,18 @@ namespace TiaMcp.Updater
             Func<int, bool> exists = options.ProcessExists ?? (pid => { try { Process.GetProcessById(pid); return true; } catch (ArgumentException) /* swallow(probe-optional): a missing PID means the Workbench has exited */ { return false; } });
             DateTime deadline = DateTime.UtcNow.AddSeconds(options.WaitForPidTimeoutSeconds);
             while (exists(options.WaitForPid) && DateTime.UtcNow < deadline) Thread.Sleep(250);
-            if (exists(options.WaitForPid)) throw new InvalidOperationException("Process " + options.WaitForPid + " (the Workbench that launched this update) is still running after " + options.WaitForPidTimeoutSeconds + " seconds.");
+            if (exists(options.WaitForPid))
+                throw new InvalidOperationException("Process " + options.WaitForPid + " (the Workbench that launched this update) is still running after "
+                    + options.WaitForPidTimeoutSeconds + " seconds.");
             say(UpdaterText.Bilingual("WorkbenchExited", "Workbench process exited") + ": PID " + options.WaitForPid);
         }
 
         private static void RequireStopped(string root, Func<string, IList<string>> processProbe)
         {
             IList<string> running = processProbe == null ? FindRunningProcesses(root) : processProbe(root);
-            if (running != null && running.Count > 0) throw new InvalidOperationException(UpdaterText.Bilingual("ProcessesRunning", "close these bundle processes first; the updater never kills them") + ": " + string.Join("; ", running));
+            if (running != null && running.Count > 0)
+                throw new InvalidOperationException(UpdaterText
+                    .Bilingual("ProcessesRunning", "close these bundle processes first; the updater never kills them") + ": " + string.Join("; ", running));
         }
 
         public static IList<string> FindRunningProcesses(string root)
@@ -234,7 +255,8 @@ namespace TiaMcp.Updater
                     string executable = "";
                     try { executable = process.MainModule.FileName; }
                     catch /* swallow(probe-optional): an unreadable image path is conservatively reported by PID */ { }
-                    if (executable.Length == 0 || IsWithin(executable, normalized)) result.Add(name + ".exe PID " + process.Id + (executable.Length > 0 ? " (" + executable + ")" : ""));
+                    if (executable.Length == 0 || IsWithin(executable, normalized)) result
+                        .Add(name + ".exe PID " + process.Id + (executable.Length > 0 ? " (" + executable + ")" : ""));
                     process.Dispose();
                 }
             }
@@ -259,7 +281,8 @@ namespace TiaMcp.Updater
             string api = options.ApiBaseUrl ?? "https://api.github.com";
             string tag = string.IsNullOrEmpty(options.Version) ? "" : "v" + options.Version.TrimStart('v', 'V');
             bool prereleaseChannel = tag.Length == 0 && UsesPrereleaseChannel(installed);
-            string url = api.TrimEnd('/') + "/repos/" + options.Repository + (prereleaseChannel ? "/releases?per_page=100" : "/releases/" + (tag.Length == 0 ? "latest" : "tags/" + tag));
+            string url = api.TrimEnd('/') + "/repos/" + options.Repository
+                + (prereleaseChannel ? "/releases?per_page=100" : "/releases/" + (tag.Length == 0 ? "latest" : "tags/" + tag));
             try
             {
                 ReleaseInfo release;
@@ -271,14 +294,18 @@ namespace TiaMcp.Updater
                 }
                 else release = GetJson<ReleaseInfo>(url, "application/vnd.github+json", options.TimeoutSeconds, options);
                 NormalizeVersion(release.Tag);
-                if (SelectAsset(release, true) == null || SelectAsset(release, false) == null) throw new InvalidOperationException("The release does not contain both delivery ZIP and .sha256 assets.");
+                if (SelectAsset(release, true) == null || SelectAsset(release, false) == null)
+                    throw new InvalidOperationException("The release does not contain both delivery ZIP and .sha256 assets.");
                 say(UpdaterText.Bilingual("GitHubApi", "GitHub API") + ": " + release.Tag + " (" + (release.PublishedAt ?? "") + ")");
                 return release;
             }
             catch (Exception apiError)
             {
                 say(UpdaterText.Bilingual("ApiFallback", "GitHub API unavailable; using the release page") + ": " + apiError.GetBaseException().Message);
-                if (prereleaseChannel) say(UpdaterText.Bilingual("PrereleaseFallback", "the release page shows only the latest plain release; newer pre-releases appear once the GitHub API answers again"));
+                if (prereleaseChannel)
+                    say(UpdaterText
+                        .Bilingual("PrereleaseFallback",
+                            "the release page shows only the latest plain release; newer pre-releases appear once the GitHub API answers again"));
                 string pageBase = options.ReleasePageBaseUrl ?? ("https://github.com/" + options.Repository);
                 if (tag.Length == 0)
                 {
@@ -289,7 +316,9 @@ namespace TiaMcp.Updater
                 }
                 var fallback = new ReleaseInfo { Tag = tag, Assets = new List<ReleaseAsset>() };
                 string html = GetText(pageBase.TrimEnd('/') + "/releases/expanded_assets/" + Uri.EscapeDataString(tag), options.TimeoutSeconds, options);
-                foreach (Match asset in Regex.Matches(html, @"/releases/download/" + Regex.Escape(tag) + @"/(?<name>TIA_MCP_Delivery_v\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?_\d{8}\.(?:zip|sha256))"))
+                foreach (Match asset in Regex
+                        .Matches(html, @"/releases/download/" + Regex.Escape(tag)
+                            + @"/(?<name>TIA_MCP_Delivery_v\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?_\d{8}\.(?:zip|sha256))"))
                 {
                     string name = Uri.UnescapeDataString(asset.Groups["name"].Value);
                     if (!fallback.Assets.Any(a => string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase)))
@@ -305,7 +334,10 @@ namespace TiaMcp.Updater
         private static ReleaseAsset SelectAsset(ReleaseInfo release, bool zip)
         {
             if (release == null || release.Assets == null) return null;
-            return release.Assets.FirstOrDefault(a => a != null && a.Name != null && (zip ? ZipPattern.IsMatch(a.Name) : ZipPattern.IsMatch(a.Name.Replace(".sha256", ".zip")) && a.Name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)));
+            return release.Assets
+                .FirstOrDefault(a => a != null && a.Name != null
+                    && (zip ? ZipPattern.IsMatch(a.Name) : ZipPattern.IsMatch(a.Name.Replace(".sha256", ".zip")) && a.Name
+                        .EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)));
         }
 
         private static void ApplyRelease(string root, DeliveryManifest installed, ReleaseInfo release, UpdaterOptions options, Action<string> say)
@@ -330,14 +362,18 @@ namespace TiaMcp.Updater
                 Download(hashAsset.Url, hashFile, options.TimeoutSeconds, options);
                 string expected = Regex.Match(ReadAllText(hashFile).Trim(), @"^[0-9a-fA-F]{64}").Value.ToLowerInvariant();
                 string actual = HashFile(zipFile);
-                if (expected.Length != 64 || expected != actual) throw new InvalidOperationException(UpdaterText.Bilingual("ChecksumMismatch", "SHA-256 mismatch; nothing was changed") + ": sidecar " + expected + " vs file " + actual);
+                if (expected.Length != 64 || expected != actual)
+                    throw new InvalidOperationException(UpdaterText.Bilingual("ChecksumMismatch", "SHA-256 mismatch; nothing was changed") + ": sidecar "
+                        + expected + " vs file " + actual);
                 say(UpdaterText.Bilingual("ChecksumVerified", "SHA-256 verified") + ": " + actual);
 
                 string package = ExtractPackage(zipFile, extraction, say);
                 DeliveryRules rules = ReadJson<DeliveryRules>(Combine(package, "scripts/operations/delivery-files.json"));
-                if (rules == null || rules.SchemaVersion != 1 || rules.Include == null || rules.Exclude == null || rules.LegacyCleanup == null) throw new InvalidOperationException("The package has invalid delivery-files.json rules.");
+                if (rules == null || rules.SchemaVersion != 1 || rules.Include == null || rules.Exclude == null || rules.LegacyCleanup == null)
+                    throw new InvalidOperationException("The package has invalid delivery-files.json rules.");
                 DeliveryManifest next = ReadJson<DeliveryManifest>(Combine(package, "manifest/delivery.json"));
-                if (next == null || NormalizeVersion(next.Release) != NormalizeVersion(release.Tag)) throw new InvalidOperationException("The ZIP delivery manifest does not match the selected release.");
+                if (next == null || NormalizeVersion(next.Release) != NormalizeVersion(release.Tag))
+                    throw new InvalidOperationException("The ZIP delivery manifest does not match the selected release.");
                 ValidatePackage(package, rules);
                 Dictionary<string, string> newFiles = HashInventory(package);
                 ValidateInstallPaths(package, root, backup);
@@ -356,12 +392,14 @@ namespace TiaMcp.Updater
                 say(UpdaterText.Bilingual("Overlay", "removing owned retired files and overlaying the delivery"));
                 RemoveLegacyFiles(root, rules, oldFiles, say);
                 foreach (KeyValuePair<string, string> file in oldFiles)
-                    if ((file.Key.StartsWith("runtime/", StringComparison.Ordinal) || file.Key.StartsWith("manifest/", StringComparison.Ordinal)) && !newFiles.ContainsKey(file.Key))
+                    if ((file.Key.StartsWith("runtime/", StringComparison.Ordinal) || file.Key.StartsWith("manifest/", StringComparison.Ordinal)) && !newFiles
+                            .ContainsKey(file.Key))
                         RemoveOwnedFile(root, file.Key, file.Value, say);
                 CopyPackage(package, root, options.BeforeDeployFile);
                 changed = true;
                 DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));
-                say(UpdaterText.Bilingual("UpdateDone", "DONE") + ": " + installed.Release + " -> " + now.Release + "; -Rollback restores " + installed.Package + ".");
+                say(UpdaterText.Bilingual("UpdateDone", "DONE") + ": " + installed.Release + " -> " + now.Release + "; -Rollback restores " + installed.Package
+                        + ".");
             }
             catch
             {
@@ -374,7 +412,10 @@ namespace TiaMcp.Updater
                         CopyTree(backup, root, true, null);
                         say(UpdaterText.Bilingual("InterruptedRollback", "interrupted replacement rolled back from") + " " + backup);
                     }
-                    catch (Exception rollbackError) { throw new InvalidOperationException("Update failed and rollback also failed: " + rollbackError.GetBaseException().Message, rollbackError); }
+                    catch (Exception rollbackError) {
+                        throw new InvalidOperationException("Update failed and rollback also failed: " + rollbackError.GetBaseException().Message,
+                                rollbackError);
+                    }
                 }
                 throw;
             }
@@ -414,19 +455,23 @@ namespace TiaMcp.Updater
             string direct = DeliveryFilePath(extraction);
             if (ExistsFile(direct)) { say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + extraction); return extraction; }
             string[] children = GetDirectories(extraction);
-            if (children.Length == 1 && ExistsFile(DeliveryFilePath(children[0]))) { say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + extraction); return children[0]; }
+            if (children.Length == 1 && ExistsFile(DeliveryFilePath(children[0]))) {
+                say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + extraction); return children[0]; }
             throw new InvalidOperationException("The ZIP does not contain a delivery root with manifest/delivery.json.");
         }
 
         private static void ValidatePackage(string package, DeliveryRules rules)
         {
-            if (rules.RequiredFiles == null || rules.RequiredFiles.Count == 0) throw new InvalidOperationException("The package has no required delivery files.");
+            if (rules.RequiredFiles == null || rules.RequiredFiles.Count == 0)
+                throw new InvalidOperationException("The package has no required delivery files.");
             foreach (string must in rules.RequiredFiles)
-                if (!IsSafeRelativePath(must) || !InDelivery(must, rules) || !ExistsFile(Combine(package, must))) throw new InvalidOperationException("Package is incomplete: missing " + must);
+                if (!IsSafeRelativePath(must) || !InDelivery(must, rules) || !ExistsFile(Combine(package, must)))
+                    throw new InvalidOperationException("Package is incomplete: missing " + must);
             foreach (string file in GetFilesRecursive(package))
             {
                 string relative = RelativeTo(package, file);
-                if (!IsSafeRelativePath(relative) || !InDelivery(relative, rules)) throw new InvalidOperationException("File outside delivery set: " + relative);
+                if (!IsSafeRelativePath(relative) || !InDelivery(relative, rules))
+                    throw new InvalidOperationException("File outside delivery set: " + relative);
             }
         }
 
@@ -455,7 +500,9 @@ namespace TiaMcp.Updater
 
         private static InvalidOperationException PathLimitError(string path, Exception inner = null)
         {
-            return new InvalidOperationException(UpdaterText.Bilingual("PathTooLong", "Windows extended path limit exceeded (32,767 characters); shorten TEMP or the install path and retry") + ": " + path, inner);
+            return new InvalidOperationException(UpdaterText
+                    .Bilingual("PathTooLong", "Windows extended path limit exceeded (32,767 characters); shorten TEMP or the install path and retry") + ": "
+                    + path, inner);
         }
 
         private static Dictionary<string, string> InstalledInventory(string root)
@@ -500,10 +547,12 @@ namespace TiaMcp.Updater
         {
             string path = OwnedPath(root, relative);
             if (!ExistsFile(path)) return;
-            if (!string.Equals(HashFile(path), expected, StringComparison.OrdinalIgnoreCase)) { say(UpdaterText.Bilingual("PreserveModified", "preserving modified file") + ": " + relative); return; }
+            if (!string.Equals(HashFile(path), expected, StringComparison.OrdinalIgnoreCase)) {
+                say(UpdaterText.Bilingual("PreserveModified", "preserving modified file") + ": " + relative); return; }
             File.Delete(Prefix(path));
             string parent = Path.GetDirectoryName(path);
-            while (IsWithin(parent, NormalizeForCompare(root)) && !string.Equals(NormalizeForCompare(parent), NormalizeForCompare(root), StringComparison.OrdinalIgnoreCase))
+            while (IsWithin(parent, NormalizeForCompare(root)) && !string
+                    .Equals(NormalizeForCompare(parent), NormalizeForCompare(root), StringComparison.OrdinalIgnoreCase))
             {
                 if (GetEntries(parent).Length != 0) break;
                 Directory.Delete(Prefix(parent), false);
@@ -517,7 +566,8 @@ namespace TiaMcp.Updater
                 if (!ExistsFile(OwnedPath(backup, file.Key))) RemoveOwnedFile(root, file.Key, file.Value, say);
         }
 
-        private static int Rollback(string root, DeliveryManifest installed, string previousRoot, UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses)
+        private static int Rollback(string root, DeliveryManifest installed, string previousRoot, UpdaterOptions options, Action<string> say, Func<string,
+                IList<string>> runningProcesses)
         {
             if (!DirectoryExists(previousRoot)) throw new InvalidOperationException("Nothing to roll back to (.previous is missing).");
             string[] backups = GetDirectories(previousRoot).OrderByDescending(Directory.GetLastWriteTimeUtc).ToArray();
@@ -577,7 +627,8 @@ namespace TiaMcp.Updater
 
         private static void PruneBackups(string previousRoot, string keep)
         {
-            foreach (string directory in GetDirectories(previousRoot).Where(d => !string.Equals(NormalizeForCompare(d), NormalizeForCompare(keep), StringComparison.OrdinalIgnoreCase))
+            foreach (string directory in GetDirectories(previousRoot)
+                    .Where(d => !string.Equals(NormalizeForCompare(d), NormalizeForCompare(keep), StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(Directory.GetLastWriteTimeUtc).Skip(1))
             {
                 File.Delete(Prefix(directory + ".update-receipt.json"));
@@ -610,7 +661,8 @@ namespace TiaMcp.Updater
             if (options.ReadBytesForTest != null)
             {
                 byte[] bytes = options.ReadBytesForTest(url, timeoutSeconds);
-                using (var output = new FileStream(Prefix(destination), FileMode.Create, FileAccess.Write, FileShare.None)) output.Write(bytes, 0, bytes.Length);
+                using (var output = new FileStream(Prefix(destination), FileMode.Create, FileAccess.Write, FileShare.None)) output
+                    .Write(bytes, 0, bytes.Length);
                 return;
             }
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
@@ -653,21 +705,26 @@ namespace TiaMcp.Updater
 #endif
             if (options.ReadTextForTest != null)
             {
-                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(options.ReadTextForTest(url, timeoutSeconds)))) return (T)JsonSerializer(typeof(T)).ReadObject(stream);
+                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(options.ReadTextForTest(url, timeoutSeconds)))) return (T)JsonSerializer(typeof(T))
+                    .ReadObject(stream);
             }
             var request = (HttpWebRequest)WebRequest.Create(url);
-            request.UserAgent = "TiaMcp-Update-Engine/1"; request.Accept = accept; request.Timeout = timeoutSeconds * 1000; request.ReadWriteTimeout = request.Timeout;
-            using (WebResponse response = request.GetResponse()) using (Stream stream = response.GetResponseStream()) return (T)new DataContractJsonSerializer(typeof(T)).ReadObject(stream);
+            request.UserAgent = "TiaMcp-Update-Engine/1"; request.Accept = accept; request.Timeout = timeoutSeconds * 1000; request.ReadWriteTimeout = request
+                .Timeout;
+            using (WebResponse response = request.GetResponse()) using (Stream stream = response.GetResponseStream())
+                return (T)new DataContractJsonSerializer(typeof(T)).ReadObject(stream);
         }
 
         private static T ReadJson<T>(string path) where T : class
         {
-            using (Stream stream = new FileStream(Prefix(path), FileMode.Open, FileAccess.Read, FileShare.Read)) return (T)JsonSerializer(typeof(T)).ReadObject(stream);
+            using (Stream stream = new FileStream(Prefix(path), FileMode.Open, FileAccess.Read, FileShare.Read)) return (T)JsonSerializer(typeof(T))
+                .ReadObject(stream);
         }
 
         private static void WriteJson<T>(string path, T value)
         {
-            using (Stream stream = new FileStream(Prefix(path), FileMode.Create, FileAccess.Write, FileShare.None)) JsonSerializer(typeof(T)).WriteObject(stream, value);
+            using (Stream stream = new FileStream(Prefix(path), FileMode.Create, FileAccess.Write, FileShare.None)) JsonSerializer(typeof(T))
+                .WriteObject(stream, value);
         }
 
         private static DataContractJsonSerializer JsonSerializer(Type type)
@@ -700,12 +757,15 @@ namespace TiaMcp.Updater
 
         private static string OwnedPath(string root, string relative)
         {
-            if (!IsSafeRelativePath(relative) || IsProtectedRoot(relative)) throw new InvalidOperationException("Unsafe or protected package path: " + relative);
+            if (!IsSafeRelativePath(relative) || IsProtectedRoot(relative))
+                throw new InvalidOperationException("Unsafe or protected package path: " + relative);
             string boundary = NormalizeForCompare(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
             string path = Combine(root, relative);
-            if (!NormalizeForCompare(path).StartsWith(boundary, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Package path leaves install root: " + relative);
+            if (!NormalizeForCompare(path).StartsWith(boundary, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Package path leaves install root: " + relative);
             for (string probe = path; IsWithin(probe, NormalizeForCompare(root)); probe = Path.GetDirectoryName(probe))
-                if (ExistsAny(probe) && (File.GetAttributes(Prefix(probe)) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Reparse point in package path: " + relative);
+                if (ExistsAny(probe) && (File.GetAttributes(Prefix(probe)) & FileAttributes.ReparsePoint) != 0)
+                    throw new InvalidOperationException("Reparse point in package path: " + relative);
             return path;
         }
 
@@ -715,9 +775,16 @@ namespace TiaMcp.Updater
             return new[] { "data", "staging", ".previous", ".update", "TiaMcp_Output", ".git", "bin-build" }.Contains(first, StringComparer.OrdinalIgnoreCase);
         }
 
-        private static bool IsValidRepository(string value) { return !string.IsNullOrWhiteSpace(value) && Regex.IsMatch(value.Trim(), @"^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$") && !value.Contains(".."); }
-        private static string Combine(string root, string relative) { return root.TrimEnd('\\', '/') + Path.DirectorySeparatorChar + relative.Replace('/', Path.DirectorySeparatorChar); }
-        private static string RelativeTo(string root, string path) { string prefix = NormalizeForCompare(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar; return NormalizeForCompare(path).Substring(prefix.Length).Replace('\\', '/'); }
+        private static bool IsValidRepository(string value) {
+            return !string.IsNullOrWhiteSpace(value) && Regex.IsMatch(value.Trim(), @"^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$") && !value
+                .Contains("..");
+        }
+        private static string Combine(string root, string relative) {
+            return root.TrimEnd('\\', '/') + Path.DirectorySeparatorChar + relative.Replace('/', Path.DirectorySeparatorChar); }
+        private static string RelativeTo(string root, string path) {
+            string prefix = NormalizeForCompare(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar; return NormalizeForCompare(path)
+                .Substring(prefix.Length).Replace('\\', '/');
+        }
         private static string NormalizeForCompare(string path)
         {
             string full = Path.GetFullPath(path);
@@ -725,7 +792,11 @@ namespace TiaMcp.Updater
             else if (full.StartsWith("\\\\?\\", StringComparison.Ordinal)) full = full.Substring(4);
             return full.TrimEnd('\\', '/');
         }
-        private static bool IsWithin(string path, string root) { string normalized = NormalizeForCompare(path); return normalized.StartsWith(root.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || string.Equals(normalized, root.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase); }
+        private static bool IsWithin(string path, string root) {
+            string normalized = NormalizeForCompare(path); return normalized
+                .StartsWith(root.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || string
+                .Equals(normalized, root.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
+        }
 
         private static string Prefix(string path)
         {
@@ -740,9 +811,12 @@ namespace TiaMcp.Updater
         private static bool DirectoryExists(string path) { return Directory.Exists(Prefix(path)); }
         private static bool ExistsAny(string path) { return ExistsFile(path) || DirectoryExists(path); }
         private static void CreateDirectory(string path) { if (!string.IsNullOrEmpty(path)) Directory.CreateDirectory(Prefix(path)); }
-        private static string[] GetFiles(string path) { return Directory.Exists(Prefix(path)) ? Directory.GetFiles(Prefix(path), "*", SearchOption.TopDirectoryOnly) : new string[0]; }
-        private static string[] GetDirectories(string path) { return Directory.Exists(Prefix(path)) ? Directory.GetDirectories(Prefix(path), "*", SearchOption.TopDirectoryOnly) : new string[0]; }
-        private static string[] GetEntries(string path) { return Directory.Exists(Prefix(path)) ? Directory.GetFileSystemEntries(Prefix(path)) : new string[0]; }
+        private static string[] GetFiles(string path) {
+            return Directory.Exists(Prefix(path)) ? Directory.GetFiles(Prefix(path), "*", SearchOption.TopDirectoryOnly) : new string[0]; }
+        private static string[] GetDirectories(string path) {
+            return Directory.Exists(Prefix(path)) ? Directory.GetDirectories(Prefix(path), "*", SearchOption.TopDirectoryOnly) : new string[0]; }
+        private static string[] GetEntries(string path) { return Directory.Exists(Prefix(path)) ? Directory.GetFileSystemEntries(Prefix(path)) : new string[0];
+        }
         private static string[] GetFilesRecursive(string root)
         {
             var files = new List<string>();
@@ -762,7 +836,8 @@ namespace TiaMcp.Updater
         private static void RemoveTree(string path)
         {
             if (!DirectoryExists(path)) { if (ExistsFile(path)) File.Delete(Prefix(path)); return; }
-            foreach (string file in GetFilesRecursive(path)) if ((File.GetAttributes(Prefix(file)) & FileAttributes.ReparsePoint) == 0) File.Delete(Prefix(file));
+            foreach (string file in GetFilesRecursive(path)) if ((File.GetAttributes(Prefix(file)) & FileAttributes.ReparsePoint) == 0) File
+                .Delete(Prefix(file));
             foreach (string dir in GetDirectoriesRecursive(path).OrderByDescending(p => p.Length))
                 if ((File.GetAttributes(Prefix(dir)) & FileAttributes.ReparsePoint) == 0) Directory.Delete(Prefix(dir), false);
             Directory.Delete(Prefix(path), false);
@@ -771,7 +846,8 @@ namespace TiaMcp.Updater
         private static IEnumerable<string> GetDirectoriesRecursive(string root)
         {
             var result = new List<string>(); var pending = new Stack<string>(); pending.Push(root);
-            while (pending.Count > 0) foreach (string dir in GetDirectories(pending.Pop())) { result.Add(dir); if ((File.GetAttributes(Prefix(dir)) & FileAttributes.ReparsePoint) == 0) pending.Push(dir); }
+            while (pending.Count > 0) foreach (string dir in GetDirectories(pending.Pop())) {
+                result.Add(dir); if ((File.GetAttributes(Prefix(dir)) & FileAttributes.ReparsePoint) == 0) pending.Push(dir); }
             return result;
         }
     }

@@ -10,10 +10,12 @@ namespace TiaMcpServer.Siemens.Services
     {
         private static string Segment(string value) => Uri.EscapeDataString(value);
         private static Dictionary<string, object?> Failure(string path, string code, Exception? ex = null, string? reason = null)
-            => new Dictionary<string, object?> { ["path"] = path, ["kind"] = "gap", ["status"] = code == "Unsupported" ? "unsupported" : "failed", ["code"] = code,
+            => new Dictionary<string, object?> {
+                ["path"] = path, ["kind"] = "gap", ["status"] = code == "Unsupported" ? "unsupported" : "failed", ["code"] = code,
                 ["reason"] = reason ?? (ex == null ? code : ex.GetBaseException().GetType().Name + ": " + ex.GetBaseException().Message) };
         private static Dictionary<string, object?> Scalar(string path, object? value, string kind)
-            => new Dictionary<string, object?> { ["path"] = path, ["kind"] = kind, ["status"] = "ok", ["type"] = value?.GetType().FullName, ["value"] = value, ["evidence"] = path };
+            => new Dictionary<string, object?> {
+                ["path"] = path, ["kind"] = kind, ["status"] = "ok", ["type"] = value?.GetType().FullName, ["value"] = value, ["evidence"] = path };
         internal static IEnumerable<Dictionary<string, object?>> Document(string text, string path, string extension)
         {
             object? doc = null; Dictionary<string, object?>? error = null;
@@ -22,8 +24,13 @@ namespace TiaMcpServer.Siemens.Services
                 if (extension.Equals(".yml", StringComparison.OrdinalIgnoreCase) || extension.Equals(".yaml", StringComparison.OrdinalIgnoreCase))
                 { var stream = new YamlStream(); stream.Load(new StringReader(text)); doc = stream; }
                 else if (extension.Equals(".xml", StringComparison.OrdinalIgnoreCase))
-                { using var reader = XmlReader.Create(new StringReader(text), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null }); doc = XDocument.Load(reader, LoadOptions.SetLineInfo | LoadOptions.PreserveWhitespace); }
-                else error = UnifiedDocumentCodec.Failure(path, "Unsupported", reason: "Native file format is retained as raw text but has no structured reader: " + extension);
+                {
+                    using var reader = XmlReader
+                        .Create(new StringReader(text), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null }); doc = XDocument
+                        .Load(reader, LoadOptions.SetLineInfo | LoadOptions.PreserveWhitespace);
+                }
+                else error = UnifiedDocumentCodec
+                    .Failure(path, "Unsupported", reason: "Native file format is retained as raw text but has no structured reader: " + extension);
             }
             catch (Exception ex) { error = UnifiedDocumentCodec.Failure(path, "NativeParseFailed", ex); }
             if (error != null) { yield return error; yield break; }
@@ -37,9 +44,13 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 if (node is YamlScalarNode scalar)
-                { var row = UnifiedDocumentCodec.Scalar(path, scalar.Value, "nativeValue"); row["line"] = node.Start.Line; row["column"] = node.Start.Column; row["nativeType"] = node.Tag.ToString(); yield return row; }
+                {
+                    var row = UnifiedDocumentCodec.Scalar(path, scalar.Value, "nativeValue"); row["line"] = node.Start.Line; row["column"] = node.Start.Column;
+                    row["nativeType"] = node.Tag.ToString(); yield return row;
+                }
                 else if (node is YamlMappingNode map) foreach (var pair in map.Children)
-                    foreach (var row in Yaml(pair.Value, path + "/" + UnifiedDocumentCodec.Segment(((YamlScalarNode)pair.Key).Value ?? ""), ancestors)) yield return row;
+                    foreach (var row in Yaml(pair.Value, path + "/" + UnifiedDocumentCodec.Segment(((YamlScalarNode)pair.Key).Value ?? ""), ancestors))
+                        yield return row;
                 else if (node is YamlSequenceNode seq) for (int i = 0; i < seq.Children.Count; i++)
                     foreach (var row in Yaml(seq.Children[i], path + "/[" + i + "]", ancestors)) yield return row;
             }
@@ -50,7 +61,8 @@ namespace TiaMcpServer.Siemens.Services
             if (depth >= 128) { yield return UnifiedDocumentCodec.Failure(path, "NativeDepthLimit"); yield break; }
             foreach (var a in element.Attributes()) yield return UnifiedDocumentCodec.Scalar(path + "/@" + a.Name, a.Value, "nativeValue");
             if (!element.HasElements) yield return UnifiedDocumentCodec.Scalar(path, element.Value, "nativeValue");
-            int i = 0; foreach (var child in element.Elements()) foreach (var row in Xml(child, path + "/" + child.Name + "[" + i++ + "]", depth + 1)) yield return row;
+            int i = 0; foreach (var child in element.Elements()) foreach (var row in Xml(child, path + "/" + child.Name + "[" + i++ + "]", depth + 1))
+                yield return row;
         }
     }
 }

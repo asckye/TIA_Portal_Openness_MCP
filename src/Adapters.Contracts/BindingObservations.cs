@@ -20,7 +20,8 @@ namespace TiaMcp.Adapters
         internal BindingObservation(BindingObservationState state, BindingIdentityStrength strength,
             int? pid, long? ticks, string? digest, string reason)
         { State=state; Strength=strength; ProcessId=pid; ProcessStartUtcTicks=ticks; ProjectSha256=digest; Reason=reason; }
-        public static BindingObservation Unknown(string reason) => new BindingObservation(BindingObservationState.Unknown, BindingIdentityStrength.None, null, null, null, reason);
+        public static BindingObservation Unknown(string reason) =>
+            new BindingObservation(BindingObservationState.Unknown, BindingIdentityStrength.None, null, null, null, reason);
         internal bool Same(BindingObservation other) => State==other.State && Strength==other.Strength &&
             ProcessId==other.ProcessId && ProcessStartUtcTicks==other.ProcessStartUtcTicks && ProjectSha256==other.ProjectSha256;
     }
@@ -51,7 +52,8 @@ namespace TiaMcp.Adapters
         public bool IsLocalSession { get; }
         public BindingCachedFields(bool hasPortal, bool hasProject, int? processId, string? projectFile, bool isLocalSession)
         { HasPortal=hasPortal; HasProject=hasProject; ProcessId=processId; ProjectFile=projectFile; IsLocalSession=isLocalSession; }
-        internal bool Same(BindingCachedFields other) => HasPortal==other.HasPortal && HasProject==other.HasProject && ProcessId==other.ProcessId && ProjectFile==other.ProjectFile && IsLocalSession==other.IsLocalSession;
+        internal bool Same(BindingCachedFields other) => HasPortal==other.HasPortal && HasProject==other.HasProject && ProcessId==other.ProcessId
+            && ProjectFile==other.ProjectFile && IsLocalSession==other.IsLocalSession;
     }
     public sealed class BindingProjectObservation
     {

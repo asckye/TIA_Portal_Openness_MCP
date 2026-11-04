@@ -24,8 +24,10 @@ public partial class AiCallsView : UserControl
     }
     private void OnModelChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (e.OldValue is FeaturePagesViewModel old) { old.PropertyChanged -= OnChanged; ((INotifyCollectionChanged)old.Calls).CollectionChanged -= OnRowsChanged; }
-        if (e.NewValue is FeaturePagesViewModel model) { model.PropertyChanged += OnChanged; ((INotifyCollectionChanged)model.Calls).CollectionChanged += OnRowsChanged; }
+        if (e.OldValue is FeaturePagesViewModel old) {
+            old.PropertyChanged -= OnChanged; ((INotifyCollectionChanged)old.Calls).CollectionChanged -= OnRowsChanged; }
+        if (e.NewValue is FeaturePagesViewModel model) {
+            model.PropertyChanged += OnChanged; ((INotifyCollectionChanged)model.Calls).CollectionChanged += OnRowsChanged; }
     }
     private void OnChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -51,7 +53,8 @@ public partial class AiCallsView : UserControl
     {
         Model.ClearCallFilters();
         // The segment is a one-way view of the filters: restore it after the click toggled it locally.
-        System.Windows.Data.BindingOperations.GetBindingExpression(AllFilter, System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?.UpdateTarget();
+        System.Windows.Data.BindingOperations.GetBindingExpression(AllFilter, System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?
+            .UpdateTarget();
     }
     private void OnApprovals(object sender, RoutedEventArgs e) => Model.OpenApprovals();
     private void OnCall(object sender, RoutedEventArgs e) => Model.OpenCall((CallRow)((Button)sender).DataContext);

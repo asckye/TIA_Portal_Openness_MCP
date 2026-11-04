@@ -8,7 +8,12 @@ namespace TiaMcpServer.Siemens.Services
     {
         public UnifiedEventsService() { }
         internal UnifiedEventsService(Func<string, JsonObject, JsonNode?> call, Func<string> identity) : base(call, identity) { }
-        public ResponseMessage ManageUnifiedEvent(string softwarePath,string objectPathJson,string eventType,string action="read",string propertyName="",string scriptPropertiesJson="{}",string expectedToken="",bool dryRun=true)
-            => Invoke(new UnifiedRequest { Operation = "ManageUnifiedEvent", SoftwarePath = softwarePath, ObjectPathJson = objectPathJson, EventType = eventType, Action = action, PropertyName = propertyName, ScriptPropertiesJson = scriptPropertiesJson, ExpectedToken = expectedToken, DryRun = dryRun }, dryRun);
+        public ResponseMessage ManageUnifiedEvent(string softwarePath,string objectPathJson,string eventType,string action="read",string propertyName="",
+                string scriptPropertiesJson="{}",string expectedToken="",bool dryRun=true)
+            =>
+                Invoke(new UnifiedRequest {
+                    Operation = "ManageUnifiedEvent", SoftwarePath = softwarePath, ObjectPathJson = objectPathJson, EventType = eventType, Action = action,
+                        PropertyName = propertyName, ScriptPropertiesJson = scriptPropertiesJson, ExpectedToken = expectedToken, DryRun = dryRun
+                }, dryRun);
     }
 }

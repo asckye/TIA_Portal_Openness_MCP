@@ -25,7 +25,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 meta["nativeCompleted"] = true;
                 meta["success"] = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
                 meta["operationSuccess"] = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
-                return "Hardware compile of '" + owner.Name + "' finished: " + result.State + " (errors " + result.ErrorCount + ", warnings " + result.WarningCount + "). Project not saved.";
+                return "Hardware compile of '" + owner.Name + "' finished: " + result.State + " (errors " + result.ErrorCount + ", warnings " + result
+                    .WarningCount + "). Project not saved.";
             });
     }
 }

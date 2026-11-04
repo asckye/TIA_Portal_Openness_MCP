@@ -97,19 +97,23 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
             if (host != null && Alive(host)) yield return host;
         }
     }
-    private async Task<(Stream Stream, OperatorHandshakeResult Result)> Handshake(OperatorHost host, string action, string? key, CancellationToken token, bool? nativeCrossReferencesAllowed = null)
+    private async Task<(Stream Stream, OperatorHandshakeResult Result)> Handshake(OperatorHost host, string action, string? key, CancellationToken token, bool
+            ? nativeCrossReferencesAllowed = null)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         deadline.CancelAfter(TimeSpan.FromSeconds(5));
         var stream = await connect(host, deadline.Token).ConfigureAwait(false);
         try
         {
-            await OperatorProtocol.Write(stream, new OperatorHandshake { Action = action, SessionKey = key, NativeCrossReferencesAllowed = nativeCrossReferencesAllowed,
+            await OperatorProtocol
+                .Write(stream, new OperatorHandshake { Action = action, SessionKey = key, NativeCrossReferencesAllowed = nativeCrossReferencesAllowed,
                 Workbench = new() { Pid = Environment.ProcessId, Version = ViewModels.MainViewModel.AppVersion } }, deadline.Token).ConfigureAwait(false);
             var result = await OperatorProtocol.Read<OperatorHandshakeResult>(stream, deadline.Token).ConfigureAwait(false);
             if (result.Protocol != "tiamcp.operator" || result.Version != 1 || !result.Accepted)
                 throw new IOException(result.Error ?? "Invalid operator handshake response.");
-            if (action != "list" && (!Guid.TryParseExact(result.SessionKey, "N", out _) || ((action == "attach" || action == "native-cross-references") && result.SessionKey != key)))
+            if (action != "list"
+                    && (!Guid.TryParseExact(result.SessionKey, "N", out _)
+                        || ((action == "attach" || action == "native-cross-references") && result.SessionKey != key)))
                 throw new InvalidDataException("Operator session identity mismatch.");
             return (stream, result);
         }
@@ -228,7 +232,8 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
     {
         await DetachAsync().ConfigureAwait(false);
         var start = new ProcessStartInfo(Image(releaseKey)) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = root };
-        foreach (string argument in new[] { "--bundle-root", root, "--release-key", releaseKey, "--transport", "operator", "--operator-owner", Environment.ProcessId.ToString() })
+        foreach (string argument in new[] {
+                "--bundle-root", root, "--release-key", releaseKey, "--transport", "operator", "--operator-owner", Environment.ProcessId.ToString() })
             start.ArgumentList.Add(argument);
         HostLifecycleService.PrepareWorkbenchHost(start);
         ownedHost = startHost(start);
@@ -312,7 +317,9 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
             {
                 if (!host.HasExited)
                 {
-                    Trace.TraceWarning("Forced termination of owned operator host {0} after {1} seconds waiting for shutdown.", host.Id, ShutdownTiming.Grace.TotalSeconds);
+                    Trace
+                        .TraceWarning("Forced termination of owned operator host {0} after {1} seconds waiting for shutdown.", host.Id, ShutdownTiming.Grace
+                            .TotalSeconds);
                     host.Terminate();
                 }
             }

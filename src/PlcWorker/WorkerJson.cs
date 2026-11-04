@@ -51,8 +51,10 @@ namespace TiaMcp.PlcWorker
             parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause),
             isArgument = TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)?.IsArgument,
             inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],
-            stagedFile=cause.Data["stagedFile"],recoveryDirectory=cause.Data["recoveryDirectory"],recoveryFiles=cause.Data["recoveryFiles"],exportPhase=cause.Data["exportPhase"],
-            stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"],attemptedPath=cause.Data["attemptedPath"],recoveryStatus=cause.Data["recoveryStatus"],recoveryWarning=cause.Data["recoveryWarning"],recoverySkipped=cause.Data["recoverySkipped"] });
+            stagedFile=cause.Data["stagedFile"],recoveryDirectory=cause.Data["recoveryDirectory"],recoveryFiles=cause.Data["recoveryFiles"],exportPhase=cause
+                .Data["exportPhase"],
+            stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"],attemptedPath=cause.Data["attemptedPath"],recoveryStatus=cause
+                .Data["recoveryStatus"],recoveryWarning=cause.Data["recoveryWarning"],recoverySkipped=cause.Data["recoverySkipped"] });
 
         internal static Dictionary<string, JsonElement> ParseArguments(string json)
         {
@@ -83,7 +85,9 @@ namespace TiaMcp.PlcWorker
 
         internal static bool IsBoolean(JsonElement value) => value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False;
 
-        private static readonly Regex IsoDate = new Regex(@"^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,7})?)(?:[Zz]|[+-][0-9]{2}:?(?:[0-9]{2})?)?\z", RegexOptions.CultureInvariant);
+        private static readonly Regex IsoDate =
+            new Regex(@"^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,7})?)(?:[Zz]|[+-][0-9]{2}:?(?:[0-9]{2})?)?\z", RegexOptions
+                .CultureInvariant);
         private static readonly Regex MicrosoftDate = new Regex(@"^/Date\((-?[0-9]+)(?:[+-][0-9]{2}(?:[0-9]{2})?)?\)/\z", RegexOptions.CultureInvariant);
 
         // JObject's default date recognition made date arguments non-strings.
@@ -122,7 +126,8 @@ namespace TiaMcp.PlcWorker
                 if ((p.ParameterType == typeof(string) && !IsString(value)) ||
                     (p.ParameterType == typeof(bool) && !IsBoolean(value)) ||
                     (p.ParameterType == typeof(int) && !integer) ||
-                    (p.ParameterType == typeof(string[]) && (value.ValueKind != JsonValueKind.Array || value.GetArrayLength()>256 || value.EnumerateArray().Any(x => !IsString(x)))))
+                    (p.ParameterType == typeof(string[])
+                            && (value.ValueKind != JsonValueKind.Array || value.GetArrayLength()>256 || value.EnumerateArray().Any(x => !IsString(x)))))
                     throw new ArgumentException("Incorrect worker argument type: " + p.Name);
                 if (p.ParameterType == typeof(int)) return (object)int.Parse(value.GetRawText(), CultureInfo.InvariantCulture);
                 return JsonSerializer.Deserialize(value.GetRawText(), p.ParameterType, Options);
@@ -187,7 +192,8 @@ namespace TiaMcp.PlcWorker
                         case '\r': text.Append("\\r"); break;
                         case '\t': text.Append("\\t"); break;
                         default:
-                            if (c < ' ' || c == '\u0085' || c == '\u2028' || c == '\u2029') text.Append("\\u").Append(((int)c).ToString("x4", CultureInfo.InvariantCulture));
+                            if (c < ' ' || c == '\u0085' || c == '\u2028' || c == '\u2029') text.Append("\\u")
+                                .Append(((int)c).ToString("x4", CultureInfo.InvariantCulture));
                             else text.Append(c);
                             break;
                     }

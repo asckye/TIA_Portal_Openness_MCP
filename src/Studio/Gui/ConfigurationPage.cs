@@ -41,7 +41,8 @@ public partial class MainWindow
         if (_model.OfflineDemo) return;
         if (Configuration == null)
         {
-            var page = new ConfigurationView(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting && _loadExistingConfiguration, _preview);
+            var page =
+                new ConfigurationView(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting && _loadExistingConfiguration, _preview);
             Configuration = page;
             page.SelectedReleaseKey = _model.SelectedReleaseKey;
             page.SetReleaseEnabled(_model.CanSelectRelease);
@@ -69,7 +70,8 @@ public partial class MainWindow
         catch (Exception ex)
         {
             ShowEngineering();
-            TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+            TiaOpenness.Gui.Controls.WorkbenchMessageBox
+                .Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     private void OnServiceStateChanged(object? sender, EventArgs e)

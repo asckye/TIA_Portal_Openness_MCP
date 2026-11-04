@@ -186,7 +186,8 @@ public partial class MainWindow
     private void NavigateGuarded(string page)
     {
         try { Navigate(page); }
-        catch (Exception ex) { Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) {
+            Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
     }
 
     internal void OpenSettings()
@@ -218,7 +219,8 @@ public partial class MainWindow
     {
         if (_drawer == "Settings") { CloseDrawer(); return; }
         try { OpenSettings(); }
-        catch (Exception ex) { Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) {
+            Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
     }
     private void OnApprovals(object sender, RoutedEventArgs e) => OpenDrawer("Approvals");
     private void OnCloseDrawer(object sender, RoutedEventArgs e) => CloseDrawer();
@@ -253,7 +255,8 @@ public partial class MainWindow
     private async Task SetApprovalEnabled(bool enabled)
     {
         try { await Task.Run(() => Approvals.Enabled = enabled); }
-        catch (Exception ex) { Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) {
+            Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
         SettingsContent.UpdateApproval();
     }
     private void OnDiagnostics(object sender, RoutedEventArgs e)
@@ -261,5 +264,6 @@ public partial class MainWindow
         Features.Export();
     }
     private void OnDismissToast(object sender, RoutedEventArgs e) { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
-    private void OnToastClick(object sender, RoutedEventArgs e) { Toast.Visibility = Visibility.Collapsed; if (_approvalToast != null) OpenDrawer("Approvals"); else Navigate("Environment"); }
+    private void OnToastClick(object sender, RoutedEventArgs e) {
+        Toast.Visibility = Visibility.Collapsed; if (_approvalToast != null) OpenDrawer("Approvals"); else Navigate("Environment"); }
 }

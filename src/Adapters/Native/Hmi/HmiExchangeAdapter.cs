@@ -130,7 +130,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             return export;
         }
 
-        public HmiExportProgram? ExportHmiProgram(string softwarePath, string exportDir, bool exportScreens = true, bool exportTagTables = true, string exportOptions = "WithDefaults")
+        public HmiExportProgram
+            ? ExportHmiProgram(string softwarePath, string exportDir, bool exportScreens = true, bool exportTagTables = true, string exportOptions =
+                "WithDefaults")
         {
             if (_session.IsProjectNull()) return null;
 
@@ -149,7 +151,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var safe = _session.MakeSafeFileName(s);
                     var outPath = Path.Combine(exportDir, $"screen_{safe}.xml");
-                    try { var result = ExportHmiScreen(softwarePath, s, outPath, exportOptions); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "screen:" + s, ["evidence"] = result.DeepClone() }); }
+                    try {
+                        var result = ExportHmiScreen(softwarePath, s, outPath, exportOptions); if (result["success"]!.GetValue<bool>()) exported.Add(outPath);
+                        else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "screen:" + s, ["evidence"] = result.DeepClone() });
+                    }
                     catch (PlcSoftwareException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"screen:{s}"); items.Add(new HmiObject { ["target"] = "screen:" + s, ["evidence"] = new HmiObject { ["operationSuccess"] = false } }); }
                 }
             }
@@ -161,7 +166,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var safe = _session.MakeSafeFileName(t);
                     var outPath = Path.Combine(exportDir, $"tagtable_{safe}.xml");
-                    try { var result = ExportHmiTagTable(softwarePath, t, outPath, exportOptions); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "tagtable:" + t, ["evidence"] = result.DeepClone() }); }
+                    try {
+                        var result = ExportHmiTagTable(softwarePath, t, outPath, exportOptions); if (result["success"]!.GetValue<bool>()) exported.Add(outPath);
+                        else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "tagtable:" + t, ["evidence"] = result.DeepClone() });
+                    }
                     catch (PlcSoftwareException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"tagtable:{t}"); items.Add(new HmiObject { ["target"] = "tagtable:" + t, ["evidence"] = new HmiObject { ["operationSuccess"] = false } }); }
                 }
             }
@@ -171,7 +179,10 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public void ImportHmiScreen(string softwarePath, string folderPath, string importPath, bool overwrite = false)
         {
-            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (_session.IsProjectNull())
+                throw new PlcSoftwareException("InvalidState",
+                    "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                    "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
@@ -218,7 +229,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         private void GuardClassicScreenSize(object hmiSoftware, string importPath)
         {
 #if HMI_UNIFIED
-            if (hmiSoftware is global::Siemens.Engineering.HmiUnified.HmiSoftware) return;       // Unified screens scale; the crash is a classic-panel behaviour
+            if (hmiSoftware is global::Siemens.Engineering.HmiUnified.HmiSoftware)
+                return;       // Unified screens scale; the crash is a classic-panel behaviour
 #endif
             int? xmlWidth = null, xmlHeight = null;
             try
@@ -226,8 +238,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var document = XDocument.Load(importPath);
                 var screen = document.Descendants().FirstOrDefault(e => e.Name.LocalName == "Hmi.Screen.Screen");
                 var attributes = screen?.Element("AttributeList");
-                if (int.TryParse(attributes?.Element("Width")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var w)) xmlWidth = w;
-                if (int.TryParse(attributes?.Element("Height")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var h)) xmlHeight = h;
+                if (int
+                        .TryParse(attributes?.Element("Width")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo
+                            .InvariantCulture, out var w))
+                    xmlWidth = w;
+                if (int
+                        .TryParse(attributes?.Element("Height")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo
+                            .InvariantCulture, out var h))
+                    xmlHeight = h;
             }
             catch (Exception) { /* swallow(parse-fallback): unrecognized screen XML is left to the native importer for diagnosis */ return; }                                              // not a screen document we understand - TIA reports its own error
             if (xmlWidth == null || xmlHeight == null) return;
@@ -239,7 +257,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var existing = root == null ? null : EnumerateClassicScreens(root).FirstOrDefault();
                 if (existing is IEngineeringObject engineeringScreen)
                 {
-                    deviceWidth = Convert.ToInt32(engineeringScreen.GetAttribute("Width")); deviceHeight = Convert.ToInt32(engineeringScreen.GetAttribute("Height"));
+                    deviceWidth = Convert.ToInt32(engineeringScreen.GetAttribute("Width")); deviceHeight = Convert
+                        .ToInt32(engineeringScreen.GetAttribute("Height"));
                     source = "existing screen '" + _session.TryGetName(existing) + "'";
                 }
             }
@@ -248,7 +267,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 foreach (var pair in new[] { ("ScreenWidth", "ScreenHeight"), ("DisplayWidth", "DisplayHeight"), ("ResolutionWidth", "ResolutionHeight") })
                 {
-                    try { deviceWidth = Convert.ToInt32(software.GetAttribute(pair.Item1)); deviceHeight = Convert.ToInt32(software.GetAttribute(pair.Item2)); source = "HMI attributes " + pair.Item1 + "/" + pair.Item2; break; }
+                    try {
+                        deviceWidth = Convert.ToInt32(software.GetAttribute(pair.Item1)); deviceHeight = Convert.ToInt32(software.GetAttribute(pair.Item2));
+                        source = "HMI attributes " + pair.Item1 + "/" + pair.Item2; break;
+                    }
                     catch (Exception) { /* swallow(probe-optional): unavailable display dimensions fall back to the next panel resolution source */ deviceWidth = null; }
                 }
             }
@@ -257,13 +279,18 @@ namespace TiaMcp.Adapters.Native.Hmi
                 // A fresh classic panel has no screen and no display attribute; the hardware catalog description of its head item
                 // carries the display ("7" TFT 鏄剧ず灞忥紝800 x 480 鍍忕礌").
                 var resolution = TryReadPanelResolutionFromCatalog(hmiSoftware);
-                if (resolution != null) { deviceWidth = resolution.Value.width; deviceHeight = resolution.Value.height; source = "hardware catalog description"; }
+                if (resolution != null) {
+                    deviceWidth = resolution.Value.width; deviceHeight = resolution.Value.height; source = "hardware catalog description"; }
             }
             if (deviceWidth == null)
-                throw new PlcSoftwareException("InvalidState", "Screen size " + xmlWidth + "x" + xmlHeight + " could not be checked against the panel (no existing screen, no display attribute, no catalog resolution) and a mismatch makes TIA Portal exit (real project, crash 10); import a screen of the panel's own size first or check the panel in TIA.");
+                throw new PlcSoftwareException("InvalidState", "Screen size " + xmlWidth + "x" + xmlHeight
+                        + " could not be checked against the panel (no existing screen, no display attribute, no catalog resolution) and a mismatch makes " +
+                        "TIA Portal exit (real project, crash 10); import a screen of the panel's own size first or check the panel in TIA.");
             if (deviceWidth != xmlWidth || deviceHeight != xmlHeight)
-                throw new PlcSoftwareException("InvalidParams", "Screen size " + xmlWidth + "x" + xmlHeight + " in the XML does not match the panel (" + deviceWidth + "x" + deviceHeight + " from " + source
-                    + "); TIA Portal V21 exits with NonRecoverableException on such an import (real project, crash 10). Rebuild the screen with width/height " + deviceWidth + "/" + deviceHeight + ".");
+                throw new PlcSoftwareException("InvalidParams", "Screen size " + xmlWidth + "x" + xmlHeight + " in the XML does not match the panel ("
+                        + deviceWidth + "x" + deviceHeight + " from " + source
+                    + "); TIA Portal V21 exits with NonRecoverableException on such an import (real project, crash 10). Rebuild the screen with width/height "
+                        + deviceWidth + "/" + deviceHeight + ".");
         }
 
         private (int width, int height)? TryReadPanelResolutionFromCatalog(object hmiSoftware)
@@ -288,7 +315,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (!string.Equals(entryIdentifier, typeIdentifier, StringComparison.OrdinalIgnoreCase)) continue;
                     var description = TryGetPropertyValue(entry, "Description")?.ToString() ?? "";
                     var match = Regex.Match(description, @"(\d{3,4})\s*[x×X]\s*(\d{3,4})");
-                    if (match.Success) return (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture));
+                    if (match.Success)
+                        return (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int
+                            .Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture));
                 }
             }
             catch (Exception) { /* swallow(probe-optional): missing catalog resolution returns null so the screen-size guard refuses an unchecked import */ }
@@ -307,7 +336,10 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public void ImportHmiTagTable(string softwarePath, string folderPath, string importPath, bool overwrite = false)
         {
-            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (_session.IsProjectNull())
+                throw new PlcSoftwareException("InvalidState",
+                    "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                    "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
@@ -340,7 +372,10 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public void ImportHmiConnection(string softwarePath, string importPath, bool overwrite = false)
         {
-            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (_session.IsProjectNull())
+                throw new PlcSoftwareException("InvalidState",
+                    "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                    "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");

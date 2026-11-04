@@ -37,7 +37,8 @@ internal static partial class Strings
         ("Pages.NotInspected", "Not inspected yet.", "尚未检查。"),
         ("Pages.OpenWorkspace", "Open workspace folder", "打开工作区目录"),
         ("Pages.GitTools", "Git tools…", "Git 工具…"),
-        ("Pages.GitHint", "Open the workspace folder in your preferred Git tool. This page shows staged, unstaged and untracked changes.", "在你使用的 Git 工具中打开工作区目录。本页显示已暂存、未暂存与未跟踪的变更。"),
+        ("Pages.GitHint", "Open the workspace folder in your preferred Git tool. This page shows staged, unstaged and untracked changes.",
+                "在你使用的 Git 工具中打开工作区目录。本页显示已暂存、未暂存与未跟踪的变更。"),
         ("Pages.NoDiff", "Select a mapped object to read its local Git changes.", "选择已映射对象以读取本地 Git 差异。"),
         ("Pages.MappedMeta", "{0} objects · {1} differ", "{0} 个 · 差异 {1}"),
     ];

@@ -100,7 +100,8 @@ namespace TiaMcp.Adapters
                 {
                     // CreateAndConnectToSubnet on a connected node would move or fail; the anchor must be free.
                     meta["anchorConnectedSubnet"] = anchorNode.ConnectedSubnet.Name;
-                    meta["refusalReason"] = "The anchor node is attached to subnet '" + anchorNode.ConnectedSubnet.Name + "', not to '" + subnetName + "'; choose a free anchor node or disconnect it explicitly first. Nothing was created.";
+                    meta["refusalReason"] = "The anchor node is attached to subnet '" + anchorNode.ConnectedSubnet.Name + "', not to '" + subnetName
+                        + "'; choose a free anchor node or disconnect it explicitly first. Nothing was created.";
                     meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
                     return new HardwareAddressingReply { Message = "Anchor node is attached to another subnet; nothing was created", Meta = meta };
                 }
@@ -114,7 +115,8 @@ namespace TiaMcp.Adapters
                 meta["success"] = ok;
                 return new HardwareAddressingReply
                 {
-                    Message = ok ? "Subnet created on the anchor node and read back (Project.Subnets and Node.ConnectedSubnet)" : "Subnet creation did not read back as the anchor node's subnet",
+                    Message = ok ? "Subnet created on the anchor node and read back (Project.Subnets and Node.ConnectedSubnet)"
+                        : "Subnet creation did not read back as the anchor node's subnet",
                     Meta = meta
                 };
             }
@@ -126,7 +128,8 @@ namespace TiaMcp.Adapters
             }
         }
 
-        public HardwareAddressingReply HardwareAttachDeviceNodeToSubnet(string deviceItemPath, int interfaceIndex, string subnetName, string anchorDeviceItemPath = "")
+        public HardwareAddressingReply HardwareAttachDeviceNodeToSubnet(string deviceItemPath, int interfaceIndex, string subnetName,
+                string anchorDeviceItemPath = "")
         {
             var meta = new Dictionary<string, object?>
             {
@@ -192,7 +195,8 @@ namespace TiaMcp.Adapters
                 {
                     // Node.ConnectToSubnet throws on a connected node (devices-and-hardware skill); never move it implicitly.
                     meta["nodeConnectedSubnet"] = connected.Name;
-                    meta["refusalReason"] = "The node is attached to subnet '" + connected.Name + "', not to '" + subnetName + "'; disconnect it explicitly first. Nothing was changed.";
+                    meta["refusalReason"] = "The node is attached to subnet '" + connected.Name + "', not to '" + subnetName
+                        + "'; disconnect it explicitly first. Nothing was changed.";
                     meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
                     return new HardwareAddressingReply { Message = "Node is attached to another subnet; nothing was changed", Meta = meta };
                 }
@@ -208,7 +212,8 @@ namespace TiaMcp.Adapters
                 meta["success"] = ok;
                 return new HardwareAddressingReply
                 {
-                    Message = ok ? "Device network node reads back on the subnet (Node.ConnectedSubnet)" : "Device network node attach did not read back on the subnet",
+                    Message = ok ? "Device network node reads back on the subnet (Node.ConnectedSubnet)"
+                        : "Device network node attach did not read back on the subnet",
                     Meta = meta
                 };
             }
@@ -316,7 +321,9 @@ namespace TiaMcp.Adapters
                     continue;
                 }
 
-                lines.Add("Candidate: " + c.Label + " | type=" + (c.Target.GetType().FullName ?? c.Target.GetType().Name) + " | name=" + (TryGetName(c.Target) ?? "<unnamed>"));
+                lines
+                    .Add("Candidate: " + c.Label + " | type=" + (c.Target.GetType().FullName ?? c.Target.GetType().Name) + " | name="
+                        + (TryGetName(c.Target) ?? "<unnamed>"));
                 foreach (var serviceType in serviceTypes)
                 {
                     object? service = null;
@@ -376,7 +383,9 @@ namespace TiaMcp.Adapters
                     foreach (var node in nodes)
                     {
                         if (node == null) continue;
-                        nodeInfos.Add((TryGetName(node) ?? "<unnamed>") + ":" + (TryGetPropertyValue(node, "NodeType")?.ToString() ?? "") + ":" + (TryGetName(TryGetPropertyValue(node, "ConnectedSubnet")) ?? "<none>"));
+                        nodeInfos
+                            .Add((TryGetName(node) ?? "<unnamed>") + ":" + (TryGetPropertyValue(node, "NodeType")?.ToString() ?? "") + ":"
+                                + (TryGetName(TryGetPropertyValue(node, "ConnectedSubnet")) ?? "<none>"));
                     }
                     parts.Add("Nodes=[" + string.Join(", ", nodeInfos) + "]");
                 }
@@ -563,7 +572,8 @@ namespace TiaMcp.Adapters
                 => node.ConnectedSubnet != null && (target == null || !object.Equals(node.ConnectedSubnet, target))
                     ? label + " node is attached to subnet '" + node.ConnectedSubnet.Name + "', not to '" + subnetName + "'" : null;
             var conflict = Conflict("PLC", plc) ?? Conflict("HMI", hmi);
-            if (conflict != null) return sb.AppendLine("Result: NOT CONNECTED: " + conflict + "; disconnect it explicitly first. Nothing was changed.").ToString();
+            if (conflict != null) return sb.AppendLine("Result: NOT CONNECTED: " + conflict + "; disconnect it explicitly first. Nothing was changed.")
+                .ToString();
 
             try
             {
@@ -602,7 +612,9 @@ namespace TiaMcp.Adapters
                 var container = HardwareSoftwareContainerUnder(hmiRoot);
                 var sw = container?.Software;
                 var connections = sw == null ? null : TryGetPropertyValue(sw, "Connections");
-                sb.AppendLine("HMI Connections after subnet (" + (sw == null ? "no HMI software under " + hmiRootPath : "software '" + (TryGetName(sw) ?? "<unnamed>") + "'") + "):");
+                sb
+                    .AppendLine("HMI Connections after subnet ("
+                        + (sw == null ? "no HMI software under " + hmiRootPath : "software '" + (TryGetName(sw) ?? "<unnamed>") + "'") + "):");
                 if (connections is IEnumerable en)
                 {
                     var any = false;
@@ -643,7 +655,8 @@ namespace TiaMcp.Adapters
                 var item = pending.Pop();
                 if (!seen.Add(item)) continue;
                 var container = ((IEngineeringServiceProvider)item).GetService<SoftwareContainer>();
-                if (container?.Software != null && (container.Software.GetType().FullName ?? "").IndexOf("Hmi", StringComparison.Ordinal) >= 0) return container;
+                if (container?.Software != null && (container.Software.GetType().FullName ?? "").IndexOf("Hmi", StringComparison.Ordinal) >= 0)
+                    return container;
                 foreach (DeviceItem child in item.DeviceItems) pending.Push(child);
             }
             return null;
@@ -660,7 +673,8 @@ namespace TiaMcp.Adapters
             return null;
         }
 
-        private IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> HardwareBuildHardwareHmiConnectionCandidates(NetworkNodeInfo plcNode, NetworkNodeInfo hmiNode)
+        private IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget,
+                object PartnerNode)> HardwareBuildHardwareHmiConnectionCandidates(NetworkNodeInfo plcNode, NetworkNodeInfo hmiNode)
         {
             var seen = new HashSet<object>(HardwareReferenceEqualityComparer.Instance);
 
@@ -693,7 +707,8 @@ namespace TiaMcp.Adapters
                 }
             }
 
-            IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> Expand(string label, object? start, object localNode, DeviceItem partnerTarget, object partnerNode)
+            IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> Expand(string label, object? start,
+                    object localNode, DeviceItem partnerTarget, object partnerNode)
             {
                 var current = start;
                 for (var depth = 0; current != null && depth < 8; depth++)
@@ -707,7 +722,8 @@ namespace TiaMcp.Adapters
                 }
             }
 
-            IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> Add(string label, object? target, object localNode, DeviceItem partnerTarget, object partnerNode)
+            IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> Add(string label, object? target,
+                    object localNode, DeviceItem partnerTarget, object partnerNode)
             {
                 if (target == null) yield break;
                 if (!seen.Add(target)) yield break;
@@ -715,7 +731,8 @@ namespace TiaMcp.Adapters
             }
         }
 
-        private static IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> HardwareBuildDirectHardwareHmiConnectionCandidates(NetworkNodeInfo plcNode, NetworkNodeInfo hmiNode)
+        private static IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget,
+                object PartnerNode)> HardwareBuildDirectHardwareHmiConnectionCandidates(NetworkNodeInfo plcNode, NetworkNodeInfo hmiNode)
         {
             yield return ("PLC node", plcNode.Node, plcNode.Node, hmiNode.Item, hmiNode.Node);
             yield return ("PLC network interface", plcNode.NetworkInterface, plcNode.Node, hmiNode.Item, hmiNode.Node);

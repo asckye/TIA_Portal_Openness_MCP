@@ -46,7 +46,8 @@ internal sealed class ProjectMultiuserAdapter
             if (matches.Length > 1) throw new InvalidOperationException("Ambiguous server project name: " + projectName);
             return matches.SingleOrDefault() ?? throw new PortalException(PortalErrorCode.NotFound, "Exact server project not found: " + projectName);
         }
-        internal SecurityResult ManageMultiuserSession(string action = "read", string serverName = "", string projectName = "", string protocol = "Https", string host = "", int port = 0,
+        internal SecurityResult ManageMultiuserSession(string action = "read", string serverName = "", string projectName = "", string protocol = "Https",
+                string host = "", int port = 0,
             string commitComment = "", int offset = 0, int limit = 100, bool confirmChange = false, bool dryRun = true)
             => engine.RunProjectLifecycleStep("ManageMultiuserSession", meta => {
                 try { return Multiuser(meta, action, serverName, projectName, protocol, host, port, commitComment, offset, limit, dryRun); }
@@ -81,14 +82,16 @@ internal sealed class ProjectMultiuserAdapter
                         if (engine.ProjectLocalSession != null)
                         {
                             var bound = new HmiObject { ["projectName"] = engine.ProjectLocalSession.Project?.Name };
-                            try { bound["isUpToDate"] = engine.ProjectLocalSession.IsUptoDate(); } catch (Exception ex) { bound["isUpToDate"] = null; bound["isUpToDateError"] = ex.GetBaseException().Message; }
+                            try { bound["isUpToDate"] = engine.ProjectLocalSession.IsUptoDate(); } catch (Exception ex) {
+                                bound["isUpToDate"] = null; bound["isUpToDateError"] = ex.GetBaseException().Message; }
 #if PROJECT_MULTIUSER_MARKINGS
                             Markings markings = engine.ProjectLocalSession.MarkingService.GetMarkings();
                             var all = HardwareGroupOperations.Items(markings.AllMarkings).ToArray();
                             bound["conflictedMarkingCount"] = HardwareGroupOperations.Items(markings.ConflictedMarkings).Count();
                             var rows = Page(all.Select(m => (object?)new HmiObject {
                                 ["markState"] = ((Marking)m).MarkState.ToString(), ["objectType"] = ((Marking)m).MarkedObject?.GetType().FullName,
-                                ["objectName"] = ((Marking)m).MarkedObject == null ? null : ((Marking)m).MarkedObject.GetType().GetProperty("Name")?.GetValue(((Marking)m).MarkedObject)?.ToString() }).ToList(), offset, limit, meta);
+                                ["objectName"] = ((Marking)m).MarkedObject == null ? null : ((Marking)m).MarkedObject.GetType().GetProperty("Name")?
+                                    .GetValue(((Marking)m).MarkedObject)?.ToString() }).ToList(), offset, limit, meta);
                             bound["markings"] = rows; meta["boundSession"] = bound;
 #else
                             meta["dataComplete"] = true;
@@ -109,7 +112,8 @@ internal sealed class ProjectMultiuserAdapter
                         var rows = Page(projects.Select(p => (object?)HmiScalar.Read(p)).ToList(), offset, limit, meta);
                         meta["records"] = rows;
 #if PROJECT_MULTIUSER_SERVER_GROUPS
-                        meta["serverGroups"] = new HmiArray(server.GetProjectServerGroups().Select(g => { ProjectServerGroup group = g; return (object?)group.Name; }).ToArray());
+                        meta["serverGroups"] =
+                            new HmiArray(server.GetProjectServerGroups().Select(g => { ProjectServerGroup group = g; return (object?)group.Name; }).ToArray());
 #else
                         meta["serverGroups"] = null;
                         meta["unsupportedFields"] = new HmiArray("serverGroups");
@@ -130,21 +134,25 @@ internal sealed class ProjectMultiuserAdapter
                     {
                         var server = ExactProjectServer(serverName); var info = ExactServerProject(server, projectName);
                         var sessions = server.GetLocalSessions(info);
-                        var rows = Page(sessions.Select(s => (object?)new HmiObject { ["sessionId"] = s.SessionId, ["projectFile"] = s.ProjectFileInfo?.FullName }).ToList(), offset, limit, meta);
+                        var rows =
+                            Page(sessions.Select(s => (object?)new HmiObject { ["sessionId"] = s.SessionId, ["projectFile"] = s.ProjectFileInfo?.FullName })
+                                .ToList(), offset, limit, meta);
                         meta["records"] = rows; meta["serverProject"] = HmiScalar.Read(info);
                         meta["apiCallSuccess"] = true; meta["dataComplete"] = offset == 0 && rows.Count == sessions.Count;
                         return "Local sessions registered on the server for the exact project listed.";
                     }
                     case "connectServer":
                     {
-                        if (engine.ProjectPortal.ProjectServers.Any(s => string.Equals(s.ServerName, serverName, StringComparison.Ordinal))) throw new InvalidOperationException("Server alias already configured: " + serverName);
+                        if (engine.ProjectPortal.ProjectServers.Any(s => string.Equals(s.ServerName, serverName, StringComparison.Ordinal)))
+                            throw new InvalidOperationException("Server alias already configured: " + serverName);
                         var mode = (Protocol)Enum.Parse(typeof(Protocol), protocol);
                         meta["request"] = new HmiObject { ["alias"] = serverName, ["protocol"] = protocol, ["host"] = host, ["port"] = port };
                         if (dryRun) return "Project server connection preview; nothing created.";
                         meta["mayHaveChanged"] = true;
                         var created = engine.ProjectPortal.ProjectServers.Create(serverName, mode, host, port);
                         meta["apiCallSuccess"] = true; meta["after"] = HmiScalar.Read(created);
-                        if (created.ServerName != serverName || created.Host != host || created.Port != port) throw new InvalidOperationException("Server connection created but readback differs.");
+                        if (created.ServerName != serverName || created.Host != host || created.Port != port)
+                            throw new InvalidOperationException("Server connection created but readback differs.");
                         return "Project server connection created and read back. This is a persistent TIA configuration; no project opened.";
                     }
                     case "disconnectServer":
@@ -153,20 +161,26 @@ internal sealed class ProjectMultiuserAdapter
                         if (dryRun) return "Project server connection removal preview; nothing changed.";
                         meta["mayHaveChanged"] = true;
                         server.DeleteConnection(); meta["apiCallSuccess"] = true;
-                        if (engine.ProjectPortal.ProjectServers.Any(s => string.Equals(s.ServerName, serverName, StringComparison.Ordinal))) throw new InvalidOperationException("DeleteConnection returned but the alias is still configured.");
+                        if (engine.ProjectPortal.ProjectServers.Any(s => string.Equals(s.ServerName, serverName, StringComparison.Ordinal)))
+                            throw new InvalidOperationException("DeleteConnection returned but the alias is still configured.");
                         meta["verifiedAbsent"] = true;
                         return "Project server connection removed and verified absent.";
                     }
                     default: // commit
                     {
-                        if (engine.ProjectLocalSession == null) throw new PortalException(PortalErrorCode.InvalidState, "No bound local session; commit applies only to a multiuser local session opened via OpenSession.");
+                        if (engine.ProjectLocalSession == null)
+                            throw new PortalException(PortalErrorCode.InvalidState,
+                                "No bound local session; commit applies only to a multiuser local session opened via OpenSession.");
                         meta["sessionProject"] = engine.ProjectLocalSession.Project?.Name; meta["commitComment"] = commitComment;
-                        if (dryRun) return "Commit preview: CloseAndCommit would commit the local session changes to the server AND close the bound session. Nothing executed.";
+                        if (dryRun)
+                            return "Commit preview: CloseAndCommit would commit the local session changes to the server AND close the bound session. Nothing " +
+                            "executed.";
                         meta["mayHaveChanged"] = true; meta["sessionClosed"] = false;
                         int committed = engine.ProjectLocalSession.CloseAndCommit(commitComment);
                         meta["apiCallSuccess"] = true; meta["nativeResult"] = committed; meta["sessionClosed"] = true;
                         engine.ProjectReleaseBinding();
-                        return "Local session committed and closed by the native CloseAndCommit; the MCP project binding was cleared. Re-open a session explicitly to continue.";
+                        return "Local session committed and closed by the native CloseAndCommit; the MCP project binding was cleared. Re-open a session " +
+                            "explicitly to continue.";
                     }
                 }
         }

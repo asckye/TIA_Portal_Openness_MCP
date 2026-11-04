@@ -16,7 +16,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public OptionalEngineeringTools(OptionalEngineeringService optionalEngineering) => _optionalEngineering = optionalEngineering;
 
-        [McpServerTool(Name="ListSivarcRules"), Description("[L2][HMI][READ] Exact SiVArc rule category and property-only path; live scalar pagination with schema, complex values excluded. Native behaviorPolicy=current; V4 native acceptance is pending. No generation.")]
+        [McpServerTool(Name="ListSivarcRules"),
+                Description("[L2][HMI][READ] Exact SiVArc rule category and property-only path; live scalar pagination with schema, complex values excluded. " +
+                "Native behaviorPolicy=current; V4 native acceptance is pending. No generation.")]
         public CallToolResult ListSivarcRules(string category, PropertyStep[] objectPath = null!, int offset=0, int limit=100)
             => OptionalPackageContract.Run("ListSivarcRules", false, () =>
             {
@@ -24,7 +26,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 EngineeringObjectPath.Parse(path);
                 return _optionalEngineering.ReadSiVArcRules(category, path, offset, limit);
             }, offset, limit);
-        [McpServerTool(Name="ManageSivarcRule"), Description("[L2][HMI][WRITE] Native SiVArc rule/folder/table composition create/update/delete with exact collection path and name. Nonempty container deletion refused. Native behaviorPolicy=current; V4 native acceptance is pending. Default preview; no generation/save/compile/download.")]
+        [McpServerTool(Name="ManageSivarcRule"),
+                Description("[L2][HMI][WRITE] Native SiVArc rule/folder/table composition create/update/delete with exact collection path and name. Nonempty " +
+                "container deletion refused. Native behaviorPolicy=current; V4 native acceptance is pending. Default preview; no " +
+                "generation/save/compile/download.")]
         public CallToolResult ManageSivarcRule(
             string category,
             [Description("Exact property/name steps to the rule collection; index selection is not supported.")] PropertyStep[] collectionPath,

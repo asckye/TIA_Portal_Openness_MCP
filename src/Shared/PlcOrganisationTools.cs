@@ -17,7 +17,12 @@ namespace TiaMcpServer.ModelContextProtocol
         private readonly PlcOrganisationPortService _blocks;
         public PlcOrganisationTools(PlcOrganisationPortService blocks) => _blocks = blocks;
 
-        [McpServerTool(Name = "ManagePlcBlockProtection"), Description("[L2][PLC-Software][WRITE] Read/protect/unprotect know-how protection of one exact block path via native PlcBlockProtectionProvider. Password is passed straight to TIA and never stored or logged; native invalid-password characters are reported. Refuses protecting an already protected block or unprotecting an unprotected one. Default preview; real change requires dryRun=false AND confirmProtectionChange=true, an Offline PLC, and is verified by IsKnowHowProtected readback. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ManagePlcBlockProtection"),
+                Description("[L2][PLC-Software][WRITE] Read/protect/unprotect know-how protection of one exact block path via native " +
+                "PlcBlockProtectionProvider. Password is passed straight to TIA and never stored or logged; native invalid-password characters are reported. " +
+                "Refuses protecting an already protected block or unprotecting an unprotected one. Default preview; real change requires dryRun=false AND " +
+                "confirmProtectionChange=true, an Offline PLC, and is verified by IsKnowHowProtected readback. No save/compile/download. Current native " +
+                "policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ManagePlcBlockProtectionV4(
             string softwarePath,
             string blockPath,
@@ -25,7 +30,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string password="",
             [Description("confirmProtectionChange: must be true together with dryRun=false to change the protection.")] bool confirmProtectionChange=false,
             bool dryRun=true)
-            => PlcToolContract.Run("ManagePlcBlockProtection", !dryRun && action != "read", true, () => ManagePlcBlockProtection(softwarePath, blockPath, action, password, confirmProtectionChange, dryRun));
+            => PlcToolContract
+                .Run("ManagePlcBlockProtection", !dryRun && action != "read", true, () =>
+                    ManagePlcBlockProtection(softwarePath, blockPath, action, password, confirmProtectionChange, dryRun));
 
         public ResponseMessage ManagePlcBlockProtection(
             string softwarePath,
@@ -41,7 +48,8 @@ namespace TiaMcpServer.ModelContextProtocol
             + "blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, "
             + "ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / "
             + "DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports "
-            + "the resolved target (pinned block number, warnings). Native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They also require "
+            + "the resolved target (pinned block number, warnings). Native cross references are allowed by default through V20 where supported; V21 requires " +
+                "the human session switch or process opt-in (GetPlcCrossReferences). They also require "
             + "crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took "
             + "TIA Portal V21 down during a dry run, so this optional check is off by default and the response says 'not queried' - never "
             + "read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, "
@@ -51,8 +59,10 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult DeletePlcBlockV4(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.")] string blockPath,
-            [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
+            [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun =
+                true,
+            [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences =
+                false)
             => PlcToolContract.Run("DeletePlcBlock", !dryRun, true, () => DeletePlcBlock(softwarePath, blockPath, dryRun, crossReferences));
 
         public ResponseJsonReport DeletePlcBlock(
@@ -75,7 +85,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 string? pinnedWarning = pinned == null ? null
                     : $"This block has the explicit block number {pinned}(AutoNumber=false)."
                       + (dryRun ? "Deleting the block will also remove this number: " : "This number has already been removed with the block: ")
-                      + "when rebuilt from an external source, the new block receives an automatically assigned number. Instance DB associations that depend on the original block number will break without any error being reported. "
+                      + "when rebuilt from an external source, the new block receives an automatically assigned number. Instance DB associations that depend " +
+                          "on the original block number will break without any error being reported. "
                       + "To update block content, keep the block and run GenerateBlocksFromExternalSource against the existing block to preserve its number."
                       + $"If deletion and recreation are required, restore the number afterwards with InvokeObject: SetAttribute(\"AutoNumber\", false) then SetAttribute(\"Number\", {pinned}).";
 
@@ -116,16 +127,21 @@ namespace TiaMcpServer.ModelContextProtocol
             + "by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what "
             + "the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every "
             + "tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the "
-            + "HMI silently loses its bindings - always review the previewed tag list first. Native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They are "
+            + "HMI silently loses its bindings - always review the previewed tag list first. Native cross references are allowed by default through V20 " +
+                "where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They are "
             + "queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down "
             + "during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at "
             + "tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and "
             + "wildcards are rejected. Back up first with ExportPlcTagTable. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult DeletePlcTagTableV4(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("tagTableName: bare table name, or the group-qualified path from ListPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.")] string tagTableName,
-            [Description("dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
+            [Description("tagTableName: bare table name, or the group-qualified path from ListPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are " +
+                "rejected.")] string tagTableName,
+            [Description("dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is " +
+                "absent")] bool dryRun =
+                true,
+            [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences =
+                false)
             => PlcToolContract.Run("DeletePlcTagTable", !dryRun, true, () => DeletePlcTagTable(softwarePath, tagTableName, dryRun, crossReferences));
 
         public ResponseJsonReport DeletePlcTagTable(
@@ -179,7 +195,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "DeletePlcType"), Description(
             "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact "
             + "path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; "
-            + "native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (see GetPlcCrossReferences). Queries also require crossReferences=true (the TIA CrossReferenceService query "
+            + "native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (see " +
+                "GetPlcCrossReferences). Queries also require crossReferences=true (the TIA CrossReferenceService query "
             + "took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so "
             + "review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type "
             + "first with ExportPlcType, and CompilePlcSoftware afterwards. Current native policy; V4 safety behavior is not yet accepted.")]
@@ -187,7 +204,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.")] string typePath,
             [Description("dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
+            [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences =
+                false)
             => PlcToolContract.Run("DeletePlcType", !dryRun, true, () => DeletePlcType(softwarePath, typePath, dryRun, crossReferences));
 
         public ResponseJsonReport DeletePlcType(
@@ -260,7 +278,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             ? $"Cross-references: {data["crossReferenceCount"]} (see data.crossReferences)."
                             : queried
                                 ? "⚠️ Cross-references could not be retrieved. This does not mean the object is unreferenced; verify it before continuing."
-                                : "Cross-references were not queried (" + (data["crossReferenceUnavailableReason"]?.GetValue<string>() ?? "crossReferences=false, the default")
+                                : "Cross-references were not queried ("
+                                    + (data["crossReferenceUnavailableReason"]?.GetValue<string>() ?? "crossReferences=false, the default")
                                     + "). This does not mean the object is unreferenced.")
                         + dryRunTail;
             }
@@ -289,7 +308,11 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
 
-        [McpServerTool(Name = "CreatePlcTypeGroup"), Description("[L2][PLC-Software][WRITE] Preview or create nested PLC data type (UDT) user groups. Exact groupPath relative to PLC data types, e.g. Common/Motors. Creates missing parents and reuses existing groups. dryRun defaults to true; pass false to create. Uses exact PLC software resolution. Does not create a UDT, save, compile or download. Errors report already-created parents; no automatic rollback. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "CreatePlcTypeGroup"),
+                Description("[L2][PLC-Software][WRITE] Preview or create nested PLC data type (UDT) user groups. Exact groupPath relative to PLC data types, " +
+                "e.g. Common/Motors. Creates missing parents and reuses existing groups. dryRun defaults to true; pass false to create. Uses exact PLC " +
+                "software resolution. Does not create a UDT, save, compile or download. Errors report already-created parents; no automatic rollback. " +
+                "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult CreatePlcTypeGroupV4(string softwarePath, string groupPath, bool dryRun = true)
             => PlcToolContract.Run("CreatePlcTypeGroup", !dryRun, true, () => CreatePlcTypeGroup(softwarePath, groupPath, dryRun));
 
@@ -307,7 +330,11 @@ namespace TiaMcpServer.ModelContextProtocol
             { throw new McpException("CreatePlcTypeGroup failed: " + ex.Message, ex, McpErrorCode.InternalError); }
         }
 
-        [McpServerTool(Name = "DeleteEmptyPlcBlockGroup"), Description("[L2][PLC-Software][WRITE] Preview or delete exactly one empty PLC user block group. dryRun defaults to true. Requires an exact groupPath relative to Program blocks, e.g. ZZ_MCP_TEST or Parent/Child. Root, nonempty, ambiguous targets are refused. Real deletion requires confirmed Offline state and exclusive access, rechecks contents, calls native Delete and verifies absence. No recursive deletion, save, compile, download or automatic DisconnectOnlinePlc. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "DeleteEmptyPlcBlockGroup"),
+                Description("[L2][PLC-Software][WRITE] Preview or delete exactly one empty PLC user block group. dryRun defaults to true. Requires an exact " +
+                "groupPath relative to Program blocks, e.g. ZZ_MCP_TEST or Parent/Child. Root, nonempty, ambiguous targets are refused. Real deletion " +
+                "requires confirmed Offline state and exclusive access, rechecks contents, calls native Delete and verifies absence. No recursive deletion, " +
+                "save, compile, download or automatic DisconnectOnlinePlc. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult DeleteEmptyPlcBlockGroupV4(string softwarePath, string groupPath, bool dryRun=true)
             => PlcToolContract.Run("DeleteEmptyPlcBlockGroup", !dryRun, true, () => DeleteEmptyPlcBlockGroup(softwarePath, groupPath, dryRun));
 
@@ -316,13 +343,17 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result=_blocks.DeleteEmptyPlcBlockGroup(softwarePath,groupPath,dryRun);
-                return new ResponseMessage { Message=dryRun ? "Empty PLC group deletion preview; nothing changed." : "Empty PLC user group deleted and absence verified.", Meta=result };
+                return new ResponseMessage {
+                    Message=dryRun ? "Empty PLC group deletion preview; nothing changed." : "Empty PLC user group deleted and absence verified.", Meta=result };
             }
             catch(Exception ex) when (ex is not McpException)
             { throw new McpException("DeleteEmptyPlcBlockGroup failed: " + ex.Message,ex,McpErrorCode.InternalError); }
         }
 
-        [McpServerTool(Name = "CreatePlcBlockGroup"), Description("[L2][PLC-Software] Create nested program-block groups, creating missing parents and reusing existing groups. groupPath is relative to Program blocks. Requires ConnectPortal + OpenProject. Organize blocks with MovePlcBlockToGroup. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "CreatePlcBlockGroup"),
+                Description("[L2][PLC-Software] Create nested program-block groups, creating missing parents and reusing existing groups. groupPath is " +
+                "relative to Program blocks. Requires ConnectPortal + OpenProject. Organize blocks with MovePlcBlockToGroup. Current native policy; V4 " +
+                "safety behavior is not yet accepted.")]
         public CallToolResult CreatePlcBlockGroupV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'")] string groupPath)
@@ -337,7 +368,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var group = _blocks.EnsurePlcBlockGroup(softwarePath, groupPath, out var created);
                 if (group == null)
                 {
-                    throw new McpException($"Could not create block group '{groupPath}': PlcSoftware not found at '{softwarePath}'", McpErrorCode.InvalidParams);
+                    throw new McpException($"Could not create block group '{groupPath}': PlcSoftware not found at '{softwarePath}'", McpErrorCode
+                            .InvalidParams);
                 }
                 return new ResponseMessage
                 {
@@ -357,7 +389,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "MovePlcBlockToGroup"), Description("[L2][PLC-Software] Move/organize an existing block into a program-block group (found anywhere by exact name). Openness cannot reparent a block, so this exports the block as SimaticML XML (ExportOptions.WithDefaults), deletes it, and re-imports it into the target group. SIMATIC SD is not used because SD documents do not store the block number. Know-how-protected blocks (their export holds only the interface) and inconsistent blocks are refused before anything is deleted. The block number is compared before and after; a changed number is reported as a failure with the retained recovery export. Organization blocks are refused. autoCreateGroup creates the target group path if missing. Requires: ConnectPortal + OpenProject + block consistent (compile first). After moving, call CompilePlcDiagnostics to confirm 0 errors. Note: avoid moving OBs with event bindings via this round-trip. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "MovePlcBlockToGroup"),
+                Description("[L2][PLC-Software] Move/organize an existing block into a program-block group (found anywhere by exact name). Openness cannot " +
+                "reparent a block, so this exports the block as SimaticML XML (ExportOptions.WithDefaults), deletes it, and re-imports it into the target " +
+                "group. SIMATIC SD is not used because SD documents do not store the block number. Know-how-protected blocks (their export holds only the " +
+                "interface) and inconsistent blocks are refused before anything is deleted. The block number is compared before and after; a changed number " +
+                "is reported as a failure with the retained recovery export. Organization blocks are refused. autoCreateGroup creates the target group path " +
+                "if missing. Requires: ConnectPortal + OpenProject + block consistent (compile first). After moving, call CompilePlcDiagnostics to confirm 0 " +
+                "errors. Note: avoid moving OBs with event bindings via this round-trip. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult MoveBlockToGroupV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("blockName: exact block name to move (searched across all groups)")] string blockName,
@@ -382,7 +421,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException($"Failed moving block '{blockName}' to '{targetGroupPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
+                throw new McpException($"Failed moving block '{blockName}' to '{targetGroupPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode
+                        .InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -390,8 +430,18 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ManagePlcUserGroup"), Description("[L2][PLC-Software][WRITE] Create, rename or deleteEmpty an exact nested PLC user group. family: blocks/types/tags/technology/watchTables/externalSources (PlcBlockUserGroup / PlcTypeUserGroup / PlcTagTableUserGroup / TechnologicalInstanceDBUserGroup / PlcWatchAndForceTableUserGroup / PlcExternalSourceUserGroup; the resulting group is read back as a typed row). groupPath is relative to the family's root. newName is one segment for rename; rename needs the group's public Name setter: V21 for blocks, types and watchTables, V20 for tags, V19 for technology (external sources V21). deleteEmpty counts every composition (type groups include PLC documents on V20/V21, watch-table groups include force tables). Default dryRun=true; actual edits require Offline and exclusive access. Missing parents are created; root and nonempty deletion refused. No save/compile/download. Partial failures may leave created parents; inspect errors. Current native policy; V4 safety behavior is not yet accepted.")]
-        public CallToolResult ManagePlcUserGroupV4(string softwarePath, [Description("blocks | types | tags | technology | watchTables | externalSources. PLC user-group family.")] string family, string groupPath, [Description("create | rename | deleteEmpty. ")] string action, string newName = "", bool dryRun = true)
+        [McpServerTool(Name = "ManagePlcUserGroup"),
+                Description("[L2][PLC-Software][WRITE] Create, rename or deleteEmpty an exact nested PLC user group. family: " +
+                "blocks/types/tags/technology/watchTables/externalSources (PlcBlockUserGroup / PlcTypeUserGroup / PlcTagTableUserGroup / " +
+                "TechnologicalInstanceDBUserGroup / PlcWatchAndForceTableUserGroup / PlcExternalSourceUserGroup; the resulting group is read back as a typed " +
+                "row). groupPath is relative to the family's root. newName is one segment for rename; rename needs the group's public Name setter: V21 for " +
+                "blocks, types and watchTables, V20 for tags, V19 for technology (external sources V21). deleteEmpty counts every composition (type groups " +
+                "include PLC documents on V20/V21, watch-table groups include force tables). Default dryRun=true; actual edits require Offline and exclusive " +
+                "access. Missing parents are created; root and nonempty deletion refused. No save/compile/download. Partial failures may leave created " +
+                "parents; inspect errors. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ManagePlcUserGroupV4(string softwarePath,
+                [Description("blocks | types | tags | technology | watchTables | externalSources. PLC user-group family.")] string family, string groupPath,
+                [Description("create | rename | deleteEmpty. ")] string action, string newName = "", bool dryRun = true)
             => PlcToolContract.Run("ManagePlcUserGroup", !dryRun, true, () => ManagePlcUserGroup(softwarePath, family, groupPath, action, newName, dryRun));
 
         public ResponseMessage ManagePlcUserGroup(string softwarePath, string family, string groupPath, string action, string newName = "", bool dryRun = true)
@@ -404,7 +454,13 @@ namespace TiaMcpServer.ModelContextProtocol
             int maxDepth=4)
         => _blocks.ReadPlcSystemGroups(softwarePath,unitName,unitKind,includeBlocks,maxDepth);
 
-        [McpServerTool(Name = "ListPlcSystemGroups"), Description("[L2][PLC-Software][READ] Typed read of the system-generated groups of the exact PLC (or of a unit via unitName + unitKind): PlcBlockSystemGroup.SystemBlockGroups as a PlcSystemBlockGroup tree (Name, blocks with number / class / language when includeBlocks, nested Groups to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types). V14 SP1 returns system block groups only and explicitly reports systemTypeGroups unavailable (UNSUPPORTED_CAPABILITY); unitName scopes require V16 (safety V18). First 200 objects per group. No modification." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ListPlcSystemGroups"),
+                Description("[L2][PLC-Software][READ] Typed read of the system-generated groups of the exact PLC (or of a unit via unitName + unitKind): " +
+                "PlcBlockSystemGroup.SystemBlockGroups as a PlcSystemBlockGroup tree (Name, blocks with number / class / language when includeBlocks, nested " +
+                "Groups to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types). V14 SP1 returns system block groups only and " +
+                "explicitly reports systemTypeGroups unavailable (UNSUPPORTED_CAPABILITY); unitName scopes require V16 (safety V18). First 200 objects per " +
+                "group. No modification."
+                    + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult ReadPlcSystemGroupsV4(
             string softwarePath,
             string unitName="",
@@ -412,7 +468,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("includeBlocks: true also returns the blocks of each chart / group.")] bool includeBlocks=true,
             int maxDepth=4)
         {
-            return PlcExchangeContract.Run("ListPlcSystemGroups", () => ReadPlcSystemGroups(softwarePath, unitName, unitKind, includeBlocks, maxDepth), write: false, current: true);
+            return PlcExchangeContract
+                .Run("ListPlcSystemGroups", () => ReadPlcSystemGroups(softwarePath, unitName, unitKind, includeBlocks, maxDepth), write: false, current: true);
         }
     }
 }

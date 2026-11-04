@@ -150,7 +150,8 @@ namespace TiaMcpServer.Runtime
         private static RuntimeWriteItem MakeWriteItem(string name, JsonNode? value, string paramName)
         {
             if (value == null) throw new ArgumentException($"{paramName}: '{name}' has a null value; only bool, number or string values can be written.");
-            if (value is not JsonValue v) throw new ArgumentException($"{paramName}: '{name}' has an array/object value; structs and arrays are not supported by this tool, write the members individually.");
+            if (value is not JsonValue v)
+                throw new ArgumentException($"{paramName}: '{name}' has an array/object value; structs and arrays are not supported by this tool, write the members individually.");
             var item = new RuntimeWriteItem { Name = name, Value = value.DeepClone() };
             if (v.TryGetValue<bool>(out var b)) { item.ClrValue = b; item.ValueKind = "bool"; }
             else if (v.TryGetValue<long>(out var l)) { item.ClrValue = l; item.ValueKind = "integer"; }
@@ -223,13 +224,17 @@ namespace TiaMcpServer.Runtime
         {
             string h = (host ?? "").Trim();
             if (h.Length == 0) throw new ArgumentException("host is empty; give the CPU web server address, e.g. '192.168.0.1' or 'plc.local:443'.");
-            if (h.Contains("://")) throw new ArgumentException("host must not contain a scheme; the S7 Web API is always https. Give '192.168.0.1' or 'host:port'.");
+            if (h.Contains("://"))
+                throw new ArgumentException("host must not contain a scheme; the S7 Web API is always https. Give '192.168.0.1' or 'host:port'.");
             if (h.Contains("/") || h.Contains("\\") || h.Contains(" ") || h.Contains("?") || h.Contains("#"))
                 throw new ArgumentException("host must be a bare host name or IP with optional :port (no path, no spaces).");
             int colon = h.LastIndexOf(':');
             if (colon > 0 && !h.StartsWith("[", StringComparison.Ordinal))
             {
-                if (!int.TryParse(h.Substring(colon + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int port) || port < 1 || port > 65535)
+                if (!int
+                        .TryParse(h.Substring(colon + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                            out int port)
+                        || port < 1 || port > 65535)
                     throw new ArgumentException("host port must be 1..65535.");
             }
             return h;
@@ -275,7 +280,8 @@ namespace TiaMcpServer.Runtime
                 if (parts.Length != 3 || !parts[1].Equals("pipe", StringComparison.OrdinalIgnoreCase) || parts[2].Length == 0)
                     throw new ArgumentException(@"pipeName must look like \\.\pipe\HmiRuntime or just HmiRuntime.");
                 if (parts[0] != ".")
-                    throw new ArgumentException("pipeName refers to a remote machine; WinCC Unified Open Pipe is a local interface only (run this MCP server on the Runtime PC).");
+                    throw new ArgumentException("pipeName refers to a remote machine; WinCC Unified Open Pipe is a local interface only (run this MCP server " +
+                        "on the Runtime PC).");
                 return (".", parts[2]);
             }
             if (p.Contains("\\") || p.Contains("/")) throw new ArgumentException(@"pipeName must look like \\.\pipe\HmiRuntime or just HmiRuntime.");
@@ -336,7 +342,8 @@ namespace TiaMcpServer.Runtime
         {
             string s = (requestJson ?? "").Trim();
             if (s.Length == 0) throw new ArgumentException("requestJson is empty.");
-            if (s.Contains("\n") || s.Contains("\r")) throw new ArgumentException("requestJson must be a single-line JSON object (Open Pipe messages are newline-terminated).");
+            if (s.Contains("\n") || s.Contains("\r"))
+                throw new ArgumentException("requestJson must be a single-line JSON object (Open Pipe messages are newline-terminated).");
             JsonNode? node;
             try { node = JsonNode.Parse(s); }
             catch (JsonException ex) { throw new ArgumentException("requestJson is not valid JSON: " + ex.Message); }

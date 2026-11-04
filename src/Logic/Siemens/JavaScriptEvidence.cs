@@ -12,17 +12,23 @@ namespace TiaMcpServer.Siemens
     {
         private static object? P(object o, string name) => o.GetType().GetProperty(name)?.GetValue(o);
         private static string Slice(string text, Node node) => text.Substring(node.Range.Start, node.Range.End - node.Range.Start);
-        private static JsonObject Location(Node n, string path) => new JsonObject { ["file"] = path, ["startOffset"] = n.Range.Start, ["endOffset"] = n.Range.End,
+        private static JsonObject Location(Node n, string path) => new JsonObject {
+            ["file"] = path, ["startOffset"] = n.Range.Start, ["endOffset"] = n.Range.End,
             ["startLine"] = n.Location.Start.Line, ["startColumn"] = n.Location.Start.Column, ["offsetUnit"] = "UTF-16 code units; end exclusive" };
         internal static JsonObject Analyze(string text, string path)
         {
             var result = new JsonObject { ["path"] = path, ["kind"] = "scriptAnalysis", ["status"] = "ok", ["rawText"] = text,
                 ["bodyReadSuccess"] = true, ["parser"] = "Esprima 3.0.5; parsing only, never execution",
-                ["referenceCoverage"] = "syntactic candidates for Tags()/HMIRuntime.Tags(), imports and faceplate popup calls; aliases, eval and runtime name construction require separate resolution",
+                ["referenceCoverage"] =
+                    "syntactic candidates for Tags()/HMIRuntime.Tags(), imports and faceplate popup calls; aliases, eval and runtime name construction " +
+                    "require separate resolution",
                 ["runtimeResolutionComplete"] = false };
             Node tree;
             try { tree = new JavaScriptParser(new ParserOptions { Tolerant = false }).ParseModule(text); }
-            catch (Exception ex) { result["status"] = "unsupported"; result["parseComplete"] = false; result["reason"] = "Original text retained; AST parsing failed: " + ex.Message; return result; }
+            catch (Exception ex) {
+                result["status"] = "unsupported"; result["parseComplete"] = false; result["reason"] = "Original text retained; AST parsing failed: " + ex
+                    .Message; return result;
+            }
             var functions = new JsonArray(); var imports = new JsonArray(); var references = new JsonArray(); var globals = new JsonArray();
             var stack = new Stack<(Node Node, Node? Parent)>(); stack.Push((tree, null));
             while (stack.Count > 0)
@@ -51,7 +57,8 @@ namespace TiaMcpServer.Siemens
                 {
                     var callee = callNode.Callee;
                     string? call = callee == null ? null : Slice(text, callee);
-                    string? referenceKind = call == "Tags" || call == "HMIRuntime.Tags" ? "tag" : call == "UI.OpenFaceplateInPopup" || call == "HMIRuntime.UI.OpenFaceplateInPopup" ? "faceplateType" : null;
+                    string? referenceKind = call == "Tags" || call == "HMIRuntime.Tags" ? "tag" : call == "UI.OpenFaceplateInPopup"
+                        || call == "HMIRuntime.UI.OpenFaceplateInPopup" ? "faceplateType" : null;
                     if (referenceKind != null)
                     {
                         var arg = callNode.Arguments.Count == 0 ? null : callNode.Arguments[0]; var literal = arg == null ? null : P(arg, "Value") as string;
@@ -71,7 +78,8 @@ namespace TiaMcpServer.Siemens
             }
             result["parseComplete"] = true; result["functions"] = functions; result["functionCount"] = functions.Count;
             result["imports"] = imports; result["references"] = references; result["globalDefinitions"] = globals;
-            result["globalDefinitionsBasis"] = "Original top-level statements outside function declarations; complete original module text, including comments, is in rawText.";
+            result["globalDefinitionsBasis"] =
+                "Original top-level statements outside function declarations; complete original module text, including comments, is in rawText.";
             return result;
         }
     }

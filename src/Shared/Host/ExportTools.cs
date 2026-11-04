@@ -24,7 +24,10 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class ExportTools
     {
-        [McpServerTool(Name = "GetExportContent"), Description("[L1][Exports][READ] Read a UTF-16 code-unit slice of a parked response with offset/limit. Concatenate data.text pages before parsing. Use meta.paging.nextOffset until complete. data.export identifies the full content and its UTF-8 byteLength and SHA-256. Pages may return fewer units to keep serialized text within 20000 characters. Handles last 24 hours in this V4 session.")]
+        [McpServerTool(Name = "GetExportContent"),
+                Description("[L1][Exports][READ] Read a UTF-16 code-unit slice of a parked response with offset/limit. Concatenate data.text pages before " +
+                "parsing. Use meta.paging.nextOffset until complete. data.export identifies the full content and its UTF-8 byteLength and SHA-256. Pages may " +
+                "return fewer units to keep serialized text within 20000 characters. Handles last 24 hours in this V4 session.")]
         public CallToolResult GetExport(
             [Description("Opaque export handle from this engine session.")] string exportId,
             [Description("Zero-based UTF-16 code-unit offset.")] int offset = 0,
@@ -47,7 +50,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         page.TotalLength, page.Eof, PagingUnit.Utf16)));
         }
 
-        [McpServerTool(Name = "ListExportHandles"), Description("[L1][Exports][READ] List this engine session's parked responses with content identity and SHA-256. Empty is a complete result. limit caps the returned handles.")]
+        [McpServerTool(Name = "ListExportHandles"),
+                Description("[L1][Exports][READ] List this engine session's parked responses with content identity and SHA-256. Empty is a complete result. " +
+                "limit caps the returned handles.")]
         public CallToolResult ListExports(string? tool = null, int limit = 20,
             [Description("Zero-based offset into the matching in-memory export handles.")] int offset = 0)
         {
@@ -62,7 +67,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["returnedCount"] = entries.Length }, paging: OffsetPage(offset, limit, matches.Count));
         }
 
-        [McpServerTool(Name = "SaveExportContent"), Description("[L1][Exports][FILE] Save a parked response as UTF-8 with BOM. raw=true preserves its full text; otherwise write its payload. Existing files require overwrite=true. A failed write can leave partial file content. V4 envelope; export behavior remains current.")]
+        [McpServerTool(Name = "SaveExportContent"),
+                Description("[L1][Exports][FILE] Save a parked response as UTF-8 with BOM. raw=true preserves its full text; otherwise write its payload. " +
+                "Existing files require overwrite=true. A failed write can leave partial file content. V4 envelope; export behavior remains current.")]
         public CallToolResult SaveExport(string exportId, string outputPath, bool raw = false, bool overwrite = false)
         {
             const string tool = "SaveExportContent";
@@ -89,14 +96,17 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var data = new JsonObject { ["export"] = Describe(entry), ["path"] = full, ["writeIssued"] = issued };
                 return issued ? PlcExchangeContract.Result(tool, data, new Error("File write outcome is unknown; inspect the destination before retrying.",
-                    new OutcomeUnknownDetails("file-write", PlcExchangeContract.Evidence(data))), Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: true)
-                    : PlcExchangeContract.Reject(tool, new Error("Cannot prepare the destination directory.", new IoFailedDetails("create-directory", full)), data);
+                    new OutcomeUnknownDetails("file-write", PlcExchangeContract.Evidence(data))), Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
+                        current: true)
+                    : PlcExchangeContract
+                        .Reject(tool, new Error("Cannot prepare the destination directory.", new IoFailedDetails("create-directory", full)), data);
             }
             return PlcExchangeContract.Result(tool, new JsonObject { ["export"] = Describe(entry), ["path"] = full,
                 ["writtenLength"] = content.Length, ["unwrapped"] = unwrapped }, execution: Execution.Completed, current: true);
         }
 
-        [McpServerTool(Name = "DeleteExportHandle"), Description("[L1][Exports][WRITE] Delete one parked response from this engine session. A missing or expired handle returns NOT_FOUND.")]
+        [McpServerTool(Name = "DeleteExportHandle"),
+                Description("[L1][Exports][WRITE] Delete one parked response from this engine session. A missing or expired handle returns NOT_FOUND.")]
         public CallToolResult DeleteExport(string exportId)
         {
             var entry = ExportStore.Get(exportId);
@@ -104,7 +114,9 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Result("DeleteExportHandle", new JsonObject { ["export"] = Describe(entry) }, execution: Execution.Completed);
         }
 
-        [McpServerTool(Name = "ClearExportHandles"), Description("[L1][Exports][WRITE] Delete parked responses at least olderThanHours old. Zero clears all; the default 24 generally removes none because handles expire automatically at 24 hours.")]
+        [McpServerTool(Name = "ClearExportHandles"),
+                Description("[L1][Exports][WRITE] Delete parked responses at least olderThanHours old. Zero clears all; the default 24 generally removes " +
+                "none because handles expire automatically at 24 hours.")]
         public CallToolResult ClearExports(int olderThanHours = 24)
         {
             if (olderThanHours < 0) return PlcExchangeContract.Reject("ClearExportHandles", InvalidInput("olderThanHours"), current: false);
@@ -174,7 +186,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (NativeResultState.TryFailure(observation.Fields, true, out _, out _)) return;
             NativeResultState.Record(observation.Fields, state, changesProject, messages: messages);
             observation.Fields["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Documents;
-            observation.Fields["targetFiles"] = new JsonArray(new[] { ".s7dcl", ".s7res" }.Select(ext => (JsonNode)NativeResultState.FileRow(Path.Combine(directory, name + ext))).ToArray());
+            observation.Fields["targetFiles"] =
+                new JsonArray(new[] { ".s7dcl", ".s7res" }.Select(ext => (JsonNode)NativeResultState.FileRow(Path.Combine(directory, name + ext))).ToArray());
         }
         internal static void Observe(string key, JsonNode? value)
         { if (Active.Value is Observation observation) observation.Fields[key] = value?.DeepClone(); }
@@ -228,7 +241,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage };
             }
             if (NativeResultState.TryUnsuccessful(data, write, out var nativeOutcome, out var nativeError, tool))
-                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
+                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed
+                        : Execution.ReadOnly,
                     nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
             bool changed = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
             // A documented Openness refusal (P8-81c F4) carries an explicit condition and never poisons the session.
@@ -244,12 +258,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 || write && success == null
                 || write && success != true && (Count(data, "attemptedFiles") > Count(data, "succeededFiles")
                     || changed && (observation == null || observation.Issued == 0));
-            if (unknown) return Result(tool, data, new Error("An issued write could not be confirmed; do not replay it.", new OutcomeUnknownDetails(observation?.Stage ?? "native-call", Evidence(data))),
+            if (unknown)
+                return Result(tool, data,
+                    new Error("An issued write could not be confirmed; do not replay it.",
+                        new OutcomeUnknownDetails(observation?.Stage ?? "native-call", Evidence(data))),
                 Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current);
             int succeeded = Count(data, "exportedBlocks") + Count(data, "succeededFiles");
             int failed = Count(data, "skippedBlocks");
             int skipped = Count(data, "notAttemptedFiles");
-            if ((string?)data["outcome"] == "partial" || write && (succeeded > 0 && (failed > 0 || skipped > 0 || success == false) || observation?.Changed == true && success != true))
+            if ((string?)data["outcome"] == "partial" || write
+                    && (succeeded > 0 && (failed > 0 || skipped > 0 || success == false) || observation?.Changed == true && success != true))
                 return Result(tool, data, new Error("The operation has confirmed partial results.",
                     succeeded > 0 && failed + skipped > 0 ? new PartialFailureDetails(succeeded, failed, skipped) : new PartialFailureDetails(0, 0, 0)),
                     Outcome.Partial, Execution.Partial, Completeness.Partial, current: current);
@@ -286,7 +304,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "InvalidParams": return InvalidInput("arguments");
                 case "NotFound": return new Error("The exact target was not found.", new NotFoundDetails(null));
                 case "NotSupportedOnVersion": return new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, null, null));
-                default: return new Error("The operation did not succeed; inspect the retained evidence.", new PreconditionFailedDetails("native-exchange", null));
+                default
+                    : return new Error("The operation did not succeed; inspect the retained evidence.", new PreconditionFailedDetails("native-exchange", null));
             }
         }
         private static CallToolResult Failure(string tool, Exception exception, bool write, bool current, Observation observation)
@@ -295,10 +314,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["confirmed"] = observation.Confirmed, ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage } };
             foreach (var pair in observation.Fields) data[pair.Key] = pair.Value?.DeepClone();
             if (NativeResultState.TryUnsuccessful(data, write, out var nativeOutcome, out var nativeError, tool))
-                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
+                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed
+                        : Execution.ReadOnly,
                     nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
             if (observation.Issued > observation.Confirmed) return Result(tool, data,
-                new Error("An issued write outcome is unknown; inspect state before another write.", new OutcomeUnknownDetails(observation.Stage, Evidence(data))),
+                new Error("An issued write outcome is unknown; inspect state before another write.",
+                        new OutcomeUnknownDetails(observation.Stage, Evidence(data))),
                 Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current);
             if (observation.Changed || observation.Confirmed > 0) return Result(tool, data,
                 new Error("Confirmed effects remain, but result reporting did not complete.", new PartialFailureDetails(0, 0, 0)),
@@ -314,11 +335,16 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (cause is PortalException portal) error = StatusError(new JsonObject { ["status"] = portal.Code.ToString() });
                 if (cause is ArgumentException) error = InvalidInput("arguments");
-                if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error = InvalidInput("arguments");
-                if (cause is NotSupportedException) error = new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
-                if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error = new Error("The input file or directory was not found.", new NotFoundDetails(null));
+                if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error =
+                    InvalidInput("arguments");
+                if (cause is NotSupportedException) error =
+                    new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
+                if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error =
+                    new Error("The input file or directory was not found.", new NotFoundDetails(null));
             }
-            if (error != null || write) return Reject(tool, error ?? new Error("The operation was rejected before its write.", new PreconditionFailedDetails("native-exchange", null)), data, current);
+            if (error != null || write)
+                return Reject(tool, error ?? new Error("The operation was rejected before its write.", new PreconditionFailedDetails("native-exchange", null)),
+                    data, current);
             return Result(tool, data, new Error("The native read did not complete.", new NativeOperationFailedDetails(null, null, Evidence(data))),
                 Outcome.ReadFailed, Execution.ReadOnly, Completeness.None, current: current);
         }
@@ -329,14 +355,20 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = new List<Warning>();
             if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; family acceptance is pending.", new Dictionary<string, JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; family acceptance is pending.",
+                        new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial || completeness == Completeness.Unknown) warnings.Add(new Warning(WarningCode.IncompleteData,
                 "The retained observations do not establish complete content or post-operation state.", new Dictionary<string, JsonElement>()));
             if ((data?["warnings"] as JsonArray)?.Count > 0 || data?["warning"] != null
                 || outcome == null && (data?["failures"] as JsonArray)?.Count > 0)
-                warnings.Add(new Warning(WarningCode.NativeWarning, "Native or precheck diagnostics are retained in data.", new Dictionary<string, JsonElement>()));
-            var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome ?? Outcome.Succeeded, execution ?? Execution.ReadOnly,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness ?? Completeness.Complete, paging, warnings);
+                warnings
+                    .Add(new Warning(WarningCode.NativeWarning, "Native or precheck diagnostics are retained in data.", new Dictionary<string, JsonElement>()));
+            var meta =
+                new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome ?? Outcome.Succeeded, execution
+                    ?? Execution.ReadOnly,
+                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+                    completeness ?? Completeness.Complete, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };

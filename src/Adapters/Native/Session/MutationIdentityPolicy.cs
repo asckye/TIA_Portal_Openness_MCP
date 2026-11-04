@@ -47,7 +47,8 @@ namespace TiaMcp.Adapters
                 throw new ArgumentException("Invalid Windows path segment.");
             string stem=segment.Split('.')[0].ToUpperInvariant();
             if(stem=="CON" || stem=="PRN" || stem=="AUX" || stem=="NUL" ||
-               (stem.Length==4 && (stem.StartsWith("COM",StringComparison.Ordinal) || stem.StartsWith("LPT",StringComparison.Ordinal)) && ((stem[3]>='1' && stem[3]<='9') || stem[3]=='¹' || stem[3]=='²' || stem[3]=='³')))
+               (stem.Length==4 && (stem.StartsWith("COM",StringComparison.Ordinal) || stem.StartsWith("LPT",StringComparison.Ordinal))
+                       && ((stem[3]>='1' && stem[3]<='9') || stem[3]=='¹' || stem[3]=='²' || stem[3]=='³')))
                 throw new ArgumentException("Windows device names cannot identify a project.");
         }
         internal static string AbsoluteFile(string path)
@@ -61,7 +62,8 @@ namespace TiaMcp.Adapters
             if(!string.Equals(AbsoluteFile(expected),AbsoluteFile(actual),StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("The project does not match expectedProjectFile; no mutation was started.");
         }
-        public static void ValidateTarget(bool dryRun,bool confirm,string expected,string operation,string releaseKey,string file,string directory,string name,Action<string> requireBound)
+        public static void ValidateTarget(bool dryRun,bool confirm,string expected,string operation,string releaseKey,string file,string directory,string name,
+                Action<string> requireBound)
         {
             if(dryRun) return;
             if(!confirm) throw new ArgumentException("Execution requires confirm=true.");
@@ -69,12 +71,15 @@ namespace TiaMcp.Adapters
             if(operation=="OpenProject") RequireSameProject(expected,file);
             else if(operation=="CreateProject")
             {
-                if(releaseKey!="14sp1" && releaseKey!="15.1" && releaseKey!="16" && releaseKey!="17" && releaseKey!="18" && releaseKey!="19" && releaseKey!="20" && releaseKey!="21") throw new ArgumentException("Unsupported precise release key.");
+                if(releaseKey!="14sp1" && releaseKey!="15.1" && releaseKey!="16" && releaseKey!="17" && releaseKey!="18" && releaseKey!="19"
+                        && releaseKey!="20" && releaseKey!="21")
+                    throw new ArgumentException("Unsupported precise release key.");
                 if(string.IsNullOrWhiteSpace(name) || name=="." || name==".." || name.Contains("/") || name.Contains("\\"))
                     throw new ArgumentException("A single new project name is required.");
                 RequireSegment(name);
                 var major=releaseKey=="14sp1" ? "14" : releaseKey=="15.1" ? "15_1" : releaseKey;
-                if(major!="14" && major!="15_1" && major!="16" && major!="17" && major!="18" && major!="19" && major!="20" && major!="21") throw new ArgumentException("Unsupported release key.");
+                if(major!="14" && major!="15_1" && major!="16" && major!="17" && major!="18" && major!="19" && major!="20" && major!="21")
+                    throw new ArgumentException("Unsupported release key.");
                 RequireSameProject(expected,Absolute(directory).TrimEnd('\\')+"\\"+name+"\\"+name+".ap"+major);
             }
             else requireBound(expected);

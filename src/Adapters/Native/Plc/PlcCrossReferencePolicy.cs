@@ -31,19 +31,23 @@ namespace TiaMcp.Adapters.Native.Plc
             bool matches = suffix.Length > 0 && (type.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
                 || suffix.IndexOf("CrossReference", StringComparison.OrdinalIgnoreCase) >= 0);
             return matches || string.Equals(method, "GetCrossReferences", StringComparison.OrdinalIgnoreCase)
-                ? "Native PLC cross references cannot be accessed through reflection. Use the guarded GetPlcCrossReferences tool; its release policy and consistency checks also apply after explicit opt-in."
+                ? "Native PLC cross references cannot be accessed through reflection. Use the guarded GetPlcCrossReferences tool; its release policy and " +
+                    "consistency checks also apply after explicit opt-in."
                 : null;
         }
 
         /// <summary>V21 remains opt-in; API availability and consistency are separate preconditions.</summary>
         public static string? PolicyRefusal(string? setting, bool unified = false, string release = "21", bool sessionAllowed = false)
             => TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.DefaultAllowed(release) || setting == "1" || sessionAllowed ? null
-                : "refused: native " + (unified ? "Unified" : "PLC") + " cross references are disabled on V21 because CrossReferenceService queries have terminated TIA Portal. "
+                : "refused: native " + (unified ? "Unified" : "PLC")
+                    + " cross references are disabled on V21 because CrossReferenceService queries have terminated TIA Portal. "
                 + "No native query was made; this does not mean there are no references. "
-                + (unified ? "No complete offline replacement for Unified references is established. " : "Use AnalyzePlcCrossReferences for partial offline analysis. ")
+                + (unified ? "No complete offline replacement for Unified references is established. "
+                        : "Use AnalyzePlcCrossReferences for partial offline analysis. ")
                 + "Save the project before the first query. Enable Allow native cross references (V21) in Workbench for this session, or set "
                 + NativeQueryOptInVariable + "=1 in the MCP server process before starting it. "
-                + "Compilation is not a guarantee against this crash. If TIA exits, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not automatically retry.";
+                + "Compilation is not a guarantee against this crash. If TIA exits, inspect the project and MCP/TIA logs before explicitly recovering the " +
+                    "session and rebinding; do not automatically retry.";
 
         /// <summary>Null when the query may run; otherwise the refusal text (the blocks that are not compiled).</summary>
         public static string? Refusal(IReadOnlyList<(string Path, bool? Consistent)> blocks, string softwarePath)
@@ -62,9 +66,11 @@ namespace TiaMcp.Adapters.Native.Plc
             string shown = string.Join(", ", stale.Take(ListLimit));
             if (stale.Count > ListLimit) shown += ", ... (+" + (stale.Count - ListLimit) + " more)";
             return "refused: " + stale.Count + " block(s) of '" + softwarePath + "' are not compiled (IsConsistent=false): " + shown
-                 + ". No native query was made; this does not mean there are no references. Uncompiled changes may leave cross-reference information outdated; on the maintainer's real project TIA Portal V21 exited "
+                 + ". No native query was made; this does not mean there are no references. Uncompiled changes may leave cross-reference information " +
+                     "outdated; on the maintainer's real project TIA Portal V21 exited "
                  + "right after such a query (2026-09-21: five blocks re-imported with Override, then a query on the old instance DB). "
-                 + "Run CompilePlcSoftware (errorCount=0) before considering a diagnostic query; compilation does not guarantee that the native service cannot crash.";
+                 + "Run CompilePlcSoftware (errorCount=0) before considering a diagnostic query; compilation does not guarantee that the native service " +
+                     "cannot crash.";
         }
 
         /// <summary>How many blocks are known to be uncompiled (for reports that only need the number).</summary>

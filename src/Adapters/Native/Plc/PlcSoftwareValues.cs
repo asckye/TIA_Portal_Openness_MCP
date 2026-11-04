@@ -9,7 +9,11 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         internal static object? Value(object? value) => value;
         internal static string StringArray(IEnumerable<object?> values)
-            => "[" + string.Join(",", values.Select(value => "\"" + (value?.ToString() ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t") + "\"")) + "]";
+            => "[" + string
+                .Join(",", values
+                    .Select(value => "\"" + (value?.ToString() ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n")
+                        .Replace("\t", "\\t") + "\""))
+                + "]";
         internal static void RecordNativeResult(Dictionary<string, object?> evidence, object? state, object? messages)
         {
             evidence["nativeResultReturned"] = true; evidence["nativeState"] = state?.ToString();

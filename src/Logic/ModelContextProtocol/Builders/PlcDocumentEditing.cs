@@ -13,7 +13,10 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class PlcDocumentEditing
     {
         public const int MaxBytes = 16 * 1024 * 1024;
-        public static string Hash(byte[] bytes) { using var sha = System.Security.Cryptography.SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
+        public static string Hash(byte[] bytes) {
+            using var sha = System.Security.Cryptography.SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "")
+                .ToLowerInvariant();
+        }
         public static string HashText(string text) => Hash(Encoding.UTF8.GetBytes(text));
         public static string Read(string path)
         {
@@ -28,11 +31,14 @@ namespace TiaMcpServer.ModelContextProtocol
         public static XDocument Parse(string xml)
         {
             if (Encoding.UTF8.GetByteCount(xml) > MaxBytes) throw new ArgumentException("XML exceeds 16 MiB.");
-            using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxBytes });
+            using var reader = XmlReader
+                .Create(new StringReader(xml), new XmlReaderSettings {
+                    DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxBytes });
             var d = XDocument.Load(reader, LoadOptions.None);
             if (d.Root?.Name.LocalName != "Document") throw new ArgumentException("One SimaticML Document is required.");
             var objects = d.Root.Elements().Where(x => x.Name.LocalName != "Engineering" && x.Name.LocalName != "DocumentInfo").ToArray();
-            if (objects.Length != 1 || !new[] { "SW.Blocks.FC", "SW.Blocks.FB", "SW.Blocks.OB", "SW.Blocks.GlobalDB", "SW.Blocks.InstanceDB" }.Contains(objects[0].Name.LocalName))
+            if (objects.Length != 1 || !new[] { "SW.Blocks.FC", "SW.Blocks.FB", "SW.Blocks.OB", "SW.Blocks.GlobalDB", "SW.Blocks.InstanceDB" }
+                    .Contains(objects[0].Name.LocalName))
                 throw new ArgumentException("Exactly one supported PLC block per XML file is required.");
             if (string.IsNullOrWhiteSpace(Value(Child(objects[0], "AttributeList"), "Name"))) throw new ArgumentException("Block Name is missing.");
             return d;
@@ -86,9 +92,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 var attributes = Child(net, "AttributeList");
                 var source = attributes.Elements().SingleOrDefault(e => e.Name.LocalName == "NetworkSource");
                 rows.Add(new JsonObject { ["networkIndex"] = index++, ["language"] = Value(attributes, "ProgrammingLanguage"),
-                    ["sourceKinds"] = new JsonArray((source?.Elements() ?? Enumerable.Empty<XElement>()).Select(e => (JsonNode)JsonValue.Create(e.Name.LocalName)!).ToArray()),
+                    ["sourceKinds"] =
+                        new JsonArray((source?.Elements() ?? Enumerable.Empty<XElement>()).Select(e => (JsonNode)JsonValue.Create(e.Name.LocalName)!)
+                            .ToArray()),
                     ["textTargets"] = TextTargets(net), ["nativeGranularLogicWriteAvailable"] = false,
-                    ["route"] = "PatchPlcBlockDocument can update existing multilingual title/comment entries; logic changes require a full reviewed block document." });
+                    ["route"] =
+                        "PatchPlcBlockDocument can update existing multilingual title/comment entries; logic changes require a full reviewed block document."
+                    });
             }
             var members = new JsonArray();
             var interfaceElement = Child(Block(d), "AttributeList").Elements().SingleOrDefault(e => e.Name.LocalName == "Interface");
@@ -96,15 +106,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var member in interfaceElement.Descendants().Where(e => e.Name.LocalName == "Member"))
                 {
                     var section = member.Ancestors().FirstOrDefault(e => e.Name.LocalName == "Section");
-                    var path = string.Join("/", member.AncestorsAndSelf().Reverse().Where(e => e.Name.LocalName == "Member").Select(e => (string?)e.Attribute("Name") ?? ""));
+                    var path = string
+                        .Join("/", member.AncestorsAndSelf().Reverse().Where(e => e.Name.LocalName == "Member")
+                            .Select(e => (string?)e.Attribute("Name") ?? ""));
                     members.Add(new JsonObject { ["section"] = (string?)section?.Attribute("Name"), ["memberPath"] = path,
-                        ["datatype"] = (string?)member.Attribute("Datatype"), ["startValue"] = member.Elements().SingleOrDefault(e => e.Name.LocalName == "StartValue")?.Value,
-                        ["attributeXml"] = member.Elements().SingleOrDefault(e => e.Name.LocalName == "AttributeList")?.ToString(SaveOptions.DisableFormatting) });
+                        ["datatype"] = (string?)member.Attribute("Datatype"), ["startValue"] = member.Elements()
+                            .SingleOrDefault(e => e.Name.LocalName == "StartValue")?.Value,
+                        ["attributeXml"] = member.Elements().SingleOrDefault(e => e.Name.LocalName == "AttributeList")?.ToString(SaveOptions.DisableFormatting)
+                        });
                 }
             return new JsonObject { ["name"] = Name(d), ["kind"] = Block(d).Name.LocalName, ["libraryBound"] = LibraryBound(d),
                 ["documentFingerprint"] = HashText(Canonical(d)), ["networks"] = rows, ["members"] = members, ["blockTextTargets"] = TextTargets(Block(d)),
                 ["supportedPatchActions"] = new JsonArray("setBlockText", "setNetworkText", "setMemberStartValue"),
-                ["nativeImportValidated"] = false, ["scope"] = "Exported structure only; does not establish target CPU compatibility, consistency or native import safety." };
+                ["nativeImportValidated"] = false, ["scope"] =
+                    "Exported structure only; does not establish target CPU compatibility, consistency or native import safety." };
         }
         private static JsonArray TextTargets(XElement owner)
         {
@@ -113,7 +128,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var item in text.Descendants().Where(e => e.Name.LocalName == "MultilingualTextItem"))
                 {
                     var a = Child(item, "AttributeList");
-                    result.Add(new JsonObject { ["field"] = (string?)text.Attribute("CompositionName"), ["culture"] = Value(a, "Culture"), ["text"] = Value(a, "Text") });
+                    result
+                        .Add(new JsonObject {
+                            ["field"] = (string?)text.Attribute("CompositionName"), ["culture"] = Value(a, "Culture"), ["text"] = Value(a, "Text") });
                 }
             return result;
         }
@@ -132,18 +149,24 @@ namespace TiaMcpServer.ModelContextProtocol
                 var action = Get("action"); XElement target;
                 var allowed = action == "setNetworkText" ? new[] { "action", "networkIndex", "field", "culture", "expectedValue", "value" }
                     : action == "setBlockText" ? new[] { "action", "field", "culture", "expectedValue", "value" }
-                    : action == "setMemberStartValue" ? new[] { "action", "section", "memberPath", "expectedValue", "value" } : throw new ArgumentException("Unknown patch action.");
+                    : action == "setMemberStartValue" ? new[] { "action", "section", "memberPath", "expectedValue", "value" }
+                        : throw new ArgumentException("Unknown patch action.");
                 if (c.Any(p => !allowed.Contains(p.Key))) throw new ArgumentException("Unknown patch property.");
                 if (action == "setMemberStartValue")
                 {
-                    var members = Child(Child(Block(d), "AttributeList"), "Interface").Descendants().Where(e => e.Name.LocalName == "Section" && (string?)e.Attribute("Name") == Get("section")).ToArray();
+                    var members = Child(Child(Block(d), "AttributeList"), "Interface").Descendants()
+                        .Where(e => e.Name.LocalName == "Section" && (string?)e.Attribute("Name") == Get("section")).ToArray();
                     if (members.Length != 1) throw new ArgumentException("Section is absent or ambiguous.");
                     XElement current = members[0];
                     foreach (var segment in Get("memberPath").Split('/'))
                         current = current.Elements().Single(e => e.Name.LocalName == "Member" && (string?)e.Attribute("Name") == segment);
-                    if (current.AncestorsAndSelf().Any(e => e.Attributes().Any(a => (a.Name.LocalName == "ReadOnly" || a.Name.LocalName == "Informative") && a.Value.Equals("true", StringComparison.OrdinalIgnoreCase))))
+                    if (current.AncestorsAndSelf()
+                            .Any(e => e.Attributes()
+                                .Any(a => (a.Name.LocalName == "ReadOnly" || a.Name.LocalName == "Informative") && a.Value
+                                    .Equals("true", StringComparison.OrdinalIgnoreCase))))
                         throw new ArgumentException("Read-only/informative member cannot be edited.");
-                    if (current.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections")) throw new ArgumentException("Select a scalar member.");
+                    if (current.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections"))
+                        throw new ArgumentException("Select a scalar member.");
                     target = Child(current, "StartValue"); // Do not invent missing/default/array value shapes.
                 }
                 else
@@ -158,11 +181,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     var field = Get("field");
                     if (field != "Title" && field != "Comment") throw new ArgumentException("field must be Title or Comment.");
-                    var text = Child(owner, "ObjectList").Elements().Single(e => e.Name.LocalName == "MultilingualText" && (string?)e.Attribute("CompositionName") == field);
-                    var item = text.Descendants().Single(e => e.Name.LocalName == "MultilingualTextItem" && Value(Child(e, "AttributeList"), "Culture") == Get("culture"));
+                    var text = Child(owner, "ObjectList").Elements()
+                        .Single(e => e.Name.LocalName == "MultilingualText" && (string?)e.Attribute("CompositionName") == field);
+                    var item = text.Descendants()
+                        .Single(e => e.Name.LocalName == "MultilingualTextItem" && Value(Child(e, "AttributeList"), "Culture") == Get("culture"));
                     target = Child(Child(item, "AttributeList"), "Text");
                 }
-                if (target.HasElements || !used.Add(target) || target.Value != Get("expectedValue")) throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
+                if (target.HasElements || !used.Add(target) || target.Value != Get("expectedValue"))
+                    throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
                 target.Value = Get("value");
             }
             return d.ToString();
@@ -170,16 +196,22 @@ namespace TiaMcpServer.ModelContextProtocol
         public static string PrepareImport(string beforeXml, string candidateXml, JsonArray preserved)
         {
             var before = Parse(beforeXml); var candidate = Parse(candidateXml);
-            if (Name(before) != Name(candidate) || Block(before).Name != Block(candidate).Name) throw new ArgumentException("Import must address the same exact block name and kind.");
-            if (LibraryBound(before) || LibraryBound(candidate)) throw new ArgumentException("Library-bound block import refused: SimaticML would lose its type connection.");
-            if (Block(before).Name.LocalName == "SW.Blocks.InstanceDB") throw new ArgumentException("Instance DB overwrite requires a separate dependency-aware workflow.");
+            if (Name(before) != Name(candidate) || Block(before).Name != Block(candidate).Name)
+                throw new ArgumentException("Import must address the same exact block name and kind.");
+            if (LibraryBound(before) || LibraryBound(candidate))
+                throw new ArgumentException("Library-bound block import refused: SimaticML would lose its type connection.");
+            if (Block(before).Name.LocalName == "SW.Blocks.InstanceDB")
+                throw new ArgumentException("Instance DB overwrite requires a separate dependency-aware workflow.");
             var ba = Child(Block(before), "AttributeList"); var ca = Child(Block(candidate), "AttributeList");
             if (Block(before).Name.LocalName != "SW.Blocks.GlobalDB" && !new[] { "LAD", "FBD", "SCL", "STL" }.Contains(Value(ba, "ProgrammingLanguage")))
-                throw new ArgumentException("Only standard LAD/FBD/SCL/STL code blocks are supported; Safety and unknown languages require their own workflow.");
-            if (Networks(before).Length > 0 && Networks(candidate).Length == 0) throw new ArgumentException("Refuse replacing executable logic with an empty block.");
+                throw new ArgumentException("Only standard LAD/FBD/SCL/STL code blocks are supported; Safety and unknown languages require their own " +
+                    "workflow.");
+            if (Networks(before).Length > 0 && Networks(candidate).Length == 0)
+                throw new ArgumentException("Refuse replacing executable logic with an empty block.");
             Child(ca, "Interface"); // Missing interface is a replacement/reset, not a merge.
             foreach (var key in new[] { "Name", "Number", "MemoryLayout", "ProgrammingLanguage", "SecondaryType" })
-                if (Value(ca, key).Length > 0 && Value(ba, key) != Value(ca, key)) throw new ArgumentException("This import does not change block identity/layout/language: " + key);
+                if (Value(ca, key).Length > 0 && Value(ba, key) != Value(ca, key))
+                    throw new ArgumentException("This import does not change block identity/layout/language: " + key);
             foreach (var e in ba.Elements().Where(e => !e.HasElements && !new[] { "ModifiedDate", "CompileDate", "CreationDate" }.Contains(e.Name.LocalName)))
                 if (!ca.Elements().Any(c => c.Name == e.Name)) { ca.Add(new XElement(e)); preserved.Add(e.Name.LocalName); }
             string MemberKey(XElement member) => string.Join("/", member.AncestorsAndSelf().Reverse()
@@ -200,7 +232,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (newAttributes == null) { newAttributes = new XElement(oldAttributes.Name); member.AddFirst(newAttributes); }
                 foreach (var attribute in oldAttributes.Elements())
                     if (!newAttributes.Elements().Any(e => e.Name == attribute.Name && (string?)e.Attribute("Name") == (string?)attribute.Attribute("Name")))
-                    { newAttributes.Add(new XElement(attribute)); preserved.Add(key + "/" + attribute.Name.LocalName + ":" + (string?)attribute.Attribute("Name")); }
+                    {
+                        newAttributes.Add(new XElement(attribute)); preserved
+                            .Add(key + "/" + attribute.Name.LocalName + ":" + (string?)attribute.Attribute("Name"));
+                    }
             }
             return candidate.ToString();
         }

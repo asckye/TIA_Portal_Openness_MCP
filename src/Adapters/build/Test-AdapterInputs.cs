@@ -52,24 +52,32 @@ async Task Check(string name, (string Folder, string Key, string ApiRelative) it
     Record(name, ok, result.ExitCode, expectedError, noCompileOutput, log);
 }
 
-foreach (var item in cases) await Check("valid-" + item.Key, item, Path.Combine(apiRoot, item.ApiRelative.Replace('/', Path.DirectorySeparatorChar)), Array.Empty<string>());
+foreach (var item in cases)
+    await Check("valid-" + item.Key, item, Path.Combine(apiRoot, item.ApiRelative.Replace('/', Path.DirectorySeparatorChar)), Array.Empty<string>());
 var v20 = cases[6];
 var api20 = Path.Combine(apiRoot, v20.ApiRelative.Replace('/', Path.DirectorySeparatorChar));
-await Check("wrong-api-version", v20, Path.Combine(apiRoot, cases[5].ApiRelative.Replace('/', Path.DirectorySeparatorChar)), Array.Empty<string>(), "Wrong adapter API identity");
-await Check("missing-api-directory", v20, Path.Combine(evidenceDirectory, "absent-sdk"), Array.Empty<string>(), "PublicAPI 20 requires Siemens.Engineering.dll");
+await Check("wrong-api-version", v20, Path.Combine(apiRoot, cases[5].ApiRelative.Replace('/', Path.DirectorySeparatorChar)), Array.Empty<string>(),
+        "Wrong adapter API identity");
+await Check("missing-api-directory", v20, Path.Combine(evidenceDirectory, "absent-sdk"), Array.Empty<string>(),
+        "PublicAPI 20 requires Siemens.Engineering.dll");
 await Check("missing-api-module", cases[7], api20, Array.Empty<string>(), "PublicAPI 21 requires Siemens.Engineering.Base.dll");
 await Check("wrong-release", v20, api20, new[] { "-p:TiaReleaseKey=21" }, "Adapter release mismatch");
 await Check("override-project-identity", v20, api20, new[] { "-p:AdapterReleaseKey=19", "-p:TiaReleaseKey=19" }, "Adapter release mismatch");
-await Check("excluded-v14", cases[0], Path.Combine(apiRoot, cases[0].ApiRelative.Replace('/', Path.DirectorySeparatorChar)), new[] { "-p:TiaReleaseKey=14" }, "Adapter release mismatch");
-await Check("excluded-v15", cases[1], Path.Combine(apiRoot, cases[1].ApiRelative.Replace('/', Path.DirectorySeparatorChar)), new[] { "-p:TiaReleaseKey=15" }, "Adapter release mismatch");
+await Check("excluded-v14", cases[0], Path.Combine(apiRoot, cases[0].ApiRelative.Replace('/', Path.DirectorySeparatorChar)), new[] { "-p:TiaReleaseKey=14" },
+        "Adapter release mismatch");
+await Check("excluded-v15", cases[1], Path.Combine(apiRoot, cases[1].ApiRelative.Replace('/', Path.DirectorySeparatorChar)), new[] { "-p:TiaReleaseKey=15" },
+        "Adapter release mismatch");
 await Check("wrong-framework", v20, api20, new[] { "-p:TargetFramework=net461" }, "Adapter framework mismatch");
 await Check("wrong-platform", v20, api20, new[] { "-p:PlatformTarget=x86" }, "x64 library");
 await Check("executable-output", v20, api20, new[] { "-p:OutputType=Exe" }, "x64 library");
 await Check("wildcard-sources", v20, api20, new[] { "-p:EnableDefaultCompileItems=true" }, "explicit allowlist");
-await Check("missing-source", v20, api20, new[] { "-p:AdapterSourceRoot=" + Path.Combine(evidenceDirectory, "absent-source") }, "Missing allowlisted adapter source");
+await Check("missing-source", v20, api20, new[] { "-p:AdapterSourceRoot=" + Path.Combine(evidenceDirectory, "absent-source") },
+        "Missing allowlisted adapter source");
 
 var json = new JsonObject { ["results"] = results };
-await File.WriteAllTextAsync(Path.Combine(evidenceDirectory, "input-results.json"), json.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
+await File
+    .WriteAllTextAsync(Path.Combine(evidenceDirectory, "input-results.json"), json
+        .ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
 Console.WriteLine($"Adapter input checks: {passed} passed, {failed} failed");
 return failed == 0 ? 0 : 1;
 
@@ -86,7 +94,8 @@ void Record(string name, bool ok, int exitCode, string expectedError, bool noCom
 
 static async Task<(int ExitCode, string Output)> Run(string program, IReadOnlyList<string> arguments, string workingDirectory)
 {
-    var start = new System.Diagnostics.ProcessStartInfo(program) { WorkingDirectory = workingDirectory, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
+    var start = new System.Diagnostics.ProcessStartInfo(program) {
+        WorkingDirectory = workingDirectory, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
     foreach (var argument in arguments) start.ArgumentList.Add(argument);
     using var process = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("Could not start " + program);
     var outputTask = process.StandardOutput.ReadToEndAsync();

@@ -19,20 +19,31 @@ namespace TiaMcpServer.ModelContextProtocol
             ["confirmRun"] = "confirmRun: must be true together with dryRun=false to execute; keep false until the user agreed.",
             ["confirmUpload"] = "confirmUpload: must be true together with dryRun=false to upload into the project; keep false until the user agreed.",
             ["confirmInstanceChange"] = "confirmInstanceChange: must be true together with dryRun=false to change the PLCSIM Advanced instance.",
-            ["softwarePath"] = "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            ["softwarePath"] =
+                "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the " +
+                "station name.",
             ["targetSoftwarePath"] = "targetSoftwarePath: the target PLC software path from GetProjectTree (e.g. 'PLC_1').",
             ["hmiSoftwarePath"] = "hmiSoftwarePath: the HMI software path from GetProjectTree (e.g. 'HMI_RT_1').",
-            ["expectedProject"] = "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            ["expectedProject"] =
+                "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             ["previewToken"] = "previewToken: the token a preceding dryRun=true call returned; passing it proves the same change is being applied.",
-            ["devicePathJson"] = "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            ["itemPathJson"] = "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
+            ["devicePathJson"] =
+                "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself " +
+                "or its JSON text).",
+            ["itemPathJson"] =
+                "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its " +
+                "CPU where the tool says so).",
             ["destinationDevicePathJson"] = "destinationDevicePathJson: JSON array naming the destination station, like devicePathJson.",
             ["destinationItemPathJson"] = "destinationItemPathJson: JSON array of exact device-item names at the destination, like itemPathJson.",
             ["partnerDevicePathJson"] = "partnerDevicePathJson: JSON array naming the partner station, like devicePathJson.",
             ["partnerItemPathJson"] = "partnerItemPathJson: JSON array of exact device-item names on the partner, like itemPathJson.",
-            ["localInterfaceItemPathJson"] = "localInterfaceItemPathJson: JSON array path to the local interface item, e.g. [\"PLC_1\",\"PROFINET interface_1\"].",
+            ["localInterfaceItemPathJson"] =
+                "localInterfaceItemPathJson: JSON array path to the local interface item, e.g. [\"PLC_1\",\"PROFINET interface_1\"].",
             ["partnerInterfaceItemPathJson"] = "partnerInterfaceItemPathJson: JSON array path to the partner's interface item.",
-            ["objectPathJson"] = "objectPathJson: JSON string containing property steps [{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks.",
+            ["objectPathJson"] =
+                "objectPathJson: JSON string containing property steps " +
+                "[{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional " +
+                "name selects an exact collection member. [] selects the root. No parent/backlinks.",
             ["groupPathJson"] = "groupPathJson: JSON array path of the group, e.g. [\"Folder\",\"Subfolder\"]; [] = the root.",
             ["propertiesJson"] = "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
             ["attributesJson"] = "attributesJson: JSON object attribute name -> value to write.",
@@ -78,7 +89,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ["sensorIndex"] = "sensorIndex: 0-based encoder / sensor index.",
             ["propertyName"] = "propertyName: exact name of the property.",
             ["includeIdentical"] = "includeIdentical: true also lists objects that compare equal.",
-            ["action"] = "action: the operation to perform - the tool description lists the accepted values (case-sensitive); 'read' is the safe one where offered.",
+            ["action"] =
+                "action: the operation to perform - the tool description lists the accepted values (case-sensitive); 'read' is the safe one where offered.",
             ["kind"] = "kind: the object kind - the tool description lists the accepted values (case-sensitive).",
             ["objectKind"] = "objectKind: the object kind - the tool description lists the accepted values.",
             ["category"] = "category: the category - the tool description lists the accepted values.",

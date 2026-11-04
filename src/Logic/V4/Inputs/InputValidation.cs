@@ -128,7 +128,8 @@ namespace TiaMcp.Logic.V4.Inputs
                 return new InputResult<T>(presence, value, null);
             }
             catch (InputRejectionException rejection) { return Failure(presence, rejection.ToError(parameter)); }
-            catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is OverflowException || ex is FormatException || ex is System.Text.RegularExpressions.RegexMatchTimeoutException)
+            catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is OverflowException
+                    || ex is FormatException || ex is System.Text.RegularExpressions.RegexMatchTimeoutException)
             { return Failure(presence, InputGuard.Invalid(parameter)); }
         }
 
@@ -179,7 +180,8 @@ namespace TiaMcp.Logic.V4.Inputs
             Require(value.ValueKind == JsonValueKind.Object);
             var names = new HashSet<string>(StringComparer.Ordinal);
             foreach (var property in value.EnumerateObject())
-                Require(names.Add(property.Name) && (required.Contains(property.Name, StringComparer.Ordinal) || optional.Contains(property.Name, StringComparer.Ordinal)));
+                Require(names.Add(property.Name)
+                        && (required.Contains(property.Name, StringComparer.Ordinal) || optional.Contains(property.Name, StringComparer.Ordinal)));
             Require(required.All(names.Contains));
         }
     }

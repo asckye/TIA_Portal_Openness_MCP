@@ -25,6 +25,7 @@ internal static partial class Strings
         ("Calls.StatAverage", "Average duration", "平均耗时"),
         ("Calls.Milliseconds", "ms", "毫秒"),
         ("Vc.Subtitle", "Map the project to a TIA VCI workspace and synchronise it in either direction.", "将项目映射到 TIA VCI 工作区，并按任一方向同步。"),
-        ("Pages.NoSelection", "No blocks selected: compile and inspect apply to the whole PLC software; select blocks to export or import.", "未选块：编译与检查作用于整个 PLC 软件，导出导入需先选块"),
+        ("Pages.NoSelection", "No blocks selected: compile and inspect apply to the whole PLC software; select blocks to export or import.",
+                "未选块：编译与检查作用于整个 PLC 软件，导出导入需先选块"),
     ];
 }

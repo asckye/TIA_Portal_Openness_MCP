@@ -58,7 +58,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var node in templates)
                 {
                     var t = node as JsonObject;
-                    md.AppendLine("- " + t?["templateName"] + ": tags=" + t?["requiredTagCount"] + ", items=" + t?["itemCount"] + ", dynamizations=" + t?["dynamizationCount"] + ", actions=" + t?["actionCount"]);
+                    md
+                        .AppendLine("- " + t?["templateName"] + ": tags=" + t?["requiredTagCount"] + ", items=" + t?["itemCount"] + ", dynamizations=" + t
+                            ?["dynamizationCount"] + ", actions=" + t?["actionCount"]);
                 }
             }
             md.AppendLine();
@@ -81,13 +83,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (node is not JsonObject t) continue;
                     var summary = t["actionRecipeSummary"] as JsonObject;
-                    md.AppendLine("- " + t["templateName"] + ": actions=" + summary?["actionCount"] + ", effective=" + summary?["effectiveActionCount"] + ", ready=" + summary?["readyForGeneration"] + ", needsConfirm=" + summary?["requiresOperatorConfirm"] + ", highRisk=" + summary?["highRiskWrites"] + ", duplicates=" + ((summary?["duplicateActions"] as JsonArray)?.Count ?? 0) + ", missingTargets=" + ((summary?["missingTargets"] as JsonArray)?.Count ?? 0));
+                    md
+                        .AppendLine("- " + t["templateName"] + ": actions=" + summary?["actionCount"] + ", effective=" + summary?["effectiveActionCount"]
+                            + ", ready=" + summary?["readyForGeneration"] + ", needsConfirm=" + summary?["requiresOperatorConfirm"] + ", highRisk=" + summary
+                            ?["highRiskWrites"] + ", duplicates=" + ((summary?["duplicateActions"] as JsonArray)?.Count ?? 0) + ", missingTargets="
+                            + ((summary?["missingTargets"] as JsonArray)?.Count ?? 0));
                     if (summary?["effectiveRecipes"] is JsonArray recipes)
                     {
                         foreach (var recipeNode in recipes.Take(8))
                         {
                             if (recipeNode is not JsonObject recipe) continue;
-                            md.AppendLine("  - " + recipe["item"] + "." + recipe["event"] + ": " + recipe["recipeKind"] + ", safety=" + recipe["safetyLevel"] + ", status=" + recipe["status"]);
+                            md
+                                .AppendLine("  - " + recipe["item"] + "." + recipe["event"] + ": " + recipe["recipeKind"] + ", safety=" + recipe["safetyLevel"]
+                                    + ", status=" + recipe["status"]);
                         }
                     }
                 }
@@ -120,7 +128,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var result = new JsonArray();
             if (!Directory.Exists(templateDirectory)) return result;
 
-            foreach (var file in Directory.EnumerateFiles(templateDirectory, "*.json", SearchOption.TopDirectoryOnly).OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+            foreach (var file in Directory.EnumerateFiles(templateDirectory, "*.json", SearchOption.TopDirectoryOnly)
+                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
             {
                 try
                 {
@@ -211,7 +220,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         ["actions"] = actions,
                         ["actionRecipeSummary"] = actionRecipeSummary,
                         ["missingRequiredTagsForActions"] = new JsonArray(missingActionTags.Select(x => JsonValue.Create(x)).ToArray()),
-                        ["bindingPolicy"] = "RequiredTags.Name must exist as HMI tag, RequiredTags.PlcTag must exist as PLC tag or DB member before template application is treated as verified."
+                        ["bindingPolicy"] =
+                            "RequiredTags.Name must exist as HMI tag, RequiredTags.PlcTag must exist as PLC tag or DB member before template application is " +
+                            "treated as verified."
                     });
                 }
                 catch (Exception ex)
@@ -277,7 +288,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["screenRdfCount"] = Directory.Exists(screenDir) ? Directory.EnumerateFiles(screenDir, "*.rdf").Count() : 0,
                 ["faceplateRdfCount"] = Directory.Exists(faceplateDir) ? Directory.EnumerateFiles(faceplateDir, "*.rdf").Count() : 0,
                 ["globalLibraryExists"] = !string.IsNullOrWhiteSpace(libraryRoot) && (Directory.Exists(libraryRoot) || File.Exists(referenceGlobalLibraryPath)),
-                ["globalLibraryFileCount"] = Directory.Exists(libraryRoot) ? Directory.EnumerateFiles(libraryRoot, "*.al*", SearchOption.TopDirectoryOnly).Count() : 0,
+                ["globalLibraryFileCount"] = Directory.Exists(libraryRoot) ? Directory.EnumerateFiles(libraryRoot, "*.al*", SearchOption.TopDirectoryOnly)
+                    .Count() : 0,
                 ["sampleRuntimeStringHints"] = sampleStrings
             };
         }
@@ -403,7 +415,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["targetPopup"] = targetPopup,
                 ["writesTag"] = writesPlcOrHmiTag,
                 ["requiresOperatorConfirm"] = requiresConfirm,
-                ["safetyLevel"] = recipeKind == "project-binding-placeholder" ? "structure-placeholder" : highRisk ? "high" : writesPlcOrHmiTag ? "command" : "navigation",
+                ["safetyLevel"] = recipeKind == "project-binding-placeholder" ? "structure-placeholder" : highRisk ? "high" : writesPlcOrHmiTag ? "command"
+                    : "navigation",
                 ["status"] = status,
                 ["applyAsScript"] = recipeKind != "project-binding-placeholder",
                 ["verificationRequired"] = new JsonArray(BuildActionVerificationSteps(recipeKind, referencedTags).Select(x => JsonValue.Create(x)).ToArray()),
@@ -556,10 +569,13 @@ namespace TiaMcpServer.ModelContextProtocol
             if (value.Equals("SetBitInTag", StringComparison.OrdinalIgnoreCase)) return "set-bit";
             if (value.Equals("ResetBitInTag", StringComparison.OrdinalIgnoreCase)) return "reset-bit";
             if (value.Equals("ToggleBitInTag", StringComparison.OrdinalIgnoreCase)) return "toggle-bit";
-            if (value.Equals("SetValue", StringComparison.OrdinalIgnoreCase) || value.Equals("SetTagValue", StringComparison.OrdinalIgnoreCase)) return "set-value";
+            if (value.Equals("SetValue", StringComparison.OrdinalIgnoreCase) || value.Equals("SetTagValue", StringComparison.OrdinalIgnoreCase))
+                return "set-value";
             if (value.Equals("ConfirmWrite", StringComparison.OrdinalIgnoreCase)) return "confirm-write";
             if (value.Equals("OpenPopup", StringComparison.OrdinalIgnoreCase)) return "open-popup";
-            if (value.Equals("GotoScreen", StringComparison.OrdinalIgnoreCase) || value.Equals("ChangeScreen", StringComparison.OrdinalIgnoreCase) || value.Equals("NavigateScreen", StringComparison.OrdinalIgnoreCase)) return "goto-screen";
+            if (value.Equals("GotoScreen", StringComparison.OrdinalIgnoreCase) || value.Equals("ChangeScreen", StringComparison.OrdinalIgnoreCase) || value
+                    .Equals("NavigateScreen", StringComparison.OrdinalIgnoreCase))
+                return "goto-screen";
             return "script";
         }
 
@@ -586,7 +602,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else if (recipeKind == "project-binding-placeholder")
             {
-                yield return "Treat this as a structural placeholder; do not generate ScriptCode until the target project provides a verified navigation or popup API.";
+                yield return "Treat this as a structural placeholder; do not generate ScriptCode until the target project provides a verified navigation or " +
+                    "popup API.";
             }
         }
 

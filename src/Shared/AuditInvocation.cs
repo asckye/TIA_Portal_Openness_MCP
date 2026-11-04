@@ -37,14 +37,21 @@ namespace TiaOpenness.Shared
             public void Dispose() => PreviewDepth.Value = previous;
         }
         private AuditInvocation(AuditLog log, string requestId, string host, string release, string tool, string actor)
-        { this.log = log; this.requestId = requestId; this.host = host; this.release = release; this.tool = tool; this.actor = actor; previous = Current.Value; Current.Value = this; }
+        {
+            this.log = log; this.requestId = requestId; this.host = host; this.release = release; this.tool = tool; this.actor = actor; previous = Current
+                .Value; Current.Value = this;
+        }
         internal string RequestId => requestId;
         internal static string? CurrentRequestId => Generation.Value?[5] ?? Current.Value?.requestId;
         internal static AuditLog? CurrentLog => Current.Value?.log ?? LogOverride.Value;
-        internal static AuditInvocation? Begin(bool write, string host, string release, string tool, string? requestId = null, AuditLog? log = null, string? actor = null)
+        internal static AuditInvocation
+            ? Begin(bool write, string host, string release, string tool, string? requestId = null, AuditLog? log = null, string? actor = null)
         {
             if (!write || PreviewDepth.Value > 0) return null;
-            try { return new AuditInvocation(log ?? CurrentLog ?? AuditLog.Current, requestId ?? Guid.NewGuid().ToString("N"), host, release, tool, actor ?? ActorScope.Actor); }
+            try {
+                return new AuditInvocation(log ?? CurrentLog ?? AuditLog.Current, requestId ?? Guid.NewGuid().ToString("N"), host, release, tool, actor
+                        ?? ActorScope.Actor);
+            }
             catch (Exception ex) { ReportFailure(ex); return null; }
         }
         internal static IDisposable UseLog(AuditLog log)
@@ -89,7 +96,9 @@ namespace TiaOpenness.Shared
             }
             catch (Exception ex) when (ex is JsonException || ex is InvalidOperationException || ex is FormatException)
             { Trace.TraceInformation("Audit result has no readable V4 outcome: " + ex.GetType().Name); }
-            if (outcome != "succeeded" && outcome != "rejected-before-operation" && outcome != "failed" && outcome != "read-failed" && outcome != "partial" && outcome != "unknown") outcome = "unknown";
+            if (outcome != "succeeded" && outcome != "rejected-before-operation" && outcome != "failed" && outcome != "read-failed" && outcome != "partial"
+                    && outcome != "unknown")
+                outcome = "unknown";
             RecordRequest(); End(outcome);
         }
         internal void End(string outcome) { if (completed) return; RecordRequest(); completed = true; Emit("end", outcome); }

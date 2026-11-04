@@ -44,7 +44,8 @@ internal sealed class SharedSessionState
         bool allowed = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.DefaultAllowed(release) || environmentCrossReferences || human;
         return new JsonObject {
             ["nativeCrossReferences"] = new JsonObject { ["allowed"] = allowed, ["humanSessionAllowed"] = human,
-                ["environmentAllowed"] = environmentCrossReferences, ["defaultAllowed"] = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.DefaultAllowed(release) },
+                ["environmentAllowed"] = environmentCrossReferences, ["defaultAllowed"] = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent
+                    .DefaultAllowed(release) },
             ["approval"] = new JsonObject { ["enabled"] = ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled, ["readOnly"] = true } };
     }
     internal JsonObject Snapshot(string release)

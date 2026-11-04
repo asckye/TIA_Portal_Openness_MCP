@@ -74,7 +74,8 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
                 Update(new(DiagnosticState.Running, LocalizedText.Key("Env.BundleRedact"), 40));
                 var reports = Path.Combine(context.DataRoot, "reports");
                 Directory.CreateDirectory(reports);
-                string final = Path.Combine(reports, "diagnostics-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..8] + ".zip");
+                string final = Path
+                    .Combine(reports, "diagnostics-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..8] + ".zip");
                 temporary = final + ".partial";
                 using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
                 using (var zip = new ZipArchive(stream, ZipArchiveMode.Create))
@@ -105,7 +106,10 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
                     {
                         format = "tia-workbench-diagnostics-v1", createdAtUtc = DateTimeOffset.UtcNow,
                         limits = new { logTailBytes = 262144, logTailLines = 200, configBytes = 2097152 },
-                        redaction = new[] { "secret-field", "xml-secret", "auth-scheme", "url-userinfo", "query-secret", "text-secret", "private-key", "known-secret", "unparseable-hidden" },
+                        redaction = new[] {
+                            "secret-field", "xml-secret", "auth-scheme", "url-userinfo", "query-secret", "text-secret", "private-key", "known-secret",
+                                "unparseable-hidden"
+                        },
                         items = manifest.Select(item => item with
                         {
                             Source = redactor.Redact(item.Source).Text,
@@ -142,11 +146,15 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
     private static object Text(EnvironmentFinding finding, bool zh)
     {
         var table = zh ? Strings.Chinese : Strings.English;
-        return new { result = table[EnvironmentCheckCatalogue.ResultKey(finding)], fix = table[EnvironmentCheckCatalogue.FixKey(finding.Id, finding.Result == "NewLogon")] };
+        return new {
+            result = table[EnvironmentCheckCatalogue.ResultKey(finding)], fix =
+                table[EnvironmentCheckCatalogue.FixKey(finding.Id, finding.Result == "NewLogon")]
+        };
     }
     private static DiagnosticManifestItem Item(DiagnosticInput input, string state, bool truncated, IReadOnlyDictionary<string, int> rules)
         => new(input.Category, input.Entry, input.Path, state, truncated, rules);
-    private static string Format(DiagnosticInput input) => input.Tail ? "text" : Path.GetExtension(input.Path).ToLowerInvariant() switch { ".json" => "json", ".config" => "xml", _ => "text" };
+    private static string Format(DiagnosticInput input) => input.Tail ? "text" : Path.GetExtension(input.Path).ToLowerInvariant() switch {
+        ".json" => "json", ".config" => "xml", _ => "text" };
     private static void Add(ZipArchive zip, string entry, string text)
     {
         using var writer = new StreamWriter(zip.CreateEntry(entry, CompressionLevel.Optimal).Open(), new UTF8Encoding(false));
@@ -195,7 +203,9 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
         var activity = System.Windows.Application.Current?.Dispatcher.Invoke(() => System.Windows.Application.Current.Windows
             .OfType<MainWindow>().Select(window => ((ViewModels.MainViewModel)window.DataContext).Activity.Log).ToArray()) ?? [];
         for (int index = 0; index < activity.Length; index++)
-            inputs.Add(new("workbench-log", "current Workbench activity " + (index + 1), "logs/workbench/activity-" + (index + 1) + ".log", true, activity[index]));
+            inputs
+                .Add(new("workbench-log", "current Workbench activity " + (index + 1), "logs/workbench/activity-" + (index + 1) + ".log", true,
+                        activity[index]));
         if (activity.Length == 0) inputs.Add(new("workbench-log", "current Workbench activity", "logs/workbench/activity.log", true));
         string diagnostics = context.DiagnosticsDirectory ?? DataLocations.Current.DiagnosticsDirectory;
         var journals = Directory.Exists(diagnostics) ? Directory.GetFiles(diagnostics, "calls-*.jsonl*")
@@ -206,7 +216,8 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
         foreach (var release in TiaVersionCatalog.Runnable)
         {
             for (int index = 0; index < logRoots.Length; index++)
-                AddLogs(inputs, Path.Combine(logRoots[index], release.Key), "host-log", "logs/hosts/" + release.Key + (logRoots.Length == 1 ? "" : "/root-" + (index + 1)));
+                AddLogs(inputs, Path.Combine(logRoots[index], release.Key), "host-log", "logs/hosts/" + release.Key
+                        + (logRoots.Length == 1 ? "" : "/root-" + (index + 1)));
             if (context.BundleRoot != null)
             {
                 string host = EnvironmentBundleFiles.Host(context.BundleRoot, release.Key);
@@ -218,7 +229,8 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
         }
         var auditRoots = context.AuditReadRoots ?? new[] { context.AuditDirectory ?? DataLocations.Current.AuditDirectory };
         for (int index = 0; index < auditRoots.Length; index++)
-            foreach (var file in Directory.Exists(auditRoots[index]) ? Directory.GetFiles(auditRoots[index], "audit-*.jsonl").OrderByDescending(File.GetLastWriteTimeUtc).Take(64) : [])
+            foreach (var file in Directory.Exists(auditRoots[index]) ? Directory.GetFiles(auditRoots[index], "audit-*.jsonl")
+                    .OrderByDescending(File.GetLastWriteTimeUtc).Take(64) : [])
                 inputs.Add(new("host-log", file, "logs/audit/chain-" + (index + 1) + "/" + Path.GetFileName(file), true));
         return inputs;
     }

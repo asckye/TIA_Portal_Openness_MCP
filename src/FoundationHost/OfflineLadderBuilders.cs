@@ -13,7 +13,8 @@ internal static class OfflineLadderBuilders
 {
     internal const string FlgNetNamespace = "http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5";
     internal const int MaxNetworks = 64;
-    private static readonly HashSet<string> Types = new(StringComparer.Ordinal) { "Bool", "Byte", "Word", "DWord", "LWord", "SInt", "USInt", "Int", "UInt", "DInt", "UDInt", "LInt", "ULInt", "Real", "LReal" };
+    private static readonly HashSet<string> Types = new(StringComparer.Ordinal) {
+        "Bool", "Byte", "Word", "DWord", "LWord", "SInt", "USInt", "Int", "UInt", "DInt", "UDInt", "LInt", "ULInt", "Real", "LReal" };
 
     internal static JsonObject Build(string toolName, string release, string json)
     {
@@ -30,15 +31,18 @@ internal static class OfflineLadderBuilders
         {
             var call = Call(root, ref parameterCount);
             document = new XDocument(new XDeclaration("1.0", "utf-8", null), call);
-            summary = new JsonObject { ["callName"] = (string?)call.Descendants(Ns + "CallInfo").Single().Attribute("Name"), ["parameterCount"] = parameterCount };
+            summary = new JsonObject {
+                ["callName"] = (string?)call.Descendants(Ns + "CallInfo").Single().Attribute("Name"), ["parameterCount"] = parameterCount };
             mode = "plc-build-flgnet-call-xml";
         }
         else if (toolName == "BuildPlcLadFcBlock")
         {
-            Properties(root, "blockName", "name", "blockNumber", "number", "inputs", "outputs", "networks", "commentZhCn", "blockCommentZhCn", "comment", "titleZhCn", "blockTitleZhCn", "title");
+            Properties(root, "blockName", "name", "blockNumber", "number", "inputs", "outputs", "networks", "commentZhCn", "blockCommentZhCn", "comment",
+                    "titleZhCn", "blockTitleZhCn", "title");
             var blockName = Identifier(Text(root, true, "blockName", "name"));
             var numberValue = Alias(root, true, "blockNumber", "number")!.Value;
-            if (numberValue.ValueKind != JsonValueKind.Number || !numberValue.TryGetInt32(out int number) || number <= 0) throw new ArgumentException("Positive integer required.");
+            if (numberValue.ValueKind != JsonValueKind.Number || !numberValue.TryGetInt32(out int number) || number <= 0)
+                throw new ArgumentException("Positive integer required.");
             var memberNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Ret_Val" };
             int memberCount = 0;
             PlcBlockMemberDefinition[] Members(string key) => Rows(root, false, OfflineCompositionBuilders.MaxItems, key).Select(row =>
@@ -61,16 +65,24 @@ internal static class OfflineLadderBuilders
                 var call = Call(Alias(row, true, "callJson", "call")!.Value, ref parameterCount);
                 networks.Add(new PlcLadFcBlockXmlComposer.LadNetwork(call, Text(row, false, "titleZhCn", "title"), Text(row, false, "commentZhCn", "comment")));
             }
-            document = PlcLadFcBlockXmlComposer.Compose(blockName, number, inputs, outputs, networks, Text(root, false, "commentZhCn", "blockCommentZhCn", "comment"), Text(root, false, "titleZhCn", "blockTitleZhCn", "title"));
-            summary = new JsonObject { ["blockName"] = blockName, ["blockNumber"] = number, ["networkCount"] = networks.Count, ["inputCount"] = inputs.Length, ["outputCount"] = outputs.Length, ["parameterCount"] = parameterCount };
+            document = PlcLadFcBlockXmlComposer
+                .Compose(blockName, number, inputs, outputs, networks, Text(root, false, "commentZhCn", "blockCommentZhCn", "comment"),
+                    Text(root, false, "titleZhCn", "blockTitleZhCn", "title"));
+            summary = new JsonObject {
+                ["blockName"] = blockName, ["blockNumber"] = number, ["networkCount"] = networks.Count, ["inputCount"] = inputs.Length, ["outputCount"] =
+                    outputs.Length, ["parameterCount"] = parameterCount
+            };
             mode = "plc-compose-lad-fc-block-xml";
         }
         else throw new ArgumentException("Unknown ladder tool.");
         using var buffer = new Utf8Writer();
-        using (var writer = XmlWriter.Create(buffer, new XmlWriterSettings { Indent = true, NewLineHandling = NewLineHandling.Entitize })) document.Save(writer);
+        using (var writer = XmlWriter.Create(buffer, new XmlWriterSettings { Indent = true, NewLineHandling = NewLineHandling.Entitize })) document
+            .Save(writer);
         var xml = buffer.ToString();
         if (xml.Length > OfflineCompositionBuilders.MaxXmlCharacters) throw new ArgumentException("Output limit exceeded.");
-        using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = OfflineCompositionBuilders.MaxXmlCharacters });
+        using var reader = XmlReader
+            .Create(new StringReader(xml), new XmlReaderSettings {
+                DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = OfflineCompositionBuilders.MaxXmlCharacters });
         var verified = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
         if (toolName == "BuildFlgNetCall")
         {
@@ -78,18 +90,30 @@ internal static class OfflineLadderBuilders
         }
         else
         {
-            if (verified.Root?.Name != "Document" || (string?)verified.Root.Element("Engineering")?.Attribute("version") != "V21" || verified.Descendants("SW.Blocks.FC").Count() != 1 || verified.Descendants(XName.Get("Sections", OfflineBlockCompositionBuilders.InterfaceNamespace)).Count() != 1) throw new InvalidOperationException("Unexpected composer document.");
+            if (verified.Root?.Name != "Document" || (string?)verified.Root.Element("Engineering")?.Attribute("version") != "V21" || verified
+                    .Descendants("SW.Blocks.FC").Count() != 1 || verified.Descendants(XName.Get("Sections", OfflineBlockCompositionBuilders.InterfaceNamespace))
+                    .Count() != 1)
+                throw new InvalidOperationException("Unexpected composer document.");
             var ids = verified.Descendants().Attributes("ID").Select(x => x.Value).ToArray();
             if (ids.Distinct(StringComparer.Ordinal).Count() != ids.Length) throw new InvalidOperationException("Document ID collision.");
         }
         foreach (var network in verified.Descendants(Ns + "FlgNet")) VerifyNetwork(network);
-        JsonObject Flags() => new() { ["offlineOnly"] = true, ["outputReleaseKey"] = "21", ["schemaValidated"] = false, ["importValidated"] = false, ["programSemanticsValidated"] = false };
+        JsonObject Flags() => new() {
+            ["offlineOnly"] = true, ["outputReleaseKey"] = "21", ["schemaValidated"] = false, ["importValidated"] = false, ["programSemanticsValidated"] = false
+        };
         var meta = Flags(); meta["success"] = true; meta["nativeAcceptance"] = "NOT RUN";
         meta["provenance"] = "Unchanged V21 FlgNetCallXmlBuilder and PlcLadFcBlockXmlComposer pure methods; no version conversion";
-        meta["validationScope"] = "Bounded structured inputs, generated XML well-formedness, per-network identifiers and wire references only; no symbol/type resolution";
-        var data = Flags(); data["ok"] = true; data["xmlParseOk"] = true; data["mode"] = mode; data["xml"] = xml; data["error"] = null; data["summary"] = summary;
-        data["safetyPolicy"] = new JsonObject { ["tia"] = "No connection, worker, import, compile or project modification.", ["write"] = "Returns XML in memory only; no file reads or writes." };
-        return new JsonObject { ["Message"] = "Candidate LAD call XML generated; schema, import and program validation pending.", ["Meta"] = meta, ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] = new JsonArray(OfflineCompositionBuilders.Warning), ["OutputPath"] = null, ["OutputFiles"] = null, ["Xml"] = xml };
+        meta["validationScope"] =
+            "Bounded structured inputs, generated XML well-formedness, per-network identifiers and wire references only; no symbol/type resolution";
+        var data = Flags(); data["ok"] = true; data["xmlParseOk"] = true; data["mode"] = mode; data["xml"] = xml; data["error"] = null; data["summary"] =
+            summary;
+        data["safetyPolicy"] = new JsonObject {
+            ["tia"] = "No connection, worker, import, compile or project modification.", ["write"] = "Returns XML in memory only; no file reads or writes." };
+        return new JsonObject {
+            ["Message"] = "Candidate LAD call XML generated; schema, import and program validation pending.", ["Meta"] = meta, ["Ok"] = true, ["Data"] = data,
+                ["Errors"] = null, ["Warnings"] = new JsonArray(OfflineCompositionBuilders.Warning), ["OutputPath"] = null, ["OutputFiles"] = null, ["Xml"] =
+                xml
+        };
     }
     private static XNamespace Ns => FlgNetNamespace;
     private static XElement Call(JsonElement root, ref int total)
@@ -101,7 +125,8 @@ internal static class OfflineLadderBuilders
         foreach (var row in Rows(root, true, OfflineCompositionBuilders.MaxItems, "parameters"))
         {
             if (++total > OfflineCompositionBuilders.MaxItems) throw new ArgumentException("Parameter limit exceeded.");
-            Properties(row, "name", "parameterName", "section", "dataType", "datatype", "type", "sourceKind", "source", "kind", "symbolPath", "symbol", "value", "constantValue");
+            Properties(row, "name", "parameterName", "section", "dataType", "datatype", "type", "sourceKind", "source", "kind", "symbolPath", "symbol", "value",
+                    "constantValue");
             var port = Identifier(Text(row, true, "name", "parameterName"));
             if (!names.Add(port)) throw new ArgumentException("Duplicate or reserved port.");
             var section = Text(row, true, "section");
@@ -123,7 +148,8 @@ internal static class OfflineLadderBuilders
                 string[] components;
                 if (row.TryGetProperty("symbolPath", out var array))
                 {
-                    if (array.ValueKind != JsonValueKind.Array || array.GetArrayLength() is < 1 or > 32) throw new ArgumentException("Bounded symbol path required.");
+                    if (array.ValueKind != JsonValueKind.Array || array.GetArrayLength() is < 1 or > 32)
+                        throw new ArgumentException("Bounded symbol path required.");
                     components = array.EnumerateArray().Select(x => Identifier(String(x, true))).ToArray();
                 }
                 else components = Text(row, true, "symbol").Split('.').Select(Identifier).ToArray();
@@ -140,11 +166,14 @@ internal static class OfflineLadderBuilders
         var parts = network.Element(Ns + "Parts")?.Elements().ToArray() ?? throw new InvalidOperationException("Missing parts.");
         var wires = network.Element(Ns + "Wires")?.Elements(Ns + "Wire").ToArray() ?? throw new InvalidOperationException("Missing wires.");
         var ids = parts.Concat(wires).Select(e => (string?)e.Attribute("UId") ?? "").ToArray();
-        if (ids.Any(id => !int.TryParse(id, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int n) || n < 1) || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length) throw new InvalidOperationException("UId collision.");
+        if (ids.Any(id => !int.TryParse(id, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int n) || n < 1)
+                || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length)
+            throw new InvalidOperationException("UId collision.");
         var call = parts.Single(e => e.Name == Ns + "Call");
         var info = call.Element(Ns + "CallInfo")!;
         var parameters = info.Elements(Ns + "Parameter").ToArray();
-        if ((string?)info.Attribute("BlockType") != "FC" || wires.Length != parameters.Length + 1 || parts.Length != parameters.Length + 1) throw new InvalidOperationException("Unexpected call shape.");
+        if ((string?)info.Attribute("BlockType") != "FC" || wires.Length != parameters.Length + 1 || parts.Length != parameters.Length + 1)
+            throw new InvalidOperationException("Unexpected call shape.");
         var accessIds = parts.Where(e => e.Name == Ns + "Access").Select(e => (string)e.Attribute("UId")!).ToHashSet(StringComparer.Ordinal);
         for (int i = 0; i < wires.Length; i++)
         {
@@ -160,7 +189,9 @@ internal static class OfflineLadderBuilders
             {
                 var parameter = parameters[i - 1];
                 var ident = ends.Single(e => e.Name == Ns + "IdentCon");
-                if (!accessIds.Remove((string)ident.Attribute("UId")!) || (string?)port.Attribute("Name") != (string?)parameter.Attribute("Name") || (ends[0] == port) != ((string?)parameter.Attribute("Section") == "Output")) throw new InvalidOperationException("Broken port wire.");
+                if (!accessIds.Remove((string)ident.Attribute("UId")!) || (string?)port.Attribute("Name") != (string?)parameter.Attribute("Name")
+                        || (ends[0] == port) != ((string?)parameter.Attribute("Section") == "Output"))
+                    throw new InvalidOperationException("Broken port wire.");
             }
         }
         if (accessIds.Count != 0) throw new InvalidOperationException("Unwired access.");
@@ -168,7 +199,8 @@ internal static class OfflineLadderBuilders
     private static string DataType(string text) => Types.Contains(text) ? text : throw new ArgumentException("Unsupported datatype.");
     private static string Identifier(string text)
     {
-        if (text.Length == 0 || !(char.IsLetter(text[0]) || text[0] == '_') || text.Any(c => !(char.IsLetterOrDigit(c) || c == '_'))) throw new ArgumentException("Simple identifier required.");
+        if (text.Length == 0 || !(char.IsLetter(text[0]) || text[0] == '_') || text.Any(c => !(char.IsLetterOrDigit(c) || c == '_')))
+            throw new ArgumentException("Simple identifier required.");
         return text;
     }
     private static void Decode(JsonElement value)
@@ -185,7 +217,8 @@ internal static class OfflineLadderBuilders
     {
         if (value.ValueKind != JsonValueKind.Object) throw new ArgumentException("Object required.");
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var p in value.EnumerateObject()) if (!seen.Add(p.Name) || !allowed.Contains(p.Name, StringComparer.Ordinal)) throw new ArgumentException("Unknown or duplicate property.");
+        foreach (var p in value.EnumerateObject()) if (!seen.Add(p.Name) || !allowed.Contains(p.Name, StringComparer.Ordinal))
+            throw new ArgumentException("Unknown or duplicate property.");
     }
     private static JsonElement? Alias(JsonElement value, bool required, params string[] aliases)
     {
@@ -193,12 +226,14 @@ internal static class OfflineLadderBuilders
         if (found.Length > 1 || (required && found.Length == 0)) throw new ArgumentException("Missing or conflicting alias.");
         return found.Length == 0 ? null : value.GetProperty(found[0]);
     }
-    private static string Text(JsonElement value, bool required, params string[] aliases) => Alias(value, required, aliases) is JsonElement text ? String(text, required) : "";
+    private static string Text(JsonElement value, bool required, params string[] aliases) => Alias(value, required, aliases) is JsonElement text
+        ? String(text, required) : "";
     private static string String(JsonElement value, bool required)
     {
         if (value.ValueKind != JsonValueKind.String) throw new ArgumentException("String required.");
         var text = value.GetString()!;
-        if ((required && string.IsNullOrWhiteSpace(text)) || text.Length > OfflineCompositionBuilders.MaxStringCharacters) throw new ArgumentException("Invalid string size.");
+        if ((required && string.IsNullOrWhiteSpace(text)) || text.Length > OfflineCompositionBuilders.MaxStringCharacters)
+            throw new ArgumentException("Invalid string size.");
         XmlConvert.VerifyXmlChars(text); return text;
     }
     private static JsonElement[] Rows(JsonElement value, bool required, int max, params string[] aliases)

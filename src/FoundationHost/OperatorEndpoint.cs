@@ -44,7 +44,8 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
     {
         if (!OperatingSystem.IsWindows())
         {
-            if (options.OperatorOwner != null || options.Transport == "operator") throw new PlatformNotSupportedException("Operator transport requires Windows.");
+            if (options.OperatorOwner != null || options.Transport == "operator")
+                throw new PlatformNotSupportedException("Operator transport requires Windows.");
             return null;
         }
         string sid = LocalPipeSecurity.CurrentSid;
@@ -142,10 +143,13 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
         {
             try
             {
-                var connection = new OperatorConnection(registration, create, pid => owner != null && !owner.HasExited && owner.Id == pid, OwnedSessionEnded, RequestShutdown);
+                var connection =
+                    new OperatorConnection(registration, create, pid => owner != null && !owner.HasExited && owner.Id == pid, OwnedSessionEnded,
+                        RequestShutdown);
                 await connection.Serve(pipe, verify(pipe), stopping.Token).ConfigureAwait(false);
             }
-            catch (Exception error) when (error is IOException or OperationCanceledException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception or McpException)
+            catch (Exception error) when (error is IOException or OperationCanceledException or UnauthorizedAccessException or InvalidOperationException or System
+                    .ComponentModel.Win32Exception or McpException)
             { if (!stopping.IsCancellationRequested) Report(error); }
             finally { slots.Release(); }
         }

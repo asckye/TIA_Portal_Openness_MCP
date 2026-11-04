@@ -44,7 +44,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (name == "CallTool" || name == "PreviewToolCall")
                 properties["arguments"] = new JsonObject { ["type"] = "object", ["description"] = "Arguments validated against the named tool's inputSchema." };
             if (name == "RunReadOnlyToolBatch" || name == "PreviewToolBatch")
-                properties["operations"] = JsonNode.Parse("{\"type\":\"array\",\"minItems\":1,\"maxItems\":50,\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"name\",\"arguments\"],\"properties\":{\"name\":{\"type\":\"string\"},\"arguments\":{\"type\":\"object\"}}}}");
+                properties["operations"] = JsonNode
+                    .Parse("{\"type\":\"array\",\"minItems\":1,\"maxItems\":50,\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"name\",\"arguments\"],\"properties\":{\"name\":{\"type\":\"string\"},\"arguments\":{\"type\":\"object\"}}}}");
             if (properties["offset"] is JsonObject offset) offset["minimum"] = 0;
             if (properties["limit"] is JsonObject limit)
             {
@@ -135,7 +136,8 @@ namespace TiaMcpServer.ModelContextProtocol
         };
 
         /// <summary>Apply documented hints and the shared V4 admission boundary; schema failures stop registration.</summary>
-        internal static McpServerTool WithSchemaHints(McpServerTool tool, string name, IReadOnlyList<PreflightLogic.ParameterSpec> specs, Action<JsonObject, JsonElement> preserveTypedSchemas)
+        internal static McpServerTool WithSchemaHints(McpServerTool tool, string name, IReadOnlyList<PreflightLogic.ParameterSpec> specs, Action<JsonObject,
+                JsonElement> preserveTypedSchemas)
         {
             var protocol = tool.ProtocolTool;
             var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
@@ -186,7 +188,8 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var kv in AllToolDescriptors())
             {
                 var specs = SpecsOf(kv.Value);
-                var schema = new JsonObject { ["properties"] = new JsonObject(specs.Select(s => new KeyValuePair<string, JsonNode?>(s.Name, new JsonObject()))) };
+                var schema = new JsonObject { ["properties"] = new JsonObject(specs.Select(s => new KeyValuePair<string, JsonNode?>(s.Name, new JsonObject())))
+                };
                 var r = SchemaHintsLogic.Augment(schema, specs, null);
                 if (r.Enums > 0) toolsWithEnums++;
                 enums += r.Enums; defaults += r.Defaults;
@@ -199,8 +202,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return new JsonObject
             {
-                ["tools"] = AllToolDescriptors().Count, ["parameters"] = parameters, ["toolsWithEnumHints"] = toolsWithEnums, ["enumHints"] = enums, ["defaultHints"] = defaults,
-                ["parametersUndocumented"] = undocumented, ["parametersFromVocabulary"] = vocabulary, ["toolsWithUndocumentedParameters"] = undocumentedTools.Count,
+                ["tools"] = AllToolDescriptors().Count, ["parameters"] = parameters, ["toolsWithEnumHints"] = toolsWithEnums, ["enumHints"] = enums,
+                    ["defaultHints"] = defaults,
+                ["parametersUndocumented"] = undocumented, ["parametersFromVocabulary"] = vocabulary, ["toolsWithUndocumentedParameters"] = undocumentedTools
+                    .Count,
                 ["undocumentedTools"] = new JsonArray(undocumentedTools.OrderBy(t => t, StringComparer.Ordinal).Select(t => (JsonNode)t).ToArray()),
             };
         }
@@ -220,7 +225,10 @@ namespace TiaMcpServer.ModelContextProtocol
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
             var error = validate != null ? validate(arguments, ProtocolTool.InputSchema)
                 : McpServer.ToolInvoker.ValidateArguments(method, arguments, ProtocolTool.InputSchema);
-            return error != null ? new ValueTask<CallToolResult>(McpServer.V4TargetReject(ProtocolTool.Name, error, McpServer.CurrentBehaviorTargets(ProtocolTool.Name, arguments))) : inner.InvokeAsync(request, cancellationToken);
+            return error != null
+                ? new ValueTask<CallToolResult>(McpServer
+                    .V4TargetReject(ProtocolTool.Name, error, McpServer.CurrentBehaviorTargets(ProtocolTool.Name, arguments)))
+                : inner.InvokeAsync(request, cancellationToken);
         }
     }
 

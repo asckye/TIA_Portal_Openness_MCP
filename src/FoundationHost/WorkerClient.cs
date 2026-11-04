@@ -78,7 +78,9 @@ internal static class FoundationWorkerRequest
     }
 }
 
-internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string? timeoutConfig = null) : IFoundationSessionWorker, IFoundationWorkerResult, IFoundationWorkerSupervisor, IFoundationWorkerReadiness
+internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string
+        ? timeoutConfig = null)
+    : IFoundationSessionWorker, IFoundationWorkerResult, IFoundationWorkerSupervisor, IFoundationWorkerReadiness
 {
     internal string? NativeCrossReferenceSessionFile { get; set; }
     internal string? NativeCrossReferenceSessionSecret { get; set; }
@@ -118,7 +120,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private JsonObject SupervisorEnvironment() => SupervisorReadiness?.Invoke()
         ?? Readiness(() => FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, null));
     public ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name)
-        => System.Text.Encoding.UTF8.GetByteCount(JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)) >= ChannelLimits.ResponseBytes / 2
+        => System.Text.Encoding.UTF8
+            .GetByteCount(JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)) >= ChannelLimits.ResponseBytes / 2
             ? ResponseGuardTool.Shrink(result, name, "worker", force: true) : result;
     private readonly WorkerTimeoutPolicy timeouts = new(defaultTimeoutSeconds, timeoutConfig,
         Environment.GetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS"));
@@ -144,7 +147,12 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         private WorkerClient? previous;
         private bool disposed;
         internal void Activate() { previous = Held.Value; Held.Value = owner; }
-        public void Dispose() { if (!disposed) { disposed = true; Held.Value = previous; if (counted) Interlocked.Decrement(ref owner.active); HostSessionCall.LaneChanged(false); owner.serial.Release(); } }
+        public void Dispose() {
+            if (!disposed) {
+                disposed = true; Held.Value = previous; if (counted) Interlocked.Decrement(ref owner.active); HostSessionCall.LaneChanged(false); owner.serial
+                    .Release();
+            }
+        }
     }
     private readonly object stateSync = new();
     private Process? process;
@@ -187,7 +195,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             var legacy = HostSnapshot();
             JsonNode? observedReadiness = ready;
             if (ReleaseCatalogData.Releases[releaseKey].ExtendedWorkerStatus)
-                observedReadiness = sharedStatus?["readiness"]?.DeepClone() ?? new JsonObject { ["ready"] = ready["ready"]?.DeepClone(), ["cause"] = ready["cause"]?.DeepClone(),
+                observedReadiness = sharedStatus?["readiness"]?.DeepClone() ?? new JsonObject {
+                    ["ready"] = ready["ready"]?.DeepClone(), ["cause"] = ready["cause"]?.DeepClone(),
                     ["groupOk"] = environment?["opennessGroupOk"]?.DeepClone(), ["recommendedFix"] = ready["recommendedFix"]?.DeepClone(),
                     ["recommendedFixZh"] = ready["recommendedFixZh"]?.DeepClone() };
             var snapshot = WorkerSupervisorReplies.Snapshot(releaseKey, new WorkerSupervisorState(legacy, faulted, process != null,
@@ -207,7 +216,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 : JsonValue.Create((bool?)hostState?["IsAttached"] ?? attachedProcessId.HasValue),
             ["sessionLocked"] = Poisoned,
             ["binding"] = new JsonObject { ["processId"] = SharedSession ? JsonValue.Create(attachedProcessId) : approvalIdentity["ProcessId"]?.DeepClone(),
-                ["projectFile"] = SharedSession ? (sharedStatus?["binding"]?["identity"]?["projectPath"] ?? sharedStatus?["binding"]?["projectPath"])?.DeepClone()
+                ["projectFile"] = SharedSession ? (sharedStatus?["binding"]?["identity"]?["projectPath"] ?? sharedStatus?["binding"]?["projectPath"])?
+                    .DeepClone()
                     : (approvalIdentity["ProjectFile"] ?? approvalIdentity["ProjectPath"])?.DeepClone(),
                 ["bindingEpoch"] = SharedSession ? JsonValue.Create(channel?.BindingEpoch) : approvalIdentity["BindingEpoch"]?.DeepClone() } };
     }
@@ -220,7 +230,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             return !observed.HasExited && observed.StartTime.ToUniversalTime() == start
                 ? start.ToString("O", System.Globalization.CultureInfo.InvariantCulture) : null;
         }
-        catch (Exception error) when (error is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception or System.Security.SecurityException)
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception or System.Security
+                .SecurityException)
         { /* swallow(env-probe): unavailable OS identity must keep the batch binding incomplete. */ return null; }
     }
     private void ClearHostBinding()
@@ -234,7 +245,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         int? pid = (int?)identity["ProcessId"] ?? attachedProcessId;
         string? start = !Poisoned && !disconnecting && pid.HasValue && hostProcessStartUtc == ProcessStartUtc(pid.Value) ? hostProcessStartUtc : null;
         return new JsonObject { ["enabled"] = true, ["state"] = process == null ? "Stopped" : Poisoned ? "Faulted" : "Running",
-            ["sessionLocked"] = Poisoned, ["session"] = new JsonObject { ["isConnected"] = (bool?)hostState?["IsAttached"] ?? attachedProcessId.HasValue, ["project"] = project },
+            ["sessionLocked"] = Poisoned, ["session"] = new JsonObject {
+                ["isConnected"] = (bool?)hostState?["IsAttached"] ?? attachedProcessId.HasValue, ["project"] = project },
             ["binding"] = new JsonObject { ["identity"] = new JsonObject {
                 ["tiaMajorVersion"] = TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion, ["processId"] = pid,
                 ["processStartUtc"] = start, ["projectPath"] = file, ["projectName"] = project,
@@ -337,7 +349,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (disconnectAcknowledgement != null)
             {
                 if (operation=="Disconnect" && arguments.Count==0) return disconnectAcknowledgement.DeepClone();
-                throw SessionEnded(releaseKey, "Disconnect ended this session. A subsequent explicit Attach requires a new host session; automatic restart is refused.");
+                throw SessionEnded(releaseKey,
+                        "Disconnect ended this session. A subsequent explicit Attach requires a new host session; automatic restart is refused.");
             }
             if (disconnecting) throw SessionEnded(releaseKey, "Disconnect is ending this session; a new host session is required.");
             if (operation=="Disconnect")
@@ -350,7 +363,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 }
             }
             // Idle Disconnect above must not launch a worker, even in native-disabled discovery.
-            if (!nativeEnabled && !managed) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
+            if (!nativeEnabled && !managed)
+                throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
             if (!managed && Bundled && WorkerOperations.RequiresPortal(operation) && !attachedProcessId.HasValue)
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
             hostAttachPid = operation == "Attach" ? (int?)arguments["processId"] : null;
@@ -370,10 +384,12 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 bool firstAttach = attach && !attachAttempted;
                 token.ThrowIfCancellationRequested();
                 if (attach) attachAttempted = true;
-                if (operation == "HostObserve") response = await channel.CallAsync("adapter.HostObserve", arguments.ToJsonString(), BindingChange.None, true, timeouts.For("status"), CancellationToken.None);
+                if (operation == "HostObserve") response = await channel
+                    .CallAsync("adapter.HostObserve", arguments.ToJsonString(), BindingChange.None, true, timeouts.For("status"), CancellationToken.None);
                 else
                 response=await FoundationWorkerRequest.Dispatch(channel, "adapter."+operation,arguments.ToJsonString(),change,
-                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true,timeouts.ForPlc(operation, arguments, firstAttach), firstAttach, CancellationToken.None);
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true,timeouts.ForPlc(operation, arguments, firstAttach),
+                        firstAttach, CancellationToken.None);
                 sent=true;
             }
             catch(ChannelFailureException failure)
@@ -400,17 +416,21 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             {
                 attachedProcessId=arguments["processId"]!.GetValue<int>();
                 ClearHostBinding();
-                if (!Poisoned && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc = startBeforeAttach;
+                if (!Poisoned && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc =
+                    startBeforeAttach;
             }
             if (operation == "ReadState" && result is JsonObject cachedState) hostState = (JsonObject)cachedState.DeepClone();
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
             if (SharedSession && !outcome.Poisoned && !WorkerOperations.IsIndependentRuntime(operation))
             {
-                var statusWire = await channel.CallAsync("adapter.HostObserve", "{\"operation\":\"status\",\"arguments\":{}}", BindingChange.None, true, timeouts.For("status"), CancellationToken.None);
+                var statusWire = await channel
+                    .CallAsync("adapter.HostObserve", "{\"operation\":\"status\",\"arguments\":{}}", BindingChange.None, true, timeouts.For("status"),
+                        CancellationToken.None);
                 sharedStatus = JsonNode.Parse(statusWire)!.AsObject();
             }
-            if (token.IsCancellationRequested) TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(activeRequestId!, operation, "RETURNED_AFTER_CANCELLATION");
+            if (token.IsCancellationRequested) TiaMcpServer.ModelContextProtocol.InvocationJournal
+                .Write(activeRequestId!, operation, "RETURNED_AFTER_CANCELLATION");
             return result;
         }
         catch(Exception ex) when (ex.Data["foundationSessionEnded"] is not true)
@@ -462,21 +482,29 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (disconnecting) throw SessionEnded(releaseKey, "Disconnect ended this session; a new host session is required.");
             if (process == null)
             {
-                if (!File.Exists(workerExe) || !Directory.Exists(apiDirectory)) throw new FileNotFoundException("Select the compiled worker and authorized PublicAPI directory explicitly.");
+                if (!File.Exists(workerExe) || !Directory.Exists(apiDirectory))
+                    throw new FileNotFoundException("Select the compiled worker and authorized PublicAPI directory explicitly.");
                 var adapterFile=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(workerExe))!,"TiaMcp.Adapter."+releaseKey+".dll");
                 var workerHash=ArgumentRules.HashFile(workerExe,FileShare.Read);
                 var adapterHash=ArgumentRules.HashFile(adapterFile,FileShare.Read);
                 var nonce=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
-                var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
+                var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) {
+                    UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
+                        StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false),
+                        StandardErrorEncoding = new System.Text.UTF8Encoding(false)
+                };
                 foreach (var argument in new WorkerLaunchOptions(releaseKey, apiDirectory, nonce, WithUi, TiaPortalLocation).Arguments())
                     start.ArgumentList.Add(argument);
                 start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = SpillsDirectory;
-                if (NativeCrossReferenceSessionFile != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionFileVariable] = NativeCrossReferenceSessionFile;
-                if (NativeCrossReferenceSessionSecret != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionSecretVariable] = NativeCrossReferenceSessionSecret;
+                if (NativeCrossReferenceSessionFile != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionFileVariable] =
+                    NativeCrossReferenceSessionFile;
+                if (NativeCrossReferenceSessionSecret != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionSecretVariable] =
+                    NativeCrossReferenceSessionSecret;
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                 attachAttempted = false;
-                process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
+                process.ErrorDataReceived += (_, e) => {
+                    if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
                 process.BeginErrorReadLine();
                 channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
                     new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce));
@@ -501,9 +529,12 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             {
                 try
                 {
-                    var wire = await FoundationWorkerRequest.Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), false, CancellationToken.None);
+                    var wire = await FoundationWorkerRequest
+                        .Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), false, CancellationToken
+                            .None);
                     wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
-                    disconnectAcknowledgement = (JsonObject)DisconnectContract.Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
+                    disconnectAcknowledgement = (JsonObject)DisconnectContract
+                        .Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
                 }
                 catch (ChannelFailureException refused) when (DisconnectContract.Refused(refused))
                 { disconnecting = false; throw DisconnectContract.Refusal(refused); }

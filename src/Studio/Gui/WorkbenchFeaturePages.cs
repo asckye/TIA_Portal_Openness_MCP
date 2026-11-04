@@ -19,7 +19,8 @@ public partial class MainWindow
 
     private void InitializeFeaturePages()
     {
-        ConfigureFeaturePages(new CallJournalService(_model.SelectedReleaseKey), new AuditLogService(), new EnvironmentCheckService(!_model.OfflineDemo, () => _model.SelectedReleaseKey));
+        ConfigureFeaturePages(new CallJournalService(_model.SelectedReleaseKey), new AuditLogService(),
+                new EnvironmentCheckService(!_model.OfflineDemo, () => _model.SelectedReleaseKey));
         Approvals.NewRequest += OnNewApproval;
         _model.PropertyChanged += OnFeatureReleaseChanged;
     }
@@ -37,7 +38,8 @@ public partial class MainWindow
         }
         if (notification != null) { _approvalNotification.Dispose(); _approvalNotification = notification; }
         Features = new FeaturePagesViewModel(Approvals, journal, audit, environment, _diagnostics, now) { Release = _model.SelectedReleaseKey };
-        DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext = CallDetailContent.DataContext = Features;
+        DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext =
+            CallDetailContent.DataContext = Features;
         Features.DrawerRequested += OnFeatureDrawer;
         Features.Feedback += OnFeatureFeedback;
         Features.SetVisibility(_page == "Calls", _page == "Audit", _drawer == "Approvals", _drawer == "CallDetail");
@@ -71,7 +73,11 @@ public partial class MainWindow
         Controls.AccessibleStatus.Announce(ToastTitle);
         if (WindowState == WindowState.Minimized)
         {
-            try { _approvalNotification.Show(ToastTitle.Text, ToastMessage.Text, () => Dispatcher.Invoke(() => { if (_featuresDisposed) return; WindowState = WindowState.Normal; Activate(); OpenDrawer("Approvals"); })); }
+            try {
+                _approvalNotification
+                    .Show(ToastTitle.Text, ToastMessage.Text, () => Dispatcher
+                        .Invoke(() => { if (_featuresDisposed) return; WindowState = WindowState.Normal; Activate(); OpenDrawer("Approvals"); }));
+            }
             catch (Exception ex) { System.Diagnostics.Trace.TraceWarning("Approval notification failed: {0}", ex.Message); }
         }
     }
@@ -87,7 +93,8 @@ public partial class MainWindow
         _model.PropertyChanged -= OnFeatureReleaseChanged;
         Features.DrawerRequested -= OnFeatureDrawer;
         Features.Feedback -= OnFeatureFeedback;
-        DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext = CallDetailContent.DataContext = null;
+        DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext =
+            CallDetailContent.DataContext = null;
         Features.Dispose(); (Features.Journal as IDisposable)?.Dispose(); (Features.Audit as IDisposable)?.Dispose(); _approvalNotification.Dispose();
     }
 }

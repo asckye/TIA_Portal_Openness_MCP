@@ -26,8 +26,10 @@ namespace TiaMcpServer.ModelContextProtocol
             // Use an enumerated identifier, not an arbitrary caller-controlled filesystem path.
             var files = Directory.GetFiles(folder, "*.md", SearchOption.AllDirectories)
                 .Select(p => new { Path = p, Id = p.Substring(folder.Length + 1).Replace('\\', '/') }).OrderBy(p => p.Id, StringComparer.Ordinal).ToList();
-            var provenance = JsonNode.Parse(File.ReadAllText(TiaOpenness.Shared.BundleLayout.RequirePath(root, "reference/siemens-openness/UPSTREAM.json")))!.AsObject();
-            var result = new JsonObject { ["source"] = "siemens/tia-portal-ai-extensions", ["commit"] = provenance["commit"]!.DeepClone(), ["referenceDataOnly"] = true };
+            var provenance = JsonNode.Parse(File.ReadAllText(TiaOpenness.Shared.BundleLayout.RequirePath(root, "reference/siemens-openness/UPSTREAM.json")))!
+                .AsObject();
+            var result = new JsonObject {
+                ["source"] = "siemens/tia-portal-ai-extensions", ["commit"] = provenance["commit"]!.DeepClone(), ["referenceDataOnly"] = true };
             if (!string.IsNullOrEmpty(document))
             {
                 var file = files.SingleOrDefault(p => p.Id == document) ?? throw new ArgumentException("Unknown document id. List first.");
@@ -37,8 +39,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 result["nextOffset"] = offset + limit < lines.Length ? (JsonNode)(offset + limit) : null;
                 return result;
             }
-            var matches = files.Where(f => string.IsNullOrEmpty(query) || f.Id.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || File.ReadAllText(f.Path).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
-            result["documents"] = new JsonArray(matches.Skip(offset).Take(limit).Select(f => (JsonNode)new JsonObject { ["id"] = f.Id, ["lines"] = File.ReadLines(f.Path).Count() }).ToArray());
+            var matches = files
+                .Where(f => string.IsNullOrEmpty(query) || f.Id.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || File.ReadAllText(f.Path)
+                    .IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+            result["documents"] =
+                new JsonArray(matches.Skip(offset).Take(limit)
+                    .Select(f => (JsonNode)new JsonObject { ["id"] = f.Id, ["lines"] = File.ReadLines(f.Path).Count() }).ToArray());
             result["total"] = matches.Count; result["dataComplete"] = true;
             result["nextOffset"] = offset + limit < matches.Count ? (JsonNode)(offset + limit) : null;
             return result;

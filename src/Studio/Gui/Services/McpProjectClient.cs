@@ -58,7 +58,8 @@ public sealed class McpProjectClient : IProjectClient
     internal async Task<JsonObject> Write(string tool, Dictionary<string, object?> arguments, CancellationToken token = default, string? expectedProject = null)
     {
         string binding = expectedProject ?? (string?)Session.State?["binding"]?["projectFile"] ?? ExpectedProjectFile;
-        if ((bool?)Session.State?["sessionLocked"] == true) throw new InvalidOperationException("SESSION_RESET_REQUIRED: " + EngineResultText.Error("SESSION_RESET_REQUIRED"));
+        if ((bool?)Session.State?["sessionLocked"] == true)
+            throw new InvalidOperationException("SESSION_RESET_REQUIRED: " + EngineResultText.Error("SESSION_RESET_REQUIRED"));
         bool candidate = Supports(tool, "mode");
         if (Supports(tool, "expectedProjectFile")) arguments["expectedProjectFile"] = binding;
         if (Supports(tool, "confirm")) arguments["confirm"] = false;
@@ -79,7 +80,8 @@ public sealed class McpProjectClient : IProjectClient
         var data = await Read("ListPortalProcessProjects");
         var processes = (data["processes"] as JsonArray ?? data["items"] as JsonArray ?? new()).Select(Decode).OfType<JsonObject>().ToArray();
         var selected = processes.Where(p => ProcessId > 0 ? (int?)p["processId"] == ProcessId :
-            !string.IsNullOrEmpty(ExpectedProjectFile) && string.Equals((string?)p["projectPath"], ExpectedProjectFile, StringComparison.OrdinalIgnoreCase)).ToArray();
+            !string.IsNullOrEmpty(ExpectedProjectFile) && string.Equals((string?)p["projectPath"], ExpectedProjectFile, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
         if (selected.Length != 1) throw new InvalidOperationException("Choose a TIA process ID and exact project file. Start TIA manually if none is listed.");
         int pid = (int)selected[0]["processId"]!;
         string file = (string?)selected[0]["projectPath"] ?? ExpectedProjectFile;
@@ -131,7 +133,8 @@ public sealed class McpProjectClient : IProjectClient
             devices.Add(new() { Id = match.Groups[2].Value, Name = match.Groups[1].Value, DisplayName = match.Groups[1].Value, Category = "Plc" });
         return devices;
     }
-    internal static JsonNode? Decode(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out string? json) && json.StartsWith("{", StringComparison.Ordinal)
+    internal static JsonNode? Decode(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out string? json) && json
+        .StartsWith("{", StringComparison.Ordinal)
         ? JsonNode.Parse(json) : node;
     internal static BlockInfo Block(JsonObject data, string path)
     {
@@ -141,8 +144,11 @@ public sealed class McpProjectClient : IProjectClient
         string kind = (string?)data["typeName"] ?? (string?)data["kind"] ?? "";
         return new() { Name = name, Path = path, FolderPath = path.Contains('/') ? path[..path.LastIndexOf('/')] : "",
             Kind = kind.Contains("OB", StringComparison.Ordinal) ? BlockKind.OB : kind.Contains("FB", StringComparison.Ordinal) ? BlockKind.FB
-                : kind.Contains("FC", StringComparison.Ordinal) ? BlockKind.FC : kind.Contains("DB", StringComparison.Ordinal) ? BlockKind.DB : BlockKind.Unknown,
-            Number = int.TryParse(Attribute("Number"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int number) ? number : null,
+                : kind.Contains("FC", StringComparison.Ordinal) ? BlockKind.FC : kind.Contains("DB", StringComparison.Ordinal) ? BlockKind.DB : BlockKind
+                    .Unknown,
+            Number = int
+                .TryParse(Attribute("Number"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int number)
+                ? number : null,
             IsConsistent = (bool?)data["isConsistent"] == true, IsKnowHowProtected = (bool?)data["isKnowHowProtected"] == true,
             ProgrammingLanguage = (string?)data["programmingLanguage"] ?? "", HeaderAuthor = Attribute("HeaderAuthor") ?? "" };
     }
@@ -163,7 +169,8 @@ public sealed class McpProjectClient : IProjectClient
     }
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format)
         => ExportAsync(deviceId, blocks, outputDirectory, format, CancellationToken.None);
-    internal async Task<ExportResult> ExportAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format, CancellationToken token)
+    internal async Task<ExportResult> ExportAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format,
+            CancellationToken token)
     {
         Directory.CreateDirectory(outputDirectory);
         if (format == ExportFormat.Source)
@@ -181,7 +188,9 @@ public sealed class McpProjectClient : IProjectClient
         var result = new ExportResult { OutputDirectory = outputDirectory, Requested = paths.Length };
         foreach (string path in paths)
         {
-            var data = await Write("ExportPlcBlock", new() { ["softwarePath"] = deviceId, ["blockPath"] = path, ["exportPath"] = outputDirectory, ["preservePath"] = true }, token);
+            var data =
+                await Write("ExportPlcBlock", new() {
+                    ["softwarePath"] = deviceId, ["blockPath"] = path, ["exportPath"] = outputDirectory, ["preservePath"] = true }, token);
             string file = (string?)data["outputFile"] ?? (string?)data["filePath"]
                 ?? (string?)data["items"]?[0]?["result"]?["data"]?["files"]?[0]?["path"] ?? "";
             result.Items.Add(new() { BlockPath = path, FilePath = file, Succeeded = true }); result.Succeeded++;

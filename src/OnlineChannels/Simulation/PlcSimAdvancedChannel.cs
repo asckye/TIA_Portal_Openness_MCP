@@ -98,7 +98,8 @@ namespace TiaMcpServer.Runtime
             lock (Gate)
             {
                 return Interfaces.TryGetValue(name, out var cached)
-                    ? new JsonObject { ["cachedInterface"] = true, ["openedAt"] = cached.Opened, ["uses"] = cached.Uses, ["tagListLoaded"] = cached.TagListLoaded }
+                    ? new JsonObject {
+                        ["cachedInterface"] = true, ["openedAt"] = cached.Opened, ["uses"] = cached.Uses, ["tagListLoaded"] = cached.TagListLoaded }
                     : new JsonObject { ["cachedInterface"] = false };
             }
         }
@@ -106,7 +107,8 @@ namespace TiaMcpServer.Runtime
         public static (string type, object? value) ReadWithRefresh(PlcSimApi api, string name, object instance, string tagName)
         {
             try { return Read(api, instance, tagName); }
-            catch (InvalidOperationException ex) when (LooksLikeUnknownTag(ex)) { EnsureTagList(api, name, instance, true); return Read(api, instance, tagName); }
+            catch (InvalidOperationException ex) when (LooksLikeUnknownTag(ex)) {
+                EnsureTagList(api, name, instance, true); return Read(api, instance, tagName); }
         }
         public static string WriteWithRefresh(PlcSimApi api, string name, object instance, string tagName, JsonNode? value)
         {
@@ -115,7 +117,8 @@ namespace TiaMcpServer.Runtime
         private static bool LooksLikeUnknownTag(Exception ex)
         {
             var m = ex.Message;
-            return m.IndexOf("not found", StringComparison.OrdinalIgnoreCase) >= 0 || m.IndexOf("NotFound", StringComparison.OrdinalIgnoreCase) >= 0 || m.IndexOf("does not exist", StringComparison.OrdinalIgnoreCase) >= 0 || m.IndexOf("DoesNotExist", StringComparison.OrdinalIgnoreCase) >= 0;
+            return m.IndexOf("not found", StringComparison.OrdinalIgnoreCase) >= 0 || m.IndexOf("NotFound", StringComparison.OrdinalIgnoreCase) >= 0 || m
+                .IndexOf("does not exist", StringComparison.OrdinalIgnoreCase) >= 0 || m.IndexOf("DoesNotExist", StringComparison.OrdinalIgnoreCase) >= 0;
         }
         private const BindingFlags Any = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.IgnoreCase;
 
@@ -140,7 +143,8 @@ namespace TiaMcpServer.Runtime
         {
             lock (Gate)
             {
-                if (_api != null && (string.IsNullOrWhiteSpace(explicitPath) || string.Equals(_api.Path, explicitPath, StringComparison.OrdinalIgnoreCase))) return _api;
+                if (_api != null && (string.IsNullOrWhiteSpace(explicitPath) || string.Equals(_api.Path, explicitPath, StringComparison.OrdinalIgnoreCase)))
+                    return _api;
                 var probed = ProbePaths(explicitPath);
                 var hit = probed.FirstOrDefault(File.Exists);
                 Assembly? asm = null;
@@ -149,7 +153,9 @@ namespace TiaMcpServer.Runtime
                 {
                     asm = Assembly.LoadFrom(hit);
                     var fromArgument = PlcSimAdvancedLogic.CandidateApiPaths(explicitPath, null, Array.Empty<KeyValuePair<string, IEnumerable<string>>>());
-                    var fromEnvironment = PlcSimAdvancedLogic.CandidateApiPaths(null, Environment.GetEnvironmentVariable(PlcSimAdvancedLogic.ApiEnvironmentVariable), Array.Empty<KeyValuePair<string, IEnumerable<string>>>());
+                    var fromEnvironment = PlcSimAdvancedLogic
+                        .CandidateApiPaths(null, Environment.GetEnvironmentVariable(PlcSimAdvancedLogic.ApiEnvironmentVariable), Array
+                            .Empty<KeyValuePair<string, IEnumerable<string>>>());
                     source = fromArgument.Contains(hit, StringComparer.OrdinalIgnoreCase) ? "apiPath"
                         : fromEnvironment.Contains(hit, StringComparer.OrdinalIgnoreCase) ? PlcSimAdvancedLogic.ApiEnvironmentVariable
                         : "installed API folder";
@@ -160,14 +166,19 @@ namespace TiaMcpServer.Runtime
                     catch (Exception) /* swallow(env-probe): a failed GAC probe falls through to the explicit API-not-found diagnostic */ { source = ""; }
                 }
                 if (asm == null)
-                    throw new PlcSimApiUnavailableException("PLCSIM Advanced API (" + PlcSimAdvancedLogic.ApiFileName + ") not found. Install S7-PLCSIM Advanced on this machine, or set apiPath / " + PlcSimAdvancedLogic.ApiEnvironmentVariable + ". Probed: " + string.Join("; ", probed));
+                    throw new PlcSimApiUnavailableException("PLCSIM Advanced API (" + PlcSimAdvancedLogic.ApiFileName
+                            + ") not found. Install S7-PLCSIM Advanced on this machine, or set apiPath / " + PlcSimAdvancedLogic.ApiEnvironmentVariable
+                            + ". Probed: " + string.Join("; ", probed));
                 var manager = asm.GetType("Siemens.Simatic.Simulation.Runtime.SimulationRuntimeManager", false)
-                              ?? throw new InvalidOperationException("Assembly at " + hit + " has no SimulationRuntimeManager type; is it the PLCSIM Advanced API?");
+                              ?? throw new InvalidOperationException("Assembly at " + hit
+                                      + " has no SimulationRuntimeManager type; is it the PLCSIM Advanced API?");
                 var api = new PlcSimApi
                 {
                     Assembly = asm, Manager = manager, Path = hit ?? "", Source = source, Probed = probed,
-                    DataValue = asm.GetType("Siemens.Simatic.Simulation.Runtime.SDataValue", false) ?? throw new InvalidOperationException("SDataValue type missing in PLCSIM Advanced API."),
-                    PrimitiveDataType = asm.GetType("Siemens.Simatic.Simulation.Runtime.EPrimitiveDataType", false) ?? throw new InvalidOperationException("EPrimitiveDataType missing in PLCSIM Advanced API.")
+                    DataValue = asm.GetType("Siemens.Simatic.Simulation.Runtime.SDataValue", false)
+                        ?? throw new InvalidOperationException("SDataValue type missing in PLCSIM Advanced API."),
+                    PrimitiveDataType = asm.GetType("Siemens.Simatic.Simulation.Runtime.EPrimitiveDataType", false)
+                        ?? throw new InvalidOperationException("EPrimitiveDataType missing in PLCSIM Advanced API.")
                 };
                 try { api.Version = Convert.ToString(GetMember(manager, null, "Version")) ?? asm.GetName().Version?.ToString() ?? ""; }
                 catch (Exception) /* swallow(probe-optional): an unavailable runtime Version member falls back to the assembly version */ { api.Version = asm.GetName().Version?.ToString() ?? ""; }
@@ -180,7 +191,8 @@ namespace TiaMcpServer.Runtime
         {
             var o = new JsonObject
             {
-                ["apiPath"] = api.Path, ["apiSource"] = api.Source, ["apiVersion"] = api.Version, ["assemblyVersion"] = api.Assembly.GetName().Version?.ToString()
+                ["apiPath"] = api.Path, ["apiSource"] = api.Source, ["apiVersion"] = api.Version, ["assemblyVersion"] = api.Assembly.GetName().Version?
+                    .ToString()
             };
             try { var mode = NetworkMode(api); if (mode != null) o["networkMode"] = mode; }
             catch (Exception ex) { o["networkModeError"] = ex.Message; }
@@ -204,7 +216,8 @@ namespace TiaMcpServer.Runtime
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ENetworkMode", false) ?? throw NotSupported("ENetworkMode");
             object value;
             try { value = Enum.Parse(enumType, networkMode.Trim(), true); }
-            catch (ArgumentException) { throw new ArgumentException("networkMode '" + networkMode + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType))); }
+            catch (ArgumentException) {
+                throw new ArgumentException("networkMode '" + networkMode + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType))); }
             try { lock (Gate) prop.SetValue(null, value); }
             catch (TargetInvocationException tie) when (tie.InnerException != null) { throw tie.InnerException; }
             return NetworkMode(api) ?? "";
@@ -215,9 +228,11 @@ namespace TiaMcpServer.Runtime
         {
             var seen = new List<string>();
             foreach (var p in api.Manager.GetProperties(Any))
-                if (p.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0) seen.Add(api.Manager.Name + "." + p.Name + " {get" + (p.CanWrite ? ";set" : "") + "}");
+                if (p.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0) seen
+                    .Add(api.Manager.Name + "." + p.Name + " {get" + (p.CanWrite ? ";set" : "") + "}");
             foreach (var m in api.Manager.GetMethods(Any))
-                if (m.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0 && !m.IsSpecialName) seen.Add(api.Manager.Name + "." + m.Name + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
+                if (m.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0 && !m.IsSpecialName) seen
+                    .Add(api.Manager.Name + "." + m.Name + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
             return seen.Count == 0 ? "none" : string.Join("; ", seen.Distinct().Take(40));
         }
 
@@ -240,7 +255,8 @@ namespace TiaMcpServer.Runtime
 
         public static object OpenInterface(PlcSimApi api, string name)
         {
-            var m = api.Manager.GetMethod("CreateInterface", new[] { typeof(string) }) ?? throw NotSupported("SimulationRuntimeManager.CreateInterface(string)");
+            var m = api.Manager.GetMethod("CreateInterface", new[] { typeof(string) })
+                ?? throw NotSupported("SimulationRuntimeManager.CreateInterface(string)");
             return Invoke(m, null, name) ?? throw new InvalidOperationException("CreateInterface returned null for '" + name + "'.");
         }
 
@@ -248,14 +264,17 @@ namespace TiaMcpServer.Runtime
         {
             if (string.IsNullOrWhiteSpace(cpuType))
             {
-                var m = api.Manager.GetMethod("RegisterInstance", new[] { typeof(string) }) ?? throw NotSupported("SimulationRuntimeManager.RegisterInstance(string)");
+                var m = api.Manager.GetMethod("RegisterInstance", new[] { typeof(string) })
+                    ?? throw NotSupported("SimulationRuntimeManager.RegisterInstance(string)");
                 return Invoke(m, null, name) ?? throw new InvalidOperationException("RegisterInstance returned null.");
             }
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ECPUType", false) ?? throw NotSupported("ECPUType");
             object cpu;
             try { cpu = Enum.Parse(enumType, cpuType!.Trim(), true); }
-            catch (ArgumentException) { throw new ArgumentException("cpuType '" + cpuType + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType))); }
-            var typed = api.Manager.GetMethod("RegisterInstance", new[] { enumType, typeof(string) }) ?? throw NotSupported("SimulationRuntimeManager.RegisterInstance(ECPUType,string)");
+            catch (ArgumentException) { throw new ArgumentException("cpuType '" + cpuType + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType)));
+            }
+            var typed = api.Manager.GetMethod("RegisterInstance", new[] { enumType, typeof(string) })
+                ?? throw NotSupported("SimulationRuntimeManager.RegisterInstance(ECPUType,string)");
             return Invoke(typed, null, cpu, name) ?? throw new InvalidOperationException("RegisterInstance returned null.");
         }
 
@@ -263,7 +282,10 @@ namespace TiaMcpServer.Runtime
         {
             var t = instance.GetType();
             var o = new JsonObject();
-            foreach (var prop in new[] { "Name", "ID", "OperatingState", "OperatingMode", "CPUType", "CommunicationInterface", "StoragePath", "ControllerName", "ControllerShortDesignation", "ControllerIP" })
+            foreach (var prop in new[] {
+                    "Name", "ID", "OperatingState", "OperatingMode", "CPUType", "CommunicationInterface", "StoragePath", "ControllerName",
+                        "ControllerShortDesignation", "ControllerIP"
+                })
             {
                 try
                 {
@@ -286,7 +308,8 @@ namespace TiaMcpServer.Runtime
         {
             var method = action switch
             {
-                "powerOn" => "PowerOn", "powerOff" => "PowerOff", "run" => "Run", "stop" => "Stop", "memoryReset" => "MemoryReset", "unregister" => "UnregisterInstance",
+                "powerOn" => "PowerOn", "powerOff" => "PowerOff", "run" => "Run", "stop" => "Stop", "memoryReset" => "MemoryReset", "unregister" =>
+                    "UnregisterInstance",
                 _ => throw new ArgumentException("Unsupported lifecycle action '" + action + "'.")
             };
             var t = instance.GetType();
@@ -314,11 +337,13 @@ namespace TiaMcpServer.Runtime
         // still has one (PLCSIM Advanced <= 5), otherwise the manager network mode (mapped by PlcSimAdvancedLogic.NetworkModeFor).
         public static string SetCommunicationInterface(PlcSimApi api, object instance, string communicationInterface, JsonObject? detail = null)
         {
-            var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ECommunicationInterface", false) ?? throw NotSupported("ECommunicationInterface");
+            var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ECommunicationInterface", false)
+                ?? throw NotSupported("ECommunicationInterface");
             object? value = null;
             try { value = Enum.Parse(enumType, communicationInterface.Trim(), true); }
             catch (ArgumentException) /* swallow(parse-fallback): a name absent from ECommunicationInterface may still identify an ENetworkMode below */ { /* not an ECommunicationInterface name - may still be an ENetworkMode name below */ }
-            if (value != null && (WritableProperty(instance, "CommunicationInterface") != null || FindSetter(instance, "CommunicationInterface", enumType) != null))
+            if (value != null
+                    && (WritableProperty(instance, "CommunicationInterface") != null || FindSetter(instance, "CommunicationInterface", enumType) != null))
             {
                 SetThroughPropertyOrMethod(instance, "CommunicationInterface", value, enumType);
                 if (detail != null) detail["route"] = "IInstance.CommunicationInterface";
@@ -326,9 +351,11 @@ namespace TiaMcpServer.Runtime
             }
             var before = NetworkMode(api);
             if (before == null)
-                throw NotSupported("IInstance.CommunicationInterface setter and SimulationRuntimeManager.NetworkMode (members seen: " + DescribeMembers(instance, "CommunicationInterface") + "; manager: " + DescribeManagerMembers(api, "NetworkMode") + ")");
+                throw NotSupported("IInstance.CommunicationInterface setter and SimulationRuntimeManager.NetworkMode (members seen: "
+                        + DescribeMembers(instance, "CommunicationInterface") + "; manager: " + DescribeManagerMembers(api, "NetworkMode") + ")");
             var wanted = PlcSimAdvancedLogic.NetworkModeFor(communicationInterface, before);
-            if (detail != null) { detail["route"] = "SimulationRuntimeManager.NetworkMode"; detail["networkModeBefore"] = before; detail["networkModeRequested"] = wanted; }
+            if (detail != null) {
+                detail["route"] = "SimulationRuntimeManager.NetworkMode"; detail["networkModeBefore"] = before; detail["networkModeRequested"] = wanted; }
             var after = wanted.Equals(before, StringComparison.OrdinalIgnoreCase) ? before : SetNetworkMode(api, wanted);
             if (detail != null) detail["networkModeAfter"] = after;
             return Convert.ToString(GetMember(instance.GetType(), instance, "CommunicationInterface")) ?? "";
@@ -340,7 +367,8 @@ namespace TiaMcpServer.Runtime
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.EOperatingMode", false) ?? throw NotSupported("EOperatingMode");
             var candidates = PlcSimAdvancedLogic.OperatingModeCandidates(mode);
             var name = candidates.FirstOrDefault(c => Enum.GetNames(enumType).Any(n => n.Equals(c, StringComparison.OrdinalIgnoreCase)))
-                ?? throw new ArgumentException("operating mode '" + mode + "' is not defined by this PLCSIM Advanced API (tried " + string.Join(" / ", candidates) + "); valid: " + string.Join(", ", Enum.GetNames(enumType)));
+                ?? throw new ArgumentException("operating mode '" + mode + "' is not defined by this PLCSIM Advanced API (tried " + string
+                        .Join(" / ", candidates) + "); valid: " + string.Join(", ", Enum.GetNames(enumType)));
             var value = Enum.Parse(enumType, name, true);
             SetThroughPropertyOrMethod(instance, "OperatingMode", value, enumType);
             return Convert.ToString(GetMember(instance.GetType(), instance, "OperatingMode")) ?? name;
@@ -379,9 +407,11 @@ namespace TiaMcpServer.Runtime
             foreach (var type in new[] { instance.GetType() }.Concat(instance.GetType().GetInterfaces()))
             {
                 foreach (var p in type.GetProperties(Any))
-                    if (p.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0) seen.Add(type.Name + "." + p.Name + " {get" + (p.CanWrite ? ";set" : "") + "}");
+                    if (p.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0) seen
+                        .Add(type.Name + "." + p.Name + " {get" + (p.CanWrite ? ";set" : "") + "}");
                 foreach (var m in type.GetMethods(Any))
-                    if (m.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0 && !m.IsSpecialName) seen.Add(type.Name + "." + m.Name + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
+                    if (m.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0 && !m.IsSpecialName) seen
+                        .Add(type.Name + "." + m.Name + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
             }
             return seen.Count == 0 ? "none" : string.Join("; ", seen.Distinct().Take(40));
         }
@@ -424,7 +454,8 @@ namespace TiaMcpServer.Runtime
             {
                 RunToNextSyncPoint(instance);
                 if (!WaitForState(instance, "Freeze", waitMs, pollMs, out state))
-                    return (i, watch.ElapsedMilliseconds, state, "sync point " + (i + 1) + " of " + count + " not reached within " + waitMs + " ms; state " + state);
+                    return (i, watch.ElapsedMilliseconds, state, "sync point " + (i + 1) + " of " + count + " not reached within " + waitMs + " ms; state "
+                            + state);
             }
             return (count, watch.ElapsedMilliseconds, state, null);
         }
@@ -455,9 +486,11 @@ namespace TiaMcpServer.Runtime
             var t = instance.GetType();
             var plain = t.GetMethod("UpdateTagList", Type.EmptyTypes);
             if (plain != null) { Invoke(plain, instance); return; }
-            var detailsType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ETagListDetails", false) ?? throw NotSupported("IInstance.UpdateTagList()");
+            var detailsType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ETagListDetails", false)
+                ?? throw NotSupported("IInstance.UpdateTagList()");
             var two = t.GetMethod("UpdateTagList", new[] { detailsType, typeof(bool) }) ?? throw NotSupported("IInstance.UpdateTagList(ETagListDetails,bool)");
-            var all = Enum.GetNames(detailsType).FirstOrDefault(n => n.IndexOf("IOMCTDB", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("All", StringComparison.OrdinalIgnoreCase) >= 0)
+            var all = Enum.GetNames(detailsType)
+                .FirstOrDefault(n => n.IndexOf("IOMCTDB", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("All", StringComparison.OrdinalIgnoreCase) >= 0)
                       ?? Enum.GetNames(detailsType).Last();
             Invoke(two, instance, Enum.Parse(detailsType, all), false);
         }
@@ -496,7 +529,9 @@ namespace TiaMcpServer.Runtime
         public static string Write(PlcSimApi api, object instance, string tagName, JsonNode? value)
         {
             var (type, _) = Read(api, instance, tagName);
-            if (!PlcSimAdvancedLogic.PrimitiveTypes.Contains(type)) throw new ArgumentException("Tag '" + tagName + "' has type " + type + "; only primitive elements can be written (address the element, e.g. \"DB\".arr[1]).");
+            if (!PlcSimAdvancedLogic.PrimitiveTypes.Contains(type))
+                throw new ArgumentException("Tag '" + tagName + "' has type " + type
+                    + "; only primitive elements can be written (address the element, e.g. \"DB\".arr[1]).");
             var converted = PlcSimAdvancedLogic.ConvertValue(value, type);
             var boxed = Activator.CreateInstance(api.DataValue) ?? throw NotSupported("SDataValue()");
             SetMember(api.DataValue, boxed, "Type", Enum.Parse(api.PrimitiveDataType, type));
@@ -549,6 +584,7 @@ namespace TiaMcpServer.Runtime
 
         private static string Camel(string name) => name.Length == 0 ? name : (name == "ID" ? "id" : char.ToLowerInvariant(name[0]) + name.Substring(1));
 
-        private static NotSupportedException NotSupported(string member) => new NotSupportedException("PLCSIM Advanced API member not available in the installed version: " + member);
+        private static NotSupportedException NotSupported(string member) =>
+            new NotSupportedException("PLCSIM Advanced API member not available in the installed version: " + member);
     }
 }

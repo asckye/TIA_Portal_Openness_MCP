@@ -53,7 +53,8 @@ public sealed class UiSettings
                 {
                     settings.Language = language;
                 }
-                else if (key == "lowEffects" && Enum.TryParse<LowEffectsMode>(value, true, out var effects) && Enum.IsDefined(effects)) settings.LowEffects = effects;
+                else if (key == "lowEffects" && Enum.TryParse<LowEffectsMode>(value, true, out var effects) && Enum.IsDefined(effects)) settings.LowEffects =
+                    effects;
                 else if (key == "workbenchControlEnabled" && bool.TryParse(value, out var controlEnabled)) settings.WorkbenchControlEnabled = controlEnabled;
                 else if (key == ThemeKey && Enum.TryParse<AppTheme>(value, ignoreCase: true, out var theme))
                 {

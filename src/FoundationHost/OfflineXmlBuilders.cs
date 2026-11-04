@@ -13,13 +13,16 @@ internal static class OfflineXmlBuilders
     internal const int MaxItems = 1000;
     internal const int MaxStringCharacters = 4096;
     internal const int MaxXmlCharacters = 1048576;
-    internal const string Warning = "V21 candidate XML only. Target-installed Siemens XSD validation and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility is claimed.";
+    internal const string Warning =
+        "V21 candidate XML only. Target-installed Siemens XSD validation and TIA import validation have NOT RUN. Not import-ready; no lower-version " +
+        "compatibility is claimed.";
 
     internal static JsonObject Build(string toolName, string outputReleaseKey, string json, bool servingDefault = false)
     {
         var format = toolName == "BuildPlcUdt" ? PlcDeclarationXmlFormat.ForRelease(outputReleaseKey) : null;
         if (format == null && !servingDefault && outputReleaseKey != "21")
-            throw new ArgumentException("Only explicit outputReleaseKey='21' candidate output is implemented. Other output releases are unavailable; no version rewriting is performed.");
+            throw new ArgumentException("Only explicit outputReleaseKey='21' candidate output is implemented. Other output releases are unavailable; no " +
+                "version rewriting is performed.");
         if (string.IsNullOrWhiteSpace(json) || json.Length > MaxJsonCharacters)
             throw new ArgumentException("Builder JSON must contain 1 to 262144 characters.");
         using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });
@@ -63,7 +66,8 @@ internal static class OfflineXmlBuilders
             DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxXmlCharacters
         });
         var parsed = XDocument.Load(reader);
-        if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != PlcDeclarationXmlFormat.ForRelease(outputReleaseKey).EngineeringVersion)
+        if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != PlcDeclarationXmlFormat
+                .ForRelease(outputReleaseKey).EngineeringVersion)
             throw new InvalidOperationException("Builder returned an unexpected output format.");
         var data = new JsonObject
         {
@@ -71,7 +75,8 @@ internal static class OfflineXmlBuilders
             ["schemaValidated"] = false, ["importValidated"] = false, ["outputReleaseKey"] = outputReleaseKey,
             ["interfaceNamespace"] = format?.InterfaceNamespace.NamespaceName, ["interfaceSchemaFile"] = format?.InterfaceSchemaFile,
             ["error"] = null, ["xml"] = xml, ["summary"] = summary,
-            ["safetyPolicy"] = new JsonObject { ["tia"] = "No connection, import or project modification.", ["write"] = "Returns XML in memory only; no files are read or written." }
+            ["safetyPolicy"] = new JsonObject {
+                ["tia"] = "No connection, import or project modification.", ["write"] = "Returns XML in memory only; no files are read or written." }
         };
         return new JsonObject
         {
@@ -80,10 +85,14 @@ internal static class OfflineXmlBuilders
             {
                 ["success"] = true, ["offlineOnly"] = true, ["outputReleaseKey"] = outputReleaseKey,
                 ["schemaValidated"] = false, ["importValidated"] = false, ["nativeAcceptance"] = "NOT RUN",
-                ["provenance"] = toolName == "BuildPlcUdt" ? "Flat UDT generation with the target release interface schema and object attributes; not an XML converter" : "Flat tag-table generation with the target release Engineering header; no version conversion",
+                ["provenance"] = toolName == "BuildPlcUdt"
+                    ? "Flat UDT generation with the target release interface schema and object attributes; not an XML converter"
+                    : "Flat tag-table generation with the target release Engineering header; no version conversion",
                 ["validationScope"] = "bounded input and XML well-formedness only"
             },
-            ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] = new JsonArray(format != null ? PlcDeclarationXmlFormat.Warning : servingDefault ? "Candidate tag-table XML only. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready." : Warning),
+            ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] =
+                new JsonArray(format != null ? PlcDeclarationXmlFormat.Warning : servingDefault
+                    ? "Candidate tag-table XML only. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready." : Warning),
             ["OutputPath"] = null, ["OutputFiles"] = null, ["Xml"] = xml
         };
     }

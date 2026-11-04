@@ -39,7 +39,8 @@ namespace TiaMcpServer.Siemens.Services
             if (!string.Equals(Path.GetDirectoryName(Path.GetFullPath(path)), directory, StringComparison.OrdinalIgnoreCase)
                 || (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
                 throw new NotSupportedException("Native export contains a file outside its isolated directory or a reparse point.");
-            if (new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)).Length > MaxBytes) throw new NotSupportedException("Native file exceeds the 1 MiB edit limit.");
+            if (new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)).Length > MaxBytes)
+                throw new NotSupportedException("Native file exceeds the 1 MiB edit limit.");
         }
         internal static TiaMcp.Adapters.Contracts.UnifiedScriptPair ReadPair(string directory, string moduleName)
         {
@@ -47,7 +48,8 @@ namespace TiaMcpServer.Siemens.Services
             if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0 || Directory.EnumerateDirectories(directory).Any())
                 throw new NotSupportedException("Nested or redirected native export folders are not supported by the single-module editor.");
             var files = Directory.EnumerateFiles(directory).Take(3).ToArray();
-            if (files.Length != 2) throw new NotSupportedException("Expected exactly one .hmi.yml and one .hmi.js; export is empty, incomplete or has extra files.");
+            if (files.Length != 2)
+                throw new NotSupportedException("Expected exactly one .hmi.yml and one .hmi.js; export is empty, incomplete or has extra files.");
             foreach (var file in files) RequirePlainFile(file, directory);
             var yamlPath = files.SingleOrDefault(f => f.EndsWith(".hmi.yml", StringComparison.OrdinalIgnoreCase))
                 ?? throw new NotSupportedException("A native .hmi.yml manifest is required.");
@@ -60,11 +62,13 @@ namespace TiaMcpServer.Siemens.Services
                 || !(Child(module, "ScriptFile") is YamlScalarNode script) || string.IsNullOrWhiteSpace(script.Value))
                 throw new NotSupportedException("Only a single exact module with one ScriptFile is supported; metadata was not rewritten.");
             var jsName = script.Value!;
-            if (jsName != Path.GetFileName(jsName) || jsName.IndexOfAny(new[] { '/', '\\', ':' }) >= 0 || !jsName.EndsWith(".hmi.js", StringComparison.OrdinalIgnoreCase))
+            if (jsName != Path.GetFileName(jsName) || jsName.IndexOfAny(new[] { '/', '\\', ':' }) >= 0 || !jsName
+                    .EndsWith(".hmi.js", StringComparison.OrdinalIgnoreCase))
                 throw new NotSupportedException("ScriptFile must be a plain relative .hmi.js filename.");
             var jsPath = Path.Combine(directory, jsName);
             if (!files.Contains(jsPath, StringComparer.OrdinalIgnoreCase)) throw new NotSupportedException("Manifest ScriptFile was not exported.");
-            var pair = new TiaMcp.Adapters.Contracts.UnifiedScriptPair { JsName = jsName, YamlName = Path.GetFileName(yamlPath), Js = File.ReadAllBytes(jsPath), Yaml = yaml };
+            var pair = new TiaMcp.Adapters.Contracts.UnifiedScriptPair {
+                JsName = jsName, YamlName = Path.GetFileName(yamlPath), Js = File.ReadAllBytes(jsPath), Yaml = yaml };
             pair.Text = Decode(pair.Js, out pair.Encoding, out pair.Bom);
             return pair;
         }

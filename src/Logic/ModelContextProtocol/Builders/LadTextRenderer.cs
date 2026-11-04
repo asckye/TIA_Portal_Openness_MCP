@@ -187,7 +187,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     var sec = Section(uid, pin);
                     if (sec != null) return !sec.Equals("Output", StringComparison.OrdinalIgnoreCase);
                     return pin != null && (pin.Equals("in", StringComparison.OrdinalIgnoreCase)
-                        || pin.Equals("en", StringComparison.OrdinalIgnoreCase) || pin.Equals("pre", StringComparison.OrdinalIgnoreCase) || pin.StartsWith("in", StringComparison.Ordinal));
+                        || pin.Equals("en", StringComparison.OrdinalIgnoreCase) || pin.Equals("pre", StringComparison.OrdinalIgnoreCase) || pin
+                            .StartsWith("in", StringComparison.Ordinal));
                 }
 
                 var sources = names.Where(t => IsOut(t.uid, t.pin)).ToList();
@@ -401,7 +402,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Memory" => "M",
                 _ => area
             };
-            if (!int.TryParse(address.Attribute("BitOffset")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var bits)) return "%" + prefix + "?";
+            if (!int
+                    .TryParse(address.Attribute("BitOffset")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo
+                        .InvariantCulture, out var bits))
+                return "%" + prefix + "?";
             var size = type switch
             {
                 "Bool" => "",
@@ -587,18 +591,21 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var name = parameter.Attribute("Name")?.Value;
             // Informative *Attribute elements may precede the tokens; they are metadata, not the first source token.
-            var first = parameter.Elements().FirstOrDefault(e => e.Name.LocalName != "Blank" && !e.Name.LocalName.EndsWith("Attribute", StringComparison.Ordinal));
+            var first = parameter.Elements()
+                .FirstOrDefault(e => e.Name.LocalName != "Blank" && !e.Name.LocalName.EndsWith("Attribute", StringComparison.Ordinal));
             var firstText = first?.Name.LocalName == "Token" ? first.Attribute("Text")?.Value : null;
             if (!string.IsNullOrEmpty(name) && (firstText == ":=" || firstText == "=>"))
             {
                 sb.Append(name);
-                if (parameter.Elements().FirstOrDefault(e => !e.Name.LocalName.EndsWith("Attribute", StringComparison.Ordinal))?.Name.LocalName != "Blank") sb.Append(' ');
+                if (parameter.Elements().FirstOrDefault(e => !e.Name.LocalName.EndsWith("Attribute", StringComparison.Ordinal))?.Name.LocalName != "Blank") sb
+                    .Append(' ');
             }
             RenderStNodes(parameter.Elements(), sb);
         }
 
         private static int ParseNum(XElement e, int def)
-            => int.TryParse(e.Attribute("Num")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : def;
+            => int.TryParse(e.Attribute("Num")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var n)
+                ? n : def;
 
         private static string FirstMultilingual(XElement unit, string composition)
         {

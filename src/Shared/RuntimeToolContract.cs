@@ -48,12 +48,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 // A wrapped native exception can occur after a write was issued. Its
                 // CLR type alone cannot prove that the operation never started.
                 Error? rejection = ex is ArgumentException ? McpServer.InvalidInput("arguments")
-                    : ex is NotSupportedException ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)) : null;
+                    : ex is NotSupportedException
+                        ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)) : null;
                 while (ex.InnerException != null && !(ex is TiaMcpServer.Siemens.PortalException)) ex = ex.InnerException;
                 if (ex is TiaMcpServer.Siemens.PortalException portal)
                 {
-                    if (portal.Code == TiaMcpServer.Siemens.PortalErrorCode.InvalidState) rejection = new Error("No project is bound.", new ProjectNotBoundDetails());
-                    if (portal.Code == TiaMcpServer.Siemens.PortalErrorCode.NotFound) rejection = new Error("The target was not found.", new NotFoundDetails(null));
+                    if (portal.Code == TiaMcpServer.Siemens.PortalErrorCode.InvalidState) rejection =
+                        new Error("No project is bound.", new ProjectNotBoundDetails());
+                    if (portal.Code == TiaMcpServer.Siemens.PortalErrorCode.NotFound) rejection =
+                        new Error("The target was not found.", new NotFoundDetails(null));
                 }
                 return Result(tool, null, rejection ?? Failure(!readOnly), rejection != null ? Outcome.RejectedBeforeOperation
                     : readOnly ? Outcome.ReadFailed : Outcome.Unknown, rejection != null ? Completeness.None : Completeness.Unknown, current);
@@ -121,9 +124,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             if (tool == "DisconnectOnlinePlcs") success = items != null && items.Count == succeeded;
             bool issued = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true || Flag(data, "writeAttempted") == true;
-            bool knownFailure = Flag(data, "writeOutcomeKnown") == true || status == "ReadbackMismatch" || (tool == "DownloadPlc" || tool == "DownloadPlcToFolder") && state == "Error";
+            bool knownFailure = Flag(data, "writeOutcomeKnown") == true || status == "ReadbackMismatch"
+                || (tool == "DownloadPlc" || tool == "DownloadPlcToFolder") && state == "Error";
             if (status == "ReadbackMismatch") success = false;
-            if (tool == "SetUnifiedRuntimeSettings" && status == "ReadbackMismatch" && data["readback"] is JsonObject settings && data["proposed"] is JsonObject proposed)
+            if (tool == "SetUnifiedRuntimeSettings" && status == "ReadbackMismatch" && data["readback"] is JsonObject settings
+                    && data["proposed"] is JsonObject proposed)
             {
                 succeeded = settings.Count(p => p.Value is JsonObject field && JsonNode.DeepEquals(field["value"], proposed[p.Key]));
                 failed = Math.Max(1, Count(data, "failureCount"));
@@ -133,7 +138,10 @@ namespace TiaMcpServer.ModelContextProtocol
             Outcome outcome;
             if (!readOnly && unknown) { outcome = Outcome.Unknown; error = Failure(true); }
             else if (!readOnly && succeeded > 0 && failed + notExecuted > 0)
-            { outcome = Outcome.Partial; error = new Error("Some operations did not complete successfully.", new PartialFailureDetails(succeeded, failed, notExecuted)); }
+            {
+                outcome = Outcome.Partial; error =
+                    new Error("Some operations did not complete successfully.", new PartialFailureDetails(succeeded, failed, notExecuted));
+            }
             else if (status == "PROJECT_NOT_BOUND" || status == "InvalidState")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "INVALID_ARGUMENT" || status == "InvalidParams")
@@ -143,14 +151,23 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "CONFIRMATION_REQUIRED")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("Explicit confirmation is required.", new ConfirmationRequiredDetails(null)); }
             else if (status == "NotSupported" || status == "UNSUPPORTED_CAPABILITY")
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; error =
+                    new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null));
+            }
             else if (status == "ApiNotFound")
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The runtime API is unavailable.", new ResourceUnavailableDetails("PLCSIM Advanced API")); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; error =
+                    new Error("The runtime API is unavailable.", new ResourceUnavailableDetails("PLCSIM Advanced API"));
+            }
             else if (success == true) outcome = Outcome.Succeeded;
             else if (readOnly) { outcome = Outcome.ReadFailed; error = Failure(false); }
             else if (knownFailure || failed > 0) { outcome = Outcome.Failed; error = Failure(false); }
             else if (Flag(data, "mayHaveChanged") == false || Flag(data, "writeAttempted") == false)
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The operation did not pass its preconditions.", new PreconditionFailedDetails("runtime-before-write", null)); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; error =
+                    new Error("The operation did not pass its preconditions.", new PreconditionFailedDetails("runtime-before-write", null));
+            }
             else { outcome = Outcome.Unknown; error = Failure(true); }
 
             bool incomplete = Incomplete(data);
@@ -162,7 +179,8 @@ namespace TiaMcpServer.ModelContextProtocol
             int total = Count(data, "totalCount");
             if (data["offset"] != null && Count(data, "limit") > 0) paging = McpServer.OffsetPage(Count(data, "offset"), Count(data, "limit"), total);
             Sanitize(data);
-            if (NativeResultState.TryUnsuccessful(data, !readOnly, out var nativeOutcome, out var nativeError, tool)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+            if (NativeResultState.TryUnsuccessful(data, !readOnly, out var nativeOutcome, out var nativeError, tool)) {
+                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
             return Result(tool, data, error, outcome, completeness, current, readOnly, paging);
         }
 
@@ -189,8 +207,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
         private static Error Failure(bool unknown) => unknown
-            ? new Error("The write outcome is unknown. Reset the session and inspect the target before any further write; do not retry.", new OutcomeUnknownDetails("runtime-operation", new Dictionary<string, System.Text.Json.JsonElement>()))
-            : new Error("The operation did not establish a successful result.", new NativeOperationFailedDetails(null, null, new Dictionary<string, System.Text.Json.JsonElement>()));
+            ? new Error("The write outcome is unknown. Reset the session and inspect the target before any further write; do not retry.",
+                    new OutcomeUnknownDetails("runtime-operation", new Dictionary<string, System.Text.Json.JsonElement>()))
+            : new Error("The operation did not establish a successful result.",
+                    new NativeOperationFailedDetails(null, null, new Dictionary<string, System.Text.Json.JsonElement>()));
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,
             bool current, bool readOnly = false, Paging? paging = null)
         {
@@ -198,8 +218,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 : outcome == Outcome.Partial ? Execution.Partial : readOnly || outcome == Outcome.ReadFailed ? Execution.ReadOnly : Execution.Completed;
             var warnings = new List<Warning>();
             if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, System.Text.Json.JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; inspect the retained per-item evidence.", new Dictionary<string, System.Text.Json.JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
+                        new Dictionary<string, System.Text.Json.JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; inspect the retained per-item evidence.", new Dictionary<string,
+                        System.Text.Json.JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));

@@ -21,7 +21,8 @@ namespace TiaMcp.Adapters.Native.Plc
 {
     public sealed partial class PlcOrganisationAdapter
     {
-        public PlcSeedHmiReply ImportTechnologyObjectsFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
+        public PlcSeedHmiReply ImportTechnologyObjectsFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite =
+                true)
         {
             if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
                 _session.PlcSoftwarePath(_session.GetPlcSoftware(softwarePath)), true);
@@ -128,15 +129,18 @@ namespace TiaMcp.Adapters.Native.Plc
             return new PlcSeedHmiReply { Imported = exported, Failed = failed };
         }
 
-        private static List<(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB To, string Folder)> EnumerateTechnologyObjectsRecursive(PlcSoftware plc)
+        private static List<(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB To,
+                string Folder)> EnumerateTechnologyObjectsRecursive(PlcSoftware plc)
         {
             var list = new List<(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB, string)>();
             void Walk(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup group, string folder)
             {
-                foreach (var to in PlcGroupOperations.Items(WatchNative.Objects(group)).Cast<global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB>())
+                foreach (var to in PlcGroupOperations.Items(WatchNative.Objects(group)).Cast<global::Siemens.Engineering.SW.TechnologicalObjects
+                        .TechnologicalInstanceDB>())
                     list.Add((to, folder));
 #if PLC_TECH_GROUP_READ
-                foreach (var sub in PlcGroupOperations.Items(WatchNative.Groups(group)).Cast<global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBUserGroup>())
+                foreach (var sub in PlcGroupOperations.Items(WatchNative.Groups(group)).Cast<global::Siemens.Engineering.SW.TechnologicalObjects
+                        .TechnologicalInstanceDBUserGroup>())
                     Walk(sub, folder.Length == 0 ? WatchNative.Name(sub) : folder + "/" + WatchNative.Name(sub));
 #endif
             }
@@ -146,7 +150,10 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames)
         {
-            if (IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (IsProjectNull())
+                throw new PlcSoftwareException("InvalidState",
+                    "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                    "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var plc = _session.ResolvePlc(softwarePath, true);
             if (plc == null) throw new PlcSoftwareException("NotFound", $"PlcSoftware not found at '{softwarePath}'" + _session.AvailablePlcPathsSuffix());
@@ -156,7 +163,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 // Use the typed TechnologicalObjectGroup property.
                 // Native observation: the misspelled reflective lookup fell through to the PLC with "TechnologyObjects collection not found".
                 // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
-                var group = (global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup)PlcGroupOperations.Group(plc.TechnologicalObjectGroup, folderPath ?? "");
+                var group = (global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup)PlcGroupOperations
+                    .Group(plc.TechnologicalObjectGroup, folderPath ?? "");
                 var col = group.TechnologicalObjects;
                 if (TryImportEngineeringObjectIntoCollection(col, importPath, overwrite, importedNames, out var err)) return;
                 throw new PlcSoftwareException("ImportFailed", err ?? "ImportTechnologyObject failed");
@@ -171,7 +179,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
         }
 
-        private bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, bool overwrite, List<string> importedNames, out string? error)
+        private bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, bool overwrite, List<string> importedNames, out string
+                ? error)
         {
             error = null;
             var nativeEntered = false;

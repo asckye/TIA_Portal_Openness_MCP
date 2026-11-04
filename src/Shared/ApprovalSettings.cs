@@ -84,7 +84,10 @@ namespace TiaOpenness.Shared
             && normalized.IndexOf('/', 4) < 0;
         private static bool MissingIdentity(int error) => error == 2 || error == 3 || error == 53 || error == 67 || error == 123 || error == 161;
         [StructLayout(LayoutKind.Sequential)] private struct FileIdentity
-        { internal uint Attributes, CreationLow, CreationHigh, AccessLow, AccessHigh, WriteLow, WriteHigh, Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow; }
+        {
+            internal uint Attributes, CreationLow, CreationHigh, AccessLow, AccessHigh, WriteLow, WriteHigh, Volume, SizeHigh, SizeLow, Links, IndexHigh,
+                IndexLow;
+        }
         [DllImport("kernel32.dll", EntryPoint = "CreateFileW", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern SafeFileHandle OpenIdentity(string path, uint access, uint share, IntPtr security, uint creation, uint flags, IntPtr template);
         [DllImport("kernel32.dll", EntryPoint = "GetFileInformationByHandle", SetLastError = true)]
@@ -123,7 +126,8 @@ namespace TiaOpenness.Shared
                 using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
                 using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
                 {
-                    writer.Write("enabled=" + (Enabled ? "true" : "false") + "\ntimeoutSeconds=" + TimeoutSeconds.ToString(CultureInfo.InvariantCulture) + "\n");
+                    writer
+                        .Write("enabled=" + (Enabled ? "true" : "false") + "\ntimeoutSeconds=" + TimeoutSeconds.ToString(CultureInfo.InvariantCulture) + "\n");
                     writer.Flush(); stream.Flush(true);
                 }
             }

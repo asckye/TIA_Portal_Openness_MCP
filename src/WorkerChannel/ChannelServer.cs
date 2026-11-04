@@ -79,13 +79,15 @@ namespace TiaMcp.WorkerChannel
                     string? correlationId = root.TryGetProperty("requestId", out _) ? ChannelCodec.Text(root, "requestId") : null;
                     if (correlationId != null && !ChannelCodec.ValidIdentity(correlationId)) throw new IOException("Invalid request correlation.");
                     string? toolName = root.TryGetProperty("toolName", out _) ? ChannelCodec.Text(root, "toolName") : null;
-                    if (toolName != null && (correlationId == null || !ChannelCodec.ValidIdentity(toolName))) throw new IOException("Invalid request tool name.");
+                    if (toolName != null && (correlationId == null || !ChannelCodec.ValidIdentity(toolName)))
+                        throw new IOException("Invalid request tool name.");
                     var request = new ChannelRequest(id, method, args.GetRawText(), (percent, payload) =>
                     {
                         try
                         {
                             RequireUsable();
-                            if (!active || lastId != id || owner != Thread.CurrentThread.ManagedThreadId || percent < 0 || percent > 100 || ++progress > ChannelCodec.ProgressLimit)
+                            if (!active || lastId != id || owner != Thread.CurrentThread.ManagedThreadId || percent < 0 || percent > 100
+                                    || ++progress > ChannelCodec.ProgressLimit)
                                 throw new IOException("Late, invalid or cross-thread worker progress.");
                             if (payload != null && profile == ChannelProfile.Foundation) throw new IOException("Unexpected worker progress payload.");
                             Emit(ChannelCodec.Progress(id, progress, percent, payload));
@@ -101,7 +103,8 @@ namespace TiaMcp.WorkerChannel
                     RequireUsable();
                     if (profile == ChannelProfile.Engine)
                     {
-                        bool unchanged = method == "engine.status" || args.TryGetProperty("preview", out var preview) && preview.ValueKind == System.Text.Json.JsonValueKind.True;
+                        bool unchanged = method == "engine.status" || args.TryGetProperty("preview", out var preview) && preview.ValueKind == System.Text.Json
+                            .JsonValueKind.True;
                         if (after.Epoch != before.Epoch && (unchanged || after.Epoch != checked(before.Epoch + 1)))
                             throw new IOException("Unexpected engine binding epoch change.");
                     }
@@ -123,6 +126,9 @@ namespace TiaMcp.WorkerChannel
         { RequireUsable(); output.Write(bytes, 0, bytes.Length); output.Flush(); RequireUsable(); }
         private void RequireUsable() { if (Poisoned) throw new IOException("Worker session is poisoned; requests are never replayed."); }
         private ChannelFaultException Fault(Exception cause)
-        { Interlocked.Exchange(ref faulted, 1); return new ChannelFaultException(cause.Message, dispatched || (cause is ChannelFaultException fault && fault.OutcomeUnknown), cause); }
+        {
+            Interlocked.Exchange(ref faulted, 1);
+            return new ChannelFaultException(cause.Message, dispatched || (cause is ChannelFaultException fault && fault.OutcomeUnknown), cause);
+        }
     }
 }

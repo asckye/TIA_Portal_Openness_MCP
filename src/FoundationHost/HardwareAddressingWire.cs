@@ -22,7 +22,9 @@ internal static class HardwareAddressingWire
                 && ((bool)io["RequiresSessionReset"]! == (io["Before"] != null && io["After"] == null)),
             "hardware-addressing.ReadHardwareAddressing" or "hardware-addressing.UpdateHardwareAddress" => reply is JsonObject step
                 && Text(step["Message"]) && Flag(step["RequiresSessionReset"]) && step["Meta"] is JsonObject meta
-                && Text(meta["tool"]) && (string?)meta["tool"] == (operation.EndsWith("ReadHardwareAddressing", StringComparison.Ordinal) ? "GetDeviceAddressing" : "SetDeviceAddress")
+                && Text(meta["tool"])
+                    && (string?)meta["tool"] == (operation.EndsWith("ReadHardwareAddressing", StringComparison.Ordinal) ? "GetDeviceAddressing"
+                        : "SetDeviceAddress")
                 && Flag(meta["success"]),
             _ => false
         };

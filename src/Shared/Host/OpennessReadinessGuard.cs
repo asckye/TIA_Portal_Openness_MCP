@@ -64,7 +64,8 @@ namespace TiaMcpServer.Dispatch
             internal GuardedTool(McpServerTool inner) => this.inner = inner;
             public override Tool ProtocolTool => inner.ProtocolTool;
 
-            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
+                    default)
             {
                 var target = NativeTarget(ProtocolTool.Name, request.Params?.Arguments);
                 if (target == null || OpennessReadiness.Ready) return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
@@ -73,9 +74,11 @@ namespace TiaMcpServer.Dispatch
                 var admission = McpServer.ValidateInfrastructureExample(ProtocolTool.Name,
                     JsonNode.Parse(arguments.GetRawText())!.AsObject());
                 if (admission != null && ProtocolTool.Name == "CallTool" && arguments.TryGetProperty("name", out var targetName)
-                    && targetName.ValueKind == JsonValueKind.String && (!arguments.TryGetProperty("arguments", out var supplied) || supplied.ValueKind == JsonValueKind.Object))
+                    && targetName.ValueKind == JsonValueKind.String
+                        && (!arguments.TryGetProperty("arguments", out var supplied) || supplied.ValueKind == JsonValueKind.Object))
                     admission = McpServer.TargetInputError(targetName.GetString()!, new TiaMcp.Logic.V4.Inputs.ToolArguments(
-                        arguments.TryGetProperty("arguments", out var targetArguments) ? targetArguments : JsonSerializer.SerializeToElement(new { })), admission);
+                        arguments.TryGetProperty("arguments", out var targetArguments) ? targetArguments : JsonSerializer.SerializeToElement(new { })),
+                            admission);
                 if (admission != null)
                     return McpServer.V4TargetReject(
                         ProtocolTool.Name == "CallTool" && admission.Details is InvalidArgumentDetails { Parameter: not "arguments" }
@@ -122,7 +125,8 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         // Registered by the Foundation host's ported tools per release and tool: true when the target refuses these arguments by capability.
-        internal static System.Collections.Concurrent.ConcurrentDictionary<(string Release, string Tool), Func<JsonElement, bool>> PortedCapabilityRefusals { get; } = new();
+        internal static System.Collections.Concurrent.ConcurrentDictionary<(string Release, string Tool), Func<JsonElement, bool>> PortedCapabilityRefusals {
+            get; } = new();
     }
 }
 #endif

@@ -15,28 +15,54 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
-        public PlcBatchImportResult ImportBlocksFromDirectory(string softwarePath,string groupPath,string dir,string regexName="",bool overwrite=false,bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",int maxItems=128, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
+        public PlcBatchImportResult ImportBlocksFromDirectory(string softwarePath,string groupPath,string dir,string regexName="",bool overwrite=false,
+                bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",int maxItems=128,
+                string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
         {
-            return BatchImport(new PlcBatchImportRequest {UnitName=unitName,SwImportOptions=swImportOptions ?? Array.Empty<string>(),ImportOptions=importOptions ?? Array.Empty<string>(),Software=softwarePath,BlockGroup=groupPath,Directory=dir,Regex=regexName,Overwrite=overwrite,DryRun=dryRun,Order=importOrder ?? new string[0],ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile,MaxItems=maxItems,Release=ReleaseKey});
+            return BatchImport(new PlcBatchImportRequest {
+                    UnitName=unitName,SwImportOptions=swImportOptions ?? Array.Empty<string>(),ImportOptions=importOptions ?? Array.Empty<string>(),Software=
+                        softwarePath,BlockGroup=groupPath,Directory=dir,Regex=regexName,Overwrite=overwrite,DryRun=dryRun,Order=importOrder ?? new string[0],
+                        ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile,MaxItems=maxItems,Release=ReleaseKey
+                });
         }
-        public PlcBatchImportResult ImportPlcProgramFromDirectory(string softwarePath,string sourceDir,string typeGroupPath="",string tagFolderPath="",string technologyFolderPath="",string blockGroupPath="",string regexName="",bool compileAfter=false,bool stopOnImportFailure=true,bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",bool overwrite=false,int maxItems=128, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
+        public PlcBatchImportResult ImportPlcProgramFromDirectory(string softwarePath,string sourceDir,string typeGroupPath="",string tagFolderPath="",
+                string technologyFolderPath="",string blockGroupPath="",string regexName="",bool compileAfter=false,bool stopOnImportFailure=true,bool dryRun=
+                true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",bool overwrite=false,int maxItems=
+                128, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
         {
-            return BatchImport(new PlcBatchImportRequest {UnitName=unitName,SwImportOptions=swImportOptions ?? Array.Empty<string>(),ImportOptions=importOptions ?? Array.Empty<string>(),Software=softwarePath,BlockGroup=blockGroupPath,TypeGroup=typeGroupPath,TagGroup=tagFolderPath,TechnologyGroup=technologyFolderPath,Directory=sourceDir,Program=true,Regex=regexName,CompileAfter=compileAfter,StopOnImportFailure=stopOnImportFailure,Overwrite=overwrite,DryRun=dryRun,Order=importOrder ?? new string[0],ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile,MaxItems=maxItems,Release=ReleaseKey});
+            return BatchImport(new PlcBatchImportRequest {
+                    UnitName=unitName,SwImportOptions=swImportOptions ?? Array.Empty<string>(),ImportOptions=importOptions ?? Array.Empty<string>(),Software=
+                        softwarePath,BlockGroup=blockGroupPath,TypeGroup=typeGroupPath,TagGroup=tagFolderPath,TechnologyGroup=technologyFolderPath,Directory=
+                        sourceDir,Program=true,Regex=regexName,CompileAfter=compileAfter,StopOnImportFailure=stopOnImportFailure,Overwrite=overwrite,DryRun=
+                        dryRun,Order=importOrder ?? new string[0],ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile,MaxItems=
+                        maxItems,Release=ReleaseKey
+                });
         }
         private static PlcBatchImportObject BatchBlock(PlcBlock block,string group)
         {
             var kind=block.GetType().Name;
-            if(!new[]{"FC","FB","OB","GlobalDB","InstanceDB"}.Contains(kind)) throw new AdapterPreconditionException("Target contains a block kind outside the bounded ordinary inventory.","softwarePath",false);
+            if(!new[]{"FC","FB","OB","GlobalDB","InstanceDB"}.Contains(kind))
+                throw new AdapterPreconditionException("Target contains a block kind outside the bounded ordinary inventory.","softwarePath",false);
             // Number is a required collision check here, not optional display metadata.
             var raw=((IEngineeringObject)block).GetAttribute("Number");
-            if(raw==null || !int.TryParse(raw.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var number) || number<0) throw new AdapterPreconditionException("Cannot establish exact existing block number.","softwarePath",false);
+            if(raw==null || !int
+                    .TryParse(raw.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var number)
+                    || number<0)
+                throw new AdapterPreconditionException("Cannot establish exact existing block number.","softwarePath",false);
             return new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=kind,Number=number,GroupPath=group};
         }
         private static PlcBatchImportObject BatchReturnedBlock(PlcBlock block,string group,object expectedGroup)
         {
             // Keep readable identity evidence even if native number inspection fails after mutation.
             var result=new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=block.GetType().Name,GroupPath=BatchReturnedGroup(block,expectedGroup,group)};
-            try {var value=((IEngineeringObject)block).GetAttribute("Number");if(value!=null && int.TryParse(value.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var number) && number>=0)result.Number=number;}
+            try {
+                var value=((IEngineeringObject)block).GetAttribute("Number");
+                if(value!=null && int
+                        .TryParse(value.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                            out var number)
+                        && number>=0)
+                    result.Number=number;
+            }
             catch(Exception) /* swallow(native-fallback): an unreadable returned block number stays missing so the batch policy rejects verification */ { /* Missing number is an explicit verification failure in the policy. */ }
             return result;
         }
@@ -52,9 +78,11 @@ namespace TiaMcp.Adapters
             foreach(var group in BatchGroupsBounded(BlockGroups(PlcUnitScope.Blocks(software, unit))))
                 foreach(var block in PlcNative.Blocks(group.Value)) yield return BatchBlock(block,group.Path);
             foreach(var group in BatchGroupsBounded(TypeGroups(PlcUnitScope.Types(software, unit))))
-                foreach(var type in PlcNative.Types(group.Value)) yield return new PlcBatchImportObject {Name=PlcNative.Name(type),Kind="UDT",GroupPath=group.Path};
+                foreach(var type in PlcNative.Types(group.Value)) yield return new PlcBatchImportObject {
+                    Name=PlcNative.Name(type),Kind="UDT",GroupPath=group.Path};
             foreach(var group in BatchGroupsBounded(TagGroups(PlcUnitScope.Tags(software, unit))))
-                foreach(var table in PlcNative.TagTables(group.Value)) yield return new PlcBatchImportObject {Name=table.Name,Kind="TagTable",GroupPath=group.Path};
+                foreach(var table in PlcNative.TagTables(group.Value)) yield return new PlcBatchImportObject {
+                    Name=table.Name,Kind="TagTable",GroupPath=group.Path};
         }
         private PlcBatchImportResult BatchImport(PlcBatchImportRequest request)
         {
@@ -64,7 +92,10 @@ namespace TiaMcp.Adapters
                 // Reject unsupported switches before any filesystem/native lookup.
                 if(request.CompileAfter || !request.StopOnImportFailure || request.TechnologyGroup!="")
                 {
-                    var validation=new PlcBatchImportRequest {Release=ReleaseKey,Overwrite=request.Overwrite,CompileAfter=request.CompileAfter,StopOnImportFailure=request.StopOnImportFailure,TechnologyGroup=request.TechnologyGroup};
+                    var validation=new PlcBatchImportRequest {
+                        Release=ReleaseKey,Overwrite=request.Overwrite,CompileAfter=request.CompileAfter,StopOnImportFailure=request.StopOnImportFailure,
+                            TechnologyGroup=request.TechnologyGroup
+                    };
                     PlcBatchImportPolicy.ValidateOptions(validation);
                 }
                 PlcNativeImportOptions.Validate(ReleaseKey, "block", request.SwImportOptions, request.ImportOptions, request.UnitName);
@@ -72,9 +103,14 @@ namespace TiaMcp.Adapters
                 var unit=PlcUnitScope.Optional(selected.Value,request.UnitName);
                 TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(request.Software,selected.ExactPath,true);
                 PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
-                request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
-                foreach(var item in new[]{(Path:request.BlockGroup,Parameter:"groupPath"),(Path:request.TypeGroup,Parameter:"typeGroupPath"),(Path:request.TagGroup,Parameter:"tagFolderPath")})
-                    if(item.Path!=PlcExchangePolicy.ObjectPath(item.Path,true,item.Parameter)) throw new AdapterPreconditionException("Exact canonical group path required.",item.Parameter);
+                request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new TiaMcp.Adapters.Contracts
+                    .AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
+                foreach(var item in new[]{
+                        (Path:request.BlockGroup,Parameter:"groupPath"),(Path:request.TypeGroup,Parameter:"typeGroupPath"),
+                            (Path:request.TagGroup,Parameter:"tagFolderPath")
+                    })
+                    if(item.Path!=PlcExchangePolicy.ObjectPath(item.Path,true,item.Parameter))
+                        throw new AdapterPreconditionException("Exact canonical group path required.",item.Parameter);
                 var blocks=BatchGroup(BlockGroups(PlcUnitScope.Blocks(selected.Value, unit)),request.BlockGroup);
                 var types=request.Program ? BatchGroup(TypeGroups(PlcUnitScope.Types(selected.Value, unit)),request.TypeGroup) : null;
                 var tags=request.Program ? BatchGroup(TagGroups(PlcUnitScope.Tags(selected.Value, unit)),request.TagGroup) : null;
@@ -82,24 +118,51 @@ namespace TiaMcp.Adapters
                 Action check=()=>
                 {
                     RequireProjectIdentity(request.Project);
-                    if(lifecycle.ProcessId!=request.ProcessId) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Process identity changed.","softwarePath",false);
+                    if(lifecycle.ProcessId!=request.ProcessId) throw new TiaMcp.Adapters.Contracts
+                        .AdapterPreconditionException("Process identity changed.","softwarePath",false);
                     var fresh=ReadSelection(request.Software);
-                    if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Selected target identity changed.","softwarePath",false);
-                    if(!object.Equals(BatchGroup(BlockGroups(PlcUnitScope.Blocks(fresh.Value, PlcUnitScope.Optional(fresh.Value,request.UnitName))),request.BlockGroup),blocks) ||
-                       (request.Program && (!object.Equals(BatchGroup(TypeGroups(PlcUnitScope.Types(fresh.Value, PlcUnitScope.Optional(fresh.Value,request.UnitName))),request.TypeGroup),types) || !object.Equals(BatchGroup(TagGroups(PlcUnitScope.Tags(fresh.Value, PlcUnitScope.Optional(fresh.Value,request.UnitName))),request.TagGroup),tags)))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination group identity changed.","softwarePath",false);
+                    if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context))
+                        throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Selected target identity changed.","softwarePath",false);
+                    if(!object
+                            .Equals(BatchGroup(BlockGroups(PlcUnitScope.Blocks(fresh.Value, PlcUnitScope.Optional(fresh.Value,request.UnitName))),request
+                                    .BlockGroup),
+                                blocks)
+                            ||
+                       (request.Program
+                               && (!object
+                                   .Equals(BatchGroup(TypeGroups(PlcUnitScope.Types(fresh.Value, PlcUnitScope.Optional(fresh.Value,request.UnitName))),request
+                                           .TypeGroup),
+                                       types)
+                                   || !object
+                                   .Equals(BatchGroup(TagGroups(PlcUnitScope.Tags(fresh.Value, PlcUnitScope.Optional(fresh.Value,request.UnitName))),request
+                                           .TagGroup),
+                                       tags)))) throw new TiaMcp
+                           .Adapters.Contracts.AdapterPreconditionException("Destination group identity changed.","softwarePath",false);
                     RequireTargetOffline(fresh);
                 };
                 PlcBatchImportObject[] Import(FileInfo file,PlcBatchImportObject planned,ImportOptions option,bool recovery=false)
                 {
                     var sw=recovery ? Array.Empty<string>() : request.SwImportOptions;
                     PlcNativeImportOptions.Validate(ReleaseKey,planned.Kind,sw,recovery ? null : request.ImportOptions,request.UnitName);
-                    if(planned.Kind=="UDT") return PlcNativeImportOptions.Types(PlcNative.Types(types!),file,option,sw).Select(t=>new PlcBatchImportObject {Name=PlcNative.Name(t),Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,types!,request.TypeGroup)}).ToArray();
-                    if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,option).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,tags!,request.TagGroup)}).ToArray();
-                    return PlcNativeImportOptions.Blocks(PlcNative.Blocks(blocks),file,option,sw).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
+                    if(planned.Kind=="UDT") return PlcNativeImportOptions.Types(PlcNative.Types(types!),file,option,sw)
+                        .Select(t=>new PlcBatchImportObject {
+                            Name=PlcNative.Name(t),Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=
+                                BatchReturnedGroup(t,types!,request.TypeGroup)
+                        })
+                        .ToArray();
+                    if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,option)
+                        .Select(t=>new PlcBatchImportObject {
+                            Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=
+                                BatchReturnedGroup(t,tags!,request.TagGroup)
+                        })
+                        .ToArray();
+                    return PlcNativeImportOptions.Blocks(PlcNative.Blocks(blocks),file,option,sw).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks))
+                        .ToArray();
                 }
                 string Blocker(PlcBatchImportObject target)
                 {
-                    if(target.Kind=="UDT") return TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).IsConsistent);
+                    if(target.Kind=="UDT") return TiaOpenness.Shared.NativeExportPolicy
+                        .ExportBlocker(PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).IsConsistent);
                     if(target.Kind=="TagTable") return "";
                     var block=PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name);
                     return TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent,block.IsKnowHowProtected);
@@ -114,8 +177,10 @@ namespace TiaMcp.Adapters
                     });
                 }
                 prepared=true;
-                return PlcBatchImportPolicy.Run(request,inventory,check,(file,target)=>Import(file,target,PlcNativeImportOptions.General(request.Overwrite,request.ImportOptions)),
-                    Backup,(file,target)=>Import(file,target,ImportOptions.Override,true),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,Blocker);
+                return PlcBatchImportPolicy
+                    .Run(request,inventory,check,(file,target)=>Import(file,target,PlcNativeImportOptions.General(request.Overwrite,request.ImportOptions)),
+                    Backup,(file,target)=>Import(file,target,ImportOptions.Override,true),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,
+                        Blocker);
             }
             catch(NotSupportedException) { throw; }
             catch(AdapterPreconditionException) { throw; }

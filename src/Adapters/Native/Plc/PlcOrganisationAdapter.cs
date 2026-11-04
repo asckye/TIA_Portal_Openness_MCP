@@ -44,20 +44,24 @@ namespace TiaMcp.Adapters.Native.Plc
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 // Destructive operations use the shared exact container resolver, never fuzzy PLC selection.
                 var sc=_session.ResolveSoftwareContainerUncached(softwarePath);
-                var plc=PlcOrganisationPrimitives.SoftwareOrNull(sc) as PlcSoftware ?? throw new PlcSoftwareException("NotFound", "PLC software not found: " + softwarePath);
+                var plc=PlcOrganisationPrimitives.SoftwareOrNull(sc) as PlcSoftware
+                    ?? throw new PlcSoftwareException("NotFound", "PLC software not found: " + softwarePath);
                 PlcBlockUserGroup? Find(string[] parts)
                 {
                     PlcBlockGroup current=PlcOrganisationPrimitives.BlockGroup(plc);
                     foreach(var name in parts)
                     {
-                        var matches=PlcOrganisationPrimitives.Groups(current).Where(g=>string.Equals(PlcOrganisationPrimitives.Name(g),name,StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
+                        var matches=PlcOrganisationPrimitives.Groups(current)
+                            .Where(g=>string.Equals(PlcOrganisationPrimitives.Name(g),name,StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
                         if(matches.Count==0) return null;
                         if(matches.Count!=1) throw new PlcSoftwareException("InvalidParams","Ambiguous user group: " + name);
                         current=matches[0];
                     }
                     return current as PlcBlockUserGroup ?? throw new PlcSoftwareException("InvalidParams","Only user block groups can be deleted.");
                 }
-                var result=EmptyPlcGroupPolicy.Execute(groupPath,dryRun,Find,g=>PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Blocks(g)),g=>PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(g)),
+                var result=EmptyPlcGroupPolicy
+                    .Execute(groupPath,dryRun,Find,g=>PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Blocks(g)),g=>PlcOrganisationPrimitives
+                        .Count(PlcOrganisationPrimitives.Groups(g)),
                     ()=>PlcOrganisationPrimitives.StateOrNull(_session.ResolvePlcService<OnlineProvider>(softwarePath,plc))?.ToString() ?? "Unknown",
                     g=> { MutationStarted = true; PlcOrganisationPrimitives.Delete(g); });
                 result["softwarePath"]=softwarePath;
@@ -147,7 +151,8 @@ namespace TiaMcp.Adapters.Native.Plc
             // 并明说「没查」，不是「没人用」。
             string? crossRefReason = null;
             bool crossRefQueried = false;
-            var refs = crossReferences ? _session.GetCrossReferences(softwarePath, resolvedPath, "Block", "AllObjects", out crossRefReason, out crossRefQueried) : null;
+            var refs = crossReferences ? _session
+                .GetCrossReferences(softwarePath, resolvedPath, "Block", "AllObjects", out crossRefReason, out crossRefQueried) : null;
             result["crossReferenceQueried"] = crossRefQueried;
             if (crossReferences) result["crossReferenceUnavailableReason"] = crossRefReason;
             result["crossReferenceAvailable"] = refs != null;
@@ -163,8 +168,11 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
-                else warnings.Add("Block cross references are unavailable (" + (crossRefReason ?? "unknown reason") + "); this does not establish that the block has no callers. "
+                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human " +
+                        "Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
+                else warnings
+                    .Add("Block cross references are unavailable (" + (crossRefReason ?? "unknown reason")
+                        + "); this does not establish that the block has no callers. "
                     + "Back up with ExportPlcBlockDocuments before deletion, then run CompilePlcSoftware and inspect errors.");
             }
             result["warnings"] = warnings;
@@ -280,7 +288,8 @@ namespace TiaMcp.Adapters.Native.Plc
             // 交叉引用仅在 crossReferences=true 时查，保留上方 TIA V21 真机退出证据对应的显式启用约束。
             string? crossRefReason = crossReferences ? _session.CrossReferenceRefusal(softwarePath) : "not queried (crossReferences=false)";
             bool crossRefQueried = false;
-            var refs = crossReferences && crossRefReason == null ? TryGetTagTableCrossReferences(table, resolvedPath, out crossRefReason, out crossRefQueried) : null;
+            var refs = crossReferences && crossRefReason == null ? TryGetTagTableCrossReferences(table, resolvedPath, out crossRefReason, out crossRefQueried)
+                : null;
             result["crossReferenceQueried"] = crossRefQueried;
             result["crossReferenceAvailable"] = refs != null;
             result["crossReferenceUnavailableReason"] = crossRefReason;
@@ -296,7 +305,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
+                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human " +
+                        "Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
                 else warnings.Add("Table cross references are unavailable; see crossReferenceUnavailableReason. "
                     + "This does not establish that there are no references. Back up with ExportPlcTagTable, "
                     + "then use GetPlcCrossReferences for blocks that may use these symbols, or inspect references manually in TIA.");
@@ -380,7 +390,8 @@ namespace TiaMcp.Adapters.Native.Plc
             // 仅在 crossReferences=true 时查，保留上方 TIA V21 真机退出证据对应的显式启用约束。
             string? crossRefReason = null;
             bool crossRefQueried = false;
-            var refs = crossReferences ? _session.GetCrossReferences(softwarePath, typePath, "Type", "AllObjects", out crossRefReason, out crossRefQueried) : null;
+            var refs = crossReferences ? _session.GetCrossReferences(softwarePath, typePath, "Type", "AllObjects", out crossRefReason, out crossRefQueried)
+                : null;
             result["crossReferenceQueried"] = crossRefQueried;
             if (crossReferences) result["crossReferenceUnavailableReason"] = crossRefReason;
             result["crossReferenceAvailable"] = refs != null;
@@ -396,8 +407,11 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
-                else warnings.Add("⚠️ Cross-references for this UDT could not be retrieved (" + (crossRefReason ?? "unknown reason") + "); this **does not mean** the UDT is unused."
+                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human " +
+                        "Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
+                else warnings
+                    .Add("⚠️ Cross-references for this UDT could not be retrieved (" + (crossRefReason ?? "unknown reason")
+                        + "); this **does not mean** the UDT is unused."
                     + "Back up with ExportPlcType before deletion; compile with CompilePlcSoftware afterwards.");
             }
             result["warnings"] = warnings;
@@ -512,7 +526,9 @@ namespace TiaMcp.Adapters.Native.Plc
             object table, string resolvedPath, out string? reason, out bool queried)
         {
             queried = false;
-            reason = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
+            reason = PlcCrossReferencePolicy
+                .PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy
+                    .ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
             if (reason != null) return null;
             try
             {
@@ -523,15 +539,21 @@ namespace TiaMcp.Adapters.Native.Plc
                 // covered. A table that holds user constants never reports a complete aggregate.
                 int userConstants = PlcGroupOperations.Items(typed.UserConstants).Count();
                 if (userConstants != 0)
-                { reason = "Tag table cross-reference result incomplete: " + userConstants + " user constant(s) are not covered by CrossReferenceService; no native query was made."; return null; }
+                {
+                    reason = "Tag table cross-reference result incomplete: " + userConstants
+                        + " user constant(s) are not covered by CrossReferenceService; no native query was made."; return null;
+                }
                 var items = new List<PlcCrossReference>();
-                var targets = PlcGroupOperations.Items(PlcOrganisationPrimitives.Tags(typed)).Concat(PlcGroupOperations.Items(PlcOrganisationPrimitives.SystemConstants(typed)));
+                var targets = PlcGroupOperations.Items(PlcOrganisationPrimitives.Tags(typed))
+                    .Concat(PlcGroupOperations.Items(PlcOrganisationPrimitives.SystemConstants(typed)));
                 foreach (IEngineeringServiceProvider target in targets)
                 {
                     var service = InvocationJournal.Native("TagTable.CrossReference.GetService", () => PlcOrganisationPrimitives.CrossReferences(target));
                     if (service == null) throw new NotSupportedException("CrossReferenceService missing on a tag/system constant; table result incomplete.");
                     queried = true;
-                    var raw = InvocationJournal.Native("TagTable.CrossReference.query", () => PlcOrganisationPrimitives.CrossReferences(service, global::Siemens.Engineering.CrossReference.CrossReferenceFilter.AllObjects));
+                    var raw = InvocationJournal
+                        .Native("TagTable.CrossReference.query", () => PlcOrganisationPrimitives
+                            .CrossReferences(service, global::Siemens.Engineering.CrossReference.CrossReferenceFilter.AllObjects));
                     items.AddRange(InvocationJournal.Native("TagTable.CrossReference.read", () => _session.TryFlattenCrossReferenceResult(raw, resolvedPath)));
                 }
                 reason = null;
@@ -555,22 +577,31 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 
 #if PLC_SOFTWARE_PROTECTION
-        public HardwareAddressingReply ManagePlcBlockProtection(string softwarePath, string blockPath, string action, string password = "", bool confirmProtectionChange = false, bool dryRun = true)
+        public HardwareAddressingReply ManagePlcBlockProtection(string softwarePath, string blockPath, string action, string password = "",
+                bool confirmProtectionChange = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcBlockProtection", meta => {
                 bool writing = PlcProtectionPolicy.ValidateProtectionRequest(action, password, confirmProtectionChange, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 _session.ExactPlcForEngineering(softwarePath, writing);
-                var block = _session.ExactMasterCopyPlcSource(softwarePath, blockPath, true) as PlcBlock ?? throw new ArgumentException("blockPath must identify a block.");
-                var provider = PlcOrganisationPrimitives.Protection(block) ?? throw new NotSupportedException("PlcBlockProtectionProvider unavailable on this block/version.");
+                var block = _session.ExactMasterCopyPlcSource(softwarePath, blockPath, true) as PlcBlock
+                    ?? throw new ArgumentException("blockPath must identify a block.");
+                var provider = PlcOrganisationPrimitives.Protection(block)
+                    ?? throw new NotSupportedException("PlcBlockProtectionProvider unavailable on this block/version.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["blockPath"] = blockPath; meta["action"] = action;
                 meta["passwordProvided"] = !string.IsNullOrEmpty(password);
-                meta["before"] = new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(block), ["isKnowHowProtected"] = PlcOrganisationPrimitives.IsKnowHowProtected(block), ["programmingLanguage"] = PlcOrganisationPrimitives.Language(block).ToString() };
+                meta["before"] = new Dictionary<string, object?> {
+                    ["name"] = PlcOrganisationPrimitives.Name(block), ["isKnowHowProtected"] = PlcOrganisationPrimitives.IsKnowHowProtected(block),
+                        ["programmingLanguage"] = PlcOrganisationPrimitives.Language(block).ToString()
+                };
                 var invalid = PlcOrganisationPrimitives.InvalidPasswordCharacters(provider)?.ToArray() ?? Array.Empty<char>();
                 meta["invalidPasswordCharacters"] = new List<object?>(invalid.Select(c => (object?)PlcSoftwareValues.Value(c.ToString())!).ToArray());
                 if (action == "read") return "Block know-how protection state read.";
                 bool expected = action == "protect";
-                if (PlcOrganisationPrimitives.IsKnowHowProtected(block) == expected) throw new InvalidOperationException(expected ? "Block is already know-how protected; unprotect first." : "Block is not know-how protected.");
-                if (expected && PlcProtectionPolicy.ContainsInvalidPasswordCharacter(password, invalid)) throw new ArgumentException("Password contains characters rejected by the native password policy.");
+                if (PlcOrganisationPrimitives.IsKnowHowProtected(block) == expected)
+                    throw new InvalidOperationException(expected ? "Block is already know-how protected; unprotect first."
+                        : "Block is not know-how protected.");
+                if (expected && PlcProtectionPolicy.ContainsInvalidPasswordCharacter(password, invalid))
+                    throw new ArgumentException("Password contains characters rejected by the native password policy.");
                 if (!writing) return "Block protection preview; no changes.";
                 meta["mayHaveChanged"] = true;
                 using (var secure = PlcProtectionPolicy.ToSecureString(password))
@@ -579,12 +610,14 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 meta["apiCallSuccess"] = true;
                 meta["after"] = new Dictionary<string, object?> { ["isKnowHowProtected"] = PlcOrganisationPrimitives.IsKnowHowProtected(block) };
-                if (PlcOrganisationPrimitives.IsKnowHowProtected(block) != expected) throw new InvalidOperationException("Protection readback differs from the requested state.");
+                if (PlcOrganisationPrimitives.IsKnowHowProtected(block) != expected)
+                    throw new InvalidOperationException("Protection readback differs from the requested state.");
                 return "Block know-how protection changed and verified by readback; no save/compile/download.";
             });
 
 #else
-        public HardwareAddressingReply ManagePlcBlockProtection(string softwarePath, string blockPath, string action, string password = "", bool confirmProtectionChange = false, bool dryRun = true)
+        public HardwareAddressingReply ManagePlcBlockProtection(string softwarePath, string blockPath, string action, string password = "",
+                bool confirmProtectionChange = false, bool dryRun = true)
             => throw new NotSupportedException("PlcBlockProtectionProvider requires V15.1 or later.");
 #endif
 
@@ -599,14 +632,16 @@ namespace TiaMcp.Adapters.Native.Plc
                 var plc = PlcOrganisationPrimitives.SoftwareOrNull(_session.ResolveSoftwareContainerUncached(softwarePath)) as PlcSoftware
                     ?? throw new PlcSoftwareException("NotFound", "PLC software not found: " + softwarePath);
                 var result = PlcGroupCreation.Execute<PlcTypeGroup>(PlcOrganisationPrimitives.TypeGroup(plc), groupPath, dryRun,
-                    g => PlcOrganisationPrimitives.Groups(g), g => PlcOrganisationPrimitives.Name(g), (g, name) => { MutationStarted = true; return PlcOrganisationPrimitives.Create(PlcOrganisationPrimitives.Groups(g), name); });
+                    g => PlcOrganisationPrimitives.Groups(g), g => PlcOrganisationPrimitives.Name(g), (g, name) => {
+                        MutationStarted = true; return PlcOrganisationPrimitives.Create(PlcOrganisationPrimitives.Groups(g), name); });
                 result["softwarePath"] = softwarePath;
                 result["resolvedSoftwareName"] = PlcOrganisationPrimitives.Name(plc);
                 return result;
             }
         }
 
-        public HardwareAddressingReply ManagePlcUserGroup(string softwarePath, string family, string groupPath, string action, string newName = "", bool dryRun = true)
+        public HardwareAddressingReply ManagePlcUserGroup(string softwarePath, string family, string groupPath, string action, string newName = "",
+                bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcUserGroup", meta => {
                 // Emptiness covers every documented object composition of the group (API audit 2026-10-19 F3, F19):
                 // PlcTypeGroup.Documents (V20/V21) and PlcWatchAndForceTableGroup.ForceTables.
@@ -630,23 +665,51 @@ namespace TiaMcp.Adapters.Native.Plc
                     throw new PlcSoftwareException("InvalidState", "Confirmed Offline state is required for group editing.");
                 if (!dryRun) meta["mayHaveChanged"] = true;
                 meta["result"] = PlcGroupOperations.Manage(PlcGroupOperations.Get(plc, shape.Item1), groupPath, action, newName, dryRun, shape.Item2);
-                if (action != "deleteEmpty" || dryRun) { try { meta["group"] = UserGroupRow(PlcGroupOperations.Group(PlcGroupOperations.Get(plc, shape.Item1), action == "rename" && !dryRun ? string.Join("/", PlcGroupOperations.Parts(groupPath).Take(PlcGroupOperations.Parts(groupPath).Length - 1).Append(newName)) : groupPath)); } catch (Exception ex) { meta["groupError"] = ex.GetBaseException().Message; } }
+                if (action != "deleteEmpty" || dryRun) {
+                    try {
+                        meta["group"] =
+                            UserGroupRow(PlcGroupOperations
+                                .Group(PlcGroupOperations.Get(plc, shape.Item1), action == "rename" && !dryRun ? string
+                                    .Join("/", PlcGroupOperations.Parts(groupPath).Take(PlcGroupOperations.Parts(groupPath).Length - 1).Append(newName))
+                                    : groupPath));
+                    } catch (Exception ex) { meta["groupError"] = ex.GetBaseException().Message; }
+                }
                 return dryRun ? "Group operation preview; nothing changed." : "Group operation completed. Project not saved.";
             });
 
         private static Dictionary<string, object?> UserGroupRow(object group) => group switch
         {
-            global::Siemens.Engineering.SW.Blocks.PlcBlockUserGroup b => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(b), ["groupClass"] = b.GetType().Name, ["blocks"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Blocks(b)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(b)) },
+            global::Siemens.Engineering.SW.Blocks.PlcBlockUserGroup b => new Dictionary<string, object?> {
+                ["name"] = PlcOrganisationPrimitives.Name(b), ["groupClass"] = b.GetType().Name, ["blocks"] = PlcOrganisationPrimitives
+                    .Count(PlcOrganisationPrimitives.Blocks(b)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(b))
+            },
 #if PLC_DOCUMENT_EXPORT
-            global::Siemens.Engineering.SW.Types.PlcTypeUserGroup ty => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(ty), ["groupClass"] = ty.GetType().Name, ["types"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Types(ty)), ["documents"] = PlcGroupOperations.Items(ty.Documents).Count(), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(ty)) },
+            global::Siemens.Engineering.SW.Types.PlcTypeUserGroup ty => new Dictionary<string, object?> {
+                ["name"] = PlcOrganisationPrimitives.Name(ty), ["groupClass"] = ty.GetType().Name, ["types"] = PlcOrganisationPrimitives
+                    .Count(PlcOrganisationPrimitives.Types(ty)), ["documents"] = PlcGroupOperations.Items(ty.Documents).Count(), ["groups"] =
+                    PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(ty))
+            },
 #else
-            global::Siemens.Engineering.SW.Types.PlcTypeUserGroup ty => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(ty), ["groupClass"] = ty.GetType().Name, ["types"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Types(ty)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(ty)) },
+            global::Siemens.Engineering.SW.Types.PlcTypeUserGroup ty => new Dictionary<string, object?> {
+                ["name"] = PlcOrganisationPrimitives.Name(ty), ["groupClass"] = ty.GetType().Name, ["types"] = PlcOrganisationPrimitives
+                    .Count(PlcOrganisationPrimitives.Types(ty)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(ty))
+            },
 #endif
-            global::Siemens.Engineering.SW.Tags.PlcTagTableUserGroup tg => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(tg), ["groupClass"] = tg.GetType().Name, ["tagTables"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.TagTables(tg)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(tg)) },
+            global::Siemens.Engineering.SW.Tags.PlcTagTableUserGroup tg => new Dictionary<string, object?> {
+                ["name"] = PlcOrganisationPrimitives.Name(tg), ["groupClass"] = tg.GetType().Name, ["tagTables"] = PlcOrganisationPrimitives
+                    .Count(PlcOrganisationPrimitives.TagTables(tg)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(tg))
+            },
 #if PLC_SOFTWARE_PROTECTION
-            global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup w => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(w), ["groupClass"] = w.GetType().Name, ["watchTables"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.WatchTables(w)), ["forceTables"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.ForceTables(w)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(w)) },
+            global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup w => new Dictionary<string, object?> {
+                ["name"] = PlcOrganisationPrimitives.Name(w), ["groupClass"] = w.GetType().Name, ["watchTables"] = PlcOrganisationPrimitives
+                    .Count(PlcOrganisationPrimitives.WatchTables(w)), ["forceTables"] = PlcOrganisationPrimitives
+                    .Count(PlcOrganisationPrimitives.ForceTables(w)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(w))
+            },
 #endif
-            global::Siemens.Engineering.SW.ExternalSources.PlcExternalSourceUserGroup e => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(e), ["groupClass"] = e.GetType().Name, ["externalSources"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.ExternalSources(e)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(e)) },
+            global::Siemens.Engineering.SW.ExternalSources.PlcExternalSourceUserGroup e => new Dictionary<string, object?> {
+                ["name"] = PlcOrganisationPrimitives.Name(e), ["groupClass"] = e.GetType().Name, ["externalSources"] = PlcOrganisationPrimitives
+                    .Count(PlcOrganisationPrimitives.ExternalSources(e)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(e))
+            },
             _ => new Dictionary<string, object?> { ["name"] = PlcGroupOperations.Get(group, "Name").ToString(), ["groupClass"] = group.GetType().Name }
         };
 
@@ -659,7 +722,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (PlcOrganisationPrimitives.SoftwareOrNull(softwareContainer) is not PlcSoftware plcSoftware || PlcOrganisationPrimitives.BlockGroup(plcSoftware) == null)
+            if (PlcOrganisationPrimitives.SoftwareOrNull(softwareContainer) is not PlcSoftware plcSoftware || PlcOrganisationPrimitives
+                    .BlockGroup(plcSoftware) == null)
             {
                 return null;
             }
@@ -668,7 +732,8 @@ namespace TiaMcp.Adapters.Native.Plc
             PlcBlockGroup currentGroup = PlcOrganisationPrimitives.BlockGroup(plcSoftware);
             foreach (var groupName in groupNames)
             {
-                var next = PlcOrganisationPrimitives.Groups(currentGroup).FirstOrDefault(g => PlcOrganisationPrimitives.Name(g).Equals(groupName, StringComparison.OrdinalIgnoreCase));
+                var next = PlcOrganisationPrimitives.Groups(currentGroup)
+                    .FirstOrDefault(g => PlcOrganisationPrimitives.Name(g).Equals(groupName, StringComparison.OrdinalIgnoreCase));
                 if (next == null)
                 {
                     MutationStarted = true;
@@ -689,7 +754,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (PlcOrganisationPrimitives.SoftwareOrNull(softwareContainer) is not PlcSoftware plcSoftware || PlcOrganisationPrimitives.BlockGroup(plcSoftware) == null)
+            if (PlcOrganisationPrimitives.SoftwareOrNull(softwareContainer) is not PlcSoftware plcSoftware || PlcOrganisationPrimitives
+                    .BlockGroup(plcSoftware) == null)
             {
                 throw new PlcSoftwareException("NotFound", $"PlcSoftware not found at '{softwarePath}'");
             }
@@ -711,7 +777,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (existingGroup != null && ReferenceEquals(PlcOrganisationPrimitives.Parent(block), existingGroup))
                     return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
                 throw new PlcSoftwareException("NotSupportedOnVersion",
-                    "Moving organization blocks by export/delete/import is disabled: the OB type, number and event assignment are not verified to survive the round trip. Move this OB in TIA Portal.");
+                    "Moving organization blocks by export/delete/import is disabled: the OB type, number and event assignment are not verified to survive " +
+                        "the round trip. Move this OB in TIA Portal.");
             }
 
             // API audit 2026-10-19 F22: the round trip deletes the source block. A know-how-protected block exports only its public
@@ -761,13 +828,15 @@ namespace TiaMcp.Adapters.Native.Plc
                         $"Re-import of '{blockName}' into '{targetGroupPath}' failed (xml)");
                 }
                 var verifyGroup = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                var moved = PlcOrganisationPrimitives.BlocksOrNull(verifyGroup)?.FirstOrDefault(b => PlcOrganisationPrimitives.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase));
+                var moved = PlcOrganisationPrimitives.BlocksOrNull(verifyGroup)?
+                    .FirstOrDefault(b => PlcOrganisationPrimitives.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase));
                 numberAfter = moved == null ? null : PlcMovePolicy.Number(((IEngineeringObject)moved).GetAttribute("Number"));
                 var numberChange = PlcMovePolicy.NumberChange(numberBefore, numberAfter);
                 moveVerified = verifyGroup != null && moved != null && numberChange == null;
                 if (verifyGroup == null || moved == null) throw new PlcSoftwareException("ImportFailed",
                     $"Move of '{blockName}' to '{targetGroupPath}' could not be verified");
-                if (numberChange != null) throw new PlcSoftwareException("ImportFailed", $"Block '{blockName}' was moved to '{targetGroupPath}' but {numberChange}");
+                if (numberChange != null)
+                    throw new PlcSoftwareException("ImportFailed", $"Block '{blockName}' was moved to '{targetGroupPath}' but {numberChange}");
             }
             catch (Exception ex)
             {

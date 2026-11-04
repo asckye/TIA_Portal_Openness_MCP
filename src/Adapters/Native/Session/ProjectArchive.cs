@@ -18,23 +18,32 @@ namespace TiaMcp.Adapters.Native.Session
             var method=project.GetType().GetMethods().SingleOrDefault(m=>m.Name=="Archive"&&m.GetParameters().Length==3&&
                 m.GetParameters()[0].ParameterType==typeof(DirectoryInfo)&&m.GetParameters()[1].ParameterType==typeof(string)&&
                 m.GetParameters()[2].ParameterType.IsEnum);
-            if(method==null)throw new PortalException(PortalErrorCode.NotSupportedOnVersion,"Native project Archive API unavailable on this project/session; use its supported project workflow.");
+            if(method==null)
+                throw new PortalException(PortalErrorCode.NotSupportedOnVersion,
+                    "Native project Archive API unavailable on this project/session; use its supported project workflow.");
             object? modified;
             try { modified = project.GetType().GetProperty("IsModified")?.GetValue(project); }
             catch /* swallow(probe-optional): unverifiable saved state is refused below */ { modified = null; }
             if(modified is not bool isModified)throw new PortalException(PortalErrorCode.InvalidState,"Cannot verify saved project state.");
-            if(isModified)throw new PortalException(PortalErrorCode.InvalidState,"Project has unsaved changes. Save explicitly before archiving; no automatic save is performed.");
+            if(isModified)
+                throw new PortalException(PortalErrorCode.InvalidState,
+                    "Project has unsaved changes. Save explicitly before archiving; no automatic save is performed.");
             var path=Path.GetFullPath(archivePath);
-            if(!path.EndsWith(".zap" + PlcLifecyclePolicy.FileSuffix(release), StringComparison.OrdinalIgnoreCase))throw new PortalException(PortalErrorCode.InvalidParams,"Use a .zap" + PlcLifecyclePolicy.FileSuffix(release) + " file path matching the project version.");
+            if(!path.EndsWith(".zap" + PlcLifecyclePolicy.FileSuffix(release), StringComparison.OrdinalIgnoreCase))
+                throw new PortalException(PortalErrorCode.InvalidParams,"Use a .zap" + PlcLifecyclePolicy.FileSuffix(release)
+                    + " file path matching the project version.");
             var version=project.GetType().Assembly.GetName().Version?.Major;
-            if(version != TiaMcp.Versioning.TiaVersionCatalog.Get(release).MajorVersion)throw new PortalException(PortalErrorCode.InvalidParams,"Archive extension does not match the TIA API version.");
+            if(version != TiaMcp.Versioning.TiaVersionCatalog.Get(release).MajorVersion)
+                throw new PortalException(PortalErrorCode.InvalidParams,"Archive extension does not match the TIA API version.");
             if(File.Exists(path))throw new PortalException(PortalErrorCode.InvalidParams,"Archive target already exists; choose a new file name.");
             var mode=method.GetParameters()[2].ParameterType;
-            if(!Enum.GetNames(mode).Contains("Compressed"))throw new PortalException(PortalErrorCode.NotSupportedOnVersion,"Compressed archive mode unavailable.");
+            if(!Enum.GetNames(mode).Contains("Compressed"))
+                throw new PortalException(PortalErrorCode.NotSupportedOnVersion,"Compressed archive mode unavailable.");
             var result=new HmiObject{["success"]=true,["dryRun"]=dryRun,["path"]=path,["kind"]="NativeProjectArchive",
                 ["mode"]="Compressed",["retrievalTested"]=false,["projectSavedByTool"]=false};
             if(dryRun)return result;
-            var export=TiaMcp.Adapters.Native.Plc.EngineeringFileExport.Export(new ArchiveWriter(project,method,Enum.Parse(mode,"Compressed")),path,false,HmiValues.ExportFailure!);
+            var export=TiaMcp.Adapters.Native.Plc.EngineeringFileExport
+                .Export(new ArchiveWriter(project,method,Enum.Parse(mode,"Compressed")),path,false,HmiValues.ExportFailure!);
             foreach(var kv in export)result[kv.Key]=kv.Value?.DeepClone();
             result["operationSuccess"]=result["success"]?.DeepClone();
             return result;

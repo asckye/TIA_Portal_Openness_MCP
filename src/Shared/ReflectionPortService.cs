@@ -47,33 +47,66 @@ namespace TiaMcpServer.Siemens.Services
             if (a is JsonValue value)
             {
                 if (value.TryGetValue<string>(out var text)) return new HardwareScalar { Kind = "string", Text = text };
-                if (value.TryGetValue<int>(out var integer)) return new HardwareScalar { Kind = "int", Text = integer.ToString(System.Globalization.CultureInfo.InvariantCulture) };
-                if (value.TryGetValue<long>(out var wide)) return new HardwareScalar { Kind = "long", Text = wide.ToString(System.Globalization.CultureInfo.InvariantCulture) };
-                if (value.TryGetValue<double>(out var number)) return new HardwareScalar { Kind = "double", Text = number.ToString("R", System.Globalization.CultureInfo.InvariantCulture) };
+                if (value.TryGetValue<int>(out var integer)) return new HardwareScalar {
+                    Kind = "int", Text = integer.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+                if (value.TryGetValue<long>(out var wide)) return new HardwareScalar {
+                    Kind = "long", Text = wide.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+                if (value.TryGetValue<double>(out var number)) return new HardwareScalar {
+                    Kind = "double", Text = number.ToString("R", System.Globalization.CultureInfo.InvariantCulture) };
                 if (value.TryGetValue<bool>(out var boolean)) return new HardwareScalar { Kind = "bool", Text = boolean.ToString() };
             }
             return new HardwareScalar { Kind = "string", Text = a.ToString() };
         }).ToArray();
         public ResponseObjectDescribe DescribeObject(string objectKind, string objectPath, string softwarePath = "", int maxMembers = 200)
-            => Invoke<ResponseObjectDescribe>(new OpennessReflectionRequest { Operation = "DescribeObject", ObjectKind = objectKind, ObjectPath = objectPath, SoftwarePath = softwarePath, Limit = maxMembers });
+            =>
+                Invoke<ResponseObjectDescribe>(new OpennessReflectionRequest {
+                    Operation = "DescribeObject", ObjectKind = objectKind, ObjectPath = objectPath, SoftwarePath = softwarePath, Limit = maxMembers });
 
-        public ResponseObjectDescribe DescribeObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "", int maxMembers = 200)
-            => Invoke<ResponseObjectDescribe>(new OpennessReflectionRequest { Operation = "DescribeObjectProperty", ObjectKind = objectKind, ObjectPath = objectPath, PropertyPath = propertyPath, SoftwarePath = softwarePath, Limit = maxMembers });
+        public ResponseObjectDescribe DescribeObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "",
+                int maxMembers = 200)
+            =>
+                Invoke<ResponseObjectDescribe>(new OpennessReflectionRequest {
+                    Operation = "DescribeObjectProperty", ObjectKind = objectKind, ObjectPath = objectPath, PropertyPath = propertyPath, SoftwarePath =
+                        softwarePath, Limit = maxMembers
+                });
 
         public ResponseObjectValue GetObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "")
-            => Invoke<ResponseObjectValue>(new OpennessReflectionRequest { Operation = "GetObjectProperty", ObjectKind = objectKind, ObjectPath = objectPath, PropertyPath = propertyPath, SoftwarePath = softwarePath });
+            =>
+                Invoke<ResponseObjectValue>(new OpennessReflectionRequest {
+                    Operation = "GetObjectProperty", ObjectKind = objectKind, ObjectPath = objectPath, PropertyPath = propertyPath, SoftwarePath = softwarePath
+                });
 
-        public ResponseObjectChildren ListObjectChildren(string objectKind, string objectPath, string collectionProperty, string softwarePath = "", int limit = 200)
-            => Invoke<ResponseObjectChildren>(new OpennessReflectionRequest { Operation = "ListObjectChildren", ObjectKind = objectKind, ObjectPath = objectPath, PropertyPath = collectionProperty, SoftwarePath = softwarePath, Limit = limit });
+        public ResponseObjectChildren ListObjectChildren(string objectKind, string objectPath, string collectionProperty, string softwarePath = "", int limit =
+                200)
+            =>
+                Invoke<ResponseObjectChildren>(new OpennessReflectionRequest {
+                    Operation = "ListObjectChildren", ObjectKind = objectKind, ObjectPath = objectPath, PropertyPath = collectionProperty, SoftwarePath =
+                        softwarePath, Limit = limit
+                });
 
-        public ResponseObjectValue InvokeObject(string objectKind, string objectPath, string methodName, JsonArray? args = null, string softwarePath = "", bool allowWrite = false)
-            => Invoke<ResponseObjectValue>(new OpennessReflectionRequest { Operation = "InvokeObject", ObjectKind = objectKind, ObjectPath = objectPath, MethodName = methodName, Arguments = Arguments(args), SoftwarePath = softwarePath, AllowWrite = allowWrite });
+        public ResponseObjectValue InvokeObject(string objectKind, string objectPath, string methodName, JsonArray? args = null, string softwarePath = "",
+                bool allowWrite = false)
+            =>
+                Invoke<ResponseObjectValue>(new OpennessReflectionRequest {
+                    Operation = "InvokeObject", ObjectKind = objectKind, ObjectPath = objectPath, MethodName = methodName, Arguments = Arguments(args),
+                        SoftwarePath = softwarePath, AllowWrite = allowWrite
+                });
 
-        public ResponseObjectDescribe DescribeService(string objectKind, string objectPath, string serviceTypeSuffix, string softwarePath = "", int maxMembers = 200)
-            => Invoke<ResponseObjectDescribe>(new OpennessReflectionRequest { Operation = "DescribeService", ObjectKind = objectKind, ObjectPath = objectPath, ServiceTypeSuffix = serviceTypeSuffix, SoftwarePath = softwarePath, Limit = maxMembers });
+        public ResponseObjectDescribe DescribeService(string objectKind, string objectPath, string serviceTypeSuffix, string softwarePath = "", int maxMembers =
+                200)
+            =>
+                Invoke<ResponseObjectDescribe>(new OpennessReflectionRequest {
+                    Operation = "DescribeService", ObjectKind = objectKind, ObjectPath = objectPath, ServiceTypeSuffix = serviceTypeSuffix, SoftwarePath =
+                        softwarePath, Limit = maxMembers
+                });
 
-        public ResponseObjectValue InvokeService(string objectKind, string objectPath, string serviceTypeSuffix, string methodName, JsonArray? args = null, string softwarePath = "", bool allowWrite = false)
-            => Invoke<ResponseObjectValue>(new OpennessReflectionRequest { Operation = "InvokeService", ObjectKind = objectKind, ObjectPath = objectPath, ServiceTypeSuffix = serviceTypeSuffix, MethodName = methodName, Arguments = Arguments(args), SoftwarePath = softwarePath, AllowWrite = allowWrite });
+        public ResponseObjectValue InvokeService(string objectKind, string objectPath, string serviceTypeSuffix, string methodName, JsonArray? args = null,
+                string softwarePath = "", bool allowWrite = false)
+            =>
+                Invoke<ResponseObjectValue>(new OpennessReflectionRequest {
+                    Operation = "InvokeService", ObjectKind = objectKind, ObjectPath = objectPath, ServiceTypeSuffix = serviceTypeSuffix, MethodName =
+                        methodName, Arguments = Arguments(args), SoftwarePath = softwarePath, AllowWrite = allowWrite
+                });
 
     }
 }

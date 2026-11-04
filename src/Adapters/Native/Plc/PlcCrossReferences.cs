@@ -19,7 +19,9 @@ namespace TiaMcp.Adapters.Native.Plc
             out string? reason, out bool queried, string unitName, string unitKind)
         {
             queried = false;
-            reason = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
+            reason = PlcCrossReferencePolicy
+                .PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy
+                    .ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
             if (reason != null) return null;
             if (string.IsNullOrWhiteSpace(filter)) filter = "AllObjects";
             if (!Enum.TryParse<global::Siemens.Engineering.CrossReference.CrossReferenceFilter>(filter, true, out var filterValue)
@@ -31,10 +33,12 @@ namespace TiaMcp.Adapters.Native.Plc
                 reason = CrossReferenceRefusal(softwarePath);
                 if (reason != null) return null;
                 var target = ExactCrossReferenceTarget(softwarePath, objectPath, objectKind, unitName, unitKind);
-                var service = InvocationJournal.Native("CrossReference.GetService", () => target.GetService<global::Siemens.Engineering.CrossReference.CrossReferenceService>());
+                var service = InvocationJournal
+                    .Native("CrossReference.GetService", () => target.GetService<global::Siemens.Engineering.CrossReference.CrossReferenceService>());
                 if (service == null) { reason = "CrossReferenceService unavailable on this exact " + objectKind + ". No query was made."; return null; }
                 queried = true;
-                var result = InvocationJournal.Native("CrossReference.GetCrossReferences", () => PlcOrganisationPrimitives.CrossReferences(service, filterValue));
+                var result = InvocationJournal
+                    .Native("CrossReference.GetCrossReferences", () => PlcOrganisationPrimitives.CrossReferences(service, filterValue));
                 return InvocationJournal.Native("CrossReference.readCompleteResult", () => TryFlattenCrossReferenceResult(result, objectPath));
             }
             catch (Exception ex) when (_session.RecoverableAuditError(ex))
@@ -43,7 +47,9 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public string? CrossReferenceRefusal(string softwarePath)
         {
-            var policy = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
+            var policy = PlcCrossReferencePolicy
+                .PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy
+                    .ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
             if (policy != null) return policy;
             try
             {
@@ -69,7 +75,8 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 
         private static PlcCrossReference BuildPlcCrossReference(global::Siemens.Engineering.CrossReference.SourceObject source,
-            global::Siemens.Engineering.CrossReference.ReferenceObject reference, global::Siemens.Engineering.CrossReference.Location? location, string fallback)
+            global::Siemens.Engineering.CrossReference.ReferenceObject reference, global::Siemens.Engineering.CrossReference.Location? location,
+                string fallback)
             => new PlcCrossReference {
                 SourceName = source.Name, SourcePath = source.Path ?? fallback, SourceTypeName = source.TypeName,
                 SourceAddress = source.Address, SourceDevice = source.Device,
@@ -83,10 +90,13 @@ namespace TiaMcp.Adapters.Native.Plc
         private IEngineeringServiceProvider ExactCrossReferenceTarget(string softwarePath, string objectPath, string kind, string unitName, string unitKind)
         {
             if (unitKind != "unit" && unitKind != "safety") throw new ArgumentException("unitKind must be unit or safety.");
-            var plc = _session.GetPlcSoftware(softwarePath) ?? throw new PlcSoftwareException("NotFound", "PLC not found: " + softwarePath + _session.AvailablePlcPathsSuffix());
+            var plc = _session.GetPlcSoftware(softwarePath)
+                ?? throw new PlcSoftwareException("NotFound", "PLC not found: " + softwarePath + _session.AvailablePlcPathsSuffix());
             var unit = _session.OptionalUnit(plc, unitName, unitKind);
-            if (kind.Equals("Block", StringComparison.OrdinalIgnoreCase)) return (PlcBlock)_session.ExactObjectUnder(_session.BlockRootOf(plc, unit), objectPath, "Blocks", "block");
-            if (kind.Equals("Type", StringComparison.OrdinalIgnoreCase)) return (PlcType)_session.ExactObjectUnder(_session.TypeRootOf(plc, unit), objectPath, "Types", "type");
+            if (kind.Equals("Block", StringComparison.OrdinalIgnoreCase)) return (PlcBlock)_session
+                .ExactObjectUnder(_session.BlockRootOf(plc, unit), objectPath, "Blocks", "block");
+            if (kind.Equals("Type", StringComparison.OrdinalIgnoreCase)) return (PlcType)_session
+                .ExactObjectUnder(_session.TypeRootOf(plc, unit), objectPath, "Types", "type");
             if (!kind.Equals("Tag", StringComparison.OrdinalIgnoreCase) && !kind.Equals("SystemConstant", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("objectKind must be Block, Type, Tag or SystemConstant.");
             var parts = PlcGroupOperations.Parts(objectPath);
@@ -94,13 +104,17 @@ namespace TiaMcp.Adapters.Native.Plc
             object root = unit == null ? plc.TagTableGroup : PlcOrganisationPrimitives.TagTableGroup(unit);
             var table = (PlcTagTable)_session.ExactObjectUnder(root, string.Join("/", parts.Take(parts.Length - 1)), "TagTables", "tag table");
             object collection = kind.Equals("Tag", StringComparison.OrdinalIgnoreCase) ? table.Tags : (object)table.SystemConstants;
-            return (IEngineeringServiceProvider)(PlcGroupOperations.Find(collection, parts.Last()) ?? throw new PlcSoftwareException("NotFound", "Exact tag/constant not found: " + objectPath));
+            return (IEngineeringServiceProvider)(PlcGroupOperations.Find(collection, parts.Last())
+                    ?? throw new PlcSoftwareException("NotFound", "Exact tag/constant not found: " + objectPath));
         }
 #else
-        public List<PlcCrossReference>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind)
+        public List<PlcCrossReference>
+            ? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried,
+                string unitName, string unitKind)
         { reason = "CrossReferenceService requires V18 or later."; queried = false; return null; }
         public string? CrossReferenceRefusal(string softwarePath) => "CrossReferenceService requires V18 or later.";
-        public static List<PlcCrossReference> TryFlattenCrossReferenceResult(object result, string path) => throw new NotSupportedException("CrossReferenceService requires V18 or later.");
+        public static List<PlcCrossReference> TryFlattenCrossReferenceResult(object result, string path) =>
+            throw new NotSupportedException("CrossReferenceService requires V18 or later.");
 #endif
     }
 }

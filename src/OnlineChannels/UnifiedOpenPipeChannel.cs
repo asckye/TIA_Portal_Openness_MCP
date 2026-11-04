@@ -56,7 +56,8 @@ namespace TiaMcpServer.Runtime
             return ex;
         }
 
-        private static async Task ExchangeAsync(string server, string name, string requestLine, string expectedCookie, string? command, int budget, OpenPipeExchange ex)
+        private static async Task ExchangeAsync(string server, string name, string requestLine, string expectedCookie, string? command, int budget,
+                OpenPipeExchange ex)
         {
             var deadline = DateTime.UtcNow.AddMilliseconds(budget);
             using var pipe = new NamedPipeClientStream(server, name, PipeDirection.InOut, PipeOptions.Asynchronous);
@@ -66,7 +67,8 @@ namespace TiaMcpServer.Runtime
             }
             catch (TimeoutException) /* swallow(teardown): a pipe connect timeout is returned as the existing channel error */
             {
-                ex.Error = $"Open Pipe '{name}' is not available (connect timed out after {budget} ms). Is WinCC Unified Runtime running on this machine with a loaded project?";
+                ex.Error =
+                    $"Open Pipe '{name}' is not available (connect timed out after {budget} ms). Is WinCC Unified Runtime running on this machine with a loaded project?";
                 return;
             }
             ex.Connected = true;
@@ -107,7 +109,8 @@ namespace TiaMcpServer.Runtime
         private static string DescribeFailure(Exception e, string name)
         {
             if (e is TimeoutException) return $"Open Pipe '{name}' timed out: {e.Message}";
-            if (e is UnauthorizedAccessException) return $"Access to Open Pipe '{name}' was denied. The user running this MCP server must be a member of the 'SIMATIC HMI' group.";
+            if (e is UnauthorizedAccessException)
+                return $"Access to Open Pipe '{name}' was denied. The user running this MCP server must be a member of the 'SIMATIC HMI' group.";
             if (e is FileNotFoundException || (e is IOException io && io.Message.IndexOf("pipe", StringComparison.OrdinalIgnoreCase) >= 0))
                 return $"Open Pipe '{name}' does not exist on this machine. WinCC Unified Runtime (OpennessManager) must be running locally.";
             return e.GetType().Name + ": " + e.Message;

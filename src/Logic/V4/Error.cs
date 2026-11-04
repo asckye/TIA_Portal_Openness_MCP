@@ -7,7 +7,9 @@ namespace TiaMcp.Logic.V4
 {
     public enum ErrorCode
     {
-        InvalidArgument, LimitExceeded, UnsupportedCapability, ToolNotFound, ProjectNotBound, NotFound, TargetAmbiguous, IdentityMismatch, AlreadyExists, ConfirmationRequired, PlanStale, PreconditionFailed, OfflineRequired, AuthenticationRequired, AccessDenied, SessionResetRequired, ResourceUnavailable, IoFailed, NativeOperationFailed, CompileErrors, Cancelled, Timeout, NotExecuted, PartialFailure, OutcomeUnknown, InternalError
+        InvalidArgument, LimitExceeded, UnsupportedCapability, ToolNotFound, ProjectNotBound, NotFound, TargetAmbiguous, IdentityMismatch, AlreadyExists,
+            ConfirmationRequired, PlanStale, PreconditionFailed, OfflineRequired, AuthenticationRequired, AccessDenied, SessionResetRequired,
+            ResourceUnavailable, IoFailed, NativeOperationFailed, CompileErrors, Cancelled, Timeout, NotExecuted, PartialFailure, OutcomeUnknown, InternalError
     }
 
     public sealed class Error

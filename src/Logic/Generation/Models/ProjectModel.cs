@@ -140,7 +140,8 @@ namespace TiaMcp.Logic.Generation
 
         public void StageArtifacts()
         {
-            if (GenerationDocuments.PlanHash(CanonicalPlan) != Plan.PlanHash) throw CanonicalJson.Failure("/planHash", "plan-hash", "Plan changed after generation.");
+            if (GenerationDocuments.PlanHash(CanonicalPlan) != Plan.PlanHash) throw CanonicalJson
+                .Failure("/planHash", "plan-hash", "Plan changed after generation.");
             var root = Path.GetFullPath(artifactRoot);
             for (var ancestor = new DirectoryInfo(root); ancestor != null; ancestor = ancestor.Parent)
                 if (ancestor.Exists) RejectLink(ancestor.FullName);
@@ -158,11 +159,13 @@ namespace TiaMcp.Logic.Generation
                 }
                 var path = Path.Combine(directory, parts[parts.Length - 1]);
                 var bytes = new UTF8Encoding(false).GetBytes(artifact.Content);
-                if (CanonicalJson.HashBytes(bytes) != artifact.Sha256) throw CanonicalJson.Failure(artifact.Path, "artifact-hash", "Artifact changed after generation.");
+                if (CanonicalJson.HashBytes(bytes) != artifact.Sha256) throw CanonicalJson
+                    .Failure(artifact.Path, "artifact-hash", "Artifact changed after generation.");
                 if (File.Exists(path))
                 {
                     RejectLink(path);
-                    if (CanonicalJson.HashBytes(File.ReadAllBytes(path)) != artifact.Sha256) throw CanonicalJson.Failure(artifact.Path, "artifact-conflict", "Staged file differs; it will not be overwritten.");
+                    if (CanonicalJson.HashBytes(File.ReadAllBytes(path)) != artifact.Sha256) throw CanonicalJson
+                        .Failure(artifact.Path, "artifact-conflict", "Staged file differs; it will not be overwritten.");
                     continue;
                 }
                 using var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
@@ -170,7 +173,8 @@ namespace TiaMcp.Logic.Generation
             }
             void RejectLink(string path)
             {
-                if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) throw CanonicalJson.Failure(path, "path", "Staging refuses links/reparse points.");
+                if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) throw CanonicalJson
+                    .Failure(path, "path", "Staging refuses links/reparse points.");
             }
         }
     }

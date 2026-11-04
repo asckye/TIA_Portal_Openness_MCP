@@ -43,7 +43,8 @@ namespace TiaOpenness.Shared
                 parent = parent.Parent;
             }
             for (var ancestor = parent; ancestor != null; ancestor = ancestor.Parent)
-                if ((ancestor.Attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("Directory ancestry contains a reparse point; attempted path: " + path);
+                if ((ancestor.Attributes & FileAttributes.ReparsePoint) != 0)
+                    throw new IOException("Directory ancestry contains a reparse point; attempted path: " + path);
             if (accessCheck != null) { accessCheck(parent.FullName); return; }
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
@@ -66,9 +67,13 @@ namespace TiaOpenness.Shared
         }
         internal static void RequireBatchOptions(bool compileAfter,bool stopOnImportFailure,string technologyGroup)
         {
-            if(compileAfter) throw new AdapterPreconditionException("compileAfter is blocked before import: project-wide compile coverage is not established.","compileAfter",false);
-            if(!stopOnImportFailure) throw new AdapterPreconditionException("This candidate stops on every failure; continuation is not supported.","stopOnImportFailure",false);
-            if(!string.IsNullOrEmpty(technologyGroup)) throw new AdapterPreconditionException("Technology objects are outside bounded batch import scope.","technologyFolderPath",false);
+            if(compileAfter)
+                throw new AdapterPreconditionException("compileAfter is blocked before import: project-wide compile coverage is not established.",
+                    "compileAfter",false);
+            if(!stopOnImportFailure)
+                throw new AdapterPreconditionException("This candidate stops on every failure; continuation is not supported.","stopOnImportFailure",false);
+            if(!string.IsNullOrEmpty(technologyGroup))
+                throw new AdapterPreconditionException("Technology objects are outside bounded batch import scope.","technologyFolderPath",false);
         }
         internal static string ExportBlocker(bool consistent, bool protectedObject = false) =>
             !consistent ? "inconsistent" : protectedObject ? "know-how-protected" : "";
@@ -81,7 +86,9 @@ namespace TiaOpenness.Shared
         internal static string BackupWarning(IEnumerable<Dictionary<string, string>> skipped) => "Backup skipped for "
             + string.Join("; ", skipped.Select(x => x["object"] + ": " + x["reason"])) + ". Import proceeds without a complete recovery backup.";
         internal static RecoveryEvidence SingleImportRecovery(IEnumerable<Action<FileInfo>> backups, Func<string> directory, string attemptedPath)
-            => SingleImportRecovery(backups.Select((export, index) => new RecoveryTarget { Object = index.ToString(), Export = export }), directory, attemptedPath);
+            =>
+                SingleImportRecovery(backups.Select((export, index) => new RecoveryTarget { Object = index.ToString(), Export = export }), directory,
+                    attemptedPath);
         internal static RecoveryEvidence SingleImportRecovery(IEnumerable<RecoveryTarget> backups, Func<string> directory, string attemptedPath)
         {
             var result = new RecoveryEvidence();
@@ -90,12 +97,15 @@ namespace TiaOpenness.Shared
             catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
             catch (Exception error) /* swallow(native-fallback): unexpected backup enumeration failure is best effort */
             {
-                result.Skipped.Add(new Dictionary<string, string> { ["object"] = "<target-inspection>", ["reason"] = "target-inspection-failed (" + error.GetType().Name + ")" });
+                result.Skipped
+                    .Add(new Dictionary<string, string> {
+                        ["object"] = "<target-inspection>", ["reason"] = "target-inspection-failed (" + error.GetType().Name + ")" });
                 result.Warning = BackupWarning(result.Skipped); return result;
             }
             if (exports.Length == 0) return result;
             var ready = new List<KeyValuePair<int, RecoveryTarget>>();
-            void Skip(RecoveryTarget target, string reason) => result.Skipped.Add(new Dictionary<string, string> { ["object"] = target.Object, ["reason"] = reason });
+            void Skip(RecoveryTarget target, string reason) => result.Skipped
+                .Add(new Dictionary<string, string> { ["object"] = target.Object, ["reason"] = reason });
             for (int index = 0; index < exports.Length; index++)
             {
                 var target = exports[index];
@@ -107,7 +117,10 @@ namespace TiaOpenness.Shared
                 try { result.Directory = directory(); }
                 catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
                 catch (Exception error) /* swallow(native-fallback): recovery location failures do not block a single import */
-                { foreach (var target in ready) Skip(target.Value, "recovery-location-unavailable (" + error.GetType().Name + "); attempted path: " + attemptedPath); }
+                {
+                    foreach (var target in ready)
+                        Skip(target.Value, "recovery-location-unavailable (" + error.GetType().Name + "); attempted path: " + attemptedPath);
+                }
             }
             long total = 0;
             if (result.Directory != null)
@@ -116,11 +129,15 @@ namespace TiaOpenness.Shared
                     var target = ready[i].Value;
                     try
                     {
-                        var file = new FileInfo(Path.Combine(result.Directory, ready[i].Key.ToString("D3", System.Globalization.CultureInfo.InvariantCulture) + ".xml"));
+                        var file =
+                            new FileInfo(Path
+                                .Combine(result.Directory, ready[i].Key.ToString("D3", System.Globalization.CultureInfo.InvariantCulture) + ".xml"));
                         target.Export(file);
                         using var saved = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                        if (saved.Length < 1 || saved.Length > 4 * 1024 * 1024 || (total += saved.Length) > 32 * 1024 * 1024) throw new IOException("Recovery export exceeds the admitted byte budget.");
-                        using var sha = SHA256.Create(); result.Files[file.FullName] = BitConverter.ToString(sha.ComputeHash(saved)).Replace("-", "").ToLowerInvariant();
+                        if (saved.Length < 1 || saved.Length > 4 * 1024 * 1024 || (total += saved.Length) > 32 * 1024 * 1024)
+                            throw new IOException("Recovery export exceeds the admitted byte budget.");
+                        using var sha = SHA256.Create(); result.Files[file.FullName] = BitConverter.ToString(sha.ComputeHash(saved)).Replace("-", "")
+                            .ToLowerInvariant();
                     }
                     catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
                     catch (Exception error) /* swallow(native-fallback): export refusal must not prevent a single overwrite import */

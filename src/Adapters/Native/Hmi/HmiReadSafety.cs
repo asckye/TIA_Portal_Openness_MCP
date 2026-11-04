@@ -29,7 +29,8 @@ namespace TiaMcp.Adapters.Native.Hmi
     {
         private static readonly object LogGate = new object();
         private static StreamWriter? Writer;
-        internal static string LogPath => TiaOpenness.Shared.DataLocations.Current.LogFile("TiaMcpServer.hmi-read.log", TiaOpenness.Shared.DataLocations.HostReleaseKey);
+        internal static string LogPath => TiaOpenness.Shared.DataLocations.Current
+            .LogFile("TiaMcpServer.hmi-read.log", TiaOpenness.Shared.DataLocations.HostReleaseKey);
         internal string OperationId { get; } = Guid.NewGuid().ToString("N");
         internal string Phase { get; private set; } = "start";
         internal string? LastAttemptedPath { get; private set; }
@@ -59,7 +60,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     Writer.Dispose(); Writer = null;
                     File.WriteAllText(path, "", new UTF8Encoding(false));
                 }
-                Writer ??= new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), new UTF8Encoding(false)) { AutoFlush = true };
+                Writer ??= new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), new UTF8Encoding(false)) {
+                    AutoFlush = true };
                 Writer.WriteLine(row);
             }
         }
@@ -67,7 +69,10 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             meta["operationId"] = OperationId;
             try { meta["diagnosticLog"] = LogPath; }
-            catch (Exception ex) { meta["diagnosticLog"] = null; LogError = "IO_FAILED: " + ex.Message; TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.hmi-read", ex); }
+            catch (Exception ex) {
+                meta["diagnosticLog"] = null; LogError = "IO_FAILED: " + ex.Message; TiaOpenness.Shared.DataLocations
+                    .ReportLogFailure("TiaMcpServer.hmi-read", ex);
+            }
             meta["phase"] = Phase; meta["lastAttemptedPath"] = LastAttemptedPath;
             meta["lastCompletedPath"] = LastCompletedPath; meta["diagnosticLogError"] = LogError;
         }

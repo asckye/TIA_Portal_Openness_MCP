@@ -96,9 +96,11 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public bool RequestsEmpty => Requests.Count == 0;
     public string PendingCount => Loc.Current.T("Feature.Count", Approvals.PendingCount);
     public string PendingSummary => Approvals.Requests.FirstOrDefault(r => r.State == ApprovalState.Pending) is { } request
-        ? Loc.Current.T("Calls.PendingSummary", ActorDisplay.Client(request.Actor), request.Operations.Count, Remaining(request)) : Loc.Current["Shell.NoPending"];
+        ? Loc.Current.T("Calls.PendingSummary", ActorDisplay.Client(request.Actor), request.Operations.Count, Remaining(request)) : Loc
+            .Current["Shell.NoPending"];
     public int Remaining(ApprovalRequest request) => Math.Clamp((int)Math.Ceiling((request.Deadline - _now()).TotalSeconds), 0, request.TimeoutSeconds);
-    public void ToggleFollow() { _pausedCalls = FollowLatest ? Journal.Calls.ToArray() : null; RefreshCalls(); Notify(nameof(FollowLatest), nameof(FollowLabel)); }
+    public void ToggleFollow() {
+        _pausedCalls = FollowLatest ? Journal.Calls.ToArray() : null; RefreshCalls(); Notify(nameof(FollowLatest), nameof(FollowLabel)); }
     public void OpenApprovals() => DrawerRequested?.Invoke(this, "Approvals");
     public void OpenCall(CallRow row) { _selectedCall = row.Record.JournalKey; Raise(nameof(SelectedCall)); DrawerRequested?.Invoke(this, "CallDetail"); }
     public void Decide(ApprovalRow row, bool approve) => Run(() =>
@@ -179,7 +181,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public string DiagnosticPath => Diagnostics.Progress.Path;
     internal Action<string> CopyText { get; set; } = System.Windows.Clipboard.SetText;
     public void Copy(string text) => Run(() => { CopyText(text); return LocalizedText.Empty; });
-    public void Export() => Run(() => { string message = Diagnostics.Export(); return message.Length == 0 ? LocalizedText.Empty : LocalizedText.Key(message); });
+    public void Export() =>
+        Run(() => { string message = Diagnostics.Export(); return message.Length == 0 ? LocalizedText.Empty : LocalizedText.Key(message); });
     public void Run(Func<LocalizedText> action)
     {
         try { var result = action(); if (result.Resolve().Length > 0) Feedback?.Invoke(this, result); }
@@ -252,7 +255,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         if (_dirty.ContainsKey(Environment))
         {
             _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
-            Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention), nameof(EnvironmentAttentionCount), nameof(LogTail));
+            Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
+                    nameof(EnvironmentAttentionCount), nameof(LogTail));
         }
         if (_dirty.ContainsKey(Diagnostics)) Notify(nameof(DiagnosticCanStart), nameof(DiagnosticIdle), nameof(DiagnosticRunning),
             nameof(DiagnosticDone), nameof(DiagnosticLabel), nameof(DiagnosticTone), nameof(DiagnosticStep), nameof(DiagnosticPercent), nameof(DiagnosticPath));
@@ -266,7 +270,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         foreach (var row in _requests) row.RefreshLanguage();
         _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
         RefreshCalls(); RefreshAudit(languageChanged: true);
-        Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention), nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting),
+        Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
+                nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting),
             nameof(PendingCount), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
         NotifyVerification();
     });
@@ -306,7 +311,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         if ((previousCount == 0) != (_calls.Count == 0)) Raise(nameof(CallsEmpty));
         if (previousSnapshotCount != _snapshotCount) Notify(nameof(CallsCount), nameof(CallEmptyTitle), nameof(CallStatTotal));
         var timed = records.Where(c => c.DurationMs != null).ToArray();
-        var stats = (records.Count(c => c.Result == CallResult.Pending), records.Count(c => c.Result is CallResult.Failed or CallResult.Partial or CallResult.Unknown),
+        var stats =
+            (records.Count(c => c.Result == CallResult.Pending), records.Count(c => c.Result is CallResult.Failed or CallResult.Partial or CallResult.Unknown),
             timed.Length == 0 ? (long?)null : (long)Math.Round(timed.Average(c => (double)c.DurationMs!.Value)));
         if (stats != _callStats) { _callStats = stats; Notify(nameof(CallStatPending), nameof(CallStatFailed), nameof(CallStatAverage)); }
         bool all = !(WriteOnly || FailOnly || HumanOnly || AiOnly);
@@ -349,7 +355,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         }
     }
     private void Notify(params string[] names) { foreach (string name in names) Raise(name); }
-    private void NotifyVerification() => Notify(nameof(HasVerification), nameof(VerificationBroken), nameof(VerificationTone), nameof(VerificationText), nameof(BreakIndex));
+    private void NotifyVerification() =>
+        Notify(nameof(HasVerification), nameof(VerificationBroken), nameof(VerificationTone), nameof(VerificationText), nameof(BreakIndex));
     private void UpdateTimer()
     {
         if (Approvals.PendingCount > 0 && (_callsVisible || _drawerVisible)) _timer.Start(); else _timer.Stop();
@@ -380,11 +387,14 @@ public sealed class CallRow(CallRecord record) : ObservableObject
         if (parameters) { _parameters = null; Raise(nameof(Parameters)); }
         if (result) { _resultJson = null; Raise(nameof(ResultJson)); }
         foreach (string name in new[] { nameof(Record), nameof(Time), nameof(Host), nameof(Tool), nameof(Duration), nameof(Target), nameof(Pending),
-            nameof(Actor), nameof(ReadWrite), nameof(WriteTone), nameof(Tone), nameof(Result), nameof(PreviewNote), nameof(Summary), nameof(Error), nameof(HasError), nameof(Approval) }) Raise(name);
+            nameof(Actor), nameof(ReadWrite), nameof(WriteTone), nameof(Tone), nameof(Result), nameof(PreviewNote), nameof(Summary), nameof(Error),
+                nameof(HasError), nameof(Approval) }) Raise(name);
     }
     internal void RefreshLanguage()
     {
-        foreach (string name in new[] { nameof(Actor), nameof(Host), nameof(ReadWrite), nameof(Result), nameof(PreviewNote), nameof(Summary), nameof(Error), nameof(Approval) }) Raise(name);
+        foreach (string name in new[] {
+                nameof(Actor), nameof(Host), nameof(ReadWrite), nameof(Result), nameof(PreviewNote), nameof(Summary), nameof(Error), nameof(Approval) })
+            Raise(name);
     }
     public string Time => Record.Time.ToLocalTime().ToString("HH:mm:ss");
     public string Actor => ActorDisplay.Name(Record.Actor);
@@ -407,8 +417,10 @@ public sealed class CallRow(CallRecord record) : ObservableObject
     }];
     public string Duration => Record.DurationMs is { } ms ? ms.ToString("N0") + " ms" : "—";
     public string Target => Record.Target;
-    public string Parameters => _parameters ??= Record.ParametersTruncated ? TiaOpenness.Shared.CallJournalPayload.Bound(Record.ParametersJson) : FeatureJson.Redact(Record.ParametersJson);
-    public string ResultJson => _resultJson ??= Record.ResultTruncated ? TiaOpenness.Shared.CallJournalPayload.Bound(Record.ResultJson) : FeatureJson.Redact(Record.ResultJson);
+    public string Parameters => _parameters ??= Record.ParametersTruncated ? TiaOpenness.Shared.CallJournalPayload.Bound(Record.ParametersJson) : FeatureJson
+        .Redact(Record.ParametersJson);
+    public string ResultJson => _resultJson ??= Record.ResultTruncated ? TiaOpenness.Shared.CallJournalPayload.Bound(Record.ResultJson) : FeatureJson
+        .Redact(Record.ResultJson);
     public string PreviewNote => Loc.Current[Record.ParametersTruncated || Record.ResultTruncated ? "Calls.PreviewTruncated" : "Calls.PreviewRedacted"];
     public string Summary => Record.Outcome.Length == 0 ? Record.Summary.Resolve() : Loc.Current.T("Calls.JournalSummary", Result,
         Loc.Current[Record.Execution switch
@@ -417,7 +429,8 @@ public sealed class CallRow(CallRecord record) : ObservableObject
             "partial" => "Calls.Execution.Partial", _ => "Calls.Execution.Unknown"
         }], Loc.Current[Record.Completeness switch
         {
-            "complete" => "Calls.Completeness.Complete", "partial" => "Calls.Completeness.Partial", "none" => "Calls.Completeness.None", _ => "Calls.Completeness.Unknown"
+            "complete" => "Calls.Completeness.Complete", "partial" => "Calls.Completeness.Partial", "none" => "Calls.Completeness.None", _ =>
+                "Calls.Completeness.Unknown"
         }]);
     public string Error => Record.ErrorCode + (EngineResultText.Error(Record.ErrorCode) is { Length: > 0 } localized
         ? "\n" + localized : Record.ErrorMessage.Resolve().Length > 0 ? "\n" + Record.ErrorMessage.Resolve() : "");
@@ -451,7 +464,10 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         {
             if (Request.GenerationPlan == null) return Array.Empty<GenerationDifferenceRow>();
             var plan = System.Text.Json.Nodes.JsonNode.Parse(Request.GenerationPlan)!;
-            return new[] { ("conflicts", Loc.Current["Approval.Conflicts"]), ("skipped", Loc.Current["Approval.Skipped"]), ("unavailable", Loc.Current["Approval.Unavailable"]) }
+            return new[] {
+                ("conflicts", Loc.Current["Approval.Conflicts"]), ("skipped", Loc.Current["Approval.Skipped"]),
+                    ("unavailable", Loc.Current["Approval.Unavailable"])
+            }
                 .Select(kind => new GenerationDifferenceRow(kind.Item2, plan[kind.Item1]!.AsArray()
                     .Select(row => new GenerationDifferenceRow(((string?)row?["key"] ?? (string?)row?["phase"]) + ": " + (string?)row?["reason"]
                         + (row?["detail"] == null ? "" : " · " + (string?)row["detail"]), Array.Empty<GenerationDifferenceRow>())).ToArray())).ToArray();
@@ -497,7 +513,11 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     }
     internal void RefreshLanguage()
     {
-        foreach (string name in new[] { nameof(Actor), nameof(Client), nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note), nameof(HasNote), nameof(IsGenerationPlan), nameof(IsToolRequest), nameof(GenerationDifferences), nameof(GenerationSteps), nameof(CompletePlan) }) Raise(name);
+        foreach (string name in new[] {
+                nameof(Actor), nameof(Client), nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note), nameof(HasNote),
+                    nameof(IsGenerationPlan), nameof(IsToolRequest), nameof(GenerationDifferences), nameof(GenerationSteps), nameof(CompletePlan)
+            })
+            Raise(name);
     }
     public void RefreshCountdown()
     {

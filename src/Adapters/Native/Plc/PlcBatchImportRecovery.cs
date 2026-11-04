@@ -20,7 +20,10 @@ namespace TiaMcp.Adapters
                 TiaOpenness.Shared.NativeExportPolicy.CheckWritableDirectory(path);
             }
             catch(Exception error) when(error is IOException || error is UnauthorizedAccessException)
-            { var refusal=new AdapterPreconditionException("Recovery is unavailable; attempted path: "+path,"overwrite",false,error);refusal.Data["attemptedPath"]=path;throw refusal; }
+            {
+                var refusal=new AdapterPreconditionException("Recovery is unavailable; attempted path: "+path,"overwrite",false,error);refusal
+                    .Data["attemptedPath"]=path;throw refusal;
+            }
         }
         internal static string Directory()
         {
@@ -30,11 +33,15 @@ namespace TiaMcp.Adapters
             try
             {
                 for(var ancestor=new DirectoryInfo(path);ancestor!=null;ancestor=ancestor.Parent)
-                    if(ancestor.Exists && (ancestor.Attributes & FileAttributes.ReparsePoint)!=0) throw new IOException("Recovery ancestry contains a reparse point.");
+                    if(ancestor.Exists && (ancestor.Attributes & FileAttributes.ReparsePoint)!=0)
+                        throw new IOException("Recovery ancestry contains a reparse point.");
                 System.IO.Directory.CreateDirectory(path);return path;
             }
             catch(Exception error) when(error is IOException || error is UnauthorizedAccessException)
-            { var refusal=new AdapterPreconditionException("Recovery is unavailable; attempted path: "+path,"overwrite",false,error);refusal.Data["attemptedPath"]=path;throw refusal; }
+            {
+                var refusal=new AdapterPreconditionException("Recovery is unavailable; attempted path: "+path,"overwrite",false,error);refusal
+                    .Data["attemptedPath"]=path;throw refusal;
+            }
         }
     }
 
@@ -43,7 +50,8 @@ namespace TiaMcp.Adapters
     public static class PlcBatchImportRunner
     {
         public static string SingleImportRecoveryDirectory()=>PlcBatchImportRecovery.Directory();
-        public static PlcBatchImportResult Run(PlcBatchImportRequest request,PlcSoftware software,Action recheck,string release="",string project="",int processId=0)
+        public static PlcBatchImportResult Run(PlcBatchImportRequest request,PlcSoftware software,Action recheck,string release="",string project="",
+                int processId=0)
         {
             bool prepared=false;
             try
@@ -54,10 +62,16 @@ namespace TiaMcp.Adapters
                 var adapter=new PlcImportAdapter(request.Release,()=>throw new NotSupportedException(),()=>software,recheck,true) {
                     UnitName=request.UnitName,SwImportOptions=request.SwImportOptions,CultureImportOptions=request.ImportOptions };
                 var inventory=adapter.ReadBatchInventory().Where(x=>!x.Kind.StartsWith("group-",StringComparison.Ordinal)).ToArray();
-                PlcBatchImportObject Map(PlcImportObject item)=>new PlcBatchImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number};
-                PlcImportInput Input(FileInfo file,PlcBatchImportObject item)=>new PlcImportInput {Path=file.FullName,Target=new PlcImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number}};
-                foreach(var target in new[]{new PlcImportObject {Kind="FC",GroupPath=request.BlockGroup},new PlcImportObject {Kind="UDT",GroupPath=request.TypeGroup},new PlcImportObject {Kind="TagTable",GroupPath=request.TagGroup}})
-                    if((request.Program || target.Kind=="FC") && adapter.TargetGroupIdentity(target)=="") throw new AdapterPreconditionException("Exact destination group is unavailable.","groupPath");
+                PlcBatchImportObject Map(PlcImportObject item)=>new PlcBatchImportObject {
+                    Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number};
+                PlcImportInput Input(FileInfo file,PlcBatchImportObject item)=>new PlcImportInput {
+                    Path=file.FullName,Target=new PlcImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number}};
+                foreach(var target in new[]{
+                        new PlcImportObject {Kind="FC",GroupPath=request.BlockGroup},new PlcImportObject {Kind="UDT",GroupPath=request.TypeGroup},
+                            new PlcImportObject {Kind="TagTable",GroupPath=request.TagGroup}
+                    })
+                    if((request.Program || target.Kind=="FC") && adapter.TargetGroupIdentity(target)=="")
+                        throw new AdapterPreconditionException("Exact destination group is unavailable.","groupPath");
                 prepared=true;
                 return PlcBatchImportPolicy.Run(request,inventory.Select(Map),recheck,
                     (file,item)=>new[]{Map(adapter.Import(Input(file,item),request.Overwrite))},

@@ -14,7 +14,17 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public SoftwareUnitDeepTools(SoftwareUnitDeepService softwareUnitDeep) => _softwareUnitDeep = softwareUnitDeep;
 
-        [McpServerTool(Name="ManagePlcDocuments"), Description("[L2][PLC-Software][WRITE] Named value type documents (objectKind=document: PlcTypeGroup.Documents / PlcDocument) and UDT documents (objectKind=type: PlcTypeComposition / PlcType) of the exact PLC type group (root, groupPath under it, or a unit's TypeGroup via unitName + unitKind). list / read; export = ExportAsDocuments(directoryPath, name) with the DocumentExportResult (State, ExportedDocuments hashed, native messages) and the new files, refusing to overwrite name.*; import = ImportFromDocuments(directoryPath, name, importOption None/Override/SkipInactiveCultures/ActivateInactiveCultures) returning DocumentImportResultForSplDocument.ImportedDocuments or DocumentImportResultForTypes.ImportedPlcTypes plus DocumentResultMessage lines, verified by Find; createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace) and createFromLibraryType (typePath + version of a PlcDocumentLibraryTypeVersion / PlcTypeLibraryTypeVersion, updatePathsMode) instantiate into the group (document CreateFrom is V21+). Default dryRun=true; real writes need an Offline PLC; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name="ManagePlcDocuments"),
+                Description("[L2][PLC-Software][WRITE] Named value type documents (objectKind=document: PlcTypeGroup.Documents / PlcDocument) and UDT " +
+                "documents (objectKind=type: PlcTypeComposition / PlcType) of the exact PLC type group (root, groupPath under it, or a unit's TypeGroup via " +
+                "unitName + unitKind). list / read; export = ExportAsDocuments(directoryPath, name) with the DocumentExportResult (State, ExportedDocuments " +
+                "hashed, native messages) and the new files, refusing to overwrite name.*; import = ImportFromDocuments(directoryPath, name, importOption " +
+                "None/Override/SkipInactiveCultures/ActivateInactiveCultures) returning DocumentImportResultForSplDocument.ImportedDocuments or " +
+                "DocumentImportResultForTypes.ImportedPlcTypes plus DocumentResultMessage lines, verified by Find; createFromMasterCopy (libraryName empty = " +
+                "project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace) and createFromLibraryType (typePath + version of a " +
+                "PlcDocumentLibraryTypeVersion / PlcTypeLibraryTypeVersion, updatePathsMode) instantiate into the group (document CreateFrom is V21+). " +
+                "Default dryRun=true; real writes need an Offline PLC; no save/compile/download. Current native policy; V4 safety behavior is not yet " +
+                "accepted.")]
         public CallToolResult ManagePlcDocumentsV4(
             string softwarePath,
             [Description("action: the operation to perform - list | read | export | import | createFromMasterCopy | createFromLibraryType.")] string action,
@@ -32,7 +42,10 @@ namespace TiaMcpServer.ModelContextProtocol
             string version="",
             [Description("updatePathsMode: UpdatePathsInTarget | KeepExistingPathsInTarget | ThrowIfPathsConflict.")] string updatePathsMode="",
             bool dryRun=true)
-            => EngineeringToolContract.Run("ManagePlcDocuments", !dryRun && action != "read" && action != "list", () => ManagePlcDocuments(softwarePath, action, objectKind, name, unitName, unitKind, groupPath, directoryPath, importOption, libraryName, masterCopyPath, copyMode, typePath, version, updatePathsMode, dryRun));
+            => EngineeringToolContract
+                .Run("ManagePlcDocuments", !dryRun && action != "read" && action != "list", () =>
+                    ManagePlcDocuments(softwarePath, action, objectKind, name, unitName, unitKind, groupPath, directoryPath, importOption, libraryName,
+                        masterCopyPath, copyMode, typePath, version, updatePathsMode, dryRun));
 
         public ResponseMessage ManagePlcDocuments(
             string softwarePath,
@@ -51,6 +64,8 @@ namespace TiaMcpServer.ModelContextProtocol
             string version="",
             string updatePathsMode="",
             bool dryRun=true)
-            => _softwareUnitDeep.ManagePlcDocuments(softwarePath,action,objectKind,name,unitName,unitKind,groupPath,directoryPath,importOption,libraryName,masterCopyPath,copyMode,typePath,version,updatePathsMode,dryRun);
+            => _softwareUnitDeep
+                .ManagePlcDocuments(softwarePath,action,objectKind,name,unitName,unitKind,groupPath,directoryPath,importOption,libraryName,masterCopyPath,
+                    copyMode,typePath,version,updatePathsMode,dryRun);
     }
 }

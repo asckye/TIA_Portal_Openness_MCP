@@ -83,7 +83,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 string response = CallJournalPayload.Redact(safe?["result"]?.ToJsonString() ?? "null");
                 string target = "";
                 if (safe?["arguments"] is JsonObject args)
-                    target = string.Join(" · ", args.Where(p => new[] { "target", "softwarePath", "devicePath", "blockPath", "typePath", "projectPath", "projectFile", "name", "action" }.Contains(p.Key))
+                    target = string
+                        .Join(" · ", args
+                            .Where(p => new[] { "target", "softwarePath", "devicePath", "blockPath", "typePath", "projectPath", "projectFile", "name", "action"
+                            }.Contains(p.Key))
                         .Select(p => p.Key + "=" + p.Value?.ToJsonString()));
                 var details = new JsonLineObject().Number("callProjection", 1).String("host", host).String("releaseKey", release)
                     .String("actor", actor).String("mcpSession", mcpSession)

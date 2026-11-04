@@ -108,7 +108,8 @@ internal sealed class HostDoctorProbe : IHostDoctorProbe, IDisposable
     private void Start()
     {
         if (observe != null) return;
-        if (!Options.NativeEnabled) throw new InvalidOperationException("Worker observations are unavailable with --offline; rerun doctor without --offline for --fix.");
+        if (!Options.NativeEnabled)
+            throw new InvalidOperationException("Worker observations are unavailable with --offline; rerun doctor without --offline for --fix.");
         var plc = new WorkerClient(Options.ReleaseKey, Options.WorkerExe, apiDirectory, true, Options.EngineTimeoutSeconds, Options.WorkerTimeoutConfig)
             { Bundled = Options.BundledWorker, TiaPortalLocation = Options.TiaPortalLocation };
         worker = plc;

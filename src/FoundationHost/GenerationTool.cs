@@ -44,7 +44,8 @@ internal sealed class GenerationTool : McpServerTool
         yield return new GenerationTool("PublishGenerationRecord", release);
         yield return new GenerationTool("ManageGenerationArtifacts", release);
     }
-    internal bool ApprovalWrite(System.Text.Json.Nodes.JsonObject arguments) => ProtocolTool.Name == "ApplyGenerationPlan" || ProtocolTool.Name == "ManageStandardPackage" || ProtocolTool.Name == "PublishGenerationRecord"
+    internal bool ApprovalWrite(System.Text.Json.Nodes.JsonObject arguments) => ProtocolTool.Name == "ApplyGenerationPlan" || ProtocolTool
+        .Name == "ManageStandardPackage" || ProtocolTool.Name == "PublishGenerationRecord"
         || ProtocolTool.Name == "ManageGenerationArtifacts" && (string?)arguments["action"] == "cleanup"
         || ProtocolTool.Name == "ManageMachineDescription" && (string?)arguments["action"] != "validate"
             && !string.IsNullOrEmpty((string?)arguments["outputPath"]);

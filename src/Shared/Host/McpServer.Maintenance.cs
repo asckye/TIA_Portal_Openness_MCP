@@ -57,9 +57,15 @@ namespace TiaMcpServer.ModelContextProtocol
             => TiaOpenness.Shared.BundleLayout.FindInstallRoot(baseDirectory, bundleRoot);
 
         [McpServerTool(Name = "CheckProductUpdate"), Description(
-            "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP " +
-            "(name, size, download URL, .sha256 sidecar) plus the exact updater command. The engine never replaces its own files: run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root> and -Check to inspect or without -Check to update. " +
-            "It refuses while an engine, Foundation host, worker or Workbench from this bundle runs, lists PIDs and never kills processes; -Rollback restores the previous install. " +
+            "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the " +
+                "delivery ZIP "
+                +
+            "(name, size, download URL, .sha256 sidecar) plus the exact updater command. The engine never replaces its own files: run " +
+                "runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root> and -Check to inspect or without -Check to update. "
+                +
+            "It refuses while an engine, Foundation host, worker or Workbench from this bundle runs, lists PIDs and never kills processes; -Rollback " +
+                "restores the previous install. "
+                +
             "The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal.")]
         public static Task<CallToolResult> CheckProductUpdateV4(
             [Description("repository: GitHub owner/name to query (default the project's repository).")] string repository = UpdateLogic.DefaultRepository,
@@ -73,7 +79,8 @@ namespace TiaMcpServer.ModelContextProtocol
             // envelope: legacy-stamp-then-verdict
             var meta = new JsonObject { ["timestamp"] = DateTime.Now };
             string current = UpdateLogic.InstalledVersion(typeof(McpServer).Assembly.GetName().Version?.ToString(3) ?? "0.0.0",
-                System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(McpServer).Assembly)?.InformationalVersion);
+                System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection
+                    .AssemblyInformationalVersionAttribute>(typeof(McpServer).Assembly)?.InformationalVersion);
             bool prereleaseChannel = UpdateLogic.UsesPrereleaseChannel(current);
             meta["currentVersion"] = current;
             meta["currentFileVersion"] = typeof(McpServer).Assembly.GetName().Version?.ToString();
@@ -88,7 +95,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!UpdateLogic.IsValidRepository(repository))
             {
                 meta["success"] = false;
-                return new ResponseStringList { Message = "repository must be 'owner/name', e.g. " + UpdateLogic.DefaultRepository + ".", Items = lines, Meta = meta };
+                return new ResponseStringList {
+                    Message = "repository must be 'owner/name', e.g. " + UpdateLogic.DefaultRepository + ".", Items = lines, Meta = meta };
             }
             if (timeoutSeconds < 1 || timeoutSeconds > 120) timeoutSeconds = 15;
             string url = UpdateLogic.UpdateApiUrl(repository, current);
@@ -107,8 +115,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     try
                     {
-                        release = prereleaseChannel ? UpdateLogic.SelectNewest(UpdateLogic.ParseReleaseList(json), includePrerelease: true) : UpdateLogic.OfferedToPlainInstall(UpdateLogic.ParseRelease(json));
-                        if (release == null) apiProblem = prereleaseChannel ? "no published release found for " + repository : "the latest release is marked as a pre-release; a plain install is never offered one";
+                        release = prereleaseChannel ? UpdateLogic.SelectNewest(UpdateLogic.ParseReleaseList(json), includePrerelease: true) : UpdateLogic
+                            .OfferedToPlainInstall(UpdateLogic.ParseRelease(json));
+                        if (release == null) apiProblem = prereleaseChannel ? "no published release found for " + repository
+                            : "the latest release is marked as a pre-release; a plain install is never offered one";
                         else meta["source"] = "api";
                     }
                     catch (Exception px) { apiProblem = "the GitHub answer could not be parsed: " + px.Message; }
@@ -118,7 +128,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["httpStatus"] = (int)response.StatusCode;
                     apiProblem = response.StatusCode == HttpStatusCode.Forbidden || (int)response.StatusCode == 429
                         ? "GitHub API rate limit reached from this address (60 unauthenticated calls per hour)"
-                        : response.StatusCode == HttpStatusCode.NotFound ? "no published release found for " + repository : "GitHub API answered " + (int)response.StatusCode;
+                        : response.StatusCode == HttpStatusCode.NotFound ? "no published release found for " + repository : "GitHub API answered "
+                            + (int)response.StatusCode;
                 }
             }
             catch (Exception ex)
@@ -128,7 +139,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseStringList
                 {
                     Message = "Engine " + current + "; GitHub could not be reached from this machine (" + (ex.InnerException?.Message ?? ex.Message) + "). " +
-                              "The updater needs access to github.com from the TIA machine; check the connection / proxy, or open " + UpdateLogic.ReleasePageUrl(repository) + " to see the latest release.",
+                              "The updater needs access to github.com from the TIA machine; check the connection / proxy, or open " + UpdateLogic
+                                  .ReleasePageUrl(repository) + " to see the latest release.",
                     Items = lines, Meta = meta,
                 };
             }
@@ -155,17 +167,23 @@ namespace TiaMcpServer.ModelContextProtocol
             if (release == null)
             {
                 meta["success"] = false;
-                return new ResponseStringList { Message = "Engine " + current + "; the latest release could not be read: " + apiProblem + ". Release page: " + UpdateLogic.ReleasePageUrl(repository), Items = lines, Meta = meta };
+                return new ResponseStringList {
+                    Message = "Engine " + current + "; the latest release could not be read: " + apiProblem + ". Release page: " + UpdateLogic
+                        .ReleasePageUrl(repository), Items = lines, Meta = meta
+                };
             }
             var comparison = UpdateLogic.Compare(current, release.Version);
             meta["latestVersion"] = release.Version; meta["latestTag"] = release.Tag; meta["latestName"] = release.Name;
             meta["publishedAt"] = release.PublishedAt; meta["releaseUrl"] = release.Url; meta["prerelease"] = release.Prerelease;
             meta["updateAvailable"] = comparison.HasValue && comparison < 0;
             var zip = release.Zip; var sha = release.Sha256;
-            meta["zip"] = zip == null ? null : new JsonObject { ["name"] = zip.Name, ["url"] = zip.Url, ["size"] = zip.Size, ["digest"] = zip.Digest.Length > 0 ? zip.Digest : null };
+            meta["zip"] = zip == null ? null : new JsonObject {
+                ["name"] = zip.Name, ["url"] = zip.Url, ["size"] = zip.Size, ["digest"] = zip.Digest.Length > 0 ? zip.Digest : null };
             meta["sha256"] = sha == null ? null : new JsonObject { ["name"] = sha.Name, ["url"] = sha.Url };
             if (zip == null) lines.Insert(0, "The latest release carries no TIA_MCP_Delivery ZIP asset - check the release page before updating.");
-            else lines.Insert(0, "Latest delivery: " + zip.Name + " (" + (zip.Size / 1048576.0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + " MB) " + zip.Url + (sha != null ? " + " + sha.Name : " (no .sha256 asset)"));
+            else lines
+                .Insert(0, "Latest delivery: " + zip.Name + " (" + (zip.Size / 1048576.0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)
+                    + " MB) " + zip.Url + (sha != null ? " + " + sha.Name : " (no .sha256 asset)"));
             meta["success"] = true;
             return new ResponseStringList { Message = UpdateLogic.Summary(current, release, comparison), Items = lines, Meta = meta };
         }

@@ -27,7 +27,8 @@ namespace TiaMcp.Adapters.Native.Plc
             if (string.IsNullOrWhiteSpace(unitName) || unitName.Trim() != unitName)
                 throw new ArgumentException("An exact unitName without surrounding whitespace is required.", nameof(unitName));
 #if PLC_UNITS
-            var provider = plc.GetService<PlcUnitProvider>() ?? throw new AdapterPreconditionException("This PLC does not provide software units.", "unitName", false);
+            var provider = plc.GetService<PlcUnitProvider>()
+                ?? throw new AdapterPreconditionException("This PLC does not provide software units.", "unitName", false);
             var unit = provider.UnitGroup.Units.Find(unitName);
             if (unit == null || unit.Name != unitName) throw new AdapterPreconditionException("Exact software unit not found: " + unitName, "unitName", false);
             return unit;
@@ -65,7 +66,8 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 #if PLC_UNITS
         public static PlcUnitProvider RequireProvider(PlcSoftware plc)
-            => plc.GetService<PlcUnitProvider>() ?? throw new NotSupportedException("PlcUnitProvider unavailable: this PLC family does not support software units.");
+            => plc.GetService<PlcUnitProvider>()
+                ?? throw new NotSupportedException("PlcUnitProvider unavailable: this PLC family does not support software units.");
         public static PlcUnitBase? FindSafety(PlcUnitSystemGroup group, string name)
         {
 #if PLC_SAFETY_UNITS
@@ -80,13 +82,17 @@ namespace TiaMcp.Adapters.Native.Plc
             {
 #if PLC_SAFETY_UNITS
                 var safety = group.SafetyUnits;
-                return safety.Find(name) ?? throw new PlcSoftwareException("NotFound", "Exact safety unit not found: " + name + " (available: " + string.Join(", ", PlcGroupOperations.Items(safety).Cast<PlcSafetyUnit>().Select(u => u.Name)) + ").");
+                return safety.Find(name)
+                    ?? throw new PlcSoftwareException("NotFound", "Exact safety unit not found: " + name + " (available: " + string
+                        .Join(", ", PlcGroupOperations.Items(safety).Cast<PlcSafetyUnit>().Select(u => u.Name)) + ").");
 #else
                 throw new NotSupportedException("PlcSafetyUnit requires V18.");
 #endif
             }
             var units = group.Units;
-            return units.Find(name) ?? throw new PlcSoftwareException("NotFound", "Exact software unit not found: " + name + " (available: " + string.Join(", ", PlcGroupOperations.Items(units).Cast<PlcUnit>().Select(u => u.Name)) + ").");
+            return units.Find(name)
+                ?? throw new PlcSoftwareException("NotFound", "Exact software unit not found: " + name + " (available: " + string
+                    .Join(", ", PlcGroupOperations.Items(units).Cast<PlcUnit>().Select(u => u.Name)) + ").");
         }
 #endif
         public static object? OptionalLegacy(PlcSoftware plc, string unitName, string unitKind)

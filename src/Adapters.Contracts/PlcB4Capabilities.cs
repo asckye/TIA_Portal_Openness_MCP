@@ -13,7 +13,9 @@ namespace TiaMcp.Adapters.Contracts
                 return "Typed watch/force entry evidence requires V17; only createComment is available on this release.";
             if (request.Operation == "ManageMotionAxis")
             {
-                if (version < 21 && (request.Action.EndsWith("Mapping", StringComparison.Ordinal) || request.Action == "connectIdent" || request.Aspect == "superimposingSetPoint"))
+                if (version < 21
+                        && (request.Action.EndsWith("Mapping", StringComparison.Ordinal) || request.Action == "connectIdent" || request
+                            .Aspect == "superimposingSetPoint"))
                     return "InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21.";
                 if (version < 16 && (request.Aspect.StartsWith("conveyor", StringComparison.Ordinal) || request.Aspect == "synchronousDelayed"))
                     return "ConveyorTrackingLeadingValues and DelayedCoupling require V16.";
@@ -22,7 +24,8 @@ namespace TiaMcp.Adapters.Contracts
             if (request.Operation == "ConfigureMotionHardwareConnection" && version < 15 && request.Aspect == "torque")
                 return "TorqueHardwareConnectionInterface requires V15.1.";
             if (version < 19 && (request.Operation == "ManageTechnologyObject" || request.Operation == "ManageMotionAxis"
-                || request.Operation == "GetMotionAxisConfiguration" || request.Operation == "ConfigureMotionHardwareConnection" || request.Operation == "ExchangeMotionCamData")
+                || request.Operation == "GetMotionAxisConfiguration" || request.Operation == "ConfigureMotionHardwareConnection" || request
+                    .Operation == "ExchangeMotionCamData")
                 && request.Path.Replace('\\', '/').Contains("/"))
                 return "Technology-object user groups require V19; use a root object on this release.";
             if (version < 19 && (request.Operation == "GetTechnologyObjectTree" || request.Operation == "ImportTechnologyObject"

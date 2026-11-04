@@ -19,9 +19,12 @@ namespace TiaMcp.PlcWorker
             int warnings = (int)type.GetProperty("WarningCount")!.GetValue(result)!;
             var summary = collected.Summary(state, errors, warnings);
             var info = new List<string>(collected.Info);
-            if (diagnose) foreach (var failure in collected.CollectFailures) info.Add("State=Information; Description=[diagnostic collection incomplete] " + failure);
-            return new PlcCompilerEvidence { State = summary["effectiveState"]!.ToString(), ErrorCount = collected.HasError && errors == 0 ? (int?)null : errors,
-                WarningCount = collected.HasWarning && warnings == 0 ? (int?)null : warnings, Errors = collected.Errors, Warnings = collected.Warnings, Info = info,
+            if (diagnose) foreach (var failure in collected.CollectFailures) info
+                .Add("State=Information; Description=[diagnostic collection incomplete] " + failure);
+            return new PlcCompilerEvidence {
+                State = summary["effectiveState"]!.ToString(), ErrorCount = collected.HasError && errors == 0 ? (int?)null : errors,
+                WarningCount = collected.HasWarning && warnings == 0 ? (int?)null : warnings, Errors = collected.Errors, Warnings = collected.Warnings, Info =
+                    info,
                 RawMessages = collected.Raw, Meta = (Dictionary<string, object?>)Plain(summary)! };
         }
         internal static PlcVerifiedCandidate Validate(PlcSoftwareRequest request)
@@ -34,7 +37,10 @@ namespace TiaMcp.PlcWorker
             var request = execution.Request;
             var meta = JsonSerializer.SerializeToNode(execution.Meta)!.AsObject();
             var initial = new Dictionary<string, object?>(execution.Meta);
-            void Compile() { execution.Compile!(); foreach (var pair in execution.Meta) if (!initial.TryGetValue(pair.Key, out var before) || !Equals(before, pair.Value)) meta[pair.Key] = JsonSerializer.SerializeToNode(pair.Value); }
+            void Compile() {
+                execution.Compile!(); foreach (var pair in execution.Meta) if (!initial.TryGetValue(pair.Key, out var before) || !Equals(before, pair.Value))
+                    meta[pair.Key] = JsonSerializer.SerializeToNode(pair.Value);
+            }
             try { return PlcVerifiedImport.Execute(execution.CandidateXml, execution.Binding, request.EvidenceDirectory, request.DryRun, request.ExpectedToken,
                 execution.Export, execution.Import, execution.VerifyBinding, meta, execution.Compile == null ? null : (Action)Compile); }
             finally { execution.Meta.Clear(); foreach (var pair in meta) execution.Meta[pair.Key] = Plain(pair.Value); }

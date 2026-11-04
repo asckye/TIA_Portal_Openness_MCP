@@ -9,7 +9,8 @@ namespace TiaMcp.Logic.Generation
 {
     internal static class GenerationModelValidation
     {
-        private static HashSet<string> Ids(JsonElement items) => new HashSet<string>(items.EnumerateArray().Select(i => i.GetProperty("id").GetString()!), StringComparer.Ordinal);
+        private static HashSet<string> Ids(JsonElement items) =>
+            new HashSet<string>(items.EnumerateArray().Select(i => i.GetProperty("id").GetString()!), StringComparer.Ordinal);
         internal static void RequireValid(string schema, JsonElement value)
         {
             var errors = new List<GenerationValidationError>();
@@ -21,7 +22,8 @@ namespace TiaMcp.Logic.Generation
                 if (!languages.GetProperty("required").EnumerateArray().Any(l => l.GetString() == languages.GetProperty("default").GetString()))
                     Error("/languages/default", "language", "Default language must be required.");
                 foreach (var language in languages.GetProperty("required").EnumerateArray())
-                    if (!value.GetProperty("title").TryGetProperty(language.GetString()!, out _)) Error("/title", "language", "Required title language is missing.");
+                    if (!value.GetProperty("title").TryGetProperty(language.GetString()!, out _))
+                        Error("/title", "language", "Required title language is missing.");
             }
             if (schema == "machine") ValidateMachine(value, errors);
             if (schema == "plan") ValidatePlan(value, errors);
@@ -34,11 +36,15 @@ namespace TiaMcp.Logic.Generation
                     var commands = Ids(model.GetProperty("commands"));
                     foreach (var transition in model.GetProperty("transitions").EnumerateArray())
                     {
-                        if (!states.Contains(transition.GetProperty("from").GetString()!) || !states.Contains(transition.GetProperty("to").GetString()!)) Error("/models/transitions", "reference", "Unknown state.");
-                        if (transition.TryGetProperty("command", out var command) && !commands.Contains(command.GetString()!)) Error("/models/transitions/command", "reference", "Unknown command.");
+                        if (!states.Contains(transition.GetProperty("from").GetString()!) || !states.Contains(transition.GetProperty("to").GetString()!))
+                            Error("/models/transitions", "reference", "Unknown state.");
+                        if (transition.TryGetProperty("command", out var command) && !commands.Contains(command.GetString()!))
+                            Error("/models/transitions/command", "reference", "Unknown command.");
                     }
                     foreach (var availability in model.GetProperty("availability").EnumerateArray())
-                        if (!modes.Contains(availability.GetProperty("mode").GetString()!) || availability.GetProperty("states").EnumerateArray().Any(s => !states.Contains(s.GetString()!))) Error("/models/availability", "reference", "Unknown mode or state.");
+                        if (!modes.Contains(availability.GetProperty("mode").GetString()!) || availability.GetProperty("states").EnumerateArray()
+                                .Any(s => !states.Contains(s.GetString()!)))
+                            Error("/models/availability", "reference", "Unknown mode or state.");
                 }
             }
             if (schema == "rule") ValidateParameterSchema(value.GetProperty("params"), "/params", Error);
@@ -50,7 +56,8 @@ namespace TiaMcp.Logic.Generation
                 {
                     foreach (var property in current.EnumerateObject()) Walk(property.Value, path + "/" + CanonicalJson.Pointer(property.Name));
                     if (current.TryGetProperty("start", out var start) && current.TryGetProperty("end", out var end)
-                        && start.ValueKind == JsonValueKind.Number && end.ValueKind == JsonValueKind.Number && CanonicalJson.CompareNumbers(start.GetRawText(), end.GetRawText()) > 0)
+                        && start.ValueKind == JsonValueKind.Number && end.ValueKind == JsonValueKind.Number && CanonicalJson
+                            .CompareNumbers(start.GetRawText(), end.GetRawText()) > 0)
                         Error(path, "range", "Range start exceeds end.");
                 }
                 if (current.ValueKind == JsonValueKind.Array)
@@ -65,8 +72,10 @@ namespace TiaMcp.Logic.Generation
                         if (item.ValueKind == JsonValueKind.Object)
                         {
                             if (item.TryGetProperty("id", out var id) && !ids.Add(id.GetString()!)) Error(child + "/id", "duplicate-id", "Duplicate entry id.");
-                            if (schema == "rule" && path == "/signals" && item.TryGetProperty("role", out var role) && !roles.Add(role.GetString()!)) Error(child + "/role", "duplicate-role", "Duplicate signal role.");
-                            if (schema == "modes" && item.TryGetProperty("number", out var number) && !numbers.Add(CanonicalJson.Number(number.GetRawText()))) Error(child + "/number", "duplicate-number", "Duplicate mode, state or command number.");
+                            if (schema == "rule" && path == "/signals" && item.TryGetProperty("role", out var role) && !roles.Add(role.GetString()!))
+                                Error(child + "/role", "duplicate-role", "Duplicate signal role.");
+                            if (schema == "modes" && item.TryGetProperty("number", out var number) && !numbers.Add(CanonicalJson.Number(number.GetRawText())))
+                                Error(child + "/number", "duplicate-number", "Duplicate mode, state or command number.");
                         }
                         Walk(item, child);
                     }
@@ -79,16 +88,20 @@ namespace TiaMcp.Logic.Generation
         private static void ValidateParameterSchema(JsonElement schema, string path, Action<string, string, string> error)
         {
             foreach (var pair in new[] { new[] { "minimum", "maximum" }, new[] { "minLength", "maxLength" }, new[] { "minItems", "maxItems" } })
-                if (schema.TryGetProperty(pair[0], out var min) && schema.TryGetProperty(pair[1], out var max) && CanonicalJson.CompareNumbers(min.GetRawText(), max.GetRawText()) > 0)
+                if (schema.TryGetProperty(pair[0], out var min) && schema.TryGetProperty(pair[1], out var max) && CanonicalJson
+                        .CompareNumbers(min.GetRawText(), max.GetRawText()) > 0)
                     error(path, "range", "Parameter schema bounds are reversed.");
             if (schema.TryGetProperty("pattern", out var pattern)) GenerationSchemas.Matches("", pattern.GetString()!, path + "/pattern");
             if (schema.TryGetProperty("required", out var required))
                 foreach (var item in required.EnumerateArray())
-                    if (!schema.TryGetProperty("properties", out var properties) || !properties.TryGetProperty(item.GetString()!, out _)) error(path + "/required", "reference", "Required parameter is not defined.");
-            if (schema.TryGetProperty("properties", out var fields)) foreach (var field in fields.EnumerateObject()) ValidateParameterSchema(field.Value, path + "/properties/" + CanonicalJson.Pointer(field.Name), error);
+                    if (!schema.TryGetProperty("properties", out var properties) || !properties.TryGetProperty(item.GetString()!, out _))
+                        error(path + "/required", "reference", "Required parameter is not defined.");
+            if (schema.TryGetProperty("properties", out var fields)) foreach (var field in fields.EnumerateObject())
+                ValidateParameterSchema(field.Value, path + "/properties/" + CanonicalJson.Pointer(field.Name), error);
             if (schema.TryGetProperty("items", out var items)) ValidateParameterSchema(items, path + "/items", error);
             if (schema.TryGetProperty("default", out var value))
-                foreach (var finding in GenerationSchemas.ValidateSchema(schema, value, "common.schema.json")) error(path + "/default" + finding.Path, finding.Rule, finding.Message);
+                foreach (var finding in GenerationSchemas.ValidateSchema(schema, value, "common.schema.json"))
+                    error(path + "/default" + finding.Path, finding.Rule, finding.Message);
         }
 
         private static void ValidateMachine(JsonElement value, IList<GenerationValidationError> errors)
@@ -101,7 +114,8 @@ namespace TiaMcp.Logic.Generation
                 foreach (var item in items.EnumerateArray())
                 {
                     var child = path + "/" + index++;
-                    if (!nodes.Add(item.GetProperty("id").GetString()!)) errors.Add(new GenerationValidationError(child + "/id", "duplicate-id", "Topology ids must be globally unique."));
+                    if (!nodes.Add(item.GetProperty("id").GetString()!)) errors
+                        .Add(new GenerationValidationError(child + "/id", "duplicate-id", "Topology ids must be globally unique."));
                     if (item.TryGetProperty("children", out var children)) Topology(children, child + "/children");
                 }
             }
@@ -110,8 +124,10 @@ namespace TiaMcp.Logic.Generation
             foreach (var device in value.GetProperty("devices").EnumerateArray())
             {
                 var path = "/devices/" + deviceIndex++;
-                if (!stations.Contains(device.GetProperty("station").GetString()!)) errors.Add(new GenerationValidationError(path + "/station", "reference", "Unknown station."));
-                if (!nodes.Contains(device.GetProperty("parent").GetString()!)) errors.Add(new GenerationValidationError(path + "/parent", "reference", "Unknown topology parent."));
+                if (!stations.Contains(device.GetProperty("station").GetString()!)) errors
+                    .Add(new GenerationValidationError(path + "/station", "reference", "Unknown station."));
+                if (!nodes.Contains(device.GetProperty("parent").GetString()!)) errors
+                    .Add(new GenerationValidationError(path + "/parent", "reference", "Unknown topology parent."));
             }
         }
 
@@ -125,34 +141,54 @@ namespace TiaMcp.Logic.Generation
             {
                 var step = steps[index];
                 var path = "/steps/" + index;
-                if (!phases.Contains(step.GetProperty("phase").GetString()!)) errors.Add(new GenerationValidationError(path + "/phase", "reference", "Step phase is not selected."));
-                if (!keys.Add(step.GetProperty("key").GetString()!)) errors.Add(new GenerationValidationError(path + "/key", "duplicate-key", "Duplicate idempotency key."));
+                if (!phases.Contains(step.GetProperty("phase").GetString()!)) errors
+                    .Add(new GenerationValidationError(path + "/phase", "reference", "Step phase is not selected."));
+                if (!keys.Add(step.GetProperty("key").GetString()!)) errors
+                    .Add(new GenerationValidationError(path + "/key", "duplicate-key", "Duplicate idempotency key."));
                 foreach (var dependency in step.GetProperty("dependsOn").EnumerateArray())
-                    if (!known.Contains(dependency.GetString()!)) errors.Add(new GenerationValidationError(path + "/dependsOn", "dependency", "Dependencies must reference earlier steps; cycles and forward references are prohibited."));
+                    if (!known.Contains(dependency.GetString()!)) errors
+                        .Add(new GenerationValidationError(path + "/dependsOn", "dependency",
+                                "Dependencies must reference earlier steps; cycles and forward references are prohibited."));
                 known.Add(step.GetProperty("id").GetString()!);
-                if (CanonicalJson.ArgumentHash(step.GetProperty("arguments")) != step.GetProperty("argumentDigest").GetString()) errors.Add(new GenerationValidationError(path + "/argumentDigest", "argument-digest", "Argument digest does not match canonical arguments."));
-                if (step.GetProperty("availability").GetProperty("tool").GetString() != "present") errors.Add(new GenerationValidationError(path + "/availability/tool", "availability", "Executable steps must have a present tool; absent phases belong in unavailable."));
+                if (CanonicalJson.ArgumentHash(step.GetProperty("arguments")) != step.GetProperty("argumentDigest").GetString()) errors
+                    .Add(new GenerationValidationError(path + "/argumentDigest", "argument-digest", "Argument digest does not match canonical arguments."));
+                if (step.GetProperty("availability").GetProperty("tool").GetString() != "present") errors
+                    .Add(new GenerationValidationError(path + "/availability/tool", "availability",
+                            "Executable steps must have a present tool; absent phases belong in unavailable."));
                 if (step.TryGetProperty("review", out var review) && review.GetProperty("mode").GetString() == "tool-preview")
                 {
                     var late = review.GetProperty("lateArguments").EnumerateArray().Select(a => a.GetString()).ToArray();
                     if (!late.SequenceEqual(new[] { "expectedPlanHash" }) || step.GetProperty("arguments").TryGetProperty("expectedPlanHash", out _))
-                        errors.Add(new GenerationValidationError(path + "/review/lateArguments", "late-slot", "Only expectedPlanHash from this step's preview may be late-filled."));
+                        errors
+                            .Add(new GenerationValidationError(path + "/review/lateArguments", "late-slot",
+                                    "Only expectedPlanHash from this step's preview may be late-filled."));
                     var rule = review.GetProperty("rule").GetString();
-                    string tool = rule == StepReviewRules.Import ? "ImportPlcExternalSource" : rule == StepReviewRules.Generate ? "GenerateBlocksFromExternalSource" : rule == StepReviewRules.Delete ? "DeletePlcExternalSource" : rule == StepReviewRules.Record ? "PublishGenerationRecord" : "";
-                    if (tool.Length == 0 || step.GetProperty("tool").GetString() != tool) errors.Add(new GenerationValidationError(path + "/review/rule", "review-rule", "Current preview rule must match the step tool."));
+                    string tool = rule == StepReviewRules.Import ? "ImportPlcExternalSource" : rule == StepReviewRules.Generate
+                        ? "GenerateBlocksFromExternalSource" : rule == StepReviewRules.Delete ? "DeletePlcExternalSource" : rule == StepReviewRules.Record
+                        ? "PublishGenerationRecord" : "";
+                    if (tool.Length == 0 || step.GetProperty("tool").GetString() != tool) errors
+                        .Add(new GenerationValidationError(path + "/review/rule", "review-rule", "Current preview rule must match the step tool."));
                     var expect = review.GetProperty("expect");
-                    var required = rule == StepReviewRules.Import ? new[] { "softwarePath", "groupPath", "filePath", "inputSha256", "byteCount", "sourceName", "sourcesBefore" }
-                        : rule == StepReviewRules.Generate ? new[] { "softwarePath", "groupPath", "sourceName", "generationOption", "resultBasis", "objectKeysBefore" }
-                        : rule == StepReviewRules.Record ? new[] { "recordPath", "previousRecordHash" } : new[] { "softwarePath", "groupPath", "sourceName", "sourcesBefore" };
-                    if (required.Any(field => !expect.TryGetProperty(field, out _))) errors.Add(new GenerationValidationError(path + "/review/expect", "review-fields", "Every deciding field and inventory prediction must be declared."));
+                    var required = rule == StepReviewRules.Import ? new[] {
+                        "softwarePath", "groupPath", "filePath", "inputSha256", "byteCount", "sourceName", "sourcesBefore" }
+                        : rule == StepReviewRules.Generate ? new[] {
+                            "softwarePath", "groupPath", "sourceName", "generationOption", "resultBasis", "objectKeysBefore" }
+                        : rule == StepReviewRules.Record ? new[] { "recordPath", "previousRecordHash" } : new[] {
+                            "softwarePath", "groupPath", "sourceName", "sourcesBefore" };
+                    if (required.Any(field => !expect.TryGetProperty(field, out _))) errors
+                        .Add(new GenerationValidationError(path + "/review/expect", "review-fields",
+                                "Every deciding field and inventory prediction must be declared."));
                     var witness = review.GetProperty("witness");
-                    if (!witness.TryGetProperty("planHash", out var constraint) || constraint.GetString() != "sha256") errors.Add(new GenerationValidationError(path + "/review/witness", "review-witness", "The tool preview hash requires a sha256 constraint."));
+                    if (!witness.TryGetProperty("planHash", out var constraint) || constraint.GetString() != "sha256") errors
+                        .Add(new GenerationValidationError(path + "/review/witness", "review-witness", "The tool preview hash requires a sha256 constraint."));
                     foreach (var field in expect.EnumerateObject())
                         if (field.Value.ValueKind == JsonValueKind.Object && field.Value.TryGetProperty("fact", out var fact))
                         {
                             string reference = fact.GetString() ?? ""; int dot = reference.IndexOf('.');
                             if (dot < 1 || reference.Substring(0, dot) == step.GetProperty("id").GetString() || !known.Contains(reference.Substring(0, dot)))
-                                errors.Add(new GenerationValidationError(path + "/review/expect/" + field.Name, "fact-reference", "A fact must reference an earlier step."));
+                                errors
+                                    .Add(new GenerationValidationError(path + "/review/expect/" + field.Name, "fact-reference",
+                                            "A fact must reference an earlier step."));
                         }
                 }
             }
@@ -172,11 +208,13 @@ namespace TiaMcp.Logic.Generation
             var parts = manifest.GetProperty("parts");
             var inherited = manifest.TryGetProperty("extends", out var parent) && parent.ValueKind != JsonValueKind.Null;
             JsonElement Part(string name) => parts.TryGetProperty(name, out var path) ? documents[path.GetString()!] : default;
-            JsonElement[] Entries(string part, string entries) => Part(part).ValueKind == JsonValueKind.Object && Part(part).TryGetProperty(entries, out var list) ? list.EnumerateArray().ToArray() : Array.Empty<JsonElement>();
+            JsonElement[] Entries(string part, string entries) => Part(part).ValueKind == JsonValueKind.Object && Part(part)
+                .TryGetProperty(entries, out var list) ? list.EnumerateArray().ToArray() : Array.Empty<JsonElement>();
             var naming = new HashSet<string>(Entries("naming", "rules").Select(r => r.GetProperty("id").GetString()!), StringComparer.Ordinal);
             var types = new HashSet<string>(Entries("library", "types").Select(r => r.GetProperty("id").GetString()!), StringComparer.Ordinal);
             var libraries = new HashSet<string>(Entries("library", "libraries").Select(r => r.GetProperty("id").GetString()!), StringComparer.Ordinal);
-            var rules = parts.TryGetProperty("rules", out var rulePaths) ? rulePaths.EnumerateArray().Select(p => documents[p.GetString()!]).ToArray() : Array.Empty<JsonElement>();
+            var rules = parts.TryGetProperty("rules", out var rulePaths) ? rulePaths.EnumerateArray().Select(p => documents[p.GetString()!]).ToArray() : Array
+                .Empty<JsonElement>();
             var deviceTypes = new HashSet<string>(StringComparer.Ordinal);
             foreach (var rule in rules)
                 if (!deviceTypes.Add(rule.GetProperty("deviceType").GetString()!)) Error("/parts/rules", "duplicate-id", "Duplicate device type.");
@@ -186,28 +224,39 @@ namespace TiaMcp.Logic.Generation
             {
                 var implementations = type.GetProperty("implementations").EnumerateArray().ToArray();
                 foreach (var release in releases)
-                    if (!implementations.Any(i => ReleaseMatches(i.GetProperty("releases"), release))) Error("/parts/library/types", "release-coverage", "Type " + type.GetProperty("id").GetString() + " has no implementation for " + release + ".");
+                    if (!implementations.Any(i => ReleaseMatches(i.GetProperty("releases"), release)))
+                        Error("/parts/library/types", "release-coverage", "Type " + type.GetProperty("id").GetString() + " has no implementation for "
+                            + release + ".");
                 foreach (var implementation in implementations)
                 {
-                    if (implementation.TryGetProperty("files", out var sources)) foreach (var source in sources.EnumerateArray()) FileReference(source.GetString()!, "/parts/library/types/implementations/files");
-                    if (implementation.TryGetProperty("library", out var library) && !inherited && !libraries.Contains(library.GetString()!)) Error("/parts/library/types/implementations/library", "reference", "Unknown library.");
+                    if (implementation.TryGetProperty("files", out var sources)) foreach (var source in sources.EnumerateArray())
+                        FileReference(source.GetString()!, "/parts/library/types/implementations/files");
+                    if (implementation.TryGetProperty("library", out var library) && !inherited && !libraries.Contains(library.GetString()!))
+                        Error("/parts/library/types/implementations/library", "reference", "Unknown library.");
                 }
             }
             foreach (var library in Entries("library", "libraries"))
-                if (library.GetProperty("provision").GetString() == "bundled") foreach (var file in library.GetProperty("fileNames").EnumerateObject()) FileReference(file.Value.GetString()!, "/parts/library/libraries/fileNames");
+                if (library.GetProperty("provision").GetString() == "bundled") foreach (var file in library.GetProperty("fileNames").EnumerateObject())
+                    FileReference(file.Value.GetString()!, "/parts/library/libraries/fileNames");
             foreach (var model in Entries("modes", "models"))
                 foreach (var name in new[] { "implementationType", "dataType" })
-                    if (!inherited && !types.Contains(model.GetProperty(name).GetString()!)) Error("/parts/modes/" + name, "reference", "Unknown library type.");
+                    if (!inherited && !types.Contains(model.GetProperty(name).GetString()!))
+                        Error("/parts/modes/" + name, "reference", "Unknown library type.");
             var alarmClasses = new HashSet<string>(Entries("alarms", "classes").Select(c => c.GetProperty("id").GetString()!), StringComparer.Ordinal);
             foreach (var alarm in Entries("alarms", "templates"))
             {
-                if (!inherited && !alarmClasses.Contains(alarm.GetProperty("class").GetString()!)) Error("/parts/alarms/templates/class", "reference", "Unknown alarm class.");
-                if (!inherited && !deviceTypes.Contains(alarm.GetProperty("deviceType").GetString()!)) Error("/parts/alarms/templates/deviceType", "reference", "Unknown device type.");
+                if (!inherited && !alarmClasses.Contains(alarm.GetProperty("class").GetString()!))
+                    Error("/parts/alarms/templates/class", "reference", "Unknown alarm class.");
+                if (!inherited && !deviceTypes.Contains(alarm.GetProperty("deviceType").GetString()!))
+                    Error("/parts/alarms/templates/deviceType", "reference", "Unknown device type.");
                 if (!inherited && (!Part("alarms").GetProperty("texts").TryGetProperty(alarm.GetProperty("textKey").GetString()!, out var texts)
-                    || manifest.GetProperty("languages").GetProperty("required").EnumerateArray().Any(l => !texts.TryGetProperty(l.GetString()!, out _)))) Error("/parts/alarms/texts", "language", "Required alarm text or language is missing.");
+                    || manifest.GetProperty("languages").GetProperty("required").EnumerateArray()
+                        .Any(l => !texts.TryGetProperty(l.GetString()!, out _)))) Error("/parts/alarms/texts", "language",
+                            "Required alarm text or language is missing.");
             }
             foreach (var widget in Entries("hmi", "widgets"))
-                if (!inherited && !deviceTypes.Contains(widget.GetProperty("deviceType").GetString()!)) Error("/parts/hmi/widgets/deviceType", "reference", "Unknown device type.");
+                if (!inherited && !deviceTypes.Contains(widget.GetProperty("deviceType").GetString()!))
+                    Error("/parts/hmi/widgets/deviceType", "reference", "Unknown device type.");
             foreach (var entry in parts.EnumerateObject())
             {
                 var paths = entry.Name == "rules" ? entry.Value.EnumerateArray().Select(v => v.GetString()!) : new[] { entry.Value.GetString()! };
@@ -228,8 +277,12 @@ namespace TiaMcp.Logic.Generation
                     {
                         var child = path + "/" + CanonicalJson.Pointer(property.Name);
                         if (property.Name == "template" && property.Value.ValueKind == JsonValueKind.String
-                            && (parts.TryGetProperty("hmi", out var h) && (path.StartsWith(h.GetString()! + "#/screens/", StringComparison.Ordinal) || path.StartsWith(h.GetString()! + "#/widgets/", StringComparison.Ordinal))
-                                || parts.TryGetProperty("rules", out var rp) && rp.EnumerateArray().Any(p => path.StartsWith(p.GetString()! + "#", StringComparison.Ordinal)))) FileReference(property.Value.GetString()!, child);
+                            && (parts.TryGetProperty("hmi", out var h)
+                                    && (path.StartsWith(h.GetString()! + "#/screens/", StringComparison.Ordinal) || path
+                                        .StartsWith(h.GetString()! + "#/widgets/", StringComparison.Ordinal))
+                                || parts.TryGetProperty("rules", out var rp) && rp.EnumerateArray()
+                                    .Any(p => path.StartsWith(p.GetString()! + "#", StringComparison.Ordinal)))) FileReference(property.Value.GetString()!,
+                                        child);
                         Walk(property.Value, child);
                     }
                 if (value.ValueKind == JsonValueKind.String)
@@ -240,13 +293,16 @@ namespace TiaMcp.Logic.Generation
                     {
                         var match = Regex.Match(text, @"\Alib:([^/]+)/([^@]+)@(.+)\z", RegexOptions.CultureInvariant);
                         if (!match.Success) Error(path, "reference", "Invalid library type reference.");
-                        else if (match.Groups[1].Value == manifest.GetProperty("id").GetString() && !inherited && !types.Contains(match.Groups[2].Value)) Error(path, "reference", "Unknown library type.");
-                        else if (match.Groups[1].Value != manifest.GetProperty("id").GetString() && !PackageDependency(match.Groups[1].Value)) Error(path, "reference", "Library package must be declared in extends or dependsOn.");
+                        else if (match.Groups[1].Value == manifest.GetProperty("id").GetString() && !inherited && !types.Contains(match.Groups[2].Value))
+                            Error(path, "reference", "Unknown library type.");
+                        else if (match.Groups[1].Value != manifest.GetProperty("id").GetString() && !PackageDependency(match.Groups[1].Value))
+                            Error(path, "reference", "Library package must be declared in extends or dependsOn.");
                     }
                 }
             }
             bool PackageDependency(string id) => inherited && parent.GetProperty("package").GetString() == id
-                || manifest.TryGetProperty("dependsOn", out var dependencies) && dependencies.EnumerateArray().Any(d => d.GetProperty("package").GetString() == id);
+                || manifest.TryGetProperty("dependsOn", out var dependencies) && dependencies.EnumerateArray()
+                    .Any(d => d.GetProperty("package").GetString() == id);
         }
 
         private static bool ReleaseMatches(JsonElement selection, string release)

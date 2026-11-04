@@ -41,7 +41,8 @@ namespace TiaMcp.Adapters
                 }
             }
         }
-        private static IEnumerable<(object Object, DeviceItem DeviceItem, string Path, string Kind)> TraverseDeviceItemsAndHardware(DeviceItem root, string path, HashSet<DeviceItem> visited)
+        private static IEnumerable<(object Object, DeviceItem DeviceItem, string Path, string Kind)> TraverseDeviceItemsAndHardware(DeviceItem root,
+                string path, HashSet<DeviceItem> visited)
         {
             if (!visited.Add(root)) yield break;
             yield return (root, root, path, "DeviceItem");

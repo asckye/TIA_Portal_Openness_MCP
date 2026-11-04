@@ -23,7 +23,8 @@ internal sealed partial class OptionalSession
     internal IDisposable AcquireHmiEditAccess() => _engine.PlcB5Session.AcquireHmiEditAccess();
     internal PlcSoftware ExactPlcForEngineering(string path, bool writing) => _engine.PlcB5Session.ExactPlcForEngineering(path, writing);
     internal SoftwareContainer? ResolveSoftwareContainerUncached(string path) => _engine.PlcB5Session.ResolveSoftwareContainerUncached(path);
-    internal object ExactObjectUnder(object root, string path, string collection, string label) => _engine.PlcB5Session.ExactObjectUnder(root, path, collection, label);
+    internal object ExactObjectUnder(object root, string path, string collection, string label) => _engine.PlcB5Session
+        .ExactObjectUnder(root, path, collection, label);
     internal MasterCopy ExactMasterCopy(string library, string path) => _engine.PlcB5Session.ExactMasterCopy(library, path);
     internal object ExactOpenEngineeringLibrary(string library) => _engine.ExactOpenEngineeringLibrary(library);
     internal object EngineeringLibraryFolder(object library, string path, string root) => _engine.HmiLibraryFolder(library, path, root);
@@ -34,14 +35,17 @@ internal sealed partial class OptionalSession
     internal object ResolveHmiScreenOrThrow(string software, string screen) => _engine.OptionalHmiScreen(software, screen);
     internal DeviceItem ExactDeviceItem(string[] devices, string[] items) => _engine.PlcB5Session.ExactEngineeringHardware(devices, items) as DeviceItem
         ?? throw new ArgumentException("itemPathJson must select a device item.");
-    internal HardwareObject ExactEngineeringHardware(string devices, string items) => _engine.PlcB5Session.ExactEngineeringHardware(SivarcPolicy.ParseNames(devices, "devicePathJson"), SivarcPolicy.ParseNames(items, "itemPathJson"));
+    internal HardwareObject ExactEngineeringHardware(string devices, string items) => _engine.PlcB5Session
+        .ExactEngineeringHardware(SivarcPolicy.ParseNames(devices, "devicePathJson"), SivarcPolicy.ParseNames(items, "itemPathJson"));
     internal Device ExactEngineeringDevice(string[] devices) => _engine.PlcB5Session.ExactEngineeringHardware(devices, Array.Empty<string>()) as Device
         ?? throw new ArgumentException("devicePathJson must select a device.");
     internal static string[] ExactNameList(string raw, string parameter = "namesJson")
     {
         if (raw.Length > 65536) throw new ArgumentException("Name list too large.");
-        var names = (OptionalInputs.Parse(raw) as HmiArray ?? throw new ArgumentException("Expected a JSON array of exact paths.")).Select(n => n!.OptionalValue<string>()).ToArray();
-        if (names.Length < 1 || names.Length > 500 || names.Any(string.IsNullOrWhiteSpace) || names.Distinct(StringComparer.OrdinalIgnoreCase).Count() != names.Length)
+        var names = (OptionalInputs.Parse(raw) as HmiArray ?? throw new ArgumentException("Expected a JSON array of exact paths."))
+            .Select(n => n!.OptionalValue<string>()).ToArray();
+        if (names.Length < 1 || names.Length > 500 || names.Any(string.IsNullOrWhiteSpace) || names.Distinct(StringComparer.OrdinalIgnoreCase).Count() != names
+                .Length)
             throw new ArgumentException("Provide 1..500 unique nonempty paths.");
         return names;
     }

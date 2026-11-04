@@ -7,12 +7,15 @@ internal static class V17CompileEnvelope
 {
     internal static JsonObject Validate(JsonNode? payload,bool dryRun)
     {
-        if(payload is not JsonObject result || result["Executed"]?.GetValue<bool>()!=!dryRun) throw new IOException("Compiler execution outcome is missing or conflicts with preview.");
+        if(payload is not JsonObject result || result["Executed"]?.GetValue<bool>()!=!dryRun)
+            throw new IOException("Compiler execution outcome is missing or conflicts with preview.");
         foreach(var name in new[]{"Messages","Errors","Warnings","Info"})
-            if(result[name] is not JsonArray lines || lines.Any(n=>n is not JsonValue value || !value.TryGetValue<string>(out _))) throw new IOException("Compiler diagnostic arrays are incomplete.");
+            if(result[name] is not JsonArray lines || lines.Any(n=>n is not JsonValue value || !value.TryGetValue<string>(out _)))
+                throw new IOException("Compiler diagnostic arrays are incomplete.");
         if(dryRun)
         {
-            if(result["State"]!=null || result["ErrorCount"]!=null || result["WarningCount"]!=null) throw new IOException("Preview must not fabricate compiler state/counts.");
+            if(result["State"]!=null || result["ErrorCount"]!=null || result["WarningCount"]!=null)
+                throw new IOException("Preview must not fabricate compiler state/counts.");
         }
         else if(result["State"] is not JsonValue state || !state.TryGetValue<string>(out var text) || string.IsNullOrWhiteSpace(text) ||
             result["ErrorCount"] is not JsonValue errors || !errors.TryGetValue<int>(out var ec) || ec<0 ||
@@ -27,10 +30,13 @@ internal static class V17CompileEnvelope
         string Wire(string name)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name)??name;
         var meta=(JsonObject)envelope[Wire("Meta")]!;
         meta["contractVersion"]="v17-compile-safe-v1";
-        meta["success"]=dryRun || (result["ErrorCount"]!.GetValue<int>()==0 && !string.Equals(result["State"]!.GetValue<string>(),"Error",StringComparison.OrdinalIgnoreCase));
+        meta["success"]=dryRun
+            || (result["ErrorCount"]!.GetValue<int>()==0 && !string.Equals(result["State"]!.GetValue<string>(),"Error",StringComparison.OrdinalIgnoreCase));
         meta["errorDetailCount"]=((JsonArray)result["Errors"]!).Count;
         meta["warningDetailCount"]=((JsonArray)result["Warnings"]!).Count;
-        meta["offlineCheckScope"]="All project OnlineProvider/RHOnlineProvider states must be Offline; the selected PLC requires a provider. Devices without an exposed state are listed, not asserted Offline. Siemens requires all devices offline before compilation.";
+        meta["offlineCheckScope"]=
+            "All project OnlineProvider/RHOnlineProvider states must be Offline; the selected PLC requires a provider. Devices without an exposed state are " +
+            "listed, not asserted Offline. Siemens requires all devices offline before compilation.";
         meta["offlineStateNotExposedByDevices"]=result["OfflineStateNotExposedByDevices"]?.DeepClone() ?? new JsonArray();
         foreach(var name in new[]{"State","ErrorCount","WarningCount"}) envelope[Wire(name)]=result[name]?.DeepClone();
         if(tool=="CompilePlcSoftware") envelope[Wire("Messages")]=result["Messages"]!.DeepClone();

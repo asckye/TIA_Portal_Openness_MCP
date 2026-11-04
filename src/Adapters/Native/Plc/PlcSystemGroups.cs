@@ -17,14 +17,17 @@ namespace TiaMcp.Adapters.Native.Plc
                 ["name"] = PlcDocumentPrimitives.Name(b), ["number"] = b.Number, ["blockClass"] = b.GetType().Name,
                 ["programmingLanguage"] = PlcDocumentPrimitives.Language(b).ToString()
             }).ToArray();
-            if (depth < maxDepth) row["groups"] = PlcGroupOperations.Items(groups).Cast<PlcSystemBlockGroup>().Select(g => SystemBlockGroupRow(g, includeBlocks, depth + 1, maxDepth)).ToArray();
+            if (depth < maxDepth) row["groups"] = PlcGroupOperations.Items(groups).Cast<PlcSystemBlockGroup>()
+                .Select(g => SystemBlockGroupRow(g, includeBlocks, depth + 1, maxDepth)).ToArray();
             else row["groupsTruncated"] = groups.Count > 0;
             return row;
         }
 
-        public HardwareAddressingReply ReadPlcSystemGroups(string softwarePath, string unitName = "", string unitKind = "unit", bool includeBlocks = true, int maxDepth = 4)
+        public HardwareAddressingReply ReadPlcSystemGroups(string softwarePath, string unitName = "", string unitKind = "unit", bool includeBlocks = true,
+                int maxDepth = 4)
             => _session.RunHmiStepTool("ListPlcSystemGroups", meta => {
-                if (!string.IsNullOrEmpty(unitName) && unitKind != "unit" && unitKind != "safety") throw new ArgumentException("unitKind must be one of: unit/safety (case-sensitive).");
+                if (!string.IsNullOrEmpty(unitName) && unitKind != "unit" && unitKind != "safety")
+                    throw new ArgumentException("unitKind must be one of: unit/safety (case-sensitive).");
                 if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
@@ -35,7 +38,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 var systemTypeGroups = typeRoot.SystemTypeGroups;
 #endif
                 meta["unit"] = unit == null ? null : PlcGroupOperations.Get(unit, "Name");
-                meta["systemBlockGroups"] = PlcGroupOperations.Items(systemBlockGroups).Cast<PlcSystemBlockGroup>().Select(g => SystemBlockGroupRow(g, includeBlocks, 1, maxDepth)).ToArray();
+                meta["systemBlockGroups"] = PlcGroupOperations.Items(systemBlockGroups).Cast<PlcSystemBlockGroup>()
+                    .Select(g => SystemBlockGroupRow(g, includeBlocks, 1, maxDepth)).ToArray();
 #if PLC_SOFTWARE_PROTECTION
                 meta["systemTypeGroups"] = PlcGroupOperations.Items(systemTypeGroups).Cast<PlcSystemTypeGroup>().Select(g => {
                     var types = g.Types;
@@ -49,7 +53,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 meta["dataComplete"] = false;
 #endif
                 meta["apiCallSuccess"] = true;
-                meta["scope"] = "PlcBlockSystemGroup.SystemBlockGroups (PlcSystemBlockGroup Name / Blocks / Groups, recursive to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types); first 200 objects per group. No modification.";
+                meta["scope"] =
+                    "PlcBlockSystemGroup.SystemBlockGroups (PlcSystemBlockGroup Name / Blocks / Groups, recursive to maxDepth) and " +
+                    "PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types); first 200 objects per group. No modification.";
                 return "System block / type groups read; no modification.";
             });
     }

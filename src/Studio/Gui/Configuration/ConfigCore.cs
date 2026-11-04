@@ -91,7 +91,8 @@ namespace TiaMcpConfigurator
                 ?? throw new TiaOpenness.Shared.BundleResourceUnavailableException(Path.Combine(directory, "manifest", "package-manifest.json"));
             var expected = Engine(root, versionKey, directory);
             if (!string.Equals(Path.GetFullPath(engine), Path.GetFullPath(expected), StringComparison.OrdinalIgnoreCase))
-                throw new FileNotFoundException(Loc.Current.T("Config.EngineNotFound", TiaVersionCatalog.Get(versionKey).DisplayName) + " " + expected, expected);
+                throw new FileNotFoundException(Loc.Current.T("Config.EngineNotFound", TiaVersionCatalog.Get(versionKey).DisplayName) + " " + expected,
+                        expected);
             return new[] { "--bundle-root", root, product.VersionOption, product.ReleaseKey, "--tia-portal-location", tia };
         }
 
@@ -110,16 +111,20 @@ namespace TiaMcpConfigurator
                 return new KeyValuePair<string, string>(env, Loc.Current["Config.TiaEnvironmentSource"]);
             try
             {
-                string regPath = TiaOpenness.Shared.OpennessEnvironment.InstalledPath(Microsoft.Win32.RegistryView.Registry64, releaseKey == "15.1" ? "15_1" : version.ToString(CultureInfo.InvariantCulture), "TIA_Opns");
+                string regPath = TiaOpenness.Shared.OpennessEnvironment
+                    .InstalledPath(Microsoft.Win32.RegistryView.Registry64, releaseKey == "15.1" ? "15_1" : version.ToString(CultureInfo.InvariantCulture),
+                        "TIA_Opns");
                 if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath) && HasOpenness(regPath, releaseKey))
                     return new KeyValuePair<string, string>(regPath, Loc.Current.T("Config.TiaRegistrySource", version));
             }
             catch (Exception) /* swallow(env-probe): failed registry detection falls through to the default Siemens installation directories */ { }
-            foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
+            foreach (var root in new[] {
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
             {
                 if (string.IsNullOrEmpty(root)) continue;
                 string candidate = Path.Combine(root, "Siemens", "Automation", descriptor.InstallFolder);
-                if (Directory.Exists(candidate) && HasOpenness(candidate, releaseKey)) return new KeyValuePair<string, string>(candidate, Loc.Current["Config.TiaDefaultSource"]);
+                if (Directory.Exists(candidate) && HasOpenness(candidate, releaseKey)) return new KeyValuePair<string,
+                    string>(candidate, Loc.Current["Config.TiaDefaultSource"]);
             }
             return new KeyValuePair<string, string>(null, Loc.Current.T("Config.TiaNotFound", version));
         }
@@ -196,7 +201,10 @@ namespace TiaMcpConfigurator
         {
             ValidateKey(key);
             var root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, bundleRoot);
-            return string.Join(" ", new[] { "--bundle-root", root, VersionArgument(settings.EffectiveReleaseKey), settings.EffectiveReleaseKey, "--tia-portal-location", settings.TiaPath,
+            return string
+                .Join(" ", new[] {
+                    "--bundle-root", root, VersionArgument(settings.EffectiveReleaseKey), settings.EffectiveReleaseKey, "--tia-portal-location", settings
+                        .TiaPath,
                 "--transport", "http", "--http-prefix", Prefix(settings.Address, settings.Port), "--http-api-key", key, "--logging", "1" }.Select(Quote));
         }
 
@@ -231,7 +239,8 @@ namespace TiaMcpConfigurator
             if (ready == null || !ready.TryGetValue("mcpHostReady", out isReady) || !(isReady is bool) || !(bool)isReady)
                 throw new InvalidOperationException(Loc.Current["Config.RemoteNotReady"]);
             object version;
-            string versionText = health != null && health.TryGetValue("fileVersion", out version) ? Convert.ToString(version) : Loc.Current["Config.UnknownVersion"];
+            string versionText = health != null && health.TryGetValue("fileVersion", out version) ? Convert.ToString(version) : Loc
+                .Current["Config.UnknownVersion"];
             return Loc.Current.T("Config.RemoteReady", versionText);
         }
 

@@ -12,7 +12,10 @@ namespace TiaMcp.Adapters.Native.Hmi
 {
     internal static class HmiFiles
     {
-        internal static HmiObject Export(object target, string path, string exportOptions = "WithDefaults") => new HmiObject(EngineeringFileExport.Export(target, path, true, HmiValues.ExportFailure ?? throw new InvalidOperationException("HMI export failure recorder unavailable."), HmiExchangePolicy.ExportOption(exportOptions)));
+        internal static HmiObject Export(object target, string path, string exportOptions = "WithDefaults") =>
+            new HmiObject(EngineeringFileExport
+                .Export(target, path, true, HmiValues.ExportFailure ?? throw new InvalidOperationException("HMI export failure recorder unavailable."),
+                    HmiExchangePolicy.ExportOption(exportOptions)));
         internal static FileInfo RequireExistingInputFile(string path, string parameter)
         {
             if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) throw new ArgumentException(parameter + " must be an absolute file path.");
@@ -39,7 +42,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             var captured=Capture(result,0);
             return new HmiObject { ["nativeResult"]=captured,["apiCallSuccess"]=true,["dataComplete"]=false,
                 ["nativeFailureDetected"]=Failed(captured),
-                ["scope"]="Native scalar result and bounded Messages/Errors/Warnings/Results. Complex fields remain excluded; API return is not validation or test success." };
+                ["scope"]=
+                    "Native scalar result and bounded Messages/Errors/Warnings/Results. Complex fields remain excluded; API return is not validation or test " +
+                    "success."
+                };
         }
         internal static void AttachResult(HmiObject meta, object? result)
         {
@@ -66,7 +72,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (value is IList list) return list.Cast<object?>().Any(x => x is IDictionary<string, object?> && Failed(x));
             if (value is not IDictionary<string, object?> row) return false;
             var values = row.Field("values") as IDictionary<string, object?> ?? row;
-            if (values.Field("State") is string state && new[] { "Error", "Failed", "Failure", "Aborted", "Canceled", "Cancelled" }.Contains(state, StringComparer.OrdinalIgnoreCase)) return true;
+            if (values.Field("State") is string state && new[] { "Error", "Failed", "Failure", "Aborted", "Canceled", "Cancelled" }
+                    .Contains(state, StringComparer.OrdinalIgnoreCase))
+                return true;
             if (values.Field("ErrorCount") is int count && count > 0) return true;
             if (row.Field("Errors") is IList errors && errors.Count > 0) return true;
             return new[] { "Messages", "Results" }.Any(k => row.Field(k) != null && Failed(row.Field(k)));

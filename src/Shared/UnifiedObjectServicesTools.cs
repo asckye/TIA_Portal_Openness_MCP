@@ -18,13 +18,18 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public UnifiedObjectServicesTools(UnifiedObjectServicesService service) => _service = service;
 
-        [McpServerTool(Name="GetUnifiedPlantObject"), Description("[L2][HMI-Unified][READ] Exact project PlantView/node and optional property-only JSON path to CPM interfaces/members. Empty plantPath lists views. Live pagination, scalar fields and schema only; no implicit recursive completeness claim.")]
+        [McpServerTool(Name="GetUnifiedPlantObject"),
+                Description("[L2][HMI-Unified][READ] Exact project PlantView/node and optional property-only JSON path to CPM interfaces/members. Empty " +
+                "plantPath lists views. Live pagination, scalar fields and schema only; no implicit recursive completeness claim.")]
         public CallToolResult ReadUnifiedPlantObjectV4(
             [Description("plantPath: plant-object path inside the HMI plant hierarchy, e.g. 'Plant/Line1/Pump'.")] string plantPath="",
             PropertyStep[] objectPath = null!,
             int offset=0,
             int limit=100)
-            => HmiInspectionContract.Run("GetUnifiedPlantObject", false, false, () => ReadUnifiedPlantObject(plantPath, V4Json.Serialize(objectPath ?? Array.Empty<PropertyStep>()), offset, limit), offset: offset, pageSize: limit);
+            => HmiInspectionContract
+                .Run("GetUnifiedPlantObject", false, false, () =>
+                    ReadUnifiedPlantObject(plantPath, V4Json.Serialize(objectPath ?? Array.Empty<PropertyStep>()), offset, limit), offset: offset, pageSize
+                    : limit);
 
         public ResponseMessage ReadUnifiedPlantObject(
             [Description("plantPath: plant-object path inside the HMI plant hierarchy, e.g. 'Plant/Line1/Pump'.")] string plantPath="",
@@ -33,14 +38,19 @@ namespace TiaMcpServer.ModelContextProtocol
             int limit=100)
         => _service.ReadUnifiedPlantObject(plantPath,objectPathJson,offset,limit);
 
-        [McpServerTool(Name="ManageUnifiedPlantNode"), Description("[L2][HMI-Unified][WRITE] Exact PlantView/node create/update/delete. Optional native CPM type for child creation. Leaf/empty deletion only. Default preview, no implicit save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageUnifiedPlantNode"),
+                Description("[L2][HMI-Unified][WRITE] Exact PlantView/node create/update/delete. Optional native CPM type for child creation. Leaf/empty " +
+                "deletion only. Default preview, no implicit save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageUnifiedPlantNodeV4(
             [Description("plantPath: plant-object path inside the HMI plant hierarchy, e.g. 'Plant/Line1/Pump'.")] string plantPath,
             [Description("action: the operation to perform - create | update | delete.")] string action,
             [Description("plantObjectType: exact plant object type name.")] string plantObjectType="",
             AttributeMap<Scalar> properties = null!,
             bool dryRun=true)
-            => HmiInspectionContract.Run("ManageUnifiedPlantNode", !dryRun, true, () => ManageUnifiedPlantNode(plantPath, action, plantObjectType, V4Json.Serialize(properties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>())), dryRun));
+            => HmiInspectionContract
+                .Run("ManageUnifiedPlantNode", !dryRun, true, () =>
+                    ManageUnifiedPlantNode(plantPath, action, plantObjectType, V4Json
+                        .Serialize(properties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>())), dryRun));
 
         public ResponseMessage ManageUnifiedPlantNode(
             [Description("plantPath: plant-object path inside the HMI plant hierarchy, e.g. 'Plant/Line1/Pump'.")] string plantPath,
@@ -50,13 +60,17 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
         => _service.ManageUnifiedPlantNode(plantPath,action,plantObjectType,propertiesJson,dryRun);
 
-        [McpServerTool(Name="SetUnifiedPlantObject"), Description("[L2][HMI-Unified][WRITE] Public scalar CPM interface/member properties at exact plant path and property-only JSON address. Default preview, checks readback, no implicit save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="SetUnifiedPlantObject"),
+                Description("[L2][HMI-Unified][WRITE] Public scalar CPM interface/member properties at exact plant path and property-only JSON address. " +
+                "Default preview, checks readback, no implicit save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult UpdateUnifiedPlantObjectV4(
             [Description("plantPath: plant-object path inside the HMI plant hierarchy, e.g. 'Plant/Line1/Pump'.")] string plantPath,
             PropertyStep[] objectPath,
             AttributeMap<Scalar> properties,
             bool dryRun=true)
-            => HmiInspectionContract.Run("SetUnifiedPlantObject", !dryRun, true, () => UpdateUnifiedPlantObject(plantPath, V4Json.Serialize(objectPath), V4Json.Serialize(properties), dryRun));
+            => HmiInspectionContract
+                .Run("SetUnifiedPlantObject", !dryRun, true, () =>
+                    UpdateUnifiedPlantObject(plantPath, V4Json.Serialize(objectPath), V4Json.Serialize(properties), dryRun));
 
         public ResponseMessage UpdateUnifiedPlantObject(
             [Description("plantPath: plant-object path inside the HMI plant hierarchy, e.g. 'Plant/Line1/Pump'.")] string plantPath,
@@ -65,21 +79,35 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
         => _service.UpdateUnifiedPlantObject(plantPath,objectPathJson,propertiesJson,dryRun);
 
-        [McpServerTool(Name="GetUnifiedObjectProperties"), Description("[L2][HMI-Unified][READ] Bounded property-only JSON path from Unified software: [{property:TagTables,name:Table},{property:Tags,name:Tag}]. Exact names; no Parent/backlinks. Returns scalar values and schema, excludes complex values, live pagination. Nested RuntimeSettings, system collections, logging tags supported by actual property availability.")]
+        [McpServerTool(Name="GetUnifiedObjectProperties"),
+                Description("[L2][HMI-Unified][READ] Bounded property-only JSON path from Unified software: " +
+                "[{property:TagTables,name:Table},{property:Tags,name:Tag}]. Exact names; no Parent/backlinks. Returns scalar values and schema, excludes " +
+                "complex values, live pagination. Nested RuntimeSettings, system collections, logging tags supported by actual property availability.")]
         public CallToolResult ReadUnifiedObjectPropertiesV4(string softwarePath, PropertyStep[] objectPath = null!, int offset=0, int limit=100)
-            => HmiInspectionContract.Run("GetUnifiedObjectProperties", false, false, () => ReadUnifiedObjectProperties(softwarePath, V4Json.Serialize(objectPath ?? Array.Empty<PropertyStep>()), offset, limit), offset: offset, pageSize: limit);
+            => HmiInspectionContract
+                .Run("GetUnifiedObjectProperties", false, false, () =>
+                    ReadUnifiedObjectProperties(softwarePath, V4Json.Serialize(objectPath ?? Array.Empty<PropertyStep>()), offset, limit), offset: offset,
+                    pageSize: limit);
 
         public ResponseMessage ReadUnifiedObjectProperties(string softwarePath, string objectPathJson="[]", int offset=0, int limit=100)
         => _service.ReadUnifiedObjectProperties(softwarePath,objectPathJson,offset,limit);
 
-        [McpServerTool(Name="SetUnifiedObjectProperties"), Description("[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object or nested settings. dryRun=true; no renaming, parent traversal, root RuntimeSettings edit, save/compile/download. TimeSpan uses invariant c string. Partial changes reported; readback checked. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="SetUnifiedObjectProperties"),
+                Description("[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object or nested settings. dryRun=true; " +
+                "no renaming, parent traversal, root RuntimeSettings edit, save/compile/download. TimeSpan uses invariant c string. Partial changes " +
+                "reported; readback checked. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult UpdateUnifiedObjectPropertiesV4(string softwarePath, PropertyStep[] objectPath, AttributeMap<Scalar> properties, bool dryRun=true)
-            => HmiInspectionContract.Run("SetUnifiedObjectProperties", !dryRun, true, () => UpdateUnifiedObjectProperties(softwarePath, V4Json.Serialize(objectPath), V4Json.Serialize(properties), dryRun));
+            => HmiInspectionContract
+                .Run("SetUnifiedObjectProperties", !dryRun, true, () =>
+                    UpdateUnifiedObjectProperties(softwarePath, V4Json.Serialize(objectPath), V4Json.Serialize(properties), dryRun));
 
         public ResponseMessage UpdateUnifiedObjectProperties(string softwarePath, string objectPathJson, string propertiesJson, bool dryRun=true)
         => _service.UpdateUnifiedObjectProperties(softwarePath,objectPathJson,propertiesJson,dryRun);
 
-        [McpServerTool(Name="SetUnifiedMultilingualProperty"), Description("[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. Raw text preserved; verifies requested language and unchanged other languages. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="SetUnifiedMultilingualProperty"),
+                Description("[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. Raw text preserved; " +
+                "verifies requested language and unchanged other languages. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 " +
+                "native acceptance is pending.")]
         public CallToolResult UpdateUnifiedMultilingualPropertyV4(
             string softwarePath,
             PropertyStep[] objectPath,
@@ -87,7 +115,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string culture,
             [Description("rawText: the text to write.")] string rawText,
             bool dryRun=true)
-            => HmiInspectionContract.Run("SetUnifiedMultilingualProperty", !dryRun, true, () => UpdateUnifiedMultilingualProperty(softwarePath, V4Json.Serialize(objectPath), property, culture, rawText, dryRun));
+            => HmiInspectionContract
+                .Run("SetUnifiedMultilingualProperty", !dryRun, true, () =>
+                    UpdateUnifiedMultilingualProperty(softwarePath, V4Json.Serialize(objectPath), property, culture, rawText, dryRun));
 
         public ResponseMessage UpdateUnifiedMultilingualProperty(
             string softwarePath,
@@ -98,19 +128,27 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
         => _service.UpdateUnifiedMultilingualProperty(softwarePath,objectPathJson,property,culture,rawText,dryRun);
 
-        [McpServerTool(Name="ValidateUnifiedObject"), Description("[L2][HMI-Unified][READ] Call native parameterless Validate on one exact Unified object. Returns errors/warnings; apiCallSuccess and validationPassed differ. No compile, script SyntaxCheck or project edit.")]
+        [McpServerTool(Name="ValidateUnifiedObject"),
+                Description("[L2][HMI-Unified][READ] Call native parameterless Validate on one exact Unified object. Returns errors/warnings; apiCallSuccess " +
+                "and validationPassed differ. No compile, script SyntaxCheck or project edit.")]
         public CallToolResult ValidateUnifiedObjectV4(string softwarePath, PropertyStep[] objectPath)
             => HmiInspectionContract.Run("ValidateUnifiedObject", false, false, () => ValidateUnifiedObject(softwarePath, V4Json.Serialize(objectPath)));
 
         public ResponseMessage ValidateUnifiedObject(string softwarePath, string objectPathJson)
         => _service.ValidateUnifiedObject(softwarePath,objectPathJson);
 
-        [McpServerTool(Name="GetUnifiedCrossReferences"), Description("[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Allowed by default through V20 where the API exists (Unified V19+). V21 requires the human Workbench Allow native cross references (V21) switch for this session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. V21 TIA exits recorded: save before the first query; compilation is no guarantee. Not queried never means zero references; decoded results retain partial-coverage limits. Reflection cannot bypass the policy. No automatic retry after TIA exit. No complete offline replacement for Unified references is established. Native acceptance pending.")]
+        [McpServerTool(Name="GetUnifiedCrossReferences"),
+                Description("[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Allowed by default through V20 " +
+                "where the API exists (Unified V19+). V21 requires the human Workbench Allow native cross references (V21) switch for this session OR " +
+                "TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. V21 TIA exits recorded: save before the first query; compilation is no " +
+                "guarantee. Not queried never means zero references; decoded results retain partial-coverage limits. Reflection cannot bypass the policy. No " +
+                "automatic retry after TIA exit. No complete offline replacement for Unified references is established. Native acceptance pending.")]
         public CallToolResult GetUnifiedCrossReferencesV4(
             string softwarePath,
             PropertyStep[] objectPath,
             [Description("filter: filter text ('' = all).")] string filter="AllObjects")
-            => HmiInspectionContract.Run("GetUnifiedCrossReferences", false, false, () => GetUnifiedCrossReferences(softwarePath, V4Json.Serialize(objectPath), filter));
+            => HmiInspectionContract
+                .Run("GetUnifiedCrossReferences", false, false, () => GetUnifiedCrossReferences(softwarePath, V4Json.Serialize(objectPath), filter));
 
         public ResponseMessage GetUnifiedCrossReferences(
             string softwarePath,
@@ -118,14 +156,22 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("filter: filter text ('' = all).")] string filter="AllObjects")
         => _service.GetUnifiedCrossReferences(softwarePath,objectPathJson,filter);
 
-        [McpServerTool(Name="ExportUnifiedEngineeringList"), Description("[L2][HMI-Unified][FILE] Export exactly named textLists/graphicLists/systemTextLists through native Export when available. New destination directory only; output files nonempty and hashed. Default preview; no project modification; entries not independently verified. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ExportUnifiedEngineeringList"),
+                Description("[L2][HMI-Unified][FILE] Export exactly named textLists/graphicLists/systemTextLists through native Export when available. New " +
+                "destination directory only; output files nonempty and hashed. Default preview; no project modification; entries not independently verified. " +
+                "Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportUnifiedEngineeringListV4(string softwarePath, string category, string name, string destinationDirectory, bool dryRun=true)
-            => HmiInspectionContract.Run("ExportUnifiedEngineeringList", !dryRun, true, () => ExportUnifiedEngineeringList(softwarePath, category, name, destinationDirectory, dryRun));
+            => HmiInspectionContract
+                .Run("ExportUnifiedEngineeringList", !dryRun, true, () =>
+                    ExportUnifiedEngineeringList(softwarePath, category, name, destinationDirectory, dryRun));
 
         public ResponseMessage ExportUnifiedEngineeringList(string softwarePath, string category, string name, string destinationDirectory, bool dryRun=true)
         => _service.ExportUnifiedEngineeringList(softwarePath,category,name,destinationDirectory,dryRun);
 
-        [McpServerTool(Name="ManageUnifiedLoggingTag"), Description("[L2][HMI-Unified][WRITE] Read/create/update/delete LoggingTags under exact ordinary Unified tag. DataLog name validated. Public scalar configuration, TimeSpan c strings, no implicit save/compile/download. Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageUnifiedLoggingTag"),
+                Description("[L2][HMI-Unified][WRITE] Read/create/update/delete LoggingTags under exact ordinary Unified tag. DataLog name validated. Public " +
+                "scalar configuration, TimeSpan c strings, no implicit save/compile/download. Default dryRun=true. Native behaviorPolicy=current; V4 native " +
+                "acceptance is pending.")]
         public CallToolResult ManageUnifiedLoggingTagV4(
             string softwarePath,
             [Description("tagPath: up to 24 {property,name?} steps identifying the logging tag.")] PropertyStep[] tagPath,
@@ -146,7 +192,10 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
             => _service.ManageUnifiedLoggingTag(softwarePath,tagPathJson,action,name,propertiesJson,dryRun);
 
-        [McpServerTool(Name="SetUnifiedLogDuration"), Description("[L2][HMI-Unified][WRITE] Set native LogDuration or SegmentDuration at exact nested object path. Normalized components; default preview, returns native readback; does not assert independent conversion equality. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="SetUnifiedLogDuration"),
+                Description("[L2][HMI-Unified][WRITE] Set native LogDuration or SegmentDuration at exact nested object path. Normalized components; default " +
+                "preview, returns native readback; does not assert independent conversion equality. Native behaviorPolicy=current; V4 native acceptance is " +
+                "pending.")]
         public CallToolResult SetUnifiedLogDurationV4(
             string softwarePath,
             [Description("durationPath: up to 24 {property,name?} steps identifying the duration property.")] PropertyStep[] durationPath,
@@ -172,7 +221,10 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
         => _service.SetUnifiedLogDuration(softwarePath,durationPathJson,kind,days,hours,minutes,seconds,hundredNanoseconds,dryRun);
 
-        [McpServerTool(Name="ManageUnifiedOpcUaAlarmType"), Description("[L2][HMI-Unified][WRITE] Native create/update OPC UA alarm type with NodeId and existing HMI connection. Default preview. Native readback supplied, full binding verification separate. Read/delete via engineering-object tools. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageUnifiedOpcUaAlarmType"),
+                Description("[L2][HMI-Unified][WRITE] Native create/update OPC UA alarm type with NodeId and existing HMI connection. Default preview. " +
+                "Native readback supplied, full binding verification separate. Read/delete via engineering-object tools. Native behaviorPolicy=current; V4 " +
+                "native acceptance is pending.")]
         public CallToolResult ManageUnifiedOpcUaAlarmTypeV4(
             string softwarePath,
             string name,
@@ -180,7 +232,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("connection: exact HMI connection name.")] string connection,
             [Description("create | update. ")] string action="create",
             bool dryRun=true)
-            => HmiInspectionContract.Run("ManageUnifiedOpcUaAlarmType", !dryRun, true, () => ManageUnifiedOpcUaAlarmType(softwarePath, name, nodeId, connection, action, dryRun));
+            => HmiInspectionContract
+                .Run("ManageUnifiedOpcUaAlarmType", !dryRun, true, () => ManageUnifiedOpcUaAlarmType(softwarePath, name, nodeId, connection, action, dryRun));
 
         public ResponseMessage ManageUnifiedOpcUaAlarmType(
             string softwarePath,

@@ -50,7 +50,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             return new HmiObject { ["path"] = path, ["kind"] = kind, ["status"] = "ok", ["type"] = value?.GetType().FullName,
                 ["value"] = json, ["evidence"] = path };
         }
-        internal static bool IsScalar(object? v) => v == null || v is string || v is decimal || v is DateTime || v is Guid || v is Version || v.GetType().IsPrimitive || v.GetType().IsEnum;
+        internal static bool IsScalar(object? v) => v == null || v is string || v is decimal || v is DateTime || v is Guid || v is Version || v.GetType()
+            .IsPrimitive || v.GetType().IsEnum;
         internal static int Count(object collection) => Convert.ToInt32(Get(collection, "Count"), CultureInfo.InvariantCulture);
         internal static object At(object collection, int index)
         {
@@ -74,7 +75,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     throw new KeyNotFoundException("Exact name not found: " + name);
                 }
             }
-            int count = Count(collection); if (count > max) throw new InvalidOperationException("Lookup exceeds " + max + " items; use an exact indexed branch.");
+            int count = Count(collection); if (count > max)
+                throw new InvalidOperationException("Lookup exceeds " + max + " items; use an exact indexed branch.");
             object? match = null;
             for (int j = 0; j < count; j++) { var v = At(collection, j); if (Get(v, key)?.ToString() != name) continue;
                 if (match != null) throw new InvalidOperationException("Ambiguous " + key + ": " + name); match = v; }
@@ -113,18 +115,23 @@ namespace TiaMcp.Adapters.Native.Hmi
             int count = 0; HmiObject? error = null;
             try { count = Count(collection); } catch (Exception ex) { error = Failure(path, "CountFailed", ex); }
             if (error != null) { yield return error; yield break; }
-            yield return new HmiObject { ["path"] = path, ["kind"] = "collection", ["status"] = "ok", ["expectedCount"] = count, ["type"] = collection.GetType().FullName };
+            yield return new HmiObject {
+                ["path"] = path, ["kind"] = "collection", ["status"] = "ok", ["expectedCount"] = count, ["type"] = collection.GetType().FullName };
             for (int j = 0; j < count; j++)
             {
                 object? value = null; error = null;
-                try { if (Count(collection) != count) throw new InvalidOperationException("CollectionChanged: start a new collection after edits stop."); value = At(collection, j); }
+                try {
+                    if (Count(collection) != count) throw new InvalidOperationException("CollectionChanged: start a new collection after edits stop."); value =
+                        At(collection, j);
+                }
                 catch (Exception ex) { error = Failure(path + "/[" + j + "]", "ItemReadFailed", ex); }
                 if (error != null) { yield return error; if (Stopped(error)) yield break; if (value == null) continue; }
                 var itemPath = path + "/[" + j + "]";
                 foreach (var row in Safe(() => visit(value!, itemPath), itemPath))
                 { yield return row; if (Stopped(row)) yield break; }
             }
-            try { if (Count(collection) != count) error = Failure(path, "CollectionChanged"); } catch (Exception ex) { error = Failure(path, "CountFailed", ex); }
+            try { if (Count(collection) != count) error = Failure(path, "CollectionChanged"); } catch (Exception ex) {
+                error = Failure(path, "CountFailed", ex); }
             if (error != null) yield return error;
             yield return new HmiObject { ["path"] = path, ["kind"] = "collectionEnd", ["status"] = "ok", ["visitedCount"] = count };
         }
@@ -148,7 +155,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static IEnumerable<HmiObject> Property(object owner, string name, string path, Func<object?, string, IEnumerable<HmiObject>> visit)
         {
             object? value = null; HmiObject? error = null;
-            try { value = Get(owner, name); } catch (Exception ex) { error = Failure(path, Cause(ex) is NotSupportedException ? "Unsupported" : "ReadFailed", ex); }
+            try { value = Get(owner, name); } catch (Exception ex) {
+                error = Failure(path, Cause(ex) is NotSupportedException ? "Unsupported" : "ReadFailed", ex); }
             if (error != null) { yield return error; yield break; }
             foreach (var row in visit(value, path)) yield return row;
         }
@@ -157,13 +165,16 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (IsScalar(root))
             {
                 yield return Scalar(path, root);
-                if (root is string code && (path.EndsWith("/ScriptCode", StringComparison.Ordinal) || path.EndsWith("/GlobalDefinitionAreaScriptCode", StringComparison.Ordinal)))
+                if (root is string code
+                        && (path.EndsWith("/ScriptCode", StringComparison.Ordinal) || path
+                            .EndsWith("/GlobalDefinitionAreaScriptCode", StringComparison.Ordinal)))
                     yield return UnifiedCodecs.AnalyzeScript(code, path);
                 yield break;
             }
             if (depth >= 128) { yield return Failure(path, "DepthLimit", reason: "Select this exact branch to continue; maximum depth 128."); yield break; }
             ancestors ??= new HashSet<object>();
-            if (!ancestors.Add(root!)) { yield return Failure(path, "Cycle", reason: "Ancestor cycle; select an exact branch if this is a meaningful association."); yield break; }
+            if (!ancestors.Add(root!)) {
+                yield return Failure(path, "Cycle", reason: "Ancestor cycle; select an exact branch if this is a meaningful association."); yield break; }
             try
             {
                 if (root is IEnumerable)
@@ -182,7 +193,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var api = root.GetType().GetInterface("Siemens.Engineering.IEngineeringObject");
                 if (api != null)
                 {
-                    try { infos = api.GetMethod("GetAttributeInfos")!.Invoke(root, Array.Empty<object>()); } catch (Exception ex) { error = Failure(path, "ReadFailed", ex); }
+                    try { infos = api.GetMethod("GetAttributeInfos")!.Invoke(root, Array.Empty<object>()); } catch (Exception ex) {
+                        error = Failure(path, "ReadFailed", ex); }
                     if (error != null) { yield return error; if (Stopped(error)) yield break; }
                     if (infos is IEnumerable list)
                     {

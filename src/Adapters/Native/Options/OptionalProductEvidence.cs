@@ -19,7 +19,8 @@ internal static class OptionalProductEvidence
             row[key + "Error"] = error.GetBaseException().Message;
         }
     }
-    internal static string CategoryLabel(string category) => category == "styleGuide" ? "rule set" : category == "application" ? "test case" : "system test case";
+    internal static string CategoryLabel(string category) => category == "styleGuide" ? "rule set" : category == "application" ? "test case"
+        : "system test case";
     internal static void Page(object?[] all, int offset, int limit, HmiObject meta)
     {
         var rows = all.Skip(offset).Take(limit).ToArray();

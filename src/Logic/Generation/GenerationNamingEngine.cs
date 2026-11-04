@@ -90,9 +90,11 @@ namespace TiaMcp.Logic.Generation
         public void Check(string kind, string name)
         {
             var matching = rules.Values.Where(r => r.Kind == kind).OrderBy(r => r.Id, StringComparer.Ordinal).ToArray();
-            if (matching.Length == 0) throw CanonicalJson.Failure("/names/" + CanonicalJson.Pointer(name), "naming-rule", "No naming rule for kind " + kind + ".");
+            if (matching.Length == 0) throw CanonicalJson
+                .Failure("/names/" + CanonicalJson.Pointer(name), "naming-rule", "No naming rule for kind " + kind + ".");
             // Multiple rules for a kind are alternatives; a naming.* call additionally checks its exact rule.
-            if (!matching.Any(r => Passes(r, name))) throw CanonicalJson.Failure("/names/" + CanonicalJson.Pointer(name), "naming", "Generated name fails the package rules for " + kind + ".");
+            if (!matching.Any(r => Passes(r, name))) throw CanonicalJson
+                .Failure("/names/" + CanonicalJson.Pointer(name), "naming", "Generated name fails the package rules for " + kind + ".");
         }
 
         private static void CheckRule(NamingPartRulesItem rule, string name)
@@ -107,7 +109,8 @@ namespace TiaMcp.Logic.Generation
             {
                 if (!GenerationRegex.IsMatch(rule.Pattern, name)) return false;
             }
-            catch (RegexMatchTimeoutException) { throw CanonicalJson.Failure("/naming/" + rule.Id, "pattern-timeout", "Naming pattern exceeded its time budget."); }
+            catch (RegexMatchTimeoutException) {
+                throw CanonicalJson.Failure("/naming/" + rule.Id, "pattern-timeout", "Naming pattern exceeded its time budget."); }
             return rule.Case switch
             {
                 "upper" => name == name.ToUpperInvariant(), "lower" => name == name.ToLowerInvariant(),
@@ -126,6 +129,7 @@ namespace TiaMcp.Logic.Generation
 
         internal static string Value(JsonElement value) => value.ValueKind == JsonValueKind.String ? value.GetString()!
             : value.ValueKind == JsonValueKind.Number || value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False
-                ? Encoding.UTF8.GetString(CanonicalJson.Encode(value)) : throw CanonicalJson.Failure("", "placeholder-type", "Placeholder result must be a string, number or boolean.");
+                ? Encoding.UTF8.GetString(CanonicalJson.Encode(value)) : throw CanonicalJson
+                    .Failure("", "placeholder-type", "Placeholder result must be a string, number or boolean.");
     }
 }

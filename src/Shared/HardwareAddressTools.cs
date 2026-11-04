@@ -17,9 +17,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public bool HasProject { get; }
         public IReadOnlyList<TiaMcp.Adapters.Contracts.IoAddressInfo>? GetDeviceItemAddresses(string path);
         public List<string> DescribeChildItemsWithAddresses(string path);
-        public (bool ok, string message, TiaMcp.Adapters.Contracts.IoAddressInfo? before, TiaMcp.Adapters.Contracts.IoAddressInfo? after) SetDeviceItemStartAddress(string path, string ioType, int startAddress);
+        public (bool ok, string message, TiaMcp.Adapters.Contracts.IoAddressInfo? before, TiaMcp.Adapters.Contracts.IoAddressInfo
+                ? after) SetDeviceItemStartAddress(string path, string ioType, int startAddress);
         public ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson, int offset, int limit);
-        public ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson, string attributesJson, string softwarePath, string processImageObName, bool dryRun);
+        public ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson,
+                string attributesJson, string softwarePath, string processImageObName, bool dryRun);
         public JsonObject GetDeviceIpAddress(string path);
     }
 
@@ -259,7 +261,11 @@ namespace TiaMcpServer.ModelContextProtocol
         #endregion
 
 
-        [McpServerTool(Name="GetDeviceAddressing"), Description("[L2][Hardware][READ] Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner paths. Paginated, no modification.")]
+        [McpServerTool(Name="GetDeviceAddressing"),
+                Description("[L2][Hardware][READ] Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), " +
+                "DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) " +
+                "and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner " +
+                "paths. Paginated, no modification.")]
         public CallToolResult GetDeviceAddressingV4(string[] devicePath, string[]? itemPath = null, int offset=0, int limit=100)
             => HardwareContract.Run("GetDeviceAddressing", () =>
             {
@@ -273,7 +279,12 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson="[]", int offset=0, int limit=100)
             => _service.ReadDeviceAddressing(devicePathJson,itemPathJson,offset,limit);
 
-        [McpServerTool(Name="SetDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]
+        [McpServerTool(Name="SetDeviceAddress"),
+                Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its " +
+                "current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. " +
+                "processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on " +
+                "V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires " +
+                "tags. Default dryRun=true; no save/compile/download.")]
         public CallToolResult SetDeviceAddressV4(
             string[] devicePath,
             string[] itemPath,
@@ -288,11 +299,14 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var devicePathJson = HardwareContract.Input(PathValidator.Device(), devicePath, "devicePath");
                 var itemPathJson = HardwareContract.Input(PathValidator.Item(), itemPath, "itemPath");
-                var propertiesJson = HardwareContract.Input(HardwareContract.AddressProperties(), properties ?? HardwareContract.EmptyAttributes(), "properties");
-                var attributesJson = HardwareContract.Input(HardwareContract.Attributes(attributes), attributes ?? HardwareContract.EmptyAttributes(), "attributes");
+                var propertiesJson = HardwareContract
+                    .Input(HardwareContract.AddressProperties(), properties ?? HardwareContract.EmptyAttributes(), "properties");
+                var attributesJson = HardwareContract
+                    .Input(HardwareContract.Attributes(attributes), attributes ?? HardwareContract.EmptyAttributes(), "attributes");
                 HardwareContract.Address(ioType, startAddress, true);
                 HardwareContract.RequireProject(_service.HasProject);
-                return UpdateDeviceAddress(devicePathJson, itemPathJson, ioType, startAddress, propertiesJson, attributesJson, softwarePath, processImageObName, dryRun);
+                return UpdateDeviceAddress(devicePathJson, itemPathJson, ioType, startAddress, propertiesJson, attributesJson, softwarePath, processImageObName,
+                        dryRun);
             }, write: !dryRun, current: false);
 
         public ResponseMessage UpdateDeviceAddress(
@@ -305,7 +319,8 @@ namespace TiaMcpServer.ModelContextProtocol
             string softwarePath="",
             [Description("processImageObName: exact name of the OB the process image partition is assigned to ('' = automatic).")] string processImageObName="",
             bool dryRun=true)
-            => _service.UpdateDeviceAddress(devicePathJson,itemPathJson,ioType,startAddress,propertiesJson,attributesJson,softwarePath,processImageObName,dryRun);
+            => _service
+                .UpdateDeviceAddress(devicePathJson,itemPathJson,ioType,startAddress,propertiesJson,attributesJson,softwarePath,processImageObName,dryRun);
 
         [McpServerTool(Name = "GetDeviceIpAddress"), Description(
             "[L1][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +

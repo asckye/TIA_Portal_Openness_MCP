@@ -5,9 +5,12 @@ namespace TiaMcp.FoundationHost;
 
 internal sealed class HostOptions
 {
-    internal const string WorkerTimeoutHelp = "All eight releases (V14 SP1-V21) share worker timeout budgets: default 120 s, firstAttach per generation 300 s, compile/transfer/importExport/archive/libraryUpdate 1800 s. "
+    internal const string WorkerTimeoutHelp =
+        "All eight releases (V14 SP1-V21) share worker timeout budgets: default 120 s, firstAttach per generation 300 s, " +
+        "compile/transfer/importExport/archive/libraryUpdate 1800 s. "
         + "--worker-timeout-seconds <seconds> sets the default. --worker-timeout-config <file> reads a JSON object of category names to seconds (0, 86400]. "
-        + "TIA_MCP_WORKER_TIMEOUTS uses the same JSON and takes precedence over the file. Previews and reads use default; Disconnect keeps its bounded shutdown wait. "
+        + "TIA_MCP_WORKER_TIMEOUTS uses the same JSON and takes precedence over the file. Previews and reads use default; Disconnect keeps its bounded " +
+            "shutdown wait. "
         + "All eight releases use the standalone PLC worker. --worker-exe selects a development worker. "
         + "Cancellation before dispatch returns CANCELLED; after dispatch the host waits for the real result.";
     public required string ReleaseKey { get; init; }
@@ -38,7 +41,8 @@ internal sealed class HostOptions
     internal static void RejectEngineOptions(string[] args, string directory)
     {
         if (args.Any(arg => arg.StartsWith("--engine-", StringComparison.OrdinalIgnoreCase)))
-            throw new ArgumentException("Engine worker options are retired. Use --release-key <key>; all releases use PlcWorker. Use --worker-exe <path> for a development worker.");
+            throw new ArgumentException("Engine worker options are retired. Use --release-key <key>; all releases use PlcWorker. Use --worker-exe <path> for " +
+                "a development worker.");
     }
 
     public static HostOptions Parse(string[] args, string directory)
@@ -48,7 +52,11 @@ internal sealed class HostOptions
         string bundleRoot = TiaOpenness.Shared.BundleLayout.RequireRoot(directory, explicitRoot);
         var options = new Dictionary<string, string>(StringComparer.Ordinal);
         var flags = new HashSet<string>(StringComparer.Ordinal);
-        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command", "--operator-owner", "--catalog-tools-list", "--catalog-package", "--catalog-generated-at" };
+        var valued = new[] {
+            "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key",
+                "--logging", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command", "--operator-owner", "--catalog-tools-list",
+                "--catalog-package", "--catalog-generated-at"
+        };
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] is "--native-session" or "--offline" or "--catalog" or "--with-ui" or "--plc-worker") { flags.Add(args[i]); continue; }
@@ -70,7 +78,11 @@ internal sealed class HostOptions
             TiaVersionCatalog.RequireMatchingEngine(release, Value("--tia-major-version"));
         var version = TiaVersionCatalog.RequireRunnable(release);
         int timeout = 120;
-        if (options.ContainsKey("--worker-timeout-seconds") && (!int.TryParse(Value("--worker-timeout-seconds"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out timeout) || timeout <= 0))
+        if (options.ContainsKey("--worker-timeout-seconds")
+                && (!int
+                    .TryParse(Value("--worker-timeout-seconds"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                        out timeout)
+                    || timeout <= 0))
             throw new ArgumentException("--worker-timeout-seconds must be positive.");
         string profile = Value("--profile", Environment.GetEnvironmentVariable("TIA_MCP_PROFILE") ?? "lite").Trim().ToLowerInvariant();
         profile = profile is "full" or "all" ? "full" : "lite";
@@ -79,7 +91,10 @@ internal sealed class HostOptions
         int? operatorOwner = null;
         if (options.ContainsKey("--operator-owner"))
         {
-            if (!int.TryParse(Value("--operator-owner"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int pid) || pid <= 0 || transport == "stdio")
+            if (!int
+                    .TryParse(Value("--operator-owner"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                        out int pid)
+                    || pid <= 0 || transport == "stdio")
                 throw new ArgumentException("--operator-owner requires a positive Workbench PID and http or operator transport.");
             operatorOwner = pid;
         }
@@ -88,7 +103,8 @@ internal sealed class HostOptions
         var key = Value("--http-api-key");
         if (transport == "http")
         {
-            if (!Uri.TryCreate(prefix, UriKind.Absolute, out var uri) || uri.Scheme != "http" || uri.AbsolutePath != "/" || !System.Net.IPAddress.TryParse(uri.Host, out _) || uri.Query.Length != 0)
+            if (!Uri.TryCreate(prefix, UriKind.Absolute, out var uri) || uri.Scheme != "http" || uri.AbsolutePath != "/" || !System.Net.IPAddress
+                    .TryParse(uri.Host, out _) || uri.Query.Length != 0)
                 throw new ArgumentException("HTTP prefix must be an explicit IP address and port at the root path.");
             if (string.IsNullOrWhiteSpace(key) || key.Any(char.IsControl)) throw new ArgumentException("HTTP requires a nonempty --http-api-key.");
         }
@@ -119,8 +135,10 @@ internal sealed class HostOptions
             // The same bundled worker path for all eight releases (runtime/vK/worker), as for V14 SP1-V19 before.
             WorkerExe = Value("--worker-exe", TiaOpenness.Shared.BundleLayout.WorkerPath(bundleRoot, release)),
             BundledWorker = !options.ContainsKey("--worker-exe"),
-            ApiDirectory = api, ApiDirectorySource = apiSource, PublicApiOption = !string.IsNullOrWhiteSpace(Value("--public-api")), NativeEnabled = !flags.Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key,
-            CatalogToolsList = options.GetValueOrDefault("--catalog-tools-list"), CatalogPackage = Value("--catalog-package"), CatalogGeneratedAt = options.GetValueOrDefault("--catalog-generated-at")
+            ApiDirectory = api, ApiDirectorySource = apiSource, PublicApiOption = !string.IsNullOrWhiteSpace(Value("--public-api")), NativeEnabled = !flags
+                .Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key,
+            CatalogToolsList = options.GetValueOrDefault("--catalog-tools-list"), CatalogPackage = Value("--catalog-package"), CatalogGeneratedAt = options
+                .GetValueOrDefault("--catalog-generated-at")
         };
     }
 }

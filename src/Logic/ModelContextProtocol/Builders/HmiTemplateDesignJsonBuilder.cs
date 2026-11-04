@@ -69,7 +69,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     foreach (var prop in source)
                     {
                         if (prop.Key.Equals("FontSize", StringComparison.OrdinalIgnoreCase)) continue;
-                        if (itemType.Equals("Text", StringComparison.OrdinalIgnoreCase) && prop.Key.Equals("BackColor", StringComparison.OrdinalIgnoreCase)) continue;
+                        if (itemType.Equals("Text", StringComparison.OrdinalIgnoreCase) && prop.Key.Equals("BackColor", StringComparison.OrdinalIgnoreCase))
+                            continue;
                         executionProps[prop.Key] = prop.Value?.DeepClone();
                     }
                     if (executionProps.Count > 0)

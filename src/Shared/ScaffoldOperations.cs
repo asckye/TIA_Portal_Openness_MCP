@@ -8,7 +8,8 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal static class ScaffoldOperations
     {
-        internal static void ApplyScaffoldPlcElements(TiaMcpServer.Siemens.Services.ProjectLifecyclePortService service, JsonNode root, string plcName, ResponseScaffold resp)
+        internal static void ApplyScaffoldPlcElements(TiaMcpServer.Siemens.Services.ProjectLifecyclePortService service, JsonNode root, string plcName,
+                ResponseScaffold resp)
         {
             void Step(string name, string status, string? detail = null)
                 => resp.Steps.Add(new ScaffoldStep { Step = name, Status = status, Detail = detail });
@@ -68,7 +69,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (string.IsNullOrWhiteSpace(hmiPath))
             {
-                Step("hmiResolve", "failed", $"could not resolve HMI software path (tried: {string.Join(", ", candidates.Where(x => !string.IsNullOrWhiteSpace(x)))})");
+                Step("hmiResolve", "failed",
+                        $"could not resolve HMI software path (tried: {string.Join(", ", candidates.Where(x => !string.IsNullOrWhiteSpace(x)))})");
                 resp.Ok = false;
             }
             else
@@ -99,7 +101,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     var dt = IS(item, "hmiDataType", "Bool");
                     var plcTag = IS(item, "plcTag");
                     var address = IS(item, "address");
-                    try { service.EnsureUnifiedHmiTag(hmiPath, tagTable, tagName, dt, plcName, plcTag, connectionName, address, true); Step("hmiTag", "ok", tagName); }
+                    try {
+                        service.EnsureUnifiedHmiTag(hmiPath, tagTable, tagName, dt, plcName, plcTag, connectionName, address, true);
+                        Step("hmiTag", "ok", tagName);
+                    }
                     catch (Exception ex) { Step("hmiTag", "failed", $"{tagName}: {ex.Message}"); resp.Ok = false; }
                 }
             }

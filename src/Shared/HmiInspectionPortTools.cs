@@ -23,7 +23,11 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly HmiInspectionPortService _hmiInspection;
         public HmiInspectionPortTools(HmiInspectionPortService service) => _hmiInspection = service;
-        [McpServerTool(Name="GetHmiScreenSnapshot"),Description("[L2][HMI]Read a bounded screen object graph. Prefer absolute /Group/Screen paths to avoid a project-wide name search. apiCallSuccess and dataComplete are separate; inspect failures, quarantined getters and limits. Connection faults stop traversal and block further HMI step operations until an explicit successful AttachOpenProject; inspect logs first, do not automatically rebind/retry. Not a restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use GetExportContent.")]
+        [McpServerTool(Name="GetHmiScreenSnapshot"),
+                Description("[L2][HMI]Read a bounded screen object graph. Prefer absolute /Group/Screen paths to avoid a project-wide name search. " +
+                "apiCallSuccess and dataComplete are separate; inspect failures, quarantined getters and limits. Connection faults stop traversal and block " +
+                "further HMI step operations until an explicit successful AttachOpenProject; inspect logs first, do not automatically rebind/retry. Not a " +
+                "restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use GetExportContent.")]
         public CallToolResult ReadHmiScreenSnapshotV4(
             string softwarePath,
             string screenPath,
@@ -38,9 +42,12 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("maxNodes: cap on nodes returned.")] int maxNodes=2000)
         =>_hmiInspection.ReadHmiScreenSnapshot(softwarePath,screenPath,maxDepth,maxNodes);
 
-        [McpServerTool(Name="ListHmiScreenPaths"),Description("[L2][HMI]List full screen group paths, including nested folders. Paths start with / and URI-escape each name segment. offset/limit paginate the list; exact paths disambiguate same-named screens.")]
+        [McpServerTool(Name="ListHmiScreenPaths"),
+                Description("[L2][HMI]List full screen group paths, including nested folders. Paths start with / and URI-escape each name segment. " +
+                "offset/limit paginate the list; exact paths disambiguate same-named screens.")]
         public CallToolResult ListHmiScreenPathsV4(string softwarePath,int offset=0,int limit=100)
-            => HmiInspectionContract.Run("ListHmiScreenPaths", false, false, () => ListHmiScreenPaths(softwarePath, offset, limit), offset: offset, pageSize: limit);
+            => HmiInspectionContract
+                .Run("ListHmiScreenPaths", false, false, () => ListHmiScreenPaths(softwarePath, offset, limit), offset: offset, pageSize: limit);
 
         public ResponseMessage ListHmiScreenPaths(string softwarePath,int offset=0,int limit=100)
         =>_hmiInspection.ListHmiScreenPaths(softwarePath,offset,limit);

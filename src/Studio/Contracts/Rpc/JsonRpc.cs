@@ -46,7 +46,9 @@ namespace TiaOpenness.Contracts.Rpc
     {
         [JsonPropertyName("jsonrpc")] public string JsonRpc { get; set; } = "2.0";
         [JsonPropertyName("id")] public string Id { get; set; }
-        [JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonConverter(typeof(BridgeJson.PresentJsonElementConverter))] public JsonElement? Result { get; set; }
+        [JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull),
+                JsonConverter(typeof(BridgeJson.PresentJsonElementConverter))] public JsonElement
+            ? Result { get; set; }
         [JsonPropertyName("error"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public RpcError Error { get; set; }
 
         public static RpcResponse Ok(string id, JsonElement? result)

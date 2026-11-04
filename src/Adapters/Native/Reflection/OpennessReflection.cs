@@ -44,7 +44,8 @@ namespace TiaMcp.Adapters.Reflection
             };
         }
 
-        public OpennessObservation DescribeObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "", int maxMembers = 200)
+        public OpennessObservation DescribeObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "", int maxMembers =
+                200)
         {
             var o = _session.ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
@@ -86,7 +87,8 @@ namespace TiaMcp.Adapters.Reflection
             var o = _session.ResolveObject(objectKind, objectPath, softwarePath);
             var read = PropertyPathReader.Read(o, propertyPath);
             if (!read.Success) return new OpennessObservation {
-                Message = read.Status + (o == null ? _session.PlcLookupPathsSuffix ?? string.Empty : string.Empty), ObjectKind = objectKind, ObjectPath = objectPath, Meta = read.Metadata() };
+                Message = read.Status + (o == null ? _session.PlcLookupPathsSuffix ?? string.Empty : string.Empty), ObjectKind = objectKind, ObjectPath =
+                    objectPath, Meta = read.Metadata() };
             var v = read.Value;
             var vt = v?.GetType();
 
@@ -118,7 +120,8 @@ namespace TiaMcp.Adapters.Reflection
             };
         }
 
-        public OpennessObservation ListObjectChildren(string objectKind, string objectPath, string collectionProperty, string softwarePath = "", int limit = 200)
+        public OpennessObservation ListObjectChildren(string objectKind, string objectPath, string collectionProperty, string softwarePath = "", int limit =
+                200)
         {
             var o = _session.ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
@@ -163,7 +166,8 @@ namespace TiaMcp.Adapters.Reflection
             };
         }
 
-        private OpennessObservation InvokeOnInstance(object instance, string resultKind, string resultPath, string methodName, HardwareScalar[]? args, bool allowWrite)
+        private OpennessObservation InvokeOnInstance(object instance, string resultKind, string resultPath, string methodName, HardwareScalar[]? args,
+                bool allowWrite)
         {
             var hardDenyReason = GetHardDeniedReflectionReason(instance, resultKind, resultPath, methodName, args?.Length ?? 0);
             if (!string.IsNullOrWhiteSpace(hardDenyReason))
@@ -320,13 +324,15 @@ namespace TiaMcp.Adapters.Reflection
 
             if (mutatingPrefixes.Any(p => (methodName ?? "").StartsWith(p, StringComparison.OrdinalIgnoreCase)))
             {
-                return "Denied by safety policy: online/watch/monitor surfaces are read-only. The MCP server may read current status only and must not modify watch-table objects or PLC values.";
+                return "Denied by safety policy: online/watch/monitor surfaces are read-only. The MCP server may read current status only and must not " +
+                    "modify watch-table objects or PLC values.";
             }
 
             return null;
         }
 
-        public OpennessObservation InvokeObject(string objectKind, string objectPath, string methodName, HardwareScalar[]? args = null, string softwarePath = "", bool allowWrite = false)
+        public OpennessObservation InvokeObject(string objectKind, string objectPath, string methodName, HardwareScalar[]? args = null, string softwarePath =
+                "", bool allowWrite = false)
         {
             _session.DenyCrossReferenceReflection(null, methodName);
             var o = _session.ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? true : false);
@@ -341,7 +347,8 @@ namespace TiaMcp.Adapters.Reflection
             return InvokeOnInstance(o, objectKind, objectPath, methodName, args, allowWrite);
         }
 
-        public OpennessObservation DescribeService(string objectKind, string objectPath, string serviceTypeSuffix, string softwarePath = "", int maxMembers = 200)
+        public OpennessObservation DescribeService(string objectKind, string objectPath, string serviceTypeSuffix, string softwarePath = "", int maxMembers =
+                200)
         {
             _session.DenyCrossReferenceReflection(serviceTypeSuffix, null);
             if ((serviceTypeSuffix ?? string.Empty).IndexOf("Force", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -407,7 +414,8 @@ namespace TiaMcp.Adapters.Reflection
             };
         }
 
-        public OpennessObservation InvokeService(string objectKind, string objectPath, string serviceTypeSuffix, string methodName, HardwareScalar[]? args = null, string softwarePath = "", bool allowWrite = false)
+        public OpennessObservation InvokeService(string objectKind, string objectPath, string serviceTypeSuffix, string methodName, HardwareScalar[]? args =
+                null, string softwarePath = "", bool allowWrite = false)
         {
             _session.DenyCrossReferenceReflection(serviceTypeSuffix, methodName);
             if ((serviceTypeSuffix ?? string.Empty).IndexOf("Force", StringComparison.OrdinalIgnoreCase) >= 0)

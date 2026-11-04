@@ -17,14 +17,16 @@ namespace TiaMcpServer.Siemens
             if (!projectLibrary) throw new NotSupportedException("Library document import is supported only in the project library.");
             RequireOneOf(importOptions, ImportOptions, "importOptions");
             if (major == 20 && importOptions != "None")
-                throw new NotSupportedException("V20 library document import supports LibraryImportOptions.None only; inactive-culture options are unsupported.");
+                throw new NotSupportedException("V20 library document import supports LibraryImportOptions.None only; inactive-culture options are " +
+                    "unsupported.");
             if (xmlExists && sdExists)
                 throw new ArgumentException("Both .xml and .s7dcl exist with the same basename; use a directory with one unambiguous document set.");
         }
 
         // Enum member names of Siemens.Engineering.Library(.Types/.Compare) in the V20/V21 PublicAPI (identical in both).
         internal static readonly string[] UpdateCheckModes = { "ReportOutOfDateOnly", "ReportOutOfDateAndUpToDate" };
-        internal static readonly string[] ForceUpdateModes = { "SetOnlyHigherUpdatedVersionAsDefault", "ForceSetAnyUpdatedVersionAsDefault", "NoDefaultVersionChange" };
+        internal static readonly string[] ForceUpdateModes = {
+            "SetOnlyHigherUpdatedVersionAsDefault", "ForceSetAnyUpdatedVersionAsDefault", "NoDefaultVersionChange" };
         internal static readonly string[] DeleteUnusedVersionsModes = { "AutomaticallyDelete", "DoNotDelete" };
         internal static readonly string[] StructureConflictResolutionModes = { "UpdateStructure", "RetainStructure", "CancelIfStructureConflicts" };
         internal static readonly string[] HarmonizeOptions = { "HarmonizeNames", "HarmonizePaths" }; // None is refused by TIA; the two flags combine
@@ -32,8 +34,12 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] ArchivationModes = { "None", "Compressed", "DiscardRestorableData", "DiscardRestorableDataAndCompressed" };
         internal static readonly string[] CreateOptions = { "None", "Override" };
         internal static readonly string[] ImportOptions = { "None", "SkipInactiveCultures", "ActivateInactiveCultures" };
-        internal static readonly string[] ConsistencyStatuses = { "None", "Consistent", "DefaultVersionInconsistent", "DuplicateVersionInconsistent", "NonDefaultVersionInstantiation", "MultipleVersionsInstantiationInSameDevice" };
-        internal static readonly string[] CompareStates = { "ContainerContentsDifferent", "ContainerContentsIdentical", "ObjectsDifferent", "LeftMissing", "RightMissing", "ObjectsIdentical" };
+        internal static readonly string[] ConsistencyStatuses = {
+            "None", "Consistent", "DefaultVersionInconsistent", "DuplicateVersionInconsistent", "NonDefaultVersionInstantiation",
+                "MultipleVersionsInstantiationInSameDevice"
+        };
+        internal static readonly string[] CompareStates = {
+            "ContainerContentsDifferent", "ContainerContentsIdentical", "ObjectsDifferent", "LeftMissing", "RightMissing", "ObjectsIdentical" };
         internal static readonly string[] DetailStatuses = { "NotCompared", "ObjectsDifferent", "ObjectsIdentical" };
 
         internal static readonly string[] TypeActions = { "update", "delete", "updateLibrary", "updateProject" };
@@ -51,13 +57,17 @@ namespace TiaMcpServer.Siemens
             for (Type? current = type; current != null; current = current.BaseType)
                 if (current.FullName == "Siemens.Engineering.HmiUnified.Library.ScriptModuleType")
                     throw new PortalException(PortalErrorCode.NativeCrashRiskBlocked,
-                        "V21 Unified ScriptModuleType.Name write blocked before any property setter: a reported native channel failure terminated TIA during this operation. " +
-                        "No rename or automatic workaround was attempted. Retain the existing type name until the affected TIA build is diagnosed; do not retry via SetAttribute.");
+                        "V21 Unified ScriptModuleType.Name write blocked before any property setter: a reported native channel failure terminated TIA during " +
+                            "this operation. "
+                            +
+                        "No rename or automatic workaround was attempted. Retain the existing type name until the affected TIA build is diagnosed; do not " +
+                            "retry via SetAttribute.");
         }
 
         internal static void ValidateTypeWriteProtection(bool isWriteProtected)
         {
-            if (isWriteProtected) throw new NotSupportedException("Library type property writes require a non-write-protected global library. No property setter was called.");
+            if (isWriteProtected)
+                throw new NotSupportedException("Library type property writes require a non-write-protected global library. No property setter was called.");
         }
 
         internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
@@ -79,21 +89,26 @@ namespace TiaMcpServer.Siemens
         }
         internal static Selection[] ParseSelection(string json)
         {
-            var array = JsonNode.Parse(string.IsNullOrWhiteSpace(json) ? "[]" : json) as JsonArray ?? throw new ArgumentException("selectionJson must be a JSON array.");
-            if (array.Count == 0) throw new ArgumentException("selectionJson must select at least one type or folder (use [{\"folder\":\"\"}] for the whole Types folder).");
+            var array = JsonNode.Parse(string.IsNullOrWhiteSpace(json) ? "[]" : json) as JsonArray
+                ?? throw new ArgumentException("selectionJson must be a JSON array.");
+            if (array.Count == 0)
+                throw new ArgumentException("selectionJson must select at least one type or folder (use [{\"folder\":\"\"}] for the whole Types folder).");
             if (array.Count > 200) throw new ArgumentException("selectionJson: at most 200 entries.");
             var result = new List<Selection>();
             foreach (var node in array)
             {
                 var obj = node as JsonObject ?? throw new ArgumentException("selectionJson entries must be objects with a single 'type' or 'folder' key.");
-                if (obj.Count != 1 || !(obj.ContainsKey("type") || obj.ContainsKey("folder"))) throw new ArgumentException("selectionJson entries must be {\"type\": path} or {\"folder\": path}.");
+                if (obj.Count != 1 || !(obj.ContainsKey("type") || obj.ContainsKey("folder")))
+                    throw new ArgumentException("selectionJson entries must be {\"type\": path} or {\"folder\": path}.");
                 bool folder = obj.ContainsKey("folder");
-                var path = (obj[folder ? "folder" : "type"] as JsonValue)?.TryGetValue<string>(out var s) == true ? s!.Trim().Trim('/') : throw new ArgumentException("selectionJson paths must be strings.");
+                var path = (obj[folder ? "folder" : "type"] as JsonValue)?.TryGetValue<string>(out var s) == true ? s!.Trim().Trim('/')
+                    : throw new ArgumentException("selectionJson paths must be strings.");
                 if (!folder && path.Length == 0) throw new ArgumentException("selectionJson: a type entry needs a non-empty path.");
                 if (path.Length > 0) EngineeringPath.Parts(path);
                 result.Add(new Selection(folder, path));
             }
-            if (result.Select(s => (s.IsFolder ? "F:" : "T:") + s.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() != result.Count) throw new ArgumentException("selectionJson: duplicate entry.");
+            if (result.Select(s => (s.IsFolder ? "F:" : "T:") + s.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() != result.Count)
+                throw new ArgumentException("selectionJson: duplicate entry.");
             return result.ToArray();
         }
         internal static string[] ParseScopes(string json)
@@ -111,13 +126,18 @@ namespace TiaMcpServer.Siemens
             string forceUpdateMode, string deleteUnusedVersionsMode, string structureConflictResolutionMode, string cleanUpMode)
         {
             RequireOneOf(action, SyncActions, "action");
-            RequireOneOf(forceUpdateMode, ForceUpdateModes, "forceUpdateMode"); RequireOneOf(deleteUnusedVersionsMode, DeleteUnusedVersionsModes, "deleteUnusedVersionsMode");
-            RequireOneOf(structureConflictResolutionMode, StructureConflictResolutionModes, "structureConflictResolutionMode"); RequireOneOf(cleanUpMode, CleanUpModes, "cleanUpMode");
+            RequireOneOf(forceUpdateMode, ForceUpdateModes, "forceUpdateMode");
+            RequireOneOf(deleteUnusedVersionsMode, DeleteUnusedVersionsModes, "deleteUnusedVersionsMode");
+            RequireOneOf(structureConflictResolutionMode, StructureConflictResolutionModes, "structureConflictResolutionMode");
+            RequireOneOf(cleanUpMode, CleanUpModes, "cleanUpMode");
             if (action == "updateLibrary")
             {
-                if (string.Equals(libraryName ?? "", targetLibraryName ?? "", StringComparison.Ordinal)) throw new ArgumentException("updateLibrary needs a target library different from the source (empty name = project library).");
+                if (string.Equals(libraryName ?? "", targetLibraryName ?? "", StringComparison.Ordinal))
+                    throw new ArgumentException("updateLibrary needs a target library different from the source (empty name = project library).");
             }
-            if ((action == "updateProject" || action == "harmonizeProject") && scopes.Length == 0) throw new ArgumentException(action + " needs scopeSoftwarePathsJson with at least one exact PLC/HMI software path; a project-wide update without scope is refused.");
+            if ((action == "updateProject" || action == "harmonizeProject") && scopes.Length == 0)
+                throw new ArgumentException(action
+                    + " needs scopeSoftwarePathsJson with at least one exact PLC/HMI software path; a project-wide update without scope is refused.");
             if (selection.Length == 0) throw new ArgumentException("selectionJson is required.");
         }
         internal static void ValidateTypeRequest(string action, JsonObject properties, string targetLibraryName, string libraryName, string[] scopes)
@@ -128,22 +148,30 @@ namespace TiaMcpServer.Siemens
                 if (properties.Count == 0) throw new ArgumentException("update needs propertiesJson with Name, DoNotUse and/or SetForUpdate.");
                 foreach (var key in properties.Select(p => p.Key)) RequireOneOf(key, TypeEditableProperties, "propertiesJson");
                 if (properties.ContainsKey("SetForUpdate") && string.IsNullOrEmpty(libraryName))
-                    throw new NotSupportedException("SetForUpdate cannot be written on project-library types (even when setting true). No property setter was called.");
+                    throw new NotSupportedException("SetForUpdate cannot be written on project-library types (even when setting true). No property setter " +
+                        "was called.");
             }
             else if (properties.Count != 0) throw new ArgumentException("propertiesJson applies to action=update only.");
-            if (action == "updateLibrary" && string.Equals(libraryName ?? "", targetLibraryName ?? "", StringComparison.Ordinal)) throw new ArgumentException("updateLibrary needs a target library different from the source.");
-            if (action == "updateProject" && scopes.Length == 0) throw new ArgumentException("updateProject needs scopeSoftwarePathsJson with at least one exact software path.");
+            if (action == "updateLibrary" && string.Equals(libraryName ?? "", targetLibraryName ?? "", StringComparison.Ordinal))
+                throw new ArgumentException("updateLibrary needs a target library different from the source.");
+            if (action == "updateProject" && scopes.Length == 0)
+                throw new ArgumentException("updateProject needs scopeSoftwarePathsJson with at least one exact software path.");
         }
         internal static void ValidateCompareRequest(string kind, string leftPath, string rightPath, string leftVersion, string rightVersion)
         {
             RequireOneOf(kind, CompareKinds, "kind");
-            if (string.IsNullOrWhiteSpace(leftPath) || string.IsNullOrWhiteSpace(rightPath)) throw new ArgumentException("leftPath and rightPath are required (exact relative paths).");
-            if (kind == "version" && (string.IsNullOrWhiteSpace(leftVersion) || string.IsNullOrWhiteSpace(rightVersion))) throw new ArgumentException("kind=version needs leftVersion and rightVersion (Major.Minor.Build).");
-            if (kind != "version" && (!string.IsNullOrWhiteSpace(leftVersion) || !string.IsNullOrWhiteSpace(rightVersion))) throw new ArgumentException("leftVersion/rightVersion apply to kind=version only.");
+            if (string.IsNullOrWhiteSpace(leftPath) || string.IsNullOrWhiteSpace(rightPath))
+                throw new ArgumentException("leftPath and rightPath are required (exact relative paths).");
+            if (kind == "version" && (string.IsNullOrWhiteSpace(leftVersion) || string.IsNullOrWhiteSpace(rightVersion)))
+                throw new ArgumentException("kind=version needs leftVersion and rightVersion (Major.Minor.Build).");
+            if (kind != "version" && (!string.IsNullOrWhiteSpace(leftVersion) || !string.IsNullOrWhiteSpace(rightVersion)))
+                throw new ArgumentException("leftVersion/rightVersion apply to kind=version only.");
         }
         internal static void ValidateArchiveName(string archiveName)
         {
-            if (string.IsNullOrWhiteSpace(archiveName) || archiveName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0 || archiveName.Length > 128) throw new ArgumentException("archiveName must be a plain file name (extension optional; TIA adds .zalXX for compressed modes when none is given).");
+            if (string.IsNullOrWhiteSpace(archiveName) || archiveName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0 || archiveName.Length > 128)
+                throw new ArgumentException("archiveName must be a plain file name (extension optional; TIA adds .zalXX for compressed modes when none is " +
+                "given).");
         }
         internal static void ValidateBounds(int maxDepth, int maxItems)
         {
@@ -158,8 +186,11 @@ namespace TiaMcpServer.Siemens
         internal const string ProjectLibraryLabel = "ProjectLibrary";
         internal static readonly string[] UserGlobalLibraryOnlyActions = { "save", "saveAs", "close", "archive" };
         internal static string NoTypeFolderMessage(string libraryClass, string operation)
-            => libraryClass + " has no TypeFolder (system global libraries expose master copies only); " + operation + " needs a library with types. Nothing was called on TIA.";
+            => libraryClass + " has no TypeFolder (system global libraries expose master copies only); " + operation
+                + " needs a library with types. Nothing was called on TIA.";
         internal static string UserGlobalLibraryOnlyMessage(string action, string libraryName, string libraryClass)
-            => "'" + libraryName + "' is a " + libraryClass + "; action=" + action + " exists only on UserGlobalLibrary in the Openness API (Close / Save / SaveAs / Archive / CleanUpLibrary). System and corporate libraries stay open until TIA closes them.";
+            => "'" + libraryName + "' is a " + libraryClass + "; action=" + action
+                + " exists only on UserGlobalLibrary in the Openness API (Close / Save / SaveAs / Archive / CleanUpLibrary). System and corporate libraries " +
+                "stay open until TIA closes them.";
     }
 }

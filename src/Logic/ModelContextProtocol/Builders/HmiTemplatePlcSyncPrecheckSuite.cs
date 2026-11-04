@@ -286,7 +286,9 @@ namespace TiaMcpServer.ModelContextProtocol
             plcType = NormalizeDataType(plcType);
             if (string.IsNullOrWhiteSpace(hmiType) || string.IsNullOrWhiteSpace(plcType)) return true;
             if (string.Equals(hmiType, plcType, StringComparison.OrdinalIgnoreCase)) return true;
-            var ints = new HashSet<string>(new[] { "SInt", "USInt", "Byte", "Int", "UInt", "Word", "DInt", "UDInt", "DWord", "LInt", "ULInt", "LWord" }, StringComparer.OrdinalIgnoreCase);
+            var ints =
+                new HashSet<string>(new[] { "SInt", "USInt", "Byte", "Int", "UInt", "Word", "DInt", "UDInt", "DWord", "LInt", "ULInt", "LWord" }, StringComparer
+                    .OrdinalIgnoreCase);
             var reals = new HashSet<string>(new[] { "Real", "LReal" }, StringComparer.OrdinalIgnoreCase);
             return (ints.Contains(hmiType) && ints.Contains(plcType)) || (reals.Contains(hmiType) && reals.Contains(plcType));
         }

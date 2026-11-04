@@ -52,7 +52,8 @@ namespace TiaOpenness.Shared
             var original = JsonNode.Parse(arguments)!.AsObject();
             var args = ApprovalDisplayPayload.RedactArguments(original)!.AsObject();
             var target = JsonNode.Parse(identity ?? "{}")!.AsObject();
-            foreach (string key in new[] { "expectedProjectFile", "projectFile", "projectPath", "projectName", "processId", "processStartUtc", "workspaceRoot" })
+            foreach (string key in new[] { "expectedProjectFile", "projectFile", "projectPath", "projectName", "processId", "processStartUtc", "workspaceRoot"
+                })
                 if (original[key] != null) target["requested:" + key] = original[key]!.DeepClone();
             string digest = Hash(Canonical(new JsonObject { ["releaseKey"] = release, ["tool"] = tool,
                 ["identity"] = ApprovalDisplayPayload.RedactArguments(target), ["arguments"] = args.DeepClone() }));
@@ -133,7 +134,8 @@ namespace TiaOpenness.Shared
                 || string.IsNullOrWhiteSpace(ReleaseKey) || string.IsNullOrWhiteSpace(Tool)
                 || !IsHash(PlanHash) || !IsHash(ArgumentDigest)
                 || TimeoutSeconds < 1 || TimeoutSeconds > 3600 || Deadline <= DateTimeOffset.UtcNow
-                || Deadline > DateTimeOffset.UtcNow.AddSeconds(TimeoutSeconds + 5) || Operations.Length == 0 || Operations.Length > (Kind == "plan" ? 10000 : 50)
+                || Deadline > DateTimeOffset.UtcNow.AddSeconds(TimeoutSeconds + 5) || Operations.Length == 0 || Operations
+                    .Length > (Kind == "plan" ? 10000 : 50)
                 || Kind == "plan" && (Tool != "ApplyGenerationPlan" || PlanJson == null))
                 throw new InvalidDataException("Invalid approval request.");
             using (var project = JsonDocument.Parse(ProjectIdentity))
@@ -145,9 +147,11 @@ namespace TiaOpenness.Shared
                 var plan = JsonNode.Parse(PlanJson!)!.AsObject();
                 if ((string?)plan["planHash"] != PlanHash) throw new InvalidDataException("Approval plan hash differs.");
 #if TIA_GENERATION_PLANNER
-                if (TiaMcp.Logic.Generation.GenerationDocuments.PlanHash(PlanJson!) != PlanHash) throw new InvalidDataException("Approval plan content differs.");
+                if (TiaMcp.Logic.Generation.GenerationDocuments.PlanHash(PlanJson!) != PlanHash)
+                    throw new InvalidDataException("Approval plan content differs.");
 #else
-                if (PlcRendering::TiaMcp.Logic.Generation.GenerationDocuments.PlanHash(PlanJson!) != PlanHash) throw new InvalidDataException("Approval plan content differs.");
+                if (PlcRendering::TiaMcp.Logic.Generation.GenerationDocuments.PlanHash(PlanJson!) != PlanHash)
+                    throw new InvalidDataException("Approval plan content differs.");
 #endif
             }
         }
@@ -210,7 +214,8 @@ namespace TiaOpenness.Shared
                 throw new InvalidOperationException("Final arguments or review differ from the approved step.");
             var previous = Current.Value;
             Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = step.Tool,
-                Digest = PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(arguments))), Approval = approval, SessionKey = sessionKey, RunId = runId };
+                Digest = PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(arguments))), Approval = approval, SessionKey =
+                    sessionKey, RunId = runId };
             return new Scope(() => Current.Value = previous);
         }
 #endif
@@ -225,7 +230,8 @@ namespace TiaOpenness.Shared
         {
             var grant = Current.Value;
             if (grant == null) return null;
-            bool matches = !grant.Used && grant.Release == request.ReleaseKey && grant.Tool == request.Tool && grant.Digest == request.InvocationArgumentsDigest;
+            bool matches = !grant.Used && grant.Release == request.ReleaseKey && grant.Tool == request.Tool && grant.Digest == request
+                .InvocationArgumentsDigest;
             grant.Used = true;
             return new ApprovalOutcome(request, grant.Approval.Disabled, matches ? null : "denied", true);
         }
@@ -312,7 +318,10 @@ namespace TiaOpenness.Shared
                     if (!fields.Add(field.Name)) throw new InvalidDataException("Duplicate approval field.");
                 string[] required = typeof(T) == typeof(ApprovalDecision)
                     ? new[] { "Version", "RequestId", "PlanHash", "ArgumentDigest", "Decision" }
-                    : new[] { "Version", "Kind", "RequestId", "Host", "ReleaseKey", "Tool", "PlanHash", "ArgumentDigest", "ProjectIdentity", "ParametersJson", "Operations", "TimeoutSeconds", "Deadline" };
+                    : new[] {
+                        "Version", "Kind", "RequestId", "Host", "ReleaseKey", "Tool", "PlanHash", "ArgumentDigest", "ProjectIdentity", "ParametersJson",
+                            "Operations", "TimeoutSeconds", "Deadline"
+                    };
                 if (required.Any(field => !fields.Contains(field))) throw new InvalidDataException("Missing approval field.");
                 if (typeof(T) == typeof(PendingApproval))
                 {

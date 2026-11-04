@@ -91,7 +91,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             // 以运行时解析到的安装根为准（CLI 覆盖 > TiaPortalLocation 环境变量 > 注册表 > 默认目录），不再硬编码开发机路径。
             var probe = TiaMcpServer.Siemens.Engineering.ProbeOpennessAssemblies();
-            var publicApi = probe.ResolvedDll != null ? Path.GetDirectoryName(probe.ResolvedDll) ?? "" : probe.InstallPath != null ? Path.Combine(probe.InstallPath, "PublicAPI") : "";
+            var publicApi = probe.ResolvedDll != null ? Path.GetDirectoryName(probe.ResolvedDll) ?? "" : probe.InstallPath != null ? Path
+                .Combine(probe.InstallPath, "PublicAPI") : "";
             var portalExe = probe.InstallPath != null ? Path.Combine(probe.InstallPath, "Bin", "Siemens.Automation.Portal.exe") : "";
             var currentUser = "";
             var groupNames = Array.Empty<string>();
@@ -140,8 +141,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 Step(2, "Add temporary KTP700 Basic PN HMI", "CreateHardwareCatalogDevice(...)", "只使用临时工程硬件。"),
                 Step(3, "Import Classic HMI tag table first", "ImportHmiTagTable(\"HMI_RT_1\", \"\", tagTableXmlPath)", tagPath),
                 Step(4, "Import Classic HMI screen second", "ImportHmiScreen(\"HMI_RT_1\", \"\", screenXmlPath)", screenPath),
-                Step(5, "Read back HMI tags/screens/items", "ListHmiTagTables/ListHmiScreens/DescribeHmiTag/DescribeHmiScreenItem", "确认 tag、ControllerTag、动态绑定和按钮事件。"),
-                Step(6, "Compile/diagnose HMI where public API supports it", "DescribeService/InvokeService guarded compile discovery", "未确认 API 前只允许发现，不允许保存真实工程。"),
+                Step(5, "Read back HMI tags/screens/items", "ListHmiTagTables/ListHmiScreens/DescribeHmiTag/DescribeHmiScreenItem",
+                        "确认 tag、ControllerTag、动态绑定和按钮事件。"),
+                Step(6, "Compile/diagnose HMI where public API supports it", "DescribeService/InvokeService guarded compile discovery",
+                        "未确认 API 前只允许发现，不允许保存真实工程。"),
                 Step(7, "Save temporary project only after readback succeeds", "SaveProject()", "仅临时工程。"));
 
             return new JsonObject
@@ -151,7 +154,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["screenXmlPath"] = screenPath,
                 ["steps"] = steps,
                 ["executionBlockedByDefault"] = true,
-                ["recommendedCli"] = "TiaMcp.Engine.V21.exe --tia-major-version 21 --project-directory <temp> --project-name <probe> --probe-ktp700-basic-hmi-import",
+                ["recommendedCli"] =
+                    "TiaMcp.Engine.V21.exe --tia-major-version 21 --project-directory <temp> --project-name <probe> --probe-ktp700-basic-hmi-import",
                 ["note"] = "当前预检只生成执行计划；真正执行应在临时工程中导入本预检输出的 tag table 与 screen XML，并读回验证。"
             };
         }

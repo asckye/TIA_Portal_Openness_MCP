@@ -23,7 +23,9 @@ namespace TiaMcp.Adapters.Hardware
 
         public static object? Find(object collection, string name)
         {
-            var matches = Items(collection).Where(x => string.Equals(x.GetType().GetProperty("Name")?.GetValue(x)?.ToString(), name, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
+            var matches = Items(collection)
+                .Where(x => string.Equals(x.GetType().GetProperty("Name")?.GetValue(x)?.ToString(), name, StringComparison.OrdinalIgnoreCase)).Take(2)
+                .ToArray();
             if (matches.Length > 1) throw new InvalidOperationException("Ambiguous exact name: " + name);
             return matches.SingleOrDefault();
         }
@@ -92,15 +94,23 @@ namespace TiaMcp.Adapters.Hardware
             var applied = new List<string>(); meta["appliedAttributes"] = applied;
             if (attributes.Count > 1)
             {
-                var pairs = new List<KeyValuePair<string, object>>(); var refused = new List<Dictionary<string, object?>>(); meta["refusedAttributes"] = refused;
+                var pairs = new List<KeyValuePair<string, object>>(); var refused = new List<Dictionary<string, object?>>(); meta["refusedAttributes"] =
+                    refused;
                 foreach (var pair in attributes)
                 {
                     object? current = null; try { current = target.GetAttribute(pair.Key); } catch { /* swallow(probe-optional): An unreadable current value leaves conversion untyped; the native write and readback still validate the requested value. */ }
-                    pairs.Add(new KeyValuePair<string, object>(pair.Key, HardwareAddressingPolicy.ConvertValue(pair.Value, current?.GetType() ?? typeof(object))!));
+                    pairs
+                        .Add(new KeyValuePair<string,
+                            object>(pair.Key, HardwareAddressingPolicy.ConvertValue(pair.Value, current?.GetType() ?? typeof(object))!));
                 }
                 meta["mayHaveChanged"] = true;
 #if PLC_ATTRIBUTE_DELEGATE
-                AttributeDelegate handler = configuration => { AttributeConfiguration problem = configuration; refused.Add(new Dictionary<string, object?> { ["attribute"] = problem.Name, ["kind"] = problem.GetType().Name, ["message"] = problem.Message }); problem.CurrentSelection = AttributeChoiceSelection.Ignore; };
+                AttributeDelegate handler = configuration => {
+                    AttributeConfiguration problem = configuration; refused
+                        .Add(new Dictionary<string, object?> { ["attribute"] = problem.Name, ["kind"] = problem.GetType().Name, ["message"] = problem.Message
+                        });
+                    problem.CurrentSelection = AttributeChoiceSelection.Ignore;
+                };
                 target.SetAttributes(pairs, handler);
 #else
                 // V14 SP1-V17 expose SetAttributes without AttributeDelegate. Preserve
@@ -111,7 +121,9 @@ namespace TiaMcp.Adapters.Hardware
                     catch (Exception ex)
                     {
                         if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)) throw;
-                        refused.Add(new Dictionary<string, object?> { ["attribute"] = pair.Key, ["kind"] = ex.GetType().Name, ["message"] = ex.GetBaseException().Message });
+                        refused
+                            .Add(new Dictionary<string, object?> {
+                                ["attribute"] = pair.Key, ["kind"] = ex.GetType().Name, ["message"] = ex.GetBaseException().Message });
                     }
                 }
 #endif
@@ -120,9 +132,12 @@ namespace TiaMcp.Adapters.Hardware
                 {
                     if (refusedNames.Contains(pair.Key)) continue;
                     applied.Add(pair.Key);
-                    if (!HardwareAddressingPolicy.SameValue(target.GetAttribute(pair.Key), pair.Value)) throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");
+                    if (!HardwareAddressingPolicy.SameValue(target.GetAttribute(pair.Key), pair.Value))
+                        throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");
                 }
-                if (refused.Count > 0) throw new InvalidOperationException("TIA refused " + refused.Count + " attribute(s) (see refusedAttributes); the others were written and read back.");
+                if (refused.Count > 0)
+                    throw new InvalidOperationException("TIA refused " + refused.Count
+                        + " attribute(s) (see refusedAttributes); the others were written and read back.");
                 return;
             }
             foreach (var pair in attributes)
@@ -132,7 +147,8 @@ namespace TiaMcp.Adapters.Hardware
                 meta["mayHaveChanged"] = true; meta["lastAttemptedAttribute"] = pair.Key;
                 target.SetAttribute(pair.Key, value);
                 applied.Add(pair.Key);
-                if (!HardwareAddressingPolicy.SameValue(target.GetAttribute(pair.Key), value)) throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");
+                if (!HardwareAddressingPolicy.SameValue(target.GetAttribute(pair.Key), value))
+                    throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");
             }
         }
     }

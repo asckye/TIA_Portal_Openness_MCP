@@ -20,7 +20,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
 
     public MainViewModel() : this(new McpProjectClient(new McpSessionClient()), new WpfDialogService()) { }
 
-    internal MainViewModel(bool offlineDemo) : this(new McpProjectClient(offlineDemo ? new OfflineSessionClient() : new McpSessionClient()), new WpfDialogService(), offlineDemo) { }
+    internal MainViewModel(bool offlineDemo)
+        : this(new McpProjectClient(offlineDemo ? new OfflineSessionClient() : new McpSessionClient()), new WpfDialogService(), offlineDemo) { }
 
     public MainViewModel(IProjectClient client, IDialogService dialogs, bool offlineDemo = false, IVersionControlClient? versionControl = null)
     {
@@ -34,7 +35,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
             : client is McpProjectClient vcProject
             ? new VersionControlViewModel(new McpVersionControlClient(vcProject), dialogs, Activity, () => null)
             : new VersionControlViewModel(client as IStudioClient ?? new StudioClient(), dialogs, Activity,
-                () => { if (!client.IsRunning) client.Start(false, SelectedReleaseKey); }, () => Engineering.SelectedDevice?.Id, legacyAccess: client is IStudioClient);
+                () => { if (!client.IsRunning) client.Start(false, SelectedReleaseKey); }, () => Engineering.SelectedDevice?.Id, legacyAccess
+                    : client is IStudioClient);
         if (client is McpProjectClient project)
         {
             _mcp = project.Session;
@@ -49,7 +51,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
 
     public McpSessionPanel? Panel { get; }
     public bool OfflineDemo { get; }
-    internal static bool OfflineDemoRequested(string[] args) => args.Any(a => a.Equals("--mock", StringComparison.OrdinalIgnoreCase) || a.Equals("--demo", StringComparison.OrdinalIgnoreCase));
+    internal static bool OfflineDemoRequested(string[] args) => args
+        .Any(a => a.Equals("--mock", StringComparison.OrdinalIgnoreCase) || a.Equals("--demo", StringComparison.OrdinalIgnoreCase));
     public bool HasMcpPanel => Panel != null && !OfflineDemo;
     public bool LegacyDemoAvailable => !HasMcpPanel && !OfflineDemo;
     public IEnumerable<McpProjectClient.Receipt> Receipts => (_client as McpProjectClient)?.Receipts ?? [];

@@ -24,5 +24,6 @@ internal static class OptionalScalars
         }
         return TiaMcp.Adapters.Native.Security.SecurityProperties.Prepare(type, values);
     }
-    internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> values, HmiObject meta) => HardwareScalarEvidence.Apply(target, values, meta);
+    internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> values, HmiObject meta) => HardwareScalarEvidence
+        .Apply(target, values, meta);
 }

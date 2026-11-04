@@ -52,8 +52,10 @@ namespace TiaMcp.Adapters
         public PlcBatchImportObject[] Restored => Items.Where(x => x.RestoreStatus == "restored").Select(x => x.Replaced!).ToArray();
         public PlcBatchImportObject[] RemainingChanged => Items.Where(x => x.Attempted && x.RestoreStatus != "restored").Select(x => x.Planned).ToArray();
         public bool RequiresSessionReset { get; internal set; }
-        public string[] Imported => Items.Where(x=>x.Status=="imported" && x.RestoreStatus!="restored").SelectMany(x=>x.ReturnedObjects.Select(o=>o.Name)).ToArray();
-        public PlcBatchImportFailure[] Failed => Items.Where(x=>x.Status=="failed").Select(x=>new PlcBatchImportFailure {Path=x.RelativePath,Error=x.Failure}).ToArray();
+        public string[] Imported => Items.Where(x=>x.Status=="imported" && x.RestoreStatus!="restored").SelectMany(x=>x.ReturnedObjects.Select(o=>o.Name))
+            .ToArray();
+        public PlcBatchImportFailure[] Failed => Items.Where(x=>x.Status=="failed").Select(x=>new PlcBatchImportFailure {Path=x.RelativePath,Error=x.Failure})
+            .ToArray();
         public int ImportedCount => Imported.Length;
         public int FailedCount => Failed.Length;
         public PlcBatchImportItem[] Items { get; internal set; } = new PlcBatchImportItem[0];

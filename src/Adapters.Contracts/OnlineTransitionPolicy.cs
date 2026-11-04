@@ -46,8 +46,10 @@ public static class OnlineTransitionPolicy
     // (pgPcInterface or target IP address) that is not applied is refused; only an automatic pick may continue unconfirmed.
     public static string? RouteApplyRefusal(bool explicitRoute, bool applied, string? error, string route)
         => applied || !explicitRoute ? null
-            : "The requested route was not applied (" + route + "): " + (string.IsNullOrEmpty(error) ? "ConnectionConfiguration.ApplyConfiguration returned false" : error)
-              + ". Nothing was sent to the PLC. Check pgPcInterface / the target address; ApplyConfiguration throws while the device is online, so call DisconnectOnlinePlc first in that case.";
+            : "The requested route was not applied (" + route + "): "
+                + (string.IsNullOrEmpty(error) ? "ConnectionConfiguration.ApplyConfiguration returned false" : error)
+              + ". Nothing was sent to the PLC. Check pgPcInterface / the target address; ApplyConfiguration throws while the device is online, so call " +
+                  "DisconnectOnlinePlc first in that case.";
 
     // DownloadPlc applies its route with ConnectionConfiguration.ApplyConfiguration, which throws while the device is online, and
     // DownloadProvider connects by itself. The download therefore starts from Offline (standard CPU: OnlineProvider.State; R/H

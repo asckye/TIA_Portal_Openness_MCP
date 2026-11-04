@@ -163,7 +163,8 @@ internal sealed class HostLifecycleService(string dataRoot, string currentVersio
             throw new UnauthorizedAccessException("Host control server identity mismatch.");
         using var verified = VerifiedProcess(host);
         await OperatorProtocol.Write(pipe, new OperatorHandshake { Action = "shutdown",
-            Workbench = new OperatorWorkbench { Pid = Environment.ProcessId, Version = TiaOpenness.Gui.ViewModels.MainViewModel.AppVersion } }, deadline.Token).ConfigureAwait(false);
+            Workbench = new OperatorWorkbench { Pid = Environment.ProcessId, Version = TiaOpenness.Gui.ViewModels.MainViewModel.AppVersion } }, deadline.Token)
+                .ConfigureAwait(false);
         var response = await OperatorProtocol.Read<OperatorHandshakeResult>(pipe, deadline.Token).ConfigureAwait(false);
         if (response.Protocol != "tiamcp.operator" || response.Version != 1) throw new InvalidDataException("Invalid host control response.");
         if (!response.Accepted)

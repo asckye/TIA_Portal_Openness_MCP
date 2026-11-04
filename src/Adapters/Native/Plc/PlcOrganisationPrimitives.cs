@@ -178,10 +178,14 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static OnlineState? StateOrNull(OnlineProvider? value) => value?.State;
 #endif
         internal static void Export(PlcBlock value, FileInfo file, ExportOptions options) => PlcBlockPrimitives.Export(value, file, options);
-        internal static IList<PlcBlock> Import(PlcBlockComposition value, FileInfo file, ImportOptions options) => PlcBlockPrimitives.Import(value, file, options);
+        internal static IList<PlcBlock> Import(PlcBlockComposition value, FileInfo file, ImportOptions options) => PlcBlockPrimitives
+            .Import(value, file, options);
 #if PLC_DOCUMENT_EXPORT
-        internal static DocumentExportResult ExportDocuments(PlcBlock value, DirectoryInfo directory, string name) => PlcDocumentPrimitives.Export(value, directory, name);
-        internal static DocumentImportResultForBlocks ImportDocuments(PlcBlockComposition value, DirectoryInfo directory, string name, ImportDocumentOptions options) => PlcDocumentPrimitives.Import(value, directory, name, options);
+        internal static DocumentExportResult ExportDocuments(PlcBlock value, DirectoryInfo directory, string name) => PlcDocumentPrimitives
+            .Export(value, directory, name);
+        internal static DocumentImportResultForBlocks ImportDocuments(PlcBlockComposition value, DirectoryInfo directory, string name,
+                ImportDocumentOptions options) =>
+            PlcDocumentPrimitives.Import(value, directory, name, options);
         internal static DocumentResultState State(DocumentExportResult value) => PlcDocumentPrimitives.State(value);
         internal static DocumentResultState State(DocumentImportResult value) => PlcDocumentPrimitives.State(value);
 #endif
@@ -207,7 +211,8 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static void Protect(PlcBlockProtectionProvider value, System.Security.SecureString password) => value.Protect(password);
 #endif
 #if STUDIO_VCI_MODERN
-        internal static void Unprotect(PlcBlockProtectionProvider value, System.Security.SecureString password) => PlcBlockPrimitives.Unprotect(value, password);
+        internal static void Unprotect(PlcBlockProtectionProvider value, System.Security.SecureString password) => PlcBlockPrimitives
+            .Unprotect(value, password);
 #else
         internal static void Unprotect(PlcBlockProtectionProvider value, System.Security.SecureString password) => value.Unprotect(password);
 #endif
@@ -254,7 +259,8 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static CrossReferenceService? CrossReferences(IEngineeringServiceProvider value) => value.GetService<CrossReferenceService>();
 #endif
 #if STUDIO_VCI_MODERN
-        internal static CrossReferenceResult CrossReferences(CrossReferenceService value, CrossReferenceFilter filter) => PlcBlockPrimitives.CrossReferences(value, filter);
+        internal static CrossReferenceResult CrossReferences(CrossReferenceService value, CrossReferenceFilter filter) => PlcBlockPrimitives
+            .CrossReferences(value, filter);
 #else
         internal static CrossReferenceResult CrossReferences(CrossReferenceService value, CrossReferenceFilter filter) => value.GetCrossReferences(filter);
 #endif

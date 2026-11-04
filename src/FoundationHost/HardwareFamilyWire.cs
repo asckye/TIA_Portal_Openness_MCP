@@ -44,7 +44,8 @@ internal static class HardwareFamilyWire
 
     // An object with exactly these members, each valid. WorkerJson writes every member, nulls included.
     private static bool Exactly(JsonNode? node, params (string Name, Func<JsonNode?, bool> Valid)[] members)
-        => node is JsonObject reply && reply.Count == members.Length && members.All(member => reply.ContainsKey(member.Name) && member.Valid(reply[member.Name]));
+        => node is JsonObject reply && reply.Count == members.Length && members
+            .All(member => reply.ContainsKey(member.Name) && member.Valid(reply[member.Name]));
 
     // The created device of HardwareDevices.HardwareCreate*Device*: null, or its name only.
     private static bool CreatedDevice(JsonNode? node) => node == null || Exactly(node, ("Name", Text));
@@ -65,7 +66,8 @@ internal static class HardwareFamilyWire
             || Exactly(reply, ("ok", False), ("failureCode", Text), ("mayHaveChanged", False), ("message", Text))
             || Exactly(reply, ("ok", True), ("dryRun", True), ("mayHaveChanged", False), ("writeOutcomeKnown", True),
                 ("device", Text), ("attributeName", Text), ("before", Flag), ("requestedValue", Flag), ("message", Text))
-            || Exactly(reply, ("ok", False), ("mayHaveChanged", True), ("writeOutcomeKnown", False), ("device", Text), ("attributeName", Text), ("message", Text))
+            || Exactly(reply, ("ok", False), ("mayHaveChanged", True), ("writeOutcomeKnown", False), ("device", Text), ("attributeName", Text),
+                    ("message", Text))
             || Exactly(reply, ("ok", Flag), ("mayHaveChanged", True), ("writeOutcomeKnown", Flag), ("device", Text), ("deviceItem", Text),
                 ("attributeName", Text), ("before", Text), ("after", Text), ("note", Text)),
         "ManagePlcProtection" or "ManageWatchForceTableWebAccess" => Step(reply),
@@ -135,7 +137,8 @@ internal static class HardwareFamilyWire
             "ExecuteProjectScaffoldPrimitive" => Scaffold(Request(arguments, "Kind"), reply),
             // Contract replies of the ported families without step members, as WorkerJson writes them.
             "ExecutePlcB5" => Exactly(reply, ("Blocks", node => node == null || node is JsonArray blocks && blocks.All(B5Block)), ("Count", OptionalNumber),
-                ("Events", node => node is JsonArray events && events.All(B5Event)), ("ExportFailures", Texts), ("ImportFailures", Texts), ("ImportedNames", Texts),
+                ("Events", node => node is JsonArray events && events.All(B5Event)), ("ExportFailures", Texts), ("ImportFailures", Texts),
+                    ("ImportedNames", Texts),
                 ("Scanned", Number), ("Selected", Number), ("Attempted", Number), ("Succeeded", Number),
                 ("Stopped", Flag), ("Ok", Flag), ("Value", Flag), ("Message", Text), ("Meta", OptionalObject),
                 ("Data", OptionalObject), ("Failure", SoftwareFailure), ("RequiresSessionReset", Flag),
@@ -170,7 +173,8 @@ internal static class HardwareFamilyWire
             "ExecuteOpennessReflection" => Exactly(reply, ("Observation", OptionalObject), ("Failure", OptionalObject), ("MayHaveChanged", Flag),
                 ("RequiresSessionReset", Flag), ("BlockReadsAfterUncertain", Flag)),
             "SeedReferenceHmi" => Exactly(reply, ("Message", OptionalText), ("Imported", node => node == null || Texts(node)),
-                ("Failed", node => node == null || node is JsonArray failures && failures.All(f => Exactly(f, ("Path", OptionalText), ("Error", OptionalText)))),
+                ("Failed", node => node == null || node is JsonArray failures && failures
+                        .All(f => Exactly(f, ("Path", OptionalText), ("Error", OptionalText)))),
                 ("Meta", OptionalObject)),
             _ => false
         };

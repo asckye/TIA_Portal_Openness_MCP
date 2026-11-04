@@ -19,7 +19,8 @@ namespace TiaMcp.Adapters.Native.Plc
         private sealed class CompilerObservation
         {
             private readonly CompilerResult result;
-            private readonly Dictionary<CompilerResultMessage, CompilerMessageObservation> messages = new Dictionary<CompilerResultMessage, CompilerMessageObservation>(CompilerMessageReferenceComparer.Instance);
+            private readonly Dictionary<CompilerResultMessage, CompilerMessageObservation> messages = new Dictionary<CompilerResultMessage,
+                CompilerMessageObservation>(CompilerMessageReferenceComparer.Instance);
             internal CompilerObservation(CompilerResult result) => this.result = result;
             public System.Collections.IEnumerable? Messages => Observe(PlcBlockPrimitives.Messages(result));
             public CompilerResultState State => PlcBlockPrimitives.State(result);
@@ -126,7 +127,10 @@ namespace TiaMcp.Adapters.Native.Plc
                 try
                 {
                     foreach (CompilerResultMessage top in PlcGroupOperations.Items(PlcBlockPrimitives.Messages(result)).Cast<CompilerResultMessage>().Take(20))
-                        if (_session.CompilerLoggingEnabled) _session.LogCompilerMessage(PlcBlockPrimitives.Path(top), PlcBlockPrimitives.State(top).ToString(), PlcBlockPrimitives.Description(top), PlcBlockPrimitives.ErrorCount(top), PlcBlockPrimitives.WarningCount(top), PlcBlockPrimitives.DateTime(top), PlcGroupOperations.Items(PlcBlockPrimitives.Messages(top)).Count());
+                        if (_session.CompilerLoggingEnabled) _session
+                            .LogCompilerMessage(PlcBlockPrimitives.Path(top), PlcBlockPrimitives.State(top).ToString(), PlcBlockPrimitives.Description(top),
+                                PlcBlockPrimitives.ErrorCount(top), PlcBlockPrimitives.WarningCount(top), PlcBlockPrimitives.DateTime(top), PlcGroupOperations
+                                .Items(PlcBlockPrimitives.Messages(top)).Count());
                 }
                 catch { /* swallow(logging-failure): Optional compiler-message logging must not replace the native compile result. */ }
                 return result;
@@ -137,7 +141,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             catch (TargetInvocationException tie) when (tie.InnerException != null)
             {
-                throw new PlcSoftwareException("OpennessError", $"{tie.InnerException.GetType().FullName}: {tie.InnerException.Message}", null, tie.InnerException);
+                throw new PlcSoftwareException("OpennessError", $"{tie.InnerException.GetType().FullName}: {tie.InnerException.Message}", null, tie
+                        .InnerException);
             }
             catch (Exception ex)
             {

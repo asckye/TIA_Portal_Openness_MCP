@@ -82,12 +82,17 @@ namespace TiaMcp.Adapters
         private void RecordHmiFaultCore(Dictionary<string, object?> meta)
         {
             hmiReadFault = new Dictionary<string, object?>();
-            foreach (var key in new[] { "timestamp", "operationId", "tool", "action", "libraryName", "typePath", "lastAttemptedProperty", "appliedProperties", "mayHaveChanged", "softwarePath", "screenPath", "phase", "lastAttemptedPath", "error" })
+            foreach (var key in new[] {
+                    "timestamp", "operationId", "tool", "action", "libraryName", "typePath", "lastAttemptedProperty", "appliedProperties", "mayHaveChanged",
+                        "softwarePath", "screenPath", "phase", "lastAttemptedPath", "error"
+                })
                 hmiReadFault[key] = meta.TryGetValue(key, out var value) && value != null ? HmiValues.DeepClone(value) : null;
             meta["status"] = "HmiConnectionUnavailable";
             meta["connectionUnavailable"] = true; meta["remoteInspectionStopped"] = true;
             meta["requiresExplicitRebind"] = true;
-            meta["recovery"] = "Stop collection and inspect MCP/TIA logs. No automatic retry, attach, close or dispose was performed. Only an explicit successful project binding clears the snapshot-read block.";
+            meta["recovery"] =
+                "Stop collection and inspect MCP/TIA logs. No automatic retry, attach, close or dispose was performed. Only an explicit successful project " +
+                "binding clears the snapshot-read block.";
         }
     }
 }

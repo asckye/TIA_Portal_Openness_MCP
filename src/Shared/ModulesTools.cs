@@ -33,8 +33,11 @@ namespace TiaMcpServer.ModelContextProtocol
             + "of a device item - that is where Startdrive drive components (Motor Modules; motors / encoders below them) plug "
             + "(official 'Creating a drive component': Device.PlugNew(\"OrderNumber:6SL3xxx-xxxxx-xxxx\", name, 65535)).")]
         public CallToolResult GetDevicePlugLocationsV4(
-            [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) name")] string deviceItemPath,
-            [Description("plugOnDevice: true = the path names a Device (station) and its own plug locations are read (Startdrive drive components)")] bool plugOnDevice = false)
+            [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) " +
+                "name")] string deviceItemPath,
+            [Description("plugOnDevice: true = the path names a Device (station) and its own plug locations are read (Startdrive drive " +
+                "components)")] bool plugOnDevice =
+                false)
             => HardwareContract.Run("GetDevicePlugLocations", () =>
             {
                 HardwareContract.RequireProject(_service.HasProject);
@@ -42,8 +45,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }, write: false, current: false);
 
         public ResponseMessage GetDevicePlugLocations(
-            [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) name")] string deviceItemPath,
-            [Description("plugOnDevice: true = the path names a Device (station) and its own plug locations are read (Startdrive drive components)")] bool plugOnDevice = false)
+            [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) " +
+                "name")] string deviceItemPath,
+            [Description("plugOnDevice: true = the path names a Device (station) and its own plug locations are read (Startdrive drive " +
+                "components)")] bool plugOnDevice =
+                false)
         {
             try
             {
@@ -125,10 +131,13 @@ namespace TiaMcpServer.ModelContextProtocol
             + "NotSupportedByDevice, PlugFailed, VerifyFailed. Startdrive drive components are plugged on the Device itself: "
             + "plugOnDevice=true with the station name, orderNumber '6SL3xxx-xxxxx-xxxx' (unspecified Motor Module) or a concrete "
             + "MLFB, positionNumber 65535 (official 'Creating a drive component'); motors / encoders then plug below the Motor "
-            + "Module item ('OrderNumber:1PH2092-4WG4x-xxxx', 'OrderNumber:XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202'). Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+            + "Module item ('OrderNumber:1PH2092-4WG4x-xxxx', 'OrderNumber:XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202'). Behavior policy is current; existing native " +
+                "selection/retry/overwrite behavior remains pending V4 acceptance.")]
         public CallToolResult PlugDeviceItemV4(
-            [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device (station) name")] string deviceItemPath,
-            [Description("orderNumber: MLFB of the module, e.g. '6ES7221-3BD30-0XB0' (with or without the space). A full 'OrderNumber:.../V1.1' type identifier is also accepted")] string orderNumber,
+            [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device " +
+                "(station) name")] string deviceItemPath,
+            [Description("orderNumber: MLFB of the module, e.g. '6ES7221-3BD30-0XB0' (with or without the space). A full 'OrderNumber:.../V1.1' type " +
+                "identifier is also accepted")] string orderNumber,
             [Description("version: module/firmware version, e.g. 'V1.1'. Leave empty to let TIA pick the default")] string version = "",
             [Description("positionNumber: target slot. -1 (default) = pick the first free slot TIA accepts")] int positionNumber = -1,
             [Description("name: name for the new module. Empty = auto-generated and de-duplicated against siblings")] string name = "",
@@ -141,8 +150,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }, write: !dryRun, current: true);
 
         public ResponseMessage PlugDeviceItem(
-            [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device (station) name")] string deviceItemPath,
-            [Description("orderNumber: MLFB of the module, e.g. '6ES7221-3BD30-0XB0' (with or without the space). A full 'OrderNumber:.../V1.1' type identifier is also accepted")] string orderNumber,
+            [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device " +
+                "(station) name")] string deviceItemPath,
+            [Description("orderNumber: MLFB of the module, e.g. '6ES7221-3BD30-0XB0' (with or without the space). A full 'OrderNumber:.../V1.1' type " +
+                "identifier is also accepted")] string orderNumber,
             [Description("version: module/firmware version, e.g. 'V1.1'. Leave empty to let TIA pick the default")] string version = "",
             [Description("positionNumber: target slot. -1 (default) = pick the first free slot TIA accepts")] int positionNumber = -1,
             [Description("name: name for the new module. Empty = auto-generated and de-duplicated against siblings")] string name = "",
@@ -237,7 +248,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = unverified
                         ? $"⚠ UNVERIFIED: {r.Message}: PlugNew has already been called; the module **may already have been inserted**, "
-                          + "but readback confirmation failed, so the outcome cannot be determined. Verify with GetDevicePlugLocations or the TIA UI before continuing; "
+                          + "but readback confirmation failed, so the outcome cannot be determined. Verify with GetDevicePlugLocations or the TIA UI before " +
+                              "continuing; "
                           + "do not retry directly (it would insert a duplicate)."
                         : r.Message,
                     Meta = meta

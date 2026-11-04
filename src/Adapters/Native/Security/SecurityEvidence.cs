@@ -18,7 +18,8 @@ namespace TiaMcp.Adapters.Native.Security
             if (item is CustomRole custom) row["assignedEngineeringRights"] = Names(custom.AssignedEngineeringRights);
             if (item is SystemRole system) row["assignedEngineeringRights"] = Names(system.AssignedEngineeringRights);
             // DeviceFunctionRight rows typed (Identifier / Group; Comment on both the system and the custom subclass).
-            if (item is DeviceFunctionRight right) { row["identifier"] = right.Identifier; row["group"] = right.Group; row["rightClass"] = right.GetType().Name; }
+            if (item is DeviceFunctionRight right) {
+                row["identifier"] = right.Identifier; row["group"] = right.Group; row["rightClass"] = right.GetType().Name; }
             if (item is SystemDeviceFunctionRight systemRight) row["comment"] = systemRight.Comment;
             if (item is CustomDeviceFunctionRight customRight) row["comment"] = customRight.Comment;
             return row;

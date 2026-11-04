@@ -6,7 +6,8 @@ namespace TiaMcp.Adapters.Contracts;
 
 public static partial class EngineeringCredentialRules
 {
-    public const string PasswordPolicyRefusal = "The password was refused by the configured password policy; nothing changed. Read ManagePasswordPolicy before choosing another password.";
+    public const string PasswordPolicyRefusal =
+        "The password was refused by the configured password policy; nothing changed. Read ManagePasswordPolicy before choosing another password.";
 
     // Only wrap one password setter, before any other mutation in the operation.
     public static bool TrySetPassword(Action setter, IDictionary<string, object?> meta)

@@ -40,7 +40,8 @@ namespace TiaMcp.WorkerChannel
             if (value.ValueKind != JsonValueKind.Object) throw new IOException("Expected worker envelope object.");
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var field in value.EnumerateObject())
-                if (!seen.Add(field.Name) || !names.Contains(field.Name, StringComparer.Ordinal)) throw new IOException("Duplicate or unknown worker envelope field.");
+                if (!seen.Add(field.Name) || !names.Contains(field.Name, StringComparer.Ordinal))
+                    throw new IOException("Duplicate or unknown worker envelope field.");
         }
         internal static string Text(JsonElement value, string name)
         {
@@ -130,9 +131,11 @@ namespace TiaMcp.WorkerChannel
             var data = failure.GetProperty("data");
             Fields(data, profile == ChannelProfile.Studio ? new[] { "outcome", "evidence", "rpc" } : new[] { "outcome", "evidence" });
             string outcome = Text(data, "outcome");
-            if (outcome != "RejectedBeforeNative" && outcome != "ReadFailed" && outcome != "Unknown") throw new IOException("Malformed worker failure classification.");
+            if (outcome != "RejectedBeforeNative" && outcome != "ReadFailed" && outcome != "Unknown")
+                throw new IOException("Malformed worker failure classification.");
             var evidence = data.GetProperty("evidence");
-            if (evidence.ValueKind != JsonValueKind.Object && evidence.ValueKind != JsonValueKind.Null) throw new IOException("Malformed worker failure evidence.");
+            if (evidence.ValueKind != JsonValueKind.Object && evidence.ValueKind != JsonValueKind.Null)
+                throw new IOException("Malformed worker failure evidence.");
             string? rpc = null;
             if (profile == ChannelProfile.Studio)
             {
@@ -141,7 +144,9 @@ namespace TiaMcp.WorkerChannel
                 original.GetProperty("code").GetInt32(); Text(original, "message"); original.GetProperty("data");
                 rpc = original.GetRawText();
             }
-            return ChannelResponse.Error(new ChannelFailureException(Text(failure, "message"), code, (ChannelOutcome)Enum.Parse(typeof(ChannelOutcome), outcome), evidence.GetRawText(), rpc));
+            return ChannelResponse
+                .Error(new ChannelFailureException(Text(failure, "message"), code, (ChannelOutcome)Enum.Parse(typeof(ChannelOutcome), outcome), evidence
+                        .GetRawText(), rpc));
         }
 
         internal static byte[] Progress(long id, int sequence, int percent, string? payload) => Encode(w =>

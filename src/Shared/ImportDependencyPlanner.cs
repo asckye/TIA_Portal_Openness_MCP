@@ -68,7 +68,8 @@ namespace TiaOpenness.Shared
                 }
             }
             var ordered = TopologicalSort(artifacts, byKey, edges, issues);
-            return new ImportOrderPlan { Valid = issues.Count == 0, Order = issues.Count == 0 ? ordered.Select(a => a.Id).ToArray() : new string[0], Issues = issues.ToArray() };
+            return new ImportOrderPlan {
+                Valid = issues.Count == 0, Order = issues.Count == 0 ? ordered.Select(a => a.Id).ToArray() : new string[0], Issues = issues.ToArray() };
         }
         private static List<ImportOrderItem> TopologicalSort(
             IReadOnlyCollection<ImportOrderItem> artifacts,

@@ -25,8 +25,10 @@ public sealed partial class PlcFoundationEngine
             "ListVersionControlWorkspaces" => VersionControl.GetVersionControlWorkspaces(),
             "GetVersionControlStatus" => VersionControl.GetVersionControlStatus(request.WorkspaceName, request.ChangedOnly),
             "CreateVersionControlWorkspace" => VersionControl.CreateVersionControlWorkspace(request.WorkspaceName, request.FolderPath),
-            "ConnectProjectToWorkspace" => VersionControl.ConnectProjectToWorkspace(request.WorkspaceName, dryRun, request.DeviceFilter, request.MaxObjects, request.WalkTrace),
-            "SynchronizeVersionControlWorkspace" => VersionControl.SyncVersionControlWorkspace(request.Direction, request.WorkspaceName, dryRun, request.ChangedOnly),
+            "ConnectProjectToWorkspace" => VersionControl
+                .ConnectProjectToWorkspace(request.WorkspaceName, dryRun, request.DeviceFilter, request.MaxObjects, request.WalkTrace),
+            "SynchronizeVersionControlWorkspace" => VersionControl
+                .SyncVersionControlWorkspace(request.Direction, request.WorkspaceName, dryRun, request.ChangedOnly),
             _ => throw new ArgumentException("Unregistered VCI operation: " + request.Operation)
         };
         reply.RequiresSessionReset = !dryRun && reply.Meta.TryGetValue("success", out var success) && success is false

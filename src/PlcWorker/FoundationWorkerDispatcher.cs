@@ -54,7 +54,10 @@ namespace TiaMcp.PlcWorker
             modules.Add(new WorkerOperationModule("plc-paging", typeof(PlcFoundationEngine), new[] { "ReadBlockPage" }));
             modules.Add(new WorkerOperationModule("plc-analysis", typeof(PlcFoundationEngine), new[] { "ExportBlockDocument" }));
             foreach (var family in PortedFamilies.All.Where(f => f.Available(releaseKey)))
-                modules.Add(new WorkerOperationModule(family.OperationPrefix, family.Name == "F04" ? typeof(plcsim::TiaMcp.PlcWorker.Runtime.PlcSimAdvancedAdapter) : typeof(PlcFoundationEngine), WorkerOperations.FamilyNames(family.Name)));
+                modules
+                    .Add(new WorkerOperationModule(family.OperationPrefix, family.Name == "F04"
+                            ? typeof(plcsim::TiaMcp.PlcWorker.Runtime.PlcSimAdvancedAdapter) : typeof(PlcFoundationEngine), WorkerOperations
+                            .FamilyNames(family.Name)));
             methods = WorkerOperationModule.Register(modules);
         }
         internal ChannelBinding Observe()
@@ -72,7 +75,8 @@ namespace TiaMcp.PlcWorker
             if (request.Method != "adapter.HostObserve") return null;
             using var document = JsonDocument.Parse(request.ArgumentsJson);
             string? operation = document.RootElement.GetProperty("operation").GetString();
-            if (operation is not ("status" or "environment" or "group" or "assemblies" or "reflection" or "reflection-deny" or "session.GetState" or "session.ConnectPortal")) return null;
+            if (operation is not ("status" or "environment" or "group" or "assemblies" or "reflection" or "reflection-deny" or "session.GetState" or "session.ConnectPortal"))
+                return null;
             return WorkerObservations.Reply(() => {
                 var value = System.Text.Json.Nodes.JsonNode.Parse(request.ArgumentsJson)!.AsObject();
                 return WorkerObservations.Read(engine, operation!, value["arguments"]!.AsObject(), ProcessStartTicks);
@@ -106,13 +110,17 @@ namespace TiaMcp.PlcWorker
                     && online.ValueKind == JsonValueKind.Object)
                     readOnly |= OnlineCapabilities.IsReadOnly(JsonSerializer.Deserialize<OnlineRequest>(online.GetRawText())!);
                 string actionName = WorkerJson.Get(values, "action").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "action").GetString()! : "";
-                string scope = WorkerJson.Get(values, "family").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "family").GetString()! : WorkerJson.Get(values, "kind").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "kind").GetString()! : "";
+                string scope = WorkerJson.Get(values, "family").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "family").GetString()! : WorkerJson
+                    .Get(values, "kind").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "kind").GetString()! : "";
                 if (HardwareCapabilities.Unsupported(releaseKey, name, actionName, scope,
                     WorkerJson.Get(values, "positionNumber").ValueKind == JsonValueKind.Number ? WorkerJson.Get(values, "positionNumber").GetInt32() : -1,
-                    WorkerJson.Get(values, "extendedPositionNumber").ValueKind == JsonValueKind.Number ? WorkerJson.Get(values, "extendedPositionNumber").GetInt32() : -1,
-                    WorkerJson.Get(values, "password").ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(WorkerJson.Get(values, "password").GetString())) is string unavailable)
+                    WorkerJson.Get(values, "extendedPositionNumber").ValueKind == JsonValueKind.Number ? WorkerJson.Get(values, "extendedPositionNumber")
+                        .GetInt32() : -1,
+                    WorkerJson.Get(values, "password").ValueKind == JsonValueKind.String && !string
+                        .IsNullOrEmpty(WorkerJson.Get(values, "password").GetString())) is string unavailable)
                     throw new NotSupportedException(unavailable);
-                if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
+                if(disconnectAttempted && name!="Disconnect")
+                    throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                 if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
                 readOnly=readOnly || (WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.True);
                 // A validated scope must be disposed even after a child call locks the session.
@@ -126,12 +134,15 @@ namespace TiaMcp.PlcWorker
                 if(WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.False)
                 {
                     if(!WorkerJson.IsBoolean(confirm)) throw new AdapterPreconditionException("Execution requires confirm=true.","confirm");
-                    if(!WorkerJson.IsString(expected)) throw new AdapterPreconditionException("Execution requires an absolute expected project file.","expectedProjectFile");
+                    if(!WorkerJson.IsString(expected))
+                        throw new AdapterPreconditionException("Execution requires an absolute expected project file.","expectedProjectFile");
                     try
                     {
                         var optionalRequest = WorkerJson.Get(values, "request");
-                        string operation = optionalRequest.ValueKind == JsonValueKind.Object && optionalRequest.TryGetProperty("Operation", out var operationValue) ? operationValue.GetString()! : "";
-                        string action = optionalRequest.ValueKind == JsonValueKind.Object && optionalRequest.TryGetProperty("Action", out var actionValue) ? actionValue.GetString()! : "";
+                        string operation = optionalRequest.ValueKind == JsonValueKind.Object && optionalRequest
+                            .TryGetProperty("Operation", out var operationValue) ? operationValue.GetString()! : "";
+                        string action = optionalRequest.ValueKind == JsonValueKind.Object && optionalRequest.TryGetProperty("Action", out var actionValue)
+                            ? actionValue.GetString()! : "";
                         OptionalEngineeringMutations.ValidateWrite(name, operation, action, confirm.GetBoolean(), expected.GetString()!,
                             () => { var state = State; return (state.IsAttached, state.ProjectFile); },
                             parameter => throw new AdapterPreconditionException(parameter == "confirm" ? "Execution requires confirm=true."

@@ -31,7 +31,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region plc software - HmiDescribe
 
-        [McpServerTool(Name = "GetHmiProgramInfo"), Description("[L2][HMI] Get HMI software type (Classic/Basic/Unified), version, and list of all screen names. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree (e.g. 'HMI_RT_1'). Use to confirm HMI type before choosing Classic vs Unified tool variants.")]
+        [McpServerTool(Name = "GetHmiProgramInfo"),
+                Description("[L2][HMI] Get HMI software type (Classic/Basic/Unified), version, and list of all screen names. Requires: ConnectPortal + " +
+                "OpenProject. softwarePath from GetProjectTree (e.g. 'HMI_RT_1'). Use to confirm HMI type before choosing Classic vs Unified tool variants.")]
         public CallToolResult GetHmiProgramInfoV4(
             [Description("softwarePath: path in the project structure to the HMI software (see GetProjectTree)")] string softwarePath)
             => HmiInspectionContract.Run("GetHmiProgramInfo", false, false, () => GetHmiProgramInfo(softwarePath));
@@ -58,11 +60,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving HMI program info from '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error retrieving HMI program info from '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex,
+                        McpErrorCode.InternalError);
             }
         }
 
-        [McpServerTool(Name = "DescribeHmiSoftware"), Description("[L2][HMI]Describe the HMI software object (members/methods) via reflection. Useful to discover Export/Import/Create APIs.")]
+        [McpServerTool(Name = "DescribeHmiSoftware"),
+                Description("[L2][HMI]Describe the HMI software object (members/methods) via reflection. Useful to discover Export/Import/Create APIs.")]
         public CallToolResult DescribeHmiSoftwareV4(
             [Description("softwarePath: path in the project structure to the HMI software (e.g. 'HMI_RT_1')")] string softwarePath,
             [Description("maxMembers: max member count")] int maxMembers = 200)
@@ -87,14 +91,18 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error describing HMI software '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error describing HMI software '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "DescribeHmiScreen"), Description("[L2][HMI]Describe one HMI screen object (members/methods) by exact absolute /Group/Sub/Screen path or unambiguous name under an HMI software. Relative slash paths and backslashes are refused with the corrected form.")]
+        [McpServerTool(Name = "DescribeHmiScreen"),
+                Description("[L2][HMI]Describe one HMI screen object (members/methods) by exact absolute /Group/Sub/Screen path or unambiguous name under an " +
+                "HMI software. Relative slash paths and backslashes are refused with the corrected form.")]
         public CallToolResult DescribeHmiScreenV4(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
-            [Description("screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names repeat.")] string screenName,
+            [Description("screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names " +
+                "repeat.")] string screenName,
             [Description("maxMembers: max member count")] int maxMembers = 200)
             => HmiInspectionContract.Run("DescribeHmiScreen", false, false, () => DescribeHmiScreen(softwarePath, screenName, maxMembers));
 
@@ -118,11 +126,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error describing HMI screen '{screenName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error describing HMI screen '{screenName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "DescribeHmiTagTable"), Description("[L2][HMI]Describe one HMI tag table object (members/methods) by name under an HMI software.")]
+        [McpServerTool(Name = "DescribeHmiTagTable"),
+                Description("[L2][HMI]Describe one HMI tag table object (members/methods) by name under an HMI software.")]
         public CallToolResult DescribeHmiTagTableV4(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
             [Description("tagTableName: tag table name")] string tagTableName,
@@ -149,7 +159,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error describing HMI tag table '{tagTableName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error describing HMI tag table '{tagTableName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
@@ -190,7 +201,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name = "DescribeHmiScreenItem"), Description("[L2][HMI]V19-V21 WinCC Unified only. Classic WinCC refuses with UNSUPPORTED_CAPABILITY; use ExportHmiScreen for classic screen XML. Describe one HMI screen item (widget) by name under an HMI screen.")]
+        [McpServerTool(Name = "DescribeHmiScreenItem"),
+                Description("[L2][HMI]V19-V21 WinCC Unified only. Classic WinCC refuses with UNSUPPORTED_CAPABILITY; use ExportHmiScreen for classic screen " +
+                "XML. Describe one HMI screen item (widget) by name under an HMI screen.")]
         public CallToolResult DescribeHmiScreenItemV4(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
             [Description("screenName: screen name, e.g. 'Main'")] string screenName,
@@ -219,7 +232,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error describing HMI screen item '{itemName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error describing HMI screen item '{itemName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 

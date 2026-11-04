@@ -23,7 +23,9 @@ internal sealed class OptionalProductPort
             request.ValidationError = error.Message;
             request.ValidationKind = error.GetType().Name;
         }
-        var unavailable = OptionalProductCapabilities.Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Category, request.Kind, request.Action, request.ExecutionMode, request.Password);
+        var unavailable = OptionalProductCapabilities
+            .Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Category, request.Kind, request.Action, request.ExecutionMode, request
+                .Password);
         if (unavailable != null) throw new NotSupportedException(unavailable);
         var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
         if (!request.DryRun || request.Action == "showInEditor")

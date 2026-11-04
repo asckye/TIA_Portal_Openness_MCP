@@ -11,7 +11,8 @@ namespace TiaMcp.Logic.Generation
         private readonly HardwarePartAllocation? allocation;
         private readonly Dictionary<string, string> io = new Dictionary<string, string>(StringComparer.Ordinal);
         private readonly Dictionary<string, string> ips = new Dictionary<string, string>(StringComparer.Ordinal);
-        private readonly Dictionary<string, List<(long Start, long End, string Owner)>> occupied = new Dictionary<string, List<(long, long, string)>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<(long Start, long End, string Owner)>> occupied = new Dictionary<string,
+            List<(long, long, string)>>(StringComparer.Ordinal);
         private readonly Dictionary<string, StructurePartNumberRangesItem> ranges;
         private readonly Dictionary<string, Dictionary<int, string>> numbers = new Dictionary<string, Dictionary<int, string>>(StringComparer.Ordinal);
         private readonly Dictionary<string, int> assignedNumbers = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -22,12 +23,14 @@ namespace TiaMcp.Logic.Generation
             GenerationDocuments.Canonical(structure);
             allocation = hardware.Allocation;
             ranges = (structure.NumberRanges ?? new List<StructurePartNumberRangesItem>()).ToDictionary(r => r.Id, StringComparer.Ordinal);
-            if (alarmNumbering != null && !ranges.ContainsKey("alarms")) ranges.Add("alarms", new StructurePartNumberRangesItem { Id = "alarms", Kind = "alarm", Start = alarmNumbering.Start, End = alarmNumbering.End });
+            if (alarmNumbering != null && !ranges.ContainsKey("alarms")) ranges
+                .Add("alarms", new StructurePartNumberRangesItem { Id = "alarms", Kind = "alarm", Start = alarmNumbering.Start, End = alarmNumbering.End });
             foreach (var range in ranges.Values)
             {
                 if (range.Start > range.End) throw CanonicalJson.Failure("/numberRanges/" + range.Id, "range", "Number range is reversed.");
                 foreach (var other in ranges.Values.Where(r => r.Id != range.Id && r.Kind == range.Kind))
-                    if (range.Start <= other.End && other.Start <= range.End) throw CanonicalJson.Failure("/numberRanges", "collision", "Number ranges of the same kind overlap.");
+                    if (range.Start <= other.End && other.Start <= range.End) throw CanonicalJson
+                        .Failure("/numberRanges", "collision", "Number ranges of the same kind overlap.");
             }
             var pools = allocation?.Io ?? new List<HardwarePartAllocationIoItem>();
             foreach (var pool in pools)
@@ -36,7 +39,8 @@ namespace TiaMcp.Logic.Generation
                 var end = IoAddress.Parse(pool.End);
                 RequireDirection(start, pool.Direction);
                 RequireDirection(end, pool.Direction);
-                if (start.Start > end.Start || start.Width != end.Width) throw CanonicalJson.Failure("/allocation/io/" + pool.Id, "range", "IO range endpoints are reversed or use different widths.");
+                if (start.Start > end.Start || start.Width != end.Width) throw CanonicalJson
+                    .Failure("/allocation/io/" + pool.Id, "range", "IO range endpoints are reversed or use different widths.");
                 foreach (var other in pools.Where(p => p.Id != pool.Id))
                 {
                     var first = IoAddress.Parse(other.Start); var last = IoAddress.Parse(other.End);
@@ -68,7 +72,8 @@ namespace TiaMcp.Logic.Generation
                 var d = request.Device; var s = request.Signal; var key = SignalKey(d, s.Role);
                 if (io.ContainsKey(key)) continue;
                 var width = Width(s.Type ?? DefaultType(s.Dir));
-                var candidates = (allocation?.Io ?? new List<HardwarePartAllocationIoItem>()).Where(p => p.Direction == s.Dir).OrderBy(p => p.Id, StringComparer.Ordinal).ToArray();
+                var candidates = (allocation?.Io ?? new List<HardwarePartAllocationIoItem>()).Where(p => p.Direction == s.Dir)
+                    .OrderBy(p => p.Id, StringComparer.Ordinal).ToArray();
                 IoAddress? selected = null;
                 foreach (var pool in candidates)
                 {
@@ -99,14 +104,16 @@ namespace TiaMcp.Logic.Generation
                 network = ParseIp(parts[0]); mask = uint.MaxValue << (32 - prefix);
                 if ((network & mask) != network) throw CanonicalJson.Failure("/allocation/ip/subnet", "range", "Subnet must use its network address.");
                 first = ParseIp(allocation.Ip.Start); last = ParseIp(allocation.Ip.End);
-                if (first > last || !InSubnet(first) || !InSubnet(last)) throw CanonicalJson.Failure("/allocation/ip", "range", "IP range is reversed or includes non-host/out-of-subnet addresses.");
+                if (first > last || !InSubnet(first) || !InSubnet(last)) throw CanonicalJson
+                    .Failure("/allocation/ip", "range", "IP range is reversed or includes non-host/out-of-subnet addresses.");
             }
             var used = new HashSet<uint>();
             foreach (var station in machine.Stations.OrderBy(s => s.Id, StringComparer.Ordinal))
             {
                 if (station.Ip == null || station.Ip == "auto") continue;
                 var ip = ParseIp(station.Ip);
-                if (allocation?.Ip != null && (ip < first || ip > last || !InSubnet(ip))) throw CanonicalJson.Failure("/stations/" + station.Id + "/ip", "range", "Explicit IP is outside the allocation range.");
+                if (allocation?.Ip != null && (ip < first || ip > last || !InSubnet(ip))) throw CanonicalJson
+                    .Failure("/stations/" + station.Id + "/ip", "range", "Explicit IP is outside the allocation range.");
                 if (!used.Add(ip)) throw CanonicalJson.Failure("/stations/" + station.Id + "/ip", "collision", "Duplicate IP address.");
                 ips.Add(station.Id, FormatIp(ip));
             }
@@ -124,7 +131,8 @@ namespace TiaMcp.Logic.Generation
         public string Io(string station, string device, string role)
         {
             var key = station + "/" + device + "/" + role;
-            if (!io.TryGetValue(key, out var value)) throw CanonicalJson.Failure("/signals/" + key, "reference", "Signal was not allocated (optional signal may be absent).");
+            if (!io.TryGetValue(key, out var value)) throw CanonicalJson
+                .Failure("/signals/" + key, "reference", "Signal was not allocated (optional signal may be absent).");
             return value;
         }
 
@@ -137,14 +145,17 @@ namespace TiaMcp.Logic.Generation
             var key = rangeId + "/" + owner;
             if (assignedNumbers.TryGetValue(key, out var assigned))
             {
-                if (explicitNumber.HasValue && explicitNumber != assigned) throw CanonicalJson.Failure("/numberRanges/" + key, "collision", "Owner requested two different numbers.");
+                if (explicitNumber.HasValue && explicitNumber != assigned) throw CanonicalJson
+                    .Failure("/numberRanges/" + key, "collision", "Owner requested two different numbers.");
                 return assigned;
             }
             if (!numbers.TryGetValue(range.Kind, out var used)) numbers.Add(range.Kind, used = new Dictionary<int, string>());
             var number = explicitNumber ?? range.Start;
             if (explicitNumber == null) while (number < range.End && used.ContainsKey(number)) number++;
-            if (number < range.Start || number > range.End) throw CanonicalJson.Failure("/numberRanges/" + key, "range", "Explicit number is outside its range.");
-            if (used.ContainsKey(number)) throw CanonicalJson.Failure("/numberRanges/" + key, explicitNumber == null ? "range-exhausted" : "collision", "Block/sequence number is already allocated.");
+            if (number < range.Start || number > range.End) throw CanonicalJson
+                .Failure("/numberRanges/" + key, "range", "Explicit number is outside its range.");
+            if (used.ContainsKey(number)) throw CanonicalJson
+                .Failure("/numberRanges/" + key, explicitNumber == null ? "range-exhausted" : "collision", "Block/sequence number is already allocated.");
             used.Add(number, key); assignedNumbers.Add(key, number); return number;
         }
 
@@ -165,17 +176,20 @@ namespace TiaMcp.Logic.Generation
             uint value = 0;
             foreach (var part in parts)
             {
-                if (part.Length == 0 || part.Length > 1 && part[0] == '0' || !byte.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out var octet))
+                if (part.Length == 0 || part.Length > 1 && part[0] == '0' || !byte
+                        .TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out var octet))
                     throw CanonicalJson.Failure("/ip", "ip", "Invalid IPv4 octet.");
                 value = (value << 8) | octet;
             }
             return value;
         }
 
-        internal static string FormatIp(uint ip) => string.Join(".", new[] { ip >> 24, ip >> 16 & 255, ip >> 8 & 255, ip & 255 }.Select(n => n.ToString(CultureInfo.InvariantCulture)));
+        internal static string FormatIp(uint ip) => string
+            .Join(".", new[] { ip >> 24, ip >> 16 & 255, ip >> 8 & 255, ip & 255 }.Select(n => n.ToString(CultureInfo.InvariantCulture)));
         private static void RequireDirection(IoAddress address, string direction)
         {
-            if (address.Area != (direction == "DI" || direction == "AI" ? "I" : "Q")) throw CanonicalJson.Failure("/allocation/io", "direction", "IO address uses the wrong memory area.");
+            if (address.Area != (direction == "DI" || direction == "AI" ? "I" : "Q")) throw CanonicalJson
+                .Failure("/allocation/io", "direction", "IO address uses the wrong memory area.");
         }
         private static void RequireWidth(IoAddress address, string type)
         {
@@ -213,9 +227,11 @@ namespace TiaMcp.Logic.Generation
             var match = Regex.Match(text, @"\A%?([IQ])(?:(\d+)\.([0-7])|([BWDL])(\d+))\z", RegexOptions.CultureInvariant);
             if (!match.Success) throw CanonicalJson.Failure("/address", "io-address", "Use an absolute I/Q bit, byte, word, double word or long word address.");
             var numeric = match.Groups[2].Success ? match.Groups[2].Value : match.Groups[5].Value;
-            if (!int.TryParse(numeric, NumberStyles.None, CultureInfo.InvariantCulture, out var bytes)) throw CanonicalJson.Failure("/address", "range", "IO byte address exceeds Int32.");
+            if (!int.TryParse(numeric, NumberStyles.None, CultureInfo.InvariantCulture, out var bytes)) throw CanonicalJson
+                .Failure("/address", "range", "IO byte address exceeds Int32.");
             var width = match.Groups[2].Success ? 1 : match.Groups[4].Value switch { "B" => 8, "W" => 16, "D" => 32, _ => 64 };
-            return new IoAddress(match.Groups[1].Value, (long)bytes * 8 + (width == 1 ? int.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture) : 0), width);
+            return new IoAddress(match.Groups[1].Value, (long)bytes * 8 + (width == 1 ? int.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture) : 0),
+                    width);
         }
     }
 }

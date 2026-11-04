@@ -67,7 +67,9 @@ namespace TiaMcp.Logic.Generation
                 {
                     var matches = available.Where(p => p.Manifest.Id == reference.Package
                         && GenerationPlanner.VersionMatches(reference.Version, p.Manifest.Version)).ToArray();
-                    if (matches.Length != 1) throw CanonicalJson.Failure("/dependsOn", "dependency", "Pin exactly one installed version satisfying " + reference.Package + " " + reference.Version + ".");
+                    if (matches.Length != 1) throw CanonicalJson
+                        .Failure("/dependsOn", "dependency", "Pin exactly one installed version satisfying " + reference.Package + " " + reference.Version
+                            + ".");
                     if (pinned.TryGetValue(reference.Package, out var previous) && previous.ContentHash != matches[0].ContentHash)
                         throw CanonicalJson.Failure("/dependsOn", "dependency", "Conflicting dependency versions.");
                     pinned[reference.Package] = matches[0];
@@ -94,7 +96,8 @@ namespace TiaMcp.Logic.Generation
             };
             result["coverage"] = Coverage(package);
             result["notices"] = new JsonArray(original.FileNames.Where(p => p == "LICENSE" || p == "NOTICE.md" || p == "sources.json")
-                .OrderBy(p => p, StringComparer.Ordinal).Select(p => (JsonNode)new JsonObject { ["path"] = p, ["sha256"] = CanonicalJson.HashBytes(original.ReadFile(p)) }).ToArray());
+                .OrderBy(p => p, StringComparer.Ordinal)
+                    .Select(p => (JsonNode)new JsonObject { ["path"] = p, ["sha256"] = CanonicalJson.HashBytes(original.ReadFile(p)) }).ToArray());
             return result;
         }
 
@@ -153,7 +156,8 @@ namespace TiaMcp.Logic.Generation
         public JsonObject Manage(string action, string id, string version, string sourcePath, string outputPath,
             string newId, string newVersion, bool dryRun, string expectedPlanHash)
         {
-            if (!new[] { "import", "export", "copy", "fork", "remove" }.Contains(action)) throw new ArgumentException("Unknown package action.", nameof(action));
+            if (!new[] { "import", "export", "copy", "fork", "remove" }.Contains(action))
+                throw new ArgumentException("Unknown package action.", nameof(action));
             if (action == "import" && (id.Length != 0 || version.Length != 0 || newId.Length != 0 || newVersion.Length != 0 || outputPath.Length != 0)
                 || action != "import" && sourcePath.Length != 0 || action != "export" && outputPath.Length != 0
                 || action is not ("copy" or "fork") && (newId.Length != 0 || newVersion.Length != 0))
@@ -173,7 +177,8 @@ namespace TiaMcp.Logic.Generation
             {
                 target = NewOutput(outputPath, ".zip");
                 using var stream = new MemoryStream(); package.WriteCanonicalZip(stream); zip = stream.ToArray();
-                if (zip.LongLength > new PackageLoadLimits().MaximumArchiveBytes) throw new ArgumentException("Export exceeds the import archive limit.", nameof(outputPath));
+                if (zip.LongLength > new PackageLoadLimits().MaximumArchiveBytes)
+                    throw new ArgumentException("Export exceeds the import archive limit.", nameof(outputPath));
             }
             else if (action == "remove")
             {
@@ -186,12 +191,14 @@ namespace TiaMcp.Logic.Generation
                 target = Path.Combine(UserRoot, package.Manifest.Id, package.Manifest.Version);
                 Safe(target);
                 if (Inventory().Any(e => e.Package.Manifest.Id == package.Manifest.Id && e.Package.Manifest.Version == package.Manifest.Version)
-                    || File.Exists(target) || Directory.Exists(target)) throw new ArgumentException("Package id/version already exists; use a new identity.", "packageId");
+                    || File.Exists(target) || Directory
+                        .Exists(target)) throw new ArgumentException("Package id/version already exists; use a new identity.", "packageId");
             }
             var result = Summary(package);
             result["action"] = action; result["targetPath"] = target; result["dryRun"] = dryRun; result["executed"] = false;
             JsonNode planTarget = action == "export" ? JsonValue.Create(outputPath)! : new JsonObject {
-                ["store"] = "user", ["path"] = target.Substring(UserRoot.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/') };
+                ["store"] = "user", ["path"] = target.Substring(UserRoot.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                    .Replace('\\', '/') };
             var plan = new JsonObject { ["action"] = action, ["target"] = planTarget, ["sourcePath"] = sourcePath, ["contentHash"] = package.ContentHash,
                 ["sourceHash"] = entry?.Package.ContentHash ?? package.ContentHash, ["archiveHash"] = zip == null ? null : CanonicalJson.HashBytes(zip) };
             string hash = CanonicalJson.Hash(CanonicalJson.Parse(plan.ToJsonString()));
@@ -213,8 +220,10 @@ namespace TiaMcp.Logic.Generation
         public JsonObject Machine(string action, string id, string version, string machineJson, string inputPath,
             string outputPath, string format, bool dryRun, string expectedPlanHash)
         {
-            if (!new[] { "validate", "import", "export", "exportTemplate" }.Contains(action)) throw new ArgumentException("Unknown machine action.", nameof(action));
-            if (format != "json" && format != "csv") throw new ArgumentException("Only JSON and package-generated CSV are supported; xlsx is deferred.", nameof(format));
+            if (!new[] { "validate", "import", "export", "exportTemplate" }.Contains(action))
+                throw new ArgumentException("Unknown machine action.", nameof(action));
+            if (format != "json" && format != "csv")
+                throw new ArgumentException("Only JSON and package-generated CSV are supported; xlsx is deferred.", nameof(format));
             if (action == "import" && machineJson.Length != 0 || action != "import" && inputPath.Length != 0
                 || action == "exportTemplate" && machineJson.Length != 0 || action == "validate" && outputPath.Length != 0)
                 throw new ArgumentException("Arguments do not belong to this machine action.", nameof(action));
@@ -235,11 +244,14 @@ namespace TiaMcp.Logic.Generation
                 var station = machine.Stations.Single(s => s.Id == device.Station);
                 // The basic package deliberately isolates an S7-1500-only instruction.
                 if (station.Kind == "S7-1200" || (station.Article ?? "").Replace(" ", "").StartsWith("6ES721", StringComparison.OrdinalIgnoreCase))
-                    throw CanonicalJson.Failure("/devices/" + machine.Devices.IndexOf(device) + "/params/programAlarm", "cpu", "Program_Alarm is unavailable on S7-1200; select false.");
+                    throw CanonicalJson
+                        .Failure("/devices/" + machine.Devices.IndexOf(device) + "/params/programAlarm", "cpu",
+                            "Program_Alarm is unavailable on S7-1200; select false.");
                 cpuWarnings.Add("Verify S7-1500 CPU/firmware support for device " + device.Id + "; native acceptance NOT RUN.");
             }
             string canonical = Encoding.UTF8.GetString(CanonicalJson.Encode(CanonicalJson.Parse(machineJson)));
-            var result = new JsonObject { ["valid"] = true, ["machine"] = JsonNode.Parse(canonical), ["machineHash"] = GenerationDocuments.MachineHash(canonical),
+            var result = new JsonObject {
+                ["valid"] = true, ["machine"] = JsonNode.Parse(canonical), ["machineHash"] = GenerationDocuments.MachineHash(canonical),
                 ["packageHash"] = package.ContentHash, ["cpuWarnings"] = cpuWarnings, ["dryRun"] = dryRun, ["executed"] = false };
             if (action == "validate" || action == "import" && outputPath.Length == 0) return result;
             var files = format == "csv" && action != "import" ? MachineCsv.Export(package, canonical) :
@@ -272,7 +284,8 @@ namespace TiaMcp.Logic.Generation
         {
             var entries = new List<Entry>();
             Add(RepositoryRoot, true, 0); Add(UserRoot, false, 0);
-            return entries.OrderBy(e => e.Package.Manifest.Id, StringComparer.Ordinal).ThenBy(e => e.Package.Manifest.Version, StringComparer.Ordinal).ToArray();
+            return entries.OrderBy(e => e.Package.Manifest.Id, StringComparer.Ordinal).ThenBy(e => e.Package.Manifest.Version, StringComparer.Ordinal)
+                .ToArray();
             void Add(string root, bool repository, int depth)
             {
                 Safe(root);
@@ -296,14 +309,16 @@ namespace TiaMcp.Logic.Generation
         }
         private Entry Find(string id, string version)
         {
-            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(version)) throw new ArgumentException("Exact packageId and version are required.", "packageId");
+            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(version))
+                throw new ArgumentException("Exact packageId and version are required.", "packageId");
             return Inventory().SingleOrDefault(e => e.Package.Manifest.Id == id && e.Package.Manifest.Version == version)
                 ?? throw new ArgumentException("Package id/version is not installed.", "packageId");
         }
         private static JsonObject Summary(StandardPackage package) => new JsonObject { ["id"] = package.Manifest.Id, ["version"] = package.Manifest.Version,
             ["contentHash"] = package.ContentHash, ["manifest"] = JsonNode.Parse(package.Documents["package.json"].GetRawText()) };
         private static JsonNode? Part(StandardPackage package, string part)
-            => package.Documents["package.json"].GetProperty("parts").TryGetProperty(part, out var path) ? JsonNode.Parse(package.Documents[path.GetString()!].GetRawText()) : null;
+            => package.Documents["package.json"].GetProperty("parts").TryGetProperty(part, out var path) ? JsonNode
+                .Parse(package.Documents[path.GetString()!].GetRawText()) : null;
         private static JsonArray Coverage(StandardPackage package)
         {
             var library = Part(package, "library") as JsonObject;
@@ -317,14 +332,17 @@ namespace TiaMcp.Logic.Generation
                         return releases.ValueKind == JsonValueKind.Array ? releases.EnumerateArray().Any(r => r.GetString() == release)
                             : GenerationModelValidation.ReleaseMatches(releases.GetString()!, release);
                     })) missing.Add((string)type["id"]!);
-                result.Add(new JsonObject { ["release"] = release, ["complete"] = missing.Count == 0, ["missingImplementations"] = missing, ["nativeAcceptance"] = "NOT RUN" });
+                result
+                    .Add(new JsonObject {
+                        ["release"] = release, ["complete"] = missing.Count == 0, ["missingImplementations"] = missing, ["nativeAcceptance"] = "NOT RUN" });
             }
             return result;
         }
         private static StandardPackage LoadSource(string path)
         {
             path = Absolute(path, "sourcePath"); Safe(path);
-            return Directory.Exists(path) ? StandardPackageLoader.LoadDirectory(path) : Path.GetExtension(path).Equals(".zip", StringComparison.OrdinalIgnoreCase)
+            return Directory.Exists(path) ? StandardPackageLoader.LoadDirectory(path) : Path.GetExtension(path)
+                .Equals(".zip", StringComparison.OrdinalIgnoreCase)
                 ? StandardPackageLoader.LoadZip(path) : throw new ArgumentException("Use a package directory or .zip file.", "sourcePath");
         }
         private static StandardPackage Fork(StandardPackage source, string id, string version)
@@ -354,8 +372,10 @@ namespace TiaMcp.Logic.Generation
                     {
                         if (property.Value is JsonValue value && value.TryGetValue<string>(out var text))
                         {
-                            if (text.StartsWith("lib:" + source.Manifest.Id + "/", StringComparison.Ordinal)) obj[property.Key] = "lib:" + id + text.Substring(4 + source.Manifest.Id.Length);
-                            else if (property.Key == "package" && text == source.Manifest.Id) { obj[property.Key] = id; if (obj.ContainsKey("version")) obj["version"] = version; }
+                            if (text.StartsWith("lib:" + source.Manifest.Id + "/", StringComparison.Ordinal)) obj[property.Key] = "lib:" + id + text
+                                .Substring(4 + source.Manifest.Id.Length);
+                            else if (property.Key == "package" && text == source.Manifest.Id) {
+                                obj[property.Key] = id; if (obj.ContainsKey("version")) obj["version"] = version; }
                         }
                         else if (property.Value != null) Rewrite(property.Value);
                     }
@@ -397,7 +417,8 @@ namespace TiaMcp.Logic.Generation
         }
         internal static void RequirePlan(bool dryRun, string expected, string actual)
         {
-            if ((!dryRun || expected.Length != 0) && expected != actual) throw new ArgumentException("Use expectedPlanHash from a fresh preview; inputs or target changed.", "expectedPlanHash");
+            if ((!dryRun || expected.Length != 0) && expected != actual)
+                throw new ArgumentException("Use expectedPlanHash from a fresh preview; inputs or target changed.", "expectedPlanHash");
         }
         internal static string Absolute(string path, string parameter)
         {
@@ -413,11 +434,14 @@ namespace TiaMcp.Logic.Generation
                     throw new ArgumentException("Links and reparse points are prohibited.", nameof(path));
         }
         private static bool Within(string path, string root) => path.Equals(root, StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith(root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+            || path
+                .StartsWith(root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison
+                    .OrdinalIgnoreCase);
         private string NewOutput(string path, string extension)
         {
             path = NewDirectory(path);
-            if (!Path.GetExtension(path).Equals(extension, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Output must use " + extension + ".", "outputPath");
+            if (!Path.GetExtension(path).Equals(extension, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Output must use " + extension + ".", "outputPath");
             return path;
         }
         private string NewDirectory(string path)

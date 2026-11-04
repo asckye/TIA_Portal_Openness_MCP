@@ -19,9 +19,11 @@ namespace TiaMcp.Adapters
         }
         internal static void RequireRelease(string release)
         {
-            if(release!="18" && release!="19" && release!="20" && release!="21") throw new NotSupportedException("Hardware catalog search requires release-specific API and manual evidence; this release is not enabled.");
+            if(release!="18" && release!="19" && release!="20" && release!="21")
+                throw new NotSupportedException("Hardware catalog search requires release-specific API and manual evidence; this release is not enabled.");
         }
-        internal static PlcHardwareCatalogSearchResult Search(string release,string keyword,int limit,Func<string,IEnumerable<PlcHardwareCatalogCandidate>> find)
+        internal static PlcHardwareCatalogSearchResult Search(string release,string keyword,int limit,Func<string,
+                IEnumerable<PlcHardwareCatalogCandidate>> find)
         {
             RequireRelease(release);
             var query=Query(keyword,limit);
@@ -37,7 +39,9 @@ namespace TiaMcp.Adapters
                     if(!cursor.MoveNext()) break;
                     visited++;
                     var entry=cursor.Current ?? throw new InvalidOperationException("Hardware catalog returned a null entry.");
-                    var fields=new[]{entry.ArticleNumber,entry.CatalogPath,entry.Description,entry.TypeIdentifier,entry.TypeIdentifierNormalized,entry.TypeName,entry.Version};
+                    var fields=new[]{
+                        entry.ArticleNumber,entry.CatalogPath,entry.Description,entry.TypeIdentifier,entry.TypeIdentifierNormalized,entry.TypeName,entry.Version
+                    };
                     if(fields.Any(s=>s!=null && s.Length>MaximumFieldCharacters)) { reason="field-character-budget"; break; }
                     if(string.IsNullOrWhiteSpace(entry.TypeIdentifier)) throw new InvalidOperationException("Catalog entry has no exact type identifier.");
                     // Preserve exact identifiers, including casing, whitespace and version. Never synthesize an insertion identifier.
@@ -46,13 +50,20 @@ namespace TiaMcp.Adapters
                     var size=fields.Sum(s=>s?.Length??0)+query.Length+32;
                     if(characters+size>MaximumCharacters) { reason="response-character-budget"; break; }
                     characters+=size;
-                    rows.Add(new PlcHardwareCatalogCandidate { Keyword=query,ArticleNumber=entry.ArticleNumber,CatalogPath=entry.CatalogPath,Description=entry.Description,TypeIdentifier=entry.TypeIdentifier,TypeIdentifierNormalized=entry.TypeIdentifierNormalized,TypeName=entry.TypeName,Version=entry.Version });
+                    rows
+                        .Add(new PlcHardwareCatalogCandidate {
+                            Keyword=query,ArticleNumber=entry.ArticleNumber,CatalogPath=entry.CatalogPath,Description=entry.Description,TypeIdentifier=entry
+                                .TypeIdentifier,TypeIdentifierNormalized=entry.TypeIdentifierNormalized,TypeName=entry.TypeName,Version=entry.Version
+                        });
                 }
             }
             return new PlcHardwareCatalogSearchResult { Keyword=query,Count=rows.Count,Items=rows.ToArray(),Meta=new Dictionary<string,object> {
-                ["releaseKey"]=release,["scope"]="installed-catalog-single-literal-query",["queryCount"]=1,["visitedEntries"]=visited,["resultLimit"]=limit,["maximumEntries"]=MaximumEntries,["maximumResponseCharacters"]=MaximumCharacters,
-                ["truncated"]=reason!=null,["truncationReason"]=reason??"none",["complete"]=reason==null,["order"]="native-enumeration-first-seen",["insertionCompatibilityChecked"]=false,["nativeAcceptance"]="NOT RUN",
-                ["boundsScope"]="Client enumeration and response only; the documented synchronous Find API has no server-side result limit or cancellation parameter."
+                ["releaseKey"]=release,["scope"]="installed-catalog-single-literal-query",["queryCount"]=1,["visitedEntries"]=visited,["resultLimit"]=limit,
+                    ["maximumEntries"]=MaximumEntries,["maximumResponseCharacters"]=MaximumCharacters,
+                ["truncated"]=reason!=null,["truncationReason"]=reason??"none",["complete"]=reason==null,["order"]="native-enumeration-first-seen",
+                    ["insertionCompatibilityChecked"]=false,["nativeAcceptance"]="NOT RUN",
+                ["boundsScope"]=
+                    "Client enumeration and response only; the documented synchronous Find API has no server-side result limit or cancellation parameter."
             }};
         }
     }

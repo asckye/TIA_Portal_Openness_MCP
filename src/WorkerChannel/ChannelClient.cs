@@ -22,7 +22,8 @@ namespace TiaMcp.WorkerChannel
         public Exception? LastFault { get { lock (gate) return lastFault; } }
         public bool Poisoned { get { lock (gate) return poisoned || recoveryOnly; } }
         public bool CanDisconnect { get { lock (gate) return verified && !poisoned && !disposed && pending == null; } }
-        public bool CanCallIndependentRuntime { get { lock (gate) return profile != ChannelProfile.Studio && verified && !poisoned && !disposed && pending == null; } }
+        public bool CanCallIndependentRuntime {
+            get { lock (gate) return profile != ChannelProfile.Studio && verified && !poisoned && !disposed && pending == null; } }
         public bool InFlight { get { lock (gate) return pending?.Dispatched == true && !pending.Replied; } }
         public bool OutcomeUnknown { get { lock (gate) return unknown; } }
         public long BindingEpoch { get { lock (gate) return epoch; } }
@@ -66,7 +67,8 @@ namespace TiaMcp.WorkerChannel
                 if (!verified) throw Poison(new IOException("Worker hello has not been verified."));
                 if (pending != null) throw Poison(new IOException("Concurrent worker call; session stopped."));
                 if (!ChannelCodec.ValidMethod(method, profile)) throw new ArgumentException(profile == ChannelProfile.Foundation
-                    ? "Worker method must use adapter.<operation>." : profile == ChannelProfile.Engine ? "Worker method must use engine.<operation>." : "Invalid Studio method.");
+                    ? "Worker method must use adapter.<operation>." : profile == ChannelProfile.Engine ? "Worker method must use engine.<operation>."
+                        : "Invalid Studio method.");
                 if (correlationId != null && (profile == ChannelProfile.Studio || !ChannelCodec.ValidIdentity(correlationId)))
                     throw new ArgumentException("Correlation is a bounded worker request identity.");
                 if (toolName != null && (correlationId == null || profile == ChannelProfile.Studio || !ChannelCodec.ValidIdentity(toolName)))
@@ -134,7 +136,9 @@ namespace TiaMcp.WorkerChannel
                                 ChannelCodec.Fields(root, "jsonrpc", "method", "params");
                                 if (ChannelCodec.Text(root, "method") != "progress") throw new IOException("Duplicate or late worker hello/notification.");
                                 var progress = root.GetProperty("params");
-                                ChannelCodec.Fields(progress, profile != ChannelProfile.Foundation ? new[] { "requestId", "sequence", "percent", "payload" } : new[] { "requestId", "sequence", "percent" });
+                                ChannelCodec
+                                    .Fields(progress, profile != ChannelProfile.Foundation ? new[] { "requestId", "sequence", "percent", "payload" } : new[] {
+                                        "requestId", "sequence", "percent" });
                                 if (pending == null || pending.Replied || ChannelCodec.Number(progress, "requestId") != pending.Id ||
                                     ChannelCodec.Number(progress, "sequence") != pending.Progress + 1 ||
                                     ChannelCodec.Number(progress, "percent") > 100 || ++pending.Progress > ChannelCodec.ProgressLimit)
@@ -148,17 +152,20 @@ namespace TiaMcp.WorkerChannel
                             else
                             {
                                 ChannelCodec.Fields(root, "jsonrpc", "id", "bindingEpochBefore", "bindingEpochAfter", "result", "error");
-                                if (pending == null || pending.Replied || ChannelCodec.Number(root, "id") != pending.Id) throw new IOException("Unknown, old or duplicate worker reply id.");
+                                if (pending == null || pending.Replied || ChannelCodec.Number(root, "id") != pending.Id)
+                                    throw new IOException("Unknown, old or duplicate worker reply id.");
                                 var response = ChannelCodec.Response(root, profile);
                                 long before = ChannelCodec.Number(root, "bindingEpochBefore"), after = ChannelCodec.Number(root, "bindingEpochAfter");
                                 var change = response.Failure == null ? pending.Change
-                                    : response.Failure.Outcome == ChannelOutcome.Unknown && pending.Change != BindingChange.None ? BindingChange.MayAdvance : BindingChange.None;
+                                    : response.Failure.Outcome == ChannelOutcome.Unknown && pending.Change != BindingChange.None ? BindingChange.MayAdvance
+                                        : BindingChange.None;
                                 if (before != pending.Before || after < before ||
                                     (change == BindingChange.None && after != before) ||
                                     (change == BindingChange.Advance && after != checked(before + 1)) ||
                                     (change == BindingChange.MayAdvance && after != before && after != checked(before + 1)))
                                     throw new IOException("Unexpected worker binding epoch change.");
-                                if (response.Failure?.Outcome == ChannelOutcome.ReadFailed && !pending.ReadOnly) throw new IOException("A write cannot report ReadFailed.");
+                                if (response.Failure?.Outcome == ChannelOutcome.ReadFailed && !pending.ReadOnly)
+                                    throw new IOException("A write cannot report ReadFailed.");
                                 pending.Replied = true;
                                 epoch = after;
                                 pending.Completion.TrySetResult(response);
@@ -181,7 +188,10 @@ namespace TiaMcp.WorkerChannel
         private void RequireUsable(string? method = null)
         {
             bool independentRuntime = profile != ChannelProfile.Studio && method == "adapter.runtime-channels.ExecutePlcSimAdvanced";
-            if (poisoned || disposed || recoveryOnly && method != "adapter.Disconnect" && !independentRuntime) throw new ChannelFaultException("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are never replayed.", unknown);
+            if (poisoned || disposed || recoveryOnly && method != "adapter.Disconnect" && !independentRuntime)
+                throw new ChannelFaultException("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are " +
+                "never replayed.",
+                    unknown);
         }
 
         private ChannelFaultException Poison(Exception cause)
@@ -207,7 +217,9 @@ namespace TiaMcp.WorkerChannel
                 if (await Task.WhenAny(task, delay).ConfigureAwait(false) != task)
                 {
                     // Observe failures from a pipe operation that completes after the deadline.
-                    _ = task.ContinueWith(t => { _ = t.Exception; }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                    _ = task
+                        .ContinueWith(t => { _ = t.Exception; }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions
+                            .ExecuteSynchronously, TaskScheduler.Default);
                     token.ThrowIfCancellationRequested();
                     throw new TimeoutException(firstAttach
                         ? "Worker timed out; native outcome is unknown. A first attach or isolated start from a new worker or build may be waiting for TIA Portal Openness access confirmation (the Openness firewall dialog); choose ‘Yes’ or ‘Yes to all’ on the TIA machine, or have an administrator add the worker to the Openness AllowList (Workbench environment check ‘Openness AllowList’)."
@@ -239,7 +251,8 @@ namespace TiaMcp.WorkerChannel
             internal readonly bool ReadOnly;
             internal bool Dispatched, Replied;
             internal int Progress;
-            internal readonly TaskCompletionSource<ChannelResponse> Completion = new TaskCompletionSource<ChannelResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            internal readonly TaskCompletionSource<ChannelResponse> Completion =
+                new TaskCompletionSource<ChannelResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
             internal Pending(long id, long before, BindingChange change, bool readOnly) { Id = id; Before = before; Change = change; ReadOnly = readOnly; }
         }
     }

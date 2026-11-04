@@ -53,7 +53,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
                 change.Property.SetValue(target, change.Value);
                 applied.Add(change.Property.Name);
-                if (!SameValue(change.Property.GetValue(target), change.Value)) throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
+                if (!SameValue(change.Property.GetValue(target), change.Value))
+                    throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
             }
         }
     }

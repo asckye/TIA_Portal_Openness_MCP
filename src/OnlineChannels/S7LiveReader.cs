@@ -414,7 +414,9 @@ namespace TiaMcpServer.Runtime
                         state.DiagRecordCount = szl.Header.N_DR;
                         state.DiagEntries = ParseSzlDiagRecords(szl.Data, szl.Header.LENTHDR, szl.Header.N_DR, maxDiagEntries);
                         if (state.DiagEntries.Count > 0)
-                            state.DiagNote = "Raw diagnostic-buffer records (newest first as returned by the CPU). Event IDs are hex; full event text requires TIA's text database.";
+                            state.DiagNote =
+                                "Raw diagnostic-buffer records (newest first as returned by the CPU). Event IDs are hex; full event text requires TIA's text " +
+                                "database.";
                     }
                     else state.DiagNote = $"Diagnostic buffer not available over SZL on this CPU ({client.ErrorText(rcSzl)}). RUN/STOP above is still valid.";
                 }

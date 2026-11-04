@@ -17,12 +17,21 @@ namespace TiaMcpServer.Siemens.Services
         private string buildFormat = "";
         internal PlcArtifactPortSession(PlcOrganisationPortService service, string tool) { this.service = service; this.tool = tool; }
         internal void RequireBuildFormat(string kind)
-        { var refusal = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, tool, family: kind); if (refusal != null) throw new NotSupportedException(refusal); buildFormat = kind; }
+        {
+            var refusal = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, tool, family: kind); if (refusal != null)
+                throw new NotSupportedException(refusal); buildFormat = kind;
+        }
         private JsonObject Invoke(string action, string path, string group = "", string file = "", bool overwrite = false)
-            => service.Artifact(new PlcSoftwareRequest { Operation = tool, Family = buildFormat, Action = action, SoftwarePath = path, GroupPath = group, FilePath = file, Overwrite = overwrite, DryRun = action == "softwarePath" });
+            => service
+                .Artifact(new PlcSoftwareRequest {
+                    Operation = tool, Family = buildFormat, Action = action, SoftwarePath = path, GroupPath = group, FilePath = file, Overwrite = overwrite,
+                        DryRun = action == "softwarePath"
+                });
         // overwrite=false refuses an existing object of the same name before the native import (API audit 2026-10-19 F25).
-        public bool ImportBlock(string path, string group, string file, bool overwrite) => (bool?)Invoke("importBlock", path, group, file, overwrite)["Found"] == true;
-        public bool ImportType(string path, string group, string file, bool overwrite) => (bool?)Invoke("importType", path, group, file, overwrite)["Found"] == true;
+        public bool ImportBlock(string path, string group, string file, bool overwrite) =>
+            (bool?)Invoke("importBlock", path, group, file, overwrite)["Found"] == true;
+        public bool ImportType(string path, string group, string file, bool overwrite) =>
+            (bool?)Invoke("importType", path, group, file, overwrite)["Found"] == true;
         public void ImportPlcTagTable(string path, string group, string file, bool overwrite) => Invoke("importTagTable", path, group, file, overwrite);
         public string SoftwarePath(string path) => (string?)Invoke("softwarePath", path)["Message"] ?? "";
         public PlcArtifactBlock? ExportBlock(string path, string block, string folder)
@@ -34,20 +43,30 @@ namespace TiaMcpServer.Siemens.Services
             => JsonSerializer.Deserialize<PlcCompilerEvidence>(Invoke("compile", path)["Compiler"]!.ToJsonString())!;
         internal static ResponseCompile BuildCompileResponse(string path, PlcCompilerEvidence result) => new ResponseCompile {
             Message = "Software '" + path + "' compile state=" + result.State + "; see Meta for root counts and diagnostic scopes.", State = result.State,
-            ErrorCount = result.ErrorCount, WarningCount = result.WarningCount, Messages = result.RawMessages, Meta = JsonSerializer.SerializeToNode(result.Meta)!.AsObject()
+            ErrorCount = result.ErrorCount, WarningCount = result.WarningCount, Messages = result.RawMessages, Meta = JsonSerializer
+                .SerializeToNode(result.Meta)!.AsObject()
         };
         public ResponseCompileDiagnose CompileAndDiagnose(string path)
         {
             try { var result = CompileSoftware(path); return new ResponseCompileDiagnose {
                 Message = "Software '" + path + "' compile state=" + result.State + "; root counts and diagnostics scopes are in Meta.", State = result.State,
-                ErrorCount = result.ErrorCount, WarningCount = result.WarningCount, Errors = result.Errors, Warnings = result.Warnings, Info = result.Info, RawMessages = result.RawMessages,
+                ErrorCount = result.ErrorCount, WarningCount = result.WarningCount, Errors = result.Errors, Warnings = result.Warnings, Info = result.Info,
+                    RawMessages = result.RawMessages,
                 Meta = JsonSerializer.SerializeToNode(result.Meta)!.AsObject() }; }
-            catch (PortalException error) { throw new McpException("Failed compiling software '" + path + "' [" + error.Code + "]: " + error.Message, error, McpErrorCode.InternalError); }
-            catch (Exception error) when (error is not McpException) { throw new McpException("Unexpected error compiling software '" + path + "': " + error.Message + McpHints.Recovery(error), error, McpErrorCode.InternalError); }
+            catch (PortalException error) {
+                throw new McpException("Failed compiling software '" + path + "' [" + error.Code + "]: " + error.Message, error, McpErrorCode.InternalError); }
+            catch (Exception error) when (error is not McpException) {
+                throw new McpException("Unexpected error compiling software '" + path + "': " + error.Message + McpHints.Recovery(error), error, McpErrorCode
+                        .InternalError);
+            }
         }
         public ResponseImportBatch ImportBlocksFromDirectory(string path, string group, string directory, string regexName = "", bool overwrite = false)
         {
-            var reply = service.Artifact(new PlcSoftwareRequest { Operation = tool, Action = "importBlockDirectory", SoftwarePath = path, GroupPath = group, FilePath = directory, RegexName = regexName, Overwrite = overwrite, DryRun = false });
+            var reply = service
+                .Artifact(new PlcSoftwareRequest {
+                    Operation = tool, Action = "importBlockDirectory", SoftwarePath = path, GroupPath = group, FilePath = directory, RegexName = regexName,
+                        Overwrite = overwrite, DryRun = false
+                });
             return JsonSerializer.Deserialize<ResponseImportBatch>(reply["Batch"]!.ToJsonString())!;
         }
     }
@@ -55,13 +74,22 @@ namespace TiaMcpServer.Siemens.Services
     {
         internal JsonObject Artifact(PlcSoftwareRequest request)
         {
-            if (!hasProject()) throw new PortalException(PortalErrorCode.InvalidState, request.Action == "compile" ? "Project is null" : "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (!hasProject())
+                throw new PortalException(PortalErrorCode.InvalidState, request.Action == "compile" ? "Project is null"
+                    : "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                    "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
             return Invoke(request);
         }
         private ResponseImportBatch SeedHmiImport(string kind, string path, string folder, string directory)
         {
-            if (HardwareContract.ReleaseKey != "20" && HardwareContract.ReleaseKey != "21") throw new NotSupportedException("Seed HMI imports depend on the B7 engine worker port in this release.");
-            var reply = call("plc-software.SeedReferenceHmi", new JsonObject { ["request"] = JsonSerializer.SerializeToNode(new SeedHmiRequest { Kind = kind, SoftwarePath = path, FolderPath = folder, Directory = directory }), ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = projectIdentity() });
+            if (HardwareContract.ReleaseKey != "20" && HardwareContract.ReleaseKey != "21")
+                throw new NotSupportedException("Seed HMI imports depend on the B7 engine worker port in this release.");
+            var reply =
+                call("plc-software.SeedReferenceHmi", new JsonObject {
+                    ["request"] = JsonSerializer
+                        .SerializeToNode(new SeedHmiRequest { Kind = kind, SoftwarePath = path, FolderPath = folder, Directory = directory }), ["dryRun"] =
+                        false, ["confirm"] = true, ["expectedProjectFile"] = projectIdentity()
+                });
             return JsonSerializer.Deserialize<ResponseImportBatch>(reply!.ToJsonString())!;
         }
     }

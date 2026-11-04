@@ -54,23 +54,27 @@ namespace TiaMcp.Logic.V4
             string? missing = MissingApplyArgument(args, false);
             if (missing == null && args["importOrder"] is not JsonArray { Count: > 0 }) missing = "importOrder";
             if (missing == null && !PendingApproval.IsHash((string?)args["expectedPlanHash"])) missing = "expectedPlanHash";
-            return missing == null ? null : new Error("Apply requires " + missing + " from a reviewed preview.", new InvalidArgumentDetails(missing, Array.Empty<string>()));
+            return missing == null ? null
+                : new Error("Apply requires " + missing + " from a reviewed preview.", new InvalidArgumentDetails(missing, Array.Empty<string>()));
         }
         internal static Error? BatchPreviewRefusal(string tool, JsonObject args, JsonNode? body)
         {
             if (!IsBatchImport(tool) || body?["ok"]?.GetValue<bool>() != true) return null;
             string? key = (string?)body["data"]?["projectFile"] != (string?)args["expectedProjectFile"] ? "expectedProjectFile"
                 : (string?)body["data"]?["planHash"] != (string?)args["expectedPlanHash"] ? "expectedPlanHash" : null;
-            return key == null ? null : new Error("Plan or project changed; review a fresh preview before applying.", new PlanStaleDetails((string?)args["expectedPlanHash"], key));
+            return key == null ? null
+                : new Error("Plan or project changed; review a fresh preview before applying.", new PlanStaleDetails((string?)args["expectedPlanHash"], key));
         }
 
         internal static bool PreviewHasNoEffect(JsonNode? body)
         {
             if (body?["ok"] is not JsonValue ok || !ok.TryGetValue<bool>(out var succeeded) || !succeeded || body["data"] is not JsonObject data) return false;
             bool False(string key) => data[key] is JsonValue value && value.TryGetValue<bool>(out var flag) && !flag;
-            return (string?)data["status"] == "not-found-not-deleted" && False("attempted") && False("executed") && False("deleted") && (string?)data["targetIdentity"] == ""
+            return (string?)data["status"] == "not-found-not-deleted" && False("attempted") && False("executed") && False("deleted")
+                && (string?)data["targetIdentity"] == ""
                 || data["plan"]?["operations"] is JsonArray { Count: 0 }
-                || data["inventoryComplete"] is JsonValue complete && complete.TryGetValue<bool>(out var inventory) && inventory && data["items"] is JsonArray { Count: 0 };
+                || data["inventoryComplete"] is JsonValue complete && complete.TryGetValue<bool>(out var inventory) && inventory && data["items"] is JsonArray {
+                    Count: 0 };
         }
 
         internal static void ExportPreview(JsonObject data)
@@ -96,12 +100,20 @@ namespace TiaMcp.Logic.V4
             string? condition = null)
             => kind switch
             {
-                HostFailureKind.Argument => new Error(nativeMessage ?? "The request argument was refused before operation.", new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
-                HostFailureKind.Precondition => new Error(nativeMessage ?? "The request precondition failed before operation.", new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
+                HostFailureKind.Argument =>
+                    new Error(nativeMessage ?? "The request argument was refused before operation.",
+                        new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
+                HostFailureKind.Precondition =>
+                    new Error(nativeMessage ?? "The request precondition failed before operation.",
+                        new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
                 HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails(stage)),
-                HostFailureKind.Unknown => new Error("The operation outcome is unknown; inspect the retained evidence before a new session.", new OutcomeUnknownDetails("tool-call", evidence, reason)),
+                HostFailureKind.Unknown =>
+                    new Error("The operation outcome is unknown; inspect the retained evidence before a new session.",
+                        new OutcomeUnknownDetails("tool-call", evidence, reason)),
                 HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(null)),
-                _ => new Error("The native read could not be completed.", new NativeOperationFailedDetails(null, nativeMessage ?? EvidenceMessage(evidence), evidence))
+                _ =>
+                    new Error("The native read could not be completed.",
+                        new NativeOperationFailedDetails(null, nativeMessage ?? EvidenceMessage(evidence), evidence))
             };
 
         private static string? EvidenceMessage(IReadOnlyDictionary<string, JsonElement> evidence)
@@ -129,7 +141,8 @@ namespace TiaMcp.Logic.V4
             { return "Native operation failed."; }
         }
 
-        internal static string? AdmissionDiagnostic(Exception error, int? reportedCode = null, string? reportedOutcome = null, string? reportedExceptionType = null)
+        internal static string
+            ? AdmissionDiagnostic(Exception error, int? reportedCode = null, string? reportedOutcome = null, string? reportedExceptionType = null)
         {
             if (HostFailurePolicy.SuppressAdmissionDiagnostic(error)) return null;
             var precondition = HostFailurePolicy.Precondition(error);
@@ -175,12 +188,14 @@ namespace TiaMcp.Logic.V4
         internal static IReadOnlyDictionary<string, JsonElement> FailureEvidence(string? exceptionType, string? message = null, bool native = false)
             => new Dictionary<string, JsonElement> {
                 ["exceptionType"] = JsonSerializer.SerializeToElement(exceptionType),
-                ["workerMessage"] = JsonSerializer.SerializeToElement(native || exceptionType == nameof(System.IO.IOException) ? SafeDiagnostic(message) : null) };
+                ["workerMessage"] = JsonSerializer
+                    .SerializeToElement(native || exceptionType == nameof(System.IO.IOException) ? SafeDiagnostic(message) : null) };
 
         internal static Error? ExpectedProjectArgument(string? expectedProject)
         {
             if (expectedProject == null || expectedProject.IndexOfAny(new[] { '/', '\\', ':' }) < 0) return null;
-            return new Error("expectedProject must be the exact project NAME, for example 'AutomaticDipCoatingMachine'. Use expectedProjectFile only when the tool requests an absolute project file path.",
+            return new Error("expectedProject must be the exact project NAME, for example 'AutomaticDipCoatingMachine'. Use expectedProjectFile only when " +
+                "the tool requests an absolute project file path.",
                 new InvalidArgumentDetails("expectedProject", Array.Empty<string>()));
         }
         internal static JsonObject RetainedRecoveryEvidence(Exception error)

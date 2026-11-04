@@ -26,7 +26,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["phase"] = phase;
             var module = UnifiedScriptAccess.Module(resolveHmi(), moduleName);
             Directory.CreateDirectory(directory);
-            var capture = NativeExportCapture.Read(module, "/Scripts/" + MigrationRead.Segment(moduleName), false, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory)));
+            var capture = NativeExportCapture
+                .Read(module, "/Scripts/" + MigrationRead.Segment(moduleName), false,
+                    new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory)));
             meta[phase] = capture.Status();
             if (!capture.ApiCallSuccess || !capture.NativeSuccess || !capture.InspectionComplete)
             {
@@ -65,7 +67,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             var work = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
             var backup = Path.Combine(work, "before");
             meta["backupDirectory"] = backup;
-            meta["backupRetention"] = "Native files stay on the MCP machine for recovery; they may contain private project source. Remove manually when no longer needed.";
+            meta["backupRetention"] =
+                "Native files stay on the MCP machine for recovery; they may contain private project source. Remove manually when no longer needed.";
             var before = Export(resolveHmi, moduleName, backup, "exportBefore", meta);
             if (before == null) return "Module export failed; no import attempted. Inspect exportBefore and failures.";
             var candidateBytes = before.Encode(scriptCode);
@@ -96,7 +99,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             // from Export. Import only this isolated, validated one-module folder.
             var scripts = UnifiedScriptAccess.Scripts(resolveHmi());
             var import = scripts.GetType().GetMethod("Import", new[] { typeof(DirectoryInfo) });
-            if (import == null || import.ReturnType != typeof(bool)) throw new NotSupportedException("Official Scripts.Import(DirectoryInfo) -> bool is unavailable.");
+            if (import == null || import.ReturnType != typeof(bool))
+                throw new NotSupportedException("Official Scripts.Import(DirectoryInfo) -> bool is unavailable.");
             meta["phase"] = "import"; meta["importMethod"] = "HmiSoftware.Scripts.Import(DirectoryInfo)";
             meta["apiCallSuccess"] = false; meta["importAttempted"] = true; meta["mayHaveChanged"] = true;
             bool returned = (bool)import.Invoke(scripts, new object[] { new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(candidate)) })!;
@@ -104,15 +108,18 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (!returned)
             {
                 meta["status"] = "ImportRejected";
-                return "Native Import returned false. Partial changes cannot be excluded; inspect TIA and the backup. No retry, delete/recreate or rollback was attempted.";
+                return "Native Import returned false. Partial changes cannot be excluded; inspect TIA and the backup. No retry, delete/recreate or rollback " +
+                    "was attempted.";
             }
             var verified = Export(resolveHmi, moduleName, Path.Combine(work, "verify"), "exportAfter", meta);
-            if (verified == null) return "Import returned true, but readback export failed. Changes may exist; success is not established. Do not retry automatically.";
+            if (verified == null)
+                return "Import returned true, but readback export failed. Changes may exist; success is not established. Do not retry automatically.";
             meta["readback"] = verified.Evidence();
             bool match = string.Equals(verified.Text, scriptCode, StringComparison.Ordinal);
             meta["verificationSuccess"] = match; meta["operationSuccess"] = match;
             meta["status"] = match ? "Verified" : "ReadbackMismatch";
-            return match ? "Selected module imported and exact full-text readback verified. Project remains unsaved; navigation targets still require separate review."
+            return match
+                ? "Selected module imported and exact full-text readback verified. Project remains unsaved; navigation targets still require separate review."
                 : "Import returned true but complete script text differs on readback. Inspect before/after/readback; no automatic retry or rollback.";
         }
     }

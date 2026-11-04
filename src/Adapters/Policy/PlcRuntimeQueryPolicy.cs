@@ -15,7 +15,8 @@ namespace TiaMcp.Adapters
             { if(match!=null) throw new InvalidOperationException("Duplicate process identity in diagnostic snapshot."); match=item; }
             return new PlcConnectReadiness { ReleaseKey=query.ReleaseKey,ProcessId=processId,ProcessFound=match!=null,Process=match,
                 Readiness=match==null ? "not-found" : "unknown",
-                Reason=match==null ? "Selected process absent from this release snapshot." : "Process metadata does not prove attach permission, installed options, or runtime readiness. No attachment was attempted." };
+                Reason=match==null ? "Selected process absent from this release snapshot."
+                    : "Process metadata does not prove attach permission, installed options, or runtime readiness. No attachment was attempted." };
         }
     }
 }

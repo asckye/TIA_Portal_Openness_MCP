@@ -22,7 +22,8 @@ namespace TiaMcp.Adapters
                 return new HmiReply { Value = UnifiedHmiInputValidation.Preview(request) };
             Check();
             if (!PortedFamilies.Available(ReleaseKey, request.Operation)) throw new NotSupportedException("WinCC Unified HMI API requires V19 or later.");
-            if (UnifiedHmiCapabilities.Unsupported(ReleaseKey, request.Operation, request.Action, request.ItemType, request.DynamizationType) is string unavailable)
+            if (UnifiedHmiCapabilities
+                    .Unsupported(ReleaseKey, request.Operation, request.Action, request.ItemType, request.DynamizationType) is string unavailable)
                 throw new NotSupportedException(unavailable);
             if (request.Inputs.TryGetValue(request.DesignJson, out var design) && design.Kind == "object"
                 && design.Properties.TryGetValue("items", out var items) && items.Kind == "array")
@@ -47,29 +48,71 @@ namespace TiaMcp.Adapters
 #if HMI_UNIFIED
                 switch (request.Operation)
                 {
-                    case "SetUnifiedHmiRuntimeState": reply.Value = new UnifiedHmiAdapter(session).EnsureStartStopUnifiedHmi(request.HmiSoftwarePath, request.ScreenName, request.TagTableName, request.PlcName, request.ConnectionName); break;
-                    case "EnsureUnifiedHmiScreen": reply.Value = new UnifiedHmiAdapter(session).EnsureUnifiedHmiScreen(request.HmiSoftwarePath, request.ScreenName, request.Width, request.Height); break;
-                    case "EnsureUnifiedHmiTagTable": reply.Value = new UnifiedHmiAdapter(session).EnsureUnifiedHmiTagTable(request.HmiSoftwarePath, request.TagTableName); break;
-                    case "EnsureUnifiedHmiTag": reply.Value = new UnifiedHmiAdapter(session).EnsureUnifiedHmiTag(request.HmiSoftwarePath, request.TagTableName, request.TagName, request.HmiDataType, request.PlcName, request.PlcTag, request.ConnectionName, request.Address, request.RequireVerifiedBinding); break;
-                    case "EnsureUnifiedHmiConnection": reply.Value = new UnifiedHmiAdapter(session).EnsureUnifiedHmiConnection(request.HmiSoftwarePath, request.ConnectionName, request.PlcName); break;
-                    case "EnsureUnifiedHmiScreenItem": reply.Value = new UnifiedHmiAdapter(session).EnsureUnifiedHmiScreenItem(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.ItemType, request.Left, request.Top, request.Width, request.Height, request.Text); break;
-                    case "GetUnifiedHmiTexts": reply.Value = new UnifiedHmiAdapter(session).ReadUnifiedHmiTexts(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.TextProperty); break;
-                    case "ApplyUnifiedHmiScreenDesign": reply.Value = new UnifiedHmiAdapter(session).ApplyUnifiedHmiScreenDesignJson(request.HmiSoftwarePath, request.ScreenName, request.DesignJson, request.Strict); break;
-                    case "BindUnifiedHmiButtonPressedTag": reply.Value = new UnifiedHmiAdapter(session).BindUnifiedHmiButtonPressedTag(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.TagName); break;
-                    case "ListUnifiedHmiApiTypes": reply.Value = new UnifiedHmiAdapter(session).ListUnifiedHmiApiTypes(request.NameContains, request.Limit); break;
-                    case "EnsureUnifiedHmiButtonEventHandler": reply.Value = new UnifiedHmiAdapter(session).EnsureUnifiedHmiButtonEventHandler(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType); break;
-                    case "DescribeUnifiedHmiButtonEventScript": reply.Value = new UnifiedHmiAdapter(session).DescribeUnifiedHmiButtonEventScript(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType, request.MaxMembers); break;
-                    case "SetUnifiedHmiButtonEventScriptCode": reply.Value = new UnifiedHmiAdapter(session).SetUnifiedHmiButtonEventScriptCode(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType, request.ScriptCode, request.GlobalDefinitionAreaScriptCode, request.Async, request.SyntaxCheck); break;
-                    case "EnsureUnifiedHmiDynamization": reply.Value = new UnifiedHmiAdapter(session).EnsureUnifiedHmiDynamization(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.PropertyName, request.DynamizationType); break;
-                    case "BindUnifiedHmiTagDynamization": reply.Value = new UnifiedHmiAdapter(session).BindUnifiedHmiTagDynamization(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.PropertyName, request.TagName, request.DataType, request.PlcTag, request.Address); break;
-                    case "DescribeUnifiedScreenItemType": reply.Value = new UnifiedScreenItemsAdapter(session).DescribeUnifiedScreenItemType(request.ItemType, request.Depth); break;
-                    case "ManageUnifiedScreenItem": reply.Value = new UnifiedScreenItemsAdapter(session).ManageUnifiedScreenItem(request.SoftwarePath, request.ScreenPath, request.Action, request.ItemName, request.ItemType, request.PropertiesJson, request.Depth, request.ConfirmDelete, request.Offset, request.Limit, request.DryRun, request.ContainedType); break;
-                    case "ManageUnifiedHmiGroup": reply.Value = new UnifiedHmiGroupsAdapter(session).ManageUnifiedHmiGroup(request.SoftwarePath, request.Family, request.GroupPath, request.Action, request.NewName, request.DryRun); break;
-                    case "GetUnifiedHmiButtonEvent": reply.Value = new UnifiedHmiInspectionAdapter(session).ReadUnifiedHmiButtonEvent(request.SoftwarePath, request.ScreenPath, request.ButtonName, request.EventType); break;
-                    case "DeleteUnifiedHmiButtonEvent": reply.Value = new UnifiedHmiInspectionAdapter(session).DeleteUnifiedHmiButtonEvent(request.SoftwarePath, request.ScreenPath, request.ButtonName, request.EventType, request.DryRun, request.ExpectedToken, request.OnlyIfEmpty); break;
-                    case "GetUnifiedHmiDynamization": reply.Value = new UnifiedHmiInspectionAdapter(session).ReadUnifiedHmiDynamization(request.SoftwarePath, request.ScreenPath, request.ItemName, request.PropertyName); break;
-                    case "DeleteUnifiedHmiDynamization": reply.Value = new UnifiedHmiInspectionAdapter(session).DeleteUnifiedHmiDynamization(request.SoftwarePath, request.ScreenPath, request.ItemName, request.PropertyName, request.DryRun, request.ExpectedToken); break;
-                    case "DeleteEmptyUnifiedHmiScreenGroup": reply.Value = new UnifiedHmiInspectionAdapter(session).DeleteEmptyUnifiedHmiScreenGroup(request.SoftwarePath, request.GroupPath, request.DryRun); break;
+                    case "SetUnifiedHmiRuntimeState": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureStartStopUnifiedHmi(request.HmiSoftwarePath, request.ScreenName, request.TagTableName, request.PlcName, request.ConnectionName);
+                    break;
+                    case "EnsureUnifiedHmiScreen": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureUnifiedHmiScreen(request.HmiSoftwarePath, request.ScreenName, request.Width, request.Height); break;
+                    case "EnsureUnifiedHmiTagTable": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureUnifiedHmiTagTable(request.HmiSoftwarePath, request.TagTableName); break;
+                    case "EnsureUnifiedHmiTag": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureUnifiedHmiTag(request.HmiSoftwarePath, request.TagTableName, request.TagName, request.HmiDataType, request.PlcName, request
+                            .PlcTag, request.ConnectionName, request.Address, request.RequireVerifiedBinding);
+                    break;
+                    case "EnsureUnifiedHmiConnection": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureUnifiedHmiConnection(request.HmiSoftwarePath, request.ConnectionName, request.PlcName); break;
+                    case "EnsureUnifiedHmiScreenItem": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureUnifiedHmiScreenItem(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.ItemType, request.Left, request.Top,
+                            request.Width, request.Height, request.Text);
+                    break;
+                    case "GetUnifiedHmiTexts": reply.Value = new UnifiedHmiAdapter(session)
+                        .ReadUnifiedHmiTexts(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.TextProperty); break;
+                    case "ApplyUnifiedHmiScreenDesign": reply.Value = new UnifiedHmiAdapter(session)
+                        .ApplyUnifiedHmiScreenDesignJson(request.HmiSoftwarePath, request.ScreenName, request.DesignJson, request.Strict); break;
+                    case "BindUnifiedHmiButtonPressedTag": reply.Value = new UnifiedHmiAdapter(session)
+                        .BindUnifiedHmiButtonPressedTag(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.TagName); break;
+                    case "ListUnifiedHmiApiTypes": reply.Value = new UnifiedHmiAdapter(session).ListUnifiedHmiApiTypes(request.NameContains, request.Limit);
+                    break;
+                    case "EnsureUnifiedHmiButtonEventHandler": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureUnifiedHmiButtonEventHandler(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType); break;
+                    case "DescribeUnifiedHmiButtonEventScript": reply.Value = new UnifiedHmiAdapter(session)
+                        .DescribeUnifiedHmiButtonEventScript(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType, request
+                            .MaxMembers);
+                    break;
+                    case "SetUnifiedHmiButtonEventScriptCode": reply.Value = new UnifiedHmiAdapter(session)
+                        .SetUnifiedHmiButtonEventScriptCode(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType, request
+                            .ScriptCode, request.GlobalDefinitionAreaScriptCode, request.Async, request.SyntaxCheck);
+                    break;
+                    case "EnsureUnifiedHmiDynamization": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureUnifiedHmiDynamization(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.PropertyName, request
+                            .DynamizationType);
+                    break;
+                    case "BindUnifiedHmiTagDynamization": reply.Value = new UnifiedHmiAdapter(session)
+                        .BindUnifiedHmiTagDynamization(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.PropertyName, request.TagName,
+                            request.DataType, request.PlcTag, request.Address);
+                    break;
+                    case "DescribeUnifiedScreenItemType": reply.Value = new UnifiedScreenItemsAdapter(session)
+                        .DescribeUnifiedScreenItemType(request.ItemType, request.Depth); break;
+                    case "ManageUnifiedScreenItem": reply.Value = new UnifiedScreenItemsAdapter(session)
+                        .ManageUnifiedScreenItem(request.SoftwarePath, request.ScreenPath, request.Action, request.ItemName, request.ItemType, request
+                            .PropertiesJson, request.Depth, request.ConfirmDelete, request.Offset, request.Limit, request.DryRun, request.ContainedType);
+                    break;
+                    case "ManageUnifiedHmiGroup": reply.Value = new UnifiedHmiGroupsAdapter(session)
+                        .ManageUnifiedHmiGroup(request.SoftwarePath, request.Family, request.GroupPath, request.Action, request.NewName, request.DryRun); break;
+                    case "GetUnifiedHmiButtonEvent": reply.Value = new UnifiedHmiInspectionAdapter(session)
+                        .ReadUnifiedHmiButtonEvent(request.SoftwarePath, request.ScreenPath, request.ButtonName, request.EventType); break;
+                    case "DeleteUnifiedHmiButtonEvent": reply.Value = new UnifiedHmiInspectionAdapter(session)
+                        .DeleteUnifiedHmiButtonEvent(request.SoftwarePath, request.ScreenPath, request.ButtonName, request.EventType, request.DryRun, request
+                            .ExpectedToken, request.OnlyIfEmpty);
+                    break;
+                    case "GetUnifiedHmiDynamization": reply.Value = new UnifiedHmiInspectionAdapter(session)
+                        .ReadUnifiedHmiDynamization(request.SoftwarePath, request.ScreenPath, request.ItemName, request.PropertyName); break;
+                    case "DeleteUnifiedHmiDynamization": reply.Value = new UnifiedHmiInspectionAdapter(session)
+                        .DeleteUnifiedHmiDynamization(request.SoftwarePath, request.ScreenPath, request.ItemName, request.PropertyName, request.DryRun, request
+                            .ExpectedToken);
+                    break;
+                    case "DeleteEmptyUnifiedHmiScreenGroup": reply.Value = new UnifiedHmiInspectionAdapter(session)
+                        .DeleteEmptyUnifiedHmiScreenGroup(request.SoftwarePath, request.GroupPath, request.DryRun); break;
                     default: throw new ArgumentException("Unknown Unified HMI operation.");
                 }
 #else
@@ -79,7 +122,8 @@ namespace TiaMcp.Adapters
             catch (Exception error)
             {
                 var cause = error.GetBaseException();
-                reply.Failure = new PlcSoftwareFailure { Code = cause is PlcSoftwareException native ? native.Code : cause.GetType().Name, Message = cause.Message };
+                reply.Failure = new PlcSoftwareFailure {
+                    Code = cause is PlcSoftwareException native ? native.Code : cause.GetType().Name, Message = cause.Message };
             }
             finally
             {
@@ -91,7 +135,8 @@ namespace TiaMcp.Adapters
             }
             reply.MayHaveChanged = session.MayHaveChanged;
             if (reply.Failure != null) reply.RequiresSessionReset = session.MayHaveChanged;
-            if (reply.Value is HmiMessage message) reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var reset) && reset is true
+            if (reply.Value is HmiMessage message) reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var reset)
+                && reset is true
                 || session.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success) && success is false;
             return reply;
         }

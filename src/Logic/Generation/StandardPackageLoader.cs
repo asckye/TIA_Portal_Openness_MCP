@@ -82,14 +82,22 @@ namespace TiaMcp.Logic.Generation
             {
                 var location = "/devices/" + index++;
                 if (!definitions.TryGetValue(device.GetProperty("type").GetString()!, out var rule))
-                { errors.Add(new GenerationValidationError(location + "/type", "reference", "Device type is not defined in this package; resolve inherited packages first.")); continue; }
+                {
+                    errors
+                        .Add(new GenerationValidationError(location + "/type", "reference",
+                                "Device type is not defined in this package; resolve inherited packages first."));
+                    continue;
+                }
                 foreach (var error in GenerationSchemas.ValidateSchema(rule.GetProperty("params"), device.GetProperty("params"), "common.schema.json"))
                     errors.Add(new GenerationValidationError(location + "/params" + error.Path, error.Rule, error.Message));
-                var signals = new HashSet<string>(rule.GetProperty("signals").EnumerateArray().Select(s => s.GetProperty("role").GetString()!), StringComparer.Ordinal);
+                var signals =
+                    new HashSet<string>(rule.GetProperty("signals").EnumerateArray().Select(s => s.GetProperty("role").GetString()!), StringComparer.Ordinal);
                 foreach (var io in device.GetProperty("io").EnumerateObject())
-                    if (!signals.Contains(io.Name)) errors.Add(new GenerationValidationError(location + "/io/" + CanonicalJson.Pointer(io.Name), "reference", "Unknown signal role."));
+                    if (!signals.Contains(io.Name)) errors
+                        .Add(new GenerationValidationError(location + "/io/" + CanonicalJson.Pointer(io.Name), "reference", "Unknown signal role."));
             }
-            if (!Manifest.Targets.Releases.Contains(machine.Target.Release)) errors.Add(new GenerationValidationError("/target/release", "release-coverage", "Package does not support the machine target release."));
+            if (!Manifest.Targets.Releases.Contains(machine.Target.Release)) errors
+                .Add(new GenerationValidationError("/target/release", "release-coverage", "Package does not support the machine target release."));
             if (errors.Count != 0) throw new GenerationValidationException(errors);
             return machine;
         }
@@ -205,14 +213,16 @@ namespace TiaMcp.Logic.Generation
             foreach (var segment in name.Split('/'))
             {
                 if (segment.Length == 0 || segment == "." || segment == ".." || segment.EndsWith(".", StringComparison.Ordinal)
-                    || segment.EndsWith(" ", StringComparison.Ordinal) || Regex.IsMatch(segment, @"\A(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+                    || segment.EndsWith(" ", StringComparison.Ordinal) || Regex
+                        .IsMatch(segment, @"\A(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
                     throw CanonicalJson.Failure(name, "path", "Package path contains an unsafe segment.");
             }
         }
 
         private static void RejectLink(string path, string name)
         {
-            if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) throw CanonicalJson.Failure(name, "link", "Symbolic links and reparse points are prohibited.");
+            if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) throw CanonicalJson
+                .Failure(name, "link", "Symbolic links and reparse points are prohibited.");
         }
 
         private static void Register(IDictionary<string, bool> names, IDictionary<string, string> directoryNames, string name, bool directory)
@@ -243,7 +253,8 @@ namespace TiaMcp.Logic.Generation
             while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
             {
                 if (output.Length + read > limits.MaximumFileBytes) throw CanonicalJson.Failure(name, "file-size", "Decompressed file exceeds the size limit.");
-                if (read > limits.MaximumTotalBytes - total) throw CanonicalJson.Failure(name, "total-size", "Decompressed package exceeds the total size limit.");
+                if (read > limits.MaximumTotalBytes - total) throw CanonicalJson
+                    .Failure(name, "total-size", "Decompressed package exceeds the total size limit.");
                 total += read;
                 output.Write(buffer, 0, read);
             }
@@ -271,8 +282,10 @@ namespace TiaMcp.Logic.Generation
                 ValidatePath(name);
                 if (!listed.Add(name)) throw CanonicalJson.Failure(name, "duplicate-name", "Manifest lists a file more than once.");
                 if (name == "package.json") throw CanonicalJson.Failure(name, "file-hash", "Manifest cannot list its own hash.");
-                if (!files.TryGetValue(name, out var bytes)) throw CanonicalJson.Failure(name, "file-reference", "Manifest file is missing or has different casing.");
-                if (CanonicalJson.HashBytes(bytes) != file.GetProperty("sha256").GetString()) throw CanonicalJson.Failure(name, "file-hash", "Manifest content hash does not match.");
+                if (!files.TryGetValue(name, out var bytes)) throw CanonicalJson
+                    .Failure(name, "file-reference", "Manifest file is missing or has different casing.");
+                if (CanonicalJson.HashBytes(bytes) != file.GetProperty("sha256").GetString()) throw CanonicalJson
+                    .Failure(name, "file-hash", "Manifest content hash does not match.");
             }
             foreach (var name in files.Keys.Where(n => n != "package.json"))
                 if (!listed.Contains(name)) throw CanonicalJson.Failure(name, "file-reference", "Every package file must be listed in the manifest.");
@@ -283,8 +296,10 @@ namespace TiaMcp.Logic.Generation
                 foreach (var name in paths)
                 {
                     ValidatePath(name);
-                    if (!partPaths.Add(name) || name == "package.json") throw CanonicalJson.Failure(name, "duplicate-name", "Each part must have a distinct JSON file.");
-                    if (!documents.TryGetValue(name, out var value)) throw CanonicalJson.Failure(name, "part-reference", "Part must reference an existing JSON file.");
+                    if (!partPaths.Add(name) || name == "package.json") throw CanonicalJson
+                        .Failure(name, "duplicate-name", "Each part must have a distinct JSON file.");
+                    if (!documents.TryGetValue(name, out var value)) throw CanonicalJson
+                        .Failure(name, "part-reference", "Part must reference an existing JSON file.");
                     RequireFileSchema(part.Name == "rules" ? "rule" : part.Name, value, name);
                 }
             }

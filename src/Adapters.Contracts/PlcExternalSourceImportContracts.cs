@@ -32,7 +32,9 @@ namespace TiaMcp.Adapters
         public string PlanHash { get; internal set; } = "";
         public int InventoryCount { get; internal set; }
         public string CollisionStatus => "none-in-complete-root-snapshot-not-race-proof";
-        public string ValidationScope => "wrapper-policy: ASCII printable plus TAB/CR/LF, unchanged bytes, 1..4194304 bytes; syntax/native validity/encoding support/source lifetime not established";
+        public string ValidationScope =>
+            "wrapper-policy: ASCII printable plus TAB/CR/LF, unchanged bytes, 1..4194304 bytes; syntax/native validity/encoding support/source lifetime not " +
+            "established";
         public string Policy => "root-external-source-plan-v1";
     }
 }

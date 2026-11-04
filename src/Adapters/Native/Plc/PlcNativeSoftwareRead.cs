@@ -21,7 +21,8 @@ namespace TiaMcp.Adapters
                 Name=PlcNative.Name(selected.Value), Attributes=attributes, Description=selected.Value.ToString(),
                 Meta=new Dictionary<string,object> {
                     ["softwarePath"]=selected.ExactPath,["scope"]="ordinary PLC software engineering attributes",
-                    ["unreadableAttributes"]=attributes.Where(a=>a.Value is string s && s.StartsWith("<unreadable: ",StringComparison.Ordinal)).Select(a=>a.Name).ToArray()
+                    ["unreadableAttributes"]=attributes.Where(a=>a.Value is string s && s.StartsWith("<unreadable: ",StringComparison.Ordinal))
+                        .Select(a=>a.Name).ToArray()
                 }
             };
         }
@@ -69,7 +70,8 @@ namespace TiaMcp.Adapters
                 var address = PlcSoftwareReadPolicy.ChildPath(path, table.Name); budget.Add(table.Name, address, table.Name);
                 children.Add(new PlcSoftwareTreeNode { Name = table.Name, Path = address, Kind = "tag-table", Display = table.Name });
             }
-            foreach (var child in group.Groups) children.Add(SnapshotTables(child, child.Name, PlcSoftwareReadPolicy.ChildPath(path, child.Name), budget, depth + 1));
+            foreach (var child in group.Groups) children
+                .Add(SnapshotTables(child, child.Name, PlcSoftwareReadPolicy.ChildPath(path, child.Name), budget, depth + 1));
             return new PlcSoftwareTreeNode { Name = label, Path = path, Kind = "tag-group", Display = label, Children = children.ToArray() };
         }
         private static PlcSoftwareTreeNode SnapshotSources(PlcExternalSourceGroup group, string label, string path, PlcSoftwareReadBudget budget, int depth)
@@ -81,10 +83,12 @@ namespace TiaMcp.Adapters
                 var address = PlcSoftwareReadPolicy.ChildPath(path, source.Name); budget.Add(source.Name, address, source.Name);
                 children.Add(new PlcSoftwareTreeNode { Name = source.Name, Path = address, Kind = "external-source", Display = source.Name });
             }
-            foreach (var child in group.Groups) children.Add(SnapshotSources(child, child.Name, PlcSoftwareReadPolicy.ChildPath(path, child.Name), budget, depth + 1));
+            foreach (var child in group.Groups) children
+                .Add(SnapshotSources(child, child.Name, PlcSoftwareReadPolicy.ChildPath(path, child.Name), budget, depth + 1));
             return new PlcSoftwareTreeNode { Name = label, Path = path, Kind = "source-group", Display = label, Children = children.ToArray() };
         }
-        private static PlcSoftwareTreeNode SnapshotBlocks(PlcBlockGroup group,string label,string path,List<string> warnings,PlcSoftwareReadBudget budget,int depth)
+        private static PlcSoftwareTreeNode SnapshotBlocks(PlcBlockGroup group,string label,string path,List<string> warnings,PlcSoftwareReadBudget budget,
+                int depth)
         {
             Depth(depth);
             budget.Add(label,path,label);
@@ -102,7 +106,8 @@ namespace TiaMcp.Adapters
                 budget.Add(name,objectPath,display);
                 children.Add(new PlcSoftwareTreeNode { Name=name,Path=objectPath,Kind="block",Display=display });
             }
-            foreach(var child in PlcNative.Groups(group)) children.Add(SnapshotBlocks(child,PlcNative.Name(child),PlcSoftwareReadPolicy.ChildPath(path,PlcNative.Name(child)),warnings,budget,depth+1));
+            foreach(var child in PlcNative.Groups(group)) children
+                .Add(SnapshotBlocks(child,PlcNative.Name(child),PlcSoftwareReadPolicy.ChildPath(path,PlcNative.Name(child)),warnings,budget,depth+1));
             return new PlcSoftwareTreeNode { Name=label,Path=path,Kind="block-group",Display=label,Children=children.ToArray() };
         }
         private static PlcSoftwareTreeNode SnapshotTypes(PlcTypeGroup group,string label,string path,PlcSoftwareReadBudget budget,int depth)
@@ -117,7 +122,8 @@ namespace TiaMcp.Adapters
                 budget.Add(name,objectPath,display);
                 children.Add(new PlcSoftwareTreeNode { Name=name,Path=objectPath,Kind="type",Display=display });
             }
-            foreach(var child in PlcNative.Groups(group)) children.Add(SnapshotTypes(child,PlcNative.Name(child),PlcSoftwareReadPolicy.ChildPath(path,PlcNative.Name(child)),budget,depth+1));
+            foreach(var child in PlcNative.Groups(group)) children
+                .Add(SnapshotTypes(child,PlcNative.Name(child),PlcSoftwareReadPolicy.ChildPath(path,PlcNative.Name(child)),budget,depth+1));
             return new PlcSoftwareTreeNode { Name=label,Path=path,Kind="type-group",Display=label,Children=children.ToArray() };
         }
         private static string OptionalTreeAttribute(Func<object?> read,string path,string fallback,List<string> warnings)

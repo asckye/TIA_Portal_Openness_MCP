@@ -28,7 +28,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 return "Existing event read without creating or changing it.";
             });
 
-        public HmiMessage DeleteUnifiedHmiButtonEvent(string softwarePath,string screenPath,string buttonName,string eventType,bool dryRun=true,string expectedToken="",bool onlyIfEmpty=true)
+        public HmiMessage DeleteUnifiedHmiButtonEvent(string softwarePath,string screenPath,string buttonName,string eventType,bool dryRun=true,
+                string expectedToken="",bool onlyIfEmpty=true)
             => _session.RunHmiStepTool("DeleteUnifiedHmiButtonEvent",meta=>{
                 using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();
                 var button=ExactHmiItem(softwarePath,screenPath,buttonName);
@@ -37,7 +38,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var scope=softwarePath+":"+screenPath+":"+buttonName+":"+eventType;
                 var token=HmiExactAccess.Token(scope,data);
                 meta["before"]=data;meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
-                var empty=!data["scriptExists"]!.GetValue<bool>() || (data["ScriptCode"]?.ToString()=="" && data["GlobalDefinitionAreaScriptCode"]?.ToString()=="");
+                var empty=!data["scriptExists"]!.GetValue<bool>()
+                    || (data["ScriptCode"]?.ToString()=="" && data["GlobalDefinitionAreaScriptCode"]?.ToString()=="");
                 meta["empty"]=empty;
                 if(onlyIfEmpty&&!empty) throw new PlcSoftwareException("InvalidState","Event contains script code; deletion refused by onlyIfEmpty.");
                 if(dryRun)return "Preview only; event has not been deleted.";
@@ -66,7 +68,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["token"]=HmiExactAccess.Token(softwarePath+":"+screenPath+":"+itemName+":"+propertyName,data);
                 return "Selected property dynamization read; coverage is recorded in the snapshot.";
             });
-        public HmiMessage DeleteUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName,bool dryRun=true,string expectedToken="")
+        public HmiMessage DeleteUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName,bool dryRun=true,
+                string expectedToken="")
             => _session.RunHmiStepTool("DeleteUnifiedHmiDynamization",meta=>{
                 using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();
                 var item=ExactHmiItem(softwarePath,screenPath,itemName);
@@ -75,7 +78,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var token=HmiExactAccess.Token(softwarePath+":"+screenPath+":"+itemName+":"+propertyName,data);
                 meta["before"]=data;meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
                 if(dryRun)return "Preview only; dynamization has not been deleted.";
-                if(data["incomplete"]!.GetValue<bool>())throw new PlcSoftwareException("InvalidState","Cannot delete while the current dynamization snapshot is incomplete.");
+                if(data["incomplete"]!.GetValue<bool>())
+                    throw new PlcSoftwareException("InvalidState","Cannot delete while the current dynamization snapshot is incomplete.");
                 HmiExactAccess.RequireToken(expectedToken,token);
                 meta["mayHaveChanged"]=true;HmiExactAccess.Delete(dyn);
                 try {ExactDynamization(item,propertyName);throw new InvalidOperationException("Dynamization still exists after Delete.");}
@@ -95,7 +99,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if(screens.Count!=0||groups.Count!=0)throw new PlcSoftwareException("InvalidState","Group is not empty; recursive deletion is not supported.");
                 if(dryRun)return "Empty group preview; nothing deleted.";
                 meta["mayHaveChanged"]=true;HmiExactAccess.Delete(group);
-                try {HmiExactAccess.Group(_session.ResolveHmiSoftwareOrThrow(softwarePath),groupPath);throw new InvalidOperationException("Group still exists after Delete.");}
+                try {
+                    HmiExactAccess.Group(_session.ResolveHmiSoftwareOrThrow(softwarePath),groupPath);
+                    throw new InvalidOperationException("Group still exists after Delete.");
+                }
                 catch(PlcSoftwareException ex) when(ex.Code=="NotFound") {meta["exists"]=false;}
                 meta["persistence"]="Not saved.";return "Empty group deleted and absence verified.";
             });

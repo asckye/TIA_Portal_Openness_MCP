@@ -51,7 +51,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "NotFound" ? new NotFoundDetails(null)
                 : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "HMI exchange", null)
                 : status == "HmiReadSessionBlocked" ? new SessionResetRequiredDetails("HMI read session is blocked.") : null;
-            return details == null ? null : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The HMI request could not start.", details);
+            return details == null ? null
+                : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The HMI request could not start.", details);
         }
 
         internal static CallToolResult Map(string tool, object response, bool writes, bool current)
@@ -92,9 +93,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.Unknown;
             else if (success != true)
             {
-                bool step = tool == "DeleteHmiTag" || tool == "ExchangeUnifiedTags" || tool == "ExchangeUnifiedScriptModules" || tool == "ImportUnifiedOpcUaAlarms";
+                bool step = tool == "DeleteHmiTag" || tool == "ExchangeUnifiedTags" || tool == "ExchangeUnifiedScriptModules"
+                    || tool == "ImportUnifiedOpcUaAlarms";
                 outcome = files ? Outcome.Partial
-                    : step && evidence["tool"] != null && success == false && !changed && (writes || Flag("readStarted") != true) ? Outcome.RejectedBeforeOperation
+                    : step && evidence["tool"] != null && success == false && !changed && (writes || Flag("readStarted") != true) ? Outcome
+                        .RejectedBeforeOperation
                     : !writes ? Outcome.ReadFailed
                     : changed && Flag("nativeSuccess") == true ? ((int?)evidence["actualCount"] > 0 ? Outcome.Partial : Outcome.Failed)
                     : evidence["capability"] != null ? Outcome.Failed : Outcome.Unknown;
@@ -116,7 +119,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     var item = row!.AsObject();
                     var child = Map(tool, new ResponseMessage { Meta = item["evidence"]!.DeepClone().AsObject() }, writes, current);
-                    items.Add(new JsonObject { ["index"] = items.Count, ["target"] = item["target"]?.DeepClone(), ["result"] = child.StructuredContent!.DeepClone() });
+                    items
+                        .Add(new JsonObject {
+                            ["index"] = items.Count, ["target"] = item["target"]?.DeepClone(), ["result"] = child.StructuredContent!.DeepClone() });
                 }
                 data["items"] = items;
                 var outcomes = items.Select(i => (string)i!["result"]!["meta"]!["outcome"]!).ToArray();
@@ -146,9 +151,12 @@ namespace TiaMcpServer.ModelContextProtocol
         private static IReadOnlyDictionary<string, JsonElement> Evidence(JsonObject evidence)
             => evidence.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value), StringComparer.Ordinal);
         private static Error Failure(Outcome outcome, JsonObject evidence)
-            => outcome == Outcome.Unknown ? new Error("The HMI write outcome is unconfirmed; inspect the evidence and reset the session before further writes.", new OutcomeUnknownDetails("HMI exchange", Evidence(evidence)))
+            => outcome == Outcome.Unknown
+                ? new Error("The HMI write outcome is unconfirmed; inspect the evidence and reset the session before further writes.",
+                    new OutcomeUnknownDetails("HMI exchange", Evidence(evidence)))
                 : outcome == Outcome.Partial ? new Error("The HMI operation left partial results.", new PartialFailureDetails(0, 0, 0))
-                : outcome == Outcome.RejectedBeforeOperation ? new Error("The HMI operation did not start.", new PreconditionFailedDetails("HMI operation prerequisites", null))
+                : outcome == Outcome.RejectedBeforeOperation
+                    ? new Error("The HMI operation did not start.", new PreconditionFailedDetails("HMI operation prerequisites", null))
                 : new Error("The HMI operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));
 
         private static void Clean(JsonNode? node)
@@ -157,7 +165,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!(node is JsonObject obj)) return;
             foreach (var pair in obj.ToArray())
             {
-                if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
+                if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)) obj
+                    .Remove(pair.Key);
                 else if (pair.Value is JsonValue v && v.TryGetValue<string>(out var text) && text.Contains("\n   "))
                     obj[pair.Key] = "Diagnostic details retained in the server log.";
                 else Clean(pair.Value);
@@ -167,14 +176,23 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult Result(string tool, JsonObject data, Error? error, Outcome outcome, Completeness completeness, bool writes, bool current)
         {
             var warnings = new List<Warning>();
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; inspect the retained evidence.", new Dictionary<string, JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
+                        new Dictionary<string, JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; inspect the retained evidence.", new Dictionary<string,
+                        JsonElement>()));
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
-                : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution.ReadOnly : Execution.Completed;
+                : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
+                    .ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, null, warnings);
+                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+                    completeness, null, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
-            return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()), Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
+            return new CallToolResult {
+                IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()), Content = new[] {
+                    new TextContentBlock { Text = result.Content[0].Text } }
+            };
         }
     }
 
@@ -187,7 +205,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region plc software - HmiExchange
 
-        [McpServerTool(Name = "ListHmiScreens"), Description("[L2][HMI] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist.")]
+        [McpServerTool(Name = "ListHmiScreens"),
+                Description("[L2][HMI] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen " +
+                "names, not folder paths; screen operations resolve these names recursively. Requires: ConnectPortal + OpenProject. softwarePath from " +
+                "GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist.")]
         public CallToolResult GetHmiScreensV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath)
             => HmiExchangeContract.Run("ListHmiScreens", false, false, () => GetHmiScreens(softwarePath));
@@ -212,7 +233,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error listing HMI screens for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error listing HMI screens for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
@@ -241,11 +263,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error listing HMI tag tables for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error listing HMI tag tables for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "ListHmiTags"), Description("[L2][HMI]List HMI tag names (best-effort). If tagTableName empty, returns tags found at root collection if available.")]
+        [McpServerTool(Name = "ListHmiTags"),
+                Description("[L2][HMI]List HMI tag names (best-effort). If tagTableName empty, returns tags found at root collection if available.")]
         public CallToolResult GetHmiTagsV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("tagTableName: optional tag table name to list tags from")] string tagTableName = "")
@@ -272,7 +296,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error listing HMI tags for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error listing HMI tags for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
@@ -301,11 +326,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error listing HMI connections for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error listing HMI connections for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "ExportHmiScreen"), Description("[L2][HMI]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportHmiScreen"),
+                Description("[L2][HMI]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 " +
+                "safety behavior is not yet accepted.")]
         public CallToolResult ExportHmiScreenV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("screenName: the screen name to export")] string screenName,
@@ -331,15 +359,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException($"Failed exporting HMI screen '{screenName}' from '{softwarePath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
+                throw new McpException($"Failed exporting HMI screen '{screenName}' from '{softwarePath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode
+                        .InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting HMI screen '{screenName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error exporting HMI screen '{screenName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "ExportHmiTagTable"), Description("[L2][HMI]Export one HMI tag table to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportHmiTagTable"),
+                Description("[L2][HMI]Export one HMI tag table to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 " +
+                "safety behavior is not yet accepted.")]
         public CallToolResult ExportHmiTagTableV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("tagTableName: the tag table name to export")] string tagTableName,
@@ -365,15 +397,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException($"Failed exporting HMI tag table '{tagTableName}' from '{softwarePath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
+                throw new McpException($"Failed exporting HMI tag table '{tagTableName}' from '{softwarePath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode
+                        .InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting HMI tag table '{tagTableName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error exporting HMI tag table '{tagTableName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "ExportHmiConnection"), Description("[L2][HMI]Export one HMI connection to a file (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportHmiConnection"),
+                Description("[L2][HMI]Export one HMI connection to a file (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native " +
+                "policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportHmiConnectionV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("connectionName: the HMI connection name to export")] string connectionName,
@@ -399,22 +435,27 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException($"Failed exporting HMI connection '{connectionName}' from '{softwarePath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
+                throw new McpException($"Failed exporting HMI connection '{connectionName}' from '{softwarePath}' [{pex.Code}]: {pex.Message}", pex,
+                        McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting HMI connection '{connectionName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error exporting HMI connection '{connectionName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "ExportHmiProgram"), Description("[L2][HMI]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportHmiProgram"),
+                Description("[L2][HMI]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native " +
+                "policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportHmiProgramV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("exportDir: directory to write exported files into")] string exportDir,
             [Description("exportScreens: default true")] bool exportScreens = true,
             [Description("exportTagTables: default true")] bool exportTagTables = true,
             [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
-            => HmiExchangeContract.Run("ExportHmiProgram", true, true, () => ExportHmiProgram(softwarePath, exportDir, exportScreens, exportTagTables, exportOptions));
+            => HmiExchangeContract
+                .Run("ExportHmiProgram", true, true, () => ExportHmiProgram(softwarePath, exportDir, exportScreens, exportTagTables, exportOptions));
 
         public ResponseBatchExport ExportHmiProgram(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
@@ -433,7 +474,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = $"HMI program export finished; see Failed list. Destination: '{exportDir}'",
                         Exported = res.Value.Exported,
                         Failed = res.Value.Failed,
-                        Meta = ResponseMeta.Basic(DateTime.Now, res.Value.Failed.Count == 0, ("operationSuccess", res.Value.Failed.Count == 0), ("items", res.Value.Items))
+                        Meta = ResponseMeta
+                            .Basic(DateTime.Now, res.Value.Failed.Count == 0, ("operationSuccess", res.Value.Failed.Count == 0), ("items", res.Value.Items))
                     };
                 }
                 throw new McpException($"HMI software not found at '{softwarePath}'", McpErrorCode.InternalError);
@@ -444,17 +486,21 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiScreen"), Description("[L2][HMI]Import one HMI screen XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiScreen"),
+                Description("[L2][HMI]Import one HMI screen XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) " +
+                "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiScreenV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+                "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported screen XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
             => HmiExchangeContract.Run("ImportHmiScreen", true, true, () => ImportHmiScreen(softwarePath, folderPath, importPath, overwrite));
 
         public ResponseMessage ImportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+                "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported screen XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
         {
@@ -477,17 +523,21 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiTagTable"), Description("[L2][HMI]Import one HMI tag table XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiTagTable"),
+                Description("[L2][HMI]Import one HMI tag table XML file into an HMI program (Classic WinCC only; Unified refuses with " +
+                "UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiTagTableV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+                "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported tag table XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
             => HmiExchangeContract.Run("ImportHmiTagTable", true, true, () => ImportHmiTagTable(softwarePath, folderPath, importPath, overwrite));
 
         public ResponseMessage ImportHmiTagTable(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+                "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported tag table XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
         {
@@ -510,7 +560,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiConnection"), Description("[L2][HMI]Import one HMI connection XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiConnection"),
+                Description("[L2][HMI]Import one HMI connection XML file into an HMI program (Classic WinCC only; Unified refuses with " +
+                "UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiConnectionV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("importPath: full file path of exported HMI connection XML")] string importPath,
@@ -541,18 +593,23 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiScreensFromDirectory"), Description("[L2][HMI]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiScreensFromDirectory"),
+                Description("[L2][HMI]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native " +
+                "policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiScreensFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+                "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
             [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
-            => HmiExchangeContract.Run("ImportHmiScreensFromDirectory", true, true, () => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
+            => HmiExchangeContract
+                .Run("ImportHmiScreensFromDirectory", true, true, () => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
 
         public ResponseImportBatch ImportHmiScreensFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+                "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
             [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
@@ -570,22 +627,28 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing HMI screens from '{dir}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error importing HMI screens from '{dir}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "ImportHmiTagTablesFromDirectory"), Description("[L2][HMI]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiTagTablesFromDirectory"),
+                Description("[L2][HMI]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native " +
+                "policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+                "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
             [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
-            => HmiExchangeContract.Run("ImportHmiTagTablesFromDirectory", true, true, () => ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
+            => HmiExchangeContract
+                .Run("ImportHmiTagTablesFromDirectory", true, true, () => ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
 
         public ResponseImportBatch ImportHmiTagTablesFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+                "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
             [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
@@ -603,7 +666,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing HMI tag tables from '{dir}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error importing HMI tag tables from '{dir}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 

@@ -27,7 +27,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 void Error(Exception ex)
                 {
                     if (!HmiReadSafety.ConnectionUnavailable(ex)) return;
-                    fault = new HmiObject { ["softwarePath"] = softwarePath, ["screenPath"] = screenPath, ["error"] = ex.ToString(), ["timestamp"] = DateTimeOffset.UtcNow.ToString("o") };
+                    fault = new HmiObject {
+                        ["softwarePath"] = softwarePath, ["screenPath"] = screenPath, ["error"] = ex.ToString(), ["timestamp"] = DateTimeOffset.UtcNow
+                            .ToString("o")
+                    };
                     trace.AddTo(fault); _session.RecordHmiReadFault(fault);
                 }
                 var scope = new HmiObject { ["screenPath"] = screenPath, ["itemNames"] = UnifiedRequestValues.Parse(itemNamesJson) };
@@ -46,7 +49,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["selectionKind"] = "caller-defined exact-name selection";
                 meta["nativeGroupVerified"] = false;
                 if (string.IsNullOrEmpty(cursor)) trace.AddTo(meta);
-                return "Read-only selection evidence. Follow nextCursor and retain all page Meta objects for CompareUnifiedGraphicSelections. Native editor groups remain unverified; no coordinate writes performed.";
+                return "Read-only selection evidence. Follow nextCursor and retain all page Meta objects for CompareUnifiedGraphicSelections. Native editor " +
+                    "groups remain unverified; no coordinate writes performed.";
             });
         private static IEnumerable<HmiObject> GuardGraphicSelection(IEnumerable<HmiObject> source, Action<Exception> error)
         {

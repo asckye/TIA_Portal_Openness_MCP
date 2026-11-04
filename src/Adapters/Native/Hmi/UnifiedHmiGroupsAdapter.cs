@@ -16,10 +16,12 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ManageUnifiedHmiGroup(string softwarePath, string family, string groupPath, string action, string newName = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageUnifiedHmiGroup", meta => {
                 var shape = family switch { "screens" => ("ScreenGroups", "Screens"), "tags" => ("TagTableGroups", "TagTables"),
-                    _ => throw new ArgumentException("family must be screens or tags. Unified exposes no ScriptGroups collection in the supported PublicAPI.") };
+                    _ => throw new ArgumentException("family must be screens or tags. Unified exposes no ScriptGroups collection in the supported PublicAPI.")
+                    };
                 EngineeringInputValidation.Action(action, "create", "rename", "deleteEmpty");
                 EngineeringInputValidation.HmiGroupPath(groupPath);
-                if (action == "rename" && (string.IsNullOrWhiteSpace(newName) || newName == "." || newName == ".." || newName.IndexOfAny(new[] { '/', '\\' }) >= 0))
+                if (action == "rename"
+                        && (string.IsNullOrWhiteSpace(newName) || newName == "." || newName == ".." || newName.IndexOfAny(new[] { '/', '\\' }) >= 0))
                     throw new ArgumentException("newName must be one nonempty segment.");
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var hmi = _session.ResolveHmiSoftwareOrThrow(softwarePath);

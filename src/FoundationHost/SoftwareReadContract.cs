@@ -24,7 +24,8 @@ internal static class SoftwareReadContract
             {
                 if(item is not JsonObject attribute) throw new InvalidDataException("Worker returned invalid software attribute.");
                 RequireString(attribute,"Name");
-                if(attribute.Any(p=>p.Key is not ("Name" or "Value" or "AccessMode"))) throw new InvalidDataException("Worker returned unexpected attribute fields.");
+                if(attribute.Any(p=>p.Key is not ("Name" or "Value" or "AccessMode")))
+                    throw new InvalidDataException("Worker returned unexpected attribute fields.");
                 if(attribute["AccessMode"]!=null) RequireString(attribute,"AccessMode");
             }
             if(source["Description"]!=null && (source["Description"] is not JsonValue description || !description.TryGetValue<string>(out _)))
@@ -44,15 +45,18 @@ internal static class SoftwareReadContract
                 string scope=unit=="" ? plc : plc+"/units/"+Uri.EscapeDataString(unit);
                 if(kind=="unit")
                 {
-                    if(unit=="" || path["name"]?.GetValue<string>()!=unit || address!=scope || path["objectPath"]?.GetValue<string>()!=unit || path["selectorParameter"]?.GetValue<string>()!="unitName" || !seen.Add(kind+"\0"+address))
+                    if(unit=="" || path["name"]?.GetValue<string>()!=unit || address!=scope || path["objectPath"]?.GetValue<string>()!=unit
+                            || path["selectorParameter"]?.GetValue<string>()!="unitName" || !seen.Add(kind+"\0"+address))
                         throw new InvalidDataException("Worker returned conflicting unit identity.");
                     continue;
                 }
                 if(unit!="" && !seen.Contains("unit\0"+scope)) throw new InvalidDataException("Worker returned a path without its unit identity.");
                 var root=kind is "block" or "block-group" ? scope+"/blocks" : kind is "type" or "type-group" ? scope+"/types"
                     : unit!="" && kind is "tag-table" or "tag-group" ? scope+"/tag-tables"
-                    : unit!="" && kind is "external-source" or "source-group" ? scope+"/external-sources" : throw new InvalidDataException("Worker returned unknown tree kind.");
-                var selector=kind=="block" ? "blockPath" : kind=="type" ? "typePath" : kind=="tag-table" ? "table" : kind=="external-source" ? "externalSourceName" : "groupPath";
+                    : unit!="" && kind is "external-source" or "source-group" ? scope+"/external-sources"
+                        : throw new InvalidDataException("Worker returned unknown tree kind.");
+                var selector=kind=="block" ? "blockPath" : kind=="type" ? "typePath" : kind=="tag-table" ? "table" : kind=="external-source"
+                    ? "externalSourceName" : "groupPath";
                 if(!Under(address,root) || !seen.Add(kind+"\0"+address))
                     throw new InvalidDataException("Worker returned conflicting tree identities.");
                 if(path["objectPath"] is not JsonValue selected || !selected.TryGetValue<string>(out var relative) ||
@@ -91,7 +95,9 @@ internal static class SoftwareReadContract
         details["success"]=true; details["timestamp"]=DateTimeOffset.UtcNow.ToString("O");
         details["nativeAcceptance"]="NOT RUN"; details["typedApiCompilation"]="pending-windows-rebuild";
         details["manualReconciliation"]="candidate-two-tool-scope";
-        details["pathContract"]="Meta softwarePath selects PLC; paths.objectPath feeds paths.selectorParameter; path+kind is full identity; unique legacy software aliases accepted";
+        details["pathContract"]=
+            "Meta softwarePath selects PLC; paths.objectPath feeds paths.selectorParameter; path+kind is full identity; unique legacy software aliases " +
+            "accepted";
         output[Wire("Message")]=tool+" retrieved"; output[Wire("Meta")]=details;
         return output;
     }

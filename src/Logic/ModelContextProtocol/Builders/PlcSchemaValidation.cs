@@ -18,7 +18,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (bytes.Length > 16 * 1024 * 1024) throw new ArgumentException("XML exceeds 16 MiB.");
             using var stream = new MemoryStream(bytes);
-            using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 });
+            using var reader = XmlReader
+                .Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024
+                });
             return XDocument.Load(reader, LoadOptions.SetLineInfo);
         }
         private static void RegularPath(string path)
@@ -72,7 +74,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 resolver.Files.Add(xsd.FullName, bytes);
             }
             var rows = new JsonArray(); var skipped = new JsonArray(); var issues = new JsonArray(); int errorCount = 0, warningCount = 0;
-            var nodes = document.Descendants().Where(e => e.Name.NamespaceName.StartsWith("http://www.siemens.com/automation/Openness/SW/", StringComparison.Ordinal)
+            var nodes = document.Descendants()
+                .Where(e => e.Name.NamespaceName.StartsWith("http://www.siemens.com/automation/Openness/SW/", StringComparison.Ordinal)
                 && (e.Parent == null || e.Parent.Name.Namespace != e.Name.Namespace)).ToArray();
             if (nodes.Length > 2000) throw new ArgumentException("Fragment budget exceeded.");
             var schemas = new Dictionary<string, XmlSchemaSet>();
@@ -82,7 +85,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var prefix = "http://www.siemens.com/automation/Openness/SW/";
                 var suffix = ns.Substring(prefix.Length);
                 string? stem = null;
-                if (Regex.IsMatch(suffix, @"^Interface/v[0-9]+$") && node.Name.LocalName == "Sections") stem = "SW.InterfaceSections_" + suffix.Split('/').Last();
+                if (Regex.IsMatch(suffix, @"^Interface/v[0-9]+$") && node.Name.LocalName == "Sections") stem = "SW.InterfaceSections_" + suffix.Split('/')
+                    .Last();
                 else if (Regex.IsMatch(suffix, @"^NetworkSource/(FlgNet|StructuredText|STL|Graph)/v[0-9]+$"))
                 {
                     var parts = suffix.Split('/');
@@ -91,12 +95,16 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (element == node.Name.LocalName) stem = "SW.PlcBlocks." + schema + "_" + parts[2];
                 }
                 var schemaPath = stem == null ? "" : Path.Combine(schemaRoot.FullName, stem + ".xsd");
-                if (stem == null || !resolver.Files.ContainsKey(schemaPath)) { skipped.Add(new JsonObject { ["element"] = node.Name.ToString(), ["reason"] = "Exact schema unavailable or fragment unsupported" }); continue; }
+                if (stem == null || !resolver.Files.ContainsKey(schemaPath)) {
+                    skipped.Add(new JsonObject { ["element"] = node.Name.ToString(), ["reason"] = "Exact schema unavailable or fragment unsupported" });
+                    continue;
+                }
                 var beforeErrors = errorCount; var beforeWarnings = warningCount;
                 void OnIssue(object? sender, ValidationEventArgs args)
                 {
                     if (args.Severity == XmlSeverityType.Error) errorCount++; else warningCount++;
-                    if (issues.Count < 200) issues.Add(new JsonObject { ["severity"] = args.Severity.ToString(), ["element"] = node.Name.ToString(), ["message"] = args.Message });
+                    if (issues.Count < 200) issues
+                        .Add(new JsonObject { ["severity"] = args.Severity.ToString(), ["element"] = node.Name.ToString(), ["message"] = args.Message });
                 }
                 if (!schemas.TryGetValue(ns, out var set))
                 {
@@ -116,7 +124,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["errorCount"] = errorCount, ["warningCount"] = warningCount, ["issuesTruncated"] = errorCount + warningCount > issues.Count,
                 ["fragmentSchemasPassed"] = rows.Count > 0 && errorCount == 0 && warningCount == 0 && skipped.Count == 0,
                 ["wholeDocumentValidated"] = false, ["nativeImportValidated"] = false, ["networkAccessed"] = false,
-                ["scope"] = "Only recognized interface/network fragments against supplied local XSDs. No full Document, cross-object semantic, CPU, native import or compilation validation. No missing schema is treated as a pass." };
+                ["scope"] =
+                    "Only recognized interface/network fragments against supplied local XSDs. No full Document, cross-object semantic, CPU, native import or " +
+                    "compilation validation. No missing schema is treated as a pass."
+                };
         }
     }
 }

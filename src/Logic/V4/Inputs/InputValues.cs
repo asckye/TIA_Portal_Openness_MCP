@@ -83,7 +83,8 @@ namespace TiaMcp.Logic.V4.Inputs
             V4Validation.Require(name == null || !string.IsNullOrWhiteSpace(name), "A selector name must be nonempty.");
             V4Validation.Require(index == null || index >= 0, "A selector index must be nonnegative.");
             V4Validation.Require(name == null || index == null, "Name and index selectors are mutually exclusive.");
-            V4Validation.Require(key == null || name != null && (key == "Name" || key == "PropertyName"), "Key requires name and must be Name or PropertyName.");
+            V4Validation
+                .Require(key == null || name != null && (key == "Name" || key == "PropertyName"), "Key requires name and must be Name or PropertyName.");
             Property = property; Name = name; Index = index; Key = key;
         }
     }

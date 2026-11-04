@@ -235,10 +235,15 @@ namespace TiaMcp.WorkerChannel
         public static string Family(string operation)
         {
             if (operation.IndexOf("Compile", StringComparison.OrdinalIgnoreCase) >= 0) return "compile";
-            if (operation.IndexOf("Download", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Upload", StringComparison.OrdinalIgnoreCase) >= 0) return "transfer";
-            if (operation.IndexOf("Import", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Export", StringComparison.OrdinalIgnoreCase) >= 0) return "importExport";
-            if (operation == "SaveProjectCopy" || operation.IndexOf("Archive", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Retrieve", StringComparison.OrdinalIgnoreCase) >= 0) return "archive";
-            if (operation.IndexOf("Update", StringComparison.OrdinalIgnoreCase) >= 0 && operation.IndexOf("Librar", StringComparison.OrdinalIgnoreCase) >= 0) return "libraryUpdate";
+            if (operation.IndexOf("Download", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Upload", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "transfer";
+            if (operation.IndexOf("Import", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Export", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "importExport";
+            if (operation == "SaveProjectCopy" || operation.IndexOf("Archive", StringComparison.OrdinalIgnoreCase) >= 0 || operation
+                    .IndexOf("Retrieve", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "archive";
+            if (operation.IndexOf("Update", StringComparison.OrdinalIgnoreCase) >= 0 && operation.IndexOf("Librar", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "libraryUpdate";
             return "default";
         }
     }

@@ -25,8 +25,10 @@ internal sealed class ProjectLifecycleSessionTools
             + "and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable "
             + "until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after "
             + "another connection leaves an orphaned portal process that later attaches steal. "
-            + "Afterwards use OpenProject / CreateProject as usual; finish with SaveProject, CloseProject and DisconnectPortal, which disposes the instance this "
-            + "session started and refuses while a project is still open in it. A first start can wait for the TIA Portal Openness access dialog (Openness firewall)."
+            + "Afterwards use OpenProject / CreateProject as usual; finish with SaveProject, CloseProject and DisconnectPortal, which disposes the instance " +
+                "this "
+            + "session started and refuses while a project is still open in it. A first start can wait for the TIA Portal Openness access dialog (Openness " +
+                "firewall)."
             + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectIsolatedPortalV4()
             => SessionToolContract.Run("ConnectIsolatedPortal", true, true, () => ConnectIsolated());
@@ -50,7 +52,9 @@ internal sealed class ProjectLifecycleSessionTools
         }
 
 
-        [McpServerTool(Name = "EnsureOpennessUserGroup"), Description("[L1][Portal]Ensure current Windows user is in TIA Openness user group (may prompt UI). Returns success=true when membership is OK.")]
+        [McpServerTool(Name = "EnsureOpennessUserGroup"),
+                Description("[L1][Portal]Ensure current Windows user is in TIA Openness user group (may prompt UI). Returns success=true when membership is " +
+                "OK.")]
         public Task<CallToolResult> EnsureOpennessUserGroupV4()
             => SessionToolContract.RunAsync("EnsureOpennessUserGroup", true, false, () => EnsureOpennessUserGroup());
 
@@ -72,7 +76,12 @@ internal sealed class ProjectLifecycleSessionTools
         }
 
 
-        [McpServerTool(Name="GetPortalInfo"), Description("[L2][Portal][READ] Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project.")]
+        [McpServerTool(Name="GetPortalInfo"),
+                Description("[L2][Portal][READ] Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode " +
+                "WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with " +
+                "Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct " +
+                "Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), " +
+                "ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project.")]
         public CallToolResult GetPortalInfoV4(
             [Description("includeProcesses: list the TIA Portal processes on the machine.")] bool includeProcesses=true,
             [Description("includeSessions: list the sessions of the bound portal.")] bool includeSessions=true,

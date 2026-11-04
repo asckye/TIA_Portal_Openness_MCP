@@ -92,7 +92,8 @@ namespace TiaOpenness.Openness
         public static string Format(MappedObject mapped) => mapped.FileFormat;
         public static IEnumerable<string> SupportedFormats(Workspace workspace, IEngineeringObject target) => workspace.GetSupportedFileFormats(target);
         public static MappedObject Find(MappedObjectComposition mappings, IEngineeringObject target) => mappings.Find(target);
-        public static MappedObject Export(Workspace workspace, IEngineeringObject target, DirectoryInfo directory, string name, string format) => workspace.ExportObject(target, directory, name, format);
+        public static MappedObject Export(Workspace workspace, IEngineeringObject target, DirectoryInfo directory, string name, string format) => workspace
+            .ExportObject(target, directory, name, format);
         public static object Attribute(IEngineeringObject target, string name) => target.GetAttribute(name);
         public static DeviceComposition Devices(ProjectBase project) => project.Devices;
         public static DeviceUserGroupComposition DeviceGroups(ProjectBase project) => project.DeviceGroups;
@@ -100,7 +101,8 @@ namespace TiaOpenness.Openness
         public static DeviceComposition Devices(DeviceGroup group) => group.Devices;
         public static DeviceUserGroupComposition DeviceGroups(DeviceUserGroup group) => group.Groups;
         public static DeviceItemComposition DeviceItems(HardwareObject hardware) => hardware.DeviceItems;
-        public static global::Siemens.Engineering.HW.Features.SoftwareContainer SoftwareContainer(DeviceItem hardware) => hardware.GetService<global::Siemens.Engineering.HW.Features.SoftwareContainer>();
+        public static global::Siemens.Engineering.HW.Features.SoftwareContainer SoftwareContainer(DeviceItem hardware) => hardware.GetService<global::Siemens
+            .Engineering.HW.Features.SoftwareContainer>();
         public static Software Software(global::Siemens.Engineering.HW.Features.SoftwareContainer container) => container?.Software;
 
 

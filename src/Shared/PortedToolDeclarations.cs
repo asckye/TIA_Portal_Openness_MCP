@@ -11,8 +11,14 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static readonly IReadOnlyDictionary<string, Type[]> Types = new Dictionary<string, Type[]>(StringComparer.Ordinal) {
             ["F04"] = new[] { typeof(RuntimeTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools), typeof(EcosystemTools) },
-            ["F01"] = new[] { typeof(McpServer), typeof(HostMetaTools), typeof(ExportTools), typeof(OfflineSuiteTools), typeof(EngineeringDiagnosticsTools), typeof(EcosystemTools), typeof(V21EcosystemTools) },
-            ["F02"] = new[] { typeof(PlcOfflineTools), typeof(PlcDocumentationTools), typeof(OfflineAnalysisTools), typeof(TemplateTools), typeof(QualityAuditTools), typeof(EngineeringDiagnosticsTools), typeof(EcosystemTools), typeof(V21EcosystemTools) },
+            ["F01"] = new[] {
+                typeof(McpServer), typeof(HostMetaTools), typeof(ExportTools), typeof(OfflineSuiteTools), typeof(EngineeringDiagnosticsTools),
+                    typeof(EcosystemTools), typeof(V21EcosystemTools)
+            },
+            ["F02"] = new[] {
+                typeof(PlcOfflineTools), typeof(PlcDocumentationTools), typeof(OfflineAnalysisTools), typeof(TemplateTools), typeof(QualityAuditTools),
+                    typeof(EngineeringDiagnosticsTools), typeof(EcosystemTools), typeof(V21EcosystemTools)
+            },
             ["F03"] = new[] { typeof(HmiOfflineTools), typeof(OfflineSuiteTools), typeof(XmlBuilderTools), typeof(V21EcosystemTools) },
             ["F22"] = new[] { typeof(OnlineDownloadTools), typeof(OnlineDataTools), typeof(NativeExchangeTools) },
             ["F29"] = new[] { typeof(SivarcTools), typeof(OptionalEngineeringTools) },
@@ -20,15 +26,24 @@ namespace TiaMcpServer.ModelContextProtocol
             ["F30"] = new[] { typeof(SafetyManagementTools), typeof(SafetyValidationTools) },
             ["F32"] = new[] { typeof(CfcTools) },
             ["F34"] = new[] { typeof(TestSuiteTools), typeof(V20OptionsTools) },
-            ["F05"] = new[] { typeof(ProjectLifecycleSessionTools), typeof(ProjectLifecycleProjectTools), typeof(ProjectLifecycleInspectionTools), typeof(ProjectLifecycleDeviceTools), typeof(ProjectLifecycleExchangeTools), typeof(ProjectSecurityTools) },
-            ["F07"] = new[] { typeof(ProjectProtectionTools), typeof(ProjectUserManagementTools), typeof(CertificateManagementTools), typeof(SecurityDeepTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools) },
+            ["F05"] = new[] {
+                typeof(ProjectLifecycleSessionTools), typeof(ProjectLifecycleProjectTools), typeof(ProjectLifecycleInspectionTools),
+                    typeof(ProjectLifecycleDeviceTools), typeof(ProjectLifecycleExchangeTools), typeof(ProjectSecurityTools)
+            },
+            ["F07"] = new[] {
+                typeof(ProjectProtectionTools), typeof(ProjectUserManagementTools), typeof(CertificateManagementTools), typeof(SecurityDeepTools),
+                    typeof(HardwareSecurityTools), typeof(HardwareServicesTools)
+            },
             ["F33"] = new[] { typeof(VersionControlTools), typeof(TeamcenterTools), typeof(GitWorkflowTools) },
             ["F06"] = new[] { typeof(EngineeringServicesTools) },
             ["F23"] = new[] { typeof(LibraryTools) },
             ["F24"] = new[] { typeof(HmiDescribeTools), typeof(HmiExchangeTools), typeof(HmiInspectionPortTools), typeof(HmiTagDeletionTools) },
             ["F26"] = new[] { typeof(UnifiedHmiTools), typeof(UnifiedHmiGroupsTools), typeof(UnifiedScreenItemsTools), typeof(HmiInspectionTools) },
             ["F27"] = new[] { typeof(UnifiedEngineeringTools), typeof(UnifiedEventsTools), typeof(UnifiedObjectServicesTools), typeof(UnifiedUiModelTools) },
-            ["F28"] = new[] { typeof(UnifiedExchangeTools), typeof(GlobalScriptEditTools), typeof(GraphicSelectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools) },
+            ["F28"] = new[] {
+                typeof(UnifiedExchangeTools), typeof(GlobalScriptEditTools), typeof(GraphicSelectionTools), typeof(MigrationReadTools),
+                    typeof(RuntimeSettingsTools)
+            },
             ["F25"] = new[] { typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools) },
             ["F35"] = new[] { typeof(ReflectionTools) },
             ["F09"] = new[] { typeof(PlcReadModifyTools), typeof(PlcBuildTools) },
@@ -41,7 +56,10 @@ namespace TiaMcpServer.ModelContextProtocol
             ["F16"] = new[] { typeof(PlcIntegrityTools) },
             ["F17"] = new[] { typeof(PlcCompilePortTools) },
             ["F08"] = new[] { typeof(PlcOrganisationTools) },
-            ["F18"] = new[] { typeof(HardwareDevicesTools), typeof(ModulesTools), typeof(HardwareManagementTools), typeof(HardwareNetworkTools), typeof(HardwareServicesPortTools) },
+            ["F18"] = new[] {
+                typeof(HardwareDevicesTools), typeof(ModulesTools), typeof(HardwareManagementTools), typeof(HardwareNetworkTools),
+                    typeof(HardwareServicesPortTools)
+            },
             ["F20"] = new[] { typeof(HardwareNetworkTools), typeof(HardwareServicesPortTools) },
             ["F19"] = new[] { typeof(AddressesTools) },
             ["F21"] = new[] { typeof(HardwareAmlTools) }
@@ -52,13 +70,18 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var family in PortedFamilies.All.Where(f => f.Available(release)))
             {
                 if (!Types.TryGetValue(family.Name, out var types)) continue;
-                var methods = types.SelectMany(t => t.GetMethods()).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() is { } attribute && family.Tools.Contains(attribute.Name, StringComparer.Ordinal)).ToArray();
+                var methods = types.SelectMany(t => t.GetMethods())
+                    .Where(m => m.GetCustomAttribute<McpServerToolAttribute>() is { } attribute && family.Tools
+                        .Contains(attribute.Name, StringComparer.Ordinal))
+                    .ToArray();
                 var names = methods.Select(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name!).ToArray();
                 var expected = family.Tools;
                 if (names.Length != expected.Length || names.Distinct(StringComparer.Ordinal).Count() != names.Length
                     || names.Except(expected, StringComparer.Ordinal).Any())
                     throw new InvalidOperationException("Ported declaration roster mismatch: " + family.Name);
-                foreach (var method in methods) if (includeUnavailable || PortedFamilies.Available(release, method.GetCustomAttribute<McpServerToolAttribute>()!.Name!)) yield return method;
+                foreach (var method in methods)
+                    if (includeUnavailable || PortedFamilies.Available(release, method.GetCustomAttribute<McpServerToolAttribute>()!.Name!))
+                    yield return method;
             }
         }
     }

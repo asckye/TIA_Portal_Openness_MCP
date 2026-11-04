@@ -16,7 +16,8 @@ namespace TiaMcp.Adapters.Native.Plc
         private static readonly string[] Interfaces = { "Siemens.Engineering.IEngineeringObject", "Siemens.Engineering.IEngineeringComposition" };
         internal static MethodInfo? Method(object target, string name, params Type[] signature)
             => target.GetType().GetMethod(name, signature)
-               ?? target.GetType().GetInterfaces().Where(i => Interfaces.Contains(i.FullName)).Select(i => i.GetMethod(name, signature)).FirstOrDefault(m => m != null);
+               ?? target.GetType().GetInterfaces().Where(i => Interfaces.Contains(i.FullName)).Select(i => i.GetMethod(name, signature))
+                   .FirstOrDefault(m => m != null);
         private static MethodInfo Require(object target, string name, params Type[] signature)
             => Method(target, name, signature) ?? throw new NotSupportedException("Official " + name + " is unavailable on " + target.GetType().FullName + ".");
         private static object? Invoke(object target, MethodInfo method, params object?[] args)
@@ -36,7 +37,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
         }
         internal static List<(string Name, string Access)> Infos(object target)
-            => Descriptors(target, "GetAttributeInfos", 512).Select(i => (Prop(i, "Name")?.ToString() ?? "", Prop(i, "AccessMode")?.ToString() ?? "")).Where(x => x.Item1 != "").ToList();
+            => Descriptors(target, "GetAttributeInfos", 512).Select(i => (Prop(i, "Name")?.ToString() ?? "", Prop(i, "AccessMode")?.ToString() ?? ""))
+                .Where(x => x.Item1 != "").ToList();
         internal static PlcB5Object Read(object target)
         {
             var values = new PlcB5Object(); var excluded = new PlcB5Array(); var failures = new PlcB5Array(); var schema = new PlcB5Array();
@@ -51,20 +53,26 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (value != null && !PlcB5Scalar.Scalar(value.GetType())) { excluded.Add(name); continue; }
                     values[name] = PlcB5Scalar.Json(value);
                 }
-                catch (Exception ex) { failures.Add(new PlcB5Object { ["attribute"] = name, ["error"] = ex.GetBaseException().Message }); if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)) throw; }
+                catch (Exception ex) {
+                    failures.Add(new PlcB5Object { ["attribute"] = name, ["error"] = ex.GetBaseException().Message });
+                    if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)) throw;
+                }
             }
             return new PlcB5Object { ["type"] = target.GetType().FullName, ["scope"] = "IEngineeringObject.GetAttributeInfos/GetAttribute scalar values only",
-                ["values"] = values, ["schema"] = schema, ["excludedComplexAttributes"] = excluded, ["failures"] = failures, ["dataComplete"] = failures.Count == 0 };
+                ["values"] = values, ["schema"] = schema, ["excludedComplexAttributes"] = excluded, ["failures"] = failures, ["dataComplete"] = failures
+                    .Count == 0 };
         }
         internal static List<(string Name, object? Value)> Prepare(object target, PlcB5Object changes)
         {
-            var infos = Infos(target); var get = Require(target, "GetAttribute", typeof(string)); Require(target, "SetAttribute", typeof(string), typeof(object));
+            var infos = Infos(target); var get = Require(target, "GetAttribute", typeof(string));
+            Require(target, "SetAttribute", typeof(string), typeof(object));
             var prepared = new List<(string, object?)>();
             foreach (var change in changes)
             {
                 var info = infos.FirstOrDefault(i => string.Equals(i.Name, change.Key, StringComparison.Ordinal));
                 if (info.Name == null) throw new NotSupportedException("Attribute not advertised by GetAttributeInfos: " + change.Key);
-                if (info.Access.IndexOf("Write", StringComparison.OrdinalIgnoreCase) < 0) throw new NotSupportedException("Attribute is not writable: " + change.Key);
+                if (info.Access.IndexOf("Write", StringComparison.OrdinalIgnoreCase) < 0)
+                    throw new NotSupportedException("Attribute is not writable: " + change.Key);
                 var existing = Invoke(target, get, change.Key);
                 var type = existing != null && PlcB5Scalar.Scalar(existing.GetType()) ? existing.GetType() : typeof(object);
                 prepared.Add((change.Key, PlcB5Scalar.ConvertValue(change.Value, type)));
@@ -81,7 +89,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 Invoke(target, set, name, value);
                 applied.Add(name);
                 var readback = Invoke(target, get, name);
-                if (!Equals(readback, value) && !string.Equals(Convert.ToString(readback, CultureInfo.InvariantCulture), Convert.ToString(value, CultureInfo.InvariantCulture), StringComparison.Ordinal))
+                if (!Equals(readback, value) && !string
+                        .Equals(Convert.ToString(readback, CultureInfo.InvariantCulture), Convert.ToString(value, CultureInfo.InvariantCulture),
+                            StringComparison.Ordinal))
                     throw new InvalidOperationException("Attribute readback differs: " + name + ". Changes are not rolled back.");
             }
         }
@@ -90,8 +100,10 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static object Composition(object target, string name)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Exact compositionName required.");
-            if (!CompositionNames(target).Contains(name, StringComparer.Ordinal)) throw new NotSupportedException("Composition not advertised by GetCompositionInfos: " + name);
-            return Invoke(target, Require(target, "GetComposition", typeof(string)), name) ?? throw new NotSupportedException("GetComposition returned null: " + name);
+            if (!CompositionNames(target).Contains(name, StringComparer.Ordinal))
+                throw new NotSupportedException("Composition not advertised by GetCompositionInfos: " + name);
+            return Invoke(target, Require(target, "GetComposition", typeof(string)), name)
+                ?? throw new NotSupportedException("GetComposition returned null: " + name);
         }
         internal static List<Type> CreationTypes(object composition)
             => Descriptors(composition, "GetCreationInfos", 128).Select(i => Prop(i, "Type") as Type).Where(t => t != null).Select(t => t!).ToList();
@@ -99,7 +111,9 @@ namespace TiaMcp.Adapters.Native.Plc
         {
             var types = CreationTypes(composition);
             var matches = types.Where(t => t.FullName == typeName || t.Name == typeName).ToList();
-            if (matches.Count != 1) throw new NotSupportedException("typeName must be exactly one type advertised by GetCreationInfos: " + string.Join(", ", types.Select(t => t.FullName)));
+            if (matches.Count != 1)
+                throw new NotSupportedException("typeName must be exactly one type advertised by GetCreationInfos: " + string
+                    .Join(", ", types.Select(t => t.FullName)));
             return matches[0];
         }
         internal static object Create(object composition, Type type, PlcB5Object attributes)
@@ -126,14 +140,17 @@ namespace TiaMcp.Adapters.Native.Plc
         {
             if (item.GetType().GetMethod("Delete", Type.EmptyTypes) != null) return true;
             var infos = Method(item, "GetInvocationInfos");
-            return infos != null && Descriptors(item, "GetInvocationInfos", 256).Any(i => Prop(i, "Name")?.ToString() == "Delete" && (Prop(i, "ParameterInfos") as IEnumerable)?.Cast<object>().Any() != true);
+            return infos != null && Descriptors(item, "GetInvocationInfos", 256)
+                .Any(i => Prop(i, "Name")?.ToString() == "Delete" && (Prop(i, "ParameterInfos") as IEnumerable)?.Cast<object>().Any() != true);
         }
         internal static void Delete(object item)
         {
-            if (!CanDelete(item)) throw new NotSupportedException("Native Delete is neither a public method nor an advertised invocation on " + item.GetType().FullName + ".");
+            if (!CanDelete(item))
+                throw new NotSupportedException("Native Delete is neither a public method nor an advertised invocation on " + item.GetType().FullName + ".");
             var direct = item.GetType().GetMethod("Delete", Type.EmptyTypes);
             if (direct != null) { Invoke(item, direct); return; }
-            Invoke(item, Require(item, "Invoke", typeof(string), typeof(IEnumerable<KeyValuePair<Type, object>>)), "Delete", new List<KeyValuePair<Type, object>>());
+            Invoke(item, Require(item, "Invoke", typeof(string), typeof(IEnumerable<KeyValuePair<Type, object>>)), "Delete", new List<KeyValuePair<Type,
+                    object>>());
         }
     }
 }

@@ -9,7 +9,8 @@ namespace TiaMcpServer.ModelContextProtocol
             => InvocationJournal.WriteRow(span.Correlation, "native:" + span.Member, phase, span.Type, span.Path,
                 () => Details(span.Id, span.Parent?.Id, span.Site, span.Member, span.Category, span.ObjectId, error));
 
-        internal static InvocationJournal.JsonLineObject Details(string id, string? parentId, string site, string member, string category, string objectId, Exception? error)
+        internal static InvocationJournal
+            .JsonLineObject Details(string id, string? parentId, string site, string member, string category, string objectId, Exception? error)
         {
             var exceptions = new StringBuilder("[");
             int count = 0;

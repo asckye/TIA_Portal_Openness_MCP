@@ -45,7 +45,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04") return null;
             if (!ToolTaxonomy.UsesOpennessLane(name)) return null;
             var key = CurrentApprovalSession();
-            return SessionBehavior.RequiresReset(key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown, ToolTaxonomy.UsesOpennessLane(name))
+            return SessionBehavior
+                .RequiresReset(key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown, ToolTaxonomy.UsesOpennessLane(name))
                 ? V4Reject(name, HostBehavior.SessionReset()) : null;
         }
         // Only a call that reached Openness (a journaled native boundary in this call, or native-issued evidence from a
@@ -110,7 +111,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
                 TryDryRunDefault(name, out _) || HostBehavior.IsSingleXmlImport(name))) return null;
             string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
-            AuditInvocation.RecordCurrentRequest(PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId).PlanHash);
+            AuditInvocation
+                .RecordCurrentRequest(PendingApproval
+                    .Create(McpServer.InvocationHostTag, ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId)
+                    .PlanHash);
             CallToolResult? result = null;
             var batchRefusal = HostBehavior.BatchApplyRefusal(name, args);
             if (batchRefusal != null) result = V4Reject(name, batchRefusal);
@@ -119,7 +123,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (TryDryRunDefault(name, out _)) args["dryRun"] = JsonValue.Create(true);
                 using var preview = BeginReadOnlyApprovalPreview();
                 using var audit = AuditInvocation.ReadOnlyPreview();
-                try { token.ThrowIfCancellationRequested(); result = await BridgeWait.On(previewCall(args.ToJsonString())).ConfigureAwait(false); token.ThrowIfCancellationRequested(); }
+                try {
+                    token.ThrowIfCancellationRequested(); result = await BridgeWait.On(previewCall(args.ToJsonString())).ConfigureAwait(false); token
+                        .ThrowIfCancellationRequested();
+                }
                 catch (OperationCanceledException) /* swallow(privacy): cancellation in the read-only precheck has no issued write */
                 { result = V4Reject(name, new Error("The approval precheck was cancelled.", new CancelledDetails("approval-precheck"))); }
                 catch (Exception ex) /* swallow(privacy): preview failures are classified before a write is issued */
@@ -164,7 +171,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool == "SaveExportContent" && JsonNode.Parse(arguments)?["outputPath"] is JsonValue output
                 && output.TryGetValue<string>(out var path) && ApprovalSettings.IsAdministrativeTarget(path))
             {
-                var rejected = PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, null, 120, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
+                var rejected = PendingApproval
+                    .Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, null, 120, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
                 TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(rejected.PlanHash);
                 return ApprovalClient.RejectAdministrativeWrite(rejected);
             }
@@ -172,7 +180,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var args = JsonNode.Parse(arguments)!.AsObject();
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
-            var pending = PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
+            var pending = PendingApproval
+                .Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation
+                    .CurrentRequestId);
             TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(pending.PlanHash);
             if (ApprovalWaitOverride.Value is { } overrideWait) return await BridgeWait.On(overrideWait(pending, settings, token)).ConfigureAwait(false);
             if (settings.Enabled) ApprovalWaitSignal("begin", settings.TimeoutSeconds);
@@ -208,7 +218,8 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static CallToolResult FinishApproval(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string? completion = null)
             => FinishApprovalAsync(result, approval, disabled, completion).GetAwaiter().GetResult();
-        internal static async Task<CallToolResult> FinishApprovalAsync(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string? completion = null)
+        internal static async Task<CallToolResult> FinishApprovalAsync(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string
+                ? completion = null)
         {
             result = McpHints.WithRecovery(result);
             if (approval == null && !disabled) return result;
@@ -219,7 +230,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return result;
             }
             body = ApprovalResult.Decorate(body, disabled || approval?.Disabled == true, approval?.Request.RequestId);
-            if (approval != null) await BridgeWait.On(ApprovalClient.Complete(approval, completion ?? (string?)body["meta"]?["outcome"] ?? "unknown")).ConfigureAwait(false);
+            if (approval != null) await BridgeWait.On(ApprovalClient.Complete(approval, completion ?? (string?)body["meta"]?["outcome"] ?? "unknown"))
+                .ConfigureAwait(false);
             return new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
         }
@@ -229,12 +241,14 @@ namespace TiaMcpServer.ModelContextProtocol
             // Target approval must finish before acquiring its lane. The identity
             // check and audit start belong inside that lane, immediately before dispatch.
             var refusal = McpApprovalContext.Value ? await BridgeWait.On(PrecheckBeforeApproval(name, arguments, previewArgs => CallToolCoreAsync(name,
-                new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.Deserialize<JsonElement>(previewArgs))), McpDispatchCancellation.Value)).ConfigureAwait(false) : SessionPrecheckRefusal(name);
+                new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.Deserialize<JsonElement>(previewArgs))), McpDispatchCancellation.Value))
+                    .ConfigureAwait(false) : SessionPrecheckRefusal(name);
             if (refusal != null) return refusal;
             var approval = McpApprovalContext.Value && ApprovalPreviewDepth.Value == 0
                 ? await BridgeWait.On(WaitForApproval(name, arguments, McpDispatchCancellation.Value)).ConfigureAwait(false) : null;
             if (approval?.Reason != null) return await BridgeWait.On(ApprovalRefusalAsync(approval)).ConfigureAwait(false);
-            using var dispatchLane = await BridgeWait.On(BridgeTargetLaneAsync(beforeDispatch == null ? name : "GetSessionState", arguments)).ConfigureAwait(false);
+            using var dispatchLane = await BridgeWait.On(BridgeTargetLaneAsync(beforeDispatch == null ? name : "GetSessionState", arguments))
+                .ConfigureAwait(false);
             ActivateTargetLane(dispatchLane);
             using var boundedTargetLane = beforeDispatch == null ? null
                 : await BridgeWait.On(BridgeTargetLaneAsync(name, arguments)).ConfigureAwait(false);
@@ -257,8 +271,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var invoked = await BridgeWait.On(invoke()).ConfigureAwait(false);
-                return await BridgeWait.On(FinishApprovalAsync(ObserveSessionOutcome(name, invoked, ApprovalWrite(name, arguments), nativeCalls.NativeCallIssued), approval,
-                    McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled)).ConfigureAwait(false);
+                return await BridgeWait
+                    .On(FinishApprovalAsync(ObserveSessionOutcome(name, invoked, ApprovalWrite(name, arguments), nativeCalls.NativeCallIssued), approval,
+                    McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled))
+                        .ConfigureAwait(false);
             }
             catch { if (approval != null) await BridgeWait.On(ApprovalClient.Complete(approval, "unknown")).ConfigureAwait(false); throw; }
         }

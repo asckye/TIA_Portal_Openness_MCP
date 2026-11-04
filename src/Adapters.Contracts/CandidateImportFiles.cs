@@ -32,13 +32,17 @@ namespace TiaMcp.Adapters.Contracts.Candidates
                         if (++entries > 4096) CandidatePrimitives.Invalid("entry-budget"); SafePath(item);
                         if (item is DirectoryInfo child) { if (tool == "ImportPlcProgramFromDirectory") Scan(child); continue; }
                         if (item.Extension.Equals(documents ? ".s7dcl" : ".xml", StringComparison.OrdinalIgnoreCase) && regex.IsMatch(item.Name))
-                            selection.Add(documents ? Path.GetFileNameWithoutExtension(item.Name) : item.FullName.Substring(root.TrimEnd('\\', '/').Length + 1).Replace('\\', '/'));
-                        if (selection.Count > request.MaxItems) CandidatePrimitives.Refuse("The input selection exceeds maxItems; nothing is truncated.", "maxItems", request.MaxItems, selection.Count);
+                            selection
+                                .Add(documents ? Path.GetFileNameWithoutExtension(item.Name) : item.FullName.Substring(root.TrimEnd('\\', '/').Length + 1)
+                                    .Replace('\\', '/'));
+                        if (selection.Count > request.MaxItems) CandidatePrimitives
+                            .Refuse("The input selection exceeds maxItems; nothing is truncated.", "maxItems", request.MaxItems, selection.Count);
                     }
                 }
                 Scan(new DirectoryInfo(root));
                 if (request.ImportOrder.Length != selection.Count || request.ImportOrder.Distinct(StringComparer.OrdinalIgnoreCase).Count() != selection.Count
-                    || !request.ImportOrder.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(selection.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)) CandidatePrimitives.Invalid("importOrder");
+                    || !request.ImportOrder.OrderBy(x => x, StringComparer.Ordinal)
+                        .SequenceEqual(selection.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)) CandidatePrimitives.Invalid("importOrder");
                 selection = request.ImportOrder.ToList();
             }
             else selection.Add(documents ? request.FileNameWithoutExtension : root);
@@ -46,7 +50,8 @@ namespace TiaMcp.Adapters.Contracts.Candidates
             byte[] Bytes(string path)
             {
                 path = Path.GetFullPath(path); SafePath(new FileInfo(path));
-                if (!locks.TryGetValue(path, out var stream)) { stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read); locks.Add(path, stream); }
+                if (!locks.TryGetValue(path, out var stream)) {
+                    stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read); locks.Add(path, stream); }
                 return CandidatePrimitives.Read(stream);
             }
             foreach (var selected in selection)
@@ -54,18 +59,25 @@ namespace TiaMcp.Adapters.Contracts.Candidates
                 if (documents)
                 {
                     if (release != "20" && release != "21") CandidatePrimitives.Unsupported(release, "documents");
-                    if (!Regex.IsMatch(selected, @"^[A-Za-z_][A-Za-z0-9_]{0,127}$", RegexOptions.CultureInvariant)) CandidatePrimitives.Invalid("document-name");
+                    if (!Regex.IsMatch(selected, @"^[A-Za-z_][A-Za-z0-9_]{0,127}$", RegexOptions.CultureInvariant)) CandidatePrimitives
+                        .Invalid("document-name");
                 }
-                var path = documents ? Path.Combine(root, selected + ".s7dcl") : directory ? Path.Combine(root, selected.Replace('/', Path.DirectorySeparatorChar)) : selected;
+                var path = documents ? Path.Combine(root, selected + ".s7dcl") : directory ? Path
+                    .Combine(root, selected.Replace('/', Path.DirectorySeparatorChar)) : selected;
                 var bytes = Bytes(path);
                 PlcImportObject target; string contentHash; string[] files;
                 if (documents)
                 {
                     var text = Text(bytes);
-                    var declaration = Regex.Matches(text, @"(?m)^\s*(FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|ORGANIZATION_BLOCK)\s+""?([A-Za-z_][A-Za-z0-9_]*)""?\b", RegexOptions.CultureInvariant);
+                    var declaration = Regex
+                        .Matches(text, @"(?m)^\s*(FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|ORGANIZATION_BLOCK)\s+""?([A-Za-z_][A-Za-z0-9_]*)""?\b", RegexOptions
+                            .CultureInvariant);
                     if (declaration.Count != 1 || declaration[0].Groups[2].Value != selected) CandidatePrimitives.Invalid("document-declaration");
                     var kind = declaration[0].Groups[1].Value;
-                    target = new PlcImportObject { Name = selected, Kind = kind == "FUNCTION" ? "FC" : kind == "FUNCTION_BLOCK" ? "FB" : kind == "ORGANIZATION_BLOCK" ? "OB" : "GlobalDB", GroupPath = request.BlockGroupPath };
+                    target = new PlcImportObject {
+                        Name = selected, Kind = kind == "FUNCTION" ? "FC" : kind == "FUNCTION_BLOCK" ? "FB" : kind == "ORGANIZATION_BLOCK" ? "OB" : "GlobalDB",
+                            GroupPath = request.BlockGroupPath
+                    };
                     string resource = Path.Combine(root, selected + ".s7res");
                     bool exists = File.Exists(resource);
                     if (release == "20" && !exists) CandidatePrimitives.Invalid("document-resource");
@@ -79,22 +91,34 @@ namespace TiaMcp.Adapters.Contracts.Candidates
                     var document = Xml(bytes);
                     var native = Object(document);
                     var producer = document.Root!.Elements("Engineering").SingleOrDefault();
-                    if ((string?)producer?.Attribute("version") != (release == "14sp1" ? "V14 SP1" : "V" + release)) CandidatePrimitives.Unsupported(release, "exact-producer");
+                    if ((string?)producer?.Attribute("version") != (release == "14sp1" ? "V14 SP1" : "V" + release)) CandidatePrimitives
+                        .Unsupported(release, "exact-producer");
                     string kind = native.Name.LocalName.Substring(native.Name.LocalName.LastIndexOf('.') + 1);
                     if (kind == "PlcStruct") kind = "UDT"; if (kind == "PlcTagTable") kind = "TagTable";
-                    if (!new[] { "FC", "FB", "OB", "GlobalDB", "InstanceDB", "UDT", "TagTable" }.Contains(kind)) CandidatePrimitives.Unsupported(release, "xml-object-kind");
-                    if (tool != "ImportPlcProgramFromDirectory" && (tool.Contains("Type") ? kind != "UDT" : tool.Contains("Tag") ? kind != "TagTable" : kind == "UDT" || kind == "TagTable")) CandidatePrimitives.Invalid("xml-object-kind");
+                    if (!new[] { "FC", "FB", "OB", "GlobalDB", "InstanceDB", "UDT", "TagTable" }.Contains(kind)) CandidatePrimitives
+                        .Unsupported(release, "xml-object-kind");
+                    if (tool != "ImportPlcProgramFromDirectory"
+                            && (tool.Contains("Type") ? kind != "UDT" : tool.Contains("Tag") ? kind != "TagTable" : kind == "UDT" || kind == "TagTable"))
+                        CandidatePrimitives.Invalid("xml-object-kind");
                     var attrs = native.Elements("AttributeList").Single();
                     string name = attrs.Elements("Name").Single().Value;
                     if (string.IsNullOrWhiteSpace(name) || name.Length > 128) CandidatePrimitives.Invalid("xml-object-name");
                     var numberText = attrs.Elements("Number").SingleOrDefault()?.Value;
                     int? number = null;
-                    if (numberText != null && kind != "UDT" && kind != "TagTable") { if (!int.TryParse(numberText, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int value)) CandidatePrimitives.Invalid("xml-number"); number = value; }
-                    if (kind != "UDT" && kind != "TagTable" && release == "14sp1" && attrs.Elements("ProgrammingLanguage").Any(e => e.Value == "SCL")) CandidatePrimitives.Unsupported(release, "interface-only-scl");
-                    target = new PlcImportObject { Name = name, Kind = kind, Number = number, GroupPath = kind == "UDT" ? request.TypeGroupPath : kind == "TagTable" ? request.TagFolderPath : request.BlockGroupPath };
+                    if (numberText != null && kind != "UDT" && kind != "TagTable") {
+                        if (!int.TryParse(numberText, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int value))
+                            CandidatePrimitives.Invalid("xml-number"); number = value;
+                    }
+                    if (kind != "UDT" && kind != "TagTable" && release == "14sp1" && attrs.Elements("ProgrammingLanguage").Any(e => e.Value == "SCL"))
+                        CandidatePrimitives.Unsupported(release, "interface-only-scl");
+                    target = new PlcImportObject {
+                        Name = name, Kind = kind, Number = number, GroupPath = kind == "UDT" ? request.TypeGroupPath : kind == "TagTable" ? request
+                            .TagFolderPath : request.BlockGroupPath
+                    };
                     files = new[] { path }; contentHash = XmlHash(bytes);
                 }
-                var unsupported = PlcImportOptionPolicy.Unsupported(release, documents ? "documents" : target.Kind, request.SwImportOptions, request.ImportOptions, request.UnitName);
+                var unsupported = PlcImportOptionPolicy
+                    .Unsupported(release, documents ? "documents" : target.Kind, request.SwImportOptions, request.ImportOptions, request.UnitName);
                 if (unsupported != null) CandidatePrimitives.Unsupported(release, unsupported);
                 result.Add(new PlcImportInput { Path = path, Files = files, Target = target, ContentHash = contentHash, Documents = documents });
             }
@@ -126,14 +150,18 @@ namespace TiaMcp.Adapters.Contracts.Candidates
                 return CandidatePrimitives.ByteHash(Encoding.UTF8.GetBytes(CanonicalBlock(document)));
             // UDT/tag content keeps all values and attributes; only object IDs and display dates normalize.
             var node = new XElement(original); var ids = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (var id in node.DescendantsAndSelf().Attributes("ID")) { if (ids.ContainsKey(id.Value)) CandidatePrimitives.Invalid("duplicate-object-id"); ids.Add(id.Value, "o" + ids.Count); }
-            foreach (var id in node.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName == "ID" || a.Name.LocalName == "RefId")) if (ids.TryGetValue(id.Value, out string? value)) id.Value = value;
+            foreach (var id in node.DescendantsAndSelf().Attributes("ID")) {
+                if (ids.ContainsKey(id.Value)) CandidatePrimitives.Invalid("duplicate-object-id"); ids.Add(id.Value, "o" + ids.Count); }
+            foreach (var id in node.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName == "ID" || a.Name.LocalName == "RefId"))
+                if (ids.TryGetValue(id.Value, out string? value)) id.Value = value;
             node.Elements("AttributeList").Elements().Where(e => new[] { "ModifiedDate", "CompileDate", "CreationDate" }.Contains(e.Name.LocalName)).Remove();
             foreach (var element in node.DescendantsAndSelf())
             {
                 if (element.HasElements && !element.Nodes().OfType<XText>().Any(t => !string.IsNullOrWhiteSpace(t.Value))
-                    && !element.AncestorsAndSelf().Any(e => (string?)e.Attribute(XNamespace.Xml + "space") == "preserve")) element.Nodes().OfType<XText>().Remove();
-                var attributes = element.Attributes().OrderBy(a => a.Name.ToString(), StringComparer.Ordinal).ToArray(); element.RemoveAttributes(); element.Add(attributes);
+                    && !element.AncestorsAndSelf().Any(e => (string?)e.Attribute(XNamespace.Xml + "space") == "preserve")) element.Nodes().OfType<XText>()
+                        .Remove();
+                var attributes = element.Attributes().OrderBy(a => a.Name.ToString(), StringComparer.Ordinal).ToArray(); element.RemoveAttributes(); element
+                    .Add(attributes);
             }
             return CandidatePrimitives.ByteHash(Encoding.UTF8.GetBytes(node.ToString(SaveOptions.DisableFormatting)));
         }
@@ -158,7 +186,8 @@ namespace TiaMcp.Adapters.Contracts.Candidates
                     a.Value = mapped;
                 }
             }
-            block.Elements().Single(x => x.Name.LocalName == "AttributeList").Elements().Where(e => new[] { "ModifiedDate", "CompileDate", "CreationDate" }.Contains(e.Name.LocalName)).Remove();
+            block.Elements().Single(x => x.Name.LocalName == "AttributeList").Elements()
+                .Where(e => new[] { "ModifiedDate", "CompileDate", "CreationDate" }.Contains(e.Name.LocalName)).Remove();
             foreach (var e in block.DescendantsAndSelf())
             {
                 // Formatting whitespace between elements is not program text. Leaf values
@@ -171,7 +200,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
             }
             return block.ToString(SaveOptions.DisableFormatting);
         }
-        private static string Text(byte[] bytes) { using var reader = new StreamReader(new MemoryStream(bytes, false), new UTF8Encoding(false, true), true); return reader.ReadToEnd().Replace("\r\n", "\n").Replace("\r", "\n"); }
+        private static string Text(byte[] bytes) {
+            using var reader = new StreamReader(new MemoryStream(bytes, false), new UTF8Encoding(false, true), true); return reader.ReadToEnd()
+                .Replace("\r\n", "\n").Replace("\r", "\n");
+        }
         public static string DocumentHash(byte[] code, byte[]? resource) => CandidateDigest.Document(Text(code), resource == null ? null : Text(resource));
     }
 }

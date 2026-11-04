@@ -69,7 +69,10 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (readOnly)
             { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = Failure(); }
             else if (Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") == false)
-            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("The operation stopped before a write was issued.", new PreconditionFailedDetails("classic-motion-before-write", null)); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
+                    new Error("The operation stopped before a write was issued.", new PreconditionFailedDetails("classic-motion-before-write", null));
+            }
             else
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = Unknown(); }
 
@@ -93,11 +96,15 @@ namespace TiaMcpServer.ModelContextProtocol
             switch (status)
             {
                 case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
-                case "HmiReadSessionBlocked": return new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("classic-motion-session"));
+                case "HmiReadSessionBlocked"
+                    : return new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("classic-motion-session"));
                 case "NotFound": case "NOT_FOUND": return new Error("The requested target was not found.", new NotFoundDetails(null));
-                case "NotSupportedOnVersion": case "NativeCrashRiskBlocked": case "UNSUPPORTED_CAPABILITY": return new Error("The target or version does not support this capability.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null));
+                case "NotSupportedOnVersion": case "NativeCrashRiskBlocked": case "UNSUPPORTED_CAPABILITY"
+                    : return new Error("The target or version does not support this capability.",
+                        new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null));
                 case "InvalidParams": case "INVALID_ARGUMENT": return McpServer.InvalidInput("arguments");
-                case "PRECONDITION_FAILED": return new Error("The operation's preconditions were not satisfied.", new PreconditionFailedDetails("classic-motion", null));
+                case "PRECONDITION_FAILED"
+                    : return new Error("The operation's preconditions were not satisfied.", new PreconditionFailedDetails("classic-motion", null));
                 default: return null;
             }
         }
@@ -108,11 +115,13 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!(node is JsonObject obj)) return false;
             foreach (var pair in new[] { ("screenCount", "screens"), ("popupCount", "screenPopups"), ("templateCount", "screenTemplates"),
                 ("tagTableCount", "tagTables"), ("scriptCount", "vbScripts"), ("count", "records") })
-                if (obj[pair.Item1] is JsonValue count && count.TryGetValue<int>(out int total) && obj[pair.Item2] is JsonArray items && items.Count < total) return true;
+                if (obj[pair.Item1] is JsonValue count && count.TryGetValue<int>(out int total) && obj[pair.Item2] is JsonArray items && items.Count < total)
+                    return true;
             return Flag(obj, "dataComplete") == false || obj.Any(p =>
                 p.Key.EndsWith("Truncated", StringComparison.OrdinalIgnoreCase) && p.Value?.ToString() == "true"
                 || p.Key.EndsWith("Error", StringComparison.OrdinalIgnoreCase) && p.Value != null
-                || (p.Key == "failures" || p.Key == "attributeErrors" || p.Key == "excludedComplexProperties") && p.Value is JsonArray failures && failures.Count > 0
+                || (p.Key == "failures" || p.Key == "attributeErrors" || p.Key == "excludedComplexProperties") && p.Value is JsonArray failures && failures
+                    .Count > 0
                 || Incomplete(p.Value));
         }
 
@@ -129,17 +138,26 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static Error Failure() => new Error("The operation did not establish a successful result.", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
-        private static Error Unknown() => new Error("The write outcome is unknown. Inspect the retained evidence and reset the session before further writes.", new OutcomeUnknownDetails("classic-motion-operation", new Dictionary<string, JsonElement>()));
+        private static Error Failure() =>
+            new Error("The operation did not establish a successful result.",
+                new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
+        private static Error Unknown() =>
+            new Error("The write outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
+                new OutcomeUnknownDetails("classic-motion-operation", new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,
             Completeness completeness, bool current, Paging? paging = null)
         {
             var warnings = new List<Warning>();
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "Only the reported scope and available fields were observed.", new Dictionary<string, JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
+                        new Dictionary<string, JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "Only the reported scope and available fields were observed.", new Dictionary<string,
+                        JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
+                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+                    completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };

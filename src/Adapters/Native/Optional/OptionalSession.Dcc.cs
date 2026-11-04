@@ -31,15 +31,22 @@ namespace TiaMcp.Adapters.Native.Optional
         {
             var container = drive.GetService<DriveControlChartContainer>(); if (container == null) return null;
             var row = new HmiObject { ["available"] = true };
-            Safe(row, "chartCount", () => container.Charts.Count); Safe(row, "charts", () => new HmiArray(EngineeringGroupOperations.Items(container.Charts).Cast<DriveControlChart>().Take(100).Select(c => (object)c.Name).ToArray()));
-            Safe(row, "dcbLibraries", () => new HmiArray(EngineeringGroupOperations.Items(container.DcbLibraries).Cast<DcbLibrary>().Select(l => (object)DcbLibraryRow(l, false)).ToArray()));
+            Safe(row, "chartCount", () => container.Charts.Count);
+            Safe(row, "charts", () =>
+                    new HmiArray(EngineeringGroupOperations.Items(container.Charts).Cast<DriveControlChart>().Take(100).Select(c => (object)c.Name).ToArray()));
+            Safe(row, "dcbLibraries", () =>
+                    new HmiArray(EngineeringGroupOperations.Items(container.DcbLibraries).Cast<DcbLibrary>().Select(l => (object)DcbLibraryRow(l, false))
+                        .ToArray()));
             return row;
         }
         internal static HmiObject DcbLibraryRow(DcbLibrary l, bool types)
         {
             var row = new HmiObject { ["libraryName"] = l.LibraryName };
             Safe(row, "version", () => l.Version?.ToString()); Safe(row, "blockTypeCount", () => l.BlockTypes.Count);
-            if (types) Safe(row, "blockTypes", () => new HmiArray(EngineeringGroupOperations.Items(l.BlockTypes).Cast<DcbBlockType>().Take(500).Select(t => (object)new HmiObject { ["name"] = t.Name, ["description"] = t.Description }).ToArray()));
+            if (types)
+                Safe(row, "blockTypes", () =>
+                    new HmiArray(EngineeringGroupOperations.Items(l.BlockTypes).Cast<DcbBlockType>().Take(500)
+                        .Select(t => (object)new HmiObject { ["name"] = t.Name, ["description"] = t.Description }).ToArray()));
             return row;
         }
     }

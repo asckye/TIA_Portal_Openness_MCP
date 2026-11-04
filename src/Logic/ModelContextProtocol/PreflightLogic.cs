@@ -24,8 +24,12 @@ namespace TiaMcpServer.ModelContextProtocol
             public IReadOnlyList<string> AllowedValues { get; }
             public string? ExampleJson { get; }
             public string? Pattern { get; }
-            public ParameterSpec(string name, string kind, bool required, string? defaultText, string description, bool synthesized = false, IReadOnlyList<string>? allowedValues = null, string? exampleJson = null, string? pattern = null)
-            { Name = name; Kind = kind; Required = required; DefaultText = defaultText; Description = description ?? ""; Synthesized = synthesized; AllowedValues = allowedValues ?? Array.Empty<string>(); ExampleJson = exampleJson; Pattern = pattern; }
+            public ParameterSpec(string name, string kind, bool required, string? defaultText, string description, bool synthesized = false,
+                    IReadOnlyList<string>? allowedValues = null, string? exampleJson = null, string? pattern = null)
+            {
+                Name = name; Kind = kind; Required = required; DefaultText = defaultText; Description = description ?? ""; Synthesized = synthesized;
+                AllowedValues = allowedValues ?? Array.Empty<string>(); ExampleJson = exampleJson; Pattern = pattern;
+            }
         }
 
         public sealed class Report
@@ -84,18 +88,25 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             }
             if (report.DryRunSupported && report.Effective && report.ConfirmFlags.Count > 0 && report.ConfirmFlagsSet.Count == 0)
-                report.Warnings.Add("dryRun=false without " + string.Join(" / ", report.ConfirmFlags) + "=true: the tool will refuse to execute (set the confirm flag only after the user agreed).");
+                report.Warnings
+                    .Add("dryRun=false without " + string.Join(" / ", report.ConfirmFlags)
+                        + "=true: the tool will refuse to execute (set the confirm flag only after the user agreed).");
             return report;
         }
 
         private static void CheckValue(ParameterSpec spec, JsonNode? value, Report report)
         {
-            if (value == null) { report.Warnings.Add(spec.Name + " is null - treated as not given" + (spec.Required ? " (required)" : "") + "."); if (spec.Required) report.Missing.Add(spec.Name); return; }
+            if (value == null) {
+                report.Warnings.Add(spec.Name + " is null - treated as not given" + (spec.Required ? " (required)" : "") + "."); if (spec.Required) report
+                    .Missing.Add(spec.Name); return;
+            }
             switch (spec.Kind)
             {
                 case "string":
                     if (value is JsonObject || value is JsonArray)
-                        report.Coercions.Add(spec.Name + ": object/array given for a string parameter - CallTool sends it as JSON text; a direct call needs the JSON string.");
+                        report.Coercions
+                            .Add(spec.Name
+                                + ": object/array given for a string parameter - CallTool sends it as JSON text; a direct call needs the JSON string.");
                     else if (value is JsonValue sv && !sv.TryGetValue<string>(out _))
                         report.Coercions.Add(spec.Name + ": " + value.ToJsonString() + " given for a string parameter - sent as its text.");
                     else
@@ -110,8 +121,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (value is JsonValue bv)
                     {
                         if (bv.TryGetValue<bool>(out _)) break;
-                        if (bv.TryGetValue<string>(out var bs) && (bool.TryParse(bs.Trim(), out _) || bs.Trim() == "0" || bs.Trim() == "1")) { report.Coercions.Add(spec.Name + ": '" + bs + "' given for a boolean - CallTool converts it; a direct call needs true/false."); break; }
-                        if (bv.TryGetValue<int>(out var bi) && (bi == 0 || bi == 1)) { report.Coercions.Add(spec.Name + ": " + bi + " given for a boolean - CallTool converts it; a direct call needs true/false."); break; }
+                        if (bv.TryGetValue<string>(out var bs) && (bool.TryParse(bs.Trim(), out _) || bs.Trim() == "0" || bs.Trim() == "1")) {
+                            report.Coercions.Add(spec.Name + ": '" + bs + "' given for a boolean - CallTool converts it; a direct call needs true/false.");
+                            break;
+                        }
+                        if (bv.TryGetValue<int>(out var bi) && (bi == 0 || bi == 1)) {
+                            report.Coercions.Add(spec.Name + ": " + bi + " given for a boolean - CallTool converts it; a direct call needs true/false."); break;
+                        }
                     }
                     report.TypeProblems.Add(spec.Name + " must be a boolean (true/false), got " + value.ToJsonString() + ".");
                     break;
@@ -121,10 +137,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         if (nv.TryGetValue<double>(out var d))
                         {
-                            if (spec.Kind == "integer" && Math.Abs(d - Math.Round(d)) > 1e-9) report.TypeProblems.Add(spec.Name + " must be an integer, got " + value.ToJsonString() + ".");
+                            if (spec.Kind == "integer" && Math.Abs(d - Math.Round(d)) > 1e-9) report.TypeProblems
+                                .Add(spec.Name + " must be an integer, got " + value.ToJsonString() + ".");
                             break;
                         }
-                        if (nv.TryGetValue<string>(out var ns) && double.TryParse(ns.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out _)) { report.Coercions.Add(spec.Name + ": '" + ns + "' given for a " + spec.Kind + " - CallTool converts it; a direct call needs a number."); break; }
+                        if (nv.TryGetValue<string>(out var ns) && double.TryParse(ns.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out _)) {
+                            report.Coercions
+                                .Add(spec.Name + ": '" + ns + "' given for a " + spec.Kind + " - CallTool converts it; a direct call needs a number."); break;
+                        }
                     }
                     report.TypeProblems.Add(spec.Name + " must be a " + spec.Kind + ", got " + value.ToJsonString() + ".");
                     break;
@@ -141,7 +161,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (alternatives.Count == 0) return;
             if (alternatives.Any(a => string.Equals(a, text, StringComparison.Ordinal))) return;
             var ci = alternatives.FirstOrDefault(a => string.Equals(a, text, StringComparison.OrdinalIgnoreCase));
-            if (ci != null) { report.Coercions.Add(spec.Name + ": '" + text + "' -> '" + ci + "' (CallTool retries with the documented spelling; a direct call needs it exactly)."); return; }
+            if (ci != null) {
+                report.Coercions
+                    .Add(spec.Name + ": '" + text + "' -> '" + ci + "' (CallTool retries with the documented spelling; a direct call needs it exactly).");
+                return;
+            }
             report.Warnings.Add(spec.Name + ": '" + text + "' is not among the documented values " + string.Join(" | ", alternatives) + ".");
         }
 
@@ -150,7 +174,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (node is JsonValue v)
             {
                 if (v.TryGetValue<bool>(out var b)) return b;
-                if (v.TryGetValue<string>(out var s)) { if (bool.TryParse(s.Trim(), out b)) return b; if (s.Trim() == "1") return true; if (s.Trim() == "0") return false; }
+                if (v.TryGetValue<string>(out var s)) {
+                    if (bool.TryParse(s.Trim(), out b)) return b; if (s.Trim() == "1") return true; if (s.Trim() == "0") return false; }
                 if (v.TryGetValue<int>(out var i)) { if (i == 1) return true; if (i == 0) return false; }
             }
             return null;
@@ -164,7 +189,8 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var n in names)
             {
                 int score = 0;
-                if (n.IndexOf(given, StringComparison.OrdinalIgnoreCase) >= 0 || given.IndexOf(n, StringComparison.OrdinalIgnoreCase) >= 0) score = 100 + Math.Min(n.Length, given.Length);
+                if (n.IndexOf(given, StringComparison.OrdinalIgnoreCase) >= 0 || given.IndexOf(n, StringComparison.OrdinalIgnoreCase) >= 0) score = 100 + Math
+                    .Min(n.Length, given.Length);
                 else
                 {
                     int p = 0, max = Math.Min(n.Length, given.Length);
@@ -192,18 +218,26 @@ namespace TiaMcpServer.ModelContextProtocol
             switch ((operation ?? "").ToUpperInvariant())
             {
                 case "UI":
-                    list.Add("Changes only Workbench UI state. Human activity, modal dialogs and the control switch can refuse it; prefill awaits human confirmation.");
+                    list
+                        .Add("Changes only Workbench UI state. Human activity, modal dialogs and the control switch can refuse it; prefill awaits human " +
+                        "confirmation.");
                     break;
                 case "WRITE":
-                    list.Add("Modifies the open project offline; nothing is saved, compiled or downloaded by itself - CompilePlcSoftware then SaveProject afterwards.");
+                    list
+                        .Add("Modifies the open project offline; nothing is saved, compiled or downloaded by itself - CompilePlcSoftware then SaveProject " +
+                        "afterwards.");
                     if (dryRunSupported) list.Add("dryRun=true (default) previews; run the preview first, then repeat with dryRun=false once it is clean.");
                     break;
                 case "ONLINE-WRITE":
-                    list.Add("Changes a real device or runtime (download / upload / operating mode / value write). In the maintainer's environment this is allowed against PLCSIM Advanced only, never a real CPU.");
+                    list
+                        .Add("Changes a real device or runtime (download / upload / operating mode / value write). In the maintainer's environment this is " +
+                        "allowed against PLCSIM Advanced only, never a real CPU.");
                     if (dryRunSupported) list.Add("dryRun=true (default) previews; execution also needs the confirm flag.");
                     break;
                 case "ONLINE":
-                    list.Add("Contacts a PLC / device / runtime read-only (scan, online state, compare). Needs the route (pgPcInterface / IP) to be right; ListTransferRoutes shows the choices.");
+                    list
+                        .Add("Contacts a PLC / device / runtime read-only (scan, online state, compare). Needs the route (pgPcInterface / IP) to be right; " +
+                        "ListTransferRoutes shows the choices.");
                     break;
                 case "EXECUTE":
                     list.Add("Runs a compile / test / self-test and returns its messages; read ErrorCount before continuing.");
@@ -232,7 +266,15 @@ namespace TiaMcpServer.ModelContextProtocol
             var op = (operation ?? "").ToUpperInvariant();
             if (op == "SESSION" || op == "OFFLINE" || op == "UI" || ToolTaxonomy.For(toolName).Domain == "Workbench") return false;
             // Tools that read the environment rather than a project.
-            var exempt = new[] { "GetOpennessWorkerStatus", "RestartOpennessWorker", "GetOpennessCompatibility", "GetNativeInvocationLog", "InspectSimaticSdCompatibility", "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetSessionState", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "CheckProductUpdate", "GetPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles", "WritePlcSclSourceFile", "GenerateErrorReport", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario", "EnsureOpennessUserGroup" };
+            var exempt = new[] {
+                "GetOpennessWorkerStatus", "RestartOpennessWorker", "GetOpennessCompatibility", "GetNativeInvocationLog", "InspectSimaticSdCompatibility",
+                    "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetSessionState", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage",
+                    "PreviewToolCall", "CheckProductUpdate", "GetPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExportContent",
+                    "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles", "WritePlcSclSourceFile", "GenerateErrorReport",
+                    "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ListPlcSimAdvancedInstances",
+                    "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario",
+                    "EnsureOpennessUserGroup"
+            };
             return !exempt.Contains(toolName, StringComparer.OrdinalIgnoreCase);
         }
     }

@@ -96,7 +96,10 @@ namespace TiaMcpServer.ModelContextProtocol
             RequireNonEmpty(op, "subnetName", index, errors);
 
             var node = op["interfaceIndex"];
-            if (node == null || !int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var interfaceIndex) || interfaceIndex < 0)
+            if (node == null || !int
+                    .TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                        out var interfaceIndex)
+                    || interfaceIndex < 0)
                 errors.Add($"operations[{index}].interfaceIndex must be a zero-based non-negative integer from network-node discovery readback.");
 
             if (op.ContainsKey("anchorDeviceItemPath"))
@@ -111,7 +114,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var settings = op["settings"] as JsonObject;
             var exact = settings?["exactAttributes"] as JsonObject;
             if (exact == null || exact.Count == 0)
-                errors.Add($"operations[{index}].settings.exactAttributes is required. Attribute names must come from GetDeviceItemInfo/GetDeviceItemNetworkInfo readback.");
+                errors
+                    .Add($"operations[{index}].settings.exactAttributes is required. Attribute names must come from GetDeviceItemInfo/GetDeviceItemNetworkInfo readback.");
 
             if (settings != null)
             {
@@ -127,7 +131,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var kv in exact)
                 {
                     if (LooksLikeAlias(kv.Key))
-                        errors.Add($"operations[{index}].settings.exactAttributes.{kv.Key} looks like an alias. Use the exact TIA attribute name from readback.");
+                        errors
+                            .Add($"operations[{index}].settings.exactAttributes.{kv.Key} looks like an alias. Use the exact TIA attribute name from readback.");
                     if (string.IsNullOrWhiteSpace(kv.Value?.ToString()))
                         warnings.Add($"operations[{index}].settings.exactAttributes.{kv.Key} has an empty value.");
                 }

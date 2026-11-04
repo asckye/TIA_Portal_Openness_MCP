@@ -17,7 +17,8 @@ namespace TiaMcp.Logic.V4
         {
             var errors = new JsonArray(new JsonObject { ["type"] = "null" });
             var knownCodes = new List<string>();
-            foreach (var type in typeof(ErrorDetails).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(ErrorDetails)) && !t.IsAbstract).OrderBy(t => t.Name, StringComparer.Ordinal))
+            foreach (var type in typeof(ErrorDetails).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(ErrorDetails)) && !t.IsAbstract)
+                    .OrderBy(t => t.Name, StringComparer.Ordinal))
             {
                 string code = JsonNamingPolicy.SnakeCaseUpper.ConvertName(type.Name.Replace("Details", ""));
                 knownCodes.Add(code);

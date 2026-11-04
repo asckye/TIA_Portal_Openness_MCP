@@ -78,7 +78,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             var multilingual = Get(item, property) ?? throw new InvalidOperationException(property + " is unavailable.");
             var rows = Snapshot(multilingual);
             if (string.IsNullOrWhiteSpace(culture) || !rows.Any(x => string.Equals(x.Culture, culture, StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException(property + " target language not found: " + culture + "; available cultures: " + string.Join(", ", rows.Select(x => x.Culture)));
+                throw new InvalidOperationException(property + " target language not found: " + culture + "; available cultures: " + string
+                        .Join(", ", rows.Select(x => x.Culture)));
         }
 
         internal static UnifiedObject WriteDetailed(object item, string property, string text, string culture)

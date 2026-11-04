@@ -29,8 +29,11 @@ namespace TiaMcp.Adapters
             var all=inventory.ToArray();
             int selected=TiaOpenness.Shared.NativePathSelection.Select(path,all.Select(c=>c.ExactPath).ToArray(),(index,parts)=>Matches(all[index],parts));
             if(selected==-3) throw new AdapterPreconditionException("softwarePath contains an empty or traversal segment.","softwarePath");
-            if(selected==-2) throw new AdapterPreconditionException("Ambiguous softwarePath '"+path+"'. Select an exact address: "+string.Join(", ",all.Select(c=>c.ExactPath)),"softwarePath");
-            if(selected<0) throw new AdapterPreconditionException("PLC software not found at '"+path+"'. Use the exact address from GetProjectTree.","softwarePath");
+            if(selected==-2)
+                throw new AdapterPreconditionException("Ambiguous softwarePath '"+path+"'. Select an exact address: "+string
+                    .Join(", ",all.Select(c=>c.ExactPath)),"softwarePath");
+            if(selected<0)
+                throw new AdapterPreconditionException("PLC software not found at '"+path+"'. Use the exact address from GetProjectTree.","softwarePath");
             return all[selected];
         }
         private static bool Matches<T>(PlcReadCandidate<T> c,string[] parts)
@@ -41,8 +44,10 @@ namespace TiaMcp.Adapters
             if(remaining<1 || remaining>2) return false;
             for(int i=0;i<c.Groups.Length;i++) if(!string.Equals(c.Groups[i],parts[i],StringComparison.Ordinal)) return false;
             var first=parts[c.Groups.Length];
-            if(remaining==1) return string.Equals(first,c.Device,StringComparison.OrdinalIgnoreCase) || string.Equals(first,c.Host,StringComparison.OrdinalIgnoreCase);
-            return string.Equals(first,c.Device,StringComparison.OrdinalIgnoreCase) && string.Equals(parts[c.Groups.Length+1],c.Host,StringComparison.OrdinalIgnoreCase);
+            if(remaining==1) return string.Equals(first,c.Device,StringComparison.OrdinalIgnoreCase) || string
+                .Equals(first,c.Host,StringComparison.OrdinalIgnoreCase);
+            return string.Equals(first,c.Device,StringComparison.OrdinalIgnoreCase) && string
+                .Equals(parts[c.Groups.Length+1],c.Host,StringComparison.OrdinalIgnoreCase);
         }
     }
 }

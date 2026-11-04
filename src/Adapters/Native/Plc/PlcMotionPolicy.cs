@@ -10,8 +10,10 @@ namespace TiaMcp.Adapters.Native.Plc
         internal const string SupervisionProvider = "Siemens.Engineering.SW.Supervision.SupervisionProvider";
         internal const string SupervisionSettingsProvider = "Siemens.Engineering.SW.Supervision.SupervisionSettingsProvider";
         internal const string GraphicsProvider = "Siemens.Engineering.Hmi.Globalization.GraphicsProvider";
-        internal static readonly string[] MotionActions = { "read", "addMasterValue", "removeMasterValue", "createMapping", "updateMapping", "deleteMapping", "connect", "disconnect", "connectIdent" };
-        internal static readonly IReadOnlyDictionary<string, (string Service, string Property)> MasterValueAspects = new Dictionary<string, (string, string)>(StringComparer.Ordinal)
+        internal static readonly string[] MotionActions = {
+            "read", "addMasterValue", "removeMasterValue", "createMapping", "updateMapping", "deleteMapping", "connect", "disconnect", "connectIdent" };
+        internal static readonly IReadOnlyDictionary<string, (string Service, string Property)> MasterValueAspects = new Dictionary<string,
+            (string, string)>(StringComparer.Ordinal)
         {
             ["synchronousSetPoint"] = (MotionNs + "SynchronousAxisMasterValues", "SetPointCoupling"),
             ["synchronousActualValue"] = (MotionNs + "SynchronousAxisMasterValues", "ActualValueCoupling"),
@@ -21,12 +23,14 @@ namespace TiaMcp.Adapters.Native.Plc
             ["conveyorDelayed"] = (MotionNs + "ConveyorTrackingLeadingValues", "DelayedCoupling"),
             ["superimposingSetPoint"] = (MotionNs + "SuperimposingAxes", "SetPointCoupling"),
         };
-        internal static readonly IReadOnlyDictionary<string, (string Service, string Property)> MappingAspects = new Dictionary<string, (string, string)>(StringComparer.Ordinal)
+        internal static readonly IReadOnlyDictionary<string, (string Service, string Property)> MappingAspects = new Dictionary<string,
+            (string, string)>(StringComparer.Ordinal)
         {
             ["toMapping"] = (MotionNs + "InterpreterMappings", "TechnologicalObjectMapping"),
             ["dbMemberMapping"] = (MotionNs + "InterpreterMappings", "DBMemberMapping"),
         };
-        internal static readonly IReadOnlyDictionary<string, (string Service, string Property)> ConnectionAspects = new Dictionary<string, (string, string)>(StringComparer.Ordinal)
+        internal static readonly IReadOnlyDictionary<string, (string Service, string Property)> ConnectionAspects = new Dictionary<string,
+            (string, string)>(StringComparer.Ordinal)
         {
             ["actor"] = (MotionNs + "AxisHardwareConnectionProvider", "ActorInterface"),
             ["sensor"] = (MotionNs + "AxisHardwareConnectionProvider", "SensorInterface"),
@@ -64,7 +68,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             if (action.EndsWith("MasterValue", StringComparison.Ordinal))
             {
-                if (!MasterValueAspects.ContainsKey(aspect)) throw new ArgumentException("aspect must be one of: " + string.Join("/", MasterValueAspects.Keys) + ".");
+                if (!MasterValueAspects.ContainsKey(aspect))
+                    throw new ArgumentException("aspect must be one of: " + string.Join("/", MasterValueAspects.Keys) + ".");
                 return "masterValue";
             }
             if (action.EndsWith("Mapping", StringComparison.Ordinal))
@@ -79,7 +84,8 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static void RequireConnectionMode(string aspect, string mode)
         {
             if (!ConnectionModes[aspect].Contains(mode))
-                throw new ArgumentException("Target " + mode + " is not a native Connect overload for aspect " + aspect + " (allowed: " + string.Join("/", ConnectionModes[aspect]) + "). Bit addresses for actor/sensor/torque are handled by ConfigureMotionHardwareConnection.");
+                throw new ArgumentException("Target " + mode + " is not a native Connect overload for aspect " + aspect + " (allowed: " + string
+                        .Join("/", ConnectionModes[aspect]) + "). Bit addresses for actor/sensor/torque are handled by ConfigureMotionHardwareConnection.");
         }
         internal static string RequireAction(string action, string[] allowed)
         {
@@ -88,7 +94,8 @@ namespace TiaMcp.Adapters.Native.Plc
         }
         internal static string RequireName(string value, string what)
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > 256 || value.IndexOfAny(new[] { '/', '\\' }) >= 0) throw new ArgumentException("Exact " + what + " (single nonempty segment) required.");
+            if (string.IsNullOrWhiteSpace(value) || value.Length > 256 || value.IndexOfAny(new[] { '/', '\\' }) >= 0)
+                throw new ArgumentException("Exact " + what + " (single nonempty segment) required.");
             return value;
         }
         internal static void RequirePagination(int offset, int limit)

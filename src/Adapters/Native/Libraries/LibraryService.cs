@@ -24,7 +24,9 @@ namespace TiaMcp.Adapters
         public HardwareAddressingReply ManageLibraryTypeVersion(string typePath, string version, string action, string libraryName = "",
             string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true)
             => RunEngineeringServicesStep("ManageLibraryTypeVersion", meta => {
-                if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances", "discard", "findInstances" }.Contains(action)) throw new ArgumentException("action must be one of: read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances (case-sensitive).");
+                if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances", "discard", "findInstances" }.Contains(action))
+                    throw new ArgumentException("action must be one of: read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances " +
+                    "(case-sensitive).");
                 bool writing = action != "read" && action != "findInstances" && !dryRun;
                 using var access = writing && action != "edit" && action != "discard" ? HardwareEditAccess() : null;
                 var library = ExactOpenEngineeringLibrary(libraryName);
@@ -32,7 +34,9 @@ namespace TiaMcp.Adapters
                     throw new NotSupportedException("Library version edit/discard is supported only in the project library.");
                 var parts = PlcGroupOperations.Parts(typePath);
                 var folder = EngineeringLibraryFolder(library, string.Join("/", parts.Take(parts.Length - 1)), "TypeFolder");
-                var type = (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last()) ?? throw new InvalidOperationException("Exact library type not found."));
+                var type =
+                    (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last())
+                        ?? throw new InvalidOperationException("Exact library type not found."));
                 var matches = type.Versions.Where(v => v.VersionNumber.ToString() == version).Take(2).ToArray();
                 if (matches.Length != 1) throw new InvalidOperationException("Expected exactly one matching version, found " + matches.Length);
                 var selected = matches[0];
@@ -47,29 +51,38 @@ namespace TiaMcp.Adapters
 #if LIBRARY_V20
                 if (action == "edit" && new[] { "codeBlock", "plcType", "plcDocument" }.Contains(LibraryTypeKind(type)))
                 {
-                    if (string.IsNullOrWhiteSpace(targetSoftwarePath)) throw new ArgumentException("STEP 7 type edit requires exact targetSoftwarePath containing a single instance of this version.");
+                    if (string.IsNullOrWhiteSpace(targetSoftwarePath))
+                        throw new ArgumentException("STEP 7 type edit requires exact targetSoftwarePath containing a single instance of this version.");
                     var search = EngineeringPlcSession.ResolveSoftwareContainerUncached(targetSoftwarePath)?.Software as IInstanceSearchScope
                         ?? throw new NotSupportedException("Selected software does not support instance search.");
                     var instances = selected.FindInstances(search).Take(2).ToArray();
-                    if (instances.Length != 1) throw new ArgumentException("STEP 7 type edit requires exactly one instance in targetSoftwarePath; found " + instances.Length + ". Use a software scope with a single matching instance; ambiguous edits are refused.");
+                    if (instances.Length != 1)
+                        throw new ArgumentException("STEP 7 type edit requires exactly one instance in targetSoftwarePath; found " + instances.Length
+                            + ". Use a software scope with a single matching instance; ambiguous edits are refused.");
                     editInstance = instances[0];
                 }
                 if (action == "release")
                 {
-                    mode = (CreateOrReleaseDependenciesMode)HardwareAddressingPolicy.ConvertValue(new HardwareScalar { Kind = "string", Text = dependenciesMode }, typeof(CreateOrReleaseDependenciesMode))!;
+                    mode = (CreateOrReleaseDependenciesMode)HardwareAddressingPolicy
+                        .ConvertValue(new HardwareScalar { Kind = "string", Text = dependenciesMode }, typeof(CreateOrReleaseDependenciesMode))!;
                     releaseVersion = Version.Parse(newVersion);
                 }
 #endif
                 if (action == "updateInstances")
                 {
-                    if (string.IsNullOrWhiteSpace(targetSoftwarePath)) throw new ArgumentException("Exact targetSoftwarePath required; unbounded project-wide update refused.");
+                    if (string.IsNullOrWhiteSpace(targetSoftwarePath))
+                        throw new ArgumentException("Exact targetSoftwarePath required; unbounded project-wide update refused.");
                     scope = EngineeringPlcSession.ResolveSoftwareContainerUncached(targetSoftwarePath)?.Software as IUpdateProjectScope
                         ?? throw new NotSupportedException("Selected software does not implement IUpdateProjectScope.");
-                    meta["versionSelection"] = "Native LibraryType.UpdateProject chooses applicable released/default versions, not necessarily the version argument. The argument identifies evidence only.";
+                    meta["versionSelection"] =
+                        "Native LibraryType.UpdateProject chooses applicable released/default versions, not necessarily the version argument. The argument " +
+                        "identifies evidence only.";
                 }
                 if (action == "findInstances") {
-                    if (string.IsNullOrWhiteSpace(targetSoftwarePath)) throw new ArgumentException("Exact targetSoftwarePath required; whole project search refused.");
-                    var search = EngineeringPlcSession.ResolveSoftwareContainerUncached(targetSoftwarePath)?.Software as IInstanceSearchScope ?? throw new NotSupportedException("Selected software does not support instance search.");
+                    if (string.IsNullOrWhiteSpace(targetSoftwarePath))
+                        throw new ArgumentException("Exact targetSoftwarePath required; whole project search refused.");
+                    var search = EngineeringPlcSession.ResolveSoftwareContainerUncached(targetSoftwarePath)?.Software as IInstanceSearchScope
+                        ?? throw new NotSupportedException("Selected software does not support instance search.");
                     var found = PlcGroupOperations.Items(selected.FindInstances(search)).ToArray();
                     meta["instances"] = new List<object?>(found.Select(x => (object)LibraryObjectAddress(x)).ToArray());
                     meta["actualCount"] = found.Length; meta["dataComplete"] = false; meta["truncated"] = false;
@@ -94,10 +107,12 @@ namespace TiaMcp.Adapters
                     case "updateInstances": type.UpdateProject(scope!); break;
                 }
                 if (action != "deleteVersion" && action != "discard") meta["after"] = HardwareScalarEvidence.Read(selected);
-                return "Native library operation completed; project/library not explicitly saved. Dependency changes may occur according to the selected native operation.";
+                return "Native library operation completed; project/library not explicitly saved. Dependency changes may occur according to the selected " +
+                    "native operation.";
             });
 
-        public HardwareAddressingReply CreateLibraryMasterCopy(string sourceKind, string sourcePath, string softwarePath = "", string folderPath = "", string libraryName = "", bool dryRun = true, string[]? sourceDevicePath = null)
+        public HardwareAddressingReply CreateLibraryMasterCopy(string sourceKind, string sourcePath, string softwarePath = "", string folderPath = "",
+                string libraryName = "", bool dryRun = true, string[]? sourceDevicePath = null)
             => RunEngineeringServicesStep("CreateLibraryMasterCopy", meta => {
                 using var access = dryRun ? null : HardwareEditAccess();
                 object source = sourceKind switch {
@@ -106,22 +121,27 @@ namespace TiaMcp.Adapters
                     "device" => ResolveLibraryDevice(sourcePath, sourceDevicePath!),
                     "screen" => ResolveLibraryHmiScreen(softwarePath, sourcePath),
                     _ => throw new ArgumentException("sourceKind must be block/type/device/screen. device sourcePath is a JSON array of exact names.") };
-                if (source is not IMasterCopySource copySource) throw new NotSupportedException("Selected object is not a supported native master-copy source.");
+                if (source is not IMasterCopySource copySource)
+                    throw new NotSupportedException("Selected object is not a supported native master-copy source.");
                 var folder = (MasterCopyFolder)EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName), folderPath, "MasterCopyFolder");
                 meta["sourceType"] = source.GetType().FullName; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                if (!dryRun) { meta["mayHaveChanged"] = true; var copy = folder.MasterCopies.Create(copySource); meta["after"] = HardwareScalarEvidence.Read(copy); }
+                if (!dryRun) {
+                    meta["mayHaveChanged"] = true; var copy = folder.MasterCopies.Create(copySource); meta["after"] = HardwareScalarEvidence.Read(copy); }
                 return dryRun ? "Master copy preview; no copy created." : "Master copy created; no explicit save or close.";
             });
-        private static ILibrary AsLibrary(object library) => library as ILibrary ?? throw new NotSupportedException(library.GetType().FullName + " does not implement ILibrary.");
+        private static ILibrary AsLibrary(object library) => library as ILibrary
+            ?? throw new NotSupportedException(library.GetType().FullName + " does not implement ILibrary.");
         private Dictionary<string, object?> VersionRow(LibraryTypeVersion version, bool deep)
         {
             var row = new Dictionary<string, object?>
             {
-                ["versionNumber"] = version.VersionNumber == null ? null : version.VersionNumber.ToString(), ["guid"] = version.Guid.ToString(), ["state"] = version.State.ToString(), ["isDefault"] = LibraryIsDefault(version),
+                ["versionNumber"] = version.VersionNumber == null ? null : version.VersionNumber.ToString(), ["guid"] = version.Guid.ToString(), ["state"] =
+                    version.State.ToString(), ["isDefault"] = LibraryIsDefault(version),
                 ["author"] = version.Author, ["modifiedDate"] = LibraryValue(version.ModifiedDate), ["comment"] = MultilingualJson(version.Comment),
                 ["versionClass"] = version.GetType().Name
             };
-            try { row["originalLibrary"] = LibraryTypedMember(version, "OriginalLibrary"); } catch (Exception ex) { row["originalLibraryError"] = ex.GetBaseException().Message; }
+            try { row["originalLibrary"] = LibraryTypedMember(version, "OriginalLibrary"); } catch (Exception ex) {
+                row["originalLibraryError"] = ex.GetBaseException().Message; }
             if (!deep) return row;
             // Dependencies / dependents can throw on InWork versions (official note); capture instead of failing the row.
             object Assoc(Func<object> get)
@@ -129,12 +149,19 @@ namespace TiaMcp.Adapters
                 try
                 {
                     return new List<object?>(PlcGroupOperations.Items(get()).Cast<LibraryTypeVersion>()
-                        .Select(v => (object)new Dictionary<string, object?> { ["type"] = v.TypeObject?.Name, ["versionNumber"] = v.VersionNumber == null ? null : v.VersionNumber.ToString(), ["guid"] = v.Guid.ToString(), ["state"] = v.State.ToString() }).ToArray());
+                        .Select(v => (object)new Dictionary<string, object?> {
+                                ["type"] = v.TypeObject?.Name, ["versionNumber"] = v.VersionNumber == null ? null : v.VersionNumber.ToString(), ["guid"] = v
+                                    .Guid.ToString(), ["state"] = v.State.ToString()
+                            })
+                            .ToArray());
                 }
                 catch (Exception ex) { return new Dictionary<string, object?> { ["error"] = ex.GetBaseException().Message }; }
             }
             row["dependencies"] = Assoc(() => version.Dependencies); row["dependents"] = Assoc(() => version.Dependents);
-            try { row["masterCopiesContainingInstances"] = new List<object?>(PlcGroupOperations.Items(version.MasterCopiesContainingInstances).Cast<MasterCopy>().Select(m => (object)m.Name).ToArray()); }
+            try {
+                row["masterCopiesContainingInstances"] = new List<object
+                    ?>(PlcGroupOperations.Items(version.MasterCopiesContainingInstances).Cast<MasterCopy>().Select(m => (object)m.Name).ToArray());
+            }
             catch (Exception ex) { row["masterCopiesContainingInstancesError"] = ex.GetBaseException().Message; }
             return row;
         }
@@ -164,13 +191,17 @@ namespace TiaMcp.Adapters
         {
             var row = new Dictionary<string, object?>
             {
-                ["name"] = type.Name, ["guid"] = type.Guid.ToString(), ["typeClass"] = type.GetType().Name, ["typeKind"] = LibraryTypeKind(type), ["author"] = type.Author, ["namespace"] = LibraryTypedMember(type, "Namespace"),
-                ["comment"] = MultilingualJson(type.Comment), ["doNotUse"] = LibraryTypedMember(type, "DoNotUse"), ["minimumTargetDeviceVersion"] = LibraryTypedMember(type, "MinimumTargetDeviceVersion")?.ToString()
+                ["name"] = type.Name, ["guid"] = type.Guid.ToString(), ["typeClass"] = type.GetType().Name, ["typeKind"] = LibraryTypeKind(type), ["author"] =
+                    type.Author, ["namespace"] = LibraryTypedMember(type, "Namespace"),
+                ["comment"] = MultilingualJson(type.Comment), ["doNotUse"] = LibraryTypedMember(type, "DoNotUse"), ["minimumTargetDeviceVersion"] =
+                    LibraryTypedMember(type, "MinimumTargetDeviceVersion")?.ToString()
             };
-            try { row["setForUpdate"] = LibraryTypedMember(type, "SetForUpdate"); } catch (Exception ex) { row["setForUpdateError"] = ex.GetBaseException().Message; }
+            try { row["setForUpdate"] = LibraryTypedMember(type, "SetForUpdate"); } catch (Exception ex) {
+                row["setForUpdateError"] = ex.GetBaseException().Message; }
             try { row["status"] = LibraryTypedMember(type, "Status").ToString(); } catch (Exception ex) { row["statusError"] = ex.GetBaseException().Message; }
             var all = PlcGroupOperations.Items(type.Versions).Cast<LibraryTypeVersion>().ToArray();
-            row["versionCount"] = all.Length; var def = all.FirstOrDefault(v => LibraryIsDefault(v)); row["defaultVersion"] = def?.VersionNumber == null ? null : def.VersionNumber.ToString();
+            row["versionCount"] = all.Length; var def = all.FirstOrDefault(v => LibraryIsDefault(v)); row["defaultVersion"] = def?.VersionNumber == null ? null
+                : def.VersionNumber.ToString();
             if (versions) row["versions"] = new List<object?>(all.Select(v => (object)VersionRow(v, false)).ToArray());
             return row;
         }
@@ -183,9 +214,11 @@ namespace TiaMcp.Adapters
         private Dictionary<string, object?> TypeFolderTree(LibraryTypeFolder folder, string path, int depth, int maxDepth, ref int items, int maxItems)
         {
             var row = new Dictionary<string, object?> { ["path"] = path, ["name"] = folder.Name, ["folderClass"] = folder.GetType().Name };
-            try { row["status"] = LibraryTypedMember(folder, "Status").ToString(); } catch (Exception ex) { row["statusError"] = ex.GetBaseException().Message; }
+            try { row["status"] = LibraryTypedMember(folder, "Status").ToString(); } catch (Exception ex) { row["statusError"] = ex.GetBaseException().Message;
+            }
             var types = new List<object?>(); row["types"] = types;
-            foreach (var type in PlcGroupOperations.Items(folder.Types).Cast<LibraryType>()) { if (++items > maxItems) { row["typesTruncated"] = true; break; } types.Add(TypeRow(type, false)); }
+            foreach (var type in PlcGroupOperations.Items(folder.Types).Cast<LibraryType>()) {
+                if (++items > maxItems) { row["typesTruncated"] = true; break; } types.Add(TypeRow(type, false)); }
             var folders = new List<object?>(); row["folders"] = folders;
             if (depth >= maxDepth) { row["foldersTruncated"] = PlcGroupOperations.Items(folder.Folders).Any(); return row; }
             foreach (var sub in PlcGroupOperations.Items(folder.Folders).Cast<LibraryTypeUserFolder>())
@@ -199,7 +232,8 @@ namespace TiaMcp.Adapters
         {
             var row = new Dictionary<string, object?> { ["path"] = path, ["name"] = folder.Name, ["folderClass"] = folder.GetType().Name };
             var copies = new List<object?>(); row["masterCopies"] = copies;
-            foreach (var copy in PlcGroupOperations.Items(folder.MasterCopies).Cast<MasterCopy>()) { if (++items > maxItems) { row["masterCopiesTruncated"] = true; break; } copies.Add(MasterCopyRow(copy)); }
+            foreach (var copy in PlcGroupOperations.Items(folder.MasterCopies).Cast<MasterCopy>()) {
+                if (++items > maxItems) { row["masterCopiesTruncated"] = true; break; } copies.Add(MasterCopyRow(copy)); }
             var folders = new List<object?>(); row["folders"] = folders;
             if (depth >= maxDepth) { row["foldersTruncated"] = PlcGroupOperations.Items(folder.Folders).Any(); return row; }
             foreach (var sub in PlcGroupOperations.Items(folder.Folders).Cast<MasterCopyUserFolder>())
@@ -215,19 +249,27 @@ namespace TiaMcp.Adapters
             if (library is GlobalLibrary global)
             {
 #if LIBRARY_V20
-                row["author"] = global.Author; row["comment"] = MultilingualJson(global.Comment); row["copyright"] = global.Copyright; row["family"] = global.Family; row["version"] = global.Version;
-                row["path"] = global.Path?.FullName; row["creationTime"] = LibraryValue(global.CreationTime); row["lastModified"] = LibraryValue(global.LastModified);
-                row["lastModifiedBy"] = global.LastModifiedBy; row["isModified"] = global.IsModified; row["isWriteProtected"] = LibraryWriteProtected(global); row["sizeKb"] = global.Size;
+                row["author"] = global.Author; row["comment"] = MultilingualJson(global.Comment); row["copyright"] = global.Copyright; row["family"] = global
+                    .Family; row["version"] = global.Version;
+                row["path"] = global.Path?.FullName; row["creationTime"] = LibraryValue(global.CreationTime); row["lastModified"] =
+                    LibraryValue(global.LastModified);
+                row["lastModifiedBy"] = global.LastModifiedBy; row["isModified"] = global.IsModified; row["isWriteProtected"] = LibraryWriteProtected(global);
+                row["sizeKb"] = global.Size;
                 row["historyEntries"] = new List<object?>(PlcGroupOperations.Items(global.HistoryEntries).Cast<HistoryEntry>()
                     .Select(h => (object)new Dictionary<string, object?> { ["dateTime"] = LibraryValue(h.DateTime), ["text"] = h.Text }).ToArray());
                 row["usedProducts"] = new List<object?>(PlcGroupOperations.Items(global.UsedProducts).Cast<UsedProduct>()
                     .Select(p => (object)new Dictionary<string, object?> { ["name"] = p.Name, ["version"] = p.Version }).ToArray());
 #else
                 row["author"] = global.Author; row["comment"] = MultilingualJson(global.Comment); row["path"] = global.Path?.FullName;
-                foreach (var pair in new[] { ("copyright", "Copyright"), ("family", "Family"), ("version", "Version"), ("creationTime", "CreationTime"), ("lastModified", "LastModified"), ("lastModifiedBy", "LastModifiedBy"), ("isModified", "IsModified"), ("isWriteProtected", "IsWriteProtected"), ("sizeKb", "Size") })
+                foreach (var pair in new[] {
+                        ("copyright", "Copyright"), ("family", "Family"), ("version", "Version"), ("creationTime", "CreationTime"),
+                            ("lastModified", "LastModified"), ("lastModifiedBy", "LastModifiedBy"), ("isModified", "IsModified"),
+                            ("isWriteProtected", "IsWriteProtected"), ("sizeKb", "Size")
+                    })
                     if (global.GetType().GetProperty(pair.Item2) is PropertyInfo property) row[pair.Item1] = LibraryValue(property.GetValue(global));
                 foreach (var pair in new[] { ("historyEntries", "HistoryEntries"), ("usedProducts", "UsedProducts") })
-                    if (global.GetType().GetProperty(pair.Item2) is PropertyInfo property) row[pair.Item1] = PlcGroupOperations.Items(property.GetValue(global)!).Select(HardwareScalarEvidence.Read).Cast<object?>().ToList();
+                    if (global.GetType().GetProperty(pair.Item2) is PropertyInfo property) row[pair.Item1] = PlcGroupOperations
+                        .Items(property.GetValue(global)!).Select(HardwareScalarEvidence.Read).Cast<object?>().ToList();
 #endif
             }
             return row;
@@ -240,12 +282,16 @@ namespace TiaMcp.Adapters
                 if (entry.IsFolder)
                 {
                     var folder = (LibraryTypeFolder)EngineeringLibraryFolder(library, entry.Path, "TypeFolder");
-                    resolved.Add(folder); rows.Add(new Dictionary<string, object?> { ["folder"] = entry.Path, ["folderClass"] = folder.GetType().Name, ["types"] = PlcGroupOperations.Items(folder.Types).Count() });
+                    resolved.Add(folder); rows
+                        .Add(new Dictionary<string, object?> {
+                            ["folder"] = entry.Path, ["folderClass"] = folder.GetType().Name, ["types"] = PlcGroupOperations.Items(folder.Types).Count() });
                 }
                 else
                 {
                     var type = ExactLibraryType(library, entry.Path);
-                    resolved.Add(type); rows.Add(new Dictionary<string, object?> { ["type"] = entry.Path, ["guid"] = type.Guid.ToString(), ["versions"] = PlcGroupOperations.Items(type.Versions).Count() });
+                    resolved.Add(type); rows
+                        .Add(new Dictionary<string, object?> {
+                            ["type"] = entry.Path, ["guid"] = type.Guid.ToString(), ["versions"] = PlcGroupOperations.Items(type.Versions).Count() });
                 }
             }
             return resolved.ToArray();
@@ -255,8 +301,12 @@ namespace TiaMcp.Adapters
             var scopes = new List<IUpdateProjectScope>(); var rows = new List<object?>(); meta["scopes"] = rows;
             foreach (var path in softwarePaths)
             {
-                var software = EngineeringPlcSession.ResolveSoftwareContainerUncached(path)?.Software ?? throw new PlcSoftwareException("NotFound", "Exact software not found: " + path);
-                scopes.Add(software as IUpdateProjectScope ?? throw new NotSupportedException(path + " (" + software.GetType().Name + ") does not implement IUpdateProjectScope (PlcSoftware / HmiTarget / Unified HmiSoftware only)."));
+                var software = EngineeringPlcSession.ResolveSoftwareContainerUncached(path)?.Software
+                    ?? throw new PlcSoftwareException("NotFound", "Exact software not found: " + path);
+                scopes
+                    .Add(software as IUpdateProjectScope
+                        ?? throw new NotSupportedException(path + " (" + software.GetType().Name
+                            + ") does not implement IUpdateProjectScope (PlcSoftware / HmiTarget / Unified HmiSoftware only)."));
                 rows.Add(new Dictionary<string, object?> { ["softwarePath"] = path, ["softwareClass"] = software.GetType().Name });
             }
             return scopes.ToArray();
@@ -264,11 +314,13 @@ namespace TiaMcp.Adapters
         private static T ParseEnum<T>(string value) where T : struct => (T)System.Enum.Parse(typeof(T), value, false);
 
         // ---- read --------------------------------------------------------------------------------------------------------
-        public HardwareAddressingReply ReadLibraryOverview(string libraryName = "", bool includeTypes = true, bool includeMasterCopies = true, int maxDepth = 6, int maxItems = 500)
+        public HardwareAddressingReply ReadLibraryOverview(string libraryName = "", bool includeTypes = true, bool includeMasterCopies = true, int maxDepth = 6,
+                int maxItems = 500)
             => RunEngineeringServicesStep("GetLibraryOverview", meta => {
                 LibraryPolicy.ValidateBounds(maxDepth, maxItems);
                 if (portal == null) throw new PlcSoftwareException("InvalidState", "Connect to TIA first.");
-                if (string.IsNullOrEmpty(libraryName) && (project == null)) throw new PlcSoftwareException("InvalidState", "Project library requested but no project is bound.");
+                if (string.IsNullOrEmpty(libraryName) && (project == null))
+                    throw new PlcSoftwareException("InvalidState", "Project library requested but no project is bound.");
                 var library = ExactOpenEngineeringLibrary(libraryName); var lib = AsLibrary(library);
                 meta["library"] = LibraryHeader(library);
                 int items = 0;
@@ -286,8 +338,11 @@ namespace TiaMcp.Adapters
                     meta["masterCopyFolder"] = masterCopyFolder == null ? null : MasterCopyFolderTree(masterCopyFolder, "", 0, maxDepth, ref copies, maxItems);
                     if (masterCopyFolder == null) meta["masterCopyFolderNote"] = library.GetType().Name + " exposes no MasterCopyFolder.";
                 }
-                meta["typeItems"] = items; meta["masterCopyItems"] = copies; meta["apiCallSuccess"] = true; meta["dataComplete"] = items <= maxItems && copies <= maxItems;
-                meta["scope"] = "Library header (GlobalLibrary scalars, comment per culture, history entries, used products), type folder tree with consistency Status / Guid / DoNotUse / SetForUpdate / version summary, master copy tree with ContentDescriptions. Bounded by maxDepth/maxItems.";
+                meta["typeItems"] = items; meta["masterCopyItems"] = copies; meta["apiCallSuccess"] = true; meta["dataComplete"] = items <= maxItems
+                    && copies <= maxItems;
+                meta["scope"] =
+                    "Library header (GlobalLibrary scalars, comment per culture, history entries, used products), type folder tree with consistency Status / " +
+                    "Guid / DoNotUse / SetForUpdate / version summary, master copy tree with ContentDescriptions. Bounded by maxDepth/maxItems.";
                 return "Library overview read; no modification.";
             }, requiresProject: false);
 
@@ -295,7 +350,8 @@ namespace TiaMcp.Adapters
             => RunEngineeringServicesStep("GetLibraryType", meta => {
                 EngineeringEvidence.ValidatePage(offset, limit);
                 var parsed = LibraryPolicy.ParseGuid(guid, "guid");
-                if ((parsed == null) == string.IsNullOrEmpty(typePath)) throw new ArgumentException("Give exactly one of typePath (relative to the Types folder) or guid (type or version GUID).");
+                if ((parsed == null) == string.IsNullOrEmpty(typePath))
+                    throw new ArgumentException("Give exactly one of typePath (relative to the Types folder) or guid (type or version GUID).");
                 if (portal == null) throw new PlcSoftwareException("InvalidState", "Connect to TIA first.");
                 var library = ExactOpenEngineeringLibrary(libraryName); var lib = AsLibrary(library);
                 LibraryType type; LibraryTypeVersion? matchedVersion = null;
@@ -303,21 +359,31 @@ namespace TiaMcp.Adapters
                 {
                     var byType = lib.FindType(parsed.Value);
                     if (byType != null) type = byType;
-                    else { matchedVersion = lib.FindVersion(parsed.Value) ?? throw new PlcSoftwareException("NotFound", "No type or version with GUID " + parsed.Value + " in this library (FindType/FindVersion both returned null)."); type = matchedVersion.TypeObject; }
+                    else {
+                        matchedVersion = lib.FindVersion(parsed.Value)
+                            ?? throw new PlcSoftwareException("NotFound", "No type or version with GUID " + parsed.Value
+                                + " in this library (FindType/FindVersion both returned null).");
+                        type = matchedVersion.TypeObject;
+                    }
                     meta["foundBy"] = matchedVersion == null ? "FindType" : "FindVersion";
                 }
                 else type = ExactLibraryType(library, typePath);
                 meta["typePath"] = LibraryPathOf(type, "LibraryTypeSystemFolder") is { Length: > 0 } p ? p + "/" + type.Name : type.Name;
                 meta["type"] = TypeRow(type, false);
                 #if LIBRARY_V20
-                try { meta["supportedExportFormats"] = new List<object?>(PlcGroupOperations.Items(type.GetSupportedExportFormats()).Select(f => (object)f.ToString()).ToArray()); }
+                try {
+                    meta["supportedExportFormats"] = new List<object
+                        ?>(PlcGroupOperations.Items(type.GetSupportedExportFormats()).Select(f => (object)f.ToString()).ToArray());
+                }
                 catch (Exception ex) { meta["supportedExportFormatsError"] = ex.GetBaseException().Message; }
 #endif
                 if (matchedVersion != null) meta["matchedVersion"] = VersionRow(matchedVersion, true);
                 var versions = PlcGroupOperations.Items(type.Versions).Cast<LibraryTypeVersion>().Select(v => (object)VersionRow(v, true)).ToArray();
                 LibraryPage(versions, offset, limit, meta);
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
-                meta["scope"] = "LibraryType scalars incl. Guid / Namespace / DoNotUse / SetForUpdate / MinimumTargetDeviceVersion / Status, GetSupportedExportFormats, and every version with Dependencies / Dependents / MasterCopiesContainingInstances / OriginalLibrary (failures captured per field).";
+                meta["scope"] =
+                    "LibraryType scalars incl. Guid / Namespace / DoNotUse / SetForUpdate / MinimumTargetDeviceVersion / Status, GetSupportedExportFormats, " +
+                    "and every version with Dependencies / Dependents / MasterCopiesContainingInstances / OriginalLibrary (failures captured per field).";
                 return "Library type and versions read; no modification.";
             }, requiresProject: false);
 
@@ -363,15 +429,21 @@ namespace TiaMcp.Adapters
                 }
                 meta["messages"] = Flatten(result.Messages, 0); meta["messageCount"] = count; meta["truncated"] = truncated;
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = !truncated;
-                meta["scope"] = "Native ILibrary.UpdateCheck(project, mode) message tree: Description, parts {Key: Value} (DeviceName / LibraryTypeName / LibraryVersionNumber / UpToDate / PathToInstance / InstanceName / CurrentVersionNumber), nested Messages. Read-only; no update performed.";
-                return count == 0 ? "Update check completed: no messages (nothing out of date for this mode)." : "Update check completed; inspect the message tree.";
+                meta["scope"] =
+                    "Native ILibrary.UpdateCheck(project, mode) message tree: Description, parts {Key: Value} (DeviceName / LibraryTypeName / " +
+                    "LibraryVersionNumber / UpToDate / PathToInstance / InstanceName / CurrentVersionNumber), nested Messages. Read-only; no update performed.";
+                return count == 0 ? "Update check completed: no messages (nothing out of date for this mode)."
+                    : "Update check completed; inspect the message tree.";
             });
 
         // ---- write --------------------------------------------------------------------------------------------------------
-        public HardwareAddressingReply ManageLibraryType(string typePath, string action, string libraryName = "", Dictionary<string, HardwareScalar> properties = null!, string targetLibraryName = "", string[] scopePaths = null!,
-            string deleteUnusedVersionsMode = "DoNotDelete", string structureConflictResolutionMode = "RetainStructure", string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", bool confirmDelete = false, bool dryRun = true)
+        public HardwareAddressingReply ManageLibraryType(string typePath, string action, string libraryName = "", Dictionary<string,
+                HardwareScalar> properties = null!, string targetLibraryName = "", string[] scopePaths = null!,
+            string deleteUnusedVersionsMode = "DoNotDelete", string structureConflictResolutionMode = "RetainStructure", string forceUpdateMode =
+                "SetOnlyHigherUpdatedVersionAsDefault", bool confirmDelete = false, bool dryRun = true)
             => RunEngineeringServicesStep("ManageLibraryType", meta => {
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["typePath"] = typePath; meta["libraryName"] = libraryName;
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["typePath"] = typePath; meta["libraryName"] =
+                    libraryName;
 
                 LibraryPolicy.ValidateTypeRequest(action, properties, targetLibraryName, libraryName, scopePaths);
                 LibraryPolicy.RequireOneOf(deleteUnusedVersionsMode, LibraryPolicy.DeleteUnusedVersionsModes, "deleteUnusedVersionsMode");
@@ -397,17 +469,22 @@ namespace TiaMcp.Adapters
                         var parent = EngineeringLibraryFolder(library, LibraryPathOf(type, "LibraryTypeSystemFolder"), "TypeFolder"); var name = type.Name;
                         if (dryRun) return "Library type delete preview; deletes every version. Nothing changed.";
                         meta["mayHaveChanged"] = true; type.Delete();
-                        if (PlcGroupOperations.Find(PlcGroupOperations.Get(parent, "Types"), name) != null) throw new InvalidOperationException("Delete returned but the type is still listed in its folder; do not blindly retry.");
+                        if (PlcGroupOperations.Find(PlcGroupOperations.Get(parent, "Types"), name) != null)
+                            throw new InvalidOperationException("Delete returned but the type is still listed in its folder; do not blindly retry.");
                         meta["verifiedAbsent"] = true; return "Library type deleted and verified absent. No save.";
                     }
                     case "updateLibrary":
                     {
                         var target = AsLibrary(ExactOpenEngineeringLibrary(targetLibraryName));
                         meta["targetLibrary"] = EngineeringLibraryRef(target);
-                        if (dryRun) return "Type UpdateLibrary preview (single-type overload with DeleteUnusedVersionsMode / StructureConflictResolutionMode / ForceUpdateMode); nothing changed.";
+                        if (dryRun)
+                            return "Type UpdateLibrary preview (single-type overload with DeleteUnusedVersionsMode / StructureConflictResolutionMode / " +
+                            "ForceUpdateMode); nothing changed.";
                         meta["mayHaveChanged"] = true;
 #if LIBRARY_V17
-                        type.UpdateLibrary(target, ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode), ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode), ParseEnum<ForceUpdateMode>(forceUpdateMode));
+                        type
+                            .UpdateLibrary(target, ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode),
+                                ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode), ParseEnum<ForceUpdateMode>(forceUpdateMode));
 #else
                         type.UpdateLibrary(target);
 #endif
@@ -417,10 +494,14 @@ namespace TiaMcp.Adapters
                     default: // updateProject
                     {
                         var scopes = ResolveScopes(scopePaths, meta);
-                        if (dryRun) return "Type UpdateProject preview (per scope, with DeleteUnusedVersionsMode / StructureConflictResolutionMode / ForceUpdateMode); nothing changed.";
+                        if (dryRun)
+                            return "Type UpdateProject preview (per scope, with DeleteUnusedVersionsMode / StructureConflictResolutionMode / " +
+                            "ForceUpdateMode); nothing changed.";
                         meta["mayHaveChanged"] = true;
 #if LIBRARY_V17
-                        foreach (var scope in scopes) type.UpdateProject(scope, ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode), ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode), ParseEnum<ForceUpdateMode>(forceUpdateMode));
+                        foreach (var scope in scopes) type
+                            .UpdateProject(scope, ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode),
+                                ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode), ParseEnum<ForceUpdateMode>(forceUpdateMode));
 #else
                         foreach (var scope in scopes) type.UpdateProject(scope);
 #endif
@@ -430,12 +511,16 @@ namespace TiaMcp.Adapters
                 }
             });
 
-        public HardwareAddressingReply SynchronizeLibrary(string action, LibrarySelection[] selection = null!, string libraryName = "", string targetLibraryName = "", string[] scopePaths = null!,
-            string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", string deleteUnusedVersionsMode = "DoNotDelete", string structureConflictResolutionMode = "RetainStructure",
+        public HardwareAddressingReply SynchronizeLibrary(string action, LibrarySelection[] selection = null!, string libraryName = "",
+                string targetLibraryName = "", string[] scopePaths = null!,
+            string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", string deleteUnusedVersionsMode = "DoNotDelete",
+                string structureConflictResolutionMode = "RetainStructure",
             string[] harmonizeOptions = null!, string cleanUpMode = "PreserveDefaultVersionOfUnusedTypes", bool confirmChange = false, bool dryRun = true)
             => RunEngineeringServicesStep("SynchronizeLibrary", meta => {
 
-                LibraryPolicy.ValidateSyncRequest(action, libraryName, targetLibraryName, scopePaths, selection, forceUpdateMode, deleteUnusedVersionsMode, structureConflictResolutionMode, cleanUpMode);
+                LibraryPolicy
+                    .ValidateSyncRequest(action, libraryName, targetLibraryName, scopePaths, selection, forceUpdateMode, deleteUnusedVersionsMode,
+                        structureConflictResolutionMode, cleanUpMode);
                 var harmonize = action == "harmonizeProject" ? LibraryPolicy.JoinHarmonizeOptions(harmonizeOptions) : "";
                 LibraryRequireConfirmation(confirmChange, "confirmChange", dryRun);
                 using var access = dryRun ? null : HardwareEditAccess();
@@ -449,27 +534,42 @@ namespace TiaMcp.Adapters
                     {
                         var target = AsLibrary(ExactOpenEngineeringLibrary(targetLibraryName));
                         meta["targetLibrary"] = EngineeringLibraryRef(target);
-                        meta["modes"] = new Dictionary<string, object?> { ["forceUpdateMode"] = forceUpdateMode, ["deleteUnusedVersionsMode"] = deleteUnusedVersionsMode, ["structureConflictResolutionMode"] = structureConflictResolutionMode };
+                        meta["modes"] = new Dictionary<string, object?> {
+                            ["forceUpdateMode"] = forceUpdateMode, ["deleteUnusedVersionsMode"] = deleteUnusedVersionsMode,
+                                ["structureConflictResolutionMode"] = structureConflictResolutionMode
+                        };
                         if (dryRun) return "UpdateLibrary preview; nothing changed (types are matched by GUID; a version GUID mismatch aborts natively).";
                         meta["mayHaveChanged"] = true;
 #if LIBRARY_V17
-                        lib.UpdateLibrary(selected, target, ParseEnum<ForceUpdateMode>(forceUpdateMode), ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode), ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode));
+                        lib
+                            .UpdateLibrary(selected, target, ParseEnum<ForceUpdateMode>(forceUpdateMode),
+                                ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode),
+                                ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode));
 #else
                         lib.UpdateLibrary(selected, target);
 #endif
-                        meta["targetTypesAfter"] = new List<object?>(selected.OfType<LibraryType>().Select(t => target.FindType(t.Guid)).Where(t => t != null).Select(t => (object)TypeRow(t!, false)).ToArray());
+                        meta["targetTypesAfter"] = new List<object
+                            ?>(selected.OfType<LibraryType>().Select(t => target.FindType(t.Guid)).Where(t => t != null).Select(t => (object)TypeRow(t!, false))
+                                .ToArray());
                         return "Selected types/folders synchronized into the target library. No save.";
                     }
                     case "updateProject":
                     {
                         LibraryPolicy.ValidateProjectUpdateModes(library is ProjectLibrary, forceUpdateMode, structureConflictResolutionMode);
                         var scopes = ResolveScopes(scopePaths, meta);
-                        meta["modes"] = new Dictionary<string, object?> { ["forceUpdateMode"] = forceUpdateMode, ["deleteUnusedVersionsMode"] = deleteUnusedVersionsMode, ["structureConflictResolutionMode"] = structureConflictResolutionMode };
+                        meta["modes"] = new Dictionary<string, object?> {
+                            ["forceUpdateMode"] = forceUpdateMode, ["deleteUnusedVersionsMode"] = deleteUnusedVersionsMode,
+                                ["structureConflictResolutionMode"] = structureConflictResolutionMode
+                        };
                         if (dryRun) return "UpdateProject preview; nothing changed (a global library source synchronizes the project library first).";
                         meta["mayHaveChanged"] = true;
 #if LIBRARY_V17
-                        if (library is ProjectLibrary projectLibrary) projectLibrary.UpdateProject(selected, scopes, ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode));
-                        else ((GlobalLibrary)library).UpdateProject(selected, scopes, ParseEnum<ForceUpdateMode>(forceUpdateMode), ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode), ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode));
+                        if (library is ProjectLibrary projectLibrary) projectLibrary
+                            .UpdateProject(selected, scopes, ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode));
+                        else ((GlobalLibrary)library)
+                            .UpdateProject(selected, scopes, ParseEnum<ForceUpdateMode>(forceUpdateMode),
+                                ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode),
+                                ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode));
 #else
                         if (library is ProjectLibrary projectLibrary) projectLibrary.UpdateProject(selected, scopes);
                         else ((GlobalLibrary)library).UpdateProject(selected, scopes);
@@ -490,13 +590,16 @@ namespace TiaMcp.Adapters
                     }
                     default: // cleanUp
                     {
-                        meta["cleanUpMode"] = library is ProjectLibrary ? cleanUpMode : "(global library: fixed native behaviour, types are never deleted completely)";
+                        meta["cleanUpMode"] = library is ProjectLibrary ? cleanUpMode
+                            : "(global library: fixed native behaviour, types are never deleted completely)";
                         if (dryRun) return "CleanUpLibrary preview; nothing changed (deletes unused, non-in-test versions of the selection).";
                         meta["mayHaveChanged"] = true;
 #if LIBRARY_V17
                         if (library is ProjectLibrary projectLibrary) projectLibrary.CleanUpLibrary(selected, ParseEnum<CleanUpMode>(cleanUpMode));
                         else if (library is UserGlobalLibrary user) user.CleanUpLibrary(selected);
-                        else throw new NotSupportedException("CleanUpLibrary exists on ProjectLibrary and UserGlobalLibrary only (" + library.GetType().Name + ").");
+                        else
+                            throw new NotSupportedException("CleanUpLibrary exists on ProjectLibrary and UserGlobalLibrary only (" + library.GetType().Name
+                                + ").");
 #else
                         throw new NotSupportedException("This library action requires V17 or later.");
 #endif
@@ -507,7 +610,8 @@ namespace TiaMcp.Adapters
             });
 
 #if LIBRARY_COMPARE
-        public HardwareAddressingReply CompareLibraryObjects(string kind, string leftPath, string rightPath, string leftLibraryName = "", string rightLibraryName = "", string leftVersion = "", string rightVersion = "",
+        public HardwareAddressingReply CompareLibraryObjects(string kind, string leftPath, string rightPath, string leftLibraryName = "",
+                string rightLibraryName = "", string leftVersion = "", string rightVersion = "",
             bool includeIdentical = false, int offset = 0, int limit = 100)
             => RunEngineeringServicesStep("CompareLibraryObjects", meta => {
                 LibraryPolicy.ValidateCompareRequest(kind, leftPath, rightPath, leftVersion, rightVersion); EngineeringEvidence.ValidatePage(offset, limit);
@@ -516,103 +620,150 @@ namespace TiaMcp.Adapters
                 DetailedCompareResult result; string leftName, rightName;
                 switch (kind)
                 {
-                    case "type": { var l = ExactLibraryType(leftLibrary, leftPath); var r = ExactLibraryType(rightLibrary, rightPath); leftName = l.Name; rightName = r.Name; result = l.CompareTo(r); break; }
-                    case "version": { var l = ExactTypeVersion(ExactLibraryType(leftLibrary, leftPath), leftVersion); var r = ExactTypeVersion(ExactLibraryType(rightLibrary, rightPath), rightVersion); leftName = l.TypeObject?.Name + " " + l.VersionNumber; rightName = r.TypeObject?.Name + " " + r.VersionNumber; result = l.CompareTo(r); break; }
-                    default: { var l = ExactMasterCopy(leftLibraryName, leftPath); var r = ExactMasterCopy(rightLibraryName, rightPath); leftName = l.Name; rightName = r.Name; result = l.CompareTo(r); break; }
+                    case "type": {
+                        var l = ExactLibraryType(leftLibrary, leftPath); var r = ExactLibraryType(rightLibrary, rightPath); leftName = l.Name; rightName = r
+                            .Name; result = l.CompareTo(r); break;
+                    }
+                    case "version": {
+                        var l = ExactTypeVersion(ExactLibraryType(leftLibrary, leftPath), leftVersion); var r =
+                            ExactTypeVersion(ExactLibraryType(rightLibrary, rightPath), rightVersion); leftName = l.TypeObject?.Name + " " + l.VersionNumber;
+                        rightName = r.TypeObject?.Name + " " + r.VersionNumber; result = l.CompareTo(r); break;
+                    }
+                    default: {
+                        var l = ExactMasterCopy(leftLibraryName, leftPath); var r = ExactMasterCopy(rightLibraryName, rightPath); leftName = l.Name; rightName =
+                            r.Name; result = l.CompareTo(r); break;
+                    }
                 }
                 meta["kind"] = kind; meta["left"] = leftName; meta["right"] = rightName; meta["resultType"] = result.GetType().FullName;
                 var rows = PlcGroupOperations.Items(result.Properties).Cast<DetailedCompareResultElement>()
-                    .Select(e => new Dictionary<string, object?> { ["description"] = e.Description, ["status"] = e.DetailCompareStatus.ToString(), ["leftValue"] = LibraryValue(e.LeftValue), ["rightValue"] = LibraryValue(e.RightValue) }).ToArray();
+                    .Select(e => new Dictionary<string, object?> {
+                            ["description"] = e.Description, ["status"] = e.DetailCompareStatus.ToString(), ["leftValue"] = LibraryValue(e.LeftValue),
+                                ["rightValue"] = LibraryValue(e.RightValue)
+                        })
+                        .ToArray();
                 meta["summary"] = rows.GroupBy(r => (string)r["status"]!).ToDictionary(g => g.Key, g => (object?)g.Count());
                 var selected = includeIdentical ? rows : rows.Where(r => (string)r["status"]! != "ObjectsIdentical").ToArray();
                 LibraryPage(selected.Cast<object>().ToArray(), offset, limit, meta);
                 meta["totalProperties"] = rows.Length; meta["includeIdentical"] = includeIdentical; meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
-                meta["scope"] = "Native DetailedCompareResult.Properties rows (Description, DetailCompareStatus, LeftValue, RightValue); OriginalLibrary is not compared by default per the official note. Read-only.";
+                meta["scope"] =
+                    "Native DetailedCompareResult.Properties rows (Description, DetailCompareStatus, LeftValue, RightValue); OriginalLibrary is not compared " +
+                    "by default per the official note. Read-only.";
                 return "Detailed comparison completed; " + rows.Length + " properties compared.";
             }, requiresProject: false);
 #endif
-        public HardwareAddressingReply ManageLibraryMasterCopy(string sourcePath,string action,string libraryName="",string destinationLibraryName="",string destinationPath="",bool dryRun=true)
+        public HardwareAddressingReply ManageLibraryMasterCopy(string sourcePath,string action,string libraryName="",string destinationLibraryName="",
+                string destinationPath="",bool dryRun=true)
             =>RunEngineeringServicesStep("ManageLibraryMasterCopy",meta=>{
-                if (!new[] { "read", "copy", "compare", "delete" }.Contains(action)) throw new ArgumentException("action must be one of: read/copy/compare/delete (case-sensitive).");
+                if (!new[] { "read", "copy", "compare", "delete" }.Contains(action))
+                    throw new ArgumentException("action must be one of: read/copy/compare/delete (case-sensitive).");
                 using var access=!dryRun&&(action=="copy"||action=="delete") ? HardwareEditAccess() : null;
-                var source=ExactMasterCopy(libraryName,sourcePath);meta["before"]=LibraryObjectAddress(source);meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
+                var source=ExactMasterCopy(libraryName,sourcePath);meta["before"]=LibraryObjectAddress(source);meta["dryRun"]=dryRun;meta["mayHaveChanged"]=
+                    false;
                 if(action=="read")return "Master copy scalar properties read.";
                 #if LIBRARY_COMPARE
-                if(action=="compare") { var other=ExactMasterCopy(destinationLibraryName,destinationPath);meta["comparison"]=HardwareOfficialService.Result(source.CompareTo(other));return "Native comparison returned; inspect differences and exclusions."; }
+                if(action=="compare") {
+                    var other=ExactMasterCopy(destinationLibraryName,destinationPath);meta["comparison"]=HardwareOfficialService
+                        .Result(source.CompareTo(other));return "Native comparison returned; inspect differences and exclusions.";
+                }
 #endif
                 MasterCopyFolder? folder=null;
                 if(action=="copy") {
                     folder=(MasterCopyFolder)EngineeringLibraryFolder(ExactOpenEngineeringLibrary(destinationLibraryName),destinationPath,"MasterCopyFolder");
-                    if(PlcGroupOperations.Find(folder.MasterCopies,source.Name)!=null)throw new InvalidOperationException("Destination master-copy name exists; overwrite refused.");
+                    if(PlcGroupOperations.Find(folder.MasterCopies,source.Name)!=null)
+                        throw new InvalidOperationException("Destination master-copy name exists; overwrite refused.");
                 }
                 if(dryRun)return "Master-copy mutation preview; no changes.";
                 meta["mayHaveChanged"]=true;
                 if(action=="copy")meta["after"]=LibraryObjectAddress(folder!.MasterCopies.CreateFrom(source));
                 else {
                     var parts=PlcGroupOperations.Parts(sourcePath);
-                    var parent=EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName),string.Join("/",parts.Take(parts.Length-1)),"MasterCopyFolder");
+                    var parent=
+                        EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName),string.Join("/",parts.Take(parts.Length-1)),"MasterCopyFolder");
                     source.Delete();meta["deleteReturned"]=true;
-                    if(PlcGroupOperations.Find(PlcGroupOperations.Get(parent,"MasterCopies"),parts.Last())!=null)throw new InvalidOperationException("Master-copy deletion not verified.");
+                    if(PlcGroupOperations.Find(PlcGroupOperations.Get(parent,"MasterCopies"),parts.Last())!=null)
+                        throw new InvalidOperationException("Master-copy deletion not verified.");
                     meta["absenceVerified"]=true;
                 }
                 return "Native master-copy operation returned; no project/library save or Portal close.";
             });
 #if LIBRARY_DOCUMENT_IMPORT
-        public HardwareAddressingReply ImportLibraryTypeDocuments(string filePath,string folderPath="",string libraryName="",string importOptions="None",string typePath="",string createOptions="None",string targetSoftwarePath="",string targetGroupKind="",string targetGroupPath="",bool dryRun=true)
+        public HardwareAddressingReply ImportLibraryTypeDocuments(string filePath,string folderPath="",string libraryName="",string importOptions="None",
+                string typePath="",string createOptions="None",string targetSoftwarePath="",string targetGroupKind="",string targetGroupPath="",bool dryRun=
+                true)
             =>RunEngineeringServicesStep("ImportLibraryTypeDocuments",meta=>{
-                var file=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));if(!file.Exists)throw new FileNotFoundException("Library type native document not found.");
-                LibraryPolicy.RequireOneOf(importOptions,LibraryPolicy.ImportOptions,"importOptions");LibraryPolicy.RequireOneOf(createOptions,LibraryPolicy.CreateOptions,"createOptions");
-                if(targetGroupKind!="" && targetGroupKind!="blocks" && targetGroupKind!="types")throw new ArgumentException("targetGroupKind must be empty, blocks or types.");
-                if((targetGroupKind=="")!=string.IsNullOrEmpty(targetSoftwarePath))throw new ArgumentException("targetSoftwarePath and targetGroupKind go together (STEP 7 documents need a PlcBlockGroup/PlcTypeGroup target environment).");
+                var file=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));if(!file.Exists)
+                    throw new FileNotFoundException("Library type native document not found.");
+                LibraryPolicy.RequireOneOf(importOptions,LibraryPolicy.ImportOptions,"importOptions");LibraryPolicy
+                    .RequireOneOf(createOptions,LibraryPolicy.CreateOptions,"createOptions");
+                if(targetGroupKind!="" && targetGroupKind!="blocks" && targetGroupKind!="types")
+                    throw new ArgumentException("targetGroupKind must be empty, blocks or types.");
+                if((targetGroupKind=="")!=string.IsNullOrEmpty(targetSoftwarePath))
+                    throw new ArgumentException("targetSoftwarePath and targetGroupKind go together (STEP 7 documents need a PlcBlockGroup/PlcTypeGroup " +
+                    "target environment).");
                 var library=ExactOpenEngineeringLibrary(libraryName);
                 string basePath=Path.Combine(file.DirectoryName!,Path.GetFileNameWithoutExtension(file.Name));
-                LibraryPolicy.ValidateDocumentImportScope(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), library is ProjectLibrary,
+                LibraryPolicy
+                    .ValidateDocumentImportScope(int
+                        .Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture),
+                        library is ProjectLibrary,
                     importOptions, File.Exists(basePath+".xml"), File.Exists(basePath+".s7dcl"));
-                var options=(LibraryImportOptions)System.Enum.Parse(typeof(LibraryImportOptions),importOptions);var create=(CreateOptions)System.Enum.Parse(typeof(CreateOptions),createOptions);
-                string fileName=Path.GetFileNameWithoutExtension(file.Name);meta["fileName"]=fileName;meta["importOptions"]=importOptions;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
+                var options=(LibraryImportOptions)System.Enum.Parse(typeof(LibraryImportOptions),importOptions);var create=(CreateOptions)System.Enum
+                    .Parse(typeof(CreateOptions),createOptions);
+                string fileName=Path.GetFileNameWithoutExtension(file.Name);meta["fileName"]=fileName;meta["importOptions"]=importOptions;meta["dryRun"]=dryRun;
+                meta["mayHaveChanged"]=false;
                 IEngineeringObject? environment=null;
                 if(targetGroupKind!=""){
                     var plc=EngineeringPlcSession.ExactPlcForEngineering(targetSoftwarePath,false);
                     environment=(IEngineeringObject)PlcGroupOperations.Group(targetGroupKind=="blocks"?(object)plc.BlockGroup:plc.TypeGroup,targetGroupPath);
-                    meta["targetEnvironment"]=new Dictionary<string, object?>{["softwarePath"]=targetSoftwarePath,["groupKind"]=targetGroupKind,["groupPath"]=targetGroupPath,["type"]=environment.GetType().Name};
+                    meta["targetEnvironment"]=new Dictionary<string, object?>{
+                        ["softwarePath"]=targetSoftwarePath,["groupKind"]=targetGroupKind,["groupPath"]=targetGroupPath,["type"]=environment.GetType().Name};
                 }
                 if(!string.IsNullOrEmpty(typePath)){
                     // Version import: LibraryTypeVersionComposition.CreateFromDocuments on an existing type ("Updating type from document").
                     var type=ExactLibraryType(library,typePath);meta["typePath"]=typePath;meta["createOptions"]=createOptions;meta["before"]=TypeRow(type,true);
                     if(dryRun)return "Library version document import preview; CreateOptions.None fails natively if an in-work version exists.";
                     using var access=HardwareEditAccess();meta["mayHaveChanged"]=true;
-                    VersionCreateTransferResults result=environment==null?type.Versions.CreateFromDocuments(file.Directory!,fileName,create,options):type.Versions.CreateFromDocuments(file.Directory!,fileName,environment,create,options);
+                    VersionCreateTransferResults result=environment==null?type.Versions.CreateFromDocuments(file.Directory!,fileName,create,options):type
+                        .Versions.CreateFromDocuments(file.Directory!,fileName,environment,create,options);
                     meta["transferResultState"]=result.TransferResultState.ToString();
 
-                    meta["messages"]=new List<object?>(PlcGroupOperations.Items(result.Messages).Cast<TransferResultMessage>().Select(m=>(object)m.Message).ToArray());
+                    meta["messages"]=new List<object
+                        ?>(PlcGroupOperations.Items(result.Messages).Cast<TransferResultMessage>().Select(m=>(object)m.Message).ToArray());
 
                     meta["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Library;
                     PlcSoftwareValues.RecordNativeResult(meta, meta["transferResultState"], meta["messages"]);
-                    meta["createdVersion"]=result.CreatedVersion==null?null:VersionRow(result.CreatedVersion,false);meta["after"]=TypeRow(type,true);meta["apiCallSuccess"]=true;
+                    meta["createdVersion"]=result.CreatedVersion==null?null:VersionRow(result.CreatedVersion,false);meta["after"]=TypeRow(type,true);
+                    meta["apiCallSuccess"]=true;
                     if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.TransferResultState))meta["operationSuccess"]=false;
-                    return "Native version import returned "+result.TransferResultState+"; created version and messages attached. No automatic library/project save.";
+                    return "Native version import returned "+result.TransferResultState
+                        +"; created version and messages attached. No automatic library/project save.";
                 }
                 var folder=EngineeringLibraryFolder(library,folderPath,"TypeFolder");
                 var types=(LibraryTypeComposition)PlcGroupOperations.Get(folder,"Types");
                 if(dryRun)return "Library native document import preview; type/dependency semantics checked on execution.";
                 using var edit=HardwareEditAccess();meta["mayHaveChanged"]=true;
-                TypeCreateTransferResults created=environment==null?types.CreateFromDocuments(file.Directory!,fileName,options):types.CreateFromDocuments(file.Directory!,fileName,environment,options);
+                TypeCreateTransferResults created=environment==null?types.CreateFromDocuments(file.Directory!,fileName,options):types
+                    .CreateFromDocuments(file.Directory!,fileName,environment,options);
                 meta["transferResultState"]=created.TransferResultState.ToString();
 
-                meta["messages"]=new List<object?>(PlcGroupOperations.Items(created.Messages).Cast<TransferResultMessage>().Select(m=>(object)m.Message).ToArray());
+                meta["messages"]=new List<object
+                    ?>(PlcGroupOperations.Items(created.Messages).Cast<TransferResultMessage>().Select(m=>(object)m.Message).ToArray());
 
                 meta["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Library;
                 PlcSoftwareValues.RecordNativeResult(meta, meta["transferResultState"], meta["messages"]);
                 meta["createdType"]=created.CreatedType==null?null:TypeRow(created.CreatedType,true);meta["apiCallSuccess"]=true;
                 if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(created.TransferResultState))meta["operationSuccess"]=false;
-                return "Native type import returned "+created.TransferResultState+"; created type (default version InWork) and messages attached. No automatic library/project save.";
+                return "Native type import returned "+created.TransferResultState
+                    +"; created type (default version InWork) and messages attached. No automatic library/project save.";
             });
 #endif
-        public HardwareAddressingReply ManageGlobalLibrary(string action, string libraryName="", string filePath="", string destinationDirectory="", string openMode="ReadOnly", bool upgrade=false,
+        public HardwareAddressingReply ManageGlobalLibrary(string action, string libraryName="", string filePath="", string destinationDirectory="",
+                string openMode="ReadOnly", bool upgrade=false,
             string archiveName="", string archiveMode="Compressed", bool dryRun=true)
             => RunEngineeringServicesStep("ManageGlobalLibrary", meta => {
                 if (portal == null) throw new InvalidOperationException("Connect to TIA first.");
-                if (!new[] { "list", "infos", "create", "open", "openInfo", "retrieve", "save", "saveAs", "close", "archive" }.Contains(action)) throw new ArgumentException("action must be one of: list/infos/create/open/openInfo/retrieve/save/saveAs/close/archive (case-sensitive).");
+                if (!new[] { "list", "infos", "create", "open", "openInfo", "retrieve", "save", "saveAs", "close", "archive" }.Contains(action))
+                    throw new ArgumentException("action must be one of: list/infos/create/open/openInfo/retrieve/save/saveAs/close/archive (case-sensitive).");
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 GlobalLibraryComposition libraries = portal.GlobalLibraries;
                 if (action == "list") {
@@ -624,14 +775,20 @@ namespace TiaMcp.Adapters
                 if (action == "infos") {
                     // GetGlobalLibraryInfos lists the libraries known to this Portal (system, corporate, recently used user libraries), open or not.
                     var infos = libraries.GetGlobalLibraryInfos().ToArray();
-                    meta["records"] = new List<object?>(infos.Select(i => (object)new Dictionary<string, object?> { ["name"] = i.Name, ["path"] = i.Path?.FullName, ["libraryType"] = i.LibraryType.ToString(), ["isOpen"] = i.IsOpen }).ToArray());
+                    meta["records"] = new List<object
+                        ?>(infos
+                            .Select(i => (object)new Dictionary<string, object?> {
+                                ["name"] = i.Name, ["path"] = i.Path?.FullName, ["libraryType"] = i.LibraryType.ToString(), ["isOpen"] = i.IsOpen })
+                            .ToArray());
                     meta["actualCount"] = infos.Length; meta["truncated"] = false; meta["dataComplete"] = true; meta["apiCallSuccess"] = true;
                     return "Global library infos read (GetGlobalLibraryInfos); nothing opened.";
                 }
                 if (action == "openInfo") {
                     if (string.IsNullOrWhiteSpace(libraryName)) throw new ArgumentException("Exact library name from action=infos required.");
-                    var info = libraries.GetGlobalLibraryInfos().FirstOrDefault(i => string.Equals(i.Name, libraryName, StringComparison.Ordinal)) ?? throw new PlcSoftwareException("NotFound", "No global library info named " + libraryName + " (see action=infos).");
-                    meta["info"] = new Dictionary<string, object?> { ["name"] = info.Name, ["path"] = info.Path?.FullName, ["libraryType"] = info.LibraryType.ToString(), ["isOpen"] = info.IsOpen };
+                    var info = libraries.GetGlobalLibraryInfos().FirstOrDefault(i => string.Equals(i.Name, libraryName, StringComparison.Ordinal))
+                        ?? throw new PlcSoftwareException("NotFound", "No global library info named " + libraryName + " (see action=infos).");
+                    meta["info"] = new Dictionary<string, object?> {
+                        ["name"] = info.Name, ["path"] = info.Path?.FullName, ["libraryType"] = info.LibraryType.ToString(), ["isOpen"] = info.IsOpen };
                     if (info.IsOpen) throw new InvalidOperationException("Library is already open.");
                     if (dryRun) return "Open-by-info preview; nothing opened (system/corporate libraries open read-only).";
                     meta["mayHaveChanged"] = true;
@@ -640,7 +797,8 @@ namespace TiaMcp.Adapters
                     meta["closableThroughApi"] = opened is UserGlobalLibrary; meta["hasTypeFolder"] = ((ILibrary)opened).TypeFolder != null;
                     return opened is UserGlobalLibrary
                         ? "Global library opened from its info entry (GlobalLibraryComposition.Open(GlobalLibraryInfo)). Close is explicit."
-                        : "Global library opened from its info entry as " + opened.GetType().Name + "; the Openness API has Close only on UserGlobalLibrary, so it stays open until TIA closes it.";
+                        : "Global library opened from its info entry as " + opened.GetType().Name
+                            + "; the Openness API has Close only on UserGlobalLibrary, so it stays open until TIA closes it.";
                 }
 #if LIBRARY_V151
                 if (action == "archive") {
@@ -648,21 +806,31 @@ namespace TiaMcp.Adapters
                     var target = ExactOpenUserGlobalLibrary(libraries, libraryName, action);
                     if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute destinationDirectory required.");
                     var archiveDirectory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory));
-                    meta["library"] = HardwareScalarEvidence.Read(target); meta["archiveMode"] = archiveMode; meta["archiveName"] = archiveName; meta["destinationDirectory"] = archiveDirectory.FullName;
-                    if (target.IsModified) throw new InvalidOperationException("Library has unsaved changes; TIA refuses Archive until it is saved (action=save first).");
-                    if (dryRun) return "Archive preview; nothing written (None/DiscardRestorableData produce a folder that cannot be retrieved through the API; Compressed modes produce a .zalXX file).";
+                    meta["library"] = HardwareScalarEvidence.Read(target); meta["archiveMode"] = archiveMode; meta["archiveName"] = archiveName;
+                    meta["destinationDirectory"] = archiveDirectory.FullName;
+                    if (target.IsModified)
+                        throw new InvalidOperationException("Library has unsaved changes; TIA refuses Archive until it is saved (action=save first).");
+                    if (dryRun)
+                        return "Archive preview; nothing written (None/DiscardRestorableData produce a folder that cannot be retrieved through the API; " +
+                        "Compressed modes produce a .zalXX file).";
                     meta["mayHaveChanged"] = true;
                     var before = archiveDirectory.Exists ? archiveDirectory.GetFileSystemInfos().Select(f => f.Name).ToArray() : Array.Empty<string>();
                     target.Archive(archiveDirectory, archiveName, (LibraryArchivationMode)System.Enum.Parse(typeof(LibraryArchivationMode), archiveMode));
-                    var created = archiveDirectory.Exists ? archiveDirectory.GetFileSystemInfos().Where(f => !before.Contains(f.Name)).Select(f => (object)new Dictionary<string, object?> { ["name"] = f.Name, ["bytes"] = f is FileInfo fi ? fi.Length : (long?)null }).ToArray() : Array.Empty<object>();
+                    var created = archiveDirectory.Exists ? archiveDirectory.GetFileSystemInfos().Where(f => !before.Contains(f.Name))
+                        .Select(f => (object)new Dictionary<string, object?> { ["name"] = f.Name, ["bytes"] = f is FileInfo fi ? fi.Length : (long?)null })
+                        .ToArray() : Array.Empty<object>();
                     meta["createdEntries"] = new List<object?>(created); meta["apiCallSuccess"] = true;
-                    if (created.Length == 0) { meta["operationSuccess"] = false; return "Archive returned but no new entry appeared in the destination directory; inspect the directory before retrying."; }
+                    if (created.Length == 0) {
+                        meta["operationSuccess"] = false;
+                        return "Archive returned but no new entry appeared in the destination directory; inspect the directory before retrying.";
+                    }
                     return "User global library archived; new directory entries listed. The library stays open at its original location.";
                 }
 #endif
                 // An empty openMode defaults to ReadOnly before enum parsing, including actions that do not open a library.
                 if (string.IsNullOrWhiteSpace(openMode)) openMode = "ReadOnly";
-                if (!System.Enum.GetNames(typeof(OpenMode)).Contains(openMode)) throw new ArgumentException("openMode must be one of: " + string.Join("/", System.Enum.GetNames(typeof(OpenMode))) + ".");
+                if (!System.Enum.GetNames(typeof(OpenMode)).Contains(openMode))
+                    throw new ArgumentException("openMode must be one of: " + string.Join("/", System.Enum.GetNames(typeof(OpenMode))) + ".");
                 var mode = (OpenMode)System.Enum.Parse(typeof(OpenMode), openMode);
                 UserGlobalLibrary? library = null; FileInfo? file = null; DirectoryInfo? directory = null;
                 if (action == "create" || action == "open" || action == "retrieve") {
@@ -670,7 +838,8 @@ namespace TiaMcp.Adapters
                     if (PlcGroupOperations.Find(libraries, libraryName) != null) throw new InvalidOperationException("Library with this name already open.");
                 } else library = ExactOpenUserGlobalLibrary(libraries, libraryName, action);
                 if (action == "open" || action == "retrieve") {
-                    file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!file.Exists) throw new FileNotFoundException("Library file not found.");
+                    file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!file.Exists)
+                        throw new FileNotFoundException("Library file not found.");
                 }
                 if (action == "create" || action == "retrieve" || action == "saveAs") {
                     if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute new destination directory required.");
@@ -678,23 +847,29 @@ namespace TiaMcp.Adapters
                     if (directory.Exists || File.Exists(directory.FullName)) throw new IOException("Destination already exists; overwrite/merge refused.");
                 }
                 if (upgrade && action != "open" && action != "retrieve") throw new ArgumentException("upgrade applies only to open/retrieve.");
-                if (upgrade && action == "open" && mode != OpenMode.ReadWrite) throw new ArgumentException("OpenWithUpgrade requires explicit ReadWrite mode; native overload has no mode parameter.");
+                if (upgrade && action == "open" && mode != OpenMode.ReadWrite)
+                    throw new ArgumentException("OpenWithUpgrade requires explicit ReadWrite mode; native overload has no mode parameter.");
                 if (dryRun) return "Library lifecycle preview. Opening/upgrading can write library files; close is explicit and never saves automatically.";
                 meta["mayHaveChanged"] = true;
                 switch (action) {
                     case "create": library = (UserGlobalLibrary)libraries.Create<UserGlobalLibrary>(directory!, libraryName); break;
                     case "open": library = upgrade ? libraries.OpenWithUpgrade(file!) : libraries.Open(file!,mode); break;
 #if LIBRARY_V151
-                    case "retrieve": library = upgrade ? libraries.RetrieveWithUpgrade(file!,directory!,mode) : libraries.Retrieve(file!,directory!,mode); break;
+                    case "retrieve": library = upgrade ? libraries.RetrieveWithUpgrade(file!,directory!,mode) : libraries.Retrieve(file!,directory!,mode);
+                    break;
 #endif
                     case "save": library!.Save(); break;
 #if LIBRARY_V151
                     case "saveAs": library!.SaveAs(directory!); break;
 #endif
-                    case "close": library!.Close(); meta["closed"] = true; return "Selected global library closed; project and Portal remain open. No implicit save.";
+                    case "close": library!.Close(); meta["closed"] = true;
+                    return "Selected global library closed; project and Portal remain open. No implicit save.";
                 }
                 meta["after"] = HardwareScalarEvidence.Read(library!); meta["apiCallSuccess"] = true;
-                if (library!.Name != libraryName) { meta["operationSuccess"] = false; meta["actualName"] = library.Name; return "Native operation completed but opened library name differs; handle retained, no automatic close or rename."; }
+                if (library!.Name != libraryName) {
+                    meta["operationSuccess"] = false; meta["actualName"] = library.Name;
+                    return "Native operation completed but opened library name differs; handle retained, no automatic close or rename.";
+                }
                 return "Native global library operation completed. Project not saved, compiled or downloaded.";
             }, requiresProject:false);
 
@@ -702,20 +877,28 @@ namespace TiaMcp.Adapters
         // found but cannot be closed through the API (observed on TIA V21) - say so instead of "not found".
         private static UserGlobalLibrary ExactOpenUserGlobalLibrary(GlobalLibraryComposition libraries, string libraryName, string action)
         {
-            var found = PlcGroupOperations.Find(libraries, libraryName) ?? throw new InvalidOperationException("Exact open global library not found (action=list shows the open ones).");
-            return found as UserGlobalLibrary ?? throw new NotSupportedException(LibraryPolicy.UserGlobalLibraryOnlyMessage(action, libraryName, found.GetType().Name));
+            var found = PlcGroupOperations.Find(libraries, libraryName)
+                ?? throw new InvalidOperationException("Exact open global library not found (action=list shows the open ones).");
+            return found as UserGlobalLibrary
+                ?? throw new NotSupportedException(LibraryPolicy.UserGlobalLibraryOnlyMessage(action, libraryName, found.GetType().Name));
         }
-        public HardwareAddressingReply ManageLibraryFolder(string folderKind, string folderPath, string action, string libraryName="", string newName="", bool dryRun=true)
+        public HardwareAddressingReply ManageLibraryFolder(string folderKind, string folderPath, string action, string libraryName="", string newName="",
+                bool dryRun=true)
             => RunEngineeringServicesStep("ManageLibraryFolder", meta => {
                 if (folderKind != "types" && folderKind != "masterCopies") throw new ArgumentException("folderKind must be types/masterCopies.");
-                if (!new[] { "read", "create", "rename", "delete" }.Contains(action)) throw new ArgumentException("action must be one of: read/create/rename/delete (case-sensitive).");
+                if (!new[] { "read", "create", "rename", "delete" }.Contains(action))
+                    throw new ArgumentException("action must be one of: read/create/rename/delete (case-sensitive).");
                 var parts = PlcGroupOperations.Parts(folderPath); // Root cannot be mutated.
                 var library = ExactOpenEngineeringLibrary(libraryName);
-                var parent = EngineeringLibraryFolder(library,string.Join("/",parts.Take(parts.Length-1)),folderKind=="types" ? "TypeFolder" : "MasterCopyFolder");
+                var parent =
+                    EngineeringLibraryFolder(library,string.Join("/",parts.Take(parts.Length-1)),folderKind=="types" ? "TypeFolder" : "MasterCopyFolder");
                 var collection = PlcGroupOperations.Get(parent,"Folders");
                 var target = PlcGroupOperations.Find(collection,parts.Last());
                 if ((action=="create") == (target!=null)) throw new InvalidOperationException(action=="create" ? "Folder exists." : "Exact folder not found.");
-                if (action=="delete" && (PlcGroupOperations.Items(PlcGroupOperations.Get(target!,"Folders")).Any() || PlcGroupOperations.Items(PlcGroupOperations.Get(target!,folderKind=="types" ? "Types" : "MasterCopies")).Any())) throw new InvalidOperationException("Only empty folders can be deleted.");
+                if (action=="delete"
+                        && (PlcGroupOperations.Items(PlcGroupOperations.Get(target!,"Folders")).Any() || PlcGroupOperations
+                            .Items(PlcGroupOperations.Get(target!,folderKind=="types" ? "Types" : "MasterCopies")).Any()))
+                    throw new InvalidOperationException("Only empty folders can be deleted.");
                 if (action=="rename") {
                     if (PlcGroupOperations.Parts(newName).Length!=1) throw new ArgumentException("Single new name required.");
                     if (PlcGroupOperations.Find(collection,newName)!=null) throw new InvalidOperationException("Destination name exists.");
@@ -729,7 +912,11 @@ namespace TiaMcp.Adapters
                     PlcGroupOperations.Call(target!,"Delete",Type.EmptyTypes);
                     if(PlcGroupOperations.Find(collection,parts.Last())!=null) throw new InvalidOperationException("Folder remains after delete.");
                     meta["verifiedAbsent"]=true; return "Empty library folder deleted; no save.";
-                } else LibraryApply(target!,LibraryPrepare(target!.GetType(),new Dictionary<string, HardwareScalar>{["Name"]=new HardwareScalar { Kind = "string", Text = newName }}),meta);
+                } else
+                    LibraryApply(target!,
+                        LibraryPrepare(target!.GetType(),new Dictionary<string, HardwareScalar>{["Name"]=new HardwareScalar { Kind = "string", Text = newName }
+                        }),
+                        meta);
                 meta["after"]=HardwareScalarEvidence.Read(target!);
                 return "Library folder changed and read back; no save/compile/download.";
             });
@@ -808,7 +995,9 @@ namespace TiaMcp.Adapters
                     .Select(m => $"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}")
                     .Take(Math.Max(10, Math.Min(1000, maxItems)))
                     .ToList();
-                var masterCopies = ListLibraryNamesByHints(library, Math.Max(1, maxItems), "MasterCopies", "MasterCopyFolder", "MasterCopyFolders", "MasterCopyGroups", "Folders");
+                var masterCopies =
+                    ListLibraryNamesByHints(library, Math.Max(1, maxItems), "MasterCopies", "MasterCopyFolder", "MasterCopyFolders", "MasterCopyGroups",
+                        "Folders");
                 var types = ListLibraryNamesByHints(library, Math.Max(1, maxItems), "Types", "TypeFolder", "TypeFolders", "LibraryTypes", "Folders");
                 var folders = ListLibraryNamesByHints(library, Math.Max(1, maxItems), "Folders", "Groups", "MasterCopyFolders", "TypeFolders");
 
@@ -823,7 +1012,9 @@ namespace TiaMcp.Adapters
                 warnings.Add("This probe only opens and lists library metadata; it does not import master copies or library types into a project.");
                 if (masterCopies.Count == 0 && types.Count == 0)
                 {
-                    warnings.Add("No master copies/types were listed through public/reflection access; use DescribeObject/DescribeObjectProperty for deeper API discovery.");
+                    warnings
+                        .Add("No master copies/types were listed through public/reflection access; use DescribeObject/DescribeObjectProperty for deeper API " +
+                        "discovery.");
                 }
 
                 return new GlobalLibraryProbeEvidence
@@ -894,7 +1085,9 @@ namespace TiaMcp.Adapters
                 {
                     var path = TryGetPropertyValue(candidate, "Path");
                     var full = path is FileInfo fi ? fi.FullName : path?.ToString();
-                    if (!string.IsNullOrEmpty(full) && string.Equals(Path.GetFullPath(full!), Path.GetFullPath(libraryFile), StringComparison.OrdinalIgnoreCase)) return candidate;
+                    if (!string.IsNullOrEmpty(full) && string
+                            .Equals(Path.GetFullPath(full!), Path.GetFullPath(libraryFile), StringComparison.OrdinalIgnoreCase))
+                        return candidate;
                 }
             }
             catch { /* swallow(probe-optional): If open-library enumeration is unavailable, retain the existing explicit open attempt. */ }

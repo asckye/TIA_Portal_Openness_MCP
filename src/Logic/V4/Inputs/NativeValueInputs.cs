@@ -13,7 +13,10 @@ namespace TiaMcp.Logic.V4.Inputs
         public InputBudget Budget { get; }
         internal Func<NativeValue, bool>? Admission { get; }
         public NativeValuePolicy(InputSchema schema, InputBudget budget, Func<NativeValue, bool>? admission = null)
-        { Schema = schema ?? throw new ArgumentNullException(nameof(schema)); Budget = budget ?? throw new ArgumentNullException(nameof(budget)); Admission = admission; }
+        {
+            Schema = schema ?? throw new ArgumentNullException(nameof(schema)); Budget = budget ?? throw new ArgumentNullException(nameof(budget)); Admission =
+                admission;
+        }
     }
 
     public static class NativeValueValidator

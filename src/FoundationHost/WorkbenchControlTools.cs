@@ -36,7 +36,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
             "Show an ordinary call by its V4 requestId. Pending approval rows are refused.",
             "Locate a block and optionally open a ladder render registered in this MCP session. Without a render, return the human next step.",
             "Show the atlas locator and optionally open an atlas render registered in this MCP session. Without a render, return the human next step.",
-            "Read frozen Workbench UI state and the authoritative requesting MCP session. selectedSession identifies the Workbench's current selection. Session switches are read-only information.",
+            "Read frozen Workbench UI state and the authoritative requesting MCP session. selectedSession identifies the Workbench's current selection. " +
+                "Session switches are read-only information.",
             "Read frozen Workbench selection with offset paging, up to 256 checked blocks.",
             "Set or clear an allowed UI form prefill owned by this MCP session. A human keeps or clears it; success awaits confirmation." };
         tool = new() { Name = name, Description = "[L1][Workbench][" + (read ? "READ" : "UI") + "] " + descriptions[(int)operation]
@@ -113,7 +114,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
         {
             WorkbenchControlError.ResourceUnavailable => new ResourceUnavailableDetails(refusal.Resource ?? "workbench-control"),
             WorkbenchControlError.AccessDenied => new AccessDeniedDetails("workbench-control", refusal.Target),
-            WorkbenchControlError.UnsupportedCapability => new UnsupportedCapabilityDetails(release, refusal.Capability ?? "workbench-control.v1", refusal.Condition),
+            WorkbenchControlError.UnsupportedCapability =>
+                new UnsupportedCapabilityDetails(release, refusal.Capability ?? "workbench-control.v1", refusal.Condition),
             WorkbenchControlError.PreconditionFailed => new PreconditionFailedDetails(refusal.Condition, refusal.Target),
             WorkbenchControlError.IdentityMismatch => new IdentityMismatchDetails(refusal.Target, refusal.Expected, refusal.Actual),
             WorkbenchControlError.NotFound => new NotFoundDetails(refusal.Target),
@@ -150,7 +152,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
         var schema = new JsonObject { ["type"] = "object", ["additionalProperties"] = false, ["properties"] = properties, ["required"] = required };
         JsonObject Text(int length = 4096) => new() { ["type"] = "string", ["minLength"] = 1, ["maxLength"] = length };
         JsonObject Hex() => new() { ["type"] = "string", ["pattern"] = "^[0-9a-f]{32}$" };
-        JsonObject Enum(params string[] values) => new() { ["type"] = "string", ["enum"] = new JsonArray(values.Select(value => (JsonNode)JsonValue.Create(value)!).ToArray()) };
+        JsonObject Enum(params string[] values) => new() {
+            ["type"] = "string", ["enum"] = new JsonArray(values.Select(value => (JsonNode)JsonValue.Create(value)!).ToArray()) };
         void Add(string name, JsonObject value, bool mandatory = true)
         {
             value["description"] = name switch {
@@ -169,7 +172,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
         }
         switch (operation)
         {
-            case WorkbenchControlOperation.DisplayPage: Add("page", Enum("overview", "blocks", "versionControl", "calls", "audit", "environment", "log")); break;
+            case WorkbenchControlOperation.DisplayPage: Add("page", Enum("overview", "blocks", "versionControl", "calls", "audit", "environment", "log"));
+            break;
             case WorkbenchControlOperation.DisplayBlock: case WorkbenchControlOperation.DisplayLadder:
                 Add("softwarePath", Text()); Add("blockPath", Text());
                 if (operation == WorkbenchControlOperation.DisplayLadder) Add("renderRequestId", Hex(), false); break;
@@ -179,7 +183,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
                 Add("offset", new() { ["type"] = "integer", ["minimum"] = 0, ["maximum"] = int.MaxValue, ["default"] = 0 }, false);
                 Add("limit", new() { ["type"] = "integer", ["minimum"] = 1, ["maximum"] = 256, ["default"] = 100 }, false); break;
             case WorkbenchControlOperation.PrefillForm:
-                Add("form", Enum("inspectionRules", "blockFilter", "blockSelection", "connectProject", "exportBlocks", "importBlocks")); Add("mode", Enum("set", "clear"));
+                Add("form", Enum("inspectionRules", "blockFilter", "blockSelection", "connectProject", "exportBlocks", "importBlocks"));
+                Add("mode", Enum("set", "clear"));
                 Add("fields", new() { ["type"] = "object", ["additionalProperties"] = false,
                     ["properties"] = new JsonObject { ["namePattern"] = new JsonObject { ["type"] = "string", ["maxLength"] = 256,
                             ["description"] = "Inspection name pattern, awaiting human confirmation." },
@@ -209,7 +214,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
                         foreach (string field in fields) fieldProperties[field] = properties["fields"]!["properties"]![field]!.DeepClone();
                         branches.Add(new JsonObject { ["properties"] = new JsonObject { ["form"] = new JsonObject { ["const"] = form },
                             ["mode"] = new JsonObject { ["const"] = mode }, ["fields"] = new JsonObject { ["type"] = "object",
-                                ["additionalProperties"] = false, ["properties"] = fieldProperties, ["required"] = new JsonArray(fields.Select(field => (JsonNode)JsonValue.Create(field)!).ToArray()) } } });
+                                ["additionalProperties"] = false, ["properties"] = fieldProperties, ["required"] =
+                                    new JsonArray(fields.Select(field => (JsonNode)JsonValue.Create(field)!).ToArray()) } } });
                     }
                 schema["oneOf"] = branches; break;
         }

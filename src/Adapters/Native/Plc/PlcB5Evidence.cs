@@ -37,7 +37,8 @@ namespace TiaMcp.Adapters.Native.Plc
     }
     internal static class PlcB5Result
     {
-        internal static void Record(Dictionary<string, object?> evidence, object? state, bool changesProject, string? logFilePath = null, string? targetPath = null, object? messages = null)
+        internal static void Record(Dictionary<string, object?> evidence, object? state, bool changesProject, string? logFilePath = null, string? targetPath =
+                null, object? messages = null)
         {
             evidence["nativeResultReturned"] = true; evidence["nativeState"] = state?.ToString();
             if (state is Enum) evidence["nativeStateType"] = state.GetType().FullName;
@@ -57,7 +58,8 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static object? Json(object? value) => HardwareAddressingPolicy.ScalarValue(value);
         internal static PlcB5Object Read(object target) => new PlcB5Object(HardwareScalarEvidence.Read(target));
         internal static HardwareScalar ScalarValue(object? value)
-            => value == null ? new HardwareScalar { Kind = "null" } : value is bool flag ? new HardwareScalar { Kind = "boolean", Text = flag ? "true" : "false" }
+            => value == null ? new HardwareScalar { Kind = "null" } : value is bool flag ? new HardwareScalar {
+                Kind = "boolean", Text = flag ? "true" : "false" }
                 : value is string text ? new HardwareScalar { Kind = "string", Text = text }
                 : new HardwareScalar { Kind = "number", Text = Convert.ToString(value, CultureInfo.InvariantCulture) ?? "" };
         internal static object? ConvertValue(object? value, Type type) => HardwareAddressingPolicy.ConvertValue(ScalarValue(value), type);
@@ -74,7 +76,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             return result;
         }
-        internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> values, Dictionary<string, object?> evidence) => HardwareScalarEvidence.Apply(target, values, evidence);
+        internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> values, Dictionary<string, object?> evidence) =>
+            HardwareScalarEvidence.Apply(target, values, evidence);
         internal static object? TryProperty(object target, string name)
         {
             try { return target.GetType().GetProperty(name)?.GetValue(target); }

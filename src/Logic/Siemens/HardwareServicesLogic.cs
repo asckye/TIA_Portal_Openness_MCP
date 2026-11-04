@@ -11,19 +11,25 @@ namespace TiaMcpServer.Siemens
         internal const string ConnectionNamespace = "Siemens.Engineering.HW.CommunicationConnections";
         internal const string FeatureNamespace = "Siemens.Engineering.HW.Features";
         // Concrete connection kinds of ConnectionComposition.Create<T> (V21 Siemens.Engineering.Base.xml).
-        internal static readonly string[] ConnectionKinds = { "S7Connection", "IsoConnection", "IsoOnTcpConnection", "TcpConnection", "UdpConnection", "FdlConnection", "PtpConnection", "HmiConnection" };
+        internal static readonly string[] ConnectionKinds = {
+            "S7Connection", "IsoConnection", "IsoOnTcpConnection", "TcpConnection", "UdpConnection", "FdlConnection", "PtpConnection", "HmiConnection" };
         // Every T: id under Siemens.Engineering.HW.Features in the V21 XML docs (Base + Step7). Runtime decides presence.
         internal static readonly string[] FeatureCatalog = {
             "AddressController", "AddressControllerAssociation", "CertificateManagementConfiguration", "CommunicationManagement", "DefaultWebPagesFeature",
-            "DeviceFeature", "DeviceItemFeature", "DisplayProtection", "FrontPanelDisplay", "GsdDevice", "GsdDeviceItem", "GsdExportProvider", "HardwareFeature",
-            "HwIdentifierController", "HwIdentifierControllerAssociation", "IGsdObject", "ImConnection", "ModuleDescriptionUpdater", "MrpDomainOwner", "MrpInstancesOwner",
+            "DeviceFeature", "DeviceItemFeature", "DisplayProtection", "FrontPanelDisplay", "GsdDevice", "GsdDeviceItem", "GsdExportProvider",
+                "HardwareFeature",
+            "HwIdentifierController", "HwIdentifierControllerAssociation", "IGsdObject", "ImConnection", "ModuleDescriptionUpdater", "MrpDomainOwner",
+                "MrpInstancesOwner",
             "NetworkInterface", "NetworkInterfaceAssociation", "NetworkPort", "NetworkPortAssociation", "OpcUaUserManagement", "PcInterfaceAssignment",
-            "PlcAccessControlConfigurationProvider", "PlcAccessLevelProvider", "PlcAccountLockingAtRuntimeFeature", "PlcMasterSecretConfigurator", "ResourceAssignment",
-            "SimpleWebserverUserManagement", "SoftwareContainer", "SubnetFeature", "SubnetOwner", "SyncDomainOwner", "SysLogConfigurationManager", "SysLogServerConfiguration",
+            "PlcAccessControlConfigurationProvider", "PlcAccessLevelProvider", "PlcAccountLockingAtRuntimeFeature", "PlcMasterSecretConfigurator",
+                "ResourceAssignment",
+            "SimpleWebserverUserManagement", "SoftwareContainer", "SubnetFeature", "SubnetOwner", "SyncDomainOwner", "SysLogConfigurationManager",
+                "SysLogServerConfiguration",
             "SysLogServerConfigurationComposition", "SystemWebPagesFeature", "TelecontrolManagement", "WatchAndForceTableAccessManager", "WebDBGenerateOptions",
             "WebserverUserDefinedPages", "WebserverUserManagement" };
         // Values of these features are never dumped; only presence is reported.
-        internal static readonly string[] FeatureValueDenylist = { "PlcMasterSecretConfigurator", "WebserverUserManagement", "SimpleWebserverUserManagement", "OpcUaUserManagement" };
+        internal static readonly string[] FeatureValueDenylist = {
+            "PlcMasterSecretConfigurator", "WebserverUserManagement", "SimpleWebserverUserManagement", "OpcUaUserManagement" };
         internal static readonly string[] OpcUaPermissionNames = { "Browse", "Read", "Write", "Call", "ReceiveEvents", "ReadRolePermissions" };
         internal static readonly string[] OpcUaActions = { "createRole", "addStandardRole", "deleteRole", "setProjectRole", "setPermission", "setRestriction" };
         internal static readonly string[] CaxImportOptions = { "MoveToParkingLot", "OverwriteTiaDevice", "RetainTiaDevice" };

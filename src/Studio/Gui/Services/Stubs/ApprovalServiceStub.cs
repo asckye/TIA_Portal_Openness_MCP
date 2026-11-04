@@ -32,7 +32,8 @@ public sealed class ApprovalServiceStub : ObservableObject, IApprovalService
     public void Receive(ApprovalRequest request)
     {
         if (_requests.Any(r => r.Id == request.Id)) throw new ArgumentException("Duplicate request ID.", nameof(request));
-        if (request.TimeoutSeconds <= 0 || request.State != ApprovalState.Pending) throw new ArgumentException("Expected a pending request with a timeout.", nameof(request));
+        if (request.TimeoutSeconds <= 0 || request.State != ApprovalState.Pending)
+            throw new ArgumentException("Expected a pending request with a timeout.", nameof(request));
         _requests.Add(request);
         Refresh();
         Changed();

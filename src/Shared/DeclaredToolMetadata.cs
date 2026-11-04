@@ -32,8 +32,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 ? values.EnumerateArray().Select(v => v.ToString()).ToArray() : documentedActions;
             if (category.ReadOnlyHint == null)
             {
-                if (category.Operation == "SESSION") read = tool.Name is "GetSessionState" or "ListPortalProcessProjects" or "InitializeEnvironment" or "CheckProductUpdate";
-                if (category.Operation == "EXECUTE") { read = tool.Name is "RunCapabilitySelfTest" or "RunHmiActionScriptRecipeSafetySelfTest" or "RunOnlineMonitoringSafetySelfTest"; idempotent = true; }
+                if (category.Operation == "SESSION") read = tool
+                    .Name is "GetSessionState" or "ListPortalProcessProjects" or "InitializeEnvironment" or "CheckProductUpdate";
+                if (category.Operation == "EXECUTE") {
+                    read = tool.Name is "RunCapabilitySelfTest" or "RunHmiActionScriptRecipeSafetySelfTest" or "RunOnlineMonitoringSafetySelfTest"; idempotent =
+                        true;
+                }
                 if (category.Operation == "UI") { read = tool.Annotations?.ReadOnlyHint == true; idempotent = false; }
                 if (tool.Name == "ConnectOnlinePlc") { read = false; idempotent = false; }
                 // Mutation hints are the worst case of the descriptor's actions and
@@ -85,7 +89,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new InvalidOperationException("All annotation hints must be explicit: " + tool.Name);
         }
 
-        internal static McpServerTool CreateToolCore(MethodInfo method, McpServerToolCreateOptions? options, Func<RequestContext<CallToolRequestParams>, object> target)
+        internal static McpServerTool CreateToolCore(MethodInfo method, McpServerToolCreateOptions? options, Func<RequestContext<CallToolRequestParams>,
+                object> target)
         {
             // Exclude custom input contracts from SDK inference before it serializes
             // optional null defaults. Their null-rejecting converters are unchanged.
@@ -196,7 +201,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (McpServer.IsInfrastructureParameter(p.ParameterType)) continue;
                 string? def = null;
                 if (p.HasDefaultValue)
-                    def = p.DefaultValue == null ? "null" : p.DefaultValue is bool b ? (b ? "true" : "false") : p.DefaultValue is string s ? "\"" + s + "\"" : Convert.ToString(p.DefaultValue, System.Globalization.CultureInfo.InvariantCulture);
+                    def = p.DefaultValue == null ? "null" : p.DefaultValue is bool b ? (b ? "true" : "false") : p.DefaultValue is string s ? "\"" + s + "\""
+                        : Convert.ToString(p.DefaultValue, System.Globalization.CultureInfo.InvariantCulture);
                 var d = p.GetCustomAttribute<DescriptionAttribute>();
                 // A parameter without its own [Description] gets the roster-wide vocabulary text (flagged Synthesized).
                 string? text = d?.Description;
@@ -221,7 +227,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     schema["properties"]![parameter.Name!] = JsonNode.Parse(original.GetProperty("properties").GetProperty(parameter.Name!).GetRawText());
         }
 
-        internal static McpServerTool Create(string name, MethodInfo method, Func<RequestContext<CallToolRequestParams>, object> target, out ToolDescriptor descriptor, string? release = null)
+        internal static McpServerTool Create(string name, MethodInfo method, Func<RequestContext<CallToolRequestParams>, object> target,
+                out ToolDescriptor descriptor, string? release = null)
         {
             release ??= HardwareContract.ReleaseKey;
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
@@ -243,7 +250,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var classification = ClassificationOf(method);
             var dryRun = method.GetParameters().FirstOrDefault(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
             descriptor = new ToolDescriptor(name, description, hinted.ProtocolTool, classification == null ? null :
-                new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead, classification.BatchWrite),
+                new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead, classification
+                        .BatchWrite),
                 RenderSignature(name, method, release), parameters, new ToolDryRunDescriptor(dryRun != null,
                     dryRun?.DefaultValue is not bool value || value), null,
                 ToolExecution.Table.TryGetValue(name, out var execution) ? execution : "worker");

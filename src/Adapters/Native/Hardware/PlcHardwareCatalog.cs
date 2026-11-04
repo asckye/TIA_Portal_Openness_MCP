@@ -17,7 +17,8 @@ namespace TiaMcp.Adapters
             RequireHardwareCatalogBinding();
             Project();
             var attached=Portal();
-            return PlcHardwareCatalogPolicy.Search(ReleaseKey,keyword,limit,query=>attached.HardwareCatalog.Find(query).Select(entry=>new PlcHardwareCatalogCandidate {
+            return PlcHardwareCatalogPolicy
+                .Search(ReleaseKey,keyword,limit,query=>attached.HardwareCatalog.Find(query).Select(entry=>new PlcHardwareCatalogCandidate {
                 ArticleNumber=NativeHardware.ArticleNumber(entry),CatalogPath=NativeHardware.CatalogPath(entry),Description=NativeHardware.Description(entry),
                 TypeIdentifier=NativeHardware.TypeIdentifier(entry),TypeIdentifierNormalized=NativeHardware.TypeIdentifierNormalized(entry),
                 TypeName=NativeHardware.TypeName(entry),Version=NativeHardware.Version(entry)

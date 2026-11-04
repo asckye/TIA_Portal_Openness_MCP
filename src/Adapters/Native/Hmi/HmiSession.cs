@@ -30,8 +30,11 @@ namespace TiaMcp.Adapters.Native.Hmi
             : PlcFoundationEngine.DefaultHmiSoftware(session, path);
         internal HmiTarget ExactClassicHmi(string path)
         {
-            var software = session.ResolveSoftwareContainerUncached(path)?.Software ?? throw new PlcSoftwareException("NotFound", "Exact HMI software not found: " + path);
-            return software as HmiTarget ?? throw new NotSupportedException("Selected software is not a classic WinCC HmiTarget (" + software.GetType().FullName + "); Unified targets use the Unified tools.");
+            var software = session.ResolveSoftwareContainerUncached(path)?.Software
+                ?? throw new PlcSoftwareException("NotFound", "Exact HMI software not found: " + path);
+            return software as HmiTarget
+                ?? throw new NotSupportedException("Selected software is not a classic WinCC HmiTarget (" + software.GetType().FullName
+                    + "); Unified targets use the Unified tools.");
         }
         internal VBScriptFolder ExactVbScriptFolder(HmiTarget hmi, IEnumerable<string> path) => HmiAccessHelpers.ExactVbScriptFolder(hmi, path);
         internal Siemens.Engineering.Hmi.Globalization.MultiLingualGraphicComposition ClassicGraphics()
@@ -54,7 +57,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal object? TryGetHmiTagTablesCollection(object value) => HmiAccessHelpers.TryGetHmiTagTablesCollection(value);
         internal object? TryFindHmiTagTable(object value, string name) => HmiAccessHelpers.TryFindHmiTagTable(value, name);
         internal IEnumerable<object> EnumerateHmiTagTablesRecursive(object value) => HmiAccessHelpers.EnumerateHmiTagTablesRecursive(value);
-        internal List<string> TryListNamesFromCollection(object value, string[] hints, string final) => HmiAccessHelpers.TryListNamesFromCollection(value, hints, final);
+        internal List<string> TryListNamesFromCollection(object value, string[] hints, string final) => HmiAccessHelpers
+            .TryListNamesFromCollection(value, hints, final);
         internal object? FindExistingByName(object value, string name) => HmiAccessHelpers.FindExistingByName(value, name);
         internal object? TryResolveChildGroupByPath(object value, string path) => HmiAccessHelpers.TryResolveChildGroupByPath(value, path);
         internal bool TryImportEngineeringObjectIntoCollection(object value, string path, out string? name, out string? error, bool overwrite = false)

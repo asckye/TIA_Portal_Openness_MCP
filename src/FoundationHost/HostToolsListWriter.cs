@@ -47,7 +47,8 @@ internal static class HostToolsListWriter
                 shared ? "plc-foundation" : "full-engine", tool.Description ?? "", JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject(), roster: names);
             var example = usage["example"]!["request"]!["params"]!["arguments"]!.AsObject();
             if (example.Select(pair => pair.Key).Except(properties, StringComparer.Ordinal).Any()
-                || tool.InputSchema.TryGetProperty("required", out var required) && required.EnumerateArray().Any(parameter => !example.ContainsKey(parameter.GetString()!)))
+                || tool.InputSchema.TryGetProperty("required", out var required) && required.EnumerateArray()
+                    .Any(parameter => !example.ContainsKey(parameter.GetString()!)))
                 throw new InvalidDataException(tool.Name + " product usage example does not fit the advertised parameter roster");
             var tag = ToolTaxonomy.For(tool.Name);
             var operation = ToolTaxonomy.OperationOf(tool.Name, tool.Description);
@@ -76,19 +77,25 @@ internal static class HostToolsListWriter
         {
             ["package"] = options.CatalogPackage,
             ["generatedAt"] = options.CatalogGeneratedAt ?? DateTimeOffset.UtcNow.ToString("o"),
-            ["source"] = "FoundationHost V" + release + " full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
+            ["source"] = "FoundationHost V" + release
+                + " full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA " +
+                "started",
             ["fileVersion"] = FileVersionInfo.GetVersionInfo(Environment.ProcessPath!).FileVersion,
             ["exeSha256"] = ArgumentRules.HashFile(Environment.ProcessPath!, FileShare.Read),
             ["workerSha256"] = ArgumentRules.HashFile(options.WorkerExe, FileShare.Read),
             ["toolCount"] = rows.Count,
-            ["note"] = "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
+            ["note"] =
+                "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime " +
+                "tools/list is authoritative.",
             ["callDiscipline"] = new JsonObject
             {
                 ["parameters"] = Count("parameters") + parameters.Length,
                 ["parametersUndocumented"] = Count("parametersUndocumented") + parameters.Count(parameter => string.IsNullOrWhiteSpace(parameter.Description)),
                 ["parametersFromVocabulary"] = Count("parametersFromVocabulary") + parameters.Count(parameter => parameter.Synthesized),
-                ["toolsWithUndocumentedParameters"] = Count("toolsWithUndocumentedParameters") + supplementary.Count(tool => tool.Parameters.Any(parameter => string.IsNullOrWhiteSpace(parameter.Description))),
-                ["toolsWithEnumHints"] = Count("toolsWithEnumHints") + supplementary.Count(tool => tool.Parameters.Any(parameter => parameter.AllowedValues.Count != 0)),
+                ["toolsWithUndocumentedParameters"] = Count("toolsWithUndocumentedParameters") + supplementary
+                    .Count(tool => tool.Parameters.Any(parameter => string.IsNullOrWhiteSpace(parameter.Description))),
+                ["toolsWithEnumHints"] = Count("toolsWithEnumHints") + supplementary
+                    .Count(tool => tool.Parameters.Any(parameter => parameter.AllowedValues.Count != 0)),
                 ["enumHints"] = Count("enumHints") + parameters.Count(parameter => parameter.AllowedValues.Count != 0),
                 ["defaultHints"] = Count("defaultHints") + parameters.Count(parameter => parameter.DefaultJson != null),
                 ["examplesCurated"] = rows.Count,

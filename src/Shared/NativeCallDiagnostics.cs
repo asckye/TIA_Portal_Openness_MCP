@@ -28,7 +28,9 @@ namespace TiaMcpServer.ModelContextProtocol
         private sealed class NativeFlag { internal bool Value; }
         private static readonly ConditionalWeakTable<Type, NativeFlag> NativeTypes = new ConditionalWeakTable<Type, NativeFlag>();
         private static readonly AsyncLocal<Span?> Active = new AsyncLocal<Span?>();
-        private static bool NativeType(Type? type) => type != null && NativeTypes.GetValue(type, t => new NativeFlag { Value = (t.Assembly.GetName().Name ?? "").StartsWith("Siemens.Engineering", StringComparison.Ordinal) }).Value;
+        private static bool NativeType(Type? type) => type != null && NativeTypes
+            .GetValue(type, t => new NativeFlag { Value = (t.Assembly.GetName().Name ?? "").StartsWith("Siemens.Engineering", StringComparison.Ordinal) })
+            .Value;
         private static bool Known(object? value) => value != null && (NativeType(value.GetType()) || Addresses.TryGetValue(value, out _));
         private static string Limit(string value) => value.Length <= 1024 ? value : value.Substring(0, 1024) + "…";
         private static string Clean(string value) => Limit(value.Replace("\r", " ").Replace("\n", " ").Replace("\0", " "));
@@ -129,7 +131,8 @@ namespace TiaMcpServer.ModelContextProtocol
             internal CollectionSequence(ICollection<T> source) : base(source) { collection = source; }
             public int Count => Call(collection, "System.Collections.Generic.ICollection::get_Count", () => collection.Count);
             public bool IsReadOnly => Call(collection, "System.Collections.Generic.ICollection::get_IsReadOnly", () => collection.IsReadOnly);
-            public void CopyTo(T[] array, int index) => Call(collection, "System.Collections.Generic.ICollection::CopyTo", () => { collection.CopyTo(array, index); return true; });
+            public void CopyTo(T[] array, int index) =>
+                Call(collection, "System.Collections.Generic.ICollection::CopyTo", () => { collection.CopyTo(array, index); return true; });
             public void Add(T item) => Call(collection, "System.Collections.Generic.ICollection::Add", () => { collection.Add(item); return true; });
             public void Clear() => Call(collection, "System.Collections.Generic.ICollection::Clear", () => { collection.Clear(); return true; });
             public bool Contains(T item) => Call(collection, "System.Collections.Generic.ICollection::Contains", () => collection.Contains(item));
@@ -139,7 +142,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             private readonly IList<T> list;
             internal ListSequence(IList<T> source) : base(source) { list = source; }
-            public T this[int index] { get => Call(list, "System.Collections.Generic.IList::get_Item", () => list[index]); set => Call(list, "System.Collections.Generic.IList::set_Item", () => { list[index] = value; return true; }); }
+            public T this[int index] {
+                get => Call(list, "System.Collections.Generic.IList::get_Item", () => list[index]); set =>
+                    Call(list, "System.Collections.Generic.IList::set_Item", () => { list[index] = value; return true; });
+            }
             public int IndexOf(T item) => Call(list, "System.Collections.Generic.IList::IndexOf", () => list.IndexOf(item));
             public void Insert(int index, T item) => Call(list, "System.Collections.Generic.IList::Insert", () => { list.Insert(index, item); return true; });
             public void RemoveAt(int index) => Call(list, "System.Collections.Generic.IList::RemoveAt", () => { list.RemoveAt(index); return true; });
@@ -151,13 +157,17 @@ namespace TiaMcpServer.ModelContextProtocol
             public int Count => Call(collection, "System.Collections.ICollection::get_Count", () => collection.Count);
             public bool IsSynchronized => Call(collection, "System.Collections.ICollection::get_IsSynchronized", () => collection.IsSynchronized);
             public object SyncRoot => Call(collection, "System.Collections.ICollection::get_SyncRoot", () => collection.SyncRoot);
-            public void CopyTo(Array array, int index) => Call(collection, "System.Collections.ICollection::CopyTo", () => { collection.CopyTo(array, index); return true; });
+            public void CopyTo(Array array, int index) =>
+                Call(collection, "System.Collections.ICollection::CopyTo", () => { collection.CopyTo(array, index); return true; });
         }
         private sealed class ListSequence : CollectionSequence, IList
         {
             private readonly IList list;
             internal ListSequence(IList source) : base(source) { list = source; }
-            public object? this[int index] { get => Call(list, "System.Collections.IList::get_Item", () => list[index]); set => Call(list, "System.Collections.IList::set_Item", () => { list[index] = value; return true; }); }
+            public object? this[int index] {
+                get => Call(list, "System.Collections.IList::get_Item", () => list[index]); set =>
+                    Call(list, "System.Collections.IList::set_Item", () => { list[index] = value; return true; });
+            }
             public bool IsFixedSize => Call(list, "System.Collections.IList::get_IsFixedSize", () => list.IsFixedSize);
             public bool IsReadOnly => Call(list, "System.Collections.IList::get_IsReadOnly", () => list.IsReadOnly);
             public int Add(object? item) => Call(list, "System.Collections.IList::Add", () => list.Add(item));

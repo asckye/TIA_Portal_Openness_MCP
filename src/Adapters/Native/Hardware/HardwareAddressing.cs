@@ -188,7 +188,8 @@ namespace TiaMcp.Adapters
 
             if (after == null)
             {
-                return IoWrite(false, "Readback after the write could not find an address of the same type. The state is abnormal; verify it in the TIA UI.", before, null);
+                return IoWrite(false, "Readback after the write could not find an address of the same type. The state is abnormal; verify it in the TIA UI.",
+                        before, null);
             }
 
             // Address.StartAddress (accessing-attributes-of-an-address-object): changing one IoType can move the other IoType of

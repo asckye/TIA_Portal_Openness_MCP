@@ -26,15 +26,25 @@ internal sealed class UsageHintTool : McpServerTool
 
 internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpServerTool>> roster, Func<string, string>? exampleProfile = null) : McpServerTool
 {
-    private readonly Tool tool = new() { Name = "GetToolUsage", Description = "Unified tool and programming examples for this release: exact contracts, parameter sources and result interpretation. toolName selects a tool; language lists code examples; exampleId reads full files/steps. query/documentId searches/reads official source. Embedded data only.",
+    private readonly Tool tool = new() {
+        Name = "GetToolUsage", Description =
+            "Unified tool and programming examples for this release: exact contracts, parameter sources and result interpretation. toolName selects a tool; " +
+            "language lists code examples; exampleId reads full files/steps. query/documentId searches/reads official source. Embedded data only.",
         InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["additionalProperties"] = false,
             ["properties"] = new JsonObject {
-                ["toolName"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Exact available tool name. Do not combine with query or documentId." },
+                ["toolName"] = new JsonObject {
+                    ["type"] = "string", ["default"] = "", ["description"] = "Exact available tool name. Do not combine with query or documentId." },
                 ["query"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Words to search in official source text." },
-                ["documentId"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Exact reference ID from a tool's officialReference.documents or search." },
-                ["operation"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Action/operation from the selected tool's operations list; foundation contracts currently have separate tool names instead." },
-                ["language"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Programming language/format from the library, e.g. scl or udt." },
-                ["exampleId"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Exact example ID; reads complete files or steps with release requirements." },
+                ["documentId"] = new JsonObject {
+                    ["type"] = "string", ["default"] = "", ["description"] = "Exact reference ID from a tool's officialReference.documents or search." },
+                ["operation"] = new JsonObject {
+                    ["type"] = "string", ["default"] = "", ["description"] =
+                        "Action/operation from the selected tool's operations list; foundation contracts currently have separate tool names instead."
+                },
+                ["language"] = new JsonObject {
+                    ["type"] = "string", ["default"] = "", ["description"] = "Programming language/format from the library, e.g. scl or udt." },
+                ["exampleId"] = new JsonObject {
+                    ["type"] = "string", ["default"] = "", ["description"] = "Exact example ID; reads complete files or steps with release requirements." },
                 ["exampleKind"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("all", "sequence", "language"), ["default"] = "all" },
                 ["offset"] = new JsonObject { ["type"] = "integer", ["default"] = 0, ["minimum"] = 0 },
                 ["limit"] = new JsonObject { ["type"] = "integer", ["default"] = 80, ["minimum"] = 1, ["maximum"] = 200 }
@@ -46,7 +56,9 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
         try
         {
             var args = request.Params?.Arguments;
-            if (args != null && args.Keys.Except(new[] { "toolName", "query", "documentId", "offset", "limit", "operation", "language", "exampleId", "exampleKind" }).Any()) throw new ArgumentException("Unknown argument.");
+            if (args != null && args.Keys
+                    .Except(new[] { "toolName", "query", "documentId", "offset", "limit", "operation", "language", "exampleId", "exampleKind" }).Any())
+                throw new ArgumentException("Unknown argument.");
             string Text(string key) => args != null && args.TryGetValue(key, out var value) ? value.GetString() ?? "" : "";
             int Number(string key, int fallback) => args != null && args.TryGetValue(key, out var value) ? value.GetInt32() : fallback;
             var name = Text("toolName"); var query = Text("query"); var id = Text("documentId");
@@ -69,10 +81,13 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                     (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!, operation: operation, roster: all.Select(t => t.ProtocolTool.Name));
                 usage["outputSchema"] = target.OutputSchema.HasValue ? JsonNode.Parse(target.OutputSchema.Value.GetRawText()) : null;
                 usage["resultContract"] = new JsonObject { ["type"] = "Envelope", ["schemaVersion"] = 4 };
-                usage["examples"] = ToolUsageCatalog.Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name, exampleKind)["examples"]!.DeepClone();
+                usage["examples"] = ToolUsageCatalog
+                    .Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name, exampleKind)["examples"]!
+                    .DeepClone();
             }
             else if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
-                usage = ToolUsageCatalog.Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, exampleKind: exampleKind);
+                usage = ToolUsageCatalog
+                    .Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, exampleKind: exampleKind);
             else
             {
                 usage = ToolUsageCatalog.ReadReference(query, id, offset, limit);
@@ -86,7 +101,10 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                     usage["exampleLibrary"] = ToolUsageCatalog.Examples(releaseKey, Profile(name), names);
                 }
             }
-            return ValueTask.FromResult(new CallToolResult { Content = new List<ContentBlock> { new TextContentBlock { Text = new JsonObject { ["success"] = true, ["usage"] = usage }.ToJsonString() } } });
+            return ValueTask
+                .FromResult(new CallToolResult {
+                    Content = new List<ContentBlock> { new TextContentBlock { Text = new JsonObject { ["success"] = true, ["usage"] = usage }.ToJsonString() } }
+                });
         }
         // Argument errors propagate to FoundationV4Tool, which returns the INVALID_ARGUMENT envelope before any operation;
         // a plain-text error result would be classified as an internal host failure.

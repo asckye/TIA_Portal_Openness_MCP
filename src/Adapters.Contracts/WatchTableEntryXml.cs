@@ -22,7 +22,9 @@ namespace TiaMcp.Adapters.Contracts
             var text = (address ?? "").Trim();
             if (text.StartsWith("%", StringComparison.Ordinal)) return "Address";
             if (text.StartsWith("\"", StringComparison.Ordinal)) return "Name";
-            return System.Text.RegularExpressions.Regex.IsMatch(text, @"^(DB\d+\.)?(DB[XBWD]|[IQMEA][BWD]?|P[IQ][BWD]?)\d+(\.\d+)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? "Address" : "Name";
+            return System.Text.RegularExpressions.Regex
+                .IsMatch(text, @"^(DB\d+\.)?(DB[XBWD]|[IQMEA][BWD]?|P[IQ][BWD]?)\d+(\.\d+)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                ? "Address" : "Name";
         }
 
         // TIA writes symbols quoted per segment: "Tag", "DB".Member, "DB".Struct.Member. A bare Tag / Struct.Member is quoted the same way.
@@ -47,7 +49,8 @@ namespace TiaMcp.Adapters.Contracts
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
                 new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(releaseKey).EngineeringVersion)),
+                    new XElement("Engineering",
+                            new XAttribute("version", TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(releaseKey).EngineeringVersion)),
                     new XElement(TableElement, new XAttribute("ID", "0"),
                         new XElement("AttributeList", new XElement("Name", tableName)),
                         new XElement("ObjectList"))));
@@ -71,7 +74,8 @@ namespace TiaMcp.Adapters.Contracts
                 var list = entry.Element("AttributeList");
                 var value = list?.Element(attribute)?.Value ?? "";
                 if (value.Length == 0) continue;
-                if (attribute == "Address" ? string.Equals(value, address.Trim(), StringComparison.OrdinalIgnoreCase) : SameSymbol(value, address)) return entry;
+                if (attribute == "Address" ? string.Equals(value, address.Trim(), StringComparison.OrdinalIgnoreCase) : SameSymbol(value, address))
+                    return entry;
             }
             return null;
         }
@@ -87,7 +91,8 @@ namespace TiaMcp.Adapters.Contracts
             {
                 var objects = Table(doc).Element("ObjectList");
                 if (objects == null) { objects = new XElement("ObjectList"); Table(doc).Add(objects); }
-                entry = new XElement(EntryElement, new XAttribute("ID", NextId(doc)), new XAttribute("CompositionName", "Entries"), new XElement("AttributeList"));
+                entry =
+                    new XElement(EntryElement, new XAttribute("ID", NextId(doc)), new XAttribute("CompositionName", "Entries"), new XElement("AttributeList"));
                 objects.Add(entry);
                 action = "appended";
             }

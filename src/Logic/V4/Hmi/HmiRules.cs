@@ -14,7 +14,8 @@ namespace TiaMcp.Logic.V4.Hmi
         internal static readonly string[] AmlRoles = { "Rack", "DeviceItem", "CommunicationInterface", "CommunicationPort" };
         internal static readonly string[] IoProperties = { "BackColor", "ForeColor", "BorderColor", "BorderWidth", "Visible", "Enabled", "Name" };
         internal static readonly string[] RectangleExcluded = { "ForeColor", "Text", "Font", "Content", "Padding" };
-        internal static readonly string[] PaletteColors = { "Page", "Background", "Surface", "Text", "Border", "page", "background", "surface", "text", "border" };
+        internal static readonly string[] PaletteColors = {
+            "Page", "Background", "Surface", "Text", "Border", "page", "background", "surface", "text", "border" };
 
         internal static void UniqueNames(IEnumerable<string> names)
         {

@@ -46,7 +46,8 @@ internal static class WorkerObservations
                     ["InvokeObject"] = type.GetMethod("InvokeObject") != null, ["probe"] = context.ReflectionProbe };
             case "reflection-deny":
                 return JsonValue.Create(context.ReflectionType.GetMethod("GetHardDeniedReflectionReason", BindingFlags.NonPublic | BindingFlags.Static)!
-                    .Invoke(null, new object[] { new object(), (string)arguments["kind"]!, (string)arguments["path"]!, (string)arguments["method"]! }) as string);
+                    .Invoke(null, new object[] { new object(), (string)arguments["kind"]!, (string)arguments["path"]!, (string)arguments["method"]!
+                        }) as string);
             default:
                 if (operation.StartsWith("session.", StringComparison.Ordinal)) return context.Session(operation.Substring("session.".Length), arguments);
                 throw new NotSupportedException("Unknown worker observation: " + operation);
@@ -80,14 +81,17 @@ internal static class WorkerObservations
         }
         if (operation == "status") return CachedStatus();
         return Read(operation, arguments, new Context {
-            Environment = () => JsonSerializer.SerializeToNode(EnvironmentDoctor.Run(Engineering.TiaMajorVersion, Engineering.TiaMajorVersion), new JsonSerializerOptions { IncludeFields = true }),
+            Environment = () => JsonSerializer
+                .SerializeToNode(EnvironmentDoctor.Run(Engineering.TiaMajorVersion, Engineering.TiaMajorVersion), new JsonSerializerOptions {
+                    IncludeFields = true }),
 #if TIA_PLC_WORKER_OPENNESS_GROUP
             Group = () => WindowsOpennessGroup.ReadEffectiveMembership(new WindowsOpennessGroupPlatform(EnvironmentDoctor.CurrentUserInOpennessGroup)),
 #else
             Group = EnvironmentDoctor.CurrentUserInOpennessGroup,
 #endif
             FixGroup = engine.EnsureOpennessUserGroup,
-            ReflectionType = typeof(PlcFoundationEngine).Assembly.GetType("TiaMcp.Adapters.Reflection.OpennessReflection")!, ReflectionProbe = typeof(PlcFoundationEngine).GetMethod("ExecuteOnline") != null,
+            ReflectionType = typeof(PlcFoundationEngine).Assembly.GetType("TiaMcp.Adapters.Reflection.OpennessReflection")!, ReflectionProbe =
+                typeof(PlcFoundationEngine).GetMethod("ExecuteOnline") != null,
             ToolNames = () => throw new NotSupportedException("The host owns the tool roster."),
             Session = (name, values) => {
                 switch (name)
@@ -99,7 +103,8 @@ internal static class WorkerObservations
                     // The frozen engine observation resolves two ConnectPortal overloads by name.
                     case "ConnectPortal": throw new AmbiguousMatchException();
                     case "GetProjectTree": return JsonValue.Create(engine.ReadProjectTree());
-                    case "ValidateAutomationContext": return JsonSerializer.SerializeToNode(engine.ValidateAutomationContext((string?)values["plc"]!, (string?)values["hmi"]!));
+                    case "ValidateAutomationContext": return JsonSerializer
+                        .SerializeToNode(engine.ValidateAutomationContext((string?)values["plc"]!, (string?)values["hmi"]!));
                     default: throw new NotSupportedException("Unknown adapter session observation: " + name);
                 }
             }

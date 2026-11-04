@@ -21,7 +21,8 @@ namespace TiaMcp.Logic.V4.Inputs
             bool transaction = false, bool orchestration = false, Func<ToolArguments, Error?>? businessValidation = null)
         {
             if (!InputGuard.Identifier(name)) throw new ArgumentException("A tool needs an identifier.");
-            if (!arguments.Json.TryGetProperty("type", out var type) || type.GetString() != "object") throw new ArgumentException("A target inputSchema must describe an object.");
+            if (!arguments.Json.TryGetProperty("type", out var type) || type.GetString() != "object")
+                throw new ArgumentException("A target inputSchema must describe an object.");
             Name = name; Arguments = arguments; Budget = budget; Read = read; Preview = preview;
             Transaction = transaction; Orchestration = orchestration; BusinessValidation = businessValidation;
         }

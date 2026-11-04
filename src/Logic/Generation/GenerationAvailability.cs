@@ -27,7 +27,8 @@ namespace TiaMcp.Logic.Generation
             return new GenerationPlanStepsItemAvailability
             {
                 Tool = present ? "present" : "absent",
-                BehaviorPolicy = policies.Length == 0 ? "not-applicable" : policies.Any(p => p.GetProperty("state").GetString() == "current") ? "current" : "safe-v4",
+                BehaviorPolicy = policies.Length == 0 ? "not-applicable" : policies.Any(p => p.GetProperty("state").GetString() == "current") ? "current"
+                    : "safe-v4",
                 Native = policies.Length > 0 && policies.All(p => p.GetProperty("l5").GetString() == "accepted") ? "accepted" : "NOT RUN"
             };
         }

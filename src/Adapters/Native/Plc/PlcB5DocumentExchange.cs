@@ -19,14 +19,17 @@ namespace TiaMcp.Adapters.Native.Plc
             internal void ConfirmWrite() => Events.Add(new PlcB5DocumentEvent { Kind = "confirm" });
             internal void Observe(string key, object? value) => Events.Add(new PlcB5DocumentEvent { Kind = "field", Stage = key, Value = value });
             internal void ObserveNativeResult(string? state, bool changesProject, object? messages, string directory, string name)
-                => Events.Add(new PlcB5DocumentEvent { Kind = "native", State = state, ChangesProject = changesProject, Value = messages, Directory = directory, Name = name });
+                => Events
+                    .Add(new PlcB5DocumentEvent {
+                        Kind = "native", State = state, ChangesProject = changesProject, Value = messages, Directory = directory, Name = name });
         }
 #if PLC_DOCUMENT_EXPORT
         private static object? AttributeValue(object? value)
         {
             if (value == null) return null;
             var type = value.GetType();
-            if (type.IsPrimitive || value is string || value is decimal || value is DateTime || value is TimeSpan || value is Guid || type.IsEnum) return type.IsEnum ? Convert.ToInt32(value) : value;
+            if (type.IsPrimitive || value is string || value is decimal || value is DateTime || value is TimeSpan || value is Guid || type.IsEnum) return type
+                .IsEnum ? Convert.ToInt32(value) : value;
             try { return value.ToString(); } catch { /* swallow(probe-optional): Preserve the original nonserializable attribute placeholder. */ return "<" + type.Name + ">"; }
         }
         private static PlcB5Block BlockRow(PlcBlock block)
@@ -40,7 +43,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 attributes.Add(new PlcB5Attribute { Name = info.Name, Value = AttributeValue(value), AccessMode = info.AccessMode.ToString() });
             }
             return new PlcB5Block { Name = block.Name, TypeName = block.GetType().Name, Namespace = block.Namespace,
-                ProgrammingLanguage = Enum.GetName(typeof(Siemens.Engineering.SW.Blocks.ProgrammingLanguage), block.ProgrammingLanguage), MemoryLayout = Enum.GetName(typeof(MemoryLayout), block.MemoryLayout),
+                ProgrammingLanguage = Enum.GetName(typeof(Siemens.Engineering.SW.Blocks.ProgrammingLanguage), block.ProgrammingLanguage), MemoryLayout = Enum
+                    .GetName(typeof(MemoryLayout), block.MemoryLayout),
                 IsConsistent = block.IsConsistent, HeaderName = block.HeaderName, ModifiedDate = block.ModifiedDate,
                 IsKnowHowProtected = block.IsKnowHowProtected, Attributes = attributes, Description = block.ToString() };
         }
@@ -123,26 +127,42 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 switch (request.Operation)
                 {
-                    case "ExportPlcBlockDocuments": reply.Value = AutoOffline(() => ExportAsDocuments(request.SoftwarePath, request.BlockPath, request.ExportPath, request.PreservePath)); break;
+                    case "ExportPlcBlockDocuments": reply.Value =
+                        AutoOffline(() => ExportAsDocuments(request.SoftwarePath, request.BlockPath, request.ExportPath, request.PreservePath)); break;
                     case "ExportPlcBlocksDocuments":
                         if (request.Action == "count") reply.Count = _session.GetBlocks(request.SoftwarePath, request.RegexName)?.Count;
-                        else reply.Blocks = ExportBlocksAsDocuments(request.SoftwarePath, request.ExportPath, request.RegexName, request.PreservePath)?.Select(BlockRow).ToArray();
+                        else reply.Blocks = ExportBlocksAsDocuments(request.SoftwarePath, request.ExportPath, request.RegexName, request.PreservePath)?
+                            .Select(BlockRow).ToArray();
                         break;
                     case "ImportPlcBlockDocuments":
-                        if (request.Action == "verify") { LastImportedDocumentBlocks = request.ImportedNames; reply.Value = VerifyLastDocumentImport(request.SoftwarePath, request.GroupPath); }
-                        else reply.Value = AutoOffline(() => ImportFromDocuments(request.SoftwarePath, request.GroupPath, request.ImportPath, request.FileNameWithoutExtension, (Siemens.Engineering.SW.ImportDocumentOptions)Enum.Parse(typeof(Siemens.Engineering.SW.ImportDocumentOptions), request.ImportOption)));
+                        if (request.Action == "verify") {
+                            LastImportedDocumentBlocks = request.ImportedNames; reply.Value = VerifyLastDocumentImport(request.SoftwarePath, request.GroupPath);
+                        }
+                        else reply.Value =
+                            AutoOffline(() =>
+                                ImportFromDocuments(request.SoftwarePath, request.GroupPath, request.ImportPath, request.FileNameWithoutExtension,
+                                    (Siemens.Engineering.SW.ImportDocumentOptions)Enum
+                                    .Parse(typeof(Siemens.Engineering.SW.ImportDocumentOptions), request.ImportOption)));
                         break;
-                    case "ImportPlcBlocksDocuments": reply.Blocks = ImportBlocksFromDocuments(request.SoftwarePath, request.GroupPath, request.ImportPath, request.RegexName, (Siemens.Engineering.SW.ImportDocumentOptions)Enum.Parse(typeof(Siemens.Engineering.SW.ImportDocumentOptions), request.ImportOption))?.Select(BlockRow).ToArray(); break;
+                    case "ImportPlcBlocksDocuments": reply.Blocks =
+                        ImportBlocksFromDocuments(request.SoftwarePath, request.GroupPath, request.ImportPath, request.RegexName,
+                            (Siemens.Engineering.SW.ImportDocumentOptions)Enum
+                            .Parse(typeof(Siemens.Engineering.SW.ImportDocumentOptions), request.ImportOption))
+                        ?.Select(BlockRow).ToArray(); break;
                 }
             }
             catch (Exception error)
             {
-                reply.Failure = new PlcSoftwareFailure { Code = error is PlcSoftwareException failure ? failure.Code : error.GetType().Name, Message = error.Message };
+                reply.Failure = new PlcSoftwareFailure {
+                    Code = error is PlcSoftwareException failure ? failure.Code : error.GetType().Name, Message = error.Message };
             }
-            reply.Events = exchange.Events; reply.ExportFailures = LastExportAsDocumentsFailures.ToArray(); reply.ImportFailures = LastImportFromDocumentsFailures.ToArray();
+            reply.Events = exchange.Events; reply.ExportFailures = LastExportAsDocumentsFailures.ToArray(); reply.ImportFailures =
+                LastImportFromDocumentsFailures.ToArray();
             reply.ImportedNames = LastImportedDocumentBlocks; reply.Scanned = LastImportFromDocumentsScanned; reply.Selected = LastImportFromDocumentsSelected;
-            reply.Attempted = LastImportFromDocumentsAttempted; reply.Succeeded = LastImportFromDocumentsSucceeded; reply.Stopped = LastImportFromDocumentsStopped;
-            reply.MayHaveChanged = exchange.Events.Any(e => e.Kind == "start"); reply.RequiresSessionReset = reply.MayHaveChanged && (reply.Failure != null || reply.Stopped);
+            reply.Attempted = LastImportFromDocumentsAttempted; reply.Succeeded = LastImportFromDocumentsSucceeded; reply.Stopped =
+                LastImportFromDocumentsStopped;
+            reply.MayHaveChanged = exchange.Events.Any(e => e.Kind == "start"); reply.RequiresSessionReset = reply.MayHaveChanged
+                && (reply.Failure != null || reply.Stopped);
             return reply;
         }
 #endif

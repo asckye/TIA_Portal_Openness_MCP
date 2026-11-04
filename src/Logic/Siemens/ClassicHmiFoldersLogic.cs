@@ -22,7 +22,8 @@ namespace TiaMcpServer.Siemens
         {
             RequireOneOf(kind, ScreenTreeKinds, "kind");
             if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
-            if (!string.IsNullOrEmpty(folderPath) && kind != "screens" && kind != "popups" && kind != "templates") throw new ArgumentException("folderPath applies to kind screens / popups / templates (slide-ins have no folders).");
+            if (!string.IsNullOrEmpty(folderPath) && kind != "screens" && kind != "popups" && kind != "templates")
+                throw new ArgumentException("folderPath applies to kind screens / popups / templates (slide-ins have no folders).");
             if (!string.IsNullOrEmpty(folderPath)) EngineeringPath.Parts(folderPath);
         }
 
@@ -31,7 +32,8 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] ObjectActions = { "read", "export", "import", "delete" };
         internal static readonly string[] SlideinTypes = { "Top", "Bottom", "Left", "Right" };
         internal static readonly string[] ImportOptionNames = { "None", "Override" };
-        internal static bool ValidateObjectRequest(string objectKind, string objectPath, string action, string filePath, string importOptions, bool confirmDelete, bool dryRun)
+        internal static bool ValidateObjectRequest(string objectKind, string objectPath, string action, string filePath, string importOptions,
+                bool confirmDelete, bool dryRun)
         {
             RequireOneOf(objectKind, ObjectKinds, "objectKind");
             RequireOneOf(action, ObjectActions, "action");
@@ -44,21 +46,27 @@ namespace TiaMcpServer.Siemens
             else if (action == "import")
             {
                 // the target folder; empty = the system folder (slide-ins always import into the system folder)
-                if (objectKind == "slidein") Refuse(objectPath, "objectPath", "does not apply to slide-in import (the slide-in system folder is the only target).");
+                if (objectKind == "slidein")
+                    Refuse(objectPath, "objectPath", "does not apply to slide-in import (the slide-in system folder is the only target).");
                 else if (!string.IsNullOrEmpty(objectPath)) EngineeringPath.Parts(objectPath);
             }
             else
             {
                 RequireName(objectPath, "objectPath", 1024);
-                if (objectKind == "slidein") { RequireOneOf(objectPath, SlideinTypes, "objectPath (slide-ins are addressed by SlideinType)"); if (action == "delete") throw new ArgumentException("Slide-in screens cannot be deleted (no native Delete)."); }
+                if (objectKind == "slidein") {
+                    RequireOneOf(objectPath, SlideinTypes, "objectPath (slide-ins are addressed by SlideinType)"); if (action == "delete")
+                        throw new ArgumentException("Slide-in screens cannot be deleted (no native Delete).");
+                }
                 else EngineeringPath.Parts(objectPath);
             }
-            if (action == "export" || action == "import") RequireAbsoluteFile(filePath, "filePath"); else Refuse(filePath, "filePath", "applies to export / import only.");
+            if (action == "export" || action == "import") RequireAbsoluteFile(filePath, "filePath"); else
+                Refuse(filePath, "filePath", "applies to export / import only.");
             if (action == "import") RequireOneOf(importOptions, ImportOptionNames, "importOptions");
             else if (!string.IsNullOrEmpty(importOptions) && importOptions != "None") throw new ArgumentException("importOptions applies to import only.");
             bool writing = (action == "import" || action == "delete") && !dryRun;
             if (action == "delete" && writing && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
-            if (action == "import" && writing && importOptions == "Override" && !confirmDelete) throw new ArgumentException("Import with Override replaces existing objects; confirmDelete=true is required.");
+            if (action == "import" && writing && importOptions == "Override" && !confirmDelete)
+                throw new ArgumentException("Import with Override replaces existing objects; confirmDelete=true is required.");
             return writing;
         }
 
@@ -70,9 +78,13 @@ namespace TiaMcpServer.Siemens
             RequireOneOf(folderKind, FolderKinds, "folderKind");
             RequireOneOf(action, FolderActions, "action");
             if (!string.IsNullOrEmpty(folderPath)) EngineeringPath.Parts(folderPath);
-            if (action == "create") { RequireName(newName, "newName"); if (newName.IndexOfAny(new[] { '/', '\\' }) >= 0) throw new ArgumentException("newName is one folder segment."); }
+            if (action == "create") {
+                RequireName(newName, "newName"); if (newName.IndexOfAny(new[] { '/', '\\' }) >= 0)
+                    throw new ArgumentException("newName is one folder segment.");
+            }
             else Refuse(newName, "newName", "applies to create only.");
-            if (action == "delete" && string.IsNullOrEmpty(folderPath)) throw new ArgumentException("The system folder cannot be deleted; folderPath must name a user folder.");
+            if (action == "delete" && string.IsNullOrEmpty(folderPath))
+                throw new ArgumentException("The system folder cannot be deleted; folderPath must name a user folder.");
             bool writing = action != "read" && !dryRun;
             if (action == "delete" && writing && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
             return writing;
@@ -85,12 +97,14 @@ namespace TiaMcpServer.Siemens
             RequireOneOf(action, GraphicActions, "action");
             if (action == "list" || action == "import") Refuse(name, "name", "applies to read / export / delete.");
             else RequireName(name, "name");
-            if (action == "export" || action == "import") RequireAbsoluteFile(filePath, "filePath"); else Refuse(filePath, "filePath", "applies to export / import only.");
+            if (action == "export" || action == "import") RequireAbsoluteFile(filePath, "filePath"); else
+                Refuse(filePath, "filePath", "applies to export / import only.");
             if (action == "import") RequireOneOf(importOptions, ImportOptionNames, "importOptions");
             else if (!string.IsNullOrEmpty(importOptions) && importOptions != "None") throw new ArgumentException("importOptions applies to import only.");
             bool writing = (action == "import" || action == "delete") && !dryRun;
             if (action == "delete" && writing && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
-            if (action == "import" && writing && importOptions == "Override" && !confirmDelete) throw new ArgumentException("Import with Override replaces existing graphics; confirmDelete=true is required.");
+            if (action == "import" && writing && importOptions == "Override" && !confirmDelete)
+                throw new ArgumentException("Import with Override replaces existing graphics; confirmDelete=true is required.");
             return writing;
         }
     }

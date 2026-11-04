@@ -7,7 +7,8 @@ internal static class DisconnectContract
     internal static JsonObject Recovery(JsonObject acknowledgement, bool requiresTiaRestart, string? priorUnknownRequestId)
     {
         acknowledgement["RequiresTiaRestart"] = requiresTiaRestart;
-        acknowledgement["RecoveryMessage"] = requiresTiaRestart ? TiaOpenness.Shared.SessionBehavior.TiaRestartRequired : TiaOpenness.Shared.SessionBehavior.DetachedAfterUnknown;
+        acknowledgement["RecoveryMessage"] = requiresTiaRestart ? TiaOpenness.Shared.SessionBehavior.TiaRestartRequired : TiaOpenness.Shared.SessionBehavior
+            .DetachedAfterUnknown;
         acknowledgement["PriorUnknownRequestId"] = priorUnknownRequestId;
         TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(
             TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId,
@@ -41,8 +42,11 @@ internal static class DisconnectContract
         if (data.ContainsKey("RequiresTiaRestart"))
         {
             bool? restart = Flag(data, "RequiresTiaRestart");
-            if (restart == null || Text(data, "RecoveryMessage") != (restart.Value ? TiaOpenness.Shared.SessionBehavior.TiaRestartRequired : TiaOpenness.Shared.SessionBehavior.DetachedAfterUnknown)
-                || !data.ContainsKey("PriorUnknownRequestId") || data["PriorUnknownRequestId"] != null && (Text(data, "PriorUnknownRequestId") is not string prior || prior.Length > 128)
+            if (restart == null
+                    || Text(data, "RecoveryMessage") != (restart.Value ? TiaOpenness.Shared.SessionBehavior.TiaRestartRequired : TiaOpenness.Shared
+                        .SessionBehavior.DetachedAfterUnknown)
+                || !data.ContainsKey("PriorUnknownRequestId") || data["PriorUnknownRequestId"] != null
+                    && (Text(data, "PriorUnknownRequestId") is not string prior || prior.Length > 128)
                 || restart == true && (acknowledged || detached))
                 throw new IOException("Malformed recovery Disconnect acknowledgement.");
         }

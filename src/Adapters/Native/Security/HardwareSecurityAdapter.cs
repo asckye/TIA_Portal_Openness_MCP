@@ -22,7 +22,8 @@ namespace TiaMcp.Adapters.Native.Security
         private static HmiObject ReadAccessRule(object rule, string tableProperty)
         {
             var row = HmiScalar.Read(rule);
-            row["tableName"] = rule switch { WatchTableAccessRule w => w.WatchTable?.Name, ForceTableAccessRule f => f.ForceTable?.Name, _ => LinkName(rule, tableProperty) };
+            row["tableName"] = rule switch {
+                WatchTableAccessRule w => w.WatchTable?.Name, ForceTableAccessRule f => f.ForceTable?.Name, _ => LinkName(rule, tableProperty) };
             row["ruleClass"] = rule.GetType().Name;
             return row;
         }
@@ -35,23 +36,28 @@ namespace TiaMcp.Adapters.Native.Security
                 bool writing = action != "read" && !dryRun;
                 if (action != "read") _session.Validate("confirmation");
                 using var exclusive = writing ? _session.AcquireHmiEditAccess() : null;
-                var item = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("Exact CPU DeviceItem path required.");
-                var manager = item.GetService<WatchAndForceTableAccessManager>() ?? throw new NotSupportedException("WatchAndForceTableAccessManager unavailable on this DeviceItem.");
+                var item = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem
+                    ?? throw new ArgumentException("Exact CPU DeviceItem path required.");
+                var manager = item.GetService<WatchAndForceTableAccessManager>()
+                    ?? throw new NotSupportedException("WatchAndForceTableAccessManager unavailable on this DeviceItem.");
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["watchTableRules"] = new HmiArray(manager.WatchtableAccessRules.Select(r => (object?)ReadAccessRule(r, "WatchTable")).ToArray());
                 meta["forceTableRules"] = new HmiArray(manager.ForcetableAccessRules.Select(r => (object?)ReadAccessRule(r, "ForceTable")).ToArray());
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
                 if (action == "read") return "Web-server watch/force table access rules read; no change.";
-                var requested = (WatchAndForceTableAccess)Enum.Parse(typeof(WatchAndForceTableAccess), SecurityCatalog.RequireOneOf(access, new[] { "None", "Read", "Write" }, "access"));
+                var requested = (WatchAndForceTableAccess)Enum
+                    .Parse(typeof(WatchAndForceTableAccess), SecurityCatalog.RequireOneOf(access, new[] { "None", "Read", "Write" }, "access"));
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
                 var parts = HardwareGroupOperations.Parts(tablePath);
                 var group = HardwareGroupOperations.Group(plc.WatchAndForceTableGroup, string.Join("/", parts.Take(parts.Length - 1)));
                 var table = HardwareGroupOperations.Find(HardwareGroupOperations.Get(group, tableKind == "watch" ? "WatchTables" : "ForceTables"), parts.Last())
                     ?? throw new PortalException(PortalErrorCode.NotFound, "Exact " + tableKind + " table not found: " + tablePath);
                 meta["tablePath"] = tablePath; meta["requestedAccess"] = requested.ToString();
-                WatchTableAccessRuleComposition watchRules = manager.WatchtableAccessRules; ForceTableAccessRuleComposition forceRules = manager.ForcetableAccessRules;
+                WatchTableAccessRuleComposition watchRules = manager.WatchtableAccessRules; ForceTableAccessRuleComposition forceRules = manager
+                    .ForcetableAccessRules;
                 object? Existing() => tableKind == "watch" ? (object?)watchRules.Find((PlcWatchTable)table) : forceRules.Find((PlcForceTable)table);
-                object Create() => tableKind == "watch" ? (object)watchRules.Create((PlcWatchTable)table, requested) : forceRules.Create((PlcForceTable)table, requested);
+                object Create() => tableKind == "watch" ? (object)watchRules.Create((PlcWatchTable)table, requested) : forceRules
+                    .Create((PlcForceTable)table, requested);
                 var existing = Existing();
                 meta["before"] = existing == null ? null : ReadAccessRule(existing, tableKind == "watch" ? "WatchTable" : "ForceTable");
                 if (action == "unassign")
@@ -59,13 +65,15 @@ namespace TiaMcp.Adapters.Native.Security
                     if (existing == null) throw new PortalException(PortalErrorCode.NotFound, "No access rule exists for this table.");
                     if (dryRun) return "Unassign preview; nothing changed.";
                     meta["mayHaveChanged"] = true;
-                    if (existing is WatchTableAccessRule watchRule) watchRule.Delete(); else if (existing is ForceTableAccessRule forceRule) forceRule.Delete(); else HardwareGroupOperations.Call(existing, "Delete", Type.EmptyTypes);
+                    if (existing is WatchTableAccessRule watchRule) watchRule.Delete(); else if (existing is ForceTableAccessRule forceRule) forceRule.Delete();
+                    else HardwareGroupOperations.Call(existing, "Delete", Type.EmptyTypes);
                     if (Existing() != null) throw new InvalidOperationException("Access rule remains after Delete.");
                     meta["verifiedAbsent"] = true;
                     return "Table access rule removed and verified; project not saved, compiled or downloaded.";
                 }
                 var accessProperty = existing?.GetType().GetProperty("Access");
-                if (existing != null && Equals(accessProperty?.GetValue(existing), requested)) { meta["alreadyAssigned"] = true; return "Access rule already matches; nothing to change."; }
+                if (existing != null && Equals(accessProperty?.GetValue(existing), requested)) {
+                    meta["alreadyAssigned"] = true; return "Access rule already matches; nothing to change."; }
                 if (dryRun) return "Assign preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
                 if (existing is WatchTableAccessRule existingWatch) existingWatch.Access = requested;
@@ -73,7 +81,8 @@ namespace TiaMcp.Adapters.Native.Security
                 else if (existing != null) accessProperty!.SetValue(existing, requested);
                 else Create();
                 var after = Existing() ?? throw new InvalidOperationException("Rule missing after assign.");
-                if (!Equals(after.GetType().GetProperty("Access")?.GetValue(after), requested)) throw new InvalidOperationException("Access readback differs from requested value.");
+                if (!Equals(after.GetType().GetProperty("Access")?.GetValue(after), requested))
+                    throw new InvalidOperationException("Access readback differs from requested value.");
                 meta["after"] = ReadAccessRule(after, tableKind == "watch" ? "WatchTable" : "ForceTable");
                 return "Table access rule assigned and read back; project not saved, compiled or downloaded.";
             });
@@ -84,7 +93,8 @@ namespace TiaMcp.Adapters.Native.Security
             // envelope: legacy-ok-only
             if (_session.IsProjectNull()) return new HmiObject { ["ok"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." };
             var device = _session.GetDevice(devicePath);
-            if (device == null) return new HmiObject { ["ok"] = false, ["failureCode"] = "NOT_FOUND", ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
+            if (device == null) return new HmiObject {
+                ["ok"] = false, ["failureCode"] = "NOT_FOUND", ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
 
             DeviceItem? item;
             string? attrName;
@@ -124,7 +134,10 @@ namespace TiaMcp.Adapters.Native.Security
             try { item.SetAttribute(attrName, enable); }
             catch (Exception ex)
             {
-                return new HmiObject { ["ok"] = false, ["mayHaveChanged"] = true, ["writeOutcomeKnown"] = false, ["device"] = device.Name, ["attributeName"] = attrName, ["message"] = $"SetAttribute failed: {ex.Message}" };
+                return new HmiObject {
+                    ["ok"] = false, ["mayHaveChanged"] = true, ["writeOutcomeKnown"] = false, ["device"] = device.Name, ["attributeName"] = attrName,
+                        ["message"] = $"SetAttribute failed: {ex.Message}"
+                };
             }
             object? after = null; try { after = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): Optional PUT/GET readback must not suppress the write attempt or its result. */ }
 
@@ -167,7 +180,8 @@ namespace TiaMcp.Adapters.Native.Security
                 if (PlcProtectionRules.LevelActions.Contains(act) && accessProvider == null)
                     throw new NotSupportedException("PlcAccessLevelProvider is not available on this device item (not an S7-1200/1500 CPU?).");
                 if (PlcProtectionRules.MasterSecretActions.Contains(act) && secretProvider == null)
-                    throw new NotSupportedException("PlcMasterSecretConfigurator is not available on this device item (needs an S7-1500 FW >= 2.9 / S7-1200 FW >= 4.5 CPU).");
+                    throw new NotSupportedException("PlcMasterSecretConfigurator is not available on this device item (needs an S7-1500 FW >= 2.9 / S7-1200 " +
+                        "FW >= 4.5 CPU).");
                 if (act == "setAccessPassword" || act == "resetAccessPassword")
                 {
                     var current = ((HmiObject)meta["before"]!)["accessLevel"]?.ToString() ?? "";
@@ -175,7 +189,8 @@ namespace TiaMcp.Adapters.Native.Security
                     if (warning != null) meta["warning"] = warning;
                 }
                 if (act == "setAccessLevel" && PlcProtectionRules.NeedsFullAccessPassword(level))
-                    meta["note"] = "TIA's hardware compile requires the FullAccess password once the level is " + level + " - set it with action setAccessPassword accessLevel FullAccess.";
+                    meta["note"] = "TIA's hardware compile requires the FullAccess password once the level is " + level
+                        + " - set it with action setAccessPassword accessLevel FullAccess.";
                 meta["plan"] = DescribeProtectionPlan(act, level);
                 if (dryRun) return "Preview: " + meta["plan"] + " Set dryRun=false and confirmChange=true to execute.";
                 _session.Validate("confirmation");
@@ -233,7 +248,8 @@ namespace TiaMcp.Adapters.Native.Security
                 {
                     var readback = after["accessLevel"]?.ToString() ?? "";
                     meta["readbackVerified"] = string.Equals(readback, level, StringComparison.Ordinal);
-                    if (!HmiValues.GetValue<bool>(meta["readbackVerified"])) throw new InvalidOperationException("Access level readback is '" + readback + "', not '" + level + "'.");
+                    if (!HmiValues.GetValue<bool>(meta["readbackVerified"]))
+                        throw new InvalidOperationException("Access level readback is '" + readback + "', not '" + level + "'.");
                 }
                 else if (PlcProtectionRules.MasterSecretActions.Contains(act) && act != "changeMasterSecret")
                 {
@@ -241,7 +257,9 @@ namespace TiaMcp.Adapters.Native.Security
                     var expected = PlcProtectionRules.ExpectedMasterSecretStates(act, !string.IsNullOrEmpty(password));
                     meta["expectedMasterSecret"] = string.Join("|", expected);
                     meta["readbackVerified"] = expected.Contains(state, StringComparer.Ordinal);
-                    if (!expected.Contains(state, StringComparer.Ordinal)) throw new InvalidOperationException("MasterSecretConfiguration read back as '" + state + "', expected " + string.Join(" / ", expected) + ".");
+                    if (!expected.Contains(state, StringComparer.Ordinal))
+                        throw new InvalidOperationException("MasterSecretConfiguration read back as '" + state + "', expected " + string.Join(" / ", expected)
+                            + ".");
                 }
                 else meta["readbackVerified"] = "password actions have no readable state; TIA raised no exception";
                 return "PLC protection " + act + " executed on '" + cpu.Name + "'; state read back in meta.after. Hardware not compiled, project not saved.";
@@ -252,7 +270,9 @@ namespace TiaMcp.Adapters.Native.Security
             var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
             if (owner is DeviceItem given && given.Classification == DeviceItemClassifications.CPU) { meta["cpu"] = given.Name; return given; }
             // An empty item path (or the device / rail) resolves to the CPU item of the station, the same object the TIA UI edits.
-            var cpu = FindCpuItem(owner) ?? throw new InvalidOperationException("No CPU device item found under '" + owner.Name + "'; give the CPU item path (e.g. [\"导轨_0\",\"PLC_1\"]).");
+            var cpu = FindCpuItem(owner)
+                ?? throw new InvalidOperationException("No CPU device item found under '" + owner.Name
+                    + "'; give the CPU item path (e.g. [\"导轨_0\",\"PLC_1\"]).");
             meta["cpu"] = cpu.Name;
             return cpu;
         }
@@ -291,14 +311,17 @@ namespace TiaMcp.Adapters.Native.Security
 #if SECURITY_ACCESS_CONTROL
             if (control != null)
             {
-                try { state["accessControl"] = control.PlcAccessControlConfiguration.ToString(); } catch (Exception ex) { state["accessControlError"] = ex.Message; }
+                try { state["accessControl"] = control.PlcAccessControlConfiguration.ToString(); } catch (Exception ex) {
+                    state["accessControlError"] = ex.Message; }
 #if SECURITY_UMC_EXTENDED
                 try { state["umcServerAddress"] = control.UmcServerAddress; } catch (Exception) { /* swallow(probe-optional): The UMC server address is absent when access control is not configured. */ /* not configured */ }
 #endif
             }
 #endif
             state["accessControlProviderPresent"] = control != null;
-            state["meaning"] = "masterSecret: None = 'Protect confidential PLC configuration data' unchecked; WithoutPassword = checked without a password (TIA's hardware compile refuses the download); WithPassword / WithPasswordAllDataProtection = password configured.";
+            state["meaning"] =
+                "masterSecret: None = 'Protect confidential PLC configuration data' unchecked; WithoutPassword = checked without a password (TIA's hardware " +
+                "compile refuses the download); WithPassword / WithPasswordAllDataProtection = password configured.";
             return state;
         }
 

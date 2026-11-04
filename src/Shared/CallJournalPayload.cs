@@ -132,7 +132,9 @@ namespace TiaOpenness.Shared
             foreach (Match match in Regex.Matches(text, @"(?i)\b(?:Bearer|Basic)\s+([^\s""'<>\\,;]+)", options, timeout))
                 if (match.Groups[1].Value != Hidden) secrets.Add(match.Groups[1].Value);
             if (boundedText) { RedactPairs(text, secrets); return; }
-            foreach (Match match in Regex.Matches(text, @"(?i)\b[\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*[=:]\s*([^\s&;,""'<>]+)", RegexOptions.None, TimeSpan.FromSeconds(1)))
+            foreach (Match match in Regex
+                    .Matches(text, @"(?i)\b[\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*[=:]\s*([^\s&;,""'<>]+)", RegexOptions.None,
+                        TimeSpan.FromSeconds(1)))
                 if (match.Groups[1].Value != Hidden) secrets.Add(match.Groups[1].Value);
         }
 
@@ -184,7 +186,9 @@ namespace TiaOpenness.Shared
             var options = boundedText ? RegexOptions.CultureInvariant : RegexOptions.None;
             text = Regex.Replace(text, @"(?i)\b(Bearer|Basic)\s+[^\s""'<>\\,;]+", "$1 " + Hidden, options, timeout);
             text = boundedText ? RedactPairs(text, null)
-                : Regex.Replace(text, @"(?i)\b([\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*[=:]\s*)[^\s&;,""'<>]+", "$1" + Hidden, RegexOptions.None, timeout);
+                : Regex
+                    .Replace(text, @"(?i)\b([\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*[=:]\s*)[^\s&;,""'<>]+", "$1" + Hidden,
+                        RegexOptions.None, timeout);
             text = Regex.Replace(text, @"(?i)(https?://)[^/\s@]+@", "$1" + Hidden + "@", options, timeout);
             return Regex.Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", Hidden, options, timeout);
         }

@@ -51,7 +51,8 @@ namespace TiaMcp.Adapters.Hardware
             catch (Exception ex)
             {
                 throw new HardwareAddressingException("OpennessError",
-                    "Type group creation failed at '" + prefix + "'. Groups already created (not rolled back): " + "[" + string.Join(",", created.Select(value => Quote((string)value!))) + "]" + ". " + ex.Message);
+                    "Type group creation failed at '" + prefix + "'. Groups already created (not rolled back): " + "[" + string
+                        .Join(",", created.Select(value => Quote((string)value!))) + "]" + ". " + ex.Message);
             }
             var result = PlcFoundationEngine.HardwareStepMeta(null, true);
             foreach (var pair in new Dictionary<string, object?> { ["groupPath"] = string.Join("/", parts),

@@ -61,8 +61,10 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public static PlcExternalSource CreateFrom(PlcExternalSourceComposition sources, MasterCopy copy) => sources.CreateFrom(copy);
 #if PLC_SOURCE_TARGET
-        public static IList<IEngineeringObject> Generate(PlcExternalSource source, PlcBlockUserGroup target, GenerateBlockOption option) => source.GenerateBlocksFromSource(target, option);
-        public static IList<IEngineeringObject> Generate(PlcExternalSource source, PlcTypeUserGroup target, GenerateBlockOption option) => source.GenerateBlocksFromSource(target, option);
+        public static IList<IEngineeringObject> Generate(PlcExternalSource source, PlcBlockUserGroup target, GenerateBlockOption option) => source
+            .GenerateBlocksFromSource(target, option);
+        public static IList<IEngineeringObject> Generate(PlcExternalSource source, PlcTypeUserGroup target, GenerateBlockOption option) => source
+            .GenerateBlocksFromSource(target, option);
 #endif
 
         public static object Attribute(IEngineeringObject value, string name) => value.GetAttribute(name);
@@ -82,7 +84,8 @@ namespace TiaMcp.Adapters.Native.Plc
 #endif
 
 #if PLC_DOCUMENT_EXPORT
-        public static DocumentExportResult ExportOptional(PlcBlockGroup group, string directory, string name) => group?.Blocks.FindBlock(name)?.ExportAsDocuments(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory)), name);
+        public static DocumentExportResult ExportOptional(PlcBlockGroup group, string directory, string name) => group?.Blocks.FindBlock(name)?
+            .ExportAsDocuments(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory)), name);
         public static DocumentExportResult Export(PlcBlock block, DirectoryInfo directory, string name) => block.ExportAsDocuments(directory, name);
         public static DocumentImportResultForBlocks Import(PlcBlockComposition blocks, DirectoryInfo directory, string name, ImportDocumentOptions option) => blocks.ImportFromDocuments(directory, name, option);
         public static DocumentResultState State(DocumentExportResult result) => result.State;
@@ -106,7 +109,8 @@ namespace TiaMcp.Adapters.Native.Plc
 
 #endif
 
-        public static PlcExternalSource CreateFrom(PlcExternalSourceComposition sources, MasterCopy copy, MasterCopyMode mode) => sources.CreateFrom(copy, mode);
+        public static PlcExternalSource CreateFrom(PlcExternalSourceComposition sources, MasterCopy copy, MasterCopyMode mode) => sources
+            .CreateFrom(copy, mode);
 
 
         public static PlcBlockComposition Blocks(PlcSystemBlockGroup group) => group.Blocks;

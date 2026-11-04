@@ -18,7 +18,8 @@ internal sealed class ProjectLifecycleDeviceTools
 {
     private readonly ProjectLifecyclePortService _service;
     public ProjectLifecycleDeviceTools(ProjectLifecyclePortService service) => _service = service;
-        [McpServerTool(Name = "ValidateAutomationContext"), Description("[L1][Diagnostics]Preflight current project for automation: devices, software, expected PLC/HMI paths, and project tree.")]
+        [McpServerTool(Name = "ValidateAutomationContext"),
+                Description("[L1][Diagnostics]Preflight current project for automation: devices, software, expected PLC/HMI paths, and project tree.")]
         public CallToolResult ValidateAutomationContextV4(
             [Description("expectedPlcSoftwarePath: expected PLC software path, empty to skip")] string expectedPlcSoftwarePath = "PLC_1",
             [Description("expectedHmiSoftwarePath: expected HMI software path, empty to skip")] string expectedHmiSoftwarePath = "HMI_RT_1")

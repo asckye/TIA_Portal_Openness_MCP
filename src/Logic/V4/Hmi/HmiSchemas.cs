@@ -60,7 +60,8 @@ namespace TiaMcp.Logic.V4.Hmi
                 definitions[type.Name] = new JsonObject();
                 var union = HmiContracts.Union(type);
                 if (union != null)
-                    definitions[type.Name] = new JsonObject { ["oneOf"] = new JsonArray(union.Values.Select(t => (JsonNode)Describe(t, definitions)).ToArray()) };
+                    definitions[type.Name] = new JsonObject { ["oneOf"] = new JsonArray(union.Values.Select(t => (JsonNode)Describe(t, definitions)).ToArray())
+                    };
                 else
                 {
                     var properties = new JsonObject();
@@ -128,7 +129,8 @@ namespace TiaMcp.Logic.V4.Hmi
             {
                 if (!schema.ContainsKey("type")) return; // Classic properties are closed DTO references.
                 schema["propertyNames"] = new JsonObject { ["pattern"] = "\\S" };
-                if (owner == typeof(UnifiedIoFieldItem) && field == "properties") schema["propertyNames"] = new JsonObject { ["enum"] = Strings(HmiRules.IoProperties) };
+                if (owner == typeof(UnifiedIoFieldItem) && field == "properties") schema["propertyNames"] = new JsonObject {
+                    ["enum"] = Strings(HmiRules.IoProperties) };
                 if (owner == typeof(UnifiedRectangleItem) && field == "properties") schema["propertyNames"] = RectangleNames();
                 if (owner == typeof(UnifiedScreen)) schema["propertyNames"] = new JsonObject { ["pattern"] = "\\S",
                     ["not"] = new JsonObject { ["enum"] = new JsonArray("Name", "Width", "Height") } };
@@ -136,27 +138,48 @@ namespace TiaMcp.Logic.V4.Hmi
         }
 
         private static JsonObject RectangleNames() => new JsonObject { ["pattern"] = "\\S",
-            ["not"] = new JsonObject { ["pattern"] = "^\\s*([Ff][Oo][Rr][Ee][Cc][Oo][Ll][Oo][Rr]|[Tt][Ee][Xx][Tt]|[Ff][Oo][Nn][Tt]|[Cc][Oo][Nn][Tt][Ee][Nn][Tt]|[Pp][Aa][Dd][Dd][Ii][Nn][Gg])\\s*$" } };
+            ["not"] = new JsonObject {
+                ["pattern"] =
+                    "^\\s*([Ff][Oo][Rr][Ee][Cc][Oo][Ll][Oo][Rr]|[Tt][Ee][Xx][Tt]|[Ff][Oo][Nn][Tt]|[Cc][Oo][Nn][Tt][Ee][Nn][Tt]|[Pp][Aa][Dd][Dd][Ii][Nn][Gg])\\s*$"
+            } };
 
         private static void CrossFieldConstraints(Type type, JsonObject schema)
         {
-            if (type == typeof(ClassicScreenSpec)) schema["$comment"] = "Runtime also enforces case-insensitive unique names and containment in the selected screen (default 640x480).";
+            if (type == typeof(ClassicScreenSpec)) schema["$comment"] =
+                "Runtime also enforces case-insensitive unique names and containment in the selected screen (default 640x480).";
             if (type == typeof(ClassicTagTableSpec)) schema["$comment"] = "Runtime also enforces case-insensitive unique tag names.";
-            if (type == typeof(ClassicTag)) schema["$comment"] = "Runtime requires connection and controllerTag to be either both nonblank or both blank/absent.";
-            if (type == typeof(DeviceAmlSpec)) schema["$comment"] = "Runtime enforces at most 5000 device items across all devices and item depth 0..8. JSON depth remains 64; current H parsers have no character/string-length cap.";
+            if (type == typeof(ClassicTag)) schema["$comment"] =
+                "Runtime requires connection and controllerTag to be either both nonblank or both blank/absent.";
+            if (type == typeof(DeviceAmlSpec)) schema["$comment"] =
+                "Runtime enforces at most 5000 device items across all devices and item depth 0..8. JSON depth remains 64; current H parsers have no " +
+                "character/string-length cap.";
             if (type == typeof(DeviceItemSpec))
                 schema["anyOf"] = new JsonArray(
-                    new JsonObject { ["required"] = new JsonArray("builtIn"), ["properties"] = new JsonObject { ["builtIn"] = new JsonObject { ["const"] = true } } },
-                    new JsonObject { ["required"] = new JsonArray("role"), ["properties"] = new JsonObject { ["role"] = new JsonObject { ["pattern"] = "^\\s*(CommunicationInterface|CommunicationPort)\\s*$" } } },
-                    new JsonObject { ["required"] = new JsonArray("typeIdentifier"), ["properties"] = new JsonObject { ["typeIdentifier"] = new JsonObject { ["pattern"] = "\\S" } } });
-            if (type == typeof(AmlNodeSpec)) schema["$comment"] = "networkAddress: empty, IPAddress.TryParse-compatible address or digits; preserved by the runtime validator.";
+                    new JsonObject {
+                        ["required"] = new JsonArray("builtIn"), ["properties"] = new JsonObject { ["builtIn"] = new JsonObject { ["const"] = true } } },
+                    new JsonObject {
+                        ["required"] = new JsonArray("role"), ["properties"] = new JsonObject {
+                            ["role"] = new JsonObject { ["pattern"] = "^\\s*(CommunicationInterface|CommunicationPort)\\s*$" } }
+                    },
+                    new JsonObject {
+                        ["required"] = new JsonArray("typeIdentifier"), ["properties"] = new JsonObject {
+                            ["typeIdentifier"] = new JsonObject { ["pattern"] = "\\S" } }
+                    });
+            if (type == typeof(AmlNodeSpec)) schema["$comment"] =
+                "networkAddress: empty, IPAddress.TryParse-compatible address or digits; preserved by the runtime validator.";
             if (type == typeof(LayoutItem))
             {
                 schema["allOf"] = new JsonArray(
-                    new JsonObject { ["if"] = new JsonObject { ["required"] = new JsonArray("type"), ["properties"] = new JsonObject { ["type"] = new JsonObject { ["const"] = "IOField" } } },
-                        ["then"] = new JsonObject { ["properties"] = new JsonObject { ["properties"] = new JsonObject { ["propertyNames"] = new JsonObject { ["enum"] = Strings(HmiRules.IoProperties) } } } } },
+                    new JsonObject {
+                        ["if"] = new JsonObject {
+                            ["required"] = new JsonArray("type"), ["properties"] = new JsonObject { ["type"] = new JsonObject { ["const"] = "IOField" } } },
+                        ["then"] = new JsonObject {
+                            ["properties"] = new JsonObject {
+                                ["properties"] = new JsonObject { ["propertyNames"] = new JsonObject { ["enum"] = Strings(HmiRules.IoProperties) } } }
+                        } },
                     new JsonObject { ["if"] = new JsonObject { ["properties"] = new JsonObject { ["type"] = new JsonObject { ["const"] = "Rectangle" } } },
-                        ["then"] = new JsonObject { ["properties"] = new JsonObject { ["text"] = false, ["font"] = false, ["content"] = false, ["padding"] = false,
+                        ["then"] = new JsonObject {
+                            ["properties"] = new JsonObject { ["text"] = false, ["font"] = false, ["content"] = false, ["padding"] = false,
                             ["properties"] = new JsonObject { ["propertyNames"] = RectangleNames() } } } });
             }
         }

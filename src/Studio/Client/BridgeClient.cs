@@ -190,7 +190,9 @@ namespace TiaOpenness.Client
             CancellationToken cancellation = default)
         {
             cancellation.ThrowIfCancellationRequested();
-            if (_faulted) throw new InvalidOperationException("The previous native call has no reliable outcome. Restart Studio and inspect the project before retrying.");
+            if (_faulted)
+                throw new InvalidOperationException("The previous native call has no reliable outcome. Restart Studio and inspect the project before " +
+                "retrying.");
             if (!IsRunning) throw new InvalidOperationException("The bridge is not running. Call Start first.");
 
             var payload = BridgeJson.ToElement(parameters ?? new { });

@@ -321,7 +321,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public sealed class FlgNetCallParameter
     {
-        private FlgNetCallParameter(string parameterName, string section, string dataType, FlgNetSourceKind sourceKind, string constantValue, string[] symbolPath)
+        private FlgNetCallParameter(string parameterName, string section, string dataType, FlgNetSourceKind sourceKind, string constantValue,
+                string[] symbolPath)
         {
             ParameterName = parameterName;
             Section = section;

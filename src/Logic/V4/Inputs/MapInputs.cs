@@ -79,7 +79,8 @@ namespace TiaMcp.Logic.V4.Inputs
 
         // PlcTagEditingLogic.cs:48-66. Active culture membership is supplied by the
         // caller (the parser's later native validation), while SDK keys remain exact.
-        public static InputContract<AttributeMap<string>> Comments(IReadOnlyCollection<string>? activeCultures = null, bool requireCultureInfo = false, int minimum = 1)
+        public static InputContract<AttributeMap<string>> Comments(IReadOnlyCollection<string>? activeCultures = null, bool requireCultureInfo = false,
+                int minimum = 1)
             => new InputContract<AttributeMap<string>>(InputSchema.Map(InputSchema.String(), minimum,
                 keys: InputSchema.String(16, 1)), new InputBudget(), values =>
             {

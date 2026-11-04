@@ -24,7 +24,9 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class HostMetaTools
     {
-        [McpServerTool(Name = "RunOnlineMonitoringSafetySelfTest"), Description("[L0][Diagnostics]Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, open projects, modify watch tables, write PLC values, or expose forced-value operations.")]
+        [McpServerTool(Name = "RunOnlineMonitoringSafetySelfTest"),
+                Description("[L0][Diagnostics]Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, " +
+                "open projects, modify watch tables, write PLC values, or expose forced-value operations.")]
         public CallToolResult RunOnlineMonitoringSafetySelfTestV4()
             => SessionToolContract.Run("RunOnlineMonitoringSafetySelfTest", false, false, () => RunOnlineMonitoringSafetySelfTest());
 
@@ -143,22 +145,33 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error running online monitoring safety self-test: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error running online monitoring safety self-test: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "GenerateAcceptanceReport"), Description("[L0][Reports]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to TIA or write to the project; it writes Markdown/JSON report files to outputDirectory.")]
+        [McpServerTool(Name = "GenerateAcceptanceReport"),
+                Description("[L0][Reports]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to " +
+                "TIA or write to the project; it writes Markdown/JSON report files to outputDirectory.")]
         public Task<CallToolResult> GenerateAcceptanceReportV4(
-            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory = "",
-            [Description("When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA Portal.")] bool connectIfNeeded = false,
+            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory =
+                "",
+            [Description("When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA " +
+                "Portal.")] bool connectIfNeeded =
+                false,
             [Description("When true, include project tree output if a project is open.")] bool includeProjectTree = false,
             [Description("When true, enumerate TIA process/project details. This may be slow if TIA is contended.")] bool inspectPortalProcesses = false,
             [Description("Optional report title.")] string title = "TIA MCP Acceptance Report")
-            => SessionToolContract.RunAsync("GenerateAcceptanceReport", true, false, () => GenerateAcceptanceReport(outputDirectory, connectIfNeeded, includeProjectTree, inspectPortalProcesses, title));
+            => SessionToolContract
+                .RunAsync("GenerateAcceptanceReport", true, false, () =>
+                    GenerateAcceptanceReport(outputDirectory, connectIfNeeded, includeProjectTree, inspectPortalProcesses, title));
 
         public async Task<ResponseAcceptanceReport> GenerateAcceptanceReport(
-            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory = "",
-            [Description("When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA Portal.")] bool connectIfNeeded = false,
+            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory =
+                "",
+            [Description("When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA " +
+                "Portal.")] bool connectIfNeeded =
+                false,
             [Description("When true, include project tree output if a project is open.")] bool includeProjectTree = false,
             [Description("When true, enumerate TIA process/project details. This may be slow if TIA is contended.")] bool inspectPortalProcesses = false,
             [Description("Optional report title.")] string title = "TIA MCP Acceptance Report")
@@ -212,23 +225,31 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GenerateErrorReport"), Description("[L0][Reports]Generate a standardized Markdown/JSON error report. This is file/report generation only; it does not touch TIA Portal or modify projects.")]
+        [McpServerTool(Name = "GenerateErrorReport"),
+                Description("[L0][Reports]Generate a standardized Markdown/JSON error report. This is file/report generation only; it does not touch TIA " +
+                "Portal or modify projects.")]
         public CallToolResult GenerateErrorReportV4(
-            [Description("Machine-readable error code, for example CompileError, HmiBindingError, TiaSessionContention, UnexpectedOpennessError.")] string errorCode,
+            [Description("Machine-readable error code, for example CompileError, HmiBindingError, TiaSessionContention, " +
+                "UnexpectedOpennessError.")] string errorCode,
             [Description("Short human-readable summary.")] string summary,
             [Description("Detailed error text, stack trace, compile message, or diagnostic context.")] string detail = "",
             [Description("Comma-separated next actions.")] string recommendedNextActions = "",
             [Description("Severity: info, warn, error, critical.")] string severity = "error",
-            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory = "")
-            => SessionToolContract.Run("GenerateErrorReport", true, false, () => GenerateErrorReport(errorCode, summary, detail, recommendedNextActions, severity, outputDirectory));
+            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory =
+                "")
+            => SessionToolContract
+                .Run("GenerateErrorReport", true, false, () =>
+                    GenerateErrorReport(errorCode, summary, detail, recommendedNextActions, severity, outputDirectory));
 
         public ResponseErrorReport GenerateErrorReport(
-            [Description("Machine-readable error code, for example CompileError, HmiBindingError, TiaSessionContention, UnexpectedOpennessError.")] string errorCode,
+            [Description("Machine-readable error code, for example CompileError, HmiBindingError, TiaSessionContention, " +
+                "UnexpectedOpennessError.")] string errorCode,
             [Description("Short human-readable summary.")] string summary,
             [Description("Detailed error text, stack trace, compile message, or diagnostic context.")] string detail = "",
             [Description("Comma-separated next actions.")] string recommendedNextActions = "",
             [Description("Severity: info, warn, error, critical.")] string severity = "error",
-            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory = "")
+            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory =
+                "")
         {
             try
             {
@@ -288,9 +309,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         public Task<ResponseCapabilitySelfTest> RunCapabilitySelfTest(
-            [Description("When true, call ConnectPortal before checks if the server is not connected. This is read-only but attaches to TIA Portal.")] bool connectIfNeeded = false,
+            [Description("When true, call ConnectPortal before checks if the server is not connected. This is read-only but attaches to TIA " +
+                "Portal.")] bool connectIfNeeded =
+                false,
             [Description("When true, include GetProjectTree output if a project is open.")] bool includeProjectTree = false,
-            [Description("When true, enumerate TIA Portal process/project details. This may attach to running TIA processes and can be slow on a contended workstation.")] bool inspectPortalProcesses = false,
+            [Description("When true, enumerate TIA Portal process/project details. This may attach to running TIA processes and can be slow on a contended " +
+                "workstation.")] bool inspectPortalProcesses =
+                false,
             [Description("Expected PLC software path for ValidateAutomationContext.")] string expectedPlcSoftwarePath = "PLC_1",
             [Description("Expected HMI software path for ValidateAutomationContext.")] string expectedHmiSoftwarePath = "HMI_RT_1")
         => CapabilitySelfTestLogic.Run(
@@ -298,13 +323,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 () => HostToolServices.Observe("session.ListPortalProcessProjects")!.AsArray().Select(n => n!.GetValue<string>()),
                 () => JsonSerializer.Deserialize<State>(HostToolServices.Observe("session.GetState")!.ToJsonString())!,
                 () => (bool)HostToolServices.Observe("session.ConnectPortal")!,
-                (plc, hmi) => JsonSerializer.Deserialize<ResponseMessage>(HostToolServices.Observe("session.ValidateAutomationContext", new JsonObject { ["plc"] = plc, ["hmi"] = hmi })!.ToJsonString())!,
+                (plc, hmi) => JsonSerializer
+                    .Deserialize<ResponseMessage>(HostToolServices
+                        .Observe("session.ValidateAutomationContext", new JsonObject { ["plc"] = plc, ["hmi"] = hmi })!.ToJsonString())!,
                 () => (string)HostToolServices.Observe("session.GetProjectTree")!,
                 connectIfNeeded, includeProjectTree, inspectPortalProcesses, expectedPlcSoftwarePath, expectedHmiSoftwarePath);
 
         private static string? InvokeReflectionDenyGuard(object guardMethod, string resultKind, string resultPath, string methodName)
         {
-            return (string?)HostToolServices.Observe("reflection-deny", new JsonObject { ["kind"] = resultKind, ["path"] = resultPath, ["method"] = methodName });
+            return (string?)HostToolServices
+                .Observe("reflection-deny", new JsonObject { ["kind"] = resultKind, ["path"] = resultPath, ["method"] = methodName });
         }
 
         private static string DescribeGuardResult(string? result)
@@ -312,7 +340,8 @@ namespace TiaMcpServer.ModelContextProtocol
             return string.IsNullOrWhiteSpace(result) ? "allow" : "deny";
         }
 
-        private static string BuildAcceptanceReportMarkdown(string title, string operationId, ResponseCapabilitySelfTest selfTest, ResponseSafetySelfTest safetySelfTest)
+        private static string BuildAcceptanceReportMarkdown(string title, string operationId, ResponseCapabilitySelfTest selfTest,
+                ResponseSafetySelfTest safetySelfTest)
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("# " + (string.IsNullOrWhiteSpace(title) ? "TIA MCP Acceptance Report" : title));
@@ -393,39 +422,85 @@ namespace TiaMcpServer.ModelContextProtocol
             switch ((errorCode ?? string.Empty).Trim().ToLowerInvariant())
             {
                 case "invalidparams":
-                    return new List<string> { "Check required parameters and path spelling.", "Read live project tree before retrying.", "Use a resolver tool when the target path is ambiguous." };
+                    return new List<string> {
+                        "Check required parameters and path spelling.", "Read live project tree before retrying.",
+                            "Use a resolver tool when the target path is ambiguous."
+                    };
                 case "notconnected":
-                    return new List<string> { "Run ConnectPortal.", "Check TIA Portal is installed and accessible.", "Run RunCapabilitySelfTest in minimal mode." };
+                    return new List<string> {
+                        "Run ConnectPortal.", "Check TIA Portal is installed and accessible.", "Run RunCapabilitySelfTest in minimal mode." };
                 case "projectnotopen":
-                    return new List<string> { "AttachOpenProject or OpenProject before writing.", "Run GetSessionState and GetProjectTree.", "Avoid opening a project already opened by another session." };
+                    return new List<string> {
+                        "AttachOpenProject or OpenProject before writing.", "Run GetSessionState and GetProjectTree.",
+                            "Avoid opening a project already opened by another session."
+                    };
                 case "preconditionfailed":
-                    return new List<string> { "Run the required preflight sequence.", "Read back the target object before writing.", "Use dry-run where available." };
+                    return new List<string> {
+                        "Run the required preflight sequence.", "Read back the target object before writing.", "Use dry-run where available." };
                 case "notfound":
-                    return new List<string> { "Search the live project tree for the target.", "Use full qualified paths for blocks/types.", "Report candidate matches instead of guessing." };
+                    return new List<string> {
+                        "Search the live project tree for the target.", "Use full qualified paths for blocks/types.",
+                            "Report candidate matches instead of guessing."
+                    };
                 case "ambiguouspath":
-                    return new List<string> { "List candidates and choose one exact path.", "Avoid single block names when groups may contain duplicates.", "Use GetPlcBlockHierarchy before exporting/importing blocks." };
+                    return new List<string> {
+                        "List candidates and choose one exact path.", "Avoid single block names when groups may contain duplicates.",
+                            "Use GetPlcBlockHierarchy before exporting/importing blocks."
+                    };
                 case "unsupportedtiaversion":
-                    return new List<string> { "Confirm the selected TIA Portal release is installed.", "Restart the server with the matching --release-key.", "Check installed Openness assemblies." };
+                    return new List<string> {
+                        "Confirm the selected TIA Portal release is installed.", "Restart the server with the matching --release-key.",
+                            "Check installed Openness assemblies."
+                    };
                 case "opennesspermissiondenied":
-                    return new List<string> { "Add the user to Siemens TIA Openness group.", "Sign out or restart after changing group membership.", "Run GetEnvironmentDiagnostics for the full environment report." };
+                    return new List<string> {
+                        "Add the user to Siemens TIA Openness group.", "Sign out or restart after changing group membership.",
+                            "Run GetEnvironmentDiagnostics for the full environment report."
+                    };
                 case "hardwarecatalognotfound":
-                    return new List<string> { "Run SearchHardwareCatalog or SearchInstalledGsdDevices.", "Use MLFB/order number and installed catalog version.", "Do not fall back from third-party hardware to Siemens devices." };
+                    return new List<string> {
+                        "Run SearchHardwareCatalog or SearchInstalledGsdDevices.", "Use MLFB/order number and installed catalog version.",
+                            "Do not fall back from third-party hardware to Siemens devices."
+                    };
                 case "importschemaerror":
-                    return new List<string> { "Validate XML is well formed.", "Compare against a same-version TIA export.", "Do not mix SCL source syntax with Openness XML syntax." };
+                    return new List<string> {
+                        "Validate XML is well formed.", "Compare against a same-version TIA export.", "Do not mix SCL source syntax with Openness XML syntax."
+                    };
                 case "compileerror":
-                    return new List<string> { "Export the failed block/type for inspection.", "Search existing tags, DBs, UDTs, and block interfaces before adding variables.", "Fix the smallest object and run CompilePlcDiagnostics again." };
+                    return new List<string> {
+                        "Export the failed block/type for inspection.", "Search existing tags, DBs, UDTs, and block interfaces before adding variables.",
+                            "Fix the smallest object and run CompilePlcDiagnostics again."
+                    };
                 case "hmibindingerror":
-                    return new List<string> { "Read HMI screens, tag tables, tags, and connections.", "Verify the HMI tag is PLC-backed, not only internal.", "Read back dynamization and button script properties after binding." };
+                    return new List<string> {
+                        "Read HMI screens, tag tables, tags, and connections.", "Verify the HMI tag is PLC-backed, not only internal.",
+                            "Read back dynamization and button script properties after binding."
+                    };
                 case "reflectionriskblocked":
-                    return new List<string> { "Describe the object/service first.", "Confirm method signature and parameter types.", "Use allowWrite only after read-only discovery and backup/export." };
+                    return new List<string> {
+                        "Describe the object/service first.", "Confirm method signature and parameter types.",
+                            "Use allowWrite only after read-only discovery and backup/export."
+                    };
                 case "saveblocked":
-                    return new List<string> { "Compile or validate before saving.", "Review warnings/failures in the report.", "Save only after readback succeeds unless the user explicitly asks otherwise." };
+                    return new List<string> {
+                        "Compile or validate before saving.", "Review warnings/failures in the report.",
+                            "Save only after readback succeeds unless the user explicitly asks otherwise."
+                    };
                 case "tiasessioncontention":
-                    return new List<string> { "Do not run write-capable CLI probes in parallel with an active MCP session.", "Use the already-running MCP server or restart it cleanly.", "Stop only the probe process you launched." };
+                    return new List<string> {
+                        "Do not run write-capable CLI probes in parallel with an active MCP session.",
+                            "Use the already-running MCP server or restart it cleanly.", "Stop only the probe process you launched."
+                    };
                 case "unexpectedopennesserror":
-                    return new List<string> { "Capture the native exception details.", "Classify the failure before retrying.", "Prefer a small sacrificial project probe before touching a real project." };
+                    return new List<string> {
+                        "Capture the native exception details.", "Classify the failure before retrying.",
+                            "Prefer a small sacrificial project probe before touching a real project."
+                    };
                 default:
-                    return new List<string> { "Capture the exact tool, parameters, and native error.", "Run readback diagnostics before retrying.", "Generate an acceptance or environment report if the failure may be machine-specific." };
+                    return new List<string> {
+                        "Capture the exact tool, parameters, and native error.", "Run readback diagnostics before retrying.",
+                            "Generate an acceptance or environment report if the failure may be machine-specific."
+                    };
             }
         }
 

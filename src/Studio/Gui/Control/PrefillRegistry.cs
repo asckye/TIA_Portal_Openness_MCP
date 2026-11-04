@@ -29,7 +29,8 @@ internal sealed class PrefillRegistry
     {
         if (arguments.Mode == WorkbenchPrefillMode.Clear) return true;
         if (arguments.Fields is WorkbenchConnectProjectFields connect)
-            return AbsolutePath(connect.ProjectPath) && Regex.IsMatch(connect.ProjectPath!, @"\.(ap|als)[0-9]+(?:_[0-9]+)?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            return AbsolutePath(connect.ProjectPath) && Regex
+                .IsMatch(connect.ProjectPath!, @"\.(ap|als)[0-9]+(?:_[0-9]+)?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         if (arguments.Fields is WorkbenchExportBlocksFields export)
             return AbsolutePath(export.OutputDirectory) && export.Format is "SimaticMl" or "Source";
         if (arguments.Fields is WorkbenchImportBlocksFields import)

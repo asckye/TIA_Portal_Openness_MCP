@@ -17,7 +17,9 @@ namespace TiaMcp.Adapters
             if(Environment.OSVersion.Platform!=PlatformID.Win32NT)
                 throw new PlatformNotSupportedException("Safe XML export publication requires the Windows worker.");
             var output=PlcFoundationPolicy.XmlOutput(destination.FullName);
-            var stage=new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(output.Directory!.FullName,".tia-export-"+Guid.NewGuid().ToString("N"))));
+            var stage=
+                new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy
+                    .FullPath(Path.Combine(output.Directory!.FullName,".tia-export-"+Guid.NewGuid().ToString("N"))));
             var staged=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(stage.FullName,output.Name)));
             string phase="create-stage"; string? hash=null;
             try
@@ -32,7 +34,8 @@ namespace TiaMcp.Adapters
                     throw new IOException("Export did not produce a regular nonempty file.");
                 using(var stream=new FileStream(staged.FullName,FileMode.Open,FileAccess.Read,FileShare.Read|FileShare.Delete))
                 {
-                    var settings=new XmlReaderSettings { DtdProcessing=DtdProcessing.Prohibit,XmlResolver=null,MaxCharactersInDocument=64*1024*1024,CloseInput=false };
+                    var settings=new XmlReaderSettings {
+                        DtdProcessing=DtdProcessing.Prohibit,XmlResolver=null,MaxCharactersInDocument=64*1024*1024,CloseInput=false };
                     using(var reader=XmlReader.Create(stream,settings))
                     {
                         var document=XDocument.Load(reader);

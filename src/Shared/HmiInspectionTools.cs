@@ -25,13 +25,16 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public HmiInspectionTools(HmiInspectionService service) => _hmiInspection = service;
 
-        [McpServerTool(Name="GetUnifiedHmiButtonEvent"),Description("[L2][HMI-Unified]Read an EXISTING button event's script, global definitions, Async and content token. Never creates events. screenPath is a unique name or /Group/Screen from ListHmiScreenPaths.")]
+        [McpServerTool(Name="GetUnifiedHmiButtonEvent"),
+                Description("[L2][HMI-Unified]Read an EXISTING button event's script, global definitions, Async and content token. Never creates events. " +
+                "screenPath is a unique name or /Group/Screen from ListHmiScreenPaths.")]
         public CallToolResult ReadUnifiedHmiButtonEventV4(
             string softwarePath,
             string screenPath,
             [Description("buttonName: exact button item name.")] string buttonName,
             string eventType)
-            => HmiInspectionContract.Run("GetUnifiedHmiButtonEvent", false, false, () => ReadUnifiedHmiButtonEvent(softwarePath, screenPath, buttonName, eventType));
+            => HmiInspectionContract
+                .Run("GetUnifiedHmiButtonEvent", false, false, () => ReadUnifiedHmiButtonEvent(softwarePath, screenPath, buttonName, eventType));
 
         public ResponseMessage ReadUnifiedHmiButtonEvent(
             string softwarePath,
@@ -40,7 +43,10 @@ namespace TiaMcpServer.ModelContextProtocol
             string eventType)
         =>_hmiInspection.ReadUnifiedHmiButtonEvent(softwarePath,screenPath,buttonName,eventType);
 
-        [McpServerTool(Name="DeleteUnifiedHmiButtonEvent"),Description("[L2][HMI-Unified][WRITE]Delete exactly one button event. Default dryRun=true; real deletion requires a matching previewToken from read/preview. onlyIfEmpty defaults true. No save, no other event is targeted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="DeleteUnifiedHmiButtonEvent"),
+                Description("[L2][HMI-Unified][WRITE]Delete exactly one button event. Default dryRun=true; real deletion requires a matching previewToken " +
+                "from read/preview. onlyIfEmpty defaults true. No save, no other event is targeted. Native behaviorPolicy=current; V4 native acceptance is " +
+                "pending.")]
         public CallToolResult DeleteUnifiedHmiButtonEventV4(
             string softwarePath,
             string screenPath,
@@ -49,7 +55,9 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true,
             string previewToken="",
             [Description("onlyIfEmpty: true deletes the event only when it has no script.")] bool onlyIfEmpty=true)
-            => HmiInspectionContract.Run("DeleteUnifiedHmiButtonEvent", !dryRun, true, () => DeleteUnifiedHmiButtonEvent(softwarePath, screenPath, buttonName, eventType, dryRun, previewToken, onlyIfEmpty));
+            => HmiInspectionContract
+                .Run("DeleteUnifiedHmiButtonEvent", !dryRun, true, () =>
+                    DeleteUnifiedHmiButtonEvent(softwarePath, screenPath, buttonName, eventType, dryRun, previewToken, onlyIfEmpty));
 
         public ResponseMessage DeleteUnifiedHmiButtonEvent(
             string softwarePath,
@@ -61,23 +69,35 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("onlyIfEmpty: true deletes the event only when it has no script.")] bool onlyIfEmpty=true)
         =>_hmiInspection.DeleteUnifiedHmiButtonEvent(softwarePath,screenPath,buttonName,eventType,dryRun,expectedToken,onlyIfEmpty);
 
-        [McpServerTool(Name="GetUnifiedHmiDynamization"),Description("[L2][HMI-Unified]Read exactly one screen item dynamization by PropertyName. Returns a bounded snapshot with coverage and a token; never creates objects.")]
+        [McpServerTool(Name="GetUnifiedHmiDynamization"),
+                Description("[L2][HMI-Unified]Read exactly one screen item dynamization by PropertyName. Returns a bounded snapshot with coverage and a " +
+                "token; never creates objects.")]
         public CallToolResult ReadUnifiedHmiDynamizationV4(string softwarePath,string screenPath,string itemName,string propertyName)
-            => HmiInspectionContract.Run("GetUnifiedHmiDynamization", false, false, () => ReadUnifiedHmiDynamization(softwarePath, screenPath, itemName, propertyName));
+            => HmiInspectionContract
+                .Run("GetUnifiedHmiDynamization", false, false, () => ReadUnifiedHmiDynamization(softwarePath, screenPath, itemName, propertyName));
 
         public ResponseMessage ReadUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName)
         =>_hmiInspection.ReadUnifiedHmiDynamization(softwarePath,screenPath,itemName,propertyName);
 
-        [McpServerTool(Name="DeleteUnifiedHmiDynamization"),Description("[L2][HMI-Unified][WRITE]Delete exactly one property dynamization; default preview only. Real deletion requires previewToken and complete readback. Does not save or delete events. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult DeleteUnifiedHmiDynamizationV4(string softwarePath,string screenPath,string itemName,string propertyName,bool dryRun=true,string previewToken="")
-            => HmiInspectionContract.Run("DeleteUnifiedHmiDynamization", !dryRun, true, () => DeleteUnifiedHmiDynamization(softwarePath, screenPath, itemName, propertyName, dryRun, previewToken));
+        [McpServerTool(Name="DeleteUnifiedHmiDynamization"),
+                Description("[L2][HMI-Unified][WRITE]Delete exactly one property dynamization; default preview only. Real deletion requires previewToken and " +
+                "complete readback. Does not save or delete events. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        public CallToolResult DeleteUnifiedHmiDynamizationV4(string softwarePath,string screenPath,string itemName,string propertyName,bool dryRun=true,
+                string previewToken="")
+            => HmiInspectionContract
+                .Run("DeleteUnifiedHmiDynamization", !dryRun, true, () =>
+                    DeleteUnifiedHmiDynamization(softwarePath, screenPath, itemName, propertyName, dryRun, previewToken));
 
-        public ResponseMessage DeleteUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName,bool dryRun=true,string expectedToken="")
+        public ResponseMessage DeleteUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName,bool dryRun=true,
+                string expectedToken="")
         =>_hmiInspection.DeleteUnifiedHmiDynamization(softwarePath,screenPath,itemName,propertyName,dryRun,expectedToken);
 
-        [McpServerTool(Name="DeleteEmptyUnifiedHmiScreenGroup"),Description("[L2][HMI-Unified][WRITE]Delete an empty screen group by absolute /Group/Subgroup path. Default preview only. Nonempty, ambiguous or root targets are rejected; no recursive deletion or save. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="DeleteEmptyUnifiedHmiScreenGroup"),
+                Description("[L2][HMI-Unified][WRITE]Delete an empty screen group by absolute /Group/Subgroup path. Default preview only. Nonempty, " +
+                "ambiguous or root targets are rejected; no recursive deletion or save. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult DeleteEmptyUnifiedHmiScreenGroupV4(string softwarePath,string groupPath,bool dryRun=true)
-            => HmiInspectionContract.Run("DeleteEmptyUnifiedHmiScreenGroup", !dryRun, true, () => DeleteEmptyUnifiedHmiScreenGroup(softwarePath, groupPath, dryRun));
+            => HmiInspectionContract
+                .Run("DeleteEmptyUnifiedHmiScreenGroup", !dryRun, true, () => DeleteEmptyUnifiedHmiScreenGroup(softwarePath, groupPath, dryRun));
 
         public ResponseMessage DeleteEmptyUnifiedHmiScreenGroup(string softwarePath,string groupPath,bool dryRun=true)
         =>_hmiInspection.DeleteEmptyUnifiedHmiScreenGroup(softwarePath,groupPath,dryRun);

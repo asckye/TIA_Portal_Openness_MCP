@@ -102,8 +102,11 @@ namespace TiaMcp.Adapters
                 meta["messages"] = new List<object?>(FlattenHardwareAmlMessages(result?.Messages).Cast<object?>());
                 meta["deviceCountAfter"] = EnumerateAllDevices().Count();
                 meta["logFile"] = null; meta["logFileScope"] = "V19+ reports the TransferResult messages; logFilePath is not written by this overload.";
-                if (!ok) throw new HardwareAddressingException("ImportFailed", "CaxProvider.Import returned TransferResult state " + state + "; inspect the reported messages.");
-                return "CAx/AutomationML import returned TransferResult " + state + " (messages reported); imported content not semantically verified. Project not saved, compiled or downloaded.";
+                if (!ok)
+                    throw new HardwareAddressingException("ImportFailed", "CaxProvider.Import returned TransferResult state " + state
+                        + "; inspect the reported messages.");
+                return "CAx/AutomationML import returned TransferResult " + state
+                    + " (messages reported); imported content not semantically verified. Project not saved, compiled or downloaded.";
 #else
                 meta["mayHaveChanged"] = true; meta["mayHaveWrittenFiles"] = true;
                 bool ok = cax.Import(source, log, option);
@@ -113,7 +116,8 @@ namespace TiaMcp.Adapters
                 if (log.Exists && log.Length > 0) meta["logFile"] = HardwareAmlPolicy.Verify(log);
                 else { meta["logFile"] = null; meta["logFileMissing"] = true; }
                 if (!ok) throw new HardwareAddressingException("ImportFailed", "CaxProvider.Import returned false; inspect the native log file.");
-                return "CAx/AutomationML import returned true (native log hashed); imported content not semantically verified. Project not saved, compiled or downloaded.";
+                return "CAx/AutomationML import returned true (native log hashed); imported content not semantically verified. Project not saved, compiled " +
+                    "or downloaded.";
 #endif
             });
         }

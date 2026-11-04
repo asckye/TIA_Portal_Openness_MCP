@@ -102,10 +102,12 @@ internal static class FoundationPassiveDiagnostics
             catch (System.Security.SecurityException) /* swallow(env-probe): the other registry view remains available for the exact release lookup. */ { }
             catch (IOException) /* swallow(env-probe): an unreadable registry view does not rule out the other view or default install folder. */ { }
         }
-        foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
+        foreach (var root in new[] {
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
         {
             if (string.IsNullOrWhiteSpace(root)) continue;
-            if (ExactApiPath(release, Path.Combine(root, "Siemens", "Automation", release.InstallFolder)) is { } fromDefault) return new InstallationLocation(fromDefault, "default-folder");
+            if (ExactApiPath(release, Path.Combine(root, "Siemens", "Automation", release.InstallFolder)) is { } fromDefault)
+                return new InstallationLocation(fromDefault, "default-folder");
         }
         return new InstallationLocation(null, null);
     }
@@ -121,7 +123,8 @@ internal static class FoundationPassiveDiagnostics
             var apiDirectory = release.FindApiDirectory(full);
             return apiDirectory == null || !ApiMatchesRelease(release, apiDirectory) ? null : full;
         }
-        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or System.Security.SecurityException or NotSupportedException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or System.Security
+                .SecurityException or NotSupportedException or System.ComponentModel.Win32Exception)
         {
             /* swallow(env-probe): an unusable local install path is not evidence of a matching release installation. */
             return null;
@@ -139,7 +142,8 @@ internal static class FoundationPassiveDiagnostics
             var apiDirectory = release.FindApiDirectory(full);
             return apiDirectory != null && ApiMatchesRelease(release, apiDirectory) ? apiDirectory : null;
         }
-        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or System.Security.SecurityException or NotSupportedException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or System.Security
+                .SecurityException or NotSupportedException or System.ComponentModel.Win32Exception)
         {
             /* swallow(env-probe): an unusable host API directory cannot establish release readiness. */
             return null;
@@ -199,7 +203,8 @@ internal static class FoundationPassiveDiagnostics
                 catch (IdentityNotMappedException) /* swallow(env-probe): an unresolved token SID cannot establish group membership. */ { }
             }
         }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or InvalidOperationException or PlatformNotSupportedException)
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security
+                .SecurityException or InvalidOperationException or PlatformNotSupportedException)
         {
             /* swallow(env-probe): unavailable token group data is not proof of Openness group membership. */
             return false;
@@ -213,7 +218,8 @@ internal static class FoundationPassiveDiagnostics
         var release = TiaVersionCatalog.Get(releaseKey);
         if (tools.Count > MaxTools) throw new InvalidOperationException();
         if (offset < 0 || offset > tools.Count || limit < 1 || limit > RosterPageLimit) throw new ArgumentOutOfRangeException();
-        sourceOperations ??= WorkerOperations.Names.Concat(new[] { "plc-analysis.ExportBlockDocument", WorkerOperations.BlockPage }).Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.SelectMany(
+        sourceOperations ??= WorkerOperations.Names.Concat(new[] { "plc-analysis.ExportBlockDocument", WorkerOperations.BlockPage })
+            .Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.SelectMany(
             family => WorkerOperations.FamilyNames(family.Name).Select(operation => family.OperationPrefix + "." + operation)))
             .ToHashSet(StringComparer.Ordinal);
         var families = PortedToolContract.Families(releaseKey).ToArray();
@@ -221,7 +227,8 @@ internal static class FoundationPassiveDiagnostics
         if (names.Any(name => name.Length > 128)) throw new InvalidOperationException();
         bool unique = names.Distinct(StringComparer.Ordinal).Count() == names.Length;
         bool schemas = tools.All(t => ObjectSchema(t.ProtocolTool.InputSchema));
-        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(d.Name, StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
+        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey))
+            .All(d => names.Contains(d.Name, StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
             && families.SelectMany(family => family.Tools.Where(name => TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, name)))
                 .All(name => names.Contains(name, StringComparer.Ordinal) && PortedToolContract.WiredOperations(name).All(sourceOperations.Contains));
         var roster = new JsonArray();
@@ -234,7 +241,12 @@ internal static class FoundationPassiveDiagnostics
                 && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name);
             var operations = ported ? PortedToolContract.WiredOperations(name) : null;
             bool engineWorker = !ported && definition == null && EngineHostConfiguration.CurrentOrNull?.Catalog?.Find(name)?.Execution == "worker";
-            var row = new JsonObject { ["name"] = name, ["execution"] = ported && operations!.Length != 0 || definition != null && definition.ResponseMember != "ImportStaging" || engineWorker ? "worker-protocol" : "host-only", ["wiredOperation"] = ported ? operations!.FirstOrDefault() : definition?.ResponseMember == "ImportStaging" ? null : definition?.Operation ?? (engineWorker ? "engine.invoke" : null), ["objectSchemaContractValid"] = ObjectSchema(tool.ProtocolTool.InputSchema) };
+            var row = new JsonObject {
+                ["name"] = name, ["execution"] = ported && operations!.Length != 0 || definition != null && definition.ResponseMember != "ImportStaging"
+                    || engineWorker ? "worker-protocol" : "host-only", ["wiredOperation"] = ported ? operations!.FirstOrDefault() : definition?
+                    .ResponseMember == "ImportStaging" ? null : definition?.Operation ?? (engineWorker ? "engine.invoke" : null),
+                    ["objectSchemaContractValid"] = ObjectSchema(tool.ProtocolTool.InputSchema)
+            };
             if (ported) row["wiredOperations"] = new JsonArray(operations!.Select(operation => (JsonNode)JsonValue.Create(operation)!).ToArray());
             int rowCharacters = row.ToJsonString().Length + 1;
             if (roster.Count != 0 && rosterCharacters + rowCharacters > RosterPageCharacters) break;
@@ -242,25 +254,45 @@ internal static class FoundationPassiveDiagnostics
             rosterCharacters += rowCharacters;
         }
         var probes = new JsonObject();
-        foreach (var key in new[] { "installedTia", "installedPublicApi", "sdkCompatibility", "groupMembership", "permission", "connectReadiness", "workerAvailability", "connectionState", "portalProcesses", "projectState", "automationContext", "nativeAcceptance" }) probes[key] = "not-probed";
+        foreach (var key in new[] {
+                "installedTia", "installedPublicApi", "sdkCompatibility", "groupMembership", "permission", "connectReadiness", "workerAvailability",
+                    "connectionState", "portalProcesses", "projectState", "automationContext", "nativeAcceptance"
+            })
+            probes[key] = "not-probed";
         return new JsonObject {
             ["contract"] = Contract, ["scope"] = "managed host registration and structural schema checks only",
             ["upstreamResponseCompatible"] = false, ["nativeCertified"] = false,
-            ["selectedRelease"] = new JsonObject { ["key"] = release.Key, ["displayName"] = release.DisplayName, ["catalogState"] = release.SupportState, ["catalogMeaning"] = "Build-target metadata only; not installed or accepted capability." },
-            ["host"] = new JsonObject { ["profile"] = "plc-foundation", ["productionAccepted"] = false, ["nativeSessionConfigured"] = nativeSessionConfigured, ["nativeCallsDisabledByDefault"] = false, ["nativeCallsDisabledByConfiguration"] = !nativeSessionConfigured, ["nativeGateMeaning"] = "Configuration only; this diagnostic never invokes the worker even when enabled." },
-            ["checks"] = new JsonObject { ["uniqueRegisteredNames"] = unique, ["objectSchemaContracts"] = schemas, ["foundationOperationsInSourceAllowlist"] = mappings, ["passed"] = unique && schemas && mappings, ["meaning"] = "Structural checks only; not complete JSON Schema validation, tool execution, PLC semantics or native readiness." },
+            ["selectedRelease"] = new JsonObject {
+                ["key"] = release.Key, ["displayName"] = release.DisplayName, ["catalogState"] = release.SupportState, ["catalogMeaning"] =
+                    "Build-target metadata only; not installed or accepted capability."
+            },
+            ["host"] = new JsonObject {
+                ["profile"] = "plc-foundation", ["productionAccepted"] = false, ["nativeSessionConfigured"] = nativeSessionConfigured,
+                    ["nativeCallsDisabledByDefault"] = false, ["nativeCallsDisabledByConfiguration"] = !nativeSessionConfigured, ["nativeGateMeaning"] =
+                    "Configuration only; this diagnostic never invokes the worker even when enabled."
+            },
+            ["checks"] = new JsonObject {
+                ["uniqueRegisteredNames"] = unique, ["objectSchemaContracts"] = schemas, ["foundationOperationsInSourceAllowlist"] = mappings, ["passed"] =
+                    unique && schemas && mappings, ["meaning"] =
+                    "Structural checks only; not complete JSON Schema validation, tool execution, PLC semantics or native readiness."
+            },
             ["registeredToolCount"] = tools.Count, ["registeredTools"] = roster, ["probes"] = probes,
             ["nextOffset"] = offset + roster.Count < tools.Count ? offset + roster.Count : null,
-            ["sideEffects"] = new JsonObject { ["workerInvoked"] = false, ["tiaLaunchedOrAttached"] = false, ["groupInspectedOrRepaired"] = false, ["persistentSettingsChanged"] = false },
+            ["sideEffects"] = new JsonObject {
+                ["workerInvoked"] = false, ["tiaLaunchedOrAttached"] = false, ["groupInspectedOrRepaired"] = false, ["persistentSettingsChanged"] = false },
             ["recommendedNextTool"] = "RunCapabilitySelfTest"
         };
     }
     // Deliberately bounded structural contract, not a JSON Schema evaluator.
     private static bool ObjectSchema(JsonElement schema)
     {
-        if (schema.ValueKind != JsonValueKind.Object || !schema.TryGetProperty("type", out var type) || type.GetString() != "object" || !schema.TryGetProperty("properties", out var props) || props.ValueKind != JsonValueKind.Object || !schema.TryGetProperty("additionalProperties", out var extra) || extra.ValueKind != JsonValueKind.False) return false;
+        if (schema.ValueKind != JsonValueKind.Object || !schema.TryGetProperty("type", out var type) || type.GetString() != "object" || !schema
+                .TryGetProperty("properties", out var props) || props.ValueKind != JsonValueKind.Object || !schema
+                .TryGetProperty("additionalProperties", out var extra) || extra.ValueKind != JsonValueKind.False)
+            return false;
         if (!schema.TryGetProperty("required", out var required)) return true;
-        return required.ValueKind == JsonValueKind.Array && required.EnumerateArray().All(x => x.ValueKind == JsonValueKind.String && props.TryGetProperty(x.GetString()!, out _));
+        return required.ValueKind == JsonValueKind.Array && required.EnumerateArray()
+            .All(x => x.ValueKind == JsonValueKind.String && props.TryGetProperty(x.GetString()!, out _));
     }
 }
 
@@ -271,7 +303,9 @@ internal static class LegacyHostToolRegistry
         Func<IReadOnlyList<McpServerTool>>? usageRoster = null, Func<string, string>? exampleProfile = null, bool hostPorts = true)
     {
         TiaVersionCatalog.Get(releaseKey);
-        var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
+        var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create())
+            .Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create())
+            .Concat(OfflineLadderTools.Create()).ToList();
         tools.RemoveAll(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name)
             && !TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, t.ProtocolTool.Name));
         tools.Add(PlcCrossReferenceAnalysis.Create(worker, releaseKey));

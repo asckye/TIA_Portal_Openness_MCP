@@ -67,7 +67,8 @@ namespace TiaMcpServer.Siemens.Services
         internal static void ValidateAddress(string text, bool branch = false, bool optional = false)
         {
             string example = branch ? EngineeringInputValidation.BranchPathExample
-                : optional ? EngineeringInputValidation.OptionalObjectPathExample + " (the typed DCC/SiVArc root)" : EngineeringInputValidation.ObjectPathExample;
+                : optional ? EngineeringInputValidation.OptionalObjectPathExample + " (the typed DCC/SiVArc root)" : EngineeringInputValidation
+                    .ObjectPathExample;
             if (text == null || text.Length > 32768) throw new ArgumentException("Object path exceeds 32 KiB. Expected property steps, e.g. " + example + ".");
             object? value;
             try

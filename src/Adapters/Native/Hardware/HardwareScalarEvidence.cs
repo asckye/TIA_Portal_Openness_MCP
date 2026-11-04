@@ -10,7 +10,8 @@ namespace TiaMcp.Adapters.Hardware
     {
         internal static Dictionary<string, object?> Requested(Dictionary<string, HardwareScalar> values)
             => values.ToDictionary(p => p.Key, p => HardwareAddressingPolicy.ConvertValue(p.Value, typeof(object)));
-        internal static bool Scalar(Type type) => type.IsEnum || type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type == typeof(DateTime) || type == typeof(TimeSpan) || type == typeof(Guid) || type == typeof(Version);
+        internal static bool Scalar(Type type) => type.IsEnum || type.IsPrimitive || type == typeof(string) || type == typeof(decimal)
+            || type == typeof(DateTime) || type == typeof(TimeSpan) || type == typeof(Guid) || type == typeof(Version);
 
         internal static Dictionary<string, object?> Read(object target)
         {
@@ -24,7 +25,10 @@ namespace TiaMcp.Adapters.Hardware
                     if (value != null && !Scalar(value.GetType())) { excluded.Add(p.Name); continue; }
                     values[p.Name] = HardwareAddressingPolicy.ScalarValue(value);
                 }
-                catch (Exception ex) { failures.Add(new Dictionary<string, object?> { ["property"] = p.Name, ["error"] = ex.GetBaseException().Message }); if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)) throw; }
+                catch (Exception ex) {
+                    failures.Add(new Dictionary<string, object?> { ["property"] = p.Name, ["error"] = ex.GetBaseException().Message });
+                    if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)) throw;
+                }
             }
             return new Dictionary<string, object?> { ["type"] = target.GetType().FullName, ["scope"] = "public scalar properties only",
                 ["values"] = values, ["excludedComplexProperties"] = excluded, ["failures"] = failures,
@@ -34,7 +38,8 @@ namespace TiaMcp.Adapters.Hardware
         internal static IEnumerable<PropertyInfo> DistinctProperties(Type type)
         {
             int Depth(PropertyInfo p) { int d = 0; for (var t = type; t != null && t != p.DeclaringType; t = t.BaseType) d++; return d; }
-            return type.GetProperties().GroupBy(p => p.Name, StringComparer.Ordinal).Select(g => g.OrderBy(Depth).First()).OrderBy(p => p.Name, StringComparer.Ordinal);
+            return type.GetProperties().GroupBy(p => p.Name, StringComparer.Ordinal).Select(g => g.OrderBy(Depth).First())
+                .OrderBy(p => p.Name, StringComparer.Ordinal);
         }
 
         internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> changes, Dictionary<string, object?> meta)
@@ -45,7 +50,8 @@ namespace TiaMcp.Adapters.Hardware
                 meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
                 change.Property.SetValue(target, change.Value);
                 applied.Add(change.Property.Name);
-                if (!HardwareAddressingPolicy.SameValue(change.Property.GetValue(target), change.Value)) throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
+                if (!HardwareAddressingPolicy.SameValue(change.Property.GetValue(target), change.Value))
+                    throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
             }
         }
     }

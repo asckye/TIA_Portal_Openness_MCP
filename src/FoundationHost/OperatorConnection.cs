@@ -26,7 +26,8 @@ internal sealed class OperatorConnection(HostRegistration registration, Func<Can
                 error = shutdown == null ? "SHUTDOWN_UNAVAILABLE" : registration.TryBeginShutdown() ? null : "HOST_BUSY";
                 try
                 {
-                    await OperatorProtocol.Write(pipe, new OperatorHandshakeResult { Accepted = error == null, Error = error }, deadline.Token).ConfigureAwait(false);
+                    await OperatorProtocol.Write(pipe, new OperatorHandshakeResult { Accepted = error == null, Error = error }, deadline.Token)
+                        .ConfigureAwait(false);
                 }
                 catch { if (error == null) registration.CancelShutdown(); throw; }
                 if (error == null) shutdown!();
@@ -47,7 +48,8 @@ internal sealed class OperatorConnection(HostRegistration registration, Func<Can
                 session!.SetNativeCrossReferences(request.NativeCrossReferencesAllowed!.Value, verifiedPeer.Value);
             using var attachment = error == null ? session?.AttachOperator() : null;
             await OperatorProtocol.Write(pipe, new OperatorHandshakeResult { Accepted = error == null, Error = error,
-                SessionKey = session?.SessionKey, Sessions = request.Action == "list" ? registration.List() : session == null ? [] : [session.Snapshot()] }, deadline.Token).ConfigureAwait(false);
+                SessionKey = session?.SessionKey, Sessions = request.Action == "list" ? registration.List() : session == null ? [] : [session.Snapshot()] },
+                    deadline.Token).ConfigureAwait(false);
             if (error != null || session == null || request.Action == "native-cross-references") return;
             var tools = new McpServerPrimitiveCollection<McpServerTool>();
             foreach (var tool in session.OperatorTools) tools.Add(tool);

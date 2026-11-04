@@ -78,7 +78,11 @@ internal static class Program
             engine.OrganisationEvidenceJson = evidence => JsonSerializer.Serialize(evidence);
             engine.UnifiedPropertyAdmission = TiaMcp.Shared.UnifiedHmiPropertyAdmission.Validate;
 #if !OPCUA_NO_EXTENSION
-            engine.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(new TiaMcpServer.Siemens.OpcUaModelledNative(engine.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
+            engine.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object
+                ?>>(new TiaMcpServer.Siemens.OpcUaModelledNative(engine.PlcB5Session)
+                    .GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName,
+                        request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun)
+                    .ToJsonString())!;
 #endif
             WorkerSessionRecovery? recovery = null;
             var dispatcher = new FoundationWorkerDispatcher(engine, typeof(Program).Assembly,

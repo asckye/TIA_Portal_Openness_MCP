@@ -33,8 +33,13 @@ namespace TiaMcp.Adapters.Native.Security
 #if SECURITY_PROJECT_SYSLOG
         private HmiObject SyslogServerRow(SyslogServer server)
         {
-            var row = new HmiObject { ["name"] = server.Name, ["address"] = server.Address, ["port"] = server.Port, ["tls"] = server.Tls, ["comment"] = server.Comment };
-            try { row["assignedModules"] = new HmiArray(HardwareGroupOperations.Items(server.AssignedModules).Cast<DeviceItem>().Select(m => (object?)new HmiObject { ["name"] = m.Name, ["ownerPath"] = _session.HardwareOwnerPath(m) }).ToArray()); }
+            var row = new HmiObject {
+                ["name"] = server.Name, ["address"] = server.Address, ["port"] = server.Port, ["tls"] = server.Tls, ["comment"] = server.Comment };
+            try {
+                row["assignedModules"] =
+                    new HmiArray(HardwareGroupOperations.Items(server.AssignedModules).Cast<DeviceItem>()
+                        .Select(m => (object?)new HmiObject { ["name"] = m.Name, ["ownerPath"] = _session.HardwareOwnerPath(m) }).ToArray());
+            }
             catch (Exception ex) { row["assignedModulesError"] = ex.GetBaseException().Message; }
             return row;
         }
@@ -45,17 +50,22 @@ namespace TiaMcp.Adapters.Native.Security
             var row = new HmiObject { ["enableSystemLogging"] = manager.EnableSystemLogging, ["transportProtocol"] = manager.TransportProtocol.ToString() };
             row["servers"] = new HmiArray(HardwareGroupOperations.Items(manager.SysLogServerConfiguration).Cast<SysLogServerConfiguration>()
                 .Select(s => (object?)new HmiObject { ["address"] = s.SysLogServerAddress, ["port"] = s.SysLogServerPort }).ToArray());
-            if (manager.OwnedBy is IEngineeringObject owner) row["attributes"] = _session.DynamicAttributes(owner, SecurityAttributePolicy.SyslogNames.ToArray());
+            if (manager.OwnedBy is IEngineeringObject owner) row["attributes"] = _session
+                .DynamicAttributes(owner, SecurityAttributePolicy.SyslogNames.ToArray());
             return row;
         }
 
-        public SecurityResult ManageSyslogServers(string scope = "project", string action = "read", string name = "", string propertiesJson = "{}", string attributesJson = "{}",
-            string[] devicePathJson = null!, string[] itemPathJson = null!, string serverAddress = "", int serverPort = 0, bool confirmDelete = false, bool dryRun = true)
+        public SecurityResult ManageSyslogServers(string scope = "project", string action = "read", string name = "", string propertiesJson = "{}",
+                string attributesJson = "{}",
+            string[] devicePathJson = null!, string[] itemPathJson = null!, string serverAddress = "", int serverPort = 0, bool confirmDelete = false,
+                bool dryRun = true)
             => _session.RunHmiStepTool("ManageSyslogServers", meta => {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var properties = Properties(false); var attributes = Properties(true);
                 _session.Validate("syslog");
-                if (attributes.Count > 0 && (scope != "plc" || action != "update")) throw new ArgumentException("attributesJson (SysLogAutoAcceptClient / SysLogClientCertificateId / SysLogTrustedCertificateIds) applies to scope=plc action=update only.");
+                if (attributes.Count > 0 && (scope != "plc" || action != "update"))
+                    throw new ArgumentException("attributesJson (SysLogAutoAcceptClient / SysLogClientCertificateId / SysLogTrustedCertificateIds) applies " +
+                    "to scope=plc action=update only.");
                 if (scope == "project" && action == "create" && !dryRun) throw new NotSupportedException(SecurityCatalog.ProjectSyslogCreateRefusal);
                 foreach (var attribute in attributes.Keys) SecurityRules.RequireApprovedAttribute(attribute, SecurityAttributePolicy.SyslogNames);
                 bool write = action != "read" && !dryRun;
@@ -66,28 +76,46 @@ namespace TiaMcp.Adapters.Native.Security
                     var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
                     var manager = _session.RequireHardwareService<SysLogConfigurationManager>(owner, "itemPathJson");
                     meta["ownerPath"] = _session.HardwareOwnerPath(owner); meta["before"] = SyslogManagerRow(manager, meta);
-                    if (action == "read") { meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["readScope"] = "EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows and approved dynamic attributes only; unverified certificate attributes are withheld pending VM confirmation."; return "PLC syslog configuration read; no modification."; }
+                    if (action == "read") {
+                        meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["readScope"] =
+                            "EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows and approved dynamic attributes only; unverified " +
+                            "certificate attributes are withheld pending VM confirmation.";
+                        return "PLC syslog configuration read; no modification.";
+                    }
                     var existing = string.IsNullOrEmpty(serverAddress) ? null : manager.SysLogServerConfiguration.Find(serverAddress);
-                    if (action == "createServer" && existing != null) throw new InvalidOperationException("A syslog server with this address exists on the CPU: " + serverAddress);
-                    if (action == "deleteServer" && existing == null) throw new PortalException(PortalErrorCode.NotFound, "No syslog server with address " + serverAddress + " on the CPU (SysLogServerConfigurationComposition.Find).");
+                    if (action == "createServer" && existing != null)
+                        throw new InvalidOperationException("A syslog server with this address exists on the CPU: " + serverAddress);
+                    if (action == "deleteServer" && existing == null)
+                        throw new PortalException(PortalErrorCode.NotFound, "No syslog server with address " + serverAddress
+                            + " on the CPU (SysLogServerConfigurationComposition.Find).");
                     meta["requestedProperties"] = properties.DeepClone(); meta["requestedAttributes"] = attributes.DeepClone();
-                    if (!write) return "PLC syslog " + action + " preview; nothing changed (S7-1500 firmware 3.1 or later; TLS protocols need certificate attributes).";
+                    if (!write) return "PLC syslog " + action
+                        + " preview; nothing changed (S7-1500 firmware 3.1 or later; TLS protocols need certificate attributes).";
                     meta["mayHaveChanged"] = true;
                     switch (action)
                     {
                         case "update":
-                            if (properties.TryGetValue("EnableSystemLogging", out var enable)) { manager.EnableSystemLogging = enable!.GetValue<bool>(); if (manager.EnableSystemLogging != enable.GetValue<bool>()) throw new InvalidOperationException("EnableSystemLogging readback differs."); }
-                            if (properties.TryGetValue("TransportProtocol", out var protocol)) { var value = (SysLogTransportProtocolType)Enum.Parse(typeof(SysLogTransportProtocolType), protocol!.ToString()); manager.TransportProtocol = value; if (manager.TransportProtocol != value) throw new InvalidOperationException("TransportProtocol readback differs."); }
+                            if (properties.TryGetValue("EnableSystemLogging", out var enable)) {
+                                manager.EnableSystemLogging = enable!.GetValue<bool>(); if (manager.EnableSystemLogging != enable.GetValue<bool>())
+                                    throw new InvalidOperationException("EnableSystemLogging readback differs.");
+                            }
+                            if (properties.TryGetValue("TransportProtocol", out var protocol)) {
+                                var value = (SysLogTransportProtocolType)Enum.Parse(typeof(SysLogTransportProtocolType), protocol!.ToString()); manager
+                                    .TransportProtocol = value; if (manager.TransportProtocol != value)
+                                    throw new InvalidOperationException("TransportProtocol readback differs.");
+                            }
                             if (attributes.Count > 0) _session.SetDynamicAttributes((IEngineeringObject)owner, attributes, meta);
                             break;
                         case "createServer":
                             var created = manager.SysLogServerConfiguration.Create(serverAddress, (ushort)serverPort);
                             meta["created"] = new HmiObject { ["address"] = created.SysLogServerAddress, ["port"] = created.SysLogServerPort };
-                            if (manager.SysLogServerConfiguration.Find(serverAddress) == null) throw new InvalidOperationException("Create returned but Find(address) does not see the new server.");
+                            if (manager.SysLogServerConfiguration.Find(serverAddress) == null)
+                                throw new InvalidOperationException("Create returned but Find(address) does not see the new server.");
                             break;
                         case "deleteServer":
                             existing!.Delete();
-                            if (manager.SysLogServerConfiguration.Find(serverAddress) != null) throw new InvalidOperationException("Delete returned but the server is still found by address.");
+                            if (manager.SysLogServerConfiguration.Find(serverAddress) != null)
+                                throw new InvalidOperationException("Delete returned but the server is still found by address.");
                             meta["verifiedAbsent"] = true; break;
                     }
                     meta["after"] = SyslogManagerRow(manager, meta); meta["apiCallSuccess"] = true;
@@ -96,32 +124,41 @@ namespace TiaMcp.Adapters.Native.Security
 #if SECURITY_PROJECT_SYSLOG
                 // scope=project: Siemens.Engineering.Security.SyslogServerProvider (project service), servers are global objects assignable to modules.
                 if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Attach a project first.");
-                var provider = _session.CurrentProject!.GetService<SyslogServerProvider>() ?? throw new NotSupportedException("SyslogServerProvider service unavailable on this project (project-global syslog servers need TIA V20 or later).");
+                var provider = _session.CurrentProject!.GetService<SyslogServerProvider>()
+                    ?? throw new NotSupportedException("SyslogServerProvider service unavailable on this project (project-global syslog servers need TIA V20 " +
+                    "or later).");
                 SyslogServerComposition composition = provider.Servers;
                 Func<object> fresh = () => (_session.CurrentProject!.GetService<SyslogServerProvider>() ?? provider).Servers;
                 var servers = HardwareGroupOperations.Items(composition).Cast<SyslogServer>().ToArray(); meta["countBefore"] = servers.Length;
                 if (action == "read")
                 {
-                    var rows = string.IsNullOrEmpty(name) ? servers : new[] { servers.FirstOrDefault(s => s.Name == name) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact syslog server not found: " + name) };
+                    var rows = string.IsNullOrEmpty(name) ? servers : new[] {
+                        servers.FirstOrDefault(s => s.Name == name)
+                            ?? throw new PortalException(PortalErrorCode.NotFound, "Exact syslog server not found: " + name)
+                    };
                     meta["records"] = new HmiArray(rows.Select(s => (object?)SyslogServerRow(s)).ToArray()); meta["actualCount"] = rows.Length;
-                    meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["readScope"] = "Name, Address, Port, Tls, Comment and AssignedModules (DeviceItem names with owner paths) of every project-global syslog server.";
+                    meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["readScope"] =
+                        "Name, Address, Port, Tls, Comment and AssignedModules (DeviceItem names with owner paths) of every project-global syslog server.";
                     return "Project syslog servers read; no modification.";
                 }
                 var server = servers.FirstOrDefault(s => s.Name == name);
-                if ((action == "create") == (server != null)) throw new InvalidOperationException(action == "create" ? "Syslog server exists: " + name : "Syslog server not found: " + name);
+                if ((action == "create") == (server != null))
+                    throw new InvalidOperationException(action == "create" ? "Syslog server exists: " + name : "Syslog server not found: " + name);
                 if (server != null) meta["before"] = SyslogServerRow(server);
                 meta["requestedProperties"] = properties.DeepClone();
                 DeviceItem? module = null;
                 if (action == "assignModule" || action == "unassignModule")
                 {
-                    module = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("assignModule/unassignModule need a DeviceItem (non-empty itemPathJson).");
+                    module = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem
+                        ?? throw new ArgumentException("assignModule/unassignModule need a DeviceItem (non-empty itemPathJson).");
                     meta["module"] = new HmiObject { ["name"] = module.Name, ["ownerPath"] = _session.HardwareOwnerPath(module) };
                     bool assigned = server!.AssignedModules.Contains(module); meta["assignedBefore"] = assigned;
                     if (action == "assignModule" && assigned) throw new InvalidOperationException("Module is already assigned to this syslog server.");
                     if (action == "unassignModule" && !assigned) throw new InvalidOperationException("Module is not assigned to this syslog server.");
                 }
                 var prepared = SecurityProperties.Prepare(typeof(SyslogServer), properties);
-                if (!write) return action == "create" ? "Project syslog server create preview (real creation is disabled: " + SecurityCatalog.ProjectSyslogCreateRefusal + ")" : "Project syslog server " + action + " preview; nothing changed.";
+                if (!write) return action == "create" ? "Project syslog server create preview (real creation is disabled: " + SecurityCatalog
+                    .ProjectSyslogCreateRefusal + ")" : "Project syslog server " + action + " preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
                 switch (action)
                 {
@@ -129,21 +166,25 @@ namespace TiaMcp.Adapters.Native.Security
                         server = composition.Create(name); meta["createdName"] = server.Name;
                         if (prepared.Count > 0) SecurityProperties.Apply(server, prepared, meta);
                         meta["foundByNameAfterCreate"] = _session.FindOnFresh(fresh, server.Name, meta, "afterCreate") != null;
-                        if (_session.CountOnFresh(fresh, meta, "countAfter") is int grown && grown != servers.Length + 1) throw new InvalidOperationException("Create returned but the refreshed server count did not grow by one.");
+                        if (_session.CountOnFresh(fresh, meta, "countAfter") is int grown && grown != servers.Length + 1)
+                            throw new InvalidOperationException("Create returned but the refreshed server count did not grow by one.");
                         break;
                     case "update":
                         SecurityProperties.Apply(server!, prepared, meta); break;
                     case "delete":
                         server!.Delete();
-                        if (_session.FindOnFresh(fresh, name, meta, "afterDelete") != null) throw new InvalidOperationException("Delete returned but the syslog server is still listed on the refreshed composition.");
+                        if (_session.FindOnFresh(fresh, name, meta, "afterDelete") != null)
+                            throw new InvalidOperationException("Delete returned but the syslog server is still listed on the refreshed composition.");
                         meta["verifiedAbsent"] = true; _session.CountOnFresh(fresh, meta, "countAfter");
                         return "Project syslog server deleted and verified absent; no save/compile/download.";
                     case "assignModule":
                         server!.AssignedModules.Add(module!);
-                        if (!server.AssignedModules.Contains(module!)) throw new InvalidOperationException("Add returned but AssignedModules does not contain the module.");
+                        if (!server.AssignedModules.Contains(module!))
+                            throw new InvalidOperationException("Add returned but AssignedModules does not contain the module.");
                         break;
                     case "unassignModule":
-                        if (!server!.AssignedModules.Remove(module!) || server.AssignedModules.Contains(module!)) throw new InvalidOperationException("Remove returned false or the module is still assigned.");
+                        if (!server!.AssignedModules.Remove(module!) || server.AssignedModules.Contains(module!))
+                            throw new InvalidOperationException("Remove returned false or the module is still assigned.");
                         break;
                 }
                 meta["after"] = SyslogServerRow(server!); meta["apiCallSuccess"] = true;
@@ -164,7 +205,10 @@ namespace TiaMcp.Adapters.Native.Security
                 "plc" => _session.CurrentProject!.GetService<PlcPasswordPolicyService>(),
                 _ => _session.CurrentProject!.GetService<LegacyPlcPasswordPolicyService>()
             };
-            var row = new HmiObject { ["target"] = target, ["service"] = target == "umac" ? "Umac.PasswordPolicyConfigurator" : target == "plc" ? "Security.PlcPasswordPolicyService" : "Security.LegacyPlcPasswordPolicyService", ["available"] = service != null };
+            var row = new HmiObject {
+                ["target"] = target, ["service"] = target == "umac" ? "Umac.PasswordPolicyConfigurator" : target == "plc" ? "Security.PlcPasswordPolicyService"
+                    : "Security.LegacyPlcPasswordPolicyService", ["available"] = service != null
+            };
             if (service == null) return row;
             try
             {
@@ -172,15 +216,19 @@ namespace TiaMcp.Adapters.Native.Security
                 {
                     PasswordPolicyConfigurator umac => new HmiObject
                     {
-                        ["IncludesLowerCaseAndUpperCaseCharacters"] = umac.IncludesLowerCaseAndUpperCaseCharacters, ["MinimumLength"] = umac.MinimumLength, ["MinimumNumericCharacterLength"] = umac.MinimumNumericCharacterLength,
-                        ["MinimumSpecialCharacterLength"] = umac.MinimumSpecialCharacterLength, ["EnablePasswordAging"] = umac.EnablePasswordAging, ["MinimumUserPasswordsBlockedForReuse"] = umac.MinimumUserPasswordsBlockedForReuse,
+                        ["IncludesLowerCaseAndUpperCaseCharacters"] = umac.IncludesLowerCaseAndUpperCaseCharacters, ["MinimumLength"] = umac.MinimumLength,
+                            ["MinimumNumericCharacterLength"] = umac.MinimumNumericCharacterLength,
+                        ["MinimumSpecialCharacterLength"] = umac.MinimumSpecialCharacterLength, ["EnablePasswordAging"] = umac.EnablePasswordAging,
+                            ["MinimumUserPasswordsBlockedForReuse"] = umac.MinimumUserPasswordsBlockedForReuse,
                         ["PasswordValidity"] = umac.PasswordValidity, ["PasswordValidityPrewarningTime"] = umac.PasswordValidityPrewarningTime
                     },
                     PlcPasswordPolicyService plc => new HmiObject { ["PasswordPolicyEnabled"] = plc.PasswordPolicyEnabled },
                     LegacyPlcPasswordPolicyService legacy => new HmiObject
                     {
-                        ["PasswordPolicyEnabled"] = legacy.PasswordPolicyEnabled, ["MinimumLength"] = legacy.MinimumLength, ["MinimumNumericCharacterLength"] = legacy.MinimumNumericCharacterLength,
-                        ["MinimumSpecialCharacterLength"] = legacy.MinimumSpecialCharacterLength, ["IncludesLowerCaseAndUpperCaseCharacters"] = legacy.IncludesLowerCaseAndUpperCaseCharacters
+                        ["PasswordPolicyEnabled"] = legacy.PasswordPolicyEnabled, ["MinimumLength"] = legacy.MinimumLength, ["MinimumNumericCharacterLength"] =
+                            legacy.MinimumNumericCharacterLength,
+                        ["MinimumSpecialCharacterLength"] = legacy.MinimumSpecialCharacterLength, ["IncludesLowerCaseAndUpperCaseCharacters"] = legacy
+                            .IncludesLowerCaseAndUpperCaseCharacters
                     },
                     _ => throw new NotSupportedException("Unexpected policy service " + service.GetType().FullName)
                 };
@@ -189,7 +237,8 @@ namespace TiaMcp.Adapters.Native.Security
             return row;
         }
 
-        public SecurityResult ManagePasswordPolicy(string action = "read", string target = "", string propertiesJson = "{}", bool confirmChange = false, bool dryRun = true)
+        public SecurityResult ManagePasswordPolicy(string action = "read", string target = "", string propertiesJson = "{}", bool confirmChange = false,
+                bool dryRun = true)
             => _session.RunHmiStepTool("ManagePasswordPolicy", meta => {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var properties = Properties(false);
@@ -202,7 +251,10 @@ namespace TiaMcp.Adapters.Native.Security
                     var targets = string.IsNullOrEmpty(target) ? SecurityCatalog.PolicyTargets : new[] { target };
                     meta["records"] = new HmiArray(targets.Select(t => (object?)PolicyRow(t)).ToArray());
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
-                    meta["scope"] = "umac = project users (PasswordPolicyConfigurator, 8 properties), plc = S7-1200/1500 (PlcPasswordPolicyService.PasswordPolicyEnabled: the UMAC complexity applies to PLC passwords), legacyPlc = S7-300/400 / ET 200S / WinAC (LegacyPlcPasswordPolicyService, own ranges). Passwords themselves are never readable.";
+                    meta["scope"] =
+                        "umac = project users (PasswordPolicyConfigurator, 8 properties), plc = S7-1200/1500 " +
+                        "(PlcPasswordPolicyService.PasswordPolicyEnabled: the UMAC complexity applies to PLC passwords), legacyPlc = S7-300/400 / ET 200S / " +
+                        "WinAC (LegacyPlcPasswordPolicyService, own ranges). Passwords themselves are never readable.";
                     return "Password policies read; no modification.";
                 }
                 object service = (target switch
@@ -213,7 +265,9 @@ namespace TiaMcp.Adapters.Native.Security
                 }) ?? throw new NotSupportedException("Password policy service for target=" + target + " is unavailable on this project.");
                 meta["target"] = target; meta["before"] = PolicyRow(target); meta["requestedProperties"] = properties.DeepClone();
                 var prepared = SecurityProperties.Prepare(service.GetType(), properties);
-                if (!write) return "Password policy update preview; nothing changed (out-of-range values raise PasswordPolicySettingsException natively; legacy ranges are checked before the call).";
+                if (!write)
+                    return "Password policy update preview; nothing changed (out-of-range values raise PasswordPolicySettingsException natively; legacy " +
+                    "ranges are checked before the call).";
                 meta["mayHaveChanged"] = true;
                 SecurityProperties.Apply(service, prepared, meta);
                 meta["after"] = PolicyRow(target); meta["apiCallSuccess"] = true;
@@ -239,12 +293,16 @@ namespace TiaMcp.Adapters.Native.Security
             return row;
         }
         private UmcServerConfigurator RequireUmcServerConfigurator()
-            => _session.CurrentProject!.GetService<UmcServerConfigurator>() ?? throw new NotSupportedException("UmcServerConfigurator service unavailable on this project (available on protected and unprotected projects from TIA V17; one preconfigured UMC server).");
+            => _session.CurrentProject!.GetService<UmcServerConfigurator>()
+                ?? throw new NotSupportedException("UmcServerConfigurator service unavailable on this project (available on protected and unprotected " +
+                "projects from TIA V17; one preconfigured UMC server).");
         // UmcServer.GetUserByName / GetUserGroupByName raise the Authentication event; the credentials go in as SecureString and are never echoed.
-        private static EventHandler<UmcAuthenticationEventArgs>? UmcAuthenticationHandler(string serverUserName, EngineeringCredentialRules.AuthenticationScope? password, HmiObject meta)
+        private static EventHandler<UmcAuthenticationEventArgs>
+            ? UmcAuthenticationHandler(string serverUserName, EngineeringCredentialRules.AuthenticationScope? password, HmiObject meta)
         {
             if (password == null) return null;
-            return (sender, e) => password.Use(secure => { meta["authenticationEventRaised"] = true; e.UmcCredentials.Name = serverUserName; e.UmcCredentials.SetPassword(secure); });
+            return (sender, e) => password
+                .Use(secure => { meta["authenticationEventRaised"] = true; e.UmcCredentials.Name = serverUserName; e.UmcCredentials.SetPassword(secure); });
         }
 
         public SecurityResult ManageUmcUsers(string kind = "user", string action = "read", string name = "", string newName = "", string roleName = "",
@@ -255,8 +313,10 @@ namespace TiaMcp.Adapters.Native.Security
                 _session.Validate("pagination");
                 bool write = request.Writes && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
-                meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["credentialsProvided"] = !string.IsNullOrEmpty(serverPassword);
-                EngineeringCredentialRules.AuthenticationScope? secure = string.IsNullOrEmpty(serverPassword) ? null : new EngineeringCredentialRules.AuthenticationScope(serverPassword);
+                meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["credentialsProvided"] = !string
+                    .IsNullOrEmpty(serverPassword);
+                EngineeringCredentialRules.AuthenticationScope? secure = string.IsNullOrEmpty(serverPassword) ? null : new EngineeringCredentialRules
+                    .AuthenticationScope(serverPassword);
                 try
                 {
                     if (kind == "server")
@@ -265,22 +325,41 @@ namespace TiaMcp.Adapters.Native.Security
                         meta["umcServer"] = server == null ? null : HmiScalar.Read(server);
                         if (action == "read")
                         {
-                            try { meta["attributeNames"] = new HmiArray(server == null ? Array.Empty<object?>() : HardwareGroupOperations.Items(server.GetAttributeInfos()).Select(i => (object?)new HmiObject { ["name"] = i.GetType().GetProperty("Name")?.GetValue(i)?.ToString(), ["accessMode"] = i.GetType().GetProperty("AccessMode")?.GetValue(i)?.ToString() }).ToArray()); }
+                            try {
+                                meta["attributeNames"] =
+                                    new HmiArray(server == null ? Array.Empty<object?>() : HardwareGroupOperations.Items(server.GetAttributeInfos())
+                                        .Select(i => (object?)new HmiObject {
+                                            ["name"] = i.GetType().GetProperty("Name")?.GetValue(i)?.ToString(), ["accessMode"] = i.GetType()
+                                                .GetProperty("AccessMode")?.GetValue(i)?.ToString()
+                                        })
+                                        .ToArray());
+                            }
                             catch (Exception ex) { meta["attributeNamesError"] = ex.GetBaseException().Message; }
                             meta["apiCallSuccess"] = true; meta["dataComplete"] = server != null;
-                            return "UMC server configurator read; the server object carries no public scalars (users/groups are fetched by name with credentials).";
+                            return "UMC server configurator read; the server object carries no public scalars (users/groups are fetched by name with " +
+                                "credentials).";
                         }
-                        if (server == null) throw new PortalException(PortalErrorCode.NotFound, "UmcServerConfigurator.UmcServer is null; no UMC server is configured for this project.");
+                        if (server == null)
+                            throw new PortalException(PortalErrorCode.NotFound,
+                                "UmcServerConfigurator.UmcServer is null; no UMC server is configured for this project.");
                         var handler = UmcAuthenticationHandler(serverUserName, secure, meta);
                         if (handler != null) server.Authentication += handler;
                         try
                         {
 #if SECURITY_UMC_SERVER_SYNC
-                            if (action == "checkConsistency") { meta["consistent"] = configurator.CheckConsistency(); meta["apiCallSuccess"] = true; return "UmcServerConfigurator.CheckConsistency executed (true = the project copy of the UMC data matches the server)."; }
-                            if (!write) return "Synchronize preview; nothing changed (Synchronize refreshes the project's UMC users/groups from the UMC server and needs a reachable server).";
+                            if (action == "checkConsistency") {
+                                meta["consistent"] = configurator.CheckConsistency(); meta["apiCallSuccess"] = true;
+                                return "UmcServerConfigurator.CheckConsistency executed (true = the project copy of the UMC data matches the server).";
+                            }
+                            if (!write)
+                                return "Synchronize preview; nothing changed (Synchronize refreshes the project's UMC users/groups from the UMC server and " +
+                                "needs a reachable server).";
                             meta["mayHaveChanged"] = true; configurator.Synchronize(); meta["apiCallSuccess"] = true;
                             var umacAfter = _session.RequireUmac();
-                            meta["countsAfter"] = new HmiObject { ["umcUsers"] = HardwareGroupOperations.Items(umacAfter.UmcUsers).Count(), ["umcUserGroups"] = HardwareGroupOperations.Items(umacAfter.UmcUserGroups).Count() };
+                            meta["countsAfter"] = new HmiObject {
+                                ["umcUsers"] = HardwareGroupOperations.Items(umacAfter.UmcUsers).Count(), ["umcUserGroups"] = HardwareGroupOperations
+                                    .Items(umacAfter.UmcUserGroups).Count()
+                            };
                             return "UMC data synchronized with the server; counts read back. No save.";
 #else
                             throw new NotSupportedException("UMC consistency/synchronization requires V18 or later.");
@@ -294,16 +373,23 @@ namespace TiaMcp.Adapters.Native.Security
                     var members = HardwareGroupOperations.Items(fresh()).ToArray(); meta["countBefore"] = members.Length;
                     if (action == "read")
                     {
-                        var rows = string.IsNullOrEmpty(name) ? members : new[] { _session.FindOrdinal(members, name, kind) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact UMC " + kind + " not found in the project: " + name) };
+                        var rows = string.IsNullOrEmpty(name) ? members : new[] {
+                            _session.FindOrdinal(members, name, kind)
+                                ?? throw new PortalException(PortalErrorCode.NotFound, "Exact UMC " + kind + " not found in the project: " + name)
+                        };
                         var page = rows.Skip(offset).Take(limit).Select(m => (object?)UmcMemberRow(m)).ToArray();
                         SecurityRules.PageMeta(meta, rows.Length, offset, limit, page.Length); meta["records"] = new HmiArray(page);
                         meta["apiCallSuccess"] = true; meta["dataComplete"] = offset == 0 && page.Length == rows.Length;
-                        meta["scope"] = "UMC " + kind + "s present in the project: Name, IsActive, DomainId (empty for offline members), Description (groups) and role names.";
+                        meta["scope"] = "UMC " + kind
+                            + "s present in the project: Name, IsActive, DomainId (empty for offline members), Description (groups) and role names.";
                         return "UMC " + kind + "s read; no modification.";
                     }
                     var existing = _session.FindOrdinal(members, name, kind);
-                    if (request.Creates && existing != null) throw new InvalidOperationException("UMC " + kind + " already exists in the project: " + name + " (offline creation of an existing name throws EngineeringTargetInvocationException natively).");
-                    if (!request.Creates && existing == null) throw new PortalException(PortalErrorCode.NotFound, "Exact UMC " + kind + " not found in the project: " + name);
+                    if (request.Creates && existing != null)
+                        throw new InvalidOperationException("UMC " + kind + " already exists in the project: " + name
+                            + " (offline creation of an existing name throws EngineeringTargetInvocationException natively).");
+                    if (!request.Creates && existing == null)
+                        throw new PortalException(PortalErrorCode.NotFound, "Exact UMC " + kind + " not found in the project: " + name);
                     if (existing != null) meta["before"] = UmcMemberRow(existing);
                     Role? role = request.NeedsRole ? _session.ExactUmacRole(umac, roleName) : null;
                     if (role != null) meta["role"] = new HmiObject { ["name"] = role.Name, ["roleClass"] = role.GetType().Name };
@@ -315,19 +401,33 @@ namespace TiaMcp.Adapters.Native.Security
                         case "createOffline":
 #if SECURITY_UMC_EXTENDED
                             if (users) created = umcUsers.CreateOfflineUmcUser(name);
-                            else { var newGroup = umcGroups.CreateOfflineUmcUserGroup(); meta["nativeNameBeforeSetName"] = newGroup.Name; newGroup.SetName(name); created = newGroup; }
+                            else {
+                                var newGroup = umcGroups.CreateOfflineUmcUserGroup(); meta["nativeNameBeforeSetName"] = newGroup.Name; newGroup.SetName(name);
+                                created = newGroup;
+                            }
                             break;
 #else
                             throw new NotSupportedException("Offline UMC creation requires V20 or later.");
 #endif
                         case "importFromServer":
                         {
-                            var server = RequireUmcServerConfigurator().UmcServer ?? throw new PortalException(PortalErrorCode.NotFound, "UmcServerConfigurator.UmcServer is null; no UMC server is configured for this project.");
+                            var server = RequireUmcServerConfigurator().UmcServer
+                                ?? throw new PortalException(PortalErrorCode.NotFound,
+                                    "UmcServerConfigurator.UmcServer is null; no UMC server is configured for this project.");
                             var handler = UmcAuthenticationHandler(serverUserName, secure, meta)!; server.Authentication += handler;
                             try
                             {
-                                if (users) { UmcUserInfo info = server.GetUserByName(name) ?? throw new PortalException(PortalErrorCode.NotFound, "UMC server returned no user named " + name); meta["serverInfo"] = new HmiObject { ["name"] = info.Name }; created = umcUsers.Create(info); }
-                                else { UmcUserGroupInfo info = server.GetUserGroupByName(name) ?? throw new PortalException(PortalErrorCode.NotFound, "UMC server returned no user group named " + name); meta["serverInfo"] = new HmiObject { ["userGroupName"] = info.UserGroupName, ["description"] = info.Description }; created = umcGroups.Create(info); }
+                                if (users) {
+                                    UmcUserInfo info = server.GetUserByName(name)
+                                        ?? throw new PortalException(PortalErrorCode.NotFound, "UMC server returned no user named " + name);
+                                    meta["serverInfo"] = new HmiObject { ["name"] = info.Name }; created = umcUsers.Create(info);
+                                }
+                                else {
+                                    UmcUserGroupInfo info = server.GetUserGroupByName(name)
+                                        ?? throw new PortalException(PortalErrorCode.NotFound, "UMC server returned no user group named " + name);
+                                    meta["serverInfo"] = new HmiObject { ["userGroupName"] = info.UserGroupName, ["description"] = info.Description }; created =
+                                        umcGroups.Create(info);
+                                }
                             }
                             finally { server.Authentication -= handler; }
                             break;
@@ -341,18 +441,24 @@ namespace TiaMcp.Adapters.Native.Security
                         case "deactivate": if (users) user!.Deactivate(); else group!.Deactivate(); break;
                         case "delete": if (users) user!.Delete(); else group!.Delete(); break;
                         case "assignRole": if (users) user!.Roles.Add(role!); else group!.Roles.Add(role!); break;
-                        case "unassignRole": if (!(users ? user!.Roles.Remove(role!) : group!.Roles.Remove(role!))) throw new InvalidOperationException("Roles.Remove returned false; the role was not assigned."); break;
+                        case "unassignRole": if (!(users ? user!.Roles.Remove(role!) : group!.Roles.Remove(role!)))
+                            throw new InvalidOperationException("Roles.Remove returned false; the role was not assigned."); break;
                     }
                     meta["apiCallSuccess"] = true;
                     string lookup = request.NeedsNewName ? newName : name;
                     if (request.Deletes)
                     {
-                        if (_session.FindOnFresh(fresh, name, meta, "afterDelete") != null) throw new InvalidOperationException("Delete returned but the UMC " + kind + " is still listed on the refreshed composition.");
+                        if (_session.FindOnFresh(fresh, name, meta, "afterDelete") != null)
+                            throw new InvalidOperationException("Delete returned but the UMC " + kind + " is still listed on the refreshed composition.");
                         meta["verifiedAbsent"] = true; _session.CountOnFresh(fresh, meta, "countAfter");
                         return "UMC " + kind + " deleted from the project and verified absent; no save.";
                     }
-                    var readback = created ?? _session.FindOnFresh(fresh, lookup, meta, "afterChange") ?? throw new InvalidOperationException("Native call returned but the UMC " + kind + " cannot be read back as " + lookup + ".");
-                    if (created != null) { meta["createdName"] = HardwareGroupOperations.Get(created, "Name").ToString(); meta["foundByNameAfterCreate"] = _session.FindOnFresh(fresh, lookup, meta, "afterCreate") != null; _session.CountOnFresh(fresh, meta, "countAfter"); }
+                    var readback = created ?? _session.FindOnFresh(fresh, lookup, meta, "afterChange")
+                        ?? throw new InvalidOperationException("Native call returned but the UMC " + kind + " cannot be read back as " + lookup + ".");
+                    if (created != null) {
+                        meta["createdName"] = HardwareGroupOperations.Get(created, "Name").ToString(); meta["foundByNameAfterCreate"] = _session
+                            .FindOnFresh(fresh, lookup, meta, "afterCreate") != null; _session.CountOnFresh(fresh, meta, "countAfter");
+                    }
                     var after = UmcMemberRow(readback); meta["after"] = after;
                     bool verified = action switch
                     {
@@ -363,7 +469,8 @@ namespace TiaMcp.Adapters.Native.Security
                         "unassignRole" => !after["roles"]!.Array().Any(x => x!.GetValue<string>() == role!.Name),
                         _ => true
                     };
-                    if (!verified) throw new InvalidOperationException("Native call returned but readback does not show the requested state for " + action + ".");
+                    if (!verified)
+                        throw new InvalidOperationException("Native call returned but readback does not show the requested state for " + action + ".");
                     return "UMC " + kind + " " + action + " executed and read back; no save.";
                 }
                 finally { secure?.Dispose(); }

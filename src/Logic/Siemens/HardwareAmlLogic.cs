@@ -104,8 +104,10 @@ namespace TiaMcpServer.Siemens
                 var o = d as JsonObject ?? throw new ArgumentException("devices[] entries must be objects.");
                 var dev = new DeviceSpec { Name = Str(o, "name", ""), TypeIdentifier = Str(o, "typeIdentifier", "") };
                 if (dev.Name.Length == 0) throw new ArgumentException("Every device needs a name.");
-                if (dev.TypeIdentifier.Length == 0) throw new ArgumentException("Device '" + dev.Name + "' needs a typeIdentifier such as 'System:Device.S71500'.");
-                var items = o["deviceItems"] as JsonArray ?? throw new ArgumentException("Device '" + dev.Name + "' needs deviceItems (the rack with its modules).");
+                if (dev.TypeIdentifier.Length == 0)
+                    throw new ArgumentException("Device '" + dev.Name + "' needs a typeIdentifier such as 'System:Device.S71500'.");
+                var items = o["deviceItems"] as JsonArray
+                    ?? throw new ArgumentException("Device '" + dev.Name + "' needs deviceItems (the rack with its modules).");
                 foreach (var it in items) dev.Items.Add(ParseItem(it, dev.Name, ref count, 0));
                 spec.Devices.Add(dev);
             }
@@ -117,7 +119,8 @@ namespace TiaMcpServer.Siemens
                     if (sub.Name.Length == 0) throw new ArgumentException("Every subnet needs a name.");
                     spec.Subnets.Add(sub);
                 }
-            var referenced = spec.Devices.SelectMany(AllItems).SelectMany(i => i.Nodes).Select(n => n.SubnetName).Where(n => n.Length > 0).Distinct(StringComparer.Ordinal).ToList();
+            var referenced = spec.Devices.SelectMany(AllItems).SelectMany(i => i.Nodes).Select(n => n.SubnetName).Where(n => n.Length > 0)
+                .Distinct(StringComparer.Ordinal).ToList();
             foreach (var r in referenced) if (!spec.Subnets.Any(s => s.Name == r)) spec.Subnets.Add(new SubnetSpec { Name = r });
             return spec;
         }
@@ -135,17 +138,24 @@ namespace TiaMcpServer.Siemens
             if (item.Name.Length == 0) throw new ArgumentException("Every device item of '" + owner + "' needs a name.");
             if (o["positionNumber"] != null) item.PositionNumber = o["positionNumber"]!.GetValue<int>();
             if (o["builtIn"] != null) item.BuiltIn = o["builtIn"]!.GetValue<bool>();
-            if (!new[] { "Rack", "DeviceItem", "CommunicationInterface", "CommunicationPort" }.Contains(item.Role)) throw new ArgumentException("Item '" + item.Name + "': role must be Rack, DeviceItem, CommunicationInterface or CommunicationPort.");
+            if (!new[] { "Rack", "DeviceItem", "CommunicationInterface", "CommunicationPort" }.Contains(item.Role))
+                throw new ArgumentException("Item '" + item.Name + "': role must be Rack, DeviceItem, CommunicationInterface or CommunicationPort.");
             if (item.Role == "Rack" && item.PositionNumber == null) item.PositionNumber = 0;
-            if ((item.Role == "DeviceItem" || item.Role == "Rack") && !item.BuiltIn && item.TypeIdentifier.Length == 0) throw new ArgumentException("Item '" + item.Name + "' needs a typeIdentifier (e.g. 'OrderNumber:6ES7 521-1BL00-0AB0/V2.0') unless builtIn=true.");
+            if ((item.Role == "DeviceItem" || item.Role == "Rack") && !item.BuiltIn && item.TypeIdentifier.Length == 0)
+                throw new ArgumentException("Item '" + item.Name
+                    + "' needs a typeIdentifier (e.g. 'OrderNumber:6ES7 521-1BL00-0AB0/V2.0') unless builtIn=true.");
             if (o["attributes"] is JsonObject attrs) foreach (var kv in attrs) item.Attributes[kv.Key] = kv.Value?.ToString() ?? "";
             if (o["nodes"] is JsonArray nodes)
                 foreach (var n in nodes)
                 {
                     var no = n as JsonObject ?? throw new ArgumentException("nodes[] entries of '" + item.Name + "' must be objects.");
-                    var ns = new NodeSpec { Name = Str(no, "name", ""), NetworkAddress = Str(no, "networkAddress", ""), SubnetMask = Str(no, "subnetMask", ""), RouterAddress = Str(no, "routerAddress", ""), SubnetName = Str(no, "subnetName", ""), PnDeviceName = Str(no, "pnDeviceName", "") };
+                    var ns = new NodeSpec {
+                        Name = Str(no, "name", ""), NetworkAddress = Str(no, "networkAddress", ""), SubnetMask = Str(no, "subnetMask", ""), RouterAddress =
+                            Str(no, "routerAddress", ""), SubnetName = Str(no, "subnetName", ""), PnDeviceName = Str(no, "pnDeviceName", "")
+                    };
                     if (ns.Name.Length == 0) ns.Name = "E" + (item.Nodes.Count + 1);
-                    if (ns.NetworkAddress.Length > 0 && !System.Net.IPAddress.TryParse(ns.NetworkAddress, out _) && !ns.NetworkAddress.All(char.IsDigit)) throw new ArgumentException("Node '" + ns.Name + "' has an invalid networkAddress '" + ns.NetworkAddress + "'.");
+                    if (ns.NetworkAddress.Length > 0 && !System.Net.IPAddress.TryParse(ns.NetworkAddress, out _) && !ns.NetworkAddress.All(char.IsDigit))
+                        throw new ArgumentException("Node '" + ns.Name + "' has an invalid networkAddress '" + ns.NetworkAddress + "'.");
                     item.Nodes.Add(ns);
                 }
             if (o["deviceItems"] is JsonArray children) foreach (var c in children) item.Items.Add(ParseItem(c, item.Name, ref count, depth + 1));
@@ -170,7 +180,8 @@ namespace TiaMcpServer.Siemens
                 if (!File.Exists(referenceAmlPath)) throw new FileNotFoundException("referenceAmlPath not found: " + referenceAmlPath, referenceAmlPath);
                 var reference = XDocument.Load(referenceAmlPath, LoadOptions.None);
                 var refRoot = reference.Root ?? throw new InvalidDataException("Reference AML is empty.");
-                if (refRoot.Name.LocalName != "CAEXFile") throw new InvalidDataException("Reference AML root must be CAEXFile, found " + refRoot.Name.LocalName + ".");
+                if (refRoot.Name.LocalName != "CAEXFile")
+                    throw new InvalidDataException("Reference AML root must be CAEXFile, found " + refRoot.Name.LocalName + ".");
                 caex = new XElement(refRoot);
                 referenceInstanceHierarchy = caex.Elements().FirstOrDefault(e => e.Name.LocalName == "InstanceHierarchy");
                 foreach (var old in caex.Elements().Where(e => e.Name.LocalName == "InstanceHierarchy").ToList()) old.Remove();
@@ -183,12 +194,15 @@ namespace TiaMcpServer.Siemens
             {
                 caex = BuiltinSkeleton(fileName, writerVersion);
                 result.LibraryOrigin = "builtin (not validated against a TIA import)";
-                result.Warnings.Add("No referenceAmlPath: header and role class libraries come from the built-in skeleton. Export any project once with ExportDeviceAml and pass the file as referenceAmlPath for a version-exact header.");
+                result.Warnings
+                    .Add("No referenceAmlPath: header and role class libraries come from the built-in skeleton. Export any project once with ExportDeviceAml " +
+                    "and pass the file as referenceAmlPath for a version-exact header.");
             }
 
             var ns = caex.Name.Namespace;
             var ih = new XElement(ns + "InstanceHierarchy", new XAttribute("Name", spec.ProjectName + " Instance Hierarchy"));
-            if (referenceInstanceHierarchy != null && (string?)referenceInstanceHierarchy.Attribute("Name") is string ihName && ihName.Length > 0) ih.SetAttributeValue("Name", ihName);
+            if (referenceInstanceHierarchy != null && (string?)referenceInstanceHierarchy.Attribute("Name") is string ihName && ihName.Length > 0) ih
+                .SetAttributeValue("Name", ihName);
             var project = Element(ns, spec.ProjectName);
             ih.Add(project);
             var subnetInterfaceIds = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -197,7 +211,9 @@ namespace TiaMcpServer.Siemens
                 var subnet = Element(ns, sub.Name);
                 subnet.Add(Attr(ns, "Type", "xs:string", sub.Type));
                 var ifId = NewId();
-                subnet.Add(new XElement(ns + "ExternalInterface", new XAttribute("Name", "LogicalEndPoint_Subnet"), new XAttribute("ID", ifId), new XAttribute("RefBaseClassPath", InterfaceLib + "/LogicalEndPoint")));
+                subnet
+                    .Add(new XElement(ns + "ExternalInterface", new XAttribute("Name", "LogicalEndPoint_Subnet"), new XAttribute("ID", ifId),
+                            new XAttribute("RefBaseClassPath", InterfaceLib + "/LogicalEndPoint")));
                 subnetInterfaceIds[sub.Name] = ifId;
                 project.Add(WithRole(ns, subnet, "Subnet"));
                 result.Subnets++;
@@ -215,7 +231,8 @@ namespace TiaMcpServer.Siemens
             WithRole(ns, project, "AutomationProject");
             result.Links = links.Count;
             // CAEX order: AdditionalInformation*, ExternalReference*, InstanceHierarchy*, InterfaceClassLib*, RoleClassLib*, SystemUnitClassLib*
-            var anchor = caex.Elements().FirstOrDefault(e => e.Name.LocalName == "InterfaceClassLib" || e.Name.LocalName == "RoleClassLib" || e.Name.LocalName == "SystemUnitClassLib");
+            var anchor = caex.Elements()
+                .FirstOrDefault(e => e.Name.LocalName == "InterfaceClassLib" || e.Name.LocalName == "RoleClassLib" || e.Name.LocalName == "SystemUnitClassLib");
             if (anchor != null) anchor.AddBeforeSelf(ih); else caex.Add(ih);
             result.Document = new XDocument(new XDeclaration("1.0", "utf-8", null), caex);
             return result;
@@ -242,8 +259,12 @@ namespace TiaMcpServer.Siemens
                 if (node.SubnetName.Length > 0 && subnetInterfaceIds.TryGetValue(node.SubnetName, out var subnetIf))
                 {
                     var nodeIf = NewId();
-                    n.Add(new XElement(ns + "ExternalInterface", new XAttribute("Name", "LogicalEndPoint_Node"), new XAttribute("ID", nodeIf), new XAttribute("RefBaseClassPath", InterfaceLib + "/LogicalEndPoint")));
-                    links.Add(new XElement(ns + "InternalLink", new XAttribute("Name", "Link To " + node.SubnetName + "_" + item.Name + "_" + node.Name), new XAttribute("RefPartnerSideA", nodeIf), new XAttribute("RefPartnerSideB", subnetIf)));
+                    n
+                        .Add(new XElement(ns + "ExternalInterface", new XAttribute("Name", "LogicalEndPoint_Node"), new XAttribute("ID", nodeIf),
+                                new XAttribute("RefBaseClassPath", InterfaceLib + "/LogicalEndPoint")));
+                    links
+                        .Add(new XElement(ns + "InternalLink", new XAttribute("Name", "Link To " + node.SubnetName + "_" + item.Name + "_" + node.Name),
+                                new XAttribute("RefPartnerSideA", nodeIf), new XAttribute("RefPartnerSideB", subnetIf)));
                 }
                 e.Add(WithRole(ns, n, "Node"));
                 result.Nodes++;
@@ -290,7 +311,8 @@ namespace TiaMcpServer.Siemens
                 new XElement("InterfaceClassLib", new XAttribute("Name", InterfaceLib),
                     new XElement("Description", "Communication interface class library"),
                     new XElement("Version", "1.0.0"),
-                    new XElement("InterfaceClass", new XAttribute("Name", "LogicalEndPoint"), new XAttribute("RefBaseClassPath", "AutomationMLInterfaceClassLib/AutomationMLBaseInterface"))),
+                    new XElement("InterfaceClass", new XAttribute("Name", "LogicalEndPoint"),
+                            new XAttribute("RefBaseClassPath", "AutomationMLInterfaceClassLib/AutomationMLBaseInterface"))),
                 new XElement("RoleClassLib", new XAttribute("Name", BaseRoleLib),
                     new XElement("Description", "Automation Markup Language base role class library"),
                     new XElement("Version", "2.2.2"),
@@ -298,7 +320,8 @@ namespace TiaMcpServer.Siemens
                 new XElement("RoleClassLib", new XAttribute("Name", RoleLib),
                     new XElement("Description", "Automation Project Configuration Role Class Library"),
                     new XElement("Version", "1.0.0"),
-                    new XElement("RoleClass", new XAttribute("Name", "AutomationProject"), new XAttribute("RefBaseClassPath", BaseRoleLib + "/AutomationMLBaseRole")),
+                    new XElement("RoleClass", new XAttribute("Name", "AutomationProject"),
+                            new XAttribute("RefBaseClassPath", BaseRoleLib + "/AutomationMLBaseRole")),
                     new XElement("RoleClass", new XAttribute("Name", "Device"), new XAttribute("RefBaseClassPath", BaseRoleLib + "/AutomationMLBaseRole")),
                     new XElement("RoleClass", new XAttribute("Name", "DeviceItem"), new XAttribute("RefBaseClassPath", BaseRoleLib + "/AutomationMLBaseRole")),
                     new XElement("RoleClass", new XAttribute("Name", "Rack"), new XAttribute("RefBaseClassPath", RoleLib + "/DeviceItem")),

@@ -9,7 +9,9 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal static class CapabilitySelfTestLogic
     {
-        internal static async Task<ResponseCapabilitySelfTest> Run(Func<bool> group, Func<IEnumerable<string>> processes, Func<State> stateReader, Func<bool> connect, Func<string, string, ResponseMessage> validate, Func<string> tree, bool connectIfNeeded, bool includeProjectTree, bool inspectPortalProcesses, string expectedPlcSoftwarePath, string expectedHmiSoftwarePath)
+        internal static async Task<ResponseCapabilitySelfTest> Run(Func<bool> group, Func<IEnumerable<string>> processes, Func<State> stateReader,
+                Func<bool> connect, Func<string, string, ResponseMessage> validate, Func<string> tree, bool connectIfNeeded, bool includeProjectTree,
+                bool inspectPortalProcesses, string expectedPlcSoftwarePath, string expectedHmiSoftwarePath)
         {
             var items = new List<CapabilitySelfTestItem>();
             string? projectTree = null;
@@ -31,7 +33,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 try
                 {
                     opennessOk = group();
-                    Add("openness.user-group", "Siemens TIA Openness user group", opennessOk ? "pass" : "fail", opennessOk ? "Current user is in the Openness group." : "Current user is not in the Openness group, or membership could not be confirmed.");
+                    Add("openness.user-group", "Siemens TIA Openness user group", opennessOk ? "pass" : "fail", opennessOk
+                            ? "Current user is in the Openness group." : "Current user is not in the Openness group, or membership could not be confirmed.");
                 }
                 catch (Exception ex)
                 {
@@ -44,7 +47,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     try
                     {
                         var processProjects = processes();
-                        Add("tia.processes", "Visible TIA Portal processes", processProjects.Any() ? "pass" : "warn", string.Join(Environment.NewLine, processProjects));
+                        Add("tia.processes", "Visible TIA Portal processes", processProjects.Any() ? "pass" : "warn", string
+                                .Join(Environment.NewLine, processProjects));
                     }
                     catch (Exception ex)
                     {
@@ -53,7 +57,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    Add("tia.processes", "Visible TIA Portal processes", "skip", "Process/project inspection skipped. Set inspectPortalProcesses=true to run it.");
+                    Add("tia.processes", "Visible TIA Portal processes", "skip",
+                            "Process/project inspection skipped. Set inspectPortalProcesses=true to run it.");
                 }
 
                 var state = connectIfNeeded ? stateReader() : null;
@@ -71,16 +76,20 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
 
-                Add("tia.connection", "MCP connection state", isConnected ? "pass" : "warn", $"IsConnected={state?.IsConnected}; Project={state?.Project}; Session={state?.Session}");
+                Add("tia.connection", "MCP connection state", isConnected ? "pass" : "warn",
+                        $"IsConnected={state?.IsConnected}; Project={state?.Project}; Session={state?.Session}");
 
-                var hasProject = isConnected && state != null && (!string.IsNullOrWhiteSpace(state.Project) && state.Project != "-" || !string.IsNullOrWhiteSpace(state.Session) && state.Session != "-");
+                var hasProject = isConnected && state != null
+                    && (!string.IsNullOrWhiteSpace(state.Project) && state.Project != "-" || !string.IsNullOrWhiteSpace(state.Session) && state.Session != "-");
                 if (hasProject)
                 {
                     try
                     {
                         var validation = validate(expectedPlcSoftwarePath, expectedHmiSoftwarePath);
-                        var success = validation.Meta != null && validation.Meta.TryGetPropertyValue("success", out var value) && value != null && value.GetValue<bool>();
-                        Add("project.automation-context", "Automation context validation", success ? "pass" : "warn", validation.Message ?? "ValidateAutomationContext returned no message.");
+                        var success = validation.Meta != null && validation.Meta.TryGetPropertyValue("success", out var value) && value != null && value
+                            .GetValue<bool>();
+                        Add("project.automation-context", "Automation context validation", success ? "pass" : "warn", validation.Message
+                                ?? "ValidateAutomationContext returned no message.");
                     }
                     catch (Exception ex)
                     {
@@ -92,7 +101,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         try
                         {
                             projectTree = tree();
-                            Add("project.tree", "Project tree readback", string.IsNullOrWhiteSpace(projectTree) ? "warn" : "pass", string.IsNullOrWhiteSpace(projectTree) ? "Project tree was empty." : "Project tree read successfully.");
+                            Add("project.tree", "Project tree readback", string.IsNullOrWhiteSpace(projectTree) ? "warn" : "pass", string
+                                    .IsNullOrWhiteSpace(projectTree) ? "Project tree was empty." : "Project tree read successfully.");
                         }
                         catch (Exception ex)
                         {

@@ -25,7 +25,8 @@ namespace TiaMcp.Adapters
         public string? RecoveryWarning { get; internal set; }
         public Dictionary<string, string>[] RecoverySkipped { get; internal set; } = new Dictionary<string, string>[0];
         public string? RecoveryStatus { get; internal set; }
-        public System.Collections.Generic.Dictionary<string, string> RecoveryFiles { get; internal set; } = new System.Collections.Generic.Dictionary<string, string>();
+        public System.Collections.Generic.Dictionary<string, string> RecoveryFiles { get; internal set; } = new System.Collections.Generic.Dictionary<string,
+            string>();
         public string? XmlContent { get; internal set; }
         public bool? FullProgramRestoreSupported { get; internal set; }
         public string[] Warnings { get; internal set; } = new string[0];

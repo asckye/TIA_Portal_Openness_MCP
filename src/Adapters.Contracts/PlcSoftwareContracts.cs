@@ -54,7 +54,10 @@ namespace TiaMcp.Adapters.Contracts
         public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>();
     }
 
-    public sealed class SeedHmiRequest { public string Kind { get; set; } = ""; public string SoftwarePath { get; set; } = ""; public string FolderPath { get; set; } = ""; public string Directory { get; set; } = ""; }
+    public sealed class SeedHmiRequest {
+        public string Kind { get; set; } = ""; public string SoftwarePath { get; set; } = ""; public string FolderPath { get; set; } = "";
+        public string Directory { get; set; } = "";
+    }
 
     public sealed class PlcSeedHmiReply
     {

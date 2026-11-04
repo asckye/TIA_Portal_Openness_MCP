@@ -18,13 +18,16 @@ public static class ProjectSecurityPrimitives
 {
     public static object? FindOrdinal(object collection, string name, string kind)
     {
-        var matches = HardwareGroupOperations.Items(collection).Where(x => string.Equals(HardwareGroupOperations.Get(x, "Name").ToString(), name, StringComparison.Ordinal)).Take(2).ToArray();
+        var matches = HardwareGroupOperations.Items(collection)
+            .Where(x => string.Equals(HardwareGroupOperations.Get(x, "Name").ToString(), name, StringComparison.Ordinal)).Take(2).ToArray();
         if (matches.Length > 1) throw new InvalidOperationException("Ambiguous exact " + kind + " name: " + name);
         return matches.SingleOrDefault();
     }
 #if SECURITY_UMAC
     public static UmacConfigurator RequireUmac(EngineeringProject project)
-        => project.GetService<UmacConfigurator>() ?? throw new NotSupportedException("UmacConfigurator service unavailable on this project: TIA returns it only for a protected project opened with UMAC credentials. Enabling protection is intentionally not exposed.");
+        => project.GetService<UmacConfigurator>()
+            ?? throw new NotSupportedException("UmacConfigurator service unavailable on this project: TIA returns it only for a protected project opened " +
+            "with UMAC credentials. Enabling protection is intentionally not exposed.");
     public static Role ExactUmacRole(UmacConfigurator umac, string name)
     {
         var custom = FindOrdinal(umac.CustomRoles, name, "custom role"); var system = FindOrdinal(umac.SystemRoles, name, "system role");

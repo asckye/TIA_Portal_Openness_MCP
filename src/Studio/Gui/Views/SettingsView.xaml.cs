@@ -61,7 +61,10 @@ public partial class SettingsView : UserControl
         }
     }
 
-    internal void Dispose() { if (_session != null) _session.PropertyChanged -= OnSessionChanged; _session = null; if (_approvals != null) _approvals.PropertyChanged -= OnApprovalChanged; _approvals = null; }
+    internal void Dispose() {
+        if (_session != null) _session.PropertyChanged -= OnSessionChanged; _session = null; if (_approvals != null) _approvals
+            .PropertyChanged -= OnApprovalChanged; _approvals = null;
+    }
     private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.TimeoutSeconds))) return;
@@ -95,7 +98,10 @@ public partial class SettingsView : UserControl
     private async Task SaveApproval(Action action)
     {
         try { await Task.Run(action); }
-        catch (Exception ex) { Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) {
+            Controls.WorkbenchMessageBox
+                .Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+        }
         UpdateApproval();
     }
 
@@ -109,8 +115,12 @@ public partial class SettingsView : UserControl
     {
         if (_session?.CanSetNativeCrossReferences != true) { UpdateNativeCrossReferences(); return; }
         try { await _session.SetNativeCrossReferencesAsync(NativeCrossReferencesEnabled.IsChecked == true); }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or System.Threading.Tasks.TaskCanceledException)
-        { Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), error.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or System.Threading.Tasks
+                .TaskCanceledException)
+        {
+            Controls.WorkbenchMessageBox
+                .Show(Window.GetWindow(this), error.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+        }
         UpdateNativeCrossReferences();
     }
 
@@ -131,7 +141,8 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.WorkbenchMessageBox
+                .Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

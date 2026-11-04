@@ -26,12 +26,17 @@ namespace TiaMcp.Adapters
             try
             {
                 if (session.IsProjectNull())
-                    return new BlockDocumentExportReply { Status = "InvalidState", Message = "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)" };
+                    return new BlockDocumentExportReply {
+                        Status = "InvalidState", Message =
+                            "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
+                            "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)"
+                    };
                 var block = session.GetBlock(softwarePath, blockPath);
                 if (block == null) return new BlockDocumentExportReply { Status = "NotFound", Message = "Block not found: '" + blockPath + "'" };
                 var groupPath = block.Parent is PlcBlockGroup parent ? session.GetPlcBlockGroupPath(parent) : "";
                 var exportPath = Path.Combine(tempDir, block.Name + ".xml");
-                TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks", block.IsConsistent ? Array.Empty<string>() : new[] { blockPath }, "blockPath");
+                TiaOpenness.Shared.NativeExportPolicy
+                    .RequireConsistent("blocks", block.IsConsistent ? Array.Empty<string>() : new[] { blockPath }, "blockPath");
                 if (File.Exists(exportPath)) File.Delete(exportPath);
                 block.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)), ExportOptions.None);
                 EngineeringRecordExportPath?.Invoke(exportPath);

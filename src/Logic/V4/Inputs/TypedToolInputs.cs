@@ -40,7 +40,9 @@ namespace TiaMcp.Logic.V4.Inputs
             if (typeof(ConstructionNode).IsAssignableFrom(type)) return Generic(nameof(Construction), type);
             if (typeof(HmiObject).IsAssignableFrom(type)) return Generic(nameof(Hmi), type);
             if (type == typeof(PropertyStep[])) return From(new InputContract<PropertyStep[]>(InputSchema.Array(
-                new InputSchema(V4Json.ParseInput("{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"property\"],\"properties\":{\"property\":{\"type\":\"string\",\"minLength\":1},\"name\":{\"type\":\"string\",\"minLength\":1},\"key\":{\"type\":\"string\",\"enum\":[\"Name\",\"PropertyName\"]},\"index\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":2147483647}},\"not\":{\"required\":[\"name\",\"index\"]}}")), maximum: 24), new InputBudget(32768)));
+                new InputSchema(V4Json
+                        .ParseInput("{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"property\"],\"properties\":{\"property\":{\"type\":\"string\",\"minLength\":1},\"name\":{\"type\":\"string\",\"minLength\":1},\"key\":{\"type\":\"string\",\"enum\":[\"Name\",\"PropertyName\"]},\"index\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":2147483647}},\"not\":{\"required\":[\"name\",\"index\"]}}")),
+                    maximum: 24), new InputBudget(32768)));
             if (type == typeof(ParameterRef[])) return From(NumberListValidator.ParameterReferences());
             if (type == typeof(Scalar)) return From(new InputContract<Scalar>(InputSchema.Scalar(), new InputBudget()));
             if (type == typeof(CompositeAttributeMap)) return From(CompositeAttributeMapValidator.Generic());

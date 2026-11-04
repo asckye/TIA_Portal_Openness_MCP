@@ -27,20 +27,26 @@ namespace TiaMcp.Adapters.Native.Hmi
     {
         internal const string UiNamespace = "Siemens.Engineering.HmiUnified.UI.";
         internal const string ScreenItemBase = UiNamespace + "Base.HmiScreenItemBase";
-        internal static readonly string[] ItemNamespaces = { UiNamespace + "Shapes", UiNamespace + "Widgets", UiNamespace + "Controls", UiNamespace + "Screens" };
+        internal static readonly string[] ItemNamespaces = { UiNamespace + "Shapes", UiNamespace + "Widgets", UiNamespace + "Controls", UiNamespace + "Screens"
+        };
         private static readonly string[] BaseContainers = { UiNamespace + "Base.HmiCustomWebControlContainer", UiNamespace + "Base.HmiCustomWidgetContainer" };
         internal static readonly string[] Actions = { "read", "list", "create", "update", "delete" };
         private static readonly string[] BackLinks = { "Parent", "Owner", "Project", "Portal", "Site", "Container", "Device", "AssignedHmiDevice" };
 
-        internal static bool ValidateRequest(string action, string itemName, string itemType, UnifiedObject changes, bool confirmDelete, bool dryRun, string containedType = "")
+        internal static bool ValidateRequest(string action, string itemName, string itemType, UnifiedObject changes, bool confirmDelete, bool dryRun,
+                string containedType = "")
         {
             if (!Actions.Contains(action)) throw new ArgumentException("action must be read/list/create/update/delete.");
-            if (action != "create" && !string.IsNullOrEmpty(containedType)) throw new ArgumentException("containedType is only used by create (faceplate / custom widget containers).");
+            if (action != "create" && !string.IsNullOrEmpty(containedType))
+                throw new ArgumentException("containedType is only used by create (faceplate / custom widget containers).");
             if (action != "list" && string.IsNullOrWhiteSpace(itemName)) throw new ArgumentException("Exact itemName required for " + action + ".");
-            if (!string.IsNullOrEmpty(itemName) && (itemName.Length > 128 || itemName.IndexOfAny(new[] { '/', '\\' }) >= 0)) throw new ArgumentException("itemName must be 1..128 characters without path separators.");
-            if (action == "create" && string.IsNullOrWhiteSpace(itemType)) throw new ArgumentException("create requires itemType (e.g. HmiCircle, Widgets.HmiSlider or a full CLR name).");
+            if (!string.IsNullOrEmpty(itemName) && (itemName.Length > 128 || itemName.IndexOfAny(new[] { '/', '\\' }) >= 0))
+                throw new ArgumentException("itemName must be 1..128 characters without path separators.");
+            if (action == "create" && string.IsNullOrWhiteSpace(itemType))
+                throw new ArgumentException("create requires itemType (e.g. HmiCircle, Widgets.HmiSlider or a full CLR name).");
             if (action != "create" && !string.IsNullOrEmpty(itemType)) throw new ArgumentException("itemType is only used by create.");
-            if ((action == "read" || action == "list" || action == "delete") && changes.Count != 0) throw new ArgumentException("propertiesJson is only accepted by create/update.");
+            if ((action == "read" || action == "list" || action == "delete") && changes.Count != 0)
+                throw new ArgumentException("propertiesJson is only accepted by create/update.");
             if (action == "update" && changes.Count == 0) throw new ArgumentException("update requires nonempty propertiesJson.");
             if (action == "read" || action == "list" || dryRun) return false;
             if (action == "delete" && !confirmDelete) throw new ArgumentException("Real delete requires confirmDelete=true besides dryRun=false.");
@@ -49,7 +55,8 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         internal static UnifiedObject ParseProperties(string propertiesJson)
         {
-            if (string.IsNullOrWhiteSpace(propertiesJson) || propertiesJson.Length > 65536) throw new ArgumentException("propertiesJson must be a JSON object (<= 64 KB).");
+            if (string.IsNullOrWhiteSpace(propertiesJson) || propertiesJson.Length > 65536)
+                throw new ArgumentException("propertiesJson must be a JSON object (<= 64 KB).");
             return UnifiedAccess.Parse(propertiesJson) as UnifiedObject ?? throw new ArgumentException("propertiesJson must be a JSON object.");
         }
 
@@ -60,7 +67,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             var root = assembly.GetType(ScreenItemBase, false);
             return LoadableTypes(assembly)
                 .Where(t => t.IsClass && !t.IsAbstract && t.IsPublic && !t.Name.EndsWith("Base", StringComparison.Ordinal)
-                    && t.Namespace != null && (ItemNamespaces.Contains(t.Namespace) || BaseContainers.Contains(t.FullName)) && (root == null || root.IsAssignableFrom(t)))
+                    && t.Namespace != null && (ItemNamespaces.Contains(t.Namespace) || BaseContainers.Contains(t.FullName))
+                        && (root == null || root.IsAssignableFrom(t)))
                 .OrderBy(t => t.Namespace, StringComparer.Ordinal).ThenBy(t => t.Name, StringComparer.Ordinal).ToList();
         }
         internal static bool RequiresContainedType(Type type)
@@ -96,18 +104,26 @@ namespace TiaMcp.Adapters.Native.Hmi
                     || string.Equals(t.Namespace!.Substring(UiNamespace.Length) + "." + t.Name, key, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(t.FullName, key, StringComparison.OrdinalIgnoreCase)).ToList();
             if (matches.Count == 1) return matches[0];
-            if (matches.Count > 1) throw new ArgumentException("Ambiguous itemType '" + key + "': " + string.Join(", ", matches.Select(t => t.FullName)) + ". Use the namespace-qualified name.");
+            if (matches.Count > 1)
+                throw new ArgumentException("Ambiguous itemType '" + key + "': " + string.Join(", ", matches.Select(t => t.FullName))
+                    + ". Use the namespace-qualified name.");
             var similar = types.Where(t => t.Name.IndexOf(key, StringComparison.OrdinalIgnoreCase) >= 0).Select(t => t.Name).Take(8).ToList();
-            throw new ArgumentException("Unknown screen item type '" + key + "'." + (similar.Count > 0 ? " Similar: " + string.Join(", ", similar) + "." : "") + " Call DescribeUnifiedScreenItemType with an empty itemType for the catalog.");
+            throw new ArgumentException("Unknown screen item type '" + key + "'." + (similar.Count > 0 ? " Similar: " + string.Join(", ", similar) + "." : "")
+                    + " Call DescribeUnifiedScreenItemType with an empty itemType for the catalog.");
         }
 
-        internal static string Group(Type type) => type.Namespace != null && type.Namespace.StartsWith(UiNamespace, StringComparison.Ordinal) ? type.Namespace.Substring(UiNamespace.Length) : type.Namespace ?? "";
+        internal static string Group(Type type) => type.Namespace != null && type.Namespace.StartsWith(UiNamespace, StringComparison.Ordinal) ? type.Namespace
+            .Substring(UiNamespace.Length) : type.Namespace ?? "";
         internal static UnifiedArray Features(Type type)
-            => new UnifiedArray(type.GetInterfaces().Where(i => i.Namespace == UiNamespace + "Features").Select(i => i.Name).OrderBy(n => n, StringComparer.Ordinal).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray());
+            =>
+                new UnifiedArray(type.GetInterfaces().Where(i => i.Namespace == UiNamespace + "Features").Select(i => i.Name)
+                    .OrderBy(n => n, StringComparer.Ordinal).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray());
         internal static UnifiedArray BaseChain(Type type)
         {
             var chain = new UnifiedArray();
-            for (var t = type.BaseType; t != null && t != typeof(object) && t.Namespace?.StartsWith("Siemens.Engineering", StringComparison.Ordinal) == true; t = t.BaseType) chain.Add(t.Name);
+            for (var t = type.BaseType; t != null && t != typeof(object) && t.Namespace?
+                    .StartsWith("Siemens.Engineering", StringComparison.Ordinal) == true; t = t.BaseType)
+                chain.Add(t.Name);
             return chain;
         }
 
@@ -118,7 +134,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (UnifiedUiModelLogic.IsColor(t)) return "color";
             if (UnifiedScalar.Scalar(t) || t == typeof(object)) return "scalar";
             if (t.Name == "MultilingualText") return "multilingual";
-            if (typeof(IEnumerable).IsAssignableFrom(t) && t != typeof(string)) return t.Name.EndsWith("Composition", StringComparison.Ordinal) || t.Name.EndsWith("Association", StringComparison.Ordinal) ? "collection" : "enumerable";
+            if (typeof(IEnumerable).IsAssignableFrom(t) && t != typeof(string)) return t.Name.EndsWith("Composition", StringComparison.Ordinal) || t.Name
+                .EndsWith("Association", StringComparison.Ordinal) ? "collection" : "enumerable";
             if (t.Namespace == UiNamespace + "Parts" || t.Name.EndsWith("Part", StringComparison.Ordinal)) return "part";
             return "reference";
         }
@@ -138,7 +155,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var element = t.GetProperty("Item")?.PropertyType;
                 row["elementType"] = element?.Name;
                 var creates = t.GetMethods(BindingFlags.Instance | BindingFlags.Public).Where(m => m.Name == "Create")
-                    .Select(m => "Create" + (m.IsGenericMethodDefinition ? "<T>" : "") + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
+                    .Select(m => "Create" + (m.IsGenericMethodDefinition ? "<T>" : "") + "(" + string
+                            .Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
                 row["create"] = new UnifiedArray(creates.Select(c => (UnifiedNode)UnifiedValues.Value(c)!).ToArray());
             }
             if (kind == "part" && depth > 0) row["properties"] = Schema(t, depth - 1);
@@ -157,13 +175,17 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         internal static UnifiedObject TypeDescription(Type type, int depth = 2)
         {
-            var events = UnifiedUiModelLogic.FindProperty(type, "EventHandlers")?.PropertyType.GetMethods().FirstOrDefault(m => m.Name == "Create" && m.GetParameters().Length == 1
+            var events = UnifiedUiModelLogic.FindProperty(type, "EventHandlers")?.PropertyType.GetMethods()
+                .FirstOrDefault(m => m.Name == "Create" && m.GetParameters().Length == 1
                 && (m.GetParameters()[0].ParameterType.IsEnum || m.GetParameters()[0].ParameterType == typeof(string)))?.GetParameters()[0].ParameterType;
             return new UnifiedObject
             {
                 ["type"] = type.FullName, ["name"] = type.Name, ["group"] = Group(type), ["baseTypes"] = BaseChain(type), ["features"] = Features(type),
-                ["hasDynamizations"] = UnifiedUiModelLogic.FindProperty(type, "Dynamizations") != null, ["hasEventHandlers"] = UnifiedUiModelLogic.FindProperty(type, "EventHandlers") != null,
-                ["eventTypes"] = events == null ? null : new UnifiedArray((events == typeof(string) ? Array.Empty<string>() : Enum.GetNames(events)).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray()),
+                ["hasDynamizations"] = UnifiedUiModelLogic.FindProperty(type, "Dynamizations") != null, ["hasEventHandlers"] = UnifiedUiModelLogic
+                    .FindProperty(type, "EventHandlers") != null,
+                ["eventTypes"] = events == null ? null
+                    : new UnifiedArray((events == typeof(string) ? Array.Empty<string>() : Enum.GetNames(events))
+                        .Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray()),
                 ["eventTypeType"] = events?.FullName, ["eventTypesRequireBinding"] = events == typeof(string),
                 ["requiresContainedType"] = RequiresContainedType(type),
                 ["deletable"] = type.GetMethod("Delete", Type.EmptyTypes) != null,
@@ -171,7 +193,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             };
         }
         internal static UnifiedArray Catalog(Assembly assembly)
-            => new UnifiedArray(ItemTypes(assembly).Select(t => (UnifiedNode)new UnifiedObject { ["name"] = t.Name, ["group"] = Group(t), ["type"] = t.FullName, ["features"] = Features(t) }).ToArray());
+            =>
+                new UnifiedArray(ItemTypes(assembly)
+                    .Select(t => (UnifiedNode)new UnifiedObject { ["name"] = t.Name, ["group"] = Group(t), ["type"] = t.FullName, ["features"] = Features(t) })
+                    .ToArray());
 
         internal sealed class TextEdit
         {
@@ -199,12 +224,15 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var name = string.Join(".", path.Concat(new[] { change.Key }));
                 if (property?.PropertyType.Name == "MultilingualText")
                 {
-                    var languages = change.Value as UnifiedObject ?? throw new ArgumentException(name + " is a MultilingualText: pass {\"<culture>\": \"text\"} per language.");
+                    var languages = change.Value as UnifiedObject
+                        ?? throw new ArgumentException(name + " is a MultilingualText: pass {\"<culture>\": \"text\"} per language.");
                     if (languages.Count == 0) throw new ArgumentException(name + " needs at least one culture entry.");
                     foreach (var language in languages)
                     {
-                        if (string.IsNullOrWhiteSpace(language.Key) || language.Key.Length > 16) throw new ArgumentException("Culture name required for " + name + ".");
-                        var text = UnifiedAccess.TryString(language.Value, out var s) ? s : throw new ArgumentException(name + "." + language.Key + " must be a string (empty clears).");
+                        if (string.IsNullOrWhiteSpace(language.Key) || language.Key.Length > 16)
+                            throw new ArgumentException("Culture name required for " + name + ".");
+                        var text = UnifiedAccess.TryString(language.Value, out var s) ? s
+                            : throw new ArgumentException(name + "." + language.Key + " must be a string (empty clears).");
                         texts.Add(new TextEdit { Path = path, Property = change.Key, Culture = language.Key, Text = text });
                     }
                     continue;
@@ -226,19 +254,24 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             object owner = item;
             foreach (var step in path)
-                owner = UnifiedUiModelLogic.FindProperty(owner.GetType(), step)?.GetValue(owner) ?? throw new InvalidOperationException("Nested part is null: " + step);
+                owner = UnifiedUiModelLogic.FindProperty(owner.GetType(), step)?.GetValue(owner)
+                    ?? throw new InvalidOperationException("Nested part is null: " + step);
             return owner;
         }
 
         // Compact list row: identity plus the geometry every visible item shares.
         internal static UnifiedObject ListRow(object item, int index)
         {
-            var row = new UnifiedObject { ["index"] = index, ["name"] = UnifiedUiModelLogic.FindProperty(item.GetType(), "Name")?.GetValue(item)?.ToString(), ["type"] = item.GetType().Name, ["group"] = Group(item.GetType()) };
+            var row = new UnifiedObject {
+                ["index"] = index, ["name"] = UnifiedUiModelLogic.FindProperty(item.GetType(), "Name")?.GetValue(item)?.ToString(), ["type"] = item.GetType()
+                    .Name, ["group"] = Group(item.GetType())
+            };
             foreach (var name in new[] { "Left", "Top", "Width", "Height", "Visible", "Enabled", "TabIndex" })
             {
                 var p = UnifiedUiModelLogic.FindProperty(item.GetType(), name);
                 if (p?.GetMethod?.IsPublic != true) continue;
-                try { row[char.ToLowerInvariant(name[0]) + name.Substring(1)] = UnifiedUiModelLogic.Json(p.GetValue(item)); } catch (Exception ex) { row[name + "Error"] = ex.GetBaseException().Message; }
+                try { row[char.ToLowerInvariant(name[0]) + name.Substring(1)] = UnifiedUiModelLogic.Json(p.GetValue(item)); } catch (Exception ex) {
+                    row[name + "Error"] = ex.GetBaseException().Message; }
             }
             return row;
         }

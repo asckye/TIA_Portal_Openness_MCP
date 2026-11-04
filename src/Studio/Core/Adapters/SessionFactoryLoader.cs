@@ -19,7 +19,9 @@ namespace TiaOpenness.Core.Abstractions
             string key = release.Key;
             string folder = key == "14sp1" ? "V14Sp1" : key == "15.1" ? "V15_1" : "V" + key;
             string path = AdapterPath(AppDomain.CurrentDomain.BaseDirectory, key);
-            if (!File.Exists(path)) return Unavailable("Build the " + release.DisplayName + " native adapter with \"dotnet build src/Studio/Openness/" + folder + "/StudioOpenness." + folder + ".csproj -p:SiemensEngineeringDirectory=<SDK>\" and deploy it under bridge/adapters/v" + key + ".");
+            if (!File.Exists(path))
+                return Unavailable("Build the " + release.DisplayName + " native adapter with \"dotnet build src/Studio/Openness/" + folder
+                    + "/StudioOpenness." + folder + ".csproj -p:SiemensEngineeringDirectory=<SDK>\" and deploy it under bridge/adapters/v" + key + ".");
             OpennessAssemblyResolver.Install(install.Version);
 #if TIA_SHARED_ADAPTER_PATHS
             ITiaSessionFactory factory = new TiaOpenness.Core.Adapters.AdapterSessionFactory(path, key);

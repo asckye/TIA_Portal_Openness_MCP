@@ -102,11 +102,13 @@ namespace TiaMcp.Logic.Generation
             }
             if (schema.TryGetProperty("type", out var type))
             {
-                var matches = type.ValueKind == JsonValueKind.Array ? type.EnumerateArray().Any(t => IsType(value, t.GetString()!)) : IsType(value, type.GetString()!);
+                var matches = type.ValueKind == JsonValueKind.Array ? type.EnumerateArray().Any(t => IsType(value, t.GetString()!))
+                    : IsType(value, type.GetString()!);
                 if (!matches) { Error("type", "Expected " + type.GetRawText() + "."); return; }
             }
             if (schema.TryGetProperty("const", out var constant) && !Equal(value, constant)) Error("const", "Unexpected constant.");
-            if (schema.TryGetProperty("enum", out var enumeration) && !enumeration.EnumerateArray().Any(item => Equal(value, item))) Error("enum", "Value is outside the allowed set.");
+            if (schema.TryGetProperty("enum", out var enumeration) && !enumeration.EnumerateArray().Any(item => Equal(value, item)))
+                Error("enum", "Value is outside the allowed set.");
             foreach (var keyword in new[] { "allOf", "anyOf", "oneOf" })
             {
                 if (!schema.TryGetProperty(keyword, out var branches)) continue;
@@ -130,22 +132,27 @@ namespace TiaMcp.Logic.Generation
             {
                 if (schema.TryGetProperty("required", out var required))
                     foreach (var item in required.EnumerateArray())
-                        if (!value.TryGetProperty(item.GetString()!, out _)) errors.Add(new GenerationValidationError(path + "/" + CanonicalJson.Pointer(item.GetString()!), "required", "Required property is missing."));
+                        if (!value.TryGetProperty(item.GetString()!, out _)) errors
+                            .Add(new GenerationValidationError(path + "/" + CanonicalJson.Pointer(item.GetString()!), "required",
+                                    "Required property is missing."));
                 schema.TryGetProperty("properties", out var properties);
                 schema.TryGetProperty("patternProperties", out var patterns);
                 foreach (var property in value.EnumerateObject())
                 {
                     var child = path + "/" + CanonicalJson.Pointer(property.Name);
-                    if (schema.TryGetProperty("propertyNames", out var names)) Visit(names, JsonSerializer.SerializeToElement(property.Name), file, child, errors, depth + 1);
+                    if (schema.TryGetProperty("propertyNames", out var names))
+                        Visit(names, JsonSerializer.SerializeToElement(property.Name), file, child, errors, depth + 1);
                     var matched = false;
                     if (properties.ValueKind == JsonValueKind.Object && properties.TryGetProperty(property.Name, out var item))
                     { matched = true; Visit(item, property.Value, file, child, errors, depth + 1); }
                     if (patterns.ValueKind == JsonValueKind.Object)
                         foreach (var pattern in patterns.EnumerateObject())
-                            if (Matches(property.Name, pattern.Name, child)) { matched = true; Visit(pattern.Value, property.Value, file, child, errors, depth + 1); }
+                            if (Matches(property.Name, pattern.Name, child)) {
+                                matched = true; Visit(pattern.Value, property.Value, file, child, errors, depth + 1); }
                     if (!matched && schema.TryGetProperty("additionalProperties", out var additional))
                     {
-                        if (additional.ValueKind == JsonValueKind.False) errors.Add(new GenerationValidationError(child, "additionalProperties", "Unknown property."));
+                        if (additional.ValueKind == JsonValueKind.False) errors
+                            .Add(new GenerationValidationError(child, "additionalProperties", "Unknown property."));
                         else Visit(additional, property.Value, file, child, errors, depth + 1);
                     }
                 }
@@ -160,7 +167,8 @@ namespace TiaMcp.Logic.Generation
                 foreach (var item in value.EnumerateArray())
                 {
                     var child = path + "/" + index.ToString(CultureInfo.InvariantCulture);
-                    if (unique && !seen.Add(Encoding.UTF8.GetString(CanonicalJson.Encode(item)))) errors.Add(new GenerationValidationError(child, "uniqueItems", "Duplicate array value."));
+                    if (unique && !seen.Add(Encoding.UTF8.GetString(CanonicalJson.Encode(item)))) errors
+                        .Add(new GenerationValidationError(child, "uniqueItems", "Duplicate array value."));
                     if (schema.TryGetProperty("items", out var itemSchema)) Visit(itemSchema, item, file, child, errors, depth + 1);
                     index++;
                 }
@@ -169,12 +177,15 @@ namespace TiaMcp.Logic.Generation
             {
                 var text = value.GetString()!;
                 Bounds(schema, "Length", text.Length - text.Count(char.IsLowSurrogate), path, errors);
-                if (schema.TryGetProperty("pattern", out var pattern) && !Matches(text, pattern.GetString()!, path)) Error("pattern", "String does not match the required pattern.");
+                if (schema.TryGetProperty("pattern", out var pattern) && !Matches(text, pattern.GetString()!, path))
+                    Error("pattern", "String does not match the required pattern.");
             }
             if (value.ValueKind == JsonValueKind.Number)
             {
-                if (schema.TryGetProperty("minimum", out var min) && CanonicalJson.CompareNumbers(value.GetRawText(), min.GetRawText()) < 0) Error("minimum", "Number is below the minimum.");
-                if (schema.TryGetProperty("maximum", out var max) && CanonicalJson.CompareNumbers(value.GetRawText(), max.GetRawText()) > 0) Error("maximum", "Number is above the maximum.");
+                if (schema.TryGetProperty("minimum", out var min) && CanonicalJson.CompareNumbers(value.GetRawText(), min.GetRawText()) < 0)
+                    Error("minimum", "Number is below the minimum.");
+                if (schema.TryGetProperty("maximum", out var max) && CanonicalJson.CompareNumbers(value.GetRawText(), max.GetRawText()) > 0)
+                    Error("maximum", "Number is above the maximum.");
             }
         }
 

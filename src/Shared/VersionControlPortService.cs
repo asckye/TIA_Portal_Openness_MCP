@@ -53,7 +53,8 @@ internal sealed class VersionControlPortService
                 if (string.IsNullOrWhiteSpace(request.WorkspaceName)) throw new ArgumentException("workspaceName is required.");
                 if (string.IsNullOrWhiteSpace(request.FolderPath)) throw new ArgumentException("folderPath is required.");
                 var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(request.FolderPath.Trim()));
-                if (!directory.Exists) throw new DirectoryNotFoundException("folderPath does not exist: " + directory.FullName + ". Create the folder (or clone the repo) first.");
+                if (!directory.Exists)
+                    throw new DirectoryNotFoundException("folderPath does not exist: " + directory.FullName + ". Create the folder (or clone the repo) first.");
             }
             if (request.Operation == "SynchronizeVersionControlWorkspace")
             {
@@ -61,7 +62,8 @@ internal sealed class VersionControlPortService
                 if (!direction.Equals("ProjectToWorkspace", StringComparison.OrdinalIgnoreCase))
                 {
                     meta.Remove("mayHaveChanged");
-                    meta["v4Rejection"] = direction.Equals("WorkspaceToProject", StringComparison.OrdinalIgnoreCase) ? "UNSUPPORTED_CAPABILITY" : "INVALID_ARGUMENT";
+                    meta["v4Rejection"] = direction.Equals("WorkspaceToProject", StringComparison.OrdinalIgnoreCase) ? "UNSUPPORTED_CAPABILITY"
+                        : "INVALID_ARGUMENT";
                 }
             }
         }
@@ -77,14 +79,28 @@ internal sealed class VersionControlPortService
         => Invoke<ResponseStringList>(new VersionControlRequest { Operation = "ListVersionControlWorkspaces" });
 
     public ResponseStringList GetVersionControlStatus(string workspaceName = "", bool changedOnly = true)
-        => Invoke<ResponseStringList>(new VersionControlRequest { Operation = "GetVersionControlStatus", WorkspaceName = workspaceName, ChangedOnly = changedOnly });
+        =>
+            Invoke<ResponseStringList>(new VersionControlRequest {
+                Operation = "GetVersionControlStatus", WorkspaceName = workspaceName, ChangedOnly = changedOnly });
 
     public ResponseMessage CreateVersionControlWorkspace(string workspaceName, string folderPath)
-        => Invoke<ResponseMessage>(new VersionControlRequest { Operation = "CreateVersionControlWorkspace", WorkspaceName = workspaceName, FolderPath = folderPath, DryRun = false });
+        =>
+            Invoke<ResponseMessage>(new VersionControlRequest {
+                Operation = "CreateVersionControlWorkspace", WorkspaceName = workspaceName, FolderPath = folderPath, DryRun = false });
 
-    public ResponseStringList ConnectProjectToWorkspace(string workspaceName = "", bool dryRun = true, string deviceFilter = "", int maxObjects = 3000, bool walkTrace = false)
-        => Invoke<ResponseStringList>(new VersionControlRequest { Operation = "ConnectProjectToWorkspace", WorkspaceName = workspaceName, DryRun = dryRun, DeviceFilter = deviceFilter, MaxObjects = maxObjects, WalkTrace = walkTrace });
+    public ResponseStringList ConnectProjectToWorkspace(string workspaceName = "", bool dryRun = true, string deviceFilter = "", int maxObjects = 3000,
+            bool walkTrace = false)
+        =>
+            Invoke<ResponseStringList>(new VersionControlRequest {
+                Operation = "ConnectProjectToWorkspace", WorkspaceName = workspaceName, DryRun = dryRun, DeviceFilter = deviceFilter, MaxObjects = maxObjects,
+                    WalkTrace = walkTrace
+            });
 
-    public ResponseStringList SyncVersionControlWorkspace(string direction = "ProjectToWorkspace", string workspaceName = "", bool dryRun = true, bool changedOnly = true)
-        => Invoke<ResponseStringList>(new VersionControlRequest { Operation = "SynchronizeVersionControlWorkspace", Direction = direction, WorkspaceName = workspaceName, DryRun = dryRun, ChangedOnly = changedOnly });
+    public ResponseStringList SyncVersionControlWorkspace(string direction = "ProjectToWorkspace", string workspaceName = "", bool dryRun = true,
+            bool changedOnly = true)
+        =>
+            Invoke<ResponseStringList>(new VersionControlRequest {
+                Operation = "SynchronizeVersionControlWorkspace", Direction = direction, WorkspaceName = workspaceName, DryRun = dryRun, ChangedOnly =
+                    changedOnly
+            });
 }

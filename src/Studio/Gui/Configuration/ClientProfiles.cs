@@ -30,7 +30,10 @@ namespace TiaMcpConfigurator
         private IReadOnlyList<LocalizedText>? detectionEvidence;
         public string Evidence
         {
-            get { return detectionEvidence == null ? evidence : detectionEvidence.Count == 0 ? Loc.Current["Config.ClientNotFound"] : string.Join(Loc.Current["Config.ReasonSeparator"], detectionEvidence.Select(x => x.Resolve())); }
+            get {
+                return detectionEvidence == null ? evidence : detectionEvidence.Count == 0 ? Loc.Current["Config.ClientNotFound"] : string
+                    .Join(Loc.Current["Config.ReasonSeparator"], detectionEvidence.Select(x => x.Resolve()));
+            }
             set { evidence = value; detectionEvidence = null; }
         }
         internal void SetDetectionEvidence(IReadOnlyList<LocalizedText> found) { detectionEvidence = found; }
@@ -41,7 +44,8 @@ namespace TiaMcpConfigurator
         public string CategoryBase { get { string label = ClientProfiles.ClientLabel(Client); return label == null ? Kind : Kind + " · " + label; } }
         public string Category { get { return CategoryBase + " · " + (Detected ? Loc.Current["Config.ClientDetected"] : Loc.Current["Config.NotDetected"]); } }
         // Tooltip: the after-save instructions plus where the client was (not) found and the file that will be written.
-        public string Tooltip { get { return Loc.Current.T(Detected ? "Config.ClientTooltipDetected" : "Config.ClientTooltipNotDetected", Hint, Evidence, Path); } }
+        public string Tooltip {
+            get { return Loc.Current.T(Detected ? "Config.ClientTooltipDetected" : "Config.ClientTooltipNotDetected", Hint, Evidence, Path); } }
         public override string ToString() { return Name; }
         public ClientProfile(string id, string name, string path, string hint, string client = null, string kind = "CLI")
         {
@@ -88,22 +92,30 @@ namespace TiaMcpConfigurator
             string opencode = System.IO.Path.Combine(home, ".config", "opencode", "opencode.json");
             // VS Code: the stable user folder, or Insiders when only that one exists on this machine.
             string vscodeUser = System.IO.Path.Combine(app, "Code", "User");
-            if (!Directory.Exists(vscodeUser) && Directory.Exists(System.IO.Path.Combine(app, "Code - Insiders", "User"))) vscodeUser = System.IO.Path.Combine(app, "Code - Insiders", "User");
+            if (!Directory.Exists(vscodeUser) && Directory.Exists(System.IO.Path.Combine(app, "Code - Insiders", "User"))) vscodeUser = System.IO.Path
+                .Combine(app, "Code - Insiders", "User");
             var profiles = new List<ClientProfile> {
-                new ClientProfile("claude-code", "Claude Code", System.IO.Path.Combine(home, ".claude.json"), LocalizedText.Key("Config.ClientHint.ClaudeCode")),
+                new ClientProfile("claude-code", "Claude Code", System.IO.Path.Combine(home, ".claude.json"), LocalizedText
+                        .Key("Config.ClientHint.ClaudeCode")),
                 new ClientProfile("codex", "Codex", System.IO.Path.Combine(codex, "config.toml"), LocalizedText.Key("Config.ClientHint.Codex")),
-                new ClientProfile("gemini", "Gemini CLI", System.IO.Path.Combine(home, ".gemini", "settings.json"), LocalizedText.Key("Config.ClientHint.Gemini")),
+                new ClientProfile("gemini", "Gemini CLI", System.IO.Path.Combine(home, ".gemini", "settings.json"), LocalizedText
+                        .Key("Config.ClientHint.Gemini")),
                 // 国产模型与 Grok 没有自带 MCP 客户端，卡片按模型命名，实际写入各家官方 CLI 或 OpenCode。
                 new ClientProfile("qwen", "Qwen", System.IO.Path.Combine(home, ".qwen", "settings.json"), LocalizedText.Key("Config.ClientHint.Qwen")),
                 new ClientProfile("kimi", "Kimi", System.IO.Path.Combine(kimi, "mcp.json"), LocalizedText.Key("Config.ClientHint.Kimi")),
-                new ClientProfile("codebuddy", "Yuanbao", System.IO.Path.Combine(home, ".codebuddy", ".mcp.json"), LocalizedText.Key("Config.ClientHint.CodeBuddy")),
+                new ClientProfile("codebuddy", "Yuanbao", System.IO.Path.Combine(home, ".codebuddy", ".mcp.json"), LocalizedText
+                        .Key("Config.ClientHint.CodeBuddy")),
                 new ClientProfile("deepseek", "DeepSeek", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", "DeepSeek"), "opencode"),
-                new ClientProfile("zhipu", "GLM", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", LocalizedText.Key("Config.ClientModel.GLM")), "opencode"),
+                new ClientProfile("zhipu", "GLM", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", LocalizedText.Key("Config.ClientModel.GLM")),
+                        "opencode"),
                 new ClientProfile("grok", "Grok", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", "xAI Grok"), "opencode"),
                 // 千问工作助理（桌面应用）只读 ~/.qwen-agent/mcp.json（或项目下 .qwen-agent/mcp.json）：url + Bearer 头，不走 OAuth；改完必须完全退出进程再打开才会重新读取。
-                new ClientProfile("qwen-agent", "Qwen Agent", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), LocalizedText.Key("Config.ClientHint.QwenAgent"), "qwen-agent", "Desktop"),
-                new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), LocalizedText.Key("Config.ClientHint.Cursor"), null, "IDE"),
-                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(vscodeUser, "mcp.json"), LocalizedText.Key("Config.ClientHint.VsCode"), null, "IDE")
+                new ClientProfile("qwen-agent", "Qwen Agent", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), LocalizedText
+                        .Key("Config.ClientHint.QwenAgent"), "qwen-agent", "Desktop"),
+                new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), LocalizedText.Key("Config.ClientHint.Cursor"), null,
+                        "IDE"),
+                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(vscodeUser, "mcp.json"), LocalizedText.Key("Config.ClientHint.VsCode"),
+                        null, "IDE")
             };
             foreach (var profile in profiles) Detect(profile);
             return profiles;
@@ -159,10 +171,16 @@ namespace TiaMcpConfigurator
             string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             switch (client)
             {
-                case "claude-code": return new[] { System.IO.Path.Combine(programs, "claude"), System.IO.Path.Combine(local, "AnthropicClaude"), System.IO.Path.Combine(programs, "Claude") };
+                case "claude-code": return new[] {
+                    System.IO.Path.Combine(programs, "claude"), System.IO.Path.Combine(local, "AnthropicClaude"), System.IO.Path.Combine(programs, "Claude") };
                 case "cursor": return new[] { System.IO.Path.Combine(programs, "cursor"), System.IO.Path.Combine(programs, "Cursor") };
-                case "vscode": return new[] { System.IO.Path.Combine(programs, "Microsoft VS Code"), System.IO.Path.Combine(pf, "Microsoft VS Code"), System.IO.Path.Combine(programs, "Microsoft VS Code Insiders") };
-                case "qwen-agent": return new[] { System.IO.Path.Combine(programs, "qwen-agent"), System.IO.Path.Combine(programs, "QwenAgent"), System.IO.Path.Combine(local, "qwen-agent") };
+                case "vscode": return new[] {
+                    System.IO.Path.Combine(programs, "Microsoft VS Code"), System.IO.Path.Combine(pf, "Microsoft VS Code"), System.IO.Path
+                        .Combine(programs, "Microsoft VS Code Insiders")
+                };
+                case "qwen-agent": return new[] {
+                    System.IO.Path.Combine(programs, "qwen-agent"), System.IO.Path.Combine(programs, "QwenAgent"), System.IO.Path.Combine(local, "qwen-agent")
+                };
                 case "codex": return new[] { System.IO.Path.Combine(programs, "Codex"), System.IO.Path.Combine(programs, "codex") };
                 default: return new string[0];
             }
@@ -204,9 +222,12 @@ namespace TiaMcpConfigurator
         {
             if (keywords.Length == 0) return null;
             var roots = new[] {
-                new KeyValuePair<Microsoft.Win32.RegistryKey, string>(Microsoft.Win32.Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
-                new KeyValuePair<Microsoft.Win32.RegistryKey, string>(Microsoft.Win32.Registry.LocalMachine, @"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
-                new KeyValuePair<Microsoft.Win32.RegistryKey, string>(Microsoft.Win32.Registry.LocalMachine, @"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall") };
+                new KeyValuePair<Microsoft.Win32.RegistryKey,
+                    string>(Microsoft.Win32.Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+                new KeyValuePair<Microsoft.Win32.RegistryKey,
+                    string>(Microsoft.Win32.Registry.LocalMachine, @"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+                new KeyValuePair<Microsoft.Win32.RegistryKey,
+                    string>(Microsoft.Win32.Registry.LocalMachine, @"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall") };
             foreach (var root in roots)
             {
                 try
@@ -241,9 +262,12 @@ namespace TiaMcpConfigurator
             return profile.Client == "gemini" || profile.Client == "qwen" ? "httpUrl" : "url";
         }
 
-        public static Dictionary<string, object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia) { return Entry(profile, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia); }
+        public static Dictionary<string,
+            object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia) {
+            return Entry(profile, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia); }
 
-        public static Dictionary<string, object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia)
+        public static Dictionary<string,
+            object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia)
         {
             string client = profile.Client;
             if (!remote)
@@ -251,7 +275,8 @@ namespace TiaMcpConfigurator
                 var localArgs = ConfigCore.LocalArguments(engine, version, tia);
                 // OpenCode: command is one array that starts with the executable.
                 if (client == "opencode")
-                    return new Dictionary<string, object> { { "type", "local" }, { "command", new[] { engine }.Concat(localArgs).ToArray() }, { "enabled", true } };
+                    return new Dictionary<string, object> {
+                        { "type", "local" }, { "command", new[] { engine }.Concat(localArgs).ToArray() }, { "enabled", true } };
                 var local = new Dictionary<string, object> { { "command", engine }, { "args", localArgs } };
                 if (client == "claude-code" || client == "vscode" || client == "cursor" || client == "codebuddy") local["type"] = "stdio";
                 return local;
@@ -267,13 +292,16 @@ namespace TiaMcpConfigurator
             return entry;
         }
 
-        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia, bool confirmed = false)
+        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia,
+                bool confirmed = false)
         { Save(profile, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia, confirmed); }
 
-        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia, bool confirmed = false)
+        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia,
+                bool confirmed = false)
         { PrepareSave(profile, remote, address, port, key, engine, version, tia).Apply(confirmed); }
 
-        public static ClientConfigurationChange PrepareSave(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia)
+        public static ClientConfigurationChange PrepareSave(ClientProfile profile, bool remote, string address, int port, string key, string engine,
+                string version, string tia)
         {
             var entry = Entry(profile, remote, address, port, key, engine, version, tia);
             string name = ServerName(profile, remote);
@@ -289,7 +317,8 @@ namespace TiaMcpConfigurator
                 return new ClientConfigurationChange(profile.Path, original, merged, migration, remote ? null : engine);
             }
             string rootKey = RootKey(profile);
-            var root = original != null ? ConfigCore.Json().DeserializeObject(StripJsonComments(text)) as Dictionary<string, object> : new Dictionary<string, object>();
+            var root = original != null ? ConfigCore.Json().DeserializeObject(StripJsonComments(text)) as Dictionary<string, object> : new Dictionary<string,
+                object>();
             if (root == null) throw new InvalidDataException(Loc.Current["Config.InvalidClientJson"]);
             object raw;
             var servers = root.TryGetValue(rootKey, out raw) ? raw as Dictionary<string, object> : new Dictionary<string, object>();
@@ -302,7 +331,8 @@ namespace TiaMcpConfigurator
                 migrate = existing.TryGetValue("command", out var command)
                     && ConfigCore.Json().Serialize(command) != ConfigCore.Json().Serialize(entry["command"]);
                 migrate |= entry.TryGetValue("args", out var desiredArgs)
-                    && (!existing.TryGetValue("args", out var previousArgs) || ConfigCore.Json().Serialize(previousArgs) != ConfigCore.Json().Serialize(desiredArgs));
+                    && (!existing.TryGetValue("args", out var previousArgs) || ConfigCore.Json().Serialize(previousArgs) != ConfigCore.Json()
+                            .Serialize(desiredArgs));
                 // A product migration replaces only command/args; URLs, auth, env and
                 // client-specific options on the existing entry remain intact.
                 if (existing.ContainsKey("command"))
@@ -402,7 +432,10 @@ namespace TiaMcpConfigurator
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
-                if (!quoted && c == ',') { int j = i + 1; while (j < text.Length && char.IsWhiteSpace(text[j])) j++; if (j < text.Length && (text[j] == '}' || text[j] == ']')) continue; }
+                if (!quoted && c == ',') {
+                    int j = i + 1; while (j < text.Length && char.IsWhiteSpace(text[j])) j++; if (j < text.Length && (text[j] == '}' || text[j] == ']'))
+                        continue;
+                }
                 result.Append(c);
                 if (escaped) escaped = false; else if (quoted && c == '\\') escaped = true; else if (c == '"') quoted = !quoted;
             }
@@ -413,7 +446,8 @@ namespace TiaMcpConfigurator
 
         // Conservative table editor: preserves all unrelated bytes. Complex root/dotted/inline
         // definitions are rejected rather than producing duplicate tables or guessing at user intent.
-        public static string MergeToml(string text, string name, bool remote, string address, int port, string key, string engine, int version, string tia) { return MergeToml(text, name, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia); }
+        public static string MergeToml(string text, string name, bool remote, string address, int port, string key, string engine, int version, string tia) {
+            return MergeToml(text, name, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia); }
 
         public static string MergeToml(string text, string name, bool remote, string address, int port, string key, string engine, string version, string tia)
         {
@@ -427,8 +461,11 @@ namespace TiaMcpConfigurator
             foreach (string line in Regex.Split(text, "(?<=\n)"))
             {
                 string trimmed = line.Trim();
-                if (multiline == null && header.IsMatch(trimmed)) { skipping = target.IsMatch(trimmed); inParent = Regex.IsMatch(trimmed, @"^\[\s*" + mcp + @"\s*\]\s*(?:#.*)?$"); }
-                if (multiline == null && (Regex.IsMatch(trimmed, @"^" + mcp + @"\s*(?:=|\.)") || (inParent && Regex.IsMatch(trimmed, "^" + token + @"\s*(?:=|\.)")) || trimmed.StartsWith("[[mcp_servers." + name, StringComparison.Ordinal)))
+                if (multiline == null && header.IsMatch(trimmed)) {
+                    skipping = target.IsMatch(trimmed); inParent = Regex.IsMatch(trimmed, @"^\[\s*" + mcp + @"\s*\]\s*(?:#.*)?$"); }
+                if (multiline == null
+                        && (Regex.IsMatch(trimmed, @"^" + mcp + @"\s*(?:=|\.)") || (inParent && Regex.IsMatch(trimmed, "^" + token + @"\s*(?:=|\.)")) || trimmed
+                            .StartsWith("[[mcp_servers." + name, StringComparison.Ordinal)))
                     throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
                 if (!skipping) kept.Append(line);
                 ScanTomlStrings(line, ref multiline);

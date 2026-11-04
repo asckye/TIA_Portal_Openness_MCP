@@ -28,7 +28,8 @@ namespace TiaMcp.Adapters.Contracts
     public sealed class HardwareAddressingException : Exception
     {
         public string Status { get; }
-        public HardwareAddressingException(string status, string message, string? detail = null, Exception? inner = null) : base(message, inner) { Status = status; }
+        public HardwareAddressingException(string status, string message, string? detail = null, Exception? inner = null) : base(message, inner) {
+            Status = status; }
     }
 
     public sealed class IoAddressWriteReply : IWorkerOperationReply

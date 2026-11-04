@@ -24,7 +24,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public HardwareAmlTools(HardwareAmlService service) => _service = service;
 
-        [McpServerTool(Name = "ExportDeviceAml"), Description("[L2][Hardware] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be an existing folder (file named <device>.aml) or a full .aml path in an existing directory; existing target files are refused. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name = "ExportDeviceAml"),
+                Description("[L2][Hardware] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be an existing folder (file named <device>.aml) or a full .aml path in an existing directory; existing target files are refused. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry behavior remains pending V4 acceptance.")]
         public CallToolResult ExportDeviceAmlV4(
             [Description("devicePath: station/device path from GetProjectTree, e.g. 'S7-1200 station_3'")] string devicePath,
             [Description("exportPath: target folder or full .aml file path")] string exportPath)
@@ -46,11 +47,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 else
                 {
                     evidence["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Cax;
-                    NativeResultState.Record(evidence, result.State, false, targetPath: result.FilePath, messages: new System.Text.Json.Nodes.JsonArray(result.Messages?.Select(m => (JsonNode)m).ToArray() ?? Array.Empty<JsonNode>()));
+                    NativeResultState
+                        .Record(evidence, result.State, false, targetPath: result.FilePath, messages: new System.Text.Json.Nodes
+                            .JsonArray(result.Messages?.Select(m => (JsonNode)m).ToArray() ?? Array.Empty<JsonNode>()));
                 }
                 return new ResponseExportDeviceAml
                 {
-                    Message = $"Device '{result.DeviceName}' exported to AML at '{result.FilePath}' (state={result.State}, errors={result.ErrorCount}, warnings={result.WarningCount})",
+                    Message =
+                        $"Device '{result.DeviceName}' exported to AML at '{result.FilePath}' (state={result.State}, errors={result.ErrorCount}, warnings={result.WarningCount})",
                     DeviceName = result.DeviceName,
                     FilePath = result.FilePath,
                     Success = result.Success,
@@ -73,7 +77,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new McpException($"Unexpected error exporting AML from '{devicePath}': {ex.Message}", ex, McpErrorCode.InternalError);
             }
         }
-        [McpServerTool(Name="ImportDeviceAml"), Description("[L2][Hardware][WRITE] Import an AutomationML/CAx (.aml) file into the open project. V14 SP1-V18: CaxProvider.Import(file, logFile, option) returns a bool and the log file sha256; V19+: CaxProvider.Import(file, option) returns a TransferResult (state, error/warning counts, messages) and writes no log file. filePath must exist (absolute); logFilePath is a NEW absolute file (validated on every release, written only before V19); importOption RetainTiaDevice|OverwriteTiaDevice|MoveToParkingLot. May add or replace devices; real run needs confirmImport=true and exclusive access. Returns the native result and device counts of the root, grouped and ungrouped devices. Default preview; no save/compile/download. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name="ImportDeviceAml"),
+                Description("[L2][Hardware][WRITE] Import an AutomationML/CAx (.aml) file into the open project. V14 SP1-V18: CaxProvider.Import(file, " +
+                "logFile, option) returns a bool and the log file sha256; V19+: CaxProvider.Import(file, option) returns a TransferResult (state, " +
+                "error/warning counts, messages) and writes no log file. filePath must exist (absolute); logFilePath is a NEW absolute file (validated on " +
+                "every release, written only before V19); importOption RetainTiaDevice|OverwriteTiaDevice|MoveToParkingLot. May add or replace devices; real " +
+                "run needs confirmImport=true and exclusive access. Returns the native result and device counts of the root, grouped and ungrouped devices. " +
+                "Default preview; no save/compile/download. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending " +
+                "V4 acceptance.")]
         public CallToolResult ImportDeviceAmlV4(
             [Description("filePath: existing absolute AutomationML (.aml) file.")] string filePath,
             [Description("logFilePath: full path of the log file to write on the TIA machine ('' = no log).")] string logFilePath,
@@ -93,7 +104,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("confirmImport: must be true together with dryRun=false to import (imports replace project data).")] bool confirmImport=false,
             bool dryRun=true)
             => _service.ImportDeviceAml(filePath,logFilePath,importOption,confirmImport,dryRun);
-        [McpServerTool(Name = "BuildDeviceAmlDocument"), Description("[L2][Hardware][OFFLINE] Build an AutomationML (CAEX 2.15, *.aml) hardware description for ImportDeviceAml from a JSON spec — the generation half of a TIA Selection Tool / Aml.Engine workflow without extra dependencies. spec: {\"projectName\":\"P\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[{\"name\":\"Rack_0\",\"role\":\"Rack\",\"typeIdentifier\":\"OrderNumber:6ES7 590-1AE80-0AA0\",\"positionNumber\":0,\"deviceItems\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"OrderNumber:6ES7 516-3AN02-0AB0/V2.9\",\"positionNumber\":1,\"deviceItems\":[{\"name\":\"PROFINET interface_1\",\"role\":\"CommunicationInterface\",\"builtIn\":true,\"nodes\":[{\"name\":\"E1\",\"networkAddress\":\"192.168.0.1\",\"subnetMask\":\"255.255.255.0\",\"subnetName\":\"PN/IE_1\"}]}]},{\"name\":\"DI 32x24VDC HF_1\",\"typeIdentifier\":\"OrderNumber:6ES7 521-1BL00-0AB0/V2.0\",\"positionNumber\":2}]}]}],\"subnets\":[{\"name\":\"PN/IE_1\",\"type\":\"Ethernet\"}]}. Roles: Rack | DeviceItem | CommunicationInterface | CommunicationPort; TypeIdentifier uses the TIA catalog form OrderNumber:<MLFB>[/Vx.y] or System:Device.<family>. outputPath must be a NEW absolute .aml file. STRONGLY RECOMMENDED: referenceAmlPath = a file that ExportDeviceAml wrote on the same TIA version — its header, role/interface class libraries are copied verbatim and only the instance hierarchy is generated; without it a built-in skeleton is used and Meta.importVerified=false is returned. Verify with ImportDeviceAml (dry run first). Nothing is saved, compiled or downloaded.")]
+        [McpServerTool(Name = "BuildDeviceAmlDocument"),
+                Description("[L2][Hardware][OFFLINE] Build an AutomationML (CAEX 2.15, *.aml) hardware description for ImportDeviceAml from a JSON spec — the generation half of a TIA Selection Tool / Aml.Engine workflow without extra dependencies. spec: {\"projectName\":\"P\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[{\"name\":\"Rack_0\",\"role\":\"Rack\",\"typeIdentifier\":\"OrderNumber:6ES7 590-1AE80-0AA0\",\"positionNumber\":0,\"deviceItems\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"OrderNumber:6ES7 516-3AN02-0AB0/V2.9\",\"positionNumber\":1,\"deviceItems\":[{\"name\":\"PROFINET interface_1\",\"role\":\"CommunicationInterface\",\"builtIn\":true,\"nodes\":[{\"name\":\"E1\",\"networkAddress\":\"192.168.0.1\",\"subnetMask\":\"255.255.255.0\",\"subnetName\":\"PN/IE_1\"}]}]},{\"name\":\"DI 32x24VDC HF_1\",\"typeIdentifier\":\"OrderNumber:6ES7 521-1BL00-0AB0/V2.0\",\"positionNumber\":2}]}]}],\"subnets\":[{\"name\":\"PN/IE_1\",\"type\":\"Ethernet\"}]}. Roles: Rack | DeviceItem | CommunicationInterface | CommunicationPort; TypeIdentifier uses the TIA catalog form OrderNumber:<MLFB>[/Vx.y] or System:Device.<family>. outputPath must be a NEW absolute .aml file. STRONGLY RECOMMENDED: referenceAmlPath = a file that ExportDeviceAml wrote on the same TIA version — its header, role/interface class libraries are copied verbatim and only the instance hierarchy is generated; without it a built-in skeleton is used and Meta.importVerified=false is returned. Verify with ImportDeviceAml (dry run first). Nothing is saved, compiled or downloaded.")]
         public CallToolResult BuildDeviceAmlDocumentV4(
             [Description("spec: JSON object describing the document to build (see the tool description).")] DeviceAmlSpec spec,
             string outputPath,
@@ -121,8 +133,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var kv in HardwareAmlLogic.Summary(result)) meta[kv.Key] = kv.Value?.DeepClone();
                 meta["output"] = NativeFileOutput.Verify(output);
                 meta["mayHaveWrittenFiles"] = true; meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
-                meta["nextStep"] = "ImportDeviceAml with this file (dryRun first); on import errors export a reference AML with ExportDeviceAml and pass it as referenceAmlPath.";
-                return "AML written: " + result.Devices + " device(s), " + result.DeviceItems + " device item(s), " + result.Nodes + " node(s), " + result.Subnets + " subnet(s) -> " + output.FullName + " (libraries: " + result.LibraryOrigin + ").";
+                meta["nextStep"] =
+                    "ImportDeviceAml with this file (dryRun first); on import errors export a reference AML with ExportDeviceAml and pass it as " +
+                    "referenceAmlPath.";
+                return "AML written: " + result.Devices + " device(s), " + result.DeviceItems + " device item(s), " + result.Nodes + " node(s), " + result
+                    .Subnets + " subnet(s) -> " + output.FullName + " (libraries: " + result.LibraryOrigin + ").";
             });
     }
 }

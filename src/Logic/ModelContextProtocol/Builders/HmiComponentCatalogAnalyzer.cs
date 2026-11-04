@@ -89,7 +89,9 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 foreach (var node in components.OfType<JsonObject>())
                 {
-                    md.AppendLine("- " + node["title"] + ": libraryHits=" + node["libraryHitCount"] + ", templateHits=" + node["templateHitCount"] + ", status=" + node["status"]);
+                    md
+                        .AppendLine("- " + node["title"] + ": libraryHits=" + node["libraryHitCount"] + ", templateHits=" + node["templateHitCount"]
+                            + ", status=" + node["status"]);
                     var samples = node["sampleLibraryPaths"] as JsonArray ?? new JsonArray();
                     foreach (var sample in samples.Take(3))
                     {
@@ -193,7 +195,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
                     if (json["Components"] is JsonArray components)
                     {
-                        fact.Components.AddRange(components.OfType<JsonObject>().Select(x => x["Kind"]?.ToString() ?? x["Name"]?.ToString() ?? "").Where(x => !string.IsNullOrWhiteSpace(x)));
+                        fact.Components
+                            .AddRange(components.OfType<JsonObject>().Select(x => x["Kind"]?.ToString() ?? x["Name"]?.ToString() ?? "")
+                                .Where(x => !string.IsNullOrWhiteSpace(x)));
                     }
 
                     if (json["Items"] is JsonArray items)
@@ -215,7 +219,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
                     if (json["Events"] is JsonArray events)
                     {
-                        fact.Events.AddRange(events.OfType<JsonObject>().Select(x => x["Event"]?.ToString() ?? x["Kind"]?.ToString() ?? "").Where(x => !string.IsNullOrWhiteSpace(x)));
+                        fact.Events
+                            .AddRange(events.OfType<JsonObject>().Select(x => x["Event"]?.ToString() ?? x["Kind"]?.ToString() ?? "")
+                                .Where(x => !string.IsNullOrWhiteSpace(x)));
                     }
 
                     facts.Add(fact);
@@ -240,14 +246,16 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var rule in ComponentRules)
             {
                 var libraryHits = libraryPaths.Where(path => ContainsAny(path, rule.Needles)).ToList();
-                var templateHits = templateFacts.Where(t => t.ContainsAny(rule.Needles)).Select(t => t.TemplateName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                var templateHits = templateFacts.Where(t => t.ContainsAny(rule.Needles)).Select(t => t.TemplateName).Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
                 result.Add(new JsonObject
                 {
                     ["id"] = rule.Id,
                     ["title"] = rule.Title,
                     ["libraryHitCount"] = libraryHits.Count,
                     ["templateHitCount"] = templateHits.Count,
-                    ["status"] = templateHits.Count > 0 ? "covered-by-current-templates" : libraryHits.Count > 0 ? "candidate-from-global-library" : "not-found",
+                    ["status"] = templateHits.Count > 0 ? "covered-by-current-templates" : libraryHits.Count > 0 ? "candidate-from-global-library"
+                        : "not-found",
                     ["sampleLibraryPaths"] = new JsonArray(libraryHits.Take(8).Select(x => JsonValue.Create(x)).ToArray()),
                     ["coveredTemplates"] = new JsonArray(templateHits.Select(x => JsonValue.Create(x)).ToArray())
                 });
@@ -296,7 +304,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["coveredEvents"] = new JsonArray(coveredEvents.Select(x => JsonValue.Create(x)).ToArray()),
                     ["recommendedComponentGaps"] = new JsonArray(missingComponents.Select(x => JsonValue.Create(x)).ToArray()),
                     ["recommendedEventGaps"] = new JsonArray(missingEvents.Select(x => JsonValue.Create(x)).ToArray()),
-                    ["summary"] = $"components={coveredComponents.Count}, events={coveredEvents.Count}, recommendedGaps={missingComponents.Count + missingEvents.Count}"
+                    ["summary"] =
+                        $"components={coveredComponents.Count}, events={coveredEvents.Count}, recommendedGaps={missingComponents.Count + missingEvents.Count}"
                 });
             }
 
@@ -309,7 +318,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 new JsonObject { ["area"] = "顶部栏", ["components"] = "Header + 状态胶囊 + 当前用户/时间", ["purpose"] = "建立统一品牌感和运行状态入口。" },
                 new JsonObject { ["area"] = "主导航", ["components"] = "MainNavigation + SubNavigation", ["purpose"] = "按总览、设备、报警、参数、诊断组织画面。" },
-                new JsonObject { ["area"] = "总览区", ["components"] = "Dashboard Tiles + Value Overview + Status Graphics", ["purpose"] = "快速看到运行、自动、故障、产量、速度等关键状态。" },
+                new JsonObject {
+                    ["area"] = "总览区", ["components"] = "Dashboard Tiles + Value Overview + Status Graphics", ["purpose"] = "快速看到运行、自动、故障、产量、速度等关键状态。" },
                 new JsonObject { ["area"] = "设备卡片", ["components"] = "Machine Module + Function Panel", ["purpose"] = "每台设备暴露状态、命令和进入详情的事件。" },
                 new JsonObject { ["area"] = "参数区", ["components"] = "ValueStepper + OptionPanel + Confirm/Cancel", ["purpose"] = "参数输入要有范围、确认、取消和错误提示。" },
                 new JsonObject { ["area"] = "报警区", ["components"] = "Notification + Alarm/Alert Popup", ["purpose"] = "报警摘要、确认入口和详细弹窗分层展示。" },
@@ -347,7 +357,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
             public bool ContainsAny(IEnumerable<string> needles)
             {
-                var joined = string.Join(" ", new[] { TemplateName, Purpose }.Concat(Components).Concat(ItemTypes).Concat(ItemNames).Concat(Events).Concat(Scripts));
+                var joined = string
+                    .Join(" ", new[] { TemplateName, Purpose }.Concat(Components).Concat(ItemTypes).Concat(ItemNames).Concat(Events).Concat(Scripts));
                 return HmiComponentCatalogAnalyzer.ContainsAny(joined, needles);
             }
 

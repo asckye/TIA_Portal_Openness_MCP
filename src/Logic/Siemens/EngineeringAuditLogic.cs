@@ -25,10 +25,16 @@ namespace TiaMcpServer.Siemens
             bool expandedLanguage = Regex.IsMatch(text, @"\b(SCL|FBD)\b", RegexOptions.IgnoreCase);
             var warnings = new JsonArray();
             if (major == 20 && (installedUpdate == null || installedUpdate < 4))
-                warnings.Add("V20 SCL/FBD/mixed-network SIMATIC SD requires Update 4. Installed patch is not inferred from an SDK copy; verify the installation before importing.");
+                warnings
+                    .Add("V20 SCL/FBD/mixed-network SIMATIC SD requires Update 4. Installed patch is not inferred from an SDK copy; verify the installation " +
+                    "before importing.");
             if (major == 20)
-                warnings.Add("Siemens documents possible data loss for V20 SCL textual interfaces. This lexical scan cannot rule out that interface form. Use a table interface and compare an exported readback before accepting the import.");
-            warnings.Add("SIMATIC SD is not a lossless project backup: OB classification, supervisions/alarms, SiVArc and certain attributes are not preserved by the format.");
+                warnings
+                    .Add("Siemens documents possible data loss for V20 SCL textual interfaces. This lexical scan cannot rule out that interface form. Use a " +
+                    "table interface and compare an exported readback before accepting the import.");
+            warnings
+                .Add("SIMATIC SD is not a lossless project backup: OB classification, supervisions/alarms, SiVArc and certain attributes are not preserved " +
+                "by the format.");
             return new JsonObject { ["major"] = major, ["installedUpdate"] = installedUpdate,
                 ["expandedLanguageDetected"] = expandedLanguage, ["textualInterfaceDetected"] = textual,
                 ["patchSupportKnown"] = major > 20 || major == 20 && installedUpdate >= 4,

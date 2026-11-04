@@ -20,7 +20,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (Override != null) return Override(operation, arguments ?? new JsonObject());
 #if TIA_ENGINE_HOST
-            return ((IHostToolServices)McpServer.Worker).Observe(operation, arguments ?? new JsonObject(), McpServer.WorkerDispatchCancellation).GetAwaiter().GetResult();
+            return ((IHostToolServices)McpServer.Worker).Observe(operation, arguments ?? new JsonObject(), McpServer.WorkerDispatchCancellation).GetAwaiter()
+                .GetResult();
 #else
             throw new InvalidOperationException("Host observations are unavailable in this process.");
 #endif

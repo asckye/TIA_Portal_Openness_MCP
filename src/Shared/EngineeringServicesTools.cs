@@ -19,35 +19,51 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly EngineeringServicesPortService _service;
         public EngineeringServicesTools(EngineeringServicesPortService service) => _service = service;
-        [McpServerTool(Name = "ManageProjectLanguage"), Description("[L2][Project][WRITE] Read/activate/deactivate/setEditing/setReference project language by exact culture. Default preview. Editing/reference must be active, cannot deactivate either; readback verified; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness.")]
+        [McpServerTool(Name = "ManageProjectLanguage"),
+                Description("[L2][Project][WRITE] Read/activate/deactivate/setEditing/setReference project language by exact culture. Default preview. " +
+                "Editing/reference must be active, cannot deactivate either; readback verified; no save/compile/download. Returns a V4 envelope; inspect " +
+                "outcome, execution and completeness.")]
         public CallToolResult ManageProjectLanguageV4(
             [Description("action: read | activate | deactivate | setEditing | setReference.")] string action="read",
             [Description("culture: exact language tag, e.g. 'en-US', 'zh-CN' (required for every action except read).")] string culture="",
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
         {
-            return PlcExchangeContract.Run("ManageProjectLanguage", () => ManageProjectLanguage(action, culture, dryRun), write: !dryRun && action != "read", current: false);
+            return PlcExchangeContract
+                .Run("ManageProjectLanguage", () => ManageProjectLanguage(action, culture, dryRun), write: !dryRun && action != "read", current: false);
         }
 
-        [McpServerTool(Name = "ExportProjectTexts"), Description("[L2][Project][FILE] Native project text export for explicit source/target cultures to a new absolute file. Returns API completion and file hash; default preview." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ExportProjectTexts"),
+                Description("[L2][Project][FILE] Native project text export for explicit source/target cultures to a new absolute file. Returns API " +
+                "completion and file hash; default preview."
+                    + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult ExportProjectTextsV4(
             [Description("filePath: new absolute XLSX file in an existing directory.")] string filePath,
             [Description("sourceCulture: source language tag, e.g. 'en-US'.")] string sourceCulture,
             [Description("targetCulture: target language tag, e.g. 'zh-CN'.")] string targetCulture,
             bool dryRun=true)
         {
-            return PlcExchangeContract.Run("ExportProjectTexts", () => ExportProjectTexts(filePath, sourceCulture, targetCulture, dryRun), write: !dryRun, current: true);
+            return PlcExchangeContract
+                .Run("ExportProjectTexts", () => ExportProjectTexts(filePath, sourceCulture, targetCulture, dryRun), write: !dryRun, current: true);
         }
 
-        [McpServerTool(Name = "ImportProjectTexts"), Description("[L2][Project][WRITE] Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ImportProjectTexts"),
+                Description("[L2][Project][WRITE] Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a " +
+                "generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download."
+                    + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult ImportProjectTextsV4(
             [Description("filePath: existing absolute XLSX file exported by ExportProjectTexts.")] string filePath,
             [Description("updateSourceLanguage: true also writes the source-language texts.")] bool updateSourceLanguage,
             bool dryRun=true)
         {
-            return PlcExchangeContract.Run("ImportProjectTexts", () => ImportProjectTexts(filePath, updateSourceLanguage, dryRun), write: !dryRun, current: true);
+            return PlcExchangeContract
+                .Run("ImportProjectTexts", () => ImportProjectTexts(filePath, updateSourceLanguage, dryRun), write: !dryRun, current: true);
         }
 
-        [McpServerTool(Name="GetObjectIdentifier"), Description("[L2][Project][READ] ObjectIdentifierProvider (project service): GetIdentifier of the exact object (kind=device/deviceItem via devicePath/itemPath, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath) - a cross-session stable identifier - or, with identifier given, Find(identifier) and describe the object it resolves to (class, name, owner path, ISystemObject flag). Official support: Device, DeviceItem, code/data blocks, PLC tags, software units, TechnologicalInstanceDB, PlcStruct. Read-only.")]
+        [McpServerTool(Name="GetObjectIdentifier"),
+                Description("[L2][Project][READ] ObjectIdentifierProvider (project service): GetIdentifier of the exact object (kind=device/deviceItem via " +
+                "devicePath/itemPath, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath) - a cross-session stable identifier - or, with " +
+                "identifier given, Find(identifier) and describe the object it resolves to (class, name, owner path, ISystemObject flag). Official support: " +
+                "Device, DeviceItem, code/data blocks, PLC tags, software units, TechnologicalInstanceDB, PlcStruct. Read-only.")]
         public CallToolResult GetObjectIdentifierV4(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
             string[]? devicePath = null,
@@ -55,7 +71,10 @@ namespace TiaMcpServer.ModelContextProtocol
             string softwarePath="",
             string objectPath="",
             [Description("identifier: exact identifier of the object as the read action lists it.")] string identifier="")
-            => SessionToolContract.Run("GetObjectIdentifier", false, false, () => ReadObjectIdentifier(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()), softwarePath, objectPath, identifier));
+            => SessionToolContract
+                .Run("GetObjectIdentifier", false, false, () =>
+                    ReadObjectIdentifier(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()),
+                        softwarePath, objectPath, identifier));
 
         public ResponseMessage ReadObjectIdentifier(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
@@ -66,7 +85,10 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("identifier: exact identifier of the object as the read action lists it.")] string identifier="")
             => _service.ReadObjectIdentifier(kind,devicePathJson,itemPathJson,softwarePath,objectPath,identifier);
 
-        [McpServerTool(Name="ShowObjectInEditor"), Description("[L2][Project][WRITE] IShowable.ShowInEditor on the exact object (kind=device via devicePath, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal started with user interface. Default dryRun=true.")]
+        [McpServerTool(Name="ShowObjectInEditor"),
+                Description("[L2][Project][WRITE] IShowable.ShowInEditor on the exact object (kind=device via devicePath, kind=plcBlock/plcType/plcTagTable " +
+                "via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal " +
+                "started with user interface. Default dryRun=true.")]
         public CallToolResult ShowObjectInEditorV4(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
             string[]? devicePath = null,
@@ -74,7 +96,10 @@ namespace TiaMcpServer.ModelContextProtocol
             string softwarePath="",
             string objectPath="",
             bool dryRun=true)
-            => SessionToolContract.Run("ShowObjectInEditor", !dryRun, false, () => ShowObjectInEditor(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()), softwarePath, objectPath, dryRun));
+            => SessionToolContract
+                .Run("ShowObjectInEditor", !dryRun, false, () =>
+                    ShowObjectInEditor(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()),
+                        softwarePath, objectPath, dryRun));
 
         public ResponseMessage ShowObjectInEditor(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
@@ -85,14 +110,25 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
             => _service.ShowObjectInEditor(kind,devicePathJson,itemPathJson,softwarePath,objectPath,dryRun);
 
-        [McpServerTool(Name="ManageProjectCompilationSettings"), Description("[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update properties {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is not yet accepted.")]
-        public CallToolResult ManageProjectCompilationSettingsV4([Description("read | update. ")] string action="read", AttributeMap<Scalar> properties = null!, bool dryRun=true)
-            => EngineeringToolContract.Run("ManageProjectCompilationSettings", !dryRun && action != "read" && action != "list", () => ManageProjectCompilationSettings(action, EngineeringToolContract.Json(properties), dryRun));
+        [McpServerTool(Name="ManageProjectCompilationSettings"),
+                Description("[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project " +
+                "properties'): read or update properties {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). " +
+                "V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / " +
+                "VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is " +
+                "not yet accepted.")]
+        public CallToolResult ManageProjectCompilationSettingsV4([Description("read | update. ")] string action="read", AttributeMap<Scalar> properties = null!,
+                bool dryRun=true)
+            => EngineeringToolContract
+                .Run("ManageProjectCompilationSettings", !dryRun && action != "read" && action != "list", () =>
+                    ManageProjectCompilationSettings(action, EngineeringToolContract.Json(properties), dryRun));
 
         public ResponseMessage ManageProjectCompilationSettings(string action="read", string propertiesJson="{}", bool dryRun=true)
             => _service.ManageProjectCompilationSettings(action,propertiesJson,dryRun);
 
-        [McpServerTool(Name="CompareLibraries"), Description("[L2][Library][READ] Native CompareToLibrary between two libraries: empty name = project library, otherwise exact open global library name. Result tree flattened (path/depth/state), summary counts all states, records exclude identical elements unless includeIdentical=true; paginated. Read-only, no library opened or modified.")]
+        [McpServerTool(Name="CompareLibraries"),
+                Description("[L2][Library][READ] Native CompareToLibrary between two libraries: empty name = project library, otherwise exact open global " +
+                "library name. Result tree flattened (path/depth/state), summary counts all states, records exclude identical elements unless " +
+                "includeIdentical=true; paginated. Read-only, no library opened or modified.")]
         public CallToolResult CompareLibraries(
             [Description("leftLibraryName: global library on the left side of the comparison ('' = the project library).")] string leftLibraryName="",
             [Description("rightLibraryName: global library on the right side of the comparison ('' = the project library).")] string rightLibraryName="",
@@ -103,13 +139,20 @@ namespace TiaMcpServer.ModelContextProtocol
             => SecurityToolContract.Invoke("CompareLibraries", true, false,
                 () => _service.CompareLibraries(leftLibraryName,rightLibraryName,includeIdentical,maxDepth,offset,limit));
 
-        [McpServerTool(Name="CompareProjects"), Description("[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). The cross-project mode (targetProjectName) needs a second project that was opened outside the MCP; no MCP tool opens a secondary project in 4.0. Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified.")]
+        [McpServerTool(Name="CompareProjects"),
+                Description("[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or " +
+                "vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project " +
+                "library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). The cross-project mode " +
+                "(targetProjectName) needs a second project that was opened outside the MCP; no MCP tool opens a secondary project in 4.0. Flattened result " +
+                "tree, summary of all states, non-identical records paginated. No online access; nothing modified.")]
         public CallToolResult CompareProjects(
             string kind,
             string softwarePath="",
             string[] devicePath=null!,
             string[] itemPath=null!,
-            [Description("targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).")] string targetProjectName="",
+            [Description("targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the " +
+                "MCP).")] string targetProjectName=
+                "",
             string targetSoftwarePath="",
             [Description("targetDevicePath: JSON array naming the target station.")] string[] targetDevicePath=null!,
             [Description("targetItemPath: array of device-item names on the target.")] string[] targetItemPath=null!,
@@ -119,9 +162,14 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset=0,
             int limit=100)
             => SecurityToolContract.Invoke("CompareProjects", true, false,
-                () => _service.CompareProjects(kind,softwarePath,SecurityToolContract.Path(devicePath),SecurityToolContract.Path(itemPath),targetProjectName,targetSoftwarePath,SecurityToolContract.Path(targetDevicePath),SecurityToolContract.Path(targetItemPath),targetLibraryName,includeIdentical,maxDepth,offset,limit));
+                () => _service
+                    .CompareProjects(kind,softwarePath,SecurityToolContract.Path(devicePath),SecurityToolContract.Path(itemPath),targetProjectName,
+                        targetSoftwarePath,SecurityToolContract.Path(targetDevicePath),SecurityToolContract.Path(targetItemPath),targetLibraryName,
+                        includeIdentical,maxDepth,offset,limit));
 
-        [McpServerTool(Name="GetProjectSettings"), Description("[L2][Project][READ] Read TIA Portal settings folders (exact slash-separated folderPath; empty lists root folders) with scalar setting values, paginated; optional customIdentityKey reads the project-root CustomIdentityProvider value. Read-only; nothing modified.")]
+        [McpServerTool(Name="GetProjectSettings"),
+                Description("[L2][Project][READ] Read TIA Portal settings folders (exact slash-separated folderPath; empty lists root folders) with scalar " +
+                "setting values, paginated; optional customIdentityKey reads the project-root CustomIdentityProvider value. Read-only; nothing modified.")]
         public CallToolResult GetProjectSettings(
             string folderPath="",
             [Description("customIdentityKey: key of the custom identity to read ('' = all).")] string customIdentityKey="",
@@ -149,7 +197,13 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
         => _service.ImportProjectTexts(filePath,updateSourceLanguage,dryRun);
 
-        [McpServerTool(Name="RunToolTransaction"), Description("[L2][Project][WRITE] Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true validates arguments only, not native semantics. Real execution needs confirmChange. No save.")]
+        [McpServerTool(Name="RunToolTransaction"),
+                Description("[L2][Project][WRITE] Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). " +
+                "calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, " +
+                "ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other " +
+                "tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call " +
+                "before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true " +
+                "validates arguments only, not native semantics. Real execution needs confirmChange. No save.")]
         public CallToolResult RunToolTransactionV4(
             [Description("calls: Array of {name, arguments:{...}} supported tool calls to run inside one transaction.")] ToolCall[] calls,
             [Description("text: transaction text shown in TIA's undo history.")] string text,
@@ -161,9 +215,11 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             const string tool = "RunToolTransaction";
             if (calls == null || calls.Length == 0) return V4Reject(tool, InvalidInput("calls"));
-            if (calls.Length > 20) return V4Reject(tool, new Error("Transaction count exceeds its limit.", new LimitExceededDetails("calls", 20, calls.Length)));
+            if (calls.Length > 20)
+                return V4Reject(tool, new Error("Transaction count exceeds its limit.", new LimitExceededDetails("calls", 20, calls.Length)));
             if (string.IsNullOrWhiteSpace(text) || text.Length > 200) return V4Reject(tool, InvalidInput("text"));
-            if (!dryRun && !confirmChange) return V4Reject(tool, new Error("Transaction execution requires confirmation.", new ConfirmationRequiredDetails(null)));
+            if (!dryRun && !confirmChange)
+                return V4Reject(tool, new Error("Transaction execution requires confirmation.", new ConfirmationRequiredDetails(null)));
             var plan = new JsonArray();
             var prepared = new List<ToolCall>();
             foreach (var call in calls)
@@ -179,7 +235,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (CatalogView.Find(call.Name, true)!.DryRun.Present) arguments["dryRun"] = false;
                 var preflight = PreflightToolCall(call.Name, arguments.ToJsonString());
                 if (preflight.Meta?["ok"]?.GetValue<bool?>() != true)
-                    return V4Reject(tool, new Error("Transaction preflight prerequisites are not satisfied.", new PreconditionFailedDetails("transaction-preflight", call.Name)));
+                    return V4Reject(tool,
+                            new Error("Transaction preflight prerequisites are not satisfied.",
+                                new PreconditionFailedDetails("transaction-preflight", call.Name)));
                 prepared.Add(new ToolCall(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(arguments))));
                 plan.Add(new JsonObject { ["name"] = call.Name, ["arguments"] = arguments });
             }
@@ -187,7 +245,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (dryRun)
             {
                 meta["success"] = true;
-                return SessionToolContract.Map(tool, new ResponseMessage { Message = "Transaction preview: " + calls.Length + " call(s) validated, nothing executed.", Meta = meta }, false, false);
+                return SessionToolContract
+                    .Map(tool, new ResponseMessage { Message = "Transaction preview: " + calls.Length + " call(s) validated, nothing executed.", Meta = meta },
+                        false, false);
             }
             var results = new JsonArray(); meta["results"] = results;
             try
@@ -202,7 +262,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     return ok;
                 }, meta);
                 meta["success"] = committed; meta["operationSuccess"] = committed; meta["apiCallSuccess"] = true;
-                return SessionToolContract.Map(tool, new ResponseMessage { Message = committed ? "Transaction committed as one undo unit (" + calls.Length + " call(s)). No save." : "Transaction not committed; project transaction disposed with rollback. Inspect results and commit/cancellation state.", Meta = meta }, true, false);
+                return SessionToolContract
+                    .Map(tool, new ResponseMessage {
+                        Message = committed ? "Transaction committed as one undo unit (" + calls.Length + " call(s)). No save."
+                            : "Transaction not committed; project transaction disposed with rollback. Inspect results and commit/cancellation state.", Meta =
+                            meta
+                    }, true, false);
             }
             catch (Exception ex)
             {

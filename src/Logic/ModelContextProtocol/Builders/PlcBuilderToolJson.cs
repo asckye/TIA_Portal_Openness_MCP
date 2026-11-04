@@ -367,7 +367,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var path = parameter["symbolPath"] as JsonArray;
             if (path != null)
             {
-                return FlgNetCallParameter.Global(name, section, dataType, path.Select(x => x?.ToString() ?? "").Where(x => !string.IsNullOrWhiteSpace(x)).ToArray());
+                return FlgNetCallParameter
+                    .Global(name, section, dataType, path.Select(x => x?.ToString() ?? "").Where(x => !string.IsNullOrWhiteSpace(x)).ToArray());
             }
 
             var symbol = ReadString(parameter, "$.parameters[" + index + "].symbol", "symbol", "path", "plcTag");

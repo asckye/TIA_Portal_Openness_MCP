@@ -15,7 +15,8 @@ namespace TiaMcp.Logic.V4.Domain
                 ("value?", Scalar), ("evidence?", text), ("access?", text), ("code?", text), ("reason?", text));
             var owner = Object(("status", text), ("evidence?", text), ("type?", nullableText), ("meaning?", text), ("name?", evidence),
                 ("path?", text), ("kind?", text), ("code?", text), ("reason?", text));
-            var capability = Object(("name", text), ("source", text), ("accessMode?", text), ("type?", nullableText), ("readable?", flag), ("contentsRead?", flag));
+            var capability =
+                Object(("name", text), ("source", text), ("accessMode?", text), ("type?", nullableText), ("readable?", flag), ("contentsRead?", flag));
             var geometry = Object(("Left", evidence), ("Top", evidence), ("Width", evidence), ("Height", evidence));
             var envelope = Object(("left", Number()), ("top", Number()), ("width", Number()), ("height", Number()), ("nativeGroupBounds", Boolean(false)));
             d[typeof(GraphicEvidence)] = evidence; d[typeof(GraphicOwner)] = owner;
@@ -43,7 +44,8 @@ namespace TiaMcp.Logic.V4.Domain
                 ("consistency?", text), ("budgetNote?", text), ("releaseCursor?", text), ("cursorPolicy?", text),
                 ("success?", flag), ("operationSuccess?", flag), ("timestamp?", text), ("tool?", text), ("softwarePath?", text), ("screenPath?", text),
                 ("expectedObjectCount?", count), ("selectionKind?", text), ("nativeGroupVerified?", Boolean(false)), ("operationId?", text),
-                ("diagnosticLog?", text), ("phase?", text), ("lastAttemptedPath?", nullableText), ("lastCompletedPath?", nullableText), ("diagnosticLogError?", nullableText));
+                ("diagnosticLog?", text), ("phase?", text), ("lastAttemptedPath?", nullableText), ("lastCompletedPath?", nullableText),
+                    ("diagnosticLogError?", nullableText));
             d[typeof(GraphicSelectionPage[])] = Array(d[typeof(GraphicSelectionPage)], 1, 1024);
         }
     }

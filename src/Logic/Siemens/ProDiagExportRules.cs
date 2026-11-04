@@ -22,7 +22,8 @@ namespace TiaMcpServer.Siemens
         }
         internal static string? ProDiagRefusal(string programmingLanguage, bool isConsistent)
         {
-            if (!string.Equals(programmingLanguage, "ProDiag", StringComparison.Ordinal)) return "ExportProDIAGInfo needs a ProDiag FB; the block language is " + programmingLanguage + ".";
+            if (!string.Equals(programmingLanguage, "ProDiag", StringComparison.Ordinal)) return "ExportProDIAGInfo needs a ProDiag FB; the block language is "
+                + programmingLanguage + ".";
             return isConsistent ? null : "The ProDiag FB is inconsistent; compile first.";
         }
     }

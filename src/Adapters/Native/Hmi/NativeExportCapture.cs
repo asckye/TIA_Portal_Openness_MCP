@@ -29,7 +29,9 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             get
             {
-                try { return TiaOpenness.Shared.DataLocations.Current.LogFile("TiaMcpServer.native-export.log", TiaOpenness.Shared.DataLocations.HostReleaseKey); }
+                try {
+                    return TiaOpenness.Shared.DataLocations.Current.LogFile("TiaMcpServer.native-export.log", TiaOpenness.Shared.DataLocations.HostReleaseKey);
+                }
                 catch (Exception ex) { TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.native-export", ex); return null; }
             }
         }
@@ -46,7 +48,11 @@ namespace TiaMcp.Adapters.Native.Hmi
             var text = string.Format("[native-export] utc={0:O} operation={1} phase={2} outcome={3}{4}",
                 DateTime.UtcNow, OperationId, Phase, outcome, error == null ? "" : Environment.NewLine + error);
             try { Console.Error.WriteLine(text); } catch /* swallow(logging-failure): closed stderr must not fail the native export read */ { }
-            try { lock (LogGate) { TiaOpenness.Shared.DataLocations.Current.AppendLog("TiaMcpServer.native-export.log", TiaOpenness.Shared.DataLocations.HostReleaseKey, text); } }
+            try {
+                lock (LogGate) {
+                    TiaOpenness.Shared.DataLocations.Current.AppendLog("TiaMcpServer.native-export.log", TiaOpenness.Shared.DataLocations.HostReleaseKey, text);
+                }
+            }
             catch (Exception ex) { TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.native-export", ex); }
         }
 
@@ -87,12 +93,18 @@ namespace TiaMcp.Adapters.Native.Hmi
                         ["type"] = type.GetType().FullName, ["versionType"] = target.GetType().FullName,
                         ["supportedFormats"] = new HmiArray(formats.Select(f => (object?)HmiValues.Value(f)).ToArray()),
                         ["selectedFormat"] = Format, ["formatEvidence"] = "LibraryType.GetSupportedExportFormats()",
-                        ["method"] = Method, ["selectionReason"] = LibraryXml ? "No document format was advertised; use the separate official XML export action once. This does not establish internal-content support." : "Advertised document format",
+                        ["method"] = Method, ["selectionReason"] = LibraryXml
+                            ? "No document format was advertised; use the separate official XML export action once. This does not establish internal-content " +
+                            "support."
+                            : "Advertised document format",
                         ["libraryExportOptions"] = LibraryXml ? null : "None", ["exportOptions"] = LibraryXml ? "WithReadOnly" : null,
                         ["baseFileName"] = LibraryXml ? "Type.xml" : "Type", ["outputDirectory"] = directory.FullName,
-                        ["timing"] = "Result inspection is completed or stopped before this plan is delivered; this row is not proof that invocation is pending." });
+                        ["timing"] =
+                            "Result inspection is completed or stopped before this plan is delivered; this row is not proof that invocation is pending." });
                     if (LibraryXml) { ReadLibraryXml(target, directory); return; }
-                    if (Format == null) throw new NotSupportedException("The selected library type advertises no supported native export format. No type was edited or instantiated.");
+                    if (Format == null)
+                        throw new NotSupportedException("The selected library type advertises no supported native export format. No type was edited or " +
+                        "instantiated.");
                     var method = target.GetType().GetMethods().SingleOrDefault(m => m.Name == "ExportAsDocuments" && m.GetParameters().Length == 4
                         && m.GetParameters()[0].ParameterType == typeof(DirectoryInfo) && m.GetParameters()[1].ParameterType == typeof(string)
                         && m.GetParameters()[2].ParameterType == typeof(string) && m.GetParameters()[3].ParameterType.IsEnum)
@@ -139,19 +151,26 @@ namespace TiaMcp.Adapters.Native.Hmi
                     Begin("readMessageCount");
                     int count = MigrationRead.Count(messages);
                     if (count < 0) throw new InvalidOperationException("Export diagnostics returned a negative count.");
-                    Rows.Add(new HmiObject { ["path"] = scope + "/ExportResult/Messages", ["kind"] = "collection", ["status"] = "ok", ["expectedCount"] = count });
+                    Rows
+                        .Add(new HmiObject { ["path"] = scope + "/ExportResult/Messages", ["kind"] = "collection", ["status"] = "ok", ["expectedCount"] = count
+                        });
                     for (int i = 0; i < Math.Min(count, 1000); i++)
                     {
                         Begin("readMessage[" + i + "]");
                         var message = MigrationRead.Get(MigrationRead.At(messages, i), "Message");
-                        if (message is not string) throw new NotSupportedException("TransferResultMessage.Message is not a string; no arbitrary graph was traversed.");
+                        if (message is not string)
+                            throw new NotSupportedException("TransferResultMessage.Message is not a string; no arbitrary graph was traversed.");
                         Rows.Add(MigrationRead.Scalar(scope + "/ExportResult/Messages/[" + i + "]/Message", message));
                     }
-                    if (count > 1000) { Begin("readMessagesLimit"); throw new NotSupportedException("Export diagnostics exceed 1000 messages; diagnostic evidence is incomplete."); }
+                    if (count > 1000) {
+                        Begin("readMessagesLimit");
+                        throw new NotSupportedException("Export diagnostics exceed 1000 messages; diagnostic evidence is incomplete.");
+                    }
                     DiagnosticsStatus = "read";
                     Log("snapshotted");
                 }
-                catch (Exception ex) { DiagnosticsStatus = "failed"; Fail(Phase == "readMessagesLimit" ? "NativeDiagnosticLimit" : "NativeDiagnosticsReadFailed", ex); return; }
+                catch (Exception ex) {
+                    DiagnosticsStatus = "failed"; Fail(Phase == "readMessagesLimit" ? "NativeDiagnosticLimit" : "NativeDiagnosticsReadFailed", ex); return; }
             }
             else DiagnosticsStatus = libraryVersion ? "notRequiredOnSuccess" : "notApplicable";
             InspectionComplete = true;
@@ -165,7 +184,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             var method = target.GetType().GetMethods().SingleOrDefault(m => m.Name == "Export" && m.ReturnType == typeof(void)
                 && m.GetParameters().Length == 2 && m.GetParameters()[0].ParameterType == typeof(FileInfo)
                 && m.GetParameters()[1].ParameterType.IsEnum && Enum.IsDefined(m.GetParameters()[1].ParameterType, "WithReadOnly"))
-                ?? throw new NotSupportedException("No document format or public Export(FileInfo, ExportOptions.WithReadOnly) action is available on the selected version. Internal content is unknown, not empty.");
+                ?? throw new NotSupportedException("No document format or public Export(FileInfo, ExportOptions.WithReadOnly) action is available on the " +
+                    "selected version. Internal content is unknown, not empty.");
             var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directory.FullName, "Type.xml")));
             var options = Enum.Parse(method.GetParameters()[1].ParameterType, "WithReadOnly");
             Begin("invokeLibraryXmlExport");
@@ -198,7 +218,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             foreach (var value in values)
             {
                 if (formats.Count >= 32) throw new NotSupportedException("Supported format list exceeds 32; no unbounded format probing is performed.");
-                if (value is not string format || string.IsNullOrWhiteSpace(format)) throw new NotSupportedException("The API returned an invalid export format identifier.");
+                if (value is not string format || string.IsNullOrWhiteSpace(format))
+                    throw new NotSupportedException("The API returned an invalid export format identifier.");
                 formats.Add(format);
             }
             return formats.ToArray();
@@ -218,7 +239,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             row["exportAttempted"] = ExportAttempted; row["method"] = Method;
             row["nativeState"] = State; row["connectionUnavailable"] = ConnectionUnavailable;
             row["remoteInspectionStopped"] = true;
-            row["recovery"] = "No automatic export retry, reconnection, project close or Portal disposal was performed. Check the server log and TIA process before manually retrying.";
+            row["recovery"] =
+                "No automatic export retry, reconnection, project close or Portal disposal was performed. Check the server log and TIA process before " +
+                "manually retrying.";
             var chain = new HmiArray(); int count = 0;
             for (var e = error; e != null && count++ < 8; e = e.InnerException)
                 chain.Add(new HmiObject { ["type"] = e.GetType().FullName, ["hResult"] = "0x" + e.HResult.ToString("X8"),
@@ -232,17 +255,21 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal HmiObject Status()
         {
             bool ok = ApiCallSuccess && NativeSuccess && InspectionComplete;
-            var status = new HmiObject { ["path"] = scope, ["kind"] = "nativeExportStatus", ["status"] = ok ? "ok" : ExportAttempted ? "failed" : "notAttempted",
+            var status = new HmiObject {
+                ["path"] = scope, ["kind"] = "nativeExportStatus", ["status"] = ok ? "ok" : ExportAttempted ? "failed" : "notAttempted",
                 ["operationId"] = OperationId, ["apiCallSuccess"] = ApiCallSuccess, ["nativeState"] = State,
                 ["exportAttempted"] = ExportAttempted, ["method"] = Method,
                 ["diagnosticLog"] = DiagnosticLog,
                 ["nativeStateSuccess"] = NativeSuccess, ["resultInspectionComplete"] = InspectionComplete,
                 ["diagnosticsStatus"] = DiagnosticsStatus, ["selectedFormat"] = Format, ["failurePhase"] = FailurePhase,
                 ["connectionUnavailable"] = ConnectionUnavailable, ["remoteInspectionStopped"] = RemoteInspectionStopped,
-                ["dataComplete"] = null, ["completenessScope"] = "native call and result inspection only; see nativeExportSummary for file and body completeness",
-                ["reason"] = ok ? null : !ExportAttempted ? "Export was not invoked. Capability selection failed; internal objects and tags remain unknown, not empty."
+                ["dataComplete"] = null, ["completenessScope"] =
+                    "native call and result inspection only; see nativeExportSummary for file and body completeness",
+                ["reason"] = ok ? null : !ExportAttempted
+                    ? "Export was not invoked. Capability selection failed; internal objects and tags remain unknown, not empty."
                     : !ApiCallSuccess ? "Native call did not return successfully."
-                    : !InspectionComplete ? "The native call returned, but result inspection failed at " + FailurePhase + ". nativeState is the previously observed raw value; it does not establish complete data."
+                    : !InspectionComplete ? "The native call returned, but result inspection failed at " + FailurePhase
+                        + ". nativeState is the previously observed raw value; it does not establish complete data."
                     : "Native call and result inspection returned, but the native state was " + State + ". Inspect diagnostics and the file summary." };
             if (ApiCallSuccess && libraryResult && !LibraryXml)
             {
@@ -250,7 +277,13 @@ namespace TiaMcp.Adapters.Native.Hmi
                 status["nativeResultReturned"] = true; status["nativeState"] = State;
                 status["mayHaveChanged"] = false; status["logFilePath"] = DiagnosticLog;
                 status["nativeMessages"] = new HmiArray(Rows.Select(r => r.DeepClone()).ToArray());
-                status["targetFiles"] = new HmiArray(Directory.GetFiles(outputDirectory!).Select(p => (object)new HmiObject { ["path"] = new FileInfo(p).FullName, ["exists"] = File.Exists(p), ["sizeBytes"] = File.Exists(p) ? new FileInfo(p).Length : (long?)null }).ToArray());
+                status["targetFiles"] =
+                    new HmiArray(Directory.GetFiles(outputDirectory!)
+                        .Select(p => (object)new HmiObject {
+                            ["path"] = new FileInfo(p).FullName, ["exists"] = File.Exists(p), ["sizeBytes"] = File.Exists(p) ? new FileInfo(p).Length
+                                : (long?)null
+                        })
+                        .ToArray());
             }
             return status;
         }

@@ -14,7 +14,11 @@ namespace TiaMcp.Adapters
         internal bool Attempted { get; private set; }
         internal PlcDisconnectResult? Result { get; private set; }
         internal void RequireActive()
-        { if (Attempted) throw new InvalidOperationException("Disconnect ended this worker session; create a new explicit session before attaching again. An uncertain disconnect must be inspected, never retried."); }
+        {
+            if (Attempted)
+                throw new InvalidOperationException("Disconnect ended this worker session; create a new explicit session before attaching again. An " +
+                "uncertain disconnect must be inspected, never retried.");
+        }
         internal static bool Supports(bool? ownsPortal, bool sharedPortal, bool workerStarted = false)
             => ownsPortal==false || ownsPortal==true && (sharedPortal || workerStarted);
         internal PlcDisconnectResult Execute(int? processId, bool? ownsPortal, Action detach, bool sharedPortal = false,
@@ -23,14 +27,16 @@ namespace TiaMcp.Adapters
             if (Result != null) return Result;
             RequireActive();
             if (processId.HasValue && !Supports(ownsPortal,sharedPortal,workerStarted))
-                throw new NotSupportedException("Disconnect supports only proven non-owning existing-process attachments and portals this worker started; unknown Portal lifetime semantics are blocked.");
+                throw new NotSupportedException("Disconnect supports only proven non-owning existing-process attachments and portals this worker started; " +
+                    "unknown Portal lifetime semantics are blocked.");
             bool started = processId.HasValue && ownsPortal==true && workerStarted && !sharedPortal;
             // Refused before any native call: the session stays usable and nothing is detached or disposed.
             if (started && ownedProjectOpen) throw new AdapterPreconditionException(OwnedOpenProjectRefusal, isArgument: false);
             Attempted = true;
             if (processId.HasValue) detach();
             Result = new PlcDisconnectResult { ProcessId=processId, Detached=processId.HasValue,
-                Strategy=sharedPortal && ownsPortal==true ? "owned-shared-portal-dispose" : started ? "worker-started-portal-dispose" : "non-owning-attachment-only",
+                Strategy=sharedPortal && ownsPortal==true ? "owned-shared-portal-dispose" : started ? "worker-started-portal-dispose"
+                    : "non-owning-attachment-only",
                 LaunchMode=ownsPortal==true ? sharedPortal ? "engine-started" : "worker-started" : "never" };
             return Result;
         }

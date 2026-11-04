@@ -53,7 +53,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     ["offlineOnly"] = true,
                     ["tiaConnection"] = "not-used",
-                    ["blockingErrors"] = new JsonArray("json-parse-error", "missing-screen", "invalid-size", "duplicate-item-name", "item-out-of-screen", "execution-json-build-failed"),
+                    ["blockingErrors"] =
+                        new JsonArray("json-parse-error", "missing-screen", "invalid-size", "duplicate-item-name", "item-out-of-screen",
+                            "execution-json-build-failed"),
                     ["nonBlockingWarnings"] = new JsonArray("layout-overlap", "dense-screen", "text-may-overflow", "missing-design-system-field")
                 },
                 ["results"] = results
@@ -109,7 +111,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 row["paletteColorCount"] = palette?.Count ?? 0;
                 row["layoutGrid"] = GetJsonInt(layout?["Grid"] ?? layout?["grid"], 0);
                 if ((palette?.Count ?? 0) < 6) warnings.Add("missing-design-system-field: Palette should contain at least 6 named colors.");
-                if (GetJsonInt(layout?["Grid"] ?? layout?["grid"], 0) <= 0) warnings.Add("missing-design-system-field: Layout.Grid should be a positive number.");
+                if (GetJsonInt(layout?["Grid"] ?? layout?["grid"], 0) <= 0) warnings
+                    .Add("missing-design-system-field: Layout.Grid should be a positive number.");
             }
 
             var screen = root["Screen"] as JsonObject ?? root["screen"] as JsonObject;
@@ -160,8 +163,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     errors.Add("item-out-of-screen: " + name + " bounds=" + left + "," + top + "," + width + "," + height);
                 }
 
-                if (type.IndexOf("Button", StringComparison.OrdinalIgnoreCase) >= 0 && (width < 72 || height < 40)) warnings.Add("small-button: " + name + " is smaller than 72x40.");
-                if (type.IndexOf("IOField", StringComparison.OrdinalIgnoreCase) >= 0 && height < 28) warnings.Add("small-iofield: " + name + " height is smaller than 28.");
+                if (type.IndexOf("Button", StringComparison.OrdinalIgnoreCase) >= 0 && (width < 72 || height < 40)) warnings
+                    .Add("small-button: " + name + " is smaller than 72x40.");
+                if (type.IndexOf("IOField", StringComparison.OrdinalIgnoreCase) >= 0 && height < 28) warnings
+                    .Add("small-iofield: " + name + " height is smaller than 28.");
 
                 var props = item["Properties"] as JsonObject ?? item["properties"] as JsonObject ?? new JsonObject();
                 var text = ExtractTemplateText(item["Text"] ?? item["text"]);
@@ -224,8 +229,12 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int GetJsonInt(JsonNode? node, int fallback)
         {
             if (node == null) return fallback;
-            if (int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value)) return value;
-            if (double.TryParse(node.ToString(), System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, System.Globalization.CultureInfo.InvariantCulture, out var doubleValue)) return (int)Math.Round(doubleValue);
+            if (int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value))
+                return value;
+            if (double
+                    .TryParse(node.ToString(), System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, System.Globalization
+                        .CultureInfo.InvariantCulture, out var doubleValue))
+                return (int)Math.Round(doubleValue);
             return fallback;
         }
 

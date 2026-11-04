@@ -10,16 +10,20 @@ namespace TiaMcp.Adapters.Native.Online;
 
 internal static class OnlineDataPolicy
 {
-    private static readonly string[] SnapshotActions = { "read", "createSnapshot", "loadSnapshotAsActualValues", "loadStartValuesAsActualValues", "exportSnapshot" };
+    private static readonly string[] SnapshotActions = {
+        "read", "createSnapshot", "loadSnapshotAsActualValues", "loadStartValuesAsActualValues", "exportSnapshot" };
     internal static SecureString ToSecureString(string password) => EngineeringCredentialRules.ToSecureString(password);
         internal static bool ValidateSnapshotRequest(string action, string filePath, bool confirmValueChange, bool dryRun)
         {
-            if (!SnapshotActions.Contains(action)) throw new ArgumentException("action must be read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot.");
+            if (!SnapshotActions.Contains(action))
+                throw new ArgumentException("action must be read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot.");
             if (action == "read") return false;
-            if (action == "exportSnapshot" && string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("exportSnapshot requires an absolute new filePath.");
+            if (action == "exportSnapshot" && string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("exportSnapshot requires an absolute new filePath.");
             if (action != "exportSnapshot" && !string.IsNullOrEmpty(filePath)) throw new ArgumentException("filePath is only used by exportSnapshot.");
             if (dryRun) return false;
-            if (action.StartsWith("load", StringComparison.Ordinal) && !confirmValueChange) throw new ArgumentException("Loading values requires confirmValueChange=true besides dryRun=false.");
+            if (action.StartsWith("load", StringComparison.Ordinal) && !confirmValueChange)
+                throw new ArgumentException("Loading values requires confirmValueChange=true besides dryRun=false.");
             return true;
         }
 
@@ -38,10 +42,15 @@ internal static class OnlineDataPolicy
         {
             if (string.IsNullOrWhiteSpace(targetIpAddress)) throw new ArgumentException("Exact targetIpAddress is required; no first-route fallback.");
             var byAddress = candidates.Where(c => string.Equals(c.Address, targetIpAddress.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
-            if (byAddress.Length == 0) throw new PortalException(PortalErrorCode.NotFound, "No configured PLC interface address equals " + targetIpAddress + ".");
-            var selected = string.IsNullOrWhiteSpace(pgPcInterface) ? byAddress : byAddress.Where(c => string.Equals(c.PcInterfaceName, pgPcInterface.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
-            if (selected.Length == 0) throw new PortalException(PortalErrorCode.NotFound, "No route to " + targetIpAddress + " uses PG/PC interface " + pgPcInterface + ".");
-            if (selected.Length > 1) throw new PortalException(PortalErrorCode.InvalidParams, "Ambiguous route to " + targetIpAddress + " (" + selected.Length + " PG/PC interfaces); pass the exact pgPcInterface name.");
+            if (byAddress.Length == 0)
+                throw new PortalException(PortalErrorCode.NotFound, "No configured PLC interface address equals " + targetIpAddress + ".");
+            var selected = string.IsNullOrWhiteSpace(pgPcInterface) ? byAddress : byAddress
+                .Where(c => string.Equals(c.PcInterfaceName, pgPcInterface.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
+            if (selected.Length == 0)
+                throw new PortalException(PortalErrorCode.NotFound, "No route to " + targetIpAddress + " uses PG/PC interface " + pgPcInterface + ".");
+            if (selected.Length > 1)
+                throw new PortalException(PortalErrorCode.InvalidParams, "Ambiguous route to " + targetIpAddress + " (" + selected.Length
+                    + " PG/PC interfaces); pass the exact pgPcInterface name.");
             return selected[0];
         }
 

@@ -12,7 +12,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["queried"] = false;
                 UnifiedObjectAddress.Parse(objectPathJson);
                 var refusal = PlcCrossReferencePolicy.PolicyRefusal(
-                    Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), unified: true, release: PlcCrossReferencePolicy.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
+                    Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), unified: true, release: PlcCrossReferencePolicy
+                        .ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
                 if (refusal != null)
                 {
                     meta["status"] = "PRECONDITION_FAILED"; meta["operationSuccess"] = false;
@@ -21,7 +22,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     return refusal;
                 }
                 var target = UnifiedObjectAddress.Resolve(session.ExactUnifiedRoot(softwarePath), objectPathJson);
-                var serviceType = typeof(global::Siemens.Engineering.IEngineeringObject).Assembly.GetType("Siemens.Engineering.CrossReference.CrossReferenceService", true)!;
+                var serviceType = typeof(global::Siemens.Engineering.IEngineeringObject).Assembly
+                    .GetType("Siemens.Engineering.CrossReference.CrossReferenceService", true)!;
                 var provider = typeof(global::Siemens.Engineering.IEngineeringServiceProvider);
                 if (!provider.IsInstanceOfType(target)) throw new NotSupportedException("Selected object is not an engineering service provider.");
                 var service = provider.GetMethod("GetService")!.MakeGenericMethod(serviceType).Invoke(target, null)

@@ -28,7 +28,8 @@ namespace TiaMcpServer.ModelContextProtocol
         // Pin names that carry a value OUT of a part; everything else is treated as an input pin.
         private static readonly HashSet<string> OutputPins = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "out", "out1", "out2", "Q", "Q1", "Q2", "ENO", "ET", "CV", "QU", "QD", "RET_VAL", "Ret_Val", "RET", "ERROR", "STATUS", "BUSY", "DONE", "VALID", "NDR", "ERR", "OUT", "OUTPUT", "ENDCONDITION", "LEN", "RLO"
+            "out", "out1", "out2", "Q", "Q1", "Q2", "ENO", "ET", "CV", "QU", "QD", "RET_VAL", "Ret_Val", "RET", "ERROR", "STATUS", "BUSY", "DONE", "VALID",
+                "NDR", "ERR", "OUT", "OUTPUT", "ENDCONDITION", "LEN", "RLO"
         };
 
         // ------------------------------------------------------------------ models
@@ -127,7 +128,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
             }
-            if (doc.Networks.Count > MaxNetworksPerBlock) throw new InvalidDataException("Block has " + doc.Networks.Count + " networks; limit is " + MaxNetworksPerBlock + ".");
+            if (doc.Networks.Count > MaxNetworksPerBlock)
+                throw new InvalidDataException("Block has " + doc.Networks.Count + " networks; limit is " + MaxNetworksPerBlock + ".");
             foreach (var net in doc.Networks)
             {
                 var r = new RenderedNetwork { Index = net.Index, Title = net.Title, Comment = net.Comment, Language = net.Language };
@@ -172,7 +174,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         var name = (string?)e.Attribute("Name") ?? e.Name.LocalName;
                         var instance = e.Elements().FirstOrDefault(x => x.Name.LocalName == "Instance");
                         var instanceName = instance == null ? "" : AccessLabel(instance);
-                        var template = e.Elements().Where(x => x.Name.LocalName == "TemplateValue").Select(x => x.Value.Trim()).Where(v => v.Length > 0).ToList();
+                        var template = e.Elements().Where(x => x.Name.LocalName == "TemplateValue").Select(x => x.Value.Trim()).Where(v => v.Length > 0)
+                            .ToList();
                         var callInfo = e.Elements().FirstOrDefault(x => x.Name.LocalName == "CallInfo");
                         var callName = callInfo == null ? "" : ((string?)callInfo.Attribute("Name") ?? "");
                         if (callInfo != null && instance == null)
@@ -183,7 +186,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         var label = callName.Length > 0 ? name + " \"" + callName + "\"" : name;
                         if (template.Count > 0) label += "<" + string.Join(",", template) + ">";
                         if (instanceName.Length > 0) label += " [" + instanceName + "]";
-                        node = new GraphNode { Id = "P" + uid, Kind = "part", Label = label, Name = callName.Length > 0 ? callName : name, Instance = instanceName };
+                        node = new GraphNode {
+                            Id = "P" + uid, Kind = "part", Label = label, Name = callName.Length > 0 ? callName : name, Instance = instanceName };
                     }
                     byUid[uid] = node;
                     g.Nodes.Add(node);
@@ -213,7 +217,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         // Operand wire: direction from the pin name on the part side.
                         var partPin = pins.Skip(1).FirstOrDefault(p => p.kind == "name");
                         if (partPin.node == null || source.node == null) continue;
-                        if (IsOutputPin(partPin.pin, partPin.node.Name)) g.Edges.Add(new GraphEdge { From = partPin.node.Id, To = source.node.Id, FromPin = partPin.pin });
+                        if (IsOutputPin(partPin.pin, partPin.node.Name)) g.Edges
+                            .Add(new GraphEdge { From = partPin.node.Id, To = source.node.Id, FromPin = partPin.pin });
                         else g.Edges.Add(new GraphEdge { From = source.node.Id, To = partPin.node.Id, ToPin = partPin.pin });
                         continue;
                     }
@@ -235,7 +240,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         // The "operand" pin of coils (Coil, SCoil, RCoil, ...) is where the result goes; on contacts/boxes it is an input.
         public static bool IsOutputPin(string pin, string partName = "")
-            => pin.Length > 0 && (OutputPins.Contains(pin) || pin.StartsWith("OUT", StringComparison.OrdinalIgnoreCase) || pin.StartsWith("Q", StringComparison.Ordinal) && pin.Length <= 3
+            => pin.Length > 0
+                && (OutputPins.Contains(pin) || pin.StartsWith("OUT", StringComparison.OrdinalIgnoreCase) || pin.StartsWith("Q", StringComparison.Ordinal)
+                    && pin.Length <= 3
                 || pin.Equals("operand", StringComparison.OrdinalIgnoreCase) && partName.IndexOf("Coil", StringComparison.OrdinalIgnoreCase) >= 0);
 
         public static string AccessLabel(XElement access)
@@ -247,7 +254,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var comps = symbol.Elements().Where(e => e.Name.LocalName == "Component").Select(ComponentText).ToList();
                 var path = string.Join(".", comps);
                 if (scope == "LocalVariable" || scope == "LocalConstant") return "#" + path;
-                if (scope == "GlobalVariable" || scope == "GlobalConstant") return "\"" + comps[0] + "\"" + (comps.Count > 1 ? "." + string.Join(".", comps.Skip(1)) : "");
+                if (scope == "GlobalVariable" || scope == "GlobalConstant") return "\"" + comps[0] + "\""
+                    + (comps.Count > 1 ? "." + string.Join(".", comps.Skip(1)) : "");
                 return path;
             }
             var constant = access.Elements().FirstOrDefault(e => e.Name.LocalName == "Constant");
@@ -263,10 +271,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 var area = (string?)address.Attribute("Area") ?? "";
                 var type = (string?)address.Attribute("Type") ?? "";
                 var bitOffset = (string?)address.Attribute("BitOffset");
-                var prefix = area == "Input" ? "I" : area == "Output" ? "Q" : area == "Memory" ? "M" : area == "PeripheryInput" ? "I" : area == "PeripheryOutput" ? "Q" : area;
+                var prefix = area == "Input" ? "I" : area == "Output" ? "Q" : area == "Memory" ? "M" : area == "PeripheryInput" ? "I"
+                    : area == "PeripheryOutput" ? "Q" : area;
                 if (int.TryParse(bitOffset, NumberStyles.Integer, CultureInfo.InvariantCulture, out var bits))
                 {
-                    var size = type == "Bool" ? "" : type == "Byte" ? "B" : type == "Word" || type == "Int" ? "W" : type == "DWord" || type == "DInt" || type == "Real" ? "D" : "";
+                    var size = type == "Bool" ? "" : type == "Byte" ? "B" : type == "Word" || type == "Int" ? "W" : type == "DWord" || type == "DInt"
+                        || type == "Real" ? "D" : "";
                     return "%" + prefix + size + (bits / 8) + (type == "Bool" ? "." + (bits % 8) : "");
                 }
                 return "%" + prefix + "?";
@@ -366,7 +376,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (doc.Members.Count > 0)
             {
                 sb.Append("## Interface\n\n| Section | Name | Datatype |\n|---|---|---|\n");
-                foreach (var m in doc.Members) sb.Append("| ").Append(m.Section).Append(" | `").Append(m.Path).Append("` | ").Append(m.Datatype.Replace("|", "\\|")).Append(" |\n");
+                foreach (var m in doc.Members) sb.Append("| ").Append(m.Section).Append(" | `").Append(m.Path).Append("` | ")
+                    .Append(m.Datatype.Replace("|", "\\|")).Append(" |\n");
                 sb.Append('\n');
             }
             if (block.Networks.Count > 0)
@@ -383,11 +394,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         if (net.Listing.Length > 0) sb.Append("`").Append(net.Listing.Replace("`", "'")).Append("`\n\n");
                         sb.Append("```mermaid\n").Append(Mermaid(net.Graph, direction)).Append("\n```\n\n");
-                        if (net.Graph.OpenConnections > 0) sb.Append("_").Append(net.Graph.OpenConnections).Append(" open connection(s) (unused output pins)._\n\n");
+                        if (net.Graph.OpenConnections > 0) sb.Append("_").Append(net.Graph.OpenConnections)
+                            .Append(" open connection(s) (unused output pins)._\n\n");
                     }
                     else if (net.SourceLines.Count > 0)
                     {
-                        var lang = string.Equals(net.Language, "SCL", StringComparison.OrdinalIgnoreCase) || string.Equals(doc.Language, "SCL", StringComparison.OrdinalIgnoreCase) ? "scl" : "text";
+                        var lang = string.Equals(net.Language, "SCL", StringComparison.OrdinalIgnoreCase) || string
+                            .Equals(doc.Language, "SCL", StringComparison.OrdinalIgnoreCase) ? "scl" : "text";
                         sb.Append("```").Append(lang).Append('\n');
                         foreach (var line in net.SourceLines) sb.Append(line).Append('\n');
                         sb.Append("```\n\n");
@@ -403,7 +416,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var calls = doc.BlockCalls.Distinct(StringComparer.Ordinal).OrderBy(c => c, StringComparer.Ordinal).ToList();
             if (calls.Count > 0) sb.Append("## Calls\n\n").Append(string.Join("\n", calls.Select(c => "- `" + c + "`"))).Append("\n\n");
-            var instr = doc.Instructions.GroupBy(i => i, StringComparer.Ordinal).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal).ToList();
+            var instr = doc.Instructions.GroupBy(i => i, StringComparer.Ordinal).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal)
+                .ToList();
             if (instr.Count > 0) sb.Append("## Instructions\n\n").Append(string.Join(", ", instr.Select(g => "`" + g.Key + "`×" + g.Count()))).Append("\n\n");
             if (doc.Warnings.Count > 0) sb.Append("## Parser notes\n\n").Append(string.Join("\n", doc.Warnings.Select(w => "- " + w))).Append("\n\n");
             return sb.ToString().TrimEnd('\n') + "\n";
@@ -428,7 +442,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public static Handbook RenderHandbook(string directory, bool recursive, string[] extensions, string title, string direction = "LR")
         {
             var files = OfflineAnalysisLogic.EnumerateDocuments(directory, recursive, extensions);
-            if (files.Count > MaxHandbookFiles) throw new InvalidDataException(files.Count + " documents exceed the handbook limit of " + MaxHandbookFiles + ".");
+            if (files.Count > MaxHandbookFiles)
+                throw new InvalidDataException(files.Count + " documents exceed the handbook limit of " + MaxHandbookFiles + ".");
             var hb = new Handbook();
             foreach (var file in files)
             {
@@ -449,18 +464,21 @@ namespace TiaMcpServer.ModelContextProtocol
             if (hb.Failed > 0) sb.Append(", ").Append(hb.Failed).Append(" failed to parse");
             sb.Append(". Generated offline from exported documents; not a Siemens compile verdict.\n\n");
 
-            var blocks = hb.Entries.Where(e => e.Block != null).Select(e => e.Block!).OrderBy(b => TypeRank(b.Document.BlockType)).ThenBy(b => b.Document.BlockName, StringComparer.OrdinalIgnoreCase).ToList();
+            var blocks = hb.Entries.Where(e => e.Block != null).Select(e => e.Block!).OrderBy(b => TypeRank(b.Document.BlockType))
+                .ThenBy(b => b.Document.BlockName, StringComparer.OrdinalIgnoreCase).ToList();
             sb.Append("## Index\n\n| Block | Type | Number | Language | Networks | Interface members | Calls |\n|---|---|---|---|---|---|---|\n");
             foreach (var b in blocks)
             {
                 var d = b.Document;
                 sb.Append("| [`").Append(d.BlockName).Append("`](#").Append(Anchor(Heading(d))).Append(") | ").Append(d.BlockType).Append(" | ")
-                  .Append(d.Attributes.TryGetValue("Number", out var n) ? n : "").Append(" | ").Append(d.Language).Append(" | ").Append(d.Networks.Count).Append(" | ")
+                  .Append(d.Attributes.TryGetValue("Number", out var n) ? n : "").Append(" | ").Append(d.Language).Append(" | ").Append(d.Networks.Count)
+                      .Append(" | ")
                   .Append(d.Members.Count).Append(" | ").Append(d.BlockCalls.Distinct().Count()).Append(" |\n");
             }
             sb.Append('\n');
 
-            var byName = blocks.GroupBy(b => b.Document.BlockName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+            var byName = blocks.GroupBy(b => b.Document.BlockName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
             var calledBy = new SortedDictionary<string, SortedSet<string>>(StringComparer.OrdinalIgnoreCase);
             foreach (var b in blocks)
                 foreach (var call in b.Document.BlockCalls.Distinct())
@@ -474,7 +492,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 sb.Append("## Call cross-reference\n\n| Called block | In program export | Callers |\n|---|---|---|\n");
                 foreach (var kv in calledBy)
-                    sb.Append("| `").Append(kv.Key).Append("` | ").Append(byName.ContainsKey(kv.Key) ? "yes" : "no (library/system/other export)").Append(" | ").Append(string.Join(", ", kv.Value.Select(c => "`" + c + "`"))).Append(" |\n");
+                    sb.Append("| `").Append(kv.Key).Append("` | ").Append(byName.ContainsKey(kv.Key) ? "yes" : "no (library/system/other export)").Append(" | ")
+                        .Append(string.Join(", ", kv.Value.Select(c => "`" + c + "`"))).Append(" |\n");
                 sb.Append('\n');
             }
             foreach (var entry in hb.Entries.Where(e => e.Block == null))
@@ -499,7 +518,8 @@ namespace TiaMcpServer.ModelContextProtocol
             return doc.BlockType + number + " `" + name + "`" + (doc.Language.Length > 0 ? " (" + doc.Language + ")" : "");
         }
 
-        private static int TypeRank(string type) => type == "OB" ? 0 : type == "FB" ? 1 : type == "FC" ? 2 : type == "GlobalDB" ? 3 : type == "InstanceDB" ? 4 : type.StartsWith("Plc", StringComparison.Ordinal) ? 5 : 6;
+        private static int TypeRank(string type) => type == "OB" ? 0 : type == "FB" ? 1 : type == "FC" ? 2 : type == "GlobalDB" ? 3 : type == "InstanceDB" ? 4
+            : type.StartsWith("Plc", StringComparison.Ordinal) ? 5 : 6;
 
         private static string Anchor(string heading)
         {
@@ -515,13 +535,18 @@ namespace TiaMcpServer.ModelContextProtocol
             ["IF"] = "END_IF", ["CASE"] = "END_CASE", ["FOR"] = "END_FOR", ["WHILE"] = "END_WHILE", ["REPEAT"] = "END_REPEAT",
             ["REGION"] = "END_REGION", ["FUNCTION"] = "END_FUNCTION", ["FUNCTION_BLOCK"] = "END_FUNCTION_BLOCK",
             ["ORGANIZATION_BLOCK"] = "END_ORGANIZATION_BLOCK", ["DATA_BLOCK"] = "END_DATA_BLOCK", ["TYPE"] = "END_TYPE", ["STRUCT"] = "END_STRUCT",
-            ["VAR"] = "END_VAR", ["VAR_INPUT"] = "END_VAR", ["VAR_OUTPUT"] = "END_VAR", ["VAR_IN_OUT"] = "END_VAR", ["VAR_TEMP"] = "END_VAR", ["VAR_STAT"] = "END_VAR",
+            ["VAR"] = "END_VAR", ["VAR_INPUT"] = "END_VAR", ["VAR_OUTPUT"] = "END_VAR", ["VAR_IN_OUT"] = "END_VAR", ["VAR_TEMP"] = "END_VAR", ["VAR_STAT"] =
+                "END_VAR",
         };
         private static readonly HashSet<string> Closers = new HashSet<string>(BlockOpeners.Values, StringComparer.OrdinalIgnoreCase);
         private static readonly Regex WordRegex = new Regex(@"[A-Za-z_][A-Za-z0-9_]*", RegexOptions.Compiled);
         private static readonly Regex AssignmentSuspect = new Regex(@"^\s*[#""]?[A-Za-z_][\w\.""#\[\]]*\s*=(?!=)", RegexOptions.Compiled);
-        private static readonly string[] StatementKeywords = { "IF", "ELSIF", "WHILE", "UNTIL", "CASE", "FOR", "RETURN", "EXIT", "CONTINUE", "ELSE", "THEN", "DO", "OF", "REPEAT", "REGION", "GOTO", "BEGIN" };
-        private static readonly HashSet<string> LineEndingKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "THEN", "DO", "ELSE", "OF", "BEGIN", "REPEAT", "STRUCT", "VAR", "VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_STAT", "CONSTANT", "RETAIN", "NON_RETAIN" };
+        private static readonly string[] StatementKeywords = {
+            "IF", "ELSIF", "WHILE", "UNTIL", "CASE", "FOR", "RETURN", "EXIT", "CONTINUE", "ELSE", "THEN", "DO", "OF", "REPEAT", "REGION", "GOTO", "BEGIN" };
+        private static readonly HashSet<string> LineEndingKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+            "THEN", "DO", "ELSE", "OF", "BEGIN", "REPEAT", "STRUCT", "VAR", "VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_STAT", "CONSTANT",
+                "RETAIN", "NON_RETAIN"
+        };
 
         public static LintOptions ParseLintOptions(string? rulesJson)
         {
@@ -530,7 +555,8 @@ namespace TiaMcpServer.ModelContextProtocol
             JsonNode? node;
             try { node = JsonNode.Parse(rulesJson!); }
             catch (JsonException ex) { throw new ArgumentException("rulesJson is not valid JSON: " + ex.Message); }
-            if (!(node is JsonObject obj)) throw new ArgumentException("rulesJson must be a JSON object, e.g. {\"disable\":[\"SCL007\"],\"maxLineLength\":120,\"maxNesting\":5}.");
+            if (!(node is JsonObject obj))
+                throw new ArgumentException("rulesJson must be a JSON object, e.g. {\"disable\":[\"SCL007\"],\"maxLineLength\":120,\"maxNesting\":5}.");
             if (obj["disable"] is JsonArray dis) foreach (var d in dis) if (d != null) o.Disabled.Add(d.ToString());
             if (obj["maxLineLength"] != null) o.MaxLineLength = obj["maxLineLength"]!.GetValue<int>();
             if (obj["maxNesting"] != null) o.MaxNesting = obj["maxNesting"]!.GetValue<int>();
@@ -548,7 +574,9 @@ namespace TiaMcpServer.ModelContextProtocol
             void Add(string rule, string severity, int line, string message, string text)
             {
                 if (options.Disabled.Contains(rule)) return;
-                findings.Add(new LintFinding { Rule = rule, Severity = severity, Line = line, Message = message, Text = text.Length > 200 ? text.Substring(0, 200) : text });
+                findings
+                    .Add(new LintFinding {
+                        Rule = rule, Severity = severity, Line = line, Message = message, Text = text.Length > 200 ? text.Substring(0, 200) : text });
             }
 
             var stack = new Stack<(string keyword, int line)>();
@@ -561,22 +589,26 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var raw = lines[i];
                 var lineNo = i + 1;
-                if (raw.Length > options.MaxLineLength) Add("SCL007", "info", lineNo, "Line longer than " + options.MaxLineLength + " characters (" + raw.Length + ").", raw);
+                if (raw.Length > options.MaxLineLength)
+                    Add("SCL007", "info", lineNo, "Line longer than " + options.MaxLineLength + " characters (" + raw.Length + ").", raw);
                 if (raw.Contains('\t') || raw.Length > 0 && char.IsWhiteSpace(raw[raw.Length - 1])) whitespaceLines++;
 
                 var stripped = OfflineAnalysisLogic.StripComments(raw, ref inBlockComment, out var comment);
                 if (comment.Length > 0)
                     foreach (var marker in options.Markers)
-                        if (Regex.IsMatch(comment, @"\b" + Regex.Escape(marker) + @"\b")) { Add("SCL010", "info", lineNo, "Annotation marker '" + marker + "' in comment.", comment.Trim()); break; }
+                        if (Regex.IsMatch(comment, @"\b" + Regex.Escape(marker) + @"\b")) {
+                            Add("SCL010", "info", lineNo, "Annotation marker '" + marker + "' in comment.", comment.Trim()); break; }
                 var code = StripStrings(stripped);
                 if (code.Trim().Length == 0) continue;
 
                 foreach (var ch in code)
                 {
                     if (ch == '(') { if (paren == 0) parenLine = lineNo; paren++; }
-                    else if (ch == ')') { paren--; if (paren < 0) { Add("SCL002", "error", lineNo, "Closing ')' without opening parenthesis.", raw.Trim()); paren = 0; } }
+                    else if (ch == ')') {
+                        paren--; if (paren < 0) { Add("SCL002", "error", lineNo, "Closing ')' without opening parenthesis.", raw.Trim()); paren = 0; } }
                     else if (ch == '[') bracket++;
-                    else if (ch == ']') { bracket--; if (bracket < 0) { Add("SCL002", "error", lineNo, "Closing ']' without opening bracket.", raw.Trim()); bracket = 0; } }
+                    else if (ch == ']') {
+                        bracket--; if (bracket < 0) { Add("SCL002", "error", lineNo, "Closing ']' without opening bracket.", raw.Trim()); bracket = 0; } }
                 }
                 if (code.Contains(";;")) Add("SCL009", "info", lineNo, "Empty statement ';;'.", raw.Trim());
 
@@ -594,7 +626,10 @@ namespace TiaMcpServer.ModelContextProtocol
                         if (upper == "IF" || upper == "CASE" || upper == "FOR" || upper == "WHILE" || upper == "REPEAT")
                         {
                             nesting++;
-                            if (nesting > options.MaxNesting && !reportedNesting) { reportedNesting = true; Add("SCL006", "info", lineNo, "Nesting depth " + nesting + " exceeds " + options.MaxNesting + ".", raw.Trim()); }
+                            if (nesting > options.MaxNesting && !reportedNesting) {
+                                reportedNesting = true;
+                                Add("SCL006", "info", lineNo, "Nesting depth " + nesting + " exceeds " + options.MaxNesting + ".", raw.Trim());
+                            }
                         }
                         continue;
                     }
@@ -605,7 +640,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         var expected = BlockOpeners[top.keyword];
                         if (!expected.Equals(upper, StringComparison.OrdinalIgnoreCase))
                         {
-                            Add("SCL001", "error", lineNo, upper + " closes " + top.keyword + " opened at line " + top.line + " (expected " + expected + ").", raw.Trim());
+                            Add("SCL001", "error", lineNo, upper + " closes " + top.keyword + " opened at line " + top.line + " (expected " + expected + ").",
+                                    raw.Trim());
                             // Recover: unwind to the nearest matching opener if any.
                             var unwound = stack.ToList();
                             var idx = unwound.FindIndex(s => BlockOpeners[s.keyword].Equals(upper, StringComparison.OrdinalIgnoreCase));
@@ -617,35 +653,45 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
 
-                if (firstWord == "WHILE" && Regex.IsMatch(code, @"\bWHILE\s+TRUE\b", RegexOptions.IgnoreCase)) Add("SCL011", "warning", lineNo, "WHILE TRUE loop; make sure an EXIT/RETURN condition exists (cycle time!).", raw.Trim());
-                if (firstWord == "REGION" && words.Count == 1 && code.Trim().Equals("REGION", StringComparison.OrdinalIgnoreCase)) Add("SCL012", "info", lineNo, "REGION without a name.", raw.Trim());
+                if (firstWord == "WHILE" && Regex.IsMatch(code, @"\bWHILE\s+TRUE\b", RegexOptions.IgnoreCase))
+                    Add("SCL011", "warning", lineNo, "WHILE TRUE loop; make sure an EXIT/RETURN condition exists (cycle time!).", raw.Trim());
+                if (firstWord == "REGION" && words.Count == 1 && code.Trim().Equals("REGION", StringComparison.OrdinalIgnoreCase))
+                    Add("SCL012", "info", lineNo, "REGION without a name.", raw.Trim());
 
-                if (AssignmentSuspect.IsMatch(code) && !StatementKeywords.Contains(firstWord) && paren == 0 && !code.Contains(":=") && !Regex.IsMatch(code, @"[<>]=|<>|=>"))
-                    Add("SCL003", "warning", lineNo, "'=' at statement level; SCL assignment is ':=' (comparison '=' is only valid inside an expression).", raw.Trim());
+                if (AssignmentSuspect.IsMatch(code) && !StatementKeywords.Contains(firstWord) && paren == 0 && !code.Contains(":=") && !Regex
+                        .IsMatch(code, @"[<>]=|<>|=>"))
+                    Add("SCL003", "warning", lineNo, "'=' at statement level; SCL assignment is ':=' (comparison '=' is only valid inside an expression).", raw
+                            .Trim());
 
                 var trimmed = code.Trim();
-                var startsCloser = firstWord == "ELSE" || firstWord == "ELSIF" || firstWord == "UNTIL" || firstWord.StartsWith("END_", StringComparison.Ordinal);
+                var startsCloser = firstWord == "ELSE" || firstWord == "ELSIF" || firstWord == "UNTIL" || firstWord
+                    .StartsWith("END_", StringComparison.Ordinal);
                 if (previousCode != null && startsCloser && !previousCode.EndsWith(";", StringComparison.Ordinal))
                 {
                     var prevWords = WordRegex.Matches(previousCode).Cast<Match>().Select(m => m.Value.ToUpperInvariant()).ToList();
                     var prevLast = prevWords.Count > 0 ? prevWords[prevWords.Count - 1] : "";
                     var prevFirst = prevWords.Count > 0 ? prevWords[0] : "";
-                    var prevIsHeader = LineEndingKeywords.Contains(prevLast) || prevFirst.StartsWith("END_", StringComparison.Ordinal) || prevFirst == "ELSE" || prevFirst == "REGION" || prevFirst == "CASE" || Regex.IsMatch(previousCode.Trim(), @"^[\w#""'\.\[\]\s,]+:$");
+                    var prevIsHeader = LineEndingKeywords.Contains(prevLast) || prevFirst.StartsWith("END_", StringComparison.Ordinal) || prevFirst == "ELSE"
+                        || prevFirst == "REGION" || prevFirst == "CASE" || Regex.IsMatch(previousCode.Trim(), @"^[\w#""'\.\[\]\s,]+:$");
                     if (!prevIsHeader && !previousCode.Trim().EndsWith(":", StringComparison.Ordinal))
                         Add("SCL004", "warning", previousLine, "Statement before " + firstWord + " does not end with ';'.", lines[previousLine - 1].Trim());
                 }
                 previousCode = trimmed; previousLine = lineNo;
             }
             foreach (var open in stack.Reverse())
-                Add("SCL001", "error", open.line, open.keyword + " opened here is never closed (missing " + BlockOpeners[open.keyword] + ").", lines[open.line - 1].Trim());
-            if (paren > 0) Add("SCL002", "error", parenLine, paren + " '(' never closed (first unclosed at line " + parenLine + ").", lines[Math.Max(0, parenLine - 1)].Trim());
+                Add("SCL001", "error", open.line, open.keyword + " opened here is never closed (missing " + BlockOpeners[open.keyword] + ").",
+                        lines[open.line - 1].Trim());
+            if (paren > 0)
+                Add("SCL002", "error", parenLine, paren + " '(' never closed (first unclosed at line " + parenLine + ").", lines[Math.Max(0, parenLine - 1)]
+                    .Trim());
             if (bracket > 0) Add("SCL002", "error", lines.Length, bracket + " '[' never closed.", "");
             if (whitespaceLines > 0) Add("SCL008", "info", 0, whitespaceLines + " line(s) with tab characters or trailing whitespace.", "");
             if (inBlockComment) Add("SCL013", "error", lines.Length, "Block comment '(*' is never closed.", "");
             return findings.OrderBy(f => f.Line).ThenBy(f => f.Rule, StringComparer.Ordinal).ToList();
         }
 
-        private static bool IsNestingKeyword(string keyword) => keyword == "IF" || keyword == "CASE" || keyword == "FOR" || keyword == "WHILE" || keyword == "REPEAT";
+        private static bool IsNestingKeyword(string keyword) => keyword == "IF" || keyword == "CASE" || keyword == "FOR" || keyword == "WHILE"
+            || keyword == "REPEAT";
 
         // Replaces the contents of '...' string literals (and "..." symbol names) so quotes/keywords inside do not count.
         public static string StripStrings(string code)
@@ -662,7 +708,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 else
                 {
                     if (ch == quote) { quote = null; sb.Append(ch); continue; }
-                    sb.Append(ch == '"' ? 'x' : ch == '\'' ? 'x' : char.IsLetterOrDigit(ch) ? 'x' : ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == ';' || ch == '=' ? 'x' : ch);
+                    sb
+                        .Append(ch == '"' ? 'x' : ch == '\'' ? 'x' : char.IsLetterOrDigit(ch) ? 'x' : ch == '(' || ch == ')' || ch == '[' || ch == ']'
+                            || ch == ';' || ch == '=' ? 'x' : ch);
                 }
             }
             return sb.ToString();

@@ -24,7 +24,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (_plans.Count >= 32) throw new InvalidOperationException("Too many pending previews; use or wait for expiry.");
                 plan.Expires = now.AddMinutes(10);
                 var token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
-                _plans.Add(token, new Plan { State = plan.State, Project = plan.Project, Operations = (JsonArray)plan.Operations.DeepClone(), Previews = (JsonArray)plan.Previews.DeepClone(), Expires = plan.Expires });
+                _plans
+                    .Add(token, new Plan {
+                        State = plan.State, Project = plan.Project, Operations = (JsonArray)plan.Operations.DeepClone(), Previews = (JsonArray)plan.Previews
+                            .DeepClone(), Expires = plan.Expires
+                    });
                 return token;
             }
         }

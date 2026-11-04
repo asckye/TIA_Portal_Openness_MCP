@@ -28,7 +28,8 @@ internal sealed class WorkerLaunchOptions
     internal static WorkerLaunchOptions Parse(string[] args)
     {
         if (args.Length < 4 || args[0] != "--native-session")
-            throw new ArgumentException("Usage: --native-session <exact-release-key> <verified-public-api-directory> <launch-nonce> [--with-ui] [--tia-portal-location <directory>].");
+            throw new ArgumentException("Usage: --native-session <exact-release-key> <verified-public-api-directory> <launch-nonce> [--with-ui] " +
+                "[--tia-portal-location <directory>].");
         bool ui = false, locationSeen = false;
         string? location = null;
         for (int i = 4; i < args.Length; i++)

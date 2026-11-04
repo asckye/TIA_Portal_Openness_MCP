@@ -35,10 +35,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "HmiReadSessionBlocked" ? new SessionResetRequiredDetails("HMI read connection failure")
                 : status == "InvalidParams" || status == "INVALID_ARGUMENT" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
                 : status == "NotFound" || status == "NOT_FOUND" ? new NotFoundDetails(null)
-                : status == "NotSupportedOnVersion" || status == "UNSUPPORTED_CAPABILITY" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI/reflection", null)
+                : status == "NotSupportedOnVersion" || status == "UNSUPPORTED_CAPABILITY"
+                    ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI/reflection", null)
                 : status == "NativeCrashRiskBlocked" || status == "ACCESS_DENIED" ? new AccessDeniedDetails("reflection", null)
                 : status == "PRECONDITION_FAILED" ? new PreconditionFailedDetails("HMI/reflection admission", null) : null;
-            return details == null ? null : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The request could not be admitted; inspect the retained evidence.", details);
+            return details == null ? null
+                : new Error(status == "NotSupportedOnVersion" && message != null ? message
+                    : "The request could not be admitted; inspect the retained evidence.", details);
         }
 
         private static Error Failure(bool writes) => writes
@@ -70,8 +73,10 @@ namespace TiaMcpServer.ModelContextProtocol
             Error? error = null;
             Outcome outcome;
             if (unknown) { outcome = Outcome.Unknown; error = Failure(true); }
-            else if (compileFailed) { outcome = Outcome.Failed; error = CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) ?? Failure(false); }
-            else if (knownMismatch) { outcome = Outcome.Partial; error = new Error("The script was imported but its readback differs.", new PartialFailureDetails(0, 0, 0)); }
+            else if (compileFailed) {
+                outcome = Outcome.Failed; error = CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) ?? Failure(false); }
+            else if (knownMismatch) {
+                outcome = Outcome.Partial; error = new Error("The script was imported but its readback differs.", new PartialFailureDetails(0, 0, 0)); }
             else if (!issued && (error = Rejection(status)) != null) outcome = Outcome.RejectedBeforeOperation;
             else if (success == true) outcome = Outcome.Succeeded;
             else if (writes && Flag(evidence, "mayHaveChanged") == false)
@@ -136,10 +141,15 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = new List<Warning>();
             if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 acceptance is pending.", new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; inspect coverage and failures.", new Dictionary<string, JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 acceptance is pending.", new Dictionary<string,
+                        JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; inspect coverage and failures.", new Dictionary<string,
+                        JsonElement>()));
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
-                : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution.ReadOnly : Execution.Completed;
+                : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
+                    .ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
                 execution, reset || outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);

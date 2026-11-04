@@ -27,7 +27,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         private static HmiTagTable? FindUnifiedTagTable(HmiSoftware hmi, string nameOrPath)
             => (HmiTagTable?)HmiExchangePolicy.TagTable(hmi, nameOrPath);
 
-        public HmiMessage ExchangeUnifiedTags(string softwarePath, string action, string directory, string tagTable = "", string fileName = "", string expectedTagNamesJson = "[]", bool dryRun = true, bool overwrite = false)
+        public HmiMessage ExchangeUnifiedTags(string softwarePath, string action, string directory, string tagTable = "", string fileName = "",
+                string expectedTagNamesJson = "[]", bool dryRun = true, bool overwrite = false)
             => _session.RunHmiStepTool("ExchangeUnifiedTags", meta => {
                 if (!UnifiedExchangeLogic.ExchangeActions.Contains(action)) throw new ArgumentException("action must be export or import.");
                 bool exporting = action == "export";
@@ -43,10 +44,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (string.IsNullOrWhiteSpace(tagTable)) tags = hmi.Tags;
                 else
                 {
-                    var table = FindUnifiedTagTable(hmi, tagTable) ?? throw new PlcSoftwareException("NotFound", "Exact Unified tag table not found: " + tagTable);
+                    var table = FindUnifiedTagTable(hmi, tagTable)
+                        ?? throw new PlcSoftwareException("NotFound", "Exact Unified tag table not found: " + tagTable);
                     tags = table.Tags;
                 }
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["directory"] = dir.FullName; meta["tagTable"] = string.IsNullOrWhiteSpace(tagTable) ? null : tagTable;
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["directory"] = dir.FullName; meta["tagTable"] = string.IsNullOrWhiteSpace(tagTable)
+                    ? null : tagTable;
                 meta["fileName"] = name.Length == 0 ? null : name; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 meta["tagCountBefore"] = tags.Count;
                 meta["format"] = "WinCC ML (YAML): <name>.hmi.yml plus NameData.yml / .ile / *.def.hmi.yml side files written by TIA";
@@ -55,7 +58,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (dryRun) return "Unified tag export preview; no file written.";
                     dir.Create(); meta["mayHaveWrittenFiles"] = true;
                     var native = name.Length == 0 ? tags.Export(dir) : tags.Export(dir, name);
-                    meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["directoryListing"] = UnifiedExchangeLogic.DirectoryListing(dir); meta["dataComplete"] = false;
+                    meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["directoryListing"] =
+                        UnifiedExchangeLogic.DirectoryListing(dir); meta["dataComplete"] = false;
                     return "Unified tags exported by TIA (WinCC ML) and hashed; content not parsed. No project change.";
                 }
                 meta["importCandidates"] = UnifiedExchangeLogic.ListImportCandidates(dir, new[] { ".hmi.yml" });
@@ -72,32 +76,40 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["missingNames"] = new HmiArray(missing.Select(n => (object)HmiValues.Value(n)!).ToArray());
                 meta["actualCount"] = expected.Length - missing.Length; meta["fullContentVerified"] = false;
                 if (missing.Length != 0) throw new InvalidOperationException("Expected tag names absent after import: " + string.Join(", ", missing));
-                return "Native tag import returned true" + (expected.Length > 0 ? " and every expected tag name is present" : "") + "; tag properties are not independently compared. No save/compile/download.";
+                return "Native tag import returned true" + (expected.Length > 0 ? " and every expected tag name is present" : "")
+                    + "; tag properties are not independently compared. No save/compile/download.";
             });
 
-        public HmiMessage ExchangeUnifiedScriptModules(string softwarePath, string action, string directory, string moduleName = "", string fileName = "", bool dryRun = true, bool overwrite = false)
+        public HmiMessage ExchangeUnifiedScriptModules(string softwarePath, string action, string directory, string moduleName = "", string fileName = "",
+                bool dryRun = true, bool overwrite = false)
             => _session.RunHmiStepTool("ExchangeUnifiedScriptModules", meta => {
                 if (!UnifiedExchangeLogic.ExchangeActions.Contains(action)) throw new ArgumentException("action must be export or import.");
                 bool exporting = action == "export";
                 var dir = UnifiedExchangeLogic.ValidateDirectory(directory, exporting);
                 var name = UnifiedExchangeLogic.ValidateFileName(fileName);
-                if (!exporting && !string.IsNullOrWhiteSpace(moduleName)) throw new ArgumentException("moduleName selects one module for export; import takes the directory (optionally one fileName).");
+                if (!exporting && !string.IsNullOrWhiteSpace(moduleName))
+                    throw new ArgumentException("moduleName selects one module for export; import takes the directory (optionally one fileName).");
                 using var access = !dryRun && !exporting ? _session.AcquireHmiEditAccess() : null;
                 meta["readStarted"] = true;
                 var hmi = ExactUnifiedSoftware(softwarePath);
                 HmiScriptModuleComposition modules = hmi.Scripts;
                 HmiScriptModule? module = null;
-                if (!string.IsNullOrWhiteSpace(moduleName)) module = modules.FirstOrDefault(m => string.Equals(m.Name, moduleName, StringComparison.Ordinal)) ?? throw new PlcSoftwareException("NotFound", "Exact script module not found: " + moduleName);
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["directory"] = dir.FullName; meta["moduleName"] = module?.Name; meta["fileName"] = name.Length == 0 ? null : name;
+                if (!string.IsNullOrWhiteSpace(moduleName)) module = modules.FirstOrDefault(m => string.Equals(m.Name, moduleName, StringComparison.Ordinal))
+                    ?? throw new PlcSoftwareException("NotFound", "Exact script module not found: " + moduleName);
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["directory"] = dir.FullName; meta["moduleName"] = module?.Name; meta["fileName"] = name
+                    .Length == 0 ? null : name;
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false; meta["moduleCountBefore"] = modules.Count;
                 meta["modules"] = new HmiArray(modules.Take(500).Select(m => (object)HmiValues.Value(m.Name)!).ToArray());
                 if (exporting)
                 {
-                    if (module == null && name.Length > 0) throw new ArgumentException("fileName applies to a single module export (HmiScriptModule.Export(dir, name)); the composition export names files itself.");
+                    if (module == null && name.Length > 0)
+                        throw new ArgumentException("fileName applies to a single module export (HmiScriptModule.Export(dir, name)); the composition export " +
+                        "names files itself.");
                     if (dryRun) return "Unified script module export preview; no file written.";
                     dir.Create(); meta["mayHaveWrittenFiles"] = true;
                     var native = module == null ? modules.Export(dir) : name.Length == 0 ? module.Export(dir) : module.Export(dir, name);
-                    meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["directoryListing"] = UnifiedExchangeLogic.DirectoryListing(dir); meta["dataComplete"] = false;
+                    meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["directoryListing"] =
+                        UnifiedExchangeLogic.DirectoryListing(dir); meta["dataComplete"] = false;
                     return "Unified script module(s) exported by TIA and hashed; script content not parsed. No project change.";
                 }
                 meta["importCandidates"] = UnifiedExchangeLogic.ListImportCandidates(dir, new[] { ".js", ".yml", ".json" });
@@ -112,7 +124,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 return "Native script module import returned true; module names listed, script bodies not compared. No save/compile/download.";
             });
 
-        public HmiMessage ImportUnifiedOpcUaAlarms(string softwarePath, string connectionName, string action = "read", string xmlPath = "", string displayName = "", bool dryRun = true, bool overwrite = false)
+        public HmiMessage ImportUnifiedOpcUaAlarms(string softwarePath, string connectionName, string action = "read", string xmlPath = "", string displayName =
+                "", bool dryRun = true, bool overwrite = false)
             => _session.RunHmiStepTool("ImportUnifiedOpcUaAlarms", meta => {
                 if (!UnifiedExchangeLogic.OpcUaAlarmActions.Contains(action)) throw new ArgumentException("action must be read or import.");
                 if (string.IsNullOrWhiteSpace(connectionName)) throw new ArgumentException("Exact HMI connection name required.");
@@ -122,21 +135,29 @@ namespace TiaMcp.Adapters.Native.Hmi
                 using var access = action == "import" && !dryRun ? _session.AcquireHmiEditAccess() : null;
                 meta["readStarted"] = true;
                 var hmi = ExactUnifiedSoftware(softwarePath);
-                var connection = hmi.Connections.Find(connectionName) ?? throw new PlcSoftwareException("NotFound", "Exact HMI connection not found: " + connectionName);
-                meta["connection"] = new HmiObject { ["name"] = connection.Name, ["communicationDriver"] = connection.CommunicationDriver, ["partner"] = connection.Partner };
+                var connection = hmi.Connections.Find(connectionName)
+                    ?? throw new PlcSoftwareException("NotFound", "Exact HMI connection not found: " + connectionName);
+                meta["connection"] = new HmiObject {
+                    ["name"] = connection.Name, ["communicationDriver"] = connection.CommunicationDriver, ["partner"] = connection.Partner };
                 // Official service on the OPC UA connection; a non-OPC UA connection yields null.
                 var service = connection.GetService<OpcUaAlarm>();
                 meta["serviceAvailable"] = service != null;
-                if (service == null) throw new PlcSoftwareException("NotSupportedOnVersion", "OpcUaAlarm service unavailable on connection " + connectionName + " (only OPC UA connections expose it).");
+                if (service == null)
+                    throw new PlcSoftwareException("NotSupportedOnVersion", "OpcUaAlarm service unavailable on connection " + connectionName
+                        + " (only OPC UA connections expose it).");
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 HmiArray Names() => new HmiArray((service.DisplayNames ?? Array.Empty<string>()).Take(2000).Select(n => (object)HmiValues.Value(n)!).ToArray());
                 meta["displayNames"] = Names();
                 if (!string.IsNullOrWhiteSpace(displayName))
                 {
                     try { meta["nodeId"] = service.GetNodeId(displayName); }
-                    catch (Exception ex) { meta["nodeId"] = null; meta["nodeIdError"] = ex.GetBaseException().Message; if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
+                    catch (Exception ex) {
+                        meta["nodeId"] = null; meta["nodeIdError"] = ex.GetBaseException().Message; if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
                 }
-                if (action == "read") { meta["apiCallSuccess"] = true; return "OPC UA alarm display names read" + (string.IsNullOrWhiteSpace(displayName) ? "" : " and node id resolved") + "; no change."; }
+                if (action == "read") {
+                    meta["apiCallSuccess"] = true; return "OPC UA alarm display names read"
+                        + (string.IsNullOrWhiteSpace(displayName) ? "" : " and node id resolved") + "; no change.";
+                }
                 meta["xmlPath"] = xml;
                 HmiExchangePolicy.BeforeOpaqueImport(service.DisplayNames ?? Array.Empty<string>(), overwrite, meta);
                 if (dryRun) return "OPC UA alarm import preview; native Import not called.";

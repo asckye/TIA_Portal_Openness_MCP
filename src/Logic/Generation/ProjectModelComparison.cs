@@ -21,7 +21,8 @@ namespace TiaMcp.Logic.Generation
 
         public static IReadOnlyList<ProjectObjectDifference> Compare(ProjectModel expected, ProjectModel observed, GenerationPlanningOptions? options = null)
         {
-            if (!observed.Complete) throw CanonicalJson.Failure("/observed", "readback-incomplete", "Complete readback is required; absence cannot be inferred from a partial snapshot.");
+            if (!observed.Complete) throw CanonicalJson
+                .Failure("/observed", "readback-incomplete", "Complete readback is required; absence cannot be inferred from a partial snapshot.");
             var actual = Index(observed);
             var desired = Index(expected);
             var ownership = (options?.Ownership ?? new List<GenerationRecordObject>()).ToDictionary(o => o.Key, StringComparer.OrdinalIgnoreCase);
@@ -40,13 +41,16 @@ namespace TiaMcp.Logic.Generation
                 if (Fingerprint(pair.Value) != owned.ExpectedFingerprint) return new ProjectObjectDifference(pair.Key, "conflict", "regeneration-required");
                 // Ownership cannot excuse collisions with unrelated occupied resources.
                 var collision = ResourceCollision(pair.Value, actual, pair.Key);
-                return collision != null ? new ProjectObjectDifference(pair.Key, "conflict", collision) : new ProjectObjectDifference(pair.Key, "skip", "owned-unchanged");
+                return collision != null ? new ProjectObjectDifference(pair.Key, "conflict", collision)
+                    : new ProjectObjectDifference(pair.Key, "skip", "owned-unchanged");
             }).ToArray();
         }
 
         public static List<GenerationRecordObject> Describe(ProjectModel model) => Index(model).OrderBy(p => p.Key, StringComparer.Ordinal).Select(p =>
-            new GenerationRecordObject { Key = p.Key, ExpectedFingerprint = Fingerprint(p.Value), Path = p.Value is ProjectBlock block ? ObjectPath(block.Group, block.Name)
-                : p.Value is ProjectType type ? ObjectPath(type.Group, type.Name) : p.Value is ProjectTag tag ? ObjectPath(tag.Table, tag.Name) : p.Value.Name }).ToList();
+            new GenerationRecordObject {
+                Key = p.Key, ExpectedFingerprint = Fingerprint(p.Value), Path = p.Value is ProjectBlock block ? ObjectPath(block.Group, block.Name)
+                : p.Value is ProjectType type ? ObjectPath(type.Group, type.Name) : p.Value is ProjectTag tag ? ObjectPath(tag.Table, tag.Name) : p.Value.Name
+                }).ToList();
         private static string ObjectPath(string group, string name) => group.Length == 0 ? name : group + "/" + name;
 
         internal static Dictionary<string, ProjectObject> Index(ProjectModel model)
@@ -60,9 +64,11 @@ namespace TiaMcp.Logic.Generation
             {
                 foreach (var item in objects)
                 {
-                    if (string.IsNullOrEmpty(item.Station) || string.IsNullOrEmpty(item.Name)) throw CanonicalJson.Failure("/model", "identity", "Objects require a station and name.");
+                    if (string.IsNullOrEmpty(item.Station) || string.IsNullOrEmpty(item.Name)) throw CanonicalJson
+                        .Failure("/model", "identity", "Objects require a station and name.");
                     var key = Key(item.Station, kind, item is ProjectGroup group ? group.Kind + "/" + item.Name : item.Name);
-                    if (result.ContainsKey(key)) throw CanonicalJson.Failure("/model/" + key, "duplicate-key", "Duplicate project object key (case insensitive).");
+                    if (result.ContainsKey(key)) throw CanonicalJson
+                        .Failure("/model/" + key, "duplicate-key", "Duplicate project object key (case insensitive).");
                     result.Add(key, item);
                 }
             }
@@ -105,12 +111,14 @@ namespace TiaMcp.Logic.Generation
                 if (string.Equals(ownKey, pair.Key, StringComparison.OrdinalIgnoreCase)) continue;
                 var ip = expected is ProjectDevice expectedDevice ? expectedDevice.Ip : expected is ProjectNetwork expectedNetwork ? expectedNetwork.Ip : null;
                 var otherIp = pair.Value is ProjectDevice actualDevice ? actualDevice.Ip : pair.Value is ProjectNetwork actualNetwork ? actualNetwork.Ip : null;
-                if (ip != null && ip == otherIp && !(pair.Value is ProjectDevice ownDevice && ownDevice.Station == expected.Station && ownDevice.Name == expected.Station))
+                if (ip != null && ip == otherIp
+                        && !(pair.Value is ProjectDevice ownDevice && ownDevice.Station == expected.Station && ownDevice.Name == expected.Station))
                     return "IP address is occupied by " + pair.Key + ".";
                 if (expected is ProjectDevice device && pair.Value is ProjectDevice otherDevice)
                 {
                     if (device.Ip != null && device.Ip == otherDevice.Ip) return "IP address is occupied by " + pair.Key + ".";
-                    if (device.Slot.HasValue && device.Station == otherDevice.Station && device.ParentPath == otherDevice.ParentPath && device.Slot == otherDevice.Slot)
+                    if (device.Slot.HasValue && device.Station == otherDevice.Station && device.ParentPath == otherDevice.ParentPath && device
+                            .Slot == otherDevice.Slot)
                         return "Hardware slot is occupied by " + pair.Key + ".";
                 }
                 if (expected.Station != pair.Value.Station) continue;
@@ -118,9 +126,11 @@ namespace TiaMcp.Logic.Generation
                 {
                     if (!IoAddress.IsIo(otherTag.Address)) continue;
                     var address = IoAddress.Parse(tag.Address); var other = IoAddress.Parse(otherTag.Address);
-                    if (address.Area == other.Area && address.Start <= other.End && other.Start <= address.End) return "IO address is occupied by " + pair.Key + ".";
+                    if (address.Area == other.Area && address.Start <= other.End && other.Start <= address.End) return "IO address is occupied by " + pair.Key
+                        + ".";
                 }
-                if (expected is ProjectBlock block && pair.Value is ProjectBlock otherBlock && block.Number.HasValue && block.Kind == otherBlock.Kind && block.Number == otherBlock.Number)
+                if (expected is ProjectBlock block && pair.Value is ProjectBlock otherBlock && block.Number.HasValue && block.Kind == otherBlock.Kind && block
+                        .Number == otherBlock.Number)
                     return "Block number is occupied by " + pair.Key + ".";
                 if (expected is ProjectAlarm alarm && pair.Value is ProjectAlarm otherAlarm && alarm.Number == otherAlarm.Number)
                     return "Alarm number is occupied by " + pair.Key + ".";

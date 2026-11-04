@@ -39,7 +39,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (segment.Length == 0 || segment.IndexOf('/') >= 0) throw new ArgumentException("Use /Scripts/<URI-escaped exact module name>.");
                 path = Uri.UnescapeDataString(segment);
             }
-            else if (path.StartsWith("/", StringComparison.Ordinal)) throw new ArgumentException("Unsupported script path; use an exact module name or /Scripts/<name>.");
+            else if (path.StartsWith("/", StringComparison.Ordinal))
+                throw new ArgumentException("Unsupported script path; use an exact module name or /Scripts/<name>.");
             return Module(resolveHmi(software), path);
         }
     }

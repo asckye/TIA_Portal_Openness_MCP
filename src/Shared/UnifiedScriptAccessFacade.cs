@@ -8,7 +8,10 @@ namespace TiaMcpServer.Siemens
         {
             try { return TiaMcp.Adapters.Native.Hmi.UnifiedPrimitiveBridge.ResolveScripts(resolveHmi, objectPath, softwarePath, collection); }
             catch (PlcSoftwareException error)
-            { throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), error.Code), error.Message, error.Candidates, error.InnerException); }
+            {
+                throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), error.Code), error.Message, error.Candidates, error
+                        .InnerException);
+            }
         }
     }
 }

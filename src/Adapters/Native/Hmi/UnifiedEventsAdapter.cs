@@ -11,13 +11,16 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public UnifiedEventsAdapter(IUnifiedSession session) => _session = session;
 
-        public HmiMessage ManageUnifiedEvent(string softwarePath,string objectPathJson,string eventType,string action="read",string propertyName="",string scriptPropertiesJson="{}",string expectedToken="",bool dryRun=true)
+        public HmiMessage ManageUnifiedEvent(string softwarePath,string objectPathJson,string eventType,string action="read",string propertyName="",
+                string scriptPropertiesJson="{}",string expectedToken="",bool dryRun=true)
             =>_session.RunHmiStepTool("ManageUnifiedEvent",meta=>{
                 UnifiedObjectAddress.Parse(objectPathJson);
-                var changes=UnifiedRequestValues.Parse(scriptPropertiesJson) as HmiObject ?? throw new ArgumentException("Script properties must be an object.");
+                var changes=UnifiedRequestValues.Parse(scriptPropertiesJson) as HmiObject
+                    ?? throw new ArgumentException("Script properties must be an object.");
                 if(!new[]{"read","create","update","delete"}.Contains(action))throw new ArgumentException("action must be read/create/update/delete.");
                 if(string.IsNullOrWhiteSpace(eventType))throw new ArgumentException("Exact event type required.");
-                if(changes.Any(x=>!new[]{"ScriptCode","GlobalDefinitionAreaScriptCode","Async"}.Contains(x.Key)))throw new ArgumentException("Only ScriptCode, GlobalDefinitionAreaScriptCode and Async may be edited.");
+                if(changes.Any(x=>!new[]{"ScriptCode","GlobalDefinitionAreaScriptCode","Async"}.Contains(x.Key)))
+                    throw new ArgumentException("Only ScriptCode, GlobalDefinitionAreaScriptCode and Async may be edited.");
                 if(action!="update"&&changes.Count!=0)throw new ArgumentException("Script edits require a separate update action.");
                 if(action=="update"&&changes.Count==0)throw new ArgumentException("No script edits supplied.");
                 bool write=action!="read"&&!dryRun;using var access=write ? _session.AcquireHmiEditAccess() : null;

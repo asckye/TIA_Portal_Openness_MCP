@@ -25,7 +25,8 @@ namespace TiaOpenness.Shared
     internal static class ApprovalPipe
     {
         internal static string CurrentSid => LocalPipeSecurity.CurrentSid;
-        internal static string Name(string scope, string sid) => "TiaMcp.Approval.v1." + PendingApproval.Hash(sid + "\n" + Path.GetFullPath(scope).ToUpperInvariant());
+        internal static string Name(string scope, string sid) => "TiaMcp.Approval.v1." + PendingApproval
+            .Hash(sid + "\n" + Path.GetFullPath(scope).ToUpperInvariant());
         internal static string CurrentName => Name(ApprovalSettings.SettingsPath, CurrentSid);
         internal static string SecurityDescriptor(string sid) => LocalPipeSecurity.SecurityDescriptor(sid);
         internal static NamedPipeServerStream CreateServer(string name, string sid, bool first)
@@ -48,7 +49,8 @@ namespace TiaOpenness.Shared
 
     internal static class ApprovalClient
     {
-        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> Used = new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> Used = new System.Collections.Concurrent
+            .ConcurrentDictionary<string, string>();
         internal static ApprovalOutcome RejectAdministrativeWrite(PendingApproval request)
         {
             var log = AuditLog.Current;
@@ -90,7 +92,9 @@ namespace TiaOpenness.Shared
                 {
                     if (!Used.TryAdd(request.RequestId, request.PlanHash + request.ArgumentDigest))
                     {
-                        try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash, request.EffectiveActor); }
+                        try {
+                            log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash, request.EffectiveActor);
+                        }
                         catch (Exception ex) { Trace.TraceWarning("Replay refusal audit unavailable: " + ex.GetType().Name); }
                         return new ApprovalOutcome(request, false, "denied");
                     }
@@ -110,7 +114,10 @@ namespace TiaOpenness.Shared
                 }
                 catch (OperationCanceledException) /* swallow(privacy): cancellation before execution becomes a bounded approval refusal */ { reason = cancellation.IsCancellationRequested ? "cancelled" : connected ? "timeout" : "workbench-unavailable"; }
                 catch (Exception ex)
-                { Trace.TraceInformation("Approval channel unavailable: " + ex.GetType().Name + ": " + ex.Message); reason = DateTimeOffset.UtcNow >= request.Deadline ? "timeout" : "workbench-unavailable"; }
+                {
+                    Trace.TraceInformation("Approval channel unavailable: " + ex.GetType().Name + ": " + ex.Message); reason = DateTimeOffset.UtcNow >= request
+                        .Deadline ? "timeout" : "workbench-unavailable";
+                }
             }
             try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool,
                 reason == null ? "granted" : reason == "timeout" ? "timeout" : "denied", request.PlanHash, request.EffectiveActor); }

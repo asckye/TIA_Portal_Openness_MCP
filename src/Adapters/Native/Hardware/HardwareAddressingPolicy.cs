@@ -9,7 +9,8 @@ namespace TiaMcp.Adapters.Hardware
 {
     public static class HardwareAddressingPolicy
     {
-        public static readonly IReadOnlyList<string> AddressAttributes = Array.AsReadOnly(new string[] { "Context", "ProcessImage", "IsochronousMode", "InterruptObNumber" });
+        public static readonly IReadOnlyList<string> AddressAttributes = Array
+            .AsReadOnly(new string[] { "Context", "ProcessImage", "IsochronousMode", "InterruptObNumber" });
         public static readonly IReadOnlyList<string> IoTypes = Array.AsReadOnly(new string[] { "None", "Input", "Output", "Diagnosis", "Substitute" });
 
         public static void RequireAvailable(string release, string tool)
@@ -62,7 +63,8 @@ namespace TiaMcp.Adapters.Hardware
                 if (value.Kind != "boolean") throw new ArgumentException("Expected a boolean scalar.");
                 return bool.Parse(value.Text);
             }
-            if (!type.IsPrimitive && type != typeof(decimal)) throw new NotSupportedException("Complex/reference property requires a dedicated adapter: " + type.FullName);
+            if (!type.IsPrimitive && type != typeof(decimal))
+                throw new NotSupportedException("Complex/reference property requires a dedicated adapter: " + type.FullName);
             if (value.Kind != "number") throw new ArgumentException("Expected a numeric scalar.");
             if (type == typeof(int)) return int.Parse(value.Text, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
             return Convert.ChangeType(value.Text, type, CultureInfo.InvariantCulture);

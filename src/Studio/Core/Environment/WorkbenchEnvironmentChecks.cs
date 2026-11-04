@@ -153,7 +153,8 @@ namespace TiaOpenness.Core.Environment
                 {
                     if (doctor == null) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", doctorError);
                     if (id == "installations")
-                        return Known(doctor.Installations.Count > 0, string.Join(", ", doctor.Installations.Select(i => "V" + i.Version + " — " + i.EngineeringDllPath)));
+                        return Known(doctor.Installations.Count > 0, string
+                                .Join(", ", doctor.Installations.Select(i => "V" + i.Version + " — " + i.EngineeringDllPath)));
                     var check = doctor.Checks.Single(c => c.Id == (id == "framework" ? "ENV-NETFX" : "TIA-GROUP"));
                     if (check.Status == CheckStatus.Warn) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", check.Detail);
                     if (id == "framework" || check.Status == CheckStatus.Pass) return Known(check.Status == CheckStatus.Pass, check.Detail);
@@ -162,7 +163,8 @@ namespace TiaOpenness.Core.Environment
                         : listed == false ? Known(false, check.Detail) : Finding(EnvironmentFindingStatus.Unknown, "Unknown", check.Detail);
                 }
                 if (id == "data") return sources.Writable(context.DataRoot)
-                    ? Finding(EnvironmentFindingStatus.Pass, context.UserFallback ? "Fallback" : "Pass", context.DataRoot + "\n" + context.ConfigDirectory + "\n" + context.LogsDirectory)
+                    ? Finding(EnvironmentFindingStatus.Pass, context.UserFallback ? "Fallback" : "Pass", context.DataRoot + "\n" + context.ConfigDirectory
+                            + "\n" + context.LogsDirectory)
                     : Known(false, context.DataRoot);
                 if (id == "runtime" || id.StartsWith("engine-", StringComparison.Ordinal))
                 {
@@ -175,7 +177,8 @@ namespace TiaOpenness.Core.Environment
                     }
                     var runtime = Path.Combine(context.BundleRoot, "runtime", "dotnet");
                     bool ContainsRuntime(string directory, string assembly) => sources.Directories(directory)
-                        .Any(d => Version.TryParse(Path.GetFileName(d), out var version) && version.Major == 10 && sources.FileExists(Path.Combine(d, assembly)));
+                        .Any(d => Version.TryParse(Path.GetFileName(d), out var version) && version.Major == 10 && sources
+                                .FileExists(Path.Combine(d, assembly)));
                     bool ok = sources.FileExists(Path.Combine(runtime, "dotnet.exe"))
                         && ContainsRuntime(Path.Combine(runtime, "host", "fxr"), "hostfxr.dll")
                         && ContainsRuntime(Path.Combine(runtime, "shared", "Microsoft.NETCore.App"), "System.Private.CoreLib.dll")
@@ -190,7 +193,8 @@ namespace TiaOpenness.Core.Environment
                 {
                     var owners = sources.PortOwners(prefix.Port);
                     return owners.Length == 0 ? Known(true, context.HttpPrefix + "\n" + context.HttpConfigurationPath)
-                        : Finding(EnvironmentFindingStatus.Fail, "PortUsed", context.HttpPrefix + "\n" + context.HttpConfigurationPath + "\n" + string.Join("\n", owners));
+                        : Finding(EnvironmentFindingStatus.Fail, "PortUsed", context.HttpPrefix + "\n" + context.HttpConfigurationPath + "\n" + string
+                                .Join("\n", owners));
                 }
                 bool? present = id == "url" ? sources.UrlReserved(context.HttpPrefix) : sources.FirewallAllowed(context.HttpPrefix);
                 return present.HasValue ? Known(present.Value, context.HttpPrefix + "\n" + context.HttpConfigurationPath)

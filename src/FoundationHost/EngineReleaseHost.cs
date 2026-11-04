@@ -18,9 +18,12 @@ internal static class SharedReleaseHost
         => RunCore(options, logger, null, stoppingToken);
 
     // No CLI/environment switch reaches this seam; only the friend test assembly calls it.
-    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) => RunCore(options, logger, catalogForTest, stoppingToken, toolsForTest);
+    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalogForTest,
+            CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) =>
+        RunCore(options, logger, catalogForTest, stoppingToken, toolsForTest);
 
-    private static async Task<int> RunCore(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
+    private static async Task<int> RunCore(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView>? catalogForTest,
+            CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
         if (options.Transport == "http" && !options.CatalogOnly && options.HostCommand == null)
         {
@@ -47,7 +50,8 @@ internal static class SharedReleaseHost
             if (!data.CatalogCallDiscipline) catalog["nativeAcceptance"] = "NOT RUN";
             catalog["behaviorCapabilities"] = pipeline.BehaviorCapabilities.DeepClone();
             if (data.CatalogCallDiscipline) catalog["callDiscipline"] = System.Text.Json.JsonSerializer.SerializeToNode(McpServer.SchemaHintStatistics());
-            catalog["tools"] = System.Text.Json.JsonSerializer.SerializeToNode(pipeline.Tools.Select(t => t.ProtocolTool), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+            catalog["tools"] = System.Text.Json.JsonSerializer
+                .SerializeToNode(pipeline.Tools.Select(t => t.ProtocolTool), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
             Console.WriteLine(catalog.ToJsonString(global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             return 0;
         }
@@ -57,7 +61,8 @@ internal static class SharedReleaseHost
             await HostToolCommand.Run(options.HostCommand, pipeline);
             return 0;
         }
-        await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token, toolsForTest));
+        await using var operatorEndpoint = OperatorEndpoint
+            .Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token, toolsForTest));
         LocalStabilityTelemetry.StartupStage("host.operator.started");
         using var operatorStopping = stoppingToken.Register(() => operatorEndpoint?.Stop());
         if (options.Transport == "operator")
@@ -98,11 +103,14 @@ internal static class SharedReleaseHost
         return (installation, installation == null ? null : "host-option");
     }
 
-    internal static WorkerClient CreateWorker(HostOptions options) => new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
+    internal static WorkerClient CreateWorker(HostOptions options) =>
+        new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options
+            .WorkerTimeoutConfig)
         { Bundled = options.BundledWorker, WithUi = options.WithUi, TiaPortalLocation = options.TiaPortalLocation,
             SharedSession = ReleaseCatalogData.Releases[options.ReleaseKey].SharedSession };
 
-    private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
+    private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null, Func<IFoundationSessionWorker,
+            IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
         EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
         WorkerClient worker = CreateWorker(options);
@@ -111,9 +119,11 @@ internal static class SharedReleaseHost
         {
             var data = ReleaseCatalogData.Releases[options.ReleaseKey];
             IReadOnlyList<McpServerTool>? roster = null;
-            Func<System.Text.Json.Nodes.JsonObject> production = () => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
+            Func<System.Text.Json.Nodes.JsonObject> production = () => FoundationPassiveDiagnostics
+                .Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
             var (installation, installationSource) = ReadinessInstallation(options);
-            Func<System.Text.Json.Nodes.JsonObject> notReady = () => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, installation, installationSource);
+            Func<System.Text.Json.Nodes.JsonObject> notReady = () => FoundationPassiveDiagnostics
+                .Readiness(options.ReleaseKey, installation, installationSource);
             Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker.Readiness(production, notReady);
             var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
                 options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false);
@@ -137,7 +147,8 @@ internal static class SharedReleaseHost
     {
         var host = new HostSession(options.ReleaseKey, session.Pipeline.Instructions, operatorOwned, session.Pipeline.Tools.ToArray(),
             session.Pipeline.OperatorTools, () => session.Services.OperatorSnapshot(), session.Dispose);
-        SharedSessionState.For(session.Worker).HumanCrossReferences = () => TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(host.NativeCrossReferenceSessionFile, host.NativeCrossReferenceSessionSecret);
+        SharedSessionState.For(session.Worker).HumanCrossReferences = () => TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent
+            .Read(host.NativeCrossReferenceSessionFile, host.NativeCrossReferenceSessionSecret);
         SharedSessionState.For(session.Worker).HostSessionKey = () => host.SessionKey;
         session.Worker.NativeCrossReferenceSessionFile = host.NativeCrossReferenceSessionFile;
         session.Worker.NativeCrossReferenceSessionSecret = host.NativeCrossReferenceSessionSecret;
@@ -148,9 +159,12 @@ internal static class SharedReleaseHost
     internal static Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default)
         => CreateHostSessionCore(options, operatorOwned, null, token);
 
-    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) => CreateHostSessionCore(options, operatorOwned, catalogForTest, token, toolsForTest);
+    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalogForTest,
+            CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) =>
+        CreateHostSessionCore(options, operatorOwned, catalogForTest, token, toolsForTest);
 
-    private static Task<HostSession> CreateHostSessionCore(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
+    private static Task<HostSession> CreateHostSessionCore(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView>? catalogForTest,
+            CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
         token.ThrowIfCancellationRequested();
         var session = CreateSession(options, catalogForTest, toolsForTest);
@@ -173,9 +187,11 @@ internal static class SharedReleaseHost
     }
 
     private static async Task RunHttp(HostOptions options, HostFileLogger logger,
-        Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
+        Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>,
+            IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
-        await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token, toolsForTest));
+        await using var operatorEndpoint = OperatorEndpoint
+            .Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token, toolsForTest));
         using var operatorStopping = stoppingToken.Register(() => operatorEndpoint?.Stop());
         LocalStabilityTelemetry.StartupStage("host.operator.started");
         LocalStabilityTelemetry.StartupStage("http.builder.begin");
@@ -186,7 +202,8 @@ internal static class SharedReleaseHost
         builder.Logging.AddProvider(logger);
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         builder.WebHost.UseSetting("urls", options.HttpPrefix);
-        var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = ReleaseCatalogData.Releases[options.ReleaseKey].Instructions).WithHttpTransport(o => {
+        var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = ReleaseCatalogData.Releases[options.ReleaseKey].Instructions)
+            .WithHttpTransport(o => {
             o.ConfigureSessionOptions = (context, server, token) => {
                 var session = CreateSession(options, catalogForTest, toolsForTest);
                 var hostSession = CreateHostSession(options, session);
@@ -218,12 +235,19 @@ internal static class SharedReleaseHost
         LocalStabilityTelemetry.StartupStage("http.app.built");
         app.Use(async (context, next) => {
             if (context.Request.Path == "/mcp/health") { await next(context); return; }
-            if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(context.Request.Headers.Authorization.ToString()), Encoding.UTF8.GetBytes("Bearer " + options.ApiKey)))
+            if (!CryptographicOperations
+                    .FixedTimeEquals(Encoding.UTF8.GetBytes(context.Request.Headers.Authorization.ToString()), Encoding.UTF8
+                        .GetBytes("Bearer " + options.ApiKey)))
             { context.Response.StatusCode = 401; return; }
             await next(context);
         });
         app.MapMcp("/mcp");
-        app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = ReleaseCatalogData.Releases[options.ReleaseKey].ProfileName });
+        app
+            .MapGet("/mcp/health", () => new {
+                status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>()
+                    .Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = ReleaseCatalogData
+                    .Releases[options.ReleaseKey].ProfileName
+            });
         app.MapGet("/mcp/ready", () => new { mcpHostReady = true, releaseKey = options.ReleaseKey, nativeAcceptance = "NOT RUN" });
         using var stopping = app.Lifetime.ApplicationStopping.Register(WorkerShutdown.StopAll);
         using var started = app.Lifetime.ApplicationStarted.Register(() => LocalStabilityTelemetry.StartupStage("http.listening"));

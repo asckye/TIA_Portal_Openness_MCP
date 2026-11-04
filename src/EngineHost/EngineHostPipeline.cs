@@ -54,7 +54,8 @@ namespace TiaMcp.FoundationHost
             : throw new InvalidOperationException("The MCP engine session is unavailable; initialize a new session.");
         internal static EngineSessionContext? CurrentOrNull => Session.Value is { Ended: false } context ? context : null;
         internal static IEngineWorker Worker { get => Current.Worker; set => Session.Value = new EngineSessionContext(value); }
-        internal static Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession> StagingOwner { get => Current.StagingOwner!; set => Current.StagingOwner = value; }
+        internal static Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession> StagingOwner {
+            get => Current.StagingOwner!; set => Current.StagingOwner = value; }
         internal static IDisposable Enter(EngineSessionContext context)
         {
             var previous = Session.Value;
@@ -182,7 +183,8 @@ namespace TiaMcp.FoundationHost
         private sealed class OperatorSessionTool(EngineHostPipeline owner, McpServerTool inner) : McpServerTool
         {
             public override Tool ProtocolTool => inner.ProtocolTool;
-            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
+                    default)
             {
                 using var session = owner.EnterOperatorSession();
                 return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
@@ -201,7 +203,8 @@ namespace TiaMcp.FoundationHost
         {
             internal McpServerTool Inner => inner;
             public override Tool ProtocolTool => inner.ProtocolTool;
-            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
+                    default)
             {
                 if (owner.context.HttpSessionId != null && request.Server.SessionId != owner.context.HttpSessionId
                     && !ReferenceEquals(EngineHostConfiguration.OperatorSession.Value, owner.context))
@@ -224,7 +227,10 @@ namespace TiaMcp.FoundationHost
         {
             public void Dispose() { ImportStagingTools.RemoveHttpSession(session); session.Dispose(); }
         }
-        public void Dispose() { TiaOpenness.Shared.GenerationWriteFence.Shutdown(context.Worker.SessionKey); context.Ended = true; context.Exports.Dispose(); stagingLifetime.Dispose(); }
+        public void Dispose() {
+            TiaOpenness.Shared.GenerationWriteFence.Shutdown(context.Worker.SessionKey); context.Ended = true; context.Exports.Dispose(); stagingLifetime
+                .Dispose();
+        }
 
         public void RegisterHandlers(IMcpServerBuilder builder)
             => RegisterHandlers(builder, EngineHostConfiguration.ReleaseKey);
@@ -233,8 +239,16 @@ namespace TiaMcp.FoundationHost
         {
             if (!ReleaseCatalogData.Releases[releaseKey].RegisterDiscoveryHandlers) return;
             McpPromptRegistration.Configure(builder);
-            builder.WithListResourcesHandler((_, token) => { token.ThrowIfCancellationRequested(); return new ValueTask<ListResourcesResult>(new ListResourcesResult { Resources = Array.Empty<Resource>() }); });
-            builder.WithListResourceTemplatesHandler((_, token) => { token.ThrowIfCancellationRequested(); return new ValueTask<ListResourceTemplatesResult>(new ListResourceTemplatesResult { ResourceTemplates = Array.Empty<ResourceTemplate>() }); });
+            builder
+                .WithListResourcesHandler((_, token) => {
+                    token.ThrowIfCancellationRequested();
+                    return new ValueTask<ListResourcesResult>(new ListResourcesResult { Resources = Array.Empty<Resource>() });
+                });
+            builder
+                .WithListResourceTemplatesHandler((_, token) => {
+                    token.ThrowIfCancellationRequested();
+                    return new ValueTask<ListResourceTemplatesResult>(new ListResourceTemplatesResult { ResourceTemplates = Array.Empty<ResourceTemplate>() });
+                });
         }
     }
 }
@@ -268,11 +282,16 @@ namespace TiaMcpServer.ModelContextProtocol
                         .ContinueWith(t => { _ = t.Exception; }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
                 }
                 catch (Exception error)
-                { InvocationJournal.Write(InvocationJournal.CorrelationId, request!.Params!.Name, "PROGRESS_DELIVERY_FAILED", details: new JsonObject { ["exceptionType"] = error.GetType().Name }); }
+                {
+                    InvocationJournal
+                        .Write(InvocationJournal.CorrelationId, request!.Params!.Name, "PROGRESS_DELIVERY_FAILED", details: new JsonObject {
+                            ["exceptionType"] = error.GetType().Name });
+                }
             };
         }
         internal static void MarkSharedSessionUncertain() => SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
-        internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession SharedStagingOwner => TiaMcp.FoundationHost.EngineHostConfiguration.StagingOwner();
+        internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession SharedStagingOwner => TiaMcp.FoundationHost.EngineHostConfiguration
+            .StagingOwner();
         static partial void RecordBridgeEvent(string id, string name, string phase);
         static partial void RecordCallRejection(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, CallToolResult result);
         static partial void ApprovalSessionKey(ref object? key)

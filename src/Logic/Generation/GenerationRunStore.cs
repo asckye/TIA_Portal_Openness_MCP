@@ -66,7 +66,8 @@ namespace TiaMcp.Logic.Generation
             }
             var completed = events.OfType<JsonObject>().LastOrDefault(e => (string?)e["event"] == "end");
             result["status"] = completed?["status"]?.DeepClone() ?? JsonValue.Create("unknown");
-            result["stoppingReason"] = completed?["stoppingReason"]?.DeepClone() ?? JsonValue.Create("host-interrupted; inspect project and replan; never replay this run");
+            result["stoppingReason"] = completed?["stoppingReason"]?.DeepClone() ?? JsonValue
+                .Create("host-interrupted; inspect project and replan; never replay this run");
             result["createdProjects"] = new JsonArray(events.OfType<JsonObject>().Where(e => (string?)e["event"] == "transition")
                 .Select(e => (string?)e["createdProject"]).Where(p => !string.IsNullOrEmpty(p)).Distinct(StringComparer.OrdinalIgnoreCase)
                 .Select(p => (JsonNode?)JsonValue.Create(p)).ToArray());
@@ -84,7 +85,9 @@ namespace TiaMcp.Logic.Generation
             foreach (var file in Directory.GetFiles(root, "*.jsonl"))
             {
                 var run = Read(Path.GetFileNameWithoutExtension(file));
-                if (!string.Equals(((string?)run["project"])?.Replace('\\', '/'), project.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase) || (string?)run["release"] != release) continue;
+                if (!string.Equals(((string?)run["project"])?.Replace('\\', '/'), project.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase)
+                        || (string?)run["release"] != release)
+                    continue;
                 if (latest == null || string.CompareOrdinal((string?)run["utc"], (string?)latest["utc"]) > 0) latest = run;
             }
             if (latest == null) return false;
@@ -97,7 +100,8 @@ namespace TiaMcp.Logic.Generation
             if (!Directory.Exists(root)) return Array.Empty<JsonObject>();
             SafeRoot();
             return Directory.GetFiles(root, "*.jsonl").Select(file => Read(Path.GetFileNameWithoutExtension(file)))
-                .Where(run => string.Equals(((string?)run["project"])?.Replace('\\', '/'), project.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase) && (string?)run["release"] == release)
+                .Where(run => string.Equals(((string?)run["project"])?.Replace('\\', '/'), project.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase)
+                        && (string?)run["release"] == release)
                 .OrderBy(run => (string?)run["utc"], StringComparer.Ordinal).ThenBy(run => (string?)run["runId"], StringComparer.Ordinal).ToArray();
         }
         public JsonObject ByPlan(string planId)
@@ -121,7 +125,8 @@ namespace TiaMcp.Logic.Generation
                 file.Flush(true);
                 return new ClaimScope(path);
             }
-            catch (IOException ex) when (File.Exists(path)) { throw new ArgumentException("Plan was already applied; observe the project and replan.", nameof(planId), ex); }
+            catch (IOException ex) when (File.Exists(path)) {
+                throw new ArgumentException("Plan was already applied; observe the project and replan.", nameof(planId), ex); }
         }
         public sealed class ClaimScope : IDisposable
         {

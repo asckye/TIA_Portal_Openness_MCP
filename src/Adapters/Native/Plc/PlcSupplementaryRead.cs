@@ -18,8 +18,11 @@ namespace TiaMcp.Adapters
                 var selected=ReadSelection(softwarePath);
                 var root=NativeCalls.WatchGroup(selected.Value);
                 if(root==null) throw new InvalidOperationException("WatchAndForceTableGroup is unavailable.");
-                var items=PlcSupplementaryReadPolicy.WatchPaths<PlcWatchAndForceTableGroup>(root,group=>NativeCalls.WatchTables(group).Select(table=>NativeCalls.Name(table)),group=>NativeCalls.Groups(group),group=>group.Name);
-                return new PlcSupplementaryReadResult { SoftwarePath=selected.ExactPath,ReleaseKey=ReleaseKey,Scope=PlcSupplementaryReadPolicy.WatchScope,Items=items };
+                var items=PlcSupplementaryReadPolicy
+                    .WatchPaths<PlcWatchAndForceTableGroup>(root,group=>NativeCalls.WatchTables(group).Select(table=>NativeCalls.Name(table)),group=>NativeCalls
+                        .Groups(group),group=>group.Name);
+                return new PlcSupplementaryReadResult {
+                    SoftwarePath=selected.ExactPath,ReleaseKey=ReleaseKey,Scope=PlcSupplementaryReadPolicy.WatchScope,Items=items };
             });
 #else
             throw new NotSupportedException("No watch-table API was compiled for this release.");
@@ -40,7 +43,8 @@ namespace TiaMcp.Adapters
                     group=>new TechnologicalInstanceDBGroup[0],
 #endif
                     group=>NativeCalls.Name(group));
-                return new PlcSupplementaryReadResult { SoftwarePath=selected.ExactPath,ReleaseKey=ReleaseKey,Scope=PlcSupplementaryReadPolicy.TechnologyReadScope(ReleaseKey),Items=items };
+                return new PlcSupplementaryReadResult {
+                    SoftwarePath=selected.ExactPath,ReleaseKey=ReleaseKey,Scope=PlcSupplementaryReadPolicy.TechnologyReadScope(ReleaseKey),Items=items };
             });
         }
         private static PlcTechnologyReadRow TechnologyMetadata(TechnologicalInstanceDB item)

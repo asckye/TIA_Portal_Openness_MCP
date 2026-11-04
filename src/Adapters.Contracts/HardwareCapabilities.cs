@@ -5,23 +5,30 @@ namespace TiaMcp.Adapters.Contracts
     // API availability is separate from runtime feature presence and acceptance.
     public static class HardwareCapabilities
     {
-        public static string? Unsupported(string release, string operation, string action = "", string family = "", int positionNumber = -1, int extendedPositionNumber = -1, bool hasPassword = false)
+        public static string
+            ? Unsupported(string release, string operation, string action = "", string family = "", int positionNumber = -1, int extendedPositionNumber = -1,
+                bool hasPassword = false)
         {
             int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
             string name = operation.Substring(operation.LastIndexOf('.') + 1);
             if ((name == "ListCommunicationConnections" || name == "ManageCommunicationConnection"
                 || name == "HardwareReadCommunicationConnections" || name == "HardwareManageCommunicationConnection") && version < 21)
                 return "CommunicationConnections requires V21.";
-            if ((name == "ListTransferAreas" || name == "ManageTransferArea" || name == "HardwareReadTransferAreas" || name == "HardwareManageTransferArea") && version < 15)
+            if ((name == "ListTransferAreas" || name == "ManageTransferArea" || name == "HardwareReadTransferAreas" || name == "HardwareManageTransferArea")
+                    && version < 15)
                 return "TransferAreas requires V15.1.";
-            if ((name == "ListNetworkDomains" || name == "ManageNetworkDomain" || name == "HardwareReadNetworkDomains" || name == "HardwareManageNetworkDomain") && version < 16)
+            if ((name == "ListNetworkDomains" || name == "ManageNetworkDomain" || name == "HardwareReadNetworkDomains" || name == "HardwareManageNetworkDomain")
+                    && version < 16)
                 return "MRP and Sync domains require V16.";
             if ((name == "ExchangeSystemDiagnosticsSettings" || name == "HardwareExchangeSystemDiagnosticsSettings") && version < 17)
                 return "System diagnostics settings require V17.";
-            if ((name == "CreateHardwareCatalogDevice" || name == "HardwareCreateCatalogDevice" || name == "SearchHardwareCatalog" || name == "HardwareLegacySearchHardwareCatalog") && version < 18)
+            if ((name == "CreateHardwareCatalogDevice" || name == "HardwareCreateCatalogDevice" || name == "SearchHardwareCatalog"
+                        || name == "HardwareLegacySearchHardwareCatalog")
+                    && version < 18)
                 return "HardwareCatalog requires V18.";
             if ((name == "CreateGsdDevice" || name == "HardwareCreateGsdDevice") && version < 18)
-                return "GSD device creation requires a HardwareCatalog TypeIdentifier (V18); the GSD:<file>/DAP/<id> identifier form is not verified for this release.";
+                return "GSD device creation requires a HardwareCatalog TypeIdentifier (V18); the GSD:<file>/DAP/<id> identifier form is not verified for " +
+                    "this release.";
             if (name == "ManageDeviceServiceObjects" || name == "HardwareManageDeviceServiceObjects")
             {
                 if (family == "webApplications" && version < 21) return "DefaultWebPagesFeature requires V21.";
@@ -35,10 +42,12 @@ namespace TiaMcp.Adapters.Contracts
                 return "GetTypeIdentifierNormalized requires V17.";
             if ((name == "ManageTransferArea" || name == "HardwareManageTransferArea") && family == "multicast" && version < 19)
                 return "Multicast transfer area mutations require V19.";
-            if ((name == "ListTransferAreas" || name == "ManageTransferArea" || name == "HardwareReadTransferAreas" || name == "HardwareManageTransferArea") && version < 16
+            if ((name == "ListTransferAreas" || name == "ManageTransferArea" || name == "HardwareReadTransferAreas" || name == "HardwareManageTransferArea")
+                    && version < 16
                 && (extendedPositionNumber >= 0 || action == "create" && positionNumber >= 0))
                 return "Extended positions and explicit creation positions require V16.";
-            if ((name == "ManageHardwareUtilities" || name == "HardwareManageHardwareUtilities") && action == "exportCardReaderPsc" && hasPassword && version < 20)
+            if ((name == "ManageHardwareUtilities" || name == "HardwareManageHardwareUtilities") && action == "exportCardReaderPsc" && hasPassword
+                    && version < 20)
                 return "Encrypted PSC export requires V20.";
             return null;
         }

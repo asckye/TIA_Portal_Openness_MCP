@@ -126,7 +126,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (NativeResultState.State(evidence) != null && NativeResultState.EnumType(evidence, tool) != null)
                 verdict = NativeResultState.Succeeded(evidence, tool) && verdict != false;
-            bool unknown = write && (Bool(evidence, "writeOutcomeUnknown") == true || Bool(evidence, "verified") == false && Bool(evidence, "mayHaveChanged") != false && Bool(evidence, "postStateKnown") != true
+            bool unknown = write
+                && (Bool(evidence, "writeOutcomeUnknown") == true || Bool(evidence, "verified") == false && Bool(evidence, "mayHaveChanged") != false
+                    && Bool(evidence, "postStateKnown") != true
                 || (string?)body["state"] == "Unknown" || (string?)evidence["reason"] == "VerifyFailed");
             int applied = (evidence["applied"] as JsonArray)?.Count ?? 0;
             int rejected = (evidence["rejected"] as JsonArray)?.Count ?? 0;
@@ -155,23 +157,34 @@ namespace TiaMcpServer.ModelContextProtocol
                 && Bool(evidence, "postStateKnown") != true && status != "InvalidState" && status != "HmiReadSessionBlocked" && status != "NotFound")
             { outcome = Outcome.Unknown; error = Failure(true, evidence); }
             else if (write && applied > 0 && verdict != true)
-            { outcome = Outcome.Partial; error = new Error("CPU writes completed with rejected attributes or incomplete follow-up observations.", new PartialFailureDetails(applied, Math.Max(1, rejected), 0)); }
+            {
+                outcome = Outcome.Partial; error =
+                    new Error("CPU writes completed with rejected attributes or incomplete follow-up observations.",
+                        new PartialFailureDetails(applied, Math.Max(1, rejected), 0));
+            }
             else if (verdict == true) outcome = Outcome.Succeeded;
             else if (status == "InvalidState")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "HmiReadSessionBlocked")
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("hardware-read-blocked")); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; error =
+                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("hardware-read-blocked"));
+            }
             else if (status == "NotFound")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("The requested object was not found.", new NotFoundDetails(null)); }
             else if (status == "InvalidParams" && started == false)
             { outcome = Outcome.RejectedBeforeOperation; error = McpServer.InvalidInput("arguments"); }
             else if (write && started == false)
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("Hardware preconditions were not met.", new PreconditionFailedDetails("hardware-admission", null)); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; error =
+                    new Error("Hardware preconditions were not met.", new PreconditionFailedDetails("hardware-admission", null));
+            }
             else
             { outcome = write ? Outcome.Failed : Outcome.ReadFailed; error = Failure(false, evidence); }
 
             if (NativeResultState.TryUnsuccessful(evidence, write, out var nativeOutcome, out var nativeError, tool))
-                return Result(tool, body, nativeError, nativeOutcome, current, write, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete);
+                return Result(tool, body, nativeError, nativeOutcome, current, write, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness
+                        .Complete);
             Paging? paging = null;
             if (evidence["offset"] != null && evidence["limit"] != null && (evidence["total"] ?? evidence["expectedCount"]) != null)
                 paging = McpServer.OffsetPage((int)evidence["offset"]!, (int)evidence["limit"]!, (int)(evidence["total"] ?? evidence["expectedCount"])!);
@@ -195,7 +208,9 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error Failure(bool unknown, JsonObject evidence)
         {
             var details = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(evidence.ToJsonString())!;
-            return unknown ? new Error("The write outcome cannot be confirmed. Rebuild the session and inspect the target before continuing.", new OutcomeUnknownDetails("hardware-operation", details))
+            return unknown
+                ? new Error("The write outcome cannot be confirmed. Rebuild the session and inspect the target before continuing.",
+                    new OutcomeUnknownDetails("hardware-operation", details))
                 : new Error("The hardware operation did not succeed.", new NativeOperationFailedDetails(null, null, details));
         }
 
@@ -205,11 +220,15 @@ namespace TiaMcpServer.ModelContextProtocol
             var warnings = new List<Warning>();
             var empty = new Dictionary<string, JsonElement>();
             if (ReleaseKey != "20" && ReleaseKey != "21" && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current = true;
-            var policy = current ? BehaviorCapabilities.EntryPolicy(typeof(HardwareContract).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) : BehaviorPolicy.NotApplicable;
+            var policy = current ? BehaviorCapabilities.EntryPolicy(typeof(HardwareContract).Assembly, ReleaseKey, tool, BehaviorPolicy.Current)
+                : BehaviorPolicy.NotApplicable;
             if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
-            if (policy == BehaviorPolicy.Current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", empty));
-            if (incomplete) warnings.Add(new Warning(WarningCode.IncompleteData, "The returned observation is incomplete; consult the retained evidence.", empty));
-            if (candidate) warnings.Add(new Warning(WarningCode.CandidateOnly, "The AML document is a candidate; successful import has not been verified.", empty));
+            if (policy == BehaviorPolicy.Current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", empty));
+            if (incomplete) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The returned observation is incomplete; consult the retained evidence.", empty));
+            if (candidate) warnings
+                .Add(new Warning(WarningCode.CandidateOnly, "The AML document is a candidate; successful import has not been verified.", empty));
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : write ? Execution.Completed : Execution.ReadOnly;
             var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,

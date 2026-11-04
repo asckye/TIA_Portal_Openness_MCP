@@ -4,28 +4,37 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class LibraryCapabilities
     {
-        public const string ScreenItemMasterCopyRefusal = "no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a document exported for the target release.";
+        public const string ScreenItemMasterCopyRefusal =
+            "no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a document " +
+            "exported for the target release.";
 
         public static string? Unsupported(string release, string operation, string action = "", string sourceKind = "",
             System.Collections.Generic.IEnumerable<string>? properties = null,
-            string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", string deleteUnusedVersionsMode = "DoNotDelete", string structureConflictResolutionMode = "RetainStructure")
+            string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", string deleteUnusedVersionsMode = "DoNotDelete",
+                string structureConflictResolutionMode = "RetainStructure")
         {
-            if (operation == "ManageLibraryTypeVersion" && (action == "edit" || action == "release" || action == "discard") && !EngineeringServicesCapabilities.AtLeast(release, "20"))
+            if (operation == "ManageLibraryTypeVersion" && (action == "edit" || action == "release" || action == "discard") && !EngineeringServicesCapabilities
+                    .AtLeast(release, "20"))
                 return "Library version editing/release/discard requires V20 or later.";
             if (operation == "ManageLibraryTypeVersion" && action == "setDefault" && !EngineeringServicesCapabilities.AtLeast(release, "17"))
                 return "Library version SetAsDefault requires V17 or later.";
-            if (operation == "SynchronizeLibrary" && (action == "harmonizeProject" || action == "cleanUp") && !EngineeringServicesCapabilities.AtLeast(release, "17"))
+            if (operation == "SynchronizeLibrary" && (action == "harmonizeProject" || action == "cleanUp") && !EngineeringServicesCapabilities
+                    .AtLeast(release, "17"))
                 return "Library harmonization/cleanup requires V17 or later.";
             if ((operation == "ManageLibraryType" || operation == "SynchronizeLibrary") && (action == "updateLibrary" || action == "updateProject")
-                && !EngineeringServicesCapabilities.AtLeast(release, "17") && (forceUpdateMode != "SetOnlyHigherUpdatedVersionAsDefault" || deleteUnusedVersionsMode != "DoNotDelete" || structureConflictResolutionMode != "RetainStructure"))
+                && !EngineeringServicesCapabilities.AtLeast(release, "17")
+                    && (forceUpdateMode != "SetOnlyHigherUpdatedVersionAsDefault" || deleteUnusedVersionsMode != "DoNotDelete"
+                        || structureConflictResolutionMode != "RetainStructure"))
                 return "Explicit library update modes require V17 or later; earlier APIs expose the simple overload only.";
-            if (operation == "ManageGlobalLibrary" && (action == "archive" || action == "retrieve" || action == "saveAs") && !EngineeringServicesCapabilities.AtLeast(release, "15.1"))
+            if (operation == "ManageGlobalLibrary" && (action == "archive" || action == "retrieve" || action == "saveAs") && !EngineeringServicesCapabilities
+                    .AtLeast(release, "15.1"))
                 return "Library archive/retrieve/SaveAs requires V15.1 or later.";
             if (operation == "ManageLibraryType" && properties != null)
                 foreach (var property in properties)
                 {
                     if (property == "DoNotUse" && !EngineeringServicesCapabilities.AtLeast(release, "20")) return "LibraryType.DoNotUse requires V20 or later.";
-                    if (property == "SetForUpdate" && !EngineeringServicesCapabilities.AtLeast(release, "18")) return "LibraryType.SetForUpdate requires V18 or later.";
+                    if (property == "SetForUpdate" && !EngineeringServicesCapabilities.AtLeast(release, "18"))
+                        return "LibraryType.SetForUpdate requires V18 or later.";
                 }
             if ((operation == "CompareLibraryObjects" || operation == "ManageLibraryMasterCopy" && action == "compare")
                 && !EngineeringServicesCapabilities.AtLeast(release, "18"))

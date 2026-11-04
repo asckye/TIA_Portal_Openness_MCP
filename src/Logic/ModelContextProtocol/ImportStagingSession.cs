@@ -7,7 +7,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
     public sealed class ImportStagingSession : IDisposable
     {
         private static readonly string HostIdentity = Guid.NewGuid().ToString("N");
-        private static readonly ConcurrentDictionary<string, ImportStagingSession> Sessions = new ConcurrentDictionary<string, ImportStagingSession>(StringComparer.Ordinal);
+        private static readonly ConcurrentDictionary<string, ImportStagingSession> Sessions = new ConcurrentDictionary<string,
+            ImportStagingSession>(StringComparer.Ordinal);
         private readonly object gate = new object();
         private int active;
         private bool closing;

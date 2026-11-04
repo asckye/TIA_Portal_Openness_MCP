@@ -38,10 +38,12 @@ namespace TiaMcpConfigurator
         public static string ReleaseApiUrl(string repository) { return "https://api.github.com/repos/" + repository + "/releases/latest"; }
         public static string ReleasesListUrl(string repository) { return "https://api.github.com/repos/" + repository + "/releases?per_page=100"; }
         // The endpoint for an install of this version: releases/latest for a plain install, the releases list for a pre-release install.
-        public static string UpdateApiUrl(string repository, string installed) { return UsesPrereleaseChannel(installed) ? ReleasesListUrl(repository) : ReleaseApiUrl(repository); }
+        public static string UpdateApiUrl(string repository, string installed) {
+            return UsesPrereleaseChannel(installed) ? ReleasesListUrl(repository) : ReleaseApiUrl(repository); }
         public static bool UsesPrereleaseChannel(string installed) { return IsPrerelease(installed); }
         public static bool IsPrerelease(string version) { var release = Release(version); return release != null && release.IsPrerelease; }
-        public static bool MayOffer(string latest, bool markedPrerelease, string installed) { return !(markedPrerelease || IsPrerelease(latest)) || UsesPrereleaseChannel(installed); }
+        public static bool MayOffer(string latest, bool markedPrerelease, string installed) {
+            return !(markedPrerelease || IsPrerelease(latest)) || UsesPrereleaseChannel(installed); }
         private static ProductReleaseVersion Release(string text)
         {
             ProductReleaseVersion release;
@@ -91,7 +93,11 @@ namespace TiaMcpConfigurator
         {
             if (string.IsNullOrWhiteSpace(text)) return null;
             var m = Regex.Match(text.Trim(), @"^v?(\d+)\.(\d+)\.(\d+)");
-            return m.Success ? new Version(int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture)) : null;
+            return m.Success
+                ? new Version(int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int
+                    .Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture), int
+                    .Parse(m.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture))
+                : null;
         }
         public static string TagFromLocation(string location)
         {
@@ -137,7 +143,8 @@ namespace TiaMcpConfigurator
             var info = new UpdateInfo { Installed = installed, Tag = tag, Latest = label != null ? label.Label : Parse(tag).ToString(), Source = "api",
                 Prerelease = release.TryGetValue("prerelease", out prerelease) && prerelease is bool && (bool)prerelease };
             object url;
-            info.ReleaseUrl = release.TryGetValue("html_url", out url) && url != null ? Convert.ToString(url) : "https://github.com/" + repository + "/releases/tag/" + tag;
+            info.ReleaseUrl = release.TryGetValue("html_url", out url) && url != null ? Convert.ToString(url) : "https://github.com/" + repository
+                + "/releases/tag/" + tag;
             object assetsValue;
             // JavaScriptSerializer hands nested arrays back as ArrayList (Deserialize<T>) or object[] (DeserializeObject).
             var assets = release.TryGetValue("assets", out assetsValue) ? assetsValue as System.Collections.IEnumerable : null;
@@ -175,7 +182,10 @@ namespace TiaMcpConfigurator
                 using (var response = (HttpWebResponse)request.GetResponse()) tag = TagFromLocation(response.Headers[HttpResponseHeader.Location]);
                 if (Parse(tag) == null) throw new InvalidOperationException(Loc.Current.T("Config.MissingReleaseTag", apiError));
                 var label = Release(tag);
-                return new UpdateInfo { Installed = installed, Tag = tag, Latest = label != null ? label.Label : Parse(tag).ToString(), Source = "page", ReleaseUrl = "https://github.com/" + repository + "/releases/tag/" + tag };
+                return new UpdateInfo {
+                    Installed = installed, Tag = tag, Latest = label != null ? label.Label : Parse(tag).ToString(), Source = "page", ReleaseUrl =
+                        "https://github.com/" + repository + "/releases/tag/" + tag
+                };
             }
             catch (Exception ex) { throw new InvalidOperationException(Loc.Current.T("Config.UpdateUnreachable", ex.GetBaseException().Message), ex); }
         }
@@ -195,7 +205,9 @@ namespace TiaMcpConfigurator
             var list = new List<string>();
             var names = TiaMcp.Versioning.TiaVersionCatalog.Runnable
                 .Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).Executable)).Distinct().ToList();
-            names.AddRange(TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).WorkerExecutable)).Distinct());
+            names
+                .AddRange(TiaMcp.Versioning.TiaVersionCatalog.Runnable
+                    .Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).WorkerExecutable)).Distinct());
             names.AddRange(new[] { "TiaMcp.Engine.V20", "TiaMcp.Engine.V21" });
             string boundary = string.IsNullOrWhiteSpace(root) ? null : Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
             foreach (string name in names.Distinct())
@@ -217,7 +229,8 @@ namespace TiaMcpConfigurator
         {
             root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, root);
             if (IsSourceRepository(root)) throw new InvalidOperationException(Loc.Current["Config.CannotUpdateSource"]);
-            return new ProcessStartInfo(UpdaterPath(root), LaunchArguments(UpdaterPath(root), root, waitForPid)) { UseShellExecute = true, WorkingDirectory = root };
+            return new ProcessStartInfo(UpdaterPath(root), LaunchArguments(UpdaterPath(root), root, waitForPid)) {
+                UseShellExecute = true, WorkingDirectory = root };
         }
     }
 }

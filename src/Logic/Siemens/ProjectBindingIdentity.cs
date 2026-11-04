@@ -21,7 +21,8 @@ namespace TiaMcpServer.Siemens
         }
         internal static string CanonicalPath(string path)
         {
-            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path) || (path.Length > 1 && path[1] == ':' && (path.Length < 3 || (path[2] != '\\' && path[2] != '/'))))
+            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)
+                    || (path.Length > 1 && path[1] == ':' && (path.Length < 3 || (path[2] != '\\' && path[2] != '/'))))
                 throw new ArgumentException("An absolute project file path is required.");
             return Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         }
@@ -30,7 +31,8 @@ namespace TiaMcpServer.Siemens
             if (major != Major || pid != ProcessId || ticks != StartUtcTicks ||
                 !string.Equals(CanonicalPath(path), ProjectPath, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(name, ProjectName, StringComparison.Ordinal))
-                throw new InvalidOperationException("The exact TIA process/project binding changed. Explicitly reconnect to the intended PID and full project path.");
+                throw new InvalidOperationException("The exact TIA process/project binding changed. Explicitly reconnect to the intended PID and full " +
+                    "project path.");
         }
         internal JsonObject ToJson() => new JsonObject {
             ["tiaMajorVersion"] = Major, ["processId"] = ProcessId,

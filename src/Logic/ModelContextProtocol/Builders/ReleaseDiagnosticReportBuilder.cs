@@ -154,10 +154,12 @@ namespace TiaMcpServer.ModelContextProtocol
             var hmiPlcSync = root["hmiTemplatePlcSyncPrecheck"] as JsonObject ?? new JsonObject();
             var blockedTemplates = ToInt(hmiPlcSync["blockedTemplateCount"]);
             var readyTemplates = ToInt(hmiPlcSync["readyTemplateCount"]);
-            Add("hmi-plc-sync", blockedTemplates > 0 ? "blocked" : "ready", "readyTemplateCount=" + readyTemplates + ", blockedTemplateCount=" + blockedTemplates, blockedTemplates > 0);
+            Add("hmi-plc-sync", blockedTemplates > 0 ? "blocked" : "ready", "readyTemplateCount=" + readyTemplates + ", blockedTemplateCount="
+                    + blockedTemplates, blockedTemplates > 0);
 
             var onlineSafety = root["onlineSafety"] as JsonObject ?? new JsonObject();
-            Add("online-safety", onlineSafety["ok"]?.GetValue<bool>() == true ? "pass" : "fail", "checkedTools=" + onlineSafety["checkedTools"], onlineSafety["ok"]?.GetValue<bool>() != true);
+            Add("online-safety", onlineSafety["ok"]?.GetValue<bool>() == true ? "pass" : "fail", "checkedTools=" + onlineSafety["checkedTools"],
+                    onlineSafety["ok"]?.GetValue<bool>() != true);
 
             return new JsonObject
             {
@@ -173,11 +175,13 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 result.Add("先处理 failedItems 中的失败项；禁止把失败总套件作为可发布版本。");
             }
-            if ((observations["items"] as JsonArray ?? new JsonArray()).OfType<JsonObject>().Any(x => x["id"]?.ToString() == "hmi-plc-sync" && x["blocking"]?.GetValue<bool>() == true))
+            if ((observations["items"] as JsonArray ?? new JsonArray()).OfType<JsonObject>()
+                    .Any(x => x["id"]?.ToString() == "hmi-plc-sync" && x["blocking"]?.GetValue<bool>() == true))
             {
                 result.Add("补齐 HMI 模板到真实 PLC tag/DB 成员的显式映射，再重新运行 PLC 同步预检。");
             }
-            if ((observations["items"] as JsonArray ?? new JsonArray()).OfType<JsonObject>().Any(x => x["id"]?.ToString() == "hmi-action-api-discovery" && x["blocking"]?.GetValue<bool>() == true))
+            if ((observations["items"] as JsonArray ?? new JsonArray()).OfType<JsonObject>()
+                    .Any(x => x["id"]?.ToString() == "hmi-action-api-discovery" && x["blocking"]?.GetValue<bool>() == true))
             {
                 result.Add("用临时 TIA V21 工程发现并读回 WinCC Unified 导航/弹窗事件 API，再解除相关配方阻断。");
             }
@@ -247,7 +251,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int ToInt(JsonNode? node)
         {
             if (node == null) return 0;
-            if (int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value)) return value;
+            if (int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value))
+                return value;
             return 0;
         }
     }

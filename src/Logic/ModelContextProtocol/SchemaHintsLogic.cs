@@ -74,7 +74,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string? DefaultString(string? defaultText)
         {
             if (defaultText == null || defaultText == "null") return null;
-            if (defaultText.Length >= 2 && defaultText[0] == '"' && defaultText[defaultText.Length - 1] == '"') return defaultText.Substring(1, defaultText.Length - 2);
+            if (defaultText.Length >= 2 && defaultText[0] == '"' && defaultText[defaultText.Length - 1] == '"') return defaultText
+                .Substring(1, defaultText.Length - 2);
             return null;
         }
 

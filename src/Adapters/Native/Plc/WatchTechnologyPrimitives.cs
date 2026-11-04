@@ -37,7 +37,8 @@ namespace TiaMcp.Adapters
 
         public static object Attribute(IEngineeringObject target, string name) => target.GetAttribute(name);
         public static void SetAttribute(IEngineeringObject target, string name, object value) => target.SetAttribute(name, value);
-        public static TechnologicalInstanceDB Create(TechnologicalInstanceDBComposition objects, string name, string typeIdentifier, Version version) => objects.Create(name, typeIdentifier, version);
+        public static TechnologicalInstanceDB Create(TechnologicalInstanceDBComposition objects, string name, string typeIdentifier, Version version) => objects
+            .Create(name, typeIdentifier, version);
         public static TechnologicalInstanceDB Find(TechnologicalInstanceDBComposition objects, string name) => objects.Find(name);
         public static TechnologicalParameter Find(TechnologicalParameterComposition parameters, string name) => parameters.Find(name);
         public static TechnologicalParameterComposition Parameters(TechnologicalInstanceDB item) => item.Parameters;

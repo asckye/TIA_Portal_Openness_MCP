@@ -22,7 +22,9 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static void RequireClassic(object software)
         {
             if (software.GetType().FullName == "Siemens.Engineering.HmiUnified.HmiSoftware")
-                throw new PlcSoftwareException("NotSupportedOnVersion", "Classic WinCC XML exchange is unavailable on Unified software. Use ExchangeUnifiedTags or ExchangeUnifiedScriptModules for supported Unified directory exchange; Unified screen/connection XML exchange is not exposed by the SDK.");
+                throw new PlcSoftwareException("NotSupportedOnVersion",
+                        "Classic WinCC XML exchange is unavailable on Unified software. Use ExchangeUnifiedTags or ExchangeUnifiedScriptModules for " +
+                        "supported Unified directory exchange; Unified screen/connection XML exchange is not exposed by the SDK.");
         }
 
         internal static object? Find(object collection, string name)
@@ -55,7 +57,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             var root = Get(software, "TagFolder") ?? software;
             var result = new List<(string, object)>();
             var ancestors = new HashSet<object>();
-            Walk(root, "", ReferenceEquals(root, software) && root.GetType().GetProperty("TagTableGroups") != null ? "TagTableGroups" : "Folders", initialDepth);
+            Walk(root, "", ReferenceEquals(root, software) && root.GetType().GetProperty("TagTableGroups") != null ? "TagTableGroups" : "Folders",
+                    initialDepth);
             return result;
 
             void Walk(object folder, string path, string childProperty, int depth)
@@ -164,7 +167,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             var create = tables.GetType().GetMethod("Create", new[] { typeof(string) })
                 ?? throw new NotSupportedException("Documented TagTables.Create(string) unavailable.");
             beforeWrite();
-            try { return VerifyParent(create.Invoke(tables, new object[] { name }) ?? throw new InvalidOperationException("Tag table creation returned null."), root); }
+            try {
+                return VerifyParent(create.Invoke(tables, new object[] { name }) ?? throw new InvalidOperationException("Tag table creation returned null."),
+                        root);
+            }
             catch (TargetInvocationException error) when (error.InnerException != null)
             { throw new InvalidOperationException(error.InnerException.GetType().FullName + ": " + error.InnerException.Message, error.InnerException); }
         }
@@ -177,13 +183,17 @@ namespace TiaMcp.Adapters.Native.Hmi
                 .Select(e => e.Elements().SingleOrDefault(a => a.Name.LocalName == "AttributeList")?
                     .Elements().SingleOrDefault(a => a.Name.LocalName == "Name")?.Value).ToArray();
             if (names.Length == 0 || names.Any(string.IsNullOrWhiteSpace))
-                throw new PlcSoftwareException("InvalidParams", "Cannot verify the import target identities for " + objectType + ". Use an official exported XML file.");
+                throw new PlcSoftwareException("InvalidParams", "Cannot verify the import target identities for " + objectType
+                        + ". Use an official exported XML file.");
             if (names.Any(n => n!.IndexOfAny(new[] { '/', '\\' }) >= 0))
-                throw new PlcSoftwareException("InvalidParams", "Imported HMI object names must be single names without path separators. Select the existing destination with absolute folderPath /Group/Sub; do not put /Group/Sub/Table in the XML Name.");
+                throw new PlcSoftwareException("InvalidParams",
+                        "Imported HMI object names must be single names without path separators. Select the existing destination with absolute folderPath " +
+                        "/Group/Sub; do not put /Group/Sub/Table in the XML Name.");
             if (!overwrite)
                 foreach (var name in names)
                     if (Find(collection, name!) != null)
-                        throw new PlcSoftwareException("InvalidState", "HMI import target already exists: " + name + ". Set overwrite=true explicitly to replace it.");
+                        throw new PlcSoftwareException("InvalidState", "HMI import target already exists: " + name
+                                + ". Set overwrite=true explicitly to replace it.");
         }
 
         internal static void WriteScalars(object target, IDictionary<string, object?> changes, Action beforeWrite)
@@ -225,7 +235,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static void RequireLegacyText(string text)
         {
             if (text.Length != 0)
-                throw new NotSupportedException("EnsureUnifiedHmiScreenItem cannot choose a text language. Omit text and use SetUnifiedMultilingualProperty with an explicit culture; the requested text was not written.");
+                throw new NotSupportedException("EnsureUnifiedHmiScreenItem cannot choose a text language. Omit text and use SetUnifiedMultilingualProperty " +
+                    "with an explicit culture; the requested text was not written.");
         }
 
         internal static object EnsureTag(object software, object table, string name, Action beforeWrite)
@@ -243,7 +254,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
             var owner = Get(tag, "TagTableName") as string;
             if (!string.Equals(owner, tableName, StringComparison.Ordinal))
-                throw new PlcSoftwareException("InvalidState", "Unified tag '" + name + "' belongs to table '" + owner + "', requested '" + tableName + "'. Tag names are device-wide; no alternative Create overload was attempted.");
+                throw new PlcSoftwareException("InvalidState", "Unified tag '" + name + "' belongs to table '" + owner + "', requested '" + tableName
+                        + "'. Tag names are device-wide; no alternative Create overload was attempted.");
             return tag;
         }
 
@@ -266,7 +278,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 // Expected-name lists are readback hints, not proof that a native package contains no other objects.
                 evidence["v4Rejection"] = "PRECONDITION_FAILED";
                 evidence["importOverwriteRefused"] = true;
-                throw new PlcSoftwareException("InvalidState", "HMI import targets already exist and the native package identities cannot all be verified offline. Set overwrite=true explicitly to permit replacement, or import into an empty target. No native Import was attempted.");
+                throw new PlcSoftwareException("InvalidState",
+                        "HMI import targets already exist and the native package identities cannot all be verified offline. Set overwrite=true explicitly to " +
+                        "permit replacement, or import into an empty target. No native Import was attempted.");
             }
         }
 

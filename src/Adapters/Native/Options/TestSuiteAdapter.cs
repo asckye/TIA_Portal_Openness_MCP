@@ -29,7 +29,9 @@ internal sealed class TestSuiteAdapter
     internal TestSuiteAdapter(OptionalProductSession session) => _session = session;
         // ---- resolution ----------------------------------------------------------------------------------------------------------
         private NativeTestSuiteService RequireTestSuite()
-            => _session.CurrentProject!.GetService<NativeTestSuiteService>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "TestSuiteService is not provided by this project (TIA Portal Test Suite not installed or not licensed).");
+            => _session.CurrentProject!.GetService<NativeTestSuiteService>()
+                ?? throw new PlcSoftwareException("NotSupportedOnVersion",
+                    "TestSuiteService is not provided by this project (TIA Portal Test Suite not installed or not licensed).");
         private static object TestSuiteCollection(NativeTestSuiteService service, string category, string kind) => category switch
         {
             "styleGuide" => service.StyleGuideGroup.RuleSets,
@@ -66,10 +68,14 @@ internal sealed class TestSuiteAdapter
             switch (entry.Kind)
             {
                 case "project": result = _session.CurrentProject!; break;
-                case "deviceGroup": result = _session.CurrentProject!.DeviceGroups.Find(entry.Name) ?? throw new PlcSoftwareException("NotFound", "Device group not found: " + entry.Name); break;
+                case "deviceGroup": result = _session.CurrentProject!.DeviceGroups.Find(entry.Name)
+                    ?? throw new PlcSoftwareException("NotFound", "Device group not found: " + entry.Name); break;
                 case "plc":
-                    var container = _session.ResolveSoftwareContainerUncached(entry.SoftwarePath) ?? throw new PlcSoftwareException("NotFound", "Exact PLC software not found: " + entry.SoftwarePath);
-                    result = container.Parent as DeviceItem ?? throw new PlcSoftwareException("NotFound", "The software container of " + entry.SoftwarePath + " is not owned by a device item."); break;
+                    var container = _session.ResolveSoftwareContainerUncached(entry.SoftwarePath)
+                        ?? throw new PlcSoftwareException("NotFound", "Exact PLC software not found: " + entry.SoftwarePath);
+                    result = container.Parent as DeviceItem
+                        ?? throw new PlcSoftwareException("NotFound", "The software container of " + entry.SoftwarePath + " is not owned by a device item.");
+                    break;
                 default:
                     var plc = _session.ExactPlcForEngineering(entry.SoftwarePath, false);
                     if (entry.Kind == "units") result = _session.RequireUnitProvider(plc).UnitGroup;
@@ -80,7 +86,8 @@ internal sealed class TestSuiteAdapter
                     }
                     break;
             }
-            resolved.Add(new HmiObject { ["kind"] = entry.Kind, ["class"] = result.GetType().Name, ["name"] = PlcGroupOperations.Get(result, "Name")?.ToString() });
+            resolved
+                .Add(new HmiObject { ["kind"] = entry.Kind, ["class"] = result.GetType().Name, ["name"] = PlcGroupOperations.Get(result, "Name")?.ToString() });
             return result;
         }
 
@@ -95,7 +102,9 @@ internal sealed class TestSuiteAdapter
 #if OPTION_SYSTEM_TEST
                 case SystemTestCase stc: row["name"] = stc.Name;
 #if OPTION_TEST_SCOPE
-                    OptionalProductEvidence.Safe(row, "opcUaServerAddress", () => stc.OPCUAServerAddress); OptionalProductEvidence.Safe(row, "opcUaServerInterfaceType", () => stc.OPCUAServerInterfaceType.ToString()); OptionalProductEvidence.Safe(row, "opcUaServerInterfaceFolderPath", () => stc.OPCUAServerInterfaceFolderPath?.FullName); break;
+                    OptionalProductEvidence.Safe(row, "opcUaServerAddress", () => stc.OPCUAServerAddress); OptionalProductEvidence
+                        .Safe(row, "opcUaServerInterfaceType", () => stc.OPCUAServerInterfaceType.ToString()); OptionalProductEvidence
+                        .Safe(row, "opcUaServerInterfaceFolderPath", () => stc.OPCUAServerInterfaceFolderPath?.FullName); break;
 #else
                     break;
 #endif
@@ -116,8 +125,10 @@ internal sealed class TestSuiteAdapter
             {
                 if (++visited[0] > 2000) { rows.Add(new HmiObject { ["truncated"] = true }); break; }
                 var row = new HmiObject();
-                OptionalProductEvidence.Safe(row, "path", () => m.Path); OptionalProductEvidence.Safe(row, "state", () => m.State.ToString()); OptionalProductEvidence.Safe(row, "description", () => m.Description);
-                OptionalProductEvidence.Safe(row, "dateTimeUtc", () => m.DateTime.ToString("o")); OptionalProductEvidence.Safe(row, "errorCount", () => m.ErrorCount); OptionalProductEvidence.Safe(row, "warningCount", () => m.WarningCount);
+                OptionalProductEvidence.Safe(row, "path", () => m.Path); OptionalProductEvidence.Safe(row, "state", () => m.State.ToString());
+                OptionalProductEvidence.Safe(row, "description", () => m.Description);
+                OptionalProductEvidence.Safe(row, "dateTimeUtc", () => m.DateTime.ToString("o")); OptionalProductEvidence
+                    .Safe(row, "errorCount", () => m.ErrorCount); OptionalProductEvidence.Safe(row, "warningCount", () => m.WarningCount);
                 OptionalProductEvidence.Safe(row, "messages", () => TestResultMessageRows(m.Messages, depth + 1, visited));
                 rows.Add(row);
             }
@@ -126,8 +137,10 @@ internal sealed class TestSuiteAdapter
         private static HmiObject TestResultsRow(TestResults results)
         {
             var row = new HmiObject();
-            OptionalProductEvidence.Safe(row, "state", () => results.State.ToString()); OptionalProductEvidence.Safe(row, "errorCount", () => results.ErrorCount); OptionalProductEvidence.Safe(row, "warningCount", () => results.WarningCount);
-            var visited = new[] { 0 }; OptionalProductEvidence.Safe(row, "messages", () => TestResultMessageRows(results.Messages, 0, visited)); row["messageCount"] = visited[0];
+            OptionalProductEvidence.Safe(row, "state", () => results.State.ToString()); OptionalProductEvidence
+                .Safe(row, "errorCount", () => results.ErrorCount); OptionalProductEvidence.Safe(row, "warningCount", () => results.WarningCount);
+            var visited = new[] { 0 }; OptionalProductEvidence.Safe(row, "messages", () => TestResultMessageRows(results.Messages, 0, visited));
+            row["messageCount"] = visited[0];
             return row;
         }
 
@@ -152,12 +165,14 @@ internal sealed class TestSuiteAdapter
                 }
                 var all = PlcGroupOperations.Items(collection).Cast<IEngineeringObject>().Select(x => (object?)TestSuiteRow(x)).ToArray();
                 OptionalProductEvidence.Page(all, offset, limit, meta);
-                return "Test Suite " + (k == "testSet" ? "application test sets" : OptionalProductEvidence.CategoryLabel(category) + "s") + " read; no test executed.";
+                return "Test Suite " + (k == "testSet" ? "application test sets" : OptionalProductEvidence.CategoryLabel(category) + "s")
+                    + " read; no test executed.";
                 }
                 catch (Exception ex) { OptionalProductEvidence.RecordFailure(meta, ex); throw; }
             });
 
-        public OptionalProductReply ExchangeTestSuiteCase(string category, string action, string name, string filePath = "", string importOptions = "None", string loadOptions = "", bool dryRun = true, string kind = "case")
+        public OptionalProductReply ExchangeTestSuiteCase(string category, string action, string name, string filePath = "", string importOptions = "None",
+                string loadOptions = "", bool dryRun = true, string kind = "case")
             => _session.RunHmiStepTool("ExchangeTestSuiteCase", meta =>
             {
                 try
@@ -166,13 +181,19 @@ internal sealed class TestSuiteAdapter
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var service = RequireTestSuite();
                 var collection = TestSuiteCollection(service, category, r.Kind);
-                meta["category"] = category; meta["kind"] = r.Kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false; meta["expectedName"] = name;
-                var target = action == "import" || action == "importTestSets" ? FindTestSuiteItem(collection, name) : ExactTestSuiteItem(collection, name, OptionalProductEvidence.CategoryLabel(category));
+                meta["category"] = category; meta["kind"] = r.Kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                meta["mayHaveWrittenFiles"] = false; meta["expectedName"] = name;
+                var target = action == "import" || action == "importTestSets" ? FindTestSuiteItem(collection, name)
+                    : ExactTestSuiteItem(collection, name, OptionalProductEvidence.CategoryLabel(category));
                 if (target != null) meta["before"] = TestSuiteRow(target);
                 FileInfo? file = null;
                 if (action == "export") file = OptionalProductFiles.Plan(filePath);
-                if (action == "import" || action == "importTestSets") { file = HmiFiles.RequireExistingInputFile(filePath, "filePath"); meta["importOptions"] = r.ImportOption; meta["loadOptions"] = string.Join("|", r.LoadFlags); }
-                if (dryRun) return "Test Suite definition " + action + " preview; import may contain multiple definitions and the native ImportOptions govern replacements. Nothing changed.";
+                if (action == "import" || action == "importTestSets") {
+                    file = HmiFiles.RequireExistingInputFile(filePath, "filePath"); meta["importOptions"] = r.ImportOption; meta["loadOptions"] = string
+                        .Join("|", r.LoadFlags);
+                }
+                if (dryRun) return "Test Suite definition " + action
+                    + " preview; import may contain multiple definitions and the native ImportOptions govern replacements. Nothing changed.";
                 meta["mayHaveChanged"] = action != "export"; meta["mayHaveWrittenFiles"] = action == "export";
                 var import = (ImportOptions)Enum.Parse(typeof(ImportOptions), r.ImportOption);
                 switch (action)
@@ -183,26 +204,38 @@ internal sealed class TestSuiteAdapter
 SystemTestCase stc => stc.SaveToFile(file!),
 #endif
 _ => throw new PlcSoftwareException("NotSupportedOnVersion", "SaveToFile is not available on " + target!.GetType().Name + ".") };
-                        meta["nativeSignature"] = target!.GetType().Name + ".SaveToFile(FileInfo) -> " + saved; meta["nativeResult"] = saved; if (!saved) meta["operationSuccess"] = false;
+                        meta["nativeSignature"] = target!.GetType().Name + ".SaveToFile(FileInfo) -> " + saved; meta["nativeResult"] = saved; if (!saved)
+                            meta["operationSuccess"] = false;
                         meta["file"] = OptionalProductFiles.Verify(file!);
-                        return "Test Suite definition exported (native bool " + saved + "); the file is verified by size / SHA-256, not by content. Project unchanged.";
+                        return "Test Suite definition exported (native bool " + saved
+                            + "); the file is verified by size / SHA-256, not by content. Project unchanged.";
                     case "import":
                         IList<IEngineeringObject> imported;
                         switch (collection)
                         {
-                            case RuleSetComposition rules: var rs = (RSLoadOptions)Enum.Parse(typeof(RSLoadOptions), string.Join(",", r.LoadFlags)); meta["nativeSignature"] = "RuleSetComposition.LoadFromFile(FileInfo, ImportOptions." + import + ", RSLoadOptions." + rs + ")"; imported = rules.LoadFromFile(file!, import, rs).Cast<IEngineeringObject>().ToList(); break;
-                            case TestCaseComposition cases: var tc = (AppLoadOptions)Enum.Parse(typeof(AppLoadOptions), r.LoadFlags[0]); meta["nativeSignature"] = "TestCaseComposition.LoadFromFile(FileInfo, ImportOptions." + import + ", TCLoadOptions." + tc + ")"; imported = cases.LoadFromFile(file!, import, tc).Cast<IEngineeringObject>().ToList(); break;
+                            case RuleSetComposition rules: var rs = (RSLoadOptions)Enum.Parse(typeof(RSLoadOptions), string.Join(",", r.LoadFlags));
+                            meta["nativeSignature"] = "RuleSetComposition.LoadFromFile(FileInfo, ImportOptions." + import + ", RSLoadOptions." + rs + ")";
+                            imported = rules.LoadFromFile(file!, import, rs).Cast<IEngineeringObject>().ToList(); break;
+                            case TestCaseComposition cases: var tc = (AppLoadOptions)Enum.Parse(typeof(AppLoadOptions), r.LoadFlags[0]);
+                            meta["nativeSignature"] = "TestCaseComposition.LoadFromFile(FileInfo, ImportOptions." + import + ", TCLoadOptions." + tc + ")";
+                            imported = cases.LoadFromFile(file!, import, tc).Cast<IEngineeringObject>().ToList(); break;
 #if OPTION_SYSTEM_TEST
-                            case SystemTestCaseComposition system: var st = (SysLoadOptions)Enum.Parse(typeof(SysLoadOptions), r.LoadFlags[0]); meta["nativeSignature"] = "SystemTestCaseComposition.LoadFromFile(FileInfo, ImportOptions." + import + ", TCLoadOptions." + st + ")"; imported = system.LoadFromFile(file!, import, st).Cast<IEngineeringObject>().ToList(); break;
+                            case SystemTestCaseComposition system: var st = (SysLoadOptions)Enum.Parse(typeof(SysLoadOptions), r.LoadFlags[0]);
+                            meta["nativeSignature"] = "SystemTestCaseComposition.LoadFromFile(FileInfo, ImportOptions." + import + ", TCLoadOptions." + st
+                                + ")"; imported = system.LoadFromFile(file!, import, st).Cast<IEngineeringObject>().ToList(); break;
 #endif
-                            default: throw new PlcSoftwareException("NotSupportedOnVersion", "LoadFromFile is not available on " + collection.GetType().Name + ".");
+                            default
+                                : throw new PlcSoftwareException("NotSupportedOnVersion", "LoadFromFile is not available on " + collection.GetType().Name
+                                    + ".");
                         }
                         meta["imported"] = new HmiArray(imported.Select(x => (object?)TestSuiteRow(x)).ToArray()); meta["importedCount"] = imported.Count;
                         if (!string.IsNullOrEmpty(name)) meta["expectedPresenceVerified"] = FindTestSuiteItem(collection, name) != null;
-                        return "Test Suite definitions imported (" + imported.Count + "); presence checks do not prove test semantics. No test run or automatic save.";
+                        return "Test Suite definitions imported (" + imported.Count
+                            + "); presence checks do not prove test semantics. No test run or automatic save.";
 #if OPTION_TEST_SETS
                     case "importTestSets":
-                        var ts = (TSLoadOptions)Enum.Parse(typeof(TSLoadOptions), r.LoadFlags[0]); meta["nativeSignature"] = "ApplicationTestSystemGroup.LoadFromFile(FileInfo, ImportOptions." + import + ", TSLoadOptions." + ts + ")";
+                        var ts = (TSLoadOptions)Enum.Parse(typeof(TSLoadOptions), r.LoadFlags[0]); meta["nativeSignature"] =
+                            "ApplicationTestSystemGroup.LoadFromFile(FileInfo, ImportOptions." + import + ", TSLoadOptions." + ts + ")";
                         var loaded = service.ApplicationTestGroup.LoadFromFile(file!, import, ts);
                         meta["imported"] = new HmiArray(loaded.Select(x => (object?)TestSuiteRow(x)).ToArray()); meta["importedCount"] = loaded.Count;
                         meta["importedTestSets"] = loaded.Count(x => x is ApplicationTestSet); meta["importedTestCases"] = loaded.Count(x => x is TestCase);
@@ -221,7 +254,8 @@ case ApplicationTestSet set: set.Delete(); break;
 #endif
  }
                         meta["nativeSignature"] = target!.GetType().Name + ".Delete()";
-                        if (FindTestSuiteItem(collection, name) != null) throw new InvalidOperationException("Test definition still present after Delete(); deletion not verified.");
+                        if (FindTestSuiteItem(collection, name) != null)
+                            throw new InvalidOperationException("Test definition still present after Delete(); deletion not verified.");
                         meta["expectedPresenceVerified"] = true; meta["verifiedAbsent"] = true;
                         return "Test Suite definition deleted and verified absent; no automatic save.";
                 }
@@ -229,7 +263,8 @@ case ApplicationTestSet set: set.Delete(); break;
                 catch (Exception ex) { OptionalProductEvidence.RecordFailure(meta, ex); throw; }
             });
 
-        public OptionalProductReply RunTestSuiteCase(string category, string name = "", bool confirmExternalExecution = false, bool dryRun = true, string namesJson = "[]", bool runAll = false, string kind = "case")
+        public OptionalProductReply RunTestSuiteCase(string category, string name = "", bool confirmExternalExecution = false, bool dryRun = true,
+                string namesJson = "[]", bool runAll = false, string kind = "case")
             => _session.RunHmiStepTool("RunTestSuiteCase", meta =>
             {
                 try
@@ -240,53 +275,103 @@ case ApplicationTestSet set: set.Delete(); break;
                 meta["category"] = category; meta["kind"] = r.Kind; meta["dryRun"] = dryRun; meta["mayHaveExternalEffects"] = false; meta["runAll"] = runAll;
                 var targets = r.Names.Select(n => ExactTestSuiteItem(collection, n, OptionalProductEvidence.CategoryLabel(category))).ToArray();
                 meta["before"] = new HmiArray(targets.Select(t => (object?)TestSuiteRow(t)).ToArray());
-                if (runAll) OptionalProductEvidence.Safe(meta, "expectedCount", () => PlcGroupOperations.Items(collection).Count()); else meta["expectedCount"] = targets.Length;
+                if (runAll) OptionalProductEvidence.Safe(meta, "expectedCount", () => PlcGroupOperations.Items(collection).Count()); else
+                    meta["expectedCount"] = targets.Length;
                 // TIA V21, 2026-09-20 (docs/reference/real-machine-ledger.md): on empty groups,
                 // TestCaseExecutor.Run(ApplicationTestSystemGroup) threw a native NullReferenceException inside TIA and
                 // SystemTestCaseExecutor.Run(SystemTestSystemGroup) answered "No test case(s) in the selected project" - only the style-guide executor
                 // returns a Success result for an empty group. Nothing to run means nothing is asked of TIA.
                 if (runAll && meta["expectedCount"] is int total && total == 0)
-                    throw new PlcSoftwareException("InvalidState", "The " + category + " system group holds no " + OptionalProductEvidence.CategoryLabel(category) + "s; runAll is refused (TIA answers a native NullReferenceException for an empty application group and 'No test case(s) in the selected project' for an empty system group).");
-                if (dryRun) return "Native test execution preview. Application / system tests may start a PLCSIM Advanced instance or talk to the configured OPC UA server; real execution needs confirmExternalExecution=true. No test executed.";
+                    throw new PlcSoftwareException("InvalidState", "The " + category + " system group holds no " + OptionalProductEvidence
+                            .CategoryLabel(category)
+                            + "s; runAll is refused (TIA answers a native NullReferenceException for an empty application group and 'No test case(s) in the " +
+                            "selected project' for an empty system group).");
+                if (dryRun)
+                    return "Native test execution preview. Application / system tests may start a PLCSIM Advanced instance or talk to the configured OPC UA " +
+                    "server; real execution needs confirmExternalExecution=true. No test executed.";
                 meta["mayHaveExternalEffects"] = r.External;
                 TestResults results;
                 switch (category)
                 {
                     case "styleGuide":
-                        var ruleExecutor = service.StyleGuideGroup.GetService<RuleSetExecutor>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "RuleSetExecutor service not provided by StyleGuideGroup.");
-                        if (runAll) { meta["nativeSignature"] = "RuleSetExecutor.Run(StyleGuideSystemGroup)"; meta["operationStarted"] = true; results = ruleExecutor.Run(service.StyleGuideGroup); }
-                        else if (targets.Length == 1) { meta["nativeSignature"] = "RuleSetExecutor.Run(RuleSet)"; meta["operationStarted"] = true; results = ruleExecutor.Run((RuleSet)targets[0]); }
-                        else { meta["nativeSignature"] = "RuleSetExecutor.Run(IEnumerable<RuleSet>)"; meta["operationStarted"] = true; results = ruleExecutor.Run(targets.Cast<RuleSet>().ToList()); }
+                        var ruleExecutor = service.StyleGuideGroup.GetService<RuleSetExecutor>()
+                            ?? throw new PlcSoftwareException("NotSupportedOnVersion", "RuleSetExecutor service not provided by StyleGuideGroup.");
+                        if (runAll) {
+                            meta["nativeSignature"] = "RuleSetExecutor.Run(StyleGuideSystemGroup)"; meta["operationStarted"] = true; results = ruleExecutor
+                                .Run(service.StyleGuideGroup);
+                        }
+                        else if (targets.Length == 1) {
+                            meta["nativeSignature"] = "RuleSetExecutor.Run(RuleSet)"; meta["operationStarted"] = true; results = ruleExecutor
+                                .Run((RuleSet)targets[0]);
+                        }
+                        else {
+                            meta["nativeSignature"] = "RuleSetExecutor.Run(IEnumerable<RuleSet>)"; meta["operationStarted"] = true; results = ruleExecutor
+                                .Run(targets.Cast<RuleSet>().ToList());
+                        }
                         break;
                     case "application":
-                        var caseExecutor = service.ApplicationTestGroup.GetService<TestCaseExecutor>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "TestCaseExecutor service not provided by ApplicationTestGroup.");
-                        if (runAll) { meta["nativeSignature"] = "TestCaseExecutor.Run(ApplicationTestSystemGroup)"; meta["operationStarted"] = true; results = caseExecutor.Run(service.ApplicationTestGroup); }
+                        var caseExecutor = service.ApplicationTestGroup.GetService<TestCaseExecutor>()
+                            ?? throw new PlcSoftwareException("NotSupportedOnVersion", "TestCaseExecutor service not provided by ApplicationTestGroup.");
+                        if (runAll) {
+                            meta["nativeSignature"] = "TestCaseExecutor.Run(ApplicationTestSystemGroup)"; meta["operationStarted"] = true; results =
+                                caseExecutor.Run(service.ApplicationTestGroup);
+                        }
 #if OPTION_TEST_SETS
-                        else if (r.Kind == "testSet") { if (targets.Length == 1) { meta["nativeSignature"] = "TestCaseExecutor.Run(ApplicationTestSet)"; meta["operationStarted"] = true; results = caseExecutor.Run((ApplicationTestSet)targets[0]); } else { meta["nativeSignature"] = "TestCaseExecutor.Run(IEnumerable<ApplicationTestSet>)"; meta["operationStarted"] = true; results = caseExecutor.Run(targets.Cast<ApplicationTestSet>().ToList()); } }
+                        else if (r.Kind == "testSet") {
+                            if (targets.Length == 1) {
+                                meta["nativeSignature"] = "TestCaseExecutor.Run(ApplicationTestSet)"; meta["operationStarted"] = true; results = caseExecutor
+                                    .Run((ApplicationTestSet)targets[0]);
+                            } else {
+                                meta["nativeSignature"] = "TestCaseExecutor.Run(IEnumerable<ApplicationTestSet>)"; meta["operationStarted"] = true; results =
+                                    caseExecutor.Run(targets.Cast<ApplicationTestSet>().ToList());
+                            }
+                        }
 #endif
-                        else if (targets.Length == 1) { meta["nativeSignature"] = "TestCaseExecutor.Run(TestCase)"; meta["operationStarted"] = true; results = caseExecutor.Run((TestCase)targets[0]); }
-                        else { meta["nativeSignature"] = "TestCaseExecutor.Run(IEnumerable<TestCase>)"; meta["operationStarted"] = true; results = caseExecutor.Run(targets.Cast<TestCase>().ToList()); }
+                        else if (targets.Length == 1) {
+                            meta["nativeSignature"] = "TestCaseExecutor.Run(TestCase)"; meta["operationStarted"] = true; results = caseExecutor
+                                .Run((TestCase)targets[0]);
+                        }
+                        else {
+                            meta["nativeSignature"] = "TestCaseExecutor.Run(IEnumerable<TestCase>)"; meta["operationStarted"] = true; results = caseExecutor
+                                .Run(targets.Cast<TestCase>().ToList());
+                        }
                         break;
 #if OPTION_SYSTEM_TEST
                     default:
-                        var systemExecutor = service.SystemTestGroup.GetService<SystemTestCaseExecutor>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SystemTestCaseExecutor service not provided by SystemTestGroup.");
-                        if (runAll) { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(SystemTestSystemGroup)"; meta["operationStarted"] = true; results = systemExecutor.Run(service.SystemTestGroup); }
-                        else if (targets.Length == 1) { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(SystemTestCase)"; meta["operationStarted"] = true; results = systemExecutor.Run((SystemTestCase)targets[0]); }
-                        else { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(IEnumerable<SystemTestCase>)"; meta["operationStarted"] = true; results = systemExecutor.Run(targets.Cast<SystemTestCase>().ToList()); }
+                        var systemExecutor = service.SystemTestGroup.GetService<SystemTestCaseExecutor>()
+                            ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SystemTestCaseExecutor service not provided by SystemTestGroup.");
+                        if (runAll) {
+                            meta["nativeSignature"] = "SystemTestCaseExecutor.Run(SystemTestSystemGroup)"; meta["operationStarted"] = true; results =
+                                systemExecutor.Run(service.SystemTestGroup);
+                        }
+                        else if (targets.Length == 1) {
+                            meta["nativeSignature"] = "SystemTestCaseExecutor.Run(SystemTestCase)"; meta["operationStarted"] = true; results = systemExecutor
+                                .Run((SystemTestCase)targets[0]);
+                        }
+                        else {
+                            meta["nativeSignature"] = "SystemTestCaseExecutor.Run(IEnumerable<SystemTestCase>)"; meta["operationStarted"] = true; results =
+                                systemExecutor.Run(targets.Cast<SystemTestCase>().ToList());
+                        }
                         break;
 #else
                     default: throw new NotSupportedException("System Test requires V18 or later.");
 #endif
                 }
                 var row = TestResultsRow(results); meta["result"] = row; meta["apiCallSuccess"] = true;
-                var state = results.State.ToString(); OptionalProductEvidence.RecordNativeState(meta, state); meta["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.TestSuite;
-                bool passed = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.TestSuite, state); meta["testPassed"] = passed; meta["operationSuccess"] = passed;
-                return "Native Test Suite execution returned TestResults (state " + state + ", " + results.ErrorCount + " error(s), " + results.WarningCount + " warning(s)); testPassed reflects the native state only. No automatic project save or Portal close.";
+                var state = results.State.ToString(); OptionalProductEvidence.RecordNativeState(meta, state); meta["nativeStateType"] = TiaMcp.Adapters
+                    .Contracts.NativeResultStates.TestSuite;
+                bool passed = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.TestSuite, state);
+                meta["testPassed"] = passed; meta["operationSuccess"] = passed;
+                return "Native Test Suite execution returned TestResults (state " + state + ", " + results.ErrorCount + " error(s), " + results.WarningCount
+                    + " warning(s)); testPassed reflects the native state only. No automatic project save or Portal close.";
                 }
                 catch (Exception ex) { OptionalProductEvidence.RecordFailure(meta, ex); throw; }
             });
 
-        public OptionalProductReply ManageTestSuiteCase(string category, string name, string action = "read", string kind = "case", string newName = "", string softwarePath = "", string instanceName = "", string executionMode = "", string opcUaServerAddress = "", string serverInterfaceType = "", string interfaceFolderPath = "", string updateOptions = "", string scopeJson = "[]", string targetName = "", string masterCopyPath = "", string libraryName = "", bool dryRun = true)
+        public OptionalProductReply ManageTestSuiteCase(string category, string name, string action = "read", string kind = "case", string newName = "",
+                string softwarePath = "", string instanceName = "", string executionMode = "", string opcUaServerAddress = "", string serverInterfaceType = "",
+                string interfaceFolderPath = "", string updateOptions = "", string scopeJson = "[]", string targetName = "", string masterCopyPath = "",
+                string libraryName = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageTestSuiteCase", meta =>
             {
                 try
@@ -295,7 +380,8 @@ case ApplicationTestSet set: set.Delete(); break;
                 if (category == "system") throw new NotSupportedException("System Test requires V18 or later.");
 #endif
 #if !OPTION_TEST_SCOPE
-                if (category == "system" && action == "createFromMasterCopy") throw new NotSupportedException("SystemTestCaseComposition.CreateFrom requires V19 or later.");
+                if (category == "system" && action == "createFromMasterCopy")
+                    throw new NotSupportedException("SystemTestCaseComposition.CreateFrom requires V19 or later.");
                 if (action == "setScope" && (category == "system" || category == "application" && !string.IsNullOrEmpty(executionMode)))
                     throw new NotSupportedException("The selected scope overload requires V19 or later.");
 #endif
@@ -304,8 +390,10 @@ case ApplicationTestSet set: set.Delete(); break;
                 var service = RequireTestSuite();
                 var collection = TestSuiteCollection(service, category, r.Kind);
                 meta["category"] = category; meta["kind"] = r.Kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                IEngineeringObject? target = action == "createFromMasterCopy" ? (string.IsNullOrEmpty(name) ? null : FindTestSuiteItem(collection, name)) : ExactTestSuiteItem(collection, name, OptionalProductEvidence.CategoryLabel(category));
-                if (action == "createFromMasterCopy" && target != null) throw new PlcSoftwareException("InvalidState", OptionalProductEvidence.CategoryLabel(category) + " already exists: " + name);
+                IEngineeringObject? target = action == "createFromMasterCopy" ? (string.IsNullOrEmpty(name) ? null : FindTestSuiteItem(collection, name))
+                    : ExactTestSuiteItem(collection, name, OptionalProductEvidence.CategoryLabel(category));
+                if (action == "createFromMasterCopy" && target != null)
+                    throw new PlcSoftwareException("InvalidState", OptionalProductEvidence.CategoryLabel(category) + " already exists: " + name);
                 if (target != null) meta["before"] = TestSuiteRow(target);
                 if (action == "read") return "Test Suite " + OptionalProductEvidence.CategoryLabel(category) + " read; nothing changed.";
                 MasterCopy? masterCopy = action == "createFromMasterCopy" ? _session.ExactMasterCopy(libraryName, masterCopyPath) : null;
@@ -313,8 +401,10 @@ case ApplicationTestSet set: set.Delete(); break;
                 if (copyTarget != null) meta["target"] = TestSuiteRow(copyTarget);
                 PlcSoftware? plc = action == "setScope" && category == "application" ? _session.ExactPlcForEngineering(softwarePath, false) : null;
                 var scopeObjects = new List<IEngineeringObject>(); var resolved = new HmiArray();
-                if (action == "setScope" && category == "styleGuide") { foreach (var entry in r.Scope) scopeObjects.Add(ResolveStyleGuideScopeObject(entry, resolved)); meta["scopeObjects"] = resolved; }
-                DirectoryInfo? folder = action == "setScope" && category == "system" && !string.IsNullOrEmpty(interfaceFolderPath) ? new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(interfaceFolderPath)) : null;
+                if (action == "setScope" && category == "styleGuide") {
+                    foreach (var entry in r.Scope) scopeObjects.Add(ResolveStyleGuideScopeObject(entry, resolved)); meta["scopeObjects"] = resolved; }
+                DirectoryInfo? folder = action == "setScope" && category == "system" && !string.IsNullOrEmpty(interfaceFolderPath)
+                    ? new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(interfaceFolderPath)) : null;
                 if (folder != null && !folder.Exists) throw new DirectoryNotFoundException("interfaceFolderPath does not exist: " + interfaceFolderPath);
                 if (action == "showInEditor")
                 {
@@ -345,11 +435,14 @@ case ApplicationTestSet set: set.Name = newName; break;
                     case "createFromMasterCopy":
                         switch (collection)
                         {
-                            case RuleSetComposition rules: meta["nativeSignature"] = "RuleSetComposition.CreateFrom(MasterCopy)"; target = rules.CreateFrom(masterCopy!); break;
-                            case TestCaseComposition cases: meta["nativeSignature"] = "TestCaseComposition.CreateFrom(MasterCopy)"; target = cases.CreateFrom(masterCopy!); break;
+                            case RuleSetComposition rules: meta["nativeSignature"] = "RuleSetComposition.CreateFrom(MasterCopy)"; target = rules
+                                .CreateFrom(masterCopy!); break;
+                            case TestCaseComposition cases: meta["nativeSignature"] = "TestCaseComposition.CreateFrom(MasterCopy)"; target = cases
+                                .CreateFrom(masterCopy!); break;
 #if OPTION_SYSTEM_TEST
 #if OPTION_TEST_SCOPE
-                            case SystemTestCaseComposition system: meta["nativeSignature"] = "SystemTestCaseComposition.CreateFrom(MasterCopy)"; target = system.CreateFrom(masterCopy!); break;
+                            case SystemTestCaseComposition system: meta["nativeSignature"] = "SystemTestCaseComposition.CreateFrom(MasterCopy)"; target = system
+                                .CreateFrom(masterCopy!); break;
 #else
                             case SystemTestCaseComposition _: throw new NotSupportedException("SystemTestCaseComposition.CreateFrom requires V19 or later.");
 #endif
@@ -357,7 +450,8 @@ case ApplicationTestSet set: set.Name = newName; break;
                             default: throw new NotSupportedException("CreateFrom is unavailable for the selected Test Suite definition.");
                         }
                         var generated = PlcGroupOperations.Get(target!, "Name")?.ToString() ?? ""; meta["generatedName"] = generated;
-                        if (!string.IsNullOrEmpty(name) && generated != name) { switch (target) { case RuleSet rs: rs.Name = name; break; case TestCase tc: tc.Name = name; break; 
+                        if (!string.IsNullOrEmpty(name) && generated != name) {
+                            switch (target) { case RuleSet rs: rs.Name = name; break; case TestCase tc: tc.Name = name; break; 
 #if OPTION_SYSTEM_TEST
 case SystemTestCase stc: stc.Name = name; break;
 #endif
@@ -365,18 +459,26 @@ case SystemTestCase stc: stc.Name = name; break;
                         else name = generated;
                         break;
                     case "copyScope":
-                        meta["nativeSignature"] = "RuleSet.CopyScope(RuleSet)"; bool copied = ((RuleSet)target!).CopyScope(copyTarget!); meta["nativeResult"] = copied; if (!copied) meta["operationSuccess"] = false;
+                        meta["nativeSignature"] = "RuleSet.CopyScope(RuleSet)"; bool copied = ((RuleSet)target!).CopyScope(copyTarget!); meta["nativeResult"] =
+                            copied; if (!copied) meta["operationSuccess"] = false;
                         break;
                     case "setScope":
                         switch (target)
                         {
                             case RuleSet rs:
-                                var option = (UpdateOptions)Enum.Parse(typeof(UpdateOptions), r.UpdateOption); meta["nativeSignature"] = "RuleSet.SetScope(UpdateOptions." + option + ", IEnumerable<IEngineeringObject>)";
+                                var option = (UpdateOptions)Enum.Parse(typeof(UpdateOptions), r.UpdateOption); meta["nativeSignature"] =
+                                    "RuleSet.SetScope(UpdateOptions." + option + ", IEnumerable<IEngineeringObject>)";
                                 bool set = rs.SetScope(option, scopeObjects); meta["nativeResult"] = set; if (!set) meta["operationSuccess"] = false; break;
                             case TestCase tc:
-                                if (string.IsNullOrEmpty(r.ExecutionMode)) { meta["nativeSignature"] = "TestCase.SetScope(PlcSoftware)"; bool ok = tc.SetScope(plc!); meta["nativeResult"] = ok; if (!ok) meta["operationSuccess"] = false; }
+                                if (string.IsNullOrEmpty(r.ExecutionMode)) {
+                                    meta["nativeSignature"] = "TestCase.SetScope(PlcSoftware)"; bool ok = tc.SetScope(plc!); meta["nativeResult"] = ok; if (!ok)
+                                        meta["operationSuccess"] = false;
+                                }
 #if OPTION_TEST_SCOPE
-                                else { var mode = (ExecutionMode)Enum.Parse(typeof(ExecutionMode), r.ExecutionMode); meta["nativeSignature"] = "TestCase.SetScope(PlcSoftware, string, ExecutionMode." + mode + ")"; tc.SetScope(plc!, instanceName, mode); }
+                                else {
+                                    var mode = (ExecutionMode)Enum.Parse(typeof(ExecutionMode), r.ExecutionMode); meta["nativeSignature"] =
+                                        "TestCase.SetScope(PlcSoftware, string, ExecutionMode." + mode + ")"; tc.SetScope(plc!, instanceName, mode);
+                                }
 #else
                                 else throw new NotSupportedException("The selected scope overload requires V19 or later.");
 #endif
@@ -385,8 +487,14 @@ case SystemTestCase stc: stc.Name = name; break;
 #if OPTION_TEST_SCOPE
                             case SystemTestCase stc:
                                 var iface = (ServerInterfaces)Enum.Parse(typeof(ServerInterfaces), r.ServerInterface);
-                                if (folder == null) { meta["nativeSignature"] = "SystemTestCase.SetScope(string, ServerInterfaces." + iface + ")"; stc.SetScope(opcUaServerAddress, iface); }
-                                else { meta["nativeSignature"] = "SystemTestCase.SetScope(string, ServerInterfaces." + iface + ", DirectoryInfo)"; stc.SetScope(opcUaServerAddress, iface, folder); }
+                                if (folder == null) {
+                                    meta["nativeSignature"] = "SystemTestCase.SetScope(string, ServerInterfaces." + iface + ")"; stc
+                                        .SetScope(opcUaServerAddress, iface);
+                                }
+                                else {
+                                    meta["nativeSignature"] = "SystemTestCase.SetScope(string, ServerInterfaces." + iface + ", DirectoryInfo)"; stc
+                                        .SetScope(opcUaServerAddress, iface, folder);
+                                }
                                 break;
 #else
                             case SystemTestCase _: throw new NotSupportedException("SystemTestCase.SetScope requires V19 or later.");

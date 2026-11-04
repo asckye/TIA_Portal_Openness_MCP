@@ -5,6 +5,8 @@ internal sealed class NativeExchangeService
 {
     private readonly OnlineDownloadService _onlineDownload;
     public NativeExchangeService(OnlineDownloadService onlineDownload) => _onlineDownload = onlineDownload;
-    public TiaMcpServer.ModelContextProtocol.ResponseMessage GeneratePlcLoadableFile(string softwarePath, string objectPathsJson, string objectKind, string targetOption, string filePath, bool dryRun = true)
+    public TiaMcpServer.ModelContextProtocol
+        .ResponseMessage GeneratePlcLoadableFile(string softwarePath, string objectPathsJson, string objectKind, string targetOption, string filePath,
+            bool dryRun = true)
         => _onlineDownload.GeneratePlcLoadableFile(softwarePath, objectPathsJson, objectKind, targetOption, filePath, dryRun);
 }

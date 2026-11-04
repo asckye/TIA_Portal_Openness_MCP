@@ -59,7 +59,8 @@ namespace TiaMcpServer.Siemens
                     foreach (var inner in nested) AddBlockNumber(result, inner.Key, inner.Value);
                     continue;
                 }
-                if (key.StartsWith("AssignmentOfBlockNumbers.", StringComparison.Ordinal)) { AddBlockNumber(result, key.Substring("AssignmentOfBlockNumbers.".Length), change.Value); continue; }
+                if (key.StartsWith("AssignmentOfBlockNumbers.", StringComparison.Ordinal)) {
+                    AddBlockNumber(result, key.Substring("AssignmentOfBlockNumbers.".Length), change.Value); continue; }
                 if (BlockNumberProperties.Contains(key)) { AddBlockNumber(result, key, change.Value); continue; }
                 if (SettingsAttributes.Contains(key))
                 {
@@ -112,11 +113,15 @@ namespace TiaMcpServer.Siemens
             var result = new List<KeyValuePair<string, object>>();
             foreach (var change in changes)
             {
-                if (!GlobalSettingNames.Contains(change.Key)) throw new ArgumentException("Unknown GlobalSettings name: " + change.Key + ". Allowed: " + string.Join(", ", GlobalSettingNames));
+                if (!GlobalSettingNames.Contains(change.Key))
+                    throw new ArgumentException("Unknown GlobalSettings name: " + change.Key + ". Allowed: " + string.Join(", ", GlobalSettingNames));
                 if (change.Key == "UsernameForFChangeHistory")
                 {
-                    var text = change.Value == null ? "" : change.Value is JsonValue v && v.TryGetValue<string>(out var s) ? s : throw new ArgumentException("UsernameForFChangeHistory must be a string (empty resets to default).");
-                    if (text.Length > 256) throw new ArgumentException("UsernameForFChangeHistory is limited to 256 characters by TIA; longer input is refused rather than silently cut.");
+                    var text = change.Value == null ? "" : change.Value is JsonValue v && v.TryGetValue<string>(out var s) ? s
+                        : throw new ArgumentException("UsernameForFChangeHistory must be a string (empty resets to default).");
+                    if (text.Length > 256)
+                        throw new ArgumentException("UsernameForFChangeHistory is limited to 256 characters by TIA; longer input is refused rather than " +
+                        "silently cut.");
                     result.Add(new KeyValuePair<string, object>(change.Key, text));
                 }
                 else
@@ -129,7 +134,8 @@ namespace TiaMcpServer.Siemens
             return result;
         }
 
-        internal static TiaOpenness.Shared.SafetyPolicy.PrintoutRequest ValidatePrintoutRequest(string filePath, string printer, string option, string documentLayout)
+        internal static TiaOpenness.Shared.SafetyPolicy
+            .PrintoutRequest ValidatePrintoutRequest(string filePath, string printer, string option, string documentLayout)
             => TiaOpenness.Shared.SafetyPolicy.ValidatePrintoutRequest(filePath, printer, option, documentLayout);
 
         // One signature row; value 0 means "no valid signature" per the official SafetySignatureProvider page.

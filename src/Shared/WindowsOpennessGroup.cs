@@ -32,7 +32,8 @@ internal static class WindowsOpennessGroup
                 {
                     Outcome.Ready => "Openness user group OK",
                     Outcome.PendingLogon => "OPENNESS_GROUP_RELOGON_REQUIRED: The current user is already in the local group. Sign out and back in.",
-                    Outcome.AddedPendingLogon => "OPENNESS_GROUP_ADDED_RELOGON_REQUIRED: Added the current user. Membership becomes effective after sign out and logon.",
+                    Outcome.AddedPendingLogon =>
+                        "OPENNESS_GROUP_ADDED_RELOGON_REQUIRED: Added the current user. Membership becomes effective after sign out and logon.",
                     Outcome.ElevationDeclined => "OPENNESS_GROUP_ELEVATION_DECLINED: The user declined administrator elevation.",
                     Outcome.MissingGroup => "OPENNESS_GROUP_MISSING: Local group 'Siemens TIA Openness' does not exist. Install TIA Portal Openness.",
                     _ => "OPENNESS_GROUP_ADD_FAILED: Administrator group repair did not establish membership. Exit code " + ExitCode + "."

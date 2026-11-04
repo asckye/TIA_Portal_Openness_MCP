@@ -71,7 +71,8 @@ namespace TiaMcpServer.Runtime
     /// </summary>
     public static class EnvironmentDoctor
     {
-        public const string OpennessGroupFixEn = "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
+        public const string OpennessGroupFixEn =
+            "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
         public const string OpennessGroupFixZh = "请将当前 Windows 用户添加到本机“Siemens TIA Openness”组，注销并重新登录，然后重启 MCP 客户端。";
         public const string DefaultFixEn = "Run `tia doctor` to inspect the TIA Openness installation and repair steps.";
         public const string DefaultFixZh = "请运行 `tia doctor` 检查 TIA Openness 安装并查看修复步骤。";
@@ -145,7 +146,9 @@ namespace TiaMcpServer.Runtime
         public static List<Check> Run(int compiledTiaMajorVersion, int? detectedTiaMajorVersion)
         {
 #if TIA_ENGINE_HOST
-            return System.Text.Json.JsonSerializer.Deserialize<List<Check>>(TiaMcpServer.ModelContextProtocol.HostToolServices.Observe("environment", new System.Text.Json.Nodes.JsonObject())!.ToJsonString(), new System.Text.Json.JsonSerializerOptions { IncludeFields = true })!;
+            return System.Text.Json.JsonSerializer
+                .Deserialize<List<Check>>(TiaMcpServer.ModelContextProtocol.HostToolServices.Observe("environment", new System.Text.Json.Nodes.JsonObject())!
+                    .ToJsonString(), new System.Text.Json.JsonSerializerOptions { IncludeFields = true })!;
 #else
 
             var checks = new List<Check>
@@ -221,7 +224,8 @@ namespace TiaMcpServer.Runtime
                 NameZh = "TIA Portal 安装",
                 DetailEn = ok ? $"detected V{detected}" : "no TIA Portal detected (registry / TiaPortalLocation / default folder)",
                 DetailZh = ok ? $"检测到 V{detected}" : "未检测到 TIA Portal（注册表 / TiaPortalLocation 环境变量 / 默认安装目录都查过了）",
-                FixEn = ok ? null : $"Install TIA Portal {SupportedVersions} including the Openness option, or set the TiaPortalLocation environment variable to the install folder (e.g. D:\\TIA21\\Portal V21).",
+                FixEn = ok ? null
+                    : $"Install TIA Portal {SupportedVersions} including the Openness option, or set the TiaPortalLocation environment variable to the install folder (e.g. D:\\TIA21\\Portal V21).",
                 FixZh = ok ? null : $"安装 TIA Portal {SupportedVersions}（安装时要勾选 Openness 组件），或把用户环境变量 TiaPortalLocation 指向安装根目录（例如 D:\\TIA21\\Portal V21）。",
             };
         }
@@ -241,8 +245,11 @@ namespace TiaMcpServer.Runtime
                 NameZh = "Openness 编程接口 DLL",
                 DetailEn = probe.Ok ? "resolvable: " + probe.ResolvedDll : (probe.Problem ?? "not resolvable"),
                 DetailZh = probe.Ok ? "可解析：" + probe.ResolvedDll : ("无法解析——" + (probe.Problem ?? "原因未知")),
-                FixEn = probe.Ok ? null : "TIA can be installed without Openness. Re-run the TIA Portal setup and add the 'Openness' component, then confirm Siemens.Engineering.dll (V20) or Siemens.Engineering.Base.dll (V21) exists under <install>\\PublicAPI\\V<version>\\.",
-                FixZh = probe.Ok ? null : "装了 TIA 不等于装了 Openness。重新运行 TIA Portal 安装程序补装『Openness』组件，然后确认 <安装目录>\\PublicAPI\\V<版本>\\ 下存在 Siemens.Engineering.dll（V20）或 Siemens.Engineering.Base.dll（V21）。",
+                FixEn = probe.Ok ? null
+                    : "TIA can be installed without Openness. Re-run the TIA Portal setup and add the 'Openness' component, then confirm " +
+                    "Siemens.Engineering.dll (V20) or Siemens.Engineering.Base.dll (V21) exists under <install>\\PublicAPI\\V<version>\\.",
+                FixZh = probe.Ok ? null
+                    : "装了 TIA 不等于装了 Openness。重新运行 TIA Portal 安装程序补装『Openness』组件，然后确认 <安装目录>\\PublicAPI\\V<版本>\\ 下存在 Siemens.Engineering.dll（V20）或 Siemens.Engineering.Base.dll（V21）。",
             };
         }
 
@@ -270,8 +277,12 @@ namespace TiaMcpServer.Runtime
                 NameZh = "引擎 exe 与 TIA 版本匹配",
                 DetailEn = $"exe built for V{compiled}" + (detected != null ? $", machine has V{detected}" : ", machine version unknown"),
                 DetailZh = $"该 exe 为 V{compiled} 构建" + (detected != null ? $"，本机装的是 V{detected}" : "，本机版本未知"),
-                FixEn = !supported ? unsupported : (ok || detected == null ? null : $"Use runtime\\v{detected}\\TiaMcp.Engine.V{detected}.exe from the delivery (both versions ship), or keep this one and pass --tia-major-version {compiled}."),
-                FixZh = !supported ? unsupported : (ok || detected == null ? null : $"改用交付包里的 runtime\\v{detected}\\TiaMcp.Engine.V{detected}.exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version {compiled}。"),
+                FixEn = !supported ? unsupported
+                    : (ok || detected == null ? null
+                        : $"Use runtime\\v{detected}\\TiaMcp.Engine.V{detected}.exe from the delivery (both versions ship), or keep this one and pass --tia-major-version {compiled}."),
+                FixZh = !supported ? unsupported
+                    : (ok || detected == null ? null
+                        : $"改用交付包里的 runtime\\v{detected}\\TiaMcp.Engine.V{detected}.exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version {compiled}。"),
             };
         }
 

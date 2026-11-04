@@ -77,7 +77,8 @@ namespace TiaMcp.Logic.V4.Construction
             {
                 ConstructionJson.Limit(++count, ConstructionJson.MaxItems);
                 Require(names.Add(member.Name), "Duplicate or reserved interface name.");
-                Require(member.EffectiveComment.Length == 0 || !string.IsNullOrWhiteSpace(member.EffectiveComment), "Whitespace-only member comment is unsupported.");
+                Require(member.EffectiveComment.Length == 0 || !string.IsNullOrWhiteSpace(member.EffectiveComment),
+                        "Whitespace-only member comment is unsupported.");
                 if (ladder) { Identifier(member.Name); DataType(member.Datatype); }
             }
         }
@@ -95,7 +96,10 @@ namespace TiaMcp.Logic.V4.Construction
                     case AssignmentStatement assignment:
                         Symbol(assignment.Target);
                         if (assignment.Source != null) Symbol(assignment.Source);
-                        else { Require(!string.IsNullOrWhiteSpace(assignment.LiteralValue), "Assignment literal must not be empty."); Literal(assignment.LiteralValue!); }
+                        else {
+                            Require(!string.IsNullOrWhiteSpace(assignment.LiteralValue), "Assignment literal must not be empty.");
+                            Literal(assignment.LiteralValue!);
+                        }
                         break;
                     case ConditionStatement condition: Symbol(condition.Condition); break;
                     case TokenStatement token: Attribute(token.Text); break;
@@ -104,9 +108,11 @@ namespace TiaMcp.Logic.V4.Construction
                     case SymbolStatement symbol:
                         Attribute(symbol.Name);
                         if (symbol.Op == "global")
-                            Require(!symbol.Name.Contains('"') && !symbol.Name.Contains('#') && !symbol.Name.Split('.').Any(string.IsNullOrWhiteSpace), "Unsupported global path.");
+                            Require(!symbol.Name.Contains('"') && !symbol.Name.Contains('#') && !symbol.Name.Split('.').Any(string.IsNullOrWhiteSpace),
+                                    "Unsupported global path.");
                         else if (symbol.Op == "local")
-                            Require(symbol.Name == symbol.Name.Trim() && !symbol.Name.Contains('.') && !symbol.Name.Contains('#') && !symbol.Name.Contains('"'), "Single local name required.");
+                            Require(symbol.Name == symbol.Name.Trim() && !symbol.Name.Contains('.') && !symbol.Name.Contains('#') && !symbol.Name.Contains('"'),
+                                    "Single local name required.");
                         else Symbol(symbol.Name);
                         break;
                     case LineStatement line:
@@ -140,7 +146,8 @@ namespace TiaMcp.Logic.V4.Construction
             }
             Require(!text.Split('.').Any(s => string.IsNullOrWhiteSpace(s) || s != s.Trim()), "Invalid symbol path.");
         }
-        private static void Identifier(string text) => Require(InputGuard.Identifier(text) && (char.IsLetter(text[0]) || text[0] == '_'), "Simple PLC identifier required.");
+        private static void Identifier(string text) =>
+            Require(InputGuard.Identifier(text) && (char.IsLetter(text[0]) || text[0] == '_'), "Simple PLC identifier required.");
         private static void DataType(string text) => Require(LadderTypes.Contains(text), "Unsupported ladder datatype.");
         private static void Require(bool condition, string message) => ConstructionJson.Require(condition, message);
     }

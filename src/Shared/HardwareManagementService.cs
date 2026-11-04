@@ -29,6 +29,13 @@ namespace TiaMcpServer.Siemens.Services
         }
         public ResponseMessage ManageHardwareObject(string devicePathJson, string action, string itemPathJson = "[]",
             string destinationDevicePathJson = "[]", string destinationItemPathJson = "[]", int position = -1, bool dryRun = true)
-            => Step(Invoke("hardware-devices.HardwareManageHardwareObject", new JsonObject { ["devicePathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(devicePathJson)), ["action"] = JsonSerializer.SerializeToNode(action), ["itemPathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(itemPathJson)), ["destinationDevicePathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(destinationDevicePathJson)), ["destinationItemPathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(destinationItemPathJson)), ["position"] = JsonSerializer.SerializeToNode(position), ["dryRun"] = JsonSerializer.SerializeToNode(dryRun) }, !dryRun && action != "read"));
+            =>
+                Step(Invoke("hardware-devices.HardwareManageHardwareObject", new JsonObject {
+                        ["devicePathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(devicePathJson)), ["action"] = JsonSerializer
+                            .SerializeToNode(action), ["itemPathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(itemPathJson)),
+                            ["destinationDevicePathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(destinationDevicePathJson)),
+                            ["destinationItemPathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(destinationItemPathJson)), ["position"] =
+                            JsonSerializer.SerializeToNode(position), ["dryRun"] = JsonSerializer.SerializeToNode(dryRun)
+                    }, !dryRun && action != "read"));
     }
 }

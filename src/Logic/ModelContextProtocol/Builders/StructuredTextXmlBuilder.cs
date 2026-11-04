@@ -149,15 +149,18 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (!valid)
                 throw new ArgumentException(
-                    "Invalid SCL local symbol: \"" + segment + "\". It contains operators/whitespace/parentheses and appears to be an expression rather than a single variable name." +
+                    "Invalid SCL local symbol: \"" + segment
+                        + "\". It contains operators/whitespace/parentheses and appears to be an expression rather than a single variable name." +
                     "condition / source / {sym} accept only a single variable name; for complex expressions use op:\"line\" + items[], " +
-                    "For CASE/FOR/WHILE or function calls (ABS/LIMIT/TON, etc.), use external SCL (ImportPlcExternalSource + GenerateBlocksFromExternalSource).",
+                    "For CASE/FOR/WHILE or function calls (ABS/LIMIT/TON, etc.), use external SCL (ImportPlcExternalSource + " +
+                        "GenerateBlocksFromExternalSource).",
                     nameof(segment));
 
             if (string.Equals(s, "TRUE", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(s, "FALSE", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException(
-                    "SCL Boolean literal \"" + segment + "\" cannot be used as a symbol. For assignments use literalValue/value; inline use {lit:\"" + s.ToUpperInvariant() + "\"}.",
+                    "SCL Boolean literal \"" + segment + "\" cannot be used as a symbol. For assignments use literalValue/value; inline use {lit:\"" + s
+                        .ToUpperInvariant() + "\"}.",
                     nameof(segment));
         }
 

@@ -28,11 +28,14 @@ namespace TiaMcpServer.Siemens
             if (Array.IndexOf(Kinds, kind) < 0) throw new ArgumentException("kind must be tag/constant.");
             if (Array.IndexOf(Actions, action) < 0) throw new ArgumentException("Invalid action.");
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Exact name required.");
-            var changes = JsonNode.Parse(string.IsNullOrWhiteSpace(propertiesJson) ? "{}" : propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");
+            var changes = JsonNode.Parse(string.IsNullOrWhiteSpace(propertiesJson) ? "{}" : propertiesJson) as JsonObject
+                ?? throw new ArgumentException("propertiesJson must be an object.");
             if (changes.ContainsKey("Name")) throw new ArgumentException("Renaming is not supported by this tool.");
             if ((action == "read" || action == "delete") && changes.Count != 0) throw new ArgumentException("No properties allowed for read/delete.");
-            if (action == "create" && (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(addressOrValue))) throw new ArgumentException("Creation requires explicit dataType and addressOrValue.");
-            if (action == "update" && changes.Count == 0) throw new ArgumentException("update needs at least one property (scalars, or Comment as a string / {culture: text} object).");
+            if (action == "create" && (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(addressOrValue)))
+                throw new ArgumentException("Creation requires explicit dataType and addressOrValue.");
+            if (action == "update" && changes.Count == 0)
+                throw new ArgumentException("update needs at least one property (scalars, or Comment as a string / {culture: text} object).");
             var r = new Request { Action = action, Kind = kind, Writes = action != "read" && !dryRun };
             var scalars = new JsonObject();
             foreach (var pair in changes)
@@ -54,8 +57,10 @@ namespace TiaMcpServer.Siemens
                 var list = new List<(string?, string)>();
                 foreach (var pair in o)
                 {
-                    if (string.IsNullOrWhiteSpace(pair.Key) || pair.Key.Length > 16) throw new ArgumentException("Comment culture names look like \"zh-CN\" / \"en-US\": " + pair.Key);
-                    if (pair.Value is not JsonValue cv || !cv.TryGetValue<string>(out var ct)) throw new ArgumentException("Comment[" + pair.Key + "] must be a string.");
+                    if (string.IsNullOrWhiteSpace(pair.Key) || pair.Key.Length > 16)
+                        throw new ArgumentException("Comment culture names look like \"zh-CN\" / \"en-US\": " + pair.Key);
+                    if (pair.Value is not JsonValue cv || !cv.TryGetValue<string>(out var ct))
+                        throw new ArgumentException("Comment[" + pair.Key + "] must be a string.");
                     list.Add((pair.Key, ct));
                 }
                 return list.ToArray();

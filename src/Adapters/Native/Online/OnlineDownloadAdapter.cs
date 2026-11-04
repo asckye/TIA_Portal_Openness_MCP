@@ -137,13 +137,17 @@ namespace TiaMcp.Adapters.Native.Online
                 if (rhTarget.Length > 0)
                 {
                     RHOnlineProvider rh = _session.ResolvePlcService<RHOnlineProvider>(softwarePath, plcSoftware)
-                        ?? throw new PortalException(PortalErrorCode.NotFound, "RHOnlineProvider service not available on this PLC (rhTarget applies to R/H systems only).");
-                    using var rhScope = AttachOnlineLegitimationHandler(rh.Configuration, password, userName, userType, meta, trustDeviceCertificate, allowNonTlsLogin);
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                                "RHOnlineProvider service not available on this PLC (rhTarget applies to R/H systems only).");
+                    using var rhScope =
+                        AttachOnlineLegitimationHandler(rh.Configuration, password, userName, userType, meta, trustDeviceCertificate, allowNonTlsLogin);
                     // ConfigurationAddress has no public constructor: the address object comes from the route tree (target interfaces).
                     ConfigurationAddress? rhAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : FindConfigurationAddress(rh.Configuration, ipAddress!);
-                    if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _session.Log.Warning("ConnectOnlinePlc R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
+                    if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _session.Log
+                        .Warning("ConnectOnlinePlc R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
 #if !ONLINE_ADDRESS_OVERLOAD
-                    if (rhAddress != null) _session.Log.Warning("ConnectOnlinePlc R/H: this release's RHOnlineProvider has no address overload; using the configured address");
+                    if (rhAddress != null) _session.Log
+                        .Warning("ConnectOnlinePlc R/H: this release's RHOnlineProvider has no address overload; using the configured address");
                     OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup();
 #else
                     OnlineState rhState = rhAddress == null
@@ -155,7 +159,8 @@ namespace TiaMcp.Adapters.Native.Online
                     // envelope: legacy-single-verdict
                     meta["success"] = rhName == "Online";
                     return new OnlineStateResult { State = rhName, IsOnline = rhName == "Online", IsReachable = rhName == "Online" || rhName == "Protected",
-                        Message = BuildOnlineStateMessage(rhName, softwarePath) + $" (R/H {rhTarget}; primary={rh.PrimaryState}, backup={rh.BackupState})", Meta = meta };
+                        Message = BuildOnlineStateMessage(rhName, softwarePath) + $" (R/H {rhTarget}; primary={rh.PrimaryState}, backup={rh.BackupState})",
+                            Meta = meta };
                 }
 #endif
                 var provider = _session.ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware);
@@ -172,7 +177,8 @@ namespace TiaMcp.Adapters.Native.Online
                     };
                 }
 
-                using var legitimationScope = AttachOnlineLegitimationHandler(provider.Configuration, password, userName, userType, meta, trustDeviceCertificate, allowNonTlsLogin);
+                using var legitimationScope =
+                    AttachOnlineLegitimationHandler(provider.Configuration, password, userName, userType, meta, trustDeviceCertificate, allowNonTlsLogin);
 
                 string routeNote = "";
                 ConfigurationAddress? address = null;
@@ -185,7 +191,8 @@ namespace TiaMcp.Adapters.Native.Online
                     meta["success"] = true;
                     return new OnlineStateResult { State = before, IsOnline = true, IsReachable = true, Meta = meta,
                         Message = BuildOnlineStateMessage(before, softwarePath) + (routeRequested
-                            ? " It was already online, so the requested route was not applied (ApplyConfiguration throws while the device is online); call DisconnectOnlinePlc first to change the route."
+                            ? " It was already online, so the requested route was not applied (ApplyConfiguration throws while the device is online); call " +
+                                "DisconnectOnlinePlc first to change the route."
                             : " It was already online.") };
                 }
                 bool isConfigured = provider.Configuration.IsConfigured;
@@ -194,7 +201,8 @@ namespace TiaMcp.Adapters.Native.Online
                 if (notConfigured != null)
                 {
                     meta["success"] = false;
-                    return new OnlineStateResult { State = before, IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + notConfigured, Meta = meta };
+                    return new OnlineStateResult {
+                        State = before, IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + notConfigured, Meta = meta };
                 }
                 if (routeRequested)
                 {
@@ -202,7 +210,10 @@ namespace TiaMcp.Adapters.Native.Online
                     if (selection.Error != null)
                     {
                         meta["success"] = false;
-                        return new OnlineStateResult { State = "NotReachable", IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + selection.Error, Meta = meta };
+                        return new OnlineStateResult {
+                            State = "NotReachable", IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + selection.Error,
+                                Meta = meta
+                        };
                     }
                     address = selection.Address;
                     routeNote = " Route: " + selection.Description + ".";
@@ -237,13 +248,18 @@ namespace TiaMcp.Adapters.Native.Online
                 // Historical native observation: EngineeringTargetInvocationException carries only "Error when calling method 'GoOnline'" - the
                 // reason ("Incompatible" against a never-downloaded PLCSIM instance) sits in the inner chain; surface it and the state TIA holds.
                 var chain = new List<string>();
-                for (var e = ex; e != null && chain.Count < 6; e = e.InnerException) if (!string.IsNullOrWhiteSpace(e.Message) && !chain.Contains(e.Message)) chain.Add(e.Message);
+                for (var e = ex; e != null && chain.Count < 6; e = e.InnerException) if (!string.IsNullOrWhiteSpace(e.Message) && !chain.Contains(e.Message))
+                    chain.Add(e.Message);
                 string stateNow = "";
                 try { stateNow = _session.ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware)?.State.ToString() ?? ""; } catch (Exception) { /* swallow(probe-optional): a failed state probe must preserve the original GoOnline failure */ }
                 meta["success"] = false; meta["error"] = string.Join(" <- ", chain);
                 if (stateNow.Length > 0) meta["onlineStateAfter"] = stateNow;
-                var hint = stateNow == "Incompatible" ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadPlc), then go online." : "";
-                return new OnlineStateResult { State = stateNow.Length > 0 && stateNow != "Online" ? stateNow : "NotReachable", IsOnline = false, IsReachable = stateNow == "Incompatible" || stateNow == "Protected", Message = $"GoOnline failed: {string.Join(" <- ", chain)}{hint}", Meta = meta };
+                var hint = stateNow == "Incompatible"
+                    ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadPlc), then go online." : "";
+                return new OnlineStateResult {
+                    State = stateNow.Length > 0 && stateNow != "Online" ? stateNow : "NotReachable", IsOnline = false, IsReachable = stateNow == "Incompatible"
+                        || stateNow == "Protected", Message = $"GoOnline failed: {string.Join(" <- ", chain)}{hint}", Meta = meta
+                };
             }
         }
 
@@ -257,7 +273,8 @@ namespace TiaMcp.Adapters.Native.Online
 #if ONLINE_TARGET_ADDRESSES
                         foreach (ConfigurationAddress address in PlcGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
 #else
-                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(OnlineRoutePrimitives.TargetAddresses(target)).Cast<ConfigurationAddress>())
+                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(OnlineRoutePrimitives.TargetAddresses(target))
+                                .Cast<ConfigurationAddress>())
 #endif
 #if ONLINE_ADDRESSES
                             if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
@@ -422,7 +439,8 @@ namespace TiaMcp.Adapters.Native.Online
             }
         }
 
-        private static bool WalkCompareTree(global::Siemens.Engineering.Compare.CompareResultElement? element, string path, int depth, int maxDepth, int maxEntries,
+        private static bool WalkCompareTree(global::Siemens.Engineering.Compare.CompareResultElement? element, string path, int depth, int maxDepth,
+                int maxEntries,
             List<OnlineCompareEntry> entries, Dictionary<string, int> summary)
         {
             if (element == null) return false;
@@ -492,12 +510,15 @@ namespace TiaMcp.Adapters.Native.Online
         public OnlineDownloadResult DownloadToPlc(OnlineRequest request)
         {
             string softwarePath = request.SoftwarePath;
-            string? password = EmptyToNull(request.Password), pgPcInterface = EmptyToNull(request.PgPcInterface), targetIpAddress = EmptyToNull(request.TargetIpAddress);
+            string? password = EmptyToNull(request.Password), pgPcInterface = EmptyToNull(request.PgPcInterface), targetIpAddress =
+                EmptyToNull(request.TargetIpAddress);
             bool trustDeviceCertificate = request.TrustDeviceCertificate;
             var legitimation = new HmiObject { ["trustDeviceCertificate"] = trustDeviceCertificate };   // TLS prompt record
             _session.Log.Information(
-                "DownloadPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U} scope={O}",
-                softwarePath, request.ConsistentBlocksOnly, request.KeepActualValues, request.StartAfterDownload, request.StopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress, request.UserManagementMode, request.DownloadScope);
+                "DownloadPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} " +
+                    "userMgmt={U} scope={O}",
+                softwarePath, request.ConsistentBlocksOnly, request.KeepActualValues, request.StartAfterDownload, request.StopBeforeDownload, !string
+                    .IsNullOrEmpty(password), pgPcInterface, targetIpAddress, request.UserManagementMode, request.DownloadScope);
             string rhTarget;
             try { rhTarget = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateRhTarget(request.RhTarget); }
             catch (ArgumentException ex) { return new OnlineDownloadResult { Ok = false, Message = ex.Message, Errors = new[] { ex.Message } }; }
@@ -536,7 +557,8 @@ namespace TiaMcp.Adapters.Native.Online
                 // R/H systems download to one CPU at a time through RHDownloadProvider; its own Configuration enumerates the routes
                 // and raises the legitimation prompts (targets are bound to the provider instance that enumerated them).
                 RHDownloadProvider? rh = rhTarget.Length == 0 ? null : _session.ResolvePlcService<RHDownloadProvider>(softwarePath, plcSoftware)
-                    ?? throw new PortalException(PortalErrorCode.NotFound, "RHDownloadProvider service not available on this PLC (rhTarget applies to R/H systems only).");
+                    ?? throw new PortalException(PortalErrorCode.NotFound,
+                            "RHDownloadProvider service not available on this PLC (rhTarget applies to R/H systems only).");
 #endif
                 DownloadProvider? downloadProvider = rhTarget.Length == 0 ? _session.ResolvePlcService<DownloadProvider>(softwarePath, plcSoftware) : null;
                 if (rhTarget.Length == 0 && downloadProvider == null)
@@ -558,7 +580,8 @@ namespace TiaMcp.Adapters.Native.Online
                         Message = "No connection configuration found. Configure the PLC's PROFINET/IP address in hardware configuration first."
                     };
 
-                using var legitimationScope = AttachOnlineLegitimationHandler(configuration, password, legitimation, trustDeviceCertificate, request.AllowNonTlsLogin);
+                using var legitimationScope =
+                    AttachOnlineLegitimationHandler(configuration, password, legitimation, trustDeviceCertificate, request.AllowNonTlsLogin);
 
                 DownloadConfigurationDelegate preDelegate = (config) => ApplyDownloadPrompt(config, promptPolicy);
                 DownloadConfigurationDelegate postDelegate = (config) => ApplyDownloadPrompt(config, promptPolicy);
@@ -575,7 +598,9 @@ namespace TiaMcp.Adapters.Native.Online
                     };
                 if (routeDiagnostics.Configuration is not IConfiguration downloadConfig)
                 {
-                    const string noRoute = "No download route: the connection configuration lists no Modes -> PcInterfaces -> TargetInterfaces route (IConfiguration) to download through. "
+                    const string noRoute =
+                        "No download route: the connection configuration lists no Modes -> PcInterfaces -> TargetInterfaces route (IConfiguration) to " +
+                        "download through. "
                         + "Check the PG/PC interface and the CPU's network settings; CheckDownloadReadiness lists the routes.";
                     return new OnlineDownloadResult { Ok = false, Message = noRoute, Errors = new[] { noRoute } };
                 }
@@ -589,7 +614,8 @@ namespace TiaMcp.Adapters.Native.Online
                 {
                     DownloadResult rhResult;
 #if ONLINE_TARGET_ADDRESSES
-                    if (routeDiagnostics.Address != null && routeDiagnostics.AddressSource == "created" && routeDiagnostics.Target is IConfiguration rhTargetConfiguration)
+                    if (routeDiagnostics.Address != null && routeDiagnostics.AddressSource == "created" && routeDiagnostics
+                            .Target is IConfiguration rhTargetConfiguration)
                         rhResult = rhTarget == "primary"
                             ? rh.DownloadToPrimary(rhTargetConfiguration, routeDiagnostics.Address, preDelegate, postDelegate, options)
                             : rh.DownloadToBackup(rhTargetConfiguration, routeDiagnostics.Address, preDelegate, postDelegate, options);
@@ -610,7 +636,8 @@ namespace TiaMcp.Adapters.Native.Online
                 {
                     // "Download Hardware and Software to a target with specific IP-Address" - the official overload for an
                     // address TIA has not seen on the target yet (PLCSIM Advanced instance before its first download, new CPU).
-                    DownloadResult createdResult = downloadProvider!.Download(targetConfiguration, routeDiagnostics.Address, preDelegate, postDelegate, options);
+                    DownloadResult createdResult = downloadProvider!
+                        .Download(targetConfiguration, routeDiagnostics.Address, preDelegate, postDelegate, options);
                     return BuildDownloadResponse(createdResult, softwarePath, routeDiagnostics, promptPolicy, legitimation);
                 }
 #endif
@@ -643,7 +670,8 @@ namespace TiaMcp.Adapters.Native.Online
                 return new OnlineDownloadResult
                 {
                     Ok = false,
-                    Message = $"Download failed: {real.Message}{routeHint}{promptPolicy.RefusedSummary()}{promptPolicy.ReinitializationSummary()}{promptPolicy.UnansweredSummary()}",
+                    Message =
+                        $"Download failed: {real.Message}{routeHint}{promptPolicy.RefusedSummary()}{promptPolicy.ReinitializationSummary()}{promptPolicy.UnansweredSummary()}",
                     Errors = new[] { real.Message },
                     Meta = failureMeta
                 };
@@ -703,15 +731,18 @@ namespace TiaMcp.Adapters.Native.Online
                 var selectionValues = selection != null && selection.PropertyType.IsEnum && selection.CanWrite
                     ? Enum.GetNames(selection.PropertyType) : Array.Empty<string>();
                 var checkedProp = type.GetProperty("Checked");
-                bool hasChecked = config is DownloadCheckConfiguration || checkedProp != null && checkedProp.CanWrite && checkedProp.PropertyType == typeof(bool);
-                bool hasPassword = config is DownloadPasswordConfiguration || config is UploadPasswordConfiguration || type.GetMethod("SetPassword", new[] { typeof(SecureString) }) != null;
+                bool hasChecked = config is DownloadCheckConfiguration || checkedProp != null && checkedProp.CanWrite && checkedProp
+                    .PropertyType == typeof(bool);
+                bool hasPassword = config is DownloadPasswordConfiguration || config is UploadPasswordConfiguration || type
+                    .GetMethod("SetPassword", new[] { typeof(SecureString) }) != null;
 
                 var answer = policy.Decide(typeName, selectionValues, hasChecked, hasPassword);
                 switch (answer.Kind)
                 {
                     case DownloadPromptPolicy.AnswerKind.Selection:
                         #if ONLINE_SELECTIVE_DELETE
-                        if (config is SelectiveDeleteDownload selectiveDelete) selectiveDelete.CurrentSelection = (SelectiveDeleteDataSelections)Enum.Parse(typeof(SelectiveDeleteDataSelections), answer.Value!, ignoreCase: true);
+                        if (config is SelectiveDeleteDownload selectiveDelete) selectiveDelete.CurrentSelection = (SelectiveDeleteDataSelections)Enum
+                            .Parse(typeof(SelectiveDeleteDataSelections), answer.Value!, ignoreCase: true);
                         else
 #endif
                         selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value!, ignoreCase: true));
@@ -750,7 +781,8 @@ namespace TiaMcp.Adapters.Native.Online
                         var nonTlsRefusal = DownloadPromptPolicy.NonTlsLoginRefusal(secureChannel, policy.AllowNonTlsLogin);
                         if (nonTlsRefusal != null)
                         {
-                            answer = new DownloadPromptPolicy.Answer { Kind = DownloadPromptPolicy.AnswerKind.Unanswered, Source = "unanswered", Note = nonTlsRefusal };
+                            answer = new DownloadPromptPolicy.Answer {
+                                Kind = DownloadPromptPolicy.AnswerKind.Unanswered, Source = "unanswered", Note = nonTlsRefusal };
                             break;
                         }
                         using var secure = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ToSecureString(secret!);
@@ -766,7 +798,9 @@ namespace TiaMcp.Adapters.Native.Online
                         if (answer.Value != null)
                         {
                             try { selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value, ignoreCase: true)); }
-                            catch (Exception ex) { _session.Log.Warning(ex, "Refused download prompt {TypeName}: the {Value} selection could not be set", typeName, answer.Value); }
+                            catch (Exception ex) {
+                                _session.Log.Warning(ex, "Refused download prompt {TypeName}: the {Value} selection could not be set", typeName, answer.Value);
+                            }
                         }
                         throw new DownloadPromptPolicy.PromptRefusedException("Download stopped at the refused prompt " + typeName
                             + (string.IsNullOrEmpty(message) ? "" : " ('" + message + "')") + "; pass " + answer.AllowWith + "=true to allow it.");
@@ -777,7 +811,9 @@ namespace TiaMcp.Adapters.Native.Online
             {
                 var real = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
                 _session.Log.Warning(real, "Download prompt {TypeName} could not be answered", typeName);
-                policy.Record(typeName, message, new DownloadPromptPolicy.Answer { Kind = DownloadPromptPolicy.AnswerKind.Unanswered, Source = "unanswered", Note = "answer failed: " + real.Message });
+                policy
+                    .Record(typeName, message, new DownloadPromptPolicy.Answer {
+                        Kind = DownloadPromptPolicy.AnswerKind.Unanswered, Source = "unanswered", Note = "answer failed: " + real.Message });
             }
         }
 #endif
@@ -845,14 +881,17 @@ namespace TiaMcp.Adapters.Native.Online
 #if ONLINE_ADDRESSES
                         if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "subnet " + subnet.Name; return address; }
 #else
-                        if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "subnet " + subnet.Name; return address; }
+                        if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) {
+                            source = "subnet " + subnet.Name; return address; }
 #endif
                     foreach (ConfigurationGateway gateway in PlcGroupOperations.Items(subnet.Gateways).Cast<ConfigurationGateway>())
                         foreach (ConfigurationAddress address in PlcGroupOperations.Items(gateway.Addresses).Cast<ConfigurationAddress>())
 #if ONLINE_ADDRESSES
-                            if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "gateway " + gateway.Name + " of subnet " + subnet.Name; return address; }
+                            if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) {
+                                source = "gateway " + gateway.Name + " of subnet " + subnet.Name; return address; }
 #else
-                            if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "gateway " + gateway.Name + " of subnet " + subnet.Name; return address; }
+                            if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) {
+                                source = "gateway " + gateway.Name + " of subnet " + subnet.Name; return address; }
 #endif
                 }
             }
@@ -1013,9 +1052,11 @@ namespace TiaMcp.Adapters.Native.Online
                         foreach (var route in pool)
                             foreach (var candidate in _session.EnumerateReflectedProperty(route.Target, "Addresses"))
 #if ONLINE_ADDRESSES
-                                if (selection.Address == null && candidate is ConfigurationAddress typed && string.Equals(typed.Address, targetIpAddress, StringComparison.OrdinalIgnoreCase))
+                                if (selection.Address == null && candidate is ConfigurationAddress typed && string
+                                        .Equals(typed.Address, targetIpAddress, StringComparison.OrdinalIgnoreCase))
 #else
-                                if (selection.Address == null && candidate is ConfigurationAddress typed && string.Equals(OnlineRoutePrimitives.Address(typed), targetIpAddress, StringComparison.OrdinalIgnoreCase))
+                                if (selection.Address == null && candidate is ConfigurationAddress typed && string
+                                        .Equals(OnlineRoutePrimitives.Address(typed), targetIpAddress, StringComparison.OrdinalIgnoreCase))
 #endif
                                 { selection.Address = typed; selection.AddressSource = "targetInterface"; selection.Target = route.Target; }
                     }
@@ -1046,7 +1087,9 @@ namespace TiaMcp.Adapters.Native.Online
                                 selection.AddressSource = "not-created";
                                 selection.Target = ordered[0].Target;
                                 selection.Configuration = ordered[0].Target;
-                                selection.Description = ordered[0].Describe() + " -> address " + targetIpAddress + " (not in the route tree; execution creates it with ConfigurationAddressComposition.Create; preview: nothing applied or created)";
+                                selection.Description = ordered[0].Describe() + " -> address " + targetIpAddress
+                                    + " (not in the route tree; execution creates it with ConfigurationAddressComposition.Create; preview: nothing applied " +
+                                    "or created)";
                                 return selection;
                             }
                             var errors = new List<string>();
@@ -1079,7 +1122,8 @@ namespace TiaMcp.Adapters.Native.Online
 #if ONLINE_ADDRESSES
                     string addressText = selection.Address == null ? "" : " -> address " + selection.Address.Address + " (" + selection.AddressSource + ")";
 #else
-                    string addressText = selection.Address == null ? "" : " -> address " + OnlineRoutePrimitives.Address(selection.Address) + " (" + selection.AddressSource + ")";
+                    string addressText = selection.Address == null ? "" : " -> address " + OnlineRoutePrimitives.Address(selection.Address) + " (" + selection
+                        .AddressSource + ")";
 #endif
                     selection.Description = best.Describe() + addressText + " (preview: ApplyConfiguration not called)";
                     return selection;
@@ -1089,7 +1133,8 @@ namespace TiaMcp.Adapters.Native.Online
                 // and handed to Download / GoOnline as the IConfiguration; the target interface is kept for the 5-arg Download overload.
                 // An address listed on the target interface keeps the field-verified path below (apply + hand over the target interface).
                 // Such an address is only selected for an explicit target IP, so a route that is not applied is refused.
-                if (selection.Address != null && selection.AddressSource != "targetInterface" && connectionConfiguration is ConnectionConfiguration typedConfiguration)
+                if (selection.Address != null && selection.AddressSource != "targetInterface"
+                        && connectionConfiguration is ConnectionConfiguration typedConfiguration)
                 {
                     bool applied = false;
                     string? applyError = null;
@@ -1099,9 +1144,11 @@ namespace TiaMcp.Adapters.Native.Online
                     selection.Applied = applied;
                     var route = pool.OrderByDescending(r => r.Score).First();
 #if ONLINE_ADDRESSES
-                    selection.Description = route.Describe() + " -> address " + selection.Address.Address + " (" + selection.AddressSource + (applied ? "" : "; not confirmed by ApplyConfiguration") + ")";
+                    selection.Description = route.Describe() + " -> address " + selection.Address.Address + " (" + selection.AddressSource
+                        + (applied ? "" : "; not confirmed by ApplyConfiguration") + ")";
 #else
-                    selection.Description = route.Describe() + " -> address " + OnlineRoutePrimitives.Address(selection.Address) + " (" + selection.AddressSource + (applied ? "" : "; not confirmed by ApplyConfiguration") + ")";
+                    selection.Description = route.Describe() + " -> address " + OnlineRoutePrimitives.Address(selection.Address) + " (" + selection
+                        .AddressSource + (applied ? "" : "; not confirmed by ApplyConfiguration") + ")";
 #endif
                     selection.Error = OnlineTransitionPolicy.RouteApplyRefusal(explicitRoute, applied, applyError, selection.Description);
                     return selection;
@@ -1148,7 +1195,8 @@ namespace TiaMcp.Adapters.Native.Online
                 // Automatic pick only: nothing applied cleanly, so hand back the best-ranked target anyway (it IS an
                 // IConfiguration), marked as not confirmed. Mirrors the previous fallback to the first target.
                 selection.Configuration = ranked[0].Target;
-                selection.Description = ranked[0].Describe() + " (not confirmed by ApplyConfiguration" + (applyErrors.Count > 0 ? ": " + string.Join("; ", applyErrors) : "") + ")";
+                selection.Description = ranked[0].Describe() + " (not confirmed by ApplyConfiguration"
+                    + (applyErrors.Count > 0 ? ": " + string.Join("; ", applyErrors) : "") + ")";
                 return selection;
             }
             catch (Exception ex)
@@ -1165,11 +1213,13 @@ namespace TiaMcp.Adapters.Native.Online
             var issues = new List<string>();
 
             if (_session.IsProjectNull())
-                return new OnlineReadinessResult { Ready = false, Issues = new[] { "No project open." }, Meta = new HmiObject { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
+                return new OnlineReadinessResult {
+                    Ready = false, Issues = new[] { "No project open." }, Meta = new HmiObject { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
 
             var plcSoftware = _session.GetPlcSoftware(softwarePath);
             if (plcSoftware == null)
-                return new OnlineReadinessResult { Ready = false, Issues = new[] { $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() } };
+                return new OnlineReadinessResult {
+                    Ready = false, Issues = new[] { $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() } };
 
             bool hasProvider = false;
             bool hasConfig = false;
@@ -1201,7 +1251,8 @@ namespace TiaMcp.Adapters.Native.Online
             try
             {
                 var consistency = _session.ReadPlcConsistency(softwarePath);
-                isConsistent = consistency.Any(x => x.Consistent == false) ? false : consistency.Count > 0 && consistency.All(x => x.Consistent == true) ? true : (bool?)null;
+                isConsistent = consistency.Any(x => x.Consistent == false) ? false : consistency.Count > 0 && consistency.All(x => x.Consistent == true) ? true
+                    : (bool?)null;
                 if (isConsistent == false) issues.Add("One or more root/unit blocks or types are inconsistent; compilation must be reviewed.");
                 if (isConsistent == null) issues.Add("Compile consistency is unknown (no complete block/type evidence).");
             }
@@ -1285,7 +1336,8 @@ namespace TiaMcp.Adapters.Native.Online
             return new OnlineDownloadResult
             {
                 Ok = ok,
-                Message = $"Download {result.State}: {result.ErrorCount} error(s), {result.WarningCount} warning(s)." + (prompts?.ReinitializationSummary() ?? string.Empty) + (prompts?.UnansweredSummary() ?? string.Empty),
+                Message = $"Download {result.State}: {result.ErrorCount} error(s), {result.WarningCount} warning(s)."
+                    + (prompts?.ReinitializationSummary() ?? string.Empty) + (prompts?.UnansweredSummary() ?? string.Empty),
                 State = result.State.ToString(),
                 ErrorCount = result.ErrorCount,
                 WarningCount = result.WarningCount,
@@ -1312,16 +1364,20 @@ namespace TiaMcp.Adapters.Native.Online
                     if (obj is DownloadResultMessage downloadMessage)
                     {
                         var text = downloadMessage.Message ?? string.Empty; var state = downloadMessage.State;
-                        if (state == DownloadResultState.Error && text.Length > 0) errors.Add(text + (downloadMessage.ErrorCount > 1 ? " [" + downloadMessage.ErrorCount + " errors]" : ""));
-                        else if (state == DownloadResultState.Warning && text.Length > 0) warnings.Add(text + (downloadMessage.WarningCount > 1 ? " [" + downloadMessage.WarningCount + " warnings]" : ""));
+                        if (state == DownloadResultState.Error && text.Length > 0) errors
+                            .Add(text + (downloadMessage.ErrorCount > 1 ? " [" + downloadMessage.ErrorCount + " errors]" : ""));
+                        else if (state == DownloadResultState.Warning && text.Length > 0) warnings
+                            .Add(text + (downloadMessage.WarningCount > 1 ? " [" + downloadMessage.WarningCount + " warnings]" : ""));
                         CollectDownloadMessages(downloadMessage.Messages, errors, warnings);
                         continue;
                     }
                     if (obj is UploadResultMessage uploadMessage)
                     {
                         var text = uploadMessage.Message ?? string.Empty; var state = uploadMessage.State;
-                        if (state == UploadResultState.Error && text.Length > 0) errors.Add(text + (uploadMessage.ErrorCount > 1 ? " [" + uploadMessage.ErrorCount + " errors]" : ""));
-                        else if (state == UploadResultState.Warning && text.Length > 0) warnings.Add(text + (uploadMessage.WarningCount > 1 ? " [" + uploadMessage.WarningCount + " warnings]" : ""));
+                        if (state == UploadResultState.Error && text.Length > 0) errors
+                            .Add(text + (uploadMessage.ErrorCount > 1 ? " [" + uploadMessage.ErrorCount + " errors]" : ""));
+                        else if (state == UploadResultState.Warning && text.Length > 0) warnings
+                            .Add(text + (uploadMessage.WarningCount > 1 ? " [" + uploadMessage.WarningCount + " warnings]" : ""));
                         CollectDownloadMessages(uploadMessage.Messages, errors, warnings);
                         continue;
                     }
@@ -1365,7 +1421,8 @@ namespace TiaMcp.Adapters.Native.Online
                     if (pcInterface == null) continue;
                     list.Add(new PcInterfacePick
                     {
-                        Interface = pcInterface, ModeName = _session.ReadReflectedString(mode, "Name"), Name = _session.ReadReflectedString(pcInterface, "Name"),
+                        Interface = pcInterface, ModeName = _session.ReadReflectedString(mode, "Name"), Name = _session
+                            .ReadReflectedString(pcInterface, "Name"),
                         Number = ReadReflectedInt(pcInterface, "Number"), Addresses = ReadConfigurationAddresses(pcInterface)
                     });
                 }
@@ -1373,7 +1430,11 @@ namespace TiaMcp.Adapters.Native.Online
         }
 
         private static HmiArray DescribePcInterfaces(IEnumerable<PcInterfacePick> picks)
-            => new HmiArray(picks.Select(p => (object)new HmiObject { ["mode"] = p.ModeName, ["name"] = p.Name, ["number"] = p.Number, ["addresses"] = string.Join(", ", p.Addresses) }).ToArray());
+            =>
+                new HmiArray(picks
+                    .Select(p => (object)new HmiObject {
+                        ["mode"] = p.ModeName, ["name"] = p.Name, ["number"] = p.Number, ["addresses"] = string.Join(", ", p.Addresses) })
+                    .ToArray());
 
         // 精确按名称或编号选择 PG/PC 接口；只有一个时允许省略。绝不做子串猜测。
         private static PcInterfacePick PickPcInterface(List<PcInterfacePick> picks, string pgPcInterface)
@@ -1383,14 +1444,19 @@ namespace TiaMcp.Adapters.Native.Online
             {
                 var single = SameAdapter(picks);
                 if (single != null) return single;
-                throw new ArgumentException("pgPcInterface is required because several PG/PC interfaces exist: " + string.Join("; ", picks.Select(p => $"{p.Name} (#{p.Number}, {p.ModeName})")));
+                throw new ArgumentException("pgPcInterface is required because several PG/PC interfaces exist: " + string
+                        .Join("; ", picks.Select(p => $"{p.Name} (#{p.Number}, {p.ModeName})")));
             }
-            var matches = picks.Where(p => string.Equals(p.Name, pgPcInterface, StringComparison.Ordinal) || (int.TryParse(pgPcInterface, out var n) && p.Number == n)).ToList();
+            var matches = picks
+                .Where(p => string.Equals(p.Name, pgPcInterface, StringComparison.Ordinal) || (int.TryParse(pgPcInterface, out var n) && p.Number == n))
+                .ToList();
             if (matches.Count == 1) return matches[0];
-            if (matches.Count == 0) throw new PortalException(PortalErrorCode.NotFound, "PG/PC interface not found (exact name or number required): " + pgPcInterface);
+            if (matches.Count == 0)
+                throw new PortalException(PortalErrorCode.NotFound, "PG/PC interface not found (exact name or number required): " + pgPcInterface);
             var same = SameAdapter(matches);
             if (same != null) return same;
-            throw new ArgumentException("pgPcInterface is ambiguous; use the interface number: " + string.Join("; ", matches.Select(p => $"{p.Name} (#{p.Number}, {p.ModeName})")));
+            throw new ArgumentException("pgPcInterface is ambiguous; use the interface number: " + string
+                    .Join("; ", matches.Select(p => $"{p.Name} (#{p.Number}, {p.ModeName})")));
         }
 
         // Historical native observation: the project-level StationUploadProvider configuration lists the same adapter once per
@@ -1431,23 +1497,34 @@ namespace TiaMcp.Adapters.Native.Online
             try
             {
                 var accessible = typed.GetAccessibleDevices() ?? new List<ConfigurationAccessibleDevice>();
-                if (!accessible.Any(d => string.Equals(d.Address, targetAddress, StringComparison.OrdinalIgnoreCase) || string.Equals(d.MACAddress, targetAddress, StringComparison.OrdinalIgnoreCase)))
+                if (!accessible
+                        .Any(d => string.Equals(d.Address, targetAddress, StringComparison.OrdinalIgnoreCase) || string
+                            .Equals(d.MACAddress, targetAddress, StringComparison.OrdinalIgnoreCase)))
                 { note = "address not reported by the network scan on this PG/PC interface"; return null; }
             }
             catch (Exception ex) { note = "network scan failed: " + ex.Message; return null; }
             foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(typed.TargetInterfaces).Cast<ConfigurationTargetInterface>())
             {
-                try { var created = target.Addresses.Find(targetAddress) ?? target.Addresses.Create(targetAddress); note = "created on target interface " + target.Name; return created; }
+                try {
+                    var created = target.Addresses.Find(targetAddress) ?? target.Addresses.Create(targetAddress); note = "created on target interface " + target
+                        .Name; return created;
+                }
                 catch (Exception ex) { errors.Add(target.Name + ": " + ex.Message); }
             }
             foreach (ConfigurationSubnet subnet in PlcGroupOperations.Items(typed.Subnets).Cast<ConfigurationSubnet>())
             {
-                try { var created = subnet.Addresses.Find(targetAddress) ?? subnet.Addresses.Create(targetAddress); note = "created on subnet " + subnet.Name; return created; }
+                try {
+                    var created = subnet.Addresses.Find(targetAddress) ?? subnet.Addresses.Create(targetAddress); note = "created on subnet " + subnet.Name;
+                    return created;
+                }
                 catch (Exception ex) { errors.Add("subnet " + subnet.Name + ": " + ex.Message); }
             }
             // Historical native observation: the project-level StationUploadProvider lists the PC interface with neither target interfaces nor
             // subnets, so the last composition left is the PC interface's own ConfigurationPcInterface.Addresses.
-            try { var created = typed.Addresses.Find(targetAddress) ?? typed.Addresses.Create(targetAddress); note = "created on PC interface " + typed.Name; return created; }
+            try {
+                var created = typed.Addresses.Find(targetAddress) ?? typed.Addresses.Create(targetAddress); note = "created on PC interface " + typed.Name;
+                return created;
+            }
             catch (Exception ex) { errors.Add("PC interface " + typed.Name + ": " + ex.Message); }
             note = errors.Count == 0 ? "no target interface, subnet or PC interface composition to create the address on" : string.Join("; ", errors);
             return null;
@@ -1464,11 +1541,14 @@ namespace TiaMcp.Adapters.Native.Online
             if (!string.IsNullOrWhiteSpace(softwarePath))
             {
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
-                var provider = _session.ResolvePlcService<DownloadProvider>(softwarePath, plc) ?? throw new PortalException(PortalErrorCode.NotFound, "DownloadProvider unavailable for " + softwarePath);
+                var provider = _session.ResolvePlcService<DownloadProvider>(softwarePath, plc)
+                    ?? throw new PortalException(PortalErrorCode.NotFound, "DownloadProvider unavailable for " + softwarePath);
                 meta["configurationSource"] = "DownloadProvider:" + softwarePath;
                 return provider.Configuration ?? throw new PortalException(PortalErrorCode.InvalidState, "PLC has no connection configuration.");
             }
-            var upload = _session.CurrentProject!.GetService<StationUploadProvider>() ?? throw new NotSupportedException("StationUploadProvider service unavailable on this project/version; pass softwarePath to scan through an existing PLC instead.");
+            var upload = _session.CurrentProject!.GetService<StationUploadProvider>()
+                ?? throw new NotSupportedException("StationUploadProvider service unavailable on this project/version; pass softwarePath to scan through an " +
+                "existing PLC instead.");
             meta["configurationSource"] = "StationUploadProvider";
             return upload.Configuration ?? throw new PortalException(PortalErrorCode.InvalidState, "StationUploadProvider has no connection configuration.");
         }
@@ -1483,14 +1563,19 @@ namespace TiaMcp.Adapters.Native.Online
                 meta["pgPcInterfaces"] = DescribePcInterfaces(picks);
                 var pick = PickPcInterface(picks, pgPcInterface);
                 meta["pgPcInterface"] = new HmiObject { ["mode"] = pick.ModeName, ["name"] = pick.Name, ["number"] = pick.Number };
-                if (pick.Interface is not ConfigurationPcInterface typed) throw new NotSupportedException("Selected PG/PC interface is not a ConfigurationPcInterface.");
+                if (pick.Interface is not ConfigurationPcInterface typed)
+                    throw new NotSupportedException("Selected PG/PC interface is not a ConfigurationPcInterface.");
                 var devices = typed.GetAccessibleDevices() ?? new List<ConfigurationAccessibleDevice>();
                 meta["apiCallSuccess"] = true;
-                var rows = devices.Select(d => (object)new HmiObject { ["name"] = d.Name, ["address"] = d.Address, ["macAddress"] = d.MACAddress, ["deviceSeries"] = d.DeviceSeries }).ToList();
+                var rows = devices
+                    .Select(d => (object)new HmiObject {
+                        ["name"] = d.Name, ["address"] = d.Address, ["macAddress"] = d.MACAddress, ["deviceSeries"] = d.DeviceSeries })
+                    .ToList();
                 meta["total"] = rows.Count; meta["offset"] = offset; meta["limit"] = limit;
                 meta["devices"] = new HmiArray(rows.Skip(offset).Take(limit).ToArray());
                 meta["dataComplete"] = offset + limit >= rows.Count;
-                return rows.Count == 0 ? "Network scan returned no accessible devices on the selected PG/PC interface." : $"{rows.Count} accessible device(s) found by a live network scan; no project change.";
+                return rows.Count == 0 ? "Network scan returned no accessible devices on the selected PG/PC interface."
+                    : $"{rows.Count} accessible device(s) found by a live network scan; no project change.";
             });
 #endif
 
@@ -1503,7 +1588,8 @@ namespace TiaMcp.Adapters.Native.Online
                 bool confirmUpload = request.ConfirmUpload, dryRun = request.DryRun;
                 if (string.IsNullOrWhiteSpace(targetIpAddress)) throw new ArgumentException("targetIpAddress is required (exact IP address of the station).");
                 var policy = BuildDownloadPromptPolicy(request);
-                var provider = _session.CurrentProject!.GetService<StationUploadProvider>() ?? throw new NotSupportedException("StationUploadProvider service unavailable on this project/version.");
+                var provider = _session.CurrentProject!.GetService<StationUploadProvider>()
+                    ?? throw new NotSupportedException("StationUploadProvider service unavailable on this project/version.");
                 var picks = EnumeratePcInterfaces(provider.Configuration);
                 var pick = PickPcInterface(picks, pgPcInterface);
                 var seen = new List<string>();
@@ -1517,20 +1603,33 @@ namespace TiaMcp.Adapters.Native.Online
                 // only ("'02-C0-A8-00-C8-00' does not specify a valid address"); the official page creates "192.68.0.1". A MAC from the scan is
                 // therefore never a valid target, and a virtual PLC that has not been downloaded to (IP 0.0.0.0) cannot be uploaded from.
                 if (address == null && LooksLikeMacAddress(targetIpAddress))
-                    throw new PortalException(PortalErrorCode.NotFound, "'" + targetIpAddress + "' is a MAC address: ConfigurationAddressComposition.Create accepts IP addresses only, so pass the device's IP as listed by ScanAccessibleDevices (a PLC that shows only a MAC, e.g. a PLCSIM Advanced instance before its first download, has no IP yet - assign one by downloading first).");
+                    throw new PortalException(PortalErrorCode.NotFound, "'" + targetIpAddress
+                            + "' is a MAC address: ConfigurationAddressComposition.Create accepts IP addresses only, so pass the device's IP as listed by " +
+                            "ScanAccessibleDevices (a PLC that shows only a MAC, e.g. a PLCSIM Advanced instance before its first download, has no IP yet - " +
+                            "assign one by downloading first).");
                 if (address != null) { meta["targetAddressSource"] = "route tree"; meta["targetAddress"] = AddressText(address); }
                 if (dryRun)
                 {
-                    if (address != null) return "Station upload preview: provider, PG/PC interface and target address resolved from the route tree; no PLC contact, no project change.";
+                    if (address != null)
+                        return "Station upload preview: provider, PG/PC interface and target address resolved from the route tree; no PLC contact, no " +
+                        "project change.";
 #if ONLINE_SCAN
                     meta["targetAddressSource"] = "not in the route tree"; meta["targetAddress"] = targetIpAddress;
-                    meta["executionEffects"] = new HmiArray("DCP network scan (ConfigurationPcInterface.GetAccessibleDevices)", "route address creation (ConfigurationAddressComposition.Create)");
-                    return "Station upload preview: '" + targetIpAddress + "' is not in the route tree of the selected PG/PC interface. Execution (after approval) runs a DCP network scan on it and creates the route address before uploading; this preview sent nothing to the network and changed nothing.";
+                    meta["executionEffects"] =
+                        new HmiArray("DCP network scan (ConfigurationPcInterface.GetAccessibleDevices)",
+                            "route address creation (ConfigurationAddressComposition.Create)");
+                    return "Station upload preview: '" + targetIpAddress
+                        + "' is not in the route tree of the selected PG/PC interface. Execution (after approval) runs a DCP network scan on it and creates " +
+                        "the route address before uploading; this preview sent nothing to the network and changed nothing.";
 #else
-                    throw new PortalException(PortalErrorCode.NotFound, "Target address not present on the selected PG/PC interface. This release has no accessible-device scan (V19+), so only an address already listed in its route tree, subnets or gateways can be uploaded from.");
+                    throw new PortalException(PortalErrorCode.NotFound,
+                            "Target address not present on the selected PG/PC interface. This release has no accessible-device scan (V19+), so only an " +
+                            "address already listed in its route tree, subnets or gateways can be uploaded from.");
 #endif
                 }
-                if (!confirmUpload) throw new InvalidOperationException("Station upload adds a new device to the project from the live PLC; set confirmUpload=true to execute.");
+                if (!confirmUpload)
+                    throw new InvalidOperationException("Station upload adds a new device to the project from the live PLC; set confirmUpload=true to " +
+                    "execute.");
                 using var access = _session.AcquireHmiEditAccess();
                 if (address == null)
                 {
@@ -1538,11 +1637,13 @@ namespace TiaMcp.Adapters.Native.Online
                     address = CreateScannedAddress(pick, targetIpAddress, out var addressSource);
                     meta["addressCreation"] = addressSource;
                     if (address == null)
-                        throw new PortalException(PortalErrorCode.NotFound, "Target address not present on the selected PG/PC interface and not creatable from the network scan (" + addressSource + "). "
+                        throw new PortalException(PortalErrorCode.NotFound,
+                                "Target address not present on the selected PG/PC interface and not creatable from the network scan (" + addressSource + "). "
                             + "Run ScanAccessibleDevices on the same interface first; only the exact IP address listed there is accepted.");
                     meta["targetAddressSource"] = "network scan"; meta["targetAddress"] = AddressText(address);
                 }
-                using var legitimationScope = AttachOnlineLegitimationHandler(provider.Configuration, password, meta, request.TrustDeviceCertificate, request.AllowNonTlsLogin);
+                using var legitimationScope =
+                    AttachOnlineLegitimationHandler(provider.Configuration, password, meta, request.TrustDeviceCertificate, request.AllowNonTlsLogin);
                 meta["mayHaveChanged"] = true;
                 UploadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
                 var result = provider.StationUpload(address, handler);
@@ -1551,14 +1652,20 @@ namespace TiaMcp.Adapters.Native.Online
                 var errors = new List<string>(); var warnings = new List<string>();
                 CollectDownloadMessages(result?.Messages, errors, warnings);
                 meta["uploadState"] = result?.State.ToString(); meta["errorCount"] = result?.ErrorCount; meta["warningCount"] = result?.WarningCount;
-                meta["errors"] = new HmiArray(errors.Select(e => (object)e).ToArray()); meta["warnings"] = new HmiArray(warnings.Select(w => (object)w).ToArray());
+                meta["errors"] = new HmiArray(errors.Select(e => (object)e).ToArray()); meta["warnings"] =
+                    new HmiArray(warnings.Select(w => (object)w).ToArray());
                 var station = result?.UploadedStation;
-                PlcB5Result.Record(meta, result?.State, true, messages: new HmiArray(errors.Concat(warnings).Select(m => (object)HmiScalar.Json(m)!).ToArray()));
+                PlcB5Result
+                    .Record(meta, result?.State, true, messages: new HmiArray(errors.Concat(warnings).Select(m => (object)HmiScalar.Json(m)!).ToArray()));
                 meta["uploadedStation"] = station?.Name; meta["devicesAfter"] = _session.CurrentProject.Devices.Count;
-                bool ok = result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State) && station != null && _session.CurrentProject.Devices.Any(d => d.Name == station.Name);
+                bool ok = result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State) && station != null && _session.CurrentProject
+                    .Devices.Any(d => d.Name == station.Name);
                 meta["operationSuccess"] = ok; meta["dataComplete"] = false;
-                if (!ok) throw new InvalidOperationException("Station upload did not yield a verified device: " + (result?.State.ToString() ?? "no result") + policy.UnansweredSummary());
-                return $"Station uploaded as device '{station!.Name}' and verified in the project; not saved, compiled or downloaded." + policy.UnansweredSummary();
+                if (!ok)
+                    throw new InvalidOperationException("Station upload did not yield a verified device: " + (result?.State.ToString() ?? "no result") + policy
+                        .UnansweredSummary());
+                return $"Station uploaded as device '{station!.Name}' and verified in the project; not saved, compiled or downloaded." + policy
+                    .UnansweredSummary();
             });
 
 #if ONLINE_ADDRESSES
@@ -1587,39 +1694,54 @@ namespace TiaMcp.Adapters.Native.Online
                     ?? throw new NotSupportedException("ParameterUploadProvider is not part of this TIA version's PublicAPI (V21 only).");
                 if (owner is not IEngineeringServiceProvider serviceProvider) throw new NotSupportedException("Hardware object is not a service provider.");
                 var getService = typeof(IEngineeringServiceProvider).GetMethod("GetService")!.MakeGenericMethod(providerType);
-                var provider = getService.Invoke(serviceProvider, null) ?? throw new NotSupportedException("ParameterUploadProvider service unavailable on this hardware object: it exists only on SINAMICS StartDrive head modules (HM), not on CPUs or other device items.");
-                var uploadMethod = providerType.GetMethod("ParameterUpload", new[] { typeof(IConfiguration), typeof(ConfigurationAddress), typeof(UploadConfigurationDelegate) })
+                var provider = getService.Invoke(serviceProvider, null)
+                    ?? throw new NotSupportedException("ParameterUploadProvider service unavailable on this hardware object: it exists only on SINAMICS " +
+                    "StartDrive head modules (HM), not on CPUs or other device items.");
+                var uploadMethod = providerType
+                    .GetMethod("ParameterUpload", new[] { typeof(IConfiguration), typeof(ConfigurationAddress), typeof(UploadConfigurationDelegate) })
                     ?? throw new NotSupportedException("ParameterUpload(IConfiguration, ConfigurationAddress, delegate) unavailable.");
                 var providerConfiguration = providerType.GetProperty("Configuration")?.GetValue(provider);
                 (DownloadRouteSelection Route, ConfigurationAddress? Address) Resolve(bool apply)
                 {
                     var selected = SelectDownloadRoute(providerConfiguration, EmptyToNull(pgPcInterface), EmptyToNull(targetIpAddress), apply);
                     if (selected.Error != null) throw new PortalException(PortalErrorCode.NotFound, selected.Error);
-                    if (selected.Configuration == null) throw new PortalException(PortalErrorCode.NotFound, "No PG/PC route to the device; run ScanAccessibleDevices first.");
+                    if (selected.Configuration == null)
+                        throw new PortalException(PortalErrorCode.NotFound, "No PG/PC route to the device; run ScanAccessibleDevices first.");
                     ConfigurationAddress? exact = selected.Address;   // target interface, subnet / gateway or created address
                     if (addressRequested)
                         foreach (var candidate in _session.EnumerateReflectedProperty(selected.Target ?? selected.Configuration, "Addresses"))
-                            if (exact == null && string.Equals(_session.ReadReflectedString(candidate, "Address"), targetIpAddress, StringComparison.OrdinalIgnoreCase) && candidate is ConfigurationAddress typed) exact = typed;
+                            if (exact == null && string
+                                    .Equals(_session.ReadReflectedString(candidate, "Address"), targetIpAddress, StringComparison.OrdinalIgnoreCase)
+                                    && candidate is ConfigurationAddress typed)
+                                exact = typed;
                     if (addressRequested && exact == null && (apply || selected.AddressSource != "not-created"))
                         throw new PortalException(PortalErrorCode.NotFound, "Exact target address not found on the selected route: " + selected.Description);
                     return (selected, exact);
                 }
                 var preview = Resolve(false);
-                meta["route"] = preview.Route.Description; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+                meta["route"] = preview.Route.Description; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string
+                    .IsNullOrEmpty(password);
                 meta["targetAddress"] = preview.Address != null ? AddressText(preview.Address) : addressRequested ? targetIpAddress : null;
-                meta["addressMode"] = addressRequested ? (preview.Route.AddressSource.Length == 0 ? "targetInterface" : preview.Route.AddressSource) : "null address (provider default)";
+                meta["addressMode"] = addressRequested ? (preview.Route.AddressSource.Length == 0 ? "targetInterface" : preview.Route.AddressSource)
+                    : "null address (provider default)";
                 meta["trustDeviceCertificate"] = request.TrustDeviceCertificate;
                 meta["before"] = HmiScalar.Read(owner);
-                if (dryRun) return "Parameter upload preview: provider, route and address resolved without applying the route (ApplyConfiguration not called); no PLC contact, no project change.";
-                if (!confirmUpload) throw new InvalidOperationException("Parameter upload overwrites offline hardware parameters from the live device; set confirmUpload=true to execute.");
+                if (dryRun)
+                    return "Parameter upload preview: provider, route and address resolved without applying the route (ApplyConfiguration not called); no " +
+                    "PLC contact, no project change.";
+                if (!confirmUpload)
+                    throw new InvalidOperationException("Parameter upload overwrites offline hardware parameters from the live device; set " +
+                    "confirmUpload=true to execute.");
                 using var access = _session.AcquireHmiEditAccess();
                 meta["mayHaveChanged"] = true;
                 var (route, address) = Resolve(true);
                 meta["route"] = route.Description; meta["routeApplied"] = route.Applied;
                 if (address != null) meta["targetAddress"] = AddressText(address);
                 UploadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
-                if ((route.Target ?? route.Configuration) is not IConfiguration configuration) throw new NotSupportedException("Selected route is not an IConfiguration.");
-                using var legitimationScope = AttachOnlineLegitimationHandler(providerConfiguration, password, meta, request.TrustDeviceCertificate, request.AllowNonTlsLogin);
+                if ((route.Target ?? route.Configuration) is not IConfiguration configuration)
+                    throw new NotSupportedException("Selected route is not an IConfiguration.");
+                using var legitimationScope =
+                    AttachOnlineLegitimationHandler(providerConfiguration, password, meta, request.TrustDeviceCertificate, request.AllowNonTlsLogin);
                 try { uploadMethod.Invoke(provider, new object?[] { configuration, address, handler }); }
                 catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException != null) { throw tie.InnerException; }
                 meta["apiCallSuccess"] = true;
@@ -1634,18 +1756,24 @@ namespace TiaMcp.Adapters.Native.Online
             => _session.RunHmiStepTool("DownloadPlcToFolder", meta => {
                 string softwarePath = request.SoftwarePath, destinationDirectory = request.DestinationDirectory, targetForSoftware = request.TargetForSoftware;
                 bool overwriteOnMemoryCard = request.OverwriteOnMemoryCard, confirmDownload = request.ConfirmDownload, dryRun = request.DryRun;
-                if (!new[] { "CPU", "PlcSimulationAdvanced" }.Contains(targetForSoftware)) throw new ArgumentException("targetForSoftware must be CPU or PlcSimulationAdvanced.");
+                if (!new[] { "CPU", "PlcSimulationAdvanced" }.Contains(targetForSoftware))
+                    throw new ArgumentException("targetForSoftware must be CPU or PlcSimulationAdvanced.");
                 if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute destinationDirectory required.");
                 var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory));
-                if (directory.Exists && directory.EnumerateFileSystemInfos().Any()) throw new IOException("destinationDirectory must be new or empty; merging into existing content is refused.");
+                if (directory.Exists && directory.EnumerateFileSystemInfos().Any())
+                    throw new IOException("destinationDirectory must be new or empty; merging into existing content is refused.");
                 // TargetForSoftware and OverwriteOnMemoryCard are answered from this request's own parameters.
                 var policy = BuildDownloadPromptPolicy(request);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
-                var provider = _session.ResolvePlcService<DownloadProvider>(softwarePath, plc) ?? throw new PortalException(PortalErrorCode.NotFound, "DownloadProvider unavailable for " + softwarePath);
-                if (provider.GetType().GetMethod("Download", new[] { typeof(DirectoryInfo), typeof(DownloadConfigurationDelegate) }) == null) throw new NotSupportedException("Download(DirectoryInfo, delegate) unavailable on this version.");
-                meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false; meta["destination"] = directory.FullName; meta["targetForSoftware"] = targetForSoftware; meta["overwriteOnMemoryCard"] = overwriteOnMemoryCard;
+                var provider = _session.ResolvePlcService<DownloadProvider>(softwarePath, plc)
+                    ?? throw new PortalException(PortalErrorCode.NotFound, "DownloadProvider unavailable for " + softwarePath);
+                if (provider.GetType().GetMethod("Download", new[] { typeof(DirectoryInfo), typeof(DownloadConfigurationDelegate) }) == null)
+                    throw new NotSupportedException("Download(DirectoryInfo, delegate) unavailable on this version.");
+                meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false; meta["destination"] = directory.FullName; meta["targetForSoftware"] =
+                    targetForSoftware; meta["overwriteOnMemoryCard"] = overwriteOnMemoryCard;
                 if (dryRun) return "Folder download preview: PLC, provider and destination validated; no files written.";
-                if (!confirmDownload) throw new InvalidOperationException("Writing a memory-card image is an explicit action; set confirmDownload=true to execute.");
+                if (!confirmDownload)
+                    throw new InvalidOperationException("Writing a memory-card image is an explicit action; set confirmDownload=true to execute.");
                 if (!directory.Exists) directory.Create();
                 meta["mayHaveWrittenFiles"] = true;
                 DownloadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
@@ -1661,16 +1789,21 @@ namespace TiaMcp.Adapters.Native.Online
                 var errors = new List<string>(); var warnings = new List<string>();
                 CollectDownloadMessages(result?.Messages, errors, warnings);
                 meta["downloadState"] = result?.State.ToString(); meta["errorCount"] = result?.ErrorCount; meta["warningCount"] = result?.WarningCount;
-                meta["errors"] = new HmiArray(errors.Select(e => (object)e).ToArray()); meta["warnings"] = new HmiArray(warnings.Select(w => (object)w).ToArray());
+                meta["errors"] = new HmiArray(errors.Select(e => (object)e).ToArray()); meta["warnings"] =
+                    new HmiArray(warnings.Select(w => (object)w).ToArray());
                 directory.Refresh();
                 var files = directory.Exists ? directory.GetFiles("*", SearchOption.AllDirectories) : Array.Empty<FileInfo>();
                 meta["filesWritten"] = files.Length; meta["bytesWritten"] = files.Sum(f => f.Length); meta["dataComplete"] = false;
-                PlcB5Result.Record(meta, result?.State, false, messages: new HmiArray(errors.Concat(warnings).Select(m => (object)HmiScalar.Json(m)!).ToArray()));
+                PlcB5Result
+                    .Record(meta, result?.State, false, messages: new HmiArray(errors.Concat(warnings).Select(m => (object)HmiScalar.Json(m)!).ToArray()));
                 meta["targetFiles"] = new HmiArray(files.Select(f => (object)PlcB5Result.FileRow(f.FullName)).ToArray());
                 bool ok = result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State) && files.Length > 0;
                 meta["operationSuccess"] = ok;
-                if (!ok) throw new InvalidOperationException("Folder download did not produce a verified image: " + (result?.State.ToString() ?? "no result") + policy.ReinitializationSummary() + policy.UnansweredSummary());
-                return $"Memory-card image written: {files.Length} file(s) in {directory.FullName}. Content semantics not verified; no PLC contacted." + policy.UnansweredSummary();
+                if (!ok)
+                    throw new InvalidOperationException("Folder download did not produce a verified image: " + (result?.State.ToString() ?? "no result")
+                        + policy.ReinitializationSummary() + policy.UnansweredSummary());
+                return $"Memory-card image written: {files.Length} file(s) in {directory.FullName}. Content semantics not verified; no PLC contacted." + policy
+                    .UnansweredSummary();
             });
 #endif
 
@@ -1682,7 +1815,8 @@ namespace TiaMcp.Adapters.Native.Online
         /// an IDisposable that unsubscribes when disposed; callers MUST dispose to avoid handler leaks. Returns null when the
         /// configuration object is not a ConnectionConfiguration (no event to hook).
         /// </summary>
-        private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, HmiObject? meta, bool trustDeviceCertificate, bool allowNonTlsLogin)
+        private static IDisposable
+            ? AttachOnlineLegitimationHandler(object? configuration, string? password, HmiObject? meta, bool trustDeviceCertificate, bool allowNonTlsLogin)
             => AttachOnlineLegitimationHandler(configuration, password, null, null, meta, trustDeviceCertificate, allowNonTlsLogin);
 
         // besides the legacy password prompt, UMAC-protected PLCs raise OnlineAuthenticationConfiguration (user name +
@@ -1690,7 +1824,9 @@ namespace TiaMcp.Adapters.Native.Online
         // Subscribe even without a password so the TLS trust decision is answered and recorded.
         // Historical PLCSIM Advanced Softbus observation (version/date not recorded): an unanswered TLS prompt
         // refuses the first connection; see docs/reference/real-machine-ledger.md.
-        private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, string? userName, string? userType, HmiObject? meta, bool trustDeviceCertificate, bool allowNonTlsLogin)
+        private static IDisposable
+            ? AttachOnlineLegitimationHandler(object? configuration, string? password, string? userName, string? userType, HmiObject? meta,
+                bool trustDeviceCertificate, bool allowNonTlsLogin)
         {
 #if ONLINE_LEGITIMATION
             if (configuration is not ConnectionConfiguration conn)
@@ -1727,14 +1863,20 @@ namespace TiaMcp.Adapters.Native.Online
                     var nonTlsRefusal = DownloadPromptPolicy.NonTlsLoginRefusal(auth.IsSecureCommunication, allowNonTlsLogin);
                     if (nonTlsRefusal != null)
                     {
-                        if (meta != null) meta["onlineAuthentication"] = new HmiObject { ["isSecureCommunication"] = false, ["answered"] = false, ["note"] = nonTlsRefusal, ["supportedUserTypes"] = supported, ["userName"] = userName ?? "" };
+                        if (meta != null) meta["onlineAuthentication"] = new HmiObject {
+                            ["isSecureCommunication"] = false, ["answered"] = false, ["note"] = nonTlsRefusal, ["supportedUserTypes"] = supported,
+                                ["userName"] = userName ?? ""
+                        };
                         return;
                     }
                     if (!string.IsNullOrEmpty(userName)) credentials.Name = userName;
                     if (!string.IsNullOrEmpty(userType)) credentials.Type = (UserType)Enum.Parse(typeof(UserType), userType);
                     else if (!string.IsNullOrEmpty(userName)) credentials.Type = UserType.ProjectUser;
                     credentials.SetPassword(secure);
-                    if (meta != null) meta["onlineAuthentication"] = new HmiObject { ["isSecureCommunication"] = auth.IsSecureCommunication, ["supportedUserTypes"] = supported, ["userName"] = userName ?? "", ["userType"] = credentials.Type.ToString() };
+                    if (meta != null) meta["onlineAuthentication"] = new HmiObject {
+                        ["isSecureCommunication"] = auth.IsSecureCommunication, ["supportedUserTypes"] = supported, ["userName"] = userName ?? "",
+                            ["userType"] = credentials.Type.ToString()
+                    };
                 }
 #endif
                 else if (cfg is OnlinePasswordConfiguration pwdCfg)
@@ -1746,7 +1888,8 @@ namespace TiaMcp.Adapters.Native.Online
                     var nonTlsRefusal = DownloadPromptPolicy.NonTlsLoginRefusal(pwdCfg.IsSecureCommunication, allowNonTlsLogin);
                     if (nonTlsRefusal != null)
                     {
-                        if (meta != null) meta["onlinePassword"] = new HmiObject { ["isSecureCommunication"] = false, ["answered"] = false, ["note"] = nonTlsRefusal };
+                        if (meta != null) meta["onlinePassword"] = new HmiObject {
+                            ["isSecureCommunication"] = false, ["answered"] = false, ["note"] = nonTlsRefusal };
                         return;
                     }
                     pwdCfg.SetPassword(secure);
@@ -1774,10 +1917,12 @@ namespace TiaMcp.Adapters.Native.Online
                 ["plcName"] = typed.PlcName, ["verificationInfo"] = typed.VerificationInfo,
                 ["selectionBefore"] = before, ["selectionAfter"] = typed.CurrentSelection.ToString(),
                 ["trustDeviceCertificate"] = trustDeviceCertificate,
-                ["note"] = trusted ? "Certificate trusted for this call on the caller's decision (trustDeviceCertificate=true); the same prompt TIA shows in the UI."
+                ["note"] = trusted
+                    ? "Certificate trusted for this call on the caller's decision (trustDeviceCertificate=true); the same prompt TIA shows in the UI."
                     : trustDeviceCertificate ? "Already trusted."
                     : before == "Trusted" ? "Already trusted; no decision needed."
-                    : "Left untrusted (trustDeviceCertificate=false); TIA refuses the connection. Check the presented certificate, then pass trustDeviceCertificate=true to trust it for this call."
+                    : "Left untrusted (trustDeviceCertificate=false); TIA refuses the connection. Check the presented certificate, then pass " +
+                        "trustDeviceCertificate=true to trust it for this call."
             };
             var certificates = PresentedCertificates(tls);
             if (certificates != null) record["certificates"] = certificates;
@@ -1824,15 +1969,21 @@ namespace TiaMcp.Adapters.Native.Online
 
         // ---- transfer routes and R/H providers --------------------------------------------------------------------------------
 #if ONLINE_ADDRESSES
-        private static HmiArray AddressRows(IEnumerable<ConfigurationAddress> addresses) => new HmiArray(PlcGroupOperations.Items(addresses).Cast<ConfigurationAddress>().Select(a => (object)new HmiObject { ["name"] = a.Name, ["address"] = a.Address }).ToArray());
+        private static HmiArray AddressRows(IEnumerable<ConfigurationAddress> addresses) =>
+            new HmiArray(PlcGroupOperations.Items(addresses).Cast<ConfigurationAddress>()
+                .Select(a => (object)new HmiObject { ["name"] = a.Name, ["address"] = a.Address }).ToArray());
 #else
-        private static HmiArray AddressRows(IEnumerable<ConfigurationAddress> addresses) => new HmiArray(PlcGroupOperations.Items(addresses).Cast<ConfigurationAddress>().Select(a => (object)new HmiObject { ["name"] = a.Name, ["address"] = OnlineRoutePrimitives.Address(a) }).ToArray());
+        private static HmiArray AddressRows(IEnumerable<ConfigurationAddress> addresses) =>
+            new HmiArray(PlcGroupOperations.Items(addresses).Cast<ConfigurationAddress>()
+                .Select(a => (object)new HmiObject { ["name"] = a.Name, ["address"] = OnlineRoutePrimitives.Address(a) }).ToArray());
 #endif
 
         public HmiMessage ReadTransferRoutes(string softwarePath, int maxItems = 500)
             => _session.RunHmiStepTool("ListTransferRoutes", meta => {
                 if (maxItems < 1 || maxItems > 500) throw new ArgumentException("offset>=0, limit 1..500 required.");
-                var plc = _session.GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath + _session.AvailablePlcPathsSuffix());
+                var plc = _session.GetPlcSoftware(softwarePath)
+                    ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath + _session
+                        .AvailablePlcPathsSuffix());
 #if ONLINE_DOWNLOAD
                 var download = _session.ResolvePlcService<DownloadProvider>(softwarePath, plc);
                 meta["downloadProviderAvailable"] = download != null;
@@ -1850,7 +2001,8 @@ namespace TiaMcp.Adapters.Native.Online
                     var modes = new HmiArray(); meta["modes"] = modes;
                     foreach (ConfigurationMode mode in PlcGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
                     {
-                        var modeRow = new HmiObject { ["name"] = mode.Name }; var interfaces = new HmiArray(); modeRow["pcInterfaces"] = interfaces; modes.Add(modeRow);
+                        var modeRow = new HmiObject { ["name"] = mode.Name }; var interfaces = new HmiArray(); modeRow["pcInterfaces"] = interfaces; modes
+                            .Add(modeRow);
                         foreach (ConfigurationPcInterface pcInterface in PlcGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
                         {
                             if (++items > maxItems) { truncated = true; break; }
@@ -1866,19 +2018,27 @@ namespace TiaMcp.Adapters.Native.Online
                             catch (Exception ex) { row["addressesError"] = ex.GetBaseException().Message; }
                             try
                             {
-                                row["subnets"] = new HmiArray(PlcGroupOperations.Items(pcInterface.Subnets).Cast<ConfigurationSubnet>().Select(s => (object)new HmiObject
+                                row["subnets"] =
+                                    new HmiArray(PlcGroupOperations.Items(pcInterface.Subnets).Cast<ConfigurationSubnet>().Select(s => (object)new HmiObject
                                 {
                                     ["name"] = s.Name, ["addresses"] = AddressRows(s.Addresses),
-                                    ["gateways"] = new HmiArray(PlcGroupOperations.Items(s.Gateways).Cast<ConfigurationGateway>().Select(g => (object)new HmiObject { ["name"] = g.Name, ["addresses"] = AddressRows(g.Addresses) }).ToArray())
+                                    ["gateways"] =
+                                        new HmiArray(PlcGroupOperations.Items(s.Gateways).Cast<ConfigurationGateway>()
+                                            .Select(g => (object)new HmiObject { ["name"] = g.Name, ["addresses"] = AddressRows(g.Addresses) }).ToArray())
                                 }).ToArray());
                             }
                             catch (Exception ex) { row["subnetsError"] = ex.GetBaseException().Message; }
                 try
                 {
 #if ONLINE_TARGET_ADDRESSES
-                    row["targetInterfaces"] = new HmiArray(PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>().Select(t => (object)new HmiObject { ["name"] = t.Name, ["addresses"] = AddressRows(t.Addresses) }).ToArray());
+                    row["targetInterfaces"] =
+                        new HmiArray(PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>()
+                            .Select(t => (object)new HmiObject { ["name"] = t.Name, ["addresses"] = AddressRows(t.Addresses) }).ToArray());
 #else
-                    row["targetInterfaces"] = new HmiArray(PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>().Select(t => (object)new HmiObject { ["name"] = t.Name, ["addresses"] = AddressRows(OnlineRoutePrimitives.TargetAddresses(t)) }).ToArray());
+                    row["targetInterfaces"] =
+                        new HmiArray(PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>()
+                            .Select(t => (object)new HmiObject { ["name"] = t.Name, ["addresses"] = AddressRows(OnlineRoutePrimitives.TargetAddresses(t)) })
+                            .ToArray());
 #endif
                 }
                             catch (Exception ex) { row["targetInterfacesError"] = ex.GetBaseException().Message; }
@@ -1891,15 +2051,28 @@ namespace TiaMcp.Adapters.Native.Online
 #if ONLINE_RH
                 var rhDownload = _session.ResolvePlcService<RHDownloadProvider>(softwarePath, plc); meta["rhDownloadProviderAvailable"] = rhDownload != null;
                 var rhOnline = _session.ResolvePlcService<RHOnlineProvider>(softwarePath, plc); meta["rhOnlineProviderAvailable"] = rhOnline != null;
-                if (rhOnline != null) { try { meta["rhOnline"] = new HmiObject { ["primaryState"] = rhOnline.PrimaryState.ToString(), ["backupState"] = rhOnline.BackupState.ToString() }; } catch (Exception ex) { meta["rhOnlineError"] = ex.GetBaseException().Message; } }
+                if (rhOnline != null) {
+                    try {
+                        meta["rhOnline"] = new HmiObject {
+                            ["primaryState"] = rhOnline.PrimaryState.ToString(), ["backupState"] = rhOnline.BackupState.ToString() };
+                    } catch (Exception ex) { meta["rhOnlineError"] = ex.GetBaseException().Message; }
+                }
 #else
                 meta["rhDownloadProviderAvailable"] = false; meta["rhOnlineProviderAvailable"] = false;
 #endif
                 var onlineProvider = _session.ResolvePlcService<OnlineProvider>(softwarePath, plc); meta["onlineProviderAvailable"] = onlineProvider != null;
-                if (onlineProvider != null) { try { meta["onlineState"] = onlineProvider.State.ToString(); } catch (Exception ex) { meta["onlineStateError"] = ex.GetBaseException().Message; } }
-                meta["compileProviderNote"] = "Siemens.Engineering.Compiler.CompileProvider is internal in the supplied PublicAPI (documented, not public); compilation goes through ICompilable.";
+                if (onlineProvider != null) {
+                    try { meta["onlineState"] = onlineProvider.State.ToString(); } catch (Exception ex) {
+                        meta["onlineStateError"] = ex.GetBaseException().Message; }
+                }
+                meta["compileProviderNote"] =
+                    "Siemens.Engineering.Compiler.CompileProvider is internal in the supplied PublicAPI (documented, not public); compilation goes through " +
+                    "ICompilable.";
                 meta["truncated"] = truncated; meta["apiCallSuccess"] = true; meta["dataComplete"] = !truncated;
-                meta["scope"] = "ConnectionConfiguration route tree of the download provider (V14 SP1: the online provider; routeProvider names it) (Modes -> PcInterfaces with Addresses / Subnets (Gateways) / TargetInterfaces) plus availability of RHDownloadProvider / RHOnlineProvider (with Primary/BackupState) / OnlineProvider. Read-only; nothing is applied.";
+                meta["scope"] =
+                    "ConnectionConfiguration route tree of the download provider (V14 SP1: the online provider; routeProvider names it) (Modes -> " +
+                    "PcInterfaces with Addresses / Subnets (Gateways) / TargetInterfaces) plus availability of RHDownloadProvider / RHOnlineProvider (with " +
+                    "Primary/BackupState) / OnlineProvider. Read-only; nothing is applied.";
                 return "Transfer routes read; no route applied, no modification.";
             });
 

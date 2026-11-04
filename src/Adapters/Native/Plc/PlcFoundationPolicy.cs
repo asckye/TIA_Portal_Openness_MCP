@@ -59,7 +59,8 @@ namespace TiaMcp.Adapters
                     .Elements().Where(e => e.Name.LocalName == "Name").ToArray();
                 if (names.Length != 1 || string.IsNullOrWhiteSpace(names[0].Value))
                     throw new AdapterPreconditionException("Import input requires an explicit object Name.", "importPath");
-                if (exists(names[0].Value)) throw new AdapterPreconditionException("Object '" + names[0].Value + "' already exists; overwrite=false refuses replacement.", "overwrite");
+                if (exists(names[0].Value))
+                    throw new AdapterPreconditionException("Object '" + names[0].Value + "' already exists; overwrite=false refuses replacement.", "overwrite");
             }
         }
 
@@ -71,7 +72,9 @@ namespace TiaMcp.Adapters
             return null;
         }
 
-        internal static bool SymbolExists<T>(System.Collections.Generic.IEnumerable<T> items, Func<string, T?> find, Func<T, string> name, string selected, bool exactChecked = false) where T : class
+        internal static bool SymbolExists<T>(System.Collections.Generic.IEnumerable<T> items, Func<string, T?> find, Func<T, string> name, string selected,
+                bool exactChecked = false) where T
+            : class
         {
             if (!exactChecked && find(selected) != null) return true;
             // SDK Find forwards the spelling to TIA; its XML does not promise casing.
@@ -97,7 +100,8 @@ namespace TiaMcp.Adapters
             var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
             if (!file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase) ||
                 file.Directory == null || !file.Directory.Exists || file.Exists)
-                throw new AdapterPreconditionException("Choose a new .xml file in an existing output directory; existing files are never overwritten.", "exportPath");
+                throw new AdapterPreconditionException("Choose a new .xml file in an existing output directory; existing files are never overwritten.",
+                        "exportPath");
             return file;
         }
 

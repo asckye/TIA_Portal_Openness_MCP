@@ -73,7 +73,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, V4Json.Deserialize<Error>(argumentError.ToJsonString()),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (status == "HmiReadSessionBlocked")
-                return Result(tool, data, new Error("The HMI session requires an explicit rebind.", new SessionResetRequiredDetails("HMI read session blocked")),
+                return Result(tool, data,
+                        new Error("The HMI session requires an explicit rebind.", new SessionResetRequiredDetails("HMI read session blocked")),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (status == "InvalidState" && !evidence.ContainsKey("apiCallSuccess")) rejection = "PROJECT_NOT_BOUND";
             var failureCode = evidence["v4FailureCode"]?.ToString();
@@ -91,7 +92,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (evidence["applyStatus"]?.ToString() == "rejected")
                 return Result(tool, data, McpServer.InvalidInput("actionKind"), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (tool == "ManageUnifiedListEntries" && evidence["action"]?.ToString() != "read" && Flag(evidence, "entriesSupported") == false)
-                return Result(tool, data, new Error("The public API does not expose list entry editing.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "Unified list entries", evidence["action"]?.ToString())),
+                return Result(tool, data,
+                        new Error("The public API does not expose list entry editing.",
+                            new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "Unified list entries", evidence["action"]?.ToString())),
                     Outcome.RejectedBeforeOperation, Completeness.Partial, false, current);
 
             // A recipe's offline 'ok' is not the verdict of either native write.
@@ -112,7 +115,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 && failureCode == "UNSUPPORTED_CAPABILITY" && !unconfirmed)
             {
                 evidence["requiresSessionReset"] = true;
-                data["partialWrite"] = "The tag was created, but the requested binding is unsupported. Inspect the tag and its binding before a new session; no rollback was attempted.";
+                data["partialWrite"] =
+                    "The tag was created, but the requested binding is unsupported. Inspect the tag and its binding before a new session; no rollback was " +
+                    "attempted.";
                 return Result(tool, data, new Error("The tag was created but its requested binding did not complete.",
                     new PartialFailureDetails(1, 1, 0)), Outcome.Partial, Completeness.Partial, writes, current);
             }
@@ -125,7 +130,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     return Result(tool, data, new Error("Some HMI items did not complete.", new PartialFailureDetails(passed, failed, 0)),
                         Outcome.Partial, Completeness.Partial, writes, current);
                 bool before = writes && Flag(evidence, "mayHaveChanged") == false;
-                return Result(tool, data, before ? new Error(nativeMessage ?? "The HMI operation was rejected before a write.", new PreconditionFailedDetails("hmi-before-write", null)) : NativeFailure(evidence),
+                return Result(tool, data, before
+                        ? new Error(nativeMessage ?? "The HMI operation was rejected before a write.", new PreconditionFailedDetails("hmi-before-write", null))
+                        : NativeFailure(evidence),
                     before ? Outcome.RejectedBeforeOperation : Outcome.ReadFailed, incomplete ? Completeness.Partial : Completeness.None, writes, current);
             }
             Paging? paging = null;
@@ -159,15 +166,18 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private static IReadOnlyDictionary<string, JsonElement> Evidence(JsonObject value)
             => value.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value), StringComparer.Ordinal);
-        private static Error Unknown(JsonObject evidence) => new Error("The HMI write outcome is unconfirmed. Inspect the evidence and reset the session before further writes.",
+        private static Error Unknown(JsonObject evidence) =>
+            new Error("The HMI write outcome is unconfirmed. Inspect the evidence and reset the session before further writes.",
             new OutcomeUnknownDetails("HMI operation", Evidence(evidence)));
-        private static Error NativeFailure(JsonObject evidence) => new Error("The HMI operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));
+        private static Error NativeFailure(JsonObject evidence) =>
+            new Error("The HMI operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));
         private static void Clean(JsonNode? node)
         {
             if (node is JsonArray array) foreach (var child in array) Clean(child);
             if (node is not JsonObject obj) return;
             foreach (var pair in obj.ToArray())
-                if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
+                if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)) obj
+                    .Remove(pair.Key);
                 else if (!pair.Key.Equals("ScriptCode", StringComparison.OrdinalIgnoreCase)
                     && !pair.Key.Equals("GlobalDefinitionAreaScriptCode", StringComparison.OrdinalIgnoreCase)
                     && pair.Value is JsonValue value && value.TryGetValue<string>(out var text) && text.Contains("\n   "))
@@ -178,8 +188,12 @@ namespace TiaMcpServer.ModelContextProtocol
             bool writes, bool current, Paging? paging = null)
         {
             var warnings = new List<Warning>();
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The returned HMI observation is incomplete; inspect the retained evidence.", new Dictionary<string, JsonElement>()));
+            if (current) warnings
+                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
+                        new Dictionary<string, JsonElement>()));
+            if (completeness == Completeness.Partial) warnings
+                .Add(new Warning(WarningCode.IncompleteData, "The returned HMI observation is incomplete; inspect the retained evidence.",
+                        new Dictionary<string, JsonElement>()));
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : writes ? Execution.Completed : Execution.ReadOnly;
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,

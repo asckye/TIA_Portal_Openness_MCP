@@ -97,7 +97,8 @@ public static IEnumerable<object> EnumerateHmiTagTablesRecursive(object folder, 
 public static object? FindExistingByName(object compositionOrEnumerable, string name)
         => HmiExchangePolicy.Find(compositionOrEnumerable, name);
 
-internal static bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, out string? importedName, out string? error, Action? beforeImport = null, bool overwrite = false)
+internal static bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, out string? importedName, out string? error, Action
+        ? beforeImport = null, bool overwrite = false)
         {
             importedName = null;
             error = null;
@@ -244,7 +245,10 @@ internal static IEnumerable<object> FindHardwareCatalogEntries(object catalog, s
 public static VBScriptFolder ExactVbScriptFolder(HmiTarget hmi, IEnumerable<string> folderPath)
         {
             VBScriptFolder current = hmi.VBScriptFolder ?? throw new NotSupportedException("VBScriptFolder unavailable.");
-            foreach (var part in folderPath) { VBScriptUserFolderComposition folders = current.Folders; current = folders.Find(part) ?? throw new PlcSoftwareException("NotFound", "Script folder not found: " + part); }
+            foreach (var part in folderPath) {
+                VBScriptUserFolderComposition folders = current.Folders; current = folders.Find(part)
+                    ?? throw new PlcSoftwareException("NotFound", "Script folder not found: " + part);
+            }
             return current;
         }
 } }

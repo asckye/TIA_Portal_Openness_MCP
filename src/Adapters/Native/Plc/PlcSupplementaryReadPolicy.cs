@@ -9,23 +9,33 @@ namespace TiaMcp.Adapters
         private static readonly string[] ReleaseKeys = TiaMcp.Adapters.Contracts.ReleaseRange.All;
 
         internal const string WatchScope = "ordinary PLC root/user-group watch-table paths only; force tables, entries and live values excluded";
-        internal const string TechnologyScope = "ordinary PLC root/user-group top-level technology-object engineering metadata only; sub-level TOs, parameters and live values excluded";
-        internal const string TechnologyRootScope = "ordinary PLC root top-level technology-object engineering metadata only; no user-group composition in this API; sub-level TOs, parameters and live values excluded";
+        internal const string TechnologyScope =
+            "ordinary PLC root/user-group top-level technology-object engineering metadata only; sub-level TOs, parameters and live values excluded";
+        internal const string TechnologyRootScope =
+            "ordinary PLC root top-level technology-object engineering metadata only; no user-group composition in this API; sub-level TOs, parameters and " +
+            "live values excluded";
         internal static string TechnologyReadScope(string key) => key=="19" || key=="20" || key=="21" ? TechnologyScope : TechnologyRootScope;
         internal static void RequireRelease(string key,bool watch=false)
         {
-            if(!ReleaseKeys.Contains(key)) throw new NotSupportedException("Exact supported release key required; original V14/V15 and unknown releases are excluded.");
-            if(watch && key=="14sp1") throw new NotSupportedException("The V14 SP1 PublicAPI lacks PlcSoftware.WatchAndForceTableGroup; no guessed reflection fallback is permitted.");
+            if(!ReleaseKeys.Contains(key))
+                throw new NotSupportedException("Exact supported release key required; original V14/V15 and unknown releases are excluded.");
+            if(watch && key=="14sp1")
+                throw new NotSupportedException("The V14 SP1 PublicAPI lacks PlcSoftware.WatchAndForceTableGroup; no guessed reflection fallback is " +
+                "permitted.");
         }
         internal static string Name(string value)
         {
-            if(value==null || value.Length>4096 || string.IsNullOrWhiteSpace(value) || value=="." || value=="..") throw new InvalidOperationException("Missing or invalid native object name.");
+            if(value==null || value.Length>4096 || string.IsNullOrWhiteSpace(value) || value=="." || value=="..")
+                throw new InvalidOperationException("Missing or invalid native object name.");
             return value;
         }
         internal static T ReadSnapshot<T>(Func<T> read)
         {
             try { return read(); }
-            catch(Exception) { throw new InvalidOperationException("Supplementary PLC engineering read failed. No incomplete result was returned; verify the selected project and API metadata locally."); }
+            catch(Exception) {
+                throw new InvalidOperationException("Supplementary PLC engineering read failed. No incomplete result was returned; verify the selected " +
+                    "project and API metadata locally.");
+            }
         }
         // Genuine typed getters are supplied by the adapter; tests use explicit
         // fake delegates. Getter failures/nulls are optional metadata, not empty
@@ -89,12 +99,15 @@ namespace TiaMcp.Adapters
         }
         // Delegates enumerate genuine typed compositions in production. Offline tests
         // explicitly supply fake delegates, not fake Siemens assemblies or namespaces.
-        internal static PlcTechnologyReadRow[] Technologies<T>(T root,Func<T,IEnumerable<PlcTechnologyReadRow>> rows,Func<T,IEnumerable<T>> groups,Func<T,string> name) where T:class
+        internal static PlcTechnologyReadRow[] Technologies<T>(T root,Func<T,IEnumerable<PlcTechnologyReadRow>> rows,Func<T,IEnumerable<T>> groups,Func<T,
+                string> name) where T
+            :class
         {
             var result=new List<PlcTechnologyReadRow>(); var visited=new HashSet<T>(); var paths=new HashSet<string>(StringComparer.Ordinal); long size=0;
             Action<T,string,int> walk=null!;
             walk=(group,folder,depth)=> {
-                if(depth>128 || !visited.Add(group) || visited.Count>10000) throw new InvalidOperationException("Invalid, cyclic or oversized technology group tree.");
+                if(depth>128 || !visited.Add(group) || visited.Count>10000)
+                    throw new InvalidOperationException("Invalid, cyclic or oversized technology group tree.");
                 size+=folder.Length;
                 if(size>1024*1024) throw new InvalidOperationException("Technology group path budget exceeded.");
                 foreach(var row in rows(group))
@@ -104,7 +117,8 @@ namespace TiaMcp.Adapters
                     if(row.OfSystemLibVersion!=null) Name(row.OfSystemLibVersion);
                     var path=folder+"/"+Uri.EscapeDataString(row.Name);
                     size+=(long)path.Length+(row.OfSystemLibElement?.Length??0)+(row.OfSystemLibVersion?.Length??0);
-                    if(!paths.Add(path) || result.Count>=10000 || size>1024*1024) throw new InvalidOperationException("Invalid or oversized technology-object snapshot.");
+                    if(!paths.Add(path) || result.Count>=10000 || size>1024*1024)
+                        throw new InvalidOperationException("Invalid or oversized technology-object snapshot.");
                     row.Folder=folder; result.Add(row);
                 }
                 var siblings=new HashSet<string>(StringComparer.Ordinal);

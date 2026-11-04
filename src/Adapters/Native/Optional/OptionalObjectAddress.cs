@@ -32,9 +32,11 @@ namespace TiaMcp.Adapters.Native.Optional
             {
                 var step = (HmiObject)node!;
                 var property = target.GetType().GetProperty(step["property"]!.OptionalValue<string>(), BindingFlags.Instance | BindingFlags.Public);
-                if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0) throw new NotSupportedException("Public property not available: " + step["property"]);
+                if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0)
+                    throw new NotSupportedException("Public property not available: " + step["property"]);
                 target = property.GetValue(target) ?? throw new InvalidOperationException("Null object at " + step);
-                if (step.ContainsKey("name")) target = EngineeringGroupOperations.Find(target, step["name"]!.OptionalValue<string>()) ?? throw new InvalidOperationException("Exact named object not found at " + step);
+                if (step.ContainsKey("name")) target = EngineeringGroupOperations.Find(target, step["name"]!.OptionalValue<string>())
+                    ?? throw new InvalidOperationException("Exact named object not found at " + step);
             }
             return target;
         }

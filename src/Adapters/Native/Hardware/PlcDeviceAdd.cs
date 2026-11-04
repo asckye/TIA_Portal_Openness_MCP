@@ -16,15 +16,22 @@ namespace TiaMcp.Adapters
         private string DeviceAddIdentity(object value)
         {
             foreach(var pair in deviceAddIdentities) if(object.Equals(pair.Key,value)) return pair.Value;
-            if(deviceAddIdentities.Count>=16384) throw new InvalidOperationException("Device identity budget exhausted; new explicitly reviewed session required.");
+            if(deviceAddIdentities.Count>=16384)
+                throw new InvalidOperationException("Device identity budget exhausted; new explicitly reviewed session required.");
             var identity=Guid.NewGuid().ToString("N");deviceAddIdentities.Add(new KeyValuePair<object,string>(value,identity));return identity;
         }
-        public PlcDeviceAddResult AddDeviceWithFallback(string preferredMlfb,string preferredVersion,string deviceName,string family="S7-1500",bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
+        public PlcDeviceAddResult AddDeviceWithFallback(string preferredMlfb,string preferredVersion,string deviceName,string family="S7-1500",bool dryRun=true,
+                string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
-            if(deviceAddOutcomeUnknown) throw new InvalidOperationException("Prior device creation outcome unknown; inspect explicitly and establish a new session. Never replay.");
-            var request=new PlcDeviceAddRequest {Release=ReleaseKey,PreferredMlfb=preferredMlfb,PreferredVersion=preferredVersion,Name=deviceName,Family=family,DryRun=dryRun,ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile};
+            if(deviceAddOutcomeUnknown)
+                throw new InvalidOperationException("Prior device creation outcome unknown; inspect explicitly and establish a new session. Never replay.");
+            var request=new PlcDeviceAddRequest {
+                Release=ReleaseKey,PreferredMlfb=preferredMlfb,PreferredVersion=preferredVersion,Name=deviceName,Family=family,DryRun=dryRun,ExpectedHash=
+                    expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile
+            };
             try { PlcDeviceAddPolicy.ValidateOptions(request); }
-            catch (ArgumentException error) { throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(error.Message, error.ParamName ?? "arguments", true, error); }
+            catch (ArgumentException error) {
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(error.Message, error.ParamName ?? "arguments", true, error); }
 #if PLC_HARDWARE_CATALOG
             RequireHardwareCatalogBinding();
             // The borrowed engine path keeps its served behavior until the worker switch.
@@ -39,13 +46,15 @@ namespace TiaMcp.Adapters
                     || deviceAddBinding.ProjectFile!=binding.ProjectFile || deviceAddBinding.BindingEpoch!=binding.BindingEpoch)
                 {
                     deviceAddIdentities.Clear();
-                    deviceAddBinding=new TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity(binding.ProcessId,binding.ProcessStartUtc,binding.ProjectFile,binding.BindingEpoch);
+                    deviceAddBinding=new TiaMcp.Adapters.Contracts.Candidates
+                        .CandidateIdentity(binding.ProcessId,binding.ProcessStartUtc,binding.ProjectFile,binding.BindingEpoch);
                 }
                 request.Project=path!;request.ProcessId=binding.ProcessId??throw new InvalidOperationException("Explicit attached process required.");
             }
             else
             {
-                request.Project=project.Path.FullName;request.ProcessId=lifecycle.ProcessId??throw new InvalidOperationException("Explicit attached process required.");
+                request.Project=project.Path.FullName;request.ProcessId=lifecycle.ProcessId
+                    ??throw new InvalidOperationException("Explicit attached process required.");
             }
             request.RootIdentity=DeviceAddIdentity(project);
             Action check=()=> {
@@ -57,9 +66,13 @@ namespace TiaMcp.Adapters
                         throw new InvalidOperationException("Exact device-creation binding changed.");
                 }
                 else RequireProjectIdentity(request.Project);
-                if(lifecycle.ProcessId!=request.ProcessId || !object.Equals(Project(),project) || !object.Equals(Portal(),portal)) throw new InvalidOperationException("Project/process/session identity changed.");
+                if(lifecycle.ProcessId!=request.ProcessId || !object.Equals(Project(),project) || !object.Equals(Portal(),portal))
+                    throw new InvalidOperationException("Project/process/session identity changed.");
             };
-            Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog=()=>portal.HardwareCatalog.Find(preferredMlfb).Select(entry=>new PlcHardwareCatalogCandidate {TypeIdentifier=NativeHardware.TypeIdentifier(entry),ArticleNumber=NativeHardware.ArticleNumber(entry),Version=NativeHardware.Version(entry)});
+            Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog=()=>portal.HardwareCatalog.Find(preferredMlfb)
+                .Select(entry=>new PlcHardwareCatalogCandidate {
+                    TypeIdentifier=NativeHardware.TypeIdentifier(entry),ArticleNumber=NativeHardware.ArticleNumber(entry),Version=NativeHardware.Version(entry)
+                });
             object? ungroupedRoot=null;
             Func<IEnumerable<PlcDeviceAddItem>> inventory=()=> {
                 // Complete root, grouped and ungrouped device inventory; no software/online reads.
@@ -69,20 +82,33 @@ namespace TiaMcp.Adapters
                     foreach(var device in composition) {
                         if(++visited>4096) throw new InvalidOperationException("Device graph budget exceeded.");
                         if(device==null) throw new InvalidOperationException("Device unavailable.");
-                        rows.Add(new PlcDeviceAddItem {Name=device.Name,Identity=DeviceAddIdentity(device),ParentIdentity=DeviceAddIdentity(parent),ParentVerified=object.Equals(device.Parent,parent),
+                        rows
+                            .Add(new PlcDeviceAddItem {
+                                Name=device.Name,Identity=DeviceAddIdentity(device),ParentIdentity=DeviceAddIdentity(parent),ParentVerified=object
+                                    .Equals(device.Parent,parent),
                             ItemNames=device.DeviceItems.Select(item=>item.Name).ToArray()});
                     }
                 };
                 Action<DeviceUserGroup,object,int> visit=null!;
                 visit=(group,parent,depth)=> {
-                    if(group==null || depth>32 || ++visited>4096 || groups.Any(x=>object.Equals(x,group))) throw new InvalidOperationException("Unsupported, cyclic or oversized device graph.");
-                    groups.Add(group);rows.Add(new PlcDeviceAddItem {Name=group.Name,Identity=DeviceAddIdentity(group),ParentIdentity=DeviceAddIdentity(parent),IsGroup=true,ParentVerified=object.Equals(group.Parent,parent)});devices(group.Devices,group);
+                    if(group==null || depth>32 || ++visited>4096 || groups.Any(x=>object.Equals(x,group)))
+                        throw new InvalidOperationException("Unsupported, cyclic or oversized device graph.");
+                    groups.Add(group);rows
+                        .Add(new PlcDeviceAddItem {
+                            Name=group.Name,Identity=DeviceAddIdentity(group),ParentIdentity=DeviceAddIdentity(parent),IsGroup=true,ParentVerified=object
+                                .Equals(group.Parent,parent)
+                        });
+                    devices(group.Devices,group);
                     foreach(var child in group.Groups) visit(child,group,depth+1);
                 };
                 devices(NativeHardware.Devices(project),project);
                 var ungrouped=project.UngroupedDevicesGroup??throw new InvalidOperationException("Ungrouped system group unavailable.");
                 ungroupedRoot=ungrouped;
-                rows.Add(new PlcDeviceAddItem {Name="$ungrouped",Identity=DeviceAddIdentity(ungrouped),ParentIdentity=request.RootIdentity,IsGroup=true,IsUngroupedSystemGroup=true,ParentVerified=object.Equals(ungrouped.Parent,project)});
+                rows
+                    .Add(new PlcDeviceAddItem {
+                        Name="$ungrouped",Identity=DeviceAddIdentity(ungrouped),ParentIdentity=request.RootIdentity,IsGroup=true,IsUngroupedSystemGroup=true,
+                            ParentVerified=object.Equals(ungrouped.Parent,project)
+                    });
                 devices(ungrouped.Devices,ungrouped);
                 foreach(var group in project.DeviceGroups) visit(group,project,0);
                 return rows;
@@ -91,7 +117,10 @@ namespace TiaMcp.Adapters
                 var created=NativeHardware.CreateWithItem(NativeHardware.Devices(project),identifier,name,name);
                 if(created==null) return null!;
                 var createdName=created.Name; var parent=created.Parent;
-                return new PlcDeviceAddItem {Name=createdName,Identity=DeviceAddIdentity(created),ParentIdentity=DeviceAddIdentity(parent),ParentVerified=object.Equals(parent,project) || object.Equals(parent,ungroupedRoot)};
+                return new PlcDeviceAddItem {
+                    Name=createdName,Identity=DeviceAddIdentity(created),ParentIdentity=DeviceAddIdentity(parent),ParentVerified=object.Equals(parent,project)
+                        || object.Equals(parent,ungroupedRoot)
+                };
             });
             if(result.RequiresSessionReset) deviceAddOutcomeUnknown=true;
             return result;

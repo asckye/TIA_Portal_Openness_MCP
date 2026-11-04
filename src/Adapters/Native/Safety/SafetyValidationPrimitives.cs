@@ -41,6 +41,7 @@ internal static class SafetyValidationPrimitives
             : usage == "Response" ? new[] { "response" } : Array.Empty<string>();
         foreach (var key in keys)
             if (properties.ContainsKey(key) && ParseConditionValue(properties[key], key).EnumName == "NotRelevant")
-                throw new ArgumentException("propertiesJson." + key + " cannot be NotRelevant while the signal usage is " + usage + " (TIA refuses it natively; use true/false).");
+                throw new ArgumentException("propertiesJson." + key + " cannot be NotRelevant while the signal usage is " + usage
+                        + " (TIA refuses it natively; use true/false).");
     }
 }

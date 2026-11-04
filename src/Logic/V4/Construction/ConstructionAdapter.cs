@@ -118,7 +118,8 @@ namespace TiaMcp.Logic.V4.Construction
         internal static void VerifyOutput(string xml, bool innerOnly)
         {
             ConstructionJson.Limit(xml.Length, ConstructionJson.MaxXmlCharacters);
-            var content = innerOnly ? "<StructuredText xmlns=\"http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4\">" + xml + "</StructuredText>" : xml;
+            var content = innerOnly ? "<StructuredText xmlns=\"http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4\">" + xml
+                + "</StructuredText>" : xml;
             using var reader = XmlReader.Create(new StringReader(content), new XmlReaderSettings
             {
                 DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null,

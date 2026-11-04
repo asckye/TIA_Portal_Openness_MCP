@@ -25,13 +25,21 @@ namespace TiaMcpServer.ModelContextProtocol
             public string? RecommendedFixZh { get; set; }
         }
 
-        [McpServerTool(Name = "GetEnvironmentDiagnostics"), Description("[L0][Diagnostics] One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. The default fix=false is a read-only diagnosis. Only fix=true ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Call this first when setup is failing or you are unsure the environment is ready.")]
+        [McpServerTool(Name = "GetEnvironmentDiagnostics"),
+                Description("[L0][Diagnostics] One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and " +
+                "connection/project state, and returns a plain-language diagnosis with the exact fix per problem. The default fix=false is a read-only " +
+                "diagnosis. Only fix=true ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Call this first when " +
+                "setup is failing or you are unsure the environment is ready.")]
         public static Task<CallToolResult> GetEnvironmentDiagnosticsV4(
-            [Description("fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt UAC).")] bool fix = false)
+            [Description("fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt " +
+                "UAC).")] bool fix =
+                false)
             => SessionToolContract.RunAsync("GetEnvironmentDiagnostics", fix, false, () => Doctor(fix));
 
         public static async Task<ResponseDoctor> Doctor(
-            [Description("fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt UAC).")] bool fix = false)
+            [Description("fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt " +
+                "UAC).")] bool fix =
+                false)
         {
             try
             {
@@ -44,7 +52,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 int? inUse = TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion;
                 int? detected = Engineering.DetectTiaMajorVersion();
                 string? firstEnvFixZh = null;
-                foreach (var c in Runtime.EnvironmentDoctor.Run(TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion, inUse ?? detected))
+                foreach (var c in Runtime.EnvironmentDoctor
+                        .Run(TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion, inUse ?? detected))
                 {
                     if (!c.Ok && firstEnvFixZh == null) firstEnvFixZh = c.FixZh;
                     checks.Add(new DoctorCheck
@@ -86,7 +95,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     Name = "Openness user group",
                     Ok = groupOk,
                     Detail = groupOk ? "current user is in 'Siemens TIA Openness' group" : "current user NOT in 'Siemens TIA Openness' group",
-                    Fix = groupOk ? null : "Run GetEnvironmentDiagnostics with fix=true (prompts UAC to add you), or manually add your Windows user to the 'Siemens TIA Openness' local group and sign out/in. Admin rights required."
+                    Fix = groupOk ? null
+                        : "Run GetEnvironmentDiagnostics with fix=true (prompts UAC to add you), or manually add your Windows user to the 'Siemens TIA " +
+                        "Openness' local group and sign out/in. Admin rights required."
                 });
 
 
@@ -109,7 +120,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     Name = "TIA connection / project",
                     Ok = connected,
                     Detail = connected ? (hasProject ? $"connected, project '{projectName}' open" : "connected, no project bound") : "not connected",
-                    Fix = connected ? (hasProject ? null : "Call AttachOpenProject (if a project is open in TIA UI) or OpenProject/CreateProject.") : "Call ConnectPortal (first call may pop an Openness authorization dialog in TIA — click Yes)."
+                    Fix = connected ? (hasProject ? null : "Call AttachOpenProject (if a project is open in TIA UI) or OpenProject/CreateProject.")
+                        : "Call ConnectPortal (first call may pop an Openness authorization dialog in TIA — click Yes)."
                 });
 
                 string next;

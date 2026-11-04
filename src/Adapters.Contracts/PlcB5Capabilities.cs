@@ -15,7 +15,8 @@ namespace TiaMcp.Adapters.Contracts
                 return "SimaticInterfaces and ReferenceNamespaces require V16.";
             if ((tool == "GetOpcUaAccessControl" || tool == "ManageOpcUaAccessControl") && !AtLeast("21"))
                 return "ServerInterfaceGroup.AccessControl requires V21.";
-            if (tool == "ManagePlcDocuments" && request.ObjectKind == "document" && request.Action.StartsWith("createFrom", StringComparison.Ordinal) && !AtLeast("21"))
+            if (tool == "ManagePlcDocuments" && request.ObjectKind == "document" && request.Action.StartsWith("createFrom", StringComparison.Ordinal)
+                    && !AtLeast("21"))
                 return "PlcDocumentComposition.CreateFrom requires V21.";
             if (tool == "ManagePlcAlarmTextList" && request.Action == "createFromMasterCopy" && request.CopyMode.Length != 0 && !AtLeast("20"))
                 return "PlcAlarmUserTextlistComposition.CreateFrom(MasterCopy, MasterCopyMode) requires V20.";

@@ -113,8 +113,12 @@ namespace TiaMcpServer.Siemens
                     foreach (var subName in installedSw.GetSubKeyNames())
                     {
                         // Key names follow pattern TIAP21, TIAP20, etc.
-                        var numMatch = System.Text.RegularExpressions.Regex.Match(subName, @"TIAP(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                        if (!numMatch.Success || !int.TryParse(numMatch.Groups[1].Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int regVer)) continue;
+                        var numMatch = System.Text.RegularExpressions.Regex
+                            .Match(subName, @"TIAP(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                        if (!numMatch.Success || !int
+                                .TryParse(numMatch.Groups[1].Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo
+                                    .InvariantCulture, out int regVer))
+                            continue;
 
                         foreach (var suffix in new[] { @"\TIA_Opns", @"\Global" })
                         {

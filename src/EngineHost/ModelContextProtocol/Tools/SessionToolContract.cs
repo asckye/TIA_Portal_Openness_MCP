@@ -48,7 +48,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var portalStateFailure = ContainsInvalidPortalState(exception);
                 var details = new PreconditionFailedDetails(portalStateFailure ? "engine-state" : "native-call-not-issued", null);
                 return Result(tool, new JsonObject { ["evidence"] = new JsonObject { ["exceptionType"] = exception.GetType().Name } },
-                    new Error(HostBehavior.AdmissionDiagnostic(exception) ?? "The session precondition was not satisfied; no native operation was started.", details),
+                    new Error(HostBehavior.AdmissionDiagnostic(exception) ?? "The session precondition was not satisfied; no native operation was started.",
+                            details),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             }
             // A thrown lifecycle action can follow an issued native call, including
@@ -109,7 +110,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     new PreconditionFailedDetails("worker-enabled-and-idle", null)), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (tool == "EnsureOpennessUserGroup" && success == false) knownFailure = true;
             if (tool == "CheckProductUpdate" && success == false && data["releaseApiUrl"] == null)
-                return Result(tool, data, new Error("The operation did not establish success.", new InvalidArgumentDetails("repository", Array.Empty<string>())),
+                return Result(tool, data,
+                        new Error("The operation did not establish success.", new InvalidArgumentDetails("repository", Array.Empty<string>())),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             // A returned report contains both completed file writes, even when
             // the diagnostic verdict recorded in those files is a failure.
@@ -155,7 +157,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static bool? Bool(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
         private static IReadOnlyDictionary<string, JsonElement> Evidence(JsonObject data)
             => data.ToDictionary(pair => pair.Key, pair => JsonSerializer.SerializeToElement(pair.Value), StringComparer.Ordinal);
-        private static Error Unknown(JsonObject evidence) => new Error("The operation outcome is unconfirmed. Inspect the retained evidence and reset the session before further writes.",
+        private static Error Unknown(JsonObject evidence) =>
+            new Error("The operation outcome is unconfirmed. Inspect the retained evidence and reset the session before further writes.",
             new OutcomeUnknownDetails("session operation", Evidence(evidence)));
 
         private static bool HasObservationError(JsonNode? node)

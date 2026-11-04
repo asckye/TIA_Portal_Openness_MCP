@@ -75,12 +75,18 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
             var summary = new HmiObject { ["kind"] = "graphicSelectionSummary", ["path"] = "/Screens" + screenPath,
                 ["status"] = "unsupported", ["code"] = "NativeGraphicGroupUnverified",
-                ["reason"] = "This is a caller-defined exact-name selection. Native graphical-group membership, origin and transformed bounds are not established by the available engineering API adapter. ScreenGroups are screen folders. Empty or unavailable group metadata does not mean the objects are ungrouped.",
+                ["reason"] =
+                    "This is a caller-defined exact-name selection. Native graphical-group membership, origin and transformed bounds are not established by " +
+                    "the available engineering API adapter. ScreenGroups are screen folders. Empty or unavailable group metadata does not mean the objects " +
+                    "are ungrouped.",
                 ["expectedObjectCount"] = names.Length, ["actualObjectCount"] = completed.Count(r => r["type"] != null),
                 ["geometryComplete"] = completed.All(r => r["geometryComplete"]?.GetValue<bool>() == true),
                 ["nativeGroupVerified"] = false, ["nativeGroup"] = null, ["nativeGroupBounds"] = null,
                 ["rawCoordinateEnvelope"] = Envelope(completed),
-                ["coordinateCaveat"] = "Envelope of returned Left/Top/Width/Height only; coordinate-frame equivalence, transforms and rotation are unverified. This is not the editor's group bounding box." };
+                ["coordinateCaveat"] =
+                    "Envelope of returned Left/Top/Width/Height only; coordinate-frame equivalence, transforms and rotation are unverified. This is not the " +
+                    "editor's group bounding box."
+                };
             yield return summary;
         }
         private static HmiObject CaptureItem(object item, string name, string path, HmiReadTrace trace)
@@ -105,13 +111,19 @@ namespace TiaMcp.Adapters.Native.Hmi
                         var key = MigrationRead.Get(info!, "Name")?.ToString() ?? "";
                         var access = MigrationRead.Get(info!, "AccessMode")?.ToString() ?? "";
                         attributes[key] = access.IndexOf("Read", StringComparison.OrdinalIgnoreCase) >= 0;
-                        if (RelationName(key)) capabilities.Add(new HmiObject { ["name"] = key, ["accessMode"] = access, ["source"] = "IEngineeringObject.GetAttributeInfos" });
+                        if (RelationName(key)) capabilities
+                            .Add(new HmiObject { ["name"] = key, ["accessMode"] = access, ["source"] = "IEngineeringObject.GetAttributeInfos" });
                     }
                 }
-                catch (Exception ex) when (!HmiReadSafety.ConnectionUnavailable(ex)) { gaps.Add(MigrationRead.Failure(path + "/$attributeInfos", "MetadataReadFailed", ex)); }
+                catch (Exception ex) when (!HmiReadSafety.ConnectionUnavailable(ex)) {
+                    gaps.Add(MigrationRead.Failure(path + "/$attributeInfos", "MetadataReadFailed", ex)); }
             }
             foreach (var p in type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => RelationName(p.Name)))
-                capabilities.Add(new HmiObject { ["name"] = p.Name, ["type"] = p.PropertyType.FullName, ["readable"] = PublicGetter(type, p.Name) != null, ["source"] = "public CLR property metadata" });
+                capabilities
+                    .Add(new HmiObject {
+                        ["name"] = p.Name, ["type"] = p.PropertyType.FullName, ["readable"] = PublicGetter(type, p.Name) != null, ["source"] =
+                            "public CLR property metadata"
+                    });
             var compositions = Official(item, "GetCompositionInfos");
             if (compositions != null)
             {
@@ -129,7 +141,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                         capabilities.Add(new HmiObject { ["name"] = key, ["source"] = "IEngineeringObject.GetCompositionInfos", ["contentsRead"] = false });
                     }
                 }
-                catch (Exception ex) when (!HmiReadSafety.ConnectionUnavailable(ex)) { gaps.Add(MigrationRead.Failure(path + "/$compositionInfos", "MetadataReadFailed", ex)); }
+                catch (Exception ex) when (!HmiReadSafety.ConnectionUnavailable(ex)) {
+                    gaps.Add(MigrationRead.Failure(path + "/$compositionInfos", "MetadataReadFailed", ex)); }
             }
             foreach (var field in Geometry)
             {
@@ -143,7 +156,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             // Read only explicitly advertised scalar relationship attributes. Names
             // are evidence, not a contract establishing native group membership.
             foreach (var entry in attributes.Where(a => a.Value && RelationName(a.Key)).Take(32))
-                relations.Add(TryValue(trace, path + "/$attributes/" + MigrationRead.Segment(entry.Key), "IEngineeringObject.GetAttribute", () => MigrationRead.Attribute(item, entry.Key)));
+                relations
+                    .Add(TryValue(trace, path + "/$attributes/" + MigrationRead.Segment(entry.Key), "IEngineeringObject.GetAttribute", () => MigrationRead
+                            .Attribute(item, entry.Key)));
             if (attributes.Count(a => a.Value && RelationName(a.Key)) > 32)
                 gaps.Add(MigrationRead.Failure(path, "RelationMetadataLimit", reason: "More than 32 relation attributes; only the first 32 were read."));
             // Parent is a deliberate ONE-hop ownership probe, not a general graph
@@ -174,14 +189,19 @@ namespace TiaMcp.Adapters.Native.Hmi
                 && (owner["name"] == null || owner["name"]!.Field("status")?.ToString() == "ok")
                 && relations.All(r => r?.Field("status")?.ToString() == "ok");
             row["status"] = complete && evidenceComplete ? "ok" : "failed";
-            if (row["status"]!.ToString() != "ok") { row["code"] = "SelectionEvidenceIncomplete"; row["reason"] = "Inspect fields, owner, relationEvidence and gaps. Missing evidence is not a zero coordinate or an ungrouped object."; }
+            if (row["status"]!.ToString() != "ok") {
+                row["code"] = "SelectionEvidenceIncomplete"; row["reason"] =
+                    "Inspect fields, owner, relationEvidence and gaps. Missing evidence is not a zero coordinate or an ungrouped object.";
+            }
             return row;
         }
         private static bool Number(HmiObject row, string field, out decimal number)
         {
             number = 0;
             var evidence = row["fields"]?.Field(field);
-            if (evidence?.Field("status")?.ToString() != "ok" || !decimal.TryParse(evidence!.Field("value")?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number)) return false;
+            if (evidence?.Field("status")?.ToString() != "ok" || !decimal
+                    .TryParse(evidence!.Field("value")?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number))
+                return false;
             return (field != "Width" && field != "Height") || number >= 0;
         }
         private static HmiObject? Envelope(IReadOnlyList<HmiObject> rows)
@@ -189,9 +209,17 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (rows.Count == 0 || rows.Any(r => !Geometry.All(f => Number(r, f, out _)))) return null;
             try
             {
-                var rectangles = rows.Select(r => { Number(r, "Left", out var l); Number(r, "Top", out var t); Number(r, "Width", out var w); Number(r, "Height", out var h); return new[] { l, t, checked(l + w), checked(t + h) }; }).ToArray();
+                var rectangles = rows
+                    .Select(r => {
+                        Number(r, "Left", out var l); Number(r, "Top", out var t); Number(r, "Width", out var w); Number(r, "Height", out var h); return new[] {
+                            l, t, checked(l + w), checked(t + h) };
+                    })
+                    .ToArray();
                 var left = rectangles.Min(r => r[0]); var top = rectangles.Min(r => r[1]);
-                return new HmiObject { ["left"] = left, ["top"] = top, ["width"] = checked(rectangles.Max(r => r[2]) - left), ["height"] = checked(rectangles.Max(r => r[3]) - top), ["nativeGroupBounds"] = false };
+                return new HmiObject {
+                    ["left"] = left, ["top"] = top, ["width"] = checked(rectangles.Max(r => r[2]) - left), ["height"] =
+                        checked(rectangles.Max(r => r[3]) - top), ["nativeGroupBounds"] = false
+                };
             }
             catch (OverflowException) /* swallow(parse-fallback): overflowed persisted coordinates cannot provide approximate selection bounds */ { return null; }
         }

@@ -14,35 +14,66 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class TemplateTools
     {
-        [McpServerTool(Name = "BuildPlcAliasAlarmLad"), Description("[L2][PLC-Builders][OFFLINE] Independently generate a V21 LAD FC XML for Boolean aliases/simple alarm bits. rows=[{source:[\"InputTag\"],destination:[\"DB\",\"Alarm\"],invert?:false,acknowledge?:[\"AckTag\"],title?:text,comment?:text}]. Without acknowledge: contact -> normal coil. With acknowledge: contact -> set coil, followed by acknowledge -> reset coil (RESET WINS if both true; level-triggered). Exact global symbol components; no string splitting, absolute addresses, indexed operands or type inference. Reject duplicate destinations. 1..500 rows. No tags/blocks imported, no safety certification; native import/compile remains unverified for this new builder. For arbitrary validated network layouts use InstantiatePlcTemplates. Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified.")]
+        [McpServerTool(Name = "BuildPlcAliasAlarmLad"),
+                Description("[L2][PLC-Builders][OFFLINE] Independently generate a V21 LAD FC XML for Boolean aliases/simple alarm bits. " +
+                "rows=[{source:[\"InputTag\"],destination:[\"DB\",\"Alarm\"],invert?:false,acknowledge?:[\"AckTag\"],title?:text,comment?:text}]. Without " +
+                "acknowledge: contact -> normal coil. With acknowledge: contact -> set coil, followed by acknowledge -> reset coil (RESET WINS if both true; " +
+                "level-triggered). Exact global symbol components; no string splitting, absolute addresses, indexed operands or type inference. Reject " +
+                "duplicate destinations. 1..500 rows. No tags/blocks imported, no safety certification; native import/compile remains unverified for this " +
+                "new builder. For arbitrary validated network layouts use InstantiatePlcTemplates. Registered on V21 only: V20 withdraws this V21-format " +
+                "composer until an import of its output on V20 is verified.")]
         public CallToolResult ComposePlcAliasAlarmLadV4(
             [Description("Name of the generated LAD FC.")] string blockName,
             [Description("Positive FC number.")] int blockNumber,
-            [Description("rows: PlcAliasRow[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] PlcAliasRow[] rows)
-            => OfflineContracts.Run("BuildPlcAliasAlarmLad", () => ComposePlcAliasAlarmLad(blockName, blockNumber, OfflineContracts.Domain(rows)), writes: false, current: false);
+            [Description("rows: PlcAliasRow[]. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] PlcAliasRow[] rows)
+            => OfflineContracts
+                .Run("BuildPlcAliasAlarmLad", () => ComposePlcAliasAlarmLad(blockName, blockNumber, OfflineContracts.Domain(rows)), writes: false, current
+                    : false);
 
-        public ResponseMessage ComposePlcAliasAlarmLad([Description("Name of the generated LAD FC.")] string blockName, [Description("Positive FC number.")] int blockNumber, [Description("Structured JSON rows; exact shape is specified in the tool description.")] string rowsJson)
-            => OfflineToolExecution.RunOfflineAnalysisTool("BuildPlcAliasAlarmLad", meta => { meta["xml"] = PlcAliasAlarmBuilder.Build(blockName, blockNumber, rowsJson); meta["targetVersion"] = "V21"; meta["nativeValidated"] = false; return "Boolean alias/alarm LAD XML composed."; });
+        public ResponseMessage ComposePlcAliasAlarmLad([Description("Name of the generated LAD FC.")] string blockName,
+                [Description("Positive FC number.")] int blockNumber,
+                [Description("Structured JSON rows; exact shape is specified in the tool description.")] string rowsJson)
+            => OfflineToolExecution
+                .RunOfflineAnalysisTool("BuildPlcAliasAlarmLad", meta => {
+                    meta["xml"] = PlcAliasAlarmBuilder.Build(blockName, blockNumber, rowsJson); meta["targetVersion"] = "V21"; meta["nativeValidated"] = false;
+                    return "Boolean alias/alarm LAD XML composed.";
+                });
 
-        [McpServerTool(Name = "InstantiatePlcTemplates"), Description("[L2][PLC-Builders][FILE] Expand an exported XML template into repeated PLC blocks/aliases/alarms without executing customization scripts. Template tokens {{Name}} in XML attributes/text are replaced structurally with XML escaping. rows=[{fileName:\"FC_1.xml\",values:{Name:\"FC_1\"}}], 1..100 rows. Reject missing/unused keys, unsafe/duplicate filenames, DTD and any existing output. Default dryRun validates ALL rows/outputs and returns hashes/sizes; execution writes new files only. No TIA import or compile. Tokens do not edit element names, UIDs, wiring topology or faceplate internals automatically. Partial files reported if writing fails.")]
+        [McpServerTool(Name = "InstantiatePlcTemplates"),
+                Description("[L2][PLC-Builders][FILE] Expand an exported XML template into repeated PLC blocks/aliases/alarms without executing " +
+                "customization scripts. Template tokens {{Name}} in XML attributes/text are replaced structurally with XML escaping. " +
+                "rows=[{fileName:\"FC_1.xml\",values:{Name:\"FC_1\"}}], 1..100 rows. Reject missing/unused keys, unsafe/duplicate filenames, DTD and any " +
+                "existing output. Default dryRun validates ALL rows/outputs and returns hashes/sizes; execution writes new files only. No TIA import or " +
+                "compile. Tokens do not edit element names, UIDs, wiring topology or faceplate internals automatically. Partial files reported if writing " +
+                "fails.")]
         public CallToolResult InstantiatePlcXmlTemplatesV4(
             [Description("Existing absolute XML template path with {{token}} placeholders in values.")] string templatePath,
-            [Description("rows: TemplateRow[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] TemplateRow[] rows,
+            [Description("rows: TemplateRow[]. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] TemplateRow[] rows,
             [Description("Existing absolute directory where new expanded XML files will be written.")] string outputDirectory,
             [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true)
-            => OfflineContracts.Run("InstantiatePlcTemplates", () => InstantiatePlcXmlTemplates(templatePath, OfflineContracts.Domain(rows), outputDirectory, dryRun), writes: !dryRun, current: false);
+            => OfflineContracts
+                .Run("InstantiatePlcTemplates", () => InstantiatePlcXmlTemplates(templatePath, OfflineContracts.Domain(rows), outputDirectory, dryRun), writes
+                    : !dryRun, current: false);
 
-        public ResponseMessage InstantiatePlcXmlTemplates([Description("Existing absolute XML template path with {{token}} placeholders in values.")] string templatePath, [Description("Structured JSON rows; exact shape is specified in the tool description.")] string rowsJson, [Description("Existing absolute directory where new expanded XML files will be written.")] string outputDirectory, [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true)
+        public ResponseMessage InstantiatePlcXmlTemplates([Description("Existing absolute XML template path with {{token}} placeholders in " +
+            "values.")] string templatePath,
+                [Description("Structured JSON rows; exact shape is specified in the tool description.")] string rowsJson,
+                [Description("Existing absolute directory where new expanded XML files will be written.")] string outputDirectory,
+                [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true)
             => OfflineToolExecution.RunOfflineAnalysisTool("InstantiatePlcTemplates", meta =>
             {
-                if (!Path.IsPathRooted(outputDirectory) || !Directory.Exists(outputDirectory)) throw new ArgumentException("outputDirectory must be an existing absolute directory.");
+                if (!Path.IsPathRooted(outputDirectory) || !Directory.Exists(outputDirectory))
+                    throw new ArgumentException("outputDirectory must be an existing absolute directory.");
                 var documents = PlcTemplateExpansion.Expand(templatePath, rowsJson);
                 var outputs = documents.Select(d => NativeFileOutput.Plan(Path.Combine(outputDirectory, d.Name))).ToList();
                 var rows = new JsonArray(); meta["files"] = rows; meta["dryRun"] = dryRun;
                 for (int i = 0; i < documents.Count; i++)
                 {
                     byte[] bytes = new UTF8Encoding(false).GetBytes(documents[i].Xml);
-                    string hash; using (var sha = System.Security.Cryptography.SHA256.Create()) hash = BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
+                    string hash; using (var sha = System.Security.Cryptography.SHA256.Create()) hash = BitConverter.ToString(sha.ComputeHash(bytes))
+                        .Replace("-", "").ToLowerInvariant();
                     rows.Add(new JsonObject { ["path"] = outputs[i].FullName, ["bytes"] = bytes.Length, ["sha256"] = hash, ["written"] = false });
                 }
                 if (!dryRun)

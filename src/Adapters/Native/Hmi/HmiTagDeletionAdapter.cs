@@ -32,20 +32,27 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["binding"] = _session.GetBindingIdentity();
                 string address = softwarePath + tagTablePath + "/" + tagName;
                 meta["readStarted"] = true;
-                var sw = InvocationJournal.Native("DeleteHmiTag.ResolveSoftware", () => _session.ResolveHmiSoftwareOrThrow(softwarePath), "HmiSoftware/HmiTarget", softwarePath);
+                var sw = InvocationJournal
+                    .Native("DeleteHmiTag.ResolveSoftware", () => _session.ResolveHmiSoftwareOrThrow(softwarePath), "HmiSoftware/HmiTarget", softwarePath);
                 if (sw is HmiTarget classic)
                 {
-                    if (parts.Length == 0) throw new ArgumentException("Classic HMI requires an explicit /Folder/Table path, including its default table name.");
+                    if (parts.Length == 0)
+                        throw new ArgumentException("Classic HMI requires an explicit /Folder/Table path, including its default table name.");
                     TagFolder folder = InvocationJournal.Native("Classic.TagFolder", () => classic.TagFolder, "HmiTarget", softwarePath);
                     for (int i = 0; i < parts.Length - 1; i++)
-                        folder = InvocationJournal.Native("Classic.TagFolder.Find", () => folder.Folders.Find(parts[i]), "TagFolder", tagTablePath) ?? throw new PlcSoftwareException("NotFound", "Tag folder not found: " + parts[i]);
-                    var table = InvocationJournal.Native("Classic.TagTable.Find", () => folder.TagTables.Find(parts[parts.Length - 1]), "TagFolder", tagTablePath);
+                        folder = InvocationJournal.Native("Classic.TagFolder.Find", () => folder.Folders.Find(parts[i]), "TagFolder", tagTablePath)
+                            ?? throw new PlcSoftwareException("NotFound", "Tag folder not found: " + parts[i]);
+                    var table = InvocationJournal
+                        .Native("Classic.TagTable.Find", () => folder.TagTables.Find(parts[parts.Length - 1]), "TagFolder", tagTablePath);
                     if (table == null && parts.Length == 1)
                     {
-                        var defaultTable = InvocationJournal.Native("Classic.DefaultTagTable", () => classic.TagFolder.DefaultTagTable, "TagSystemFolder", tagTablePath);
+                        var defaultTable = InvocationJournal
+                            .Native("Classic.DefaultTagTable", () => classic.TagFolder.DefaultTagTable, "TagSystemFolder", tagTablePath);
                         if (defaultTable != null && string.Equals(defaultTable.Name, parts[0], StringComparison.Ordinal)) table = defaultTable;
                     }
-                    var tags = InvocationJournal.Native("Classic.TagTable.Tags", () => (table ?? throw new PlcSoftwareException("NotFound", "Tag table not found.")).Tags, "TagTable", tagTablePath);
+                    var tags = InvocationJournal
+                        .Native("Classic.TagTable.Tags", () => (table ?? throw new PlcSoftwareException("NotFound", "Tag table not found.")).Tags, "TagTable",
+                            tagTablePath);
                     meta["family"] = "Classic";
                     return HmiTagDeletion.Execute(meta, dryRun,
                         () => InvocationJournal.Native("Hmi.Tag.Find", () => (object?)tags.Find(tagName), "Siemens.Engineering.Hmi.Tag.Tag", address),
@@ -60,13 +67,22 @@ namespace TiaMcp.Adapters.Native.Hmi
                     {
                         HmiTagTableGroup? group = null;
                         for (int i = 0; i < parts.Length - 1; i++)
-                            group = InvocationJournal.Native("Unified.TagGroup.Find", () => (group == null ? unified.TagTableGroups : group.Groups).Find(parts[i]), "HmiTagTableGroup", tagTablePath) ?? throw new PlcSoftwareException("NotFound", "Tag group not found: " + parts[i]);
-                        tags = InvocationJournal.Native("Unified.TagTable.Tags", () => ((group == null ? unified.TagTables : group.TagTables).Find(parts[parts.Length - 1]) ?? throw new PlcSoftwareException("NotFound", "Tag table not found.")).Tags, "HmiTagTable", tagTablePath);
+                            group = InvocationJournal
+                                .Native("Unified.TagGroup.Find", () => (group == null ? unified.TagTableGroups : group.Groups).Find(parts[i]),
+                                    "HmiTagTableGroup", tagTablePath)
+                                ?? throw new PlcSoftwareException("NotFound", "Tag group not found: " + parts[i]);
+                        tags = InvocationJournal
+                            .Native("Unified.TagTable.Tags", () =>
+                                ((group == null ? unified.TagTables : group.TagTables).Find(parts[parts.Length - 1])
+                                    ?? throw new PlcSoftwareException("NotFound", "Tag table not found."))
+                                .Tags, "HmiTagTable", tagTablePath);
                     }
                     meta["family"] = "Unified";
                     return HmiTagDeletion.Execute(meta, dryRun,
-                        () => InvocationJournal.Native("Unified.HmiTag.Find", () => (object?)tags.Find(tagName), "Siemens.Engineering.HmiUnified.HmiTags.HmiTag", address),
-                        tag => InvocationJournal.Native("Unified.HmiTag.Delete", () => ((HmiTag)tag).Delete(), "Siemens.Engineering.HmiUnified.HmiTags.HmiTag", address));
+                        () => InvocationJournal
+                            .Native("Unified.HmiTag.Find", () => (object?)tags.Find(tagName), "Siemens.Engineering.HmiUnified.HmiTags.HmiTag", address),
+                        tag => InvocationJournal
+                            .Native("Unified.HmiTag.Delete", () => ((HmiTag)tag).Delete(), "Siemens.Engineering.HmiUnified.HmiTags.HmiTag", address));
                 }
 #endif
                 throw new PlcSoftwareException("NotSupportedOnVersion", "Only Classic and Unified HMI tags are supported.");

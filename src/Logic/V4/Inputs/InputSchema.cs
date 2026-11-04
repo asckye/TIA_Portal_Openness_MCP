@@ -62,7 +62,8 @@ namespace TiaMcp.Logic.V4.Inputs
         }
         public static InputSchema Object(IReadOnlyDictionary<string, InputSchema> properties, string[]? required = null, int minimum = 0, int? maximum = null)
         {
-            var schema = new Dictionary<string, object?> { ["type"] = "object", ["properties"] = properties.ToDictionary(p => p.Key, p => p.Value.Json, StringComparer.Ordinal),
+            var schema = new Dictionary<string, object?> {
+                ["type"] = "object", ["properties"] = properties.ToDictionary(p => p.Key, p => p.Value.Json, StringComparer.Ordinal),
                 ["required"] = required ?? System.Array.Empty<string>(), ["additionalProperties"] = false, ["minProperties"] = minimum };
             if (maximum.HasValue) schema["maxProperties"] = maximum;
             return Build(schema);
@@ -88,7 +89,8 @@ namespace TiaMcp.Logic.V4.Inputs
                 try
                 {
                     new InputBudget().Check(property.Value);
-                    if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member)) Check(member, property.Value, Json);
+                    if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member))
+                        Check(member, property.Value, Json);
                     else if (Json.TryGetProperty("additionalProperties", out var additional)) Check(additional, property.Value, Json);
                 }
                 catch (InputRejectionException rejection) { errors.Add(rejection.ToError(property.Name)); }
@@ -104,7 +106,8 @@ namespace TiaMcp.Logic.V4.Inputs
                 var error = ex.ToError(parameter);
                 if (parameter == "arguments" && value.ValueKind == JsonValueKind.Object && error.Details is InvalidArgumentDetails details)
                 {
-                    var fields = ValidateFields(value).SelectMany(e => e.Details is InvalidArgumentDetails field ? field.Parameters : System.Array.Empty<string>()).ToArray();
+                    var fields = ValidateFields(value)
+                        .SelectMany(e => e.Details is InvalidArgumentDetails field ? field.Parameters : System.Array.Empty<string>()).ToArray();
                     if (fields.Length > 0) return new Error(error.Message,
                         new InvalidArgumentDetails(fields[0], details.AllowedValues, fields) { WholeArgumentValidation = true });
                 }
@@ -144,7 +147,9 @@ namespace TiaMcp.Logic.V4.Inputs
                     case "pattern": _ = new Regex(field.Value.GetString()!, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)); break;
                     case "type":
                         var types = field.Value.ValueKind == JsonValueKind.Array ? field.Value.EnumerateArray().ToArray() : new[] { field.Value };
-                        if (types.Any(t => !new[] { "object", "array", "string", "number", "integer", "boolean", "null" }.Contains(t.GetString(), StringComparer.Ordinal)))
+                        if (types
+                                .Any(t => !new[] { "object", "array", "string", "number", "integer", "boolean", "null" }
+                                    .Contains(t.GetString(), StringComparer.Ordinal)))
                             throw new ArgumentException("Unsupported schema type.");
                         break;
                 }
@@ -209,9 +214,13 @@ namespace TiaMcp.Logic.V4.Inputs
                 new InputBudget(depth: schema.TryGetProperty("x-maxDepth", out var depth) ? depth.GetInt32() : V4Json.MaximumInputDepth,
                     utf8Bytes: bytes.ValueKind == JsonValueKind.Number ? bytes.GetInt32() : (int?)null).Check(value);
             if (schema.TryGetProperty("type", out var type))
-                InputGuard.Require(type.ValueKind == JsonValueKind.Array ? type.EnumerateArray().Any(t => IsType(value, t.GetString()!)) : IsType(value, type.GetString()!));
+                InputGuard
+                    .Require(type.ValueKind == JsonValueKind.Array ? type.EnumerateArray().Any(t => IsType(value, t.GetString()!))
+                        : IsType(value, type.GetString()!));
             if (schema.TryGetProperty("enum", out var allowed))
-                InputGuard.Require(allowed.EnumerateArray().Any(a => Equal(a, value)), allowed.EnumerateArray().Where(a => a.ValueKind == JsonValueKind.String).Select(a => a.GetString()!).ToArray());
+                InputGuard
+                    .Require(allowed.EnumerateArray().Any(a => Equal(a, value)), allowed.EnumerateArray().Where(a => a.ValueKind == JsonValueKind.String)
+                        .Select(a => a.GetString()!).ToArray());
             if (schema.TryGetProperty("const", out var constant)) InputGuard.Require(Equal(constant, value));
             foreach (string keyword in new[] { "anyOf", "oneOf", "allOf" })
             {
@@ -261,8 +270,10 @@ namespace TiaMcp.Logic.V4.Inputs
                 foreach (var property in properties)
                 {
                     InputGuard.Require(names.Add(property.Name));
-                    if (schema.TryGetProperty("propertyNames", out var keys)) Check(keys, V4Json.Deserialize<JsonElement>(V4Json.Serialize(property.Name)), root);
-                    if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member)) Check(member, property.Value, root);
+                    if (schema.TryGetProperty("propertyNames", out var keys))
+                        Check(keys, V4Json.Deserialize<JsonElement>(V4Json.Serialize(property.Name)), root);
+                    if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member))
+                        Check(member, property.Value, root);
                     else if (schema.TryGetProperty("additionalProperties", out var additional)) Check(additional, property.Value, root);
                 }
                 if (schema.TryGetProperty("required", out var required))

@@ -31,7 +31,14 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public LibraryTools(LibraryPortService library) => _library = library;
 
-        [McpServerTool(Name="GetLibraryOverview"), Description("[L2][Library][READ] Official library overview: empty libraryName = project library, otherwise an exact already-open global library. Header (GlobalLibrary Author/Comment per culture/Copyright/Family/Version/Path/CreationTime/LastModified(By)/IsModified/IsWriteProtected/Size, HistoryEntries, UsedProducts), the Types folder tree (LibraryTypeFolder Status, each LibraryType with Guid/Namespace/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion/Status/version summary) and the master copy tree (MasterCopy Author/CreationDate/ContentDescriptions). Bounded by maxDepth/maxItems; no modification. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="GetLibraryOverview"),
+                Description("[L2][Library][READ] Official library overview: empty libraryName = project library, otherwise an exact already-open global " +
+                "library. Header (GlobalLibrary Author/Comment per " +
+                "culture/Copyright/Family/Version/Path/CreationTime/LastModified(By)/IsModified/IsWriteProtected/Size, HistoryEntries, UsedProducts), the " +
+                "Types folder tree (LibraryTypeFolder Status, each LibraryType with " +
+                "Guid/Namespace/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion/Status/version summary) and the master copy tree (MasterCopy " +
+                "Author/CreationDate/ContentDescriptions). Bounded by maxDepth/maxItems; no modification. Current native policy; V4 native acceptance is " +
+                "pending.")]
         public CallToolResult GetLibraryOverviewV4(
             string libraryName="",
             [Description("includeTypes: true also lists the types.")] bool includeTypes=true,
@@ -51,7 +58,12 @@ namespace TiaMcpServer.ModelContextProtocol
             int maxDepth=6,
             int maxItems=500)
         => _library.ReadLibraryOverview(libraryName,includeTypes,includeMasterCopies,maxDepth,maxItems);
-        [McpServerTool(Name="GetLibraryType"), Description("[L2][Library][READ] One library type by exact typePath (relative to the Types folder) or by guid (type GUID via ILibrary.FindType, or version GUID via FindVersion): type scalars incl. Status/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion, GetSupportedExportFormats, and every version with State/IsDefault/Author/ModifiedDate/OriginalLibrary/Dependencies/Dependents/MasterCopiesContainingInstances (per-field failures captured; TIA may throw on InWork versions). Paginated versions; no modification. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="GetLibraryType"),
+                Description("[L2][Library][READ] One library type by exact typePath (relative to the Types folder) or by guid (type GUID via " +
+                "ILibrary.FindType, or version GUID via FindVersion): type scalars incl. Status/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion, " +
+                "GetSupportedExportFormats, and every version with " +
+                "State/IsDefault/Author/ModifiedDate/OriginalLibrary/Dependencies/Dependents/MasterCopiesContainingInstances (per-field failures captured; " +
+                "TIA may throw on InWork versions). Paginated versions; no modification. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult GetLibraryTypeV4(
             string libraryName="",
             string typePath="",
@@ -71,29 +83,48 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset=0,
             int limit=100)
         => _library.ReadLibraryType(libraryName,typePath,guid,offset,limit);
-        [McpServerTool(Name="ManageLibraryType"), Description("[L2][Library][WRITE] One exact library type: update (properties Name/DoNotUse/SetForUpdate), delete (all versions, needs confirmDelete), updateLibrary (LibraryType.UpdateLibrary into targetLibraryName with deleteUnusedVersionsMode/structureConflictResolutionMode/forceUpdateMode, target read back by GUID) and updateProject (LibraryType.UpdateProject per scopeSoftwarePaths entry: PLC / HMI / Unified HMI software paths). V21 Unified ScriptModuleType.Name writes are blocked due to reported native TIA crashes, including previews. Project-library SetForUpdate and property writes to protected global libraries are refused before setters. Default dryRun=true; preview does not prove native setter safety. No save/compile/download. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageLibraryType"),
+                Description("[L2][Library][WRITE] One exact library type: update (properties Name/DoNotUse/SetForUpdate), delete (all versions, needs " +
+                "confirmDelete), updateLibrary (LibraryType.UpdateLibrary into targetLibraryName with " +
+                "deleteUnusedVersionsMode/structureConflictResolutionMode/forceUpdateMode, target read back by GUID) and updateProject " +
+                "(LibraryType.UpdateProject per scopeSoftwarePaths entry: PLC / HMI / Unified HMI software paths). V21 Unified ScriptModuleType.Name writes " +
+                "are blocked due to reported native TIA crashes, including previews. Project-library SetForUpdate and property writes to protected global " +
+                "libraries are refused before setters. Default dryRun=true; preview does not prove native setter safety. No save/compile/download. Current " +
+                "native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageLibraryTypeV4(
             string typePath,
             [Description("action: the operation to perform - update | delete | updateLibrary | updateProject.")] string action,
             string libraryName="",
             AttributeMap<Scalar> properties = null!,
             string targetLibraryName="",
-            [Description("scopeSoftwarePaths: JSON array of software paths that limit the update scope (required for updateProject / harmonizeProject; an unscoped update is refused).")] string[] scopeSoftwarePaths = null!,
+            [Description("scopeSoftwarePaths: JSON array of software paths that limit the update scope (required for updateProject / harmonizeProject; an " +
+                "unscoped update is refused).")] string[] scopeSoftwarePaths =
+                null!,
             [Description("deleteUnusedVersionsMode: AutomaticallyDelete | DoNotDelete.")] string deleteUnusedVersionsMode="DoNotDelete",
-            [Description("structureConflictResolutionMode: UpdateStructure | RetainStructure | CancelIfStructureConflicts.")] string structureConflictResolutionMode="RetainStructure",
-            [Description("forceUpdateMode: SetOnlyHigherUpdatedVersionAsDefault | ForceSetAnyUpdatedVersionAsDefault | NoDefaultVersionChange.")] string forceUpdateMode="SetOnlyHigherUpdatedVersionAsDefault",
+            [Description("structureConflictResolutionMode: UpdateStructure | RetainStructure | " +
+                "CancelIfStructureConflicts.")] string structureConflictResolutionMode=
+                "RetainStructure",
+            [Description("forceUpdateMode: SetOnlyHigherUpdatedVersionAsDefault | ForceSetAnyUpdatedVersionAsDefault | " +
+                "NoDefaultVersionChange.")] string forceUpdateMode=
+                "SetOnlyHigherUpdatedVersionAsDefault",
             bool confirmDelete=false,
             bool dryRun=true)
             => LibraryToolContract.Run("ManageLibraryType", !dryRun, true, () =>
             {
                 string propertiesJson = V4Json.Serialize(properties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>()));
                 string scopeSoftwarePathsJson = V4Json.Serialize(scopeSoftwarePaths ?? Array.Empty<string>());
-                LibraryToolContract.Check(() => { LibraryDeepLogic.ValidateTypeRequest(action, HardwareNetworkLogic.ParseObject(propertiesJson, "properties"), targetLibraryName, libraryName, LibraryDeepLogic.ParseScopes(scopeSoftwarePathsJson));
+                LibraryToolContract
+                    .Check(() => {
+                        LibraryDeepLogic
+                            .ValidateTypeRequest(action, HardwareNetworkLogic.ParseObject(propertiesJson, "properties"), targetLibraryName, libraryName,
+                                LibraryDeepLogic.ParseScopes(scopeSoftwarePathsJson));
                 LibraryDeepLogic.RequireOneOf(deleteUnusedVersionsMode, LibraryDeepLogic.DeleteUnusedVersionsModes, "deleteUnusedVersionsMode");
-                LibraryDeepLogic.RequireOneOf(structureConflictResolutionMode, LibraryDeepLogic.StructureConflictResolutionModes, "structureConflictResolutionMode");
+                LibraryDeepLogic
+                    .RequireOneOf(structureConflictResolutionMode, LibraryDeepLogic.StructureConflictResolutionModes, "structureConflictResolutionMode");
                 LibraryDeepLogic.RequireOneOf(forceUpdateMode, LibraryDeepLogic.ForceUpdateModes, "forceUpdateMode");
                 if (action == "delete") HardwareServicesLogic.RequireConfirmation(confirmDelete, "confirmDelete", dryRun); });
-                return ManageLibraryType(typePath, action, libraryName, propertiesJson, targetLibraryName, scopeSoftwarePathsJson, deleteUnusedVersionsMode, structureConflictResolutionMode, forceUpdateMode, confirmDelete, dryRun);
+                return ManageLibraryType(typePath, action, libraryName, propertiesJson, targetLibraryName, scopeSoftwarePathsJson, deleteUnusedVersionsMode,
+                        structureConflictResolutionMode, forceUpdateMode, confirmDelete, dryRun);
             });
 
         internal ResponseMessage ManageLibraryType(
@@ -108,15 +139,24 @@ namespace TiaMcpServer.ModelContextProtocol
             string forceUpdateMode="SetOnlyHigherUpdatedVersionAsDefault",
             bool confirmDelete=false,
             bool dryRun=true)
-        => _library.ManageLibraryType(typePath,action,libraryName,propertiesJson,targetLibraryName,scopeSoftwarePathsJson,deleteUnusedVersionsMode,structureConflictResolutionMode,forceUpdateMode,confirmDelete,dryRun);
-        [McpServerTool(Name="CheckLibraryUpdates"), Description("[L2][Library][READ] Native ILibrary.UpdateCheck(project, updateCheckMode ReportOutOfDateOnly/ReportOutOfDateAndUpToDate) of the project library or an exact open global library against the bound project: the UpdateCheckResult message tree (Description, MessageParts, nested Messages) flattened with bounds. Read-only; nothing is updated. Current native policy; V4 native acceptance is pending.")]
+        => _library
+            .ManageLibraryType(typePath,action,libraryName,propertiesJson,targetLibraryName,scopeSoftwarePathsJson,deleteUnusedVersionsMode,
+                structureConflictResolutionMode,forceUpdateMode,confirmDelete,dryRun);
+        [McpServerTool(Name="CheckLibraryUpdates"),
+                Description("[L2][Library][READ] Native ILibrary.UpdateCheck(project, updateCheckMode ReportOutOfDateOnly/ReportOutOfDateAndUpToDate) of the " +
+                "project library or an exact open global library against the bound project: the UpdateCheckResult message tree (Description, MessageParts, " +
+                "nested Messages) flattened with bounds. Read-only; nothing is updated. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult CheckLibraryUpdatesV4(
             string libraryName="",
             [Description("updateCheckMode: ReportOutOfDateOnly | ReportOutOfDateAndUpToDate.")] string updateCheckMode="ReportOutOfDateOnly",
             int maxItems=2000)
             => LibraryToolContract.Run("CheckLibraryUpdates", false, true, () =>
             {
-                LibraryToolContract.Check(() => { LibraryDeepLogic.RequireOneOf(updateCheckMode, LibraryDeepLogic.UpdateCheckModes, "updateCheckMode"); LibraryDeepLogic.ValidateBounds(1, maxItems); });
+                LibraryToolContract
+                    .Check(() => {
+                        LibraryDeepLogic.RequireOneOf(updateCheckMode, LibraryDeepLogic.UpdateCheckModes, "updateCheckMode"); LibraryDeepLogic
+                            .ValidateBounds(1, maxItems);
+                    });
                 return CheckLibraryUpdates(libraryName, updateCheckMode, maxItems);
             });
 
@@ -125,16 +165,31 @@ namespace TiaMcpServer.ModelContextProtocol
             string updateCheckMode="ReportOutOfDateOnly",
             int maxItems=2000)
         => _library.CheckLibraryUpdates(libraryName,updateCheckMode,maxItems);
-        [McpServerTool(Name="SynchronizeLibrary"), Description("[L2][Library][WRITE] ILibrary-level operations on a selection (selection: [{\"type\":\"Folder/Type\"},{\"folder\":\"Folder\"}], {\"folder\":\"\"} = whole Types folder): updateLibrary (UpdateLibrary into targetLibraryName with forceUpdateMode/deleteUnusedVersionsMode/structureConflictResolutionMode; types matched by GUID), updateProject (UpdateProject into scopeSoftwarePaths scopes; a global library source synchronizes the project library first; a project-library source applies only deleteUnusedVersionsMode and refuses non-default force/structure modes), harmonizeProject (HarmonizeProject with harmonizeOptions HarmonizeNames/HarmonizePaths; renames and moves instances) and cleanUp (ProjectLibrary.CleanUpLibrary with cleanUpMode PreserveDefaultVersionOfUnusedTypes/DeleteUnusedTypes, UserGlobalLibrary.CleanUpLibrary without mode). Real execution needs confirmChange=true; default dryRun=true; no save/compile/download. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="SynchronizeLibrary"),
+                Description("[L2][Library][WRITE] ILibrary-level operations on a selection (selection: [{\"type\":\"Folder/Type\"},{\"folder\":\"Folder\"}], " +
+                "{\"folder\":\"\"} = whole Types folder): updateLibrary (UpdateLibrary into targetLibraryName with " +
+                "forceUpdateMode/deleteUnusedVersionsMode/structureConflictResolutionMode; types matched by GUID), updateProject (UpdateProject into " +
+                "scopeSoftwarePaths scopes; a global library source synchronizes the project library first; a project-library source applies only " +
+                "deleteUnusedVersionsMode and refuses non-default force/structure modes), harmonizeProject (HarmonizeProject with harmonizeOptions " +
+                "HarmonizeNames/HarmonizePaths; renames and moves instances) and cleanUp (ProjectLibrary.CleanUpLibrary with cleanUpMode " +
+                "PreserveDefaultVersionOfUnusedTypes/DeleteUnusedTypes, UserGlobalLibrary.CleanUpLibrary without mode). Real execution needs " +
+                "confirmChange=true; default dryRun=true; no save/compile/download. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult SynchronizeLibraryV4(
             [Description("action: the operation to perform - updateLibrary | updateProject | harmonizeProject | cleanUp.")] string action,
-            [Description("selection: JSON array selecting the types / instances to synchronise (at least one type or folder; {folder: ''} selects the whole Types folder).")] LibrarySelection[] selection,
+            [Description("selection: JSON array selecting the types / instances to synchronise (at least one type or folder; {folder: ''} selects the whole " +
+                "Types folder).")] LibrarySelection[] selection,
             string libraryName="",
             string targetLibraryName="",
-            [Description("scopeSoftwarePaths: JSON array of software paths that limit the update scope (required for updateProject / harmonizeProject; an unscoped update is refused).")] string[] scopeSoftwarePaths = null!,
-            [Description("forceUpdateMode: SetOnlyHigherUpdatedVersionAsDefault | ForceSetAnyUpdatedVersionAsDefault | NoDefaultVersionChange.")] string forceUpdateMode="SetOnlyHigherUpdatedVersionAsDefault",
+            [Description("scopeSoftwarePaths: JSON array of software paths that limit the update scope (required for updateProject / harmonizeProject; an " +
+                "unscoped update is refused).")] string[] scopeSoftwarePaths =
+                null!,
+            [Description("forceUpdateMode: SetOnlyHigherUpdatedVersionAsDefault | ForceSetAnyUpdatedVersionAsDefault | " +
+                "NoDefaultVersionChange.")] string forceUpdateMode=
+                "SetOnlyHigherUpdatedVersionAsDefault",
             [Description("deleteUnusedVersionsMode: AutomaticallyDelete | DoNotDelete.")] string deleteUnusedVersionsMode="DoNotDelete",
-            [Description("structureConflictResolutionMode: UpdateStructure | RetainStructure | CancelIfStructureConflicts.")] string structureConflictResolutionMode="RetainStructure",
+            [Description("structureConflictResolutionMode: UpdateStructure | RetainStructure | " +
+                "CancelIfStructureConflicts.")] string structureConflictResolutionMode=
+                "RetainStructure",
             [Description("harmonizeOptions: Array of harmonisation option names (see the tool description).")] string[] harmonizeOptions = null!,
             [Description("cleanUpMode: PreserveDefaultVersionOfUnusedTypes | DeleteUnusedTypes.")] string cleanUpMode="PreserveDefaultVersionOfUnusedTypes",
             bool confirmChange=false,
@@ -144,10 +199,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 string selectionJson = V4Json.Serialize(selection);
                 string scopeSoftwarePathsJson = V4Json.Serialize(scopeSoftwarePaths ?? Array.Empty<string>());
                 string harmonizeOptionsJson = V4Json.Serialize(harmonizeOptions ?? new[] { "HarmonizeNames", "HarmonizePaths" });
-                LibraryToolContract.Check(() => { LibraryDeepLogic.ValidateSyncRequest(action, libraryName, targetLibraryName, LibraryDeepLogic.ParseScopes(scopeSoftwarePathsJson), LibraryDeepLogic.ParseSelection(selectionJson), forceUpdateMode, deleteUnusedVersionsMode, structureConflictResolutionMode, cleanUpMode);
-                if (action == "harmonizeProject") LibraryDeepLogic.JoinHarmonizeOptions(HardwareNetworkLogic.ParseNames(harmonizeOptionsJson, "harmonizeOptions", 2));
+                LibraryToolContract
+                    .Check(() => {
+                        LibraryDeepLogic
+                            .ValidateSyncRequest(action, libraryName, targetLibraryName, LibraryDeepLogic.ParseScopes(scopeSoftwarePathsJson), LibraryDeepLogic
+                                .ParseSelection(selectionJson), forceUpdateMode, deleteUnusedVersionsMode, structureConflictResolutionMode, cleanUpMode);
+                if (action == "harmonizeProject") LibraryDeepLogic
+                    .JoinHarmonizeOptions(HardwareNetworkLogic.ParseNames(harmonizeOptionsJson, "harmonizeOptions", 2));
                 HardwareServicesLogic.RequireConfirmation(confirmChange, "confirmChange", dryRun); });
-                return SynchronizeLibrary(action, selectionJson, libraryName, targetLibraryName, scopeSoftwarePathsJson, forceUpdateMode, deleteUnusedVersionsMode, structureConflictResolutionMode, harmonizeOptionsJson, cleanUpMode, confirmChange, dryRun);
+                return SynchronizeLibrary(action, selectionJson, libraryName, targetLibraryName, scopeSoftwarePathsJson, forceUpdateMode,
+                        deleteUnusedVersionsMode, structureConflictResolutionMode, harmonizeOptionsJson, cleanUpMode, confirmChange, dryRun);
             });
 
         internal ResponseMessage SynchronizeLibrary(
@@ -163,8 +224,14 @@ namespace TiaMcpServer.ModelContextProtocol
             string cleanUpMode="PreserveDefaultVersionOfUnusedTypes",
             bool confirmChange=false,
             bool dryRun=true)
-        => _library.SynchronizeLibrary(action,selectionJson,libraryName,targetLibraryName,scopeSoftwarePathsJson,forceUpdateMode,deleteUnusedVersionsMode,structureConflictResolutionMode,harmonizeOptionsJson,cleanUpMode,confirmChange,dryRun);
-        [McpServerTool(Name="CompareLibraryObjects"), Description("[L2][Library][READ] Native detailed comparison of two library objects of the same kind (type: LibraryType.CompareTo; version: LibraryTypeVersion.CompareTo with leftVersion/rightVersion Major.Minor.Build; masterCopy: MasterCopy.CompareTo) across the project library and open global libraries: DetailedCompareResult.Properties rows (Description, DetailCompareStatus, LeftValue, RightValue) with a status summary; identical rows hidden unless includeIdentical. Read-only. Current native policy; V4 native acceptance is pending.")]
+        => _library
+            .SynchronizeLibrary(action,selectionJson,libraryName,targetLibraryName,scopeSoftwarePathsJson,forceUpdateMode,deleteUnusedVersionsMode,
+                structureConflictResolutionMode,harmonizeOptionsJson,cleanUpMode,confirmChange,dryRun);
+        [McpServerTool(Name="CompareLibraryObjects"),
+                Description("[L2][Library][READ] Native detailed comparison of two library objects of the same kind (type: LibraryType.CompareTo; version: " +
+                "LibraryTypeVersion.CompareTo with leftVersion/rightVersion Major.Minor.Build; masterCopy: MasterCopy.CompareTo) across the project library " +
+                "and open global libraries: DetailedCompareResult.Properties rows (Description, DetailCompareStatus, LeftValue, RightValue) with a status " +
+                "summary; identical rows hidden unless includeIdentical. Read-only. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult CompareLibraryObjectsV4(
             [Description("kind: type | version | masterCopy.")] string kind,
             [Description("leftPath: 'Folder/Name' of the left object.")] string leftPath,
@@ -172,14 +239,21 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("leftLibraryName: global library on the left side of the comparison ('' = the project library).")] string leftLibraryName="",
             [Description("rightLibraryName: global library on the right side of the comparison ('' = the project library).")] string rightLibraryName="",
             [Description("leftVersion: version string of the left type (e.g. 'V1.0.0'; '' = default version).")] string leftVersion="",
-            [Description("rightVersion: version string of the right type (e.g. '1.0.1' (Major.Minor.Build, without a V prefix); '' = default version).")] string rightVersion="",
+            [Description("rightVersion: version string of the right type (e.g. '1.0.1' (Major.Minor.Build, without a V prefix); '' = default " +
+                "version).")] string rightVersion=
+                "",
             bool includeIdentical=false,
             int offset=0,
             int limit=100)
             => LibraryToolContract.Run("CompareLibraryObjects", false, true, () =>
             {
-                LibraryToolContract.Check(() => { LibraryDeepLogic.ValidateCompareRequest(kind, leftPath, rightPath, leftVersion, rightVersion); HardwareServicesLogic.ValidatePagination(offset, limit); });
-                return CompareLibraryObjects(kind, leftPath, rightPath, leftLibraryName, rightLibraryName, leftVersion, rightVersion, includeIdentical, offset, limit);
+                LibraryToolContract
+                    .Check(() => {
+                        LibraryDeepLogic.ValidateCompareRequest(kind, leftPath, rightPath, leftVersion, rightVersion); HardwareServicesLogic
+                            .ValidatePagination(offset, limit);
+                    });
+                return CompareLibraryObjects(kind, leftPath, rightPath, leftLibraryName, rightLibraryName, leftVersion, rightVersion, includeIdentical, offset,
+                        limit);
             });
 
         internal ResponseMessage CompareLibraryObjects(
@@ -194,11 +268,20 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset=0,
             int limit=100)
         => _library.CompareLibraryObjects(kind,leftPath,rightPath,leftLibraryName,rightLibraryName,leftVersion,rightVersion,includeIdentical,offset,limit);
-        [McpServerTool(Name="ManageLibraryTypeVersion"), Description("[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires exact targetSoftwarePath with a single instance and uses Edit(instanceInfo), while HMI edit uses Edit(). Versions use Major.Minor.Build without a V prefix. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageLibraryTypeVersion"),
+                Description("[L2][Library][WRITE] Exact library type/version " +
+                "read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise " +
+                "unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires " +
+                "exact targetSoftwarePath with a single instance and uses Edit(instanceInfo), while HMI edit uses Edit(). Versions use Major.Minor.Build " +
+                "without a V prefix. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact " +
+                "targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update " +
+                "chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic " +
+                "validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageLibraryTypeVersionV4(
             string typePath,
             string version,
-            [Description("action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances.")] string action,
+            [Description("action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | " +
+                "findInstances.")] string action,
             string libraryName="",
             [Description("newVersion: version string of the new type version, e.g. 'V1.0.1'.")] string newVersion="",
             [Description("dependenciesMode: how dependent types are handled by the action ('' = default).")] string dependenciesMode="",
@@ -208,7 +291,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
             => LibraryToolContract.Run("ManageLibraryTypeVersion", !dryRun && !(action == "read" || action == "findInstances"), true, () =>
             {
-                return ManageLibraryTypeVersion(typePath, version, action, libraryName, newVersion, dependenciesMode, author, comment, targetSoftwarePath, dryRun);
+                return ManageLibraryTypeVersion(typePath, version, action, libraryName, newVersion, dependenciesMode, author, comment, targetSoftwarePath,
+                        dryRun);
             });
 
         internal ResponseMessage ManageLibraryTypeVersion(
@@ -223,7 +307,11 @@ namespace TiaMcpServer.ModelContextProtocol
             string targetSoftwarePath="",
             bool dryRun=true)
         => _library.ManageLibraryTypeVersion(typePath,version,action,libraryName,newVersion,dependenciesMode,author,comment,targetSoftwarePath,dryRun);
-        [McpServerTool(Name="CreateLibraryMasterCopy"), Description("[L2][Library][WRITE] Create a native master copy from an exact block/type/device/screen in an existing library folder. sourcePath is relative object path; for device use JSON array of exact group/station names. Empty libraryName=project library; otherwise already-open global library. dryRun=true default. Native IMasterCopySource required; no automatic save or close. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="CreateLibraryMasterCopy"),
+                Description("[L2][Library][WRITE] Create a native master copy from an exact block/type/device/screen in an existing library folder. " +
+                "sourcePath is relative object path; for device use JSON array of exact group/station names. Empty libraryName=project library; otherwise " +
+                "already-open global library. dryRun=true default. Native IMasterCopySource required; no automatic save or close. Current native policy; V4 " +
+                "native acceptance is pending.")]
         public CallToolResult CreateLibraryMasterCopyV4(
             [Description("sourceKind: block | type | device | screen.")] string sourceKind,
             [Description("sourcePath: 'Group/Name' of the source object.")] string sourcePath,
@@ -244,7 +332,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string libraryName="",
             bool dryRun=true)
         => _library.CreateLibraryMasterCopy(sourceKind,sourcePath,softwarePath,folderPath,libraryName,dryRun);
-        [McpServerTool(Name="ManageLibraryMasterCopy"), Description("[L2][Library][WRITE] Exact master-copy read/copy/compare/delete. copy destinationPath is a folder; compare uses exact master-copy path. No overwrites or automatic save. Default preview for mutations. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageLibraryMasterCopy"),
+                Description("[L2][Library][WRITE] Exact master-copy read/copy/compare/delete. copy destinationPath is a folder; compare uses exact " +
+                "master-copy path. No overwrites or automatic save. Default preview for mutations. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageLibraryMasterCopyV4(
             [Description("sourcePath: 'Group/Name' of the source object.")] string sourcePath,
             [Description("action: the operation to perform - read | copy | compare | delete.")] string action,
@@ -265,7 +355,14 @@ namespace TiaMcpServer.ModelContextProtocol
             string destinationPath="",
             bool dryRun=true)
         => _library.ManageLibraryMasterCopy(sourcePath,action,libraryName,destinationLibraryName,destinationPath,dryRun);
-        [McpServerTool(Name="ImportLibraryTypeDocuments"), Description("[L2][Library][WRITE] Native library document import (SimaticML / WinCC ML / S7DCL / SCL / STL / UDT / NVT): without typePath, LibraryTypeComposition.CreateFromDocuments creates a new type with an InWork default version in the exact library folder; with typePath, LibraryTypeVersionComposition.CreateFromDocuments adds a version to that type (createOptions None fails natively if an in-work version exists, Override replaces it). STEP 7 documents need targetSoftwarePath + targetGroupKind (blocks/types) + targetGroupPath as target environment. importOptions None/SkipInactiveCultures/ActivateInactiveCultures. Returns TransferResultState, messages and the created type/version. Project library only (global libraries throw natively); default preview; no automatic save. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ImportLibraryTypeDocuments"),
+                Description("[L2][Library][WRITE] Native library document import (SimaticML / WinCC ML / S7DCL / SCL / STL / UDT / NVT): without typePath, " +
+                "LibraryTypeComposition.CreateFromDocuments creates a new type with an InWork default version in the exact library folder; with typePath, " +
+                "LibraryTypeVersionComposition.CreateFromDocuments adds a version to that type (createOptions None fails natively if an in-work version " +
+                "exists, Override replaces it). STEP 7 documents need targetSoftwarePath + targetGroupKind (blocks/types) + targetGroupPath as target " +
+                "environment. importOptions None/SkipInactiveCultures/ActivateInactiveCultures. Returns TransferResultState, messages and the created " +
+                "type/version. Project library only (global libraries throw natively); default preview; no automatic save. Current native policy; V4 native " +
+                "acceptance is pending.")]
         public CallToolResult ImportLibraryTypeDocumentsV4(
             string filePath,
             string folderPath="",
@@ -279,7 +376,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
             => LibraryToolContract.Run("ImportLibraryTypeDocuments", !dryRun, true, () =>
             {
-                return ImportLibraryTypeDocuments(filePath, folderPath, libraryName, importOptions, typePath, createOptions, targetSoftwarePath, targetGroupKind, targetGroupPath, dryRun);
+                return ImportLibraryTypeDocuments(filePath, folderPath, libraryName, importOptions, typePath, createOptions, targetSoftwarePath,
+                        targetGroupKind, targetGroupPath, dryRun);
             });
 
         internal ResponseMessage ImportLibraryTypeDocuments(
@@ -293,10 +391,19 @@ namespace TiaMcpServer.ModelContextProtocol
             string targetGroupKind="",
             string targetGroupPath="",
             bool dryRun=true)
-        => _library.ImportLibraryTypeDocuments(filePath,folderPath,libraryName,importOptions,typePath,createOptions,targetSoftwarePath,targetGroupKind,targetGroupPath,dryRun);
-        [McpServerTool(Name="ManageGlobalLibrary"), Description("[L2][Library][WRITE] Global library lifecycle: list (open libraries), infos (GlobalLibraryComposition.GetGlobalLibraryInfos: every library this Portal knows with path, type and IsOpen), create/open/openInfo (Open(GlobalLibraryInfo) by exact name)/retrieve/save/saveAs/close, and archive (UserGlobalLibrary.Archive(destinationDirectory, archiveName, archiveMode None/Compressed/DiscardRestorableData/DiscardRestorableDataAndCompressed); the library must be saved first). Exact expected name, new destination; preview by default. Close is explicit, never auto-save. Upgrade opening requires explicit ReadWrite. Current native policy; V4 native acceptance is pending.")]
+        => _library
+            .ImportLibraryTypeDocuments(filePath,folderPath,libraryName,importOptions,typePath,createOptions,targetSoftwarePath,targetGroupKind,targetGroupPath,
+                dryRun);
+        [McpServerTool(Name="ManageGlobalLibrary"),
+                Description("[L2][Library][WRITE] Global library lifecycle: list (open libraries), infos (GlobalLibraryComposition.GetGlobalLibraryInfos: " +
+                "every library this Portal knows with path, type and IsOpen), create/open/openInfo (Open(GlobalLibraryInfo) by exact " +
+                "name)/retrieve/save/saveAs/close, and archive (UserGlobalLibrary.Archive(destinationDirectory, archiveName, archiveMode " +
+                "None/Compressed/DiscardRestorableData/DiscardRestorableDataAndCompressed); the library must be saved first). Exact expected name, new " +
+                "destination; preview by default. Close is explicit, never auto-save. Upgrade opening requires explicit ReadWrite. Current native policy; V4 " +
+                "native acceptance is pending.")]
         public CallToolResult ManageGlobalLibraryV4(
-            [Description("action: the operation to perform - list | infos | create | open | openInfo | retrieve | save | saveAs | close | archive.")] string action,
+            [Description("action: the operation to perform - list | infos | create | open | openInfo | retrieve | save | saveAs | close | " +
+                "archive.")] string action,
             string libraryName="",
             string filePath="",
             string destinationDirectory="",
@@ -321,7 +428,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string archiveMode="Compressed",
             bool dryRun=true)
         => _library.ManageGlobalLibrary(action,libraryName,filePath,destinationDirectory,openMode,upgrade,archiveName,archiveMode,dryRun);
-        [McpServerTool(Name="ManageLibraryFolder"), Description("[L2][Library][WRITE] Read/create/rename/delete exact types or masterCopies folder. Empty-folder deletion only, no recursive deletion or save. Default preview. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageLibraryFolder"),
+                Description("[L2][Library][WRITE] Read/create/rename/delete exact types or masterCopies folder. Empty-folder deletion only, no recursive " +
+                "deletion or save. Default preview. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageLibraryFolderV4(
             [Description("folderKind: types | masterCopies.")] string folderKind,
             string folderPath,
@@ -343,7 +452,9 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
         => _library.ManageLibraryFolder(folderKind,folderPath,action,libraryName,newName,dryRun);
 
-        [McpServerTool(Name = "ProbeGlobalLibrary"), Description("[L2][HMI-Library]Open a TIA global library (.al21) read-only/best-effort and list accessible master copies/types/folders through public/reflection APIs. It does not import library content. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ProbeGlobalLibrary"),
+                Description("[L2][HMI-Library]Open a TIA global library (.al21) read-only/best-effort and list accessible master copies/types/folders " +
+                "through public/reflection APIs. It does not import library content. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ProbeGlobalLibraryV4(
             [Description("libraryPath: full path to .al21 file or its containing folder")] string libraryPath,
             [Description("maxItems: maximum items per list")] int maxItems = 500)
@@ -368,7 +479,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportMasterCopyFromGlobalLibrary"), Description("[L2][HMI-Library] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen item is modified. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ImportMasterCopyFromGlobalLibrary"),
+                Description("[L2][HMI-Library] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document " +
+                "import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen " +
+                "item is modified. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ImportMasterCopyFromGlobalLibraryV4(
             [Description("libraryPath: full path to .al21 file or its containing folder")] string libraryPath,
             [Description("masterCopyName: exact or suffix path/name from ProbeGlobalLibrary MasterCopies readback")] string masterCopyName,
@@ -399,7 +513,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing global-library master copy: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error importing global-library master copy: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 

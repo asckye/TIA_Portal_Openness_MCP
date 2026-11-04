@@ -10,7 +10,8 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static string[] Parse(string path) => PlcOrganisationPaths.Parse(path, true);
 
         internal static Dictionary<string, object?> Execute<T>(T root, string path, bool dryRun,
-            Func<T, IEnumerable<T>> children, Func<T, string> name, Func<T, string, T> create, bool stripTypeRoot = true, Func<string, string[]>? pathParts = null) where T : class
+            Func<T, IEnumerable<T>> children, Func<T, string> name, Func<T, string, T> create, bool stripTypeRoot = true, Func<string, string[]>? pathParts =
+                null) where T : class
         {
             var parts = pathParts != null ? pathParts(path) : stripTypeRoot ? Parse(path) : PlcGroupOperations.Parts(path);
             T? current = root;
@@ -36,9 +37,11 @@ namespace TiaMcp.Adapters.Native.Plc
             catch (Exception ex)
             {
                 throw new PlcSoftwareException("OpennessError",
-                    "Type group creation failed at '" + prefix + "'. Groups already created (not rolled back): " + PlcSoftwareValues.StringArray(created) + ". " + ex.Message, null, ex);
+                    "Type group creation failed at '" + prefix + "'. Groups already created (not rolled back): " + PlcSoftwareValues.StringArray(created)
+                        + ". " + ex.Message, null, ex);
             }
-            return new Dictionary<string, object?> { ["success"] = true, ["groupPath"] = pathParts == null ? string.Join("/", parts) : "/" + string.Join("/", parts.Select(Uri.EscapeDataString)),
+            return new Dictionary<string, object?> {
+                ["success"] = true, ["groupPath"] = pathParts == null ? string.Join("/", parts) : "/" + string.Join("/", parts.Select(Uri.EscapeDataString)),
                 ["dryRun"] = dryRun, ["createdCount"] = created.Count, ["createdPaths"] = created,
                 ["missingPaths"] = missing, ["alreadyExisted"] = missing.Count == 0 };
         }

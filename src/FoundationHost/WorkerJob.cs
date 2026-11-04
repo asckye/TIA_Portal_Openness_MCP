@@ -93,11 +93,17 @@ internal static class WorkerShutdown
         }
         catch (WorkerTerminationException refusal) { Trace.TraceError(refusal.ToString()); return refusal; }
         catch (System.ComponentModel.Win32Exception error)
-        { var refusal = new WorkerTerminationException("Unable to verify or stop the owned worker.", error); Trace.TraceError(refusal.ToString()); return refusal; }
+        {
+            var refusal = new WorkerTerminationException("Unable to verify or stop the owned worker.", error); Trace.TraceError(refusal.ToString());
+            return refusal;
+        }
         catch (InvalidOperationException error)
         {
             if (process != null && !Exited(process))
-            { var refusal = new WorkerTerminationException("Unable to confirm the owned worker has exited.", error); Trace.TraceError(refusal.ToString()); return refusal; }
+            {
+                var refusal = new WorkerTerminationException("Unable to confirm the owned worker has exited.", error); Trace.TraceError(refusal.ToString());
+                return refusal;
+            }
         }
         if (disposeProcess) process?.Dispose();
         return null;

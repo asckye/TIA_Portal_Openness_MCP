@@ -29,7 +29,10 @@ namespace TiaMcp.PlcWorker.Runtime
         public JsonObject ExecutePlcSimAdvanced(JsonObject request)
         {
             var operation = (string?)request["operation"] ?? "";
-            if (!new[] { "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" }.Contains(operation, StringComparer.Ordinal))
+            if (!new[] {
+                    "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags",
+                        "RunPlcSimAdvancedTestScenario"
+                }.Contains(operation, StringComparer.Ordinal))
                 throw new ArgumentException("Unknown PLCSIM Advanced operation.");
             var method = typeof(PlcSimAdvancedAdapter).GetMethod(operation)!;
             var arguments = request["arguments"]!.AsObject();
@@ -68,7 +71,8 @@ namespace TiaMcp.PlcWorker.Runtime
                 var cause = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
                 // envelope: legacy-plcsim-failure: Failed would append dataComplete, which this executor does not set.
                 meta["success"] = false; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
-                meta["status"] = cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported" : cause is PlcSimApiUnavailableException ? "ApiNotFound" : "ReadOrWriteFailed";
+                meta["status"] = cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported"
+                    : cause is PlcSimApiUnavailableException ? "ApiNotFound" : "ReadOrWriteFailed";
                 meta["error"] = cause.Message;
                 return new PlcSimAdvancedReport { Ok = false, Message = tool + " failed: " + cause.Message, Data = data, Meta = meta };
             }
@@ -89,7 +93,8 @@ namespace TiaMcp.PlcWorker.Runtime
                         object? instance = null;
                         try
                         {
-                            instance = PlcSimAdvancedChannel.Acquire(api, name); foreach (var kv in PlcSimAdvancedChannel.InstanceState(instance)) o[kv.Key] = kv.Value?.DeepClone();
+                            instance = PlcSimAdvancedChannel.Acquire(api, name); foreach (var kv in PlcSimAdvancedChannel.InstanceState(instance)) o[kv.Key] =
+                                kv.Value?.DeepClone();
                             if (!string.IsNullOrWhiteSpace(memberFilter)) o["members"] = PlcSimAdvancedChannel.DescribeMembers(instance, memberFilter.Trim());
                         }
                         catch (Exception ex) { o["stateError"] = ex.Message; PlcSimAdvancedChannel.Forget(name); }
@@ -103,12 +108,14 @@ namespace TiaMcp.PlcWorker.Runtime
                 return items.Count + " PLCSIM Advanced instance(s) registered (API " + api.Version + ").";
             });
 
-        public PlcSimAdvancedReport ManagePlcSimAdvancedInstance(string instanceName, string action, string cpuType = "", int timeoutMs = 60000, bool confirmInstanceChange = false, bool dryRun = true, string apiPath = "", string communicationInterface = "")
+        public PlcSimAdvancedReport ManagePlcSimAdvancedInstance(string instanceName, string action, string cpuType = "", int timeoutMs = 60000,
+                bool confirmInstanceChange = false, bool dryRun = true, string apiPath = "", string communicationInterface = "")
             => RunPlcSimTool("ManagePlcSimAdvancedInstance", dryRun, (data, meta) =>
             {
                 var name = PlcSimAdvancedLogic.RequireInstanceName(instanceName);
                 var act = PlcSimAdvancedLogic.NormalizeAction(action);
-                if (!string.IsNullOrWhiteSpace(communicationInterface) && act != "register" && act != "powerOn") throw new ArgumentException("communicationInterface applies to register / powerOn only.");
+                if (!string.IsNullOrWhiteSpace(communicationInterface) && act != "register" && act != "powerOn")
+                    throw new ArgumentException("communicationInterface applies to register / powerOn only.");
                 if (timeoutMs < 1000 || timeoutMs > 600000) throw new ArgumentException("timeoutMs must be between 1000 and 600000.");
                 var api = PlcSimAdvancedChannel.Load(apiPath);
                 data["api"] = PlcSimAdvancedChannel.Describe(api);
@@ -125,25 +132,35 @@ namespace TiaMcp.PlcWorker.Runtime
                         data["stateBefore"] = PlcSimAdvancedChannel.InstanceState(instance);
                     }
                     if (act == "register" && registered) throw new ArgumentException("Instance '" + name + "' is already registered; use powerOn/run instead.");
-                    if (act != "register" && !registered) throw new ArgumentException("Instance '" + name + "' is not registered; register it first (or check ListPlcSimAdvancedInstances).");
+                    if (act != "register" && !registered)
+                        throw new ArgumentException("Instance '" + name + "' is not registered; register it first (or check ListPlcSimAdvancedInstances).");
                     if (dryRun || !confirmInstanceChange)
                     {
                         meta["mayHaveChanged"] = false;
                         data["executed"] = false;
                         if (!dryRun && !confirmInstanceChange) data["refusal"] = "confirmInstanceChange=true is required to execute.";
-                        return "Preview: would " + act + " PLCSIM Advanced instance '" + name + "'" + (registered ? " (current state " + data["stateBefore"]?["operatingState"] + ")" : " (not registered yet)") + ". Set dryRun=false and confirmInstanceChange=true to execute.";
+                        return "Preview: would " + act + " PLCSIM Advanced instance '" + name + "'"
+                            + (registered ? " (current state " + data["stateBefore"]?["operatingState"] + ")" : " (not registered yet)")
+                            + ". Set dryRun=false and confirmInstanceChange=true to execute.";
                     }
                     meta["mayHaveChanged"] = true;
                     if (act == "register")
                     {
-                        PlcSimAdvancedChannel.Dispose(PlcSimAdvancedChannel.Register(api, name, cpuType));   // the registration handle; the cached interface is opened below
+                        PlcSimAdvancedChannel
+                            .Dispose(PlcSimAdvancedChannel.Register(api, name, cpuType));   // the registration handle; the cached interface is opened below
                         instance = PlcSimAdvancedChannel.Acquire(api, name);
                         if (!string.IsNullOrWhiteSpace(communicationInterface))
                         {
                             // The instance exists from here on - a setter failure must say so instead of looking like a failed registration.
                             var detail = new JsonObject(); data["communicationInterfaceRoute"] = detail;
-                            try { data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance, communicationInterface, detail); }
-                            catch (Exception ex) { throw new InvalidOperationException("Instance '" + name + "' was registered, but communicationInterface '" + communicationInterface + "' could not be applied: " + ex.Message + " (powerOff + unregister it, or keep its current setting).", ex); }
+                            try {
+                                data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance, communicationInterface, detail);
+                            }
+                            catch (Exception ex) {
+                                throw new InvalidOperationException("Instance '" + name + "' was registered, but communicationInterface '"
+                                        + communicationInterface + "' could not be applied: " + ex.Message
+                                        + " (powerOff + unregister it, or keep its current setting).", ex);
+                            }
                         }
                     }
                     else
@@ -156,7 +173,8 @@ namespace TiaMcp.PlcWorker.Runtime
                         var runtimeCode = PlcSimAdvancedChannel.Lifecycle(instance!, act, timeoutMs);
                         if (runtimeCode != null) data["runtimeErrorCode"] = runtimeCode;
                         if (act == "unregister") { PlcSimAdvancedChannel.Forget(name); instance = null; }
-                        else if (act == "powerOff" || act == "memoryReset") PlcSimAdvancedChannel.Forget(name);   // the tag list is stale after these; the next call reopens
+                        else if (act == "powerOff" || act == "memoryReset") PlcSimAdvancedChannel
+                            .Forget(name);   // the tag list is stale after these; the next call reopens
                     }
                     meta["mayHaveChanged"] = true;
                     data["executed"] = true;
@@ -164,16 +182,21 @@ namespace TiaMcp.PlcWorker.Runtime
                     if (instance != null) data["stateAfter"] = PlcSimAdvancedChannel.InstanceState(instance);
                     data["registeredAfter"] = PlcSimAdvancedChannel.RegisteredInstances(api).Any(r => r.name.Equals(name, StringComparison.OrdinalIgnoreCase));
                     var stateNow = instance == null ? "" : Convert.ToString(data["stateAfter"]?["operatingState"]) ?? "";
-                    return act + " executed on PLCSIM Advanced instance '" + name + "'" + (instance != null ? "; state now " + (stateNow.Length == 0 ? "(powered off - no operating state until the next powerOn)" : stateNow) : "") + ".";
+                    return act + " executed on PLCSIM Advanced instance '" + name + "'"
+                        + (instance != null ? "; state now " + (stateNow.Length == 0 ? "(powered off - no operating state until the next powerOn)" : stateNow)
+                            : "")
+                        + ".";
                 }
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
-        public PlcSimAdvancedReport ReadPlcSimAdvancedTags(string instanceName, string namesJson = "", string areaFilter = "", string nameContains = "", int offset = 0, int limit = 200, string apiPath = "")
+        public PlcSimAdvancedReport ReadPlcSimAdvancedTags(string instanceName, string namesJson = "", string areaFilter = "", string nameContains = "",
+                int offset = 0, int limit = 200, string apiPath = "")
             => RunPlcSimTool("GetPlcSimAdvancedTags", null, (data, meta) =>
             {
                 var name = PlcSimAdvancedLogic.RequireInstanceName(instanceName);
-                if (offset < 0 || limit < 1 || limit > PlcSimAdvancedLogic.MaxTagsPerCall) throw new ArgumentException("offset must be >= 0 and limit between 1 and " + PlcSimAdvancedLogic.MaxTagsPerCall + ".");
+                if (offset < 0 || limit < 1 || limit > PlcSimAdvancedLogic.MaxTagsPerCall)
+                    throw new ArgumentException("offset must be >= 0 and limit between 1 and " + PlcSimAdvancedLogic.MaxTagsPerCall + ".");
                 var names = PlcSimAdvancedLogic.ParseNameList(namesJson, "namesJson");
                 var api = PlcSimAdvancedChannel.Load(apiPath);
                 data["api"] = PlcSimAdvancedChannel.Describe(api);
@@ -204,13 +227,20 @@ namespace TiaMcp.PlcWorker.Runtime
                         }
                         data["items"] = items;
                         meta["dataComplete"] = failures == 0;
-                        return "Read " + (names.Count - failures) + "/" + names.Count + " tag(s) from PLCSIM Advanced instance '" + name + "' (state " + data["state"] + ").";
+                        return "Read " + (names.Count - failures) + "/" + names.Count + " tag(s) from PLCSIM Advanced instance '" + name + "' (state "
+                            + data["state"] + ").";
                     }
                     var tags = PlcSimAdvancedChannel.Tags(instance);
-                    if (!string.IsNullOrWhiteSpace(areaFilter)) tags = tags.Where(t => t.Area.Equals(areaFilter.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
-                    if (!string.IsNullOrWhiteSpace(nameContains)) tags = tags.Where(t => t.Name.IndexOf(nameContains.Trim(), StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+                    if (!string.IsNullOrWhiteSpace(areaFilter)) tags = tags.Where(t => t.Area.Equals(areaFilter.Trim(), StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                    if (!string.IsNullOrWhiteSpace(nameContains)) tags = tags
+                        .Where(t => t.Name.IndexOf(nameContains.Trim(), StringComparison.OrdinalIgnoreCase) >= 0).ToList();
                     foreach (var t in tags.Skip(offset).Take(limit))
-                        items.Add(new JsonObject { ["name"] = t.Name, ["area"] = t.Area, ["dataType"] = t.DataType, ["primitiveType"] = t.PrimitiveType, ["offset"] = t.Offset, ["bit"] = t.Bit, ["size"] = t.Size });
+                        items
+                            .Add(new JsonObject {
+                                ["name"] = t.Name, ["area"] = t.Area, ["dataType"] = t.DataType, ["primitiveType"] = t.PrimitiveType, ["offset"] = t.Offset,
+                                    ["bit"] = t.Bit, ["size"] = t.Size
+                            });
                     data["items"] = items; data["totalCount"] = tags.Count; data["offset"] = offset; data["limit"] = limit;
                     meta["dataComplete"] = offset + items.Count >= tags.Count;
                     return items.Count + " of " + tags.Count + " tag(s) listed for PLCSIM Advanced instance '" + name + "' (state " + data["state"] + ").";
@@ -218,7 +248,8 @@ namespace TiaMcp.PlcWorker.Runtime
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
-        public PlcSimAdvancedReport WritePlcSimAdvancedTags(string instanceName, string valuesJson, bool confirmWrite = false, bool dryRun = true, string apiPath = "")
+        public PlcSimAdvancedReport WritePlcSimAdvancedTags(string instanceName, string valuesJson, bool confirmWrite = false, bool dryRun = true,
+                string apiPath = "")
             => RunPlcSimTool("WritePlcSimAdvancedTags", dryRun, (data, meta) =>
             {
                 var name = PlcSimAdvancedLogic.RequireInstanceName(instanceName);
@@ -270,8 +301,10 @@ namespace TiaMcp.PlcWorker.Runtime
                     data["items"] = items; data["executed"] = execute;
                     meta["mayHaveChanged"] = items.Any(i => i?["writeAttempted"]?.GetValue<bool>() == true);
                     meta["dataComplete"] = failures == 0;
-                    meta["operationSuccess"] = failures == 0;   // A failed write must fail the operation (TIA V21 / PLCSIM Advanced, 2026-09-21; docs/reference/real-machine-ledger.md).
-                    return (execute ? "Wrote " : "Preview: would write ") + (values.Count - failures) + "/" + values.Count + " tag(s) on PLCSIM Advanced instance '" + name + "'" + (execute ? "." : ". Set dryRun=false and confirmWrite=true to write.");
+                    meta["operationSuccess"] =
+                        failures == 0;   // A failed write must fail the operation (TIA V21 / PLCSIM Advanced, 2026-09-21; docs/reference/real-machine-ledger.md).
+                    return (execute ? "Wrote " : "Preview: would write ") + (values.Count - failures) + "/" + values.Count
+                        + " tag(s) on PLCSIM Advanced instance '" + name + "'" + (execute ? "." : ". Set dryRun=false and confirmWrite=true to write.");
                 }
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
@@ -281,13 +314,16 @@ namespace TiaMcp.PlcWorker.Runtime
             {
                 var scenario = PlcSimAdvancedLogic.ParseScenario(scenarioJson);
                 data["plan"] = PlcSimAdvancedLogic.ScenarioPlan(scenario);
-                data["safety"] = PlcSimSafety(scenario.Steps.Any(s => s.Kind == "powerOn" || s.Kind == "run" || s.Kind == "stop" || s.Kind == "cycles"), scenario.Steps.Any(s => s.Kind == "write"));
+                data["safety"] =
+                    PlcSimSafety(scenario.Steps.Any(s => s.Kind == "powerOn" || s.Kind == "run" || s.Kind == "stop" || s.Kind == "cycles"), scenario.Steps
+                        .Any(s => s.Kind == "write"));
                 var execute = !dryRun && confirmRun;
                 if (!execute)
                 {
                     meta["mayHaveChanged"] = false; data["executed"] = false;
                     if (!dryRun && !confirmRun) data["refusal"] = "confirmRun=true is required to execute.";
-                    return "Preview: scenario with " + scenario.Steps.Count + " step(s) on PLCSIM Advanced instance '" + scenario.Instance + "' validated. Set dryRun=false and confirmRun=true to execute.";
+                    return "Preview: scenario with " + scenario.Steps.Count + " step(s) on PLCSIM Advanced instance '" + scenario.Instance
+                        + "' validated. Set dryRun=false and confirmRun=true to execute.";
                 }
                 var api = PlcSimAdvancedChannel.Load(apiPath);
                 data["api"] = PlcSimAdvancedChannel.Describe(api);
@@ -321,13 +357,17 @@ namespace TiaMcp.PlcWorker.Runtime
                                 case "write":
                                     var written = new JsonArray();
                                     r["written"] = written;
-                                    foreach (var kv in step.Values) { var type = PlcSimAdvancedChannel.WriteWithRefresh(api, scenario.Instance, instance, kv.Key, kv.Value); written.Add(new JsonObject { ["name"] = kv.Key, ["type"] = type, ["value"] = kv.Value?.DeepClone() }); }
+                                    foreach (var kv in step.Values) {
+                                        var type = PlcSimAdvancedChannel.WriteWithRefresh(api, scenario.Instance, instance, kv.Key, kv.Value); written
+                                            .Add(new JsonObject { ["name"] = kv.Key, ["type"] = type, ["value"] = kv.Value?.DeepClone() });
+                                    }
                                     break;
                                 case "cycles":
                                     if (scenario.Mode == "singleStep")
                                     {
                                         // Each RunToNextSyncPoint is followed by a wait for Freeze (see StepCycles).
-                                        var (done, waitedMs, finalState, failure) = PlcSimAdvancedChannel.StepCycles(instance, step.Count, PlcSimAdvancedLogic.SyncPointWaitMs, PlcSimAdvancedLogic.SyncPointPollMs);
+                                        var (done, waitedMs, finalState, failure) = PlcSimAdvancedChannel
+                                            .StepCycles(instance, step.Count, PlcSimAdvancedLogic.SyncPointWaitMs, PlcSimAdvancedLogic.SyncPointPollMs);
                                         r["cyclesStepped"] = done; r["waitedMs"] = waitedMs; r["stateAfterSteps"] = finalState;
                                         if (failure != null) { r["error"] = failure; stepOk = false; }
                                     }
@@ -344,7 +384,11 @@ namespace TiaMcp.PlcWorker.Runtime
                                         var (type, actual) = PlcSimAdvancedChannel.ReadWithRefresh(api, scenario.Instance, instance, kv.Key);
                                         var ok = PlcSimAdvancedLogic.ValuesMatch(actual, kv.Value, step.Tolerance);
                                         if (!ok) stepOk = false;
-                                        checks.Add(new JsonObject { ["name"] = kv.Key, ["type"] = type, ["expected"] = kv.Value?.DeepClone(), ["actual"] = PlcSimAdvancedLogic.ToJson(actual), ["ok"] = ok });
+                                        checks
+                                            .Add(new JsonObject {
+                                                ["name"] = kv.Key, ["type"] = type, ["expected"] = kv.Value?.DeepClone(), ["actual"] = PlcSimAdvancedLogic
+                                                    .ToJson(actual), ["ok"] = ok
+                                            });
                                     }
                                     r["checks"] = checks;
                                     break;
@@ -380,10 +424,12 @@ namespace TiaMcp.PlcWorker.Runtime
                 if (meta["outcomeUnknown"]?.GetValue<bool>() != true && data["operatingModeRestoreError"] == null) meta["writeOutcomeKnown"] = true;
                 data["executedSteps"] = executedSteps; data["assertionsPassed"] = passed; data["failedSteps"] = failed;
                 data["verdict"] = failed == 0 ? "passed" : "failed";
-                meta["operationSuccess"] = failed == 0;   // A failed scenario must fail the operation (TIA V21 / PLCSIM Advanced, 2026-09-21; docs/reference/real-machine-ledger.md).
+                meta["operationSuccess"] =
+                    failed == 0;   // A failed scenario must fail the operation (TIA V21 / PLCSIM Advanced, 2026-09-21; docs/reference/real-machine-ledger.md).
                 meta["mayHaveChanged"] = true;
                 meta["dataComplete"] = executedSteps == scenario.Steps.Count;
-                return "Scenario " + (failed == 0 ? "PASSED" : "FAILED") + ": " + executedSteps + "/" + scenario.Steps.Count + " step(s) executed, " + passed + " assertion(s) passed, " + failed + " failed on PLCSIM Advanced instance '" + scenario.Instance + "'.";
+                return "Scenario " + (failed == 0 ? "PASSED" : "FAILED") + ": " + executedSteps + "/" + scenario.Steps.Count + " step(s) executed, " + passed
+                    + " assertion(s) passed, " + failed + " failed on PLCSIM Advanced instance '" + scenario.Instance + "'.";
             });
     }
 }

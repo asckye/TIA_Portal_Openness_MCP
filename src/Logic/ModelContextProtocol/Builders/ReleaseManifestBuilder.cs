@@ -31,7 +31,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["releaseReady"] = suiteOk && noFailedItems && !hasKnownBlocks,
                 ["releaseReadinessReason"] = suiteOk && noFailedItems && !hasKnownBlocks
                     ? "All release gates are green and no known blocking signals remain."
-                    : "Offline gates are usable, but known blocking signals remain; do not claim final release readiness until they are closed and temporary TIA project validation passes.",
+                    : "Offline gates are usable, but known blocking signals remain; do not claim final release readiness until they are closed and temporary " +
+                        "TIA project validation passes.",
                 ["workspaceRoot"] = suiteRoot["workspaceRoot"]?.ToString() ?? "",
                 ["reports"] = new JsonObject
                 {

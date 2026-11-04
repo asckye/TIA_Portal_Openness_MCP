@@ -43,7 +43,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                     catch (Exception ex)
                     {
                         trace.Step("failed", trace.LastAttemptedPath ?? softwarePath, ex);
-                        meta["failureCount"] = 1; meta["failures"] = new HmiArray(MigrationRead.Failure(trace.LastAttemptedPath ?? "/RuntimeSettings", ex is NotSupportedException ? "Unsupported" : "RuntimeSettingsFailed", ex));
+                        meta["failureCount"] = 1; meta["failures"] =
+                            new HmiArray(MigrationRead
+                                .Failure(trace.LastAttemptedPath ?? "/RuntimeSettings", ex is NotSupportedException ? "Unsupported" : "RuntimeSettingsFailed",
+                                    ex));
                         if (HmiReadSafety.ConnectionUnavailable(ex)) { meta["connectionUnavailable"] = true; meta["truncated"] = true; }
                         throw;
                     }
@@ -55,16 +58,21 @@ namespace TiaMcp.Adapters.Native.Hmi
                     }
                 });
         }
-        public HmiMessage ReadUnifiedRuntimeSettings(string softwarePath, string expectedProject, string fieldsJson = UnifiedRuntimeSettingsAccess.DefaultFields)
+        public HmiMessage ReadUnifiedRuntimeSettings(string softwarePath, string expectedProject, string fieldsJson = UnifiedRuntimeSettingsAccess
+                .DefaultFields)
             => RuntimeSettingsOperation("GetUnifiedRuntimeSettings", softwarePath, expectedProject, false,
                 () => UnifiedRuntimeSettingsAccess.Fields(fieldsJson), (hmi, meta, trace) =>
                 {
                     UnifiedRuntimeSettingsAccess.Read(hmi, UnifiedRuntimeSettingsAccess.Fields(fieldsJson), meta, trace);
                     return "Requested runtime settings read; inspect capabilities, failures and dataComplete. No startup setting changed.";
                 });
-        public HmiMessage UpdateUnifiedRuntimeSettings(string softwarePath, string expectedProject, string changesJson, bool dryRun = true, string expectedToken = "")
+        public HmiMessage UpdateUnifiedRuntimeSettings(string softwarePath, string expectedProject, string changesJson, bool dryRun = true,
+                string expectedToken = "")
             => RuntimeSettingsOperation("SetUnifiedRuntimeSettings", softwarePath, expectedProject, !dryRun,
-                () => { UnifiedRuntimeSettingsAccess.Changes(changesJson); if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview expectedToken required."); },
+                () => {
+                    UnifiedRuntimeSettingsAccess.Changes(changesJson); if (!dryRun && string.IsNullOrWhiteSpace(expectedToken))
+                        throw new ArgumentException("Preview expectedToken required.");
+                },
                 (hmi, meta, trace) => UnifiedRuntimeSettingsAccess.Update(hmi, expectedProject, softwarePath,
                     UnifiedRuntimeSettingsAccess.Changes(changesJson), dryRun, expectedToken, meta, trace));
     }

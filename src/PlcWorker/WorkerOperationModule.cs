@@ -33,7 +33,8 @@ namespace TiaMcp.PlcWorker
                 var parameters = original.GetParameters();
                 var extended = scoped.GetParameters();
                 if (original.ReturnType != scoped.ReturnType || extended.Length < parameters.Length
-                    || !parameters.Select(p => (p.Name, p.ParameterType, p.DefaultValue)).SequenceEqual(extended.Take(parameters.Length).Select(p => (p.Name, p.ParameterType, p.DefaultValue)))
+                    || !parameters.Select(p => (p.Name, p.ParameterType, p.DefaultValue))
+                        .SequenceEqual(extended.Take(parameters.Length).Select(p => (p.Name, p.ParameterType, p.DefaultValue)))
                     || extended.Skip(parameters.Length).Any(p => !p.IsOptional))
                     throw new InvalidOperationException("Scoped worker operation changed its legacy contract: " + name);
                 methods[name] = scoped;

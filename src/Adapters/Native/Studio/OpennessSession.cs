@@ -174,8 +174,10 @@ namespace TiaOpenness.Openness
             try { return process.Attach(); }
             catch (EngineeringSecurityException denied)
             {
-                throw new InvalidOperationException("TIA Portal Openness denied access to the bridge (EngineeringSecurityException). Allow it in the TIA Portal "
-                    + "Openness access dialog (Yes, or Yes to all), or have an administrator add it to HKLM\\SOFTWARE\\Siemens\\Automation\\Openness\\AllowList; "
+                throw new InvalidOperationException("TIA Portal Openness denied access to the bridge (EngineeringSecurityException). Allow it in the TIA " +
+                    "Portal "
+                    + "Openness access dialog (Yes, or Yes to all), or have an administrator add it to " +
+                        "HKLM\\SOFTWARE\\Siemens\\Automation\\Openness\\AllowList; "
                     + "the Windows user must be a member of 'Siemens TIA Openness'. No other TIA Portal was started. TIA: " + denied.Message, denied);
             }
         }
@@ -537,7 +539,9 @@ namespace TiaOpenness.Openness
             var extension = Path.GetExtension(path).ToLowerInvariant();
             if (extension != ".scl" && extension != ".db" && extension != ".udt")
                 throw new NotSupportedException("Native source import accepts .scl, .db or .udt; use XML for other block formats.");
-            if (!overwrite) throw new InvalidOperationException("Generating blocks from source can replace existing blocks. Confirm overwrite before importing source text.");
+            if (!overwrite)
+                throw new InvalidOperationException("Generating blocks from source can replace existing blocks. Confirm overwrite before importing source " +
+                "text.");
             // Own only this temporary source; never delete a pre-existing project source.
             var name = "TIA_Studio_" + Guid.NewGuid().ToString("N") + extension;
             var source = plc.Software.ExternalSourceGroup.ExternalSources.CreateFromFile(name, path);
@@ -547,11 +551,13 @@ namespace TiaOpenness.Openness
             {
                 string failed = DeleteTemporarySource(source);
                 if (failed == null) throw;
-                throw new InvalidOperationException(generation.Message + " The temporary external source '" + name + "' could not be removed: " + failed, generation);
+                throw new InvalidOperationException(generation.Message + " The temporary external source '" + name + "' could not be removed: " + failed,
+                        generation);
             }
             string cleanup = DeleteTemporarySource(source);
             if (cleanup != null)
-                throw new InvalidOperationException("Blocks were generated from the source, but the temporary external source '" + name + "' could not be removed: " + cleanup);
+                throw new InvalidOperationException("Blocks were generated from the source, but the temporary external source '" + name
+                        + "' could not be removed: " + cleanup);
             return Path.GetFileNameWithoutExtension(path);
         }
 

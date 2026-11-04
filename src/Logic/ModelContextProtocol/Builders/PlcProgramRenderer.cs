@@ -88,8 +88,12 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (RejectedException ex)
             { return Result(null, new Error(ex.Message, ex.Details), Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None); }
             catch (OperationCanceledException) /* swallow(privacy): expose the stable V4 cancellation code without exception text */
-            { return Result(null, new Error("Rendering cancelled before file creation.", new CancelledDetails("render")), Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None); }
-            catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is System.Xml.XmlException)
+            {
+                return Result(null, new Error("Rendering cancelled before file creation.", new CancelledDetails("render")), Outcome.RejectedBeforeOperation,
+                        Execution.NotStarted, Completeness.None);
+            }
+            catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException || ex is ArgumentException
+                    || ex is System.Xml.XmlException)
             {
                 if (created) return Result(new { outputPath, outputComplete = false },
                     new Error("Output creation started but did not complete. Inspect the retained file.", new PartialFailureDetails(0, 0, 0)),
@@ -171,15 +175,19 @@ namespace TiaMcpServer.ModelContextProtocol
                     Limit("inputPath.networks", pages.Sum(p => p.Networks.Count), MaxNetworks);
                 }
             }
-            if (pages.Count == 0 || (!atlas && pages.Count != 1)) Invalid("inputPath", "Select exactly one block for a block page, or at least one for an atlas.");
-            pages = pages.OrderBy(p => p.Block.Number ?? int.MaxValue).ThenBy(p => p.Block.Name, StringComparer.Ordinal).ThenBy(p => p.Source, StringComparer.Ordinal).ToList();
+            if (pages.Count == 0 || (!atlas && pages.Count != 1))
+                Invalid("inputPath", "Select exactly one block for a block page, or at least one for an atlas.");
+            pages = pages.OrderBy(p => p.Block.Number ?? int.MaxValue).ThenBy(p => p.Block.Name, StringComparer.Ordinal)
+                .ThenBy(p => p.Source, StringComparer.Ordinal).ToList();
             for (int i = 0; i < pages.Count; i++) pages[i].Id = "block-" + (i + 1).ToString(CultureInfo.InvariantCulture);
             return pages;
         }
 
         private static string E(string? value) => WebUtility.HtmlEncode(value ?? "");
         private static string Texts(IEnumerable<MultilingualTextDefinition> texts, string kind)
-            => string.Join("\n", texts.Where(t => t.CompositionName == kind).SelectMany(t => t.Items).Where(t => !string.IsNullOrWhiteSpace(t.Text)).Select(t => t.Text));
+            => string
+                .Join("\n", texts.Where(t => t.CompositionName == kind).SelectMany(t => t.Items).Where(t => !string.IsNullOrWhiteSpace(t.Text))
+                    .Select(t => t.Text));
         private static string Link(string name, List<Page> pages)
         {
             var matches = pages.Where(p => p.Block.Name == name).ToArray();
@@ -202,43 +210,65 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Page[] Callers(Page page, List<Page> pages)
             => pages.Where(p => p.Calls.Contains(page.Block.Name ?? "") && pages.Count(q => q.Block.Name == page.Block.Name) == 1).ToArray();
         private static string CallerLinks(Page[] callers)
-            => callers.Length + (callers.Length == 0 ? "" : ": " + string.Join(", ", callers.Select(p => "<a href=\"#" + p.Id + "\">" + E(p.Block.Name) + "</a>")));
+            => callers.Length
+                + (callers.Length == 0 ? "" : ": " + string.Join(", ", callers.Select(p => "<a href=\"#" + p.Id + "\">" + E(p.Block.Name) + "</a>")));
         private const string Footer = "Drawn offline from exported SimaticML files — not a TIA Portal screenshot.";
 
         private static string Html(List<Page> pages, bool atlas)
         {
-            var b = new StringBuilder("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>PLC program atlas</title><style>");
-            b.Append(Styles).Append("</style></head><body><main><header class=\"doc\" id=\"contents\"><div class=\"catalog-heading\"><div><p class=\"eyebrow\">")
-                .Append(atlas ? "PROGRAM ATLAS" : "PLC BLOCK PAGE").Append("</p><h1>").Append(atlas ? "PLC program atlas" : "PLC block page").Append("</h1></div><div class=\"stats\">");
+            var b =
+                new StringBuilder("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, " +
+                "initial-scale=1\"><title>PLC program atlas</title><style>");
+            b.Append(Styles)
+                .Append("</style></head><body><main><header class=\"doc\" id=\"contents\"><div class=\"catalog-heading\"><div><p class=\"eyebrow\">")
+                .Append(atlas ? "PROGRAM ATLAS" : "PLC BLOCK PAGE").Append("</p><h1>").Append(atlas ? "PLC program atlas" : "PLC block page")
+                    .Append("</h1></div><div class=\"stats\">");
             Stat(b, pages.Count, "blocks");
-            foreach (string kind in new[] { "ladder", "code", "empty" }) Stat(b, pages.Sum(p => p.Networks.Count(n => n.Kind == kind)), kind == "empty" ? "empty" : kind + " nets");
-            b.Append("</div></div><p class=\"scope\">Offline SimaticML exports. Static logic only; no online power-flow display. Simplified layout; source exports remain the engineering authority.</p>");
-            b.Append("<div class=\"table-scroll\"><table class=\"catalog\" aria-label=\"Contents\"><thead><tr><th>No.</th><th>Name</th><th>Lang.</th><th>Nets</th><th>L / C / E</th><th>Calls</th><th>Called by</th><th>Source file</th></tr></thead><tbody>");
+            foreach (string kind in new[] { "ladder", "code", "empty" })
+                Stat(b, pages.Sum(p => p.Networks.Count(n => n.Kind == kind)), kind == "empty" ? "empty" : kind + " nets");
+            b
+                .Append("</div></div><p class=\"scope\">Offline SimaticML exports. Static logic only; no online power-flow display. Simplified layout; " +
+                "source exports remain the engineering authority.</p>");
+            b
+                .Append("<div class=\"table-scroll\"><table class=\"catalog\" " +
+                "aria-label=\"Contents\"><thead><tr><th>No.</th><th>Name</th><th>Lang.</th><th>Nets</th><th>L / C / E</th><th>Calls</th><th>Called " +
+                "by</th><th>Source file</th></tr></thead><tbody>");
             foreach (var page in pages)
             {
                 var callers = Callers(page, pages);
-                b.Append("<tr").Append(callers.Length == 0 ? " class=\"uncalled\"" : "").Append("><td class=\"mono\">").Append(E(page.Block.BlockKind)).Append(' ').Append(page.Block.Number)
-                    .Append("</td><td><a href=\"#").Append(page.Id).Append("\">").Append(E(page.Block.Name)).Append("</a></td><td>").Append(E(page.Block.ProgrammingLanguage))
+                b.Append("<tr").Append(callers.Length == 0 ? " class=\"uncalled\"" : "").Append("><td class=\"mono\">").Append(E(page.Block.BlockKind))
+                    .Append(' ').Append(page.Block.Number)
+                    .Append("</td><td><a href=\"#").Append(page.Id).Append("\">").Append(E(page.Block.Name)).Append("</a></td><td>")
+                        .Append(E(page.Block.ProgrammingLanguage))
                     .Append("</td><td class=\"mono\">").Append(page.Networks.Count).Append("</td><td class=\"mono\">")
                     .Append(string.Join(" / ", new[] { "ladder", "code", "empty" }.Select(k => page.Networks.Count(n => n.Kind == k))))
                     .Append("</td><td>").Append(string.Join(", ", page.Calls.Select(n => Link(n, pages))))
                     .Append("</td><td class=\"called-by\">").Append(CallerLinks(callers)).Append(callers.Length == 0 ? " · Not called" : "")
-                    .Append("</td><td class=\"mono source\" title=\"").Append(E(page.Source)).Append("\">").Append(E(Path.GetFileName(page.Source))).Append("</td></tr>");
+                    .Append("</td><td class=\"mono source\" title=\"").Append(E(page.Source)).Append("\">").Append(E(Path.GetFileName(page.Source)))
+                        .Append("</td></tr>");
             }
-            b.Append("</tbody></table></div><p class=\"footer\">No.: block type and number. Lang.: programming language. Nets: network count. L / C / E: ladder / code / empty networks. Called by: distinct caller blocks inside this atlas only; external callers are not counted. Source file: full path in the tooltip. · ").Append(Footer).Append("</p></header>");
+            b
+                .Append("</tbody></table></div><p class=\"footer\">No.: block type and number. Lang.: programming language. Nets: network count. L / C / E: ladder / code / empty networks. Called by: distinct caller blocks inside this atlas only; external callers are not counted. Source file: full path in the tooltip. · ")
+                .Append(Footer).Append("</p></header>");
             foreach (var page in pages)
             {
                 var block = page.Block;
                 var unknownParts = new SortedSet<string>(StringComparer.Ordinal);
-                b.Append("<article class=\"doc page\" id=\"").Append(page.Id).Append("\"><nav class=\"page-nav\"><a href=\"#contents\">← Back to catalog</a></nav>")
-                    .Append("<header class=\"block-header\"><div class=\"block-heading\"><span class=\"chip mono\">").Append(E(block.BlockKind)).Append(' ').Append(block.Number)
+                b.Append("<article class=\"doc page\" id=\"").Append(page.Id)
+                    .Append("\"><nav class=\"page-nav\"><a href=\"#contents\">← Back to catalog</a></nav>")
+                    .Append("<header class=\"block-header\"><div class=\"block-heading\"><span class=\"chip mono\">").Append(E(block.BlockKind)).Append(' ')
+                        .Append(block.Number)
                     .Append("</span><h1>").Append(E(block.Name)).Append("</h1><span class=\"chip language\">").Append(E(block.ProgrammingLanguage))
                     .Append("</span><span class=\"block-title comment\">").Append(E(Texts(block.Texts, "Title"))).Append("</span></div><p class=\"comment\">")
-                    .Append(E(Texts(block.Texts, "Comment"))).Append("</p><div class=\"meta\"><span>Source file · <span class=\"mono value\">").Append(E(page.Source))
+                    .Append(E(Texts(block.Texts, "Comment"))).Append("</p><div class=\"meta\"><span>Source file · <span class=\"mono value\">")
+                        .Append(E(page.Source))
                     .Append("</span></span><span>Export version · <span class=\"mono value\">").Append(E(page.Version))
                     .Append("</span></span><span>Called by · <span class=\"value\">").Append(CallerLinks(Callers(page, pages)))
-                    .Append("</span></span><span>Calls · <span class=\"value\">").Append(string.Join(", ", page.Calls.Select(n => Link(n, pages)))).Append("</span></span></div></header>");
-                b.Append("<details class=\"interface\" open><summary>Block interface</summary><div class=\"table-scroll\"><table aria-label=\"Block interface\"><thead><tr><th>Section</th><th>Name</th><th>Type</th><th>Start / default</th><th>Comment</th></tr></thead><tbody>");
+                    .Append("</span></span><span>Calls · <span class=\"value\">").Append(string.Join(", ", page.Calls.Select(n => Link(n, pages))))
+                        .Append("</span></span></div></header>");
+                b
+                    .Append("<details class=\"interface\" open><summary>Block interface</summary><div class=\"table-scroll\"><table aria-label=\"Block " +
+                    "interface\"><thead><tr><th>Section</th><th>Name</th><th>Type</th><th>Start / default</th><th>Comment</th></tr></thead><tbody>");
                 foreach (var section in block.InterfaceSections) Members(b, section.Name, "", section.Members);
                 b.Append("</tbody></table></div></details>");
                 if (page.Networks.Count == 0) b.Append("<p class=\"empty\">No networks (declaration-only or empty block).</p>");
@@ -247,7 +277,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     var n = page.Networks[i];
                     var title = Texts(n.Unit.Texts, "Title");
                     b.Append("<section class=\"network\"><header class=\"network-heading\"><span class=\"network-id\">N").Append(i + 1).Append("</span><h2>")
-                        .Append(string.IsNullOrWhiteSpace(title) ? "Network " + (i + 1) : E(title)).Append("</h2><span class=\"chip\">").Append(E(n.Language)).Append("</span>");
+                        .Append(string.IsNullOrWhiteSpace(title) ? "Network " + (i + 1) : E(title)).Append("</h2><span class=\"chip\">").Append(E(n.Language))
+                            .Append("</span>");
                     if (n.Language == "FBD") b.Append("<span class=\"scope\">FBD shown as ladder equivalent</span>");
                     b.Append("</header><p class=\"comment\">").Append(E(Texts(n.Unit.Texts, "Comment"))).Append("</p>");
                     if (n.Kind == "empty") b.Append("<p class=\"empty\">Empty network.</p>");
@@ -260,9 +291,11 @@ namespace TiaMcpServer.ModelContextProtocol
                             return match.Length == 1 ? "#" + match[0].Id : null;
                         }, unknownParts);
                         b.Append("<div class=\"diagram\">").Append(PrimerSvg(drawing, out var findings)).Append("</div>");
-                        foreach (string finding in findings) b.Append("<aside class=\"inspection-note\"><strong aria-label=\"Inspection\">!</strong><span>").Append(E(finding)).Append("</span></aside>");
+                        foreach (string finding in findings) b.Append("<aside class=\"inspection-note\"><strong aria-label=\"Inspection\">!</strong><span>")
+                            .Append(E(finding)).Append("</span></aside>");
                     }
-                    if (n.Calls.Length > 0) b.Append("<p class=\"scope\">Calls in this network: ").Append(string.Join(", ", n.Calls.Select(name => Link(name, pages)))).Append("</p>");
+                    if (n.Calls.Length > 0) b.Append("<p class=\"scope\">Calls in this network: ")
+                        .Append(string.Join(", ", n.Calls.Select(name => Link(name, pages)))).Append("</p>");
                     b.Append("</section>");
                 }
                 if (unknownParts.Count > 0) b.Append("<aside class=\"render-notes\"><h2>Rendering notes</h2><p>Unknown parts shown as labelled boxes: ")
@@ -291,7 +324,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (symbol != null && (kind.StartsWith("contact-", StringComparison.Ordinal) || kind.StartsWith("coil", StringComparison.Ordinal)))
                 {
                     var start = System.Text.RegularExpressions.Regex.Match((string)symbol.Attribute("d")!, @"^M (-?\d+) (-?\d+)");
-                    int x = int.Parse(start.Groups[1].Value, CultureInfo.InvariantCulture) + 30, y = int.Parse(start.Groups[2].Value, CultureInfo.InvariantCulture);
+                    int x = int.Parse(start.Groups[1].Value, CultureInfo.InvariantCulture) + 30, y = int
+                        .Parse(start.Groups[2].Value, CultureInfo.InvariantCulture);
                     int half = ContactGap / 2, tall = ContactHeight / 2;
                     symbol.SetAttributeValue("d", kind.StartsWith("contact-", StringComparison.Ordinal)
                         ? $"M {x - 30} {y} H {x - half} M {x + half} {y} H {x + 30} M {x - half} {y - tall} V {y + tall} M {x + half} {y - tall} V {y + tall}"
@@ -301,7 +335,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         notes.Add(finding.Value);
                         node.SetAttributeValue("class", kind + " has-finding");
-                        finding.ReplaceWith(new XElement(ns + "rect", new XAttribute("class", "finding"), new XAttribute("x", x - 18), new XAttribute("y", y - 20),
+                        finding
+                            .ReplaceWith(new XElement(ns + "rect", new XAttribute("class", "finding"), new XAttribute("x", x - 18), new XAttribute("y", y - 20),
                             new XAttribute("width", 36), new XAttribute("height", 40), new XAttribute("rx", 4), new XElement(ns + "title", finding.Value)));
                         var highlight = node.Elements().Single(e => (string?)e.Attribute("class") == "finding");
                         highlight.Remove(); symbol.AddBeforeSelf(highlight);
@@ -315,12 +350,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     var pins = node.Elements().Where(e => (string?)e.Attribute("class") == "pin").ToArray();
                     int y = pins.Select(p => int.Parse(((string)p.Attribute("d")!).Split(' ')[2], CultureInfo.InvariantCulture)).Min();
                     int top = y - 28;
-                    box.SetAttributeValue("x", newLeft); box.SetAttributeValue("y", top); box.SetAttributeValue("width", TimerWidth); box.SetAttributeValue("height", TimerHeight); box.SetAttributeValue("rx", 3);
+                    box.SetAttributeValue("x", newLeft); box.SetAttributeValue("y", top); box.SetAttributeValue("width", TimerWidth); box
+                        .SetAttributeValue("height", TimerHeight); box.SetAttributeValue("rx", 3);
                     node.Elements().Where(e => (string?)e.Attribute("class") == "box-divider").Remove();
                     foreach (var pin in pins)
                     {
                         var point = System.Text.RegularExpressions.Regex.Match((string)pin.Attribute("d")!, @"^M (-?\d+) (-?\d+) H (-?\d+)$");
-                        int oldX = int.Parse(point.Groups[1].Value, CultureInfo.InvariantCulture), pinY = int.Parse(point.Groups[2].Value, CultureInfo.InvariantCulture);
+                        int oldX = int.Parse(point.Groups[1].Value, CultureInfo.InvariantCulture), pinY = int
+                            .Parse(point.Groups[2].Value, CultureInfo.InvariantCulture);
                         int edge = oldX == left ? newLeft : newRight;
                         endpoints[(oldX, pinY)] = (edge, pinY);
                         pin.SetAttributeValue("d", $"M {edge} {pinY} H {edge + (oldX == left ? -16 : 16)}");
@@ -329,7 +366,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         string labelKind = (string)label.Attribute("class")!;
                         if (labelKind == "instance" || labelKind == "instruction-name" || labelKind == "instruction-type")
-                            label.SetAttributeValue("y", top + (labelKind == "instance" ? -8 - Math.Max(0, label.Elements().Count() - 1) * 16 : labelKind == "instruction-name" ? 20 : 34));
+                            label
+                                .SetAttributeValue("y", top
+                                    + (labelKind == "instance" ? -8 - Math.Max(0, label.Elements().Count() - 1) * 16 : labelKind == "instruction-name" ? 20
+                                        : 34));
                         else if (labelKind == "pin-name" || labelKind == "pin-value")
                         {
                             int x = (int)label.Attribute("x")!;
@@ -374,7 +414,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (box != null)
                 {
                     left = (int)box.Attribute("x")!; right = left + (int)box.Attribute("width")!;
-                    var flow = node.Elements().FirstOrDefault(e => (string?)e.Attribute("class") == "pin-name" && (e.Value == "ENO" || e.Value == "Q" || e.Value == "QU" || e.Value == "QD") && (int)e.Attribute("x")! > (left + right) / 2);
+                    var flow = node.Elements()
+                        .FirstOrDefault(e => (string?)e.Attribute("class") == "pin-name"
+                            && (e.Value == "ENO" || e.Value == "Q" || e.Value == "QU" || e.Value == "QD") && (int)e.Attribute("x")! > (left + right) / 2);
                     y = flow == null ? (int)box.Attribute("y")! : (int)flow.Attribute("y")! - 4;
                     terminal = !wires.Any(w => w.x == right);
                     if (terminal && flow != null) outputY = y;
@@ -434,7 +476,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 pin.SetAttributeValue("cx", endpoints.TryGetValue((x, y), out var point) ? point.x : Fit(x));
             }
             foreach (var output in outputs)
-                svg.Add(new XElement(svg.Name.Namespace + "path", new XAttribute("class", "wire"), new XAttribute("d", $"M {output.x} {output.y} H {LadderWidth}")));
+                svg
+                    .Add(new XElement(svg.Name.Namespace + "path", new XAttribute("class", "wire"),
+                            new XAttribute("d", $"M {output.x} {output.y} H {LadderWidth}")));
         }
 
         private static string ShiftPath(string path, int shift)
@@ -454,7 +498,8 @@ namespace TiaMcpServer.ModelContextProtocol
             int x = 0, y = 0;
             return System.Text.RegularExpressions.Regex.Replace(path, @"M (-?\d+) (-?\d+)|([HV]) (-?\d+)", m =>
             {
-                if (m.Groups[1].Success) { x = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture); y = int.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture); }
+                if (m.Groups[1].Success) {
+                    x = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture); y = int.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture); }
                 else if (m.Groups[3].Value == "H") x = int.Parse(m.Groups[4].Value, CultureInfo.InvariantCulture);
                 else y = int.Parse(m.Groups[4].Value, CultureInfo.InvariantCulture);
                 if (!endpoints.TryGetValue((x, y), out var point)) return m.Value;

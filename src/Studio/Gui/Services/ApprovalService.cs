@@ -68,7 +68,8 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     public int PendingCount { get { lock (sync) return pendingCount; } }
     public IReadOnlyList<ApprovalRequest> Requests { get { lock (sync) return published; } }
     public event EventHandler<ApprovalRequest>? NewRequest;
-    public bool CanDecide(string id) { lock (sync) return pending.TryGetValue(id, out var item) && !item.Decision.Task.IsCompleted && item.Request.Deadline > DateTimeOffset.UtcNow; }
+    public bool CanDecide(string id) {
+        lock (sync) return pending.TryGetValue(id, out var item) && !item.Decision.Task.IsCompleted && item.Request.Deadline > DateTimeOffset.UtcNow; }
     public bool Approve(string id) => Decide(id, true);
     public bool Deny(string id) => Decide(id, false);
     private bool Decide(string id, bool approve)
@@ -117,7 +118,8 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                         if (original == null || original.PlanHash != item.PlanHash || !seen.TryGetValue(item.RequestId, out var digest)
                             || digest != item.ArgumentDigest || original.State != ApprovalState.Approved
                             || original.Actor != item.EffectiveActor || original.OperatorCallId != item.OperatorCallId) return;
-                        SetState(original.Id, item.Outcome switch { "succeeded" => ApprovalState.Completed, "rejected-before-operation" => ApprovalState.Rejected,
+                        SetState(original.Id, item.Outcome switch {
+                                "succeeded" => ApprovalState.Completed, "rejected-before-operation" => ApprovalState.Rejected,
                             "failed" or "read-failed" => ApprovalState.Failed, "partial" => ApprovalState.Partial, _ => ApprovalState.Unknown });
                     }
                     Changed(); return;
@@ -130,7 +132,9 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                 {
                     if (disposed || seen.ContainsKey(id) || pending.Count >= 50) throw new InvalidDataException("Duplicate or excess approval request.");
                     seen.Add(id, item.ArgumentDigest);
-                    row = new ApprovalRequest(id, item.EffectiveActor == ActorScope.Workbench ? "Workbench" : "MCP", "MCP", item.Host, item.ReleaseKey, item.ProjectIdentity, "",
+                    row =
+                        new ApprovalRequest(id, item.EffectiveActor == ActorScope.Workbench ? "Workbench" : "MCP", "MCP", item.Host, item.ReleaseKey, item
+                            .ProjectIdentity, "",
                         item.Operations.Select(op => new ApprovalOperation(LocalizedText.Literal(op.Action), op.Target, op.Tool)).ToArray(), [],
                         item.PlanHash, item.TimeoutSeconds, item.Deadline, ApprovalState.Pending, item.ParametersJson)
                     { Actor = item.EffectiveActor, OperatorCallId = item.OperatorCallId, GenerationPlan = item.PlanJson };
@@ -147,7 +151,8 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                 await ApprovalFrames.Write(pipe, await decision.Task.ConfigureAwait(false), limit.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException) /* swallow(privacy): expired or disconnected approval requests cannot execute */ { if (id != null) SetStateSafe(id, stop.IsCancellationRequested ? ApprovalState.Disconnected : ApprovalState.TimedOut); }
-            catch (Exception ex) { if (id != null) SetStateSafe(id, ApprovalState.Disconnected); Trace.TraceInformation("Approval connection ended: " + ex.GetType().Name); }
+            catch (Exception ex) {
+                if (id != null) SetStateSafe(id, ApprovalState.Disconnected); Trace.TraceInformation("Approval connection ended: " + ex.GetType().Name); }
             finally { if (id != null) { lock (sync) pending.Remove(id); Changed(); } }
         }
     }
@@ -163,7 +168,8 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
             if (rowsChanged) published = requests.ToArray();
             int count = requests.Count(r => r.State == ApprovalState.Pending);
             countChanged = pendingCount != count; pendingCount = count;
-            var deadline = requests.Where(r => r.State == ApprovalState.Approved).Select(r => r.Deadline.AddMinutes(2)).DefaultIfEmpty(DateTimeOffset.MaxValue).Min();
+            var deadline = requests.Where(r => r.State == ApprovalState.Approved).Select(r => r.Deadline.AddMinutes(2)).DefaultIfEmpty(DateTimeOffset.MaxValue)
+                .Min();
             if (!disposed) expiry.Change(deadline == DateTimeOffset.MaxValue ? Timeout.InfiniteTimeSpan
                 : TimeSpan.FromMilliseconds(Math.Max(1, (deadline - DateTimeOffset.UtcNow).TotalMilliseconds)), Timeout.InfiniteTimeSpan);
         }

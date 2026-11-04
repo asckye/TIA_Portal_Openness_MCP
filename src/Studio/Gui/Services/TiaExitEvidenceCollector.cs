@@ -71,7 +71,9 @@ internal static class TiaExitEvidenceCollector
             dumpInventory = dumps.Select(item => new { path = item.Path, bytes = item.Bytes, modifiedUtc = item.ModifiedUtc }),
             errors,
             complete = errors.Count == 0,
-            note = "Local evidence only; missing events or dump files do not prove absence of a crash. Events and paths may contain private information. No dump content or project was copied."
+            note =
+                "Local evidence only; missing events or dump files do not prove absence of a crash. Events and paths may contain private information. No " +
+                "dump content or project was copied."
         };
         return JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
     }
@@ -94,7 +96,8 @@ internal static class TiaExitEvidenceCollector
             string system = query.Provider == null
                 ? "(" + ids + ")"
                 : "Provider[@Name='" + query.Provider + "'] and (" + ids + ")";
-            string xpath = "*[System[" + system + " and TimeCreated[timediff(@SystemTime) <= " + ageMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture) + "]]]";
+            string xpath = "*[System[" + system + " and TimeCreated[timediff(@SystemTime) <= " + ageMilliseconds
+                .ToString(System.Globalization.CultureInfo.InvariantCulture) + "]]]";
             var eventQuery = new EventLogQuery(query.LogName, PathType.LogName, xpath) { ReverseDirection = true };
             using var reader = new EventLogReader(eventQuery);
             var rows = new List<TiaEvidenceEvent>();

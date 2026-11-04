@@ -46,12 +46,14 @@ internal sealed class OptionalProductsAdapter
             meta["output"] = HmiFiles.FileRow(file);
         }
         public OptionalProductReply ManageSinumerikArchive(string action, string filePath, string[] devicePathJson = null!, string[] itemPathJson = null!,
-            string[] modifiedDevicePathJson = null!, string[] modifiedItemPathJson = null!, string mode = "HardwareAndAllProgramBlocks", string comment = "", string author = "", string password = "", bool dryRun = true)
+            string[] modifiedDevicePathJson = null!, string[] modifiedItemPathJson = null!, string mode = "HardwareAndAllProgramBlocks", string comment = "",
+                string author = "", string password = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageSinumerikArchive", meta => {
                 try
                 {
 #if !OPTION_SINUMERIK_ARCHIVE
-                throw new NotSupportedException("SinumerikArchiveProvider is absent from the selected release's SDK; select a release with this API and the appropriate SINUMERIK option.");
+                throw new NotSupportedException("SinumerikArchiveProvider is absent from the selected release's SDK; select a release with this API and the " +
+                    "appropriate SINUMERIK option.");
 #else
                 // Refuse unavailable overloads before resolving the native provider or hardware.
 #if !OPTION_ARCHIVE_F_ADDRESS
@@ -61,17 +63,22 @@ internal sealed class OptionalProductsAdapter
                 if (!string.IsNullOrEmpty(password)) throw new NotSupportedException("The requested archive password overload is unavailable on this release.");
 #endif
 #if !OPTION_ARCHIVE_RETRIEVE_PASSWORD
-                if (action == "retrieve" && !string.IsNullOrEmpty(password)) throw new NotSupportedException("The requested retrieve password overload is unavailable on this release.");
+                if (action == "retrieve" && !string.IsNullOrEmpty(password))
+                    throw new NotSupportedException("The requested retrieve password overload is unavailable on this release.");
 #endif
-                if (action != "archive" && action != "retrieve" && action != "fAddressArchive") throw new ArgumentException("action: archive/retrieve/fAddressArchive.");
+                if (action != "archive" && action != "retrieve" && action != "fAddressArchive")
+                    throw new ArgumentException("action: archive/retrieve/fAddressArchive.");
                 var file = OptionFile(filePath, ".dsf", action == "retrieve");
                 var archiveMode = (SinumerikArchivationMode)HmiScalar.ConvertValue(mode, typeof(SinumerikArchivationMode))!;
                 using var access = !dryRun ? _session.AcquireHmiEditAccess() : null;
                 var provider = _session.RequireHardwareUtility<SinumerikArchiveProvider>("SinumerikArchiveProvider");
                 DeviceItem? plc = null, modified = null;
-                if (action != "retrieve") plc = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("itemPathJson must select the NCU PLC device item.");
-                if (action == "fAddressArchive") modified = _session.ExactEngineeringHardware(modifiedDevicePathJson, modifiedItemPathJson) as DeviceItem ?? throw new ArgumentException("modifiedItemPathJson must select the modified PLC device item.");
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["filePath"] = file.FullName; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                if (action != "retrieve") plc = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem
+                    ?? throw new ArgumentException("itemPathJson must select the NCU PLC device item.");
+                if (action == "fAddressArchive") modified = _session.ExactEngineeringHardware(modifiedDevicePathJson, modifiedItemPathJson) as DeviceItem
+                    ?? throw new ArgumentException("modifiedItemPathJson must select the modified PLC device item.");
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["filePath"] = file.FullName; meta["mayHaveChanged"] = false;
+                meta["mayHaveWrittenFiles"] = false;
                 if (dryRun) return "SINUMERIK archive operation preview; no native archive/retrieve call.";
                 using var secure = string.IsNullOrEmpty(password) ? null : EngineeringCredentialRules.ToSecureString(password);
                 if (action == "retrieve")
@@ -142,8 +149,10 @@ internal sealed class OptionalProductsAdapter
                     return OptionFile(p, extension, true);
                 }).ToArray();
                 using var access = !dryRun ? _session.AcquireHmiEditAccess() : null;
-                var device = _session.ExactEngineeringHardware(devicePathJson, Array.Empty<string>()) as Device ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
-                var provider = InvocationJournal.Native("SinumerikAlarmText.GetService", () => device.GetService<SinumerikAlarmTextProvider>()) ?? throw new NotSupportedException("The selected device has no SinumerikAlarmTextProvider.");
+                var device = _session.ExactEngineeringHardware(devicePathJson, Array.Empty<string>()) as Device
+                    ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
+                var provider = InvocationJournal.Native("SinumerikAlarmText.GetService", () => device.GetService<SinumerikAlarmTextProvider>())
+                    ?? throw new NotSupportedException("The selected device has no SinumerikAlarmTextProvider.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["inputCount"] = files.Length;
                 meta["replacementScope"] = "SINUMERIK DB2 alarm texts; native import can replace existing texts. Required languages must already be active.";
                 if (dryRun) return "Alarm import preview; no text imported.";
@@ -156,7 +165,8 @@ internal sealed class OptionalProductsAdapter
                 catch (Exception ex) { OptionalProductEvidence.RecordFailure(meta, ex); throw; }
             }, requiresProject: true);
 
-        public OptionalProductReply ManageSinumerikSafetyMode(string[] devicePathJson, string action = "read", string mode = "", bool dryRun = true, bool confirmSafetyChange = false)
+        public OptionalProductReply ManageSinumerikSafetyMode(string[] devicePathJson, string action = "read", string mode = "", bool dryRun = true,
+                bool confirmSafetyChange = false)
             => _session.RunHmiStepTool("ManageSinumerikSafetyMode", meta => {
                 try
                 {
@@ -165,13 +175,18 @@ internal sealed class OptionalProductsAdapter
 #else
                 if (action != "read" && action != "set") throw new ArgumentException("action: read/set.");
                 bool writing = action == "set" && !dryRun;
-                if (writing && !confirmSafetyChange) throw new ArgumentException("Setting SINUMERIK safety mode requires confirmSafetyChange=true and dryRun=false.");
+                if (writing && !confirmSafetyChange)
+                    throw new ArgumentException("Setting SINUMERIK safety mode requires confirmSafetyChange=true and dryRun=false.");
                 SafetyMode requested = action == "set" ? (SafetyMode)HmiScalar.ConvertValue(mode, typeof(SafetyMode))! : default;
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
-                var device = _session.ExactEngineeringHardware(devicePathJson, Array.Empty<string>()) as Device ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
-                var provider = InvocationJournal.Native("SinumerikSafety.GetService", () => device.GetService<SafetyModeProvider>()) ?? throw new NotSupportedException("The selected device has no SafetyModeProvider.");
+                var device = _session.ExactEngineeringHardware(devicePathJson, Array.Empty<string>()) as Device
+                    ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
+                var provider = InvocationJournal.Native("SinumerikSafety.GetService", () => device.GetService<SafetyModeProvider>())
+                    ?? throw new NotSupportedException("The selected device has no SafetyModeProvider.");
                 meta["before"] = provider.CurrentMode.ToString(); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                meta["preconditions"] = "NCU PLC must be offline; the native API checks configuration eligibility. Switching affects safety/telegram configuration and requires engineering acceptance.";
+                meta["preconditions"] =
+                    "NCU PLC must be offline; the native API checks configuration eligibility. Switching affects safety/telegram configuration and requires " +
+                    "engineering acceptance.";
                 if (!writing) return action == "read" ? "Current SINUMERIK safety mode read." : "Safety mode preview; no change.";
                 // Siemens performs the offline/configuration check on the actual NCU; do not go offline automatically or target a different PLC.
                 meta["mayHaveChanged"] = true;
@@ -192,7 +207,8 @@ internal sealed class OptionalProductsAdapter
 #if !OPTION_SIMOTION
                 throw new NotSupportedException("SimotionProvider is absent from the selected release's SDK.");
 #else
-                var provider = InvocationJournal.Native("Simotion.GetService", () => _session.CurrentProject!.GetService<SimotionProvider>()) ?? throw new NotSupportedException("Project does not provide SimotionProvider; SIMOTION SCOUT TIA must be installed.");
+                var provider = InvocationJournal.Native("Simotion.GetService", () => _session.CurrentProject!.GetService<SimotionProvider>())
+                    ?? throw new NotSupportedException("Project does not provide SimotionProvider; SIMOTION SCOUT TIA must be installed.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (dryRun) return "SIMOTION scripting initialization preview; no Initialize call.";
                 meta["operationStarted"] = true;
@@ -212,8 +228,11 @@ internal sealed class OptionalProductsAdapter
                 throw new NotSupportedException("ScadaExportProvider is absent from the selected release's SDK.");
 #else
                 var file = OptionFile(filePath, ".zip", false);
-                IEngineeringServiceProvider owner = string.IsNullOrEmpty(softwarePath) ? (IEngineeringServiceProvider)_session.CurrentProject! : _session.ExactPlcForEngineering(softwarePath, false);
-                var provider = InvocationJournal.Native("ScadaExport.GetService", () => owner.GetService<ScadaExportProvider>()) ?? throw new NotSupportedException("ScadaExportProvider unavailable; install SIMATIC SCADA Export for TIA Portal and select a supported project/PLC.");
+                IEngineeringServiceProvider owner = string.IsNullOrEmpty(softwarePath) ? (IEngineeringServiceProvider)_session.CurrentProject! : _session
+                    .ExactPlcForEngineering(softwarePath, false);
+                var provider = InvocationJournal.Native("ScadaExport.GetService", () => owner.GetService<ScadaExportProvider>())
+                    ?? throw new NotSupportedException("ScadaExportProvider unavailable; install SIMATIC SCADA Export for TIA Portal and select a supported " +
+                    "project/PLC.");
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false;
                 if (dryRun) return "SCADA PLC configuration export preview; no ZIP written.";
                 meta["mayHaveWrittenFiles"] = true;

@@ -42,7 +42,8 @@ namespace TiaMcpServer.ModelContextProtocol
             => "Example: " + e.ArgumentsJson + (e.Note.Length > 0 ? " (" + e.Note + ")" : "") + ".";
 
         // Placeholders such as <Folder/Name> must read as written, not as < escapes.
-        private static readonly JsonSerializerOptions PlainJson = new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+        private static readonly JsonSerializerOptions PlainJson = new JsonSerializerOptions {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
         public const string DerivedNote = "derived from the signature - placeholder values, read the parameter descriptions";
 
@@ -71,9 +72,13 @@ namespace TiaMcpServer.ModelContextProtocol
             var name = spec.Name;
             switch (spec.Kind)
             {
-                case "boolean": return JsonValue.Create(spec.DefaultText == null ? true : string.Equals(spec.DefaultText, "true", StringComparison.OrdinalIgnoreCase));
+                case "boolean": return JsonValue
+                    .Create(spec.DefaultText == null ? true : string.Equals(spec.DefaultText, "true", StringComparison.OrdinalIgnoreCase));
                 case "integer": return JsonValue.Create(long.TryParse(spec.DefaultText ?? "", out var l) ? l : 1);
-                case "number": return JsonValue.Create(double.TryParse(spec.DefaultText ?? "", System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 1.0);
+                case "number": return JsonValue
+                    .Create(double
+                        .TryParse(spec.DefaultText ?? "", System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d)
+                        ? d : 1.0);
             }
             if (spec.Kind != "string") return JsonValue.Create("<" + name + ">");
             if (spec.ExampleJson != null) return JsonNode.Parse(spec.ExampleJson)!;

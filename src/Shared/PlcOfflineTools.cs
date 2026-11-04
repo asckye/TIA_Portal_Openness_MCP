@@ -23,10 +23,17 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class PlcOfflineTools
     {
-        [McpServerTool(Name = "AnalyzePlcReferences"), Description("[L2][Validation][OFFLINE] Query supplied exports without native CrossReferenceService. action summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); SCL/S7DCL and invalid files are reported unindexed. target is exact block name or relative file ID; references takes a quoted component path e.g. \"Motor\".\"Run\". Uses explicit CallInfo and global Symbol nodes only. Reports missing/ambiguous callees, cycles, truncation and failures; coverageComplete and safeToDelete are always false. An empty result is not proof of no references. No TIA calls or writes.")]
+        [McpServerTool(Name = "AnalyzePlcReferences"),
+                Description("[L2][Validation][OFFLINE] Query supplied exports without native CrossReferenceService. action " +
+                "summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); " +
+                "SCL/S7DCL and invalid files are reported unindexed. target is exact block name or relative file ID; references takes a quoted component " +
+                "path e.g. \"Motor\".\"Run\". Uses explicit CallInfo and global Symbol nodes only. Reports missing/ambiguous callees, cycles, truncation and " +
+                "failures; coverageComplete and safeToDelete are always false. An empty result is not proof of no references. No TIA calls or writes.")]
         public CallToolResult AnalyzePlcReferencesV4(
             [Description("Absolute directory of exports from one PLC/scope, scanned recursively.")] string directory,
-            [Description("summary | callers | callees | callPaths | unreachable | references. summary, callers, callees, callPaths, unreachable or references.")] string action = "summary",
+            [Description("summary | callers | callees | callPaths | unreachable | references. summary, callers, callees, callPaths, unreachable or " +
+                "references.")] string action =
+                "summary",
             [Description("Exact block name or relative file ID; references uses quoted symbol components.")] string target = "",
             [Description("Maximum call-path edge depth, 1..50.")] int maxDepth = 10,
             [Description("Zero-based result offset.")] int offset = 0,
@@ -46,10 +53,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "Partial offline reference query completed. Inspect failures, unresolvedCalls and scope; never use it alone to justify deletion.";
             });
 
-        [McpServerTool(Name = "PatchPlcBlockDocument"), Description("[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged.")]
+        [McpServerTool(Name = "PatchPlcBlockDocument"),
+                Description("[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires " +
+                "expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), " +
+                "setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only " +
+                "existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. " +
+                "Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged.")]
         public CallToolResult PatchPlcBlockDocumentV4(
             [Description("Absolute existing single-block SimaticML XML file.")] string filePath,
-            [Description("JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}].")] BlockEdit[] changes,
+            [Description("JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. " +
+                "The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old " +
+                "title\",\"value\":\"Example\"}].")] BlockEdit[] changes,
             [Description("documentFingerprint returned by GetPlcBlockEditCapabilities for this input.")] string expectedDocumentHash,
             [Description("New absolute output file; existing parent directory required when dryRun=false.")] string outputPath = "",
             [Description("Preview only by default; false writes a new file, never imports into TIA.")] bool dryRun = true)
@@ -73,20 +87,29 @@ namespace TiaMcpServer.ModelContextProtocol
                     using (var writer = new StreamWriter(stream, new UTF8Encoding(true))) writer.Write(edited);
                     meta["output"] = Siemens.NativeFileOutput.Verify(output);
                 }
-                return dryRun ? "Offline patch preview validated. No file or project changed." : "Patched document written; native import/compilation remain unverified.";
+                return dryRun ? "Offline patch preview validated. No file or project changed."
+                    : "Patched document written; native import/compilation remain unverified.";
             });
 
-        [McpServerTool(Name = "WritePlcSclSourceFile"), Description("[L1][PLC-Software][OFFLINE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: 'Cannot create SW.Blocks.CompileUnit... token not supported'): the user imports the .scl manually in TIA via project tree → 'External source files' → 'Add new external file', then right-clicks the source → 'Generate blocks from source'. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "WritePlcSclSourceFile"),
+                Description("[L1][PLC-Software][OFFLINE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: 'Cannot create SW.Blocks.CompileUnit... token not supported'): the user imports the .scl manually in TIA via project tree → 'External source files' → 'Add new external file', then right-clicks the source → 'Generate blocks from source'. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK."
+                    + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult WritePlcSclSourceFileV4(
-            [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim.")] string sclContent,
-            [Description("outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath = "")
+            [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written " +
+                "verbatim.")] string sclContent,
+            [Description("outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first " +
+                "block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath =
+                "")
         {
             return PlcExchangeContract.Run("WritePlcSclSourceFile", () => WritePlcSclSourceFile(sclContent, outputPath), write: true, current: true);
         }
 
         public ResponseMessage WritePlcSclSourceFile(
-            [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim.")] string sclContent,
-            [Description("outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath = "")
+            [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written " +
+                "verbatim.")] string sclContent,
+            [Description("outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first " +
+                "block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath =
+                "")
         {
             try
             {
@@ -98,7 +121,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     int drivePrefix = outputPath.Length >= 2 && char.IsLetter(outputPath[0]) && outputPath[1] == ':' ? 2 : 0;
                     if (outputPath.IndexOf(':', drivePrefix) >= 0 || outputPath.EndsWith(".", StringComparison.Ordinal)
                         || outputPath.EndsWith(" ", StringComparison.Ordinal))
-                        throw new McpException("outputPath must be .scl only; alternate streams and trailing dots or spaces are not allowed.", McpErrorCode.InvalidParams);
+                        throw new McpException("outputPath must be .scl only; alternate streams and trailing dots or spaces are not allowed.", McpErrorCode
+                                .InvalidParams);
                     bool directory = Directory.Exists(outputPath) || outputPath.EndsWith("\\", StringComparison.Ordinal)
                         || outputPath.EndsWith("/", StringComparison.Ordinal);
                     string extension = Path.GetExtension(outputPath);

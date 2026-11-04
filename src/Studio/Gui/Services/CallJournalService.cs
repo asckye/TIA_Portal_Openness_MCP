@@ -30,7 +30,8 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
 
     public CallJournalService(string? release = null, string? directory = null, string? configDirectory = null, bool live = true)
     {
-        _release = release ?? TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey(); _configDirectory = configDirectory ?? ConfigCore.StateDirectory;
+        _release = release ?? TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey(); _configDirectory = configDirectory ?? ConfigCore
+            .StateDirectory;
         _reader = new CallJournalReader(directory, false, false);
         _reader.Changed += OnChanged;
         if (!live) Refresh();

@@ -21,10 +21,20 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
 #if TIA_ENGINE_HOST
-        private static IToolCatalogView? BridgeCatalog { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog = value; }
-        private static IToolInvoker? BridgeInvoker { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker = value; }
-        private static Func<bool> BridgeIsLiteProfile { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile = value; }
-        private static ISet<string> BridgeLiteToolNames { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames = value; }
+        private static IToolCatalogView? BridgeCatalog {
+            get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog = value;
+        }
+        private static IToolInvoker? BridgeInvoker {
+            get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker = value;
+        }
+        private static Func<bool> BridgeIsLiteProfile {
+            get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current
+                .IsLiteProfile = value;
+        }
+        private static ISet<string> BridgeLiteToolNames {
+            get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current
+                .LiteToolNames = value;
+        }
 #else
         private static IToolCatalogView? BridgeCatalog;
         private static IToolInvoker? BridgeInvoker;
@@ -95,20 +105,24 @@ namespace TiaMcpServer.ModelContextProtocol
             return "";
         }
 
-        [McpServerTool(Name = "ListToolCategories"), Description("[L0][Meta][READ] List the tool taxonomy, layers and current full-catalog counts. Use FindTools to browse a category or domain.")]
+        [McpServerTool(Name = "ListToolCategories"),
+                Description("[L0][Meta][READ] List the tool taxonomy, layers and current full-catalog counts. Use FindTools to browse a category or domain.")]
         public static CallToolResult ListToolCategoriesV4()
             => InfrastructureResult("ListToolCategories", ListToolCategories());
 
         [Description(
             "[L0][Meta][READ] The tool taxonomy: 7 categories (session, project, plc, plc-online, hardware, hmi, runtime), " +
-            "their domains (the [L?][Domain] tag every tool description starts with), the meaning of layers L0/L1/L2, and live tool counts per category/domain/operation. " +
+            "their domains (the [L?][Domain] tag every tool description starts with), the meaning of layers L0/L1/L2, and live tool counts per " +
+                "category/domain/operation. "
+                +
             "Call this first to orient, then FindTools(category=… or domain=…) to browse one area.")]
         public static ResponseStringList ListToolCategories()
         {
             try
             {
                 var all = AllToolDescriptors();
-                var parsed = all.Select(kv => (Name: kv.Key, Tag: ToolTaxonomy.For(kv.Key), Op: ToolTaxonomy.OperationOf(kv.Key, ToolDescription(kv.Value)))).ToList();
+                var parsed = all.Select(kv => (Name: kv.Key, Tag: ToolTaxonomy.For(kv.Key), Op: ToolTaxonomy.OperationOf(kv.Key, ToolDescription(kv.Value))))
+                    .ToList();
                 var lines = new List<string>();
                 var categories = new JsonArray();
                 foreach (var c in ToolTaxonomy.Categories)
@@ -119,11 +133,20 @@ namespace TiaMcpServer.ModelContextProtocol
                     foreach (var d in c.Domains)
                     {
                         var inDomain = inCategory.Where(p => string.Equals(p.Tag.Domain, d, StringComparison.OrdinalIgnoreCase)).ToList();
-                        lines.Add($"    [{d}] {inDomain.Count} tools; layers " + string.Join("/", inDomain.GroupBy(p => p.Tag.Layer).OrderBy(g => g.Key).Select(g => g.Key + "=" + g.Count())));
+                        lines
+                            .Add($"    [{d}] {inDomain.Count} tools; layers " + string
+                                .Join("/", inDomain.GroupBy(p => p.Tag.Layer).OrderBy(g => g.Key).Select(g => g.Key + "=" + g.Count())));
                         domains.Add(new JsonObject { ["domain"] = d, ["tools"] = inDomain.Count,
-                            ["operations"] = new JsonObject(inDomain.GroupBy(p => p.Op.Operation).OrderBy(g => g.Key).Select(g => new KeyValuePair<string, JsonNode?>(g.Key, g.Count()))), ["operationsInferred"] = inDomain.Count(p => p.Op.Inferred) });
+                            ["operations"] =
+                                new JsonObject(inDomain.GroupBy(p => p.Op.Operation).OrderBy(g => g.Key)
+                                    .Select(g => new KeyValuePair<string, JsonNode?>(g.Key, g.Count()))),
+                                ["operationsInferred"] = inDomain.Count(p => p.Op.Inferred) });
                     }
-                    categories.Add(new JsonObject { ["key"] = c.Key, ["nameZh"] = c.NameZh, ["nameEn"] = c.NameEn, ["description"] = c.Description, ["tools"] = inCategory.Count, ["domains"] = domains });
+                    categories
+                        .Add(new JsonObject {
+                            ["key"] = c.Key, ["nameZh"] = c.NameZh, ["nameEn"] = c.NameEn, ["description"] = c.Description, ["tools"] = inCategory.Count,
+                                ["domains"] = domains
+                        });
                 }
                 var unknown = parsed.Where(p => !ToolTaxonomy.IsKnownDomain(p.Tag.Domain)).Select(p => p.Name + "(" + p.Tag.Domain + ")").ToList();
                 var meta = BridgeMeta(true);
@@ -134,7 +157,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["toolCount"] = all.Count;
                 return new ResponseStringList
                 {
-                    Message = $"{all.Count} tools in {ToolTaxonomy.Categories.Count} categories" + (unknown.Count > 0 ? $"; {unknown.Count} tool(s) carry an unregistered domain tag: {string.Join(", ", unknown)}" : "") + ". Use FindTools(category=…) or FindTools(domain=…) to list one area.",
+                    Message = $"{all.Count} tools in {ToolTaxonomy.Categories.Count} categories"
+                        + (unknown.Count > 0 ? $"; {unknown.Count} tool(s) carry an unregistered domain tag: {string.Join(", ", unknown)}" : "")
+                        + ". Use FindTools(category=…) or FindTools(domain=…) to list one area.",
                     Items = lines,
                     Meta = meta,
                 };
@@ -145,9 +170,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "FindTools"), Description("[L0][Meta][READ] Search the full version-gated catalog, including tools outside lite. Returns names, signatures, descriptions and examples. Use CallTool with an arguments object to invoke a match.")]
+        [McpServerTool(Name = "FindTools"),
+                Description("[L0][Meta][READ] Search the full version-gated catalog, including tools outside lite. Returns names, signatures, descriptions " +
+                "and examples. Use CallTool with an arguments object to invoke a match.")]
         public static CallToolResult FindToolsV4(
-            [Description("All capability words must match. Single words also match descriptions, ranked below tool names and aliases. Empty browses the catalog.")] string query = "",
+            [Description("All capability words must match. Single words also match descriptions, ranked below tool names and aliases. Empty browses the " +
+                "catalog.")] string query =
+                "",
             [Description("Positive page size; default 12.")] int limit = 12,
             [Description("Optional category key from ListToolCategories.")] string category = "",
             [Description("Optional exact domain tag from ListToolCategories.")] string domain = "",
@@ -160,7 +189,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var lines = (response.Items ?? Enumerable.Empty<string>()).ToArray();
             int count = lines.Length / 3;
             if (offset > count) return V4Reject("FindTools", InvalidInput("offset"));
-            response.Items = lines.Skip(offset * 3L > int.MaxValue ? int.MaxValue : offset * 3).Take(limit > int.MaxValue / 3 ? int.MaxValue : limit * 3).ToArray();
+            response.Items = lines.Skip(offset * 3L > int.MaxValue ? int.MaxValue : offset * 3).Take(limit > int.MaxValue / 3 ? int.MaxValue : limit * 3)
+                .ToArray();
             return InfrastructureResult("FindTools", response, OffsetPage(offset, limit, count));
         }
 
@@ -169,22 +199,32 @@ namespace TiaMcpServer.ModelContextProtocol
             "The server ships a small 'lite' roster by default so every host can load it; everything else is reached through this tool plus CallTool. " +
             "USE THIS whenever the visible tools do not cover what you need, before concluding the server cannot do something. " +
             "Search by capability words, not exact names: 'watch table', 'HMI screen', 'download', 'cross reference', 'GSD'. " +
-            "Optionally restrict to one category (session/project/plc/plc-online/hardware/hmi/runtime) or one domain tag (e.g. HMI-Unified, PLC-Online) — see ListToolCategories. " +
+            "Optionally restrict to one category (session/project/plc/plc-online/hardware/hmi/runtime) or one domain tag (e.g. HMI-Unified, PLC-Online) — see ListToolCategories. "
+                +
             "Returns each match's exact name, parameter signature with defaults, and full description; then invoke it with CallTool.")]
         public static ResponseStringList FindTools(
-            [Description("query: space-separated words matched against tool names and descriptions, e.g. 'export watch table'. Empty lists the whole roster (or the whole category/domain when one is given).")] string query = "",
+            [Description("query: space-separated words matched against tool names and descriptions, e.g. 'export watch table'. Empty lists the whole roster " +
+                "(or the whole category/domain when one is given).")] string query =
+                "",
             [Description("limit: max tools to return (default 12). Raise it for a broad survey.")] int limit = 12,
-            [Description("category: optional category key from ListToolCategories (session, project, plc, plc-online, hardware, hmi, runtime).")] string category = "",
-            [Description("domain: optional exact domain tag from ListToolCategories, e.g. 'HMI-Unified' or 'PLC-Software'. Case-insensitive.")] string domain = "")
+            [Description("category: optional category key from ListToolCategories (session, project, plc, plc-online, hardware, hmi, " +
+                "runtime).")] string category =
+                "",
+            [Description("domain: optional exact domain tag from ListToolCategories, e.g. 'HMI-Unified' or 'PLC-Software'. Case-insensitive.")] string domain =
+                "")
         {
             try
             {
                 var all = AllToolDescriptors();
                 if (limit <= 0) limit = 12;
                 if (!string.IsNullOrWhiteSpace(category) && ToolTaxonomy.FindCategory(category) == null)
-                    return new ResponseStringList { Message = "Unknown category '" + category + "'. Valid keys: " + string.Join(", ", ToolTaxonomy.Categories.Select(c => c.Key)) + ".", Meta = BridgeMeta(false) };
+                    return new ResponseStringList {
+                        Message = "Unknown category '" + category + "'. Valid keys: " + string.Join(", ", ToolTaxonomy.Categories.Select(c => c.Key)) + ".",
+                            Meta = BridgeMeta(false)
+                    };
                 if (!string.IsNullOrWhiteSpace(domain) && !ToolTaxonomy.IsKnownDomain(domain))
-                    return new ResponseStringList { Message = "Unknown domain '" + domain + "'. Call ListToolCategories for the registered domain tags.", Meta = BridgeMeta(false) };
+                    return new ResponseStringList {
+                        Message = "Unknown domain '" + domain + "'. Call ListToolCategories for the registered domain tags.", Meta = BridgeMeta(false) };
                 if (!string.IsNullOrWhiteSpace(category) || !string.IsNullOrWhiteSpace(domain))
                 {
                     var filtered = new Dictionary<string, ToolDescriptor>(StringComparer.OrdinalIgnoreCase);
@@ -192,7 +232,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         var tag = ToolTaxonomy.For(kv.Key);
                         if (!string.IsNullOrWhiteSpace(domain) && !string.Equals(tag.Domain, domain.Trim(), StringComparison.OrdinalIgnoreCase)) continue;
-                        if (!string.IsNullOrWhiteSpace(category) && !string.Equals(ToolTaxonomy.CategoryOf(tag.Domain), category.Trim(), StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!string.IsNullOrWhiteSpace(category) && !string
+                                .Equals(ToolTaxonomy.CategoryOf(tag.Domain), category.Trim(), StringComparison.OrdinalIgnoreCase))
+                            continue;
                         filtered[kv.Key] = kv.Value;
                     }
                     all = filtered;
@@ -272,7 +314,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CallTool"), Description("[L0][Meta] Invoke a tool in the full version-gated catalog. arguments must be an object matching the target inputSchema. Large results return data.text, data.export and data.continuation; follow GetExportContent with meta.paging.nextOffset and concatenate text before parsing. Dispatch failures use the V4 envelope. Nested orchestration is refused.")]
+        [McpServerTool(Name = "CallTool"),
+                Description("[L0][Meta] Invoke a tool in the full version-gated catalog. arguments must be an object matching the target inputSchema. Large " +
+                "results return data.text, data.export and data.continuation; follow GetExportContent with meta.paging.nextOffset and concatenate text " +
+                "before parsing. Dispatch failures use the V4 envelope. Nested orchestration is refused.")]
         [AsyncDispatch(nameof(CallToolAsync))]
         public static CallToolResult CallTool(
             [Description("Exact currently registered tool name from FindTools.")] string name,
@@ -303,17 +348,24 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     var fields = TargetInputError(name, input, rejected);
                     if (!ReferenceEquals(fields, rejected))
-                        return FinishApproval(V4TargetReject(name, fields, CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name }))), null);
+                        return FinishApproval(V4TargetReject(name, fields, CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name }))),
+                                null);
                     return (await BridgeWait.On(ToolInvoker.InvokeAsync(name, input, ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result;
                 }
                 var previous = FoundationBeforeDispatch;
                 FoundationBeforeDispatch = beforeDispatch;
-                try { return (await BridgeWait.On(ToolInvoker.InvokeAsync(name, arguments ?? EmptyArguments(), ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result; }
+                try {
+                    return (await BridgeWait.On(ToolInvoker.InvokeAsync(name, arguments ?? EmptyArguments(), ApprovalPreviewDepth.Value > 0))
+                            .ConfigureAwait(false))
+                        .Result;
+                }
                 finally { FoundationBeforeDispatch = previous; }
             }
 #endif
-            bool write = AllToolDescriptors(includeUnavailable: true).TryGetValue(name ?? "", out _) && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
-            bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
+            bool write = AllToolDescriptors(includeUnavailable: true).TryGetValue(name ?? "", out _)
+                && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
+            bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath)
+                .Enabled;
             string requestId = Meta.Correlate(InvocationJournal.CorrelationId);
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, McpServer.InvocationHostTag, ReleaseKey, name ?? "", requestId);
             var fenced = write ? GenerationFenceRefusal(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText()) : null;
@@ -335,7 +387,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
             bool issued = false;
             try { return AuditBridgeResult(audit, await BridgeWait.On(ApprovedBridgeCallAsync(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
-                async () => { issued = true; return (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result; }, beforeDispatch)).ConfigureAwait(false), disabled); }
+                async () => { issued = true; return (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result; },
+                    beforeDispatch)).ConfigureAwait(false), disabled); }
             catch (OperationCanceledException) when (!issued) /* swallow(privacy): typed cancellation before dispatch does not expose exception text */
             { return AuditBridgeResult(audit, V4TargetReject(name, new Error("The request was cancelled before dispatch.",
                 new CancelledDetails("tool-queue")), CurrentBehaviorTargets(name, (arguments ?? EmptyArguments()).Json)), disabled); }
@@ -355,16 +408,19 @@ namespace TiaMcpServer.ModelContextProtocol
             error = TiaOpenness.Shared.HostFailurePolicy.Unwrap(error);
             if (error.Data["workerRequestSent"] is false) issued = false;
             if (!issued && error.Data["workerLimitBytes"] is int workerLimit)
-                return V4Reject(tool, new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)));
+                return V4Reject(tool,
+                        new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)));
             if (!issued && error is OperationCanceledException)
                 return V4Reject(tool, new Error("The request was cancelled before dispatch.", new CancelledDetails("tool-queue")));
             var classification = AllToolDescriptors(includeUnavailable: true).TryGetValue(tool, out var method)
                 ? ClassificationOf(method) : null;
             var fallback = classification == null ? ToolMetadata.Find(tool) : null;
             string operation = classification?.Operation ?? fallback?.Operation ?? ToolTaxonomy.OperationOf(tool, null).Operation;
-            bool readOnly = ApprovalPreviewDepth.Value > 0 || operation is "READ" or "OFFLINE" || operation == "SESSION" && (classification?.BatchRead ?? fallback?.BatchRead) == true;
+            bool readOnly = ApprovalPreviewDepth.Value > 0 || operation is "READ" or "OFFLINE" || operation == "SESSION"
+                && (classification?.BatchRead ?? fallback?.BatchRead) == true;
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(error, issued, readOnly,
-                reportedCode: error is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams ? -32602 : (int?)null,
+                reportedCode: error is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode
+                    .InvalidParams ? -32602 : (int?)null,
                 nativeRead: InvocationJournal.NativeCallIssued);
             var evidence = HostBehavior.FailureEvidence(error.GetType().Name, error.Message);
             var data = new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) };
@@ -389,7 +445,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string ReleaseKey => Siemens.EngineRouter.CompiledTiaMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture);
 #endif
         internal static ToolArguments EmptyArguments() => new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject()));
-        internal static Error InvalidInput(string parameter) => new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
+        internal static Error InvalidInput(string parameter) =>
+            new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
         internal static Paging OffsetPage(int offset, int limit, int total) => new Paging(PagingMode.Offset, offset, limit,
             (long)offset + limit < total ? offset + limit : (int?)null, null, null, total, (long)offset + limit >= total);
         internal static CallToolResult V4Reject(string tool, Error error, JsonObject? data = null)
@@ -442,10 +499,12 @@ namespace TiaMcpServer.ModelContextProtocol
             Outcome outcome, Execution execution, Completeness completeness, Paging? paging = null, bool current = false)
         {
 #if TIA_ENGINE_HOST
-            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].DisclosePortedBehavior && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current = true;
+            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].DisclosePortedBehavior && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool))
+                current = true;
 #endif
             var warnings = current ? new[] { new Warning(WarningCode.UnverifiedBehavior,
-                "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) } : Array.Empty<Warning>();
+                "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) } : Array
+                    .Empty<Warning>();
             var policy = current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable;
             if (ToolBehaviorPolicy(tool, policy) == BehaviorPolicy.SafeV4)
             { policy = BehaviorPolicy.SafeV4; warnings = Array.Empty<Warning>(); }
@@ -463,7 +522,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
             data.Remove("success"); data.Remove("timestamp");
             data["summary"] = response.Message;
-            if (response is ResponseStringList list) data["items"] = new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
+            if (response is ResponseStringList list) data["items"] =
+                new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
             return reportOnly || response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, paging: paging)
                 : V4Result(tool, data, new Error("Input does not satisfy the declared contract.",
                     new InternalErrorDetails(null)), Outcome.ReadFailed, Execution.ReadOnly, Completeness.None);
@@ -501,7 +561,9 @@ namespace TiaMcpServer.ModelContextProtocol
         // PreflightLogic builds the report (pure, offline-tested); only session state comes from the engine,
         // through a partial method the offline suite does not implement.
 
-        [McpServerTool(Name = "PreviewToolCall"), Description("[L0][Meta][SESSION] Validate a planned call against the target inputSchema and version gates without executing it. Returns signature, prerequisites and a worked example. No native calls.")]
+        [McpServerTool(Name = "PreviewToolCall"),
+                Description("[L0][Meta][SESSION] Validate a planned call against the target inputSchema and version gates without executing it. Returns " +
+                "signature, prerequisites and a worked example. No native calls.")]
         [AsyncDispatch(nameof(PreviewToolCallAsync))]
         public static CallToolResult PreviewToolCall(
             [Description("Exact currently registered tool name.")] string name,
@@ -557,12 +619,15 @@ namespace TiaMcpServer.ModelContextProtocol
                     .OrderBy(k => k, StringComparer.Ordinal).Take(8).ToList();
                 if (near.Count == 0)
                     near = all.Keys.Select(k => new KeyValuePair<int, string>(CommonPrefixLength(k, target), k))
-                        .Where(x => x.Key >= 6).OrderByDescending(x => x.Key).ThenBy(x => x.Value, StringComparer.Ordinal).Take(5).Select(x => x.Value).ToList();
+                        .Where(x => x.Key >= 6).OrderByDescending(x => x.Key).ThenBy(x => x.Value, StringComparer.Ordinal).Take(5).Select(x => x.Value)
+                            .ToList();
                 meta["success"] = false; meta["ok"] = false; meta["toolFound"] = false;
                 meta["suggestions"] = new JsonArray(near.Select(n => (JsonNode)n).ToArray());
                 return new ResponseStringList
                 {
-                    Message = "No tool named '" + target + "'." + (near.Count > 0 ? " Did you mean: " + string.Join(", ", near) + "? Re-run PreviewToolCall with that name." : " Call FindTools with capability words to find it."),
+                    Message = "No tool named '" + target + "'."
+                        + (near.Count > 0 ? " Did you mean: " + string.Join(", ", near) + "? Re-run PreviewToolCall with that name."
+                            : " Call FindTools with capability words to find it."),
                     Meta = meta,
                 };
             }
@@ -578,7 +643,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (JsonException jx)
                 {
                     meta["success"] = false; meta["ok"] = false; meta["toolFound"] = true;
-                    return new ResponseStringList { Message = "arguments is not valid JSON (" + jx.Message + "). Expected signature: " + method.Signature, Meta = meta };
+                    return new ResponseStringList {
+                        Message = "arguments is not valid JSON (" + jx.Message + "). Expected signature: " + method.Signature, Meta = meta };
                 }
                 if (!(parsed is JsonObject obj))
                 {
@@ -626,13 +692,15 @@ namespace TiaMcpServer.ModelContextProtocol
             var prerequisites = new List<string>();
             if (needsProject)
             {
-                if (connected == false) prerequisites.Add("Not connected to TIA Portal - call ConnectPortal (or AttachOpenProject with the project name) first.");
+                if (connected == false) prerequisites
+                    .Add("Not connected to TIA Portal - call ConnectPortal (or AttachOpenProject with the project name) first.");
                 else if (connected == true && !projectBound) prerequisites.Add("Connected but no project bound - AttachOpenProject / OpenProject first.");
                 else if (connected == null) prerequisites.Add("Session state unknown here; GetSessionState tells whether a project is bound.");
                 else prerequisites.Add("Project '" + project + "' is bound.");
             }
 
-            var lines = new List<string> { "Signature: " + method.Signature, "Class: " + tag.Layer + " " + tag.Domain + " " + op.Operation + (op.Inferred ? " (inferred)" : "") };
+            var lines = new List<string> {
+                "Signature: " + method.Signature, "Class: " + tag.Layer + " " + tag.Domain + " " + op.Operation + (op.Inferred ? " (inferred)" : "") };
             foreach (var m in report.Missing) lines.Add("MISSING required parameter: " + m);
             foreach (var u in report.Unknown) lines.Add("UNKNOWN parameter: " + u);
             foreach (var t in report.TypeProblems) lines.Add("TYPE: " + t);
@@ -640,7 +708,13 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var c in report.Coercions) lines.Add("Coercion: " + c);
             foreach (var w in report.Warnings) lines.Add("Warning: " + w);
             if (report.DryRunSupported)
-                lines.Add("dryRun: " + (report.DryRunGiven == null ? "not given -> default " + (report.DryRunDefault ? "true (preview only)" : "false (executes)") : report.DryRunGiven == true ? "true (preview only)" : "false (EXECUTES" + (report.ConfirmFlags.Count > 0 ? "; confirm flags set: " + (report.ConfirmFlagsSet.Count > 0 ? string.Join(", ", report.ConfirmFlagsSet) : "none") : "") + ")"));
+                lines
+                    .Add("dryRun: "
+                        + (report.DryRunGiven == null ? "not given -> default " + (report.DryRunDefault ? "true (preview only)" : "false (executes)") : report
+                            .DryRunGiven == true ? "true (preview only)" : "false (EXECUTES"
+                            + (report.ConfirmFlags.Count > 0 ? "; confirm flags set: "
+                                + (report.ConfirmFlagsSet.Count > 0 ? string.Join(", ", report.ConfirmFlagsSet) : "none") : "")
+                            + ")"));
             foreach (var p in precautions) lines.Add("Precaution: " + p);
             foreach (var p in prerequisites) lines.Add("Prerequisite: " + p);
             var example = ToolExamples.FindOrDerive(canonical, specs);
@@ -658,19 +732,31 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["typeProblems"] = new JsonArray(report.TypeProblems.Select(x => (JsonNode)x).ToArray());
             meta["coercions"] = new JsonArray(report.Coercions.Select(x => (JsonNode)x).ToArray());
             meta["warnings"] = new JsonArray(report.Warnings.Select(x => (JsonNode)x).ToArray());
-            meta["dryRun"] = new JsonObject { ["supported"] = report.DryRunSupported, ["given"] = report.DryRunGiven, ["effective"] = report.Effective, ["confirmFlags"] = new JsonArray(report.ConfirmFlags.Select(x => (JsonNode)x).ToArray()), ["confirmFlagsSet"] = new JsonArray(report.ConfirmFlagsSet.Select(x => (JsonNode)x).ToArray()) };
+            meta["dryRun"] = new JsonObject {
+                ["supported"] = report.DryRunSupported, ["given"] = report.DryRunGiven, ["effective"] = report.Effective, ["confirmFlags"] =
+                    new JsonArray(report.ConfirmFlags.Select(x => (JsonNode)x).ToArray()), ["confirmFlagsSet"] =
+                    new JsonArray(report.ConfirmFlagsSet.Select(x => (JsonNode)x).ToArray())
+            };
             meta["precautions"] = new JsonArray(precautions.Select(x => (JsonNode)x).ToArray());
-            meta["prerequisites"] = new JsonObject { ["needsProject"] = needsProject, ["connected"] = connected, ["project"] = project, ["satisfied"] = prerequisitesOk };
+            meta["prerequisites"] = new JsonObject {
+                ["needsProject"] = needsProject, ["connected"] = connected, ["project"] = project, ["satisfied"] = prerequisitesOk };
             meta["example"] = JsonNode.Parse(example.ArgumentsJson);
             meta["exampleDerived"] = example.Note == ToolExamples.DerivedNote;
             string verdict = !report.Ok
-                ? "NOT READY: fix " + (report.Missing.Count + report.Unknown.Count + report.TypeProblems.Count) + " problem(s) listed in Items, then preflight again."
+                ? "NOT READY: fix " + (report.Missing.Count + report.Unknown.Count + report.TypeProblems.Count)
+                    + " problem(s) listed in Items, then preflight again."
                 : prerequisitesOk == false ? "Arguments fit; the session prerequisite is not met (see Items)."
-                : "READY: " + canonical + " would bind" + (report.CaseFixes.Count + report.Coercions.Count > 0 ? " after " + (report.CaseFixes.Count + report.Coercions.Count) + " automatic correction(s) (CallTool only)" : "") + (nativeParameterRead ? "; native parameter reads may execute even with dryRun=true" : (report.DryRunSupported ? (report.Effective ? "; it EXECUTES (dryRun=false)" : "; it is a preview (dryRun)") : "")) + ".";
+                : "READY: " + canonical + " would bind"
+                    + (report.CaseFixes.Count + report.Coercions.Count > 0 ? " after " + (report.CaseFixes.Count + report.Coercions.Count)
+                        + " automatic correction(s) (CallTool only)" : "")
+                    + (nativeParameterRead ? "; native parameter reads may execute even with dryRun=true"
+                        : (report.DryRunSupported ? (report.Effective ? "; it EXECUTES (dryRun=false)" : "; it is a preview (dryRun)") : ""))
+                    + ".";
             return new ResponseStringList { Message = verdict, Items = lines, Meta = meta };
         }
 
-        internal static bool IsWriteTool(string name) => ToolTaxonomy.OperationOf(name, null).Operation is "WRITE" or "ONLINE-WRITE" || name == "StageImportFiles" || name == "CleanupStagedImportFiles";
+        internal static bool IsWriteTool(string name) => ToolTaxonomy.OperationOf(name, null).Operation is "WRITE" or "ONLINE-WRITE"
+            || name == "StageImportFiles" || name == "CleanupStagedImportFiles";
         private static bool IsWrite(ToolMetadata.Classification? classification)
             => classification?.Operation is "WRITE" or "ONLINE-WRITE";
 
@@ -739,7 +825,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return ToolInvoker.Bind((string)arguments["name"]!, arguments["arguments"] == null ? EmptyArguments()
                     : new ToolArguments(JsonSerializer.SerializeToElement(arguments["arguments"])), out _);
             if (name == "RunReadOnlyToolBatch" || name == "PreviewToolBatch")
-                return ValidateBatch(JsonSerializer.Deserialize<ToolCall[]>(arguments["operations"]!.ToJsonString(), V4BindingJson)!, name == "PreviewToolBatch", out _);
+                return ValidateBatch(JsonSerializer.Deserialize<ToolCall[]>(arguments["operations"]!.ToJsonString(), V4BindingJson)!,
+                        name == "PreviewToolBatch", out _);
 
             return null;
         }

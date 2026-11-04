@@ -57,43 +57,124 @@ namespace TiaMcp.Adapters
             {
                 switch (request.Operation)
                 {
-                    case "GetUnifiedObjectProperties": reply.Value = new UnifiedObjectServicesAdapter(session).ReadUnifiedObjectProperties(request.SoftwarePath, request.ObjectPathJson, request.Offset, request.Limit); break;
-                    case "SetUnifiedObjectProperties": reply.Value = new UnifiedObjectServicesAdapter(session).UpdateUnifiedObjectProperties(request.SoftwarePath, request.ObjectPathJson, request.PropertiesJson, request.DryRun); break;
-                    case "SetUnifiedMultilingualProperty": reply.Value = new UnifiedObjectServicesAdapter(session).UpdateUnifiedMultilingualProperty(request.SoftwarePath, request.ObjectPathJson, request.Property, request.Culture, request.RawText, request.DryRun); break;
-                    case "ValidateUnifiedObject": reply.Value = new UnifiedObjectServicesAdapter(session).ValidateUnifiedObject(request.SoftwarePath, request.ObjectPathJson); break;
-                    case "GetUnifiedCrossReferences": reply.Value = new UnifiedObjectServicesAdapter(session).GetUnifiedCrossReferences(request.SoftwarePath, request.ObjectPathJson, request.Filter); break;
-                    case "ExportUnifiedEngineeringList": reply.Value = new UnifiedObjectServicesAdapter(session).ExportUnifiedEngineeringList(request.SoftwarePath, request.Category, request.Name, request.DestinationDirectory, request.DryRun); break;
-                    case "ManageUnifiedLoggingTag": reply.Value = new UnifiedObjectServicesAdapter(session).ManageUnifiedLoggingTag(request.SoftwarePath, request.TagPathJson, request.Action, request.Name, request.PropertiesJson, request.DryRun); break;
-                    case "SetUnifiedLogDuration": reply.Value = new UnifiedObjectServicesAdapter(session).SetUnifiedLogDuration(request.SoftwarePath, request.DurationPathJson, request.Kind, request.Days, request.Hours, request.Minutes, request.Seconds, request.HundredNanoseconds, request.DryRun); break;
-                    case "ManageUnifiedOpcUaAlarmType": reply.Value = new UnifiedObjectServicesAdapter(session).ManageUnifiedOpcUaAlarmType(request.SoftwarePath, request.Name, request.NodeId, request.Connection, request.Action, request.DryRun); break;
-                    case "GetUnifiedPlantObject": reply.Value = new UnifiedObjectServicesAdapter(session).ReadUnifiedPlantObject(request.PlantPath, request.ObjectPathJson, request.Offset, request.Limit); break;
-                    case "ManageUnifiedPlantNode": reply.Value = new UnifiedObjectServicesAdapter(session).ManageUnifiedPlantNode(request.PlantPath, request.Action, request.PlantObjectType, request.PropertiesJson, request.DryRun); break;
-                    case "SetUnifiedPlantObject": reply.Value = new UnifiedObjectServicesAdapter(session).UpdateUnifiedPlantObject(request.PlantPath, request.ObjectPathJson, request.PropertiesJson, request.DryRun); break;
-                    case "GetUnifiedObjectEvents": reply.Value = new UnifiedUiModelAdapter(session).ReadUnifiedObjectEvents(request.SoftwarePath, request.ObjectPathJson, request.Offset, request.Limit); break;
-                    case "ManageUnifiedObjectParts": reply.Value = new UnifiedUiModelAdapter(session).ManageUnifiedObjectParts(request.SoftwarePath, request.ObjectPathJson, request.Action, request.CollectionProperty, request.PartName, request.PartIndex, request.PartKind, request.PropertiesJson, request.ConfirmDelete, request.DryRun); break;
-                    case "ManageUnifiedDynamization": reply.Value = new UnifiedUiModelAdapter(session).ManageUnifiedDynamization(request.SoftwarePath, request.ObjectPathJson, request.PropertyName, request.Action, request.DynamizationKind, request.PropertiesJson, request.MappingEntriesJson, request.ConfirmDelete, request.DryRun); break;
-                    case "ManageUnifiedScreenLayout": reply.Value = new UnifiedUiModelAdapter(session).ManageUnifiedScreenLayout(request.SoftwarePath, request.ObjectPathJson, request.Action, request.Name, request.PropertiesJson, request.ConfirmDelete, request.DryRun); break;
-                    case "ManageUnifiedListEntries": reply.Value = new UnifiedUiModelAdapter(session).ManageUnifiedListEntries(request.SoftwarePath, request.Category, request.ListName, request.Action, request.EntryKey, request.EntryJson, request.ConfirmDelete, request.DryRun); break;
-                    case "GetUnifiedAlarmCommon": reply.Value = new UnifiedUiModelAdapter(session).ReadUnifiedAlarmCommon(request.SoftwarePath, request.Category, request.Name, request.Offset, request.Limit); break;
-                    case "GetUnifiedAuditSettings": reply.Value = new UnifiedUiModelAdapter(session).ReadUnifiedAuditSettings(request.SoftwarePath, request.Category, request.Name, request.Offset, request.Limit); break;
-                    case "ImportUnifiedEngineeringList": reply.Value = new UnifiedEngineeringAdapter(session).ImportUnifiedEngineeringList(request.SoftwarePath, request.Category, request.FilePath, request.ExpectedNamesJson, request.DryRun, request.Overwrite); break;
-                    case "ListUnifiedEngineeringObjects": reply.Value = new UnifiedEngineeringAdapter(session).ReadUnifiedEngineeringObjects(request.SoftwarePath, request.Category, request.Name, request.Offset, request.Limit); break;
-                    case "ManageUnifiedEngineeringObject": reply.Value = new UnifiedEngineeringAdapter(session).ManageUnifiedEngineeringObject(request.SoftwarePath, request.Category, request.Name, request.Action, request.PropertiesJson, request.DryRun); break;
-                    case "ManageUnifiedEvent": reply.Value = new UnifiedEventsAdapter(session).ManageUnifiedEvent(request.SoftwarePath, request.ObjectPathJson, request.EventType, request.Action, request.PropertyName, request.ScriptPropertiesJson, request.ExpectedToken, request.DryRun); break;
-                    case "ExchangeUnifiedTags": reply.Value = new UnifiedExchangeAdapter(session).ExchangeUnifiedTags(request.SoftwarePath, request.Action, request.Directory, request.TagTable, request.FileName, request.ExpectedTagNamesJson, request.DryRun, request.Overwrite); break;
-                    case "ExchangeUnifiedScriptModules": reply.Value = new UnifiedExchangeAdapter(session).ExchangeUnifiedScriptModules(request.SoftwarePath, request.Action, request.Directory, request.ModuleName, request.FileName, request.DryRun, request.Overwrite); break;
-                    case "ImportUnifiedOpcUaAlarms": reply.Value = new UnifiedExchangeAdapter(session).ImportUnifiedOpcUaAlarms(request.SoftwarePath, request.ConnectionName, request.Action, request.XmlPath, request.DisplayName, request.DryRun, request.Overwrite); break;
-                    case "SetUnifiedGlobalScript": reply.Value = new GlobalScriptEditAdapter(session).UpdateUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.ScriptCode, request.DryRun, request.ExpectedToken); break;
-                    case "GetUnifiedGraphicSelection": reply.Value = new GraphicSelectionAdapter(session, new MigrationReadAdapter(session)).ReadUnifiedGraphicSelection(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemNamesJson, request.Cursor, request.PageSize, request.BudgetMs); break;
-                    case "GetUnifiedRuntimeSettings": reply.Value = new RuntimeSettingsAdapter(session).ReadUnifiedRuntimeSettings(request.SoftwarePath, request.ExpectedProject, request.FieldsJson); break;
-                    case "SetUnifiedRuntimeSettings": reply.Value = new RuntimeSettingsAdapter(session).UpdateUnifiedRuntimeSettings(request.SoftwarePath, request.ExpectedProject, request.ChangesJson, request.DryRun, request.ExpectedToken); break;
-                    case "ListUnifiedGlobalScripts": reply.Value = new MigrationReadAdapter(session).ListUnifiedGlobalScripts(request.SoftwarePath, request.ExpectedProject, request.Cursor, request.PageSize, request.BudgetMs); break;
-                    case "GetUnifiedGlobalScript": reply.Value = new MigrationReadAdapter(session).ReadUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.Cursor, request.PageSize, request.BudgetMs); break;
-                    case "ListUnifiedTagDefinitions": reply.Value = new MigrationReadAdapter(session).ReadUnifiedTagDefinitions(request.SoftwarePath, request.ExpectedProject, request.Cursor, request.PageSize, request.BudgetMs); break;
-                    case "GetUnifiedScreenBranch": reply.Value = new MigrationReadAdapter(session).ReadUnifiedScreenBranch(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemName, request.BranchJson, request.Cursor, request.PageSize, request.BudgetMs); break;
-                    case "GetUnifiedLibraryType": reply.Value = new MigrationReadAdapter(session).ReadUnifiedLibraryType(request.SoftwarePath, request.ExpectedProject, request.TypePath, request.Version, request.Cursor, request.PageSize, request.BudgetMs); break;
-                    case "ListUnifiedLibraryFolderEntries": reply.Value = new MigrationReadAdapter(session).ListUnifiedLibraryFolder(request.SoftwarePath, request.ExpectedProject, request.FolderPath, request.Cursor, request.PageSize, request.BudgetMs); break;
-                    case "GetUnifiedFaceplateInstance": reply.Value = new MigrationReadAdapter(session).ReadUnifiedFaceplateInstance(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemName, request.TypePath, request.Version, request.Cursor, request.PageSize, request.BudgetMs); break;
+                    case "GetUnifiedObjectProperties": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .ReadUnifiedObjectProperties(request.SoftwarePath, request.ObjectPathJson, request.Offset, request.Limit); break;
+                    case "SetUnifiedObjectProperties": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .UpdateUnifiedObjectProperties(request.SoftwarePath, request.ObjectPathJson, request.PropertiesJson, request.DryRun); break;
+                    case "SetUnifiedMultilingualProperty": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .UpdateUnifiedMultilingualProperty(request.SoftwarePath, request.ObjectPathJson, request.Property, request.Culture, request.RawText,
+                            request.DryRun);
+                    break;
+                    case "ValidateUnifiedObject": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .ValidateUnifiedObject(request.SoftwarePath, request.ObjectPathJson); break;
+                    case "GetUnifiedCrossReferences": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .GetUnifiedCrossReferences(request.SoftwarePath, request.ObjectPathJson, request.Filter); break;
+                    case "ExportUnifiedEngineeringList": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .ExportUnifiedEngineeringList(request.SoftwarePath, request.Category, request.Name, request.DestinationDirectory, request.DryRun);
+                    break;
+                    case "ManageUnifiedLoggingTag": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .ManageUnifiedLoggingTag(request.SoftwarePath, request.TagPathJson, request.Action, request.Name, request.PropertiesJson, request
+                            .DryRun);
+                    break;
+                    case "SetUnifiedLogDuration": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .SetUnifiedLogDuration(request.SoftwarePath, request.DurationPathJson, request.Kind, request.Days, request.Hours, request.Minutes,
+                            request.Seconds, request.HundredNanoseconds, request.DryRun);
+                    break;
+                    case "ManageUnifiedOpcUaAlarmType": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .ManageUnifiedOpcUaAlarmType(request.SoftwarePath, request.Name, request.NodeId, request.Connection, request.Action, request.DryRun);
+                    break;
+                    case "GetUnifiedPlantObject": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .ReadUnifiedPlantObject(request.PlantPath, request.ObjectPathJson, request.Offset, request.Limit); break;
+                    case "ManageUnifiedPlantNode": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .ManageUnifiedPlantNode(request.PlantPath, request.Action, request.PlantObjectType, request.PropertiesJson, request.DryRun); break;
+                    case "SetUnifiedPlantObject": reply.Value = new UnifiedObjectServicesAdapter(session)
+                        .UpdateUnifiedPlantObject(request.PlantPath, request.ObjectPathJson, request.PropertiesJson, request.DryRun); break;
+                    case "GetUnifiedObjectEvents": reply.Value = new UnifiedUiModelAdapter(session)
+                        .ReadUnifiedObjectEvents(request.SoftwarePath, request.ObjectPathJson, request.Offset, request.Limit); break;
+                    case "ManageUnifiedObjectParts": reply.Value = new UnifiedUiModelAdapter(session)
+                        .ManageUnifiedObjectParts(request.SoftwarePath, request.ObjectPathJson, request.Action, request.CollectionProperty, request.PartName,
+                            request.PartIndex, request.PartKind, request.PropertiesJson, request.ConfirmDelete, request.DryRun);
+                    break;
+                    case "ManageUnifiedDynamization": reply.Value = new UnifiedUiModelAdapter(session)
+                        .ManageUnifiedDynamization(request.SoftwarePath, request.ObjectPathJson, request.PropertyName, request.Action, request.DynamizationKind,
+                            request.PropertiesJson, request.MappingEntriesJson, request.ConfirmDelete, request.DryRun);
+                    break;
+                    case "ManageUnifiedScreenLayout": reply.Value = new UnifiedUiModelAdapter(session)
+                        .ManageUnifiedScreenLayout(request.SoftwarePath, request.ObjectPathJson, request.Action, request.Name, request.PropertiesJson, request
+                            .ConfirmDelete, request.DryRun);
+                    break;
+                    case "ManageUnifiedListEntries": reply.Value = new UnifiedUiModelAdapter(session)
+                        .ManageUnifiedListEntries(request.SoftwarePath, request.Category, request.ListName, request.Action, request.EntryKey, request.EntryJson,
+                            request.ConfirmDelete, request.DryRun);
+                    break;
+                    case "GetUnifiedAlarmCommon": reply.Value = new UnifiedUiModelAdapter(session)
+                        .ReadUnifiedAlarmCommon(request.SoftwarePath, request.Category, request.Name, request.Offset, request.Limit); break;
+                    case "GetUnifiedAuditSettings": reply.Value = new UnifiedUiModelAdapter(session)
+                        .ReadUnifiedAuditSettings(request.SoftwarePath, request.Category, request.Name, request.Offset, request.Limit); break;
+                    case "ImportUnifiedEngineeringList": reply.Value = new UnifiedEngineeringAdapter(session)
+                        .ImportUnifiedEngineeringList(request.SoftwarePath, request.Category, request.FilePath, request.ExpectedNamesJson, request.DryRun,
+                            request.Overwrite);
+                    break;
+                    case "ListUnifiedEngineeringObjects": reply.Value = new UnifiedEngineeringAdapter(session)
+                        .ReadUnifiedEngineeringObjects(request.SoftwarePath, request.Category, request.Name, request.Offset, request.Limit); break;
+                    case "ManageUnifiedEngineeringObject": reply.Value = new UnifiedEngineeringAdapter(session)
+                        .ManageUnifiedEngineeringObject(request.SoftwarePath, request.Category, request.Name, request.Action, request.PropertiesJson, request
+                            .DryRun);
+                    break;
+                    case "ManageUnifiedEvent": reply.Value = new UnifiedEventsAdapter(session)
+                        .ManageUnifiedEvent(request.SoftwarePath, request.ObjectPathJson, request.EventType, request.Action, request.PropertyName, request
+                            .ScriptPropertiesJson, request.ExpectedToken, request.DryRun);
+                    break;
+                    case "ExchangeUnifiedTags": reply.Value = new UnifiedExchangeAdapter(session)
+                        .ExchangeUnifiedTags(request.SoftwarePath, request.Action, request.Directory, request.TagTable, request.FileName, request
+                            .ExpectedTagNamesJson, request.DryRun, request.Overwrite);
+                    break;
+                    case "ExchangeUnifiedScriptModules": reply.Value = new UnifiedExchangeAdapter(session)
+                        .ExchangeUnifiedScriptModules(request.SoftwarePath, request.Action, request.Directory, request.ModuleName, request.FileName, request
+                            .DryRun, request.Overwrite);
+                    break;
+                    case "ImportUnifiedOpcUaAlarms": reply.Value = new UnifiedExchangeAdapter(session)
+                        .ImportUnifiedOpcUaAlarms(request.SoftwarePath, request.ConnectionName, request.Action, request.XmlPath, request.DisplayName, request
+                            .DryRun, request.Overwrite);
+                    break;
+                    case "SetUnifiedGlobalScript": reply.Value = new GlobalScriptEditAdapter(session)
+                        .UpdateUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.ScriptCode, request.DryRun,
+                            request.ExpectedToken);
+                    break;
+                    case "GetUnifiedGraphicSelection": reply.Value = new GraphicSelectionAdapter(session, new MigrationReadAdapter(session))
+                        .ReadUnifiedGraphicSelection(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemNamesJson, request.Cursor,
+                            request.PageSize, request.BudgetMs);
+                    break;
+                    case "GetUnifiedRuntimeSettings": reply.Value = new RuntimeSettingsAdapter(session)
+                        .ReadUnifiedRuntimeSettings(request.SoftwarePath, request.ExpectedProject, request.FieldsJson); break;
+                    case "SetUnifiedRuntimeSettings": reply.Value = new RuntimeSettingsAdapter(session)
+                        .UpdateUnifiedRuntimeSettings(request.SoftwarePath, request.ExpectedProject, request.ChangesJson, request.DryRun, request
+                            .ExpectedToken);
+                    break;
+                    case "ListUnifiedGlobalScripts": reply.Value = new MigrationReadAdapter(session)
+                        .ListUnifiedGlobalScripts(request.SoftwarePath, request.ExpectedProject, request.Cursor, request.PageSize, request.BudgetMs); break;
+                    case "GetUnifiedGlobalScript": reply.Value = new MigrationReadAdapter(session)
+                        .ReadUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.Cursor, request.PageSize, request
+                            .BudgetMs);
+                    break;
+                    case "ListUnifiedTagDefinitions": reply.Value = new MigrationReadAdapter(session)
+                        .ReadUnifiedTagDefinitions(request.SoftwarePath, request.ExpectedProject, request.Cursor, request.PageSize, request.BudgetMs); break;
+                    case "GetUnifiedScreenBranch": reply.Value = new MigrationReadAdapter(session)
+                        .ReadUnifiedScreenBranch(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemName, request.BranchJson,
+                            request.Cursor, request.PageSize, request.BudgetMs);
+                    break;
+                    case "GetUnifiedLibraryType": reply.Value = new MigrationReadAdapter(session)
+                        .ReadUnifiedLibraryType(request.SoftwarePath, request.ExpectedProject, request.TypePath, request.Version, request.Cursor, request
+                            .PageSize, request.BudgetMs);
+                    break;
+                    case "ListUnifiedLibraryFolderEntries": reply.Value = new MigrationReadAdapter(session)
+                        .ListUnifiedLibraryFolder(request.SoftwarePath, request.ExpectedProject, request.FolderPath, request.Cursor, request.PageSize, request
+                            .BudgetMs);
+                    break;
+                    case "GetUnifiedFaceplateInstance": reply.Value = new MigrationReadAdapter(session)
+                        .ReadUnifiedFaceplateInstance(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemName, request.TypePath,
+                            request.Version, request.Cursor, request.PageSize, request.BudgetMs);
+                    break;
                     case "ReleaseUnifiedReadCursor": reply.Value = new MigrationReadAdapter(session).ReleaseUnifiedReadCursor(request.Cursor); break;
                     default: throw new ArgumentException("Unregistered Unified operation: " + request.Operation);
                 }

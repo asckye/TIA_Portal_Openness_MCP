@@ -31,11 +31,13 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
     internal bool StatusOutcomeIsFault { get; init; } = true;
     internal bool NativeObservations { get; init; }
     internal IReadOnlyList<string> ObservationToolNames { get; init; } = Array.Empty<string>();
-    internal IReadOnlyList<string> ObservationSet { get; init; } = new[] { "environment", "group", "group.fix", "assemblies", "tool-names", "reflection", "reflection-deny",
+    internal IReadOnlyList<string> ObservationSet { get; init; } = new[] {
+        "environment", "group", "group.fix", "assemblies", "tool-names", "reflection", "reflection-deny",
         "session.GetState", "session.ListPortalProcessProjects", "session.GetProjectTree", "session.ConnectPortal" };
     internal bool FoundationReadinessBoundary { get; init; } = true;
     private const string DiscoveryInstructions = ToolUsageCatalog.Instructions +
-        " FindTools searches the complete release catalog, including tools omitted by the lite profile; CallTool invokes a discovered tool. InitializeEnvironment reports the current connection and environment.";
+        " FindTools searches the complete release catalog, including tools omitted by the lite profile; CallTool invokes a discovered tool. " +
+            "InitializeEnvironment reports the current connection and environment.";
 
     private static readonly Lazy<MethodInfo[]> s_attributedMethods = new(() => typeof(EngineHostPipeline).Assembly
         .GetTypes().SelectMany(type => type.GetMethods())
@@ -55,7 +57,8 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
         };
 
     private static ReleaseCatalogData Foundation() => new(ToolUsageCatalog.Instructions +
-        " This release uses the PLC foundation catalog. InitializeEnvironment reports environment/session state; ListPortalProcessProjects returns current process/project identities. Only listed contracts are available.",
+        " This release uses the PLC foundation catalog. InitializeEnvironment reports environment/session state; ListPortalProcessProjects returns current " +
+            "process/project identities. Only listed contracts are available.",
         false, false, false, " Native behaviorPolicy=current; V4 native acceptance is pending.",
         Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>(), StringComparer.OrdinalIgnoreCase,
         "plc-foundation", new Dictionary<string, string>(StringComparer.Ordinal),
@@ -79,13 +82,15 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
             ["GetEnvironmentDiagnostics"] = "CallToolResult"
         }) { ProfileName = "full-engine", RegisterDiscoveryHandlers = true, CatalogCallDiscipline = true, HasManifestCatalog = true,
             SharedSession = true, MergeWorkerReadiness = true, RevealSessionEndedDiagnostic = true, WrapPortedTools = true, DisclosePortedBehavior = false,
-            ExtendedWorkerStatus = true, StartSupervisorOnRead = true, StatusOutcomeIsFault = false, NativeObservations = true, FoundationReadinessBoundary = false,
+            ExtendedWorkerStatus = true, StartSupervisorOnRead = true, StatusOutcomeIsFault = false, NativeObservations = true, FoundationReadinessBoundary =
+                false,
             ObservationToolNames = ToolUsageCatalog.ProfileEntries(release, engineSource: true).Select(row => (string)row!["currentName"]!)
                 .OrderBy(name => name, StringComparer.Ordinal)
                 .Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.Where(f => f.Available(release)).SelectMany(f => f.Tools))
                 .Distinct(StringComparer.Ordinal).ToArray(),
             ObservationSet = new[] { "environment", "group", "group.fix", "assemblies", "tool-names", "reflection", "reflection-deny",
-                "session.GetState", "session.ListPortalProcessProjects", "session.GetProjectTree", "session.ConnectPortal", "session.ValidateAutomationContext" } };
+                "session.GetState", "session.ListPortalProcessProjects", "session.GetProjectTree", "session.ConnectPortal", "session.ValidateAutomationContext"
+                } };
 
     internal string ExampleProfile(string name) => ExampleProfiles.GetValueOrDefault(name, DefaultExampleProfile);
 

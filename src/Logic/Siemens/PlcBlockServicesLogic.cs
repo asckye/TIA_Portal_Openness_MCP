@@ -17,11 +17,14 @@ namespace TiaMcpServer.Siemens
             var text = (address ?? "").Trim();
             if (text.StartsWith("%", StringComparison.Ordinal)) return "Address";
             if (text.StartsWith("\"", StringComparison.Ordinal)) return "Name";
-            return System.Text.RegularExpressions.Regex.IsMatch(text, @"^(DB\d+\.)?(DB[XBWD]|[IQMEA][BWD]?|P[IQ][BWD]?)\d+(\.\d+)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? "Address" : "Name";
+            return System.Text.RegularExpressions.Regex
+                .IsMatch(text, @"^(DB\d+\.)?(DB[XBWD]|[IQMEA][BWD]?|P[IQ][BWD]?)\d+(\.\d+)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                ? "Address" : "Name";
         }
 
         internal static readonly string[] ProtectionActions = { "read", "protect", "unprotect" };
-        internal static readonly string[] SnapshotActions = { "read", "createSnapshot", "loadSnapshotAsActualValues", "loadStartValuesAsActualValues", "exportSnapshot" };
+        internal static readonly string[] SnapshotActions = {
+            "read", "createSnapshot", "loadSnapshotAsActualValues", "loadStartValuesAsActualValues", "exportSnapshot" };
         internal static readonly string[] TextListActions = { "read", "createFromMasterCopy", "delete" };
 
         // Returns true when the request performs a real native write (not read, not preview).
@@ -38,12 +41,15 @@ namespace TiaMcpServer.Siemens
 
         internal static bool ValidateSnapshotRequest(string action, string filePath, bool confirmValueChange, bool dryRun)
         {
-            if (!SnapshotActions.Contains(action)) throw new ArgumentException("action must be read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot.");
+            if (!SnapshotActions.Contains(action))
+                throw new ArgumentException("action must be read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot.");
             if (action == "read") return false;
-            if (action == "exportSnapshot" && string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("exportSnapshot requires an absolute new filePath.");
+            if (action == "exportSnapshot" && string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("exportSnapshot requires an absolute new filePath.");
             if (action != "exportSnapshot" && !string.IsNullOrEmpty(filePath)) throw new ArgumentException("filePath is only used by exportSnapshot.");
             if (dryRun) return false;
-            if (action.StartsWith("load", StringComparison.Ordinal) && !confirmValueChange) throw new ArgumentException("Loading values requires confirmValueChange=true besides dryRun=false.");
+            if (action.StartsWith("load", StringComparison.Ordinal) && !confirmValueChange)
+                throw new ArgumentException("Loading values requires confirmValueChange=true besides dryRun=false.");
             return true;
         }
 
@@ -52,7 +58,8 @@ namespace TiaMcpServer.Siemens
             if (!TextListActions.Contains(action)) throw new ArgumentException("action must be read/createFromMasterCopy/delete.");
             if (action == "read") return false;
             if (action == "delete" && string.IsNullOrWhiteSpace(name)) throw new ArgumentException("delete requires the exact user text list name.");
-            if (action == "createFromMasterCopy" && (string.IsNullOrWhiteSpace(libraryName) || string.IsNullOrWhiteSpace(masterCopyPath))) throw new ArgumentException("createFromMasterCopy requires libraryName and masterCopyPath.");
+            if (action == "createFromMasterCopy" && (string.IsNullOrWhiteSpace(libraryName) || string.IsNullOrWhiteSpace(masterCopyPath)))
+                throw new ArgumentException("createFromMasterCopy requires libraryName and masterCopyPath.");
             if (dryRun) return false;
             if (action == "delete" && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
             return true;
@@ -72,13 +79,17 @@ namespace TiaMcpServer.Siemens
         {
             if (string.IsNullOrWhiteSpace(json) || json.Length > 4096) throw new ArgumentException("culturesJson must be a JSON array of 1..64 culture names.");
             var array = JsonNode.Parse(json) as JsonArray ?? throw new ArgumentException("culturesJson must be a JSON array of culture names.");
-            var names = array.Select(n => n is JsonValue v && v.TryGetValue<string>(out var s) ? s : throw new ArgumentException("Every culture entry must be a string.")).ToArray();
-            if (names.Length < 1 || names.Length > 64 || names.Any(string.IsNullOrWhiteSpace)) throw new ArgumentException("Provide 1..64 nonempty culture names.");
+            var names = array
+                .Select(n => n is JsonValue v && v.TryGetValue<string>(out var s) ? s : throw new ArgumentException("Every culture entry must be a string."))
+                .ToArray();
+            if (names.Length < 1 || names.Length > 64 || names.Any(string.IsNullOrWhiteSpace))
+                throw new ArgumentException("Provide 1..64 nonempty culture names.");
             var cultures = names.Select(n => {
                 try { return CultureInfo.GetCultureInfo(n.Trim()); }
                 catch (CultureNotFoundException) { throw new ArgumentException("Unknown culture name: " + n); }
             }).ToArray();
-            if (cultures.Select(c => c.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != cultures.Length) throw new ArgumentException("Duplicate culture names.");
+            if (cultures.Select(c => c.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != cultures.Length)
+                throw new ArgumentException("Duplicate culture names.");
             return cultures;
         }
 
@@ -109,10 +120,15 @@ namespace TiaMcpServer.Siemens
         {
             if (string.IsNullOrWhiteSpace(targetIpAddress)) throw new ArgumentException("Exact targetIpAddress is required; no first-route fallback.");
             var byAddress = candidates.Where(c => string.Equals(c.Address, targetIpAddress.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
-            if (byAddress.Length == 0) throw new PortalException(PortalErrorCode.NotFound, "No configured PLC interface address equals " + targetIpAddress + ".");
-            var selected = string.IsNullOrWhiteSpace(pgPcInterface) ? byAddress : byAddress.Where(c => string.Equals(c.PcInterfaceName, pgPcInterface.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
-            if (selected.Length == 0) throw new PortalException(PortalErrorCode.NotFound, "No route to " + targetIpAddress + " uses PG/PC interface " + pgPcInterface + ".");
-            if (selected.Length > 1) throw new PortalException(PortalErrorCode.InvalidParams, "Ambiguous route to " + targetIpAddress + " (" + selected.Length + " PG/PC interfaces); pass the exact pgPcInterface name.");
+            if (byAddress.Length == 0)
+                throw new PortalException(PortalErrorCode.NotFound, "No configured PLC interface address equals " + targetIpAddress + ".");
+            var selected = string.IsNullOrWhiteSpace(pgPcInterface) ? byAddress : byAddress
+                .Where(c => string.Equals(c.PcInterfaceName, pgPcInterface.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
+            if (selected.Length == 0)
+                throw new PortalException(PortalErrorCode.NotFound, "No route to " + targetIpAddress + " uses PG/PC interface " + pgPcInterface + ".");
+            if (selected.Length > 1)
+                throw new PortalException(PortalErrorCode.InvalidParams, "Ambiguous route to " + targetIpAddress + " (" + selected.Length
+                    + " PG/PC interfaces); pass the exact pgPcInterface name.");
             return selected[0];
         }
     }

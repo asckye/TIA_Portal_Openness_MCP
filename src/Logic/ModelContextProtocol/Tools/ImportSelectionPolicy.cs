@@ -7,7 +7,9 @@ namespace TiaMcpServer.ModelContextProtocol
     // Pure selection policy: no Siemens references and no filesystem/native side effects.
     internal static class ImportSelectionPolicy
     {
-        internal const string OrderingDescription = "Types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype; lexical file path within each phase/subtype.";
+        internal const string OrderingDescription =
+            "Types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype; lexical file path " +
+            "within each phase/subtype.";
 
         internal sealed class Conflict
         {
@@ -16,7 +18,8 @@ namespace TiaMcpServer.ModelContextProtocol
             internal int CandidateCount { get; set; }
             internal bool PathsTruncated => CandidateCount > Paths.Count;
             internal List<string> Paths { get; set; } = new List<string>();
-            internal string Message => $"Ambiguous import candidates for {DiagnosticText(Kind)} '{DiagnosticText(ObjectName)}': {string.Join("; ", Paths)} (candidateCount={CandidateCount}, pathsTruncated={PathsTruncated}). Entire selected batch rejected before import or compile; remove duplicates or narrow the selection.";
+            internal string Message =>
+                $"Ambiguous import candidates for {DiagnosticText(Kind)} '{DiagnosticText(ObjectName)}': {string.Join("; ", Paths)} (candidateCount={CandidateCount}, pathsTruncated={PathsTruncated}). Entire selected batch rejected before import or compile; remove duplicates or narrow the selection.";
         }
 
         private static string DiagnosticText(string value)

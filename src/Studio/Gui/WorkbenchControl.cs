@@ -342,7 +342,8 @@ public partial class MainWindow
                 case WorkbenchExportBlocksFields export:
                     engineering.OutputDirectory = export.OutputDirectory ?? ""; engineering.SourceFormat = export.Format == "Source"; break;
                 case WorkbenchImportBlocksFields import:
-                    engineering.ImportPathsText = string.Join(Environment.NewLine, import.Paths ?? []); engineering.ImportOverwrite = import.Overwrite == true; break;
+                    engineering.ImportPathsText = string.Join(Environment.NewLine, import.Paths ?? []); engineering.ImportOverwrite = import.Overwrite == true;
+                    break;
                 case WorkbenchBlockSelectionFields:
                     var selected = selection.ToHashSet();
                     foreach (var row in engineering.Blocks) row.Selected = selected.Contains(row);
@@ -393,13 +394,16 @@ public partial class MainWindow
     private void OnConfirmControlPrefill(object sender, RoutedEventArgs e) => ConfirmControlPrefill();
     private void ConfirmControlPrefill() { _prefillRestore.Clear(); _prefills.ClearByHuman(); UpdateControlPrefill(); QueueControlSnapshot(); }
     private void OnControlEnabledChanged(object? sender, EventArgs e) => QueueControlSnapshot();
-    private void OnControlMouseDown(object sender, MouseButtonEventArgs e) { if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true; ControlGuard.HumanInput(); }
-    private void OnControlMouseUp(object sender, MouseButtonEventArgs e) { if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true; ControlGuard.HumanInput(); }
+    private void OnControlMouseDown(object sender, MouseButtonEventArgs e) {
+        if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true; ControlGuard.HumanInput(); }
+    private void OnControlMouseUp(object sender, MouseButtonEventArgs e) {
+        if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true; ControlGuard.HumanInput(); }
     private void OnControlMouseMove(object sender, MouseEventArgs e) => ControlGuard.MouseMove();
     private void OnControlMouseWheel(object sender, MouseWheelEventArgs e) => ControlGuard.HumanInput();
     private void OnControlKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key is Key.Enter or Key.Space && (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject) || ControlGuard.ClickGuardActive)) e.Handled = true;
+        if (e.Key is Key.Enter or Key.Space && (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject) || ControlGuard.ClickGuardActive)) e.Handled =
+            true;
         if (ControlGuard.ClickGuardActive && (e.Key == Key.System || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))) e.Handled = true;
         if (ControlGuard.ClickGuardActive && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.B) e.Handled = true;
         ControlGuard.HumanInput();

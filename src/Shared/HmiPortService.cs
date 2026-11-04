@@ -23,13 +23,16 @@ namespace TiaMcpServer.Siemens.Services
             {
                 try
                 {
-                    var attributes = JsonNode.Parse(request.AttributesJson) as JsonObject ?? throw new ArgumentException("attributesJson must be a JSON object.");
+                    var attributes = JsonNode.Parse(request.AttributesJson) as JsonObject
+                        ?? throw new ArgumentException("attributesJson must be a JSON object.");
                     foreach (var pair in attributes)
                     {
-                        if (pair.Value is JsonArray || pair.Value is JsonObject) throw new ArgumentException("Only scalar attribute values are supported: " + pair.Key);
+                        if (pair.Value is JsonArray || pair.Value is JsonObject)
+                            throw new ArgumentException("Only scalar attribute values are supported: " + pair.Key);
                         request.Attributes[pair.Key] = pair.Value == null ? new HardwareScalar { Kind = "null" }
                             : pair.Value.GetValueKind() == JsonValueKind.String ? new HardwareScalar { Kind = "string", Text = pair.Value.GetValue<string>() }
-                            : pair.Value.GetValueKind() is JsonValueKind.True or JsonValueKind.False ? new HardwareScalar { Kind = "boolean", Text = pair.Value.ToJsonString() }
+                            : pair.Value.GetValueKind() is JsonValueKind.True or JsonValueKind.False ? new HardwareScalar {
+                                Kind = "boolean", Text = pair.Value.ToJsonString() }
                             : new HardwareScalar { Kind = "number", Text = pair.Value.ToJsonString() };
                     }
                 }

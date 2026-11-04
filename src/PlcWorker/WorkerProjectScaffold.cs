@@ -130,11 +130,14 @@ internal sealed class WorkerProjectScaffold
             case "createProject":
                 // Never close an existing project, including a borrowed UI project.
                 if (!string.IsNullOrEmpty((string?)RuntimeState["ProjectFile"]))
-                    throw new AdapterPreconditionException("CreateProject refused: a project is already bound; explicitly save/close/disconnect first.", "session", false);
+                    throw new AdapterPreconditionException("CreateProject refused: a project is already bound; explicitly save/close/disconnect first.",
+                            "session", false);
                 if (_call("ListProjects", new JsonObject()) is not JsonArray projects)
                     throw new InvalidOperationException("Missing scaffold project inventory.");
                 if (projects.Count != 0)
-                    throw new AdapterPreconditionException("CreateProject refused: TIA Portal already has an open project/session; explicitly bind or disconnect first.", "session", false);
+                    throw new AdapterPreconditionException("CreateProject refused: TIA Portal already has an open project/session; explicitly bind or " +
+                        "disconnect first.",
+                            "session", false);
                 var directory = Path.GetFullPath(text[0]);
                 Directory.CreateDirectory(directory);
                 string suffix = _release == "14sp1" ? "14" : _release == "15.1" ? "15_1" : _release;
@@ -156,12 +159,26 @@ internal sealed class WorkerProjectScaffold
             case "compile": return Compile(text[0]);
             case "hmiInfo": return HmiInfo(text[0]);
             case "hmiConnect":
-                var connection = Unified(new UnifiedHmiRequest { Operation = "EnsureUnifiedHmiConnection", HmiSoftwarePath = text[0], ConnectionName = text[1], PlcName = text[2], DryRun = false });
+                var connection =
+                    Unified(new UnifiedHmiRequest {
+                        Operation = "EnsureUnifiedHmiConnection", HmiSoftwarePath = text[0], ConnectionName = text[1], PlcName = text[2], DryRun = false });
                 connection["Meta"] = Meta();
                 return connection;
-            case "hmiScreen": return Unified(new UnifiedHmiRequest { Operation = "EnsureUnifiedHmiScreen", HmiSoftwarePath = text[0], ScreenName = text[1], Width = request.Numbers[0], Height = request.Numbers[1], DryRun = false });
-            case "hmiDesign": return Unified(new UnifiedHmiRequest { Operation = "ApplyUnifiedHmiScreenDesign", HmiSoftwarePath = text[0], ScreenName = text[1], DesignJson = text[2], Strict = request.Flags[0], DryRun = false });
-            case "hmiTag": return Unified(new UnifiedHmiRequest { Operation = "EnsureUnifiedHmiTag", HmiSoftwarePath = text[0], TagTableName = text[1], TagName = text[2], HmiDataType = text[3], PlcName = text[4], PlcTag = text[5], ConnectionName = text[6], Address = text[7], RequireVerifiedBinding = request.Flags[0], DryRun = false });
+            case "hmiScreen"
+                : return Unified(new UnifiedHmiRequest {
+                    Operation = "EnsureUnifiedHmiScreen", HmiSoftwarePath = text[0], ScreenName = text[1], Width = request.Numbers[0], Height = request
+                        .Numbers[1], DryRun = false
+                });
+            case "hmiDesign"
+                : return Unified(new UnifiedHmiRequest {
+                    Operation = "ApplyUnifiedHmiScreenDesign", HmiSoftwarePath = text[0], ScreenName = text[1], DesignJson = text[2], Strict = request.Flags[0],
+                        DryRun = false
+                });
+            case "hmiTag"
+                : return Unified(new UnifiedHmiRequest {
+                    Operation = "EnsureUnifiedHmiTag", HmiSoftwarePath = text[0], TagTableName = text[1], TagName = text[2], HmiDataType = text[3], PlcName =
+                        text[4], PlcTag = text[5], ConnectionName = text[6], Address = text[7], RequireVerifiedBinding = request.Flags[0], DryRun = false
+                });
             default: throw new ArgumentException("Unknown scaffold primitive.");
         }
     }
@@ -179,7 +196,10 @@ internal sealed class WorkerProjectScaffold
     private JsonObject Connect()
     {
         var processes = Call("ReadPortalProcessProjects", new JsonObject())["Processes"]!.AsArray();
-        if (processes.Count > 1) throw new AdapterPreconditionException("Multiple TIA instances match. Use ListPortalProcessProjects then ConnectProject with PID, start time and full project path.", "session", false);
+        if (processes.Count > 1)
+            throw new AdapterPreconditionException("Multiple TIA instances match. Use ListPortalProcessProjects then ConnectProject with PID, start time and " +
+            "full project path.",
+                "session", false);
         bool started = processes.Count == 0;
         if (started) Call("project-lifecycle.ConnectIsolatedPortal", new JsonObject());
         else
@@ -207,13 +227,16 @@ internal sealed class WorkerProjectScaffold
             ["MlfbUsed"] = ok ? probe["MlfbUsed"]?.DeepClone() : null,
             ["VersionUsed"] = ok ? probe["VersionUsed"]?.DeepClone() : null,
             ["Attempts"] = probe["Attempts"]?.DeepClone(), ["Error"] = ok ? null : probe["Error"]?.DeepClone(),
-            ["Message"] = ok ? $"Device '{text[2]}' added (one exact create call)" : $"Failed to add device '{text[2]}' exactly as requested", ["Meta"] = meta };
+            ["Message"] = ok ? $"Device '{text[2]}' added (one exact create call)" : $"Failed to add device '{text[2]}' exactly as requested", ["Meta"] = meta
+            };
     }
 
     private JsonObject Compile(string path)
     {
         // This existing family action uses the shared structured diagnostic codec.
-        var result = Plc(new PlcSoftwareRequest { Operation = "RepairAndReimportPlcBlock", Action = "compile", SoftwarePath = path, DryRun = false })["Compiler"]!.AsObject();
+        var result =
+            Plc(new PlcSoftwareRequest { Operation = "RepairAndReimportPlcBlock", Action = "compile", SoftwarePath = path, DryRun = false })["Compiler"]!
+            .AsObject();
         return new JsonObject { ["State"] = result["State"]?.DeepClone(), ["ErrorCount"] = result["ErrorCount"]?.DeepClone(),
             ["WarningCount"] = result["WarningCount"]?.DeepClone(), ["Errors"] = result["Errors"]?.DeepClone(),
             ["Warnings"] = result["Warnings"]?.DeepClone(), ["Info"] = result["Info"]?.DeepClone(),
@@ -225,7 +248,8 @@ internal sealed class WorkerProjectScaffold
     private JsonObject HmiInfo(string path)
     {
         var request = new HmiRequest { Operation = "GetHmiProgramInfo", SoftwarePath = path, DryRun = true };
-        var reply = RequireFamilyReply(Call("hmi-generic.ExecuteHmi", new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = true }));
+        var reply =
+            RequireFamilyReply(Call("hmi-generic.ExecuteHmi", new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = true }));
         var info = reply["Value"] as JsonObject ?? throw new InvalidOperationException($"HMI program not found at '{path}'");
         return new JsonObject { ["Name"] = info["Name"]?.DeepClone(), ["ProgramType"] = info["ProgramType"]?.DeepClone(),
             ["Screens"] = info["Screens"]?.DeepClone(), ["Message"] = $"HMI program info retrieved from '{path}'", ["Meta"] = Meta() };

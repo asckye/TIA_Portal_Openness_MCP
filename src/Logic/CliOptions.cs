@@ -66,7 +66,8 @@ namespace TiaMcpServer
             if (AnalyzeReferenceAssets || AnalyzeHmiTemplateReference) RequireInput(ReferenceProjectPath, "--reference-project-path");
             if (AnalyzeReferenceAssets || AnalyzeHmiTemplateReference) RequireInput(ReferenceGlobalLibraryPath, "--reference-global-library-path");
             if (AnalyzeGlobalLibraryPackage || GenerateGlobalLibraryProbeReport || ValidateGlobalLibraryMasterCopyImport)
-                RequireInput(string.IsNullOrWhiteSpace(GlobalLibraryPackagePath) ? ReferenceGlobalLibraryPath : GlobalLibraryPackagePath, "--global-library-package-path");
+                RequireInput(string.IsNullOrWhiteSpace(GlobalLibraryPackagePath) ? ReferenceGlobalLibraryPath : GlobalLibraryPackagePath,
+                        "--global-library-package-path");
         }
         public bool CreateHardwareHmiConnection { get; set; }
         public bool DeepHardwareHmiConnectionScan { get; set; }
@@ -172,7 +173,8 @@ namespace TiaMcpServer
                 switch (args[i].ToLowerInvariant())
                 {
                     case "--workspace-root":
-                        if (options.WorkspaceRoot != null || ++i >= args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i].StartsWith("--", StringComparison.Ordinal))
+                        if (options.WorkspaceRoot != null || ++i >= args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i]
+                                .StartsWith("--", StringComparison.Ordinal))
                             throw new System.ArgumentException("INVALID_ARGUMENT: --workspace-root requires one absolute directory.");
                         options.WorkspaceRoot = args[i];
                         options.RequireWorkspaceRoot();
@@ -187,7 +189,8 @@ namespace TiaMcpServer
                         if (++i >= args.Length)
                             throw new System.ArgumentException("A canonical TIA version key is required after " + args[i - 1] + ".");
                         var selectedVersion = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(args[i]);
-                        if (!selectedVersion.IsFullEngine) throw new System.ArgumentException("Use the matching PLC foundation host selected in the configurator for " + selectedVersion.DisplayName + ".");
+                        if (!selectedVersion.IsFullEngine) throw new System
+                            .ArgumentException("Use the matching PLC foundation host selected in the configurator for " + selectedVersion.DisplayName + ".");
                         if (options.TiaMajorVersion.HasValue && options.TiaMajorVersion.Value != selectedVersion.MajorVersion)
                             throw new System.ArgumentException("Conflicting TIA version options are not allowed.");
                         options.TiaMajorVersion = selectedVersion.MajorVersion;
@@ -213,7 +216,8 @@ namespace TiaMcpServer
 
                     case "-logging":
                     case "--logging":
-                        if (i + 1 < args.Length && int.TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int l))
+                        if (i + 1 < args.Length && int
+                                .TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int l))
                         {
                             options.Logging = l;
                             i++;
@@ -421,7 +425,9 @@ namespace TiaMcpServer
                         break;
 
                     case "--max-plc-tag-tables-to-export":
-                        if (i + 1 < args.Length && int.TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int maxTagTables))
+                        if (i + 1 < args.Length && int
+                                .TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                                    out int maxTagTables))
                         {
                             options.MaxPlcTagTablesToExport = maxTagTables;
                             i++;
@@ -781,7 +787,9 @@ namespace TiaMcpServer
                         break;
 
                     case "--tia-step-timeout-seconds":
-                        if (i + 1 < args.Length && int.TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int stepTimeoutSeconds))
+                        if (i + 1 < args.Length && int
+                                .TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                                    out int stepTimeoutSeconds))
                         {
                             options.TiaStepTimeoutSeconds = stepTimeoutSeconds;
                             i++;

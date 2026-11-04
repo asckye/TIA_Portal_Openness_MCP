@@ -22,13 +22,17 @@ namespace TiaMcp.Logic.V4.Inputs
             {
                 case "read": case "updateCheckSums": break;
                 case "changeDriveObjectType": Add("driveObjectType", InputSchema.String(minLength: 1)); break;
-                case "changeActivationState": Add("activationState", InputSchema.String(allowed: new[] { "Deactivate", "Activate", "DeactivateAndNotPresent" })); break;
-                case "activateFunction": case "deactivateFunction": Add("functionKey", InputSchema.String(allowed: new[] { "BasicPositioner", "TechnologyController" })); break;
+                case "changeActivationState"
+                    : Add("activationState", InputSchema.String(allowed: new[] { "Deactivate", "Activate", "DeactivateAndNotPresent" })); break;
+                case "activateFunction": case "deactivateFunction"
+                    : Add("functionKey", InputSchema.String(allowed: new[] { "BasicPositioner", "TechnologyController" })); break;
                 case "setSIAxisType": Add("rotaryLinear", rotaryLinear); break;
                 case "setMotorCode": Add("motorCode", InputSchema.Integer(0)); Add("motorDataSet", InputSchema.Integer(0, 65535), false); break;
                 case "setSimoGearMlfb": Add("mlfb", InputSchema.String(minLength: 1)); break;
                 case "setMotorType":
-                    Add("motorType", InputSchema.String(allowed: new[] { "NoMotor", "InductionMotor", "SynchronousMotor", "NoCodeNumber1LE1InductionMotor", "NoCodeNumber1LG6InductionMotor",
+                    Add("motorType", InputSchema
+                            .String(allowed: new[] {
+                                "NoMotor", "InductionMotor", "SynchronousMotor", "NoCodeNumber1LE1InductionMotor", "NoCodeNumber1LG6InductionMotor",
                         "NoCodeNumber1xx1SIMOTICSFDInductionMotor", "NoCodeNumber1LA7InductionMotorNoCodeNumber", "MotorSeriesNumber1LA81PQ8StandardInduction",
                         "InductionMotor1LE1", "InductionMotor1PC1", "InductionMotor1PH4", "InductionMotor1LE5", "InductionMotor1PH7", "InductionMotor1PH8",
                         "NoEncoder1FG1GearedSynchronousMotor", "NoEncoder1FK7SynchronousMotor", "DriveCliqMotor", "DriveCliqMotorDataSet" }));
@@ -38,7 +42,11 @@ namespace TiaMcp.Logic.V4.Inputs
                 case "projectMotorConfiguration": DataSet(); Entries(); break;
                 case "setEncoder":
                     Add("encoderInterface", InputSchema.String(allowed: new[] { "None", "Terminal", "DSub", "DriveCliQ", "HTL", "SSI" }));
-                    Add("encoderType", InputSchema.String(allowed: new[] { "NoEncoder", "Resolver", "HTLTTL", "SSIProtocoll", "SinCos", "EnDat", "HTL", "SSIProtocollAndHTLTTL", "SSIProtocollAndSinCos", "DriveCliQ" }));
+                    Add("encoderType", InputSchema
+                            .String(allowed: new[] {
+                                "NoEncoder", "Resolver", "HTLTTL", "SSIProtocoll", "SinCos", "EnDat", "HTL", "SSIProtocollAndHTLTTL", "SSIProtocollAndSinCos",
+                                    "DriveCliQ"
+                            }));
                     Add("absoluteIncremental", absoluteIncremental); Add("rotaryLinear", rotaryLinear); EncoderNumber(); break;
                 case "readEncoderConfiguration": EncoderNumber(); break;
                 case "projectEncoderConfiguration": EncoderNumber(); Entries(); break;
@@ -49,8 +57,10 @@ namespace TiaMcp.Logic.V4.Inputs
             {
                 foreach (var property in value.Json.EnumerateObject())
                 {
-                    if (property.Value.ValueKind == System.Text.Json.JsonValueKind.String && string.IsNullOrWhiteSpace(property.Value.GetString())) return false;
-                    if (property.Name == "entries") foreach (var entry in property.Value.EnumerateObject()) if (string.IsNullOrWhiteSpace(entry.Name)) return false;
+                    if (property.Value.ValueKind == System.Text.Json.JsonValueKind.String && string.IsNullOrWhiteSpace(property.Value.GetString()))
+                        return false;
+                    if (property.Name == "entries") foreach (var entry in property.Value.EnumerateObject()) if (string.IsNullOrWhiteSpace(entry.Name))
+                        return false;
                 }
                 return true;
             });

@@ -81,8 +81,12 @@ namespace TiaMcp.Adapters.Contracts
         public List<HmiImportFailure> Failed { get; set; } = new List<HmiImportFailure>();
         public Dictionary<string, object?>? Meta { get; set; }
     }
-    public sealed class HmiProgramInfo { public string? Name { get; set; } public string ProgramType { get; set; } = ""; public List<string> Screens { get; set; } = new List<string>(); }
-    public sealed class HmiExportProgram { public List<string> Exported { get; set; } = new List<string>(); public List<string> Failed { get; set; } = new List<string>(); public object? Items { get; set; } }
+    public sealed class HmiProgramInfo {
+        public string? Name { get; set; } public string ProgramType { get; set; } = ""; public List<string> Screens { get; set; } = new List<string>(); }
+    public sealed class HmiExportProgram {
+        public List<string> Exported { get; set; } = new List<string>(); public List<string> Failed { get; set; } = new List<string>(); public object? Items {
+            get; set; }
+    }
     public static class HmiCapabilities
     {
         public static string? Unsupported(string release, string tool)

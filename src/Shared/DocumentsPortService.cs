@@ -31,19 +31,45 @@ namespace TiaMcpServer.Siemens.Services
         }
         public List<PlcB5Block>? GetBlocks(string softwarePath, string regexName)
         {
-            var count = (int?)Invoke(new PlcB5Request { Operation = "ExportPlcBlocksDocuments", Action = "count", SoftwarePath = softwarePath, RegexName = regexName })["Count"];
+            var count =
+                (int?)Invoke(new PlcB5Request { Operation = "ExportPlcBlocksDocuments", Action = "count", SoftwarePath = softwarePath, RegexName = regexName
+                })["Count"];
             return count.HasValue ? Enumerable.Range(0, count.Value).Select(_ => new PlcB5Block()).ToList() : null;
         }
         public bool ExportAsDocuments(string softwarePath, string blockPath, string exportPath, bool preservePath = false)
-            => Invoke(new PlcB5Request { Operation = "ExportPlcBlockDocuments", SoftwarePath = softwarePath, BlockPath = blockPath, ExportPath = exportPath, PreservePath = preservePath, DryRun = false })["Value"]!.GetValue<bool>();
+            =>
+                Invoke(new PlcB5Request {
+                    Operation = "ExportPlcBlockDocuments", SoftwarePath = softwarePath, BlockPath = blockPath, ExportPath = exportPath, PreservePath =
+                        preservePath, DryRun = false
+                })["Value"]!
+                .GetValue<bool>();
         public IEnumerable<PlcB5Block>? ExportBlocksAsDocuments(string softwarePath, string exportPath, string regexName, bool preservePath = false)
-            => Blocks(Invoke(new PlcB5Request { Operation = "ExportPlcBlocksDocuments", SoftwarePath = softwarePath, ExportPath = exportPath, RegexName = regexName, PreservePath = preservePath, DryRun = false }));
+            =>
+                Blocks(Invoke(new PlcB5Request {
+                        Operation = "ExportPlcBlocksDocuments", SoftwarePath = softwarePath, ExportPath = exportPath, RegexName = regexName, PreservePath =
+                            preservePath, DryRun = false
+                    }));
         public bool ImportFromDocuments(string softwarePath, string groupPath, string importPath, string fileNameWithoutExtension, string option)
-            => Invoke(new PlcB5Request { Operation = "ImportPlcBlockDocuments", SoftwarePath = softwarePath, GroupPath = groupPath, ImportPath = importPath, FileNameWithoutExtension = fileNameWithoutExtension, ImportOption = option, DryRun = false })["Value"]!.GetValue<bool>();
+            =>
+                Invoke(new PlcB5Request {
+                    Operation = "ImportPlcBlockDocuments", SoftwarePath = softwarePath, GroupPath = groupPath, ImportPath = importPath,
+                        FileNameWithoutExtension = fileNameWithoutExtension, ImportOption = option, DryRun = false
+                })["Value"]!
+                .GetValue<bool>();
         public bool VerifyLastDocumentImport(string softwarePath, string groupPath)
-            => Invoke(new PlcB5Request { Operation = "ImportPlcBlockDocuments", Action = "verify", ImportedNames = LastImportedDocumentBlocks, SoftwarePath = softwarePath, GroupPath = groupPath })["Value"]!.GetValue<bool>();
+            =>
+                Invoke(new PlcB5Request {
+                    Operation = "ImportPlcBlockDocuments", Action = "verify", ImportedNames = LastImportedDocumentBlocks, SoftwarePath = softwarePath,
+                        GroupPath = groupPath
+                })["Value"]!
+                .GetValue<bool>();
         public IEnumerable<PlcB5Block>? ImportBlocksFromDocuments(string softwarePath, string groupPath, string importPath, string regexName, string option)
-            => Blocks(Invoke(new PlcB5Request { Operation = "ImportPlcBlocksDocuments", SoftwarePath = softwarePath, GroupPath = groupPath, ImportPath = importPath, RegexName = regexName, ImportOption = option, DryRun = false }));
-        private static PlcB5Block[]? Blocks(JsonObject reply) => reply["Blocks"] == null ? null : JsonSerializer.Deserialize<PlcB5Block[]>(reply["Blocks"]!.ToJsonString());
+            =>
+                Blocks(Invoke(new PlcB5Request {
+                        Operation = "ImportPlcBlocksDocuments", SoftwarePath = softwarePath, GroupPath = groupPath, ImportPath = importPath, RegexName =
+                            regexName, ImportOption = option, DryRun = false
+                    }));
+        private static PlcB5Block[]? Blocks(JsonObject reply) => reply["Blocks"] == null ? null : JsonSerializer
+            .Deserialize<PlcB5Block[]>(reply["Blocks"]!.ToJsonString());
     }
 }

@@ -13,7 +13,8 @@ namespace TiaMcp.Updater
         {
             UpdaterOptions options;
             try { options = Parse(args); }
-            catch (Exception error) { Console.Error.WriteLine(UpdaterText.Bilingual("InvalidArguments", "invalid arguments") + ": " + error.Message); return 1; }
+            catch (Exception error) { Console.Error.WriteLine(UpdaterText.Bilingual("InvalidArguments", "invalid arguments") + ": " + error.Message); return 1;
+            }
 
             if (options.SelfTest) return SelfTest();
             string executable = Assembly.GetExecutingAssembly().Location;
@@ -29,7 +30,10 @@ namespace TiaMcp.Updater
                     var stagedArgs = HasInstallRoot(args) ? args : args.Concat(new[] { "-InstallRoot", options.InstallRoot }).ToArray();
                     return StartStaged(stagedArgs);
                 }
-                catch (Exception error) { Console.Error.WriteLine(UpdaterText.Bilingual("StageFailed", "could not stage updater") + ": " + error.GetBaseException().Message); return 1; }
+                catch (Exception error) {
+                    Console.Error.WriteLine(UpdaterText.Bilingual("StageFailed", "could not stage updater") + ": " + error.GetBaseException().Message);
+                    return 1;
+                }
             }
 
             try { return UpdaterEngine.Run(options, Say); }
@@ -73,11 +77,13 @@ namespace TiaMcp.Updater
                 }
             }
             if (options.Check && options.Rollback) throw new ArgumentException("-Check and -Rollback cannot be combined.");
-            if (options.Rollback && (options.Version != null || options.Force)) throw new ArgumentException("-Rollback cannot be combined with -Version or -Force.");
+            if (options.Rollback && (options.Version != null || options.Force))
+                throw new ArgumentException("-Rollback cannot be combined with -Version or -Force.");
             return options;
         }
 
-        private static bool IsStaged(string[] args) { return args.Any(a => a.Equals("-staged", StringComparison.OrdinalIgnoreCase) || a.Equals("--staged", StringComparison.OrdinalIgnoreCase)); }
+        private static bool IsStaged(string[] args) {
+            return args.Any(a => a.Equals("-staged", StringComparison.OrdinalIgnoreCase) || a.Equals("--staged", StringComparison.OrdinalIgnoreCase)); }
 
         private static bool HasInstallRoot(string[] args)
         {
@@ -86,7 +92,8 @@ namespace TiaMcp.Updater
 
         private static string FindInstallRoot(string executable)
         {
-            for (DirectoryInfo directory = new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(executable))); directory != null; directory = directory.Parent)
+            for (DirectoryInfo directory = new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(executable))); directory != null; directory = directory
+                    .Parent)
                 if (File.Exists(Path.Combine(directory.FullName, "manifest", "delivery.json"))) return directory.FullName;
             return AppDomain.CurrentDomain.BaseDirectory;
         }
@@ -97,7 +104,8 @@ namespace TiaMcp.Updater
             string stage = Path.Combine(Path.GetTempPath(), "tia-mcp-updater-" + Guid.NewGuid().ToString("N"));
             string target = UpdaterFileStaging.CopyTo(source, stage);
             var forwarded = args.Where(a => !a.Equals("-staged", StringComparison.OrdinalIgnoreCase)).Concat(new[] { "-staged" });
-            var start = new ProcessStartInfo(target, string.Join(" ", forwarded.Select(Quote))) { WorkingDirectory = Path.GetDirectoryName(target), UseShellExecute = true };
+            var start = new ProcessStartInfo(target, string.Join(" ", forwarded.Select(Quote))) {
+                WorkingDirectory = Path.GetDirectoryName(target), UseShellExecute = true };
             Process.Start(start);
             Say(UpdaterText.Bilingual("Staged", "updater staged outside the install and started") + ": " + stage);
             return 0;
@@ -129,7 +137,10 @@ namespace TiaMcp.Updater
             if (File.Exists(executable))
             {
                 try { Process.Start(new ProcessStartInfo(executable) { WorkingDirectory = options.InstallRoot, UseShellExecute = true }); }
-                catch (Exception error) { Console.Error.WriteLine(UpdaterText.Bilingual("RelaunchFailed", "Workbench could not be relaunched") + ": " + error.GetBaseException().Message); }
+                catch (Exception error) {
+                    Console.Error
+                        .WriteLine(UpdaterText.Bilingual("RelaunchFailed", "Workbench could not be relaunched") + ": " + error.GetBaseException().Message);
+                }
             }
         }
 
@@ -151,8 +162,13 @@ namespace TiaMcp.Updater
         private static void Say(string message) { Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss") + "] " + message); }
         private static void PrintUsage()
         {
-            Console.WriteLine("runtime/tools/TiaMcp.Updater.exe [-Check] [-Version vX.Y.Z] [-Rollback] [-Force] [-Repository owner/name] [-InstallRoot path] [-TimeoutSeconds n] [-WaitForPid pid] [-RelaunchConfigurator]");
-            Console.WriteLine(UpdaterText.Bilingual("UsageCheck", "From the bundle root, pass -InstallRoot .; use -Check to inspect a release or -Rollback to restore the newest backup."));
+            Console
+                .WriteLine("runtime/tools/TiaMcp.Updater.exe [-Check] [-Version vX.Y.Z] [-Rollback] [-Force] [-Repository owner/name] [-InstallRoot path] " +
+                "[-TimeoutSeconds n] [-WaitForPid pid] [-RelaunchConfigurator]");
+            Console
+                .WriteLine(UpdaterText
+                    .Bilingual("UsageCheck",
+                        "From the bundle root, pass -InstallRoot .; use -Check to inspect a release or -Rollback to restore the newest backup."));
         }
     }
 }

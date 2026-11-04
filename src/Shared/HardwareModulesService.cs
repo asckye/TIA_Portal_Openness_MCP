@@ -28,12 +28,23 @@ namespace TiaMcpServer.Siemens.Services
             return new ResponseMessage { Message = message.GetValue<string>(), Meta = (JsonObject)meta.DeepClone() };
         }
 
-        public (IReadOnlyList<HardwarePlugLocation> free, IReadOnlyList<HardwarePluggedItem> occupied)? GetDevicePlugLocations(string deviceItemPath, bool plugOnDevice = false)
+        public (IReadOnlyList<HardwarePlugLocation> free, IReadOnlyList<HardwarePluggedItem> occupied)
+            ? GetDevicePlugLocations(string deviceItemPath, bool plugOnDevice = false)
         {
-            var reply = Invoke("hardware-devices.HardwareReadPlugLocations", new JsonObject { ["deviceItemPath"] = deviceItemPath, ["plugOnDevice"] = plugOnDevice }, false) as JsonObject;
-            return reply == null ? null : (JsonSerializer.Deserialize<HardwarePlugLocation[]>(reply["free"]!.ToJsonString())!, JsonSerializer.Deserialize<HardwarePluggedItem[]>(reply["occupied"]!.ToJsonString())!);
+            var reply =
+                Invoke("hardware-devices.HardwareReadPlugLocations", new JsonObject { ["deviceItemPath"] = deviceItemPath, ["plugOnDevice"] = plugOnDevice },
+                    false) as JsonObject;
+            return reply == null ? null
+                : (JsonSerializer.Deserialize<HardwarePlugLocation[]>(reply["free"]!.ToJsonString())!, JsonSerializer
+                    .Deserialize<HardwarePluggedItem[]>(reply["occupied"]!.ToJsonString())!);
         }
-        public HardwarePlugResult PlugSubmodule(string deviceItemPath, string orderNumber, string version, int positionNumber, string? name, bool dryRun, bool plugOnDevice = false)
-            => JsonSerializer.Deserialize<HardwarePlugResult>(Invoke("hardware-devices.HardwarePlugModule", new JsonObject { ["deviceItemPath"] = deviceItemPath, ["orderNumber"] = orderNumber, ["version"] = version, ["positionNumber"] = positionNumber, ["name"] = name, ["dryRun"] = dryRun, ["plugOnDevice"] = plugOnDevice }, !dryRun)!.ToJsonString())!;
+        public HardwarePlugResult PlugSubmodule(string deviceItemPath, string orderNumber, string version, int positionNumber, string? name, bool dryRun,
+                bool plugOnDevice = false)
+            => JsonSerializer
+                .Deserialize<HardwarePlugResult>(Invoke("hardware-devices.HardwarePlugModule", new JsonObject {
+                        ["deviceItemPath"] = deviceItemPath, ["orderNumber"] = orderNumber, ["version"] = version, ["positionNumber"] = positionNumber,
+                            ["name"] = name, ["dryRun"] = dryRun, ["plugOnDevice"] = plugOnDevice
+                    }, !dryRun)!
+                    .ToJsonString())!;
     }
 }

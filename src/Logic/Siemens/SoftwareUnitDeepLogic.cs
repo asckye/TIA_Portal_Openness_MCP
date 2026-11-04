@@ -22,7 +22,8 @@ namespace TiaMcpServer.Siemens
         // ---- software units (PlcUnitProvider.UnitGroup: Units / SafetyUnits) --------------------------------------------------
         internal static readonly string[] UnitKinds = { "unit", "safety" };
         internal static readonly string[] UnitListKinds = { "all", "unit", "safety" };
-        internal static readonly string[] UnitActions = { "list", "read", "create", "createFromMasterCopy", "delete", "update", "createRelation", "deleteRelation" };
+        internal static readonly string[] UnitActions = {
+            "list", "read", "create", "createFromMasterCopy", "delete", "update", "createRelation", "deleteRelation" };
         // The safety unit is system generated: it can neither be created nor deleted (official page "Accessing the SafetyUnit").
         internal static readonly string[] SafetyUnitRefusedActions = { "create", "createFromMasterCopy", "delete" };
         internal static readonly string[] UnitRelationTypes = { "SoftwareUnit", "NonUnitDB", "TODB" };
@@ -39,12 +40,15 @@ namespace TiaMcpServer.Siemens
             internal (string Culture, string Text)[] Comments = Array.Empty<(string, string)>();
         }
 
-        internal static UnitRequest ValidateUnitRequest(string action, string unitKind, string name, string relatedUnit, string relationType, string propertiesJson, string commentsJson,
+        internal static UnitRequest ValidateUnitRequest(string action, string unitKind, string name, string relatedUnit, string relationType,
+                string propertiesJson, string commentsJson,
             string libraryName, string masterCopyPath, string copyMode, bool dryRun)
         {
             RequireOneOf(action, UnitActions, "action");
             RequireOneOf(unitKind, UnitKinds, "unitKind");
-            if (unitKind == "safety" && SafetyUnitRefusedActions.Contains(action)) throw new ArgumentException("The safety unit is system generated: " + action + " is refused (only read / update / createRelation / deleteRelation apply).");
+            if (unitKind == "safety" && SafetyUnitRefusedActions.Contains(action))
+                throw new ArgumentException("The safety unit is system generated: " + action
+                    + " is refused (only read / update / createRelation / deleteRelation apply).");
             var request = new UnitRequest();
             if (action != "list") RequireName(name, "name");
             else Refuse(name, "name", "applies to every action except list.");
@@ -69,10 +73,15 @@ namespace TiaMcpServer.Siemens
             if (action == "update")
             {
                 var unknown = properties.Select(p => p.Key).Where(k => !UnitScalarProperties.Contains(k, StringComparer.Ordinal)).ToArray();
-                if (unknown.Length > 0) throw new ArgumentException(unknown.Contains("Name") ? "Unit rename requires a separate reference-impact review; Name updates refused." : "propertiesJson accepts only " + string.Join(" / ", UnitScalarProperties) + "; unknown: " + string.Join(", ", unknown));
-                foreach (var pair in properties) if (pair.Value is not JsonValue v || !v.TryGetValue<string>(out _)) throw new ArgumentException("propertiesJson." + pair.Key + " must be a string.");
-                foreach (var pair in comments) if (pair.Value is not JsonValue v || !v.TryGetValue<string>(out _)) throw new ArgumentException("commentsJson maps culture names to plain-text strings; " + pair.Key + " is not a string.");
-                if (properties.Count == 0 && comments.Count == 0) throw new ArgumentException("update needs at least one propertiesJson scalar or one commentsJson culture.");
+                if (unknown.Length > 0)
+                    throw new ArgumentException(unknown.Contains("Name") ? "Unit rename requires a separate reference-impact review; Name updates refused."
+                        : "propertiesJson accepts only " + string.Join(" / ", UnitScalarProperties) + "; unknown: " + string.Join(", ", unknown));
+                foreach (var pair in properties) if (pair.Value is not JsonValue v || !v.TryGetValue<string>(out _))
+                    throw new ArgumentException("propertiesJson." + pair.Key + " must be a string.");
+                foreach (var pair in comments) if (pair.Value is not JsonValue v || !v.TryGetValue<string>(out _))
+                    throw new ArgumentException("commentsJson maps culture names to plain-text strings; " + pair.Key + " is not a string.");
+                if (properties.Count == 0 && comments.Count == 0)
+                    throw new ArgumentException("update needs at least one propertiesJson scalar or one commentsJson culture.");
                 request.Properties = properties;
                 request.Comments = comments.Select(p => (p.Key, p.Value!.GetValue<string>())).ToArray();
             }
@@ -90,7 +99,8 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] DocumentActions = { "list", "read", "export", "import", "createFromMasterCopy", "createFromLibraryType" };
         internal static readonly string[] ImportDocumentOptionNames = { "None", "Override", "SkipInactiveCultures", "ActivateInactiveCultures" };
 
-        internal static bool ValidateDocumentRequest(string action, string objectKind, string name, string unitName, string unitKind, string directoryPath, string importOption,
+        internal static bool ValidateDocumentRequest(string action, string objectKind, string name, string unitName, string unitKind, string directoryPath,
+                string importOption,
             string libraryName, string masterCopyPath, string copyMode, string typePath, string version, string updatePathsMode, bool dryRun)
         {
             RequireOneOf(action, DocumentActions, "action");
@@ -101,7 +111,8 @@ namespace TiaMcpServer.Siemens
             bool file = action == "export" || action == "import";
             if (file)
             {
-                if (string.IsNullOrWhiteSpace(directoryPath) || !Path.IsPathRooted(directoryPath)) throw new ArgumentException("Absolute existing directoryPath required for export / import.");
+                if (string.IsNullOrWhiteSpace(directoryPath) || !Path.IsPathRooted(directoryPath))
+                    throw new ArgumentException("Absolute existing directoryPath required for export / import.");
             }
             else Refuse(directoryPath, "directoryPath", "applies to export / import only.");
             if (action == "import") RequireOneOf(importOption, ImportDocumentOptionNames, "importOption");
@@ -111,14 +122,21 @@ namespace TiaMcpServer.Siemens
                 RequireName(masterCopyPath, "masterCopyPath", 1024);
                 if (!string.IsNullOrEmpty(copyMode)) RequireOneOf(copyMode, MasterCopyModes, "copyMode");
             }
-            else { Refuse(masterCopyPath, "masterCopyPath", "applies to createFromMasterCopy only."); Refuse(copyMode, "copyMode", "applies to createFromMasterCopy only."); }
+            else {
+                Refuse(masterCopyPath, "masterCopyPath", "applies to createFromMasterCopy only.");
+                Refuse(copyMode, "copyMode", "applies to createFromMasterCopy only.");
+            }
             if (action == "createFromLibraryType")
             {
                 RequireName(typePath, "typePath", 1024); RequireName(version, "version", 64);
                 if (!string.IsNullOrEmpty(updatePathsMode)) RequireOneOf(updatePathsMode, UpdatePathsModes, "updatePathsMode");
             }
-            else { Refuse(typePath, "typePath", "applies to createFromLibraryType only."); Refuse(version, "version", "applies to createFromLibraryType only."); Refuse(updatePathsMode, "updatePathsMode", "applies to createFromLibraryType only."); }
-            if (action != "createFromMasterCopy" && action != "createFromLibraryType") Refuse(libraryName, "libraryName", "applies to createFromMasterCopy / createFromLibraryType only (empty = project library).");
+            else {
+                Refuse(typePath, "typePath", "applies to createFromLibraryType only."); Refuse(version, "version", "applies to createFromLibraryType only.");
+                Refuse(updatePathsMode, "updatePathsMode", "applies to createFromLibraryType only.");
+            }
+            if (action != "createFromMasterCopy" && action != "createFromLibraryType")
+                Refuse(libraryName, "libraryName", "applies to createFromMasterCopy / createFromLibraryType only (empty = project library).");
             // export writes files, never the project: it needs no exclusive access and no Offline PLC.
             return action != "list" && action != "read" && action != "export" && !dryRun;
         }
@@ -126,7 +144,9 @@ namespace TiaMcpServer.Siemens
         internal static HashSet<string> SnapshotDirectory(string directoryPath)
             => new HashSet<string>(Directory.EnumerateFiles(directoryPath, "*", SearchOption.TopDirectoryOnly), StringComparer.OrdinalIgnoreCase);
         internal static JsonArray NewFilesSince(string directoryPath, HashSet<string> before)
-            => new JsonArray(Directory.EnumerateFiles(directoryPath, "*", SearchOption.TopDirectoryOnly).Where(f => !before.Contains(f)).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).Select(f => (JsonNode)FileRow(new FileInfo(f))).ToArray());
+            =>
+                new JsonArray(Directory.EnumerateFiles(directoryPath, "*", SearchOption.TopDirectoryOnly).Where(f => !before.Contains(f))
+                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).Select(f => (JsonNode)FileRow(new FileInfo(f))).ToArray());
         internal static JsonObject FileRow(FileInfo file)
         {
             file.Refresh();
@@ -137,7 +157,10 @@ namespace TiaMcpServer.Siemens
 
         // ---- fingerprints (FingerprintProvider on blocks and UDTs) ------------------------------------------------------------------
         internal static readonly string[] FingerprintObjectKinds = { "block", "type" };
-        internal static readonly string[] FingerprintIds = { "Code", "Comments", "Interface", "LibraryType", "Texts", "Alarms", "Supervisions", "TechnologyObject", "Events", "TextualInterface", "Properties", "ProgramCode" };
+        internal static readonly string[] FingerprintIds = {
+            "Code", "Comments", "Interface", "LibraryType", "Texts", "Alarms", "Supervisions", "TechnologyObject", "Events", "TextualInterface", "Properties",
+                "ProgramCode"
+        };
         internal static void ValidateFingerprintRequest(string objectKind, string objectPath, string unitName, string unitKind)
         {
             RequireOneOf(objectKind, FingerprintObjectKinds, "objectKind");
@@ -156,10 +179,12 @@ namespace TiaMcpServer.Siemens
                 return false;
             }
             if (string.IsNullOrEmpty(password)) throw new ArgumentException(action + " requires the current password (define: the password to set).");
-            if (action == "change") { if (string.IsNullOrEmpty(newPassword)) throw new ArgumentException("change requires newPassword; use remove to drop the password entirely."); }
+            if (action == "change") {
+                if (string.IsNullOrEmpty(newPassword)) throw new ArgumentException("change requires newPassword; use remove to drop the password entirely."); }
             else if (!string.IsNullOrEmpty(newPassword)) throw new ArgumentException("newPassword applies to change only.");
             if (dryRun) return false;
-            if (!confirmProtectionChange) throw new ArgumentException("Real write-protection changes require confirmProtectionChange=true besides dryRun=false.");
+            if (!confirmProtectionChange)
+                throw new ArgumentException("Real write-protection changes require confirmProtectionChange=true besides dryRun=false.");
             return true;
         }
         // State machine of the official workflow: Define sets the password, Protect / Unprotect toggle protection with it,
@@ -169,7 +194,8 @@ namespace TiaMcpServer.Siemens
             switch (action)
             {
                 case "define": return isDefined ? "A write-protection password is already defined; use change or remove." : null;
-                case "protect": return !isDefined ? "No write-protection password is defined; define first." : isProtected ? "Block is already write protected." : null;
+                case "protect": return !isDefined ? "No write-protection password is defined; define first." : isProtected
+                    ? "Block is already write protected." : null;
                 case "unprotect": return !isDefined ? "No write-protection password is defined." : !isProtected ? "Block is not write protected." : null;
                 case "change": case "remove": return !isDefined ? "No write-protection password is defined." : null;
                 default: return null;
@@ -191,8 +217,10 @@ namespace TiaMcpServer.Siemens
             }
             foreach (var pair in properties)
             {
-                if (!CompilationSettingKeys.Contains(pair.Key, StringComparer.Ordinal)) throw new ArgumentException("propertiesJson accepts only " + string.Join(" / ", CompilationSettingKeys) + "; unknown: " + pair.Key);
-                if (pair.Value is not JsonValue v || !v.TryGetValue<bool>(out var flag)) throw new ArgumentException("propertiesJson." + pair.Key + " must be a boolean.");
+                if (!CompilationSettingKeys.Contains(pair.Key, StringComparer.Ordinal))
+                    throw new ArgumentException("propertiesJson accepts only " + string.Join(" / ", CompilationSettingKeys) + "; unknown: " + pair.Key);
+                if (pair.Value is not JsonValue v || !v.TryGetValue<bool>(out var flag))
+                    throw new ArgumentException("propertiesJson." + pair.Key + " must be a boolean.");
                 values[pair.Key] = flag;
             }
             if (values.Count == 0) throw new ArgumentException("update needs at least one of " + string.Join(" / ", CompilationSettingKeys) + ".");

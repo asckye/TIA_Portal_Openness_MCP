@@ -24,7 +24,9 @@ internal static class Program
 
 public static class GuardHost
 {
-    private const string UnknownMessage = "TIA write guard: '{0}' is unknown; the tool list is out of date. Regenerate manifest/tools-list.json from the current engines (or set TIA_MCP_WRITE_GUARD=0 to disable the guard).";
+    private const string UnknownMessage =
+        "TIA write guard: '{0}' is unknown; the tool list is out of date. Regenerate manifest/tools-list.json from the current engines (or set " +
+        "TIA_MCP_WRITE_GUARD=0 to disable the guard).";
     private static readonly HashSet<string> SafeOperations = new(StringComparer.OrdinalIgnoreCase) { "READ", "SESSION", "OFFLINE" };
     private static readonly HashSet<string> KnownOperations = new(StringComparer.OrdinalIgnoreCase)
         { "READ", "SESSION", "OFFLINE", "WRITE", "FILE", "EXECUTE", "ONLINE", "ONLINE-WRITE" };
@@ -140,12 +142,15 @@ public static class GuardHost
                     entries, deny, allowed, payload, auditPath, localAppData));
             }
             if (target.Equals("ApplyToolBatch", StringComparison.OrdinalIgnoreCase) && !preview && !allowed)
-                reasons.Add("TIA write guard: 'ApplyToolBatch' has an opaque stored plan; its targets cannot be classified. Set TIA_MCP_ALLOW_ONLINE_WRITE=1 to execute the batch.");
+                reasons
+                    .Add("TIA write guard: 'ApplyToolBatch' has an opaque stored plan; its targets cannot be classified. Set TIA_MCP_ALLOW_ONLINE_WRITE=1 to " +
+                    "execute the batch.");
         }
         if (deny.Contains(entry.Operation) && !isPreview && !allowed)
             reasons.Add($"TIA write guard: '{target}' is a {entry.Operation} operation on a real controller/runtime/simulation. " +
                 (hasDryRun ? "Run it with dryRun=true first; to execute, " : "To execute, ") +
-                "set TIA_MCP_ALLOW_ONLINE_WRITE=1 in the environment of this Claude Code session (or TIA_MCP_WRITE_GUARD=0 to disable the guard). Every write is recorded in the audit log.");
+                "set TIA_MCP_ALLOW_ONLINE_WRITE=1 in the environment of this Claude Code session (or TIA_MCP_WRITE_GUARD=0 to disable the guard). Every " +
+                    "write is recorded in the audit log.");
         return reasons;
     }
 

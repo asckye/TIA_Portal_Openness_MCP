@@ -53,7 +53,9 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         public static void Unsupported(string release, string action) => Fail("unsupported", action, release);
         public static void NotFound(string target) => Fail("not-found", target, "Exact target group not found.");
         public static void Refuse(string message, string subject, long limit, long actual)
-            => throw new CandidateObservationException(new CandidateFault { Kind = "limit", Subject = subject, Message = message, Limit = limit, Actual = actual });
+            =>
+                throw new CandidateObservationException(new CandidateFault {
+                    Kind = "limit", Subject = subject, Message = message, Limit = limit, Actual = actual });
         public static string CanonicalProject(string path) => Path.GetFullPath(path).Replace('/', '\\').TrimEnd('\\').ToUpperInvariant();
         public static string ByteHash(byte[] bytes)
         { using var sha = SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
@@ -83,14 +85,19 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     public static class CandidateDigest
     {
         private static string Encode(string kind, Action<BinaryWriter> write)
-        { using var bytes = new MemoryStream(); using (var writer = new BinaryWriter(bytes, Encoding.UTF8, true)) { Text(writer, "candidate-observation-v1"); Text(writer, kind); write(writer); }
+        {
+            using var bytes = new MemoryStream(); using (var writer = new BinaryWriter(bytes, Encoding.UTF8, true)) {
+                Text(writer, "candidate-observation-v1"); Text(writer, kind); write(writer); }
             return CandidatePrimitives.ByteHash(bytes.ToArray()); }
         private static void Text(BinaryWriter writer, string? text)
         { if (text == null) { writer.Write(-1); return; } var bytes = Encoding.UTF8.GetBytes(text); writer.Write(bytes.Length); writer.Write(bytes); }
         private static void Number(BinaryWriter writer, long? value)
         { writer.Write(value.HasValue); if (value.HasValue) writer.Write(value.Value); }
         private static void Identity(BinaryWriter w, CandidateIdentity i)
-        { Number(w, i.ProcessId); Number(w, i.ProcessStartUtc?.UtcDateTime.Ticks); Text(w, i.ProjectFile == null ? null : CandidatePrimitives.CanonicalProject(i.ProjectFile)); Number(w, i.BindingEpoch); }
+        {
+            Number(w, i.ProcessId); Number(w, i.ProcessStartUtc?.UtcDateTime.Ticks);
+            Text(w, i.ProjectFile == null ? null : CandidatePrimitives.CanonicalProject(i.ProjectFile)); Number(w, i.BindingEpoch);
+        }
         private static void Device(BinaryWriter w, DeviceInventoryItem i)
         { Text(w, i.Id); Text(w, i.Name); Text(w, i.ParentId); w.Write(i.IsGroup); }
         private static void Catalog(BinaryWriter w, DeviceCatalogEntry i)
@@ -103,20 +110,29 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         { var array = rows.ToArray(); w.Write(array.Length); foreach (var row in array) write(w, row); }
         public static string Binding(CandidateIdentity identity) => Encode("binding", w => Identity(w, identity));
         public static string DeviceRow(DeviceInventoryItem row) => Encode("device-row", w => Device(w, row));
-        public static string DeviceInventory(IEnumerable<DeviceInventoryItem> rows) => Encode("devices", w => List(w, rows.OrderBy(r => r.Id, StringComparer.Ordinal), Device));
-        public static string DeviceObservation(CandidateIdentity identity, DeviceCatalogEntry catalog, IEnumerable<DeviceInventoryItem> rows, string type, string name)
-            => Encode("device-create", w => { Identity(w, identity); Catalog(w, catalog); List(w, rows.OrderBy(r => r.Id, StringComparer.Ordinal), Device); Text(w, type); Text(w, name); });
+        public static string DeviceInventory(IEnumerable<DeviceInventoryItem> rows) =>
+            Encode("devices", w => List(w, rows.OrderBy(r => r.Id, StringComparer.Ordinal), Device));
+        public static string DeviceObservation(CandidateIdentity identity, DeviceCatalogEntry catalog, IEnumerable<DeviceInventoryItem> rows, string type,
+                string name)
+            =>
+                Encode("device-create", w => {
+                    Identity(w, identity); Catalog(w, catalog); List(w, rows.OrderBy(r => r.Id, StringComparer.Ordinal), Device); Text(w, type); Text(w, name);
+                });
         public static string ImportRow(PlcImportObject row) => Encode("import-row", w => Object(w, row));
-        public static string ImportInventory(IEnumerable<PlcImportObject> rows) => Encode("imports", w => List(w, rows.OrderBy(r => r.Id, StringComparer.Ordinal), Object));
+        public static string ImportInventory(IEnumerable<PlcImportObject> rows) =>
+            Encode("imports", w => List(w, rows.OrderBy(r => r.Id, StringComparer.Ordinal), Object));
         public static string Inputs(IEnumerable<PlcImportInput> rows) => Encode("inputs", w => List(w, rows, Input));
         public static string Files(IEnumerable<CandidateFile> rows) => Encode("files", w => List(w, rows.OrderBy(r => r.Path, StringComparer.Ordinal), (b, f) =>
             { Text(b, f.Path); b.Write(f.Exists); Number(b, f.ByteLength); Text(b, f.Sha256); }));
         public static string ImportObservation(PlcImportCheck check) => Encode("import-item", w =>
         { Identity(w, check.Identity); Text(w, check.Release); Text(w, check.Tool); var r = check.Request;
-            Text(w, r.SoftwarePath); Text(w, r.InputPath); Text(w, r.BlockGroupPath); Text(w, r.TypeGroupPath); Text(w, r.TagFolderPath); Text(w, r.TechnologyFolderPath);
-            Text(w, r.RegexName); Text(w, r.FileNameWithoutExtension); List(w, r.ImportOrder, Text); Text(w, r.VersionPolicy); Text(w, r.OnError); w.Write(r.CompileAfter); w.Write(r.MaxItems);
+            Text(w, r.SoftwarePath); Text(w, r.InputPath); Text(w, r.BlockGroupPath); Text(w, r.TypeGroupPath); Text(w, r.TagFolderPath);
+            Text(w, r.TechnologyFolderPath);
+            Text(w, r.RegexName); Text(w, r.FileNameWithoutExtension); List(w, r.ImportOrder, Text); Text(w, r.VersionPolicy); Text(w, r.OnError); w
+                .Write(r.CompileAfter); w.Write(r.MaxItems);
             Text(w, Inputs(check.Inputs)); Text(w, Files(check.Files));
-            Text(w, ImportInventory(check.CurrentInventory)); w.Write(check.Index); Text(w, check.GroupIdentity); w.Write(check.Request.Overwrite); w.Write(check.OverwriteSupported); });
+            Text(w, ImportInventory(check.CurrentInventory)); w.Write(check.Index); Text(w, check.GroupIdentity); w.Write(check.Request.Overwrite); w
+                .Write(check.OverwriteSupported); });
         public static string Document(string code, string? resource) => Encode("documents", w => { Text(w, code); Text(w, resource); });
     }
 }

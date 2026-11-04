@@ -52,9 +52,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
             info["requiredFiles"] = new JsonObject
             {
-                ["PEData.plf"] = File.Exists(peDataPlf) ? FileInfoToJson(rootDir, new FileInfo(peDataPlf), includeSha256: false) : new JsonObject { ["exists"] = false, ["path"] = peDataPlf },
-                ["PEData.idx"] = File.Exists(peDataIdx) ? FileInfoToJson(rootDir, new FileInfo(peDataIdx), includeSha256: false) : new JsonObject { ["exists"] = false, ["path"] = peDataIdx },
-                ["XRef.db"] = File.Exists(xrefDb) ? FileInfoToJson(rootDir, new FileInfo(xrefDb), includeSha256: false) : new JsonObject { ["exists"] = false, ["path"] = xrefDb }
+                ["PEData.plf"] = File.Exists(peDataPlf) ? FileInfoToJson(rootDir, new FileInfo(peDataPlf), includeSha256: false) : new JsonObject {
+                    ["exists"] = false, ["path"] = peDataPlf },
+                ["PEData.idx"] = File.Exists(peDataIdx) ? FileInfoToJson(rootDir, new FileInfo(peDataIdx), includeSha256: false) : new JsonObject {
+                    ["exists"] = false, ["path"] = peDataIdx },
+                ["XRef.db"] = File.Exists(xrefDb) ? FileInfoToJson(rootDir, new FileInfo(xrefDb), includeSha256: false) : new JsonObject {
+                    ["exists"] = false, ["path"] = xrefDb }
             };
 
             info["xref"] = AnalyzeSqliteDatabaseHeader(xrefDb);
@@ -391,7 +394,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string AppendDirectorySeparatorChar(string path)
         {
             if (string.IsNullOrEmpty(path)) return path;
-            return path.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString(), StringComparison.Ordinal)
+            return path.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal) || path
+                .EndsWith(Path.AltDirectorySeparatorChar.ToString(), StringComparison.Ordinal)
                 ? path
                 : path + Path.DirectorySeparatorChar;
         }

@@ -65,19 +65,23 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static string ColorText(Color color) => "#" + color.ToArgb().ToString("X8", CultureInfo.InvariantCulture);
         internal static Color ParseColor(UnifiedNode? node)
         {
-            var text = UnifiedAccess.TryString(node, out var s) ? s.Trim() : throw new ArgumentException("Color must be a \"#AARRGGBB\" or \"#RRGGBB\" string.");
-            if (!text.StartsWith("#") || (text.Length != 7 && text.Length != 9) || !int.TryParse(text.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var argb))
+            var text = UnifiedAccess.TryString(node, out var s) ? s.Trim()
+                : throw new ArgumentException("Color must be a \"#AARRGGBB\" or \"#RRGGBB\" string.");
+            if (!text.StartsWith("#") || (text.Length != 7 && text.Length != 9) || !int
+                    .TryParse(text.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var argb))
                 throw new ArgumentException("Color must be a \"#AARRGGBB\" or \"#RRGGBB\" hex string: " + text);
             if (text.Length == 7) argb = unchecked((int)0xFF000000) | argb;
             return Color.FromArgb(argb);
         }
         internal static object? ConvertValue(UnifiedNode? node, Type type) => IsColor(type) ? ParseColor(node) : UnifiedAccess.ConvertValue(node, type);
-        internal static bool SameValue(object? actual, object? expected) => actual is Color a && expected is Color e ? a.ToArgb() == e.ToArgb() : UnifiedScalar.SameValue(actual, expected);
+        internal static bool SameValue(object? actual, object? expected) => actual is Color a && expected is Color e ? a.ToArgb() == e.ToArgb() : UnifiedScalar
+            .SameValue(actual, expected);
         internal static UnifiedNode? Json(object? value) => value is Color c ? UnifiedValues.Value(ColorText(c)) : UnifiedScalar.Json(value);
 
         internal static UnifiedObject VerifiedWrite(object target, string propertyName, UnifiedNode? requested, Func<bool> trySet, Func<bool>? fallback = null)
         {
-            var result = new UnifiedObject { ["property"] = propertyName, ["requested"] = requested?.DeepClone(), ["trySetResult"] = false, ["verified"] = false };
+            var result = new UnifiedObject {
+                ["property"] = propertyName, ["requested"] = requested?.DeepClone(), ["trySetResult"] = false, ["verified"] = false };
             try
             {
                 var written = trySet(); result["trySetResult"] = written;
@@ -88,7 +92,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 else
                 {
                     var api = target.GetType().GetInterface("Siemens.Engineering.IEngineeringObject");
-                    var getter = api?.GetMethod("GetAttribute", new[] { typeof(string) }) ?? target.GetType().GetMethod("GetAttribute", new[] { typeof(string) });
+                    var getter = api?.GetMethod("GetAttribute", new[] { typeof(string) }) ?? target.GetType()
+                        .GetMethod("GetAttribute", new[] { typeof(string) });
                     if (getter == null) throw new NotSupportedException("Property/attribute readback unavailable: " + propertyName);
                     actual = getter.Invoke(target, new object[] { propertyName });
                 }
@@ -96,7 +101,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var expected = actual == null || requested == null || actual.GetType().IsInstanceOfType(requested)
                     ? requested : ConvertValue(requested, actual.GetType());
                 result["verified"] = written && SameValue(actual, expected);
-                if (!result["verified"]!.GetValue<bool>()) result["error"] = written ? "Property readback differs." : "Property/attribute write returned false.";
+                if (!result["verified"]!.GetValue<bool>()) result["error"] = written ? "Property readback differs."
+                    : "Property/attribute write returned false.";
             }
             catch (Exception error)
             {
@@ -110,12 +116,17 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static UnifiedObject Scalars(object target)
         {
             var result = UnifiedScalar.Read(target);
-            var values = (UnifiedObject)result["values"]!; var excluded = (UnifiedArray)result["excludedComplexProperties"]!; var failures = (UnifiedArray)result["failures"]!;
-            foreach (var p in target.GetType().GetProperties().Where(p => IsColor(p.PropertyType) && p.GetIndexParameters().Length == 0 && p.GetMethod?.IsPublic == true))
+            var values = (UnifiedObject)result["values"]!; var excluded = (UnifiedArray)result["excludedComplexProperties"]!; var failures =
+                (UnifiedArray)result["failures"]!;
+            foreach (var p in target.GetType().GetProperties()
+                    .Where(p => IsColor(p.PropertyType) && p.GetIndexParameters().Length == 0 && p.GetMethod?.IsPublic == true))
             {
                 var index = excluded.Select((n, i) => (n, i)).Where(x => x.n?.ToString() == p.Name).Select(x => x.i).DefaultIfEmpty(-1).First();
                 try { values[p.Name] = ColorText((Color)p.GetValue(target)!); if (index >= 0) excluded.RemoveAt(index); }
-                catch (Exception ex) { failures.Add(new UnifiedObject { ["property"] = p.Name, ["error"] = ex.GetBaseException().Message }); if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
+                catch (Exception ex) {
+                    failures.Add(new UnifiedObject { ["property"] = p.Name, ["error"] = ex.GetBaseException().Message });
+                    if (HmiReadSafety.ConnectionUnavailable(ex)) throw;
+                }
             }
             result["dataComplete"] = failures.Count == 0; result["fullObjectComplete"] = excluded.Count == 0 && failures.Count == 0;
             return result;
@@ -134,12 +145,18 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var property = FindProperty(target.GetType(), name);
                 object? value;
                 try { value = property?.GetValue(target); }
-                catch (Exception ex) { ((UnifiedArray)row["failures"]!).Add(new UnifiedObject { ["property"] = name, ["error"] = ex.GetBaseException().Message }); if (HmiReadSafety.ConnectionUnavailable(ex)) throw; continue; }
+                catch (Exception ex) {
+                    ((UnifiedArray)row["failures"]!).Add(new UnifiedObject { ["property"] = name, ["error"] = ex.GetBaseException().Message });
+                    if (HmiReadSafety.ConnectionUnavailable(ex)) throw; continue;
+                }
                 if (value == null) { children[name] = null; continue; }
                 if (value is IEnumerable sequence && value is not string)
                 {
                     var items = new UnifiedArray(); int count = 0;
-                    foreach (var item in sequence) { if (item == null) continue; if (++count > 500) { row["dataComplete"] = false; items.Add(new UnifiedObject { ["truncated"] = true }); break; } items.Add(Tree(item, depth - 1)); }
+                    foreach (var item in sequence) {
+                        if (item == null) continue; if (++count > 500) {
+                            row["dataComplete"] = false; items.Add(new UnifiedObject { ["truncated"] = true }); break; } items.Add(Tree(item, depth - 1));
+                    }
                     children[name] = items;
                 }
                 else if (value.GetType().IsClass && value.GetType().Namespace?.StartsWith("System", StringComparison.Ordinal) != true)
@@ -157,26 +174,35 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         // Validates nested propertiesJson: scalar and Color leaves need a public setter,
         // JSON objects descend into readable engineering sub-objects; interface Value reads its current runtime type.
-        internal static List<Edit> PrepareNested(Type type, UnifiedObject changes, string[]? path = null, int budget = 50, object? target = null, UnifiedObject? evidence = null)
+        internal static List<Edit> PrepareNested(Type type, UnifiedObject changes, string[]? path = null, int budget = 50, object? target = null, UnifiedObject
+                ? evidence = null)
         {
             path ??= Array.Empty<string>();
             if (path.Length > 6) throw new ArgumentException("Nested property depth exceeds 6.");
             var result = new List<Edit>();
             foreach (var change in changes)
             {
-                if (change.Key == "Name" || change.Key == "Parent" || BackLinks.Contains(change.Key, StringComparer.OrdinalIgnoreCase)) throw new ArgumentException("Renaming/backlink edits excluded: " + change.Key);
+                if (change.Key == "Name" || change.Key == "Parent" || BackLinks.Contains(change.Key, StringComparer.OrdinalIgnoreCase))
+                    throw new ArgumentException("Renaming/backlink edits excluded: " + change.Key);
                 var property = FindProperty(type, change.Key);
                 if (property == null || property.GetIndexParameters().Length != 0 || property.GetMethod?.IsPublic != true)
                     throw new NotSupportedException("Public property unavailable: " + type.FullName + "." + change.Key);
                 bool leaf = UnifiedScalar.Scalar(property.PropertyType) || IsColor(property.PropertyType) || property.PropertyType == typeof(object);
                 if (!leaf && change.Value is UnifiedObject nested)
                 {
-                    if (typeof(IEnumerable).IsAssignableFrom(property.PropertyType) && property.PropertyType != typeof(string)) throw new NotSupportedException("Collections need a dedicated action, not nested properties: " + change.Key);
-                    result.AddRange(PrepareNested(property.PropertyType, nested, path.Concat(new[] { change.Key }).ToArray(), budget, target == null ? null : property.GetValue(target), evidence));
+                    if (typeof(IEnumerable).IsAssignableFrom(property.PropertyType) && property.PropertyType != typeof(string))
+                        throw new NotSupportedException("Collections need a dedicated action, not nested properties: " + change.Key);
+                    result
+                        .AddRange(PrepareNested(property.PropertyType, nested, path.Concat(new[] { change.Key }).ToArray(), budget, target == null ? null
+                                : property.GetValue(target), evidence));
                     continue;
                 }
-                if (!leaf) throw new NotSupportedException("Complex/reference property requires a JSON object of nested scalars or a dedicated adapter: " + property.PropertyType.FullName);
-                if (property.SetMethod?.IsPublic != true) throw new NotSupportedException("Public writable property unavailable (V20 may expose it only as a dynamic attribute): " + type.FullName + "." + change.Key);
+                if (!leaf)
+                    throw new NotSupportedException("Complex/reference property requires a JSON object of nested scalars or a dedicated adapter: " + property
+                        .PropertyType.FullName);
+                if (property.SetMethod?.IsPublic != true)
+                    throw new NotSupportedException("Public writable property unavailable (V20 may expose it only as a dynamic attribute): " + type.FullName
+                        + "." + change.Key);
                 object? converted;
                 try { converted = ConvertField(target, type, changes, change.Key, property.PropertyType); }
                 catch (ArgumentException error)
@@ -194,11 +220,15 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (declaredType != typeof(object) || name != "Value" || type.GetProperty("PropertyName") == null)
                 return UnifiedAccess.ConvertField(changes, name, declaredType);
             var current = target == null ? null : type.GetProperty(name)!.GetValue(target);
-            if (current == null) throw new ArgumentException("Interface Value conversion refused: expected runtime type is unavailable because the current Value is null.");
+            if (current == null)
+                throw new ArgumentException("Interface Value conversion refused: expected runtime type is unavailable because the current Value is null.");
             var expected = current.GetType();
-            if (expected == typeof(object)) throw new ArgumentException("Interface Value requires System.Object, but no concrete scalar runtime type is available; JSON token type is not used to guess it.");
+            if (expected == typeof(object))
+                throw new ArgumentException("Interface Value requires System.Object, but no concrete scalar runtime type is available; JSON token type is " +
+                "not used to guess it.");
             try { return UnifiedAccess.ConvertField(changes, name, expected); }
-            catch (Exception error) when (error is ArgumentException || error is FormatException || error is OverflowException || error is NotSupportedException || error is InvalidOperationException)
+            catch (Exception error) when (error is ArgumentException || error is FormatException || error is OverflowException
+                    || error is NotSupportedException || error is InvalidOperationException)
             { throw new ArgumentException("Interface Value requires " + expected.FullName + ": " + error.Message, error); }
         }
 
@@ -208,11 +238,13 @@ namespace TiaMcp.Adapters.Native.Hmi
             foreach (var edit in edits)
             {
                 object owner = target;
-                foreach (var step in edit.Path) owner = FindProperty(owner.GetType(), step)!.GetValue(owner) ?? throw new InvalidOperationException("Nested object is null: " + step);
+                foreach (var step in edit.Path) owner = FindProperty(owner.GetType(), step)!.GetValue(owner)
+                    ?? throw new InvalidOperationException("Nested object is null: " + step);
                 meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = edit.Name;
                 edit.Property.SetValue(owner, edit.Value);
                 applied.Add(edit.Name);
-                if (!SameValue(edit.Property.GetValue(owner), edit.Value)) throw new InvalidOperationException("Property readback differs: " + edit.Name + ". Changes are not rolled back.");
+                if (!SameValue(edit.Property.GetValue(owner), edit.Value))
+                    throw new InvalidOperationException("Property readback differs: " + edit.Name + ". Changes are not rolled back.");
             }
         }
 
@@ -223,7 +255,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["records"] = rows; meta["expectedCount"] = all.Count; meta["actualCount"] = rows.Count;
             meta["nextOffset"] = offset + rows.Count < all.Count ? offset + rows.Count : (int?)null;
             meta["truncated"] = offset + rows.Count < all.Count;
-            meta["dataComplete"] = offset == 0 && rows.Count == all.Count && rows.All(r => r is not UnifiedObject o || o["dataComplete"] == null || o["dataComplete"]!.GetValue<bool>());
+            meta["dataComplete"] = offset == 0 && rows.Count == all.Count && rows
+                .All(r => r is not UnifiedObject o || o["dataComplete"] == null || o["dataComplete"]!.GetValue<bool>());
             return meta;
         }
 
@@ -255,10 +288,14 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 var property = FindProperty(target.GetType(), source);
                 if (property?.GetMethod?.IsPublic != true) { result[source] = null; continue; }
-                var create = property.PropertyType.GetMethods().FirstOrDefault(m => m.Name == "Create" && m.GetParameters().Length > 0 && m.GetParameters().Last().ParameterType.IsEnum);
+                var create = property.PropertyType.GetMethods()
+                    .FirstOrDefault(m => m.Name == "Create" && m.GetParameters().Length > 0 && m.GetParameters().Last().ParameterType.IsEnum);
                 result[source] = new UnifiedObject { ["compositionType"] = property.PropertyType.FullName,
                     ["eventTypeEnum"] = create?.GetParameters().Last().ParameterType.FullName,
-                    ["availableEventTypes"] = create == null ? null : new UnifiedArray(Enum.GetNames(create.GetParameters().Last().ParameterType).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray()) };
+                    ["availableEventTypes"] = create == null ? null
+                        : new UnifiedArray(Enum.GetNames(create.GetParameters().Last().ParameterType).Select(n => (UnifiedNode)UnifiedValues.Value(n)!)
+                            .ToArray())
+                    };
             }
             return result;
         }
@@ -267,9 +304,11 @@ namespace TiaMcp.Adapters.Native.Hmi
         // part type has no Name, by zero-based index. Exactly one selector is accepted.
         internal static object Composition(object owner, string collectionProperty)
         {
-            if (string.IsNullOrWhiteSpace(collectionProperty) || !collectionProperty.All(c => char.IsLetterOrDigit(c) || c == '_')) throw new ArgumentException("Exact collection property name required.");
+            if (string.IsNullOrWhiteSpace(collectionProperty) || !collectionProperty.All(c => char.IsLetterOrDigit(c) || c == '_'))
+                throw new ArgumentException("Exact collection property name required.");
             var property = FindProperty(owner.GetType(), collectionProperty);
-            if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0) throw new NotSupportedException("Public collection property unavailable: " + owner.GetType().FullName + "." + collectionProperty);
+            if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0)
+                throw new NotSupportedException("Public collection property unavailable: " + owner.GetType().FullName + "." + collectionProperty);
             var value = property.GetValue(owner) ?? throw new InvalidOperationException("Collection is null: " + collectionProperty);
             if (value is not IEnumerable || value is string) throw new NotSupportedException(collectionProperty + " is not a collection.");
             return value;
@@ -283,7 +322,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (byName)
             {
                 if (!Named(composition)) throw new ArgumentException("Parts in this collection have no Name; use partIndex.");
-                var matches = UnifiedGroups.Items(composition).Where(x => string.Equals(x.GetType().GetProperty("Name")?.GetValue(x)?.ToString(), partName, StringComparison.Ordinal)).Take(2).ToArray();
+                var matches = UnifiedGroups.Items(composition)
+                    .Where(x => string.Equals(x.GetType().GetProperty("Name")?.GetValue(x)?.ToString(), partName, StringComparison.Ordinal)).Take(2).ToArray();
                 if (matches.Length > 1) throw new InvalidOperationException("Ambiguous exact part name: " + partName);
                 return matches.SingleOrDefault();
             }
@@ -293,23 +333,37 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static (MethodInfo Method, object[] Args) PartCreation(object composition, string partName, string partKind)
         {
             var element = ElementType(composition);
-            if (!string.IsNullOrEmpty(partKind) && !string.Equals(element?.Name, partKind, StringComparison.Ordinal) && !string.Equals(element?.FullName, partKind, StringComparison.Ordinal))
+            if (!string.IsNullOrEmpty(partKind) && !string.Equals(element?.Name, partKind, StringComparison.Ordinal) && !string
+                    .Equals(element?.FullName, partKind, StringComparison.Ordinal))
                 throw new ArgumentException("partKind must match the collection element type " + element?.Name + ".");
-            var methods = composition.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public).Where(m => m.Name == "Create" && !m.IsGenericMethodDefinition).ToArray();
+            var methods = composition.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                .Where(m => m.Name == "Create" && !m.IsGenericMethodDefinition).ToArray();
             var named = methods.FirstOrDefault(m => m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string));
             var plain = methods.FirstOrDefault(m => m.GetParameters().Length == 0);
-            if (named != null) { if (string.IsNullOrEmpty(partName)) throw new ArgumentException("This composition creates named parts; partName required."); return (named, new object[] { partName }); }
-            if (plain != null) { if (!string.IsNullOrEmpty(partName)) throw new ArgumentException("This composition creates unnamed parts via Create(); omit partName and address the result by partIndex."); return (plain, Array.Empty<object>()); }
-            throw new NotSupportedException("Native Create() / Create(string) is not exposed on " + composition.GetType().FullName + "; parts of this kind are created by TIA, not the public API.");
+            if (named != null) {
+                if (string.IsNullOrEmpty(partName)) throw new ArgumentException("This composition creates named parts; partName required.");
+                return (named, new object[] { partName });
+            }
+            if (plain != null) {
+                if (!string.IsNullOrEmpty(partName))
+                    throw new ArgumentException("This composition creates unnamed parts via Create(); omit partName and address the result by partIndex.");
+                return (plain, Array.Empty<object>());
+            }
+            throw new NotSupportedException("Native Create() / Create(string) is not exposed on " + composition.GetType().FullName
+                    + "; parts of this kind are created by TIA, not the public API.");
         }
         internal static UnifiedArray PartCollections(object owner)
         {
             var rows = new UnifiedArray();
-            foreach (var p in owner.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetIndexParameters().Length == 0 && p.GetMethod?.IsPublic == true).OrderBy(p => p.Name, StringComparer.Ordinal))
+            foreach (var p in owner.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(p => p.GetIndexParameters().Length == 0 && p.GetMethod?.IsPublic == true).OrderBy(p => p.Name, StringComparer.Ordinal))
             {
                 if (!typeof(IEnumerable).IsAssignableFrom(p.PropertyType) || p.PropertyType == typeof(string)) continue;
                 var element = p.PropertyType.GetProperty("Item")?.PropertyType;
-                var creates = p.PropertyType.GetMethods().Where(m => m.Name == "Create").Select(m => "Create" + (m.IsGenericMethodDefinition ? "<T>" : "") + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")").ToArray();
+                var creates = p.PropertyType.GetMethods().Where(m => m.Name == "Create")
+                    .Select(m => "Create" + (m.IsGenericMethodDefinition ? "<T>" : "") + "(" + string
+                        .Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")")
+                    .ToArray();
                 rows.Add(new UnifiedObject { ["property"] = p.Name, ["compositionType"] = p.PropertyType.FullName, ["elementType"] = element?.FullName,
                     ["isPart"] = element?.Namespace == "Siemens.Engineering.HmiUnified.UI.Parts", ["named"] = element?.GetProperty("Name") != null,
                     ["deletable"] = element?.GetMethod("Delete", Type.EmptyTypes) != null,
@@ -321,20 +375,26 @@ namespace TiaMcp.Adapters.Native.Hmi
         // Dynamizations
         internal static Type DynamizationType(object composition, string kind)
         {
-            if (!DynamizationKinds.TryGetValue(kind, out var fullName)) throw new ArgumentException("dynamizationKind must be one of " + string.Join("/", DynamizationKinds.Keys) + ".");
-            return composition.GetType().Assembly.GetType(fullName, false) ?? throw new NotSupportedException("Native type unavailable in this API version: " + fullName);
+            if (!DynamizationKinds.TryGetValue(kind, out var fullName))
+                throw new ArgumentException("dynamizationKind must be one of " + string.Join("/", DynamizationKinds.Keys) + ".");
+            return composition.GetType().Assembly.GetType(fullName, false)
+                ?? throw new NotSupportedException("Native type unavailable in this API version: " + fullName);
         }
         internal static MethodInfo GenericCreate(object composition, Type argument, int parameterCount)
         {
             var open = composition.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public)
-                .FirstOrDefault(m => m.Name == "Create" && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1 && m.GetParameters().Length == parameterCount)
-                ?? throw new NotSupportedException("Native generic Create<T> with " + parameterCount + " parameter(s) unavailable on " + composition.GetType().FullName);
+                .FirstOrDefault(m => m.Name == "Create" && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1 && m.GetParameters()
+                        .Length == parameterCount)
+                ?? throw new NotSupportedException("Native generic Create<T> with " + parameterCount + " parameter(s) unavailable on " + composition.GetType()
+                        .FullName);
             return open.MakeGenericMethod(argument);
         }
         internal static object? FindDynamization(object composition, string propertyName)
         {
             if (string.IsNullOrWhiteSpace(propertyName)) throw new ArgumentException("Exact dynamized propertyName required.");
-            var matches = UnifiedGroups.Items(composition).Where(x => string.Equals(x.GetType().GetProperty("PropertyName")?.GetValue(x)?.ToString(), propertyName, StringComparison.Ordinal)).Take(2).ToArray();
+            var matches = UnifiedGroups.Items(composition)
+                .Where(x => string.Equals(x.GetType().GetProperty("PropertyName")?.GetValue(x)?.ToString(), propertyName, StringComparison.Ordinal)).Take(2)
+                .ToArray();
             if (matches.Length > 1) throw new InvalidOperationException("Ambiguous dynamization for " + propertyName + "; no mutation performed.");
             return matches.SingleOrDefault();
         }
@@ -364,14 +424,17 @@ namespace TiaMcp.Adapters.Native.Hmi
             return result;
         }
         internal static string[] MappingTablePath(Type dynamization)
-            => dynamization.GetProperty("ValueConverter") != null && dynamization.GetProperty("ValueConverter")!.PropertyType.GetProperty("MappingTable") != null ? new[] { "ValueConverter", "MappingTable", "Entries" } : Array.Empty<string>();
+            => dynamization.GetProperty("ValueConverter") != null && dynamization.GetProperty("ValueConverter")!.PropertyType
+                .GetProperty("MappingTable") != null ? new[] { "ValueConverter", "MappingTable", "Entries" } : Array.Empty<string>();
 
         // Screens
         internal static bool IsScreen(object target) => target.GetType().FullName == "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreen";
-        internal static bool IsScreenComposition(object target) => target.GetType().FullName == "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreenComposition";
+        internal static bool IsScreenComposition(object target) => target.GetType()
+            .FullName == "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreenComposition";
         internal static string ValidateScreenName(string name)
         {
-            if (string.IsNullOrWhiteSpace(name) || name.Length > 128 || name.IndexOfAny(new[] { '/', '\\' }) >= 0) throw new ArgumentException("Exact screen name of 1..128 characters without path separators required.");
+            if (string.IsNullOrWhiteSpace(name) || name.Length > 128 || name.IndexOfAny(new[] { '/', '\\' }) >= 0)
+                throw new ArgumentException("Exact screen name of 1..128 characters without path separators required.");
             return name;
         }
 
@@ -379,14 +442,24 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static UnifiedObject SelfDescription(object target)
         {
             var api = target.GetType().GetInterface("Siemens.Engineering.IEngineeringObject");
-            var result = new UnifiedObject { ["engineeringObject"] = api != null, ["attributes"] = new UnifiedArray(), ["compositions"] = new UnifiedArray(), ["contentsRead"] = false };
+            var result = new UnifiedObject {
+                ["engineeringObject"] = api != null, ["attributes"] = new UnifiedArray(), ["compositions"] = new UnifiedArray(), ["contentsRead"] = false };
             if (api == null) return result;
             try
             {
                 if (api.GetMethod("GetAttributeInfos", Type.EmptyTypes)?.Invoke(target, null) is IEnumerable attributes)
-                    foreach (var info in attributes) { if (((UnifiedArray)result["attributes"]!).Count >= 512) break; ((UnifiedArray)result["attributes"]!).Add(new UnifiedObject { ["name"] = info?.GetType().GetProperty("Name")?.GetValue(info)?.ToString(), ["accessMode"] = info?.GetType().GetProperty("AccessMode")?.GetValue(info)?.ToString() }); }
+                    foreach (var info in attributes) {
+                        if (((UnifiedArray)result["attributes"]!).Count >= 512) break; ((UnifiedArray)result["attributes"]!)
+                            .Add(new UnifiedObject {
+                                ["name"] = info?.GetType().GetProperty("Name")?.GetValue(info)?.ToString(), ["accessMode"] = info?.GetType()
+                                    .GetProperty("AccessMode")?.GetValue(info)?.ToString()
+                            });
+                    }
                 if (api.GetMethod("GetCompositionInfos", Type.EmptyTypes)?.Invoke(target, null) is IEnumerable compositions)
-                    foreach (var info in compositions) { if (((UnifiedArray)result["compositions"]!).Count >= 128) break; ((UnifiedArray)result["compositions"]!).Add(info?.GetType().GetProperty("Name")?.GetValue(info)?.ToString()); }
+                    foreach (var info in compositions) {
+                        if (((UnifiedArray)result["compositions"]!).Count >= 128) break; ((UnifiedArray)result["compositions"]!)
+                            .Add(info?.GetType().GetProperty("Name")?.GetValue(info)?.ToString());
+                    }
             }
             catch (Exception ex) { result["error"] = ex.GetBaseException().Message; if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
             return result;
@@ -409,10 +482,12 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static UnifiedObject MultilingualRows(object target)
         {
             var result = new UnifiedObject();
-            foreach (var p in target.GetType().GetProperties().Where(p => p.PropertyType.Name == "MultilingualText" && p.GetMethod?.IsPublic == true).OrderBy(p => p.Name, StringComparer.Ordinal))
+            foreach (var p in target.GetType().GetProperties().Where(p => p.PropertyType.Name == "MultilingualText" && p.GetMethod?.IsPublic == true)
+                    .OrderBy(p => p.Name, StringComparer.Ordinal))
             {
                 try { var value = p.GetValue(target); result[p.Name] = value == null ? null : UnifiedMultilingualText.Read(value); }
-                catch (Exception ex) { result[p.Name] = new UnifiedObject { ["error"] = ex.GetBaseException().Message }; if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
+                catch (Exception ex) {
+                    result[p.Name] = new UnifiedObject { ["error"] = ex.GetBaseException().Message }; if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
             }
             return result;
         }

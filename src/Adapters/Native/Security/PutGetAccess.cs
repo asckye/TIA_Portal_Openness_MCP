@@ -9,7 +9,8 @@ public sealed class PutGetAccess
 {
     private readonly PlcFoundationEngine engine;
     internal PutGetAccess(PlcFoundationEngine engine) => this.engine = engine;
-    internal Device? GetDevice(string path) => engine.ResolveEngineeringDevice != null ? engine.ResolveEngineeringDevice(path) as Device : engine.SecurityLegacyDevice(path);
+    internal Device? GetDevice(string path) => engine.ResolveEngineeringDevice != null ? engine.ResolveEngineeringDevice(path) as Device : engine
+        .SecurityLegacyDevice(path);
     // Exact names only. Enumeration failures make uniqueness unknowable and must refuse.
     public static (DeviceItem? item, string? attrName) FindPutGetAttribute(Device device)
     {

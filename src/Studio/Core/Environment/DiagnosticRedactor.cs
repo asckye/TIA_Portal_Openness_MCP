@@ -67,11 +67,15 @@ namespace TiaOpenness.Core.Environment
             string Plain(string value)
             {
                 value = Replace(value, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?(?:-----END [^-]*PRIVATE KEY-----|\z)", "private-key", _ => Mask);
-                value = Replace(value, @"\b(?:Bearer|Basic)\s+[^\s""'<>\\,;]+", "auth-scheme", m => (m.Value.StartsWith("Basic", StringComparison.OrdinalIgnoreCase) ? "Basic " : "Bearer ") + Mask);
+                value =
+                    Replace(value, @"\b(?:Bearer|Basic)\s+[^\s""'<>\\,;]+", "auth-scheme", m =>
+                        (m.Value.StartsWith("Basic", StringComparison.OrdinalIgnoreCase) ? "Basic " : "Bearer ") + Mask);
                 value = Replace(value, @"(?<prefix>https?://)[^\s/@]+:[^\s/@]+@", "url-userinfo", m => m.Groups["prefix"].Value + Mask + "@");
                 value = Replace(value, @"(?<prefix>[?&]" + SecretName + @"=)[^&\s""'<>]+", "query-secret", m => m.Groups["prefix"].Value + Mask);
                 // Quotes include escaped quotes; unquoted values are conservatively removed to the end of the line.
-                value = Replace(value, @"(?<prefix>(?:[""']?" + SecretName + @"[""']?\s*[:=]\s*|--" + SecretName + @"\s+))(?<value>""(?:\\.|[^""\\])*""|'(?:\\.|[^'\\])*'|[^\r\n]+)",
+                value =
+                    Replace(value, @"(?<prefix>(?:[""']?" + SecretName + @"[""']?\s*[:=]\s*|--" + SecretName
+                        + @"\s+))(?<value>""(?:\\.|[^""\\])*""|'(?:\\.|[^'\\])*'|[^\r\n]+)",
                     "text-secret", m => m.Groups["prefix"].Value + "\"" + Mask + "\"");
                 foreach (string secret in knownSecrets.OrderByDescending(s => s.Length))
                     if (value.Contains(secret)) { value = value.Replace(secret, Mask); Count("known-secret"); }
@@ -101,7 +105,9 @@ namespace TiaOpenness.Core.Environment
                 }
                 // JSONL logs retain readable fields when complete; malformed fragments use the conservative text rules.
                 text = Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?(?:-----END [^-]*PRIVATE KEY-----|\z)", "private-key", _ => Mask);
-                text = Replace(text, @"\b(?:Bearer|Basic)\s+[^\s""'<>\\,;]+", "auth-scheme", m => (m.Value.StartsWith("Basic", StringComparison.OrdinalIgnoreCase) ? "Basic " : "Bearer ") + Mask);
+                text =
+                    Replace(text, @"\b(?:Bearer|Basic)\s+[^\s""'<>\\,;]+", "auth-scheme", m =>
+                        (m.Value.StartsWith("Basic", StringComparison.OrdinalIgnoreCase) ? "Basic " : "Bearer ") + Mask);
                 var lines = text.Split('\n').Select(line =>
                 {
                     if (!line.TrimStart().StartsWith("{", StringComparison.Ordinal)) return Plain(line);

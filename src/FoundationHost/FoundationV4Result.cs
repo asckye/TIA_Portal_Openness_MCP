@@ -9,7 +9,8 @@ namespace TiaMcp.FoundationHost;
 internal static class FoundationV4Result
 {
     internal static bool Classified(JsonNode? body) => body is JsonObject source && source["meta"] is JsonObject meta && meta["outcome"] is JsonValue outcome
-        && outcome.TryGetValue<string>(out var value) && value is "succeeded" or "rejected-before-operation" or "read-failed" or "failed" or "partial" or "unknown";
+        && outcome.TryGetValue<string>(out var value)
+            && value is "succeeded" or "rejected-before-operation" or "read-failed" or "failed" or "partial" or "unknown";
     internal static CallToolResult WorkerFailure(CallToolResult result, string release, string name, string id, bool mutation, Exception? failure)
     {
         if (failure == null || result.IsError != true || Classified(result.StructuredContent)
@@ -76,9 +77,12 @@ internal static class FoundationV4Result
             Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
     }
     private static readonly IReadOnlyDictionary<string, JsonElement> Empty = new Dictionary<string, JsonElement>();
-    internal static Error Invalid(string parameter) => new("Invalid Foundation argument. Nothing was executed.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
+    internal static Error Invalid(string parameter) =>
+        new("Invalid Foundation argument. Nothing was executed.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
     internal static CallToolResult Reject(string release, string name, string id, Error error, bool current = false)
-        => Wire(release, name, id, null, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, current, error.Code == ErrorCode.SessionResetRequired);
+        =>
+            Wire(release, name, id, null, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, current, error.Code == ErrorCode
+                .SessionResetRequired);
     internal static CallToolResult ReadinessUnavailable(string release, string name, string id, JsonObject readiness)
     {
         var environment = Object(readiness["environment"]);
@@ -113,7 +117,8 @@ internal static class FoundationV4Result
         return HostBehavior.FailureError(kind, parameter, Empty, message);
     }
 
-    internal static CallToolResult Failure(string release, string name, string id, bool dispatched, bool mutation, JsonNode? evidence, Exception? exception = null)
+    internal static CallToolResult Failure(string release, string name, string id, bool dispatched, bool mutation, JsonNode? evidence, Exception? exception =
+            null)
     {
         var data = evidence == null ? null : Object(evidence);
         var worker = exception as WorkerOperationException;
@@ -137,7 +142,8 @@ internal static class FoundationV4Result
         }
         if (exception?.Data["foundationRequestSent"] is false) dispatched = false;
         if (!dispatched && exception?.Data["workerLimitBytes"] is int workerLimit)
-            return Reject(release, name, id, new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)), true);
+            return Reject(release, name, id,
+                    new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)), true);
         if (!dispatched && exception?.Data["foundationSessionPoisoned"] is true)
             return Reject(release, name, id, HostBehavior.SessionReset(), true);
         if (!dispatched && exception?.GetBaseException() is NotSupportedException unavailable)
@@ -164,7 +170,8 @@ internal static class FoundationV4Result
         return Wire(release, name, id, data, readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind),
             readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
-                TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception) ? null : HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType)
+                TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception) ? null : HostBehavior
+                    .AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType)
                     ?? (dispatched && nativeDiagnostic ? HostBehavior.SafeDiagnostic(exception.Message) : null),
                 reason, dispatched ? "tool-call" : "tool-queue", worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition),
             true, lost || kind == TiaOpenness.Shared.HostFailureKind.Unknown);
@@ -182,7 +189,9 @@ internal static class FoundationV4Result
             int total = data["total"]!.GetValue<int>();
             data.Remove("offset"); data.Remove("nextCursor"); data.Remove("total");
             return Wire(release, name, id, data, Outcome.Succeeded, Execution.ReadOnly, Completeness.Complete, null, true,
-                paging: new Paging(PagingMode.Cursor, null, limit, null, string.IsNullOrEmpty((string?)args["cursor"]) ? null : (string?)args["cursor"], next, total, next == null));
+                paging
+                    : new Paging(PagingMode.Cursor, null, limit, null, string.IsNullOrEmpty((string?)args["cursor"]) ? null : (string?)args["cursor"], next,
+                        total, next == null));
         }
         bool mutation = IsMutation(definition, args);
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
@@ -205,7 +214,8 @@ internal static class FoundationV4Result
                 string? state = Text(item, "status");
                 var childOutcome = state is "not-attempted" or "inconsistent" ? Outcome.RejectedBeforeOperation
                     : state == "failed" && (Text(item, "failure") == "native-outcome-uncertain" || definition.ResponseMember == "BatchExport") ? Outcome.Unknown
-                    : state is "failed" or "inconsistent" ? (preview || Flag(item, "attempted") == false ? Outcome.RejectedBeforeOperation : Outcome.Failed) : Outcome.Succeeded;
+                    : state is "failed" or "inconsistent" ? (preview || Flag(item, "attempted") == false ? Outcome.RejectedBeforeOperation : Outcome.Failed)
+                        : Outcome.Succeeded;
                 if (childOutcome == Outcome.Succeeded) succeeded++;
                 else if (state == "not-attempted") skipped++;
                 else { failed++; if (state == "failed") causeIndex ??= mapped.Count; }
@@ -215,7 +225,11 @@ internal static class FoundationV4Result
                     : childOutcome != Outcome.Succeeded ? NativeFailure(item) : null;
                 var child = EnvelopeFor(release, name, id, item, childOutcome, Execute(childOutcome, mutation),
                     childOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, childError, true, childOutcome == Outcome.Unknown);
-                mapped.Add(new JsonObject { ["index"] = mapped.Count, ["target"] = Text(item, "objectPath") ?? Text(item, "relativePath"), ["result"] = JsonNode.Parse(V4Json.Serialize(child)) });
+                mapped
+                    .Add(new JsonObject {
+                        ["index"] = mapped.Count, ["target"] = Text(item, "objectPath") ?? Text(item, "relativePath"), ["result"] = JsonNode
+                            .Parse(V4Json.Serialize(child))
+                    });
             }
             data["items"] = mapped;
             outcome = unknown ? Outcome.Unknown : failed + skipped == 0 ? Outcome.Succeeded
@@ -231,7 +245,8 @@ internal static class FoundationV4Result
                 == TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected)
             outcome = Outcome.Unknown;
         if (outcome == Outcome.Unknown) error = Unknown();
-        else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = definition.ResponseMember == "Compile" ? CompileResultMapping.Errors(data) ?? NativeFailure(data) : NativeFailure(data);
+        else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = definition.ResponseMember == "Compile" ? CompileResultMapping
+            .Errors(data) ?? NativeFailure(data) : NativeFailure(data);
         if (definition.ResponseMember is "DocumentExport" or "BatchDocumentExport" && data["nativeResult"] is JsonObject native)
         {
             var evidence = new JsonObject { ["nativeStateType"] = native["enumType"]?.DeepClone() };
@@ -325,7 +340,8 @@ internal static class FoundationV4Result
             paging = new Paging(PagingMode.Offset, offset, limit, complete ? null : offset + limit, null, null, total, complete);
             data.Remove("offset"); data.Remove("nextOffset"); data.Remove("nextToolOffset");
         }
-        var success = !isError && (Flag(data, "success") ?? Flag(data, "ok") ?? Flag(data, "valid") ?? Flag(data["checks"] as JsonObject, "passed") ?? name == "GetToolUsage");
+        var success = !isError
+            && (Flag(data, "success") ?? Flag(data, "ok") ?? Flag(data, "valid") ?? Flag(data["checks"] as JsonObject, "passed") ?? name == "GetToolUsage");
         if (name == "CheckProductUpdate" && !success && args != null && args.TryGetValue("repository", out var repository)
             && !TiaMcpServer.ModelContextProtocol.UpdateLogic.IsValidRepository(repository.GetString()))
             return Reject(release, name, id, new Error("The operation did not establish success; inspect the returned result.",
@@ -370,12 +386,15 @@ internal static class FoundationV4Result
         if (data != null && name is "CompilePlcSoftware" or "CompilePlcDiagnostics" && data["state"]?.ToString() == "Warning")
             warnings.AddRange(NativeResultState.Warnings(new JsonObject { ["nativeState"] = "Warning",
                 ["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Compiler }));
-        if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", Empty));
-        if (candidate) warnings.Add(new Warning(WarningCode.CandidateOnly, "Candidate output only; target schema, import and program semantics remain unverified.", Empty));
+        if (current) warnings
+            .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", Empty));
+        if (candidate) warnings
+            .Add(new Warning(WarningCode.CandidateOnly, "Candidate output only; target schema, import and program semantics remain unverified.", Empty));
         if (HostBehavior.BackupSkipped(data) is Warning backup) warnings.Add(backup);
         if (current && data?["warnings"] is JsonArray { Count: > 0 })
             warnings.Add(new Warning(WarningCode.NativeWarning, "Native diagnostics include warnings; see data.warnings.", Empty));
-        if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; retain the declared scope and unprobed fields.", Empty));
+        if (completeness == Completeness.Partial) warnings
+            .Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; retain the declared scope and unprobed fields.", Empty));
         return BehaviorCapabilities.Disclose(Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution, reset,
             current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings)));
     }

@@ -15,10 +15,12 @@ namespace TiaMcpServer.ModelContextProtocol
             public List<(string Name, int Network)> Calls = new List<(string, int)>();
             public List<(string Name, int Network, string Scope)> Symbols = new List<(string, int, string)>();
         }
-        public static JsonObject Analyze(string directory, string action, string target, int maxDepth, int offset, int limit, IReadOnlyList<string>? exportedFiles = null)
+        public static JsonObject Analyze(string directory, string action, string target, int maxDepth, int offset, int limit, IReadOnlyList<string>
+                ? exportedFiles = null)
         {
             if (!Path.IsPathRooted(directory) || !Directory.Exists(directory)) throw new ArgumentException("Existing absolute export directory required.");
-            if (!new[] { "summary", "callers", "callees", "callPaths", "unreachable", "references", "blocks" }.Contains(action)) throw new ArgumentException("Unknown reference action.");
+            if (!new[] { "summary", "callers", "callees", "callPaths", "unreachable", "references", "blocks" }.Contains(action))
+                throw new ArgumentException("Unknown reference action.");
             OfflineAnalysisLogic.ValidatePage(offset, limit);
             if (maxDepth < 1 || maxDepth > 50) throw new ArgumentException("maxDepth must be 1..50.");
             directory = Path.GetFullPath(directory);
@@ -49,7 +51,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Reparse files refused.");
                     files.Add(file); if (files.Count > 2000) throw new ArgumentException("Maximum 2000 export documents.");
                 }
-                foreach (var sub in Directory.EnumerateDirectories(folder)) { pending.Push(sub); if (pending.Count > 2000) throw new ArgumentException("Directory traversal limit exceeded."); }
+                foreach (var sub in Directory.EnumerateDirectories(folder)) {
+                    pending.Push(sub); if (pending.Count > 2000) throw new ArgumentException("Directory traversal limit exceeded."); }
             }
             if (files.Count == 0) throw new ArgumentException("No exported PLC documents found; no references were queried.");
             var entries = new List<Entry>(); var failures = new JsonArray(); var warnings = new JsonArray(); long bytes = 0;
@@ -60,7 +63,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 var id = path.Substring(prefix.Length).Replace('\\', '/');
                 try
                 {
-                    if (!path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) throw new NotSupportedException("Text-only SCL/S7DCL is not indexed by this structural query. Export SimaticML for explicit CallInfo and Symbol records.");
+                    if (!path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                        throw new NotSupportedException("Text-only SCL/S7DCL is not indexed by this structural query. Export SimaticML for explicit CallInfo " +
+                        "and Symbol records.");
                     var d = PlcDocumentEditing.Parse(PlcDocumentEditing.Read(path));
                     var entry = new Entry { Id = id, Name = PlcDocumentEditing.Name(d), Kind = PlcDocumentEditing.Block(d).Name.LocalName };
                     var networkIndex = 0;
@@ -79,7 +84,9 @@ namespace TiaMcpServer.ModelContextProtocol
                             var symbol = access.Elements().SingleOrDefault(e => e.Name.LocalName == "Symbol");
                             if (symbol == null) continue;
                             // Keep quoted components separate: tag "A.B" differs from member "A"."B".
-                            var name = string.Join(".", symbol.Elements().Where(e => e.Name.LocalName == "Component").Select(e => "\"" + ((string?)e.Attribute("Name") ?? "").Replace("\"", "\"\"") + "\""));
+                            var name = string
+                                .Join(".", symbol.Elements().Where(e => e.Name.LocalName == "Component")
+                                    .Select(e => "\"" + ((string?)e.Attribute("Name") ?? "").Replace("\"", "\"\"") + "\""));
                             if (name.Length > 0) entry.Symbols.Add((name, networkIndex, scope));
                         }
                         networkIndex++;
@@ -97,7 +104,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (names.TryGetValue(call.Name, out var found) && found.Length == 1) edges.Add((e.Id, found[0].Id, call.Name, call.Network));
                     else unresolved.Add(new JsonObject { ["caller"] = e.Id, ["name"] = call.Name, ["networkIndex"] = call.Network,
-                        ["reason"] = found == null ? "Not in supplied exports (may be a system instruction or missing block)" : "Ambiguous name across supplied exports/scopes" });
+                        ["reason"] = found == null ? "Not in supplied exports (may be a system instruction or missing block)"
+                            : "Ambiguous name across supplied exports/scopes" });
                 }
             string Resolve()
             {
@@ -115,14 +123,24 @@ namespace TiaMcpServer.ModelContextProtocol
                     bool limited = callers.Length > 2000 || callees.Length > 2000 || e.Symbols.Count > 2000;
                     truncated |= limited;
                     rows.Add(new JsonObject { ["id"] = e.Id, ["name"] = e.Name, ["kind"] = e.Kind,
-                        ["callers"] = new JsonArray(callers.Take(2000).Select(edge => (JsonNode)new JsonObject { ["caller"] = edge.From, ["networkIndex"] = edge.Network }).ToArray()),
-                        ["callees"] = new JsonArray(callees.Take(2000).Select(edge => (JsonNode)new JsonObject { ["callee"] = edge.To, ["networkIndex"] = edge.Network }).ToArray()),
-                        ["referenceSites"] = new JsonArray(e.Symbols.Take(2000).Select(site => (JsonNode)new JsonObject { ["symbol"] = site.Name, ["networkIndex"] = site.Network, ["scope"] = site.Scope, ["accessKind"] = "Unknown" }).ToArray()),
+                        ["callers"] =
+                            new JsonArray(callers.Take(2000)
+                                .Select(edge => (JsonNode)new JsonObject { ["caller"] = edge.From, ["networkIndex"] = edge.Network }).ToArray()),
+                        ["callees"] =
+                            new JsonArray(callees.Take(2000).Select(edge => (JsonNode)new JsonObject { ["callee"] = edge.To, ["networkIndex"] = edge.Network })
+                                .ToArray()),
+                        ["referenceSites"] =
+                            new JsonArray(e.Symbols.Take(2000)
+                                .Select(site => (JsonNode)new JsonObject {
+                                    ["symbol"] = site.Name, ["networkIndex"] = site.Network, ["scope"] = site.Scope, ["accessKind"] = "Unknown" })
+                                .ToArray()),
                         ["truncated"] = limited });
                 }
             }
             else if (action == "summary")
-                foreach (var e in entries) rows.Add(new JsonObject { ["id"] = e.Id, ["name"] = e.Name, ["kind"] = e.Kind, ["explicitCalls"] = e.Calls.Count, ["globalSymbolAccesses"] = e.Symbols.Count });
+                foreach (var e in entries) rows
+                    .Add(new JsonObject {
+                        ["id"] = e.Id, ["name"] = e.Name, ["kind"] = e.Kind, ["explicitCalls"] = e.Calls.Count, ["globalSymbolAccesses"] = e.Symbols.Count });
             else if (action == "references")
             {
                 if (string.IsNullOrWhiteSpace(target)) throw new ArgumentException("Exact quoted component path required, e.g. \"Motor\".\"Run\".");
@@ -133,7 +151,8 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (action == "callers" || action == "callees")
             {
                 var id = Resolve();
-                foreach (var e in edges.Where(e => action == "callers" ? e.To == id : e.From == id)) rows.Add(new JsonObject { ["caller"] = e.From, ["callee"] = e.To, ["networkIndex"] = e.Network });
+                foreach (var e in edges.Where(e => action == "callers" ? e.To == id : e.From == id)) rows
+                    .Add(new JsonObject { ["caller"] = e.From, ["callee"] = e.To, ["networkIndex"] = e.Network });
             }
             else
             {
@@ -141,9 +160,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (roots.Length == 0) throw new ArgumentException("No OB roots in supplied exports; reachability cannot be evaluated.");
                 var adjacency = edges.GroupBy(e => e.From).ToDictionary(g => g.Key, g => g.Select(e => e.To).Distinct().ToArray());
                 var reached = new HashSet<string>(roots); var queue = new Queue<string>(roots);
-                while (queue.Count > 0) { var from = queue.Dequeue(); if (adjacency.TryGetValue(from, out var tos)) foreach (var to in tos) if (reached.Add(to)) queue.Enqueue(to); }
+                while (queue.Count > 0) {
+                    var from = queue.Dequeue(); if (adjacency.TryGetValue(from, out var tos)) foreach (var to in tos) if (reached.Add(to)) queue.Enqueue(to); }
                 if (action == "unreachable")
-                    foreach (var e in entries.Where(e => !reached.Contains(e.Id) && (e.Kind == "SW.Blocks.FC" || e.Kind == "SW.Blocks.FB"))) rows.Add(new JsonObject { ["id"] = e.Id, ["classification"] = "No explicit call path from supplied OBs; not proof of unused code" });
+                    foreach (var e in entries.Where(e => !reached.Contains(e.Id) && (e.Kind == "SW.Blocks.FC" || e.Kind == "SW.Blocks.FB"))) rows
+                        .Add(new JsonObject { ["id"] = e.Id, ["classification"] = "No explicit call path from supplied OBs; not proof of unused code" });
                 else
                 {
                     var wanted = Resolve(); int visits = 0;
@@ -152,7 +173,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         if (++visits > 10000 || rows.Count >= 2000) { truncated = true; return; }
                         if (path.Contains(id)) { cycles++; return; }
                         var next = new List<string>(path) { id };
-                        if (id == wanted) { rows.Add(new JsonObject { ["path"] = new JsonArray(next.Select(s => (JsonNode)JsonValue.Create(s)!).ToArray()) }); return; }
+                        if (id == wanted) {
+                            rows.Add(new JsonObject { ["path"] = new JsonArray(next.Select(s => (JsonNode)JsonValue.Create(s)!).ToArray()) }); return; }
                         if (!adjacency.TryGetValue(id, out var children)) return;
                         if (next.Count - 1 >= maxDepth) { truncated = true; return; }
                         foreach (var child in children) { if (truncated && visits > 10000) break; Walk(child, next); }
@@ -166,7 +188,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["offset"] = offset, ["rows"] = page, ["hasMore"] = offset + page.Count < rows.Count, ["truncated"] = truncated, ["cyclesStopped"] = cycles,
                 ["inputParsedCompletely"] = failures.Count == 0, ["coverageComplete"] = false, ["dataComplete"] = false,
                 ["nativeCrossReferencesQueried"] = false, ["safeToDelete"] = false,
-                ["scope"] = "Only explicit SimaticML CallInfo and global Symbol nodes in supplied files. Indirect/dynamic calls, HMI references, external clients and omitted exports are not covered. No destructive decision may be inferred from an empty result." };
+                ["scope"] =
+                    "Only explicit SimaticML CallInfo and global Symbol nodes in supplied files. Indirect/dynamic calls, HMI references, external clients " +
+                    "and omitted exports are not covered. No destructive decision may be inferred from an empty result."
+                };
         }
     }
 }

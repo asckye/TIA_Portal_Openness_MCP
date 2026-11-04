@@ -31,7 +31,8 @@ namespace TiaMcp.Logic.Generation
             catch (DecoderFallbackException) { throw CanonicalJson.Failure("/sources", "encoding", "SCL must be UTF-8."); }
             source = source.Replace("\r\n", "\n").Replace("\r", "\n").TrimStart('\ufeff');
             var code = Mask(source);
-            var headers = GenerationRegex.Matches(code, @"(?im)^\s*(TYPE|FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|ORGANIZATION_BLOCK)\s+(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))");
+            var headers = GenerationRegex
+                .Matches(code, @"(?im)^\s*(TYPE|FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|ORGANIZATION_BLOCK)\s+(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))");
             if (headers.Length == 0) throw CanonicalJson.Failure("/sources", "scl-declaration", "SCL source has no named declaration.");
             var declarations = new List<SclDeclaration>();
             for (var i = 0; i < headers.Length; i++)
@@ -50,7 +51,8 @@ namespace TiaMcp.Logic.Generation
                         && !declarationCode.Substring(0, m.Index).TrimEnd().EndsWith(".", StringComparison.Ordinal))
                     .Select(m => m.Groups[1].Value).Distinct(StringComparer.Ordinal).OrderBy(n => n, StringComparer.Ordinal).ToArray();
                 declarations.Add(new SclDeclaration { Name = header.Groups[2].Success ? header.Groups[2].Value : header.Groups[3].Value,
-                    Kind = keyword switch { "TYPE" => "UDT", "FUNCTION_BLOCK" => "FB", "FUNCTION" => "FC", "DATA_BLOCK" => "DB", _ => "OB" }, Content = content, References = references });
+                    Kind = keyword switch { "TYPE" => "UDT", "FUNCTION_BLOCK" => "FB", "FUNCTION" => "FC", "DATA_BLOCK" => "DB", _ => "OB" }, Content = content,
+                        References = references });
             }
             return declarations;
         }
@@ -71,7 +73,8 @@ namespace TiaMcp.Logic.Generation
                 void Add(List<InterfaceMember>? members, string assignment)
                 {
                     foreach (var member in (members ?? new List<InterfaceMember>()).OrderBy(m => m.Name, StringComparer.Ordinal))
-                        if (call.Bindings.TryGetValue(member.Role, out var value)) bindings.Add("        " + Quote(member.Name) + " " + assignment + " " + Binding(value));
+                        if (call.Bindings.TryGetValue(member.Role, out var value)) bindings
+                            .Add("        " + Quote(member.Name) + " " + assignment + " " + Binding(value));
                 }
             }
             result.Append("END_FUNCTION\n");
@@ -80,9 +83,11 @@ namespace TiaMcp.Logic.Generation
 
         internal static string Binding(string value)
         {
-            if (Regex.IsMatch(value, @"\A(?:TRUE|FALSE|-?[0-9]+(?:\.[0-9]+)?|%[IQ](?:[0-9]+\.[0-7]|[BWDL][0-9]+))\z", RegexOptions.CultureInvariant)) return value;
+            if (Regex.IsMatch(value, @"\A(?:TRUE|FALSE|-?[0-9]+(?:\.[0-9]+)?|%[IQ](?:[0-9]+\.[0-7]|[BWDL][0-9]+))\z", RegexOptions.CultureInvariant))
+                return value;
             var path = Regex.Matches(value, @"(?:\A|\.)(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_-]*))", RegexOptions.CultureInvariant).Cast<Match>().ToArray();
-            if (path.Length == 0 || string.Concat(path.Select(m => m.Value)) != value) throw CanonicalJson.Failure("/bind", "scl-binding", "Binding must be a literal or symbolic object/member path.");
+            if (path.Length == 0 || string.Concat(path.Select(m => m.Value)) != value) throw CanonicalJson
+                .Failure("/bind", "scl-binding", "Binding must be a literal or symbolic object/member path.");
             return string.Join(".", path.Select(m => Quote(m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value)));
         }
 
@@ -107,7 +112,10 @@ namespace TiaMcp.Logic.Generation
             {
                 if (string.Equals(type, "Bool", StringComparison.OrdinalIgnoreCase)) return;
             }
-            else if (new[] { "SINT", "USINT", "INT", "UINT", "DINT", "UDINT", "LINT", "ULINT", "REAL", "LREAL", "BYTE", "WORD", "DWORD", "LWORD" }.Contains(type.ToUpperInvariant())) return;
+            else
+                if (new[] { "SINT", "USINT", "INT", "UINT", "DINT", "UDINT", "LINT", "ULINT", "REAL", "LREAL", "BYTE", "WORD", "DWORD", "LWORD" }
+                    .Contains(type.ToUpperInvariant()))
+                return;
             throw CanonicalJson.Failure("/bind/" + value, "type", "Literal/address type differs from its interface parameter.");
         }
 
@@ -115,11 +123,13 @@ namespace TiaMcp.Logic.Generation
         {
             var code = Mask(content);
             var members = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var field in GenerationRegex.Matches(code, @"(?m)^\s*(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))\s*:\s*(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))\s*(?:;|:=)"))
+            foreach (var field in GenerationRegex
+                    .Matches(code, @"(?m)^\s*(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))\s*:\s*(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))\s*(?:;|:=)"))
             {
                 var name = field.Groups[1].Success ? field.Groups[1].Value : field.Groups[2].Value;
                 if (name == "VERSION") continue;
-                if (members.ContainsKey(name)) throw CanonicalJson.Failure("/sources/members", "duplicate-key", "Duplicate or unsupported inline-structure member: " + name);
+                if (members.ContainsKey(name)) throw CanonicalJson
+                    .Failure("/sources/members", "duplicate-key", "Duplicate or unsupported inline-structure member: " + name);
                 members.Add(name, field.Groups[3].Success ? field.Groups[3].Value : field.Groups[4].Value);
             }
             return members;

@@ -36,7 +36,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             var names = changes.Keys.ToArray();
             if (names.Length == 0 || names.Length > Allowed.Length)
                 throw new ArgumentException("Supply 1..12 distinct setting names; duplicate JSON keys are invalid.");
-            foreach (var name in names) if (!Allowed.Contains(name, StringComparer.Ordinal)) throw new NotSupportedException("Unsupported root setting: " + name);
+            foreach (var name in names) if (!Allowed.Contains(name, StringComparer.Ordinal))
+                throw new NotSupportedException("Unsupported root setting: " + name);
             return changes;
         }
         private static PropertyInfo Property(object settings, string name, bool write)
@@ -45,7 +46,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             var p = settings.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public);
             if (p?.GetMethod?.IsPublic != true || p.GetIndexParameters().Length != 0 || (write && p.SetMethod?.IsPublic != true)
                 || !(p.PropertyType == typeof(string) || p.PropertyType == typeof(bool) || p.PropertyType.IsEnum))
-                throw new NotSupportedException("Public " + (write ? "read/write" : "read") + " scalar API unavailable for " + name + " on " + settings.GetType().FullName);
+                throw new NotSupportedException("Public " + (write ? "read/write" : "read") + " scalar API unavailable for " + name + " on " + settings
+                        .GetType().FullName);
             return p;
         }
         private static object? Call(HmiReadTrace trace, string path, Func<object?> action)
@@ -61,7 +63,10 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             var path = "/RuntimeSettings/" + p.Name;
             var value = Call(trace, path, () => p.GetValue(settings));
-            return new HmiObject { ["path"] = path, ["type"] = p.PropertyType.FullName, ["value"] = Json(value), ["status"] = "ok", ["publicSetter"] = p.SetMethod?.IsPublic == true };
+            return new HmiObject {
+                ["path"] = path, ["type"] = p.PropertyType.FullName, ["value"] = Json(value), ["status"] = "ok", ["publicSetter"] = p.SetMethod?
+                    .IsPublic == true
+            };
         }
         private static HmiArray Capabilities(object settings)
         {
@@ -72,9 +77,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var p = Property(settings, field, false);
                     result.Add(new HmiObject { ["field"] = field, ["type"] = p.PropertyType.FullName, ["readable"] = true,
-                        ["writable"] = p.SetMethod?.IsPublic == true, ["allowedValues"] = p.PropertyType.IsEnum ? new HmiArray(Enum.GetNames(p.PropertyType).Select(n => (object)HmiValues.Value(n)!).ToArray()) : null });
+                        ["writable"] = p.SetMethod?.IsPublic == true, ["allowedValues"] = p.PropertyType.IsEnum
+                            ? new HmiArray(Enum.GetNames(p.PropertyType).Select(n => (object)HmiValues.Value(n)!).ToArray()) : null });
                 }
-                catch (NotSupportedException ex) { result.Add(new HmiObject { ["field"] = field, ["readable"] = false, ["writable"] = false, ["reason"] = ex.Message }); }
+                catch (NotSupportedException ex) {
+                    result.Add(new HmiObject { ["field"] = field, ["readable"] = false, ["writable"] = false, ["reason"] = ex.Message }); }
             }
             return result;
         }
@@ -86,9 +93,13 @@ namespace TiaMcp.Adapters.Native.Hmi
             var settings = Settings(hmi, trace); meta["capabilities"] = Capabilities(settings);
             foreach (var field in fields)
             {
-                try { rows[field] = Evidence(settings, Property(settings, field, false), trace); meta["actualCount"] = meta["actualCount"]!.GetValue<int>() + 1; }
+                try {
+                    rows[field] = Evidence(settings, Property(settings, field, false), trace); meta["actualCount"] = meta["actualCount"]!.GetValue<int>() + 1; }
                 catch (Exception ex) when (!HmiReadSafety.ConnectionUnavailable(ex))
-                { var failure = MigrationRead.Failure("/RuntimeSettings/" + field, ex is NotSupportedException ? "Unsupported" : "ReadFailed", ex); rows[field] = failure; failures.Add(failure.DeepClone()); }
+                {
+                    var failure = MigrationRead.Failure("/RuntimeSettings/" + field, ex is NotSupportedException ? "Unsupported" : "ReadFailed", ex);
+                    rows[field] = failure; failures.Add(failure.DeepClone());
+                }
             }
             meta["failureCount"] = failures.Count; meta["apiCallSuccess"] = true; meta["dataComplete"] = failures.Count == 0;
             meta["operationSuccess"] = failures.Count == 0;
@@ -105,7 +116,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
             if (type.IsEnum && value.TryGetValue<string>(out var enumName) && Enum.GetNames(type).Contains(enumName, StringComparer.Ordinal))
                 return Enum.Parse(type, enumName, false);
-            throw new ArgumentException(field + " requires " + type.FullName + (type.IsEnum ? "; use an exact advertised enum name, not an integer." : "; no implicit conversion is performed."));
+            throw new ArgumentException(field + " requires " + type.FullName
+                    + (type.IsEnum ? "; use an exact advertised enum name, not an integer." : "; no implicit conversion is performed."));
         }
         private static string StartScreenName(object hmi, string path, HmiReadTrace trace, HmiObject meta)
         {
@@ -113,12 +125,16 @@ namespace TiaMcp.Adapters.Native.Hmi
                 || path.Substring(1).Split('/').Any(string.IsNullOrEmpty) || path.Count(c => c == '/') > 65)
                 throw new ArgumentException("StartScreen requires an exact absolute URI-escaped screen path, not a bare name or an empty value.");
             var screen = Call(trace, path, () => MigrationRead.Screen(hmi, path))!;
-            var name = (string?)Call(trace, path + "/Name", () => MigrationRead.Get(screen, "Name")) ?? throw new InvalidOperationException("Target screen Name unavailable.");
+            var name = (string?)Call(trace, path + "/Name", () => MigrationRead.Get(screen, "Name"))
+                ?? throw new InvalidOperationException("Target screen Name unavailable.");
             // StartScreen stores a NAME, not a folder path. Prove that name is
             // unique using a bounded names-only scan before sending any setter.
             var pending = new Stack<(object owner, bool root, int depth)>(); pending.Push((hmi, true, 0));
             var watch = Stopwatch.StartNew(); int visited = 0, matches = 0;
-            void Limit() { if (++visited > 30000 || watch.ElapsedMilliseconds > 15000) throw new NotSupportedException("Screen-name uniqueness scan exceeded 30000 steps/15 seconds; no setting was written."); }
+            void Limit() {
+                if (++visited > 30000 || watch.ElapsedMilliseconds > 15000)
+                    throw new NotSupportedException("Screen-name uniqueness scan exceeded 30000 steps/15 seconds; no setting was written.");
+            }
             while (pending.Count > 0)
             {
                 Limit(); var entry = pending.Pop();
@@ -138,22 +154,26 @@ namespace TiaMcp.Adapters.Native.Hmi
                         var candidate = Call(trace, "/$screenNameCheck/Name", () => MigrationRead.Get(item, "Name")) as string
                             ?? throw new InvalidOperationException("Screen name could not be read.");
                         if (string.Equals(candidate, name, StringComparison.OrdinalIgnoreCase) && ++matches > 1)
-                            throw new InvalidOperationException("Ambiguous StartScreen name across folders: " + name + ". The API stores only a name; no setting was written.");
+                            throw new InvalidOperationException("Ambiguous StartScreen name across folders: " + name
+                                    + ". The API stores only a name; no setting was written.");
                     }
                     if (count != (int)Call(trace, "/$screenNameCheck/" + collectionName + "/Count", () => MigrationRead.Count(collection))!)
                         throw new InvalidOperationException("Screen inventory changed during preview; retry an explicit fresh preview.");
                 }
             }
             if (matches != 1) throw new InvalidOperationException("Target screen name uniqueness could not be established.");
-            meta["startScreenTarget"] = new HmiObject { ["screenPath"] = path, ["apiValue"] = name, ["uniqueNameVerified"] = true, ["uniquenessScope"] = "selected HMI software; names only" };
+            meta["startScreenTarget"] = new HmiObject {
+                ["screenPath"] = path, ["apiValue"] = name, ["uniqueNameVerified"] = true, ["uniquenessScope"] = "selected HMI software; names only" };
             return name;
         }
-        internal static string Update(object hmi, string project, string softwarePath, HmiObject changes, bool dryRun, string expectedToken, HmiObject meta, HmiReadTrace trace)
+        internal static string Update(object hmi, string project, string softwarePath, HmiObject changes, bool dryRun, string expectedToken, HmiObject meta,
+                HmiReadTrace trace)
         {
             meta["readOnly"] = dryRun; meta["dryRun"] = dryRun; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
             meta["verificationSuccess"] = false; meta["dataComplete"] = false; meta["writeAttempted"] = false; meta["mayHaveChanged"] = false;
             meta["expectedCount"] = changes.Count; meta["actualCount"] = 0; meta["nextCursor"] = null; meta["truncated"] = false;
-            meta["persistence"] = "No save, compile, download, Runtime restart or TIA close. Applied changes remain in the engineering project until separately saved/deployed.";
+            meta["persistence"] =
+                "No save, compile, download, Runtime restart or TIA close. Applied changes remain in the engineering project until separately saved/deployed.";
             meta["atomicity"] = "Multiple settings are not an atomic transaction. No automatic rollback or retry after a write failure.";
             if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview expectedToken is required before writing.");
             var settings = Settings(hmi, trace);
@@ -168,10 +188,16 @@ namespace TiaMcp.Adapters.Native.Hmi
                 writes.Add((p, value));
             }
             meta["before"] = before; meta["proposed"] = desired; meta["requested"] = requested;
-            var scope = new HmiObject { ["expectedProject"] = project, ["softwarePath"] = softwarePath, ["before"] = before.DeepClone(), ["requested"] = requested.DeepClone(), ["proposed"] = desired.DeepClone() };
+            var scope = new HmiObject {
+                ["expectedProject"] = project, ["softwarePath"] = softwarePath, ["before"] = before.DeepClone(), ["requested"] = requested.DeepClone(),
+                    ["proposed"] = desired.DeepClone()
+            };
             var token = HmiExactAccess.Token("UpdateUnifiedRuntimeSettings/v1", scope); meta["token"] = token;
             meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["actualCount"] = writes.Count;
-            if (dryRun) { meta["operationSuccess"] = true; meta["status"] = "Preview"; return "Review before/proposed; apply the same changes with dryRun=false and expectedToken. No setting was written."; }
+            if (dryRun) {
+                meta["operationSuccess"] = true; meta["status"] = "Preview";
+                return "Review before/proposed; apply the same changes with dryRun=false and expectedToken. No setting was written.";
+            }
             HmiExactAccess.RequireToken(expectedToken, token);
             var applied = new HmiArray(); var readback = new HmiObject(); meta["appliedFields"] = applied; meta["readback"] = readback;
             meta["dataComplete"] = false; meta["actualCount"] = 0;
@@ -186,7 +212,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (!UnifiedRequestValues.Same(readback[field]!.Field("value"), desired[field]))
                 {
                     meta["status"] = "ReadbackMismatch"; meta["failureCount"] = 1;
-                    meta["failures"] = new HmiArray(MigrationRead.Failure("/RuntimeSettings/" + field, "ReadbackMismatch", reason: "Setter returned but readback differs; remaining writes were not attempted."));
+                    meta["failures"] =
+                        new HmiArray(MigrationRead
+                            .Failure("/RuntimeSettings/" + field, "ReadbackMismatch", reason
+                                : "Setter returned but readback differs; remaining writes were not attempted."));
                     return "Write returned but readback mismatched. Partial changes may exist; inspect before/proposed/readback. No retry or rollback.";
                 }
             }
@@ -197,12 +226,14 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 meta["phase"] = "verify:" + write.p.Name;
                 readback[write.p.Name] = Evidence(settings, write.p, trace); meta["actualCount"] = meta["actualCount"]!.GetValue<int>() + 1;
-                if (!UnifiedRequestValues.Same(readback[write.p.Name]!.Field("value"), desired[write.p.Name])) failures.Add(MigrationRead.Failure("/RuntimeSettings/" + write.p.Name, "ReadbackMismatch"));
+                if (!UnifiedRequestValues.Same(readback[write.p.Name]!.Field("value"), desired[write.p.Name])) failures
+                    .Add(MigrationRead.Failure("/RuntimeSettings/" + write.p.Name, "ReadbackMismatch"));
             }
             meta["failures"] = failures; meta["failureCount"] = failures.Count; meta["dataComplete"] = true;
             meta["verificationSuccess"] = failures.Count == 0; meta["operationSuccess"] = failures.Count == 0;
             meta["status"] = failures.Count > 0 ? "ReadbackMismatch" : applied.Count == 0 ? "Unchanged" : "Verified";
-            return failures.Count == 0 ? "Requested runtime settings readback verified; no save or deployment performed." : "Final readback detected coupled or rejected changes. Inspect evidence; no automatic rollback.";
+            return failures.Count == 0 ? "Requested runtime settings readback verified; no save or deployment performed."
+                : "Final readback detected coupled or rejected changes. Inspect evidence; no automatic rollback.";
         }
     }
 }

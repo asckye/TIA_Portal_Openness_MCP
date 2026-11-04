@@ -16,14 +16,16 @@ internal static class RuntimeQueryContract
                 Keys(o,"ReleaseKey","IsAttached","ProcessId","ProjectFile","OwnsProject","IsLocalSession","IdentityStatus","RuntimeConnectionStatus");
                 var attached=Bool(o,"IsAttached"); var owns=Bool(o,"OwnsProject"); var local=Bool(o,"IsLocalSession");
                 if(o["ProcessId"]!=null) Pid(o,"ProcessId");
-                if(attached!=(o["ProcessId"]!=null) || (!attached && o["ProjectFile"]!=null) || (o["ProjectFile"]==null && (owns||local))) throw new InvalidDataException();
+                if(attached!=(o["ProcessId"]!=null) || (!attached && o["ProjectFile"]!=null) || (o["ProjectFile"]==null && (owns||local)))
+                    throw new InvalidDataException();
                 NullableText(o,"ProjectFile");
                 if(Text(o,"IdentityStatus")!="unverified-cached-pid" || Text(o,"RuntimeConnectionStatus")!="not-probed") throw new InvalidDataException();
             }
             else if(tool=="ListPortalProcessProjects")
             {
                 Keys(o,"ReleaseKey","Processes","IdentityStrategy");
-                if(Text(o,"IdentityStrategy")!="os-pid-and-start-time-observation-only" || o["Processes"] is not JsonArray rows || rows.Count>1024) throw new InvalidDataException();
+                if(Text(o,"IdentityStrategy")!="os-pid-and-start-time-observation-only" || o["Processes"] is not JsonArray rows || rows.Count>1024)
+                    throw new InvalidDataException();
                 var ids=new HashSet<int>();
                 foreach(var row in rows) { var p=Process(row); if(!ids.Add(p)) throw new InvalidDataException(); }
             }
@@ -46,14 +48,17 @@ internal static class RuntimeQueryContract
         if(node is not JsonObject o) throw new InvalidDataException();
         Keys(o,"ProcessId","SnapshotAcquisitionTime","ProjectPath","OsStartTimeUtc","OsIdentityStatus");
         var pid=Pid(o,"ProcessId");
-        if(!DateTime.TryParseExact(Text(o,"SnapshotAcquisitionTime"),"O",CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind,out _)) throw new InvalidDataException();
+        if(!DateTime.TryParseExact(Text(o,"SnapshotAcquisitionTime"),"O",CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind,out _))
+            throw new InvalidDataException();
         NullableText(o,"ProjectPath"); NullableText(o,"OsStartTimeUtc");
         var status=Text(o,"OsIdentityStatus");
         if(status=="unknown") { if(o["OsStartTimeUtc"]!=null) throw new InvalidDataException(); }
         else if(status=="observed-not-bound")
         {
             var time=Text(o,"OsStartTimeUtc");
-            if(!time.EndsWith("Z",StringComparison.Ordinal) || !DateTime.TryParseExact(time,"O",CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind,out var date) || date.Kind!=DateTimeKind.Utc) throw new InvalidDataException();
+            if(!time.EndsWith("Z",StringComparison.Ordinal) || !DateTime
+                    .TryParseExact(time,"O",CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind,out var date) || date.Kind!=DateTimeKind.Utc)
+                throw new InvalidDataException();
         }
         else throw new InvalidDataException();
         return pid;

@@ -31,8 +31,10 @@ namespace TiaMcp.Adapters.Native.Plc
     internal sealed partial class PlcB5Adapter
     {
 #if PLC_SUPERVISION
-        public PlcB5Reply ManagePlcSupervision(string softwarePath, string action, string blockPath = "", string providerKind = "supervision", string compositionName = "",
-            string entryName = "", string typeName = "", string filePath = "", string attributesJson = "{}", int offset = 0, int limit = 100, bool confirmDelete = false, bool dryRun = true)
+        public PlcB5Reply ManagePlcSupervision(string softwarePath, string action, string blockPath = "", string providerKind = "supervision",
+                string compositionName = "",
+            string entryName = "", string typeName = "", string filePath = "", string attributesJson = "{}", int offset = 0, int limit = 100,
+                bool confirmDelete = false, bool dryRun = true)
             => RunTool("ManagePlcSupervision", meta => {
                 RequireAction(action, SupervisionActions);
                 if (providerKind != "supervision" && providerKind != "settings") throw new ArgumentException("providerKind must be supervision/settings.");
@@ -42,19 +44,25 @@ namespace TiaMcp.Adapters.Native.Plc
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
                 object owner = string.IsNullOrEmpty(blockPath) ? plc : _session.ExactMasterCopyPlcSource(softwarePath, blockPath, true);
-                meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
-                meta["nativeLimits"] = "Openness V20/V21 expose no typed supervision composition; entries are reachable only through IEngineeringObject composition metadata of the providers or through XLSX exchange (ExchangePlcSupervisions).";
+                meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] =
+                    false; meta["mayHaveWrittenFiles"] = false;
+                meta["nativeLimits"] =
+                    "Openness V20/V21 expose no typed supervision composition; entries are reachable only through IEngineeringObject composition metadata of " +
+                    "the providers or through XLSX exchange (ExchangePlcSupervisions).";
                 var supervision = OptionalOfficialService(owner, SupervisionProvider, out var supervisionState);
                 var settings = OptionalOfficialService(owner, SupervisionSettingsProvider, out var settingsState);
                 meta["providerStates"] = new PlcB5Object { ["SupervisionProvider"] = supervisionState, ["SupervisionSettingsProvider"] = settingsState };
                 if (action == "read")
                 {
-                    if (supervision == null && settings == null) throw new NotSupportedException("No ProDiag supervision provider on this object/version (" + supervisionState + "/" + settingsState + ").");
+                    if (supervision == null && settings == null)
+                        throw new NotSupportedException("No ProDiag supervision provider on this object/version (" + supervisionState + "/" + settingsState
+                            + ").");
                     bool complete = true;
                     foreach (var (key, provider) in new[] { ("supervisionProvider", supervision), ("settingsProvider", settings) })
                     {
                         if (provider == null) continue;
-                        var row = PlcB5Dynamic.Read(provider); row["compositions"] = new PlcB5Array(PlcB5Dynamic.CompositionNames(provider).Select(n => (object)n).ToArray());
+                        var row = PlcB5Dynamic.Read(provider); row["compositions"] =
+                            new PlcB5Array(PlcB5Dynamic.CompositionNames(provider).Select(n => (object)n).ToArray());
                         row["clrProperties"] = EngineeringScalarProperties.Read(provider); meta[key] = row; complete &= row["dataComplete"]!.GetValue<bool>();
                     }
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = complete;
@@ -67,7 +75,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     var file = import ? new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)) : NativeFileOutput.Plan(filePath);
                     if (import && !file.Exists) throw new FileNotFoundException("Supervision settings input (.dat) not found.");
                     var method = import ? "Import" : "Export";
-                    if (provider.GetType().GetMethod(method, new[] { typeof(FileInfo) }) == null) throw new NotSupportedException("Native SupervisionSettingsProvider." + method + "(FileInfo) unavailable.");
+                    if (provider.GetType().GetMethod(method, new[] { typeof(FileInfo) }) == null)
+                        throw new NotSupportedException("Native SupervisionSettingsProvider." + method + "(FileInfo) unavailable.");
                     if (dryRun) return "Supervision settings " + method.ToLowerInvariant() + " preview; no file or project change.";
                     meta["mayHaveChanged"] = import; meta["mayHaveWrittenFiles"] = !import;
                     var result = EngineeringGroupOperations.Call(provider, method, new[] { typeof(FileInfo) }, file);
@@ -76,16 +85,22 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (result is global::Siemens.Engineering.SW.Supervision.SupervisionSettingsExportImportResult typed)
                     {
                         meta["errorCount"] = typed.ErrorCount; meta["warningCount"] = typed.WarningCount;
-                        meta["messages"] = new PlcB5Array(EngineeringGroupOperations.Items(typed.Messages).Cast<global::Siemens.Engineering.SW.Supervision.SupervisionSettingsExportImportResultMessage>().Select(m => (object)m.Message).ToArray());
+                        meta["messages"] =
+                            new PlcB5Array(EngineeringGroupOperations.Items(typed.Messages).Cast<global::Siemens.Engineering.SW.Supervision
+                                .SupervisionSettingsExportImportResultMessage>().Select(m => (object)m.Message).ToArray());
                     }
                     var state = result?.GetType().GetProperty("State")?.GetValue(result)?.ToString();
-                    meta["nativeState"] = state; meta["nativeSuccessVerified"] = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.SupervisionSettings, state);
-                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.SupervisionSettings, state)) meta["operationSuccess"] = false;
+                    meta["nativeState"] = state; meta["nativeSuccessVerified"] = TiaMcp.Adapters.Contracts.NativeResultStates
+                        .Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.SupervisionSettings, state);
+                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.SupervisionSettings, state))
+                        meta["operationSuccess"] = false;
                     if (!import) meta["file"] = NativeFileOutput.Verify(file);
-                    return "Native supervision settings " + method.ToLowerInvariant() + " returned; inspect native state and messages. No save/compile/download.";
+                    return "Native supervision settings " + method.ToLowerInvariant()
+                        + " returned; inspect native state and messages. No save/compile/download.";
                 }
                 var host = providerKind == "settings" ? settings : supervision;
-                if (host == null) throw new NotSupportedException("Selected provider is " + (providerKind == "settings" ? settingsState : supervisionState) + ".");
+                if (host == null)
+                    throw new NotSupportedException("Selected provider is " + (providerKind == "settings" ? settingsState : supervisionState) + ".");
                 if (action == "setAttributes")
                 {
                     var prepared = PlcB5Dynamic.Prepare(host, Attributes(attributesJson, true));
@@ -101,12 +116,18 @@ namespace TiaMcp.Adapters.Native.Plc
                 {
                     Attributes(attributesJson, false);
                     var items = EngineeringGroupOperations.Items(composition).ToArray();
-                    var rows = items.Skip(offset).Take(limit).Select(x => { var row = PlcB5Dynamic.Read(x); row["clrProperties"] = EngineeringScalarProperties.Read(x); row["name"] = PlcB5Dynamic.Name(x); return row; }).ToArray();
+                    var rows = items.Skip(offset).Take(limit)
+                        .Select(x => {
+                            var row = PlcB5Dynamic.Read(x); row["clrProperties"] = EngineeringScalarProperties.Read(x); row["name"] = PlcB5Dynamic.Name(x);
+                            return row;
+                        })
+                        .ToArray();
                     meta["records"] = new PlcB5Array(rows); meta["expectedCount"] = items.Length; meta["actualCount"] = rows.Length;
                     meta["nextOffset"] = offset + rows.Length < items.Length ? offset + rows.Length : (int?)null;
                     try { meta["creationTypes"] = new PlcB5Array(PlcB5Dynamic.CreationTypes(composition).Select(t => (object)t.FullName!).ToArray()); }
                     catch (NotSupportedException ex) { meta["creationTypes"] = null; meta["creationTypesError"] = ex.Message; }
-                    meta["apiCallSuccess"] = true; meta["dataComplete"] = offset == 0 && rows.Length == items.Length && rows.All(r => r!["dataComplete"]!.GetValue<bool>());
+                    meta["apiCallSuccess"] = true; meta["dataComplete"] = offset == 0 && rows.Length == items.Length && rows
+                        .All(r => r!["dataComplete"]!.GetValue<bool>());
                     return "Advertised supervision composition read with live pagination.";
                 }
                 if (action == "createEntry")
@@ -118,7 +139,9 @@ namespace TiaMcp.Adapters.Native.Plc
                     meta["mayHaveChanged"] = true;
                     var created = PlcB5Dynamic.Create(composition, type, attributes); meta["apiCallSuccess"] = true;
                     meta["after"] = PlcB5Dynamic.Read(created);
-                    if (attributes.ContainsKey("Name") && !string.Equals(PlcB5Dynamic.Name(created), attributes["Name"]?.GetValue<string>(), StringComparison.Ordinal)) throw new InvalidOperationException("Created entry Name readback differs.");
+                    if (attributes.ContainsKey("Name") && !string
+                            .Equals(PlcB5Dynamic.Name(created), attributes["Name"]?.GetValue<string>(), StringComparison.Ordinal))
+                        throw new InvalidOperationException("Created entry Name readback differs.");
                     return "Supervision entry created through the official dynamic composition; no save/compile/download.";
                 }
                 // deleteEntry
@@ -130,19 +153,25 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!writing) return "Supervision entry deletion preview; no changes.";
                 meta["mayHaveChanged"] = true;
                 PlcB5Dynamic.Delete(entry); meta["apiCallSuccess"] = true;
-                if (EngineeringGroupOperations.Items(composition).Any(x => string.Equals(PlcB5Dynamic.Name(x), entryName, StringComparison.Ordinal))) throw new InvalidOperationException("Entry remains after Delete.");
+                if (EngineeringGroupOperations.Items(composition).Any(x => string.Equals(PlcB5Dynamic.Name(x), entryName, StringComparison.Ordinal)))
+                    throw new InvalidOperationException("Entry remains after Delete.");
                 meta["verifiedAbsent"] = true;
                 return "Supervision entry deleted and verified absent; no save/compile/download.";
             });
 
-        public PlcB5Reply ExportPlcProDiagInfo(string softwarePath, string blockPath, string directoryPath, string unitName = "", string unitKind = "unit", bool dryRun = true)
+        public PlcB5Reply ExportPlcProDiagInfo(string softwarePath, string blockPath, string directoryPath, string unitName = "", string unitKind = "unit",
+                bool dryRun = true)
             => RunTool("ExportPlcProDiagInfo", meta => {
                 ValidateRequest();
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
                 var block = (PlcBlock)_session.ExactObjectUnder(_session.BlockRootOf(plc, unit), blockPath, "Blocks", "block");
-                CodeBlock code = block as CodeBlock ?? throw new ArgumentException("blockPath must name a code block (FB); " + block.GetType().Name + " has no ExportProDIAGInfo.");
-                meta["block"] = new PlcB5Object { ["name"] = code.Name, ["blockClass"] = code.GetType().Name, ["programmingLanguage"] = code.ProgrammingLanguage.ToString(), ["isConsistent"] = code.IsConsistent, ["unit"] = UnitName(unit) };
+                CodeBlock code = block as CodeBlock
+                    ?? throw new ArgumentException("blockPath must name a code block (FB); " + block.GetType().Name + " has no ExportProDIAGInfo.");
+                meta["block"] = new PlcB5Object {
+                    ["name"] = code.Name, ["blockClass"] = code.GetType().Name, ["programmingLanguage"] = code.ProgrammingLanguage.ToString(),
+                        ["isConsistent"] = code.IsConsistent, ["unit"] = UnitName(unit)
+                };
                 var refusal = ProDiagRefusal(code.ProgrammingLanguage.ToString(), code.IsConsistent);
                 if (refusal != null) throw new PortalException("InvalidState", refusal);
                 var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directoryPath));

@@ -49,14 +49,19 @@ namespace TiaMcpServer.Siemens
         internal static string Refusal(IReadOnlyList<Candidate> candidates, string? projectName)
         {
             var wanted = string.IsNullOrWhiteSpace(projectName) ? "" : " Project '" + projectName!.Trim() + "' was not found in any of them.";
-            return "TIA Portal is running (" + candidates.Count + " process(es)) but no acceptable target could be bound: " + string.Join("; ", candidates.Select(Describe))
-                + "." + wanted + " No new instance was started. Typical causes: TIA is showing the Openness access dialog for this engine build (allow it on the TIA machine),"
-                + " the instance is busy with a modal dialog / compile / download, or a previous attach is still pending. Retry, run ListPortalProcessProjects, or call"
+            return "TIA Portal is running (" + candidates.Count + " process(es)) but no acceptable target could be bound: " + string
+                .Join("; ", candidates.Select(Describe))
+                + "." + wanted
+                    + " No new instance was started. Typical causes: TIA is showing the Openness access dialog for this engine build (allow it on the TIA " +
+                    "machine),"
+                + " the instance is busy with a modal dialog / compile / download, or a previous attach is still pending. Retry, run " +
+                    "ListPortalProcessProjects, or call"
                 + " ConnectPortal with allowStart=true (or ConnectIsolatedPortal) to deliberately start a separate headless instance.";
         }
 
         internal static string MissingProjectWarning(IReadOnlyList<Candidate> candidates, string projectName, Candidate chosen)
-            => "Project '" + projectName + "' is open in none of the attached processes (" + string.Join("; ", candidates.Where(c => c.Attached).Select(Describe))
+            => "Project '" + projectName + "' is open in none of the attached processes (" + string
+                .Join("; ", candidates.Where(c => c.Attached).Select(Describe))
                + "); bound PID " + chosen.ProcessId + " instead - AttachOpenProject / OpenProject decide the project.";
     }
 }

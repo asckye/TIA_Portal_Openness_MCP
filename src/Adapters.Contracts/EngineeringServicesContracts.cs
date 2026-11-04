@@ -46,15 +46,19 @@ namespace TiaMcp.Adapters.Contracts
             var releases = ReleaseKeys;
             return Array.IndexOf(releases, release) >= Array.IndexOf(releases, first);
         }
-        public static string? Unsupported(string release, string tool, string kind = "", string customIdentityKey = "", System.Collections.Generic.IEnumerable<string>? properties = null)
+        public static string
+            ? Unsupported(string release, string tool, string kind = "", string customIdentityKey = "", System.Collections.Generic.IEnumerable<string>
+                ? properties = null)
         {
             if (tool == "GetObjectIdentifier" && !AtLeast(release, "20")) return "ObjectIdentifierProvider requires V20 or later.";
             if (tool == "ManageProjectCompilationSettings" && !AtLeast(release, "16")) return "Project compilation settings require V16 or later.";
             if (tool == "ManageProjectCompilationSettings" && !AtLeast(release, "19") && properties != null)
-                foreach (var property in properties) if (property == "IsVirtualPlcDuringBlockCompilationEnabled") return "Virtual PLC compilation settings require V19 or later.";
+                foreach (var property in properties) if (property == "IsVirtualPlcDuringBlockCompilationEnabled")
+                    return "Virtual PLC compilation settings require V19 or later.";
             if (tool == "CompareLibraries" && !AtLeast(release, "18")) return "CompareToLibrary requires V18 or later.";
             if (tool == "CompareProjects" && kind == "hardware" && !AtLeast(release, "15.1")) return "HardwareObject.CompareTo requires V15.1 or later.";
-            if (tool == "GetProjectSettings" && !string.IsNullOrEmpty(customIdentityKey) && !AtLeast(release, "16")) return "CustomIdentityProvider requires V16 or later.";
+            if (tool == "GetProjectSettings" && !string.IsNullOrEmpty(customIdentityKey) && !AtLeast(release, "16"))
+                return "CustomIdentityProvider requires V16 or later.";
             return null;
         }
     }

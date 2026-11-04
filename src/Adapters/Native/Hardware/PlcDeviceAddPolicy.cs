@@ -9,7 +9,8 @@ namespace TiaMcp.Adapters
 {
     internal sealed class PlcDeviceAddRequest
     {
-        internal string Release="", Project="", RootIdentity="", PreferredMlfb="", PreferredVersion="", Name="", Family="S7-1500", ExpectedHash="", ExpectedProject="";
+        internal string Release="", Project="", RootIdentity="", PreferredMlfb="", PreferredVersion="", Name="", Family="S7-1500", ExpectedHash="",
+            ExpectedProject="";
         internal int ProcessId;
         internal bool DryRun=true, Confirm;
     }
@@ -35,10 +36,12 @@ namespace TiaMcp.Adapters
             }
             else Text(r.PreferredVersion,64,"Exact catalog version required; no default or fallback versions.");
             Text(r.Name,128,"Exact device name required.");
-            if(r.Name=="." || r.Name==".." || r.Name.Any(c=>"/\\:*?\"<>|".IndexOf(c)>=0) || r.Name.Trim()!=r.Name) throw new ArgumentException("Ambiguous device name.");
+            if(r.Name=="." || r.Name==".." || r.Name.Any(c=>"/\\:*?\"<>|".IndexOf(c)>=0) || r.Name.Trim()!=r.Name)
+                throw new ArgumentException("Ambiguous device name.");
             if(!r.DryRun)
             {
-                if(!r.Confirm || r.ExpectedHash==null || r.ExpectedHash.Length!=64 || r.ExpectedHash.Any(c=>!"0123456789abcdef".Contains(c))) throw new ArgumentException("Apply requires confirm=true and the exact preview hash.");
+                if(!r.Confirm || r.ExpectedHash==null || r.ExpectedHash.Length!=64 || r.ExpectedHash.Any(c=>!"0123456789abcdef".Contains(c)))
+                    throw new ArgumentException("Apply requires confirm=true and the exact preview hash.");
                 MutationIdentityPolicy.AbsoluteFile(r.ExpectedProject);
             }
         }
@@ -58,42 +61,70 @@ namespace TiaMcp.Adapters
             var matched=rows.Where(x=>r.PreferredMlfb.StartsWith("OrderNumber:",StringComparison.Ordinal)
                 ? x.TypeIdentifier==r.PreferredMlfb
                 : x.ArticleNumber==r.PreferredMlfb && x.Version==r.PreferredVersion).ToArray();
-            if(matched.Length!=1) throw new AdapterPreconditionException("preferredMlfb/preferredVersion must select exactly one catalog row. Run SearchHardwareCatalog and copy articleNumber and version from the same row, preserving spaces.", "preferredMlfb/preferredVersion");
+            if(matched.Length!=1)
+                throw new AdapterPreconditionException("preferredMlfb/preferredVersion must select exactly one catalog row. Run SearchHardwareCatalog and " +
+                "copy articleNumber and version from the same row, preserving spaces.",
+                    "preferredMlfb/preferredVersion");
             var chosen=matched[0];
-            if(!chosen.TypeIdentifier!.StartsWith("OrderNumber:",StringComparison.Ordinal)) throw new ArgumentException("Only exact Siemens OrderNumber identifiers are accepted.");
+            if(!chosen.TypeIdentifier!.StartsWith("OrderNumber:",StringComparison.Ordinal))
+                throw new ArgumentException("Only exact Siemens OrderNumber identifiers are accepted.");
             Text(chosen.ArticleNumber!,256,"Selected article number required."); Text(chosen.Version!,64,"Selected version required.");
-            if(chosen.TypeIdentifier!="OrderNumber:"+chosen.ArticleNumber+"/"+chosen.Version || chosen.ArticleNumber!.Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c)) || chosen.Version!.Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c))) throw new AdapterPreconditionException("An exact OrderNumber:<articleNumber>/<version> catalog identifier is required.", "preferredMlfb/preferredVersion", true);
+            if(chosen.TypeIdentifier!="OrderNumber:"+chosen.ArticleNumber+"/"+chosen.Version || chosen.ArticleNumber!
+                    .Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c)) || chosen.Version!.Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c)))
+                throw new AdapterPreconditionException("An exact OrderNumber:<articleNumber>/<version> catalog identifier is required.",
+                    "preferredMlfb/preferredVersion", true);
             DeviceCreationRules.RequireUnifiedPanelVersion(chosen.TypeIdentifier!, "", int.Parse(r.Release, System.Globalization.CultureInfo.InvariantCulture));
             return chosen;
         }
         private static PlcDeviceAddItem[] Snapshot(Func<IEnumerable<PlcDeviceAddItem>> read)
         {
             var items=read().Take(4097).ToArray();
-            if(items.Length>4096 || items.Any(x=>x==null || !x.ParentVerified)) throw new InvalidOperationException("Incomplete, oversized or wrong-parent device inventory.");
-            foreach(var x in items) { Text(x.Name,128,"Device name unavailable.");Text(x.Identity,128,"Device identity unavailable.");Text(x.ParentIdentity,128,"Device parent identity unavailable."); }
-            if(items.Where(x=>!x.IsGroup).Select(x=>x.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=items.Count(x=>!x.IsGroup) || items.Select(x=>x.Identity).Distinct(StringComparer.Ordinal).Count()!=items.Length) throw new InvalidOperationException("Ambiguous device inventory.");
+            if(items.Length>4096 || items.Any(x=>x==null || !x.ParentVerified))
+                throw new InvalidOperationException("Incomplete, oversized or wrong-parent device inventory.");
+            foreach(var x in items) {
+                Text(x.Name,128,"Device name unavailable.");Text(x.Identity,128,"Device identity unavailable.");
+                Text(x.ParentIdentity,128,"Device parent identity unavailable.");
+            }
+            if(items.Where(x=>!x.IsGroup).Select(x=>x.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=items.Count(x=>!x.IsGroup) || items
+                    .Select(x=>x.Identity).Distinct(StringComparer.Ordinal).Count()!=items.Length)
+                throw new InvalidOperationException("Ambiguous device inventory.");
             return items.OrderBy(x=>x.Identity,StringComparer.Ordinal).ToArray();
         }
         private static void RequireFreeName(PlcDeviceAddRequest r,PlcDeviceAddItem[] items)
         {
-            if(items.Any(x=>!x.IsGroup && string.Equals(x.Name,r.Name,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Device name already exists; no create attempted. Choose a new deviceName and preview again.", "deviceName", false);
-            if(items.Any(x=>!x.IsGroup && (x.ItemNames??new string[0]).Any(n=>string.Equals(n,r.Name,StringComparison.OrdinalIgnoreCase)))) throw new AdapterPreconditionException("A device head item already uses this name (CreateWithItem names the new head item with deviceName too); no create attempted. Choose a new deviceName and preview again.", "deviceName", false);
+            if(items.Any(x=>!x.IsGroup && string.Equals(x.Name,r.Name,StringComparison.OrdinalIgnoreCase)))
+                throw new AdapterPreconditionException("Device name already exists; no create attempted. Choose a new deviceName and preview again.",
+                    "deviceName", false);
+            if(items.Any(x=>!x.IsGroup && (x.ItemNames??new string[0]).Any(n=>string.Equals(n,r.Name,StringComparison.OrdinalIgnoreCase))))
+                throw new AdapterPreconditionException("A device head item already uses this name (CreateWithItem names the new head item with deviceName " +
+                "too); no create attempted. Choose a new deviceName and preview again.",
+                    "deviceName", false);
         }
         private static string Field(string s)=>s.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)+":"+s;
         private static string Hash(PlcDeviceAddRequest r,PlcHardwareCatalogCandidate c,PlcDeviceAddItem[] items)
         {
-            var fields=new[]{"exact-catalog-root-device-add-v1",r.Release,MutationIdentityPolicy.AbsoluteFile(r.Project).ToUpperInvariant(),r.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),r.RootIdentity,r.PreferredMlfb,r.PreferredVersion,r.Name,r.Family,c.TypeIdentifier!,c.ArticleNumber!,c.Version!}.Concat(items.SelectMany(x=>new[]{x.Identity,x.Name,x.ParentIdentity,x.IsUngroupedSystemGroup?"ungrouped":x.IsGroup?"group":"device"}));
-            using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(string.Concat(fields.Select(Field))))).Replace("-","").ToLowerInvariant();
+            var fields=new[]{
+                "exact-catalog-root-device-add-v1",r.Release,MutationIdentityPolicy.AbsoluteFile(r.Project).ToUpperInvariant(),r.ProcessId
+                    .ToString(System.Globalization.CultureInfo.InvariantCulture),r.RootIdentity,r.PreferredMlfb,r.PreferredVersion,r.Name,r.Family,c
+                    .TypeIdentifier!,c.ArticleNumber!,c.Version!
+            }.Concat(items.SelectMany(x=>new[]{x.Identity,x.Name,x.ParentIdentity,x.IsUngroupedSystemGroup?"ungrouped":x.IsGroup?"group":"device"}));
+            using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(string.Concat(fields.Select(Field)))))
+                .Replace("-","").ToLowerInvariant();
         }
-        internal static PlcDeviceAddResult Run(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
+        internal static PlcDeviceAddResult Run(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,
+                Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
         {
             try { return RunChecked(r,catalog,inventory,check,create); }
             catch(Exception error) when (error is ArgumentException argument && error is not AdapterPreconditionException)
             { throw new AdapterPreconditionException(argument.Message,argument.ParamName??"arguments",true,error); }
             catch(InvalidOperationException error) when (error is not AdapterPreconditionException)
-            { throw new AdapterPreconditionException("Device preflight could not verify the complete catalog, inventory or binding; no create attempted.","device-create-preflight",false,error); }
+            {
+                throw new AdapterPreconditionException("Device preflight could not verify the complete catalog, inventory or binding; no create attempted.",
+                        "device-create-preflight",false,error);
+            }
         }
-        private static PlcDeviceAddResult RunChecked(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
+        private static PlcDeviceAddResult RunChecked(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,
+                Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
         {
             ValidateOptions(r); Text(r.RootIdentity,128,"Explicit project root identity required.");
             if(r.ProcessId<=0) throw new ArgumentException("Explicit attached process required.");
@@ -102,23 +133,41 @@ namespace TiaMcp.Adapters
             check(); var selected=Select(r,catalog); var before=Snapshot(inventory);
             RequireFreeName(r,before);
             var hash=Hash(r,selected,before);
-            var result=new PlcDeviceAddResult { Release=r.Release,ProjectFile=r.Project,ProcessId=r.ProcessId,DeviceName=r.Name,Family=r.Family,TypeIdentifier=selected.TypeIdentifier!,ArticleNumber=selected.ArticleNumber!,Version=selected.Version!,PlanHash=hash,Inventory=before.Where(x=>!x.IsGroup).Select(x=>x.Name).ToArray() };
+            var result=new PlcDeviceAddResult {
+                Release=r.Release,ProjectFile=r.Project,ProcessId=r.ProcessId,DeviceName=r.Name,Family=r.Family,TypeIdentifier=selected.TypeIdentifier!,
+                    ArticleNumber=selected.ArticleNumber!,Version=selected.Version!,PlanHash=hash,Inventory=before.Where(x=>!x.IsGroup).Select(x=>x.Name)
+                    .ToArray()
+            };
             if(r.DryRun) return result;
-            if(hash!=r.ExpectedHash) throw new AdapterPreconditionException("Reviewed device selection or project inventory changed; preview again and use the new expectedPlanHash.", "expectedPlanHash");
+            if(hash!=r.ExpectedHash)
+                throw new AdapterPreconditionException("Reviewed device selection or project inventory changed; preview again and use the new " +
+                "expectedPlanHash.",
+                    "expectedPlanHash");
             check(); var freshSelection=Select(r,catalog); var freshInventory=Snapshot(inventory); RequireFreeName(r,freshInventory);
-            if(Hash(r,freshSelection,freshInventory)!=hash) throw new AdapterPreconditionException("Device selection or inventory changed before creation; preview again.", "expectedPlanHash", false);
+            if(Hash(r,freshSelection,freshInventory)!=hash)
+                throw new AdapterPreconditionException("Device selection or inventory changed before creation; preview again.", "expectedPlanHash", false);
             check(); result.Attempted=true;
             try
             {
                 var created=create(selected.TypeIdentifier!,r.Name); // Exactly one call, including on native exception.
                 if(created==null || !created.ParentVerified || created.Name!=r.Name || created.IsGroup
-                    || !(created.ParentIdentity==r.RootIdentity || before.Any(x=>x.IsGroup && x.IsUngroupedSystemGroup && x.ParentIdentity==r.RootIdentity && x.Identity==created.ParentIdentity))
-                    || string.IsNullOrWhiteSpace(created.Identity) || before.Any(x=>x.Identity==created.Identity)) throw new InvalidOperationException("Returned created device identity not verified.");
+                    || !(created.ParentIdentity==r.RootIdentity || before
+                            .Any(x=>x.IsGroup && x.IsUngroupedSystemGroup && x.ParentIdentity==r.RootIdentity && x.Identity==created.ParentIdentity))
+                    || string.IsNullOrWhiteSpace(created.Identity) || before
+                        .Any(x=>x.Identity==created.Identity)) throw new InvalidOperationException("Returned created device identity not verified.");
                 check(); var after=Snapshot(inventory);
-                if(after.Length!=before.Length+1 || !after.Any(x=>x.Identity==created.Identity && x.Name==r.Name && !x.IsGroup && x.ParentIdentity==created.ParentIdentity) || !before.All(x=>after.Any(y=>y.Identity==x.Identity && y.Name==x.Name && y.ParentIdentity==x.ParentIdentity && y.IsGroup==x.IsGroup && y.IsUngroupedSystemGroup==x.IsUngroupedSystemGroup))) throw new InvalidOperationException("Post-create inventory differs from the one planned addition.");
+                if(after.Length!=before.Length+1 || !after
+                        .Any(x=>x.Identity==created.Identity && x.Name==r.Name && !x.IsGroup && x.ParentIdentity==created.ParentIdentity) || !before
+                        .All(x=>after
+                            .Any(y=>y.Identity==x.Identity && y.Name==x.Name && y.ParentIdentity==x.ParentIdentity && y.IsGroup==x.IsGroup && y
+                                .IsUngroupedSystemGroup==x.IsUngroupedSystemGroup)))
+                    throw new InvalidOperationException("Post-create inventory differs from the one planned addition.");
                 result.Status="created-verified"; result.Executed=true;
             }
-            catch(Exception ex) { result.Status="outcome-unknown";result.RequiresSessionReset=true;var error=ex.GetType().Name+": "+ex.Message;result.Error=error.Length<=2048?error:error.Substring(0,2048); }
+            catch(Exception ex) {
+                result.Status="outcome-unknown";result.RequiresSessionReset=true;var error=ex.GetType().Name+": "+ex.Message;result.Error=error.Length<=2048
+                    ?error:error.Substring(0,2048);
+            }
             return result;
         }
     }

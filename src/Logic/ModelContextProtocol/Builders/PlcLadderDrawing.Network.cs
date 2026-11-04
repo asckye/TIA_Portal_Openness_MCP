@@ -23,7 +23,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private sealed class DiagramNode
         {
             internal XElement Xml = null!;
-            internal string Id = "", Name = "", Title = "", Symbol = "", Operand = "", LowerOperand = "", Instance = "", Comment = "", Finding = "", Preset = "";
+            internal string Id = "", Name = "", Title = "", Symbol = "", Operand = "", LowerOperand = "", Instance = "", Comment = "", Finding = "", Preset =
+                "";
             internal List<DiagramPin> Pins = new List<DiagramPin>();
             internal int Column, Row, X, Y, Left, Right, Top, Bottom, BoxWidth, Pitch, Above, Below, CellWidth;
             internal bool IsBox => Symbol.Length == 0;
@@ -45,7 +46,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var xml = XElement.Parse(network.RawXml!);
             var wires = xml.Descendants().Where(e => e.Name.LocalName == "Wire").ToArray();
             var components = SimaticMlToSactMapper.MapNetworkBody(network);
-            var routingIds = new HashSet<string>(xml.Descendants().Where(e => IsRoutingPart(e, wires)).Select(e => (string)e.Attribute("UId")!), StringComparer.Ordinal);
+            var routingIds =
+                new HashSet<string>(xml.Descendants().Where(e => IsRoutingPart(e, wires)).Select(e => (string)e.Attribute("UId")!), StringComparer.Ordinal);
             var joinedWires = JoinRoutingWires(routingIds, wires).ToArray();
             var accesses = xml.Descendants().Where(e => e.Name.LocalName == "Access" && e.Attribute("UId") != null)
                 .GroupBy(e => (string)e.Attribute("UId")!, StringComparer.Ordinal)
@@ -64,7 +66,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 node.Symbol = SymbolKind(element);
                 node.Title = node.Name == "PBox" ? "P_TRIG" : node.Name == "NBox" ? "N_TRIG"
                     : !node.IsCall && BoxInstructions.Contains(node.Name) ? node.Name.ToUpperInvariant() : node.Name;
-                node.Preset = string.Join(" → ", element.Descendants().Where(e => e.Name.LocalName == "TemplateValue" && (string?)e.Attribute("Type") == "Type").Select(e => e.Value).Distinct());
+                node.Preset = string
+                    .Join(" → ", element.Descendants().Where(e => e.Name.LocalName == "TemplateValue" && (string?)e.Attribute("Type") == "Type")
+                        .Select(e => e.Value).Distinct());
                 if (!node.IsCall && node.IsBox && !BoxInstructions.Contains(node.Name)) unknownParts?.Add(node.Name);
                 var parameters = element.Descendants().Where(e => e.Name.LocalName == "Parameter").ToArray();
                 var pinNames = DefaultPins(node).Concat(parameters.Select(e => (string?)e.Attribute("Name") ?? ""))
@@ -76,11 +80,18 @@ namespace TiaMcpServer.ModelContextProtocol
                     string section = (string?)declaration?.Attribute("Section") ?? "";
                     var pin = new DiagramPin { Name = name, Output = section == "Output" || section == "Return"
                         || (section.Length == 0 && IsOutputPin(name)), Type = (string?)declaration?.Attribute("Type") ?? "" };
-                    pin.Label = name.Equals("pre", StringComparison.OrdinalIgnoreCase) ? "" : !node.IsCall || name.Equals("en", StringComparison.OrdinalIgnoreCase) || name.Equals("eno", StringComparison.OrdinalIgnoreCase) ? name.ToUpperInvariant() : name;
-                    if (node.Name == "PBox" || node.Name == "NBox") pin.Label = name.Equals("in", StringComparison.OrdinalIgnoreCase) ? "CLK" : name.Equals("out", StringComparison.OrdinalIgnoreCase) ? "Q" : pin.Label;
-                    foreach (var wire in wires.Where(w => w.Elements().Any(e => e.Name.LocalName == "NameCon" && (string?)e.Attribute("UId") == id && string.Equals((string?)e.Attribute("Name"), name, StringComparison.OrdinalIgnoreCase))))
+                    pin.Label = name.Equals("pre", StringComparison.OrdinalIgnoreCase) ? "" : !node.IsCall || name
+                        .Equals("en", StringComparison.OrdinalIgnoreCase) || name.Equals("eno", StringComparison.OrdinalIgnoreCase) ? name.ToUpperInvariant()
+                        : name;
+                    if (node.Name == "PBox" || node.Name == "NBox") pin.Label = name.Equals("in", StringComparison.OrdinalIgnoreCase) ? "CLK" : name
+                        .Equals("out", StringComparison.OrdinalIgnoreCase) ? "Q" : pin.Label;
+                    foreach (var wire in wires
+                            .Where(w => w.Elements()
+                                .Any(e => e.Name.LocalName == "NameCon" && (string?)e.Attribute("UId") == id && string
+                                    .Equals((string?)e.Attribute("Name"), name, StringComparison.OrdinalIgnoreCase))))
                     {
-                        pin.Connected |= wire.Elements().Any(e => e.Name.LocalName == "Powerrail" || e.Name.LocalName == "NameCon" && (string?)e.Attribute("UId") != id);
+                        pin.Connected |= wire.Elements()
+                            .Any(e => e.Name.LocalName == "Powerrail" || e.Name.LocalName == "NameCon" && (string?)e.Attribute("UId") != id);
                         var access = wire.Elements().FirstOrDefault(e => e.Name.LocalName == "IdentCon");
                         if (access == null || !accesses.TryGetValue((string?)access.Attribute("UId") ?? "", out var value)) continue;
                         pin.Value = value.text;
@@ -91,13 +102,16 @@ namespace TiaMcpServer.ModelContextProtocol
                             {
                                 bool truth = value.text == "1" || value.text.Equals("true", StringComparison.OrdinalIgnoreCase);
                                 bool falsity = value.text == "0" || value.text.Equals("false", StringComparison.OrdinalIgnoreCase);
-                                node.Finding = truth || falsity ? ((truth != (node.Symbol == "contact-nc")) ? "Finding: constant closed contact" : "Finding: constant open contact") : "Finding: constant contact";
+                                node.Finding = truth || falsity
+                                    ? ((truth != (node.Symbol == "contact-nc")) ? "Finding: constant closed contact" : "Finding: constant open contact")
+                                    : "Finding: constant contact";
                             }
                         }
                     }
                     if (node.Symbol == "compare" && name.Equals("in1", StringComparison.OrdinalIgnoreCase)) node.Operand = pin.Value;
                     if (node.Symbol == "compare" && name.Equals("in2", StringComparison.OrdinalIgnoreCase)) node.LowerOperand = pin.Value;
-                    bool edge = node.Symbol.EndsWith("positive", StringComparison.Ordinal) || node.Symbol.EndsWith("negative", StringComparison.Ordinal) || node.Name == "PBox" || node.Name == "NBox";
+                    bool edge = node.Symbol.EndsWith("positive", StringComparison.Ordinal) || node.Symbol.EndsWith("negative", StringComparison.Ordinal) || node
+                        .Name == "PBox" || node.Name == "NBox";
                     if (edge && name.Equals("bit", StringComparison.OrdinalIgnoreCase)) node.LowerOperand = pin.Value;
                     else if (!name.Equals("operand", StringComparison.OrdinalIgnoreCase)) node.Pins.Add(pin);
                 }
@@ -111,7 +125,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     node.Pins.RemoveAll(p => p.Name.Equals("pre", StringComparison.OrdinalIgnoreCase));
                 }
                 // Actual XML names/sections take precedence over the comparison layout's generic IN/OUT labels.
-                node.Pins = node.Pins.OrderBy(p => p.Name.Equals("en", StringComparison.OrdinalIgnoreCase) || p.Name.Equals("eno", StringComparison.OrdinalIgnoreCase) ? 0 : 1).ToList();
+                node.Pins = node.Pins
+                    .OrderBy(p => p.Name.Equals("en", StringComparison.OrdinalIgnoreCase) || p.Name.Equals("eno", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                    .ToList();
                 foreach (var pin in node.Pins.Where(p => p.Output && !p.Connected && p.Value.Length == 0)) pin.Value = "...";
                 Measure(node);
                 nodes.Add(node);
@@ -177,13 +193,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static void Measure(DiagramNode node)
         {
-            node.BoxWidth = Math.Max(132, Math.Min(200, Math.Max(node.Title.Length, node.Pins.Select(p => p.Label.Length * 2).DefaultIfEmpty(0).Max()) * 7 + 28));
+            node.BoxWidth = Math
+                .Max(132, Math.Min(200, Math.Max(node.Title.Length, node.Pins.Select(p => p.Label.Length * 2).DefaultIfEmpty(0).Max()) * 7 + 28));
             int operandLines = Wrap(node.Operand, 22).Count(), commentLines = Wrap(node.Comment, 24).Count();
             int instanceLines = Wrap(node.Instance, 24).Count();
             node.Pitch = Math.Max(28, node.Pins.Select(p => Wrap(p.Value, 18).Count() * 15 + 8).DefaultIfEmpty(28).Max());
             int lowerLines = Wrap(node.LowerOperand, 22).Count();
             node.Above = node.IsBox ? HeaderHeight(node) + 28 + instanceLines * 16 : Math.Max(42, operandLines * 16 + (node.Symbol == "compare" ? 36 : 22));
-            node.Below = node.IsBox ? Math.Max(0, Math.Max(node.Side(false).Count(), node.Side(true).Count()) - 1) * node.Pitch + 30 + (commentLines + lowerLines) * 16
+            node.Below = node.IsBox ? Math.Max(0, Math.Max(node.Side(false).Count(), node.Side(true).Count()) - 1) * node.Pitch + 30
+                + (commentLines + lowerLines) * 16
                 : Math.Max(34, (commentLines + lowerLines) * 16 + (node.Symbol == "compare" ? 46 : 26));
             int left = node.Side(false).Select(p => Math.Min(18, p.Value.Length) * 7 + 22).DefaultIfEmpty(28).Max();
             int right = node.Side(true).Select(p => Math.Min(18, p.Value.Length) * 7 + 22).DefaultIfEmpty(28).Max();
@@ -194,7 +212,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string SymbolKind(XElement node)
         {
             if (node.Name.LocalName == "Call") return "";
-            bool negated = node.Elements().Any(e => e.Name.LocalName == "Negated" && ((string?)e.Attribute("Name") == "operand" || e.Attribute("Name") == null));
+            bool negated = node.Elements()
+                .Any(e => e.Name.LocalName == "Negated" && ((string?)e.Attribute("Name") == "operand" || e.Attribute("Name") == null));
             return (string?)node.Attribute("Name") switch
             {
                 "Contact" => negated ? "contact-nc" : "contact-no",
@@ -291,7 +310,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var pins = new List<string> { "en", "eno" };
             int count = node.Name.Equals("Move", StringComparison.OrdinalIgnoreCase) ? 1 : 2;
             var cardinality = node.Xml.Elements().FirstOrDefault(e => e.Name.LocalName == "TemplateValue" && (string?)e.Attribute("Type") == "Cardinality");
-            if (cardinality != null && int.TryParse(cardinality.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int value)) count = value;
+            if (cardinality != null && int
+                    .TryParse(cardinality.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int value))
+                count = value;
             if (count < 1 || count > PlcProgramRenderer.MaxElements) throw new ArgumentException("Instruction pin cardinality exceeds the render budget.");
             if (node.Name.Equals("Move", StringComparison.OrdinalIgnoreCase))
             {
@@ -345,7 +366,8 @@ namespace TiaMcpServer.ModelContextProtocol
             int top = ends.Min(e => e.y), bottom = ends.Max(e => e.y);
             if (top != bottom) Path(b, "branch", $"M {bus} {top} V {bottom}");
             if (ends.Count > 2)
-                foreach (int y in ends.Select(e => e.y).Distinct()) b.Append("<circle class=\"junction\" cx=\"").Append(bus).Append("\" cy=\"").Append(y).Append("\" r=\"2.5\"/>");
+                foreach (int y in ends.Select(e => e.y).Distinct()) b.Append("<circle class=\"junction\" cx=\"").Append(bus).Append("\" cy=\"").Append(y)
+                    .Append("\" r=\"2.5\"/>");
         }
 
         private static void DrawSymbol(StringBuilder b, DiagramNode node)
@@ -355,7 +377,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (node.Symbol == "compare" || node.Symbol == "not")
             {
                 int plate = node.Symbol == "compare" ? 26 : 22, halfHeight = node.Symbol == "compare" ? 26 : 15;
-                Path(b, "symbol", $"M {node.Left} {y} H {x - plate} M {x + plate} {y} H {node.Right} M {x - plate} {y - halfHeight} V {y + halfHeight} M {x + plate} {y - halfHeight} V {y + halfHeight}");
+                Path(b, "symbol",
+                        $"M {node.Left} {y} H {x - plate} M {x + plate} {y} H {node.Right} M {x - plate} {y - halfHeight} V {y + halfHeight} M {x + plate} {y - halfHeight} V {y + halfHeight}");
                 string mark = node.Name switch { "Eq" => "==", "Ne" => "<>", "Gt" => ">", "Ge" => ">=", "Lt" => "<", "Le" => "<=", _ => "NOT" };
                 Text(b, "symbol-mark", x, y + (node.Symbol == "compare" ? -4 : 5), mark, "middle");
                 if (node.Symbol == "compare") Text(b, "instruction-type", x, y + 17, node.Preset, "middle", 12);
@@ -364,11 +387,13 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 Path(b, "symbol", $"M {x - 30} {y} H {x - 8} M {x + 8} {y} H {x + 30} M {x - 8} {y - 15} V {y + 15} M {x + 8} {y - 15} V {y + 15}");
                 if (node.Symbol == "contact-nc") Path(b, "symbol", $"M {x - 7} {y + 12} L {x + 7} {y - 12}");
-                if (node.Symbol == "contact-positive" || node.Symbol == "contact-negative") Text(b, "symbol-mark", x, y + 5, node.Symbol == "contact-positive" ? "P" : "N", "middle");
+                if (node.Symbol == "contact-positive" || node.Symbol == "contact-negative")
+                    Text(b, "symbol-mark", x, y + 5, node.Symbol == "contact-positive" ? "P" : "N", "middle");
             }
             else
             {
-                Path(b, "symbol", $"M {x - 30} {y} H {x - 15} M {x + 15} {y} H {x + 30} M {x - 6} {y - 15} Q {x - 24} {y} {x - 6} {y + 15} M {x + 6} {y - 15} Q {x + 24} {y} {x + 6} {y + 15}");
+                Path(b, "symbol",
+                        $"M {x - 30} {y} H {x - 15} M {x + 15} {y} H {x + 30} M {x - 6} {y - 15} Q {x - 24} {y} {x - 6} {y + 15} M {x + 6} {y - 15} Q {x + 24} {y} {x + 6} {y + 15}");
                 if (node.Symbol == "coil-negated") Path(b, "symbol", $"M {x - 6} {y + 12} L {x + 6} {y - 12}");
                 string mark = node.Symbol switch { "coil-set" => "S", "coil-reset" => "R", "coil-positive" => "P", "coil-negative" => "N", _ => "" };
                 Text(b, "symbol-mark", x, y + 5, mark, "middle");
@@ -376,17 +401,20 @@ namespace TiaMcpServer.ModelContextProtocol
             int lowerY = y + (node.Symbol == "compare" ? 49 : 34);
             Text(b, node.Symbol == "compare" ? "compare-operand" : "edge-memory", x, lowerY, node.LowerOperand, "middle", 22);
             Text(b, "symbol-comment", x, lowerY + Wrap(node.LowerOperand, 22).Count() * 16, node.Comment, "middle", 24);
-            if (node.Finding.Length > 0) b.Append("<circle class=\"finding\" cx=\"").Append(x + 23).Append("\" cy=\"").Append(y - 18).Append("\" r=\"4\"><title>").Append(E(node.Finding)).Append("</title></circle>");
+            if (node.Finding.Length > 0) b.Append("<circle class=\"finding\" cx=\"").Append(x + 23).Append("\" cy=\"").Append(y - 18)
+                .Append("\" r=\"4\"><title>").Append(E(node.Finding)).Append("</title></circle>");
         }
 
         private static void DrawBox(StringBuilder b, DiagramNode node)
         {
             int header = HeaderHeight(node), bottom = Math.Max(node.Top + header + 32, node.Bottom);
-            b.Append("<rect class=\"box\" x=\"").Append(node.Left).Append("\" y=\"").Append(node.Top).Append("\" width=\"").Append(node.BoxWidth).Append("\" height=\"").Append(bottom - node.Top).Append("\"/>");
+            b.Append("<rect class=\"box\" x=\"").Append(node.Left).Append("\" y=\"").Append(node.Top).Append("\" width=\"").Append(node.BoxWidth)
+                .Append("\" height=\"").Append(bottom - node.Top).Append("\"/>");
             Path(b, "box-divider", $"M {node.Left} {node.Top + header} H {node.Right}");
             Text(b, "instance", node.X, node.Top - 12 - (Wrap(node.Instance, 24).Count() - 1) * 16, node.Instance, "middle", 24);
             Text(b, "instruction-name", node.X, node.Top + 19, node.Title, "middle", 22);
-            if (node.Preset.Length > 0) Text(b, "instruction-type", node.X, node.Top + header - 7 - (Wrap(node.Preset, 22).Count() - 1) * 16, node.Preset, "middle", 22);
+            if (node.Preset.Length > 0)
+                Text(b, "instruction-type", node.X, node.Top + header - 7 - (Wrap(node.Preset, 22).Count() - 1) * 16, node.Preset, "middle", 22);
             foreach (var pin in node.Pins)
             {
                 int edge = pin.Output ? node.Right : node.Left, outer = edge + (pin.Output ? 16 : -16);
@@ -404,10 +432,12 @@ namespace TiaMcpServer.ModelContextProtocol
         private static void Text(StringBuilder b, string kind, int x, int y, string value, string anchor, int wrap = 100)
         {
             if (string.IsNullOrWhiteSpace(value)) return;
-            b.Append("<text class=\"").Append(kind).Append("\" x=\"").Append(x).Append("\" y=\"").Append(y).Append("\" text-anchor=\"").Append(anchor).Append("\">");
+            b.Append("<text class=\"").Append(kind).Append("\" x=\"").Append(x).Append("\" y=\"").Append(y).Append("\" text-anchor=\"").Append(anchor)
+                .Append("\">");
             var lines = Wrap(value, wrap).ToArray();
             if (lines.Length == 1) b.Append(E(lines[0]));
-            else for (int i = 0; i < lines.Length; i++) b.Append("<tspan x=\"").Append(x).Append("\" dy=\"").Append(i == 0 ? 0 : 16).Append("\">").Append(E(lines[i])).Append("</tspan>");
+            else for (int i = 0; i < lines.Length; i++) b.Append("<tspan x=\"").Append(x).Append("\" dy=\"").Append(i == 0 ? 0 : 16).Append("\">")
+                .Append(E(lines[i])).Append("</tspan>");
             b.Append("</text>");
         }
 

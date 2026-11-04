@@ -29,14 +29,16 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 
     public EnvironmentCheckService() : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix, true) { }
     internal EnvironmentCheckService(bool allowFix) : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
-    internal EnvironmentCheckService(bool allowFix, Func<string> release) : this(() => EnvironmentServiceContext.Current(release()), WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
+    internal EnvironmentCheckService(bool allowFix, Func<string> release)
+        : this(() => EnvironmentServiceContext.Current(release()), WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
     // A fix action that only receives the host path returns no doctor report; when it returns, the checks run again.
     public EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership)
         : this(context, sources, fixMembership, true) { }
     internal EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership, bool allowFix)
         : this(context, sources, (host, _) => { fixMembership(host); return null; }, allowFix) { }
     // runDoctor receives the host path and its release key and returns the doctor's exit code and output.
-    internal EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Func<string, string, DoctorRun?> runDoctor, bool allowFix)
+    internal EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Func<string, string, DoctorRun?> runDoctor,
+            bool allowFix)
     {
         _allowFix = allowFix;
         _context = context; _sources = sources; _fixMembership = runDoctor;
@@ -58,7 +60,9 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
             }
             catch (Exception ex)
             {
-                Findings = WorkbenchEnvironmentChecks.Ids.Select(id => new EnvironmentFinding(id, EnvironmentFindingStatus.Unknown, "Unknown", new DiagnosticRedactor().Redact(ex.Message).Text)).ToArray();
+                Findings = WorkbenchEnvironmentChecks.Ids
+                    .Select(id => new EnvironmentFinding(id, EnvironmentFindingStatus.Unknown, "Unknown", new DiagnosticRedactor().Redact(ex.Message).Text))
+                    .ToArray();
                 Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
             }
             finally { Interlocked.Exchange(ref _busy, 0); Raise(nameof(Groups)); Raise(nameof(LogTail)); }
@@ -189,7 +193,8 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 
     private static IReadOnlyList<EnvironmentGroup> Group(IReadOnlyList<EnvironmentCheck> rows) =>
     [
-        new(LocalizedText.Literal("TIA Portal"), rows.Where(r => r.Id is "installations" or "membership" or "openness-readiness" or "confirmation" or "openness-allowlist").ToArray()),
+        new(LocalizedText.Literal("TIA Portal"), rows
+                .Where(r => r.Id is "installations" or "membership" or "openness-readiness" or "confirmation" or "openness-allowlist").ToArray()),
         new(LocalizedText.Key("Env.Runtime"), rows.Where(r => r.Id is "framework" or "runtime").ToArray()),
         new(LocalizedText.Key("Env.Application"), rows.Where(r => r.Id.StartsWith("engine-", StringComparison.Ordinal) || r.Id == "data").ToArray()),
         new(LocalizedText.Key("Env.Network"), rows.Where(r => r.Id is "port" or "url" or "firewall").ToArray()),
@@ -239,7 +244,8 @@ public static class EnvironmentCheckCatalogue
         ? LocalizedText.Key("Env.ReleaseFiles", TiaMcp.Versioning.TiaVersionCatalog.Get(id[7..]).DisplayName)
         : LocalizedText.Key(id switch
         {
-            "installations" => "Env.Installations", "membership" => "Env.Membership", "openness-readiness" => "Env.OpennessReadiness", "framework" => "Env.Framework", "engines" => "Env.Engines",
+            "installations" => "Env.Installations", "membership" => "Env.Membership", "openness-readiness" => "Env.OpennessReadiness", "framework" =>
+                "Env.Framework", "engines" => "Env.Engines",
             "runtime" => "Env.BundledRuntime", "data" => "Env.Data", "port" => "Env.Port", "url" => "Env.Url",
             "firewall" => "Env.Firewall", "openness-allowlist" => "Env.OpennessAllowList", _ => "Env.FirstConnection",
         });
@@ -250,14 +256,17 @@ public static class EnvironmentCheckCatalogue
         "installations" => "Env.FixInstall", "membership" => newLogon ? "Env.FixLogon" : "Env.FixMembership",
         "openness-readiness" => "Env.FixOpennessReadiness",
         "framework" => "Env.FixFramework", "runtime" => "Env.FixRuntime", "data" => "Env.FixData",
-        "port" => "Env.FixPort", "url" => "Env.FixUrl", "firewall" => "Env.FixFirewall", "openness-allowlist" => "Env.FixOpennessAllowList", _ => "Env.FirstConnectionHelp",
+        "port" => "Env.FixPort", "url" => "Env.FixUrl", "firewall" => "Env.FixFirewall", "openness-allowlist" => "Env.FixOpennessAllowList", _ =>
+            "Env.FirstConnectionHelp",
     };
 
-    public static EnvironmentCheck Unchecked(string id) => new(id, CheckStatus.Unchecked, Name(id), LocalizedText.Key("Env.Unchecked"), LocalizedText.Empty, LocalizedText.Empty);
+    public static EnvironmentCheck Unchecked(string id) =>
+        new(id, CheckStatus.Unchecked, Name(id), LocalizedText.Key("Env.Unchecked"), LocalizedText.Empty, LocalizedText.Empty);
     public static EnvironmentCheck Checking(string id) => Unchecked(id) with { Status = CheckStatus.Checking, Result = LocalizedText.Key("Env.Checking") };
     public static EnvironmentCheck Row(EnvironmentFinding finding)
     {
-        var status = finding.Status switch { EnvironmentFindingStatus.Pass => CheckStatus.Pass, EnvironmentFindingStatus.Fail => CheckStatus.Fail, _ => CheckStatus.Warn };
+        var status = finding.Status switch {
+            EnvironmentFindingStatus.Pass => CheckStatus.Pass, EnvironmentFindingStatus.Fail => CheckStatus.Fail, _ => CheckStatus.Warn };
         var result = LocalizedText.Key(ResultKey(finding));
         string evidence = new DiagnosticRedactor().Redact(finding.Evidence ?? "").Text;
         return new(finding.Id, status, Name(finding.Id), result,

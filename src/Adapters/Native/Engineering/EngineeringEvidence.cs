@@ -24,7 +24,8 @@ namespace TiaMcp.Adapters.Engineering
         {
             if (maxDepth < 1 || maxDepth > 32) throw new ArgumentException("maxDepth 1..32 required.");
         }
-        internal static bool IsIdentical(string? state) => state != null && new[] { "ObjectsIdentical", "ContainerContentsIdentical", "FolderContentsIdentical", "CompareIrrelevant" }.Contains(state, StringComparer.Ordinal);
+        internal static bool IsIdentical(string? state) => state != null && new[] {
+            "ObjectsIdentical", "ContainerContentsIdentical", "FolderContentsIdentical", "CompareIrrelevant" }.Contains(state, StringComparer.Ordinal);
         internal static List<Dictionary<string, object?>> FlattenCompareTree(object? root, Func<object, IEnumerable<object>> children,
             Func<object, Dictionary<string, object?>> describe, int maxDepth, int maxRows, out bool truncated)
         {
@@ -48,7 +49,8 @@ namespace TiaMcp.Adapters.Engineering
         internal static Dictionary<string, object?> Summarize(IEnumerable<Dictionary<string, object?>> rows)
         {
             var summary = new Dictionary<string, object?>();
-            foreach (var group in rows.GroupBy(r => (string?)r["comparisonResult"] ?? "Unknown").OrderBy(g => g.Key, StringComparer.Ordinal)) summary[group.Key] = group.Count();
+            foreach (var group in rows.GroupBy(r => (string?)r["comparisonResult"] ?? "Unknown").OrderBy(g => g.Key, StringComparer.Ordinal))
+                summary[group.Key] = group.Count();
             return summary;
         }
     }

@@ -60,7 +60,9 @@ namespace TiaMcp.Adapters
                 var expected = new AssemblyName("Siemens.Engineering.Step7, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b");
                 var actual = typeof(PlcSoftware).Assembly;
                 EngineeringAssemblyIdentity.RequireMatch(expected, actual.GetName(), actual.Location);
-                if (!string.Equals(Path.GetDirectoryName(actual.Location), Path.GetFullPath(selectedPublicApiDirectory).TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase))
+                if (!string
+                        .Equals(Path.GetDirectoryName(actual.Location), Path.GetFullPath(selectedPublicApiDirectory).TrimEnd('\\', '/'), StringComparison
+                            .OrdinalIgnoreCase))
                     throw new FileLoadException("Step7 must come from the selected V21 API directory.", actual.Location);
             }
             ReleaseKey = releaseKey;
@@ -127,8 +129,12 @@ namespace TiaMcp.Adapters
             localSession=null;
 #endif
         }
-        private TiaPortal Portal() { Check(); disconnect.RequireActive(); RequirePortalAlive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
-        private EngineeringProject Project() { Portal(); lifecycle.RequireBound(); return project ?? throw new InvalidOperationException("Bind, open or create an explicit project first."); }
+        private TiaPortal Portal() {
+            Check(); disconnect.RequireActive(); RequirePortalAlive(); return portal
+                ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first.");
+        }
+        private EngineeringProject Project() {
+            Portal(); lifecycle.RequireBound(); return project ?? throw new InvalidOperationException("Bind, open or create an explicit project first."); }
 
         private void RequireHardwareCatalogBinding()
         {
@@ -159,7 +165,8 @@ namespace TiaMcp.Adapters
 #endif
             return result.ToArray();
         }
-        private static PlcProjectDetails ProjectDetails(EngineeringProject p,bool session) => new PlcProjectDetails { Name=p.Name,Attributes=ReadAttributes(p),Meta=new Dictionary<string,object> { ["projectFile"]=p.Path.FullName,["isLocalSession"]=session } };
+        private static PlcProjectDetails ProjectDetails(EngineeringProject p,bool session) => new PlcProjectDetails {
+            Name=p.Name,Attributes=ReadAttributes(p),Meta=new Dictionary<string,object> { ["projectFile"]=p.Path.FullName,["isLocalSession"]=session } };
         public void RequireProjectIdentity(string expectedProjectFile)
         {
             var current=Project();
@@ -171,21 +178,25 @@ namespace TiaMcp.Adapters
             Portal(); lifecycle.RequireUnbound();
             string full;
             try { full=Path.GetFullPath(expectedProjectFile); }
-            catch(ArgumentException ex) { throw new AdapterPreconditionException("An absolute expected project file is required.","expectedProjectFile",true,ex); }
+            catch(ArgumentException ex) {
+                throw new AdapterPreconditionException("An absolute expected project file is required.","expectedProjectFile",true,ex); }
             try { MutationIdentityPolicy.RequireSameProject(expectedProjectFile,full); }
             catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
             bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,full);
 #if PROJECT_MULTIUSER
             if(session)
             {
-                localSession=portal!.LocalSessions.SingleOrDefault(s=>s.Project.Name==projectName && string.Equals(s.Project.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new AdapterPreconditionException("The exact named local session is not open.","expectedProjectFile");
+                localSession=portal!.LocalSessions
+                    .SingleOrDefault(s=>s.Project.Name==projectName && string.Equals(s.Project.Path.FullName,full,StringComparison.OrdinalIgnoreCase))
+                    ?? throw new AdapterPreconditionException("The exact named local session is not open.","expectedProjectFile");
                 project=localSession.Project;
             }
             else
 #endif
             {
                 project=portal!.Projects.SingleOrDefault(p=>p.Name==projectName && string.Equals(p.Path.FullName,full,StringComparison.OrdinalIgnoreCase));
-                if(project==null) { RequireVisibleProject(full); throw new AdapterPreconditionException("The exact named project is not open.","expectedProjectFile"); }
+                if(project==null) {
+                    RequireVisibleProject(full); throw new AdapterPreconditionException("The exact named project is not open.","expectedProjectFile"); }
             }
             lifecycle.Bound(full,false,session);
             if (_resetWorkerFamilyState != null) _resetWorkerFamilyState();
@@ -207,7 +218,8 @@ namespace TiaMcp.Adapters
             if (p.Projects.Any(x => string.Equals(x.Path.FullName, input.FullName, StringComparison.OrdinalIgnoreCase)))
                 throw new AdapterPreconditionException("Project is already open; bind it explicitly instead.","path");
 #if PROJECT_MULTIUSER
-            if(p.LocalSessions.Any(s=>string.Equals(s.Project.Path.FullName,input.FullName,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Local session already open; bind it explicitly.","path");
+            if(p.LocalSessions.Any(s=>string.Equals(s.Project.Path.FullName,input.FullName,StringComparison.OrdinalIgnoreCase)))
+                throw new AdapterPreconditionException("Local session already open; bind it explicitly.","path");
 #endif
             RequireNoOpenProject(p, "OpenProject");
             using var login = UmacCredentialsFor(umacUserName, umacPassword, umacUserType, "umacUserName");
@@ -235,7 +247,8 @@ namespace TiaMcp.Adapters
         {
 #if PROJECT_UMAC
             using (login.Authenticate(connection))
-                return OpennessRefusalMapping.Run("open", login.Given, () => login.Delegate == null ? connection.Projects.Open(input) : connection.Projects.Open(input, login.Delegate));
+                return OpennessRefusalMapping
+                    .Run("open", login.Given, () => login.Delegate == null ? connection.Projects.Open(input) : connection.Projects.Open(input, login.Delegate));
 #else
             return OpennessRefusalMapping.Run("open", login.Given, () => connection.Projects.Open(input));
 #endif
@@ -247,10 +260,14 @@ namespace TiaMcp.Adapters
             lifecycle.RequireUnbound();
             var parent = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(directoryPath)));
             if (!parent.Exists || Directory.Exists(Path.Combine(parent.FullName, projectName)) || File.Exists(Path.Combine(parent.FullName, projectName)))
-                throw new AdapterPreconditionException("Use an existing parent directory and a new project name.",!parent.Exists ? "directoryPath" : "projectName");
+                throw new AdapterPreconditionException("Use an existing parent directory and a new project name.",!parent.Exists ? "directoryPath"
+                        : "projectName");
             var expected=PlcLifecyclePolicy.CreationFile(ReleaseKey,parent.FullName,projectName);
             RequireNoOpenProject(p, "CreateProject");
-            if (!dryRun) { project = OpennessRefusalMapping.Run("create", false, () => p.Projects.Create(parent, projectName)); lifecycle.Bound(project.Path.FullName,true,false); }
+            if (!dryRun) {
+                project = OpennessRefusalMapping.Run("create", false, () => p.Projects.Create(parent, projectName)); lifecycle
+                    .Bound(project.Path.FullName,true,false);
+            }
             var result=Mutation("CreateProject",dryRun); result.ProjectFile=dryRun ? expected : project!.Path.FullName; return result;
         }
         public PlcMutationResult SaveProject(bool dryRun = true)
@@ -294,12 +311,14 @@ namespace TiaMcp.Adapters
             internal readonly T Value;
             internal Located(string path, T value) { Path = path; Value = value; }
         }
-        private static string Child(string path, string name) => path.Length == 0 ? PlcFoundationPolicy.Segment(name) : path + "/" + PlcFoundationPolicy.Segment(name);
+        private static string Child(string path, string name) => path.Length == 0 ? PlcFoundationPolicy.Segment(name) : path + "/" + PlcFoundationPolicy
+            .Segment(name);
         private static PlcObjectInfo Info(string path, string name, string kind) => new PlcObjectInfo { Path = path, Name = name, Kind = kind };
         private PlcMutationResult Mutation(string operation, bool dryRun, IEnumerable<string>? names = null, bool scoped = false)
         {
             PlcMutationResult result = scoped ? new PlcScopedMutationResult() : new PlcMutationResult();
-            result.Operation=operation; result.Executed=!dryRun; result.AffectedNames=names?.ToArray() ?? new string[0]; result.ProjectFile=project?.Path.FullName;
+            result.Operation=operation; result.Executed=!dryRun; result.AffectedNames=names?.ToArray() ?? new string[0]; result.ProjectFile=project?.Path
+                .FullName;
             return result;
         }
         private static void Depth(int depth) { if (depth > 128) throw new InvalidOperationException("Object hierarchy exceeds the traversal depth limit."); }
@@ -347,9 +366,12 @@ namespace TiaMcp.Adapters
             Depth(depth); yield return new Located<PlcTagTableGroup>(path, group);
             foreach (var child in group.Groups) foreach (var g in TagGroups(child, Child(path, child.Name), depth + 1)) yield return g;
         }
-        private IEnumerable<Located<PlcBlock>> Blocks(string plc) => BlockGroups(Plc(plc).BlockGroup).SelectMany(g => g.Value.Blocks.Select(b => new Located<PlcBlock>(Child(g.Path, b.Name), b)));
-        private IEnumerable<Located<PlcType>> Types(string plc) => TypeGroups(Plc(plc).TypeGroup).SelectMany(g => g.Value.Types.Select(t => new Located<PlcType>(Child(g.Path, t.Name), t)));
-        private IEnumerable<Located<PlcTagTable>> Tables(string plc) => TagGroups(Plc(plc).TagTableGroup).SelectMany(g => g.Value.TagTables.Select(t => new Located<PlcTagTable>(Child(g.Path, t.Name), t)));
+        private IEnumerable<Located<PlcBlock>> Blocks(string plc) => BlockGroups(Plc(plc).BlockGroup)
+            .SelectMany(g => g.Value.Blocks.Select(b => new Located<PlcBlock>(Child(g.Path, b.Name), b)));
+        private IEnumerable<Located<PlcType>> Types(string plc) => TypeGroups(Plc(plc).TypeGroup)
+            .SelectMany(g => g.Value.Types.Select(t => new Located<PlcType>(Child(g.Path, t.Name), t)));
+        private IEnumerable<Located<PlcTagTable>> Tables(string plc) => TagGroups(Plc(plc).TagTableGroup)
+            .SelectMany(g => g.Value.TagTables.Select(t => new Located<PlcTagTable>(Child(g.Path, t.Name), t)));
         private Located<PlcTagTable> SelectTable(string plc, string path)
         {
             return PlcExchangePolicy.SelectTable(Tables(plc),path,x=>x.Path,x=>x.Value.Name);
@@ -361,27 +383,59 @@ namespace TiaMcp.Adapters
         private IEnumerable<Located<PlcTagTable>> DeclarationTables(string plc, string table, string unitName, bool includeUnits)
         {
             if (includeUnits && unitName != "") throw new ArgumentException("unitName and includeUnits cannot be combined.");
-            if (includeUnits && ReleaseKey == "14sp1" || includeUnits && ReleaseKey == "15.1") throw new NotSupportedException("includeUnits requires V16–V21.");
+            if (includeUnits && ReleaseKey == "14sp1" || includeUnits && ReleaseKey == "15.1")
+                throw new NotSupportedException("includeUnits requires V16–V21.");
             if (unitName == "" && !includeUnits) return new[] { SelectTable(plc, table) };
             var software = Plc(plc);
             IEnumerable<Located<PlcTagTable>> Scope(object? unit, string prefix)
             {
-                var tables = TagGroups(PlcUnitScope.Tags(software, unit)).SelectMany(g => g.Value.TagTables.Select(t => new Located<PlcTagTable>(Child(g.Path, t.Name), t))).ToArray();
-                var selected = table == "" ? tables : includeUnits ? tables.Where(t => t.Path == table).ToArray() : new[] { PlcExchangePolicy.SelectTable(tables, table, t => t.Path, t => t.Value.Name) };
+                var tables = TagGroups(PlcUnitScope.Tags(software, unit))
+                    .SelectMany(g => g.Value.TagTables.Select(t => new Located<PlcTagTable>(Child(g.Path, t.Name), t))).ToArray();
+                var selected = table == "" ? tables : includeUnits ? tables.Where(t => t.Path == table).ToArray() : new[] {
+                    PlcExchangePolicy.SelectTable(tables, table, t => t.Path, t => t.Value.Name) };
                 foreach (var selectedTable in selected) yield return new Located<PlcTagTable>(prefix + selectedTable.Path, selectedTable.Value);
             }
             if (unitName != "") return Scope(PlcUnitScope.Optional(software, unitName), "units/" + Uri.EscapeDataString(unitName) + "/tag-tables/").ToArray();
-            return Scope(null, "root/tag-tables/").Concat(PlcUnitScope.Units(software).SelectMany(unit => Scope(unit.Value, "units/" + Uri.EscapeDataString(unit.Key) + "/tag-tables/"))).ToArray();
+            return Scope(null, "root/tag-tables/")
+                .Concat(PlcUnitScope.Units(software).SelectMany(unit => Scope(unit.Value, "units/" + Uri.EscapeDataString(unit.Key) + "/tag-tables/")))
+                .ToArray();
         }
-        public PlcObjectInfo[] ListTags(string plc, string table) { var selected=SelectTable(plc,table); return selected.Value.Tags.Select(t => new PlcObjectInfo { Name = t.Name, Path = Child(selected.Path, t.Name), Kind = "tag", DataType = t.DataTypeName, Value = t.LogicalAddress }).ToArray(); }
+        public PlcObjectInfo[] ListTags(string plc, string table) {
+            var selected=SelectTable(plc,table); return selected.Value.Tags
+                .Select(t => new PlcObjectInfo {
+                    Name = t.Name, Path = Child(selected.Path, t.Name), Kind = "tag", DataType = t.DataTypeName, Value = t.LogicalAddress })
+                .ToArray();
+        }
         public PlcObjectInfo[] ListTagsScoped(string plc, string table, string unitName = "", bool includeUnits = false)
-            => DeclarationTables(plc, table, unitName, includeUnits).SelectMany(selected => selected.Value.Tags.Select(t => new PlcObjectInfo { Name = t.Name, Path = Child(selected.Path, t.Name), Kind = "tag", DataType = t.DataTypeName, Value = t.LogicalAddress })).ToArray();
-        public PlcObjectInfo[] ListUserConstants(string plc, string table) { var selected=SelectTable(plc,table); return selected.Value.UserConstants.Select(c => new PlcObjectInfo { Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "user-constant", DataType = c.DataTypeName, Value = c.Value }).ToArray(); }
+            => DeclarationTables(plc, table, unitName, includeUnits)
+                .SelectMany(selected => selected.Value.Tags
+                    .Select(t => new PlcObjectInfo {
+                        Name = t.Name, Path = Child(selected.Path, t.Name), Kind = "tag", DataType = t.DataTypeName, Value = t.LogicalAddress }))
+                .ToArray();
+        public PlcObjectInfo[] ListUserConstants(string plc, string table) {
+            var selected=SelectTable(plc,table); return selected.Value.UserConstants
+                .Select(c => new PlcObjectInfo {
+                    Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "user-constant", DataType = c.DataTypeName, Value = c.Value })
+                .ToArray();
+        }
         public PlcObjectInfo[] ListUserConstantsScoped(string plc, string table, string unitName = "", bool includeUnits = false)
-            => DeclarationTables(plc, table, unitName, includeUnits).SelectMany(selected => selected.Value.UserConstants.Select(c => new PlcObjectInfo { Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "user-constant", DataType = c.DataTypeName, Value = c.Value })).ToArray();
-        public PlcObjectInfo[] ListSystemConstants(string plc, string table) { var selected=SelectTable(plc,table); return selected.Value.SystemConstants.Select(c => new PlcObjectInfo { Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "system-constant", DataType = c.DataTypeName, Value = c.Value }).ToArray(); }
+            => DeclarationTables(plc, table, unitName, includeUnits)
+                .SelectMany(selected => selected.Value.UserConstants
+                    .Select(c => new PlcObjectInfo {
+                        Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "user-constant", DataType = c.DataTypeName, Value = c.Value }))
+                .ToArray();
+        public PlcObjectInfo[] ListSystemConstants(string plc, string table) {
+            var selected=SelectTable(plc,table); return selected.Value.SystemConstants
+                .Select(c => new PlcObjectInfo {
+                    Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "system-constant", DataType = c.DataTypeName, Value = c.Value })
+                .ToArray();
+        }
         public PlcObjectInfo[] ListSystemConstantsScoped(string plc, string table, string unitName = "", bool includeUnits = false)
-            => DeclarationTables(plc, table, unitName, includeUnits).SelectMany(selected => selected.Value.SystemConstants.Select(c => new PlcObjectInfo { Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "system-constant", DataType = c.DataTypeName, Value = c.Value })).ToArray();
+            => DeclarationTables(plc, table, unitName, includeUnits)
+                .SelectMany(selected => selected.Value.SystemConstants
+                    .Select(c => new PlcObjectInfo {
+                        Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "system-constant", DataType = c.DataTypeName, Value = c.Value }))
+                .ToArray();
 
         private PlcMutationResult Export(string operation, string file, bool dryRun, Action<FileInfo> export, string unitName = "")
         {
@@ -392,12 +446,15 @@ namespace TiaMcp.Adapters
             if(result is PlcScopedMutationResult scope) scope.UnitName=unitName;
             result.OutputFile=output.FullName; result.RecoveryDirectory=recovery; return result;
         }
-        public PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true) => ExportBlockScoped(softwarePath, blockPath, exportPath, preservePath, dryRun);
-        public PlcMutationResult ExportBlockScoped(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true, string unitName = "")
+        public PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true) =>
+            ExportBlockScoped(softwarePath, blockPath, exportPath, preservePath, dryRun);
+        public PlcMutationResult ExportBlockScoped(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true,
+                string unitName = "")
         {
             var selected=ReadSelection(softwarePath);
             var path=PlcExchangePolicy.ObjectPath(blockPath,false,"blockPath");
-            var blocks=BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))).SelectMany(g=>g.Value.Blocks.Select(b=>new Located<PlcBlock>(Child(g.Path,b.Name),b)));
+            var blocks=BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName)))
+                .SelectMany(g=>g.Value.Blocks.Select(b=>new Located<PlcBlock>(Child(g.Path,b.Name),b)));
             var target=PlcExchangePolicy.Exact(blocks,x=>x.Path,path,"blockPath").Value;
             TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks",target.IsConsistent?new string[0]:new[]{blockPath},"blockPath");
             var file=PlcExchangePolicy.ExportDestination(exportPath,path,preservePath);
@@ -405,55 +462,106 @@ namespace TiaMcp.Adapters
             var result=Export("ExportBlock",file.FullName,dryRun,f=>{ RequireTargetOffline(selected); target.Export(f,ExportOptions.None); },unitName);
             capability.Apply(result); return result;
         }
-        public PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true) => ExportTypeScoped(softwarePath, exportPath, typePath, preservePath, dryRun);
-        public PlcMutationResult ExportTypeScoped(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true, string unitName = "")
+        public PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true) =>
+            ExportTypeScoped(softwarePath, exportPath, typePath, preservePath, dryRun);
+        public PlcMutationResult ExportTypeScoped(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true,
+                string unitName = "")
         {
             var selected=ReadSelection(softwarePath);
             var path=PlcExchangePolicy.ObjectPath(typePath,false,"typePath");
-            var types=TypeGroups(PlcUnitScope.Types(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))).SelectMany(g=>g.Value.Types.Select(t=>new Located<PlcType>(Child(g.Path,t.Name),t)));
+            var types=TypeGroups(PlcUnitScope.Types(selected.Value, PlcUnitScope.Optional(selected.Value, unitName)))
+                .SelectMany(g=>g.Value.Types.Select(t=>new Located<PlcType>(Child(g.Path,t.Name),t)));
             var target=PlcExchangePolicy.Exact(types,x=>x.Path,path,"typePath").Value;
             TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("types",target.IsConsistent?new string[0]:new[]{typePath},"typePath");
             var file=PlcExchangePolicy.ExportDestination(exportPath,path,preservePath);
             return Export("ExportType", file.FullName, dryRun, f => { RequireTargetOffline(selected); target.Export(f, ExportOptions.None); },unitName);
         }
-        public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true) => ExportTagTableScoped(softwarePath, tagTableName, exportPath, dryRun);
+        public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true) =>
+            ExportTagTableScoped(softwarePath, tagTableName, exportPath, dryRun);
         public PlcMutationResult ExportTagTableScoped(string softwarePath, string tagTableName, string exportPath, bool dryRun = true, string unitName = "")
         {
             var tables=PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName).TagTables;
             var target=PlcExchangePolicy.Exact(tables,t=>t.Name,tagTableName,"tagTableName");
             return Export("ExportTagTable", exportPath, dryRun, f => target.Export(f, ExportOptions.None),unitName);
         }
-        public PlcMutationResult ImportBlocks(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true) => ImportBlocksScoped(softwarePath, groupPath, importPath, overwrite, dryRun);
-        public PlcMutationResult ImportBlocksScoped(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
+        public PlcMutationResult ImportBlocks(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true) =>
+            ImportBlocksScoped(softwarePath, groupPath, importPath, overwrite, dryRun);
+        public PlcMutationResult ImportBlocksScoped(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true,
+                string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
         {
             PlcNativeImportOptions.Validate(ReleaseKey, "block", swImportOptions, importOptions, unitName);
             var selected=ReadSelection(softwarePath);
             var input = PlcFoundationPolicy.XmlInput(importPath);
-            var target = PlcExchangePolicy.Exact(BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
-            return ImportXml("ImportBlocks",input,dryRun,()=>WithTargetOffline(selected,()=>PlcNativeImportOptions.Blocks(target.Blocks, input, PlcNativeImportOptions.General(overwrite, importOptions), swImportOptions).Select(b=>b.Name)),()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName), document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Blocks.", overwrite,
-                name => BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, selectedName => g.Value.Blocks.Find(selectedName), b => b.Name, name))), unitName: unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target.Blocks.Where(b => ImportNames(document).Contains(b.Name)).Select(b => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = groupPath + "/" + b.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(b.IsConsistent, b.IsKnowHowProtected), Export = file => WithTargetOffline(selected, () => { b.Export(file, ExportOptions.WithDefaults); return true; }) }));
+            var target = PlcExchangePolicy
+                .Exact(BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))), x => x.Path, PlcExchangePolicy
+                    .ObjectPath(groupPath,true,"groupPath"),"groupPath")
+                .Value;
+            return ImportXml("ImportBlocks",input,dryRun,()=>
+                    WithTargetOffline(selected,()=>PlcNativeImportOptions
+                        .Blocks(target.Blocks, input, PlcNativeImportOptions.General(overwrite, importOptions), swImportOptions).Select(b=>b.Name)),
+                    ()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName), document => PlcFoundationPolicy
+                    .RequireImportAvailable(document, "SW.Blocks.", overwrite,
+                name => BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName)))
+                    .Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, selectedName => g.Value.Blocks.Find(selectedName), b => b.Name, name))), unitName
+                    : unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target.Blocks
+                    .Where(b => ImportNames(document).Contains(b.Name))
+                    .Select(b => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget {
+                        Object = groupPath + "/" + b.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy
+                            .ExportBlocker(b.IsConsistent, b.IsKnowHowProtected), Export = file =>
+                            WithTargetOffline(selected, () => { b.Export(file, ExportOptions.WithDefaults); return true; })
+                    }));
         }
-        public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true) => ImportTypesScoped(softwarePath, groupPath, importPath, overwrite, dryRun);
-        public PlcMutationResult ImportTypesScoped(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
+        public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true) =>
+            ImportTypesScoped(softwarePath, groupPath, importPath, overwrite, dryRun);
+        public PlcMutationResult ImportTypesScoped(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true,
+                string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
         {
             PlcNativeImportOptions.Validate(ReleaseKey, "UDT", swImportOptions, importOptions, unitName);
             var selected=ReadSelection(softwarePath);
             var input = PlcFoundationPolicy.XmlInput(importPath);
-            var target = PlcExchangePolicy.Exact(TypeGroups(PlcUnitScope.Types(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
-            return ImportXml("ImportTypes",input,dryRun,()=>WithTargetOffline(selected,()=>PlcNativeImportOptions.Types(target.Types, input, PlcNativeImportOptions.General(overwrite, importOptions), swImportOptions).Select(t=>t.Name)), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Types.", overwrite,
-                name => TypeGroups(PlcUnitScope.Types(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Types, selectedName => g.Value.Types.Find(selectedName), t => t.Name, name))), unitName: unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target.Types.Where(t => ImportNames(document).Contains(t.Name)).Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = groupPath + "/" + t.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(t.IsConsistent), Export = file => WithTargetOffline(selected, () => { t.Export(file, ExportOptions.WithDefaults); return true; }) }));
+            var target = PlcExchangePolicy
+                .Exact(TypeGroups(PlcUnitScope.Types(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))), x => x.Path, PlcExchangePolicy
+                    .ObjectPath(groupPath,true,"groupPath"),"groupPath")
+                .Value;
+            return ImportXml("ImportTypes",input,dryRun,()=>
+                    WithTargetOffline(selected,()=>PlcNativeImportOptions
+                        .Types(target.Types, input, PlcNativeImportOptions.General(overwrite, importOptions), swImportOptions).Select(t=>t.Name)),
+                    precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Types.", overwrite,
+                name => TypeGroups(PlcUnitScope.Types(selected.Value, PlcUnitScope.Optional(selected.Value, unitName)))
+                    .Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Types, selectedName => g.Value.Types.Find(selectedName), t => t.Name, name))), unitName
+                    : unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target.Types
+                    .Where(t => ImportNames(document).Contains(t.Name))
+                    .Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget {
+                        Object = groupPath + "/" + t.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(t.IsConsistent), Export =
+                            file => WithTargetOffline(selected, () => { t.Export(file, ExportOptions.WithDefaults); return true; })
+                    }));
         }
-        public PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true) => ImportTagTablesScoped(softwarePath, folderPath, importPath, overwrite, dryRun);
-        public PlcMutationResult ImportTagTablesScoped(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
+        public PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true) =>
+            ImportTagTablesScoped(softwarePath, folderPath, importPath, overwrite, dryRun);
+        public PlcMutationResult ImportTagTablesScoped(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true,
+                string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null)
         {
             PlcNativeImportOptions.Validate(ReleaseKey, "TagTable", swImportOptions, importOptions, unitName);
             var input = PlcFoundationPolicy.XmlInput(importPath);
-            var target = PlcExchangePolicy.Exact(TagGroups(PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName)), x => x.Path, PlcExchangePolicy.ObjectPath(folderPath,true,"folderPath"),"folderPath").Value;
-            return ImportXml("ImportTagTables",input,dryRun,()=>target.TagTables.Import(input, PlcNativeImportOptions.General(overwrite, importOptions)).Select(t=>t.Name), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Tags.PlcTagTable", overwrite,
-                name => TagGroups(PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName)).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.TagTables, selectedName => g.Value.TagTables.Find(selectedName), t => t.Name, name))), unitName: unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target.TagTables.Where(t => ImportNames(document).Contains(t.Name)).Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = folderPath + "/" + t.Name, Export = file => t.Export(file, ExportOptions.WithDefaults) }));
+            var target = PlcExchangePolicy
+                .Exact(TagGroups(PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName)), x => x.Path, PlcExchangePolicy
+                    .ObjectPath(folderPath,true,"folderPath"),"folderPath")
+                .Value;
+            return ImportXml("ImportTagTables",input,dryRun,()=>target.TagTables.Import(input, PlcNativeImportOptions.General(overwrite, importOptions))
+                    .Select(t=>t.Name), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Tags.PlcTagTable", overwrite,
+                name => TagGroups(PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName))
+                    .Any(g => PlcFoundationPolicy.SymbolExists(g.Value.TagTables, selectedName => g.Value.TagTables.Find(selectedName), t => t.Name, name))),
+                    unitName: unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target
+                    .TagTables.Where(t => ImportNames(document).Contains(t.Name))
+                    .Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget {
+                        Object = folderPath + "/" + t.Name, Export = file => t.Export(file, ExportOptions.WithDefaults) }));
         }
-        private static string[] ImportNames(System.Xml.Linq.XDocument document) => document.Root!.Elements().Where(e => e.Name.LocalName.StartsWith("SW.", StringComparison.Ordinal)).SelectMany(e => e.Elements("AttributeList").Elements("Name")).Select(e => e.Value).ToArray();
-        private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=null, Action<System.Xml.Linq.XDocument>? precheck=null, Func<System.Xml.Linq.XDocument, IEnumerable<TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget>>? backups=null, string unitName="", string[]? swImportOptions=null, string[]? importOptions=null)
+        private static string[] ImportNames(System.Xml.Linq.XDocument document) => document.Root!.Elements()
+            .Where(e => e.Name.LocalName.StartsWith("SW.", StringComparison.Ordinal)).SelectMany(e => e.Elements("AttributeList").Elements("Name"))
+            .Select(e => e.Value).ToArray();
+        private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=
+                null, Action<System.Xml.Linq.XDocument>? precheck=null, Func<System.Xml.Linq.XDocument, IEnumerable<TiaOpenness.Shared.NativeExportPolicy
+                .RecoveryTarget>>? backups=null, string unitName="", string[]? swImportOptions=null, string[]? importOptions=null)
         {
             using(var stream=TiaOpenness.Shared.NativeInputPolicy.OpenRead(input.FullName,"importPath"))
             using(var sha=System.Security.Cryptography.SHA256.Create())
@@ -462,25 +570,42 @@ namespace TiaMcp.Adapters
                 PlcFoundationPolicy.XmlInput(input.FullName, out var document);
                 precheck?.Invoke(document);
                 var hash=BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
-                string? recoveryDirectory=null,recoveryWarning=null; var recoveryFiles=new Dictionary<string,string>(); var recoverySkipped=new Dictionary<string,string>[0];
+                string? recoveryDirectory=null,recoveryWarning=null; var recoveryFiles=new Dictionary<string,string>(); var recoverySkipped=
+                    new Dictionary<string,string>[0];
                 try
                 {
                     var capability=format?.Invoke();
                     if(!dryRun) capability?.RequireImport();
                     if(!dryRun && backups!=null)
                     {
-                        var recovery=TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(backups(document),PlcBatchImportRecovery.Directory,TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath);
-                        recoveryDirectory=recovery.Directory; recoveryWarning=recovery.Warning; recoveryFiles=recovery.Files; recoverySkipped=recovery.Skipped.ToArray();
+                        var recovery=TiaOpenness.Shared.NativeExportPolicy
+                            .SingleImportRecovery(backups(document),PlcBatchImportRecovery.Directory,TiaOpenness.Shared.DataLocations.Current
+                                .RecoveryAttemptedPath);
+                        recoveryDirectory=recovery.Directory; recoveryWarning=recovery.Warning; recoveryFiles=recovery.Files; recoverySkipped=recovery.Skipped
+                            .ToArray();
                     }
                     var result=Mutation(operation,dryRun,dryRun ? null : import(),scoped:true);
                     capability?.Apply(result);
                     var scope=(PlcScopedMutationResult)result;
-                    scope.UnitName=unitName; scope.SwImportOptions=swImportOptions ?? Array.Empty<string>(); scope.ImportOptions=importOptions ?? Array.Empty<string>();
-                    result.InputFile=input.FullName; result.InputSha256=hash; result.RecoveryDirectory=recoveryDirectory; result.RecoveryFiles=recoveryFiles; result.RecoveryStatus=dryRun && backups!=null ? "not-attempted-preview" : recoveryWarning!=null ? "backup-skipped" : recoveryDirectory!=null ? "backup-ready" : "not-needed";
+                    scope.UnitName=unitName; scope.SwImportOptions=swImportOptions ?? Array.Empty<string>(); scope.ImportOptions=importOptions ?? Array
+                        .Empty<string>();
+                    result.InputFile=input.FullName; result.InputSha256=hash; result.RecoveryDirectory=recoveryDirectory; result.RecoveryFiles=recoveryFiles;
+                    result.RecoveryStatus=dryRun && backups!=null ? "not-attempted-preview" : recoveryWarning!=null ? "backup-skipped"
+                        : recoveryDirectory!=null ? "backup-ready" : "not-needed";
                     if (operation == "ImportBlocks" && backups != null)
-                        result.Warnings = result.Warnings.Concat(new[] { "XML overwrite can detach a block from its library type. Review library instances and their callers before execution; the XML backup does not restore a library type link. Use the library type workflow when the link must be preserved." }).ToArray();
+                        result.Warnings = result.Warnings
+                            .Concat(new[] {
+                                "XML overwrite can detach a block from its library type. Review library instances and their callers before execution; the " +
+                                    "XML backup does not restore a library type link. Use the library type workflow when the link must be preserved."
+                            })
+                            .ToArray();
                     if (dryRun && backups != null)
-                        result.Warnings = result.Warnings.Concat(new[] { "Preview does not export recovery files. Apply reports backup-ready or backup-skipped from the actual backup attempt; inspect that result before further work." }).ToArray();
+                        result.Warnings = result.Warnings
+                            .Concat(new[] {
+                                "Preview does not export recovery files. Apply reports backup-ready or backup-skipped from the actual backup attempt; " +
+                                    "inspect that result before further work."
+                            })
+                            .ToArray();
                     result.RecoveryWarning=recoveryWarning; result.RecoverySkipped=recoverySkipped;
                     return result;
                 }
@@ -489,7 +614,10 @@ namespace TiaMcp.Adapters
                     ex.Data["inputFile"]=input.FullName; ex.Data["inputSha256"]=hash;
                     if(recoveryDirectory!=null) ex.Data["recoveryDirectory"]=recoveryDirectory;
                     if(!ex.Data.Contains("recoveryFiles")) ex.Data["recoveryFiles"]=recoveryFiles;
-                    if(recoveryWarning!=null) { ex.Data["recoveryStatus"]="backup-skipped";ex.Data["recoveryWarning"]=recoveryWarning;ex.Data["recoverySkipped"]=recoverySkipped;ex.Data["attemptedPath"]=TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath; }
+                    if(recoveryWarning!=null) {
+                        ex.Data["recoveryStatus"]="backup-skipped";ex.Data["recoveryWarning"]=recoveryWarning;ex.Data["recoverySkipped"]=recoverySkipped;ex
+                            .Data["attemptedPath"]=TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath;
+                    }
                     throw;
                 }
             }
@@ -505,7 +633,9 @@ namespace TiaMcp.Adapters
         public PlcMutationResult CreateTag(string plc, string table, string name, string dataType, string address, bool dryRun = true)
         {
             PlcFoundationPolicy.RequireName(name);
-            if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(address)) throw new AdapterPreconditionException("Data type and logical address are required.",string.IsNullOrWhiteSpace(dataType) ? "dataType" : "address");
+            if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(address))
+                throw new AdapterPreconditionException("Data type and logical address are required.",string.IsNullOrWhiteSpace(dataType) ? "dataType"
+                    : "address");
             var target = Table(plc, table);
             if (target.Tags.Find(name) != null) throw new AdapterPreconditionException("Tag already exists.","name");
             RequireUniqueSymbol(plc, name);
@@ -515,7 +645,8 @@ namespace TiaMcp.Adapters
         public PlcMutationResult CreateUserConstant(string plc, string table, string name, string dataType, string value, bool dryRun = true)
         {
             PlcFoundationPolicy.RequireName(name);
-            if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(value)) throw new AdapterPreconditionException("Data type and value are required.",string.IsNullOrWhiteSpace(dataType) ? "dataType" : "value");
+            if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(value))
+                throw new AdapterPreconditionException("Data type and value are required.",string.IsNullOrWhiteSpace(dataType) ? "dataType" : "value");
             var target = Table(plc, table);
             if (target.UserConstants.Find(name) != null) throw new AdapterPreconditionException("User constant already exists.","name");
             RequireUniqueSymbol(plc, name);
@@ -532,7 +663,9 @@ namespace TiaMcp.Adapters
                 t => PlcFoundationPolicy.SymbolExists(t.Tags, selectedName => t.Tags.Find(selectedName), tag => tag.Name, name, true)
                     || PlcFoundationPolicy.SymbolExists(t.UserConstants, selectedName => t.UserConstants.Find(selectedName), c => c.Name, name, true)
                     || PlcFoundationPolicy.SymbolExists(t.SystemConstants, selectedName => t.SystemConstants.Find(selectedName), c => c.Name, name, true));
-            if (table != null) throw new AdapterPreconditionException("A tag or constant with this name already exists in tag table '" + table.Name + "'; PLC symbol names are unique per PLC.", "name");
+            if (table != null)
+                throw new AdapterPreconditionException("A tag or constant with this name already exists in tag table '" + table.Name
+                    + "'; PLC symbol names are unique per PLC.", "name");
         }
         public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true)
         {
@@ -551,15 +684,24 @@ namespace TiaMcp.Adapters
                 if(ReleaseKey=="21")
                 {
                     var assembly=typeof(Siemens.Engineering.Safety.SafetyAdministration).Assembly;
-                    EngineeringAssemblyIdentity.RequireMatch(new AssemblyName("Siemens.Engineering.Safety, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b"),assembly.GetName(),assembly.Location);
-                    if(!string.Equals(Path.GetDirectoryName(assembly.Location),Path.GetDirectoryName(typeof(PlcSoftware).Assembly.Location),StringComparison.OrdinalIgnoreCase)) throw new FileLoadException("Safety must come from the selected V21 API directory.");
+                    EngineeringAssemblyIdentity
+                        .RequireMatch(new AssemblyName("Siemens.Engineering.Safety, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b"),
+                            assembly.GetName(),assembly.Location);
+                    if(!string
+                            .Equals(Path.GetDirectoryName(assembly.Location),Path.GetDirectoryName(typeof(PlcSoftware).Assembly.Location),StringComparison
+                                .OrdinalIgnoreCase))
+                        throw new FileLoadException("Safety must come from the selected V21 API directory.");
                 }
                 admin=((IEngineeringServiceProvider)(DeviceItem)selected.Context!).GetService<Siemens.Engineering.Safety.SafetyAdministration>()
-                    ?? throw new AdapterPreconditionException("The selected PLC does not provide SafetyAdministration; password was not ignored.","softwarePath",false);
+                    ?? throw new AdapterPreconditionException("The selected PLC does not provide SafetyAdministration; password was not ignored.",
+                            "softwarePath",false);
                 if(!admin.IsLoggedOnToSafetyOfflineProgram)
                 {
                     using(var secure=new System.Net.NetworkCredential("",password).SecurePassword)
-                    { try { admin.LoginToSafetyOfflineProgram(secure); } catch { throw new InvalidOperationException("Safety offline login failed; password and native login details are not echoed."); } }
+                    {
+                        try { admin.LoginToSafetyOfflineProgram(secure); } catch {
+                            throw new InvalidOperationException("Safety offline login failed; password and native login details are not echoed."); }
+                    }
                     loggedOnHere=true;
                 }
             }
@@ -569,11 +711,17 @@ namespace TiaMcp.Adapters
                 if(loggedOnHere) { try { admin!.LogoffFromSafetyOfflineProgram(); } catch /* swallow(teardown): preserve the original compile failure and attach the safety logoff failure as cleanup evidence */ { ex.Data["safetyCleanup"]="Safety logoff also failed; inspect the session manually."; } }
                 throw;
             }
-            if(loggedOnHere) { try { admin!.LogoffFromSafetyOfflineProgram(); } catch { throw new InvalidOperationException("Compile returned but safety logoff failed; session outcome is unknown."); } }
+            if(loggedOnHere) {
+                try { admin!.LogoffFromSafetyOfflineProgram(); } catch {
+                    throw new InvalidOperationException("Compile returned but safety logoff failed; session outcome is unknown."); }
+            }
 #else
             RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); result=compiler.Compile();
 #endif
-            var response=new PlcCompileResult { Executed=true, ProjectFile=Project().Path.FullName, State=result.State.ToString(), ErrorCount=result.ErrorCount,WarningCount=result.WarningCount,OfflineStateNotExposedByDevices=unobservedDevices };
+            var response=new PlcCompileResult {
+                Executed=true, ProjectFile=Project().Path.FullName, State=result.State.ToString(), ErrorCount=result.ErrorCount,WarningCount=result
+                    .WarningCount,OfflineStateNotExposedByDevices=unobservedDevices
+            };
             PlcCompilePolicy.Classify(response,Messages(result.Messages,0));
             return response;
         }
@@ -589,7 +737,8 @@ namespace TiaMcp.Adapters
                 parts.Add("DateTime="+m.DateTime.ToString("O"));
                 parts.Add("ErrorCount="+m.ErrorCount);
                 parts.Add("WarningCount="+m.WarningCount);
-                yield return new PlcDiagnostic { State=m.State.ToString(),Description=m.Description ?? "",Formatted=string.Join("; ",parts),HasChildren=m.Messages.Count!=0 };
+                yield return new PlcDiagnostic {
+                    State=m.State.ToString(),Description=m.Description ?? "",Formatted=string.Join("; ",parts),HasChildren=m.Messages.Count!=0 };
                 foreach (var child in Messages(m.Messages, depth + 1, path)) yield return child;
             }
         }

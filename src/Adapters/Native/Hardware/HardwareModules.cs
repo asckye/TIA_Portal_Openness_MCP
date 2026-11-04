@@ -331,7 +331,10 @@ namespace TiaMcp.Adapters
             if (after == null && createdName != null)
             {
                 var nested = FindDescendantByName(verifyHost, createdName, 3);
-                if (nested != null) { after = DescribeItem(nested); result.Attempts.Add("readback: '" + createdName + "' found below the host at position " + after.PositionNumber); }
+                if (nested != null) {
+                    after = DescribeItem(nested); result.Attempts
+                        .Add("readback: '" + createdName + "' found below the host at position " + after.PositionNumber);
+                }
             }
             if (after != null && acceptedSlot == 65535) { acceptedSlot = after.PositionNumber; result.PositionNumber = acceptedSlot; }
             if (after == null)
@@ -399,14 +402,17 @@ namespace TiaMcp.Adapters
             try
             {
                 var provider = HardwareRequireUtility<ModuleInformationProvider>("ModuleInformationProvider");
-                types = (provider.FindModuleTypes(partial) ?? Array.Empty<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct(StringComparer.Ordinal).ToList();
+                types = (provider.FindModuleTypes(partial) ?? Array.Empty<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct(StringComparer.Ordinal)
+                    .ToList();
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
-                return (null, "InvalidParams", $"ModuleInformationProvider.FindModuleTypes('{partial}') failed: {ShortExceptionMessage(ex)}. Pass the full TypeIdentifier as orderNumber.");
+                return (null, "InvalidParams",
+                        $"ModuleInformationProvider.FindModuleTypes('{partial}') failed: {ShortExceptionMessage(ex)}. Pass the full TypeIdentifier as orderNumber.");
             }
             if (types.Count == 0)
-                return (null, "OrderNumberNotFound", $"ModuleInformationProvider.FindModuleTypes('{partial}') returned no installed module type. Check the article number (with its spaces) or pass the full TypeIdentifier.");
+                return (null, "OrderNumberNotFound",
+                        $"ModuleInformationProvider.FindModuleTypes('{partial}') returned no installed module type. Check the article number (with its spaces) or pass the full TypeIdentifier.");
             var matches = requestedVersion.Length == 0 ? types : types.Where(t => t.EndsWith("/" + requestedVersion, StringComparison.Ordinal)).ToList();
             if (matches.Count == 1) return (matches[0], "", "");
             var listed = string.Join("; ", types.Take(12)) + (types.Count > 12 ? "; ..." : "");

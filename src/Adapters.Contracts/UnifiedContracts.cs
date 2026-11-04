@@ -30,7 +30,9 @@ namespace TiaMcp.Adapters.Contracts
                 case "array": return value.Items.Select(Value).ToArray();
                 case "string": return value.Text;
                 case "number": return int.TryParse(value.Text, out var number) ? (object)number
-                    : double.TryParse(value.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var fractional) ? fractional : double.NaN;
+                    : double
+                        .TryParse(value.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var fractional)
+                        ? fractional : double.NaN;
                 case "boolean": return bool.Parse(value.Text);
                 default: return null;
             }
@@ -55,7 +57,8 @@ namespace TiaMcp.Adapters.Contracts
                     if (step.Keys.Any(k => k != "property" && k != "name" && k != "key")) throw Invalid(prefix + "unknown key.");
                     if (!step.TryGetValue("property", out var property) || !Member(property)) throw Invalid(prefix + "invalid or backward property.");
                     if (step.TryGetValue("name", out var name) && !Name(name)) throw Invalid(prefix + "name must be a nonempty string.");
-                    if (step.TryGetValue("key", out var key) && (key is not string text || (text != "Name" && text != "PropertyName") || !step.ContainsKey("name")))
+                    if (step.TryGetValue("key", out var key)
+                            && (key is not string text || (text != "Name" && text != "PropertyName") || !step.ContainsKey("name")))
                         throw Invalid(prefix + "key requires name and must be Name or PropertyName.");
                 }
                 else if (step.Count == 1 && (step.TryGetValue("property", out var member) || step.TryGetValue("attribute", out member)))
@@ -68,7 +71,8 @@ namespace TiaMcp.Adapters.Contracts
                 }
                 else if (step.TryGetValue("name", out var name) && step.Keys.All(k => k == "name" || k == "key"))
                 {
-                    if (!Name(name) || step.TryGetValue("key", out var key) && !BranchMember(key)) throw Invalid(prefix + "invalid exact name or backward key.");
+                    if (!Name(name) || step.TryGetValue("key", out var key) && !BranchMember(key))
+                        throw Invalid(prefix + "invalid exact name or backward key.");
                 }
                 else throw Invalid(prefix + "unknown key or invalid branch step.");
             }
@@ -95,7 +99,8 @@ namespace TiaMcp.Adapters.Contracts
             foreach (var text in new[] { request.ObjectPathJson, request.TagPathJson, request.DurationPathJson, request.BranchJson })
                 if (text.Length != 0 && request.Inputs.TryGetValue(text, out var path)) Path(text, Value(path), branch: text == request.BranchJson);
             if (request.Operation == "GetUnifiedScreenBranch" || request.Operation == "GetUnifiedFaceplateInstance") AbsoluteHmiPath(request.ScreenPath);
-            if (request.Operation == "GetUnifiedLibraryType" || request.Operation == "GetUnifiedFaceplateInstance" && request.TypePath.Length != 0) AbsoluteHmiPath(request.TypePath);
+            if (request.Operation == "GetUnifiedLibraryType" || request.Operation == "GetUnifiedFaceplateInstance" && request.TypePath.Length != 0)
+                AbsoluteHmiPath(request.TypePath);
             if (request.Operation == "ListUnifiedLibraryFolderEntries") AbsoluteHmiPath(request.FolderPath, rootAllowed: true);
             switch (request.Operation)
             {
@@ -108,7 +113,8 @@ namespace TiaMcp.Adapters.Contracts
                     break;
                 case "ListUnifiedEngineeringObjects":
                 case "ManageUnifiedEngineeringObject":
-                    Category(request.Category, "alarmClasses", "discreteAlarms", "analogAlarms", "alarmLogs", "dataLogs", "textLists", "graphicLists", "systemTags", "systemTextLists", "auditTrails", "opcUaAlarmTypes");
+                    Category(request.Category, "alarmClasses", "discreteAlarms", "analogAlarms", "alarmLogs", "dataLogs", "textLists", "graphicLists",
+                            "systemTags", "systemTextLists", "auditTrails", "opcUaAlarmTypes");
                     if (request.Operation == "ManageUnifiedEngineeringObject")
                     {
                         Action(request.Action, "create", "update", "delete");
@@ -122,19 +128,24 @@ namespace TiaMcp.Adapters.Contracts
                         throw new ArgumentException("plantObjectType only applies to creating a child CPM instance.");
                     break;
             }
-            if (new[] { "GetUnifiedAlarmCommon", "GetUnifiedAuditSettings", "ListUnifiedEngineeringObjects", "ManageUnifiedEngineeringObject", "ManageUnifiedListEntries" }.Contains(request.Operation)
+            if (new[] {
+                    "GetUnifiedAlarmCommon", "GetUnifiedAuditSettings", "ListUnifiedEngineeringObjects", "ManageUnifiedEngineeringObject",
+                        "ManageUnifiedListEntries"
+                }.Contains(request.Operation)
                 && string.IsNullOrWhiteSpace(request.SoftwarePath)) throw new ArgumentException("Nonempty softwarePath required.");
             foreach (var input in new[] { request.PropertiesJson, request.EntryJson })
                 if (input.Length != 0 && request.Inputs.TryGetValue(input, out var value))
                 {
-                    if (value.Error != null || value.Kind != "object") throw new ArgumentException("Properties and entry inputs must be JSON objects with unique keys.");
+                    if (value.Error != null || value.Kind != "object")
+                        throw new ArgumentException("Properties and entry inputs must be JSON objects with unique keys.");
                     if (request.Operation == "ManageUnifiedEngineeringObject" || request.Operation == "ManageUnifiedPlantNode")
                     {
                         if (value.Properties.ContainsKey("Name")) throw new ArgumentException("Renaming through properties is refused.");
                         if (request.Action == "delete" && value.Properties.Count != 0) throw new ArgumentException("Delete does not accept properties.");
                     }
                 }
-            if (request.Operation == "GetUnifiedAlarmCommon" || request.Operation == "GetUnifiedAuditSettings" || request.Operation == "ListUnifiedEngineeringObjects")
+            if (request.Operation == "GetUnifiedAlarmCommon" || request.Operation == "GetUnifiedAuditSettings" || request
+                    .Operation == "ListUnifiedEngineeringObjects")
                 if (request.Offset < 0 || request.Limit < 1 || request.Limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
         }
 
@@ -162,7 +173,8 @@ namespace TiaMcp.Adapters.Contracts
                 throw new ArgumentException("Relative and backslash HMI paths are refused." + guidance);
             var parts = value.Substring(1).Split('/');
             if (parts.Length > maximumSegments || parts.Any(p => string.IsNullOrWhiteSpace(Uri.UnescapeDataString(p))))
-                throw new ArgumentException("Invalid HMI path: empty segments and trailing / are refused; at most " + maximumSegments + " segments are allowed." + guidance);
+                throw new ArgumentException("Invalid HMI path: empty segments and trailing / are refused; at most " + maximumSegments
+                        + " segments are allowed." + guidance);
             return parts;
         }
     }

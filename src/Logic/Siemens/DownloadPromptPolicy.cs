@@ -65,7 +65,10 @@ namespace TiaMcpServer.Siemens
         // Prompts that widen a download beyond what the approver saw (SDK summaries: the F-program, "Differences between configured and
         // target modules", "Active test and commissioning functions could be canceled / could prevent loading", "The download must be
         // expanded beyond your selection", "Load identification data to the PROFINET IO devices"). Only the named parameter answers them.
-        internal static readonly string[] OptInPrompts = { "SafetyProgram", "DifferentTargetConfiguration", "ActiveTestCanBeAborted", "ActiveTestCanPreventDownload", "ExpandDownload", "LoadIdentificationData" };
+        internal static readonly string[] OptInPrompts = {
+            "SafetyProgram", "DifferentTargetConfiguration", "ActiveTestCanBeAborted", "ActiveTestCanPreventDownload", "ExpandDownload",
+                "LoadIdentificationData"
+        };
 
         internal static string? OptInParameter(string typeName) => typeName.ToLowerInvariant() switch
         {
@@ -123,7 +126,8 @@ namespace TiaMcpServer.Siemens
                 StartAfterDownload = download && request.StartAfterDownload,
                 StopBeforeDownload = download && request.StopBeforeDownload,
                 UserManagementMode = mode,
-                ModuleAccessPassword = download ? NonEmpty(request.ModuleAccessPassword) ?? NonEmpty(request.Password) : folder ? null : NonEmpty(request.Password),
+                ModuleAccessPassword = download ? NonEmpty(request.ModuleAccessPassword) ?? NonEmpty(request.Password) : folder ? null
+                    : NonEmpty(request.Password),
                 BlockBindingPassword = download ? NonEmpty(request.BlockBindingPassword) : null,
                 MasterSecretPassword = download ? NonEmpty(request.MasterSecretPassword) : null,
                 AllowSafetyProgramDownload = (download || folder) && request.AllowSafetyProgramDownload,
@@ -153,7 +157,8 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         internal static string? NonTlsLoginRefusal(bool? isSecureCommunication, bool allowNonTlsLogin)
             => isSecureCommunication == false && !allowNonTlsLogin
-                ? "password not sent: the connection is not TLS-secured (IsSecureCommunication=false); pass allowNonTlsLogin=true to send it over the legacy channel"
+                ? "password not sent: the connection is not TLS-secured (IsSecureCommunication=false); pass allowNonTlsLogin=true to send it over the legacy " +
+                    "channel"
                 : null;
 
         /// <summary>解析 promptAnswersJson：{"ResetModule":"DeleteAll","OverwriteHmiData":true}。值为枚举名或布尔。</summary>
@@ -165,9 +170,11 @@ namespace TiaMcpServer.Siemens
             var node = JsonNode.Parse(json) as JsonObject ?? throw new ArgumentException("promptAnswersJson must be a JSON object of promptType -> value.");
             foreach (var kv in node)
             {
-                if (string.IsNullOrWhiteSpace(kv.Key) || kv.Key.Any(c => !char.IsLetterOrDigit(c))) throw new ArgumentException("Prompt type names are plain identifiers: " + kv.Key);
+                if (string.IsNullOrWhiteSpace(kv.Key) || kv.Key.Any(c => !char.IsLetterOrDigit(c)))
+                    throw new ArgumentException("Prompt type names are plain identifiers: " + kv.Key);
                 if (kv.Value is not JsonValue v) throw new ArgumentException("Prompt answer must be a string or boolean: " + kv.Key);
-                string text = v.TryGetValue<bool>(out var b) ? (b ? "true" : "false") : v.TryGetValue<string>(out var s) ? s : throw new ArgumentException("Prompt answer must be a string or boolean: " + kv.Key);
+                string text = v.TryGetValue<bool>(out var b) ? (b ? "true" : "false") : v.TryGetValue<string>(out var s) ? s
+                    : throw new ArgumentException("Prompt answer must be a string or boolean: " + kv.Key);
                 if (string.IsNullOrWhiteSpace(text) || text.Length > 64) throw new ArgumentException("Prompt answer out of range: " + kv.Key);
                 result[kv.Key] = text;
             }
@@ -198,12 +205,16 @@ namespace TiaMcpServer.Siemens
                 // so TIA aborts a download that needs reinitialization. Reinitializing needs STOP (the selection's own documentation), on
                 // both reinitialization prompts: without stopBeforeDownload the answer is NoAction and TIA aborts.
                 case "DataBlockReinitialization":
-                    if (KeepActualValues) return ("NoAction", "builtin", "keepActualValues=true answers NoAction, so TIA aborts a download that needs reinitialization; pass keepActualValues=false with stopBeforeDownload=true to reinitialize");
+                    if (KeepActualValues)
+                        return ("NoAction", "builtin",
+                            "keepActualValues=true answers NoAction, so TIA aborts a download that needs reinitialization; pass keepActualValues=false with " +
+                            "stopBeforeDownload=true to reinitialize");
                     return Reinitialization();
                 case "DataBlockReinitializationOrKeepActualValues":
                     return KeepActualValues ? ("KeepActualValues", "builtin", null) : Reinitialization();
                 case "ConsistentBlocksDownload": return ("ConsistentDownload", "builtin", null);
-                case "AllBlocksDownload": return ConsistentBlocksOnly ? null : ("DownloadAllBlocks", "builtin", "consistentBlocksOnly=false answers DownloadAllBlocks (its only selection)");
+                case "AllBlocksDownload": return ConsistentBlocksOnly ? null
+                    : ("DownloadAllBlocks", "builtin", "consistentBlocksOnly=false answers DownloadAllBlocks (its only selection)");
                 case "UserManagementDownload": return (UserManagementSelection(UserManagementMode), "builtin", null);
                 case "AlarmTextLibrariesDownload": return ("ConsistentDownload", "builtin", null);
                 case "WaitOnReboot": return ("Wait", "builtin", null);
@@ -222,11 +233,13 @@ namespace TiaMcpServer.Siemens
 
         private (string Value, string Source, string? Note) Reinitialization() => StopBeforeDownload
             ? ("StopPlcAndReinitialize", "builtin", "keepActualValues=false: the PLC is stopped and all data values are reset to their start values")
-            : ("NoAction", "conservative", "reinitialization needs STOP, so stopBeforeDownload=false answers NoAction and TIA aborts; pass stopBeforeDownload=true to reinitialize");
+            : ("NoAction", "conservative",
+                    "reinitialization needs STOP, so stopBeforeDownload=false answers NoAction and TIA aborts; pass stopBeforeDownload=true to reinitialize");
 
         // A reinitialization prompt answered NoAction stops the download in TIA; the result names it and the parameter that allows it.
         internal string ReinitializationSummary() => string.Concat(Answered
-            .Where(x => x.ContainsKey("note") && x.ContainsKey("value") && x["prompt"]!.GetValue<string>().StartsWith("DataBlockReinitialization", StringComparison.Ordinal)
+            .Where(x => x.ContainsKey("note") && x.ContainsKey("value") && x["prompt"]!.GetValue<string>()
+                    .StartsWith("DataBlockReinitialization", StringComparison.Ordinal)
                 && x["value"]!.GetValue<string>() == "NoAction")
             .Select(x => " " + x["prompt"]!.GetValue<string>() + " answered NoAction: " + x["note"]!.GetValue<string>() + "."));
 
@@ -256,7 +269,8 @@ namespace TiaMcpServer.Siemens
         private string UnansweredNote(string typeName, IReadOnlyList<string>? selectionValues, bool hasChecked)
         {
             if (typeName == "AllBlocksDownload" && ConsistentBlocksOnly)
-                return "consistentBlocksOnly=true leaves AllBlocksDownload unanswered, so TIA aborts instead of downloading all blocks; pass consistentBlocksOnly=false to answer DownloadAllBlocks";
+                return "consistentBlocksOnly=true leaves AllBlocksDownload unanswered, so TIA aborts instead of downloading all blocks; pass " +
+                    "consistentBlocksOnly=false to answer DownloadAllBlocks";
             if (selectionValues != null && selectionValues.Count > 0) return "no default for this prompt; allowed values: " + string.Join("/", selectionValues);
             return hasChecked ? "no default for this checkbox prompt; pass true/false via promptAnswersJson" : "prompt exposes nothing settable";
         }
@@ -283,7 +297,8 @@ namespace TiaMcpServer.Siemens
                     if (!bool.TryParse(explicitValue, out var flag)) throw new ArgumentException($"promptAnswersJson[{typeName}] must be true or false.");
                     return new Answer { Kind = AnswerKind.Checked, Value = flag ? "true" : "false", Source = "explicit" };
                 }
-                if (hasPassword) throw new ArgumentException($"promptAnswersJson[{typeName}] refused: passwords are only accepted through dedicated parameters.");
+                if (hasPassword)
+                    throw new ArgumentException($"promptAnswersJson[{typeName}] refused: passwords are only accepted through dedicated parameters.");
                 throw new ArgumentException($"promptAnswersJson[{typeName}]: prompt has no settable selection or checkbox.");
             }
 
@@ -300,11 +315,17 @@ namespace TiaMcpServer.Siemens
                 if (OptInAllowed(typeName))
                 {
                     string allow = OptInAllowSelection(typeName);
-                    if (selectionValues.Contains(allow)) return new Answer { Kind = AnswerKind.Selection, Value = allow, Source = "allowed", Note = "allowed by " + parameter + "=true" };
-                    return new Answer { Kind = AnswerKind.Unanswered, Source = "unanswered", Note = "allowed by " + parameter + "=true, but the prompt offers no " + allow + "; allowed values: " + string.Join("/", selectionValues) };
+                    if (selectionValues.Contains(allow)) return new Answer {
+                        Kind = AnswerKind.Selection, Value = allow, Source = "allowed", Note = "allowed by " + parameter + "=true" };
+                    return new Answer {
+                        Kind = AnswerKind.Unanswered, Source = "unanswered", Note = "allowed by " + parameter + "=true, but the prompt offers no " + allow
+                            + "; allowed values: " + string.Join("/", selectionValues)
+                    };
                 }
                 string? refuse = OptInRefuseSelection(typeName);
-                return new Answer { Kind = AnswerKind.Refused, Value = refuse != null && selectionValues.Contains(refuse) ? refuse : null, Source = "refused", AllowWith = parameter,
+                return new Answer {
+                    Kind = AnswerKind.Refused, Value = refuse != null && selectionValues.Contains(refuse) ? refuse : null, Source = "refused", AllowWith =
+                        parameter,
                     Note = "refused by default; the download stops at this prompt. Pass " + parameter + "=true to allow it" };
             }
 
@@ -357,18 +378,24 @@ namespace TiaMcpServer.Siemens
 
 #endif
         internal string UnansweredSummary() => Unanswered.Count == 0 ? "" :
-            " Unanswered download prompts: " + string.Join(", ", Unanswered.Select(x => x["prompt"]!.GetValue<string>())) + " (pass answers via promptAnswersJson or the password parameters).";
+            " Unanswered download prompts: " + string.Join(", ", Unanswered.Select(x => x["prompt"]!.GetValue<string>()))
+                + " (pass answers via promptAnswersJson or the password parameters).";
 
         internal string RefusedSummary() => Refused.Count == 0 ? "" :
-            " Stopped at refused download prompt(s): " + string.Join(", ", Refused.Select(x => x["prompt"]!.GetValue<string>() + " (pass " + x["allowWith"]!.GetValue<string>() + "=true to allow it)")) + ".";
+            " Stopped at refused download prompt(s): " + string
+                .Join(", ", Refused.Select(x => x["prompt"]!.GetValue<string>() + " (pass " + x["allowWith"]!.GetValue<string>() + "=true to allow it)")) + ".";
 
 #if !TIA_NATIVE_ONLINE
         private static readonly string[] PlannedDownloadPrompts = { "StopModules", "StopHSystemOrModule", "StopHSystem", "StartModules", "StartBackupModules",
-            "DataBlockReinitialization", "DataBlockReinitializationOrKeepActualValues", "ConsistentBlocksDownload", "AllBlocksDownload", "UserManagementDownload",
-            "AlarmTextLibrariesDownload", "WaitOnReboot", "TargetForSoftware", "InitializeMemory", "OverwriteOnMemoryCard", "OverwriteSystemData", "ResetModule",
+            "DataBlockReinitialization", "DataBlockReinitializationOrKeepActualValues", "ConsistentBlocksDownload", "AllBlocksDownload",
+                "UserManagementDownload",
+            "AlarmTextLibrariesDownload", "WaitOnReboot", "TargetForSoftware", "InitializeMemory", "OverwriteOnMemoryCard", "OverwriteSystemData",
+                "ResetModule",
             "SwitchBackupToPrimary", "ProtectionLevelChanged" };
-        private static readonly string[] PlannedCheckPrompts = { "CheckBeforeDownload", "FitHmiComponents", "OverwriteTargetLanguages", "DownloadWebApplication", "UpdateWebApplication", "DeleteWebApplication" };
-        private static readonly string[] PlannedPasswordPrompts = { "ModuleReadAccessPassword", "ModuleWriteAccessPassword", "PasswordReadAccess", "BlockBindingPassword", "PlcMasterSecretPassword" };
+        private static readonly string[] PlannedCheckPrompts = {
+            "CheckBeforeDownload", "FitHmiComponents", "OverwriteTargetLanguages", "DownloadWebApplication", "UpdateWebApplication", "DeleteWebApplication" };
+        private static readonly string[] PlannedPasswordPrompts = {
+            "ModuleReadAccessPassword", "ModuleWriteAccessPassword", "PasswordReadAccess", "BlockBindingPassword", "PlcMasterSecretPassword" };
 
         /// <summary>
         /// Every prompt answer this request will give, for the approval card. Selection values are the intended enum names; a prompt
@@ -393,26 +420,31 @@ namespace TiaMcpServer.Siemens
                     if (builtin?.Note != null) row["note"] = builtin.Value.Note;
                     Add(type, row);
                 }
-                foreach (var type in PlannedCheckPrompts) Add(type, new JsonObject { ["answer"] = BuiltinCheck(type) == true ? "true" : "false", ["source"] = "builtin" });
+                foreach (var type in PlannedCheckPrompts)
+                    Add(type, new JsonObject { ["answer"] = BuiltinCheck(type) == true ? "true" : "false", ["source"] = "builtin" });
                 foreach (var type in OptInPrompts)
                 {
                     string parameter = OptInParameter(type)!;
                     Add(type, OptInAllowed(type)
                         ? new JsonObject { ["answer"] = OptInAllowSelection(type), ["source"] = "allowed", ["allowedBy"] = parameter }
-                        : new JsonObject { ["answer"] = null, ["source"] = "refused", ["allowWith"] = parameter, ["note"] = "the download stops at this prompt" });
+                        : new JsonObject { ["answer"] = null, ["source"] = "refused", ["allowWith"] = parameter, ["note"] = "the download stops at this prompt"
+                        });
                 }
             }
             // Password prompts are listed by name in values, never as object keys: the approval display redacts every value under a
             // key that names a password, which would also hide the rest of this plan.
             var logins = new JsonArray();
             foreach (var type in upload ? new[] { "ModuleReadAccessPassword", "ModuleWriteAccessPassword", "PasswordReadAccess" } : PlannedPasswordPrompts)
-                logins.Add(new JsonObject { ["prompt"] = type, ["answered"] = !string.IsNullOrEmpty(Secret(type)), ["from"] = upload ? "password" : PasswordFrom(type) });
+                logins
+                    .Add(new JsonObject {
+                        ["prompt"] = type, ["answered"] = !string.IsNullOrEmpty(Secret(type)), ["from"] = upload ? "password" : PasswordFrom(type) });
             return new JsonObject
             {
                 ["answers"] = answers,
                 ["loginPrompts"] = logins,
                 ["otherPrompts"] = "unanswered; TIA aborts the download at a blocking prompt",
-                ["loginChannel"] = AllowNonTlsLogin ? "also connections that are not TLS-secured (allowNonTlsLogin=true)" : "TLS-secured connections only, where the release reports IsSecureCommunication"
+                ["loginChannel"] = AllowNonTlsLogin ? "also connections that are not TLS-secured (allowNonTlsLogin=true)"
+                    : "TLS-secured connections only, where the release reports IsSecureCommunication"
             };
         }
 
@@ -457,7 +489,8 @@ namespace TiaMcpServer.Siemens
             request.MasterSecretPassword = Text("masterSecretPassword") ?? "";
             try
             {
-                var answers = args["promptAnswers"] is JsonObject map ? ParseExplicitAnswers(map.ToJsonString()) : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                var answers = args["promptAnswers"] is JsonObject map ? ParseExplicitAnswers(map.ToJsonString()) : new Dictionary<string,
+                    string>(StringComparer.OrdinalIgnoreCase);
                 return ForRequest(request, answers).Plan(tool);
             }
             catch (Exception error) when (error is ArgumentException || error is System.Text.Json.JsonException)

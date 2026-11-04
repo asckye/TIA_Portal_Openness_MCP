@@ -11,7 +11,8 @@ namespace TiaMcp.Adapters
         {
             TiaVersionCatalog.Get(release);
             if(password.Length!=0 && (release=="14sp1" || release=="15.1" || release=="16"))
-                throw new NotSupportedException("The supplied native PublicAPI for "+release+" has no SafetyAdministration login API; password-based compilation is unavailable in this adapter. No password is ignored.");
+                throw new NotSupportedException("The supplied native PublicAPI for "+release
+                        +" has no SafetyAdministration login API; password-based compilation is unavailable in this adapter. No password is ignored.");
         }
         internal static void Classify(PlcCompileResult result,IEnumerable<PlcDiagnostic> diagnostics)
         {
@@ -24,7 +25,9 @@ namespace TiaMcp.Adapters
                 // localized text. Summary rows are still recognised by the English/German "Compiling finished" prefixes and by the
                 // empty-description parent rule; where TIA places them in the tree is on the VM checklist. Success and the native
                 // ErrorCount/WarningCount always come from the root result, not from these lists.
-                if(new[]{"Compiling finished","Compilation finished","Kompilierung beendet"}.Any(s=>description.StartsWith(s,StringComparison.OrdinalIgnoreCase))) continue;
+                if(new[]{"Compiling finished","Compilation finished","Kompilierung beendet"}
+                        .Any(s=>description.StartsWith(s,StringComparison.OrdinalIgnoreCase)))
+                    continue;
                 bool error=string.Equals(item.State,"Error",StringComparison.Ordinal);
                 bool warning=string.Equals(item.State,"Warning",StringComparison.Ordinal);
                 if((error || warning) && item.HasChildren && string.IsNullOrWhiteSpace(item.Description)) continue;

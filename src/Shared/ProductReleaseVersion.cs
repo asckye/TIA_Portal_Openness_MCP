@@ -12,7 +12,8 @@ namespace TiaMcp.Versioning
     /// </summary>
     public sealed class ProductReleaseVersion : IComparable<ProductReleaseVersion>, IEquatable<ProductReleaseVersion>
     {
-        private static readonly Regex Pattern = new Regex(@"^(?<core>(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+))(?:-(?<pre>(?:beta|rc)\.(?:0|[1-9]\d*)))?$", RegexOptions.CultureInvariant);
+        private static readonly Regex Pattern =
+            new Regex(@"^(?<core>(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+))(?:-(?<pre>(?:beta|rc)\.(?:0|[1-9]\d*)))?$", RegexOptions.CultureInvariant);
 
         private ProductReleaseVersion(int major, int minor, int patch, string core, string prerelease)
         {
@@ -61,7 +62,8 @@ namespace TiaMcp.Versioning
         public static ProductReleaseVersion Parse(string text)
         {
             ProductReleaseVersion? version;
-            if (!TryParse(text, out version) || version == null) throw new FormatException("Release version must be X.Y.Z or X.Y.Z-beta.N / X.Y.Z-rc.N: " + text);
+            if (!TryParse(text, out version) || version == null)
+                throw new FormatException("Release version must be X.Y.Z or X.Y.Z-beta.N / X.Y.Z-rc.N: " + text);
             return version;
         }
 

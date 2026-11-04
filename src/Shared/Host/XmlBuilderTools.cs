@@ -24,37 +24,56 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class XmlBuilderTools
     {
-        [McpServerTool(Name = "BuildClassicHmiScreen"), Description("[L2][HMI-Classic]Offline-only helper: build a V18-stamped Classic/Basic WinCC HMI screen XML document from structured JSON (V18–V21 hosts; V18/V19 TP700 Comfort import acceptance NOT RUN). It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
+        [McpServerTool(Name = "BuildClassicHmiScreen"),
+                Description("[L2][HMI-Classic]Offline-only helper: build a V18-stamped Classic/Basic WinCC HMI screen XML document from structured JSON (V18–V21 hosts; V18/V19 TP700 Comfort import acceptance NOT RUN). It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
         public CallToolResult BuildClassicHmiScreenXmlV4(
-            [Description("design: ClassicScreenSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] ClassicScreenSpec design)
-            => OfflineContracts.Run("BuildClassicHmiScreen", () => BuildClassicHmiScreenXml(design.ToBuilderInput().ToJsonString()), writes: false, current: HardwareContract.ReleaseKey is "18" or "19");
+            [Description("design: ClassicScreenSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] ClassicScreenSpec design)
+            => OfflineContracts
+                .Run("BuildClassicHmiScreen", () => BuildClassicHmiScreenXml(design.ToBuilderInput().ToJsonString()), writes: false, current: HardwareContract
+                    .ReleaseKey is "18" or "19");
 
         public ResponseXmlBuild BuildClassicHmiScreenXml(
-            [Description("designJson: JSON object with Screen/Items. Items support Type=Text/Button/IOField/Lamp/Rectangle plus Name/Left/Top/Width/Height/Text/Properties.")] string designJson)
+            [Description("designJson: JSON object with Screen/Items. Items support Type=Text/Button/IOField/Lamp/Rectangle plus " +
+                "Name/Left/Top/Width/Height/Text/Properties.")] string designJson)
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(ClassicHmiScreenXmlBuilder.BuildFromJson(designJson), "Classic HMI screen XML built offline");
+                return XmlBuildResults
+                    .BuildOfflineXmlBuilderReport(ClassicHmiScreenXmlBuilder.BuildFromJson(designJson), "Classic HMI screen XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error building Classic HMI screen XML offline: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error building Classic HMI screen XML offline: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
+                        .InternalError);
             }
         }
 
-        [McpServerTool(Name = "BuildPlcUdt"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC UDT/PlcStruct candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; the default is the serving release. Input: {name,members:[{name,datatype,externalWritable?,commentZhCn?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
+        [McpServerTool(Name = "BuildPlcUdt"),
+                Description("[L2][PLC-Builders][OFFLINE] Build flat PLC UDT/PlcStruct candidate XML using the selected release's interface schema. Explicit " +
+                "outputReleaseKey supports 14sp1, 15.1 and 16-21; the default is the serving release. Input: " +
+                "{name,members:[{name,datatype,externalWritable?,commentZhCn?}]}. Returns XML only. Runtime XSD and native import validation are separate; " +
+                "it does not connect, import or write files.")]
         public CallToolResult BuildPlcUdtXmlV4(
             [Description("udt: UdtSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] UdtSpec udt,
-            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.")] string outputReleaseKey = null!)
-            => OfflineContracts.Run("BuildPlcUdt", () => BuildPlcUdtXml(ConstructionAdapter.ToBuilderJson(udt), outputReleaseKey), writes: false, current: false);
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the " +
+                "serving release.")] string outputReleaseKey =
+                null!)
+            => OfflineContracts
+                .Run("BuildPlcUdt", () => BuildPlcUdtXml(ConstructionAdapter.ToBuilderJson(udt), outputReleaseKey), writes: false, current: false);
 
         public ResponseXmlBuild BuildPlcUdtXml(
-            [Description("udtJson: JSON object with members[]. Required member fields: name, datatype. Optional: externalWritable, commentZhCn/comment.")] string udtJson,
-            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.")] string outputReleaseKey = null!)
+            [Description("udtJson: JSON object with members[]. Required member fields: name, datatype. Optional: externalWritable, " +
+                "commentZhCn/comment.")] string udtJson,
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the " +
+                "serving release.")] string outputReleaseKey =
+                null!)
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildUdt(udtJson, outputReleaseKey ?? HardwareContract.ReleaseKey), "PLC UDT XML built offline");
+                return XmlBuildResults
+                    .BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildUdt(udtJson, outputReleaseKey ?? HardwareContract.ReleaseKey),
+                        "PLC UDT XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -62,17 +81,24 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcTagTable"), Description("[L2][PLC-Builders][OFFLINE] Build a PLC tag table XML document for the serving release from structured JSON. Input: {tableName,tags:[{name,dataTypeName,logicalAddress}]}. It only returns XML; it does not connect to TIA Portal, import tag tables, write files, or modify projects.")]
+        [McpServerTool(Name = "BuildPlcTagTable"),
+                Description("[L2][PLC-Builders][OFFLINE] Build a PLC tag table XML document for the serving release from structured JSON. Input: " +
+                "{tableName,tags:[{name,dataTypeName,logicalAddress}]}. It only returns XML; it does not connect to TIA Portal, import tag tables, write " +
+                "files, or modify projects.")]
         public CallToolResult BuildPlcTagTableXmlV4(
-            [Description("tagTable: PlcTagTableSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] PlcTagTableSpec tagTable)
+            [Description("tagTable: PlcTagTableSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] PlcTagTableSpec tagTable)
             => OfflineContracts.Run("BuildPlcTagTable", () => BuildPlcTagTableXml(ConstructionAdapter.ToBuilderJson(tagTable)), writes: false, current: false);
 
         public ResponseXmlBuild BuildPlcTagTableXml(
-            [Description("tagTableJson: JSON object with tableName/name and tags[]. Required tag fields: name, dataTypeName/datatype, logicalAddress/address.")] string tagTableJson)
+            [Description("tagTableJson: JSON object with tableName/name and tags[]. Required tag fields: name, dataTypeName/datatype, " +
+                "logicalAddress/address.")] string tagTableJson)
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildTagTableForRelease(tagTableJson, HardwareContract.ReleaseKey), "PLC tag table XML built offline");
+                return XmlBuildResults
+                    .BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildTagTableForRelease(tagTableJson, HardwareContract.ReleaseKey),
+                        "PLC tag table XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -80,19 +106,32 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcGlobalDb"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC GlobalDB candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; the default is the serving release. Input: {dbName,dbNumber,staticMembers:[{name,datatype,externalWritable?,commentZhCn?,startValue?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
+        [McpServerTool(Name = "BuildPlcGlobalDb"),
+                Description("[L2][PLC-Builders][OFFLINE] Build flat PLC GlobalDB candidate XML using the selected release's interface schema. Explicit " +
+                "outputReleaseKey supports 14sp1, 15.1 and 16-21; the default is the serving release. Input: " +
+                "{dbName,dbNumber,staticMembers:[{name,datatype,externalWritable?,commentZhCn?,startValue?}]}. Returns XML only. Runtime XSD and native " +
+                "import validation are separate; it does not connect, import or write files.")]
         public CallToolResult BuildPlcGlobalDbXmlV4(
-            [Description("globalDb: GlobalDbSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] GlobalDbSpec globalDb,
-            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.")] string outputReleaseKey = null!)
-            => OfflineContracts.Run("BuildPlcGlobalDb", () => BuildPlcGlobalDbXml(ConstructionAdapter.ToBuilderJson(globalDb), outputReleaseKey), writes: false, current: false);
+            [Description("globalDb: GlobalDbSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] GlobalDbSpec globalDb,
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the " +
+                "serving release.")] string outputReleaseKey =
+                null!)
+            => OfflineContracts
+                .Run("BuildPlcGlobalDb", () => BuildPlcGlobalDbXml(ConstructionAdapter.ToBuilderJson(globalDb), outputReleaseKey), writes: false, current
+                    : false);
 
         public ResponseXmlBuild BuildPlcGlobalDbXml(
             [Description("globalDbJson: JSON object with dbName/name, dbNumber/number, and staticMembers[] or members[].")] string globalDbJson,
-            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.")] string outputReleaseKey = null!)
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the " +
+                "serving release.")] string outputReleaseKey =
+                null!)
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildGlobalDb(globalDbJson, outputReleaseKey ?? HardwareContract.ReleaseKey), "PLC GlobalDB XML built offline");
+                return XmlBuildResults
+                    .BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildGlobalDb(globalDbJson, outputReleaseKey ?? HardwareContract.ReleaseKey),
+                        "PLC GlobalDB XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -100,19 +139,28 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildStructuredText"), Description("[L2][PLC-Builders][OFFLINE] Build a TIA V21 StructuredText/v4 XML fragment from operation JSON. Input: {operations:[{op:'if'|'else'|'endif'|'assign'|'token'|'blank'|'newline', ...}]}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects.")]
+        [McpServerTool(Name = "BuildStructuredText"),
+                Description("[L2][PLC-Builders][OFFLINE] Build a TIA V21 StructuredText/v4 XML fragment from operation JSON. Input: " +
+                "{operations:[{op:'if'|'else'|'endif'|'assign'|'token'|'blank'|'newline', ...}]}. It only returns XML; it does not connect to TIA Portal, " +
+                "import blocks, write files, or modify projects.")]
         public CallToolResult BuildStructuredTextXmlV4(
-            [Description("structuredText: StructuredTextSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] StructuredTextSpec structuredText,
+            [Description("structuredText: StructuredTextSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] StructuredTextSpec structuredText,
             [Description("innerOnly: true returns only inner XML for embedding into a block composer; false returns <StructuredText>.")] bool innerOnly = false)
-            => OfflineContracts.Run("BuildStructuredText", () => BuildStructuredTextXml(ConstructionAdapter.ToBuilderJson(structuredText), innerOnly), writes: false, current: false);
+            => OfflineContracts
+                .Run("BuildStructuredText", () => BuildStructuredTextXml(ConstructionAdapter.ToBuilderJson(structuredText), innerOnly), writes: false, current
+                    : false);
 
         public ResponseXmlBuild BuildStructuredTextXml(
-            [Description("structuredTextJson: JSON object with operations[]. assignment uses target + literalValue/value; if uses condition/variable; token uses text.")] string structuredTextJson,
+            [Description("structuredTextJson: JSON object with operations[]. assignment uses target + literalValue/value; if uses condition/variable; token " +
+                "uses text.")] string structuredTextJson,
             [Description("innerOnly: true returns only inner XML for embedding into a block composer; false returns <StructuredText>.")] bool innerOnly = false)
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildStructuredText(structuredTextJson, innerOnly), "PLC StructuredText XML built offline");
+                return XmlBuildResults
+                    .BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildStructuredText(structuredTextJson, innerOnly),
+                        "PLC StructuredText XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -120,13 +168,16 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildFlgNetCall"), Description("[L2][PLC-Builders][OFFLINE] NARROW SCOPE: builds ONLY a LAD network that calls one FC with parameters. For general ladder (contacts/coils/SR/compare/Move/math) author S7DCL text and import with ImportPlcBlocksDocuments — there is no XML builder for those, and hand-written FlgNet XML is the usual cause of import errors. Build a TIA V21 LAD FlgNet/v5 FC call network XML from structured JSON. Input: {callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects.")]
+        [McpServerTool(Name = "BuildFlgNetCall"),
+                Description("[L2][PLC-Builders][OFFLINE] NARROW SCOPE: builds ONLY a LAD network that calls one FC with parameters. For general ladder (contacts/coils/SR/compare/Move/math) author S7DCL text and import with ImportPlcBlocksDocuments — there is no XML builder for those, and hand-written FlgNet XML is the usual cause of import errors. Build a TIA V21 LAD FlgNet/v5 FC call network XML from structured JSON. Input: {callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects.")]
         public CallToolResult BuildFlgNetCallXmlV4(
-            [Description("flgNet: FlgNetCallSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] FlgNetCallSpec flgNet)
+            [Description("flgNet: FlgNetCallSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] FlgNetCallSpec flgNet)
             => OfflineContracts.Run("BuildFlgNetCall", () => BuildFlgNetCallXml(ConstructionAdapter.ToBuilderJson(flgNet)), writes: false, current: false);
 
         public ResponseXmlBuild BuildFlgNetCallXml(
-            [Description("flgNetJson: JSON object with callName/name and parameters[]. Global parameters use symbolPath[] or dotted symbol; constants use sourceKind='constant' and value.")] string flgNetJson)
+            [Description("flgNetJson: JSON object with callName/name and parameters[]. Global parameters use symbolPath[] or dotted symbol; constants use " +
+                "sourceKind='constant' and value.")] string flgNetJson)
         {
             try
             {
@@ -138,13 +189,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcFcBlock"), Description("[L2][PLC-Builders][OFFLINE] Compose a TIA V21 SCL FC block XML from interface JSON and StructuredText content. Input: {blockName,blockNumber,inputs:[{name,datatype}],outputs:[{name,datatype}],structuredText:{operations:[]}}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects. Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified.")]
+        [McpServerTool(Name = "BuildPlcFcBlock"),
+                Description("[L2][PLC-Builders][OFFLINE] Compose a TIA V21 SCL FC block XML from interface JSON and StructuredText content. Input: " +
+                "{blockName,blockNumber,inputs:[{name,datatype}],outputs:[{name,datatype}],structuredText:{operations:[]}}. It only returns XML; it does not " +
+                "connect to TIA Portal, import blocks, write files, or modify projects. Registered on V21 only: V20 withdraws this V21-format composer until " +
+                "an import of its output on V20 is verified.")]
         public CallToolResult ComposePlcFcBlockXmlV4(
-            [Description("fcBlock: FcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] FcBlockSpec fcBlock)
+            [Description("fcBlock: FcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] FcBlockSpec fcBlock)
             => OfflineContracts.Run("BuildPlcFcBlock", () => ComposePlcFcBlockXml(ConstructionAdapter.ToBuilderJson(fcBlock)), writes: false, current: false);
 
         public ResponseXmlBuild ComposePlcFcBlockXml(
-            [Description("fcBlockJson: JSON object with blockName/name, blockNumber/number, inputs[], outputs[], and structuredTextInnerXml or structuredText.operations[].")] string fcBlockJson)
+            [Description("fcBlockJson: JSON object with blockName/name, blockNumber/number, inputs[], outputs[], and structuredTextInnerXml or " +
+                "structuredText.operations[].")] string fcBlockJson)
         {
             try
             {
@@ -156,13 +213,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcFbBlock"), Description("[L2][PLC-Builders][OFFLINE] Compose a TIA V21 SCL FB block XML from interface JSON and StructuredText content. Input: {blockName,blockNumber,inputs?,outputs?,inouts?,statics?,temps?,structuredText:{operations:[]}}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, create instance DBs, or modify projects. Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified.")]
+        [McpServerTool(Name = "BuildPlcFbBlock"),
+                Description("[L2][PLC-Builders][OFFLINE] Compose a TIA V21 SCL FB block XML from interface JSON and StructuredText content. Input: " +
+                "{blockName,blockNumber,inputs?,outputs?,inouts?,statics?,temps?,structuredText:{operations:[]}}. It only returns XML; it does not connect " +
+                "to TIA Portal, import blocks, write files, create instance DBs, or modify projects. Registered on V21 only: V20 withdraws this V21-format " +
+                "composer until an import of its output on V20 is verified.")]
         public CallToolResult ComposePlcFbBlockXmlV4(
-            [Description("fbBlock: FbBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] FbBlockSpec fbBlock)
+            [Description("fbBlock: FbBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] FbBlockSpec fbBlock)
             => OfflineContracts.Run("BuildPlcFbBlock", () => ComposePlcFbBlockXml(ConstructionAdapter.ToBuilderJson(fbBlock)), writes: false, current: false);
 
         public ResponseXmlBuild ComposePlcFbBlockXml(
-            [Description("fbBlockJson: JSON object with blockName/name, blockNumber/number, optional inputs/outputs/inouts/statics/temps arrays, and structuredTextInnerXml or structuredText.operations[].")] string fbBlockJson)
+            [Description("fbBlockJson: JSON object with blockName/name, blockNumber/number, optional inputs/outputs/inouts/statics/temps arrays, and " +
+                "structuredTextInnerXml or structuredText.operations[].")] string fbBlockJson)
         {
             try
             {
@@ -174,17 +237,28 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcLadFcBlock"), Description("[L2][PLC-Builders][OFFLINE] NARROW SCOPE: every network must be an FC call; this cannot emit contacts/coils/SR/compare/Move/math. For general ladder, author S7DCL text (.s7dcl + .s7res) and import with ImportPlcBlocksDocuments instead. Compose a TIA V21 LAD FC block XML containing one or more FlgNet/v5 FC-call networks. Each network is an FC call described as { call: { callName, parameters[] }, titleZhCn?, commentZhCn? }. Top-level: blockName, blockNumber, optional inputs/outputs members, optional commentZhCn / titleZhCn. Returns XML only; does not connect to TIA Portal or import. Pair with ImportPlcBlock. Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified.")]
+        [McpServerTool(Name = "BuildPlcLadFcBlock"),
+                Description("[L2][PLC-Builders][OFFLINE] NARROW SCOPE: every network must be an FC call; this cannot emit " +
+                "contacts/coils/SR/compare/Move/math. For general ladder, author S7DCL text (.s7dcl + .s7res) and import with ImportPlcBlocksDocuments " +
+                "instead. Compose a TIA V21 LAD FC block XML containing one or more FlgNet/v5 FC-call networks. Each network is an FC call described as { " +
+                "call: { callName, parameters[] }, titleZhCn?, commentZhCn? }. Top-level: blockName, blockNumber, optional inputs/outputs members, optional " +
+                "commentZhCn / titleZhCn. Returns XML only; does not connect to TIA Portal or import. Pair with ImportPlcBlock. Registered on V21 only: V20 " +
+                "withdraws this V21-format composer until an import of its output on V20 is verified.")]
         public CallToolResult ComposePlcLadFcBlockXmlV4(
-            [Description("ladFcBlock: LadFcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] LadFcBlockSpec ladFcBlock)
-            => OfflineContracts.Run("BuildPlcLadFcBlock", () => ComposePlcLadFcBlockXml(ConstructionAdapter.ToBuilderJson(ladFcBlock)), writes: false, current: false);
+            [Description("ladFcBlock: LadFcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
+                "encoding.")] LadFcBlockSpec ladFcBlock)
+            => OfflineContracts
+                .Run("BuildPlcLadFcBlock", () => ComposePlcLadFcBlockXml(ConstructionAdapter.ToBuilderJson(ladFcBlock)), writes: false, current: false);
 
         public ResponseXmlBuild ComposePlcLadFcBlockXml(
-            [Description("ladFcBlockJson: JSON object with blockName, blockNumber, networks[] (each with callJson{callName,parameters[]}, optional titleZhCn/commentZhCn), optional inputs[]/outputs[] interface members with commentZhCn, optional commentZhCn/titleZhCn block-level.")] string ladFcBlockJson)
+            [Description("ladFcBlockJson: JSON object with blockName, blockNumber, networks[] (each with callJson{callName,parameters[]}, optional " +
+                "titleZhCn/commentZhCn), optional inputs[]/outputs[] interface members with commentZhCn, optional commentZhCn/titleZhCn " +
+                "block-level.")] string ladFcBlockJson)
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.ComposeLadFcBlock(ladFcBlockJson), "PLC LAD FC block XML composed offline");
+                return XmlBuildResults
+                    .BuildOfflineXmlBuilderReport(PlcBuilderToolJson.ComposeLadFcBlock(ladFcBlockJson), "PLC LAD FC block XML composed offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {

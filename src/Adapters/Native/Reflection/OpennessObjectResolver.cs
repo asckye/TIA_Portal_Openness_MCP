@@ -228,7 +228,8 @@ namespace TiaMcp.Adapters
             var scripts = TryGetPropertyValue(hmi, "Scripts") ?? throw new NotSupportedException("This HMI has no public Scripts composition.");
             if (collection)
             {
-                if (path != "" && path != "Scripts" && path != "/Scripts") throw new ArgumentException("HmiScripts objectPath must be /Scripts (or empty) with an explicit softwarePath.");
+                if (path != "" && path != "Scripts" && path != "/Scripts")
+                    throw new ArgumentException("HmiScripts objectPath must be /Scripts (or empty) with an explicit softwarePath.");
                 return scripts;
             }
             if (path.StartsWith("/Scripts/", StringComparison.Ordinal))
@@ -237,7 +238,8 @@ namespace TiaMcp.Adapters
                 if (segment.Length == 0 || segment.IndexOf('/') >= 0) throw new ArgumentException("Use /Scripts/<URI-escaped exact module name>.");
                 path = Uri.UnescapeDataString(segment);
             }
-            else if (path.StartsWith("/", StringComparison.Ordinal)) throw new ArgumentException("Unsupported script path; use an exact module name or /Scripts/<name>.");
+            else if (path.StartsWith("/", StringComparison.Ordinal))
+                throw new ArgumentException("Unsupported script path; use an exact module name or /Scripts/<name>.");
             return FindExistingByName(scripts, path);
         }
     }

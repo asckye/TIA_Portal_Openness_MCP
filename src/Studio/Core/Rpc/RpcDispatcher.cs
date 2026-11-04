@@ -100,7 +100,8 @@ namespace TiaOpenness.Core.Rpc
                 return local.Reason == SessionFailureReason.NotConnected ? RpcErrorCodes.NotConnected : RpcErrorCodes.NoProjectOpen;
 #if TIA_SHARED_ADAPTER_PATHS
             if (error is TiaMcp.Adapters.Contracts.Studio.Errors.SessionPreconditionException shared)
-                return shared.Reason == TiaMcp.Adapters.Contracts.Studio.Errors.SessionFailureReason.NotConnected ? RpcErrorCodes.NotConnected : RpcErrorCodes.NoProjectOpen;
+                return shared.Reason == TiaMcp.Adapters.Contracts.Studio.Errors.SessionFailureReason.NotConnected ? RpcErrorCodes.NotConnected : RpcErrorCodes
+                    .NoProjectOpen;
 #endif
             return RpcErrorCodes.InternalError;
         }
@@ -339,7 +340,8 @@ namespace TiaOpenness.Core.Rpc
         private static bool Bool(JsonElement p, string name, bool fallback)
         {
             var token = p.TryGetProperty(name, out var valueToken) ? valueToken : default;
-            return token.ValueKind == JsonValueKind.Undefined || token.ValueKind == JsonValueKind.Null ? fallback : (bool)Convert.ChangeType(ScalarValue(token), typeof(bool), CultureInfo.InvariantCulture);
+            return token.ValueKind == JsonValueKind.Undefined || token.ValueKind == JsonValueKind.Null ? fallback : (bool)Convert
+                .ChangeType(ScalarValue(token), typeof(bool), CultureInfo.InvariantCulture);
         }
 
         private static IReadOnlyList<string> StrList(JsonElement p, string name)

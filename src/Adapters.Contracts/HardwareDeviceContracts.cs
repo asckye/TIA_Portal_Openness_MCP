@@ -5,7 +5,10 @@ namespace TiaMcp.Adapters.Contracts
     public sealed class HardwareDeviceAttribute
     { public string Name { get; set; } = ""; public object? Value { get; set; } public string? AccessMode { get; set; } }
     public sealed class HardwareDeviceDescription
-    { public string Name { get; set; } = ""; public string? Description { get; set; } public List<HardwareDeviceAttribute> Attributes { get; set; } = new List<HardwareDeviceAttribute>(); }
+    {
+        public string Name { get; set; } = ""; public string? Description { get; set; } public List<HardwareDeviceAttribute> Attributes { get; set; } =
+            new List<HardwareDeviceAttribute>();
+    }
     public class HardwareGsdCandidate
     {
         public string? Source { get; set; }

@@ -48,14 +48,18 @@ namespace TiaMcp.Adapters.Reflection
             foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (property.GetIndexParameters().Length != 0) continue;
-                members.Add(new OpennessMember { Kind = "Property", Name = property.Name, Type = property.PropertyType.FullName ?? property.PropertyType.Name });
+                members
+                    .Add(new OpennessMember { Kind = "Property", Name = property.Name, Type = property.PropertyType.FullName ?? property.PropertyType.Name });
                 if (members.Count >= maxMembers) return members;
             }
             foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (method.IsSpecialName) continue;
-                var signature = $"{method.Name}({string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))}) -> {method.ReturnType.Name}";
-                members.Add(new OpennessMember { Kind = "Method", Name = method.Name, Type = method.ReturnType.FullName ?? method.ReturnType.Name, Signature = signature });
+                var signature =
+                    $"{method.Name}({string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))}) -> {method.ReturnType.Name}";
+                members
+                    .Add(new OpennessMember {
+                        Kind = "Method", Name = method.Name, Type = method.ReturnType.FullName ?? method.ReturnType.Name, Signature = signature });
                 if (members.Count >= maxMembers) return members;
             }
             return members;
@@ -69,7 +73,8 @@ namespace TiaMcp.Adapters.Reflection
                 "Startdrive", "TestSuite", "WinCC", "WinCCUnified", "WinCC.Extension", "TeamcenterGateway" })
             {
                 try { Assembly.Load("Siemens.Engineering." + name); }
-                catch (Exception error) when (error is System.IO.FileNotFoundException || error is System.IO.FileLoadException || error is BadImageFormatException)
+                catch (Exception error) when (error is System.IO.FileNotFoundException || error is System.IO.FileLoadException
+                        || error is BadImageFormatException)
                 { /* swallow(probe-optional): an uninstalled split product supplies no service types. */ }
             }
 #endif
@@ -94,7 +99,8 @@ namespace TiaMcp.Adapters.Reflection
             }
             var distinct = matches.Distinct().ToArray();
             if (distinct.Length > 1) throw new PlcSoftwareException("InvalidParams",
-                "Ambiguous Siemens service type '" + suffix + "'; use its exact full name: " + string.Join(", ", distinct.Select(t => t.FullName).OrderBy(n => n, StringComparer.Ordinal)));
+                "Ambiguous Siemens service type '" + suffix + "'; use its exact full name: " + string
+                    .Join(", ", distinct.Select(t => t.FullName).OrderBy(n => n, StringComparer.Ordinal)));
             return distinct.SingleOrDefault();
         }
 
@@ -130,12 +136,14 @@ namespace TiaMcp.Adapters.Reflection
                             object? value = values[i];
                             if (type == typeof(object) && method.Name == "SetAttribute" && i == 1 && values[0] is string attribute)
                             {
-                                var current = instance.GetType().GetMethod("GetAttribute", new[] { typeof(string) })?.Invoke(instance, new object[] { attribute });
+                                var current = instance.GetType().GetMethod("GetAttribute", new[] { typeof(string) })?
+                                    .Invoke(instance, new object[] { attribute });
                                 if (current != null) type = current.GetType();
                             }
                             if (value == null)
                             {
-                                if (type.IsValueType && Nullable.GetUnderlyingType(type) == null) throw new ArgumentException("Null cannot bind a value parameter.");
+                                if (type.IsValueType && Nullable.GetUnderlyingType(type) == null)
+                                    throw new ArgumentException("Null cannot bind a value parameter.");
                                 continue;
                             }
                             var target = Nullable.GetUnderlyingType(type) ?? type;
@@ -149,7 +157,8 @@ namespace TiaMcp.Adapters.Reflection
                         }
                         matches = true;
                     }
-                    catch (Exception error) when (error is ArgumentException || error is FormatException || error is OverflowException || error is InvalidCastException)
+                    catch (Exception error) when (error is ArgumentException || error is FormatException || error is OverflowException
+                            || error is InvalidCastException)
                     { /* swallow(parse-fallback): a nonconvertible overload is not a callable candidate. */ }
                     finally
                     {
@@ -199,15 +208,24 @@ namespace TiaMcp.Adapters.Reflection
                 ? Enum.Parse(targetType, enumText, ignoreCase: true)
                 : Enum.ToObject(targetType, value);
             if (targetType == typeof(bool)) return value is string boolText ? bool.Parse(boolText) : Convert.ToBoolean(value);
-            if (targetType == typeof(byte)) return value is string byteText ? byte.Parse(byteText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToByte(value);
-            if (targetType == typeof(short)) return value is string shortText ? short.Parse(shortText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToInt16(value);
-            if (targetType == typeof(ushort)) return value is string ushortText ? ushort.Parse(ushortText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToUInt16(value);
-            if (targetType == typeof(int)) return value is string intText ? int.Parse(intText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToInt32(value);
-            if (targetType == typeof(uint)) return value is string uintText ? uint.Parse(uintText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToUInt32(value);
-            if (targetType == typeof(long)) return value is string longText ? long.Parse(longText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToInt64(value);
-            if (targetType == typeof(ulong)) return value is string ulongText ? ulong.Parse(ulongText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToUInt64(value);
-            if (targetType == typeof(float)) return value is string floatText ? float.Parse(floatText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToSingle(value);
-            if (targetType == typeof(double)) return value is string doubleText ? double.Parse(doubleText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToDouble(value);
+            if (targetType == typeof(byte)) return value is string byteText ? byte.Parse(byteText, System.Globalization.CultureInfo.InvariantCulture) : Convert
+                .ToByte(value);
+            if (targetType == typeof(short)) return value is string shortText ? short.Parse(shortText, System.Globalization.CultureInfo.InvariantCulture)
+                : Convert.ToInt16(value);
+            if (targetType == typeof(ushort)) return value is string ushortText ? ushort.Parse(ushortText, System.Globalization.CultureInfo.InvariantCulture)
+                : Convert.ToUInt16(value);
+            if (targetType == typeof(int)) return value is string intText ? int.Parse(intText, System.Globalization.CultureInfo.InvariantCulture) : Convert
+                .ToInt32(value);
+            if (targetType == typeof(uint)) return value is string uintText ? uint.Parse(uintText, System.Globalization.CultureInfo.InvariantCulture) : Convert
+                .ToUInt32(value);
+            if (targetType == typeof(long)) return value is string longText ? long.Parse(longText, System.Globalization.CultureInfo.InvariantCulture) : Convert
+                .ToInt64(value);
+            if (targetType == typeof(ulong)) return value is string ulongText ? ulong.Parse(ulongText, System.Globalization.CultureInfo.InvariantCulture)
+                : Convert.ToUInt64(value);
+            if (targetType == typeof(float)) return value is string floatText ? float.Parse(floatText, System.Globalization.CultureInfo.InvariantCulture)
+                : Convert.ToSingle(value);
+            if (targetType == typeof(double)) return value is string doubleText ? double.Parse(doubleText, System.Globalization.CultureInfo.InvariantCulture)
+                : Convert.ToDouble(value);
             if (targetType == typeof(Color)) return CoerceColor(value);
 
             return value;

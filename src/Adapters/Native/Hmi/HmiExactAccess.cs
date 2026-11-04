@@ -19,7 +19,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             var result = new List<object>();
             if (value is not IEnumerable list || value is string) throw new PlcSoftwareException("InvalidParams", "Expected collection.");
-            foreach (var item in list) { if (item != null) result.Add(item); if (result.Count > 10000) throw new InvalidOperationException("Collection limit exceeded."); }
+            foreach (var item in list) {
+                if (item != null) result.Add(item); if (result.Count > 10000) throw new InvalidOperationException("Collection limit exceeded."); }
             return result;
         }
         internal static object Named(object collection, string name)
@@ -84,7 +85,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         internal static object Group(object software,string path)
         {
-            if (!path.StartsWith("/", StringComparison.Ordinal) || path == "/" || path.EndsWith("/", StringComparison.Ordinal)) throw new PlcSoftwareException("InvalidParams","Use an absolute group path such as /Folder/Subfolder; root cannot be deleted.");
+            if (!path.StartsWith("/", StringComparison.Ordinal) || path == "/" || path.EndsWith("/", StringComparison.Ordinal))
+                throw new PlcSoftwareException("InvalidParams","Use an absolute group path such as /Folder/Subfolder; root cannot be deleted.");
             object current = software;
             foreach(var part in path.Substring(1).Split('/'))
             {

@@ -29,9 +29,13 @@ public sealed partial class PlcFoundationEngine
                 var boundProject = project!;
                 bool complete = true;
                 var projectRow = HmiScalar.Read(boundProject); meta["project"] = projectRow; complete &= projectRow["dataComplete"]!.GetValue<bool>();
-                meta["protectProjectMethodAvailable"] = boundProject.GetType().GetMethod("ProtectProject", new[] { typeof(string), typeof(SecureString) }) != null;
+                meta["protectProjectMethodAvailable"] = boundProject.GetType()
+                    .GetMethod("ProtectProject", new[] { typeof(string), typeof(SecureString) }) != null;
                 meta["projectProtectedFlag"] = null;
-                meta["note"] = "The Openness API exposes no project-level IsProtected scalar. The projectProtectedFlag follows UmacConfigurator availability and EngineeringFunctionRights.Any() (reference/siemens-openness/skills/security/SKILL.md). ProtectionProviderBase is for block protection and cannot detect project protection. ProjectBase.ProtectProject is intentionally not exposed.";
+                meta["note"] =
+                    "The Openness API exposes no project-level IsProtected scalar. The projectProtectedFlag follows UmacConfigurator availability and " +
+                    "EngineeringFunctionRights.Any() (reference/siemens-openness/skills/security/SKILL.md). ProtectionProviderBase is for block protection " +
+                    "and cannot detect project protection. ProjectBase.ProtectProject is intentionally not exposed.";
 #if SECURITY_UMAC
                 var umac = boundProject.GetService<UmacConfigurator>();
                 meta["umacConfiguratorAvailable"] = umac != null;
@@ -39,11 +43,16 @@ public sealed partial class PlcFoundationEngine
                 if (umac != null)
                 {
                     meta["counts"] = new HmiObject {
-                        ["users"] = HardwareGroupOperations.Items(umac.ProjectUsers).Count(), ["customRoles"] = HardwareGroupOperations.Items(umac.CustomRoles).Count(),
-                        ["systemRoles"] = HardwareGroupOperations.Items(umac.SystemRoles).Count(), ["engineeringRights"] = HardwareGroupOperations.Items(umac.EngineeringFunctionRights).Count(),
-                        ["customDeviceRights"] = HardwareGroupOperations.Items(umac.CustomDeviceFunctionRights).Count(), ["umcUsers"] = HardwareGroupOperations.Items(umac.UmcUsers).Count(),
+                        ["users"] = HardwareGroupOperations.Items(umac.ProjectUsers).Count(), ["customRoles"] = HardwareGroupOperations.Items(umac.CustomRoles)
+                            .Count(),
+                        ["systemRoles"] = HardwareGroupOperations.Items(umac.SystemRoles).Count(), ["engineeringRights"] = HardwareGroupOperations
+                            .Items(umac.EngineeringFunctionRights).Count(),
+                        ["customDeviceRights"] = HardwareGroupOperations.Items(umac.CustomDeviceFunctionRights).Count(), ["umcUsers"] = HardwareGroupOperations
+                            .Items(umac.UmcUsers).Count(),
                         ["umcUserGroups"] = HardwareGroupOperations.Items(umac.UmcUserGroups).Count() };
-                    if (umac.AnonymousUser != null) { var row = SecurityEvidence.UmacRow(umac.AnonymousUser); meta["anonymousUser"] = row; complete &= row["dataComplete"]!.GetValue<bool>(); }
+                    if (umac.AnonymousUser != null) {
+                        var row = SecurityEvidence.UmacRow(umac.AnonymousUser); meta["anonymousUser"] = row; complete &= row["dataComplete"]!.GetValue<bool>();
+                    }
                 }
 #else
                 meta["umacConfiguratorAvailable"] = false;
@@ -55,12 +64,15 @@ public sealed partial class PlcFoundationEngine
 #if SECURITY_UMAC
                 var umcServer = boundProject.GetService<UmcServerConfigurator>();
                 meta["umcServerConfiguratorAvailable"] = umcServer != null;
-                if (umcServer?.UmcServer != null) { var row = HmiScalar.Read(umcServer.UmcServer); meta["umcServer"] = row; complete &= row["dataComplete"]!.GetValue<bool>(); }
+                if (umcServer?.UmcServer != null) {
+                    var row = HmiScalar.Read(umcServer.UmcServer); meta["umcServer"] = row; complete &= row["dataComplete"]!.GetValue<bool>(); }
 #else
                 meta["umcServerConfiguratorAvailable"] = false;
 #endif
                 meta["advancedProtectionProviderAvailable"] = null; // No documented project service; do not probe a block-protection base type.
-                meta["verificationCertificates"] = "Siemens.Engineering.Online.Security.VerificationCertificate is only reachable via TlsVerificationConfiguration.Certificates inside an online/download configuration callback; there is no project-level read.";
+                meta["verificationCertificates"] =
+                    "Siemens.Engineering.Online.Security.VerificationCertificate is only reachable via TlsVerificationConfiguration.Certificates inside an " +
+                    "online/download configuration callback; there is no project-level read.";
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = complete;
                 return "Project protection indicators read; no protection state changed.";
             });

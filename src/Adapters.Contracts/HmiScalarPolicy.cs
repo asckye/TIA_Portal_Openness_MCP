@@ -79,7 +79,9 @@ namespace TiaMcp.Adapters.Contracts
         }
         private static DateTime DateValue(string text)
         {
-            var match = Regex.Match(text, @"\A[0-9]{4}-[0-9]{2}-[0-9]{2}(?:T[0-9]{2}:[0-9]{2}(?::[0-9]{2}(?<fraction>\.[0-9]{1,16})?)?(?:Z|(?<offset>[+-][0-9]{2}:[0-9]{2}))?)?\z");
+            var match = Regex
+                .Match(text,
+                    @"\A[0-9]{4}-[0-9]{2}-[0-9]{2}(?:T[0-9]{2}:[0-9]{2}(?::[0-9]{2}(?<fraction>\.[0-9]{1,16})?)?(?:Z|(?<offset>[+-][0-9]{2}:[0-9]{2}))?)?\z");
             if (!match.Success) throw new FormatException("Expected an ISO date scalar.");
             var offset = match.Groups["offset"];
             if (offset.Success)

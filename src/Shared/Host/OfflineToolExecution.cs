@@ -24,7 +24,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var export = HostToolServices.ExportBlockDocument(softwarePath, blockPath);
             tempDir = export.TempDir;
-            meta[side + "Source"] = new JsonObject { ["mode"] = "block", ["softwarePath"] = softwarePath, ["blockPath"] = blockPath, ["tempExportDeleted"] = true };
+            meta[side + "Source"] = new JsonObject {
+                ["mode"] = "block", ["softwarePath"] = softwarePath, ["blockPath"] = blockPath, ["tempExportDeleted"] = true };
             return export.XmlPath;
         }
 
@@ -53,7 +54,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";
                 ResponseMeta.Failed(meta);
                 meta["status"] = cause is PortalException pex ? pex.Code.ToString()
-                    : cause is ArgumentException || cause is FileNotFoundException || cause is DirectoryNotFoundException || cause is JsonException ? "InvalidParams"
+                    : cause is ArgumentException || cause is FileNotFoundException || cause is DirectoryNotFoundException || cause is JsonException
+                        ? "InvalidParams"
                     : "ReadOrWriteFailed";
                 return new ResponseMessage { Message = toolName + " failed: " + cause.Message, Meta = meta };
             }

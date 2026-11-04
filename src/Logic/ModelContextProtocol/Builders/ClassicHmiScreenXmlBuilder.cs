@@ -32,7 +32,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     ["tia"] = "Offline XML generation only; TIA Portal is not connected.",
                     ["write"] = "No project, reference project, or delivery package content is modified.",
-                    ["apply"] = "Import this XML only in a temporary Classic/Basic HMI project first, then read back the screen and compile/diagnose before using a real project."
+                    ["apply"] =
+                        "Import this XML only in a temporary Classic/Basic HMI project first, then read back the screen and compile/diagnose before using a " +
+                        "real project."
                 },
                 ["ok"] = analysis["ok"]?.GetValue<bool>() == true,
                 ["analysis"] = analysis,
@@ -45,7 +47,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var screen = design["Screen"] as JsonObject ?? design["screen"] as JsonObject ?? design;
             var screenName = GetString(screen, "Name", "name", "Classic_Generated_Screen");
             if (screenName.IndexOfAny(new[] { '/', '\\' }) >= 0)
-                throw new ArgumentException("Classic HMI screen Name must be a single name without path separators. Select the existing destination with absolute folderPath /Group/Sub when importing; paths do not belong in the XML Name.");
+                throw new ArgumentException("Classic HMI screen Name must be a single name without path separators. Select the existing destination with " +
+                    "absolute folderPath /Group/Sub when importing; paths do not belong in the XML Name.");
             var width = GetInt(screen, "Width", "width", 640);
             var height = GetInt(screen, "Height", "height", 480);
             if (width < 320 || height < 240)
@@ -491,8 +494,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static int ParseInt(string? value, int fallback)
         {
-            if (int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var result)) return result;
-            if (double.TryParse(value, System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, System.Globalization.CultureInfo.InvariantCulture, out var dbl)) return (int)Math.Round(dbl);
+            if (int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var result))
+                return result;
+            if (double
+                    .TryParse(value, System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, System.Globalization
+                        .CultureInfo.InvariantCulture, out var dbl))
+                return (int)Math.Round(dbl);
             return fallback;
         }
 

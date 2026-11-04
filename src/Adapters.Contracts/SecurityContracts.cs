@@ -6,7 +6,8 @@ public sealed class SecurityResult : IWorkerOperationReply
     public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>();
     public bool RequiresSessionReset { get; set; }
     public bool MayHaveChanged => Meta.TryGetValue("mayHaveChanged", out var changed)
-        && string.Equals(System.Convert.ToString(changed, System.Globalization.CultureInfo.InvariantCulture), "true", System.StringComparison.OrdinalIgnoreCase);
+        && string
+            .Equals(System.Convert.ToString(changed, System.Globalization.CultureInfo.InvariantCulture), "true", System.StringComparison.OrdinalIgnoreCase);
     public bool BlockReadsAfterUncertain => true;
 }
 
@@ -14,7 +15,9 @@ public sealed class SecurityDataResult : Dictionary<string, object?>, IWorkerOpe
 {
     public SecurityDataResult(IDictionary<string, object?> values) : base(values) { }
     private bool Flag(string name, bool expected) => TryGetValue(name, out var value)
-        && string.Equals(System.Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture), expected ? "true" : "false", System.StringComparison.OrdinalIgnoreCase);
+        && string
+            .Equals(System.Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture), expected ? "true" : "false", System.StringComparison
+                .OrdinalIgnoreCase);
     public bool MayHaveChanged => Flag("mayHaveChanged", true);
     public bool RequiresSessionReset => MayHaveChanged && (Flag("writeOutcomeKnown", false) || Flag("ok", false));
     public bool BlockReadsAfterUncertain => true;

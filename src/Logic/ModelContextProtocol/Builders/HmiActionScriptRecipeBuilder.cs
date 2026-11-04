@@ -50,13 +50,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "set-value":
                     script = BuildSetValueScript(tags, errors);
                     requiresSafetyPolicy = true;
-                    applyBlockedReason = "SetValue is intentionally blocked until range validation, operator confirmation, permission checks, TIA SyntaxCheck, and ScriptCode readback are implemented for the target project.";
+                    applyBlockedReason =
+                        "SetValue is intentionally blocked until range validation, operator confirmation, permission checks, TIA SyntaxCheck, and ScriptCode " +
+                        "readback are implemented for the target project.";
                     warnings.Add("SetValue is high risk: use an explicit ConfirmWrite or project-specific validated write recipe before applying.");
                     break;
                 case "confirm-write":
                     script = BuildConfirmWriteScript(tags, errors);
                     requiresSafetyPolicy = true;
-                    applyBlockedReason = "ConfirmWrite is intentionally blocked until range validation, operator confirmation, permission checks, TIA SyntaxCheck, and ScriptCode readback are implemented for the target project.";
+                    applyBlockedReason =
+                        "ConfirmWrite is intentionally blocked until range validation, operator confirmation, permission checks, TIA SyntaxCheck, and " +
+                        "ScriptCode readback are implemented for the target project.";
                     warnings.Add("ConfirmWrite is high risk: range validation, operator confirmation, and TIA SyntaxCheck/readback are required.");
                     break;
                 case "open-popup":
@@ -167,7 +171,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     .Count(IsSafeDeterministicApplyCandidate),
                 ["safetySelfTest"] = RunSafetySelfTest(),
                 ["generated"] = generated,
-                ["ok"] = generated.OfType<JsonObject>().All(x => x["ok"]?.GetValue<bool>() == true || string.Equals(x["recipeKind"]?.ToString(), "script", StringComparison.OrdinalIgnoreCase))
+                ["ok"] = generated.OfType<JsonObject>()
+                    .All(x => x["ok"]?.GetValue<bool>() == true || string.Equals(x["recipeKind"]?.ToString(), "script", StringComparison.OrdinalIgnoreCase))
             };
             root["ok"] = root["ok"]?.GetValue<bool>() == true && root["safetySelfTest"]?["ok"]?.GetValue<bool>() == true;
 
@@ -425,7 +430,9 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var node in root["generated"] as JsonArray ?? new JsonArray())
             {
                 if (node is not JsonObject item) continue;
-                md.AppendLine("- " + item["templateName"] + "." + item["item"] + "." + item["event"] + ": " + item["recipeKind"] + ", ok=" + item["ok"] + ", safety=" + item["safetyLevel"] + ", requiresApiDiscovery=" + item["requiresApiDiscovery"]);
+                md
+                    .AppendLine("- " + item["templateName"] + "." + item["item"] + "." + item["event"] + ": " + item["recipeKind"] + ", ok=" + item["ok"]
+                        + ", safety=" + item["safetyLevel"] + ", requiresApiDiscovery=" + item["requiresApiDiscovery"]);
             }
 
             return md.ToString();

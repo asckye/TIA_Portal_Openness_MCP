@@ -34,7 +34,8 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
     internal long BytesRead => _reader.BytesRead;
     internal int ReadThreadId => _reader.ReadThreadId;
 
-    public AuditLogService(string? directory = null, string? diagnostics = null, string? settingsPath = null, Action<string>? open = null, string[]? chains = null)
+    public AuditLogService(string? directory = null, string? diagnostics = null, string? settingsPath = null, Action<string>? open = null, string[]? chains =
+            null)
     {
         _directory = directory ?? DataLocations.Current.AuditDirectory;
         _chains = chains ?? (directory == null ? null : new[] { directory });
@@ -59,7 +60,9 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
     public int FileSizeMb { get => _retention.FileSizeMb; set => SaveRetention(value, null); }
     public int Copies { get => _retention.Copies; set => SaveRetention(null, value); }
     public LocalizedText Coverage => _coverage.Start.HasValue && _coverage.End.HasValue
-        ? LocalizedText.Key("Audit.Window", _coverage.Start.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"), _coverage.End.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"))
+        ? LocalizedText
+            .Key("Audit.Window", _coverage.Start.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"), _coverage.End.Value.ToLocalTime()
+                .ToString("yyyy-MM-dd HH:mm:ss"))
         : LocalizedText.Key("Audit.NoCoverage");
     public bool HasOlder => Events.Count > 0 && Events[0].Index > 1;
     public bool IsLatest => _pageEnd == null;
@@ -103,7 +106,10 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
         }
         Refresh(); progress?.Invoke(100);
         return new AuditVerification(broken == null, broken?.Count ?? reports.Sum(report => report.Count), broken?.BreakIndex)
-        { Chain = broken?.Chain, File = broken?.File, Chains = reports.Select(report => new AuditChainVerification(report.Chain!, report.Passed, report.Count, report.BreakIndex, report.File)).ToArray() };
+        {
+            Chain = broken?.Chain, File = broken?.File, Chains = reports
+                .Select(report => new AuditChainVerification(report.Chain!, report.Passed, report.Count, report.BreakIndex, report.File)).ToArray()
+        };
     }
     public LocalizedText OpenFolder()
     {
@@ -120,7 +126,8 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
             try
             {
                 var recent = _reader.Poll();
-                if (_pageEnd.HasValue && (_pageEnd != _loadedPageEnd || _pageGeneration != _reader.Generation)) { _page = _reader.Page(_pageEnd.Value); _loadedPageEnd = _pageEnd; _pageGeneration = _reader.Generation; }
+                if (_pageEnd.HasValue && (_pageEnd != _loadedPageEnd || _pageGeneration != _reader.Generation)) {
+                    _page = _reader.Page(_pageEnd.Value); _loadedPageEnd = _pageEnd; _pageGeneration = _reader.Generation; }
                 var events = _pageEnd.HasValue ? _page : recent;
                 if (!_events.SequenceEqual(events))
                 { Volatile.Write(ref _events, events); Raise(nameof(Events)); Raise(nameof(HasOlder)); Raise(nameof(IsLatest)); }

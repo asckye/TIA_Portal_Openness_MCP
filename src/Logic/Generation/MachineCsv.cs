@@ -21,10 +21,14 @@ namespace TiaMcp.Logic.Generation
             return new JsonObject {
             ["schema"] = "tiamcp.machine/1", ["machine"] = new JsonObject { ["id"] = "M1", ["name"] = Names("Machine") },
             ["standard"] = new JsonObject { ["package"] = package.Manifest.Id, ["version"] = package.Manifest.Version },
-            ["target"] = new JsonObject { ["release"] = package.Manifest.Targets.Releases.Last(), ["project"] = new JsonObject { ["mode"] = "new", ["name"] = "Machine", ["directory"] = "C:/Projects" } },
+            ["target"] = new JsonObject {
+                ["release"] = package.Manifest.Targets.Releases.Last(), ["project"] = new JsonObject {
+                    ["mode"] = "new", ["name"] = "Machine", ["directory"] = "C:/Projects" }
+            },
             ["stations"] = new JsonArray(new JsonObject { ["id"] = "PLC1", ["role"] = "plc.main" }),
             ["topology"] = new JsonArray(new JsonObject { ["id"] = "U01", ["kind"] = "unit", ["name"] = Names("Unit") }),
-            ["devices"] = new JsonArray(), ["options"] = new JsonObject { ["languages"] = new JsonArray(languages.Select(l => (JsonNode)JsonValue.Create(l)!).ToArray()) }
+            ["devices"] = new JsonArray(), ["options"] = new JsonObject {
+                ["languages"] = new JsonArray(languages.Select(l => (JsonNode)JsonValue.Create(l)!).ToArray()) }
             }.ToJsonString();
         }
 
@@ -39,7 +43,10 @@ namespace TiaMcp.Logic.Generation
             machineRow["version"] = (string)machine["standard"]!["version"]!; machineRow["release"] = (string)machine["target"]!["release"]!;
             Fields(machine["target"]!["project"]!, machineRow, "Project:");
             machineRow["languages"] = machine["options"]!["languages"]!.ToJsonString(); machineRow["packageHash"] = package.ContentHash;
-            Sheet("Machine", new[] { machineRow }, new[] { "id", "package", "version", "release", "Project:mode", "Project:name", "Project:directory", "Project:projectIdentity", "Project:softwarePath", "languages", "packageHash" });
+            Sheet("Machine", new[] { machineRow }, new[] {
+                    "id", "package", "version", "release", "Project:mode", "Project:name", "Project:directory", "Project:projectIdentity",
+                        "Project:softwarePath", "languages", "packageHash"
+                });
             Sheet("Stations", machine["stations"]!.AsArray().Select(n => Row(n!)), new[] { "id", "role", "article", "firmware", "ip", "profinetName", "kind" });
             var units = new List<Dictionary<string, string>>();
             Flatten(machine["topology"]!.AsArray(), "", 0);
@@ -56,9 +63,12 @@ namespace TiaMcp.Logic.Generation
             }).ToArray();
             var dynamic = rules.SelectMany(r => r["params"]!["properties"]!.AsObject().Select(p => "Param:" + p.Key)
                 .Concat(r["signals"]!.AsArray().Select(s => "IO:" + (string)s!["role"]!))).Distinct(StringComparer.Ordinal);
-            Sheet("Devices", devices, new[] { "id", "type", "parent", "station", "note", "Hmi:screen", "paramsPresent", "ioPresent", "alarmsPresent", "hmiPresent" }
+            Sheet("Devices", devices, new[] {
+                    "id", "type", "parent", "station", "note", "Hmi:screen", "paramsPresent", "ioPresent", "alarmsPresent", "hmiPresent" }
                 .Concat(machine["options"]!["languages"]!.AsArray().Select(l => "Name:" + (string)l!)).Concat(dynamic));
-            var lists = rules.Select(r => new Dictionary<string, string> { ["deviceType"] = (string)r["deviceType"]!, ["paramsSchema"] = r["params"]!.ToJsonString(), ["signals"] = r["signals"]!.ToJsonString() });
+            var lists = rules
+                .Select(r => new Dictionary<string, string> {
+                    ["deviceType"] = (string)r["deviceType"]!, ["paramsSchema"] = r["params"]!.ToJsonString(), ["signals"] = r["signals"]!.ToJsonString() });
             Sheet("Lists", lists, new[] { "deviceType", "paramsSchema", "signals" });
             if (files.Values.Sum(b => (long)b.Length) > MaximumBytes) throw new ArgumentException("CSV output exceeds 16 MiB.");
             return files;
@@ -114,19 +124,23 @@ namespace TiaMcp.Logic.Generation
                     throw new ArgumentException("CSV headers must be nonempty and unique.", "inputPath");
                 var columns = rows[0];
                 headers[sheet] = columns;
-                sheets[sheet] = rows.Skip(1).Select(row => row.Length != columns.Length ? throw new ArgumentException("CSV row width differs from its header.", "inputPath")
+                sheets[sheet] = rows.Skip(1)
+                    .Select(row => row.Length != columns.Length ? throw new ArgumentException("CSV row width differs from its header.", "inputPath")
                     : columns.Select((c, i) => new { c, i }).ToDictionary(p => p.c, p => row[p.i], StringComparer.Ordinal)).ToArray();
             }
             if (sheets["Machine"].Length != 1) throw new ArgumentException("Machine.csv must contain exactly one machine.", "inputPath");
             var info = sheets["Machine"][0];
-            string Cell(string key) => info.TryGetValue(key, out var value) ? value : throw new ArgumentException("Missing machine CSV field: " + key, "inputPath");
+            string Cell(string key) => info.TryGetValue(key, out var value) ? value
+                : throw new ArgumentException("Missing machine CSV field: " + key, "inputPath");
             if (Cell("packageHash") != package.ContentHash || Cell("package") != package.Manifest.Id)
                 throw new ArgumentException("CSV template belongs to a different package; export a new template.", "inputPath");
             var identity = Object(info, new[] { "id" }, "Name:");
             var project = new JsonObject();
-            foreach (var column in info.Where(c => c.Key.StartsWith("Project:", StringComparison.Ordinal) && c.Value.Length != 0)) project[column.Key.Substring(8)] = column.Value;
+            foreach (var column in info.Where(c => c.Key.StartsWith("Project:", StringComparison.Ordinal) && c.Value.Length != 0))
+                project[column.Key.Substring(8)] = column.Value;
             var units = sheets["Units"];
-            if (units.Select(u => u["id"]).Distinct(StringComparer.Ordinal).Count() != units.Length) throw new ArgumentException("Duplicate topology id.", "inputPath");
+            if (units.Select(u => u["id"]).Distinct(StringComparer.Ordinal).Count() != units.Length)
+                throw new ArgumentException("Duplicate topology id.", "inputPath");
             var nodes = units.ToDictionary(u => u["id"], u => Object(u, new[] { "id", "kind" }, "Name:"), StringComparer.Ordinal);
             var topology = new JsonArray();
             foreach (var row in units)
@@ -140,7 +154,8 @@ namespace TiaMcp.Logic.Generation
                 var seen = new HashSet<string>(StringComparer.Ordinal) { row["id"] };
                 while (parent.Length != 0)
                 {
-                    if (!seen.Add(parent) || seen.Count > 32 || !nodes.ContainsKey(parent)) throw new ArgumentException("Invalid or cyclic topology parent.", "inputPath");
+                    if (!seen.Add(parent) || seen.Count > 32 || !nodes.ContainsKey(parent))
+                        throw new ArgumentException("Invalid or cyclic topology parent.", "inputPath");
                     parent = units.Single(u => u["id"] == parent)["parent"];
                 }
                 parent = row["parent"];
@@ -158,7 +173,8 @@ namespace TiaMcp.Logic.Generation
                 {
                     var obj = new JsonObject();
                     foreach (var cell in row.Where(c => c.Key.StartsWith(Prefix(field), StringComparison.Ordinal) && c.Value.Length != 0))
-                        obj[cell.Key.Substring(Prefix(field).Length)] = field is "params" or "alarms" ? JsonNode.Parse(CanonicalJson.Parse(cell.Value).GetRawText()) : JsonValue.Create(cell.Value);
+                        obj[cell.Key.Substring(Prefix(field).Length)] = field is "params" or "alarms" ? JsonNode
+                            .Parse(CanonicalJson.Parse(cell.Value).GetRawText()) : JsonValue.Create(cell.Value);
                     bool present = Present(row, field + "Present");
                     if (obj.Count > 0 || present) device[field] = obj;
                 }
@@ -168,15 +184,19 @@ namespace TiaMcp.Logic.Generation
             var machine = new JsonObject { ["schema"] = "tiamcp.machine/1", ["machine"] = identity,
                 ["standard"] = new JsonObject { ["package"] = Cell("package"), ["version"] = Cell("version") },
                 ["target"] = new JsonObject { ["release"] = Cell("release"), ["project"] = project },
-                ["stations"] = new JsonArray(sheets["Stations"].Select(row => (JsonNode)Object(row, new[] { "id", "role", "article", "firmware", "ip", "profinetName", "kind" })).ToArray()),
-                ["topology"] = topology, ["devices"] = devices, ["options"] = new JsonObject { ["languages"] = JsonNode.Parse(CanonicalJson.Parse(Cell("languages")).GetRawText()) } };
+                ["stations"] =
+                    new JsonArray(sheets["Stations"]
+                        .Select(row => (JsonNode)Object(row, new[] { "id", "role", "article", "firmware", "ip", "profinetName", "kind" })).ToArray()),
+                ["topology"] = topology, ["devices"] = devices, ["options"] = new JsonObject {
+                    ["languages"] = JsonNode.Parse(CanonicalJson.Parse(Cell("languages")).GetRawText()) } };
             string json = machine.ToJsonString(); package.ValidateMachine(json);
             // Unknown columns are refused instead of silently losing a user's edits.
             var expected = Export(package, json);
             foreach (var sheet in Sheets)
             {
                 var columns = Parse(Utf8.GetString(expected[sheet + ".csv"].Skip(3).ToArray()))[0];
-                if (headers[sheet].Any(c => !columns.Contains(c, StringComparer.Ordinal))) throw new ArgumentException("Unknown CSV column in " + sheet + ".", "inputPath");
+                if (headers[sheet].Any(c => !columns.Contains(c, StringComparer.Ordinal)))
+                    throw new ArgumentException("Unknown CSV column in " + sheet + ".", "inputPath");
             }
             return Encoding.UTF8.GetString(CanonicalJson.Encode(CanonicalJson.Parse(json)));
         }
@@ -202,7 +222,8 @@ namespace TiaMcp.Logic.Generation
             foreach (var column in columns) if (row.TryGetValue(column, out var value) && value.Length != 0) obj[column] = value;
             if (localized.Length != 0)
             {
-                var name = new JsonObject(); foreach (var cell in row.Where(c => c.Key.StartsWith(localized, StringComparison.Ordinal) && c.Value.Length != 0)) name[cell.Key.Substring(localized.Length)] = cell.Value;
+                var name = new JsonObject(); foreach (var cell in row.Where(c => c.Key.StartsWith(localized, StringComparison.Ordinal) && c.Value.Length != 0))
+                    name[cell.Key.Substring(localized.Length)] = cell.Value;
                 obj["name"] = name;
             }
             return obj;

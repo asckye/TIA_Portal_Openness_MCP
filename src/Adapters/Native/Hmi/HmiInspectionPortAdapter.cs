@@ -10,7 +10,8 @@ namespace TiaMcp.Adapters.Native.Hmi {
         public HmiMessage RunHmiStepTool(string tool, Func<HmiObject, string> action, bool requiresProject = true);
         public void RecordHmiReadFault(HmiObject meta);
     }
-    internal sealed class HmiInspectionPortAdapter { private readonly IHmiInspectionSession _session; public HmiInspectionPortAdapter(IHmiInspectionSession session) => _session = session;
+    internal sealed class HmiInspectionPortAdapter {
+        private readonly IHmiInspectionSession _session; public HmiInspectionPortAdapter(IHmiInspectionSession session) => _session = session;
 public HmiMessage ReadHmiScreenSnapshot(string softwarePath,string screenPath,int maxDepth=6,int maxNodes=2000)
             => _session.RunHmiStepTool("GetHmiScreenSnapshot",meta=>{
                 meta["softwarePath"]=softwarePath;meta["screenPath"]=screenPath;
@@ -27,7 +28,10 @@ public HmiMessage ReadHmiScreenSnapshot(string softwarePath,string screenPath,in
                     trace.Step("after", "resolveScreen:" + screenPath);
                     var snapshot = HmiSnapshot.Capture(screen, maxDepth, maxNodes, 65536, trace.Step);
                     meta["snapshot"] = snapshot;
-                    foreach (var key in new[] { "apiCallSuccess", "dataComplete", "traversalComplete", "truncated", "readFailureCount", "quarantinedCount", "connectionUnavailable", "expectedCount", "actualCount", "nextCursor" })
+                    foreach (var key in new[] {
+                            "apiCallSuccess", "dataComplete", "traversalComplete", "truncated", "readFailureCount", "quarantinedCount", "connectionUnavailable",
+                                "expectedCount", "actualCount", "nextCursor"
+                        })
                         meta[key] = snapshot[key]?.DeepClone();
                     meta["operationSuccess"] = snapshot["apiCallSuccess"]?.DeepClone();
                     trace.AddTo(meta);

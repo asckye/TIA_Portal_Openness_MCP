@@ -42,8 +42,11 @@ namespace TiaMcpServer.Siemens
         private static readonly IReadOnlyDictionary<TiaFeature, string> Notes =
             new Dictionary<TiaFeature, string>
             {
-                [TiaFeature.HardwareHmiConnection] = "Siemens.Engineering.HW.CommunicationConnections is not exposed on TIA V20; this build provides the API route on V21 only.",
-                [TiaFeature.DocumentExport] = "ExportAsDocuments API route exists in the V20/V21 engines. Availability is not proof of language, update-level, object or round-trip support; SIMATIC SD content restrictions still apply."
+                [TiaFeature.HardwareHmiConnection] =
+                    "Siemens.Engineering.HW.CommunicationConnections is not exposed on TIA V20; this build provides the API route on V21 only.",
+                [TiaFeature.DocumentExport] =
+                    "ExportAsDocuments API route exists in the V20/V21 engines. Availability is not proof of language, update-level, object or round-trip " +
+                    "support; SIMATIC SD content restrictions still apply."
             };
 
         /// <summary>Unknown, planned and unrecognized versions fail closed.</summary>

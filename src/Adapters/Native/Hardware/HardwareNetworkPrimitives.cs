@@ -27,14 +27,16 @@ namespace TiaMcp.Adapters
             => owner as DeviceItem ?? throw new ArgumentException(parameter + " must address a DeviceItem (non-empty itemPathJson).");
 
         private static T HardwareRequireHardwareService<T>(HardwareObject owner, string parameter) where T : class, IEngineeringService
-            => HardwareServiceProvider(owner).GetService<T>() ?? throw new NotSupportedException(parameter + " does not expose " + typeof(T).Name + " (service is null for this hardware object).");
+            => HardwareServiceProvider(owner).GetService<T>()
+                ?? throw new NotSupportedException(parameter + " does not expose " + typeof(T).Name + " (service is null for this hardware object).");
 
         private static object? HardwareFindOnFresh(Func<object> composition, string name, Dictionary<string, object?> meta, string phase)
         {
             try { return HardwareGroupOperations.Find(composition(), name); }
             catch (Exception ex) when (HardwareDisposedOnly(ex))
             {
-                meta[phase + "Enumeration"] = "EngineeringObjectDisposedException on the refreshed composition (TIA released a proxy): " + ex.GetBaseException().Message;
+                meta[phase + "Enumeration"] = "EngineeringObjectDisposedException on the refreshed composition (TIA released a proxy): " + ex.GetBaseException()
+                    .Message;
                 return null;
             }
         }
@@ -46,7 +48,8 @@ namespace TiaMcp.Adapters
         }
 
         private static Channel HardwareExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber)
-            => item.Channels.Find((ChannelType)Enum.Parse(typeof(ChannelType), channelType), (ChannelIoType)Enum.Parse(typeof(ChannelIoType), channelIoType), channelNumber)
+            => item.Channels
+                .Find((ChannelType)Enum.Parse(typeof(ChannelType), channelType), (ChannelIoType)Enum.Parse(typeof(ChannelIoType), channelIoType), channelNumber)
                ?? throw new HardwareAddressingException("NotFound", "Channel not found: " + channelType + "/" + channelIoType + "/" + channelNumber);
 
         private static object? HardwareLinkedTagRows(Channel channel, Dictionary<string, object?> row)
@@ -58,7 +61,13 @@ namespace TiaMcp.Adapters
             PlcTagProvider? provider = channel.GetService<PlcTagProvider>();
             if (provider == null) { row["linkedTagsNote"] = "PlcTagProvider unavailable on this channel."; return null; }
             IList<PlcTag> tags = provider.GetLinkedTags();
-            return new List<object?>(tags.Select(t => (object)new Dictionary<string, object?> { ["name"] = t.Name, ["dataTypeName"] = t.DataTypeName, ["logicalAddress"] = t.LogicalAddress, ["tagTable"] = (t.Parent as PlcTagTable)?.Name }).ToArray());
+            return new List<object
+                ?>(tags
+                    .Select(t => (object)new Dictionary<string, object?> {
+                        ["name"] = t.Name, ["dataTypeName"] = t.DataTypeName, ["logicalAddress"] = t.LogicalAddress, ["tagTable"] = (t.Parent as PlcTagTable)?
+                            .Name
+                    })
+                    .ToArray());
 #endif
         }
     }

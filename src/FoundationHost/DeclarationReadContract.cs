@@ -17,7 +17,10 @@ internal static class DeclarationReadContract
     }
     internal static JsonArray Validate(string tool,string table,JsonNode? result,string unitName="",bool includeUnits=false)
     {
-        string kind=tool switch { "ListPlcTags"=>"tag", "ListPlcUserConstants"=>"user-constant", "ListPlcSystemConstants"=>"system-constant", _=>throw new InvalidDataException("Unknown declaration reader.") };
+        string kind=tool switch {
+            "ListPlcTags"=>"tag", "ListPlcUserConstants"=>"user-constant", "ListPlcSystemConstants"=>"system-constant", _=>
+                throw new InvalidDataException("Unknown declaration reader.")
+        };
         if(result is not JsonArray rows) throw new InvalidDataException("Worker returned an invalid declaration list for "+tool);
         var paths=new HashSet<string>(StringComparer.Ordinal);
         // The table may be the exact encoded path or (P6-55) a unique raw single-segment name, which the worker
@@ -42,11 +45,14 @@ internal static class DeclarationReadContract
                     throw new InvalidDataException("Worker returned conflicting unit declaration identity.");
                 relative=string.Join("/",parts.Skip(3));
             }
-            else if(includeUnits && rowPrefix?.StartsWith("root/tag-tables/",StringComparison.Ordinal)==true) relative=rowPrefix.Substring("root/tag-tables/".Length);
+            else if(includeUnits && rowPrefix?.StartsWith("root/tag-tables/",StringComparison.Ordinal)==true) relative=rowPrefix
+                .Substring("root/tag-tables/".Length);
             else if(includeUnits) relative=null;
             else if(unitName!="") relative=null;
             bool scoped=includeUnits || unitName!="";
-            bool canonical=relative!=null && relative.Split('/').All(segment=>!string.IsNullOrWhiteSpace(Uri.UnescapeDataString(segment)) && Uri.UnescapeDataString(segment) is not ("." or "..") && Uri.EscapeDataString(Uri.UnescapeDataString(segment))==segment);
+            bool canonical=relative!=null && relative.Split('/')
+                .All(segment=>!string.IsNullOrWhiteSpace(Uri.UnescapeDataString(segment)) && Uri.UnescapeDataString(segment) is not ("." or "..") && Uri
+                    .EscapeDataString(Uri.UnescapeDataString(segment))==segment);
             bool knownPrefix=canonical && (relative==table || (!table.Contains('/') && relative==Uri.EscapeDataString(table)) || scoped && table=="");
             if(string.IsNullOrWhiteSpace(name) || row["Kind"]!.GetValue<string>()!=kind || !knownPrefix ||
                 (!scoped && prefix!=null && rowPrefix!=prefix) || !paths.Add(path))

@@ -56,12 +56,16 @@ namespace TiaMcp.Adapters
             HardwareAddressingPolicy.ValidatePath(itemPath, false);
             Device device;
             if (devicePath.Length == 1)
-                device = (Device)(Find(EnumerateAllDevices().ToArray(), devicePath[0]) ?? throw new InvalidOperationException("Exact unique device not found."));
+                device =
+                    (Device)(Find(EnumerateAllDevices().ToArray(), devicePath[0]) ?? throw new InvalidOperationException("Exact unique device not found."));
             else if (devicePath[0] == TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.UngroupedSegment)
             {
                 // The ungrouped system group has a localized name and no subgroups.
-                if (devicePath.Length != 2) throw new InvalidOperationException("Use [\"$ungrouped\", \"<device>\"] for a device in the ungrouped devices group.");
-                device = (Device)(Find(project!.UngroupedDevicesGroup.Devices, devicePath[1]) ?? throw new InvalidOperationException("Device not found in the ungrouped devices group."));
+                if (devicePath.Length != 2)
+                    throw new InvalidOperationException("Use [\"$ungrouped\", \"<device>\"] for a device in the ungrouped devices group.");
+                device =
+                    (Device)(Find(project!.UngroupedDevicesGroup.Devices, devicePath[1])
+                        ?? throw new InvalidOperationException("Device not found in the ungrouped devices group."));
             }
             else
             {
@@ -76,7 +80,10 @@ namespace TiaMcp.Adapters
             {
                 var next = Find(current.DeviceItems, name)
                     ?? current.Items.Cast<object?>().FirstOrDefault(i => i is DeviceItem d && string.Equals(d.Name, name, StringComparison.Ordinal))
-                    ?? throw new InvalidOperationException("Device item not found: " + name + " (children of " + current.Name + ": " + string.Join(", ", current.DeviceItems.Select(d => d.Name).Concat(current.Items.OfType<DeviceItem>().Select(d => d.Name)).Distinct().Take(20)) + ").");
+                    ?? throw new InvalidOperationException("Device item not found: " + name + " (children of " + current.Name + ": " + string
+                            .Join(", ", current.DeviceItems.Select(d => d.Name).Concat(current.Items.OfType<DeviceItem>().Select(d => d.Name)).Distinct()
+                                .Take(20))
+                            + ").");
                 current = (DeviceItem)next;
             }
             return current;
@@ -110,7 +117,9 @@ namespace TiaMcp.Adapters
                 meta["nextOffset"] = offset + page.Length < rows.Count ? (int?)(offset + page.Length) : null;
                 meta["truncated"] = offset + page.Length < rows.Count;
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
-                meta["scope"] = "Address StartAddress/Length/IoType, controller owner paths and official dynamic attributes; HwIdentifiers; AddressController/HwIdentifierController registrations when the item is a controller.";
+                meta["scope"] =
+                    "Address StartAddress/Length/IoType, controller owner paths and official dynamic attributes; HwIdentifiers; " +
+                    "AddressController/HwIdentifierController registrations when the item is a controller.";
                 return "Addressing of the hardware object read; no modification.";
             });
         }
@@ -122,15 +131,19 @@ namespace TiaMcp.Adapters
             return RunHardwareAddressStep("SetDeviceAddress", meta => {
                 if (!HardwareAddressingPolicy.IoTypes.Contains(update.IoType)) throw new ArgumentException("Invalid ioType.");
                 if (update.StartAddress < 0) throw new ArgumentException("startAddress identifies the existing address (>= 0).");
-                using var access = dryRun ? null : AcquireEngineeringEditAccess != null ? AcquireEngineeringEditAccess() : Portal().ExclusiveAccess(ExclusiveAccessText());
+                using var access = dryRun ? null : AcquireEngineeringEditAccess != null ? AcquireEngineeringEditAccess() : Portal()
+                    .ExclusiveAccess(ExclusiveAccessText());
                 var item = ExactHardware(update.DevicePath, update.ItemPath) as DeviceItem
                     ?? throw new ArgumentException("itemPathJson must address a DeviceItem (non-empty itemPathJson).");
                 var wanted = (AddressIoType)Enum.Parse(typeof(AddressIoType), update.IoType);
                 var matches = Items(item.Addresses).Cast<Address>().Where(a => a.IoType == wanted && a.StartAddress == update.StartAddress).Take(2).ToArray();
-                if (matches.Length != 1) throw new HardwareAddressingException("NotFound", matches.Length == 0 ? "No address with that IoType/StartAddress on the item." : "Ambiguous address identity.");
+                if (matches.Length != 1)
+                    throw new HardwareAddressingException("NotFound", matches.Length == 0 ? "No address with that IoType/StartAddress on the item."
+                        : "Ambiguous address identity.");
                 var address = matches[0];
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["ownerPath"] = HardwareOwnerPath(item); meta["before"] = AddressRow(address);
-                meta["restrictions"] = "Changing StartAddress may move the opposite IoType of the same module and never rewires tags; packed addresses are unsupported.";
+                meta["restrictions"] =
+                    "Changing StartAddress may move the opposite IoType of the same module and never rewires tags; packed addresses are unsupported.";
                 OB? ob = null;
 #if PLC_ADDRESS_PROCESS_IMAGE_SERVICE
                 global::Siemens.Engineering.SW.ProcessImageProvider? processImage = null;
@@ -139,11 +152,14 @@ namespace TiaMcp.Adapters
                 {
                     if (string.IsNullOrWhiteSpace(update.SoftwarePath) || update.SoftwarePath.Length > 256 || update.SoftwarePath != update.SoftwarePath.Trim())
                         throw new ArgumentException("softwarePath must be an exact nonempty name without surrounding whitespace.");
-                    ob = (ResolveEngineeringBlock != null ? ResolveEngineeringBlock(update.SoftwarePath, update.ProcessImageObName) : HardwareBlock(update.SoftwarePath, update.ProcessImageObName)) as OB
+                    ob =
+                        (ResolveEngineeringBlock != null ? ResolveEngineeringBlock(update.SoftwarePath, update.ProcessImageObName)
+                            : HardwareBlock(update.SoftwarePath, update.ProcessImageObName)) as OB
                         ?? throw new HardwareAddressingException("NotFound", "OB not found in the PLC software: " + update.ProcessImageObName);
 #if PLC_ADDRESS_PROCESS_IMAGE_SERVICE
                     processImage = address.GetService<global::Siemens.Engineering.SW.ProcessImageProvider>()
-                        ?? throw new NotSupportedException("ProcessImageProvider unavailable on this address (V21 service replacing Address.AssignProcessImageToOrganizationBlock).");
+                        ?? throw new NotSupportedException("ProcessImageProvider unavailable on this address (V21 service replacing " +
+                            "Address.AssignProcessImageToOrganizationBlock).");
 #endif
                     meta["processImageOb"] = ob.Name;
 #if PLC_ADDRESS_PROCESS_IMAGE_SERVICE
@@ -212,7 +228,8 @@ namespace TiaMcp.Adapters
                     {
                         var data = engineering.MessageData;
                         meta["messageData"] = new Dictionary<string, object?> { ["text"] = data.Text, ["detailText"] = data.DetailText };
-                        meta["detailMessageData"] = engineering.DetailMessageData.Select(d => new Dictionary<string, object?> { ["text"] = d.Text, ["detailText"] = d.DetailText }).ToArray();
+                        meta["detailMessageData"] = engineering.DetailMessageData
+                            .Select(d => new Dictionary<string, object?> { ["text"] = d.Text, ["detailText"] = d.DetailText }).ToArray();
                     }
                     catch { /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ }
                 }

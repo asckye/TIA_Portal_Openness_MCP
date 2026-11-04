@@ -17,9 +17,11 @@ internal static class EngineeringObjectPath
                 var step = node as JsonObject ?? throw new ArgumentException("Each step must be {property,name?}.");
                 if (step.Any(p => p.Key != "property" && p.Key != "name")) throw new ArgumentException("Unknown object-path key.");
                 var property = step["property"]?.GetValue<string>();
-                if (string.IsNullOrWhiteSpace(property) || !property!.All(c => char.IsLetterOrDigit(c) || c == '_') || BackLinks.Contains(property, StringComparer.OrdinalIgnoreCase))
+                if (string.IsNullOrWhiteSpace(property) || !property!.All(c => char.IsLetterOrDigit(c) || c == '_') || BackLinks
+                        .Contains(property, StringComparer.OrdinalIgnoreCase))
                     throw new ArgumentException("Invalid or backward property step: " + property);
-                if (step.ContainsKey("name") && string.IsNullOrWhiteSpace(step["name"]?.GetValue<string>())) throw new ArgumentException("Exact nonempty name required.");
+                if (step.ContainsKey("name") && string.IsNullOrWhiteSpace(step["name"]?.GetValue<string>()))
+                    throw new ArgumentException("Exact nonempty name required.");
             }
             return path;
         }

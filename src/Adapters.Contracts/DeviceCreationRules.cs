@@ -22,7 +22,9 @@ public static class DeviceCreationRules
         if (!match.Success) return;
         if (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) != portalMajor)
             throw new AdapterPreconditionException("WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + portalMajor
-                + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the catalog entry ending in /" + portalMajor + ".0.0.0 (SearchHardwareCatalog); no create attempted.", "typeIdentifier");
+                + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the " +
+                    "catalog entry ending in /"
+                    + portalMajor + ".0.0.0 (SearchHardwareCatalog); no create attempted.", "typeIdentifier");
     }
 
     public static bool IsFullTypeIdentifier(string value)
@@ -38,11 +40,15 @@ public static class DeviceCreationRules
         var order = (orderNumber ?? string.Empty).Trim();
         var requestedVersion = (version ?? string.Empty).Trim();
         if (order.Length == 0)
-            throw new AdapterPreconditionException(orderParameter + " is required: the exact article number (with its spaces, e.g. '6ES7 513-1AM03-0AB0') or the full TypeIdentifier from the hardware catalog. No family default device is created.", orderParameter);
+            throw new AdapterPreconditionException(orderParameter
+                    + " is required: the exact article number (with its spaces, e.g. '6ES7 513-1AM03-0AB0') or the full TypeIdentifier from the hardware " +
+                    "catalog. No family default device is created.",
+                    orderParameter);
         if (IsFullTypeIdentifier(order))
         {
             if (requestedVersion.Length != 0)
-                throw new AdapterPreconditionException("A full TypeIdentifier already contains its version; pass " + versionParameter + " empty.", versionParameter);
+                throw new AdapterPreconditionException("A full TypeIdentifier already contains its version; pass " + versionParameter + " empty.",
+                        versionParameter);
             return order;
         }
         return requestedVersion.Length == 0 ? "OrderNumber:" + order : "OrderNumber:" + order + "/" + requestedVersion;
@@ -52,7 +58,8 @@ public static class DeviceCreationRules
     public static string? SpecProblem(string mlfb, string version, string mlfbKey, string versionKey)
     {
         if (string.IsNullOrWhiteSpace(mlfb))
-            return mlfbKey + " is required: the exact article number with " + versionKey + ", or the full TypeIdentifier from SearchHardwareCatalog. No family default device is created.";
+            return mlfbKey + " is required: the exact article number with " + versionKey
+                + ", or the full TypeIdentifier from SearchHardwareCatalog. No family default device is created.";
         return IsFullTypeIdentifier(mlfb) && !string.IsNullOrWhiteSpace(version)
             ? "A full TypeIdentifier in " + mlfbKey + " already contains its version; leave " + versionKey + " empty." : null;
     }
@@ -91,10 +98,14 @@ public static class DeviceCreationRules
     }
 
     public static string NoCatalogText(string typeIdentifier)
-        => " This release has no HardwareCatalog API (V18+), so no candidates are listed; read the exact TypeIdentifier in TIA (Options > Settings > Hardware configuration > Display of the type identifier) for '" + typeIdentifier + "'.";
+        =>
+            " This release has no HardwareCatalog API (V18+), so no candidates are listed; read the exact TypeIdentifier in TIA (Options > Settings > " +
+            "Hardware configuration > Display of the type identifier) for '"
+            + typeIdentifier + "'.";
 
     // A TIA refusal is typed only when the device inventory read back unchanged; otherwise the outcome stays unknown.
-    public static AdapterPreconditionException TiaRefusal(string typeIdentifier, string deviceName, string reason, string candidates, string parameter, Exception cause)
+    public static AdapterPreconditionException TiaRefusal(string typeIdentifier, string deviceName, string reason, string candidates, string parameter,
+            Exception cause)
         => new AdapterPreconditionException("TIA refused CreateWithItem('" + typeIdentifier + "', '" + deviceName + "'): " + reason
             + " No device was created (device inventory unchanged); no other type, version or name was tried." + candidates, parameter, false, cause);
 
@@ -106,7 +117,8 @@ public static class DeviceCreationRules
         if (string.IsNullOrWhiteSpace(deviceName))
             throw new AdapterPreconditionException("deviceName is required; it names the device and its head item.", "deviceName");
         if (occupiedNames.Any(name => string.Equals(name, deviceName, StringComparison.OrdinalIgnoreCase)))
-            throw new AdapterPreconditionException("A device or device head item named '" + deviceName + "' already exists (root, grouped or ungrouped devices); no create attempted. Choose a new deviceName.", "deviceName", false);
+            throw new AdapterPreconditionException("A device or device head item named '" + deviceName
+                    + "' already exists (root, grouped or ungrouped devices); no create attempted. Choose a new deviceName.", "deviceName", false);
     }
 
     private static string List(IReadOnlyList<string> identifiers)

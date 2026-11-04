@@ -23,12 +23,16 @@ namespace TiaMcp.Adapters.Native.Hmi
             row["texts"] = UnifiedUiModelLogic.MultilingualRows(item);
             row["group"] = UnifiedScreenItemLogic.Group(item.GetType());
             row["features"] = UnifiedScreenItemLogic.Features(item.GetType());
-            foreach (var (name, key) in new[] { ("EventHandlers", "eventHandlerCount"), ("PropertyEventHandlers", "propertyEventHandlerCount"), ("Dynamizations", "dynamizationCount") })
+            foreach (var (name, key) in new[] {
+                    ("EventHandlers", "eventHandlerCount"), ("PropertyEventHandlers", "propertyEventHandlerCount"), ("Dynamizations", "dynamizationCount") })
             {
                 var p = UnifiedUiModelLogic.FindProperty(item.GetType(), name);
                 if (p?.GetMethod?.IsPublic != true) { row[key] = null; continue; }
                 try { row[key] = PlcGroupOperations.Items(p.GetValue(item) ?? throw new InvalidOperationException(name + " is null.")).Count(); }
-                catch (Exception ex) { row[key] = null; ((HmiArray)row["failures"]!).Add(new HmiObject { ["property"] = name, ["error"] = ex.GetBaseException().Message }); if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
+                catch (Exception ex) {
+                    row[key] = null; ((HmiArray)row["failures"]!).Add(new HmiObject { ["property"] = name, ["error"] = ex.GetBaseException().Message });
+                    if (HmiReadSafety.ConnectionUnavailable(ex)) throw;
+                }
             }
             return row;
         }
@@ -41,17 +45,22 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var catalog = UnifiedScreenItemLogic.Catalog(_session.UnifiedAssembly);
                     meta["itemTypes"] = catalog; meta["count"] = catalog.Count; meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
-                    meta["scope"] = "Every concrete screen item type of the loaded WinCC Unified API (UI.Shapes / Widgets / Controls / Screens) with the IHmi*Feature interfaces it implements; pass one name for its property schema.";
+                    meta["scope"] =
+                        "Every concrete screen item type of the loaded WinCC Unified API (UI.Shapes / Widgets / Controls / Screens) with the IHmi*Feature " +
+                        "interfaces it implements; pass one name for its property schema.";
                     return "Unified screen item type catalog from the loaded API; no project access.";
                 }
                 var type = UnifiedScreenItemLogic.ResolveItemType(_session.UnifiedAssembly, itemType);
                 meta["description"] = UnifiedScreenItemLogic.TypeDescription(type, depth); meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
-                meta["scope"] = "Public properties classified as scalar/color/multilingual/part/collection/reference with CLR type, enum values and writability; parts expanded to depth. From the loaded API, not from a project.";
+                meta["scope"] =
+                    "Public properties classified as scalar/color/multilingual/part/collection/reference with CLR type, enum values and writability; parts " +
+                    "expanded to depth. From the loaded API, not from a project.";
                 return "Unified screen item type described; use ManageUnifiedScreenItem to create/read/update items of this type.";
             }, requiresProject: false);
 
         public HmiMessage ManageUnifiedScreenItem(string softwarePath, string screenPath, string action = "read", string itemName = "", string itemType = "",
-            string propertiesJson = "{}", int depth = 2, bool confirmDelete = false, int offset = 0, int limit = 100, bool dryRun = true, string containedType = "")
+            string propertiesJson = "{}", int depth = 2, bool confirmDelete = false, int offset = 0, int limit = 100, bool dryRun = true, string containedType =
+                "")
             => _session.RunHmiStepTool("ManageUnifiedScreenItem", meta => {
                 var changes = UnifiedScreenItemLogic.ParseProperties(propertiesJson);
                 bool writing = UnifiedScreenItemLogic.ValidateRequest(action, itemName, itemType, changes, confirmDelete, dryRun, containedType);
@@ -59,7 +68,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var createType = action == "create" ? UnifiedScreenItemLogic.ResolveItemType(_session.UnifiedAssembly, itemType) : null;
                 if (createType != null) UnifiedScreenItemLogic.ValidateContainedType(createType, containedType);
                 if (createType != null && changes.ContainsKey("ContainedType"))
-                    throw new ArgumentException("Create accepts ContainedType only through the containedType parameter, copied verbatim from an existing container.");
+                    throw new ArgumentException("Create accepts ContainedType only through the containedType parameter, copied verbatim from an existing " +
+                        "container.");
                 if (depth < 0 || depth > 4) throw new ArgumentException("depth 0..4 required.");
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var root = _session.ExactUnifiedRoot(softwarePath);
@@ -82,7 +92,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (existing == null) throw new PlcSoftwareException("NotFound", "Screen item not found: " + itemName);
                     meta["item"] = ScreenItemSnapshot(existing, depth); meta["itemType"] = existing.GetType().FullName; meta["apiCallSuccess"] = true;
                     meta["dataComplete"] = meta["item"]!.Field("dataComplete")!.GetValue<bool>();
-                    meta["scope"] = "Scalars and colors at every level, parts and collections to depth, every MultilingualText language, feature interfaces, event/dynamization counts. Events: GetUnifiedObjectEvents; dynamizations: ManageUnifiedDynamization.";
+                    meta["scope"] =
+                        "Scalars and colors at every level, parts and collections to depth, every MultilingualText language, feature interfaces, " +
+                        "event/dynamization counts. Events: GetUnifiedObjectEvents; dynamizations: ManageUnifiedDynamization.";
                     return "Screen item read.";
                 }
                 if (action == "create" && existing != null) throw new InvalidOperationException("Screen item already exists: " + itemName);
@@ -100,9 +112,13 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (action == "create") meta["containedType"] = string.IsNullOrEmpty(containedType) ? null : containedType;
                 var (plain, texts) = UnifiedScreenItemLogic.SplitProperties(type, changes);
                 var prepared = UnifiedUiModelLogic.PrepareNested(type, plain);
-                if (action == "delete" && type.GetMethod("Delete", Type.EmptyTypes) == null) throw new NotSupportedException("Native Delete() unavailable on " + type.FullName);
+                if (action == "delete" && type.GetMethod("Delete", Type.EmptyTypes) == null)
+                    throw new NotSupportedException("Native Delete() unavailable on " + type.FullName);
                 if (existing != null) meta["before"] = ScreenItemSnapshot(existing, Math.Min(depth, 1));
-                if (action != "delete") { meta["requestedProperties"] = plain.DeepClone(); meta["requestedTexts"] = new HmiArray(texts.Select(t => (object)new HmiObject { ["property"] = t.Name, ["culture"] = t.Culture, ["text"] = t.Text }).ToArray()); }
+                if (action != "delete") {
+                    meta["requestedProperties"] = plain.DeepClone(); meta["requestedTexts"] =
+                        new HmiArray(texts.Select(t => (object)new HmiObject { ["property"] = t.Name, ["culture"] = t.Culture, ["text"] = t.Text }).ToArray());
+                }
                 int countBefore = PlcGroupOperations.Items(items).Count(); meta["countBefore"] = countBefore;
                 if (!writing) return "Screen item " + action + " preview; type, property shape and value conversions checked, no native write.";
                 meta["mayHaveChanged"] = true;
@@ -113,14 +129,19 @@ namespace TiaMcp.Adapters.Native.Hmi
                     meta["verifiedAbsent"] = true; meta["countAfter"] = PlcGroupOperations.Items(items).Count();
                     return "Screen item deleted and absence verified. No save/compile/download.";
                 }
-                object item = existing ?? (create!.Invoke(items, string.IsNullOrEmpty(containedType) ? new object[] { itemName } : new object[] { itemName, containedType }) ?? throw new InvalidOperationException("Native Create<T> returned null."));
+                object item = existing
+                    ?? (create!.Invoke(items, string.IsNullOrEmpty(containedType) ? new object[] { itemName } : new object[] { itemName, containedType })
+                        ?? throw new InvalidOperationException("Native Create<T> returned null."));
                 if (action == "create")
                 {
                     meta["apiCallSuccess"] = true;
                     // Openness returns a fresh proxy from Create<T>; Find() yields another proxy for the same object, so identity is checked by exact name and count, never by reference.
-                    item = PlcGroupOperations.Find(items, itemName) ?? throw new InvalidOperationException("Create returned but the item is not found by name.");
-                    if (PlcGroupOperations.Items(items).Count() != countBefore + 1) throw new InvalidOperationException("Create returned but the item count did not grow by one.");
-                    if (UnifiedScreenItemLogic.RequiresContainedType(type)) meta["containedTypeReadback"] = UnifiedScreenItemLogic.ReadContainedType(item, containedType);
+                    item = PlcGroupOperations.Find(items, itemName)
+                        ?? throw new InvalidOperationException("Create returned but the item is not found by name.");
+                    if (PlcGroupOperations.Items(items).Count() != countBefore + 1)
+                        throw new InvalidOperationException("Create returned but the item count did not grow by one.");
+                    if (UnifiedScreenItemLogic.RequiresContainedType(type)) meta["containedTypeReadback"] = UnifiedScreenItemLogic
+                        .ReadContainedType(item, containedType);
                 }
                 UnifiedUiModelLogic.ApplyNested(item, prepared, meta);
                 var textResults = new HmiArray(); meta["textResults"] = textResults;
@@ -130,10 +151,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                     var result = UnifiedMultilingualText.WriteDetailed(owner, edit.Property, edit.Text, edit.Culture);
                     result["path"] = edit.Name;
                     textResults.Add(result);
-                    if (!result["verified"]!.GetValue<bool>()) throw new InvalidOperationException(edit.Name + " culture=" + edit.Culture + ": " + result["error"] + ". Earlier edits are not rolled back.");
+                    if (!result["verified"]!.GetValue<bool>())
+                        throw new InvalidOperationException(edit.Name + " culture=" + edit.Culture + ": " + result["error"]
+                            + ". Earlier edits are not rolled back.");
                 }
-                meta["apiCallSuccess"] = true; meta["after"] = ScreenItemSnapshot(item, Math.Min(depth, 1)); meta["countAfter"] = PlcGroupOperations.Items(items).Count();
-                return "Screen item " + action + " completed and read back (nested properties, colors and texts verified). No save/compile/download; partial edits are not rolled back.";
+                meta["apiCallSuccess"] = true; meta["after"] = ScreenItemSnapshot(item, Math.Min(depth, 1)); meta["countAfter"] = PlcGroupOperations
+                    .Items(items).Count();
+                return "Screen item " + action
+                    + " completed and read back (nested properties, colors and texts verified). No save/compile/download; partial edits are not rolled back.";
             });
     }
 }

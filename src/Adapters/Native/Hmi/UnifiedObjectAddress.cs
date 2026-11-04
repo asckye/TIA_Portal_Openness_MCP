@@ -23,7 +23,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 var step = (HmiObject)node!;
                 var property = target.GetType().GetProperty(step["property"]!.GetValue<string>(), BindingFlags.Instance | BindingFlags.Public);
-                if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0) throw new NotSupportedException("Public property not available: " + step["property"]);
+                if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0)
+                    throw new NotSupportedException("Public property not available: " + step["property"]);
                 target = property.GetValue(target) ?? throw new InvalidOperationException("Null object at " + step);
                 if (step.ContainsKey("name"))
                 {

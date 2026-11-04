@@ -27,7 +27,8 @@ internal sealed class AuditTailReader(string directory)
     internal int Generation { get; private set; }
     internal long BytesRead { get; private set; }
     internal int ReadThreadId { get; private set; }
-    private string[] Paths() => Directory.Exists(directory) ? Directory.GetFiles(directory, "audit-*.jsonl").OrderBy(p => p, StringComparer.Ordinal).ToArray() : [];
+    private string[] Paths() => Directory.Exists(directory) ? Directory.GetFiles(directory, "audit-*.jsonl").OrderBy(p => p, StringComparer.Ordinal).ToArray()
+        : [];
     internal AuditEvent[] Poll()
     {
         ReadThreadId = Environment.CurrentManagedThreadId;

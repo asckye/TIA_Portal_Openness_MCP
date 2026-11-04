@@ -14,7 +14,8 @@ namespace TiaMcp.Adapters.Contracts
     // the window is refused before any native call, an in-window header passes through unchanged.
     public static class SimaticMlImportWindow
     {
-        private static readonly Regex Header = new Regex(@"^V(?<major>\d{1,2})(?:\.(?<minor>\d{1,2}))?(?:\s+SP(?<sp>\d{1,2}))?$", RegexOptions.CultureInvariant);
+        private static readonly Regex Header =
+            new Regex(@"^V(?<major>\d{1,2})(?:\.(?<minor>\d{1,2}))?(?:\s+SP(?<sp>\d{1,2}))?$", RegexOptions.CultureInvariant);
 
         // Parses the Engineering version spellings TIA writes: "V13 SP1", "V14", "V14 SP1", "V15", "V15.1", "V16" ... "V21".
         // A service pack and a dotted minor are the same ordering step ("V14 SP1" < "V15" < "V15.1" < "V16").
@@ -62,7 +63,8 @@ namespace TiaMcp.Adapters.Contracts
             var api = ApiVersion(release);
             string window = "TIA Portal " + PlcDeclarationText(release) + " imports SimaticML " + Window(release) + " (Version-specific SimaticML import).";
             if (fileVersion == null) return "The document has no single Engineering version header; " + window + " The MCP never adds or rewrites the header.";
-            if (!TryParse(fileVersion, out var version)) return "The document's Engineering version '" + fileVersion + "' is not a TIA Portal version; " + window;
+            if (!TryParse(fileVersion, out var version)) return "The document's Engineering version '" + fileVersion + "' is not a TIA Portal version; "
+                + window;
             var lowest = Lowest(release);
             if (version > api || lowest != null && version < lowest)
                 return "The document's Engineering version " + fileVersion + " is outside the import window: " + window
@@ -84,7 +86,8 @@ namespace TiaMcp.Adapters.Contracts
         {
             var native = document.Root?.Elements().FirstOrDefault(e => e.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal)
                 || e.Name.LocalName.StartsWith("SW.Types.", StringComparison.Ordinal) || e.Name.LocalName.StartsWith("SW.Tags.", StringComparison.Ordinal));
-            var name = native?.Elements().FirstOrDefault(e => e.Name.LocalName == "AttributeList")?.Elements().FirstOrDefault(e => e.Name.LocalName == "Name")?.Value?.Trim();
+            var name = native?.Elements().FirstOrDefault(e => e.Name.LocalName == "AttributeList")?.Elements().FirstOrDefault(e => e.Name.LocalName == "Name")?
+                .Value?.Trim();
             if (native == null || string.IsNullOrEmpty(name)) return null;
             return (native.Name.LocalName.Substring(native.Name.LocalName.LastIndexOf('.') + 1), name!);
         }
@@ -101,7 +104,8 @@ namespace TiaMcp.Adapters.Contracts
         {
             XDocument document;
             try { document = Load(bytes); }
-            catch (XmlException error) { throw new AdapterPreconditionException("The import file is not well-formed SimaticML XML: " + error.Message, parameter, true, error); }
+            catch (XmlException error) {
+                throw new AdapterPreconditionException("The import file is not well-formed SimaticML XML: " + error.Message, parameter, true, error); }
             var refusal = Refusal(release, ReadVersion(document));
             if (refusal != null) throw new AdapterPreconditionException(refusal, parameter, false);
         }

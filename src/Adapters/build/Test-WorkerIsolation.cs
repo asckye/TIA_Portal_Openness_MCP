@@ -29,9 +29,14 @@ var failed = 0;
 foreach (var key in TiaMcp.Adapters.Contracts.ReleaseRange.All)
 {
     var selectionLog = Path.Combine(evidenceDirectory, "selection-" + key + ".json");
-    var selection = await Run(dotnet, new[] { "msbuild", worker, "-nologo", "-v:quiet", "-t:ValidateWorkerAdapter", "-p:TiaReleaseKey=" + key, "-getItem:ProjectReference", "-getProperty:TargetFramework" }, repo);
+    var selection =
+        await Run(dotnet, new[] {
+            "msbuild", worker, "-nologo", "-v:quiet", "-t:ValidateWorkerAdapter", "-p:TiaReleaseKey=" + key, "-getItem:ProjectReference",
+                "-getProperty:TargetFramework"
+        }, repo);
     await File.WriteAllTextAsync(selectionLog, selection.Output, new UTF8Encoding(false));
-    var correct = selection.ExitCode == 0 && HasSelectedReferences(selection.Output, "/Adapter." + key + ".csproj") && TargetFramework(selection.Output) == "net48";
+    var correct = selection.ExitCode == 0 && HasSelectedReferences(selection.Output, "/Adapter." + key + ".csproj")
+        && TargetFramework(selection.Output) == "net48";
     Record("selection-" + key, correct, selection.ExitCode);
 
     var binary = Path.Combine(repo, "src", "PlcWorker", "bin", key, "Release", "net48", "TiaMcp.Adapter." + key + ".dll");
@@ -66,18 +71,29 @@ foreach (var test in cases)
 }
 
 var identityLog = Path.Combine(evidenceDirectory, "identity-override.json");
-var identity = await Run(dotnet, new[] { "msbuild", worker, "-nologo", "-v:quiet", "-t:ValidateWorkerAdapter", "-p:TiaReleaseKey=20", "-p:SelectedAdapterDirectory=V21", "-p:SelectedAdapterProject=invalid.csproj", "-getItem:ProjectReference" }, repo);
+var identity =
+    await Run(dotnet, new[] {
+        "msbuild", worker, "-nologo", "-v:quiet", "-t:ValidateWorkerAdapter", "-p:TiaReleaseKey=20", "-p:SelectedAdapterDirectory=V21",
+            "-p:SelectedAdapterProject=invalid.csproj", "-getItem:ProjectReference"
+    }, repo);
 await File.WriteAllTextAsync(identityLog, identity.Output, new UTF8Encoding(false));
 Record("identity-override-ignored", identity.ExitCode == 0 && HasSelectedReferences(identity.Output, "/V20/Adapter.20.csproj"), identity.ExitCode);
 
 var adapter = Path.Combine(adapterRoot, "V20", "Adapter.20.csproj");
 var missingWeaverLog = Path.Combine(evidenceDirectory, "missing-weaver.log");
-var missingWeaver = await Run(dotnet, new[] { "msbuild", adapter, "-nologo", "-v:minimal", "-t:InstrumentAdapterNativeBoundaries", "-p:NativeCallWeaverPath=" + Path.Combine(evidenceDirectory, "absent-weaver.dll") }, repo);
+var missingWeaver =
+    await Run(dotnet, new[] {
+        "msbuild", adapter, "-nologo", "-v:minimal", "-t:InstrumentAdapterNativeBoundaries", "-p:NativeCallWeaverPath=" + Path
+            .Combine(evidenceDirectory, "absent-weaver.dll")
+    }, repo);
 await File.WriteAllTextAsync(missingWeaverLog, missingWeaver.Output, new UTF8Encoding(false));
-Record("missing-weaver", missingWeaver.ExitCode != 0 && missingWeaver.Output.Contains("Uninstrumented adapter output is refused", StringComparison.Ordinal), missingWeaver.ExitCode);
+Record("missing-weaver", missingWeaver.ExitCode != 0 && missingWeaver.Output.Contains("Uninstrumented adapter output is refused", StringComparison.Ordinal),
+        missingWeaver.ExitCode);
 
 var output = new JsonObject { ["results"] = results };
-await File.WriteAllTextAsync(Path.Combine(evidenceDirectory, "worker-isolation-results.json"), results.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
+await File
+    .WriteAllTextAsync(Path.Combine(evidenceDirectory, "worker-isolation-results.json"), results
+        .ToJsonString(new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
 Console.WriteLine($"Worker isolation checks: {passed} passed, {failed} failed");
 return failed == 0 ? 0 : 1;
 
@@ -94,7 +110,9 @@ static bool HasSelectedReferences(string output, string adapterSuffix)
     {
         var projectReferences = JsonNode.Parse(output)!["Items"]!["ProjectReference"]!.AsArray();
         return projectReferences.Any(item => (item!["Identity"]?.GetValue<string>() ?? "").Replace('\\', '/').EndsWith(adapterSuffix, StringComparison.Ordinal))
-            && projectReferences.Any(item => (item!["Identity"]?.GetValue<string>() ?? "").Replace('\\', '/').EndsWith("/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj", StringComparison.Ordinal))
+            && projectReferences
+                .Any(item => (item!["Identity"]?.GetValue<string>() ?? "").Replace('\\', '/')
+                    .EndsWith("/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj", StringComparison.Ordinal))
             && projectReferences.All(item =>
             {
                 var identity = (item!["Identity"]?.GetValue<string>() ?? "").Replace('\\', '/');
@@ -115,7 +133,8 @@ static string TargetFramework(string output)
 
 static async Task<(int ExitCode, string Output)> Run(string program, IReadOnlyList<string> arguments, string workingDirectory)
 {
-    var start = new System.Diagnostics.ProcessStartInfo(program) { WorkingDirectory = workingDirectory, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
+    var start = new System.Diagnostics.ProcessStartInfo(program) {
+        WorkingDirectory = workingDirectory, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
     foreach (var argument in arguments) start.ArgumentList.Add(argument);
     using var process = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("Could not start " + program);
     var outputTask = process.StandardOutput.ReadToEndAsync();

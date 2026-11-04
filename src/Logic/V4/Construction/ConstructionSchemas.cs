@@ -72,7 +72,8 @@ namespace TiaMcp.Logic.V4.Construction
             var parameter = InputSchema.Union(
                 Object(new[] { "name", "section", "dataType", "symbolPath" }, ("name", Nonblank), ("section", Nonblank), ("dataType", Nonblank),
                     ("sourceKind", InputSchema.String(allowed: new[] { "global", "local" })), ("symbolPath", Rows(Nonblank))),
-                Object(new[] { "name", "section", "dataType", "sourceKind", "constantValue" }, ("name", Nonblank), ("section", Nonblank), ("dataType", Nonblank),
+                Object(new[] { "name", "section", "dataType", "sourceKind", "constantValue" }, ("name", Nonblank), ("section", Nonblank),
+                        ("dataType", Nonblank),
                     ("sourceKind", InputSchema.String(allowed: new[] { "constant" })), ("constantValue", Text)));
             schemas.Add(typeof(CallParameter), parameter);
             var call = Object(new[] { "callName", "parameters" }, ("callName", Nonblank), ("parameters", Rows(parameter)));

@@ -15,11 +15,14 @@ namespace TiaMcpServer.Siemens.Services
         private readonly Func<string> projectIdentity;
         internal PlcOrganisationPortService(Func<string, JsonObject, JsonNode?> call, Func<bool> hasProject, Func<string> projectIdentity)
         { this.call = call; this.hasProject = hasProject; this.projectIdentity = projectIdentity; }
-        public PlcOrganisationPortService() : this(HardwareAddressWorkerBridge.Call, HardwareAddressWorkerBridge.HasProject, HardwareAddressWorkerBridge.ProjectIdentity) { }
+        public PlcOrganisationPortService()
+            : this(HardwareAddressWorkerBridge.Call, HardwareAddressWorkerBridge.HasProject, HardwareAddressWorkerBridge.ProjectIdentity) { }
 
         private JsonObject Invoke(PlcSoftwareRequest request)
         {
-            string? unsupported = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Action, request.Family, request.UnitName, request.UnitKind, request.TargetKind, request.CopyMode, request.GenerateOption);
+            string? unsupported = PlcSoftwareCapabilities
+                .Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Action, request.Family, request.UnitName, request.UnitKind, request
+                    .TargetKind, request.CopyMode, request.GenerateOption);
             unsupported ??= PlcB4Capabilities.Unsupported(HardwareContract.ReleaseKey, request);
             if (unsupported != null) throw new NotSupportedException(unsupported);
             var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
@@ -38,7 +41,8 @@ namespace TiaMcpServer.Siemens.Services
                     throw error;
                 }
                 // A worker refusal raised before its first native mutation stays a typed precondition on the host.
-                if (code == nameof(AdapterPreconditionException) && (bool?)reply["MayHaveChanged"] != true) throw new AdapterPreconditionException(message, null, false);
+                if (code == nameof(AdapterPreconditionException) && (bool?)reply["MayHaveChanged"] != true)
+                    throw new AdapterPreconditionException(message, null, false);
                 if (code == nameof(ArgumentException)) throw new ArgumentException(message);
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
                 throw new InvalidOperationException(message);
@@ -51,7 +55,9 @@ namespace TiaMcpServer.Siemens.Services
         private ResponseMessage OrganisationStep(PlcSoftwareRequest request)
             => !hasProject() ? NoProject(request.Operation) : Step(Invoke(request));
         private static ResponseMessage NoProject(string tool) => new ResponseMessage {
-            Message = "Project is null", Meta = ResponseMeta.Step(tool, ("error", JsonValue.Create("Project is null")), ("status", JsonValue.Create("InvalidState")), ("operationSuccess", JsonValue.Create(false)))
+            Message = "Project is null", Meta = ResponseMeta
+                .Step(tool, ("error", JsonValue.Create("Project is null")), ("status", JsonValue.Create("InvalidState")),
+                    ("operationSuccess", JsonValue.Create(false)))
         };
         private JsonObject Delete(string tool, string softwarePath, string path, bool dryRun, bool crossReferences)
         {
@@ -62,7 +68,8 @@ namespace TiaMcpServer.Siemens.Services
             if (leaf.IndexOfAny(new[] { '.', '*', '+', '?', '^', '$', '[', ']', '(', ')', '{', '}', '|', '\\' }) >= 0)
                 throw new PortalException(PortalErrorCode.InvalidParams, tool == "DeletePlcTagTable"
                     ? "DeletePlcTagTable requires one exact tag table name or group-qualified path; regular expressions and wildcards are not allowed"
-                    : tool + " requires one exact " + (tool == "DeletePlcBlock" ? "block" : "type") + " path; regular expressions and wildcards are not allowed");
+                    : tool + " requires one exact " + (tool == "DeletePlcBlock" ? "block" : "type")
+                        + " path; regular expressions and wildcards are not allowed");
             if (!hasProject()) throw new PortalException(PortalErrorCode.InvalidState, tool + ": no project is open. ConnectPortal / AttachOpenProject first.");
             return (JsonObject)Invoke(new PlcSoftwareRequest { Operation = tool, SoftwarePath = softwarePath, Path = path,
                 DryRun = dryRun, CrossReferences = crossReferences })["Data"]!.DeepClone();
@@ -115,7 +122,8 @@ namespace TiaMcpServer.Siemens.Services
             return Step(Invoke(new PlcSoftwareRequest { Operation = "ManagePlcUserGroup", SoftwarePath = softwarePath,
                 Family = family, GroupPath = groupPath, Action = action, NewName = newName, DryRun = dryRun }));
         }
-        public ResponseMessage ManagePlcBlockProtection(string softwarePath, string blockPath, string action, string password = "", bool confirmProtectionChange = false, bool dryRun = true)
+        public ResponseMessage ManagePlcBlockProtection(string softwarePath, string blockPath, string action, string password = "",
+                bool confirmProtectionChange = false, bool dryRun = true)
         {
             var unavailable = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, "ManagePlcBlockProtection", action);
             if (unavailable != null) throw new NotSupportedException(unavailable);
@@ -123,7 +131,8 @@ namespace TiaMcpServer.Siemens.Services
             return Step(Invoke(new PlcSoftwareRequest { Operation = "ManagePlcBlockProtection", SoftwarePath = softwarePath,
                 Path = blockPath, Action = action, Password = password, Confirm = confirmProtectionChange, DryRun = dryRun }));
         }
-        public ResponseMessage ReadPlcSystemGroups(string softwarePath, string unitName = "", string unitKind = "unit", bool includeBlocks = true, int maxDepth = 4)
+        public ResponseMessage ReadPlcSystemGroups(string softwarePath, string unitName = "", string unitKind = "unit", bool includeBlocks = true,
+                int maxDepth = 4)
         {
             var unavailable = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, "ListPlcSystemGroups", unitName: unitName, unitKind: unitKind);
             if (unavailable != null) throw new NotSupportedException(unavailable);

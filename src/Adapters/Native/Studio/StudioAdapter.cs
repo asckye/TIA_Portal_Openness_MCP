@@ -103,7 +103,8 @@ namespace TiaMcp.Adapters
             public WorkspaceInfo CreateWorkspace(string name, string folderPath) => guard.Run(() => versionControl.CreateWorkspace(name, folderPath));
             public MappingResult MapProject(string workspaceName, string deviceFilter, bool dryRun, ProgressCallback progress) =>
                 guard.Run(() => versionControl.MapProject(workspaceName, deviceFilter, dryRun, progress));
-            public WorkspaceStatusReport GetStatus(string workspaceName, bool changedOnly) => guard.Run(() => versionControl.GetStatus(workspaceName, changedOnly));
+            public WorkspaceStatusReport GetStatus(string workspaceName, bool changedOnly) => guard
+                .Run(() => versionControl.GetStatus(workspaceName, changedOnly));
             public SyncResult Sync(string workspaceName, SyncDirection direction, bool dryRun, ProgressCallback progress) =>
                 guard.Run(() => versionControl.Sync(workspaceName, direction, dryRun, progress));
         }

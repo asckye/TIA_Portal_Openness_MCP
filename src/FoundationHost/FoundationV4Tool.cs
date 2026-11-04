@@ -58,7 +58,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         {
             tool = new Tool { Name = source.Name, Title = source.Title,
                 Description = source.Description + " Native behaviorPolicy=current; V4 native acceptance is pending.",
-                InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = source.OutputSchema, Annotations = source.Annotations, Meta = source.Meta };
+                InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = source.OutputSchema, Annotations = source.Annotations, Meta = source
+                    .Meta };
             return;
         }
         var properties = schema["properties"]!.AsObject();
@@ -100,7 +101,9 @@ internal sealed class FoundationV4Tool : McpServerTool
         string description = source.Description ?? "";
         if (parameter != null) description = description.Replace(parameter + "Json", parameter)
             + " Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply.";
-        if (parameter == "artifacts") description = "Offline dependency-first import planning. artifacts is a typed array of {id, target?, priority?, dependencies?}; 1..256 unique IDs, no missing or cyclic dependencies. No worker or file operations.";
+        if (parameter == "artifacts") description =
+            "Offline dependency-first import planning. artifacts is a typed array of {id, target?, priority?, dependencies?}; 1..256 unique IDs, no missing " +
+            "or cyclic dependencies. No worker or file operations.";
         tool = new Tool { Name = source.Name, Description = description
             + (inner is FoundationTool { IsNative: true } ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
             InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = FoundationV4Result.Schema };
@@ -123,7 +126,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (inner is WorkbenchControlTool control)
         {
             string controlId = Meta.Correlate(sharedSession ? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId : null);
-            using var controlJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(controlId, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
+            using var controlJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal
+                .Observe(controlId, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
                 false, () => JsonSerializer.Serialize(request.Params?.Arguments));
             var controlResult = await control.InvokeV4Async(request, controlId, cancellationToken);
             controlJournal.Complete(() => JsonSerializer.Serialize(controlResult, McpJsonUtilities.DefaultOptions));
@@ -149,7 +153,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             var usage = TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation", tool.Description ?? "", schema);
             if (operation.Length == 0) return usage["example"] as JsonObject;
             if (!usage["operations"]!.AsArray().Any(row => (string?)row!["operation"] == operation)) return null;
-            return TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation", tool.Description ?? "", schema, operation: operation)["example"] as JsonObject;
+            return TiaOpenness.Shared.ToolUsageCatalog
+                .Describe(name, key, "plc-foundation", tool.Description ?? "", schema, operation: operation)["example"] as JsonObject;
         }))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
@@ -165,7 +170,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (body != null && (approval != null || write && !settings.Enabled))
         {
             body = TiaOpenness.Shared.ApprovalResult.Decorate(body, write && !settings.Enabled, approval?.Request.RequestId);
-            result = new CallToolResult { IsError = result.IsError, StructuredContent = body, Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+            result = new CallToolResult {
+                IsError = result.IsError, StructuredContent = body, Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
             if (approval != null) await TiaOpenness.Shared.ApprovalClient.Complete(approval,
                 (string?)body["error"]?["code"] == "CANCELLED" ? "unknown" : (string?)body["meta"]?["outcome"] ?? "unknown");
         }
@@ -179,13 +185,15 @@ internal sealed class FoundationV4Tool : McpServerTool
         string id, TiaOpenness.Shared.AuditInvocation? audit, bool write, bool internalPrecheck = false)
     {
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
-        using var journal = internalPrecheck ? null : TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
+        using var journal = internalPrecheck ? null : TiaMcpServer.ModelContextProtocol.InvocationJournal
+            .Observe(id, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
         using var workerRequest = FoundationWorkerRequest.Use(id, tool.Name);
         CallToolResult Recorded(CallToolResult result)
         {
             if (inner is FoundationTool artifactProducer)
-                artifactProducer.ControlSession.Observe(tool.Name, request.Params?.Arguments ?? new Dictionary<string, JsonElement>(), result.StructuredContent);
+                artifactProducer.ControlSession
+                    .Observe(tool.Name, request.Params?.Arguments ?? new Dictionary<string, JsonElement>(), result.StructuredContent);
             journal?.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
             return result;
         }
@@ -195,9 +203,12 @@ internal sealed class FoundationV4Tool : McpServerTool
             var argumentsInput = JsonSerializer.SerializeToElement(args);
             if (UnifiedInputAdmission.ValidateNavigation(tool.Name, tool.InputSchema, argumentsInput) is { } navigationError)
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id, navigationError, inner is FoundationTool { IsNative: true }));
-            var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), tool.Name == "StageImportFiles" ? new InputBudget(characters: 40 * 1024 * 1024, items: 4096) : new InputBudget())
+            var validation =
+                new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), tool.Name == "StageImportFiles"
+                    ? new InputBudget(characters: 40 * 1024 * 1024, items: 4096) : new InputBudget())
                 .Read(argumentsInput, "arguments");
-            if (validation.Error != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            if (validation.Error != null)
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
             if (SoftwareUnitCapabilityError(release, tool.Name, args) is { } unitCapability)
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id, unitCapability, true));
             try { CallerInputFiles.RefuseHumanSettingsTargets(JsonSerializer.SerializeToNode(args)!.AsObject()); }
@@ -211,7 +222,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.SessionReset(), true));
-            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
+            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool
+                    && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
                 await nativeTool.PrepareReadiness(cancellationToken).ConfigureAwait(false);
                 var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
@@ -220,7 +232,9 @@ internal sealed class FoundationV4Tool : McpServerTool
             }
             // V20/V21 with their bundled PlcWorker answer like the engine (P8-04j2): its session and process reads stopped at
             // native admission without a ready TIA environment. A ready environment dispatches exactly as before.
-            else if (ReleaseCatalogData.Releases[release].MergeWorkerReadiness && inner is FoundationTool { IsRuntimeQuery: true, UsesBundledPlcWorker: true } runtimeQuery)
+            else
+                if (ReleaseCatalogData.Releases[release].MergeWorkerReadiness && inner is FoundationTool { IsRuntimeQuery: true, UsesBundledPlcWorker: true
+                } runtimeQuery)
             {
                 await runtimeQuery.PrepareReadiness(cancellationToken).ConfigureAwait(false);
                 if (!(readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release))["ready"]!.GetValue<bool>())
@@ -231,7 +245,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             TiaOpenness.Shared.ApprovalOutcome? approval = null;
             if (write && inner is not GenerationTool { OwnsApproval: true })
             {
-                pending = TiaOpenness.Shared.PendingApproval.Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name, JsonSerializer.Serialize(args),
+                pending = TiaOpenness.Shared.PendingApproval
+                    .Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name, JsonSerializer.Serialize(args),
                     (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
                 audit?.RecordRequest(pending.PlanHash);
                 if (HostBehavior.NeedsPrecheck(internalPrecheck, write, settings.Enabled, true))
@@ -246,7 +261,12 @@ internal sealed class FoundationV4Tool : McpServerTool
                             if (inner is FoundationTool applyTool) applyTool.ValidateApplyArguments(args);
                         }
                         catch (ArgumentException ex)
-                        { refusal = FoundationV4Result.Reject(release, tool.Name, id, new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "arguments", Array.Empty<string>())), inner is FoundationTool { IsNative: true }); }
+                        {
+                            refusal = FoundationV4Result
+                                .Reject(release, tool.Name, id,
+                                    new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "arguments", Array.Empty<string>())),
+                                    inner is FoundationTool { IsNative: true });
+                        }
                         if (refusal == null)
                         {
                             precheckArguments["dryRun"] = JsonSerializer.SerializeToElement(true);
@@ -295,7 +315,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args), dispatched: true) is { } dispatchFenced)
                 return Recorded(dispatchFenced);
             if (await FoundationHostPorts.BeforeDispatchAsync().ConfigureAwait(false) is { } batchRefusal) return Recorded(batchRefusal);
-            if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,
+            if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval
+                    .Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
             {
                 await TiaOpenness.Shared.ApprovalClient.Complete(approval, "rejected-before-operation");
@@ -327,12 +348,18 @@ internal sealed class FoundationV4Tool : McpServerTool
                 catch (JsonException) /* swallow(privacy): SDK error text is an internal failure, not client data or invalid input */
                 { return Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
                 if (inner is GenerationTool) return Recorded(result);
-                return Recorded(FoundationV4Result.Host(release, tool.Name, id, body, parameter != null && parameter != "artifacts", result.IsError == true, args));
+                return Recorded(FoundationV4Result
+                        .Host(release, tool.Name, id, body, parameter != null && parameter != "artifacts", result.IsError == true, args));
             }
             finally { request.Params = original; }
         }
         catch (OperationCanceledException) /* swallow(privacy): cancellation is represented by the stable V4 code, without exception text */
-        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(sharedSession ? "Request cancelled before dispatch." : "Request cancelled before completion.", new CancelledDetails(sharedSession ? "tool-queue" : "host")))); }
+        {
+            return Recorded(FoundationV4Result
+                    .Reject(release, tool.Name, id,
+                        new Error(sharedSession ? "Request cancelled before dispatch." : "Request cancelled before completion.",
+                            new CancelledDetails(sharedSession ? "tool-queue" : "host"))));
+        }
         catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
         { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)
@@ -353,7 +380,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         string unit = args.TryGetValue("unitName", out var selected) ? selected.GetString() ?? "" : "";
         if (args.TryGetValue("includeUnits", out var all) && all.GetBoolean())
         {
-            if (unit != "") return new Error("unitName and includeUnits cannot be combined.", new InvalidArgumentDetails("includeUnits", Array.Empty<string>()));
+            if (unit != "")
+                return new Error("unitName and includeUnits cannot be combined.", new InvalidArgumentDetails("includeUnits", Array.Empty<string>()));
             unit = "*";
         }
         string[] Options(string key) => args.TryGetValue(key, out var options) && options.ValueKind != JsonValueKind.Null

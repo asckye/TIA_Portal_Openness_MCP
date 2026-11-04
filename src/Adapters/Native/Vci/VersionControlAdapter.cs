@@ -153,7 +153,8 @@ namespace TiaMcp.Adapters.Native.Vci
                     lines.Add(string.Format(
                         "{0} | folder={1} | mappedObjects={2} | language={3}",
                         PortVci.Name(w), root, mapped, SafeLanguage(w)));
-                    entries.Add(new HmiObject { ["name"] = PortVci.Name(w), ["rootPath"] = root, ["mappedObjectCount"] = mapped, ["language"] = SafeLanguage(w) });
+                    entries
+                        .Add(new HmiObject { ["name"] = PortVci.Name(w), ["rootPath"] = root, ["mappedObjectCount"] = mapped, ["language"] = SafeLanguage(w) });
                 }
                 return new VersionControlResult
                 {
@@ -255,7 +256,8 @@ namespace TiaMcp.Adapters.Native.Vci
                     lines.Add(string.Format("{0} | {1} | file={2}{3}",
                         SafeName(mo), status, SafeFile(mo), SafeFormat(mo)));
                     entries.Add(new HmiObject { ["name"] = SafeName(mo), ["compareState"] = status.StartsWith("Unknown") ? "Unknown" : status,
-                        ["error"] = status.StartsWith("Unknown(") ? status : null, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo).Replace(" | format=", "") });
+                        ["error"] = status.StartsWith("Unknown(") ? status : null, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo)
+                            .Replace(" | format=", "") });
                 }
 
                 return new VersionControlResult
@@ -268,7 +270,10 @@ namespace TiaMcp.Adapters.Native.Vci
                             : " Call SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit."),
                     Items = lines,
                     // envelope: legacy-multiple-dynamic-fields
-                    Meta = new HmiObject { ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws), ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["objects"] = entries },
+                    Meta = new HmiObject {
+                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
+                            ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["objects"] = entries
+                    },
                 };
             }
             catch (Exception ex)
@@ -363,7 +368,10 @@ namespace TiaMcp.Adapters.Native.Vci
                     return new VersionControlResult
                     {
                         Message = "Workspace '" + PortVci.Name(ws) + "': nothing to synchronize — every mapped object is already in sync.",
-                        Meta = new HmiObject { ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws), ["rootPath"] = SafeRoot(ws), ["dryRun"] = dryRun, ["synchronized"] = 0, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
+                        Meta = new HmiObject {
+                            ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
+                                ["rootPath"] = SafeRoot(ws), ["dryRun"] = dryRun, ["synchronized"] = 0, ["failed"] = 0, ["skippedEqual"] = skippedEqual
+                        },
                     };
 
                 if (dryRun)
@@ -376,7 +384,11 @@ namespace TiaMcp.Adapters.Native.Vci
                             "(folder {3}). Call again with dryRun=false to do it.",
                             targets.Count, mode, PortVci.Name(ws), SafeRoot(ws)),
                         Items = lines,
-                        Meta = new HmiObject { ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws), ["rootPath"] = SafeRoot(ws), ["dryRun"] = true, ["synchronized"] = 0, ["wouldSynchronize"] = targets.Count, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
+                        Meta = new HmiObject {
+                            ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
+                                ["rootPath"] = SafeRoot(ws), ["dryRun"] = true, ["synchronized"] = 0, ["wouldSynchronize"] = targets.Count, ["failed"] = 0,
+                                ["skippedEqual"] = skippedEqual
+                        },
                     };
                 }
 
@@ -396,7 +408,10 @@ namespace TiaMcp.Adapters.Native.Vci
                             : " The project now holds the workspace's version — compile and save to persist it.",
                         skippedEqual),
                     Items = lines,
-                    Meta = new HmiObject { ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = failed == 0, ["workspaceName"] = PortVci.Name(ws), ["rootPath"] = SafeRoot(ws), ["dryRun"] = false, ["synchronized"] = ok, ["failed"] = failed, ["skippedEqual"] = skippedEqual },
+                    Meta = new HmiObject {
+                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = failed == 0, ["workspaceName"] = PortVci.Name(ws),
+                            ["rootPath"] = SafeRoot(ws), ["dryRun"] = false, ["synchronized"] = ok, ["failed"] = failed, ["skippedEqual"] = skippedEqual
+                    },
                 };
             }
             catch (Exception ex)
@@ -586,7 +601,8 @@ namespace TiaMcp.Adapters.Native.Vci
                 int mapped = 0, already = 0, failed = 0, unsupported = 0, visited = 0;
                 bool truncated = false;
                 var ungroupedDevices = new List<VcNode>();
-                void Note(VcNode reported) { var device = reported.UngroupedDevice ? reported : reported.UngroupedRoot; if (device != null) device.Reported = true; }
+                void Note(VcNode reported) {
+                    var device = reported.UngroupedDevice ? reported : reported.UngroupedRoot; if (device != null) device.Reported = true; }
 
                 var stack = new Stack<VcNode>();
                 stack.Push(new VcNode
@@ -731,7 +747,11 @@ namespace TiaMcp.Adapters.Native.Vci
                 {
                     Message = head,
                     Items = lines,
-                    Meta = new HmiObject { ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = failed == 0, ["workspaceName"] = wsName, ["rootPath"] = wsRootPath, ["dryRun"] = dryRun, ["visited"] = visited, ["mapped"] = mapped, ["alreadyMapped"] = already, ["unsupported"] = unsupported, ["failed"] = failed, ["truncated"] = truncated },
+                    Meta = new HmiObject {
+                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = failed == 0, ["workspaceName"] = wsName,
+                            ["rootPath"] = wsRootPath, ["dryRun"] = dryRun, ["visited"] = visited, ["mapped"] = mapped, ["alreadyMapped"] = already,
+                            ["unsupported"] = unsupported, ["failed"] = failed, ["truncated"] = truncated
+                    },
                 };
             }
             catch (Exception ex)

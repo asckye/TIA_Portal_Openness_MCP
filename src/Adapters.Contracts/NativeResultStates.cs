@@ -32,7 +32,8 @@ namespace TiaMcp.Adapters.Contracts
                 total++;
                 if (kept.Count < 8 && !string.IsNullOrWhiteSpace(message)) kept.Add(message!.Length > 512 ? message.Substring(0, 512) + "..." : message);
             }
-            return kept.Count == 0 ? "" : " Native messages: " + string.Join(" | ", kept) + (total > kept.Count ? " (" + (total - kept.Count) + " more not shown)" : "");
+            return kept.Count == 0 ? "" : " Native messages: " + string.Join(" | ", kept)
+                + (total > kept.Count ? " (" + (total - kept.Count) + " more not shown)" : "");
         }
     }
 
@@ -59,7 +60,8 @@ namespace TiaMcp.Adapters.Contracts
         public const string SafetyTest = "Siemens.Engineering.SafetyValidation.TestState";
         public const string SafetyValidation = "Siemens.Engineering.SafetyValidation.TestValidationResultState";
 
-        private static Dictionary<string, NativeStateKind> Values(string success, string failures = "", string partial = "", string unexpected = "", bool warning = true)
+        private static Dictionary<string,
+            NativeStateKind> Values(string success, string failures = "", string partial = "", string unexpected = "", bool warning = true)
         {
             var values = new Dictionary<string, NativeStateKind>(StringComparer.Ordinal);
             void Add(string list, NativeStateKind kind)
@@ -70,7 +72,8 @@ namespace TiaMcp.Adapters.Contracts
             return values;
         }
 
-        private static readonly Dictionary<string, Dictionary<string, NativeStateKind>> Enums = new Dictionary<string, Dictionary<string, NativeStateKind>>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, Dictionary<string, NativeStateKind>> Enums = new Dictionary<string, Dictionary<string,
+            NativeStateKind>>(StringComparer.Ordinal)
         {
             [Compiler] = Values("Success,Information", "Error"),
             [Download] = Values("Success,Information", "Error"),
@@ -95,7 +98,8 @@ namespace TiaMcp.Adapters.Contracts
         public static IEnumerable<string> EnumTypes => Enums.Keys;
         public static IEnumerable<string> States(string enumType) => Enums.TryGetValue(enumType, out var values) ? values.Keys : Array.Empty<string>();
         public static NativeStateKind Classify(string? enumType, string? state)
-            => enumType != null && state != null && Enums.TryGetValue(enumType, out var values) && values.TryGetValue(state, out var kind) ? kind : NativeStateKind.Unexpected;
+            => enumType != null && state != null && Enums.TryGetValue(enumType, out var values) && values.TryGetValue(state, out var kind) ? kind
+                : NativeStateKind.Unexpected;
         public static bool Succeeded(string enumType, string? state)
             => Classify(enumType, state) is NativeStateKind.Success or NativeStateKind.Warning;
         public static bool Succeeded(object? state) => state is Enum value && Succeeded(value.GetType().FullName!, value.ToString());

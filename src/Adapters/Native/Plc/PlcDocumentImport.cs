@@ -13,10 +13,15 @@ namespace TiaMcp.Adapters
     {
         private readonly PlcExternalSourceDeleteIdentities documentImportIdentities=new PlcExternalSourceDeleteIdentities();
         private bool documentImportOutcomeUnknown;
-        public PlcDocumentImportResult ImportFromDocuments(string softwarePath,string groupPath,string importPath,string fileNameWithoutExtension,bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
+        public PlcDocumentImportResult ImportFromDocuments(string softwarePath,string groupPath,string importPath,string fileNameWithoutExtension,
+                bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
-            if(documentImportOutcomeUnknown) throw new InvalidOperationException("Prior document import outcome unknown; inspect before a new explicit session. Never replay.");
-            var r=new PlcDocumentImportRequest {Release=ReleaseKey,Software=softwarePath,Group=groupPath,Directory=importPath,Name=fileNameWithoutExtension,Overwrite=overwrite,DryRun=dryRun,ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile};
+            if(documentImportOutcomeUnknown)
+                throw new InvalidOperationException("Prior document import outcome unknown; inspect before a new explicit session. Never replay.");
+            var r=new PlcDocumentImportRequest {
+                Release=ReleaseKey,Software=softwarePath,Group=groupPath,Directory=importPath,Name=fileNameWithoutExtension,Overwrite=overwrite,DryRun=dryRun,
+                    ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile
+            };
             PlcDocumentImportPolicy.ValidateOptions(r);
             var result=CreateDocumentImportContext(r).Run();
             if(result.RequiresSessionReset)documentImportOutcomeUnknown=true;
@@ -24,14 +29,16 @@ namespace TiaMcp.Adapters
         }
         private PlcDocumentImportContext CreateDocumentImportContext(PlcDocumentImportRequest r)
         {
-            if(documentImportOutcomeUnknown)throw new InvalidOperationException("Prior document import outcome unknown; inspect before a new explicit session. Never replay.");
+            if(documentImportOutcomeUnknown)
+                throw new InvalidOperationException("Prior document import outcome unknown; inspect before a new explicit session. Never replay.");
             PlcDocumentImportPolicy.ValidateOptions(r);
 #if PLC_DOCUMENT_EXPORT
             var softwarePath=r.Software;var groupPath=r.Group;var importPath=r.Directory;var fileNameWithoutExtension=r.Name;
             var selected=ReadSelection(softwarePath);
             r.Software=selected.ExactPath;
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
-            var project=Project();r.Project=project.Path.FullName;r.ProcessId=lifecycle.ProcessId??throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
+            var project=Project();r.Project=project.Path.FullName;r.ProcessId=lifecycle.ProcessId??throw new TiaMcp.Adapters.Contracts
+                .AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
             var target=BatchGroup(BlockGroups(Documents.BlockGroup(selected.Value)),groupPath);
             r.TargetIdentity=string.Join(":",new[]{project,(object)selected.Value,selected.Context,(object)target}.Select(documentImportIdentities.Get));
             var names=new List<string>();
@@ -43,17 +50,22 @@ namespace TiaMcp.Adapters
                     yield return PlcDocumentImportPolicy.InventoryItem(group.Path,"","group",documentImportIdentities.Get(group.Value));
                     foreach(var block in Documents.Blocks(group.Value))
                     {
-                        if(string.IsNullOrEmpty(Documents.Name(block)) || !object.Equals(Documents.Parent(block),group.Value)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Ordinary block inventory ownership missing.","softwarePath",false);
+                        if(string.IsNullOrEmpty(Documents.Name(block)) || !object.Equals(Documents.Parent(block),group.Value)) throw new TiaMcp.Adapters
+                            .Contracts.AdapterPreconditionException("Ordinary block inventory ownership missing.","softwarePath",false);
                         names.Add(Documents.Name(block));
-                        yield return PlcDocumentImportPolicy.InventoryItem(group.Path,Documents.Name(block),block.GetType().Name,documentImportIdentities.Get(block));
+                        yield return PlcDocumentImportPolicy
+                            .InventoryItem(group.Path,Documents.Name(block),block.GetType().Name,documentImportIdentities.Get(block));
                     }
                 }
             }
             Action recheck=()=> {
                 RequireProjectIdentity(r.Project);
-                if(lifecycle.ProcessId!=r.ProcessId || !object.Equals(Project(),project))throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Project/process identity changed.","softwarePath",false);
+                if(lifecycle.ProcessId!=r.ProcessId || !object.Equals(Project(),project))throw new TiaMcp.Adapters.Contracts
+                    .AdapterPreconditionException("Project/process identity changed.","softwarePath",false);
                 var fresh=ReadSelection(softwarePath);
-                if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context) || !object.Equals(BatchGroup(BlockGroups(Documents.BlockGroup(fresh.Value)),groupPath),target))throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact PLC/group identity changed.","softwarePath",false);
+                if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context)
+                        || !object.Equals(BatchGroup(BlockGroups(Documents.BlockGroup(fresh.Value)),groupPath),target))
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact PLC/group identity changed.","softwarePath",false);
                 RequireTargetOffline(fresh);
             };
             return new PlcDocumentImportContext {Request=r,Scan=()=>PlcDocumentImportPolicy.Scan(r),Open=path=> {
@@ -62,7 +74,9 @@ namespace TiaMcp.Adapters
             },Inventory=Inventory,Collision=name=>names.Any(n=>string.Equals(n,name,StringComparison.OrdinalIgnoreCase)),Recheck=recheck,Import=()=> {
                 // Exactly one typed native call. Exact V20/V21 SDK XML: None = "Throw if exists".
                 // It does NOT promise atomicity, normalization, rollback or race-free preflight.
-                var native=Documents.Import(Documents.Blocks(target),new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(importPath))),fileNameWithoutExtension,ImportDocumentOptions.None);
+                var native=Documents
+                    .Import(Documents.Blocks(target),new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(importPath))),
+                        fileNameWithoutExtension,ImportDocumentOptions.None);
                 if(native==null) return null!;
                 var outcome=new PlcDocumentImportNative();
                 try
@@ -73,17 +87,26 @@ namespace TiaMcp.Adapters
                     if(messages.Length>256 || messages.Any(m=>m.Length>4096)) return outcome;
                     // Association has no Find: enumerate the exact typed returned association (bounded).
                     var imported=Documents.ImportedBlocks(native).Take(2).ToArray();
-                    outcome.Identities=imported.Select(b=>PlcDocumentImportPolicy.InventoryItem(object.Equals(Documents.Parent(b),target)?groupPath:"<unverified-parent>",Documents.Name(b),b.GetType().Name,"returned")).ToArray();
-                    if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(native)) || imported.Length!=1 || Documents.Name(imported[0])!=fileNameWithoutExtension || imported[0].GetType().Name!="GlobalDB" || !object.Equals(Documents.Parent(imported[0]),target))return outcome;
+                    outcome.Identities=imported
+                        .Select(b=>PlcDocumentImportPolicy
+                            .InventoryItem(object.Equals(Documents.Parent(b),target)?groupPath:"<unverified-parent>",Documents.Name(b),b.GetType().Name,
+                                "returned"))
+                        .ToArray();
+                    if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(native)) || imported.Length!=1 || Documents
+                            .Name(imported[0])!=fileNameWithoutExtension || imported[0].GetType().Name!="GlobalDB" || !object
+                            .Equals(Documents.Parent(imported[0]),target))
+                        return outcome;
                     var found=Documents.FindBlock(Documents.Blocks(target),fileNameWithoutExtension);
-                    outcome.ExistsVerified=found!=null && Documents.Name(found)==fileNameWithoutExtension && found.GetType().Name=="GlobalDB" && object.Equals(Documents.Parent(found),target) && object.Equals(found,imported[0]);
+                    outcome.ExistsVerified=found!=null && Documents.Name(found)==fileNameWithoutExtension && found.GetType().Name=="GlobalDB" && object
+                        .Equals(Documents.Parent(found),target) && object.Equals(found,imported[0]);
                     outcome.Success=true;
                 }
                 catch(Exception) /* swallow(native-fallback): failed inspection of the native import result leaves Success false for the policy to report uncertainty */ {outcome.Success=false;}
                 return outcome;
             }};
 #else
-            throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact V20/V21 document SDK support is not compiled for this release.","softwarePath",false);
+            throw new TiaMcp.Adapters.Contracts
+                .AdapterPreconditionException("Exact V20/V21 document SDK support is not compiled for this release.","softwarePath",false);
 #endif
         }
     }

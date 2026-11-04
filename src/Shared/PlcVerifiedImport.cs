@@ -43,9 +43,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 bytes = Encoding.UTF8.GetBytes(planned); file.Write(bytes, 0, bytes.Length); file.Flush(true);
             }
             meta["plannedPath"] = plannedPath;
-            meta["scope"] = "Existing non-library root/user-group PLC block. Full replacement; missing scalar block attributes are preserved, but missing interface members/networks are intentional deletions. Compile only when explicitly requested. No save, download, automatic retry or rollback.";
-            if (dryRun) { meta["phase"] = "preview"; meta["operationSuccess"] = true; return "Preview and original backup retained. Inspect planned.xml; apply the same candidate and token to overwrite."; }
-            if (!string.Equals(token, expectedToken, StringComparison.Ordinal)) throw new InvalidOperationException("Preview no longer matches binding/current block/candidate. No import attempted.");
+            meta["scope"] =
+                "Existing non-library root/user-group PLC block. Full replacement; missing scalar block attributes are preserved, but missing interface " +
+                "members/networks are intentional deletions. Compile only when explicitly requested. No save, download, automatic retry or rollback.";
+            if (dryRun) {
+                meta["phase"] = "preview"; meta["operationSuccess"] = true;
+                return "Preview and original backup retained. Inspect planned.xml; apply the same candidate and token to overwrite.";
+            }
+            if (!string.Equals(token, expectedToken, StringComparison.Ordinal))
+                throw new InvalidOperationException("Preview no longer matches binding/current block/candidate. No import attempted.");
             verifyBinding();
             meta["phase"] = "import"; meta["mayHaveChanged"] = true;
             import(plannedPath); // An exception exits immediately: no second native call or automatic retry.
@@ -59,7 +65,9 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["verificationSuccess"] = matches; meta["operationSuccess"] = matches;
             meta["status"] = matches ? "DocumentReadbackMatched" : "DocumentReadbackMismatch";
             meta["phase"] = "complete";
-            return matches ? "Imported and re-exported document matches after identifier normalization. Inspect compileRequested/compileReturned for compilation; project was not saved."
+            return matches
+                ? "Imported and re-exported document matches after identifier normalization. Inspect compileRequested/compileReturned for compilation; " +
+                "project was not saved."
                 : "Import returned, but document readback differs. Original backup and both documents retained. No automatic repair or rollback was attempted.";
         }
     }

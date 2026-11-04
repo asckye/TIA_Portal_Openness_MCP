@@ -12,7 +12,8 @@ namespace TiaMcp.Adapters.Contracts
         // API audit F21: the V15.1 and V16 SDK documents CreateInstanceDB only "for Prodiag block"; ordinary FBs open from V17.
         public static string? SourceRefusal(string release, string programmingLanguage)
             => (release == "15.1" || release == "16") && !string.Equals(programmingLanguage, "ProDiag", StringComparison.Ordinal)
-                ? "On TIA Portal V" + release + " PlcBlockComposition.CreateInstanceDB is documented for ProDiag function blocks only; this FB's language is " + programmingLanguage + ". Use V17 or later for ordinary FBs."
+                ? "On TIA Portal V" + release + " PlcBlockComposition.CreateInstanceDB is documented for ProDiag function blocks only; this FB's language is "
+                    + programmingLanguage + ". Use V17 or later for ordinary FBs."
                 : null;
     }
 }

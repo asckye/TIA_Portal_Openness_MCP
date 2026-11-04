@@ -74,7 +74,8 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
         nameof(CompileState), nameof(InspectionTime), nameof(InspectionSummary), nameof(Mapped), nameof(Unsupported), nameof(Failed),
         nameof(MappingSummary), nameof(SyncSummary), nameof(Diagnostics), nameof(Rules)
     }.Select(name => typeof(ResultPresentation).GetProperty(name)!).ToArray();
-    private static readonly string[] PresentationProperties = typeof(ResultPresentation).GetProperties().Select(p => p.Name).Where(name => name != nameof(LogRows)).ToArray();
+    private static readonly string[] PresentationProperties = typeof(ResultPresentation).GetProperties().Select(p => p.Name)
+        .Where(name => name != nameof(LogRows)).ToArray();
     public ResultPresentation(MainViewModel model)
     {
         this.model = model;
@@ -95,7 +96,9 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public event PropertyChangedEventHandler? PropertyChanged;
     public bool HasProject => model.Session.IsConnected && model.Session.ProjectName.Length > 0;
     public bool CanConnect => !model.Busy;
-    public string MappedMeta => Loc.Current.T("Pages.MappedMeta", model.VersionControl.SelectedWorkspace?.MappedObjectCount ?? 0, model.VersionControl.VcStatusItems.Count(i => i.CompareState != VcCompareState.Equal));
+    public string MappedMeta => Loc.Current
+        .T("Pages.MappedMeta", model.VersionControl.SelectedWorkspace?.MappedObjectCount ?? 0, model.VersionControl.VcStatusItems
+            .Count(i => i.CompareState != VcCompareState.Equal));
     public bool CanOperate => HasProject && !model.Busy && model.Panel?.Locked != true;
     public double OperationOpacity => HasProject ? 1 : .5;
     public bool HasSelection => CanOperate && model.Engineering.Blocks.Any(b => b.Selected);
@@ -112,13 +115,15 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public bool HasInspection => InspectionTime.Length > 0;
     public string ProjectKind => model.Session.UseMock ? Loc.Current["Toolbar.Mock"] : Loc.Current["Pages.RealProject"];
     public string BlocksSubtitle => model.Session.ProjectName + " · " + model.Engineering.SelectedDevice?.Name + Loc.Current["Common.SoftwareSuffix"];
-    public string SelectedSummary => HasProject ? Loc.Current.T("Pages.Selected", model.Engineering.Blocks.Count(b => b.Selected)) : Loc.Current["Pages.NotRun"];
+    public string SelectedSummary => HasProject ? Loc.Current.T("Pages.Selected", model.Engineering.Blocks.Count(b => b.Selected)) : Loc
+        .Current["Pages.NotRun"];
     public string ReadyState => HasProject ? Loc.Current["Pages.Ready"] : Loc.Current["Pages.NeedConnection"];
     public string CompileOperationState => OperationState(model.Engineering.Compile.IsRunning, HasCompile);
     public string InspectionOperationState => OperationState(model.Engineering.Inspect.IsRunning, HasInspection);
     public string EnvironmentState => Loc.Current["Pages.Ready"];
     public string EnvironmentSummary => Loc.Current["Pages.NotRun"];
-    public string CompileSummary => HasCompile ? model.Engineering.SelectedDevice?.Name + " · " + Errors + " " + Loc.Current["Primer.Errors"] + " · " + Warnings + " " + Loc.Current["Primer.Warnings"] : Loc.Current["Pages.NotRun"];
+    public string CompileSummary => HasCompile ? model.Engineering.SelectedDevice?.Name + " · " + Errors + " " + Loc.Current["Primer.Errors"] + " · "
+        + Warnings + " " + Loc.Current["Primer.Warnings"] : Loc.Current["Pages.NotRun"];
     public string LogCount => Loc.Current.T("Pages.LogCount", model.Activity.Log.Split('\n').Count(line => !string.IsNullOrWhiteSpace(line)));
     private string OperationState(bool running, bool completed) => !HasProject ? Loc.Current["Pages.NeedConnection"]
         : running ? Loc.Current["Pages.Running"]
@@ -131,7 +136,8 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public string BlocksSummary => Loc.Current.T("Primer.BlocksSummary", model.Engineering.Blocks.Count,
         model.Engineering.Blocks.Count(b=>b.Selected), model.Engineering.BlocksView.Cast<BlockRow>().Count());
     public string DifferenceLabel => Loc.Current["Primer.Differ"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.Unequal);
-    public string MissingLabel => Loc.Current["Primer.Missing"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
+    public string MissingLabel => Loc.Current["Primer.Missing"] + " · " + model.VersionControl.VcStatusItems
+        .Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
     public string WorkspaceSummary => model.VersionControl.SelectedWorkspace is null ? model.VersionControl.WorkspaceRootDisplay
         : Loc.Current.T("Primer.WorkspaceSummary", model.VersionControl.WorkspaceRootDisplay,
             model.VersionControl.SelectedWorkspace.MappedObjectCount, model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal));
@@ -216,7 +222,8 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
                 case "Status.CompileResult":
                     Errors = Arg(1); Warnings = Arg(2);
                     CompileState = Convert.ToInt32(entry.Arguments[1], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Primer.CompileErrors"]
-                        : Convert.ToInt32(entry.Arguments[2], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Primer.CompileWarnings"] : Loc.Current["Primer.CompileCompleted"];
+                        : Convert.ToInt32(entry.Arguments[2], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Primer.CompileWarnings"] : Loc
+                            .Current["Primer.CompileCompleted"];
                     diagnostics = [.. pendingDiagnostics];
                     pendingDiagnostics.Clear();
                     break;

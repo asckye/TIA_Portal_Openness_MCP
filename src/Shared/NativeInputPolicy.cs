@@ -19,7 +19,11 @@ namespace TiaOpenness.Shared
             { throw new AdapterPreconditionException("The input file cannot be read. Verify its path and read permissions.", parameter, true, error); }
             // A sharing violation or another I/O failure still happens before the native operation.
             catch (IOException error)
-            { throw new AdapterPreconditionException("The input file cannot be read now; another program may hold it open. Close it or pass a copy, then retry.", parameter, false, error); }
+            {
+                throw new AdapterPreconditionException("The input file cannot be read now; another program may hold it open. Close it or pass a copy, then " +
+                    "retry.",
+                        parameter, false, error);
+            }
         }
 
         // TIA Portal holds an open project file; a project path is checked for existence only.

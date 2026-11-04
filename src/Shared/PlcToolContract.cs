@@ -67,7 +67,8 @@ namespace TiaMcpServer.ModelContextProtocol
             #if !TIA_ENGINE_HOST
             if (exception is PlcBlockVerificationException)
                 return Result(tool, new JsonObject { ["verification"] = "mismatch", ["importReturned"] = true },
-                    new Error("The imported block does not match the declared attributes.", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())),
+                    new Error("The imported block does not match the declared attributes.",
+                            new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())),
                     Outcome.Failed, Completeness.Partial, current);
             #endif
             // Exceptions after a write may have been issued cannot establish its outcome.
@@ -97,7 +98,8 @@ namespace TiaMcpServer.ModelContextProtocol
             Clean(root);
 
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool))
-                return Result(tool, root, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current, writes);
+                return Result(tool, root, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current,
+                        writes);
             bool? Flag(string key) => Bool(evidence[key]) ?? Bool(root[key]);
             string? Text(string key) => (evidence[key] ?? root[key])?.ToString();
             bool incomplete = Flag("dataComplete") == false || Flag("incomplete") == true || Flag("truncated") == true
@@ -131,7 +133,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var details = Text("v4Rejection") == "PROJECT_NOT_BOUND" ? (ErrorDetails)new ProjectNotBoundDetails()
                     : Text("v4Rejection") == "NOT_FOUND" ? new NotFoundDetails(null)
                     : new InvalidArgumentDetails("arguments", Array.Empty<string>());
-                return Result(tool, root, new Error("The PLC request was rejected before execution.", details), Outcome.RejectedBeforeOperation, Completeness.None, current);
+                return Result(tool, root, new Error("The PLC request was rejected before execution.", details), Outcome.RejectedBeforeOperation, Completeness
+                        .None, current);
             }
             var compile = root["compile"] as JsonObject;
             var compileMeta = compile?["meta"] as JsonObject;
@@ -169,7 +172,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int Count(JsonObject obj, string key) => (obj[key] as JsonArray)?.Count ?? 0;
         private static IReadOnlyDictionary<string, JsonElement> Evidence(JsonObject data)
             => data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value), StringComparer.Ordinal);
-        private static Error Unknown(JsonObject evidence) => new Error("The write outcome is unconfirmed. Inspect the retained evidence and reset the session before further writes.",
+        private static Error Unknown(JsonObject evidence) =>
+            new Error("The write outcome is unconfirmed. Inspect the retained evidence and reset the session before further writes.",
             new OutcomeUnknownDetails("PLC operation", Evidence(evidence)));
 
         private static void Clean(JsonNode? node)

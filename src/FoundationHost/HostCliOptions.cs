@@ -5,18 +5,23 @@ namespace TiaMcp.FoundationHost;
 internal sealed class HostCliOptions
 {
     internal static readonly string[] Verbs = { "doctor", "audit", "schema", "version", "config", "install-plc-tools", "help", "--help", "-h" };
-    private static readonly string[] HostValues = { "--release-key", "--tia-major-version", "--tia-version", "--tia-portal-location", "--public-api", "--worker-exe", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--logging" };
+    private static readonly string[] HostValues = {
+        "--release-key", "--tia-major-version", "--tia-version", "--tia-portal-location", "--public-api", "--worker-exe", "--engine-worker", "--engine-catalog",
+            "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--logging"
+    };
     internal required string[] Arguments { get; init; }
     internal required HostOptions Host { get; init; }
 
     internal static bool IsCommand(string[] args) => args.Length > 0 &&
-        (!args[0].StartsWith("-", StringComparison.Ordinal) || args[0].Equals("--help", StringComparison.OrdinalIgnoreCase) || args[0].Equals("-h", StringComparison.OrdinalIgnoreCase));
+        (!args[0].StartsWith("-", StringComparison.Ordinal) || args[0].Equals("--help", StringComparison.OrdinalIgnoreCase) || args[0]
+                .Equals("-h", StringComparison.OrdinalIgnoreCase));
 
     internal static HostCliOptions Parse(string[] args, string directory)
     {
         string verb = args[0].ToLowerInvariant();
         if (!Verbs.Contains(verb))
-            throw new ArgumentException("Unknown or retired command. Run tia help for supported commands; use MCP tools and the project generation framework for project changes.");
+            throw new ArgumentException("Unknown or retired command. Run tia help for supported commands; use MCP tools and the project generation framework " +
+                "for project changes.");
         var allowed = new HashSet<string>(HostValues, StringComparer.OrdinalIgnoreCase);
         allowed.UnionWith(new[] { "--plc-worker", "--offline", "--with-ui", "--full", "--lite" });
         switch (verb)
@@ -61,7 +66,8 @@ internal sealed class HostCliOptions
             if (option == "--path" && !Path.IsPathRooted(value!)) throw new ArgumentException("Expected tia audit verify [--path <absolute directory>].");
             if (option == "--profile" && !string.Equals(value, "full", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(value, "lite", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("--profile must be full or lite.");
-            if (option == "--logging" && (!int.TryParse(value, out int logging) || logging < 0 || logging > 3)) throw new ArgumentException("--logging must be 0..3.");
+            if (option == "--logging" && (!int.TryParse(value, out int logging) || logging < 0 || logging > 3))
+                throw new ArgumentException("--logging must be 0..3.");
             if (hostOption) { hostArgs.Add(option); if (value != null) hostArgs.Add(value); }
             commandArgs.Add(option); if (value != null) commandArgs.Add(value);
         }

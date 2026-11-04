@@ -43,7 +43,8 @@ internal static class OnlinePrimitives
         public static OnlineConfigurationDelegate Handler(Action<OnlineConfiguration> handler) => new OnlineConfigurationDelegate(handler);
 #endif
 #if ONLINE_FINGERPRINTS
-        public static FingerprintDataResult Fingerprints(FingerprintDataProvider value, ConfigurationAddress address, OnlineConfigurationDelegate handler) => value.GetFingerprintData(address, handler);
+        public static FingerprintDataResult Fingerprints(FingerprintDataProvider value, ConfigurationAddress address, OnlineConfigurationDelegate handler) =>
+            value.GetFingerprintData(address, handler);
 #endif
 #if ONLINE_FINGERPRINTS
         public static FingerprintDataItemComposition Items(FingerprintDataResult value) => value.FingerprintDataItems;

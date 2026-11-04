@@ -96,7 +96,8 @@ namespace TiaMcpServer.Siemens
         internal void RequireAssemblyIdentity(AssemblyName actual, string path)
         {
             if (expectedIdentity == null)
-                throw new NotSupportedException("This documented contract is unbound; a verified SDK reference assembly identity is required before native calls.");
+                throw new NotSupportedException("This documented contract is unbound; a verified SDK reference assembly identity is required before native " +
+                    "calls.");
             EngineeringAssemblyIdentity.RequireMatch(expectedIdentity, actual, path);
             bool directoryMatches = selectedDirectory == null ? PublicApiKey(path) == Key :
                 string.Equals(Path.GetDirectoryName(Path.GetFullPath(path)), selectedDirectory,
@@ -116,7 +117,8 @@ namespace TiaMcpServer.Siemens
             if (!itemType.IsInstanceOfType(deviceItem)) throw new ArgumentException("Device item belongs to another API assembly.");
             var provider = engineering.GetType("Siemens.Engineering.IEngineeringServiceProvider", throwOnError: true)!;
             var service = engineering.GetType(SoftwareContainerType, throwOnError: true)!;
-            var getter = provider.GetMethods().Single(m => m.Name == "GetService" && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1 && m.GetParameters().Length == 0);
+            var getter = provider.GetMethods()
+                .Single(m => m.Name == "GetService" && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1 && m.GetParameters().Length == 0);
             var container = InvokeExact(getter.MakeGenericMethod(service), deviceItem, Array.Empty<object>());
             if (container == null) return null; // E.g. redundant partner CPU; not an API mismatch.
             var software = service.GetProperty("Software")!.GetValue(container);

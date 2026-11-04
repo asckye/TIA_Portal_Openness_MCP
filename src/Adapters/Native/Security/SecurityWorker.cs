@@ -41,13 +41,17 @@ public sealed partial class PlcFoundationEngine
 #if !SECURITY_PROJECT_SYSLOG
                 if (request.Scope == "project") throw new NotSupportedException("Project-global syslog requires V20 or later.");
 #endif
-                return security.ManageSyslogServers(request.Scope, request.Action, request.Name, "{}", "{}", request.DevicePath, request.ItemPath, request.ServerAddress, request.ServerPort, request.ConfirmDelete, request.DryRun);
+                return security
+                    .ManageSyslogServers(request.Scope, request.Action, request.Name, "{}", "{}", request.DevicePath, request.ItemPath, request.ServerAddress,
+                        request.ServerPort, request.ConfirmDelete, request.DryRun);
 #endif
 #if SECURITY_POLICY
             case "ManagePasswordPolicy": return security.ManagePasswordPolicy(request.Action, request.Target, "{}", request.ConfirmChange, request.DryRun);
 #endif
 #if SECURITY_UMAC
-            case "ManageUmcUsers": return security.ManageUmcUsers(request.Kind, request.Action, request.Name, request.NewName, request.RoleName, request.ServerUserName, request.ServerPassword, request.ConfirmChange, request.DryRun, request.Offset, request.Limit);
+            case "ManageUmcUsers": return security
+                .ManageUmcUsers(request.Kind, request.Action, request.Name, request.NewName, request.RoleName, request.ServerUserName, request.ServerPassword,
+                    request.ConfirmChange, request.DryRun, request.Offset, request.Limit);
 #endif
             default: throw new NotSupportedException("The requested security operation is unavailable on this release.");
         }
@@ -79,8 +83,11 @@ public sealed partial class PlcFoundationEngine
         session.RequireUserAction();
         var users = new ProjectUsers(session);
         return request.Operation switch {
-            "GetProjectUserManagement" => users.ReadProjectUserManagement(request.Category, request.Name, request.DevicePath, request.ItemPath, request.Offset, request.Limit),
-            "ManageProjectUserManagement" => users.ManageProjectUserManagement(request.Action, request.Name, request.Password, request.RoleName, request.RightName, request.Comment, request.Group, request.DevicePath, request.ItemPath, request.ConfirmChange, request.DryRun),
+            "GetProjectUserManagement" => users
+                .ReadProjectUserManagement(request.Category, request.Name, request.DevicePath, request.ItemPath, request.Offset, request.Limit),
+            "ManageProjectUserManagement" => users
+                .ManageProjectUserManagement(request.Action, request.Name, request.Password, request.RoleName, request.RightName, request.Comment, request
+                    .Group, request.DevicePath, request.ItemPath, request.ConfirmChange, request.DryRun),
             _ => throw new ArgumentException("Unregistered project user operation: " + request.Operation)
         };
 #else
@@ -95,13 +102,16 @@ public sealed partial class PlcFoundationEngine
 #if !SECURITY_SIMPLE_WEB
         if (request.Family == "simpleWebserver") throw new NotSupportedException("Simple web users require V18 or later.");
 #endif
-        return new DeviceUsersAdapter(new SecuritySession(this, request.Faults), request).ManageDeviceUsers(request.DevicePath, request.ItemPath, request.Family, request.Action, request.UserName, request.Password, "[]", request.Active, request.NewName, request.ConfirmDelete, request.DryRun);
+        return new DeviceUsersAdapter(new SecuritySession(this, request.Faults), request)
+            .ManageDeviceUsers(request.DevicePath, request.ItemPath, request.Family, request.Action, request.UserName, request.Password, "[]", request.Active,
+                request.NewName, request.ConfirmDelete, request.DryRun);
 #else
         throw new NotSupportedException("Device users require V16 or later.");
 #endif
     }
     internal Siemens.Engineering.HW.Device? SecurityLegacyDevice(string path) => HardwareLegacyDevice(path);
-    internal System.Collections.Generic.IEnumerable<(DeviceItem Item, string Path)> SecurityTraverseDeviceItems(DeviceItem root, string path) => HardwareTraverseDeviceItems(root, path);
+    internal System.Collections.Generic.IEnumerable<(DeviceItem Item, string Path)> SecurityTraverseDeviceItems(DeviceItem root, string path) =>
+        HardwareTraverseDeviceItems(root, path);
     public object ExecuteHardwareSecurity(HardwareSecurityRequest request, bool dryRun = true)
     {
         Check();
@@ -110,10 +120,12 @@ public sealed partial class PlcFoundationEngine
         {
             request.NormalizedAction = PlcProtectionRules.NormalizeAction(request.Action);
 #if !SECURITY_MASTER_SECRET
-            if (PlcProtectionRules.MasterSecretActions.Contains(request.NormalizedAction)) throw new NotSupportedException("PLC master secret requires V17 or later.");
+            if (PlcProtectionRules.MasterSecretActions.Contains(request.NormalizedAction))
+                throw new NotSupportedException("PLC master secret requires V17 or later.");
 #endif
 #if !SECURITY_ALL_CONFIGURATION
-            if (request.NormalizedAction is "protectAllConfiguration" or "unprotectAllConfiguration") throw new NotSupportedException("All-configuration protection requires V21.");
+            if (request.NormalizedAction is "protectAllConfiguration" or "unprotectAllConfiguration")
+                throw new NotSupportedException("All-configuration protection requires V21.");
 #endif
         }
         var security = new HardwareSecurityAdapter(new SecuritySession(this, request.Faults), request);
@@ -122,10 +134,14 @@ public sealed partial class PlcFoundationEngine
             case "GetPlcPutGetAccess": return security.GetPutGetAccess(request.DeviceName);
             case "SetPlcPutGetAccess": return new SecurityDataResult(security.SetPutGetAccess(request.DeviceName, request.Enable, request.DryRun));
 #if SECURITY_WATCH_WEB
-            case "ManageWatchForceTableWebAccess": return security.ManageWatchForceTableWebAccess(request.DevicePath, request.ItemPath, request.Action, request.SoftwarePath, request.TableKind, request.TablePath, request.Access, request.ConfirmChange, request.DryRun);
+            case "ManageWatchForceTableWebAccess": return security
+                .ManageWatchForceTableWebAccess(request.DevicePath, request.ItemPath, request.Action, request.SoftwarePath, request.TableKind, request
+                    .TablePath, request.Access, request.ConfirmChange, request.DryRun);
 #endif
 #if SECURITY_PROJECT_PROTECTION
-            case "ManagePlcProtection": return security.ManagePlcProtection(request.DevicePath, request.ItemPath, request.Action, request.AccessLevel, request.Password, request.NewPassword, request.ConfirmChange, request.DryRun);
+            case "ManagePlcProtection": return security
+                .ManagePlcProtection(request.DevicePath, request.ItemPath, request.Action, request.AccessLevel, request.Password, request.NewPassword, request
+                    .ConfirmChange, request.DryRun);
 #endif
             default: throw new NotSupportedException("The requested hardware security operation is unavailable on this release.");
         }

@@ -98,6 +98,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         public string NodeName { get; set; } = string.Empty;
         public string InitialAddress { get; set; } = string.Empty;
         public string Family { get; set; } = "UNKNOWN";
-        public string Summary => $"SoftwarePath={SoftwarePath}; DeviceName={DeviceName}; StationName={StationName}; NodeName={NodeName}; InitialAddress={InitialAddress}; Family={Family}";
+        public string Summary =>
+            $"SoftwarePath={SoftwarePath}; DeviceName={DeviceName}; StationName={StationName}; NodeName={NodeName}; InitialAddress={InitialAddress}; Family={Family}";
     }
 }

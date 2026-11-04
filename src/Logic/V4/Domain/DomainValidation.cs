@@ -105,7 +105,8 @@ namespace TiaMcp.Logic.V4.Domain
             {
                 XPathExpression.Compile(json.GetProperty("xpath").GetString()!);
                 foreach (var key in new[] { "files", "valuePattern" })
-                    if (json.TryGetProperty(key, out var pattern)) _ = new Regex(pattern.GetString()!, RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(250));
+                    if (json.TryGetProperty(key, out var pattern)) _ =
+                        new Regex(pattern.GetString()!, RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(250));
                 int min = json.TryGetProperty("minCount", out var a) ? a.GetInt32() : 0;
                 int max = json.TryGetProperty("maxCount", out var b) ? b.GetInt32() : int.MaxValue;
                 Require(min <= max);
@@ -132,7 +133,9 @@ namespace TiaMcp.Logic.V4.Domain
                 foreach (string id in dependencies.OrderBy(id => byId[id].Priority ?? 0).ThenBy(id => id, StringComparer.OrdinalIgnoreCase)) Visit(byId[id]);
                 active.Remove(item.Id); done.Add(item.Id); ordered.Add(item.Id);
             }
-            foreach (var item in artifacts.OrderBy(a => a.Priority ?? 0).ThenBy(a => a.Target, StringComparer.OrdinalIgnoreCase).ThenBy(a => a.Id, StringComparer.OrdinalIgnoreCase)) Visit(item);
+            foreach (var item in artifacts.OrderBy(a => a.Priority ?? 0).ThenBy(a => a.Target, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(a => a.Id, StringComparer.OrdinalIgnoreCase))
+                Visit(item);
             return ordered.AsReadOnly();
         }
 
@@ -184,7 +187,8 @@ namespace TiaMcp.Logic.V4.Domain
             if (action == "setScope" && category == "styleGuide") Require(kind == "case" && scope.Length > 0);
             else Require(scope.Length == 0);
         }
-        public static void Teamcenter(TeamcenterItemSpec? item, TeamcenterRevisionSpec? revision, string action, string releaseKey, bool packageAvailable, bool readOnly)
+        public static void Teamcenter(TeamcenterItemSpec? item, TeamcenterRevisionSpec? revision, string action, string releaseKey, bool packageAvailable,
+                bool readOnly)
         {
             Capability(releaseKey, packageAvailable, "Teamcenter", readOnly, action != "readCustomAttributes");
             Require(TeamcenterLogic.WorkflowActions.Contains(action));
@@ -208,7 +212,8 @@ namespace TiaMcp.Logic.V4.Domain
             Capability(releaseKey, packageAvailable, "Library", readOnly, true);
             ValidateParameter(selection);
             if (action == "harmonizeProject") LibraryDeepLogic.JoinHarmonizeOptions(harmonizeOptions);
-            LibraryDeepLogic.ValidateSyncRequest(action, libraryName, targetLibraryName, softwarePaths, LibraryDeepLogic.ParseSelection(V4Json.Serialize(selection)),
+            LibraryDeepLogic
+                .ValidateSyncRequest(action, libraryName, targetLibraryName, softwarePaths, LibraryDeepLogic.ParseSelection(V4Json.Serialize(selection)),
                 "SetOnlyHigherUpdatedVersionAsDefault", "DoNotDelete", "UpdateStructure", "PreserveDefaultVersionOfUnusedTypes");
         }
         public static void Monitoring(MonitoringOptions options, string provider, bool readOnly)

@@ -21,7 +21,8 @@ namespace TiaOpenness.Shared
         private const string ProcessCacheKey = "TiaOpenness.Shared.DataLocations.v1";
         private static readonly Lazy<DataLocations> ProcessLocations = new Lazy<DataLocations>(ForProcess);
         internal static readonly string ProcessKey = Process.GetCurrentProcess().Id + "-"
-            + Process.GetCurrentProcess().StartTime.ToUniversalTime().ToString("yyyyMMdd-HHmmss-fffffff", CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N");
+            + Process.GetCurrentProcess().StartTime.ToUniversalTime().ToString("yyyyMMdd-HHmmss-fffffff", CultureInfo.InvariantCulture) + "-" + Guid.NewGuid()
+                .ToString("N");
         private const string HostKey = "TiaOpenness.Shared.DataLocations.host";
         internal static string HostReleaseKey => AppDomain.CurrentDomain.GetData(HostKey) as string ?? "studio";
         internal static void InitializeHost(string releaseKey)
@@ -70,7 +71,10 @@ namespace TiaOpenness.Shared
                         Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY"),
                         !string.IsNullOrWhiteSpace(localOverride) && Path.IsPathRooted(localOverride) ? localOverride
                             : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Path.GetTempPath());
-                    cached = new[] { locations.Root, locations.localApplicationData, locations.temporaryDirectory, locations.explicitDataRoot.ToString(), locations.primaryDataRoot };
+                    cached = new[] {
+                        locations.Root, locations.localApplicationData, locations.temporaryDirectory, locations.explicitDataRoot.ToString(), locations
+                            .primaryDataRoot
+                    };
                     AppDomain.CurrentDomain.SetData(ProcessCacheKey, cached);
                 }
                 return new DataLocations(cached[0], cached[1], cached[2], bool.Parse(cached[3]), cached[4]);
@@ -128,8 +132,10 @@ namespace TiaOpenness.Shared
         internal string LeasesDirectory => At("leases", Path.Combine(localApplicationData, "TiaMcp", "instance-leases"));
         internal string ConfigDirectory => configDirectory.Value;
         internal string UiFilePath => uiFilePath.Value;
-        internal string LogsDirectory => WritableDirectory(Root == null ? null : Path.Combine(Root, "logs"), FallbackPath(temporaryDirectory, "TiaMcp/logs"), "IO_FAILED");
-        internal string[] LogReadRoots => ReadRoots(primaryDataRoot == null ? null : Path.Combine(primaryDataRoot, "logs"), FallbackPath(temporaryDirectory, "TiaMcp/logs"));
+        internal string LogsDirectory =>
+            WritableDirectory(Root == null ? null : Path.Combine(Root, "logs"), FallbackPath(temporaryDirectory, "TiaMcp/logs"), "IO_FAILED");
+        internal string[] LogReadRoots =>
+            ReadRoots(primaryDataRoot == null ? null : Path.Combine(primaryDataRoot, "logs"), FallbackPath(temporaryDirectory, "TiaMcp/logs"));
         internal string[] AuditReadRoots
         {
             get
@@ -201,7 +207,9 @@ namespace TiaOpenness.Shared
         }
 
         internal const int PlainLogCopies = 32;
-        private static readonly Regex PlainLogName = new Regex(@"^(?<purpose>TiaMcpServer(?:\.hmi-read|\.native-export)?|TiaOpenness\.crash)-(?<pid>[1-9][0-9]*)-(?<start>[0-9]{8}-[0-9]{6}-[0-9]{7})-[a-f0-9]{32}(?:-[a-f0-9]{32})?\.log$", RegexOptions.CultureInvariant);
+        private static readonly Regex PlainLogName =
+            new Regex(@"^(?<purpose>TiaMcpServer(?:\.hmi-read|\.native-export)?|TiaOpenness\.crash)-(?<pid>[1-9][0-9]*)-(?<start>[0-9]{8}-[0-9]{6}-[0-9]{7})-[a-f0-9]{32}(?:-[a-f0-9]{32})?\.log$",
+                RegexOptions.CultureInvariant);
         internal static void PruneLogsAtStartup()
         {
             try { Current.PruneLogs(); }
@@ -225,11 +233,14 @@ namespace TiaOpenness.Shared
             for (var parent = new DirectoryInfo(directory); parent != null; parent = parent.Parent)
                 if ((parent.Attributes & FileAttributes.ReparsePoint) != 0) return;
             var files = Directory.GetFiles(directory, "*.log").Select(path => new { Path = path, Match = PlainLogName.Match(Path.GetFileName(path)) })
-                .Where(file => file.Match.Success && int.TryParse(file.Match.Groups["pid"].Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out _)
+                .Where(file => file.Match.Success && int
+                        .TryParse(file.Match.Groups["pid"].Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
+                            out _)
                     && DateTime.TryParseExact(file.Match.Groups["start"].Value, "yyyyMMdd-HHmmss-fffffff", CultureInfo.InvariantCulture,
                         DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out _));
             foreach (var purpose in files.GroupBy(file => file.Match.Groups["purpose"].Value))
-                foreach (var file in purpose.OrderByDescending(file => File.GetLastWriteTimeUtc(file.Path)).ThenBy(file => file.Path, StringComparer.Ordinal).Skip(PlainLogCopies))
+                foreach (var file in purpose.OrderByDescending(file => File.GetLastWriteTimeUtc(file.Path)).ThenBy(file => file.Path, StringComparer.Ordinal)
+                        .Skip(PlainLogCopies))
                 {
                     if ((File.GetAttributes(file.Path) & FileAttributes.ReparsePoint) != 0 || IsLiveProcess(file.Match)) continue;
                     try
@@ -284,7 +295,8 @@ namespace TiaOpenness.Shared
                 return configured;
             }
             if (string.IsNullOrWhiteSpace(localApplicationData) || !Path.IsPathRooted(localApplicationData))
-                throw new DataLocationIOException((localApplicationData ?? "<missing LocalAppData>") + "/TiaMcp/ecosystem-python", "LocalAppData is unavailable");
+                throw new DataLocationIOException((localApplicationData ?? "<missing LocalAppData>") + "/TiaMcp/ecosystem-python",
+                        "LocalAppData is unavailable");
             string directory = Path.Combine(localApplicationData, "TiaMcp", "ecosystem-python");
             string python = Path.Combine(directory, "Scripts", "python.exe");
             if (!Directory.Exists(directory)) throw new DataLocationIOException(directory, "Python environment is unavailable");

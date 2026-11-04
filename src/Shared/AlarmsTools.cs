@@ -50,7 +50,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ImportAlarmClasses"), Description(
             "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject]" +
             " Import PLC alarm classes from a previously exported file." +
-            " Overwrites existing alarm class definitions. Run CompilePlcSoftware after import. Current native policy; V4 safety behavior is not yet accepted.")]
+            " Overwrites existing alarm class definitions. Run CompilePlcSoftware after import. Current native policy; V4 safety behavior is not yet " +
+                "accepted.")]
         public CallToolResult ImportAlarmClassesV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("importPath: existing absolute DAT file written by ExportAlarmClasses")] string importPath)
@@ -116,7 +117,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("includeInfoText: include the Info Text column (default: true)")] bool includeInfoText = true,
             [Description("includeAdditionalTexts: include Additional Texts columns (default: true)")] bool includeAdditionalTexts = true,
             [Description("includeAlarmClass: include the Alarm Class column (default: true)")] bool includeAlarmClass = true)
-            => EngineeringToolContract.Export("ExportAlarmInstanceTexts", exportPath, () => ExportAlarmInstanceTexts(softwarePath, exportPath, includeInfoText, includeAdditionalTexts, includeAlarmClass));
+            => EngineeringToolContract
+                .Export("ExportAlarmInstanceTexts", exportPath, () =>
+                    ExportAlarmInstanceTexts(softwarePath, exportPath, includeInfoText, includeAdditionalTexts, includeAlarmClass));
 
         public ResponseMessage ExportAlarmInstanceTexts(
             string softwarePath,
@@ -131,7 +134,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
 
-        [McpServerTool(Name="ExchangePlcAlarmTextLists"), Description("[L2][PLC-Alarms][WRITE] Native XLSX exchange of PLC alarm text lists through PlcAlarmTextListProvider of the exact PLC or of a unit (unitName + unitKind): export writes a NEW absolute .xlsx (every user text list in every project language, or the filtered overload with textListNames + cultures, both required together; TIA refuses system text lists and inactive languages natively) and returns the TextListXlsxResult state, log file and file hash; import (importOption None refuses existing lists, Override replaces their entries) needs confirmImport=true besides dryRun=false and an Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name="ExchangePlcAlarmTextLists"),
+                Description("[L2][PLC-Alarms][WRITE] Native XLSX exchange of PLC alarm text lists through PlcAlarmTextListProvider of the exact PLC or of a " +
+                "unit (unitName + unitKind): export writes a NEW absolute .xlsx (every user text list in every project language, or the filtered overload " +
+                "with textListNames + cultures, both required together; TIA refuses system text lists and inactive languages natively) and returns the " +
+                "TextListXlsxResult state, log file and file hash; import (importOption None refuses existing lists, Override replaces their entries) needs " +
+                "confirmImport=true besides dryRun=false and an Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet " +
+                "accepted.")]
         public CallToolResult ExchangePlcAlarmTextListsXlsxV4(
             string softwarePath,
             [Description("action: the operation to perform - export | import.")] string action,
@@ -143,7 +152,11 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("importOption: import option - None | Override.")] string importOption="None",
             [Description("confirmImport: must be true together with dryRun=false to import (imports replace project data).")] bool confirmImport=false,
             bool dryRun=true)
-            => EngineeringToolContract.Run("ExchangePlcAlarmTextLists", !dryRun, () => ExchangePlcAlarmTextListsXlsx(softwarePath, action, filePath, unitName, unitKind, EngineeringToolContract.Json(textListNames ?? Array.Empty<string>()), EngineeringToolContract.Json(cultures ?? Array.Empty<string>()), importOption, confirmImport, dryRun));
+            => EngineeringToolContract
+                .Run("ExchangePlcAlarmTextLists", !dryRun, () =>
+                    ExchangePlcAlarmTextListsXlsx(softwarePath, action, filePath, unitName, unitKind, EngineeringToolContract
+                        .Json(textListNames ?? Array.Empty<string>()), EngineeringToolContract.Json(cultures ?? Array.Empty<string>()), importOption,
+                        confirmImport, dryRun));
 
         public ResponseMessage ExchangePlcAlarmTextListsXlsx(
             string softwarePath,
@@ -156,15 +169,22 @@ namespace TiaMcpServer.ModelContextProtocol
             string importOption="None",
             bool confirmImport=false,
             bool dryRun=true)
-            => _service.ExchangePlcAlarmTextListsXlsx(softwarePath,action,filePath,unitName,unitKind,textListNamesJson,culturesJson,importOption,confirmImport,dryRun);
+            => _service
+                .ExchangePlcAlarmTextListsXlsx(softwarePath,action,filePath,unitName,unitKind,textListNamesJson,culturesJson,importOption,confirmImport,dryRun);
 
-        [McpServerTool(Name="ImportPlcAlarmInstanceTexts"), Description("[L2][PLC-Alarms][WRITE] Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name="ImportPlcAlarmInstanceTexts"),
+                Description("[L2][PLC-Alarms][WRITE] Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute " +
+                "xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text " +
+                "changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download. Current native policy; V4 " +
+                "safety behavior is not yet accepted.")]
         public CallToolResult ImportPlcAlarmInstanceTextsV4(
             string softwarePath,
             [Description("filePath: existing absolute XLSX file written by ExportAlarmInstanceTexts.")] string filePath,
             [Description("cultures: Array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).")] string[] cultures,
             bool dryRun=true)
-            => EngineeringToolContract.Run("ImportPlcAlarmInstanceTexts", !dryRun, () => ImportPlcAlarmInstanceTexts(softwarePath, filePath, EngineeringToolContract.Json(cultures), dryRun));
+            => EngineeringToolContract
+                .Run("ImportPlcAlarmInstanceTexts", !dryRun, () =>
+                    ImportPlcAlarmInstanceTexts(softwarePath, filePath, EngineeringToolContract.Json(cultures), dryRun));
 
         public ResponseMessage ImportPlcAlarmInstanceTexts(
             string softwarePath,
@@ -173,7 +193,12 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
             => _service.ImportPlcAlarmInstanceTexts(softwarePath,filePath,culturesJson,dryRun);
 
-        [McpServerTool(Name="ManagePlcAlarmTextList"), Description("[L2][PLC-Alarms][WRITE] read/createFromMasterCopy/delete PLC alarm text lists (PlcAlarmTextlistGroup system+user lists; entries are not exposed by Openness). read paginates Name/ID/ListRange, optionally one exact name. createFromMasterCopy needs an open library name and exact master copy path; copyMode ThrowIfExists/Rename/Replace optional. delete refuses system lists and requires confirmDelete=true besides dryRun=false; absence verified. Default preview, Offline PLC for execution; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name="ManagePlcAlarmTextList"),
+                Description("[L2][PLC-Alarms][WRITE] read/createFromMasterCopy/delete PLC alarm text lists (PlcAlarmTextlistGroup system+user lists; entries " +
+                "are not exposed by Openness). read paginates Name/ID/ListRange, optionally one exact name. createFromMasterCopy needs an open library name " +
+                "and exact master copy path; copyMode ThrowIfExists/Rename/Replace optional. delete refuses system lists and requires confirmDelete=true " +
+                "besides dryRun=false; absence verified. Default preview, Offline PLC for execution; no save/compile/download. Current native policy; V4 " +
+                "safety behavior is not yet accepted.")]
         public CallToolResult ManagePlcAlarmTextListV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
             [Description("action: read | createFromMasterCopy | delete.")] string action="read",
@@ -185,7 +210,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("offset: first list to return (paging).")] int offset=0,
             [Description("limit: maximum lists to return.")] int limit=100,
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
-            => EngineeringToolContract.Run("ManagePlcAlarmTextList", !dryRun && action != "read" && action != "list", () => ManagePlcAlarmTextList(softwarePath, action, name, libraryName, masterCopyPath, copyMode, confirmDelete, offset, limit, dryRun));
+            => EngineeringToolContract
+                .Run("ManagePlcAlarmTextList", !dryRun && action != "read" && action != "list", () =>
+                    ManagePlcAlarmTextList(softwarePath, action, name, libraryName, masterCopyPath, copyMode, confirmDelete, offset, limit, dryRun));
 
         public ResponseMessage ManagePlcAlarmTextList(
             string softwarePath,
