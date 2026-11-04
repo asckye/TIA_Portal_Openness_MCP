@@ -161,7 +161,7 @@
 | 审批 | `src/Shared/ApprovalPipe.cs`、`ApprovalProtocol.cs`、`ApprovalSettings.cs`；工作台 `src/Studio/Gui/Services/ApprovalService.cs` |
 | 审计链与调用日志 | `src/Shared/AuditLog.cs`、`AuditInvocation.cs`、`InvocationJournal.cs`、`JournalRetention.cs`、`build-tools/native-call-weaver` |
 | 工作台控制与操作端 | `src/Shared/WorkbenchControl*.cs`、`OperatorPipe.cs`、`OperatorProtocol.cs`、`LocalPipeSecurity.cs`；`src/FoundationHost/WorkbenchControl*.cs`、`OperatorEndpoint.cs`、`HostRegistration.cs`；`src/Studio/Gui/Control/` |
-| 生成框架 | `src/Logic/Generation/`、`src/Shared/Host/Generation*.cs`、`schemas/standards/v1/`、`templates/standards/` |
+| 生成框架 | `src/Logic/Generation/`、`src/Shared/Host/Generation*.cs`、`reference/schemas/standards/v1/`、`templates/standards/` |
 | 导入暂存 | `src/Logic/ModelContextProtocol/ImportStagingStore.cs` |
 | 运行时通道（S7、OPC UA、Web API、Open Pipe） | `src/OnlineChannels/` |
 
@@ -761,7 +761,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 | 规则 | 依据 |
 |---|---|
-| MUST：标准包是“目录 + JSON 清单与分部文件”，分发时整个目录无损打成 zip；包清单与分部只用 JSON，按 [`schemas/standards/v1`](../../schemas/standards/v1/README.md) 的 JSON Schema 2020-12 校验，并做静态交叉引用检查。包用 SemVer，格式用整数 `schemaVersion` | ADR 待补写 B22 |
+| MUST：标准包是“目录 + JSON 清单与分部文件”，分发时整个目录无损打成 zip；包清单与分部只用 JSON，按 [`reference/schemas/standards/v1`](../../schemas/standards/v1/README.md) 的 JSON Schema 2020-12 校验，并做静态交叉引用检查。包用 SemVer，格式用整数 `schemaVersion` | ADR 待补写 B22 |
 | MUST：规则只用声明式结构（`forEach`、`when`、命名模板）和受限占位符（字段路径与白名单函数）；不执行包内代码，不用正则替换链、任意表达式或网络访问；包可以带 SCL、库文件等资源，但不运行它们。复杂逻辑放在包的 SCL 源或库类型中 | ADR 待补写 B22；SEC-08 |
 | MUST：`extends` 与 `dependsOn` 用包 id 加版本范围；派生包按条目 id 整条替换，不做深层合并；`parts.rules` 是精确文件路径列表，不展开 glob | `src/Logic/Generation/` |
 | MUST：加载限制默认 1,024 个文件、2,048 个条目、单文件 16 MiB、总量 64 MiB、压缩 zip 32 MiB；路径最多 240 个 UTF-16 单元、16 段，NFC、正斜杠，拒绝越界、链接、Windows 保留名、大小写重复和文件与目录冲突；JSON 是无 BOM 的严格 UTF-8，拒绝重复键和非法 Unicode，深度最多 64；zip 只在内存中读取，不解压 | SEC-08 |
