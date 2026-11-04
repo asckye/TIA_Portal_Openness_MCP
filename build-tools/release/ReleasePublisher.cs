@@ -38,7 +38,7 @@ internal static class ReleasePublisher
     {
         PublishPrepared.RequirePrerelease(options.Version);
         var version = ReleaseVersions.Require(options.Version, "Invalid prepared version");
-        var package = PreparedPackage.Read(root, candidatePath, options.Version);
+        var package = PreparedCandidate.Read(root, candidatePath, options.Version);
         await package.VerifyAsync(cancellationToken);
         var notes = await File.ReadAllTextAsync(Path.Combine(root, "docs/releases", version.Tag + ".md"), cancellationToken);
         if (!PrereleaseNotes.HasSection(notes))
@@ -91,7 +91,7 @@ internal static class ReleasePublisher
 
     internal sealed record PreparedRelease(bool Public, JsonElement ZipAsset);
 
-    internal static async Task<PreparedRelease> ReadPreparedReleaseAsync(GitHubApi api, PreparedPackage package, CancellationToken cancellationToken)
+    internal static async Task<PreparedRelease> ReadPreparedReleaseAsync(GitHubApi api, PreparedCandidate package, CancellationToken cancellationToken)
     {
         var path = "repos/" + api.Repository + "/releases/" + package.ReleaseId.ToString(CultureInfo.InvariantCulture);
         using var release = await api.GetReleaseByTagOrNullAsync(path, cancellationToken);
@@ -109,7 +109,7 @@ internal static class ReleasePublisher
         return new(!JsonBool(release.RootElement, "draft"), zip[0].Clone());
     }
 
-    internal static async Task<bool> PreparedTagExistsAsync(GitHubApi api, PreparedPackage package, CancellationToken cancellationToken)
+    internal static async Task<bool> PreparedTagExistsAsync(GitHubApi api, PreparedCandidate package, CancellationToken cancellationToken)
     {
         using var reference = await api.GetReleaseByTagOrNullAsync("repos/" + api.Repository + "/git/ref/tags/" + Uri.EscapeDataString("v" + package.Version), cancellationToken);
         if (reference is null) return false;
@@ -124,7 +124,7 @@ internal static class ReleasePublisher
         return true;
     }
 
-    internal static async Task PublishPreparedDraftAsync(GitHubApi api, PreparedPackage package, HttpClient http, PublicationBudget budget)
+    internal static async Task PublishPreparedDraftAsync(GitHubApi api, PreparedCandidate package, HttpClient http, PublicationBudget budget)
     {
         JsonElement published = default;
         for (var attempt = 1; attempt <= 3; attempt++)

@@ -21,7 +21,7 @@ internal static class PublishPrepared
         {
             budget.RemainingMilliseconds();
             RequirePrerelease(options.Version);
-            var package = PreparedPackage.Read(root, Path.Combine(root, "bin-build/prepared", options.Version, "candidate.json"), options.Version);
+            var package = PreparedCandidate.Read(root, Path.Combine(root, "bin-build/prepared", options.Version, "candidate.json"), options.Version);
             git ??= (args, timeout) => ProcessRunner.Run(options.GitExecutable, args, root,
                 new Dictionary<string, string?> { ["GIT_TERMINAL_PROMPT"] = "0", ["GCM_INTERACTIVE"] = "Never" }, timeoutMilliseconds: timeout);
             var head = git(["rev-parse", "HEAD"], budget.RemainingMilliseconds());
@@ -69,7 +69,7 @@ internal static class PublishPrepared
             throw new ReleaseException("publish-prepared publishes pre-releases only; upload-draft also requires a pre-release");
     }
 
-    private static async Task EnsureTagAsync(ReleasePublisher.GitHubApi api, PreparedPackage package, PublicationBudget budget)
+    private static async Task EnsureTagAsync(ReleasePublisher.GitHubApi api, PreparedCandidate package, PublicationBudget budget)
     {
         using var attempt = budget.BeginAttempt();
         try
@@ -109,12 +109,12 @@ internal sealed class PublicationBudget(Func<TimeSpan> elapsed, Func<TimeSpan, C
     }
 }
 
-internal sealed record PreparedPackage(string CandidatePath, JsonObject Candidate, string Zip, string Digest,
+internal sealed record PreparedCandidate(string CandidatePath, JsonObject Candidate, string Zip, string Digest,
     long Size, string Commit, string Version, long ReleaseId, long AssetId)
 {
     internal string Sidecar => Path.ChangeExtension(Zip, ".sha256");
 
-    internal static PreparedPackage Read(string root, string path, string version)
+    internal static PreparedCandidate Read(string root, string path, string version)
     {
         if (!File.Exists(path)) throw new ReleaseException("no candidate: " + path);
         var candidate = JsonNode.Parse(File.ReadAllText(path, Encoding.UTF8))?.AsObject() ?? throw new ReleaseException("Invalid candidate.json");
