@@ -6,6 +6,7 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OnlineDownloadService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/RuntimeTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/RuntimeChannelTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/RuntimeChannelTools.UnifiedPipe.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcSimAdvancedTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcSimAdvancedPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/RuntimeWriteValidation.cs" />
@@ -83,6 +84,7 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeResponses.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiDescribeTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiTagDeletionTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ClassicHmiFoldersTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/MotionProDiagClassicHmiTools.cs" />
@@ -97,6 +99,8 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OptionalPackageContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsResponses.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsTools.Export.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsTools.Import.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/AlarmsTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OpcUaTools.cs" />
@@ -162,6 +166,8 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareToolContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../EngineHost/ModelContextProtocol/Tools/ToolDescriptor.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/McpServer.ToolBridge.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/McpServer.ToolBridge.Search.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/McpServer.ToolBridge.Preflight.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../EngineHost/ModelContextProtocol/Tools/McpServer.Approval.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/McpServer.Batch.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../EngineHost/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" />
@@ -177,6 +183,7 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/XmlBuilderTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../EngineHost/ModelContextProtocol/Tools/XmlBuildResults.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/OfflineSuiteTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/OfflineSuiteTools.UnifiedTemplates.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/EcosystemTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/V21EcosystemTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/TemplateTools.cs" />

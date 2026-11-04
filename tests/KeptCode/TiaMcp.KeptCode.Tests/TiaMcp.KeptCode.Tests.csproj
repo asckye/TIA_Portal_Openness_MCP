@@ -45,6 +45,7 @@
     <Compile Include="../../../src/Shared/HmiExchangeService.cs" />
     <Compile Include="../../../src/Shared/HmiTagDeletionService.cs" />
     <Compile Include="../../../src/Shared/HmiExchangeTools.cs" />
+    <Compile Include="../../../src/Shared/HmiExchangeContract.cs" />
     <Compile Include="../../../src/Shared/UnifiedHmiContract.cs" />
     <Compile Include="../../../src/Shared/UnifiedHmiPortService.cs" />
     <Compile Include="../../../src/Shared/UnifiedPortService.cs" />
@@ -87,6 +88,9 @@
     <Compile Include="../../../src/Shared/UnifiedHmiPropertyPolicy.cs" />
     <Compile Include="../../../src/Shared/UnifiedScreenItemsTools.cs" />
     <Compile Include="../../../src/Updater/Updater.cs" />
+    <Compile Include="../../../src/Updater/UpdaterModels.cs" />
+    <Compile Include="../../../src/Updater/Updater.Release.cs" />
+    <Compile Include="../../../src/Updater/Updater.Files.cs" />
     <EmbeddedResource Include="../../Engine/TiaMcp.Engine.Tests/ArgumentRulesCharacterization.json" LogicalName="ArgumentRulesCharacterization.json" />
     <EmbeddedResource Include="../../Engine/TiaMcp.Engine.Harness/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
     <EmbeddedResource Include="../../Engine/TiaMcp.Engine.Harness/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />

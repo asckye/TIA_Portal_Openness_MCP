@@ -29,6 +29,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/McpServer.Batch.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/McpServer.ExportFailure.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/McpServer.ToolBridge.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/McpServer.ToolBridge.Search.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/McpServer.ToolBridge.Preflight.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/InvocationJournal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/PlcToolContract.cs" />
   </ItemGroup>
