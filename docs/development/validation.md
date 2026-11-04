@@ -13,9 +13,9 @@
 
 | 证据 | 位置和用途 |
 |---|---|
-| V20/V21 完整构建（历史） | [release-build.json](../../manifest/release-build.json)：引擎时期的编译、离线、实际进程、API 形状及诊断记录；P8-04j2 起不再交付，引擎删除后不再生成 |
-| 配置器 | [configurator-build.json](../../manifest/configurator-build.json)：源码/文件哈希及界面功能测试 |
-| 全版本交付 | [multi-version-build.json](../../manifest/multi-version-build.json)：八版 worker/Studio 适配器、文件与源码哈希 |
+| V20/V21 完整构建（历史） | `release-build.json`（历史文件，已退役）：引擎时期的编译、离线、实际进程、API 形状及诊断记录；P8-04j2 起不再交付，引擎删除后不再生成 |
+| 配置器 | `configurator-build.json`（历史文件，已退役）：源码/文件哈希及界面功能测试 |
+| 全版本交付 | `multi-version-build.json`（历史文件，已退役）：八版 worker/Studio 适配器、文件与源码哈希 |
 | 统一示例 | [tool-usage-coverage.json](../../manifest/tool-usage-coverage.json)：所有注册工具/操作的检索与可执行离线示例 |
 | 工具与功能范围 | [版本矩阵](../reference/version-tools.md)及 [功能矩阵](../../reference/version-feature-matrix.json) |
 

@@ -120,7 +120,7 @@ worker 在原有 owner 线程上非拥有式分离并写入 `RELEASED\n`；不�
 ### 安装根与开发输出
 
 G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需要 `.git`。交付包由
-[`Package-Release.py`](../../build-tools/Package-Release.py) 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，
+`Package-Release.py`（历史文件，已退役） 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，
 排除 `runtime/verification/`。交付包保留资源、用户文档、插件及桥接所用 Python 源码；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。
 
 [`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
@@ -263,7 +263,7 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 
 ### 检查器与离线证明
 
-[`Check-BundleLayout.py`](../../scripts/checks/Check-BundleLayout.py) 不运行 dotnet 或引擎，检查：
+`Check-BundleLayout.py`（历史文件，已退役） 不运行 dotnet 或引擎，检查：
 
 - 枚举与字面量代码表一一对应，资源 ID 和路径不重复；路径是普通根相对路径，不含绝对路径、反斜杠、空段、`.` 或 `..`。
 - 九项资源在本地存在，文件本身或目录中的文件属于 `git ls-files` 文件集。

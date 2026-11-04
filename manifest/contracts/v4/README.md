@@ -31,48 +31,15 @@ proposal or normalized beyond the MCP product output.
 `load_snapshots` resolves references back to `outputSchema` in memory. Capture writes format 2;
 capture-to-baseline comparisons remain byte-exact, and a changed output schema remains breaking.
 
-## Response snapshot format 3
+## Verification
 
-`responses/<releaseKey>.json` has exactly `formatVersion` (integer `3`), `rawMaskRules`, `release`,
-`profiles`, `transport`, `coverage`, and `calls`. V20/V21 also have `maxResponseChars` (integer
-`2000000`). `transport` is `stdio`; `profiles` is `['full', 'lite']` for V20/V21 and
-`['plc-foundation']` for Foundation.
+`Snapshot-ToolContracts.py verify` rejects unknown or missing format fields,
+noncanonical release coverage and disagreement with the generated catalog and
+source-registered tool inventory. The source-contracts CI job runs this check.
+Capture all eight releases from built products, compare with the baseline and
+review every difference before replacing it.
 
-`coverage` is an exact inventory of tested and intentionally skipped calls. Full-engine coverage
-fields are `registeredTools`, `calledTools`, `behaviorCallTools`, `directRejectedTools`,
-`directSkipped`, `calledOperations`, `usageTools`, `usageOperations`, `offlineExamples`, `l1Domains`,
-`bridgeRejectedTools`, `bridgeSelfGuardTools`, `bridgeSkipped`, and `liteAdvertisedTools`.
-Foundation fields are `registeredTools`, `calledTools`, `directRejectedTools`, `directSkipped`,
-`passiveTools`, `passiveSkipped`, `bridgeRejectedTools`, and `bridgeSkipped`.
-
-Each call has `profile`, `tool`, `arguments`, `rawTextBlocks`, and exactly one of `response` or
-`responseDigest`. A digest has `length`, `sha256`, `shape`, and `textShapes`. Each raw text block
-has `contentIndex` and `sha256`. Calls are sorted by profile, tool name, and canonical arguments;
-coverage name lists are sorted. Responses above 16 KiB, `GetToolUsage`, and full lite-bridge
-rejection responses use digests; other responses retain their complete protocol result or error.
-
-Canonical JSON sorts object keys and preserves array order. The fixed JSON-RPC `id` and `jsonrpc`
-framing fields are omitted. The only volatile response fields masked are:
-
-- `meta.timestamp` in response envelopes (wall clock).
-- `data.timestamp` for `BuildClassicHmiScreen`, `BuildClassicHmiTagTable`, and
-  `BuildClassicHmiMinimalPackage` (builder wall clock).
-- `data.screen.timestamp` and `data.tagTable.timestamp` for
-  `BuildClassicHmiMinimalPackage` (embedded builder wall clock).
-- `meta.requestId` in V4 infrastructure envelopes, including batch-child envelopes (correlation
-  GUID).
-
-For raw MCP text evidence, the same listed timestamp values are replaced lexically while retaining
-the original JSON text's whitespace, key order, quoting, and other bytes. Its UTF-8 SHA-256 is
-recorded before JSON decoding/canonicalization. No other GUID, path, PID, machine name, duration,
-identifier, message, error, or hash is masked. An unrecognized volatile value must fail the
-two-capture comparison and be reviewed here before a narrowly scoped rule is added.
-
-`Snapshot-ToolContracts.py verify` and `Snapshot-ToolResponses.py verify` reject unknown or missing
-format fields, noncanonical release coverage, and disagreement with the generated catalog and
-source-registered tool inventory; the source-contracts CI job runs both on every push, so an added,
-removed or renamed tool or a changed lite roster fails CI until the baselines follow. Schema,
-description and response changes are visible only in built products, which hosted Ubuntu CI cannot
-build without the Siemens PublicAPI assemblies, so they are a reviewer gate before every merge:
-capture all eight releases twice from one build, check byte identity, compare with these files and
-review every difference before the capture output replaces them.
+Per-tool response snapshots are retired. The Studio reader retains frozen real
+MCP envelopes in `tests/Studio/V4RealEnvelopes.json`; these are reader fixtures,
+not generated release evidence. V3 contract and response archives remain in
+`manifest/history/contracts-v3` with their original provenance and hashes.

@@ -284,16 +284,6 @@ public sealed class StaticPolicyTests
         Assert.Empty(ScriptToolCalls.Check("scripts/example.py", source, new HashSet<string> { "known" }));
 
     [Theory]
-    [InlineData("scripts/checks/Test-LocalStability.py", "__soak_unknown__")]
-    [InlineData("scripts/checks/Snapshot-ToolResponses.py", "__contract_unknown_tool__")]
-    public void ScriptNegativeCallExceptionsAreLimitedToTheirReviewedPathAndName(string path, string name)
-    {
-        Assert.Empty(ScriptToolCalls.Check(path, $"call('{name}', {{}})", new HashSet<string>()));
-        Assert.Single(ScriptToolCalls.Check("scripts/example.py", $"call('{name}', {{}})", new HashSet<string>()));
-        Assert.Single(ScriptToolCalls.Check(path, "call('RemovedTool', {})", new HashSet<string>()));
-    }
-
-    [Theory]
     [InlineData("Call 'RemovedTool' @{calls=@(@{name='RemovedNested';arguments=@{}})}", 2)]
     [InlineData("client.exe call RemovedTool", 1)]
     [InlineData("$client bridge RemovedTool", 1)]

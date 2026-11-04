@@ -23,7 +23,7 @@ journal implementation when adding an adapter.
 Studio calls Openness through its native bridge. Sharing these utilities does not introduce an MCP
 dependency. V14 SP1–V19 use foundation runtimes; V20/V21 use full engines. The exact-version adapters and both profiles are built and checked by Build-MultiVersion.
 
-Build-Release and Package-Release include this directory in the compiler-input inventory.
+The preparation build compiles the shared sources into the appropriate host and desktop projects.
 Build-Configurator records the source-linked desktop inputs separately.
 
 `BundleLayout` accepts an explicit root first, preserving its spelling. A nonempty
@@ -40,8 +40,7 @@ remain the caller's responsibility; no new override name is introduced.
 
 The table contains tracked delivery resources, including the template and guide
 directories. Runtime executables are build outputs, not entries in this table.
-`Check-BundleLayout.py` verifies Git membership and the enforced resource list in
-`validate-bundle` (release tool). `build-configurator` records this shared desktop input;
-`build-release` and `build-multi-version` already inventory the whole shared directory.
+`check-bundle-layout` verifies Git membership and the enforced delivery resource list.
+`prepare` validates those resources in the staged package.
 
 This component is part of the shared FoundationHost and per-session worker architecture. Ported native tools live in `src/Adapters/Native`; shared declarations and host mappings live in `src/Shared`. Historical step tables below record the original migration. Current ownership and acceptance follow the architecture specification and generated catalogs.

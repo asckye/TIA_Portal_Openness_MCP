@@ -158,14 +158,14 @@ CFC 的现行实现为 [CfcAdapter](../../src/Adapters/Native/Options/CfcAdapter
 CLI 方法还逐一比较反射、接口调用、对象分派及枚举输入点的顺序；嵌套 DTO/委托只归一化外层 CLI 类名。
 它证明静态调用点顺序；方法体原样迁移的源码检查另保证参数、lambda 所在位置与线程调度不变，不能替代真机轨迹。
 
-[Test-DomainTools.py](../../scripts/checks/Test-DomainTools.py) 用迁移前后各自的 TiaMcp.Engine.Harness（`--baseline-harness` /
+`Test-DomainTools.py`（历史文件，已退役） 用迁移前后各自的 TiaMcp.Engine.Harness（`--baseline-harness` /
 `--host-harness`）和 EXE（`--baseline-exe` / `--exe`），以可重复的 `--domain <name>` 选择领域，在
 full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，并核对源码中的工具名单。
 `--domain Cfc` 覆盖两个工具的八种操作；均须到达未连接会话的工程前置检查，返回文本除 `meta.timestamp`（桥接为 `Meta.timestamp`）外
 逐字节相同。契约、响应快照、原生清单及全部离线门禁仍按本页验收要求运行。
 
 CFC 已纳入 [Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCallOrder.py) 和
-[Test-DomainTools.py](../../scripts/checks/Test-DomainTools.py) 的统一领域检查；旧兼容入口已删除。
+`Test-DomainTools.py`（历史文件，已退役） 的统一领域检查；旧兼容入口已删除。
 
 ### CLI 宿主与命令实现
 

@@ -1,6 +1,6 @@
 # 独立原生生命周期测试
 
-当前构建包含 V20/V21 独立 net48 测试程序及进程监督脚本；默认仅编译并执行离线安全测试，**没有启动或连接 TIA，没有执行以下原生场景**。完整发布构建记录各版测试程序哈希、离线断言数与 `liveAcceptance=NOT RUN`，见 [release-build.json](../../manifest/release-build.json)。
+当前构建包含 V20/V21 独立 net48 测试程序及进程监督脚本；默认仅编译并执行离线安全测试，**没有启动或连接 TIA，没有执行以下原生场景**。完整发布构建记录各版测试程序哈希、离线断言数与 `liveAcceptance=NOT RUN`，见 `release-build.json`（历史文件，已退役）。
 
 ## 实现与范围
 

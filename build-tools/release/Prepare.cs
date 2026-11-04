@@ -274,12 +274,10 @@ internal static class Prepare
         RequireRepository(Git(root, "status", "--porcelain=v1", "--untracked-files=all"), Git(root, "branch", "--show-current"), buildOnly);
     }
 
-    internal static bool IsBuildRecord(string path) => path.StartsWith("manifest/", StringComparison.Ordinal) && path.EndsWith("-build.json", StringComparison.Ordinal);
-
     internal static SortedDictionary<string, string> Contents(string root, IEnumerable<string> tracked, DeliveryRules rules)
     {
         var files = ReleaseCommands.Contents(root, tracked, rules.Delivered);
-        foreach (var path in files.Keys.Where(path => IsBuildRecord(path) || GeneratedPaths.Contains(path) || path == "TEST-PACKAGE.txt").ToArray())
+        foreach (var path in files.Keys.Where(path => GeneratedPaths.Contains(path) || path == "TEST-PACKAGE.txt").ToArray())
             files.Remove(path);
         return files;
     }
@@ -343,10 +341,6 @@ internal static class Prepare
         manifest["bundleVersion"] = context.Version;
         manifest["fileVersion"] = ReleaseVersions.FileVersionOf(context.Version);
         manifest["refreshedAt"] = DateTimeOffset.UtcNow.ToString("o");
-        // The template carries the previous release's check receipts. They do not
-        // describe these bytes and must not survive into a newly prepared package.
-        foreach (var field in new[] { "tier", "buildCache", "buildCacheEnabled", "checkStatus", "checksSelected", "checksRan", "checksSkipped", "changedPaths" })
-            manifest.Remove(field);
         manifest["validationRecords"] = new JsonObject { ["delivery"] = "manifest/delivery.json", ["inventory"] = InventoryPath };
         var capabilities = manifest["capabilities"]!.AsObject();
         capabilities["mcpToolCount"] = tools.Count;
@@ -389,9 +383,9 @@ internal static class Prepare
     {
         var errors = new List<string>();
         foreach (var path in Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories).Select(path => Path.GetRelativePath(stage, path).Replace('\\', '/')))
-            if (!rules.Delivered(path) || ReleaseCommands.Excluded(path) || IsBuildRecord(path) && path != InventoryPath)
+            if (!rules.Delivered(path) || ReleaseCommands.Excluded(path))
                 errors.Add("Non-delivery file in stage: " + path);
-        foreach (var path in ReleaseCommands.RequiredPaths(stage, rules).Where(path => !IsBuildRecord(path) || path == InventoryPath))
+        foreach (var path in ReleaseCommands.RequiredPaths(stage, rules))
             if (!File.Exists(Path.Combine(stage, path)) && !Directory.Exists(Path.Combine(stage, path))) errors.Add("Missing delivery path: " + path);
         errors.AddRange(BundleManifestRequirements.MissingBundleResources(stage, package: true, noBinaries: false).Select(path => "Missing bundle resource: " + path));
         errors.AddRange(ReleaseCommands.TestPolicyAssemblyErrors(stage));

@@ -97,7 +97,7 @@ namespace TiaOpenness.Shared
                 return null;
             // A checkout's own runtime/vK (release chain, check-all) is a development layout, not an installed bundle:
             // only a package places the updater in runtime/tools, and no package carries Version.props (the package-mode
-            // rule of validate-bundle). Packages are unaffected; the development layout answers like the bin layout.
+            // rule of prepare). Packages are unaffected; the development layout answers like the bin layout.
             if (!File.Exists(Combine(root, RelativePath(BundleResource.Updater))) && File.Exists(Combine(root, "Version.props")))
                 return null;
             RequirePath(root, "manifest/delivery.json");
@@ -125,7 +125,7 @@ namespace TiaOpenness.Shared
             return Path.DirectorySeparatorChar != '\\' || prefix.Length >= 3;
         }
 
-        // Check-BundleLayout.py checks this table against Git and Validate-Bundle.
+        // BundleLayoutChecks checks this table against Git and the delivery resource list.
         private static readonly Dictionary<BundleResource, string> ResourcePaths =
             new Dictionary<BundleResource, string>
             {

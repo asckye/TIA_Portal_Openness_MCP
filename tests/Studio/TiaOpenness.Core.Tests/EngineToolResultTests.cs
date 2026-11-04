@@ -53,13 +53,11 @@ public sealed class EngineToolResultTests
     public void RealSnapshotEnvelopesPassThroughTheStudioReader(string release)
     {
         var assembly = typeof(EngineToolResultTests).Assembly;
-        using var stream = assembly.GetManifestResourceStream(assembly.GetManifestResourceNames().Single(n => n.EndsWith("." + release + ".json")))!;
+        using var stream = assembly.GetManifestResourceStream(assembly.GetManifestResourceNames().Single(n => n.EndsWith(".V4RealEnvelopes.json")))!;
         using var snapshot = JsonDocument.Parse(stream);
         int read = 0;
-        foreach (var call in snapshot.RootElement.GetProperty("calls").EnumerateArray())
+        foreach (var wire in snapshot.RootElement.GetProperty(release).EnumerateArray())
         {
-            if (!call.TryGetProperty("response", out var response) || !response.TryGetProperty("result", out var wire)
-                || !wire.TryGetProperty("structuredContent", out var envelope) || !envelope.TryGetProperty("schemaVersion", out _)) continue;
             var transport = JsonNode.Parse(wire.GetRawText())!;
             Hydrate(transport);
             // Snapshots store parsed text JSON. Restore its transport string without

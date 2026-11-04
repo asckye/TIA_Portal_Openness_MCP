@@ -9,7 +9,6 @@
       "manifest/package-manifest.json",
       "manifest/delivery.json",
       "manifest/multi-version-build.json",
-      "manifest/configurator-build.json",
       "manifest/tools-list.json",
       "manifest/version-tools.json",
       "README.md",
@@ -223,7 +222,8 @@
       "runtime/studio/Fonts/NotoSansSC-Regular.otf",
       "runtime/studio/Fonts/NotoSansSC-Bold.otf",
       "runtime/studio/Fonts/NotoSansSC-OFL.txt",
-      "docs/licenses/MapleMono-CN-OFL.txt"
+      "docs/licenses/MapleMono-CN-OFL.txt",
+      "manifest/configurator-build.json"
     ],
     "prefixes": [
       "runtime/verification/",
@@ -291,7 +291,8 @@
       "runtime/v21/worker/Newtonsoft.Json.dll",
       "runtime/v21/worker/ModelContextProtocol.dll",
       "runtime/v21/worker/ModelContextProtocol.Core.dll",
-      "manifest/release-build.json"
+      "manifest/release-build.json",
+      "manifest/configurator-build.json"
     ],
     "prefixes": [
       "tools/",

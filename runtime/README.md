@@ -23,7 +23,7 @@ V20/V21 accept `--profile full` for the MCP catalog. All eight releases register
 the worker starts on demand when a native tool is called.
 
 [Version tools](../docs/reference/version-tools.md) and
-[build hashes](../manifest/multi-version-build.json) describe the built package.
+`build hashes`（历史文件，已退役） describe the built package.
 Native acceptance for the new version routes is still pending.
 Published archives retain their recorded scope; use the current delivery package and its manifest for the selected release.
 

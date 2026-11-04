@@ -1,6 +1,6 @@
 # 真机验收与历史证据
 
-当前版本的构建、离线功能、协议测试和 Studio mock 结果见 [release-build.json](../../manifest/release-build.json)、[multi-version-build.json](../../manifest/multi-version-build.json)。这些检查没有连接 TIA 工程或在线 PLC，不能标记为原生验收。
+当前版本的构建、离线功能、协议测试和 Studio mock 结果见 `release-build.json`（历史文件，已退役）、`multi-version-build.json`（历史文件，已退役）。这些检查没有连接 TIA 工程或在线 PLC，不能标记为原生验收。
 
 ## 预发布例外
 

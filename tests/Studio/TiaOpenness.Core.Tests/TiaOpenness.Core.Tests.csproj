@@ -14,7 +14,7 @@
   <ItemGroup>
     <Compile Include="../V4Fixtures.cs" Link="V4Fixtures.cs" />
     <EmbeddedResource Include="../V4Supplemental.json" Link="V4Supplemental.json" />
-    <EmbeddedResource Include="../../../manifest/contracts/v4/responses/*.json" LinkBase="V4Snapshots" />
+    <EmbeddedResource Include="../V4RealEnvelopes.json" Link="V4RealEnvelopes.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Journal/InvocationJournal.Shared.cs" />

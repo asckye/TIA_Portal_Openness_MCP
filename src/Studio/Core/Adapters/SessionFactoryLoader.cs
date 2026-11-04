@@ -17,8 +17,9 @@ namespace TiaOpenness.Core.Abstractions
             if (install == null) return Unavailable("No supported V14 SP1, V15.1 or V16-V21 Openness installation was found. Run Doctor.");
             var release = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(install.Version);
             string key = release.Key;
+            string folder = key == "14sp1" ? "V14Sp1" : key == "15.1" ? "V15_1" : "V" + key;
             string path = AdapterPath(AppDomain.CurrentDomain.BaseDirectory, key);
-            if (!File.Exists(path)) return Unavailable("Build the " + release.DisplayName + " native adapter with \"dotnet run --project build-tools/release -- build-studio\" and deploy it under bridge/adapters/v" + key + ".");
+            if (!File.Exists(path)) return Unavailable("Build the " + release.DisplayName + " native adapter with \"dotnet build src/Studio/Openness/" + folder + "/StudioOpenness." + folder + ".csproj -p:SiemensEngineeringDirectory=<SDK>\" and deploy it under bridge/adapters/v" + key + ".");
             OpennessAssemblyResolver.Install(install.Version);
 #if TIA_SHARED_ADAPTER_PATHS
             ITiaSessionFactory factory = new TiaOpenness.Core.Adapters.AdapterSessionFactory(path, key);

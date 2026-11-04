@@ -4,7 +4,6 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
-from ported_families import RELEASES
 
 from tool_usage_checks import check_usage
 
@@ -16,6 +15,10 @@ def helper(name):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+contracts = helper('Snapshot-ToolContracts')
+RELEASES = contracts.RELEASES
 
 
 def coverage(records, output):
@@ -69,9 +72,8 @@ def main():
     args = parser.parse_args()
     if args.coverage_output.resolve() == (ROOT / 'manifest/tool-usage-coverage.json').resolve():
         raise ValueError('audit-tool-usage is the only writer of manifest/tool-usage-coverage.json; choose a bin-build evidence output')
-    snapshots = helper('Snapshot-ToolResponses')
-    resources = snapshots.resources
-    plc = snapshots.contracts.engine_overrides(args.plc_worker, '--plc-worker')
+    resources = helper('Test-ResourceDiscovery')
+    plc = contracts.engine_overrides(args.plc_worker, '--plc-worker')
     # P8-04l: V20/V21 usage runs on FoundationHost with the explicit PLC SDK worker (the engine fixtures are retired).
     for key in sorted(set(args.releases) & {'20', '21'}):
         if key not in plc:
@@ -98,7 +100,7 @@ def main():
             exe, installation, options, profile = args.foundation_host, case, {}, 'plc-foundation'
         server = resources.server(exe.resolve(), installation, release, 'stdio', profile, env_overrides=env, **options)
         with server as (rpc, _, _):
-            tools = snapshots.initialize(rpc)
+            tools = contracts.initialize(rpc)
 
             def call(name, arguments):
                 # check_usage is the shared literal allowlist; it never executes native examples.
@@ -113,7 +115,7 @@ def main():
             (case / 'tool-usage.json').write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
             print(f'PASS V{release}: {record["checkedToolCount"]} tools, '
                   f'{record["operationExampleCount"]} operations, all reference hashes and offline examples', flush=True)
-    if set(args.releases) == set(snapshots.RELEASES):
+    if set(args.releases) == set(RELEASES):
         coverage(records, args.coverage_output)
     else:
         args.coverage_output.parent.mkdir(parents=True, exist_ok=True)

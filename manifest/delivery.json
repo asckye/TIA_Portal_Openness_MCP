@@ -1,20 +1,4 @@
 {
   "release": "4.0.0-beta.2",
-  "releaseDate": "20261030",
-  "package": "TIA_MCP_Delivery_v4.0.0-beta.2_20261030",
-  "engineRelease": "4.0.0-beta.2",
-  "fileVersion": "4.0.0.0",
-  "multiVersionBuildSha256": "3644a3b6a46e88a75b4c3015df689e2c2044fdb49deb5ba760a2f11be2a3c30f",
-  "configuratorBuildSha256": "01ffccae77d8f55e909abcd13795dce335f667c3013ff412ee2cb0d466024204",
-  "generatedAt": "2026-10-30T18:02:08.3131003\u002B00:00",
-  "releaseKeys": [
-    "14sp1",
-    "15.1",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21"
-  ]
+  "package": "TIA_MCP_Delivery_v4.0.0-beta.2_20261030"
 }

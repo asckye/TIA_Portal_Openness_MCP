@@ -20,7 +20,6 @@
 |---|---|---|---|---|
 | 注册的离线套件 | xUnit / VSTest 工程，按 `tests/test-suites.json` 运行 | 运行目录中的 TRX 与汇总报告 | 宿主、worker 通道、审批、生成、发布工具、工作台等的离线行为 | 原生 TIA 行为 |
 | 契约捕获 | 八个发布键的工具名称、输入 schema 和 lite 名单 | `manifest/contracts/v4/baseline` | 输入契约没有意外的破坏性变化 | 返回结构与原生语义 |
-| 响应捕获 | 八个发布键的规范化响应，两轮捕获一致才写入 | `manifest/contracts/v4/responses` | 返回结构和拒绝路径稳定 | 原生调用成功 |
 | SDK / PublicAPI 形状 | `foundation-api` 与带 `publicApiRoot` 的套件使用 `sdk/` 中的 PublicAPI；生成的接口片段按各版本官方 XSD 校验 | 套件 TRX | 编译与 API 形状、片段与 XSD 一致 | 整个文档或原生导入成功 |
 | 生成器与仓库检查 | 生成器的 `-Check`、`check-repository`、死引用、分析器警告棘轮、注释与 MCP 中文门禁 | 命令输出与基线文件 | 生成文件、链接、随包路径、工具名引用和警告没有漂移 | 运行时行为 |
 | 示例检查 | `GetToolUsage` 检索全部工具与操作，执行返回的离线示例 | `manifest/tool-usage-coverage.json` | 每个注册工具和操作都有示例，离线示例可执行 | 示例参数在真实项目中正确 |
@@ -60,7 +59,6 @@
 | 基线 | 正式写入方 |
 |---|---|
 | 契约基线 | `Snapshot-ToolContracts.py capture`，再用 `compare` 审查差异 |
-| 响应基线 | `Snapshot-ToolResponses.py capture`，再用 `compare` 审查差异 |
 | 规划 golden | 设置 `TIA_MCP_UPDATE_GOLDEN=1` 运行 `generation-planning` 套件；移除开关后再正常运行一次（[golden 说明](../../tests/Generation/TiaMcp.Generation.Planning.Tests/Golden/README.md)） |
 | TIA 功能检查 | `check-tia-features -Capture` |
 | 嵌入目录、工具用法、工具数量块、迁移表 | `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`、`generate-release-migration`，按此顺序运行，各自的 `-Check` 逐字节核对 |
@@ -85,8 +83,7 @@
 ## 6 稳定性与计时
 
 - 计时敏感的测试方法逐项登记在 `tests/Shared/TimeSensitiveTests.cs`；Studio Core/Gui、Updater 和 ShippedTools 的分片框架使用这份清单。
-- 单项测试保留五分钟挂起门槛；`check-all` 的每个作业另有整项超时（[验证分层](../development/validation.md)）。
-- 稳定性检查默认每组合 50 轮，压测的轮数、时限和增长门槛不得放宽。
+- 单项测试保留五分钟挂起门槛；准备检查的每个作业另有整项超时（[验证分层](../development/validation.md)）。
 - 出现偶发失败时保留证据并定位原因，不靠重跑把结果变绿。P8-91（master 上连续 20 次干净运行）用来证明稳定性，状态见 [当前交接](../development/handoff.md)。
 
 ## 7 测试中不做的事

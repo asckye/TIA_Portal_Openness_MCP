@@ -79,7 +79,7 @@ public sealed class FamilyReplyApiMetadataChecks
                 if (cache.TryGetValue(release, out var known)) return known;
                 string path = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
                     "src/PlcWorker/bin", release, "Release/net48", file);
-                Assert.True(File.Exists(path), "Build the PlcWorkers first (build-plc-workers): " + path);
+                Assert.True(File.Exists(path), "Build the PlcWorker projects first: " + path);
                 using var stream = File.OpenRead(path);
                 using var pe = new PEReader(stream);
                 var reader = pe.GetMetadataReader();

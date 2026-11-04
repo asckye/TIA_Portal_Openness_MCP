@@ -222,7 +222,7 @@ public sealed class GeneratorTests
     {
         Assert.Contains("ToolProfiles", CatalogGenerator.Resource); Assert.DoesNotContain("ToolProfiles", Source(Root, "build-tools/release/ToolUsageGenerator.cs"));
         var audits = Source(Root, "build-tools/release/CatalogAudits.cs"); Assert.DoesNotContain("results[\"manifest/version-tools.json\"]", audits); Assert.DoesNotContain("results[\"docs/reference/version-tool-catalog.md\"]", audits);
-        foreach (var path in new[] { "scripts/checks/Test-ToolUsage.py", "scripts/checks/Snapshot-SharedToolUsage.py" }) Assert.Contains("audit-tool-usage is the only writer", Source(Root, path));
+        Assert.Contains("audit-tool-usage is the only writer", Source(Root, "scripts/checks/Test-ToolUsage.py"));
     }
     [Fact]
     public void UnknownTaxonomyGrammarAndCategoryDowngradeAreRefused()
@@ -238,7 +238,7 @@ public sealed class GeneratorTests
     }
     // The evidence folder the audit reads for the repository's current records (3.3.0 on master, 4.0.0-beta.1 during that release).
     private static string RecordedReleaseFolder() => CatalogAudits.ReleaseDirectoryVersion(
-        (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "manifest/tools-list.json")))!["fileVersion"] ?? "", (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "manifest/release-build.json")))!["release"]);
+        (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "manifest/tools-list.json")))!["fileVersion"] ?? "", (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "manifest/delivery.json")))!["release"]);
 
     [Fact]
     public void NativeAuditCountsXmlOverloadsPropertiesAndExactCompiledMembers()
@@ -301,7 +301,7 @@ public sealed class GeneratorTests
     {
         // audit-tool-usage writes this result to manifest/tool-usage-coverage.json; check-all's engine and PLC usage
         // audits reproduce those committed bytes from receipts only, so the PLC receipts are validated, never written.
-        var matrix = Read(Root, "manifest/version-tools.json")["releases"]!.AsObject(); var release = Text(Read(Root, "manifest/release-build.json")["release"]);
+        var matrix = Read(Root, "manifest/version-tools.json")["releases"]!.AsObject(); var release = Text(Read(Root, "manifest/delivery.json")["release"]);
         JsonObject Receipt(string key, string profile = "full", string transport = "stdio") => new JsonObject { ["releaseKey"] = key, ["profile"] = profile, ["transport"] = transport, ["exampleCallsExecuted"] = false, ["allSourceTextRetrievedAndHashChecked"] = true,
             ["registeredToolCount"] = Copy(matrix[key]!["toolCount"]!), ["checkedToolCount"] = Copy(matrix[key]!["toolCount"]!), ["tools"] = new JsonArray(Strings(matrix[key]!["tools"]).Select(n => (JsonNode)new JsonObject { ["toolName"] = n }).ToArray()), ["offlineCallExamplesExecuted"] = new JsonArray(),
             ["inputSchemas"] = Read(Root, "manifest/contracts/v4/baseline/" + key + ".json")["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!["inputSchema"]!.DeepClone().AsObject()).ToJsonObject() };

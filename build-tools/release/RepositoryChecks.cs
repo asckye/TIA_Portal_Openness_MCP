@@ -161,7 +161,6 @@ internal static class RepositoryChecks
         {
             if (key == "mcpServerArgs") { if (!JsonNode.DeepEquals(value, new JsonArray("--release-key", "21"))) errors.Add("package entry mcpServerArgs: expected the default release key"); continue; }
             var name = value!.GetValue<string>();
-            if (key == "bundleValidationScript" && !File.Exists(Path.Combine(root, name))) continue;
             Required(name, "package entry " + key);
         }
         Required(package["cli"]!["exe"]!.GetValue<string>(), "CLI");
@@ -172,7 +171,7 @@ internal static class RepositoryChecks
         var roster = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "manifest/tools-list.json")))!;
         var toolNames = roster["tools"]!.AsArray().Select(r => r!["name"]!.GetValue<string>()).ToArray();
         if (toolNames.Length != toolNames.Distinct().Count() || toolNames.Length != roster["toolCount"]!.GetValue<int>() || toolNames.Length != package["capabilities"]!["mcpToolCount"]!.GetValue<int>()) errors.Add("Tool inventory count/uniqueness differs from package metadata");
-        foreach (var name in new[] { "manifest/history/contracts-v3/README.md", "manifest/history/contracts-v3/provenance.json" }.Concat(new[] { "manifest/history/contracts-v3", "manifest/contracts/v4" }.SelectMany(d => new[] { "baseline", "responses" }.SelectMany(c => TiaFeatures.Releases.Select(r => $"{d}/{c}/{r}.json"))))) Required(name, "contract snapshot");
+        foreach (var name in new[] { "manifest/history/contracts-v3/README.md", "manifest/history/contracts-v3/provenance.json" }.Concat(new[] { "baseline", "responses" }.SelectMany(c => TiaFeatures.Releases.Select(r => $"manifest/history/contracts-v3/{c}/{r}.json")).Concat(TiaFeatures.Releases.Select(r => $"manifest/contracts/v4/baseline/{r}.json")))) Required(name, "contract snapshot");
         foreach (var kind in RatchetChecks.Baselines.Keys)
             if (RatchetChecks.Run(root, Options.Parse(["-Kind", kind], new HashSet<string>())) != 0) errors.Add(kind + " baseline check failed (see diagnostics above)");
         if (BundleLayoutChecks.Run(root) != 0) errors.Add("Bundle-layout resource check failed (see diagnostics above)");

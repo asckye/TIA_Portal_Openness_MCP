@@ -61,9 +61,6 @@ public sealed partial class VersionCatalogWiring
         var registered = (FindAll("McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"", Sources.AllText())).ToHashSet();
         Assert.False((excluded).ToHashSet().Except(registered).Any());
         Assert.Contains("exercise_engine", Read(Path.Combine(ROOT, "scripts/checks/Test-FoundationTransport.py")), StringComparison.Ordinal);
-        var stability = Read(Path.Combine(ROOT, "scripts/checks/Test-LocalStability.py"));
-        Assert.Contains("if getattr(args, key) is None: setattr(args, key, len(names))", stability, StringComparison.Ordinal);
-        Assert.DoesNotContain("ToolProfiles.resx", stability, StringComparison.Ordinal);
     }
 
     [Fact]

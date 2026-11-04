@@ -79,7 +79,6 @@ namespace TiaMcp.Updater
     {
         [DataMember(Name = "release")] public string Release { get; set; }
         [DataMember(Name = "package")] public string Package { get; set; }
-        [DataMember(Name = "engineRelease")] public string EngineRelease { get; set; }
     }
 
     [DataContract]
@@ -470,14 +469,14 @@ namespace TiaMcp.Updater
                 inventory["manifest/release-file-hashes.json"] = HashFile(record);
                 return inventory;
             }
-            foreach (string name in new[] { "release-build.json", "multi-version-build.json" })
+            foreach (string name in new[] { "release-build.json", "multi-version-build.json", "configurator-build.json" })
             {
                 string path = Combine(root, "manifest/" + name);
                 if (!ExistsFile(path)) continue;
                 InventoryRecord manifest = ReadJson<InventoryRecord>(path);
                 foreach (InventoryRecord row in (manifest.RuntimeFiles ?? new List<InventoryRecord>()).Concat(manifest.Files ?? new List<InventoryRecord>()))
                     if (row != null && !string.IsNullOrEmpty(row.Path) && !string.IsNullOrEmpty(row.Sha256)) inventory[row.Path] = row.Sha256;
-                // The record itself is owned too. A retired engine record must be
+                // The record itself is owned too. A retired build record must be
                 // removable after its older runtime inventory has been consumed.
                 inventory["manifest/" + name] = HashFile(path);
             }

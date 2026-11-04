@@ -2,7 +2,7 @@
 
 [文档目录](../README.md) · [NOTICE](../../NOTICE.md)
 
-本清单登记随 八版 MCP、Studio 和工作台交付的第三方组件及源码来源。下表按组件范围列示，早期 V20/V21 依赖项保留其核对版本；实际文件版本与哈希以 `manifest/release-build.json` 和 `manifest/multi-version-build.json` 为准。许可原文和版权声明继续保留，不将一个运行时的依赖清单视为所有适配器都相同。
+本清单登记随 八版 MCP、Studio 和工作台交付的第三方组件及源码来源。下表按组件范围列示，早期 V20/V21 依赖项保留其核对版本；实际文件版本与哈希以安装包内生成的 `manifest/multi-version-build.json` 清单为准。许可原文和版权声明继续保留，不将一个运行时的依赖清单视为所有适配器都相同。
 
 Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取得许可的 TIA Portal 提供，**不随本包分发**，不在此列。
 

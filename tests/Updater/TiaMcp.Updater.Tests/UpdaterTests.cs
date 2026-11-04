@@ -27,6 +27,28 @@ namespace TiaMcp.Updater.Tests
                 Assert.False(fixture.Exists("runtime/decoder-python/" + Path.GetFileName(file)));
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Installed_configurator_record_is_removed_and_restored_on_rollback(bool hasHashInventory)
+        {
+            using var fixture = new Fixture();
+            const string path = "manifest/configurator-build.json";
+            fixture.Write(path, "{\"files\":[]}");
+            if (hasHashInventory)
+                fixture.Write("manifest/release-file-hashes.json", JsonSerializer.Serialize(new { files = fixture.CurrentInventory() }));
+            else
+            {
+                fixture.Write("manifest/multi-version-build.json", JsonSerializer.Serialize(new
+                { files = fixture.CurrentInventory().Where(row => row.Key.StartsWith("runtime/", StringComparison.Ordinal)).Select(row => new { path = row.Key, sha256 = row.Value }) }));
+                File.Delete(Path.Combine(fixture.Root, "manifest/release-file-hashes.json"));
+            }
+            Assert.Equal(0, fixture.Run());
+            Assert.False(fixture.Exists(path));
+            Assert.Equal(0, fixture.Run(rollback: true));
+            Assert.Equal("{\"files\":[]}", fixture.Text(path));
+        }
+
         private static void PreviousEngineLayout(Fixture fixture, bool oldRecordOnly)
         {
             fixture.Write("manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"TIA_MCP_Delivery_v4.0.0_pre_engine\",\"engineRelease\":\"4.0.0\"}");

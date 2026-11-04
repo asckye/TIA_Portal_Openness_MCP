@@ -10,11 +10,6 @@ internal static class ScriptToolCalls
     internal static readonly string[] DataAllowlist = ["scripts/diagnostics/campaign/historical_tool_names.json", "scripts/checks/write-guard-operations-v3.3.0.json"];
     private static readonly string[] Helpers = ["call", "call_raw", "call_guide_tool", "S", "Call", "invoke_tool", "CallTool", "InvokeTool", "CallRaw", "CallGuideTool", "InvokeToolAsync", "CallToolAsync"];
     private static readonly string[] Protocol = ["initialize", "notifications/initialized", "tools/list", "tools/call", "ping", "resources/list", "resources/read", "prompts/list", "prompts/get"];
-    private static readonly Dictionary<string, string> NegativeCalls = new(StringComparer.Ordinal)
-    {
-        ["scripts/checks/Test-LocalStability.py"] = "__soak_unknown__",
-        ["scripts/checks/Snapshot-ToolResponses.py"] = "__contract_unknown_tool__"
-    };
     private static bool ToolLiteral(string name)
     {
         if (name.Length == 0 || name.Contains("::", StringComparison.Ordinal) || Protocol.Contains(name)) return false;
@@ -93,7 +88,7 @@ internal static class ScriptToolCalls
         return calls;
     }
     internal static List<(int Line, string Name)> Check(string path, string source, ISet<string> registered) => DataAllowlist.Contains(path) ? [] : Calls(path, source)
-        .Where(c => !registered.Contains(c.Name) && (!NegativeCalls.TryGetValue(path, out var allowed) || allowed != c.Name)).Distinct().ToList();
+        .Where(c => !registered.Contains(c.Name)).Distinct().ToList();
     internal static int Run(string root)
     {
         var names = Registrations(root);

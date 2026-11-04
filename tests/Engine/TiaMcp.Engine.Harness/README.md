@@ -47,7 +47,7 @@ The test HTTP listener binds only to localhost with a temporary test key.
 dotnet build tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj -c Release
 $tests = 'tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe'
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe'
-$fileVersion = (Get-Content 'manifest/release-build.json' -Raw | ConvertFrom-Json).fileVersion
+$fileVersion = (Get-Content 'manifest/tools-list.json' -Raw | ConvertFrom-Json).fileVersion
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe' hmi-only 21 $fileVersion
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe' host-build-no-tia 21
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe' packaged-start-no-tia 21

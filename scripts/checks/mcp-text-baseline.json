@@ -97,7 +97,7 @@
       "kind": "other-literal",
       "fingerprint": "058233add0f5d873e9bcecc31e65ed3ec5a0fb8b5403a57334b5f036d2992b80",
       "path": "src/FoundationHost/HostDoctorProbe.cs",
-      "line": 85,
+      "line": 82,
       "cjk": 17,
       "literal": "\"请修复所选版本的 worker 与 Openness 安装，然后重新运行 `tia doctor`。\"",
       "reason": "P8-04i: NameZh/DetailZh/FixZh/recommendedFixZh values in the bilingual doctor result, now covering host and worker directories for all eight releases (maintainer 2026-10-18).",

@@ -30,6 +30,26 @@ import urllib.request
 import urllib.error
 
 
+def initialize(rpc):
+    reply = rpc('initialize', params={'protocolVersion': '2024-11-05',
+        'capabilities': {}, 'clientInfo': {'name': 'response-snapshot', 'version': '2'}})
+    if 'result' not in reply:
+        raise AssertionError('Initialize failed: ' + json.dumps(reply, sort_keys=True))
+    rpc('notifications/initialized', notification=True)
+    tools, cursor, seen = [], None, set()
+    while True:
+        reply = rpc('tools/list', params={} if cursor is None else {'cursor': cursor})
+        tools.extend(reply['result']['tools'])
+        cursor = reply['result'].get('nextCursor')
+        if cursor is None:
+            break
+        if cursor in seen:
+            raise AssertionError('Repeated tools/list cursor')
+        seen.add(cursor)
+    tool_records(tools)
+    return tools
+
+
 def engine_overrides(values, option):
     result = {}
     for value in values:
@@ -1016,6 +1036,35 @@ def self_test(args):
         try: ported_families.parse(invalid)
         except AssertionError: count += 1
         else: raise AssertionError('Unreviewed per-tool release override accepted')
+    # The shared usage bootstrap must keep all pages and reject invalid sessions.
+    first = {'name': 'First', 'inputSchema': {'type': 'object'}}
+    second = {'name': 'Second', 'inputSchema': {'type': 'object'}}
+    calls = []
+    def paged(method, **options):
+        calls.append((method, options))
+        if method == 'initialize': return {'result': {}}
+        if method == 'notifications/initialized': return None
+        if not options['params']: return {'result': {'tools': [first], 'nextCursor': 'page-2'}}
+        assert options['params'] == {'cursor': 'page-2'}
+        return {'result': {'tools': [second]}}
+    assert initialize(paged) == [first, second]
+    assert calls[1] == ('notifications/initialized', {'notification': True})
+    count += 1
+    for reply, expected in (({'error': {'message': 'denied'}}, 'Initialize failed'),
+                            ({'result': {'tools': [first], 'nextCursor': 'loop'}}, 'Repeated tools/list cursor')):
+        def invalid(method, **options):
+            if method == 'initialize' and 'error' not in reply: return {'result': {}}
+            if method == 'notifications/initialized': return None
+            return reply
+        try: initialize(invalid)
+        except AssertionError as error: assert expected in str(error); count += 1
+        else: raise AssertionError('Invalid usage initialization accepted')
+    try:
+        initialize(lambda method, **options: {'result': {}} if method == 'initialize'
+                   else None if method == 'notifications/initialized'
+                   else {'result': {'tools': [first, first]}})
+    except ValueError: count += 1
+    else: raise AssertionError('Duplicate tools accepted by usage initialization')
     print(f'Contract negative self-tests: {count} passed, 0 failed.')
     return 0
 
