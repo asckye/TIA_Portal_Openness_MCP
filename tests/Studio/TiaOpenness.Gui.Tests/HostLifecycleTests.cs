@@ -13,6 +13,8 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class HostLifecycleTests
 {
     internal static readonly HostLifecycleTiming ShortTiming = new(TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(20), TimeSpan.FromSeconds(2));
+    // Windows timer granularity can signal the grace deadline slightly early.
+    private static readonly TimeSpan GraceTimerTolerance = TimeSpan.FromMilliseconds(20);
     private static readonly HostLifecycleTiming CooperativeTiming = ShortTiming with { Grace = TimeSpan.FromSeconds(15), ConfirmationWait = TimeSpan.FromSeconds(15) };
     private static Task Stop(VisibleHost host, Func<VisibleHost, Task>? requestShutdown = null,
         Func<VisibleHost, Task<bool>>? confirmForce = null, HostLifecycleTiming? timing = null)
@@ -216,12 +218,13 @@ public sealed class HostLifecycleTests
             var stopping = Stop(identity, _ => { requests++; return Task.CompletedTask; }, async _ => {
                 confirmations++;
                 Assert.Equal(1, requests);
-                Assert.True(elapsed.Elapsed >= ShortTiming.Grace);
+                Assert.True(elapsed.Elapsed >= ShortTiming.Grace - GraceTimerTolerance);
                 Assert.False(process.HasExited);
                 confirmationRequested.TrySetResult(true);
                 return await confirmation.Task;
             }, ShortTiming);
-            await confirmationRequested.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await Task.WhenAny(confirmationRequested.Task, stopping).WaitAsync(TimeSpan.FromSeconds(5));
+            if (stopping.IsFaulted) await stopping;
             Assert.False(stopping.IsCompleted); Assert.False(process.HasExited);
             await Task.Delay(ShortTiming.PollInterval);
             Assert.False(stopping.IsCompleted); Assert.False(process.HasExited);
