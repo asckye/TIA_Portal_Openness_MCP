@@ -29,9 +29,21 @@ internal static class Prepare
     internal static readonly string[] GeneratedPaths =
         ["manifest/package-manifest.json", "manifest/delivery.json", "manifest/tools-list.json", InventoryPath];
 
-    internal static int Run(string root, Options options)
+    internal static int RunWithTimings(Func<int> action)
     {
-        using var timings = new PrepareTimings();
+        var timings = new PrepareTimings();
+        try { return action(); }
+        catch (Exception error)
+        {
+            Console.Error.WriteLine(error.Message);
+            if (!timings.HasFailures) PrepareTimings.RecordFailure("prepare", error.Message);
+            return error is ReleaseException release ? release.ExitCode : 1;
+        }
+        finally { timings.Dispose(); }
+    }
+
+    internal static int Run(string root, Options options) => RunWithTimings(() =>
+    {
         var context = Timed("prerequisites", () => CreateContext(root, options));
         var tracked = Repository.GitFiles(root);
         var before = tracked.ToDictionary(path => path, path => ReleaseRecords.HashFile(Path.Combine(root, path)), StringComparer.Ordinal);
@@ -50,7 +62,7 @@ internal static class Prepare
             Console.WriteLine($"Package: {package.ZipPath}\nSHA-256: {package.Sha256}\nFiles: {package.FileCount}\nSize: {package.Size} bytes");
             return Complete(context, package, options, environment, () => RequireUnchanged(root, before));
         });
-    }
+    });
 
     internal static int Complete(PrepareContext context, PreparedPackage package, Options options,
         IDictionary<string, string?> environment, Action requireUnchanged,
@@ -151,6 +163,11 @@ internal static class Prepare
         var clock = Stopwatch.StartNew();
         Console.WriteLine("PREPARE " + name);
         try { return action(); }
+        catch (Exception error)
+        {
+            PrepareTimings.RecordFailure(name, error.Message);
+            throw;
+        }
         finally
         {
             PrepareTimings.Record(name, clock.Elapsed.TotalSeconds);

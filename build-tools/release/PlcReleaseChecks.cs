@@ -143,12 +143,12 @@ internal static partial class ReleaseCommands
     // The same command inventory is used by preparation, branch-gate and the
     // candidate captures. No scheduler/cache/sharding state is shared with CheckAll.
     internal static IReadOnlyList<PlcReleaseJob> PlcReleaseJobs(string root, string apiRoot, string logs,
-        string temp, string dotnet, string python, int rounds = 50)
+        string temp, string dotnet, string python, int rounds = 50, string? weaver = null)
     {
         if (rounds < 10) throw new ReleaseException("PLC release checks require at least 10 stability rounds.");
         var jobs = new List<PlcReleaseJob>();
         var harness = Path.Combine(root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
-        var weaver = Path.Combine(root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
+        weaver ??= Path.Combine(root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
         foreach (var key in new[] { "20", "21" })
         {
             var api = Path.Combine(apiRoot, PlcWorkerApi(key).Directory);

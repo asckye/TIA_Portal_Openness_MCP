@@ -189,6 +189,140 @@ public sealed class PrepareChecksTests
     }
 
     [Fact]
+    public void FailedPrepareEndsWithEveryFailedJobAfterSlowestFirstTimings()
+    {
+        using var tree = new StaticTree();
+        var context = Context(tree.Root);
+        var package = Package(context);
+        var savedOut = Console.Out;
+        var savedError = Console.Error;
+        using var output = new StringWriter();
+        try
+        {
+            Console.SetOut(output);
+            Console.SetError(output);
+            var plan = new PrepareCheckPlan(
+                [new("producer", () => new("producer", 1, "producer reason\nproducer details", ""))],
+                [new("check", () => throw new ReleaseException("check reason\ncheck details"))], [], []);
+            Assert.Equal(1, Prepare.RunWithTimings(() =>
+            {
+                PrepareTimings.Record("slow", 9);
+                PrepareTimings.Record("fast", 1);
+                try
+                {
+                    PrepareChecks.Execute(context, package, Environment(tree.Root), plan, new JsonObject(),
+                        runtimeCheck: () => throw new IOException("runtime reason\nruntime details"));
+                    return 0;
+                }
+                finally { Console.WriteLine("cleanup complete"); }
+            }));
+        }
+        finally { Console.SetOut(savedOut); Console.SetError(savedError); }
+        var lines = output.ToString().Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+        var timingLines = lines.Where(line => line.StartsWith("PREPARE timing ", StringComparison.Ordinal)).ToArray();
+        Assert.Contains("PREPARE timing slow: 9.0 s", timingLines);
+        Assert.Contains("PREPARE timing fast: 1.0 s", timingLines);
+        Assert.True(Array.IndexOf(timingLines, "PREPARE timing slow: 9.0 s") < Array.IndexOf(timingLines, "PREPARE timing fast: 1.0 s"));
+        Assert.True(Array.IndexOf(lines, "cleanup complete") < Array.IndexOf(lines, timingLines[0]));
+        Assert.Equal(new[] { "PREPARE failed jobs:", "FAIL check: TiaMcp.ReleaseTool.ReleaseException: check reason",
+            "FAIL producer: producer reason", "FAIL runtime-bytes: System.IO.IOException: runtime reason",
+            "FAIL suites-and-checks: Release test stage failed: check" }, lines.TakeLast(5));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TimingsArePrintedForSuccessfulAndFailedPrepare(bool fail)
+    {
+        var savedOut = Console.Out;
+        var savedError = Console.Error;
+        using var output = new StringWriter();
+        try
+        {
+            Console.SetOut(output);
+            Console.SetError(output);
+            Assert.Equal(fail ? 64 : 0, Prepare.RunWithTimings(() => Prepare.Timed("fixture", () =>
+            {
+                if (fail) throw new ReleaseException("fixture reason\nfull details", 64);
+                return 0;
+            })));
+        }
+        finally { Console.SetOut(savedOut); Console.SetError(savedError); }
+        Assert.Contains("PREPARE timing fixture:", output.ToString());
+        if (fail)
+        {
+            Assert.Contains("full details", output.ToString());
+            Assert.EndsWith("PREPARE failed jobs:" + System.Environment.NewLine + "FAIL fixture: fixture reason" + System.Environment.NewLine, output.ToString());
+        }
+        else Assert.DoesNotContain("PREPARE failed jobs:", output.ToString());
+    }
+
+    [Fact]
+    public void FailedSuiteIsReportedEvenWhenItsTrxPasses()
+    {
+        using var tree = new StaticTree();
+        tree.Write("fixture.csproj", "<Project />");
+        var context = Context(tree.Root);
+        var package = Package(context);
+        var savedOut = Console.Out;
+        var savedError = Console.Error;
+        using var output = new StringWriter();
+        try
+        {
+            Console.SetOut(output);
+            Console.SetError(output);
+            Assert.Equal(1, Prepare.RunWithTimings(() =>
+            {
+                PrepareChecks.Execute(context, package, Environment(tree.Root), new([], [], [], []),
+                    new JsonObject { ["first"] = Suite() }, (_, arguments, _, _) =>
+                    {
+                        var args = arguments.ToArray();
+                        if (args[0] == "build") return new(0, "", "");
+                        var directory = args[Array.IndexOf(args, "--results-directory") + 1];
+                        WriteTrx(Path.Combine(directory, "first.trx"), 2, 0);
+                        return new(1, "suite reason\nfull suite details", "");
+                    }, runtimeCheck: () => { });
+                return 0;
+            }));
+        }
+        finally { Console.SetOut(savedOut); Console.SetError(savedError); }
+        var summary = output.ToString().Split("PREPARE failed jobs:", StringSplitOptions.None)[1];
+        Assert.Contains("FAIL suite-first-test: suite reason" + System.Environment.NewLine, summary);
+        Assert.DoesNotContain("full suite details", summary);
+    }
+
+    [Fact]
+    public void EveryPreparedVerificationUsesTheFrozenWeaver()
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        var calls = new List<string[]>();
+        var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
+            (_, arguments, _, _, _) =>
+            {
+                calls.Add(arguments.ToArray());
+                return new(1, "", "stop at the fake process boundary");
+            });
+        foreach (var job in All(plan).Where(job => job.Name.StartsWith("weave-", StringComparison.Ordinal)
+            || job.Name.StartsWith("native-coverage-", StringComparison.Ordinal)
+            || job.Name.StartsWith("adapter-native-coverage-", StringComparison.Ordinal)
+            || job.Name.StartsWith("jit-adapter-coverage-", StringComparison.Ordinal)))
+            Assert.Throws<ReleaseException>(() => job.Run());
+        Assert.Equal(14, calls.Count);
+        Assert.All(calls, args =>
+        {
+            Assert.Equal("verify", args[1]);
+            Assert.Equal(Path.Combine(tree.Root, "runtime/verification/NativeCallWeaver.dll"), args[0]);
+            Assert.DoesNotContain("bin/Release", args[0]);
+        });
+        var legacy = ReleaseCommands.PlcReleaseJobs(tree.Root, "sdk", "logs", "temp", "dotnet", "python")
+            .Where(job => job.Arguments.Contains("verify")).ToArray();
+        Assert.Equal(6, legacy.Length);
+        Assert.All(legacy, job => Assert.Equal(Path.Combine(tree.Root,
+            "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"), job.Arguments[0]));
+    }
+
+    [Fact]
     public void OnlyTheExpectedJobsExecuteFromTheBundle()
     {
         using var tree = new StaticTree();

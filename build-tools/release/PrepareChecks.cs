@@ -19,14 +19,26 @@ internal sealed class PrepareTimings : IDisposable
 {
     private static readonly AsyncLocal<PrepareTimings?> Current = new();
     private readonly ConcurrentQueue<(string Name, double Seconds)> rows = new();
+    private readonly ConcurrentDictionary<string, string> failures = new(StringComparer.Ordinal);
     private readonly PrepareTimings? previous = Current.Value;
     internal PrepareTimings() => Current.Value = this;
     internal static void Record(string name, double seconds) => Current.Value?.rows.Enqueue((name, seconds));
+    internal static void RecordFailure(string name, string reason)
+    {
+        if (Current.Value is { } current) current.failures[name] = reason;
+    }
+    internal bool HasFailures => !failures.IsEmpty;
     public void Dispose()
     {
         Current.Value = previous;
         foreach (var (name, seconds) in rows.OrderByDescending(row => row.Seconds))
             Console.WriteLine($"PREPARE timing {name}: {seconds:F1} s");
+        if (!failures.IsEmpty)
+        {
+            Console.WriteLine("PREPARE failed jobs:");
+            foreach (var (name, reason) in failures.OrderBy(row => row.Key, StringComparer.Ordinal))
+                Console.WriteLine($"FAIL {name}: {reason.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? "No diagnostic output."}");
+        }
     }
 }
 
@@ -71,7 +83,9 @@ internal static class PrepareChecks
             var resultsIndex = Array.IndexOf(args, "--results-directory");
             var label = resultsIndex >= 0 ? Path.GetFileName(args[resultsIndex + 1]) : Path.GetFileNameWithoutExtension(args[1]);
             var name = "suite-" + label + "-" + args[0];
-            return Prepare.Timed(name, () => (process ?? DotnetSuites.RunProcess)(exe, args, cwd, env));
+            var result = Prepare.Timed(name, () => (process ?? DotnetSuites.RunProcess)(exe, args, cwd, env));
+            if (result.ExitCode != 0) PrepareTimings.RecordFailure(name, result.StandardOutput + result.StandardError);
+            return result;
         }
         // Inventory writers and file-app builds finish before any consumer starts.
         foreach (var job in plan.Producers) RunJob(job);
@@ -111,6 +125,7 @@ internal static class PrepareChecks
         IReadOnlyDictionary<string, string> failures)
     {
         var errors = failures.Select(row => row.Key + ": " + row.Value).ToList();
+        foreach (var (name, reason) in failures) PrepareTimings.RecordFailure(name, reason);
         var suites = new JsonObject();
         foreach (var (name, registration) in catalog)
         {
@@ -119,9 +134,14 @@ internal static class PrepareChecks
                 var path = Path.Combine(output, name, name + ".trx");
                 var gate = DotnetSuites.EvaluateTrx(path, (int)registration!["minimumPassed"]!, (int)registration["maximumSkipped"]!);
                 errors.AddRange(gate.Errors.Select(error => name + ": " + error));
+                if (gate.Errors.Count != 0) PrepareTimings.RecordFailure(name, string.Join("; ", gate.Errors));
                 suites[name] = new JsonObject { ["passed"] = gate.Counts["passed"]!.DeepClone(), ["skipped"] = gate.Counts["skipped"]!.DeepClone() };
             }
-            catch (Exception error) { errors.Add(name + ": " + error.Message); }
+            catch (Exception error)
+            {
+                errors.Add(name + ": " + error.Message);
+                PrepareTimings.RecordFailure(name, error.Message);
+            }
         }
         if (errors.Count != 0) throw new ReleaseException("Prepare checks failed:\n" + string.Join("\n", errors));
         return new(suites, checks.Order(StringComparer.Ordinal).ToArray());
@@ -248,7 +268,7 @@ internal static partial class ReleaseCommands
         }
         foreach (var key in PlcWorkerFixtures.Keys)
         {
-            jobs.Add(Command("weave-v" + key + "-bundle", Dotnet, [Path.Combine(root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"),
+            jobs.Add(Command("weave-v" + key + "-bundle", Dotnet, [Path.Combine(root, "runtime/verification/NativeCallWeaver.dll"),
                 "verify", Path.Combine(bundle, $"runtime/v{key}/worker/TiaMcp.Adapter.{key}.dll")], true));
             var captured = Path.Combine(context.Logs, "contracts-v" + key);
             jobs.Add(ActionJob("contracts-v" + key, () =>
@@ -327,7 +347,8 @@ internal static partial class ReleaseCommands
     private static CommandResult ToCommand(PipelineResult result) => new(result.ExitCode, result.StandardOutput, result.StandardError);
 
     internal static PlcReleaseJob[] PreparedPlcJobs(string root, string api, string logs, string temp, string dotnet, string python) =>
-        PlcReleaseJobs(root, api, logs, temp, dotnet, python).Where(job => job.Check is not ("plc-approval" or "plc-stability" or "plc-isolated-stability" or "plc-responses")).ToArray();
+        PlcReleaseJobs(root, api, logs, temp, dotnet, python, weaver: Path.Combine(root, "runtime/verification/NativeCallWeaver.dll"))
+            .Where(job => job.Check is not ("plc-approval" or "plc-stability" or "plc-isolated-stability" or "plc-responses")).ToArray();
 
     private static void RequirePreparedFoundationApproval(string path)
     {
