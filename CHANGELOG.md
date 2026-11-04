@@ -4,37 +4,13 @@
 
 ## [Unreleased]
 
-- Move standard schemas to `reference/schemas/`, consolidate the solution and release-tool data, and remove inventory-owned legacy paths during updates; hooks stay at the bundle root.
-
-- Remove retired host engine cross-check clients, fixtures and dead compile symbols; keep all eight releases on PlcWorker with unchanged MCP contracts.
-
-- 精简第三方目录：移除未交付的上游测试、文档和 Studio 参考归档，保留交付源码、许可、来源记录及本项目生态桥接检查。
-- 新增可恢复的 `upload-draft` / `publish-prepared` 预发布路径：复用已验证的草稿资产，核对候选和标签后发布；发布阶段不构建、测试或打包，硬限时 300 秒，失败后重跑恢复。
-
-- 发布测试阶段复用 Foundation 分片执行器及已批准的套件派生门槛，收集全部作业失败后统一返回；诊断模式使用仓库外临时目录。
-
-- 发布诊断新增 `release -TestStageOnly [-Only <作业名,...>]`，复用已暂存产物执行测试，不绑定发布记录或生成发布包。
-
-- Derive reviewed release availability from ordered ranges and the version catalog without changing shipped contracts.
-- Centralize NuGet package versions in Directory.Packages.props and align the Studio core tests on Newtonsoft.Json 13.0.4.
-- **维护**：工具契约基线升级为格式 2，每个文件按 SHA-256 去重输出 schema；八版契约语义和逐字节捕获比较保持不变。
-
-- **维护**：SafeV4 候选实现归档到 `archive/safev4-candidates` 后删除，取消 P8-04l3、延后 P8-31e6；发布行为与契约保持不变。
-
-- Deduplicate host foundation checks through foundation-api in both profiles and retire the kept-code-v20 suite and release count.
-
-- Remove unshipped residual engine sources and engine-only tests, fixtures and scripts; retain kept-code coverage and published contract bytes.
-
-- Freeze engine source catalog inputs and declare final V4 tool names without runtime rewriting; remove the stale documentation coverage copy.
-- **开发检查**：删除已有 C# 实现的 10 个 Python 检查及重复作业；打包复用 C# 仓库检查，C# 工具调用检查同时覆盖 Python、PowerShell 和 JSON 计划。
-
-## [4.0.0-beta.3] - 2026-11-03
+## [4.0.0-beta.3] - 2026-11-04
 
 4.0 的第三个预发布版本，同样在 GitHub 上标为预发布、不设为最新版，3.3 的更新器和工作台更新检查不会提示它。产品对外名称改为“自动化工程工作台（Automation Engineering Workbench，原 TIA Portal Openness MCP）”；程序文件名、插件 ID、MCP 服务名 `tia-portal`、交付包名和仓库地址不变。beta.2 在 V21 虚拟机上做过一轮真机测试，本版修复了其中的发现；这些修复和本版新功能尚未在真实 TIA Portal 上复验。说明见 [v4.0.0-beta.3](docs/releases/v4.0.0-beta.3.md)。
 
 ### 行为变化（测试者须知）
 
-- 文件工具拒绝定位审批设置及 `.git` 元数据；SCL 写入只接受 `.scl`、目录或无扩展名路径，并拒绝备用数据流及末尾点或空格。`ManagePlcGitRepository` 不再运行 hooks，且忽略 fsmonitor 和提交签名。
+- 文件工具拒绝定位审批设置及 `.git` 元数据；SCL 写入只生成 `.scl` 文件（目录或无扩展名路径会补全文件名），并拒绝备用数据流及末尾点或空格。`ManagePlcGitRepository` 不再运行 hooks，且忽略 fsmonitor 和提交签名。
 - 设备白名单已移除：设备创建不再只限两颗示例 CPU 和 S7-1200/S7-1500 系列，同一次目录读取中的任何精确目录行都可以创建，精确 OrderNumber、版本、重名检查、预览哈希、确认、工程文件身份和创建后回读照旧。
 - `expectedProject` 是工程名称（`Project.Name`），不是文件路径；像路径的值在任何 TIA 调用前以 INVALID_ARGUMENT 拒绝，需要文件身份的工具继续使用 `expectedProjectFile`（绝对路径）。
 - `ListPlcBlocks` 默认分页：每页 4 项（`limit` 1–100），把返回的 `meta.paging.nextCursor` 作为 `cursor` 传入直到 `complete` 为真，块清单变化后旧游标被拒绝、须从空游标重新开始。
@@ -67,7 +43,7 @@
 
 ### 新工具与新参数
 
-- 八版注册工具数：<!-- count -->。
+- 八版注册工具数见[工具矩阵](docs/reference/tool-matrix.md)，以运行时 `tools/list` 为准。
 - 新增八版 READ 工具 `AnalyzePlcCrossReferences`：一次有界普通 PLC/块组 XML 导出后离线分析每块调用者、被调用者和引用位置，文件保留在会话输出目录，无原生 CrossReferenceService 调用。明确报告导出范围、失败和索引缺口；部分/未查询/空结果不等于没有引用。
 - 原生交叉引用：V14 SP1–V20 在 API 可用时恢复默认允许；V21 保留 opt-in，新增仅人工可改的工作台会话开关（en / zh-CN），环境变量仍可替代。首次查询前保存工程；一致性、反射拒绝和退出后不重试的保护不变。`GetSessionState` 报告当前会话交叉引用的生效来源和只读审批状态。
 - HMI：对象路径支持按 `PropertyName` 选择面板接口项；接口 `Value` 按现值的运行时类型转换并回读，无法确定类型时拒绝。面板追溯从实例的库版本服务取得身份，`typePath/version` 变为可选核对条件；Classic 面板库类型按类型名及继承关系匹配并返回版本。
@@ -78,27 +54,33 @@
 
 - 旧 HMI 写入工具默认预览后，画面设计拒绝重命名和同名异类冲突，几何、属性及变量动态化保留逐项写入结果与回读；变量表核对父目录。
 - HMI 类别、动作与路径在原生调用前校验；组与 Plant 路径统一为绝对 `/Group/Sub/Name`，错误路径带改正写法。
-- 设备创建去掉白名单后仍保留全部真实保护；Unified 面板版本必须与 Portal 主版本一致。V18/V19 的可选 safe-v4 候选使用同一选择规则。
+- 设备创建去掉白名单后仍保留全部真实保护；Unified 面板版本必须与 Portal 主版本一致。
 - 宿主停止与重启只能由人在工作台确认；没有 MCP、操作端或工作台控制入口。强制结束只在正常退出超时且再次确认后进行。
 
 ### 工作台外观（ADR 0028）
 
 - 共享主题改用 EplanMcp 设计系统：强调色 #0071E3、系统字体 Segoe UI Variable / Segoe UI / Microsoft YaHei UI、新的字号、尺寸与圆角；高对比度主题给控件加描边，键盘焦点环 2 px，所有使用中的前景/背景组合对比度不低于 4.5:1。移除随包 Maple Mono CN 字体。布局重新设计与审批页在后续预发布版本中提供。
 
+### 整理与交付内容
+
+- 删除未交付的旧引擎源码、宿主交叉检查客户端、专用测试和夹具；SafeV4 候选在 `archive/safev4-candidates` 归档后删除，取消 P8-04l3、延后 P8-31e6。八版仍使用 PLC worker，测试者可见的工具与 MCP 契约不因这些删除而改变。
+- 标准 schema 移至 `reference/schemas/`，合并解决方案和发布工具数据；按职责拆分大文件并整理长行。版本可用范围从统一版本目录推导，冻结旧引擎目录输入，工具名不再在运行时改写，移除过时的文档覆盖副本。
+- 交付包精简开发内容：移除 `.editorconfig`、`Directory.Build.props` 及 `src/Shared/` 下的 `CodeAnalysis.props`、`DependencyVersions.props`、`ReproducibleBuild.props`，不含 Siemens DLL。更新器按安装清单清理旧文件；旧 beta 清单未记录的 `schemas/` 和 `runtime/README.md` 可能保留，根目录 `hooks/` 继续使用。
+- 精简第三方目录：移除未交付的上游测试、文档和 Studio 参考归档，保留交付源码、许可、来源记录及本项目生态桥接检查。
+- NuGet 包版本集中到 `Directory.Packages.props`，Newtonsoft.Json 统一为 13.0.4；Microsoft.Extensions.*、System.Text.Json 及配套依赖由 preview.4 升至 10.0.12 正式版，MCP SDK 保持 0.3.0-preview.4。
+
 ### 文档
 
-- 新增 ADR 0022–0029（引擎退役与八版统一、4.0 最终标准、CI 不阻塞合并、nightly 与已验证构建单元的发布证据、文档结构与语言、架构图、工作台视觉设计、权威会话状态），修订 ADR 0020，并以 `docs/status/release-plan.md` 作为各版本唯一计划；交接与路线图同步更新，用户文档改用“服务”“项目”用词。
-- 新增安全、测试、MCP 工具设计标准、开发流程和工具规格模板。
+- 开发文档统一为 `docs/standards/`、`docs/plan/`、`docs/manuals/` 与 `docs/archive/`，各版本计划在 `docs/plan/plan.md`；用户文档采用“服务”“项目”用词。
+- ADR 0022–0031 记录引擎退役、4.0 标准、工作台与会话状态、目录结构及新发布流程；新增和整理安全、开发、设计、UI 与文档规范。
 
 ### 构建与发布（内部）
 
-- 重复工作只做一次、合并只跑受影响的检查、失败即停、恢复并行构建。维护者 2026-11-03 批准精简：删除计时门禁（延迟基准、HTTP 稳定性、独占安静阶段）、测试输出一致性对比、重复的构建配置以及 V14 SP1–V19 的逐工具响应采集（工具定义快照保留）。功能测试未删除。发布命令先一次性检查全部前提，构建后把全部功能测试并行跑一次，不再依赖 nightly 结果，也不再运行稳定性压测。
-- 发布前统一检查并传递生态/伴随 Python 路径；发布、证据采纳和独立证据核验提前拒绝 Git 规范化与工作字节不同的跟踪文件。主机注册文件遇到共享冲突时短暂重试，工作台读取容忍原子替换。
-- 可复现构建，共享库只编译一次（SPD-3、SPD-5）。
-- 新增八版 HMI 示例离线自检，核对维护的调用及操作示例的必填参数、对象路径、绝对路径和控件类型目录。
-- 宿主注册信息每次工具调用只发布一次（此前三次，每次调用约多 8 ms）；宿主生命周期测试注入停止计时，生产环境的 20 秒宽限、轮询间隔和确认等待不变。
-- 测试夹具未捕获异常统一记录 stderr 并以 86 退出，避免进入 Windows 错误报告；修复深路径夹具、审计目录清理与测试产物证据绑定，过深的工作树根目录提前报错。
-- 将 Microsoft.Extensions.*、System.Text.Json 及 preview.4 配套依赖统一升级到与随包运行时一致的 10.0.12 正式版，net48 worker 随附对应正式版程序集；八版契约和响应逐字节不变，MCP SDK 保持 0.3.0-preview.4。
+- 重建构建与发布工具：`merge-check` 选择受影响的普通构建、测试和静态检查；`prepare` 构建、打包并运行完整检查后上传私有草稿，`upload-draft` 可恢复上传，`publish-prepared` 核对候选和摘要后公开预发布，限时 300 秒，不重新构建、测试或打包。删除旧调度器、缓存、证据链与 nightly 依赖；旧 `release -TestStageOnly` 诊断入口随旧链删除。
+- 经维护者批准，删除计时门禁、HTTP 稳定性压测、独占静默阶段、测试输出一致性对比、重复构建配置及八版逐工具响应捕获；工具定义契约快照和功能检查保留。已有 C# 实现的 10 个 Python 检查及重复作业删除，C# 工具调用检查覆盖 Python、PowerShell 和 JSON 计划。
+- Foundation 检查复用分片执行器并由 `foundation-api` 派生子集，移除 `kept-code-v20` 重复套件；按工具将获批的版本重复准入用例缩至最旧与最新版本，审批、写安全、worker 故障恢复及协议测试保留。测试阶段收集全部作业失败后统一返回。
+- 工具契约基线升级为格式 2，按 SHA-256 去重输出 schema，保留八版契约语义和逐字节捕获比较。
+- 保留可复现构建、共享库复用、八版 HMI 示例离线自检；主机注册信息每次工具调用只发布一次，注册读写容忍共享冲突。测试夹具未捕获异常以 86 退出并记录 stderr，修复深路径夹具和审计目录清理。
 
 ## [4.0.0-beta.2] - 2026-10-27
 
