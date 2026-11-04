@@ -53,11 +53,13 @@ All eight runtimes and Studio are built locally against the supplied SDKs. Funct
 
 ## Development
 
-`master` is the maintained branch. Runtime binaries are release assets, not tracked Git files. With the documented SDK layout and companion Python environment:
+`master` is the maintained branch. Runtime binaries are release assets, not tracked Git files. From a clean checkout on any branch, with the documented SDK layout and companion Python environment, use the version in `Version.props` (currently `4.0.0-beta.3`):
 
 ```powershell
-dotnet run --project build-tools/release -- build-multi-version -PublicApiRoot <SDK-root> -Python <python.exe> -Test
+dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3 -BuildOnly -PublicApiRoot <SDK-root> -Python <python.exe>
 ```
+
+`-BuildOnly` builds and packages all eight versions; it does not run the full checks or create a publishable candidate.
 
 [Build and validation](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/validation.md) · [Release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/release.md) · [Development progress](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/progress.md) · [Changelog](CHANGELOG.md) · [License notices](docs/licenses/THIRD-PARTY-NOTICES.md)
 

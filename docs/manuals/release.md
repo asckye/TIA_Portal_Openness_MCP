@@ -10,9 +10,9 @@
 
 ## 准备环境
 
-从 Windows 上的 master 检出根目录运行命令。准备前核对：
+完整准备和公开从 Windows 上的 master 检出根目录运行；`prepare -BuildOnly` 可在任意分支的干净 worktree 中运行。准备前核对：
 
-- 工作树干净，所有待发布改动已经过审查并在 master；跟踪文件的实际字节符合 `.gitattributes`。仅 `git status` 干净不足以证明行尾正确。
+- 工作树干净；完整准备时，所有待发布改动已经过审查并在 master；跟踪文件的实际字节符合 `.gitattributes`。仅 `git status` 干净不足以证明行尾正确。
 - `Version.props`、`.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json` 和 `CHANGELOG.md` 最新版本条目一致；日期为有效 ISO 日期；`docs/releases/v<版本>.md` 存在，生成的未验收清单是最新的。
 - .NET SDK 与依赖缓存可用；八版 Siemens PublicAPI 在 `sdk/`，或由 `-PublicApiRoot` 指向其父目录。可用 `-NuGetConfig` 指定已有的离线配置。
 - 解码器使用固定 CPython，必要时由 `-Python` 或 `TIA_MCP_DECODER_PYTHON` 指定；PLC Tools 伴随 Python 的依赖导入检查通过。伴随解释器按 `-CompanionPython`、`TIA_MCP_PLC_TOOLS_PYTHON`、已有的 `TiaMcp_Output/ecosystem-python/Scripts/python.exe` 解析。
@@ -33,7 +33,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3
 
 | 选项 | 用途与边界 |
 |---|---|
-| `-BuildOnly` | 只构建、暂存校验和打包，不运行完整套件与发布检查，不生成可发布候选，不上传草稿；用于检查构建和交付布局 |
+| `-BuildOnly` | 只构建、暂存校验和打包，不运行完整套件与发布检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
 | `-NoDraftUpload` | 完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |
 | `-Python`、`-CompanionPython` | 分别指定解码器和 PLC Tools 的解释器绝对路径 |

@@ -1,6 +1,6 @@
 # Runtime outputs
 
-`dotnet run --project build-tools/release -- build-multi-version -PublicApiRoot <SDK-root> -Test` produces these ignored local outputs:
+From a clean checkout on any branch, `dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3 -BuildOnly -PublicApiRoot <SDK-root>` produces these ignored local outputs. Use the version in `Version.props`. This mode builds and packages without running the full checks or creating a publishable candidate:
 
 | Release | Executable | Profile |
 |---|---|---|
@@ -22,8 +22,7 @@ V20/V21 accept `--profile full` for the MCP catalog. All eight releases register
 `--offline` explicitly disables native worker calls. Normal startup does not attach:
 the worker starts on demand when a native tool is called.
 
-[Version tools](../docs/reference/version-tools.md) and
-`build hashes`（历史文件，已退役） describe the built package.
+[Version tools](../docs/reference/version-tools.md) describes the tools in the built package.
 Native acceptance for the new version routes is still pending.
 Published archives retain their recorded scope; use the current delivery package and its manifest for the selected release.
 

@@ -10,7 +10,7 @@
 - beta.3 尚未发布。2026-11-03 的发布尝试已停止，改用全新的准备与公开流程；master 已含对应 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)。
 - PIPE-INT/SLIM-1 已合并（`eee7b372`），VMFIX-2 已合并（`93371695`、`b769d196`）。旧文档中的“仍等这两项合并”已不适用。
 - NEW-REL-A 已合并（`545e3604`、`55f9c737`）：`prepare` 构建、暂存校验并生成 ZIP。NEW-REL-C 已合并（`2db5bf1e`）：草稿上传、300 秒公开预算、重跑恢复及发布后 ZIP/sidecar 核验。NEW-REL-B 已合并（`0ae4b1e8`、`1af64ce7`）：`prepare` 接入全部注册套件、保留检查、`candidate.json` 和自动草稿上传；真实 `prepare` 尚未运行。
-- 合并门为 NEW-REL-2 的 `merge-check`（`90be875b`、`9485a33b`），完整检查进入 `prepare`，取消 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。NEW-REL-3 已删除旧调度器、构建缓存、证据、旧发布链和全部八版响应捕获（`bce6994c`、`6a489b47`、`3b66a7be`、`090ebab1`）。
+- 合并门为 NEW-REL-2 的 `merge-check`（`90be875b`、`9485a33b`），完整检查进入 `prepare`，取消 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。NEW-REL-3 已删除旧调度器、构建缓存、证据、旧发布链和全部八版响应捕获（`bce6994c`、`6a489b47`、`3b66a7be`、`090ebab1`）；主机准入测试精简 1,810 例（`3e343bd6`），引擎删除后注册表保留 38 个套件（`2b524f6a`）。
 - 架构：八版 FoundationHost，每个 MCP 会话一个 PLC worker；入口 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`，worker 位于同目录 `worker/`。V20/V21 使用 MTA，V14 SP1–V19 使用 STA；MTA-1 的统一仍列在后续计划。引擎运行文件已退役，源目录残留已由 Q2/Q3 删除。各版工具数见[生成的目录](../reference/version-tool-catalog.md)。
 - 品牌为自动化工程工作台；程序名、插件 ID、MCP 服务名 `tia-portal`、包名和仓库地址保持原有标识。GitHub 仓库改名仍在正式版计划内，未执行。
 
@@ -25,10 +25,10 @@
 | NEW-REL-B、SEC-1 | 已合并（提交见[计划](plan.md)） | 随真实 `prepare` 验证 |
 | Q1–Q9、CPM | 已合并（提交见[计划](plan.md)） | 无 |
 | NEW-REL-2/3、THIRD-1、主机测试精简 | 已合并（提交见[计划](plan.md)） | 无 |
-| DOCS-1/2 | 本文及相邻规范、手册已在文档 worktree 整理；尚待审查集成 | 与新工具实现核对并合并 |
-| REORG-2、REORG-3、大文件拆分及长行整理 | 已决定全部先于真实发布准备 | 按顺序整理、同步路径并验证 |
+| DOCS-1 → DOCS-2 → DOCS-3 | 文档链已重基到包含 NEW-REL-3 的 master；DOCS-3 核对事实与指令，尚待审查集成 | 在 NEW-REL-3 后按文档链顺序合并 |
+| REORG-2、REORG-3、TIDY-1–6 | TIDY-1 工具已合并（`0f2ffd29`）；其余 beta.3 整理先于真实发布准备，根目录 `runtime/` 和项目 `bin`/`obj` 保留，`hooks/` 不搬迁 | 按顺序整理、同步路径并验证 |
 | beta.3 准备与公开 | 没有本次可公开候选或成功发布结果 | 上述整理完成后运行完整 `prepare`，维护者确认后 `publish-prepared` |
-| beta.4 | VMFIX-3/4/5、DES-INT/4、RELAY-1、UI、P8-84、N1-INT、REVIEW-1、SCORE-1、VMAUTO-1、输出根外文件写审批均在计划中 | 按整理后的路径和新验证入口更新任务说明 |
+| beta.4 | VMFIX-3/4/5、DES-INT/4、RELAY-1、UI、P8-84、N1-INT、REVIEW-1、SCORE-1、VMAUTO-1、输出根外文件写审批均在计划中；产品分支合并后执行 TIDY-7、`src/EngineHost` 改名和 `wrap-long-lines -Check` 合并门；HANG-GUARD 待任务说明 | 按整理后的路径和新验证入口更新任务说明 |
 
 REVIEW-1 会把漏洞扫描带入新工具；目前不能宣称新准备命令已覆盖它。APR-05 的确认词用于关闭写操作审批，不用于每次普通批准。
 
@@ -77,4 +77,4 @@ REVIEW-1 会把漏洞扫描带入新工具；目前不能宣称新准备命令�
 3. [开发计划](plan.md)：各版范围、任务状态、放行门槛和待决定事项。
 4. [验证](../manuals/validation.md)和[发布流程](../manuals/release.md)：检查分层、合并门和发布步骤。
 
-修改工具示例后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，捕获契约或响应前先构建；生成器都有逐字节检查模式，生成的哈希只由正式工具写入。发布后在本页记下版本、标签、候选摘要与验证结果；新发布路径不再生成受跟踪的 publication 构建记录。构建或离线结果都不授权连接 TIA、PLC、VM 或外部服务。
+修改工具示例后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，捕获工具定义契约前先构建；生成器都有逐字节检查模式，生成的哈希只由正式工具写入。发布后在本页记下版本、标签、候选摘要与验证结果；新发布路径不再生成受跟踪的 publication 构建记录。构建或离线结果都不授权连接 TIA、PLC、VM 或外部服务。

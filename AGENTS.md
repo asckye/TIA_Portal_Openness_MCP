@@ -18,22 +18,21 @@
 ### 范围
 
 - 修改任务说明列出的路径，以及为完成任务必须同步修改的测试、生成产物、注册清单和文档，并在报告中逐项列出。其他范围外的改动先停下，在报告中说明原因。
-- MCP 对外接口（工具名称、参数名与类型、返回结构和错误语义）只在任务说明要求时改变；改变后用正式工具重新生成契约与响应基线，在报告中逐项列出差异。
+- MCP 对外接口（工具名称、参数名与类型、返回结构和错误语义）只在任务说明要求时改变；改变后用正式工具重新生成契约基线，在报告中逐项列出差异。
 - 不改变西门子 Openness 调用的顺序、参数和线程归属，除非任务明确要求；有改动时在报告中列出前后调用序列。
 - 不编辑 `manifest/*.json` 中的哈希，不手改生成文件（`manifest/tools-list.json`、
   `src/Shared/ToolUsageData.json`、`docs/reference/tool-matrix.md` 等），除非任务要求运行对应生成器。
-- 不连接 TIA Portal、PLC、VM 或任何外部网络服务；不运行 live 测试分支。测试和检查自己在本机回环地址（127.0.0.1）上启动的合成服务（HTTP 夹具、命名管道夹具等）是允许的，注册套件、preflight 和传输检查都要完整运行，不得因此跳过。
+- 不连接 TIA Portal、PLC、VM 或任何外部网络服务；不运行 live 测试分支。测试和检查自己在本机回环地址（127.0.0.1）上启动的合成服务（HTTP 夹具、命名管道夹具等）是允许的，主机上的注册套件、preflight 和传输检查仍须完整运行。
 - 只能停止自己在本 worktree 中启动的进程：先核对可执行文件路径或命令行位于本 worktree 内，再按进程号停止；绝不按进程名或模糊匹配停止进程，绝不停止其他 worktree、审查者或用户的进程。
-- 不删除、跳过、过滤、放宽或重设任何功能检查、测试、断言、阈值和门禁（含套件最低通过数、最大跳过数、计时与增长上限）；认为某项检查有误或不稳定时保持原样，在报告中附证据说明，由维护者决定。功能按设计有意改变时，用仓库内正式工具重新生成受影响的生成基线和 golden 文件（契约/响应捕获、`TIA_MCP_UPDATE_GOLDEN=1`、`check-tia-features -Capture`、各生成器）是允许的，在报告中逐项列出差异；改阈值、改断言、删除或跳过检查仍须维护者批准（任务说明写明的批准除外）。
+- 不删除、跳过、过滤、放宽或重设任何功能检查、测试、断言、阈值和门禁（含套件最低通过数、最大跳过数、计时与增长上限）；认为某项检查有误或不稳定时保持原样，在报告中附证据说明，由维护者决定。功能按设计有意改变时，用仓库内正式工具重新生成受影响的生成基线和 golden 文件（契约捕获、`TIA_MCP_UPDATE_GOLDEN=1`、`check-tia-features -Capture`、各生成器）是允许的，在报告中逐项列出差异；改阈值、改断言、删除或跳过检查仍须维护者批准（任务说明写明的批准除外）。
 - 任务说明给出时间预算；到时完成当前一批，干净收尾并列出剩余工作。
 
 ### 验证
 
-- 交付前运行一次 `dotnet run --project build-tools/release -- check-all -Affected -Quick`（约 15 分钟上限）和任务说明点名的套件，报告通过、失败和阻塞数。沙箱中无法运行的作业（例如需要 HTTP 或并行 MSBuild 的作业）列出名称和原因，由审查者在主机运行。
+- Codex 在沙箱中不运行注册套件、`merge-check`、`prepare` 或解决方案构建；只运行改动涉及的测试类和 Debug 项目构建，报告通过、失败与阻塞数。主导代理在主机运行其余检查，以 `dotnet run --project build-tools/release -- merge-check` 为合并门；发布前提前 `prepare`，维护者确认后 `publish-prepared`，没有 nightly。
 - 替换代码路径时补对等测试；新命令至少真实运行一次；夹具使用真实格式的数据。
-- 已迁移套件以 `tests/test-suites.json` 注册表为准，用 `dotnet run --project build-tools/release -- test-suites -Suite <name>` 执行并检查注册的 trx 最低通过数和最大跳过数；开发时可直接用 `dotnet test <csproj> -c Release`。未注册的控制台工程仍用 `dotnet run --project <csproj> -c Release`，`dotnet test` 不执行其断言。
-- 删除、移动或新增文件的任务都要运行 `dotnet run --project build-tools/release -- validate-bundle -Strict -NoBinaries -SkipSourceHashes` 与
-  `dotnet run --project build-tools/release -- check-repository -NoBinaries`；两者含必需文件清单，`Package-Release.py` 另有一份同类清单。
+- 主机套件以 `tests/test-suites.json` 为准，用 `dotnet run --project build-tools/release -- test-suites -Suite <name>` 执行并检查 trx 最低通过数和最大跳过数；沙箱用 `dotnet test <csproj> -c Debug --filter <测试类>`。未注册的控制台工程用 `dotnet run --project <csproj> -c Debug`，`dotnet test` 不执行其断言。
+- 文档变更和删除、移动或新增文件的任务都要运行 `dotnet run --project build-tools/release -- check-repository -NoBinaries`，核对链接、路径和交付必需文件。
 
 ### 代码
 

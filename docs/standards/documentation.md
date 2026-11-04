@@ -1,6 +1,6 @@
 # 文档规范
 
-状态：现行 · 最后核对：2026-11-03，master `1dfe2067`
+状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
 
 本文规定仓库全部文字材料的位置、语言、写法、术语、生成文档和 ADR，并登记现有文档与本文的偏差；它合并并取代了[文档偏差清单](../archive/development/design-spec/deviations/docs.md)。
 
@@ -26,7 +26,6 @@
 | 计划 | `docs/plan/plan.md`（版本、放行门槛、未决决定）、`docs/plan/progress.md`（当前状态、分支、测试者反馈） | 否 |
 | 手册 | `docs/manuals/`：`workflow.md`、`validation.md`、`release.md`、`real-machine-testing.md` | 否 |
 | 历史资料 | `docs/archive/` | 否 |
-| 证据 | `docs/development/evidence/`（由检查读取） | 否 |
 | 代理说明 | `AGENTS.md`、`CLAUDE.md`、`plugin/skill/SKILL.md` | 只有 `SKILL.md`（随插件） |
 | 代码旁说明 | `src/**`、`tests/**`、`build-tools/**` 下的 `README.md` | 否 |
 

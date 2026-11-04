@@ -29,7 +29,7 @@
 | T02 | 错误后会话可用：用不存在的块名调用 `GetPlcBlockInfo`，再调用 `ListPlcBlocks` | 第一次返回错误且说明原因，第二次仍成功；会话没有被锁定 |
 | T03 | 编译行为：`CompilePlcSoftware` 对应 TIA 的“仅更改”还是“全部重建”，步骤见下文 | 记录结论、两种 TIA 编译各自涉及的块数和 MCP 结果中的块数 |
 | T04 | 编译诊断：一个只有警告的编译，以及一个故意制造错误的编译，分别用 `CompilePlcSoftware` 和 `CompilePlcDiagnostics` | 只有警告时成功；有错误时返回 `COMPILE_ERRORS`，带错误数、警告数和最多十条带对象路径的叶级错误；与 TIA“信息 > 编译”对照并记录差异 |
-| T05 | 导出导入往返：`ExportPlcBlock` 的 `exportPath` 指向已有目录，从返回的 `data.outputFile` 取得 XML 文件路径；`ImportPlcBlock` 以 `overwrite: false` 导回 | 导出文件存在；同名对象存在时导入在 TIA 调用前被拒绝；预览后以 `overwrite: true` 执行并批准，对象被替换，再次导出内容一致 |
+| T05 | 导出导入往返：`ExportPlcBlock` 的 `exportPath` 指向已有目录，从返回的 `data.outputFile` 取得 XML 文件路径；`ImportPlcBlock` 以 `overwrite: false` 导回 | 导出文件存在；同名对象存在时导入在 TIA 调用前被拒绝；预览后以 `overwrite: true` 执行并批准，对象被替换；再次导出须使用另一个目录（同目录已有目标文件时会拒绝），核对两次内容一致 |
 | T06 | 审批：任选一个写工具，先预览，再实际执行；第一次在工作台拒绝，第二次批准 | 预览不等待审批；拒绝时返回 `CONFIRMATION_REQUIRED` 且工程没有变化；批准后执行；**审计日志** 页出现同一个 `requestId`，`tia audit verify` 通过 |
 | T07 | 保存和断开：修改后调用 `SaveProject` 并批准，再调用 `DisconnectPortal` | 保存需要批准；断开不保存、不关闭工程；任务管理器中本次的 worker 进程退出 |
 | T08 | worker 重启：空闲时调用 `RestartOpennessWorker`，再调用 `ConnectPortal` 和 `AttachOpenProject` | 新 worker 启动；重新绑定后 `GetProjectTree` 正常；TIA 不需要重启 |

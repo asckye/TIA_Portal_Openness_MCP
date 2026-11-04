@@ -4,8 +4,7 @@ Status: Current · Last checked: 2026-10-11, master `578a05ee`
 
 
 These eight peer projects compile native Foundation capabilities into version-specific typed libraries. FoundationHost uses the matching adapter through each session's PLC worker on every release; since P8-04j2, V20/V21 use the PLC worker too. The old Studio extension surfaces remain until their retirement task. Each worker references exactly one selected adapter.
-Use `dotnet run --project build-tools/release -- build-multi-version` from the repository root to build, test and deploy
-the eight-version distribution. Native TIA acceptance remains pending.
+From a clean repository root, use `dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3 -BuildOnly` to build and package all eight versions; match `Version.props`. Full checks and a publishable candidate require `prepare` without `-BuildOnly` on master. Native TIA acceptance remains pending.
 
 The native source allowlist is shared by source, not by an API-bound binary.
 It is intentionally transitional: `PlcReadContracts.cs` still contains typed
@@ -115,11 +114,7 @@ common diagnostic abstraction removes the duplication, not eight runtime copies.
 
 ## Integration and remaining work
 
-Each worker selects one exact adapter and preserves its resolver and STA session model.
-The host and configurator now select the eight precise release keys. V14 SP1–V19 use
-the foundation catalog; V20/V21 retain their full engines. `build-multi-version`
-assembles the runtime directories, tests real STDIO/HTTP against synthetic child workers,
-and records hashes. The former blanket Publish/Pack refusal has been removed.
+Each worker selects one exact adapter and preserves its resolver and thread model: STA for V14 SP1–V19, MTA for V20/V21. All eight releases use FoundationHost and a PLC worker; V20/V21 expose lite and full catalogs. `prepare` assembles the runtime directories and package, runs the registered suites and retained checks, then seals the candidate and uploads a draft. The host runs `merge-check` before merging; after maintainer confirmation, `publish-prepared` publishes the prepared draft. There is no nightly run.
 
 Do not load both the old PLC foundation assembly and a typed adapter in one process;
 their implementation types intentionally overlap during this migration. Native call

@@ -7,8 +7,9 @@
 | 分类 | 入口 | 用途 |
 |---|---|---|
 | 审查 | `dotnet run --project build-tools/release -- merge-check` | 本机合并检查 |
-| 准备 | `dotnet run --project build-tools/release -- prepare -Version X.Y.Z` | 构建八版产物，在暂存目录检查并封存交付包；`-BuildOnly` 允许在干净的任务分支生成开发包 |
-| 发布 | `dotnet run --project build-tools/release -- publish-prepared -Version X.Y.Z` | 发布已封存并验证的候选包 |
+| 准备 | `dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3` | 构建八版产物，在暂存目录检查并封存交付包；`-BuildOnly` 允许在干净的任务分支生成开发包 |
+| 上传重试 | `dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0.0-beta.3` | 重试上传已通过完整检查的候选 |
+| 发布 | `dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0-beta.3` | 发布已封存并验证的候选包 |
 | 检查 | `dotnet run --project build-tools/release -- check-repository -NoBinaries` | 源码 checkout 的文档、路径、资源与静态规则检查 |
 | 检查 | `dotnet run --project build-tools/release -- check-dead-tool-references` | 工具描述死引用检查 |
 | 检查 | [Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，发布链执行；需相应环境或测试 harness |

@@ -16,15 +16,14 @@ dotnet run --project build-tools/release -- merge-check
 
 GitHub CI 保留独立检查，但不阻塞合并，也不代替本机检查。不再设置 nightly；发布前的全集由 `prepare` 执行。审查时核对实际运行的项目、失败与阻塞项，而非只看命令退出或旧结果缓存。
 
-开发期间可以直接运行受影响的项目：
+Codex 沙箱只构建受影响的 Debug 项目并运行涉及的测试类；例如把 `<测试类全名>` 替换为实际改动的类名：
 
 ```powershell
-dotnet build tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj -c Release
-dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj -c Release --no-build
-dotnet run --project build-tools/release -- test-suites -Suite worker-channel
+dotnet build tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj -c Debug
+dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~<测试类全名>"
 ```
 
-注册套件的正式运行使用 `test-suites -Suite <名称>`，保留注册的参数、平台差异、最低通过数和最大跳过数。未迁移的控制台工程使用 `dotnet run --project <工程> -c Release`；`dotnet test` 不执行其控制台断言。需要 Siemens 程序集的单工程构建传入该版 `-p:SiemensEngineeringDirectory=<绝对路径>`；不要给八版工程统一传入某一版 SDK。
+主导代理在主机运行 `merge-check`、`prepare`、解决方案构建和注册套件；注册套件的正式运行使用 `test-suites -Suite <名称>`，保留注册的参数、平台差异、最低通过数和最大跳过数。未迁移的控制台工程使用 `dotnet run --project <工程> -c Release`；`dotnet test` 不执行其控制台断言。需要 Siemens 程序集的单工程构建传入该版 `-p:SiemensEngineeringDirectory=<绝对路径>`；不要给八版工程统一传入某一版 SDK。
 
 ## 发布前完整检查
 
@@ -85,6 +84,8 @@ dotnet run --project build-tools/release -- test-suites -Suite worker-channel
 | 捆绑运行时 | 宿主与工作台确实加载随包 .NET；不借用开发机器上的运行时证明交付完整 |
 | 写入保护 | 随包 `TiaMcp.WriteGuard.exe` 拒绝未知 V4 工具，读工具通过；默认审批对八个版本均在派发前拒绝无工作台的写请求 |
 | 原生边界 | 八版适配器的 weaver 校验；`native-mcp-session-self-test` 至少 8 项，`nativelifecycle-self-test` 至少 1 项（必须大于 0），保留现有判定 |
+| 适配器输入与 worker 隔离 | `src/Adapters/build/Test-AdapterInputs.cs`、`Test-WorkerIsolation.cs`：核对八版输入选择与 worker 隔离，必须产生通过的结果记录 |
+| 原生诊断夹具 | `Test-NativeDiagnostics.py --fixture <诊断测试程序>`：行为检查至少 36 项、拒绝检查至少 5 项，`nativeTiaExecuted` 必须为 false |
 | V20/V21 worker | `PlcReleaseJobs` 中保留的目录、编排、调用输入、协议、离线拒绝、原生诊断、生命周期与故障夹具；先产出清单，再逐项检查并报告所有失败 |
 | 传输与行为 | `foundation-transport`、`foundation-transport-plc`、`host-behavior-parity`；HTTP 使用本机回环合成服务，不连接 TIA 或外部服务 |
 | 工作台配置与生态 | `configuration-page` 控制台检查保留至少 157 项；生态检查保留解码器、PDF 及伴随 PLC Tools 依赖 |
@@ -98,7 +99,7 @@ dotnet run --project build-tools/release -- test-suites -Suite worker-channel
 
 维护者在 2026-11-03 批准以下移除，工具清理已由 NEW-REL-3 执行。
 
-- 延迟、耗时及性能增长门槛；性能数据用于趋势报告。功能测试的短时限后续改为防挂起保护，须按对应任务实施，不能自行放宽现有断言。
+- 延迟、耗时及性能增长门槛；性能数据用于趋势报告。功能测试的短时限后续改为防挂起保护，由计划中的 HANG-GUARD 任务实施，不能自行放宽现有断言。
 - HTTP 稳定性压测（包括 c8/c16 和重复轮次）。普通 HTTP 功能、传输、审批及故障恢复检查保留。
 - 独占静默阶段及围绕它的 CPU/内存调度。
 - 套件普通输出与隔离输出的 `suite-output-parity` 比较；`host-behavior-parity` 功能检查保留。

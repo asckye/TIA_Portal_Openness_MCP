@@ -206,5 +206,5 @@ progress and error recovery. It also runs Doctor through the ordinary bridge wit
 session. WPF tests render and inspect the actual controls. Native adapters compile against the
 official eight-release SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
 
-Live 4.0 TIA project acceptance remains pending. `dotnet run --project build-tools/release -- build-multi-version` deploys the desktop to `runtime/studio`; the formal release pipeline includes Studio and all eight adapters through `Package-Release.py`. `Package-MultiVersion.py` remains available for local development archives. Full audit findings are in
+Live 4.0 TIA project acceptance remains pending. From a clean repository root, `dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3 -BuildOnly` builds the desktop in `runtime/studio` and packages all eight adapters; match `Version.props`. This mode is available on any branch and does not run the full checks. On master, `prepare` without `-BuildOnly` runs the complete checks and uploads a candidate draft; after maintainer confirmation, `publish-prepared` publishes it. The host merge gate is `merge-check`; there is no nightly run. Full audit findings are in
 [the shared version framework](../../docs/standards/design.md).

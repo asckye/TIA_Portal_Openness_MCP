@@ -1,6 +1,6 @@
 # 开发流程
 
-状态：现行 · 最后核对：2026-11-04，master `55f9c737`
+状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
 
 本文写改动从任务说明到进入 master 的项目做法，附录取代已归档的[工具规格模板](../archive/development/templates/tool-spec.md)；通用流程见[《工程开发手册》](../standards/engineering-handbook.html)第 18、19、23 节，命令见[验证分层](validation.md)，发布见[发布流程](release.md)。
 
@@ -18,8 +18,8 @@
 
 1. 新事项先进 `bin-build/refactor/tasks/followups.md`（不入库），当天转写到[开发计划](../plan/plan.md)或 ADR；任务说明只引用开发计划的编号。
 2. Claude 定位根因后写任务说明：按手册模板 [T.4](../standards/engineering-handbook.html#tpl-task)，另写 Siemens SDK 路径（`-p:SiemensEngineeringDirectory=<绝对路径>`）、点名的套件、生成器与要重新捕获的基线、留给主机的检查。Codex 的执行规则只在 AGENTS.md 中维护，不复制进说明。
-3. 从当前 master 建 worktree 和 `refactor/<任务 ID>` 分支；Codex 实现、构建，交付前运行一次 `check-all -Affected -Quick`。
-4. Claude 审查 diff 并运行涉及的检查；失败先定位，再带具体问题退回同一 Codex 会话，不反复重跑完整门禁。
+3. 从当前 master 建 worktree 和 `refactor/<任务 ID>` 分支；Codex 实现，运行涉及的测试类和 Debug 项目构建，文档变更运行 `check-repository -NoBinaries`。
+4. 独立 AI 先审查交付，Claude 再审查 diff 并在主机运行 `merge-check` 和其余涉及的检查；失败先定位，再带具体问题退回同一 Codex 会话，不反复重跑完整门禁。
 5. 用明确路径提交，变基到 master，通过合并门后快进推送，删除任务分支；更新[开发进度](../plan/progress.md)和任务状态。
 
 ## 3 变更级别与完成条件
@@ -38,12 +38,12 @@
 
 | 阶段 | 何时 | 入口 | 判定 |
 |---|---|---|---|
-| 开发自检 | 开发中、Codex 交付前 | 按当前 AGENTS.md 运行 `check-all -Affected -Quick` 及点名套件 | 列出通过、失败、阻塞和沙箱限制，不作为可公开候选 |
+| 开发自检 | 开发中、Codex 交付前 | 涉及的测试类、Debug 项目构建；文档用 `check-repository -NoBinaries` | 列出通过、失败、阻塞和沙箱限制，不作为可公开候选 |
 | 合并门 | 每次合并前，在主机上 | `merge-check` | 普通构建、受影响的测试与生成/仓库检查通过，目标约 10 分钟 |
 | 完整准备 | 发布前提前运行 | `prepare -Version <版本>` | 所有注册套件与保留检查通过，包与测试字节一致，封存候选并上传私有草稿 |
 | 公开 | 维护者确认后 | 已构建工具的 `publish-prepared -Version <版本>` | 300 秒内核对候选、推送、打标签和公开；不构建、不测试、不打包 |
 
-没有 nightly，不等待 GitHub CI 合并。CI 失败仍按缺陷处理。实施状态见[进度](../plan/progress.md)，上传和公开失败的恢复步骤见[发布流程](release.md)。
+没有 nightly，不等待 GitHub CI 合并。CI 失败仍按缺陷处理。当前命令均已实现，待完成整理后运行真实准备；状态见[进度](../plan/progress.md)，上传和公开失败的恢复步骤见[发布流程](release.md)。
 
 ## 5 提交、发布与资源
 
@@ -115,7 +115,7 @@
 - `reference/tool-examples` 记录与 `GetToolUsage` 示例编号（每个动作一条，项目相关值放在绑定中）；`validation` 文字；真机核对的发布键、日期和台账条目：
 
 ## 10 测试与捕获
-- 新增或修改的测试 csproj 与 `tests/test-suites.json` 套件；必须覆盖的失败路径；要运行的生成器；契约与响应基线的预期差异：
+- 新增或修改的测试 csproj 与 `tests/test-suites.json` 套件；必须覆盖的失败路径；要运行的生成器；工具定义契约基线的预期差异：
 
 ## 11 兼容性与发布
 - 增量或破坏性（是否升 `schemaVersion`）；发布说明与迁移表条目；弃用的名称或参数及保留期限：

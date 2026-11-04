@@ -52,7 +52,7 @@ python scripts/checks/Test-NativeLifecycle.py --runner tests/Engine/TiaMcp.Engin
 
 ## 原生调用诊断
 
-- 织入：`build-tools/native-call-weaver`（Mono.Cecil 0.11.6）在编译后给八版适配器 `TiaMcp.Adapter.<key>.dll` 的每个 Openness 调用点生成包装，并内嵌 `TiaMcp.NativeCallCoverage.json`（调用者、IL 位置、目标成员、调用点 ID）。缺少织入器时构建失败，没有关闭开关；check-all 的 `adapter-coverage-v<key>` 逐版校验。`GetSessionState.journalHealth.nativeBoundaryCoverage` 报告 `build-instrumented` 或 `not-instrumented`。
+- 织入：`build-tools/native-call-weaver`（Mono.Cecil 0.11.6）在编译后给八版适配器 `TiaMcp.Adapter.<key>.dll` 的每个 Openness 调用点生成包装，并内嵌 `TiaMcp.NativeCallCoverage.json`（调用者、IL 位置、目标成员、调用点 ID）。缺少织入器时构建失败，没有关闭开关；`prepare` 对八版随包适配器逐版校验。`GetSessionState.journalHealth.nativeBoundaryCoverage` 报告 `build-instrumented` 或 `not-instrumented`。
 - 覆盖直接调用（方法、构造器、属性、索引器、事件）、反射调用、集合接口与外部遍历，以及原生对象的 `ToString`/`Equals`/`GetHashCode`；未处理的函数指针、动态代码生成等新路径让构建失败。不改动或分发 PublicAPI，不注入 TIA；只能定位最后执行到哪个调用，看不到 TIA 内部，也不保证 TIA 不崩溃。
 - 读取：`GetNativeInvocationLog`（`take: 100`），或在工作台“环境体检”页导出诊断包（脱敏日志、最近 24 小时匹配的 Windows 事件、进程和转储文件清单，不复制转储内容）。日志在 `data/logs/<发布键>/`，诊断在 `data/diagnostics/`；分享前检查隐私信息。
 

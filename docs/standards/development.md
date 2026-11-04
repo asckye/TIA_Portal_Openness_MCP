@@ -1,6 +1,6 @@
 # 开发规范
 
-状态：现行 · 最后核对：2026-11-03，master `1dfe2067`
+状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
 
 本文是本仓库唯一的开发规范，规定代码、仓库结构、新工具开发、测试、Git、AI 分工和 C# 偏差登记，取代归档的 [C# 与 .NET API 设计规范](../archive/development/design-spec/csharp-design.md)、[C# 偏差清单](../archive/development/design-spec/deviations/csharp.md)、[工具开发](../archive/development/tool-development.md)、[仓库结构](../archive/development/repository-layout.md) 和本文件原来的测试策略。
 
@@ -62,7 +62,7 @@
 | U-06 | MUST | `StartsWith`、`EndsWith`、`IndexOf(string)`、`Compare` 等显式传 `StringComparison`；标识符、路径、协议令牌和 XML 名称用 `Ordinal` 或 `OrdinalIgnoreCase` |
 | U-07 | MUST | 机器数据的解析与格式化用 `CultureInfo.InvariantCulture`；大小写转换用 `ToUpperInvariant`、`ToLowerInvariant` |
 | U-10 | MUST | 新代码只用 System.Text.Json，不新增 Newtonsoft.Json；不用 `BinaryFormatter` 一类不安全的序列化器，新类型不加 `[Serializable]` |
-| U-12 | MUST [P] | 响应 POCO、V4 类型和 worker DTO 的成员顺序、命名策略、null 处理、数值类型和时间戳编码是线上契约，只随契约与响应基线一起改变；字段改属性、改 `IncludeFields`、换序列化选项都属于这类改变 |
+| U-12 | MUST [P] | 响应 POCO、V4 类型和 worker DTO 的成员顺序、命名策略、null 处理、数值类型和时间戳编码是线上契约，只随经审查的契约与功能测试一起改变；字段改属性、改 `IncludeFields`、换序列化选项都属于这类改变 |
 | U-13 | SHOULD [P] | V4 线上类型显式写 `[JsonPropertyOrder]` |
 | U-14 | MUST | 处理工程导出、用户文件等不受信任的 XML 时禁止 DTD、不解析外部实体（`DtdProcessing.Prohibit`，net48 另设 `XmlResolver = null`）；公共 API 不以 `XmlDocument`、`XmlNode` 作参数或返回值 |
 | U-16 | MUST NOT [P] | MCP 工具类和领域服务单例实现 `IDisposable`；SDK 每次调用后会释放目标对象 |
@@ -126,7 +126,7 @@ MCP 可见文本（[ADR 待办 B02](decisions/README.md)）：
 
 - 新增的 MCP 可见文本（描述、参数说明、消息、异常文本）一律英文；中文只作为数据出现，例如 TIA 原文、工程对象名和示例名称。源码中的中文保持 UTF-8 原文，不改写为 `\uXXXX`（U-08）。
 - MCP 响应不做本地化；本地化只用于工作台的 `Loc` 和 CLI `doctor` 输出。
-- `check-ratchet -Kind mcp-text` 约束中文字面量只减不增。豁免按字面量及其出现次数逐条登记理由，不是对文件的豁免；新增的中文数据单独审查并记录理由。只减不增的门禁不授权改动已有的响应字节，契约与响应基线仍须通过。
+- `check-ratchet -Kind mcp-text` 约束中文字面量只减不增。豁免按字面量及其出现次数逐条登记理由，不是对文件的豁免；新增的中文数据单独审查并记录理由。只减不增的门禁不授权改动已有的响应字节，工具定义契约快照与功能测试仍须通过。
 
 ### 2.6 复杂度门槛
 
@@ -194,15 +194,17 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | `build-tools/` | 全部 C# 构建、检查与发布自动化：`release`（唯一入口）、`common`、`native-call-weaver` |
 | `scripts/` | 只放随包交付的 Python 和手动诊断脚本；开发用的 Python 检查和生成器（`scripts/checks`、`scripts/generate`）正由 P8-10 移植到 `build-tools/release` |
 | `reference/` | 生成器输入和随包参考数据：`tool-examples`（调用、语言文件、结果解释、调用顺序）、`tool-catalog`、固定来源的 Siemens 官方示例与授权记录、`version-feature-matrix.json`、`v21-ecosystem.json`；根目录的 `schemas/` 以后移到这里 |
-| `manifest/` | 生成的版本、工具、构建与交付记录，契约基线 `contracts/v4/baseline`，发布记录 `publication-v*.json`；只由生成器和发布命令写入 |
+| `manifest/` | 版本与工具数据、契约基线 `contracts/v4/baseline`；只由正式生成器写入。准备阶段的交付清单写入暂存包，候选与日志留在 `bin-build/prepared/`，不在 Git 中记录构建或发布结果 |
 | `templates/` | 随包的编程与工程模板 |
 | `third_party/` | 固定版本的第三方组件，各自带许可证和 `UPSTREAM.json` |
-| `plugin/` | Claude Code 插件技能，引导 AI 按版本使用 `GetToolUsage` 示例；插件定义在 `.claude-plugin/`，根目录的 `hooks/` 以后移到这里 |
+| `plugin/` | Claude Code 插件技能，引导 AI 按版本使用 `GetToolUsage` 示例；插件定义在 `.claude-plugin/`，`hooks/` 保留在根目录，避免早期安装更新后自动加载旧钩子并重复执行 |
 | `docs/` | `standards/`（规范与 ADR）、`plan/`（计划与进展）、`manuals/`（操作手册）、`archive/`（冻结的历史）和用户文档 |
-| `bin-build/` | 全部构建与运行输出：检查输出、测试结果、暂存、构建缓存（主检出的 `bin-build/cache/`，各 worktree 共用）和开发时的数据目录 `bin-build/data/`（安装包用 `data/`）；不入 Git |
+| `bin-build/` | 检查与暂存输出：检查输出、测试结果、暂存、构建缓存（主检出的 `bin-build/cache/`，各 worktree 共用）和开发时的数据目录 `bin-build/data/`（安装包用 `data/`）；不入 Git |
 | `sdk/` | 本机的八版 Siemens PublicAPI 副本（`TIA_V*_PublicAPI`）；不入 Git，不分发 |
 
 根目录文件：`Version.props`（产品版本的唯一来源）、`Directory.Build.props`、`global.json`、`.editorconfig`、`TiaPortalOpenness.slnx`（全部开发工程）和 `TiaPortalOpenness.Offline.slnx`（不需要 Siemens 程序集的工程；整理方案改为一个 `.slnx`）。构建生成的八个运行目录和工作台目前仍输出到根目录 `runtime/`（只跟踪 README，布局与安装包相同），整理方案把运行输出改到 `bin-build/` 下（待核对）。
+
+归档的[仓库结构](../archive/development/repository-layout.md)按历史原样保留，其中 Studio 上游完整源码与历史归档已由 THIRD-1 删除；当前仅保留交付源码、README、LICENSE、UPSTREAM.json 及 NOTICE 中的来源记录。根目录 `runtime/` 与各项目 `bin`/`obj` 保留，不统一搬入 `bin-build/`。
 
 ## 4 新工具开发
 
@@ -238,7 +240,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | 层 | 内容 | 证明什么 | 不证明什么 |
 |---|---|---|---|
 | 注册的离线套件 | xUnit 和控制台测试工程，按 `tests/test-suites.json` 运行 | 宿主、worker 通道、审批、生成、发布工具和工作台的离线行为 | 原生 TIA 行为 |
-| 契约与响应基线 | `manifest/contracts/v4` 中八个发布键的工具定义快照，以及规范化的响应（覆盖范围见验证分层） | 输入契约和返回结构没有意外变化 | 原生调用成功 |
+| 工具定义契约基线 | `manifest/contracts/v4/baseline` 中八个发布键的工具定义快照 | 工具名、输入/输出 schema、注解与描述没有意外变化 | 原生调用成功 |
 | SDK 与 PublicAPI 形状 | 带 `publicApiRoot` 的套件编译 `sdk/` 中的 PublicAPI；生成的接口片段按各版本官方 XSD 校验 | API 形状、片段与 XSD 一致 | 原生导入成功 |
 | 生成器与仓库检查 | 生成器的 `-Check`、`check-repository`、死引用、分析器警告与棘轮 | 生成文件、链接、随包路径和警告没有漂移 | 运行时行为 |
 | 示例检查 | `GetToolUsage` 检索全部工具与动作，执行返回的离线示例（`manifest/tool-usage-coverage.json`） | 每个注册的工具和动作都有示例，离线示例可执行 | 示例参数在真实项目中正确 |
@@ -265,7 +267,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 `tests/test-suites.json` 是注册套件的唯一来源。每个套件登记 `project`、`minimumPassed`（最少通过数）、`maximumSkipped`（最多跳过数）和 `arguments`（例如 `--filter`）；可选字段为 `platforms`（按平台覆盖下限，必须写 `reason`）、`splitFrom`、`companions`（必须同时运行的伙伴套件）和 `publicApiRoot`。
 
 - 失败数必须为零；重复的测试身份被拒绝。
-- 用 `dotnet run --project build-tools/release -- test-suites -Suite <名称>` 运行并核对注册门禁；`dotnet test` 只用于开发时的快速运行。未注册的控制台工程用 `dotnet run --project <csproj> -c Release`，`dotnet test` 不执行它们的断言。
+- 主导代理在主机用 `dotnet run --project build-tools/release -- test-suites -Suite <名称>` 运行并核对注册门禁；Codex 沙箱只对涉及的测试类运行 `dotnet test <csproj> -c Debug --filter <测试类>`。未注册的控制台工程用 `dotnet run --project <csproj> -c Release`，`dotnet test` 不执行它们的断言。
 - 新测试工程在注册表中登记后，才由 `test-suites`、`merge-check` 和 `prepare` 按门禁运行。降低 `minimumPassed`、提高 `maximumSkipped` 或删除套件都属于放宽（第 5.8 节）。
 
 ### 5.5 基线与生成文件
@@ -282,13 +284,12 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 - 不手改测试哈希、`manifest/*.json` 中的哈希和生成文件（`manifest/tools-list.json`、`src/Shared/ToolUsageData.json`、`docs/reference/tool-matrix.md` 等）。
 - 重新生成基线不授权修改阈值或断言。
-- 把全部生成器合成一条 `regen-all` 命令已于 2026-11-01 决定，由 RULES-1 实现，尚未提供。
 
 ### 5.6 必须覆盖的失败路径
 
 新代码和改动的代码测试下列失败路径中与它相关的部分：
 
-- 审批：拒绝、超时和工作台不可用都在派发前返回 `CONFIRMATION_REQUIRED`；读取不排队；默认开启审批和关闭审批两种情况都要测（[验证分层](../manuals/validation.md)“压力与故障检查”）。
+- 审批：拒绝、超时和工作台不可用都在派发前返回 `CONFIRMATION_REQUIRED`；读取不排队；默认开启审批和关闭审批两种情况都要测（[验证分层](../manuals/validation.md)“其他保留检查”）。
 - worker 与通道：超时、异常退出、错误响应、迟到响应、帧超限、未知或重复回复（`worker-channel`、`worker-robustness` 套件；故障由 `TIA_FIXTURE_FAULT` 注入）。
 - 结果未知：返回 `OUTCOME_UNKNOWN`，会话锁定，不自动重放（E-10、TH-04）。
 - 输入边界：路径越界、保留名、重解析点、数量与大小上限、格式错误（[安全标准](security.md) SEC-08、SEC-09）。
@@ -346,7 +347,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 |---|---|---|
 | 维护者 | 范围、优先级和设计取舍；批准 ADR、检查或阈值的改变、发布 | 不需要亲自运行检查 |
 | Claude | 研究、诊断、方案比较；任务说明和 ADR 草稿；审查；主机检查；提交、变基、合并；交接与计划 | 不写新功能代码；变基时的一行修正和文档笔误除外 |
-| Codex | 在独立 worktree 的沙箱中按任务说明写全部新代码和测试，构建，交付前运行一次 `check-all -Affected -Quick` 并列出沙箱中无法运行的作业 | 不提交、不推送、不合并；不连接 TIA、PLC、虚拟机或外部网络 |
+| Codex | 在独立 worktree 的沙箱中按任务说明写全部新代码和测试，运行涉及的测试类与 Debug 项目构建，列出留给主机的检查 | 不提交、不推送、不合并；不连接 TIA、PLC、虚拟机或外部网络 |
 
 - 研究、分析和方案比较由 Claude 完成，不交给 Codex。
 - 任务说明按手册模板 [T.4](engineering-handbook.html#tpl-task)，写明根因、涉及的文件和函数、预期设计、允许修改的路径、修改前失败而修改后通过的测试、验证命令和时间预算；需要维护者批准的断言或阈值改变在说明中事先写明。
@@ -383,7 +384,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | CS-30 | 命名空间根（N-07） | `TiaMcpServer.*`、`TiaOpenness.Shared`、`TiaMcpConfigurator` 与 `TiaMcp.*` 并存，约 770 个文件 | 4.0 后一次性机械迁移并重录织入和反射基线；`src/Studio` 的 `TiaOpenness.*` 是有意偏差 |
 | CS-31 | 可变静态状态（U-24） | 多会话宿主中 32 个：进程级钩子、环境诊断状态、桥接目录 | 4.0 后改为一次性初始化或注入 |
 | CS-32 | 默认 `internal`、`sealed`（T-03） | 公共类型 1,251 个，未密封的公共类 238 个，多为旧响应 POCO | 4.0 后随旧族移除处理；契约 DTO 密封；工作台按 WPF 需要保留 |
-| CS-33 | 不暴露公共实例字段 | 对外可见类型上 244 个，12 个文件 | 4.0 后逐类型附响应基线证据 |
+| CS-33 | 不暴露公共实例字段 | 对外可见类型上 244 个，12 个文件 | 4.0 后逐类型附契约与序列化行为测试结果 |
 | CS-37 | 不用公共嵌套类型 | 64 个，25 个文件 | 4.0 后（类型全名进入织入清单） |
 | CS-39 | 设置 `ParamName`（E-03） | 只传消息的 `ArgumentException` 1,691 处 | 4.0 前按工具族分批转换，每批附基线差异；P8-62 后的剩余量待核对 |
 | CS-40 | 不用 `Exception.Data` 分类（E-11） | 76 处，部分决定 V4 outcome | 4.0 后先补分类行为测试，再改为强类型属性 |

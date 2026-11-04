@@ -23,7 +23,7 @@
 
 ## 4.0.0-beta.3（未发布）
 
-master `ef1988bc` 已含 beta.3 的 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)，以及 PIPE-INT/SLIM-1、VMFIX-2、新发布路径的 A、B、C 三部分、SEC-1、Q1–Q9、CPM、NEW-REL-2、NEW-REL-3 和 THIRD-1。beta.3 尚未发布。2026-11-04 维护者决定：全部整理先完成，再真实运行 `prepare`，确认后公开。
+master `ef1988bc` 已含 beta.3 的 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)，以及 PIPE-INT/SLIM-1、VMFIX-2、新发布路径的 A、B、C 三部分、SEC-1、Q1–Q9、CPM、NEW-REL-2、NEW-REL-3 和 THIRD-1。beta.3 尚未发布。2026-11-04 维护者决定：先完成下表列明的 beta.3 整理，再真实运行 `prepare`，确认后公开；依赖产品分支的拆分、`src/EngineHost` 改名与长行合并门排 beta.4。
 
 ### 发布前顺序
 
@@ -31,11 +31,11 @@ master `ef1988bc` 已含 beta.3 的 CHANGELOG 和[发布说明](../releases/v4.0
 |---|---|---|
 | 1 | NEW-REL-B、SEC-1 | 已合并（`0ae4b1e8`、`1af64ce7`；`6ae345fd`、`b711e0bb`、`979b1263`）：NEW-REL-B 接入所有套件、保留检查、候选和自动草稿上传；SEC-1 修补审批设置保护、文件写入与 Git 调用的小范围安全问题（调查 S1/S2）。输出根以外写文件的完整审批另排 beta.4 |
 | 2 | Q1–Q9、CPM | 已合并（Q1 `5f956ea8`、Q5 `a26c60bd`、Q2 `84c4e966`、Q3 `bd30bc9d`、Q4 `c001c1c4`、Q7 `6d771add`、CPM `975a0ff5`、Q8 `02548d27`、Q9 `74073ed0`，Q-INT-1 `3cac74e0`）：清理引擎残留、重复检查、SafeV4 候选，集中包版本、压缩契约公共 schema、派生发布键 |
-| 3 | NEW-REL-2、NEW-REL-3、THIRD-1、主机测试精简 | 已合并（NEW-REL-2 `90be875b`、`9485a33b`；NEW-REL-3a–e `bce6994c`、`6a489b47`、`3e343bd6`、`3b66a7be`、`090ebab1`；THIRD-1 `63281105`）：新合并门；删除旧发布工具和全部八版响应捕获/基线；第三方裁剪；版本重复的准入用例去重。保留功能、协议、审批、写安全、故障恢复测试及各数量门槛 |
-| 4 | DOCS-1、DOCS-2 | 文档分目录、归并规范和手册；按新发布路径与调查刷新文档。本分支工作，待审查集成；[ADR 0030](../standards/decisions/0030-documentation-and-repository-structure.md) 与 [0031](../standards/decisions/0031-release-path.md) |
-| 5 | REORG-2 | 整理数据与脚本：`schemas/` 并入 `reference/`、`hooks/` 并入 `plugin/`、运行布局并入设计规范、一个 `.slnx`、输出到 `bin-build`；清理旧记录和 LibraryRenameProbe，核对交付清单与许可文件引用；待实施 |
+| 3 | NEW-REL-2、NEW-REL-3、THIRD-1、主机测试精简 | 已合并（NEW-REL-2 `90be875b`、`9485a33b`；NEW-REL-3a–e `bce6994c`、`6a489b47`、`3e343bd6`、`3b66a7be`、`090ebab1`；THIRD-1 `63281105`）：新合并门；删除旧发布工具和全部八版响应捕获/基线；第三方裁剪；版本重复的准入用例精简 1,810 例；引擎删除后注册表保留 38 个套件。保留功能、协议、审批、写安全、故障恢复测试及各数量门槛 |
+| 4 | DOCS-1 → DOCS-2 → DOCS-3 | 在 NEW-REL-3 之后依次合并：DOCS-1 分目录并归并规范，DOCS-2 刷新发布路径与调查，DOCS-3 核对重基后的事实和指令；当前文档链待审查集成；[ADR 0030](../standards/decisions/0030-documentation-and-repository-structure.md) 与 [0031](../standards/decisions/0031-release-path.md) |
+| 5 | REORG-2 | 整理数据与脚本：`schemas/` 并入 `reference/`、运行布局并入设计规范、一个 `.slnx`；`hooks/` 保留根目录，根目录 `runtime/` 与项目 `bin`/`obj` 保留；清理旧记录和 LibraryRenameProbe，核对交付清单与许可文件引用；待实施 |
 | 6 | REORG-3 | 整理源码、测试和交付包路径，更新所有引用、注册与交付规则；待实施 |
-| 7 | 大文件拆分、长行整理 | 在路径整理后拆分大文件、整理长行，保留行为；与中文段落不在句中换行的文档规范协调；待任务说明与验证 |
+| 7 | TIDY-1–TIDY-6 | TIDY-1 工具已合并（`0f2ffd29`）；在重基后的路径上运行 TIDY-2 长行整理和 TIDY-3–6 无行为变更拆分。受产品分支影响的文件留给 beta.4 的 TIDY-7；文档中文段落不在句中换行 |
 | 8 | 实际准备 | 在最终干净 master 上运行完整 `prepare`，审查全部结果、ZIP、候选与草稿；尚未执行 |
 | 9 | 确认与公开 | 维护者明确确认后运行 `publish-prepared`，随后 VM 回归与测试者验证；尚未执行 |
 
@@ -68,15 +68,19 @@ THIRD-1 保留交付源码、每个项目的 README、LICENSE、UPSTREAM.json、
 
 ## 4.0.0-beta.4
 
-以下在 beta.3 后集成。VMFIX-3/4/5 和 DES-INT 必须适配整理后的代码及新验证入口；DES-4 在 DES-INT 之后。旧引擎测试迁移到仍在使用的测试工程，不恢复将删除的响应基线。
+以下在 beta.3 后集成。VMFIX-3/4/5 和 DES-INT 必须适配整理后的代码及新验证入口；DES-4 在 DES-INT 之后。旧引擎测试迁移到仍在使用的测试工程，保留工具定义契约与功能覆盖。
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
+| TIDY-7 | DES-INT、VMFIX-3、RELAY-1、UI-INT、N1-INT 全部进入 master 后，独占执行剩余大文件拆分与新增长行整理，保持行为和 IL 不变 | 排队（产品分支全部合并后） | 2026-11-04 |
+| HOST-RENAME | `src/EngineHost` 改名，同步链接源、工程和文档路径 | 排队（beta.4 产品分支合并后） | 2026-11-04 |
+| LONG-LINE-GATE | 将 `wrap-long-lines -Check` 加入 `merge-check`，检查代码长行 | 排队（beta.4 整理后） | 2026-11-04 |
+| HANG-GUARD | 将功能测试的短时限改为防挂起保护；性能只报告趋势，按任务说明保留功能断言和数量门槛 | 已决定，待任务说明 | 2026-11-03 |
 | Q6a | 已移植工具一条调用管线：V20/V21 也经 `FoundationV4Tool`，15 个调用流程旗标合并为一个档案；吸收 Q6b，取代 P8-04n2；合并后在 VM 上复测 V20/V21 | 排队（Q9 之后） | 2026-11-02 |
 | Q10a、Q10b | 声明式工具清单：读（手写工具表导出到 `reference/tool-catalog/tools.json`）、写（由清单生成各表，删除正则解析副本）；Q6c（宿主工具改走 `FoundationV4Tool`）在 Q10b 后评估 | 排队（Q6a 之后；Q10b 任务说明待写） | 2026-11-02 |
 | DES-INT（DES-2、DES-3） | DES-2：一项功能一个实现（L2 工具转到 Foundation 实现），安全移块：导出并核实 → 删除源块 → 导入目标组 → 核实，失败时把备份恢复到原组；DES-3：写入工具默认预览（`dryRun` 默认 true）并绑定 `expectedProjectFile`，多步写入失败时回滚；工具描述去掉“引擎”说法，批处理准入按 BatchRead/BatchWrite 描述；`ReleaseUnifiedReadCursor` 移出只读批处理（D-P7） | 待合并（`refactor/DES-INT` `5b74969a`，第 2 轮完成） | 2026-11-01 |
 | DES-4 | 统一参数模型（先写 ADR），字段级参数错误、去敏原生消息和按请求号查日志；补入 B21、B27、B28、B30 的明确处理与验收 | 排队（DES-INT 之后） | 2026-11-01 |
-| VMFIX-3 | 写入结果如实（R2/R4）：确定的结果不报 `OUTCOME_UNKNOWN`、不要求会话重置；独占访问；`ImportDeviceAml` 只在 V21 移出独占访问；已批准 `HmiDryRunTests`、`PortedPortalAdmissionTests` 的断言修改；与 Q2 相遇时 `HonestOutcomeMappingTests` 移到 KeptCode/FoundationHost 测试，`EngineWorkerHost` 的修改随 `src/Engine` 删除 | 进行中（`refactor/VMFIX-3` `867efd36`，原分支待适配整理后的主线） | 2026-11-02 |
+| VMFIX-3 | 写入结果如实（R2/R4）：确定的结果不报 `OUTCOME_UNKNOWN`、不要求会话重置；独占访问；`ImportDeviceAml` 只在 V21 移出独占访问；已批准 `HmiDryRunTests`、`PortedPortalAdmissionTests` 及第 5 轮 `HonestWriteSources` 两项替换断言；与 Q2 相遇时 `HonestOutcomeMappingTests` 移到 KeptCode/FoundationHost 测试，`EngineWorkerHost` 的修改随 `src/Engine` 删除 | 进行中（`refactor/VMFIX-3` `589d6559`，原分支待适配整理后的主线） | 2026-11-02 |
 | VMFIX-4 | 会话生命周期与恢复（R3/R5）：重新绑定纪元、是否重启 TIA 的判断、读超时取消、重置关口、日志过滤 | 排队（整理后的主线可用后） | 2026-11-02 |
 | VMFIX-5a、VMFIX-5b | 其余 HIGH 缺陷：5a 结果映射、去敏和宿主诊断；5b V21 的 PLC 服务、工艺对象和 Unified HMI；两者可并行 | 排队（整理后的主线可用后） | 2026-11-02 |
 | RELAY-1 | 代理安全的远程连接：随包本地 stdio 中继，私网地址绕过 HTTP(S)_PROXY，其他地址遵守 NO_PROXY，令牌只在工作台数据目录；环境检查“代理与远程连接”及一键修复 | 待合并（`refactor/RELAY-1` `0e4f5d5c`，第 2 轮完成） | 2026-11-01 |
@@ -89,7 +93,7 @@ THIRD-1 保留交付源码、每个项目的 README、LICENSE、UPSTREAM.json、
 | SCORE-1 | 质量评分卡与性能趋势，只读新工具的实际结果，每个版本一张；删除对旧发布证据链的依赖 | 待适配新工具（REVIEW-1 后） | 2026-11-03 |
 | VMAUTO-1 | 扩展 `scripts/diagnostics/campaign`，读取维护的调用与序列；串行读取/预览后执行序列，区分通过、缺陷、应拒绝和待人工判断；发布后在获授权的 VM 与项目副本运行 | 已决定，待任务说明 | 2026-11-03 |
 | FILE-APPROVAL | 文件写入目标在会话输出根以外时须审批；定义输出根与例外范围，补安全验收 | 已决定，待任务说明 | 2026-11-04 |
-| COV-V21 | 更正 [Openness 覆盖](../reference/openness-coverage.md)中的 V21 数字（直接引用 1,748，待复核 2,575）和复现命令（`build-multi-version` 后运行 `audit-version-tools`） | 未开始 | 2026-11-02 |
+| COV-V21 | 更正 [Openness 覆盖](../reference/openness-coverage.md)中的 V21 数字（直接引用 1,748，待复核 2,575）和复现命令（`prepare -BuildOnly` 后运行 `audit-version-tools`） | 未开始 | 2026-11-02 |
 
 ## 4.0.0-beta.5
 
@@ -126,7 +130,7 @@ beta.4 合并后开始。V21 API 的 6 个 P1 缺口按 API 先行注册，带�
 |---|---|---|---|
 | P8-31f–i | 库与母版实例化、`CheckProjectStandard`（2026-11-02 更正后仍在 4.1）、工作台生成模块、状态模型包；P8-31h1 审批抽屉扩展；P8-31e6 延后（族通过 L5 后基于现行代码重建规则，候选实现已归档删除）。设计见已归档的[项目生成框架](../archive/development/design/project-generation-framework.md)和[分阶段生成](../archive/development/design/p8-31-staged-generation.md) | 推迟 | 2026-10-22 |
 | P8-40 | 表格与 ECAD 导入、Classic VB 到 Unified JS、V20/V21 补深度、按版本输出的构建工具 | 推迟 | 2026-10-22 |
-| API-P2、API-P3 | V21 API 差距评审的 P2（嵌套 Unified 运行设置、SIMATIC SD 更多语言、Multiuser、UMAC 与证书设置、PLC 与显示屏密码、参考工程、VCI 管理、GSD 参数、运动解释程序、项目文本筛选、带依赖生成源）和 P3（Classic 删除、空 FB、块元数据、少量硬件服务等） | 推迟 | 2026-11-02 |
+| API-P2、API-P3 | V21 API 差距评审的 P2（SIMATIC SD 更多语言、Multiuser、UMAC 与证书设置、PLC 与显示屏密码、参考工程、VCI 管理、GSD 参数、运动解释程序、项目文本筛选、带依赖生成源）和 P3（Classic 删除、空 FB、块元数据、少量硬件服务等） | 推迟 | 2026-11-02 |
 | P8-95a–g | EplanMCP 借鉴项：VM HTTP 加固、“工程内容是数据”的服务器说明与审批卡清理、防误点、退出确认与单实例、Claude Desktop（MSIX）配置路径、CI 加固、doctor/audit 的 `schemaVersion` | 推迟 | 2026-11-01 |
 | T-IA 大项 | 块接口编辑与 SCL 体替换（带回滚）；其余硬件缺口（插槽兼容、命名 CPU/网络/PN 属性、AML/GSD 预检；改型号和子网已提前到 API-P1c）；异步作业与取消；离线快照与撤销；工程报告与交付物；PLCSIM Advanced 扩展；Classic HMI 动画与事件；GRAPH/FBD/STL 生成；流水线与工作计划；帮助与文档搜索；多工程会话；模式库内容；VCI 工作区分组；一次调用导出整个工程到 Git | 推迟 | 2026-10-30 |
 | 生态大项 | 整程序导出、磁盘编辑、只导入变化（先预览）；覆盖前自动快照与回滚；PLC 代码规则检查（规则目录、SARIF、评分）；SCL 单元测试库与运行器；CI 入口与 GitHub/GitLab 模板；Siemens 文档搜索；Web API 补全；生成后自检循环；AML 离线核对与 IO 变量生成；DB 注释生成 HMI 报警、导出全部 Unified 画面脚本；GRAPH 文本 DSL 与 STL 控制流 | 推迟 | 2026-10-30 |
