@@ -1,7 +1,7 @@
 > Archive: marker blocks are frozen; generate-catalogs neither generates nor checks this file.
 
 
-SafeV4 候选实现于 2026-11-02 归档到标签 `archive/safev4-candidates` 后删除；本页相关源码链接指向该归档。现行决定见 [ADR 0002](decisions/0002-native-behavior-by-family-acceptance.md)，P8-04l3 已取消、P8-31e6 延后。
+SafeV4 候选实现于 2026-11-02 归档到标签 `archive/safev4-candidates` 后删除；本页相关源码链接指向该归档。现行决定见 [ADR 0002](../../standards/decisions/0002-native-behavior-by-family-acceptance.md)，P8-04l3 已取消、P8-31e6 延后。
 # 阶段 6：4.0 契约规范与实施计划
 
 [重构计划](refactor-plan.md) · [当前响应族](response-and-errors.md) · [D1 行为边界](adapter-merge.md) · [当前布局](runtime-layout.md) · [真机台账](../../reference/real-machine-ledger.md)

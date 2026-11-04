@@ -316,7 +316,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P8-91 | 4.0 前的稳定性：master 上连续 20 次干净通过；偶发失败集中按 worker 生命周期竞态排查和修复，不放宽任何期限（维护者 2026-10-18、2026-10-20 决定）。P8-stab-1 已合并（44f4aa3c）：`WorkerShutdown.KillOwned` 把探测映像期间已退出的子进程视为已停止；Foundation 审批窗口在预检之后、开始等待前才计时；截在 200 个批次的暂存列表带 `INCOMPLETE_DATA` 警告，不再失败；测试修复未放宽任何预算、期限或断言。P8-stab-2b（`cadac580`，桥接调用改为异步）已合并。“连续 20 次”条件由维护者 2026-10-30 取消（[ADR 0023](../../standards/decisions/0023-release-4-0-final-criteria.md)） | — | 每个修复配确定性回归用例；20 次重复 | superseded |
 | P8-92 | `check-all` 快照清理：被中断的 `-Clean` 运行留下的快照在其所属进程结束（或进程号被重用）后删除，没有任何标记的快照在 24 小时无变化后删除；运行中、其他 worktree 与本次运行的快照保留。已合并（f494a595） | — | T、V | done |
 | P8-04l2 | 删除 `src/Engine` 剩余的非编译源码、生成器中的引擎行、诊断成员链接、宿主引擎客户端和死条件分支；随后退役 `Compare-SharedNativePaths.py` | P8-04l | T、V | todo（4.0） |
-| P8-04l3 | 取消：SafeV4 候选实现于 2026-11-02 归档到 `archive/safev4-candidates` 后删除（Q7，[ADR 0002](decisions/0002-native-behavior-by-family-acceptance.md)）；不重建候选作业，P8-31e6 延后 | P8-04l | T、V | cancelled |
+| P8-04l3 | 取消：SafeV4 候选实现于 2026-11-02 归档到 `archive/safev4-candidates` 后删除（Q7，[ADR 0002](../../standards/decisions/0002-native-behavior-by-family-acceptance.md)）；不重建候选作业，P8-31e6 延后 | P8-04l | T、V | cancelled |
 | P8-04n | 八版统一对外呈现：精简清单默认启用、服务器说明、提示词与资源、档案名、包装与审批路径、行为披露 | P8-04l | T、V；基线逐项审查 | todo（beta.3） |
 | P8-83 | 审批、审计与计划摘要排除敏感值；大参数下脱敏保持确定且快速（P8-83b）。已合并（`e7e9da54`、`05416b57`） | — | T、V | done |
 | P8-84 | 工作台 TIA 进程选择器：多个 TIA 进程时由用户选择，按 PID 精确附着；MCP 契约不变 | P8-81c | T | todo（beta.3） |

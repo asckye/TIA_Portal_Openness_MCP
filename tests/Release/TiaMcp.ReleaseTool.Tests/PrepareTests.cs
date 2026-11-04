@@ -531,7 +531,7 @@ public sealed class PrepareTests
         tree.Write(".claude-plugin/marketplace.json", "{\"plugins\":[{\"version\":\"4.0.0-beta.3\"}]}");
         tree.Write("CHANGELOG.md", "## [Unreleased]\n\n## [4.0.0-beta.3] - 2026-11-02\n\n## [3.0.0] - 2025-11-02\n");
         tree.Write("docs/README.md", "[当前版本说明](releases/v4.0.0-beta.3.md)");
-        tree.Write("docs/development/roadmap.md", "# Roadmap 4.0.0-beta.3\n");
+        tree.Write("docs/plan/plan.md", "# Roadmap 4.0.0-beta.3\n");
         return tree;
     }
 

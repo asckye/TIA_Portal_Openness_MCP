@@ -74,7 +74,7 @@ public sealed class MergeCheckTests
 
     [Theory]
     [InlineData("README.md")]
-    [InlineData("docs/development/example.md")]
+    [InlineData("docs/manuals/example.md")]
     [InlineData("")]
     public void DocsPlanHasExactlyThreeChecksAndNoBuildsOrSuites(string path)
     {

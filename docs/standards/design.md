@@ -169,7 +169,7 @@
 
 | 项目 | 现状 | 计划 |
 |---|---|---|
-| 引擎残留 | 引擎程序已删除，宿主以退出码 64 拒绝 `--engine-*`；`src/Engine` 的非编译源码、宿主的引擎客户端与 worker 协议 Engine profile 仍在 | Q2（取代 P8-04l2，[开发计划](../plan/plan.md)） |
+| 引擎残留 | 引擎程序已删除，宿主以退出码 64 拒绝 `--engine-*`；Q2/Q3 已删除 `src/Engine` 残余源码、宿主引擎客户端和死条件分支；worker 协议的 `ChannelProfile.Engine` 和历史目录名 `src/EngineHost` 仍在 | 后续精简（[开发计划](../plan/plan.md)） |
 | Studio 桥接与 Studio 适配器 | V16–V19 版本控制页经桥接只读 VCI，禁用“工作区到项目”同步；WorkerChannel 的 Studio profile 只供桥接 | P8-21f |
 | 八版对外呈现 | 精简目录只在 V20/V21 默认启用；服务器说明、档案名、行为披露尚未统一 | P8-04n |
 | 一项功能一个实现 | V21 上部分重复的旧工具失败 | DES-2 |
@@ -182,7 +182,7 @@
 
 ### 3.1 构建输出与交付包
 
-`dotnet run --project build-tools/release -- build-multi-version -PublicApiRoot <SDK-root> -Test` 产生以下被忽略的本地输出：
+`dotnet run --project build-tools/release -- prepare -Version <版本> -BuildOnly -PublicApiRoot <SDK-root>` 产生以下被忽略的本地输出：
 
 | 发布 | 可执行文件 | 组成 |
 |---|---|---|
@@ -224,7 +224,7 @@ runtime/v<发布键>/        （八个发布键相同）
 | V21 | 512 | 84 |
 <!-- generated:tool-counts:end -->
 
-交付包由 `build-tools/Package-Release.py` 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，排除 `runtime/verification/`；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。多版本打包器断言 `runtime/` 下没有引擎文件。构建记录是 [`manifest/multi-version-build.json`](../../manifest/multi-version-build.json)，工具范围见[版本工具矩阵](../reference/version-tools.md)。已发布的归档保留各自记录的范围。
+交付包由 `prepare` 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，排除 `runtime/verification/`；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。文件清单 `manifest/multi-version-build.json` 只在暂存目录生成，不入 Git；工具范围见[版本工具矩阵](../reference/version-tools.md)。已发布的归档保留各自记录的范围。
 
 ### 3.2 包根与资源定位
 
@@ -313,7 +313,7 @@ runtime/v<发布键>/        （八个发布键相同）
 1. 把交付资源放进受版本管理的包内路径，在 `BundleResource` 与 `ResourcePaths` 增加一项；目录资源同步 `FindResource` 的目录判断。编译生成的 EXE 与 DLL 由构建和交付清单管理。
 2. 同步 `delivery-files.json` 与 C# `BundleManifestRequirements`，核对仓库检查和打包脚本的必需文件清单；清单与源码哈希由构建生成器更新，不手工改哈希。
 3. 调用方复用解析器和版本目录表，需要新布局时显式扩充锚点，不增加新的仓库探测；只供单个程序集使用的固定数据可以嵌入，并保留唯一的可编辑源。
-4. 补充布局测试（缺文件、显式覆盖、仓库外重定位），运行 `check-bundle-layout -SelfTest`、`check-bundle-layout`、`check-repository -NoBinaries` 和 `validate-bundle -Strict -NoBinaries -SkipSourceHashes`（均经 `dotnet run --project build-tools/release --`），其余按[验证分层](../manuals/validation.md)。
+4. 补充布局测试（缺文件、显式覆盖、仓库外重定位），运行 `check-bundle-layout -SelfTest`、`check-bundle-layout`、和 `check-repository -NoBinaries`（均经 `dotnet run --project build-tools/release --`），其余按[验证分层](../manuals/validation.md)。
 
 ## 4 V4 协议
 
@@ -465,7 +465,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `CANDIDATE_ONLY` | 离线构造器生成的候选内容，尚未经过导入验证 | `{}` |
 | `UNVERIFIED_BEHAVIOR` | `behaviorPolicy == current` | `{}` |
 | `NATIVE_CAPABILITY_LIMIT` | Foundation 原生能力拒绝 | 无定型字段 |
-| `CLEANUP_FAILED` | 编译候选清理 Safety 登录失败 | 候选定义 |
+| `CLEANUP_FAILED` | 保留的编译清理错误码；当前无候选执行路径，契约枚举保留 | 历史候选定义已归档 |
 | `DIAGNOSTIC_WRITE_FAILED` | CLI 报告文件写不出 | 报告定义 |
 | `APPROVAL_DISABLED` | 审批关闭时执行的 MCP 写调用，每个信封至多 1 条 | `enabled: false` |
 | `APPROVAL_PRECHECK_REFUSED` | 写入被自身预览拒绝，没有发起审批 | `stage: approval-precheck` |
@@ -513,7 +513,7 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 | 情形 | 是否审批 |
 |---|---|
 | 分类为 `WRITE` 或 `ONLINE-WRITE` 的实际执行；`SaveProject`、`SaveProjectCopy`、`CloseProject`；`StageImportFiles`、`CleanupStagedImportFiles` | 审批 |
-| 有 `dryRun` 参数的工具显式传 `dryRun: true`，或省略且默认是预览；safe-v4 候选的 `mode: preview` | 不审批，也不作为写请求写审计 |
+| 有 `dryRun` 参数的工具显式传 `dryRun: true`，或省略且默认是预览 | 不审批，也不作为写请求写审计 |
 | `ExchangeSystemDiagnosticsSettings`、`ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules` | 只有 `action=import` 审批 |
 | `GetEnvironmentDiagnostics` | 只有 `fix=true` 审批（默认 `false`） |
 | `EnsureOpennessUserGroup` | 始终审批 |
@@ -533,7 +533,7 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 
 - 生产者 MUST 在原生调用前完成全部 apply 参数检查；批量目录导入的 apply 缺少 `expectedProjectFile`、`expectedPlanHash`、`confirm` 或 `importOrder` 时返回 `INVALID_ARGUMENT`。
 - 协议层的计划哈希、参数摘要和文件 `sha256` MUST 是 64 位小写十六进制、不带 `sha256:` 前缀；`tiamcp.plan/1` 等数据格式内部的哈希属于各自格式。
-- `current` 工具的预览沿用自己的实际字段（如 `data.planHash`、`data.projectFile`、`data.token`），不能假定都有 `data.plan`。D1 候选协议（`mode = preview|apply`、`data.plan`，计划含 PID、启动时间、项目文件与绑定纪元组成的身份、输入哈希、清单哈希和操作列表，一个计划只允许一次执行尝试）只在显式 `TiaMcpTestPolicy` 测试构建中可用，行为族切换到 safe-v4 后才保证（API-39，[ADR 0002](decisions/0002-native-behavior-by-family-acceptance.md)）。（待核对：候选代码是否保留。）
+- `current` 工具的预览沿用自己的实际字段（如 `data.planHash`、`data.projectFile`、`data.token`），不能假定都有 `data.plan`。D1 候选协议（`mode = preview|apply`、`data.plan`，计划含 PID、启动时间、项目文件与绑定纪元组成的身份、输入哈希、清单哈希和操作列表，一个计划只允许一次执行尝试）的类型与约束保留，不代表当前可调用的路径：SafeV4 候选实现已归档到标签 `archive/safev4-candidates`，2026-11-02 从当前代码删除，各族通过 L5 后基于届时的现行代码重建（API-39，[ADR 0002](decisions/0002-native-behavior-by-family-acceptance.md)）。
 
 #### MCP 写操作审批
 

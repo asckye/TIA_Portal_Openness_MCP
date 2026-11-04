@@ -404,7 +404,7 @@ WCAG 2.2 A/AA 是必须达到的底线，按 WCAG2ICT 对非 Web 软件的解释
 | A11Y-11 | MUST | 对话框与带遮罩的面板：`IsDialog`、初始焦点、Tab 循环、Esc、焦点归还 | 自动化测试检查 `Keyboard.FocusedElement` | 2.4.3、2.4.11 |
 | A11Y-12 | MUST | 不只靠颜色传达状态、日志级别、筛选与选中、差异 | 评审清单与灰度截图 | 1.4.1 |
 | A11Y-13 | MUST | 指针目标 ≥ 24 × 24 epx 或满足间距例外 | 遍历可视树断言可点击元素的 `ActualWidth` / `ActualHeight`（例外列在测试白名单） | 2.5.8 |
-| A11Y-14 | MUST | 以上自动化检查放在 `tests/test-suites.json` 中工作台的现有套件，由合并门（本机 `check-all -Affected`）与 nightly 阻断回归（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)） | 合并门、nightly | 无 |
+| A11Y-14 | MUST | 以上自动化检查放在 `tests/test-suites.json` 中工作台的现有套件，由合并门（本机 `merge-check`）与完整准备（`prepare`）阻断回归（[ADR 0031](decisions/0031-release-path.md)） | 合并门、`prepare` | 无 |
 | A11Y-15 | SHOULD | 每个页面在 `--mock` 与夹具状态下 AI4W FastPass 零失败 | 发布前人工运行 | 无 |
 
 ### 6.4 WCAG 2.2 A / AA 准则对照

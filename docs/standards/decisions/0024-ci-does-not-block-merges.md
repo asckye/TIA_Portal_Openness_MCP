@@ -34,4 +34,4 @@
 - 后续工作：RULES-1 把三档验证（受影响、nightly、发布只核对）写进发布工具，并把不等待 CI 设为发布默认值；`CLAUDE.md`、`AGENTS.md` 已按本决定更新。
 - 验证方式：`check-all -Affected` 的 `affected.json` 记录选择与复用依据；发布记录中的 CI 等待步骤显示 `-NoWait`。
 
-**maintainer decision 2026-11-03（整套精简，SLIM-1）**：批准删除延迟门禁/基准、HTTP 稳定性作业、独占安静阶段、suite-output-parity 及重复编译配置；V14 SP1–V19 只保留 contract 捕获，V20/V21 保留功能 response 捕获。构建改用单一交付配置的 MSBuild 增量图，移除逐单元 portable-cache Prepare/Complete 热路径；保留 rounds 1–4 与旧发布证据验证。新作业清单和目标见[验证分层](../validation.md)；SLIM-1 round 2 已落实 nightly/release 45 分钟门槛，merge 仍为 30 分钟。
+**maintainer decision 2026-11-03（整套精简，SLIM-1）**：批准删除延迟门禁/基准、HTTP 稳定性作业、独占安静阶段、suite-output-parity 及重复编译配置；V14 SP1–V19 只保留 contract 捕获，V20/V21 保留功能 response 捕获。构建改用单一交付配置的 MSBuild 增量图，移除逐单元 portable-cache Prepare/Complete 热路径；保留 rounds 1–4 与旧发布证据验证。新作业清单和目标见[验证分层](../../manuals/validation.md)；SLIM-1 round 2 已落实 nightly/release 45 分钟门槛，merge 仍为 30 分钟。

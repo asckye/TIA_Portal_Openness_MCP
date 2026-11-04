@@ -1,6 +1,6 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-04，master `55f9c737`
+状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
 
 本页记录已核对的主线状态、待集成工作和测试者反馈；范围、顺序与放行门槛见[开发计划](plan.md)。
 
@@ -9,9 +9,9 @@
 - 公开版本记录：最新正式版为 [v3.3.0](../releases/v3.3.0.md)；已记录的 4.0 预发布为 [v4.0.0-beta.2](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.2)（2026-10-30，`7e9c4c65`）和 [v4.0.0-beta.1](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.1)（2026-10-22，`bc5dcc5a`）。预发布不设为 latest，3.3 更新器不提示；本次仅核对本地记录，未访问 GitHub。
 - beta.3 尚未发布。2026-11-03 的发布尝试已停止，改用全新的准备与公开流程；master 已含对应 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)。
 - PIPE-INT/SLIM-1 已合并（`eee7b372`），VMFIX-2 已合并（`93371695`、`b769d196`）。旧文档中的“仍等这两项合并”已不适用。
-- NEW-REL-A 已合并（`545e3604`、`55f9c737`）：`prepare` 构建、暂存校验并生成 ZIP。NEW-REL-C 已合并（`2db5bf1e`）：草稿上传、300 秒公开预算、重跑恢复及发布后 ZIP/sidecar 核验。核对时的 `Prepare.Run` 尚未接入完整测试、候选与自动上传，不能把它的成功视为完整发布准备通过。
-- 合并门已决定改为 NEW-REL-2 的 `merge-check`，完整检查进入 `prepare`，取消 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。这是已采纳的方向；NEW-REL-B、NEW-REL-2 和 NEW-REL-3 的实现集成仍待完成。
-- 架构：八版 FoundationHost，每个 MCP 会话一个 PLC worker；入口 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`，worker 位于同目录 `worker/`。V20/V21 使用 MTA，V14 SP1–V19 使用 STA；MTA-1 的统一仍列在后续计划。引擎运行文件已退役，源目录残留由 Q2 整理。各版工具数见[生成的目录](../reference/version-tool-catalog.md)。
+- NEW-REL-A 已合并（`545e3604`、`55f9c737`）：`prepare` 构建、暂存校验并生成 ZIP。NEW-REL-C 已合并（`2db5bf1e`）：草稿上传、300 秒公开预算、重跑恢复及发布后 ZIP/sidecar 核验。NEW-REL-B 已合并（`0ae4b1e8`、`1af64ce7`）：`prepare` 接入全部注册套件、保留检查、`candidate.json` 和自动草稿上传；真实 `prepare` 尚未运行。
+- 合并门为 NEW-REL-2 的 `merge-check`（`90be875b`、`9485a33b`），完整检查进入 `prepare`，取消 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。NEW-REL-3 已删除旧调度器、构建缓存、证据、旧发布链和全部八版响应捕获（`bce6994c`、`6a489b47`、`3b66a7be`、`090ebab1`）。
+- 架构：八版 FoundationHost，每个 MCP 会话一个 PLC worker；入口 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`，worker 位于同目录 `worker/`。V20/V21 使用 MTA，V14 SP1–V19 使用 STA；MTA-1 的统一仍列在后续计划。引擎运行文件已退役，源目录残留已由 Q2/Q3 删除。各版工具数见[生成的目录](../reference/version-tool-catalog.md)。
 - 品牌为自动化工程工作台；程序名、插件 ID、MCP 服务名 `tia-portal`、包名和仓库地址保持原有标识。GitHub 仓库改名仍在正式版计划内，未执行。
 
 机器地址、PID、worktree 和运行中的检查必须从当前环境确认，不从本页推断。本页不以旧分支提交号证明当前分支是否完成或已验证。
@@ -22,9 +22,9 @@
 
 | 阶段 | 已知状态 | 下一步 |
 |---|---|---|
-| NEW-REL-B、SEC-1 | 主线尚无完整候选准备阶段；安全小修排入 beta.3 | 完成实现、审查及主机验证 |
-| Q1–Q9、CPM | 已有待集成精简栈，不能按旧 PIPE-INT 基线直接当作当前结果 | 适配新主线，迁移仍有效的测试，再按依赖集成 |
-| NEW-REL-2/3、THIRD-1、主机测试精简 | 已决定在 beta.3 前完成 | 新合并门、旧工具及八版响应基线清理、第三方裁剪和批准的测试精简 |
+| NEW-REL-B、SEC-1 | 已合并（提交见[计划](plan.md)） | 随真实 `prepare` 验证 |
+| Q1–Q9、CPM | 已合并（提交见[计划](plan.md)） | 无 |
+| NEW-REL-2/3、THIRD-1、主机测试精简 | 已合并（提交见[计划](plan.md)） | 无 |
 | DOCS-1/2 | 本文及相邻规范、手册已在文档 worktree 整理；尚待审查集成 | 与新工具实现核对并合并 |
 | REORG-2、REORG-3、大文件拆分及长行整理 | 已决定全部先于真实发布准备 | 按顺序整理、同步路径并验证 |
 | beta.3 准备与公开 | 没有本次可公开候选或成功发布结果 | 上述整理完成后运行完整 `prepare`，维护者确认后 `publish-prepared` |

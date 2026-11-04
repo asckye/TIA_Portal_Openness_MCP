@@ -240,7 +240,7 @@ internal static class Prepare
             throw new ReleaseException(error);
         if (!File.ReadAllText(Path.Combine(root, "docs/README.md")).Contains($"[当前版本说明](releases/v{version}.md)", StringComparison.Ordinal))
             throw new ReleaseException("docs/README.md current release link is stale");
-        if (!Regex.IsMatch(File.ReadAllText(Path.Combine(root, "docs/development/roadmap.md")), "(?m)^# .*" + Regex.Escape(version)))
+        if (!Regex.IsMatch(File.ReadAllText(Path.Combine(root, "docs/plan/plan.md")), "(?m)^# .*" + Regex.Escape(version)))
             throw new ReleaseException("Roadmap title is stale");
     }
 

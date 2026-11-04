@@ -1,18 +1,18 @@
 # 验证
 
-状态：现行 · 最后核对：2026-11-04，master `55f9c737`
+状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
 
 本文规定合并检查、发布前完整检查和发布后真机验证的职责，依据 [ADR 0031](../standards/decisions/0031-release-path.md)。
 
 ## 合并检查
 
-合并门为 `merge-check`：使用普通 `dotnet build` 和 `dotnet test` 构建、测试受影响的项目，再检查生成内容和仓库规则；目标约 10 分钟，不把性能目标当作功能正确性的替代。该命令由 NEW-REL-2 交付，核对时尚未进入 master。在它交付前，遵守当前 [AGENTS.md](../../AGENTS.md) 要求的检查，不以规划中的命令冒充已完成验证。
-
-NEW-REL-2 合并后，从仓库根目录运行：
+合并门为 `merge-check`：使用普通 `dotnet build` 和 `dotnet test` 构建、测试受影响的项目，再检查生成内容和仓库规则；目标约 10 分钟，不把性能目标当作功能正确性的替代。从仓库根目录运行：
 
 ```powershell
 dotnet run --project build-tools/release -- merge-check
 ```
+
+命令按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件；`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取证据或结果缓存；Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。日志和各作业耗时写在 `bin-build/merge-check/`；首次冷构建及宽范围改动可能超过十分钟。
 
 GitHub CI 保留独立检查，但不阻塞合并，也不代替本机检查。不再设置 nightly；发布前的全集由 `prepare` 执行。审查时核对实际运行的项目、失败与阻塞项，而非只看命令退出或旧结果缓存。
 
@@ -28,13 +28,13 @@ dotnet run --project build-tools/release -- test-suites -Suite worker-channel
 
 ## 发布前完整检查
 
-完整入口是 `prepare`，步骤见[发布流程](release.md)。NEW-REL-B 接入后，它构建八版交付物、生成 ZIP，在隔离目录测试提取包，并对 checkout 的运行文件与 ZIP 做字节核对。任一套件或检查失败都不得写入可发布候选；每项作业运行到底并汇总结果，不因先前失败漏掉后续作业。
+完整入口是 `prepare`，步骤见[发布流程](release.md)。它构建八版交付物、生成 ZIP，在隔离目录测试提取包，并对 checkout 的运行文件与 ZIP 做字节核对。任一套件或检查失败都不得写入可发布候选；每项作业运行到底并汇总结果，不因先前失败漏掉后续作业。
 
 ### 注册套件与数量门槛
 
-套件名称、项目、过滤条件、构建属性及数量门槛的权威来源是 [`tests/test-suites.json`](../../tests/test-suites.json)。NEW-REL-B 读取全部条目，Foundation 使用现有分片执行器；所有结果要求零失败、通过数达到 `minimumPassed`、跳过数不超过 `maximumSkipped`。平台例外只采用注册表已声明的值，不临时放宽。
+套件名称、项目、过滤条件、构建属性及数量门槛的权威来源是 [`tests/test-suites.json`](../../tests/test-suites.json)。`prepare` 读取全部条目，Foundation 使用现有分片执行器；所有结果要求零失败、通过数达到 `minimumPassed`、跳过数不超过 `maximumSkipped`。平台例外只采用注册表已声明的值，不临时放宽。
 
-下表直接摘录核对的 master 注册表。当前文档分支仍含被 SLIM-1 移除的重复变体，合并时以 master 的注册表为准。后续 Q 系列和经批准的测试精简会更新注册表，本表不授权删减或调整门槛。
+下表直接摘录核对的 master 注册表，共 38 个套件。经批准的测试精简会更新注册表，本表不授权删减或调整门槛。
 
 | 套件 | 最低通过数 | 最大跳过数（Windows） |
 |---|---:|---:|
@@ -42,33 +42,27 @@ dotnet run --project build-tools/release -- test-suites -Suite worker-channel
 | `generation-planning` | 260 | 0 |
 | `generation-model` | 129 | 0 |
 | `release-tool` | 720 | 0 |
-| `offline` | 303 | 0 |
-| `kept-code` | 4,854 | 0 |
+| `kept-code` | 5,155 | 0 |
 | `version-policy` | 10 | 0 |
 | `write-guard` | 8 | 0 |
 | `crash-evidence` | 7 | 0 |
 | `updater` | 33 | 0 |
-| `foundation` | 29,000 | 1 |
-| `foundation-api` | 30,000 | 1 |
+| `foundation` | 27,820 | 1 |
+| `foundation-api` | 28,812 | 1 |
 | `software-read` | 258 | 0 |
 | `special-export-shape` | 12 | 0 |
-| `device-add` | 175 | 0 |
+| `device-add` | 116 | 0 |
 | `hardware-catalog` | 57 | 0 |
 | `diagnostic-membership` | 10 | 0 |
 | `prompt-registration` | 195 | 0 |
 | `adapter-contracts` | 1,850 | 0 |
 | `worker-channel` | 275 | 0 |
-| `compile-candidate` | 17 | 0 |
-| `compile-candidate-no-safety` | 17 | 0 |
-| `fallback-vci-modern` | 13 | 0 |
-| `fallback-vci-initial` | 15 | 0 |
-| `fallback-vci-classic` | 13 | 0 |
 | `engine-host` | 159 | 0 |
 | `shared-session` | 6 | 0 |
 | `shared-pipeline` | 6 | 0 |
 | `worker-robustness` | 570 | 0 |
 | `shared-lifecycle` | 6 | 0 |
-| `source-contracts` | 148 | 0 |
+| `source-contracts` | 140 | 0 |
 | `workbench-control-protocol` | 94 | 0 |
 | `workbench-control` | 96 | 0 |
 | `workbench-control-host` | 98 | 0 |
@@ -98,11 +92,11 @@ dotnet run --project build-tools/release -- test-suites -Suite worker-channel
 | 暂存布局 | 交付规则、必需文件、包资源、测试策略程序集拒绝、Openness 用户组运行时及程序集依赖闭包 |
 | 分析器 | 使用本次构建的报告运行分析器棘轮，不接受新增警告或过期报告 |
 
-具体发布作业由 NEW-REL-B 接入；仓库 lint 和检查工具自身的测试属于合并门，不重复加入发布全集。以上保留项没有因迁移而获准降低通过数、增加跳过数或过滤失败。
+仓库 lint 和检查工具自身的测试属于合并门，不重复加入发布全集。以上保留项没有因迁移而获准降低通过数、增加跳过数或过滤失败。
 
 ## 已批准移除的检查机制
 
-维护者在 2026-11-03 批准以下移除，后续工具清理由 NEW-REL-3 执行。文档描述该决定，不在本任务中删除任何检查或测试代码。
+维护者在 2026-11-03 批准以下移除，工具清理已由 NEW-REL-3 执行。
 
 - 延迟、耗时及性能增长门槛；性能数据用于趋势报告。功能测试的短时限后续改为防挂起保护，须按对应任务实施，不能自行放宽现有断言。
 - HTTP 稳定性压测（包括 c8/c16 和重复轮次）。普通 HTTP 功能、传输、审批及故障恢复检查保留。
@@ -127,7 +121,7 @@ dotnet run --project build-tools/release -- generate-tool-counts
 
 ### 工具契约兼容检查
 
-八个发布键分别通过 `Snapshot-ToolContracts.py capture --exe` 从对应宿主捕获工具定义，再用 `compare --baseline manifest/contracts/v4/baseline --current <捕获目录>` 检查。删除工具或参数、新增必填参数以及类型、枚举、默认值变化均须审查，不能只运行离线 `verify` 代替实际捕获。逐工具响应基线的移除范围见上文；契约快照继续保留。
+八个发布键分别通过 `Snapshot-ToolContracts.py capture --exe` 从对应宿主捕获工具定义，再用 `compare --baseline manifest/contracts/v4/baseline --current <捕获目录>` 检查。基线守护八版工具名称、输入与输出 schema、注解、描述哈希、行为能力及 V20/V21 lite 名单；格式 2 在每个文件的 `schemas` 表中保存输出 schema，由工具的 `outputSchemaSha256` 引用，加载时还原完整输出 schema，捕获文件与基线仍逐字节比较。删除工具或参数、新增必填参数以及类型、枚举、默认值变化均须审查，不能只运行离线 `verify` 代替实际捕获。逐工具响应基线的移除范围见上文；契约快照继续保留。
 
 ### 注释与 MCP 中文门禁
 
@@ -136,8 +130,7 @@ dotnet run --project build-tools/release -- generate-tool-counts
 文档变更检查每个改动文件的链接、锚点、路径、命令参数与工具适用版本。新增、移动或删除文件还须执行：
 
 ```powershell
-dotnet run --project build-tools/release -- validate-bundle -Strict -NoBinaries -SkipSourceHashes
-python scripts/checks/Check-Repository.py --no-binaries
+dotnet run --project build-tools/release -- check-repository -NoBinaries
 ```
 
 仓库静态检查保留交付布局、工具调用、适配器边界、吞异常说明、注释与 MCP 文本、版本与生成内容漂移检查。分析器报告和完整程序集校验按受影响范围执行。静态包检查不等于二进制包已通过测试。

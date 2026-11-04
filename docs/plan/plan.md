@@ -1,6 +1,6 @@
 # 路线图与待办（v4.0.0-beta.3）
 
-状态：现行 · 最后核对：2026-11-04，master `55f9c737`
+状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
 
 本页是开发计划：按版本记录范围、任务状态、放行门槛和待维护者决定，取代已归档的[路线图](../archive/development/roadmap.md)和[重构计划](../archive/development/refactor-plan.md)（阶段 0–8 的 P0–P8 任务表、历史目标和风险留在那里）。
 
@@ -14,7 +14,7 @@
 
 | 关口 | 门槛 | 依据 |
 |---|---|---|
-| 合并 | 本机 `merge-check`：普通 `dotnet build`、受影响的 `dotnet test` 与生成/仓库检查，目标约 10 分钟，由 NEW-REL-2 交付；交付前继续遵守当前 AGENTS.md。任务说明先经独立 AI 审查，交付后经审查与主机验证；GitHub CI 不阻塞合并 | [ADR 0031](../standards/decisions/0031-release-path.md)；维护者 2026-11-03 |
+| 合并 | 本机 `merge-check`：普通 `dotnet build`、受影响的 `dotnet test` 与生成/仓库检查，目标约 10 分钟（NEW-REL-2）。任务说明先经独立 AI 审查，交付后经审查与主机验证；GitHub CI 不阻塞合并 | [ADR 0031](../standards/decisions/0031-release-path.md)；维护者 2026-11-03 |
 | 预发布 `4.0.0-beta.N` | GitHub 预发布，不设为最新版，3.3 更新器不提示；发布说明附未验收清单；发布后测试者按[清单](../guides/beta-tester-checklist.md)报告，维护者做 VM 回归；每次公开前维护者确认，确认后保持候选提交不变 | [ADR 0020](../standards/decisions/0020-prereleases-tested-by-users.md) |
 | 发布准备与公开 | `prepare` 完整构建、所有注册套件与保留检查通过后封存候选并提前上传草稿；`publish-prepared` 不构建或测试，300 秒内完成公开。没有 nightly，也不采纳旧收据。发布后只校验 ZIP 与 sidecar | [ADR 0031](../standards/decisions/0031-release-path.md) |
 | 4.0 正式版 | 全部 4.0 任务合并、完整准备通过、rc 经验证、没有未决 blocker、维护者确认；正式版公开规则须先实现。起初不向 3.3 更新器提供，不设固定公测期或连续通过次数 | [ADR 0023](../standards/decisions/0023-release-4-0-final-criteria.md)、[0031](../standards/decisions/0031-release-path.md) |
@@ -23,15 +23,15 @@
 
 ## 4.0.0-beta.3（未发布）
 
-master `55f9c737` 已含 beta.3 的 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)，以及 PIPE-INT/SLIM-1、VMFIX-2 和新发布路径的 A、C 两部分。beta.3 尚未发布。2026-11-04 维护者决定：全部整理先完成，再真实运行 `prepare`，确认后公开。
+master `ef1988bc` 已含 beta.3 的 CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)，以及 PIPE-INT/SLIM-1、VMFIX-2、新发布路径的 A、B、C 三部分、SEC-1、Q1–Q9、CPM、NEW-REL-2、NEW-REL-3 和 THIRD-1。beta.3 尚未发布。2026-11-04 维护者决定：全部整理先完成，再真实运行 `prepare`，确认后公开。
 
 ### 发布前顺序
 
 | 顺序 | 任务 | 内容与状态 |
 |---|---|---|
-| 1 | NEW-REL-B、SEC-1 | NEW-REL-B 接入所有套件、保留检查、候选和自动草稿上传；SEC-1 修补审批设置保护、文件写入与 Git 调用的小范围安全问题（调查 S1/S2）。均待集成；输出根以外写文件的完整审批另排 beta.4 |
-| 2 | Q1–Q9、CPM | 集成已有精简栈：Q1/Q5 → Q2 → Q3/Q4 → Q7 → Q8/CPM → Q9；清理引擎残留、重复检查、SafeV4 候选，集中包版本、压缩契约公共 schema、派生发布键。重新变基到新工具；迁移仍有意义的审批与回滚测试后再删除旧测试目录 |
-| 3 | NEW-REL-2、NEW-REL-3、THIRD-1、主机测试精简 | 新合并门；删除旧发布工具和全部八版响应捕获/基线；第三方裁剪；准入测试去重及隔离改进。保留功能、协议、审批、写安全、故障恢复测试及各数量门槛；任务说明与主机验证待完成 |
+| 1 | NEW-REL-B、SEC-1 | 已合并（`0ae4b1e8`、`1af64ce7`；`6ae345fd`、`b711e0bb`、`979b1263`）：NEW-REL-B 接入所有套件、保留检查、候选和自动草稿上传；SEC-1 修补审批设置保护、文件写入与 Git 调用的小范围安全问题（调查 S1/S2）。输出根以外写文件的完整审批另排 beta.4 |
+| 2 | Q1–Q9、CPM | 已合并（Q1 `5f956ea8`、Q5 `a26c60bd`、Q2 `84c4e966`、Q3 `bd30bc9d`、Q4 `c001c1c4`、Q7 `6d771add`、CPM `975a0ff5`、Q8 `02548d27`、Q9 `74073ed0`，Q-INT-1 `3cac74e0`）：清理引擎残留、重复检查、SafeV4 候选，集中包版本、压缩契约公共 schema、派生发布键 |
+| 3 | NEW-REL-2、NEW-REL-3、THIRD-1、主机测试精简 | 已合并（NEW-REL-2 `90be875b`、`9485a33b`；NEW-REL-3a–e `bce6994c`、`6a489b47`、`3e343bd6`、`3b66a7be`、`090ebab1`；THIRD-1 `63281105`）：新合并门；删除旧发布工具和全部八版响应捕获/基线；第三方裁剪；版本重复的准入用例去重。保留功能、协议、审批、写安全、故障恢复测试及各数量门槛 |
 | 4 | DOCS-1、DOCS-2 | 文档分目录、归并规范和手册；按新发布路径与调查刷新文档。本分支工作，待审查集成；[ADR 0030](../standards/decisions/0030-documentation-and-repository-structure.md) 与 [0031](../standards/decisions/0031-release-path.md) |
 | 5 | REORG-2 | 整理数据与脚本：`schemas/` 并入 `reference/`、`hooks/` 并入 `plugin/`、运行布局并入设计规范、一个 `.slnx`、输出到 `bin-build`；清理旧记录和 LibraryRenameProbe，核对交付清单与许可文件引用；待实施 |
 | 6 | REORG-3 | 整理源码、测试和交付包路径，更新所有引用、注册与交付规则；待实施 |
@@ -63,7 +63,7 @@ THIRD-1 保留交付源码、每个项目的 README、LICENSE、UPSTREAM.json、
 | BATCH2 | 批次 2 的正式重新生成与门禁修复，CHANGELOG 与发布说明定稿 | 已合并（`030f1660`、`dbe12b88`、`757ce94d`、`c6c1d99c`、`34e85560`、`1dfe2067`） | 2026-11-02 |
 | PIPE-INT、SLIM-1 | 旧检查链精简；已批准的延迟门槛、HTTP 稳定性、静默阶段、套件输出对照及重复变体清理；后续由新工具接替 | 已合并（`eee7b372`） | 2026-11-03 |
 | VMFIX-2 | 扩展族回复校验、Unified 读取范围和脚本、HMI 探测与状态原因；第二轮修复安全管理回复回归 | 已合并（`93371695`、`b769d196`） | 2026-11-03 |
-| NEW-REL-A | 全新 `prepare` 的构建、暂存校验和打包；尚不含 B 阶段完整检查 | 已合并（`545e3604`、`55f9c737`） | 2026-11-04 |
+| NEW-REL-A | 全新 `prepare` 的构建、暂存校验和打包 | 已合并（`545e3604`、`55f9c737`） | 2026-11-04 |
 | NEW-REL-C | 预上传草稿、300 秒公开预算、重跑恢复；发布后 ZIP 与 sidecar 校验 | 已合并（`2db5bf1e`） | 2026-11-04 |
 
 ## 4.0.0-beta.4
@@ -124,7 +124,7 @@ beta.4 合并后开始。V21 API 的 6 个 P1 缺口按 API 先行注册，带�
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
-| P8-31f–i | 库与母版实例化、`CheckProjectStandard`（2026-11-02 更正后仍在 4.1）、工作台生成模块、状态模型包；P8-31h1 审批抽屉扩展；P8-31e6 随 SafeV4 候选删除（Q7）失去前提（待核对）。设计见已归档的[项目生成框架](../archive/development/design/project-generation-framework.md)和[分阶段生成](../archive/development/design/p8-31-staged-generation.md) | 推迟 | 2026-10-22 |
+| P8-31f–i | 库与母版实例化、`CheckProjectStandard`（2026-11-02 更正后仍在 4.1）、工作台生成模块、状态模型包；P8-31h1 审批抽屉扩展；P8-31e6 延后（族通过 L5 后基于现行代码重建规则，候选实现已归档删除）。设计见已归档的[项目生成框架](../archive/development/design/project-generation-framework.md)和[分阶段生成](../archive/development/design/p8-31-staged-generation.md) | 推迟 | 2026-10-22 |
 | P8-40 | 表格与 ECAD 导入、Classic VB 到 Unified JS、V20/V21 补深度、按版本输出的构建工具 | 推迟 | 2026-10-22 |
 | API-P2、API-P3 | V21 API 差距评审的 P2（嵌套 Unified 运行设置、SIMATIC SD 更多语言、Multiuser、UMAC 与证书设置、PLC 与显示屏密码、参考工程、VCI 管理、GSD 参数、运动解释程序、项目文本筛选、带依赖生成源）和 P3（Classic 删除、空 FB、块元数据、少量硬件服务等） | 推迟 | 2026-11-02 |
 | P8-95a–g | EplanMCP 借鉴项：VM HTTP 加固、“工程内容是数据”的服务器说明与审批卡清理、防误点、退出确认与单实例、Claude Desktop（MSIX）配置路径、CI 加固、doctor/audit 的 `schemaVersion` | 推迟 | 2026-11-01 |

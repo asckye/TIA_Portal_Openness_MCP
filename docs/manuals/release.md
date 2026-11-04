@@ -1,12 +1,12 @@
 # 准备和发布版本
 
-状态：现行 · 最后核对：2026-11-04，master `55f9c737`
+状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
 
 本文说明维护者如何提前构建、检查和上传候选，再在确认后公开预发布，依据 [ADR 0031](../standards/decisions/0031-release-path.md)。
 
 发布分为两个阶段：`prepare` 完成所有耗时工作；`publish-prepared` 使用已上传的候选，在 300 秒内核对、推送提交、打标签并公开。发布阶段不构建、不测试、不打包。
 
-实施状态：核对时 master 已有 NEW-REL-A 的构建打包和 NEW-REL-C 的上传、公开命令；NEW-REL-B 尚未把完整检查、`candidate.json` 和自动上传接入 `prepare`。下述完整准备流程在 NEW-REL-B 合并后使用。当前单独运行 `prepare` 只会得到 ZIP，不能视为可发布候选，也不能手工补候选记录。合并顺序见[开发计划](../plan/plan.md)。
+实施状态：master 已含 NEW-REL-A 的构建打包、NEW-REL-B 的完整检查与候选、NEW-REL-C 的上传和公开命令。`prepare -BuildOnly` 只得到 ZIP，不能视为可发布候选，也不能手工补候选记录。
 
 ## 准备环境
 
@@ -19,7 +19,7 @@
 - 本机已有校验过的随包 .NET 压缩包缓存 `bin-build/cache/dotnet-10.0.12/`；SDK、缓存、密钥和私人项目均不随包分发。
 - GitHub 凭据能上传草稿、推送 master 和创建标签。上传和公开按 `-Token`、`GITHUB_TOKEN`、Git Credential Manager 的顺序取令牌；不要把令牌写进文档或命令历史。
 
-准备会重建当前检出的 `runtime/`，保留其中的 `README.md`，并重建 `bin-build/prepared/<版本>/`。重跑前保留仍需审查的旧日志；不要让运行中的程序占用这些输出。命令会验证跟踪文件未被改写，生成的包清单只写入暂存目录。
+准备会重建当前检出的 `runtime/`（保留其中的 `README.md`）和 `bin-build/prepared/<版本>/`，并清理 `src`、`tests`、`third_party`、`build-tools/native-call-weaver` 下的全部 `bin`/`obj`，避免旧依赖进入交付包；运行中的 `build-tools/release` 不清理。`TEMP`、`TMP`、`TMPDIR` 和 `DOTNET_CLI_HOME` 使用仓库外的短 `tmr-<8位标识>` 目录，运行结束后删除；占用中的文件导致清理失败时保留目录并打印警告。重跑前保留仍需审查的旧日志；不要让运行中的程序占用这些输出。命令会验证跟踪文件未被改写，生成的包清单只写入暂存目录。
 
 ## 提前准备候选
 
@@ -29,15 +29,15 @@
 dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3
 ```
 
-完整准备按顺序完成构建、暂存校验、ZIP 和摘要生成、全部注册套件与发布检查，然后写候选记录并上传私有草稿。检查范围及最低通过数、最大跳过数见[验证](validation.md)。任一套件或检查失败时不写可发布候选；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。
+完整准备按顺序完成构建、暂存校验、ZIP 和摘要生成、全部注册套件与发布检查，然后写候选记录并上传私有草稿。检查范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。
 
 | 选项 | 用途与边界 |
 |---|---|
 | `-BuildOnly` | 只构建、暂存校验和打包，不运行完整套件与发布检查，不生成可发布候选，不上传草稿；用于检查构建和交付布局 |
-| `-NoDraftUpload` | 完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft`。此选项由 NEW-REL-B 接入，核对时的 master 尚不支持 |
+| `-NoDraftUpload` | 完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |
 | `-Python`、`-CompanionPython` | 分别指定解码器和 PLC Tools 的解释器绝对路径 |
-| `-MaxParallelism` | 构建并行度，必须为正整数 |
+| `-MaxParallelism` | 构建并行度，必须为正整数，默认 6 |
 
 成功产物位于 `bin-build/prepared/<版本>/`：
 

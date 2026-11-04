@@ -70,7 +70,7 @@
 | U-19 | MUST NOT | 在 UI 线程或同步上下文中同步等待异步操作（`.Result`、`.Wait()`、`GetAwaiter().GetResult()`）；允许的位置（进程入口与 CLI 主流程、所属线程上包装同步原生 API、SDK 同步回调）写注释说明 |
 | U-23 | MUST | 线上、日志和持久化的时间戳用 `DateTimeOffset.UtcNow`，时长用 `Stopwatch`；`DateTime.Now` 只用于本地显示和文件名。冻结的旧 meta 时间戳在旧族移除前不改（CS-44） |
 | U-24 | SHOULD NOT | 引入可变静态状态；必需的进程级钩子只在启动时设置一次，并说明线程安全 |
-| U-26 | MUST [P] | 版本条件编译只用 [`TiaFeatures.props`](../../src/Shared/TiaFeatures.props) 的特性符号、SDK 框架符号（`NET`、`NETFRAMEWORK`、`NET48`）和文档化的构建角色符号，不新增临时版本宏（`Check-TiaFeatures.py` 核对） |
+| U-26 | MUST [P] | 版本条件编译只用 [`TiaFeatures.props`](../../src/Shared/TiaFeatures.props) 的特性符号、SDK 框架符号（`NET`、`NETFRAMEWORK`、`NET48`）和文档化的构建角色符号，不新增临时版本宏（`check-tia-features` 核对） |
 | NR-01 | MUST | 新工程 `<Nullable>enable</Nullable>`；文件级 `#nullable disable` 只用于链接进禁用工程的旧源码，并在同一行写明原因 |
 | NR-04 | MUST [P] | 可空注解不改变线上形状；JSON 中“缺失”与 `null` 的区别由契约基线决定 |
 
@@ -160,7 +160,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 ### 2.8 依赖
 
 - 新增依赖先写明用途、许可证、维护状况和更轻的替代；运行时依赖由维护者批准（手册 [第 14 节](engineering-handbook.html#deps)）。随包组件的许可证见 [`docs/licenses`](../licenses) 和 [NOTICE.md](../../NOTICE.md)。
-- 共享包版本在 `src/Shared/DependencyVersions.props`（.NET 包版本与 `build-tools/bundled-dotnet.json` 的运行时一致）；`global.json` 固定 SDK。中央包管理（`Directory.Packages.props`）在 `refactor/CPM` 分支，尚未合并。
+- NuGet 包版本统一在根目录 `Directory.Packages.props`；.NET 运行时对齐值保留在 `src/Shared/DependencyVersions.props`（与 `build-tools/bundled-dotnet.json` 的运行时一致）；`global.json` 固定 SDK。
 - 分析器只用 .NET SDK 自带的代码样式规则、NetAnalyzers 和 `dotnet format`；不引入新的分析器包（StyleCop、VS Threading Analyzers 等）。
 - B-06（MUST）：契约程序集不引用 Siemens 或 JSON 库；`TiaMcp.Logic` 不引用 Siemens 或 MCP SDK；Siemens 引用只出现在适配器（含工作台的 `src/Studio/Openness`）和 PlcWorker 中（契约工程中的 MSBuild 目标 `RejectNativeAndJsonDependencies`）。
 - Siemens PublicAPI 是本机构建输入，不入库、不分发：默认查找 `sdk/` 下的八版 `TIA_V*_PublicAPI`，也可以用 `TiaPublicApiRoot` 指定其父目录；单个工程显式给出的 `SiemensEngineeringDirectory` 优先（[`TiaPublicApi.props`](../../src/Shared/TiaPublicApi.props)）。
@@ -189,12 +189,12 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 | 路径 | 内容 |
 |---|---|
-| `src/` | 产品源码：八个发布键共用的 FoundationHost 宿主、PlcWorker、按发布键编译的适配器及其契约、WorkerChannel、OnlineChannels、纯逻辑库 `Logic`、共享源码 `Shared`、工作台 `Studio`、Updater 和随包工具。`src/Engine` 只剩不再编译的旧源码，由 Q2 删除（取代 P8-04l2），不在其中新增代码 |
+| `src/` | 产品源码：八个发布键共用的 FoundationHost 宿主、PlcWorker、按发布键编译的适配器及其契约、WorkerChannel、OnlineChannels、纯逻辑库 `Logic`、共享源码 `Shared`、工作台 `Studio`、Updater 和随包工具。`src/Engine` 残余源码已由 Q2 删除；`src/EngineHost` 是八版共享的宿主包装链代码，保留历史名称 |
 | `tests/` | 测试工程，按 Shared、FoundationHost、Adapters、WorkerChannel、Studio、Generation、Release、Tools、Updater 等分组，目录与工程同名；`tests/test-suites.json` 是套件注册表 |
-| `build-tools/` | 全部 C# 构建、检查与发布自动化：`release`（唯一入口）、`common`、`native-call-weaver`；剩余的 `Package-*.py` 由 P8-10 改为 C# |
+| `build-tools/` | 全部 C# 构建、检查与发布自动化：`release`（唯一入口）、`common`、`native-call-weaver` |
 | `scripts/` | 只放随包交付的 Python 和手动诊断脚本；开发用的 Python 检查和生成器（`scripts/checks`、`scripts/generate`）正由 P8-10 移植到 `build-tools/release` |
 | `reference/` | 生成器输入和随包参考数据：`tool-examples`（调用、语言文件、结果解释、调用顺序）、`tool-catalog`、固定来源的 Siemens 官方示例与授权记录、`version-feature-matrix.json`、`v21-ecosystem.json`；根目录的 `schemas/` 以后移到这里 |
-| `manifest/` | 生成的版本、工具、构建与交付记录，契约与响应基线 `contracts/v4`，发布记录 `publication-v*.json`；只由生成器和发布命令写入 |
+| `manifest/` | 生成的版本、工具、构建与交付记录，契约基线 `contracts/v4/baseline`，发布记录 `publication-v*.json`；只由生成器和发布命令写入 |
 | `templates/` | 随包的编程与工程模板 |
 | `third_party/` | 固定版本的第三方组件，各自带许可证和 `UPSTREAM.json` |
 | `plugin/` | Claude Code 插件技能，引导 AI 按版本使用 `GetToolUsage` 示例；插件定义在 `.claude-plugin/`，根目录的 `hooks/` 以后移到这里 |
@@ -231,7 +231,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 - 开发机没有 TIA Portal。离线检查证明构建、协议、契约和宿主行为，不证明原生行为；原生结果以 [真机台账](../reference/real-machine-ledger.md) 为准，没有运行时写 `NOT RUN`。
 - 测试不连接 TIA Portal、PLC、虚拟机或外部网络服务；可以使用自己在 127.0.0.1 上启动的合成服务（HTTP 夹具、命名管道夹具），注册套件、preflight 和传输检查不能因此跳过（[AGENTS.md](../../AGENTS.md)“范围”）。
 - 测试证明主要行为和规定的失败路径；不写证明不了主要功能的防御性测试（手册 [第 12 节](engineering-handbook.html#testing)）。
-- 具体命令、作业清单、超时和输出目录以 [验证分层](../manuals/validation.md) 为准；什么时候运行哪一档见 [开发流程](../manuals/workflow.md) 第 4 节。维护者 2026-11-03 批准的 SLIM-1（尚未合并）删除计时与延迟门禁、测试输出一致性检查、重复的构建配置以及 V14 SP1–V19 的响应捕获，本节的规则不依赖这些检查。
+- 具体命令、作业清单、超时和输出目录以 [验证分层](../manuals/validation.md) 为准；什么时候运行哪一档见 [开发流程](../manuals/workflow.md) 第 4 节。维护者 2026-11-03 批准的 SLIM-1 和 NEW-REL-3（已合并）删除了计时与延迟门禁、测试输出一致性检查、重复的构建配置以及八版逐工具响应捕获，本节的规则不依赖这些检查。
 
 ### 5.2 层次
 
@@ -266,7 +266,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 - 失败数必须为零；重复的测试身份被拒绝。
 - 用 `dotnet run --project build-tools/release -- test-suites -Suite <名称>` 运行并核对注册门禁；`dotnet test` 只用于开发时的快速运行。未注册的控制台工程用 `dotnet run --project <csproj> -c Release`，`dotnet test` 不执行它们的断言。
-- 新测试工程在注册表中登记后，才由 `test-suites` 和 `check-all` 按门禁运行。降低 `minimumPassed`、提高 `maximumSkipped` 或删除套件都属于放宽（第 5.8 节）。
+- 新测试工程在注册表中登记后，才由 `test-suites`、`merge-check` 和 `prepare` 按门禁运行。降低 `minimumPassed`、提高 `maximumSkipped` 或删除套件都属于放宽（第 5.8 节）。
 
 ### 5.5 基线与生成文件
 
@@ -336,7 +336,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 - 运行二进制、本地 SDK、用户项目、设计交接草稿、密钥和本机绝对路径不进 Git。
 - 一次提交只做一件事；格式化和重命名单独提交（第 2.9 节）。
 - 不经维护者明确同意不做破坏性 Git 操作：`reset --hard`、`push --force`、`clean -fdx`、改写已推送的历史、跳过钩子。
-- 文档改动核对链接、路径、工具适用版本和引用，并运行 `python scripts/checks/Check-Repository.py --no-binaries`。
+- 文档改动核对链接、路径、工具适用版本和引用，并运行 `dotnet run --project build-tools/release -- check-repository -NoBinaries`。
 
 ## 7 AI 分工
 
@@ -377,7 +377,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | CS-14 | 一条语句一个声明 | 125 处 | 4.0 后格式化提交 |
 | CS-15 | Allman 大括号 | 行尾左大括号 67 行 | 4.0 后格式化提交 |
 | CS-16 | 不写多余的 `this.` | 同名赋值 162 处 | 随 CS-01 消失 |
-| CS-20 | 不用 `#region`（S-15） | 38 处，引擎 33 处 | 4.0 后；引擎部分随 `src/Engine` 删除 |
+| CS-20 | 不用 `#region`（S-15） | 38 处，引擎 33 处 | 4.0 后；引擎部分已随 `src/Engine` 删除（Q2） |
 | CS-22 | 不出现连续空行 | 209 处 | 4.0 后格式化提交 |
 | CS-24 | 总是写访问修饰符 | 约 22 处，多在 native-call-weaver | 与下一次必要的织入器改动合并（改动会改变织入器指纹，须重新织入全部产物） |
 | CS-30 | 命名空间根（N-07） | `TiaMcpServer.*`、`TiaOpenness.Shared`、`TiaMcpConfigurator` 与 `TiaMcp.*` 并存，约 770 个文件 | 4.0 后一次性机械迁移并重录织入和反射基线；`src/Studio` 的 `TiaOpenness.*` 是有意偏差 |
@@ -393,7 +393,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | CS-47 | 启用可空（NR-01） | 工作台 Bridge、Client、Contracts、Openness 和 Updater 关闭可空；另有 20 个 `#nullable disable` 文件 | 4.0 后（工作台阶段） |
 | CS-48 | Dispose 模式 | 未密封且无 `Dispose(bool)` 的可释放类型 2 个（`Portal`、`BlocksView`） | 4.0 后改为 `sealed` |
 | CS-50 | 不重复定义类型（T-11） | 工作台 DTO 和枚举两份，`SessionPreconditionException` 两份 | 4.0 后合并为一份 |
-| CS-52 | 安全的 XML 处理（U-14） | 引擎 CLI 中 `new XmlDocument` 6 处 | 随 `src/Engine` 删除，或按 CA3075 处理 |
+| CS-52 | 安全的 XML 处理（U-14） | 引擎 CLI 中 `new XmlDocument` 6 处 | 已随 `src/Engine` 删除（Q2） |
 | CS-53 | 只用 System.Text.Json（U-10） | `S7WebApiChannel` 仍用 Newtonsoft.Json | 4.0 后 |
 | CS-56 | 不用控制流异常（E-05） | 私有或内部控制流异常 13 个，`InputFailure` 有 6 份 | 4.0 后合并为一个共享类型或改为结果类型 |
 | CS-58 | 复用 `HttpClient` | 产品代码新建 4 处，更新检查每次调用都新建 | 4.0 后 |
