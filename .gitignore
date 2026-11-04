@@ -52,3 +52,7 @@ __pycache__/
 
 *.ap14
 *.zap14
+
+# Created at the bundle root when a host runs from this checkout.
+/data/
+/staging/
