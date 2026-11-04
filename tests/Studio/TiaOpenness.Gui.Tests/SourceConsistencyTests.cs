@@ -27,12 +27,12 @@ public class SourceConsistencyTests(WpfContext wpf)
     // LocalizedText.Key("X"), LocalizedText.Working("X")
     private static readonly Regex[] CodeKeys =
     [
-        new(@"TrExtension\.CreateBinding\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
-        new(@"Loc\.Current\[""([A-Za-z][\w.]*)""\]", RegexOptions.Compiled),
-        new(@"Loc\.Current\.T\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
+        new(@"TrExtension\s*\.\s*CreateBinding\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
+        new(@"Loc\s*\.\s*Current\[""([A-Za-z][\w.]*)""\]", RegexOptions.Compiled),
+        new(@"Loc\s*\.\s*Current\s*\.\s*T\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"(?:SetStatus|AppendLocalized)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"\bGuarded\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
-        new(@"LocalizedText\.(?:Key|Working)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
+        new(@"LocalizedText\s*\.\s*(?:Key|Working)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"SetLocalizedText\(""[^""]+"", [^,]+, ""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"(?:[?:]|=>)\s*""((?:Config|Shell|Mcp|Feature|Calls|Approval|Audit|Env)\.[\w.]+)""", RegexOptions.Compiled),
     ];
