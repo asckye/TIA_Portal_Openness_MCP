@@ -6,7 +6,7 @@ internal static class Program
 {
     private static readonly HashSet<string> BooleanOptions = new(StringComparer.OrdinalIgnoreCase)
     {
-        "NoDraftUpload", "TestStageOnly", "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
+        "All", "NoAnalyzer", "NoDraftUpload", "TestStageOnly", "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
         "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "DeferTests", "Strict", "NoBinaries",
         "SkipSourceHashes", "PackageMode", "UseReferenceAssemblyPackage", "Rebuild", "FunctionsOnly", "PassThru", "SkipFullEngines",
         "DraftOnly", "DeleteDraft", "NoBuildCache", "NoResultCache", "ResultCacheInventory", "CompileOnly", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "Clean", "Cold", "ProveEquivalence", "BuildOnly", "Initialize", "Complete", "GateOnly", "Build", "NoRecord", "BumpOnly", "Ci", "Affected", "Quick", "FailFast", "Reuse", "SharedLibrariesOnly", "ConfirmPublication"
@@ -44,7 +44,7 @@ internal static class Program
             if ((command.Equals("check-all", StringComparison.OrdinalIgnoreCase) || command.Equals("nightly", StringComparison.OrdinalIgnoreCase) ||
                  command.Equals("run-release-build", StringComparison.OrdinalIgnoreCase) || command.Equals("release", StringComparison.OrdinalIgnoreCase) ||
                  command.Equals("build-solutions", StringComparison.OrdinalIgnoreCase) || command.Equals("prepare", StringComparison.OrdinalIgnoreCase) ||
-                 command.Equals("preflight", StringComparison.OrdinalIgnoreCase) ||
+                 command.Equals("preflight", StringComparison.OrdinalIgnoreCase) || command.Equals("merge-check", StringComparison.OrdinalIgnoreCase) ||
                  command.Equals("test-suites", StringComparison.OrdinalIgnoreCase) || options.Has("SelfTest")) &&
                 Environment.GetEnvironmentVariable("TIA_MCP_CHECK_RUNNER") != "1")
             {
@@ -96,7 +96,7 @@ internal static class CommandLine
 {
     internal static readonly string[] Commands =
     [
-        "prepare", "release", "build-release", "build-multi-version", "compare-release-records", "run-release-build", "branch-gate", "check-all", "nightly", "check-release-evidence", "ci-coverage", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish", "publish-prepared", "upload-draft", "build-reproducibility", "release-prepare", "release-publication-check",
+        "merge-check", "prepare", "release", "build-release", "build-multi-version", "compare-release-records", "run-release-build", "branch-gate", "check-all", "nightly", "check-release-evidence", "ci-coverage", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish", "publish-prepared", "upload-draft", "build-reproducibility", "release-prepare", "release-publication-check",
         "build-studio", "build-configurator", "build-plc-workers", "build-plc-worker-fixtures", "check-plc-workers", "build-solutions", "build-file-programs", "publish-vci-watch", "prepare-delivery", "prepare-decoder-python", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity",
         "check-analyzer-warnings", "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls",
         "generate-tool-counts", "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list", "generate-prerelease-notes", "package-test"

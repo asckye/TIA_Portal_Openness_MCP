@@ -8,6 +8,15 @@ namespace TiaMcp.ReleaseTool;
 // Merge extracts the same-run subset; nightly compares it with the independently executed original.
 internal static class DerivedSuiteGates
 {
+    internal static readonly IReadOnlyDictionary<string, string> Supersets = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["foundation"] = "foundation-api", ["worker-robustness"] = "foundation-api",
+        ["workbench-control-host"] = "foundation-api", ["shared-pipeline"] = "foundation-api", ["shared-lifecycle-plc"] = "foundation-api",
+        ["workbench-control"] = "studio-gui", ["mcp-panel"] = "studio-gui",
+        ["workbench-vci-prefill"] = "studio-gui", ["crash-evidence"] = "studio-gui",
+        ["vci-read-only-binding"] = "studio-core", ["shared-lifecycle"] = "shared-session",
+    };
+
     private static readonly XNamespace Ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
     internal sealed record Case(string Class, string Method, string Display, XElement Result, XElement Definition);
 

@@ -58,7 +58,7 @@ internal static class ReleaseSuiteStage
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? additionalJobs = null, object? compilationGate = null,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? exclusiveJobs = null, ReleaseTestSelection? selection = null,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? postSuiteJobs = null,
-        Func<Dictionary<string, CommandResult>>? foundationRun = null)
+        Func<Dictionary<string, CommandResult>>? foundationRun = null, IReadOnlySet<string>? prebuilt = null)
     {
         var results = new ConcurrentDictionary<string, CommandResult>(StringComparer.Ordinal);
         var failures = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
@@ -105,6 +105,13 @@ internal static class ReleaseSuiteStage
                     prepared[name] = (env, sharedOutput);
                     if (buildFailures.TryGetValue(names.First(other => Identity(other) == identity), out var failed)) buildFailures[name] = failed;
                     File.WriteAllText(Path.Combine(directory, "build.log"), "Uses the already compiled project/property variant.\n");
+                    continue;
+                }
+                if (prebuilt?.Contains(suite["project"]!.GetValue<string>()) == true && !DotnetSuites.BuildArguments(suite["arguments"]!.AsArray().Select(arg => arg!.GetValue<string>())).Any())
+                {
+                    builtVariants[identity] = null;
+                    prepared[name] = (env, null);
+                    File.WriteAllText(Path.Combine(directory, "build.log"), "Built by the merge traversal.\n");
                     continue;
                 }
                 var compiled = variants ? Path.Combine(output, "compiled", name) : null;
@@ -208,7 +215,7 @@ internal static class ReleaseFoundationStage
         Func<Options, JsonObject, SuiteProcess, CommandResult>? run = null)
     {
         var plan = CheckAllProfiles.Plan(catalog, api, nuget ?? "", Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON"), dotnet);
-        foreach (var name in Names.Where(name => name != "foundation-api"))
+        foreach (var name in Names.Where(name => name != "foundation-api" && catalog.ContainsKey(name)))
             if (plan.Mappings.GetValueOrDefault(name) != "foundation-api")
                 throw new ReleaseException("Foundation derivation is not approved for " + name + ": " + plan.Fallbacks.GetValueOrDefault(name));
         var directory = Path.Combine(output, "foundation-api");
@@ -236,7 +243,7 @@ internal static class ReleaseFoundationStage
         results["foundation-api"] = Stamp("foundation-api", catalog["foundation-api"]!.AsObject(), directory,
             new(reported.ExitCode, reported.StandardOutput, reported.StandardError));
         var trx = Path.Combine(directory, "foundation-api.trx");
-        foreach (var name in Names.Where(name => name != "foundation-api"))
+        foreach (var name in Names.Where(name => name != "foundation-api" && catalog.ContainsKey(name)))
         {
             var target = Path.Combine(output, name);
             var derived = ReleaseTestSelection.RunJob(name, () =>

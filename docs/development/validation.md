@@ -4,6 +4,8 @@
 
 > 2026-11-01 维护者决定：合并门为本机受影响的检查，GitHub CI 不阻塞合并（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）；发布证据改为最近一次通过的 nightly 加已验证构建单元，nightly 门槛由三十分钟改为 45 分钟（[ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md)）。RULES-1 负责其余证据策略；SLIM-1 round 2 已落实 nightly/release 45 分钟门槛，同提交运行采纳规则暂保持。检查可以在合并、nightly 与 CI 之间移动或按身份复用，不得未经维护者批准删除或放宽；SLIM-1 的批准删除清单见下文。
 
+> Maintainer decision 2026-11-03：日常合并使用 `dotnet run --project build-tools/release -- merge-check`，按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件；`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取 nightly、证据或结果缓存；Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。日志和各作业耗时写在 `bin-build/merge-check/`；首次冷构建及宽范围改动可能超过十分钟。`prepare` 仍在每次发布前执行完整检查，预发布后的验证由 VM 回归和测试者完成。下文旧命令暂保留作历史参考，文档整体清理随 NEW-REL-3。
+
 [文档目录](../README.md) · [发布流程](release-workflow.md) · [当前交接](handoff.md)
 
 命令从仓库根目录运行。八个精确 SDK 目标和离线结果以当前构建记录为准；

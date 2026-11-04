@@ -18,14 +18,7 @@ internal static class CheckAllProfiles
         "merge" => "merge", "nightly" => "nightly", _ => throw new ReleaseException("-Profile must be merge or nightly", 64)
     };
 
-    internal static readonly IReadOnlyDictionary<string, string> Derived = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        ["foundation"] = "foundation-api", ["worker-robustness"] = "foundation-api",
-        ["workbench-control-host"] = "foundation-api", ["shared-pipeline"] = "foundation-api", ["shared-lifecycle-plc"] = "foundation-api",
-        ["workbench-control"] = "studio-gui", ["mcp-panel"] = "studio-gui",
-        ["workbench-vci-prefill"] = "studio-gui", ["crash-evidence"] = "studio-gui",
-        ["vci-read-only-binding"] = "studio-core", ["shared-lifecycle"] = "shared-session",
-    };
+    internal static readonly IReadOnlyDictionary<string, string> Derived = DerivedSuiteGates.Supersets;
 
     internal static readonly string[] StudioSuites = ["studio-core", "studio-gui"];
 
