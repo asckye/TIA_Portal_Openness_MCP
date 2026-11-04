@@ -1067,40 +1067,6 @@
       ]
     },
     {
-      "rule": "CA2002",
-      "path": "tests/Release/TiaMcp.ReleaseTool.Tests/CheckAllTests.cs",
-      "line": 35,
-      "column": 19,
-      "endLine": 35,
-      "endColumn": 23,
-      "message": "Do not lock on objects with weak identity",
-      "member": "TiaMcp . ReleaseTool . Tests/CheckAllTests/SchedulerHonorsDependenciesResourcesAndExclusiveChecks( )/Run( bool exclusive )",
-      "anchor": "this ",
-      "fingerprint": "68f7f33b4319e69680b007a604e34a1b6270f210d86b2b1e2f2272bb8c7131d6",
-      "reason": "fixture-lock",
-      "retirement": "",
-      "contexts": [
-        "ordinary|tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "build-tools/release/BuildOutputCache.cs",
-      "line": 137,
-      "column": 38,
-      "endLine": 137,
-      "endColumn": 87,
-      "message": "Method Populate passes \u0027maxBytes\u0027 as the paramName argument to a ArgumentOutOfRangeException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . ReleaseTool/BuildOutputCache/Populate( string key , Dictionary \u003C string , string \u003E outputs )",
-      "anchor": "new ArgumentOutOfRangeException ( nameof ( maxBytes ) ) ",
-      "fingerprint": "c7aaa558a6b0313ba110dead0affd67350404dd6baeeb0c946c084f46cb84fd6",
-      "reason": "field-name-compatibility",
-      "retirement": "",
-      "contexts": [
-        "ordinary|build-tools/release/TiaMcp.ReleaseTool.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
-      ]
-    },
-    {
       "rule": "CA2208",
       "path": "src/Adapters/Native/Hardware/HardwareAmlPolicy.cs",
       "line": 43,
