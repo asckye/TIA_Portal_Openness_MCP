@@ -27,7 +27,7 @@ MCP 响应不引入本地化层，以保持快照和确定性；本地化仅用�
 FindTools 检索关键词具有功能意义，在阶段 6 引入错误码之前不得改动。
 
 `dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text`约束中文字面量只减不增；
-[基线中的 allowlist](../../../scripts/checks/mcp-text-baseline.json)逐条保存双语表、报告、TIA 数据及 CLI 输出的理由。
+[基线中的 allowlist](../../../build-tools/release/baselines/mcp-text-baseline.json)逐条保存双语表、报告、TIA 数据及 CLI 输出的理由。
 豁免是既有字面量及其出现次数，不是对文件的豁免；新增中文数据须单独审查并记录理由。
 XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授权修改已有响应字节，兼容快照仍须通过。
 
@@ -42,7 +42,7 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 - `*Leftovers*` 随阶段 3 的领域迁移逐步消解，不先单独改名；步骤 15 结束时文件数应为 0。
 
 `dotnet run --project build-tools/release -- check-ratchet -Kind comments`按工程和类别报告候选，
-[注释基线](../../../scripts/checks/comment-hygiene-baseline.json)按内容及重复次数守护，文件移动不会增加额度。
+[注释基线](../../../build-tools/release/baselines/comment-hygiene-baseline.json)按内容及重复次数守护，文件移动不会增加额度。
 具体计数口径、自检及基线收缩命令见[验证分层](../../manuals/validation.md#注释与-mcp-中文门禁)。
 
 ## 抛异常与返回失败
@@ -61,7 +61,7 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 
 响应兼容性包含属性顺序、null、转义、数值类型和时间戳的编码。SDK 默认选项、`BridgeJson`、
 `DisciplineJson` 与无参数 `ToJsonString()` 的事实由
-[TiaMcp.Engine.Harness 黄金数据](../../../tests/Engine/TiaMcp.Engine.Harness/README.md)记录；
+[TiaMcp.Engine.Harness 黄金数据](../../../tests/FoundationHost/TiaMcp.Engine.Harness/README.md)记录；
 修改响应代码须比较规范化快照和格式 3 原始文本哈希。`meta.error` 按维护者决策 D1 只将首行
 “类型: 消息”作为执行器黄金比较的契约，堆栈帧允许随迁移变化；这不授权改写实际返回内容。
 

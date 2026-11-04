@@ -231,7 +231,7 @@ tiamcp.basic/
 ### 3.3.1 P8-31a 已实现的格式 1
 
 模型位于 `src/Logic/Generation/`（命名空间 `TiaMcp.Logic.Generation`，net48/net10.0），
-schema 固定在 [schemas/standards/v1](../../../../schemas/standards/v1/README.md)，作为资源嵌入 Logic，
+schema 固定在 [schemas/standards/v1](../../../../reference/schemas/standards/v1/README.md)，作为资源嵌入 Logic，
 并由交付文件规则随包分发；不新增 JSON/schema 依赖。包、八个分部、设备规则、机器描述、计划、检查结果
 及共享定义共 14 份 schema。包内容仍由 P8-31c/i 提供。
 
