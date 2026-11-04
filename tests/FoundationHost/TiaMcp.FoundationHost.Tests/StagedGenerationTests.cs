@@ -44,6 +44,8 @@ public sealed class StagedGenerationTests
         internal readonly HashSet<string> Tables = new(), Groups = new();
         internal bool CompileFails, RecordRace, RecordIo;
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
+        private readonly string previousRelease = Configuration.ReleaseKey;
+        private IDisposable? hostScope;
         private Catalog catalog = null!;
         internal Fixture(string release, int maximumSteps = 10000, bool newProject = false)
         {
@@ -66,7 +68,9 @@ public sealed class StagedGenerationTests
         }
         private void ConfigureWorker()
         {
-            Configuration.ReleaseKey = Release; Configuration.Worker = Worker;
+            hostScope?.Dispose();
+            Configuration.ReleaseKey = Release;
+            hostScope = Configuration.Enter(new enginehost::TiaMcp.FoundationHost.EngineSessionContext(Worker));
             var tools = new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource" }.Select(name =>
                 new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), Worker), Release, null,
                     () => new ApprovalSettings(true, 1), (pending, _, _) => {
@@ -173,7 +177,16 @@ public sealed class StagedGenerationTests
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, IReadOnlyDictionary<string, JsonElement>> Schemas = new(StringComparer.OrdinalIgnoreCase);
         private static IReadOnlyDictionary<string, JsonElement> BaselineSchemas(string path) => Schemas.GetOrAdd(path, file =>
             JsonNode.Parse(File.ReadAllText(file))!["tools"]!.AsArray().ToDictionary(t => (string)t!["name"]!, t => JsonSerializer.SerializeToElement(t!["inputSchema"]), StringComparer.Ordinal));
-        public void Dispose() { lifetime.Dispose(); if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+        public void Dispose()
+        {
+            try { lifetime.Dispose(); }
+            finally
+            {
+                hostScope?.Dispose();
+                Configuration.ReleaseKey = previousRelease;
+                if (Directory.Exists(Root)) Directory.Delete(Root, true);
+            }
+        }
     }
     private sealed class Catalog : enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView
     {

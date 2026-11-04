@@ -12,6 +12,27 @@ using Xunit;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class Round2BlockPageTests
 {
+    [Fact]
+    public async Task Generation_fixture_restores_the_host_context_before_paging_and_decoder_tests()
+    {
+        var previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var context = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker);
+        using var scope = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
+        try
+        {
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+            new StagedGenerationTests().FirstPreviewRefusalDoesNotConsumeAndCanRunAgain("17");
+            await Default_native_pages_fit_and_keep_cursor_through_CallTool(false);
+            await Default_native_pages_fit_and_keep_cursor_through_CallTool(true);
+            await Missing_or_invalid_decoder_runtime_is_rejected_without_install_path(false);
+            await Missing_or_invalid_decoder_runtime_is_rejected_without_install_path(true);
+            Assert.Equal("21", enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey);
+            Assert.Same(context, enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull);
+        }
+        finally { enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
+    }
+
     private sealed class Worker(JsonNode? malformed = null) : IFoundationWorker
     {
         internal int Limit;
