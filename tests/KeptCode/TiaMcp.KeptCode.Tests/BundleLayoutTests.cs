@@ -116,7 +116,7 @@ namespace TiaOpenness.Shared.Tests
             string stage = Output(scratch, "stage"); Bundle(stage);
             string output = Output(stage, "runtime/v21");
             Assert.Equal(stage, BundleLayout.ResolveRoot(output, null!, null!));
-            var error = Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.RequireResource(BundleResource.PlcToolsBridge, output));
+            var error = Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.RequireResource(BundleResource.PlcToolsBridge, output, stage));
             Assert.Equal(At(stage, "scripts/ecosystem/plc_tools_bridge.py"), error.Resource);
         }
 
@@ -130,11 +130,11 @@ namespace TiaOpenness.Shared.Tests
                 string relative = BundleLayout.RelativePath(resource);
                 bool directory = resource == BundleResource.OpennessGuides || resource == BundleResource.Templates;
                 if (directory) Output(scratch, relative); else Put(scratch, relative);
-                Assert.Equal(At(scratch, relative), BundleLayout.RequireResource(resource, output));
+                Assert.Equal(At(scratch, relative), BundleLayout.RequireResource(resource, output, scratch));
                 if (resource == BundleResource.PackageManifest) continue;
                 if (directory) Directory.Delete(At(scratch, relative)); else File.Delete(At(scratch, relative));
                 Assert.Equal(At(scratch, relative), Assert.Throws<BundleResourceUnavailableException>(
-                    () => BundleLayout.RequireResource(resource, output)).Resource);
+                    () => BundleLayout.RequireResource(resource, output, scratch)).Resource);
             }
             Assert.Throws<ArgumentException>(() => BundleLayout.RequirePath(scratch, "../outside"));
         }

@@ -114,10 +114,17 @@ public sealed class StudioBundleLayoutTests : IDisposable
         Put(scratch, "manifest/package-manifest.json");
         Put(scratch, "data"); // deterministic IO refusal, without changing the user's ACLs
         string local = At(scratch, "user");
-        var data = DataLocations.Resolve(scratch, null!, local, scratch);
-        Assert.Null(data.Root);
-        Assert.Equal(Path.Combine(local, "TiaPortalMcp"), data.ConfigDirectory);
-        Assert.Equal(Path.Combine(local, "TiaOpennessStudio", "ui.settings"), data.UiFilePath);
+        const string selectionKey = "TiaOpenness.Shared.BundleLayout.v4";
+        var previous = AppDomain.CurrentDomain.GetData(selectionKey);
+        try
+        {
+            AppDomain.CurrentDomain.SetData(selectionKey, scratch);
+            var data = DataLocations.Resolve(scratch, null!, local, scratch);
+            Assert.Null(data.Root);
+            Assert.Equal(Path.Combine(local, "TiaPortalMcp"), data.ConfigDirectory);
+            Assert.Equal(Path.Combine(local, "TiaOpennessStudio", "ui.settings"), data.UiFilePath);
+        }
+        finally { AppDomain.CurrentDomain.SetData(selectionKey, previous); }
     }
 
     public void Dispose() { if (Directory.Exists(scratch)) Directory.Delete(scratch, true); }

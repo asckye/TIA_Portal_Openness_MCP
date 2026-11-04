@@ -192,7 +192,14 @@ public sealed class PlainReleaseTests
         foreach (var name in new[] { "parent", "child" })
         {
             var pid = int.Parse(File.ReadAllText(Path.Combine(tree.Root, name + ".pid")), System.Globalization.CultureInfo.InvariantCulture);
-            try { using var process = Process.GetProcessById(pid); Assert.True(process.HasExited); }
+            try
+            {
+                using var process = Process.GetProcessById(pid);
+                // Kill(entireProcessTree: true) waits for the parent only. Keep the
+                // child handle until its asynchronous termination releases the image.
+                Assert.True(process.WaitForExit(5000));
+                Assert.True(process.HasExited);
+            }
             catch (ArgumentException) { }
         }
     }

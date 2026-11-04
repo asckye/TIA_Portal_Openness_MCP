@@ -21,8 +21,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
+        id: decoder-python
         with:
-          python-version: '3.12'
+          python-version: '3.12.10'
+          architecture: 'x64'
+      - name: Export the pinned decoder interpreter
+        run: '"TIA_MCP_DECODER_PYTHON=${{ steps.decoder-python.outputs.python-path }}" >> $env:GITHUB_ENV'
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
