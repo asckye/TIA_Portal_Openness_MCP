@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Move standard schemas to `reference/schemas/`, consolidate the solution and release-tool data, and remove inventory-owned legacy paths during updates; hooks stay at the bundle root.
+
 - Remove retired host engine cross-check clients, fixtures and dead compile symbols; keep all eight releases on PlcWorker with unchanged MCP contracts.
 
 - 精简第三方目录：移除未交付的上游测试、文档和 Studio 参考归档，保留交付源码、许可、来源记录及本项目生态桥接检查。

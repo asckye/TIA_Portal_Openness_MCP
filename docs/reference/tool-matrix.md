@@ -2,9 +2,9 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [官方 API 覆盖清单](openness-coverage.md)
 
-本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.cs` 从 `manifest/tools-list.json`（八个 release 的注册工具目录并集）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
+本文件由 `dotnet run --project build-tools/release -- generate-tool-capability-matrix` 从 `manifest/tools-list.json`（八个 release 的注册工具目录并集）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-11-02 04:18:52
+- 生成时间：2026-11-04 05:56:57
 - 产品文件版本：4.0.0.0
 - 工具数量：517
 

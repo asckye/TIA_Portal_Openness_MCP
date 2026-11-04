@@ -305,7 +305,7 @@ internal sealed class PrepareBuild
         RequireOwnedTree(root, runtime);
         if (!Directory.Exists(runtime)) { Directory.CreateDirectory(runtime); return; }
         foreach (var file in Directory.EnumerateFiles(runtime))
-            if (Path.GetFileName(file) != "README.md") File.Delete(file);
+            File.Delete(file);
         foreach (var directory in Directory.EnumerateDirectories(runtime)) Directory.Delete(directory, true);
     }
 

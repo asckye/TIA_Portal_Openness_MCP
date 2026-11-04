@@ -38,7 +38,7 @@
 | AI → 工作台控制通道 | 显示、读取、预填 | 同上，另核对工作台映像路径；协议中没有审批操作 | `src/Shared/WorkbenchControlPipe.cs`、`src/Shared/WorkbenchControlProtocol.cs`、`src/Studio/Gui/WorkbenchControl.cs` |
 | 工作台 ↔ MCP 会话（操作端管道） | 项目页发起的调用 | 同上，另核对映像路径；发起的写调用同样须审批 | `src/Shared/OperatorPipe.cs` |
 | FoundationHost ↔ PLC worker | JSON-RPC 帧（STDIO） | 启动前计算 worker 与适配器的 SHA-256，`hello` 帧必须回显协议、发布键、两个哈希、PID 和 32 字节 nonce；作业对象在宿主退出时结束 worker | `src/FoundationHost/WorkerClient.cs`、`src/WorkerChannel/ChannelCodec.cs`、`src/FoundationHost/WorkerJob.cs` |
-| 标准包 zip → 生成框架 | 包清单、分部文件 | 只在内存中读取；路径、数量与大小限制；逐个按 JSON Schema 校验；不执行包内代码 | `src/Logic/Generation/StandardPackageLoader.cs`、`schemas/standards/v1/README.md` |
+| 标准包 zip → 生成框架 | 包清单、分部文件 | 只在内存中读取；路径、数量与大小限制；逐个按 JSON Schema 校验；不执行包内代码 | `src/Logic/Generation/StandardPackageLoader.cs`、`reference/schemas/standards/v1/README.md` |
 | 宿主机上的 AI → 导入暂存 | 文本源文件 | 文件数、批次数与大小上限；文件名与扩展名规则；拒绝重解析点；XML 禁用 DTD | `src/Logic/ModelContextProtocol/ImportStagingStore.cs` |
 | FoundationHost → 生态工具子进程 | Python 桥接与参数 | 不经 shell 启动，参数经 stdin 以 JSON 传递；超时与输出上限；只允许固定的命令组；分类为 ONLINE-WRITE，默认 `dryRun` | `src/Shared/Host/EcosystemTools.cs`、`src/Shared/LocalProcess.cs`、`scripts/ecosystem/plc_tools_bridge.py` |
 | GitHub Releases → 更新器 | 交付 ZIP | 与同一发布的 `.sha256` 比较；解压路径检查；包内发布号必须等于标签 | `src/Updater/Updater.cs` |

@@ -108,7 +108,7 @@ C# 目标的缩写：
 | `Test-ImportSelectionSources.py` | 58 | 导入选择、冲突、覆盖与确定性排序 | CI-sc | 无 | — | xUnit；批 2 |
 | `Test-PromptRegistrationSources.py` | 91 | 两种传输的显式 prompt 清单 | CI-sc | 无 | — | xUnit；批 2 |
 | `Test-SupplementaryReadSources.py` | 50 | 补充读取与 worker 派发的源码契约（导入 Check-TiaFeatures） | CI-va | 无 | 经 Check-TiaFeatures 调用 dotnet msbuild | xUnit；批 2 |
-| `Check-TiaFeatures.py` | 115 | 用 MSBuild 求值八版编译常量，与评审表比对 | CI-va；PY：Test-SupplementaryReadSources；DOC | `--capture` → `scripts/checks/tia-feature-expectations.json`（**逐字节**）；`--output` 为证据文件 | `dotnet msbuild -getProperty` | RT 子命令 `check-tia-features`；批 2 |
+| `Check-TiaFeatures.py` | 115 | 用 MSBuild 求值八版编译常量，与评审表比对 | CI-va；PY：Test-SupplementaryReadSources；DOC | `--capture` → `build-tools/release/baselines/tia-feature-expectations.json`（**逐字节**）；`--output` 为证据文件 | `dotnet msbuild -getProperty` | RT 子命令 `check-tia-features`；批 2 |
 | `Test-ScriptClients.py` | 109 | 对 camp/export_full/rawmsg/Sweep/vci-watch 做合成测试，不启动进程、不访问网络 | CI-sc | 无 | unittest.mock | 改为 xUnit，随 C# 客户端；批 7 |
 
 ### 2.2 发布链检查（scripts/checks/，30 个）
@@ -253,7 +253,7 @@ C# 目标的缩写：
 已有先例：提交 `038ed553`、`1d0bc966`、`12398d4e` 曾把 PowerShell 移植到 C#，做法如下。
 
 - **file-based app**
-  - 实例：`scripts/checks/Test-MatchPlcName.cs`、`Test-SharedNativeMigration.cs`、`scripts/generate/Generate-ToolCapabilityMatrix.cs`、`src/Adapters/build/Test-*.cs`。
+  - 实例：`scripts/checks/Test-MatchPlcName.cs`、`Test-SharedNativeMigration.cs`、`build-tools/release/ToolCapabilityMatrixGenerator.cs`、`src/Adapters/build/Test-*.cs`。
   - 文件头：`#!/usr/bin/env dotnet`，一行用途注释，`// Usage: dotnet run <path> -- …`，`#:property PublishAot=false`，离线时加 `#:property NuGetAudit=false`。
   - 编码约定：每个文件自带 `FindRoot`/`Take`/`Required`；JSON 用 `JsonNode`（不走反射序列化）；写文件用 `new UTF8Encoding(false)`；`--check` 比较 UTF-8 字节。
   - 发布工具用 `dotnet run <file.cs> -- …` 调用（见 `BuildReleasePipeline` 的 `tool-capability-matrix`）。
@@ -320,7 +320,7 @@ C# 目标的缩写：
   - 配置：`ReleaseCommandTable`（kept-code、write-guard 等条目；offline、offline-v20、kept-code-v20 已退役）；`release-checks.json` 中 `dotnetsuites-self-test` 及 paths 映射。
 - **其他引用**
   - `Test-DownloadRouteSelection.cs` 改用共用库 EngineSources，去掉 `-Python`。
-  - 修改 `tests/Engine/*/Program.cs` 的提示文字、`TiaPortalOpenness.Offline.slnx` 的注释、AGENTS.md 和 validation.md。
+  - 修改 `tests/Engine/*/Program.cs` 的提示文字、`build-tools/TiaPortalOpenness.Offline.slnf` 的注释、AGENTS.md 和 validation.md。
 
 #### 批 2：静态源码检查与棘轮基线
 

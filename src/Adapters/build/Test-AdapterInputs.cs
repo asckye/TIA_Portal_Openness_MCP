@@ -118,6 +118,6 @@ static string? Take(List<string> values, string key)
 static string FindAdapterRoot(string start)
 {
     for (var directory = new DirectoryInfo(start); directory != null; directory = directory.Parent)
-        if (File.Exists(Path.Combine(directory.FullName, "TiaPortalOpenness.Offline.slnx"))) return Path.Combine(directory.FullName, "src", "Adapters");
+        if (File.Exists(Path.Combine(directory.FullName, "TiaPortalOpenness.slnx"))) return Path.Combine(directory.FullName, "src", "Adapters");
     throw new DirectoryNotFoundException("Repository root not found.");
 }

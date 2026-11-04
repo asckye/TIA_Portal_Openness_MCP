@@ -7,7 +7,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class ScriptToolCalls
 {
-    internal static readonly string[] DataAllowlist = ["scripts/diagnostics/campaign/historical_tool_names.json", "scripts/checks/write-guard-operations-v3.3.0.json"];
+    internal static readonly string[] DataAllowlist = ["scripts/diagnostics/campaign/historical_tool_names.json", "build-tools/release/baselines/write-guard-operations-v3.3.0.json"];
     private static readonly string[] Helpers = ["call", "call_raw", "call_guide_tool", "S", "Call", "invoke_tool", "CallTool", "InvokeTool", "CallRaw", "CallGuideTool", "InvokeToolAsync", "CallToolAsync"];
     private static readonly string[] Protocol = ["initialize", "notifications/initialized", "tools/list", "tools/call", "ping", "resources/list", "resources/read", "prompts/list", "prompts/get"];
     private static bool ToolLiteral(string name)

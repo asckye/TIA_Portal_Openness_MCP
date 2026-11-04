@@ -1,5 +1,7 @@
 <Solution>
   <!-- PlcWorker is built per TiaReleaseKey by the build-tools/release build-plc-workers command; it has no default release. -->
+  <!-- Offline filter: Windows/.NET 10 SDK required for Studio. No Siemens assemblies required.
+       Registered xunit suites use the release-tool test-suites command; unregistered console suites require dotnet run. -->
   <Folder Name="/Engine/">
     <Project Path="src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
     <Project Path="src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />

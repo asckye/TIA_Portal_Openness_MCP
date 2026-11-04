@@ -654,7 +654,7 @@ internal static class DeveloperChecks
     private static string FindRepositoryRoot(string start)
     {
         for (var directory = new DirectoryInfo(start); directory != null; directory = directory.Parent)
-            if (File.Exists(Path.Combine(directory.FullName, "TiaPortalOpenness.Offline.slnx"))) return directory.FullName;
+            if (File.Exists(Path.Combine(directory.FullName, "TiaPortalOpenness.slnx"))) return directory.FullName;
         throw new DirectoryNotFoundException("Repository root not found from " + start);
     }
 

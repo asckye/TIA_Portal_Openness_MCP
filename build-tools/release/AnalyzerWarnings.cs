@@ -18,7 +18,7 @@ internal sealed record AnalyzerWarningCollection(AnalyzerWarning[] Entries, Hash
 
 internal static class AnalyzerWarnings
 {
-    internal const string BaselinePath = "scripts/checks/analyzer-warnings-baseline.json";
+    internal const string BaselinePath = "build-tools/release/baselines/analyzer-warnings-baseline.json";
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true, NewLine = "\n" };
 
     internal static string DefaultDirectory(string root)

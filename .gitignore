@@ -2,15 +2,10 @@
 *.startup.log
 .vs/
 **/obj/
-**/obj-v20/
 **/TestResults/
-# Old scratch roots stay ignored for existing local checkouts; new output belongs in bin-build/.
-/test-results/
 **/bin/Debug/
-**/bin-v20/Debug/
 **/bin/Release/
 **/bin/check-all/
-**/bin-v20/Release/
 TiaMcp_Output/
 *.user
 *.suo
@@ -37,12 +32,9 @@ __pycache__/
 # 本机 Claude Code 设置与发布产物
 .claude/
 *.sha256
-RELEASE_STATUS.txt
 
 # Siemens PublicAPI 副本（授权组件，不可分发）：本机放在 sdk/（或仓库之外，用 TiaPublicApiRoot 指定）；以下规则防止误提交
 /sdk/
-TIA_V20_PublicAPI/
-TIA_V21_PublicAPI/
 /TIA_V*_PublicAPI/
 
 # 本机打的交付归档（例如拷去虚拟机的 7z/zip），不入库
@@ -50,8 +42,7 @@ TIA_V21_PublicAPI/
 /*.zip
 
 # 引擎与配置器的二进制不入库：本机 dotnet run --project build-tools/release -- build-release 生成，release 命令上传发布 ZIP
-/runtime/v20/
-/runtime/v21/
+/runtime/
 /TiaOpenness.exe
 
 # Per-release compile-only foundation outputs; never distribute Siemens references.
@@ -60,20 +51,8 @@ TIA_V21_PublicAPI/
 /src/PlcWorker/bin/
 /src/Adapters/*/bin/
 
-/runtime/v14sp1/
-/runtime/v15.1/
-/runtime/v16/
-/runtime/v17/
-/runtime/v18/
-/runtime/v19/
-/runtime/studio/
-/runtime/tools/
-/runtime/dotnet/
-/runtime/verification/
 *.ap14
 *.zap14
 /data/
 
 /staging/
-
-/runtime/decoder-python/

@@ -324,7 +324,7 @@ public sealed class WriteGuardPortTests
             };
             Manifest = ReadManifest();
             Profiles = ProfileCatalog.Read(RepositoryRoot);
-            using var baseline = JsonDocument.Parse(File.ReadAllText(Path.Combine(RepositoryRoot, "scripts", "checks", "write-guard-operations-v3.3.0.json")));
+            using var baseline = JsonDocument.Parse(File.ReadAllText(Path.Combine(RepositoryRoot, "build-tools", "release", "baselines", "write-guard-operations-v3.3.0.json")));
             var releases = Profiles.Rows;
             OnlineRows = new JsonArray(releases.Where(row => baseline.RootElement.GetProperty("operations").TryGetProperty(row["sourceName"]!.GetValue<string>(), out var operation) && operation.GetString() == "ONLINE-WRITE")
                 .Select(row => row.DeepClone()).ToArray());

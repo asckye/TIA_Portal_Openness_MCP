@@ -96,7 +96,7 @@ internal static partial class ReleaseCommands
         if (Directory.Exists(directory)) throw new ReleaseException("Analyzer report directory must be fresh: " + directory, 64);
         Directory.CreateDirectory(directory);
         var environment = new Dictionary<string, string?> { ["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = directory };
-        foreach (var solution in new[] { "TiaPortalOpenness.Offline.slnx", "TiaPortalOpenness.slnx" })
+        foreach (var solution in new[] { "build-tools/TiaPortalOpenness.Offline.slnf", "TiaPortalOpenness.slnx" })
         {
             var result = ProcessRunner.Run(Dotnet, ["build", Path.Combine(Root, solution), "-c", "Release", "--nologo", .. properties], Root, environment,
                 logPath: Path.Combine(directory, Path.GetFileNameWithoutExtension(solution) + ".log"));

@@ -283,7 +283,7 @@ internal static class Prepare
     }
 
     internal static void Stage(PrepareContext context, IEnumerable<string> tracked, IDictionary<string, string?>? buildEnvironment = null,
-        SuiteProcess? catalogProducer = null, SuiteProcess? matrixGenerator = null)
+        SuiteProcess? catalogProducer = null, Func<string, string, int>? matrixGenerator = null)
     {
         var stage = context.StageDirectory;
         if (Directory.Exists(stage)) throw new ReleaseException("Stage already exists: " + stage);
@@ -311,13 +311,8 @@ internal static class Prepare
         RequireRosterDiscipline(context.Root, stage);
         var matrix = Path.Combine(stage, "docs/reference/tool-matrix.md");
         Directory.CreateDirectory(Path.GetDirectoryName(matrix)!);
-        string[] generatorArguments = ["run", Path.Combine(context.Root, "scripts/generate/Generate-ToolCapabilityMatrix.cs"),
-            "--", "--tools-list", roster, "--out-file", matrix];
-        var dotnet = Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
-        var generated = matrixGenerator == null
-            ? ProcessRunner.Run(dotnet, generatorArguments, context.Root, environment, logPath: Path.Combine(context.Logs, "tool-matrix.log"))
-            : matrixGenerator(dotnet, generatorArguments, context.Root, environment);
-        ProcessRunner.RequireSuccess(generated, "Tool capability matrix generation");
+        var generated = (matrixGenerator ?? ((tools, output) => ToolCapabilityMatrixGenerator.Generate(tools, output)))(roster, matrix);
+        if (generated != 0) throw new ReleaseException("Tool capability matrix generation exited " + generated);
         GenerateManifests(context);
     }
 

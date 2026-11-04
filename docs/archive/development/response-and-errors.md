@@ -158,7 +158,7 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
   未开启时引擎只在 `ILogger` Debug 级别（类别 `TiaMcpServer.Swallowed`）记录，已开启调试日志时可见。永远不写入 `calls-*.jsonl`、`InvocationJournal` 计数器或任何 meta 字段。
 - 每个保留的 `catch` 在同一行标注 `/* swallow(<类别>): <原因> */`，类别取自封闭清单：cleanup / teardown / logging-failure /
   probe-optional / enumerate-optional / native-fallback / parse-fallback / env-probe / ui / fail-open-guard / privacy。
-- `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed` 检查标注，基线 `scripts/checks/swallowed-exceptions-baseline.json` 只许减少，
+- `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed` 检查标注，基线 `build-tools/release/baselines/swallowed-exceptions-baseline.json` 只许减少，
   指纹与路径无关（阶段 3 搬文件无需改基线），接入仓库检查和离线流程；第 A 步已删除预览协议及其豁免。
 
 ### 任务

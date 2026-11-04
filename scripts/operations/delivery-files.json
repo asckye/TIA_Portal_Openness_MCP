@@ -5,7 +5,6 @@
       "TiaOpenness.exe",
       "runtime/tools/TiaMcp.Updater.exe",
       "runtime/tools/TiaMcp.Updater.exe.config",
-      "runtime/README.md",
       "manifest/package-manifest.json",
       "manifest/delivery.json",
       "manifest/multi-version-build.json",
@@ -51,7 +50,7 @@
       "runtime/",
       "reference/siemens-openness/",
       "templates/",
-      "schemas/standards/",
+      "reference/schemas/standards/",
       "scripts/ecosystem/",
       "scripts/operations/",
       "docs/getting-started/",
@@ -77,20 +76,6 @@
   },
   "exclude": {
     "files": [
-      "hooks/tia-write-guard.ps1",
-      "scripts/operations/鐢熸垚宸ョ▼.bat",
-      "scripts/operations/棰勭儹.bat",
-      "scripts/ecosystem/Install-PlcTools.ps1",
-      "scripts/diagnostics/Collect-TiaExitEvidence.cmd",
-      "scripts/diagnostics/Collect-TiaCrashEvidence.ps1",
-      "scripts/checks/Test-CrashEvidence.ps1",
-      "scripts/checks/Test-WriteGuard.ps1",
-      "scripts/diagnostics/LibraryRenameProbe/Run-Tests.ps1",
-      "scripts/diagnostics/LibraryRenameProbe/Test-Supervisor.ps1",
-      "scripts/diagnostics/LibraryRenameProbe/Run-Tests.cmd",
-      "scripts/diagnostics/LibraryRenameProbe/Build-Package.ps1",
-      "scripts/operations/vci-watch/register-task.ps1",
-      "scripts/operations/Update-Engine.ps1",
       "runtime/v20/TiaMcp.Engine.V20.exe",
       "runtime/v20/TiaMcp.Engine.V20.exe.config",
       "runtime/v20/TiaMcp.Adapter.20.dll",
@@ -292,7 +277,9 @@
       "runtime/v21/worker/ModelContextProtocol.dll",
       "runtime/v21/worker/ModelContextProtocol.Core.dll",
       "manifest/release-build.json",
-      "manifest/configurator-build.json"
+      "scripts/operations/Update-Engine.ps1",
+      "manifest/configurator-build.json",
+      "runtime/README.md"
     ],
     "prefixes": [
       "tools/",
@@ -314,7 +301,8 @@
       "runtime/v20/worker/",
       "runtime/v20/plc-worker/",
       "runtime/v21/worker/",
-      "runtime/v21/plc-worker/"
+      "runtime/v21/plc-worker/",
+      "schemas/"
     ]
   },
   "requiredFiles": [

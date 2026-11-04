@@ -8,7 +8,7 @@ public static class Repository
     public static string FindRoot(string? start = null)
     {
         for (var directory = new DirectoryInfo(start ?? Environment.CurrentDirectory); directory is not null; directory = directory.Parent)
-            if (File.Exists(Path.Combine(directory.FullName, "TiaPortalOpenness.Offline.slnx"))) return directory.FullName;
+            if (File.Exists(Path.Combine(directory.FullName, "TiaPortalOpenness.slnx"))) return directory.FullName;
         throw new DirectoryNotFoundException("Repository root not found.");
     }
 

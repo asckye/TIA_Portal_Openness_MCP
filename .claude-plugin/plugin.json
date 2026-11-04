@@ -6,7 +6,6 @@
   "author": { "name": "asckye" },
   "keywords": ["siemens", "tia-portal", "tia-openness", "plc", "hmi", "scl", "s7", "automation", "mcp"],
   "skills": "./plugin",
-  "hooks": "./hooks/hooks.json",
   "mcpServers": {
     "tia-portal": {
       "command": "${CLAUDE_PLUGIN_ROOT}/runtime/tools/TiaMcp.PluginLauncher.exe",

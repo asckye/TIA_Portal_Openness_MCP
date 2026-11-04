@@ -369,7 +369,7 @@ stateDiagram-v2
 | 调用日志与原生诊断 | `src/Shared/InvocationJournal.cs`、`NativeCallDiagnostics*.cs`、`build-tools/native-call-weaver` |
 | 工作台控制通道 | `src/Shared/WorkbenchControl{Pipe,Protocol,Frames}.cs`、`LocalPipeSecurity.cs`；`src/FoundationHost/WorkbenchControl{Client,Session,Tools}.cs`；`src/Studio/Gui/Control/` |
 | 操作端 | `src/Shared/OperatorPipe.cs`、`OperatorProtocol.cs`；`src/FoundationHost/OperatorEndpoint.cs`、`OperatorConnection.cs`、`HostRegistration.cs`、`SessionNotifications.cs`；工作台 `McpSessionClient.cs`、`McpProjectClient.cs`、`McpVersionControlClient.cs` |
-| 生成框架 | `src/Logic/Generation/`、`src/Shared/Host/GenerationTools.cs`、`GenerationExecutionTools.cs`、`src/FoundationHost/GenerationTool.cs`、`schemas/standards/v1/`、`templates/standards/` |
+| 生成框架 | `src/Logic/Generation/`、`src/Shared/Host/GenerationTools.cs`、`GenerationExecutionTools.cs`、`src/FoundationHost/GenerationTool.cs`、`reference/schemas/standards/v1/`、`templates/standards/` |
 | 导入暂存 | `src/Logic/ModelContextProtocol/ImportStagingStore.cs`、`ImportStagingSession.cs` |
 | 工作台界面与启动器 | `src/Studio/Gui/`、`src/Studio/Launcher/Launcher.cs` |
 | 迁移期遗留的 Studio 会话栈 | `src/Studio/Bridge`、`Client`、`Core`、`Openness/V*`、`src/Adapters/Native/Studio`；`src/Studio/Gui/Services/ReadOnlyVciBridge.cs` |

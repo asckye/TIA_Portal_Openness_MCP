@@ -107,13 +107,13 @@ public sealed class PrepareTests
     public void ContentsExcludeOldBuildRecordsAndGeneratedInputs()
     {
         using var tree = new StaticTree();
-        string[] files = ["README.md", "runtime/README.md", "runtime/v21/TiaMcp.FoundationHost.dll",
+        string[] files = ["README.md", "reference/schemas/standards/v1/package.schema.json", "runtime/v21/TiaMcp.FoundationHost.dll",
             "runtime/v21/Siemens.Engineering.Base.dll", "runtime/v21/debug.pdb", "runtime/verification/tool.dll",
             "manifest/configurator-build.json", "manifest/multi-version-build.json", "manifest/package-manifest.json",
             "manifest/tools-list.json", "manifest/delivery.json", "TEST-PACKAGE.txt"];
         foreach (var path in files) tree.Write(path, path);
         var contents = Prepare.Contents(tree.Root, files, DeliveryRules.Load(StaticCheckVectorTests.Root));
-        Assert.Equal(new[] { "README.md", "runtime/README.md", "runtime/v21/TiaMcp.FoundationHost.dll" }, contents.Keys);
+        Assert.Equal(new[] { "README.md", "reference/schemas/standards/v1/package.schema.json", "runtime/v21/TiaMcp.FoundationHost.dll" }, contents.Keys);
     }
 
     [Fact]
@@ -160,18 +160,13 @@ public sealed class PrepareTests
             Assert.Contains("--bundle-root", arguments);
             File.Copy(Path.Combine(tree.Root, "manifest/tools-list.json"), Path.Combine(workingDirectory, "manifest/tools-list.json"));
             return new(0, "catalog generated", "");
-        }, matrixGenerator: (executable, arguments, workingDirectory, environment) =>
+        }, matrixGenerator: (toolsList, outputPath) =>
         {
             matrixInvoked = true;
-            Assert.Equal(tree.Root, workingDirectory);
-            Assert.Equal(temp, environment!["TEMP"]);
-            Assert.Equal(temp, environment["DOTNET_CLI_HOME"]);
-            Assert.Equal(buildEnvironment["RestoreConfigFile"], environment["RestoreConfigFile"]);
-            var args = arguments.ToArray();
-            Assert.EndsWith("Generate-ToolCapabilityMatrix.cs", args[1]);
-            Assert.Equal(Path.Combine(context.StageDirectory, "manifest/tools-list.json"), args[Array.IndexOf(args, "--tools-list") + 1]);
-            File.WriteAllText(args[Array.IndexOf(args, "--out-file") + 1], "generated matrix");
-            return new(0, "matrix generated", "");
+            Assert.Equal(Path.Combine(context.StageDirectory, "manifest/tools-list.json"), toolsList);
+            Assert.Equal(Path.Combine(context.StageDirectory, "docs/reference/tool-matrix.md"), outputPath);
+            File.WriteAllText(outputPath, "generated matrix");
+            return 0;
         });
         Assert.True(invoked);
         Assert.True(matrixInvoked);
@@ -257,15 +252,14 @@ public sealed class PrepareTests
     }
 
     [Fact]
-    public void CleanRuntimePreservesReadmeAndRejectsOutsidePaths()
+    public void CleanRuntimeEmptiesTheFolderAndRejectsOutsidePaths()
     {
         using var tree = new StaticTree();
-        var readme = Path.GetFullPath(tree.Write("runtime/README.md", "tracked readme"));
+        tree.Write("runtime/README.md", "tracked readme");
         tree.Write("runtime/v21/old.dll", "old");
         tree.Write("runtime/old.log", "old");
         PrepareBuild.CleanRuntime(tree.Root);
-        Assert.Equal("tracked readme", File.ReadAllText(readme));
-        Assert.Equal(new[] { readme }, Directory.GetFiles(Path.Combine(tree.Root, "runtime"), "*", SearchOption.AllDirectories));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(Path.Combine(tree.Root, "runtime")));
         Assert.Throws<ReleaseException>(() => PrepareBuild.RequireOwnedTree(tree.Root, Path.Combine(tree.Root, "..", "outside")));
     }
 
@@ -397,7 +391,7 @@ public sealed class PrepareTests
     public void PublicApiScanChecksRuntimeBeforeDeliveryFiltering()
     {
         using var tree = new StaticTree();
-        tree.Write("runtime/README.md", "runtime");
+        tree.Write("runtime/v21/TiaMcp.FoundationHost.dll", "runtime");
         PrepareBuild.RequireNoPublicApi(tree.Root);
         tree.Write("runtime/v21/worker/Siemens.Engineering.Base.dll", "planted SDK");
         Assert.DoesNotContain("runtime/v21/worker/Siemens.Engineering.Base.dll",
@@ -436,10 +430,10 @@ public sealed class PrepareTests
             {
                 File.WriteAllText(Path.Combine(root, "manifest/tools-list.json"), roster.ToJsonString());
                 return new(0, "catalog", "");
-            }, matrixGenerator: (exe, args, root, env) =>
+            }, matrixGenerator: (toolsList, outputPath) =>
             {
                 matrixInvoked = true;
-                return new(0, "unexpected generator", "");
+                return 0;
             })).Message);
         Assert.False(matrixInvoked);
     }
@@ -555,7 +549,7 @@ public sealed class PrepareTests
     {
         using var tree = new StaticTree();
         var rules = DeliveryRules.Load(StaticCheckVectorTests.Root);
-        string[] tracked = ["README.md", "docs/guides/a.md", "src/Logic/Code.cs", "AGENTS.md", "runtime/README.md", "docs/guides/deleted.md"];
+        string[] tracked = ["README.md", "docs/guides/a.md", "src/Logic/Code.cs", "AGENTS.md", "reference/schemas/standards/v1/package.schema.json", "docs/guides/deleted.md"];
         foreach (var name in tracked.Where(name => name != "docs/guides/deleted.md")) tree.Write(name, name);
         foreach (var name in new[]
         {
@@ -569,7 +563,7 @@ public sealed class PrepareTests
 
         Assert.Equal(
         [
-            "README.md", "TiaOpenness.exe", "docs/guides/a.md", "runtime/README.md", "runtime/studio/TiaOpenness.exe",
+            "README.md", "TiaOpenness.exe", "docs/guides/a.md", "reference/schemas/standards/v1/package.schema.json", "runtime/studio/TiaOpenness.exe",
             "runtime/tools/TiaMcp.Updater.exe", "runtime/tools/TiaMcp.Updater.exe.config", "runtime/v16/Siemens.Simatic.S7.Webserver.API.dll",
             "runtime/v16/TiaMcp.FoundationHost.dll"
         ], contents.Keys);

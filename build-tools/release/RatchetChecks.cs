@@ -13,7 +13,7 @@ internal static class RatchetChecks
     {
         var kind = options.Get("Kind") ?? throw new ReleaseException("-Kind swallowed|comments|mcp-text|envelopes is required", 64);
         if (!Baselines.TryGetValue(kind, out var filename)) throw new ReleaseException("Unknown ratchet kind: " + kind, 64);
-        var path = Path.GetFullPath(options.Get("Baseline", Path.Combine(root, "scripts/checks", filename)));
+        var path = Path.GetFullPath(options.Get("Baseline", Path.Combine(root, "build-tools/release/baselines", filename)));
         var update = options.Has("UpdateBaseline");
         if (options.Has("AllowGrowth") && !update) throw new ReleaseException("-AllowGrowth requires -UpdateBaseline", 64);
         var initialize = update && options.Has("AllowGrowth") && !File.Exists(path);

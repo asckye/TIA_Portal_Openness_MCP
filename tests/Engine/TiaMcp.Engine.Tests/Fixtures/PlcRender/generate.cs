@@ -70,6 +70,6 @@ return failed == 0 ? 0 : 1;
 static string FindRoot()
 {
     for (var directory = new DirectoryInfo(Environment.CurrentDirectory); directory != null; directory = directory.Parent)
-        if (File.Exists(Path.Combine(directory.FullName, "TiaPortalOpenness.Offline.slnx"))) return directory.FullName;
+        if (File.Exists(Path.Combine(directory.FullName, "TiaPortalOpenness.slnx"))) return directory.FullName;
     throw new DirectoryNotFoundException("Repository root not found");
 }

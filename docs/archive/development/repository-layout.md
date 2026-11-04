@@ -8,8 +8,8 @@
 
 | 路径 | 用途 |
 |---|---|
-| `TiaPortalOpenness.slnx` | 73 个开发工程，按 Engine、PlcAdapters、Studio、Tools、Tests 分组；不包含 reference 示例、LibraryRenameProbe 和必须逐版本构建的 PlcWorker |
-| `TiaPortalOpenness.Offline.slnx` | 53 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
+| `TiaPortalOpenness.slnx` | 70 个开发工程，按 Engine、PlcAdapters、Studio、Tools、Tests 分组；不包含 reference 示例和必须逐版本构建的 PlcWorker |
+| `build-tools/TiaPortalOpenness.Offline.slnf` | 50 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
 | `src/Shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由 .NET release tool 收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `src/FoundationHost`、`src/PlcWorker` | 八版 FoundationHost 宿主（含命令行）和 PLC worker；会话只使用 `WorkerClient`，Q2/Q3 已删除引擎残余源码、客户端与目录交叉检查 |
@@ -114,3 +114,7 @@ NuGet 包版本统一在根目录 `Directory.Packages.props` 管理；.NET 运�
 `tests/Engine/TiaMcp.Engine.Tests` 原路径，Harness 的屏幕遍历测试及 PLC renderer 夹具也保留。
 `tests/Engine` 继续容纳 Harness、原生安全、诊断、API 编译、提示注册、版本策略和共享会话套件。
 共享边界见[版本框架](unified-version-framework.md)。
+
+## REORG-2 布局调整（2026-11-04）
+
+JSON Schema 位于 `reference/schemas/standards/v1/`，发布工具基线位于 `build-tools/release/baselines/`。根目录只保留 `TiaPortalOpenness.slnx`，离线构建使用 `build-tools/TiaPortalOpenness.Offline.slnf`。`runtime/` 全部为生成输出，说明见[架构](design-spec/architecture.md)。`hooks/hooks.json` 保留原位，不迁入 `plugin/`；manifest 不再显式指定 hooks，合并前必须验证 Claude Code 自动加载和写入拒绝。

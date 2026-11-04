@@ -64,7 +64,7 @@ internal static class TiaFeatures
         var actual = Capture(root, options.Get("Dotnet", "dotnet"));
         if (options.Get("Capture") is { } capture) { WriteCapture(capture, actual); Console.WriteLine($"Captured {actual.Count} project/framework evaluations in {capture}."); return 0; }
         if (options.Get("Output") is { } output) WriteCapture(output, actual);
-        var expected = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "scripts/checks/tia-feature-expectations.json")))!.AsArray();
+        var expected = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "build-tools/release/baselines/tia-feature-expectations.json")))!.AsArray();
         Dictionary<string, JsonNode> Index(JsonArray rows) => rows.ToDictionary(r => r!["project"]!.GetValue<string>() + " " + PythonJson.Dumps(r["properties"], sortKeys: true) + " " + r["targetFramework"]!.GetValue<string>(), r => r!["defineConstants"]!);
         var before = Index(expected); var after = Index(actual);
         var errors = new List<string>();

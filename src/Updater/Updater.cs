@@ -216,7 +216,7 @@ namespace TiaMcp.Updater
                 PruneBackups(Combine(root, ".previous"), backup);
 
                 say(UpdaterText.Bilingual("Overlay", "removing owned retired files and overlaying the delivery"));
-                RemoveLegacyFiles(root, rules, oldFiles, say);
+                RemoveLegacyFiles(root, rules, oldFiles, newFiles, say);
                 foreach (KeyValuePair<string, string> file in oldFiles)
                     if ((file.Key.StartsWith("runtime/", StringComparison.Ordinal) || file.Key.StartsWith("manifest/", StringComparison.Ordinal)) && !newFiles
                             .ContainsKey(file.Key))

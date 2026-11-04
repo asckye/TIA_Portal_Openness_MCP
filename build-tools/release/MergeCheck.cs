@@ -210,7 +210,7 @@ internal static class MergeCheck
     {
         void Tool(string name, params string[] args) => plan.Checks.Add(new(name, dotnet, [typeof(Program).Assembly.Location, name, .. args]));
         void Py(string name, string script, params string[] args) => plan.Checks.Add(new(name, python, ["scripts/checks/" + script, .. args]));
-        foreach (var name in new[] { "generate-catalogs", "generate-tool-usage", "generate-release-migration" }) Tool(name, "-Check");
+        foreach (var name in new[] { "generate-catalogs", "generate-tool-usage", "generate-release-migration", "generate-tool-capability-matrix" }) Tool(name, "-Check");
         foreach (var name in new[] { "check-tools-list", "check-script-tool-calls", "check-adapter-boundary", "check-tia-features" }) Tool(name);
         Tool("check-analyzer-warnings", "-Check", "-DiagnosticsDirectory", Path.Combine(output, "analyzers"));
         Py("contract-verify", "Snapshot-ToolContracts.py", "verify");

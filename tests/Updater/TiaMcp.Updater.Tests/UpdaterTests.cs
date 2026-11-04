@@ -49,6 +49,28 @@ namespace TiaMcp.Updater.Tests
             Assert.Equal("{\"files\":[]}", fixture.Text(path));
         }
 
+        [Fact]
+        public void Relocated_schemas_replace_legacy_paths_and_roll_back()
+        {
+            using var fixture = new Fixture();
+            const string schema = "schemas/standards/v1/package.schema.json";
+            const string relocated = "reference/schemas/standards/v1/package.schema.json";
+            const string legacyScript = "scripts/operations/Update-Engine.ps1";
+            fixture.Write(schema, "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\"}");
+            fixture.Write("runtime/README.md", "old runtime readme");
+            fixture.Write("hooks/hooks.json", "{\"hooks\":{}}");
+            fixture.Write("manifest/release-file-hashes.json", JsonSerializer.Serialize(new { files = fixture.CurrentInventory() }));
+            var before = fixture.CurrentInventory();
+            Assert.Equal(0, fixture.Run());
+            Assert.False(fixture.Exists(schema));
+            Assert.False(fixture.Exists("runtime/README.md"));
+            Assert.False(fixture.Exists(legacyScript));
+            Assert.Equal(File.ReadAllText(Path.Combine(Fixture.FindRepositoryRoot(), relocated)), fixture.Text(relocated));
+            Assert.Equal(File.ReadAllText(Path.Combine(Fixture.FindRepositoryRoot(), "hooks/hooks.json")), fixture.Text("hooks/hooks.json"));
+            Assert.Equal(0, fixture.Run(rollback: true));
+            Assert.Equal(before.OrderBy(row => row.Key), fixture.CurrentInventory().OrderBy(row => row.Key));
+        }
+
         private static void PreviousEngineLayout(Fixture fixture, bool oldRecordOnly)
         {
             fixture.Write("manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"TIA_MCP_Delivery_v4.0.0_pre_engine\",\"engineRelease\":\"4.0.0\"}");
@@ -337,6 +359,8 @@ namespace TiaMcp.Updater.Tests
         {
             string rules = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "scripts/operations/delivery-files.json"));
             add("scripts/operations/delivery-files.json", rules);
+            add("reference/schemas/standards/v1/package.schema.json", File.ReadAllText(Path.Combine(FindRepositoryRoot(), "reference/schemas/standards/v1/package.schema.json")));
+            add("hooks/hooks.json", File.ReadAllText(Path.Combine(FindRepositoryRoot(), "hooks/hooks.json")));
             using var document = JsonDocument.Parse(rules);
             foreach (var item in document.RootElement.GetProperty("requiredFiles").EnumerateArray())
             {

@@ -153,7 +153,7 @@ internal static class RepositoryChecks
             if (Prepare.GeneratedPaths.Contains(name, StringComparer.Ordinal)) return;
             var target = Path.GetFullPath(Path.Combine(root, name));
             if (!Within(root, target)) errors.Add(label + ": external path: " + name);
-            else if (noBinaries && (name.EndsWith(".exe", StringComparison.Ordinal) || name == "runtime/tools/TiaMcp.Updater.exe.config" || name.StartsWith("runtime/", StringComparison.Ordinal) && name != "runtime/README.md")) return;
+            else if (noBinaries && (name.EndsWith(".exe", StringComparison.Ordinal) || name == "runtime/tools/TiaMcp.Updater.exe.config" || name.StartsWith("runtime/", StringComparison.Ordinal))) return;
             else if (name is "runtime/tools/TiaMcp.Updater.exe" or "runtime/tools/TiaMcp.Updater.exe.config" && File.Exists(Path.Combine(root, "bin-build/updater", Path.GetFileName(name)))) return;
             else if (!File.Exists(target) && !Directory.Exists(target)) errors.Add(label + ": missing or external path: " + name);
         }
