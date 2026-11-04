@@ -268,7 +268,8 @@ def run_engine(args) -> dict:
     readiness_root, readiness_env = fresh_data_root(args.temp_root, f"engine-v{args.major}-readiness", approval_enabled=None)
     with retained_on_failure(readiness_root):
         readiness_install = resources.sdk_only_installation(api, args.major, readiness_root)
-        readiness_worker = (Path(__file__).resolve().parents[2] / 'src' / 'PlcWorker' / 'bin' / str(args.major)
+        readiness_worker = (getattr(args, 'readiness_worker', None) or
+                            Path(__file__).resolve().parents[2] / 'src' / 'PlcWorker' / 'bin' / str(args.major)
                             / 'Release' / 'net48' / f'TiaMcp.PlcWorker.{args.major}.exe') if args.plc_worker else None
         with resources.server(exe, readiness_install, args.major, "stdio", "full", None, api,
                               env_overrides=readiness_env, plc_worker=readiness_worker, sdk_ready=False) as (rpc, _, logs):
@@ -373,6 +374,8 @@ def main() -> int:
     parser.add_argument("--portal-root", type=Path)
     parser.add_argument("--host-harness", type=Path)
     parser.add_argument('--plc-worker', type=Path)
+    parser.add_argument('--readiness-worker', type=Path,
+                        help='Production worker for the readiness proof (default: checkout src/PlcWorker/bin/<major>/Release/net48)')
     parser.add_argument("--public-api", type=Path)
     parser.add_argument("--runtime-root", type=Path)
     parser.add_argument("--temp-root", type=Path)

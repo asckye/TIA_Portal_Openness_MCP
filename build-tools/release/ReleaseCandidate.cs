@@ -79,11 +79,11 @@ internal static class ReleaseCandidate
             throw new ReleaseException("Candidate requires the complete full cold-build package plan");
     }
 
-    internal static void RequireRuntimeFiles(string root, JsonObject hashes)
+    internal static void RequireRuntimeFiles(string root, JsonObject hashes, bool remapUpdater = true)
     {
         foreach (var (relative, digest) in hashes)
         {
-            var source = relative is "runtime/tools/TiaMcp.Updater.exe" or "runtime/tools/TiaMcp.Updater.exe.config"
+            var source = remapUpdater && relative is ("runtime/tools/TiaMcp.Updater.exe" or "runtime/tools/TiaMcp.Updater.exe.config")
                 ? "bin-build/updater/" + Path.GetFileName(relative) : relative;
             var path = Resolve(root, source);
             if (!File.Exists(path) || ReleaseRecords.HashFile(path) != ReleaseEvidence.Text(digest))

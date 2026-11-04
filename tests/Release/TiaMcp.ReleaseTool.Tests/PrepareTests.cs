@@ -270,6 +270,25 @@ public sealed class PrepareTests
     }
 
     [Fact]
+    public void RuntimeCleanupRemovesBuildOutputsButKeepsTheRunningReleaseTool()
+    {
+        using var tree = new StaticTree();
+        var stale = new List<string>();
+        foreach (var parent in new[] { "src/PlcWorker", "tests/Fixture", "third_party/Dependency", "build-tools/native-call-weaver" })
+        foreach (var folder in new[] { "bin", "obj" })
+            stale.Add(tree.Write(parent + "/" + folder + "/21/Release/net48/System.CodeDom.dll", "stale"));
+        stale.Add(tree.Write("src/PlcWorker/bin/" + string.Join('/', Enumerable.Repeat(new string('x', 28), 10)) + "/System.Security.AccessControl.dll", "long-path stale"));
+        var bootstrap = tree.Write("build-tools/release/bin/Release/net10.0/TiaMcp.ReleaseTool.dll", "running");
+        var bootstrapObj = tree.Write("build-tools/release/obj/project.assets.json", "keep");
+        var source = tree.Write("src/PlcWorker/Program.cs", "source");
+        PrepareBuild.CleanRuntime(tree.Root);
+        Assert.All(stale, path => Assert.False(File.Exists(path), path));
+        Assert.Equal("running", File.ReadAllText(bootstrap));
+        Assert.True(File.Exists(bootstrapObj));
+        Assert.Equal("source", File.ReadAllText(source));
+    }
+
+    [Fact]
     public void VersionBuildTableRunsEightPropertyIsolatedItemsInRealMsbuild()
     {
         using var tree = new StaticTree();

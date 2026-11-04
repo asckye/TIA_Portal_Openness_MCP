@@ -20,11 +20,13 @@
 从干净的 master 提前构建交付包，默认 MSBuild 并行度为 6（可用 `-MaxParallelism` 指定）。版本文件、插件、marketplace、最新 CHANGELOG 版本和有效日期、发布说明及生成的未验证清单必须一致；工作区字节必须符合 Git 规范化规则。
 伴随 Python 按 `-CompanionPython`、`TIA_MCP_PLC_TOOLS_PYTHON`、本地 `TiaMcp_Output/ecosystem-python/Scripts/python.exe` 解析并检查依赖。
 
-输出保留在 `bin-build/prepared/<version>/`：stage、逐阶段日志、唯一 ZIP 和 `.sha256`。每次运行先核对并清理该版本的旧输出目录，再清理 `runtime/`（保留 README），通过普通 MSBuild/dotnet 构建；同版本的新提交可重新准备，不使用 nightly、证据或旧发布编排，不写跟踪文件，不发布。
+输出保留在 `bin-build/prepared/<version>/`：stage、逐阶段日志、唯一 ZIP 和 `.sha256`。每次运行先核对并清理该版本的旧输出目录，再清理 `runtime/`（保留 README）及 `src`、`tests`、`third_party`、`build-tools/native-call-weaver` 下的全部 `bin`/`obj`，避免旧依赖进入交付包；运行中的 `build-tools/release` 不清理。之后通过普通 MSBuild/dotnet 构建；同版本的新提交可重新准备，不使用 nightly、证据或旧发布编排，不写跟踪文件，不发布。
 TEMP、TMP、TMPDIR 和 `DOTNET_CLI_HOME` 使用仓库外的短 `tmr-<8位标识>` 目录，运行结束后删除；占用中的文件导致清理失败时保留目录并打印警告。
 四份清单及工具矩阵只在 stage 生成。`multi-version-build.json` 是更新器所需的 `{files:[{path,sha256}]}` 文件库存（不包含它自身）；旧构建记录和 `TEST-PACKAGE.txt` 不交付。ZIP 解压后的逐文件哈希必须与 stage 相同；同一次运行内不覆盖 ZIP。
 
-本批只实现构建、交付检查和打包；`-BuildOnly` 用于此阶段。后续 NEW-REL-B 接入测试，NEW-REL-C 接入发布。下面的旧命令及其记录格式仍保持原行为。
+不带 `-BuildOnly` 时，`prepare` 在解压后的 ZIP 上执行 smoke、搬迁、随包运行时、写保护、八版审批和契约检查，同时执行全部 44 个注册套件及保留的 PLC 功能检查。所有作业完成后汇总失败；只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时，才写入 `bin-build/prepared/<版本>/candidate.json`。构建阶段与检查作业均打印秒数，并按耗时降序汇总。
+
+默认随后上传草稿；`-NoDraftUpload` 只保留本地候选，并打印 `upload-draft` 作为下一步。上传失败保留候选，使用 `dotnet run --no-build --project build-tools/release -- upload-draft -Version <版本>` 重试。草稿上传完成后执行 `dotnet run --no-build --project build-tools/release -- publish-prepared -Version <版本>`。`-BuildOnly` 只构建和打包，不执行这些检查、不生成候选、不上传草稿。下面的旧命令及其记录格式仍保持原行为。
 
 每日冷全集由 `dotnet run --project build-tools/release -- nightly -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>`
 运行，默认使用本地 `origin/master`，可用 `-Rev` 指定提交；工具打印每日 03:00 的 Task Scheduler 命令，由维护者登记。

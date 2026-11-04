@@ -13,7 +13,7 @@ internal static partial class ReleaseCommands
 {
     private static readonly string Root = FindRoot(Environment.CurrentDirectory);
     private static string Py => Environment.GetEnvironmentVariable("PYTHON") ?? "python";
-    private static string Dotnet => Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
+    internal static string Dotnet => Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
 
     internal static int Run(string command, Options options) => command switch
     {
@@ -59,7 +59,7 @@ internal static partial class ReleaseCommands
         _ => throw new ReleaseException($"Unknown release command '{command}'.", 64)
     };
 
-    private static PublishOptions PreparedPublishOptions(Options options) => new(
+    internal static PublishOptions PreparedPublishOptions(Options options) => new(
         options.Get("Version") ?? throw new ReleaseException("-Version is required"), options.Get("Token", ""),
         options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), options.Get("ApiBaseUrl", "https://api.github.com"),
         false, false, GitExecutable: options.Get("Git", "git"));
@@ -1923,19 +1923,19 @@ internal static partial class ReleaseCommands
         }
     }
 
-    private static void AssertBundledRuntime(string executable, string[] arguments, string name, string logs)
+    internal static void AssertBundledRuntime(string executable, string[] arguments, string name, string logs,
+        string? bundleRoot = null, IDictionary<string, string?>? environment = null, SuiteProcess? process = null)
     {
         var trace = Path.Combine(logs, "corehost-" + name + ".txt");
         File.Delete(trace);
-        var env = new Dictionary<string, string?>
-        {
-            ["COREHOST_TRACE"] = "1", ["COREHOST_TRACEFILE"] = trace,
-            ["TIA_OPENNESS_NETWORK_NO_DIALOG"] = "1"
-        };
-        var result = ProcessRunner.Run(executable, arguments, Root, env);
+        var env = environment is null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
+        env["COREHOST_TRACE"] = "1";
+        env["COREHOST_TRACEFILE"] = trace;
+        env["TIA_OPENNESS_NETWORK_NO_DIALOG"] = "1";
+        var result = (process ?? DotnetSuites.RunProcess)(executable, arguments, bundleRoot ?? Root, env);
         WriteLog(Path.Combine(logs, "corehost-" + name + ".out.log"), new CommandResult(result.ExitCode, result.StandardOutput, ""));
         WriteLog(Path.Combine(logs, "corehost-" + name + ".err.log"), new CommandResult(result.ExitCode, "", result.StandardError));
-        var fxr = Path.GetFullPath(Path.Combine(Root, "runtime/dotnet/host/fxr")).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var fxr = Path.GetFullPath(Path.Combine(bundleRoot ?? Root, "runtime/dotnet/host/fxr")).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         if (!File.Exists(trace) || !File.ReadAllText(trace).Contains("Resolved fxr [" + fxr, StringComparison.OrdinalIgnoreCase))
             throw new ReleaseException($"{name} does not load the bundled .NET runtime; see {trace}");
     }

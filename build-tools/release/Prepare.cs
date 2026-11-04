@@ -21,8 +21,8 @@ internal sealed record PrepareContext(string Root, string Version, string Public
 
 internal sealed record PreparedPackage(string ZipPath, string Sha256, int FileCount, long Size, string StageDirectory);
 
-// Local preparation owns build outputs and a single immutable archive. Publication and the
-// check scheduler are deliberately outside this pipeline; later checks consume this context.
+// Local preparation owns build outputs, checks and one immutable archive. Public
+// release publication remains a separate command; no check-all scheduler is used.
 internal static class Prepare
 {
     internal const string InventoryPath = "manifest/multi-version-build.json";
@@ -31,6 +31,7 @@ internal static class Prepare
 
     internal static int Run(string root, Options options)
     {
+        using var timings = new PrepareTimings();
         var context = Timed("prerequisites", () => CreateContext(root, options));
         var tracked = Repository.GitFiles(root);
         var before = tracked.ToDictionary(path => path, path => ReleaseRecords.HashFile(Path.Combine(root, path)), StringComparer.Ordinal);
@@ -47,8 +48,35 @@ internal static class Prepare
             RequireUnchanged(root, before);
             var package = Timed("zip", () => Archive(context));
             Console.WriteLine($"Package: {package.ZipPath}\nSHA-256: {package.Sha256}\nFiles: {package.FileCount}\nSize: {package.Size} bytes");
-            return 0;
+            return Complete(context, package, options, environment, () => RequireUnchanged(root, before));
         });
+    }
+
+    internal static int Complete(PrepareContext context, PreparedPackage package, Options options,
+        IDictionary<string, string?> environment, Action requireUnchanged,
+        Func<PrepareCheckResults>? checks = null, Func<string, Task>? upload = null)
+    {
+        if (options.Has("BuildOnly")) return 0;
+        var results = Timed("checks", checks ?? (() => PrepareChecks.Run(context, package, environment)));
+        Timed("clean-tree", requireUnchanged);
+        var candidate = Timed("candidate", () => PrepareChecks.WriteCandidate(context, package, results));
+        if (!options.Has("NoDraftUpload"))
+        {
+            try
+            {
+                Timed("upload-draft", () => (upload?.Invoke(candidate) ?? ReleasePublisher.UploadDraftAsync(context.Root,
+                    candidate, ReleaseCommands.PreparedPublishOptions(options))).GetAwaiter().GetResult());
+            }
+            catch (Exception error)
+            {
+                Console.Error.WriteLine("Draft upload failed; candidate kept: " + error.Message);
+                Console.Error.WriteLine($"Run: dotnet run --no-build --project build-tools/release -- upload-draft -Version {context.Version}");
+                return 1;
+            }
+        }
+        var next = options.Has("NoDraftUpload") ? "upload-draft" : "publish-prepared";
+        Console.WriteLine($"dotnet run --no-build --project build-tools/release -- {next} -Version {context.Version}");
+        return 0;
     }
 
     internal static T WithRunEnvironment<T>(PrepareContext context, Action requireUnchanged,
@@ -123,7 +151,11 @@ internal static class Prepare
         var clock = Stopwatch.StartNew();
         Console.WriteLine("PREPARE " + name);
         try { return action(); }
-        finally { Console.WriteLine($"PREPARE {name}: {clock.Elapsed.TotalSeconds:F1} s"); }
+        finally
+        {
+            PrepareTimings.Record(name, clock.Elapsed.TotalSeconds);
+            Console.WriteLine($"PREPARE {name}: {clock.Elapsed.TotalSeconds:F1} s");
+        }
     }
 
     internal static void Timed(string name, Action action) => Timed(name, () => { action(); return 0; });

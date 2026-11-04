@@ -225,7 +225,8 @@ internal static partial class ReleaseCommands
         return jobs;
     }
 
-    internal static void ValidatePlcReleaseJob(PlcReleaseJob job, CommandResult result, string root, string logs, int rounds = 50)
+    internal static void ValidatePlcReleaseJob(PlcReleaseJob job, CommandResult result, string root, string logs, int rounds = 50,
+        bool compareUsageReceipt = true)
     {
         ProcessRunner.RequireSuccess(result, job.Name);
         var key = job.Release;
@@ -237,7 +238,9 @@ internal static partial class ReleaseCommands
             ValidateCheckAllPlcHarness(result.StandardOutput, job.Arguments[Array.IndexOf(job.Arguments, "--output") + 1], job.Mode, key, host,
                 ReleasePlcFixture(logs, key), job.Arguments[Array.IndexOf(job.Arguments, "--adapter-inventory") + 1]);
         }
-        if (job.Name.StartsWith("usage-", StringComparison.Ordinal))
+        // prepare keeps the functional usage run but omits the retired receipt
+        // comparison. Existing release callers retain their original gate.
+        if (compareUsageReceipt && job.Name.StartsWith("usage-", StringComparison.Ordinal))
         {
             // Same receipt identity as check-all's PLC usage audit.
             var receipt = JsonNode.Parse(File.ReadAllText(job.Arguments[Array.IndexOf(job.Arguments, "--coverage-output") + 1]))!.AsArray().Single()!;
@@ -272,7 +275,8 @@ internal static partial class ReleaseCommands
     }
 
     internal static void RunPlcReleaseJobs(IEnumerable<PlcReleaseJob> jobs, string root, string logs,
-        Func<PlcReleaseJob, CommandResult> run, Action<string, string[]> compare, int rounds = 50, int parallelism = 1)
+        Func<PlcReleaseJob, CommandResult> run, Action<string, string[]> compare, int rounds = 50, int parallelism = 1,
+        bool compareUsageReceipt = true)
     {
         var ordered = jobs.ToArray();
         void Compare(PlcReleaseJob job)
@@ -288,7 +292,7 @@ internal static partial class ReleaseCommands
         {
             foreach (var job in ordered)
             {
-                ValidatePlcReleaseJob(job, run(job), root, logs, rounds);
+                ValidatePlcReleaseJob(job, run(job), root, logs, rounds, compareUsageReceipt);
                 Compare(job);
             }
             return;
@@ -300,17 +304,17 @@ internal static partial class ReleaseCommands
         var first = ordered.Where(IsPlcInventoryProducer).ToArray();
         var exclusive = ordered.Where(job => !IsPlcInventoryProducer(job) && IsExclusivePlcJob(job)).ToArray();
         var concurrent = ordered.Where(job => !IsPlcInventoryProducer(job) && !IsExclusivePlcJob(job)).ToArray();
-        foreach (var job in first) ValidatePlcReleaseJob(job, run(job), root, logs, rounds);
+        foreach (var job in first) ValidatePlcReleaseJob(job, run(job), root, logs, rounds, compareUsageReceipt);
         var failures = new System.Collections.Concurrent.ConcurrentQueue<Exception>();
         Parallel.ForEach(concurrent, new ParallelOptions { MaxDegreeOfParallelism = parallelism }, (job, state) =>
         {
             if (!failures.IsEmpty) { state.Stop(); return; }
-            try { ValidatePlcReleaseJob(job, run(job), root, logs, rounds); }
+            try { ValidatePlcReleaseJob(job, run(job), root, logs, rounds, compareUsageReceipt); }
             catch (Exception ex) { failures.Enqueue(ex); state.Stop(); }
         });
         if (!failures.IsEmpty)
             throw new ReleaseException(string.Join(Environment.NewLine, failures.Select(ex => ex.Message)));
-        foreach (var job in exclusive) ValidatePlcReleaseJob(job, run(job), root, logs, rounds);
+        foreach (var job in exclusive) ValidatePlcReleaseJob(job, run(job), root, logs, rounds, compareUsageReceipt);
         foreach (var job in ordered) Compare(job);
     }
 

@@ -281,6 +281,23 @@ internal sealed class PrepareBuild
 
     internal static void CleanRuntime(string root)
     {
+        // Start from source on every prepare. Old dependency closures in bin/obj
+        // must not leak into the worker payload; the running release tool stays.
+        var outputs = new List<string>();
+        foreach (var relative in new[] { "src", "tests", "third_party", "build-tools/native-call-weaver" })
+        {
+            var parent = Path.GetFullPath(Path.Combine(root, relative));
+            RequireOwnedTree(root, parent);
+            if (!Directory.Exists(parent)) continue;
+            var pending = new Stack<string>();
+            pending.Push(parent);
+            while (pending.TryPop(out var current))
+                foreach (var directory in Directory.EnumerateDirectories(current))
+                    if (Path.GetFileName(directory).Equals("bin", StringComparison.OrdinalIgnoreCase)
+                        || Path.GetFileName(directory).Equals("obj", StringComparison.OrdinalIgnoreCase)) outputs.Add(directory);
+                    else pending.Push(directory);
+        }
+        foreach (var directory in outputs) Directory.Delete(directory, true);
         var runtime = Path.GetFullPath(Path.Combine(root, "runtime"));
         RequireOwnedTree(root, runtime);
         if (!Directory.Exists(runtime)) { Directory.CreateDirectory(runtime); return; }

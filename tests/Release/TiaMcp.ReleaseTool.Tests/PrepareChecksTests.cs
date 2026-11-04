@@ -1,0 +1,503 @@
+using System.IO.Compression;
+using System.Text.Json.Nodes;
+using System.Xml.Linq;
+using TiaMcp.BuildCommon;
+using Xunit;
+
+namespace TiaMcp.ReleaseTool.Tests;
+
+public sealed class PrepareChecksTests
+{
+    [Theory]
+    [InlineData("suite")]
+    [InlineData("check")]
+    [InlineData("plc")]
+    [InlineData("producer")]
+    public void FailureRunsLaterJobsAndNeverWritesCandidate(string failure)
+    {
+        using var tree = new StaticTree();
+        var context = Context(tree.Root);
+        var package = Package(context);
+        var events = new List<string>();
+        var catalog = new JsonObject { ["first"] = Suite(), ["later"] = Suite() };
+        tree.Write("fixture.csproj", "<Project />");
+        PrepareCheckJob Job(string name) => new(name, () =>
+        {
+            events.Add(name);
+            if (name == failure) throw new ReleaseException("failed " + name);
+            return new(name, 0, "passed", "");
+        });
+        var plan = new PrepareCheckPlan([Job("producer")], [Job("check"), Job("plc"), Job("plc-later")],
+            [Job("exclusive")], [Job("post")]);
+        CommandResult Process(string exe, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
+        {
+            var args = arguments.ToArray();
+            Assert.Equal(context.CompanionPython, env!["TIA_MCP_PLC_TOOLS_PYTHON"]);
+            Assert.NotEqual(Path.Combine(tree.Root, "temp"), env["TEMP"]);
+            if (args[0] == "build") return new(0, "", "");
+            var directory = args[Array.IndexOf(args, "--results-directory") + 1];
+            var name = Path.GetFileName(directory);
+            events.Add(name);
+            WriteTrx(Path.Combine(directory, name + ".trx"), 2, 0);
+            return new(failure == "suite" && name == "first" ? 1 : 0, "finished", "");
+        }
+        var error = Assert.Throws<ReleaseException>(() => Prepare.Complete(context, package, Options(), Environment(tree.Root),
+            () => throw new InvalidOperationException("clean-tree must not run after failure"),
+            () => PrepareChecks.Execute(context, package, Environment(tree.Root), plan, catalog, Process,
+                runtimeCheck: () => events.Add("runtime-bytes")),
+            _ => throw new InvalidOperationException("upload must not run")));
+        Assert.Contains(failure == "suite" ? "first" : failure, error.Message);
+        foreach (var name in new[] { "producer", "first", "later", "check", "plc", "plc-later", "exclusive", "post", "runtime-bytes" })
+            Assert.Contains(name, events);
+        Assert.True(events.IndexOf("producer") < events.IndexOf("first"));
+        Assert.False(File.Exists(Path.Combine(context.OutputDirectory, "candidate.json")));
+    }
+
+    [Theory]
+    [InlineData(1, 0, false)]
+    [InlineData(2, 1, false)]
+    [InlineData(2, 0, true)]
+    public void CandidateRequiresRegisteredPassedAndSkippedGates(int passed, int skipped, bool success)
+    {
+        using var tree = new StaticTree();
+        var catalog = new JsonObject { ["fixture"] = Suite() };
+        WriteTrx(tree.Write("fixture/fixture.trx", ""), passed, skipped);
+        if (success)
+        {
+            var result = PrepareChecks.RequireResults(catalog, tree.Root, ["a"], new Dictionary<string, string>());
+            Assert.Equal(passed, (int)result.Suites["fixture"]!["passed"]!);
+            Assert.Equal(skipped, (int)result.Suites["fixture"]!["skipped"]!);
+        }
+        else Assert.Throws<ReleaseException>(() => PrepareChecks.RequireResults(catalog, tree.Root, [], new Dictionary<string, string>()));
+    }
+
+    [Fact]
+    public async Task CandidateRoundTripsAndUploadFailureKeepsIt()
+    {
+        using var tree = new StaticTree();
+        var context = Context(tree.Root);
+        var package = Package(context);
+        var clean = false;
+        var uploaded = false;
+        var checks = new PrepareCheckResults(new JsonObject { ["fixture"] = new JsonObject { ["passed"] = 2, ["skipped"] = 0 } }, ["product-smoke"]);
+        Assert.Equal(1, Prepare.Complete(context, package, Options(), Environment(tree.Root), () => clean = true,
+            () => checks, path => { uploaded = true; Assert.True(clean); Assert.True(File.Exists(path)); throw new IOException("offline fixture"); }));
+        Assert.True(uploaded);
+        var read = PreparedCandidate.Read(tree.Root, Path.Combine(context.OutputDirectory, "candidate.json"), context.Version);
+        Assert.Equal(package.ZipPath, read.Zip);
+        Assert.Equal(package.Sha256, read.Digest);
+        Assert.Equal(package.Size, read.Size);
+        Assert.Equal(package.FileCount, (int)read.Candidate["fileCount"]!);
+        Assert.True(JsonNode.DeepEquals(checks.Suites, read.Candidate["suites"]));
+        Assert.Equal("product-smoke", (string?)read.Candidate["checks"]![0]);
+        Assert.True(DateTimeOffset.TryParse((string?)read.Candidate["finishedUtc"], out _));
+        await read.VerifyAsync(default);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void BuildOnlyAndNoDraftUploadRespectTheirBoundaries(bool buildOnly)
+    {
+        using var tree = new StaticTree();
+        var context = Context(tree.Root);
+        var package = Package(context);
+        var checks = 0;
+        var clean = 0;
+        var options = Options(buildOnly ? "-BuildOnly" : "-NoDraftUpload");
+        Assert.Equal(0, Prepare.Complete(context, package, options, Environment(tree.Root), () => clean++,
+            () => { checks++; return new(new JsonObject(), []); }, _ => throw new InvalidOperationException("No upload expected")));
+        Assert.Equal(buildOnly ? 0 : 1, checks);
+        Assert.Equal(buildOnly ? 0 : 1, clean);
+        Assert.Equal(!buildOnly, File.Exists(Path.Combine(context.OutputDirectory, "candidate.json")));
+    }
+
+    [Fact]
+    public void DirtyTreeAndChangedArchiveLeaveNoCandidate()
+    {
+        using var tree = new StaticTree();
+        var context = Context(tree.Root);
+        var package = Package(context);
+        var checks = new PrepareCheckResults(new JsonObject(), []);
+        Assert.Throws<ReleaseException>(() => Prepare.Complete(context, package, Options("-NoDraftUpload"), Environment(tree.Root),
+            () => throw new ReleaseException("dirty"), () => checks));
+        File.AppendAllText(package.ZipPath, "changed");
+        Assert.Throws<ReleaseException>(() => PrepareChecks.WriteCandidate(context, package, checks, new string('a', 40)));
+        Assert.False(File.Exists(Path.Combine(context.OutputDirectory, "candidate.json")));
+    }
+
+    [Fact]
+    public void UpdaterComparisonUsesInstalledBytesOnlyWhenRequested()
+    {
+        using var tree = new StaticTree();
+        var runtime = tree.Write("runtime/tools/TiaMcp.Updater.exe", "shipped");
+        tree.Write("bin-build/updater/TiaMcp.Updater.exe", "suite rebuild");
+        var inventory = new JsonObject { ["runtime/tools/TiaMcp.Updater.exe"] = ReleaseRecords.HashFile(runtime) };
+        Assert.Throws<ReleaseException>(() => ReleaseCandidate.RequireRuntimeFiles(tree.Root, inventory));
+        ReleaseCandidate.RequireRuntimeFiles(tree.Root, inventory, remapUpdater: false);
+        File.WriteAllText(runtime, "changed");
+        Assert.Throws<ReleaseException>(() => ReleaseCandidate.RequireRuntimeFiles(tree.Root, inventory, remapUpdater: false));
+    }
+
+    [Fact]
+    public void PrepareKeepsUsageExecutionWithoutRequiringAnOldReceipt()
+    {
+        using var tree = new StaticTree();
+        var job = new PlcReleaseJob("usage-v20-plc", "resource-discovery", "python", ["--coverage-output", "missing.json"], Release: "20");
+        var calls = 0;
+        var passed = new CommandResult(0, "offline examples passed", "");
+        ReleaseCommands.RunPlcReleaseJobs([job], tree.Root, tree.Root, _ => { calls++; return passed; }, (_, _) => { }, compareUsageReceipt: false);
+        Assert.Equal(1, calls);
+        Assert.Throws<FileNotFoundException>(() => ReleaseCommands.ValidatePlcReleaseJob(job, passed, tree.Root, tree.Root));
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.RunPlcReleaseJobs([job], tree.Root, tree.Root,
+            _ => new(1, "", "example failed"), (_, _) => { }, compareUsageReceipt: false));
+    }
+
+    [Fact]
+    public void ComposedInventoryContainsExactlyTheRetainedChecks()
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root));
+        var actual = All(plan).Select(job => job.Name).Order().ToArray();
+        var expected = new List<string> { "plc-file-programs", "configuration-build", "host-parity-build", "product-smoke", "relocated-bundle",
+            "bundled-runtime-foundation-host", "bundled-runtime-studio", "bundle-write-guard", "foundation-approval", "configuration-page",
+            "native-mcp-session-self-test", "nativelifecycle-self-test", "host-behavior-parity", "foundation-transport", "foundation-transport-plc" };
+        foreach (var key in PlcWorkerFixtures.Keys)
+            expected.AddRange(["weave-v" + key + "-bundle", "contracts-v" + key]);
+        foreach (var key in new[] { "20", "21" })
+        {
+            expected.Add("approval-v" + key + "-bundle");
+            foreach (var name in new[] { "native-coverage", "adapter-native-coverage", "jit-adapter-coverage", "worker-robustness", "engine-host", "engineering-api",
+                "native-safety", "worker-protocol", "resources", "ecosystem", "usage", "campaign-inputs", "contracts-stdio", "contracts-http", "contracts-source-stdio", "contracts-source-http" })
+                expected.Add(name + "-v" + key + "-plc");
+            foreach (var mode in new[] { "example-library-only", "software-lookup-only", "http", "hmi-only", "native-diagnostics-only", "process-leases-only",
+                "native-export-only", "hmi-snapshot-only", "global-script-only", "graphic-selection-only", "runtime-settings-only", "test-migration-read-assembly",
+                "test-ecosystem-assembly", "descriptor-catalog-only", "check-modes-self-test" })
+                expected.Add("harness-v" + key + "-" + mode + "-plc");
+            if (key == "21") expected.AddRange(["harness-v21-test-download-route-plc", "harness-v21-test-match-plc-name-plc"]);
+        }
+        Assert.Equal(expected.Order(), actual);
+        Assert.Equal(actual.Length, actual.Distinct().Count());
+        Assert.All(plan.Producers.Where(job => job.Name.Contains("coverage", StringComparison.Ordinal)), job => Assert.DoesNotContain(job, plan.Jobs));
+        var catalog = DotnetSuites.LoadCatalog(Path.Combine(Repository.FindRoot(), "tests/test-suites.json"), Repository.FindRoot());
+        Assert.Equal(44, catalog.Count);
+        var concurrentNames = ReleaseSuiteStage.Groups(catalog)
+            .Select(group => group.Where(name => name is not ("studio-gui" or "updater") && !ReleaseFoundationStage.Names.Contains(name)).ToArray())
+            .Where(group => group.Length != 0).Select(group => group[0]).Concat(plan.Jobs.Select(job => job.Name)).ToArray();
+        Assert.Equal(concurrentNames.Length, concurrentNames.Distinct(StringComparer.Ordinal).Count());
+    }
+
+    [Fact]
+    public void OnlyTheExpectedJobsExecuteFromTheBundle()
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        var bundle = Path.Combine(tree.Root, "bundle");
+        var current = "";
+        var bundled = new HashSet<string>(StringComparer.Ordinal);
+        var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), bundle, Environment(tree.Root), (_, _, cwd, _, _) =>
+        {
+            if (cwd == bundle) bundled.Add(current);
+            return new(1, "", "stop at the fake process boundary");
+        });
+        foreach (var job in plan.Jobs)
+        {
+            current = job.Name;
+            Assert.Throws<ReleaseException>(() => job.Run());
+        }
+        var expected = new[] { "product-smoke", "relocated-bundle", "bundle-write-guard", "bundled-runtime-foundation-host", "bundled-runtime-studio",
+            "foundation-approval", "approval-v20-bundle", "approval-v21-bundle" }
+            .Concat(PlcWorkerFixtures.Keys.SelectMany(key => new[] { "weave-v" + key + "-bundle", "contracts-v" + key }));
+        Assert.Equal(expected.Order(), bundled.Order());
+    }
+
+    [Fact]
+    public void BundleCommandsUseExtractedHostsAndRunTemporaryEnvironment()
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        var context = Context(tree.Root);
+        var bundle = Path.Combine(tree.Root, "extracted/package");
+        foreach (var key in PlcWorkerFixtures.Keys) tree.Write($"manifest/contracts/v4/baseline/{key}.json", "{}\n");
+        var calls = new List<(string Exe, string[] Args, string Cwd, IDictionary<string, string?> Env, string? Input)>();
+        CommandResult Process(string exe, IEnumerable<string> arguments, string cwd, IDictionary<string, string?> env, string? input)
+        {
+            calls.Add((exe, arguments.ToArray(), cwd, new Dictionary<string, string?>(env), input));
+            if (env.TryGetValue("COREHOST_TRACEFILE", out var trace))
+                File.WriteAllText(trace!, "Resolved fxr [" + Path.GetFullPath(Path.Combine(bundle, "runtime/dotnet/host/fxr")) + Path.DirectorySeparatorChar + "10.0/hostfxr.dll]");
+            if (input is not null)
+                return new(0, input.Contains("UnknownV4Tool", StringComparison.Ordinal) ? "{\"hookSpecificOutput\":{\"permissionDecision\":\"deny\"}}" : "", "");
+            var args = arguments.ToArray();
+            if (args.Contains("capture"))
+            {
+                Assert.Equal(bundle, args[Array.IndexOf(args, "--repo-root") + 1]);
+                var key = args[Array.IndexOf(args, "--releases") + 1];
+                var output = args[Array.IndexOf(args, "--output") + 1];
+                Directory.CreateDirectory(output);
+                File.Copy(Path.Combine(tree.Root, $"manifest/contracts/v4/baseline/{key}.json"), Path.Combine(output, key + ".json"));
+            }
+            return new(0, "", "");
+        }
+        var plan = ReleaseCommands.PrepareCheckJobs(context, bundle, Environment(tree.Root), Process);
+        var bundled = plan.Jobs.Where(job => job.Name is "product-smoke" or "relocated-bundle" or "bundle-write-guard" or "bundled-runtime-foundation-host" or "bundled-runtime-studio"
+            || job.Name.StartsWith("weave-", StringComparison.Ordinal) || job.Name.StartsWith("contracts-v", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Equal(new[] { "product-smoke", "relocated-bundle", "bundle-write-guard", "bundled-runtime-foundation-host", "bundled-runtime-studio" }
+            .Concat(PlcWorkerFixtures.Keys.SelectMany(key => new[] { "weave-v" + key + "-bundle", "contracts-v" + key })).Order(), bundled.Select(job => job.Name).Order());
+        foreach (var job in bundled)
+            Assert.Equal(0, job.Run().ExitCode);
+        foreach (var call in calls.Where(call => call.Cwd == bundle))
+        {
+            Assert.Equal(bundle, call.Env["TIA_MCP_BUNDLE_ROOT"]);
+            Assert.Equal(bundle, call.Env["CLAUDE_PLUGIN_ROOT"]);
+            Assert.Equal(context.CompanionPython, call.Env["TIA_MCP_PLC_TOOLS_PYTHON"]);
+        }
+        foreach (var key in PlcWorkerFixtures.Keys)
+        {
+            Assert.Contains(calls, call => call.Args.Contains(Path.Combine(bundle, $"runtime/v{key}/worker/TiaMcp.Adapter.{key}.dll")));
+            Assert.Contains(calls, call => call.Args.Contains(key + "=" + Path.Combine(bundle, $"runtime/v{key}/TiaMcp.FoundationHost.exe")));
+        }
+        Assert.Equal(8, calls.Count(call => call.Args.Contains("capture")));
+        Assert.Equal(8, calls.Count(call => call.Args.Contains("compare")));
+    }
+
+    [Theory]
+    [InlineData("native-mcp-session-self-test", "COMPLETE: 7 native MCP safety checks passed")]
+    [InlineData("nativelifecycle-self-test", "COMPLETE: 0 native supervisor checks passed; live TIA tests NOT RUN")]
+    [InlineData("configuration-page", "Passed: 156")]
+    public void NativeAndConfigurationCountsAreNotOnlyExitCodeChecks(string name, string output)
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
+            (_, _, _, _, _) => new(0, output, ""));
+        Assert.Throws<ReleaseException>(() => plan.Jobs.Single(job => job.Name == name).Run());
+    }
+
+    [Fact]
+    public void WriteGuardFailsWhenDenyDisappearsOrReadIsDenied()
+    {
+        var denied = new CommandResult(0, "{\"hookSpecificOutput\":{\"permissionDecision\":\"deny\"}}", "");
+        var empty = new CommandResult(0, "", "");
+        PrepareChecks.RequireWriteGuard(denied, empty);
+        Assert.ThrowsAny<Exception>(() => PrepareChecks.RequireWriteGuard(empty, empty));
+        Assert.Throws<ReleaseException>(() => PrepareChecks.RequireWriteGuard(denied, denied));
+    }
+
+    [Fact]
+    public void RealPlcJobWrappersContinueAfterAProcessFailure()
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        var context = Context(tree.Root);
+        var calls = new List<string>();
+        var composed = ReleaseCommands.PrepareCheckJobs(context, Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
+            (exe, args, cwd, env, input) =>
+            {
+                calls.Add(string.Join(" ", args));
+                return new(1, "", "injected PLC process failure");
+            });
+        var jobs = composed.Jobs.Where(job => job.Name is "native-safety-v20-plc" or "native-safety-v21-plc").ToArray();
+        Assert.Equal(2, jobs.Length);
+        var error = Assert.Throws<ReleaseException>(() => PrepareChecks.Execute(context, Package(context), Environment(tree.Root),
+            new([], jobs, [], []), new JsonObject(), runtimeCheck: () => { }));
+        Assert.Equal(2, calls.Count);
+        Assert.Contains("native-safety-v20-plc", error.Message);
+        Assert.Contains("native-safety-v21-plc", error.Message);
+    }
+
+    [Fact]
+    public void ParityFailureDoesNotHideTheOtherVersion()
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        var releases = new List<string>();
+        var manifest = tree.Write("runtime-paths.tsv", string.Join("\n", new[] { "20", "21" }.Select(key =>
+        {
+            var unit = HostParity.Unit(key);
+            return string.Join('\t', Path.Combine(tree.Root, unit.Project), unit.Variant, "isolated", "ordinary", tree.Write(key + ".dll", "fixture"));
+        })));
+        var plan = ReleaseCommands.PrepareCheckJobs(Context(tree.Root), Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
+            (exe, args, cwd, env, input) =>
+            {
+                releases.Add(env["TIA_MCP_PARITY_ENGINE_RELEASE"]!);
+                return new(1, "", "parity failure");
+            }, prepareParity: () => manifest);
+        plan.Producers.Single(job => job.Name == "host-parity-build").Run();
+        var error = Assert.Throws<ReleaseException>(() => plan.PostSuites.Single(job => job.Name == "host-behavior-parity").Run());
+        Assert.Equal(new[] { "20", "21" }, releases);
+        Assert.Contains("host-behavior-parity-v20", error.Message);
+        Assert.Contains("host-behavior-parity-v21", error.Message);
+    }
+
+    [Fact]
+    public void FileProgramsUseTheirPreparedCacheAndApprovalUsesAllBundleHosts()
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        var context = Context(tree.Root);
+        var bundle = Path.Combine(tree.Root, "bundle");
+        var calls = new List<(string[] Args, IDictionary<string, string?> Env)>();
+        var plan = ReleaseCommands.PrepareCheckJobs(context, bundle, Environment(tree.Root), (exe, args, cwd, env, input) =>
+        {
+            calls.Add((args.ToArray(), new Dictionary<string, string?>(env)));
+            return new(1, "", "stop before fixture validation");
+        });
+        // The fake fails the first compiler invocation; its environment must still
+        // name the same cache the later harness processes read.
+        Assert.Throws<ReleaseException>(() => plan.Producers.Single(job => job.Name == "plc-file-programs").Run());
+        Assert.Equal(Path.Combine(tree.Root, "temp", "file-apps"), calls[0].Env["TEMP"]);
+        foreach (var name in new[] { "foundation-approval", "approval-v20-bundle", "approval-v21-bundle" })
+            Assert.Throws<ReleaseException>(() => plan.Jobs.Single(job => job.Name == name).Run());
+        var foundation = calls[1];
+        Assert.Contains("foundation", foundation.Args);
+        Assert.Contains(Path.Combine(bundle, "runtime"), foundation.Args);
+        foreach (var key in new[] { "20", "21" })
+        {
+            var call = calls.Single(call => call.Args.Contains(key));
+            Assert.Contains(Path.Combine(bundle, $"runtime/v{key}/TiaMcp.FoundationHost.exe"), call.Args);
+            Assert.Contains("--plc-worker", call.Args);
+            Assert.Contains("--readiness-worker", call.Args);
+            Assert.Contains(Path.Combine(bundle, $"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe"), call.Args);
+            Assert.Contains(call.Args, arg => arg.StartsWith(Path.Combine(context.Logs, "plc-fixtures"), StringComparison.Ordinal));
+            Assert.Equal(bundle, call.Env["TIA_MCP_BUNDLE_ROOT"]);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ApprovalReadinessSelectsThePackagedWorkerOrTheExistingDefault(bool packaged)
+    {
+        using var tree = new StaticTree();
+        var script = Path.Combine(Repository.FindRoot(), "scripts/checks/Test-ReleaseApprovalGate.py");
+        const string code = """
+            import contextlib, importlib.util, sys
+            from pathlib import Path
+            from types import SimpleNamespace
+            from unittest.mock import patch
+            script, directory, packaged = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3] == 'True'
+            sys.path.insert(0, str(script.parent))
+            spec = importlib.util.spec_from_file_location('approval_fixture', script)
+            gate = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(gate)
+            exe = directory / 'host.exe'
+            exe.touch()
+            worker = directory / 'bundle/runtime/v21/worker/TiaMcp.PlcWorker.21.exe'
+            args = SimpleNamespace(exe=exe, portal_root=directory, public_api=directory,
+                host_harness=None, plc_worker=directory / 'sdk-worker.exe', major=21,
+                temp_root=directory, readiness_worker=worker if packaged else None)
+            calls = []
+            def rpc(method, *args, **kwargs):
+                if method == 'tools/list':
+                    return {'result': {'tools': [{'name': gate.ENGINE_WRITE[0]}, {'name': 'CallTool'}]}}
+                return {'result': {}}
+            @contextlib.contextmanager
+            def server(*args, **kwargs):
+                calls.append(kwargs)
+                yield rpc, None, []
+            with patch.multiple(gate, WINDOWS=True,
+                    fresh_data_root=lambda *a, **k: (directory, {}),
+                    retained_on_failure=contextlib.nullcontext,
+                    assert_refused=lambda *a: None, assert_engine_read=lambda *a: None,
+                    assert_readiness_refused=lambda *a: None), \
+                 patch.object(gate.resources, 'server', server), \
+                 patch.object(gate.resources, 'sdk_only_installation', lambda *a: directory):
+                report = gate.run_engine(args)
+            assert report['checksPassed'] == report['checksExpected'] == 7
+            expected = worker if packaged else script.parents[2] / 'src/PlcWorker/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe'
+            assert calls[-1]['plc_worker'] == expected, (calls[-1]['plc_worker'], expected)
+            assert calls[-1]['sdk_ready'] is False
+            assert all(call['plc_worker'] == args.plc_worker for call in calls[:2])
+            print('Readiness routing passed')
+            """;
+        var result = ProcessRunner.Run("python", ["-c", code, script, tree.Root, packaged.ToString()], tree.Root);
+        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
+        Assert.Contains("Readiness routing passed", result.StandardOutput);
+    }
+
+    [Fact]
+    public void NonbreakingBundleContractDriftStillFailsExactBytes()
+    {
+        using var tree = new StaticTree();
+        tree.Copy("build-tools/release/release-checks.json");
+        tree.Write("manifest/contracts/v4/baseline/21.json", "{\"description\":\"original\"}\n");
+        var context = Context(tree.Root);
+        var plan = ReleaseCommands.PrepareCheckJobs(context, Path.Combine(tree.Root, "bundle"), Environment(tree.Root),
+            (_, arguments, _, _, _) =>
+            {
+                var args = arguments.ToArray();
+                if (args.Contains("capture"))
+                {
+                    var output = args[Array.IndexOf(args, "--output") + 1];
+                    Directory.CreateDirectory(output);
+                    File.WriteAllText(Path.Combine(output, "21.json"), "{\"description\":\"changed\"}\n");
+                }
+                return new(0, "No breaking changes", "");
+            });
+        Assert.Throws<ReleaseException>(() => plan.Jobs.Single(job => job.Name == "contracts-v21").Run());
+    }
+
+    [Fact]
+    public void SuiteTimingNamesAndLocalOnlyNextCommandIdentifyTheRealWork()
+    {
+        using var tree = new StaticTree();
+        var context = Context(tree.Root);
+        tree.Write("fixture.csproj", "<Project />");
+        var catalog = new JsonObject { ["first"] = Suite(), ["later"] = Suite() };
+        var saved = Console.Out;
+        using var output = new StringWriter();
+        try
+        {
+            Console.SetOut(output);
+            Assert.Equal(0, Prepare.Complete(context, Package(context), Options("-NoDraftUpload"), Environment(tree.Root), () => { },
+                () => PrepareChecks.Execute(context, Package(context with { OutputDirectory = Path.Combine(tree.Root, "other") }), Environment(tree.Root),
+                    new([], [], [], []), catalog, (_, arguments, _, _) =>
+                    {
+                        var args = arguments.ToArray();
+                        if (args[0] == "test")
+                        {
+                            var directory = args[Array.IndexOf(args, "--results-directory") + 1];
+                            WriteTrx(Path.Combine(directory, Path.GetFileName(directory) + ".trx"), 2, 0);
+                        }
+                        return new(0, "", "");
+                    }, runtimeCheck: () => { })));
+        }
+        finally { Console.SetOut(saved); }
+        Assert.Contains("PREPARE suite-first-test:", output.ToString());
+        Assert.Contains("PREPARE suite-later-test:", output.ToString());
+        Assert.Contains("dotnet run --no-build --project build-tools/release -- upload-draft -Version " + context.Version, output.ToString());
+        Assert.DoesNotContain("publish-prepared", output.ToString());
+    }
+
+    private static IEnumerable<PrepareCheckJob> All(PrepareCheckPlan plan) => plan.Producers.Concat(plan.Jobs).Concat(plan.Exclusive).Concat(plan.PostSuites);
+    private static PrepareContext Context(string root) => new(root, "4.0.0-beta.3", Path.Combine(root, "sdk"), null,
+        "python", "companion-python", Path.Combine(root, "prepared"), new(2026, 11, 3), 1);
+    private static Dictionary<string, string?> Environment(string root) => new() { ["TEMP"] = Path.Combine(root, "temp") };
+    private static Options Options(params string[] flags) => TiaMcp.ReleaseTool.Options.Parse(["-Version", "4.0.0-beta.3", .. flags],
+        new HashSet<string> { "BuildOnly", "NoDraftUpload" });
+    private static JsonObject Suite() => new() { ["project"] = "fixture.csproj", ["minimumPassed"] = 2, ["maximumSkipped"] = 0, ["arguments"] = new JsonArray() };
+    private static PreparedPackage Package(PrepareContext context)
+    {
+        Directory.CreateDirectory(context.OutputDirectory);
+        var zip = Path.Combine(context.OutputDirectory, context.PackageName + ".zip");
+        using (var archive = ZipFile.Open(zip, ZipArchiveMode.Create))
+        using (var writer = new StreamWriter(archive.CreateEntry(context.PackageName + "/runtime/test.dll").Open())) writer.Write("test");
+        var hash = ReleaseRecords.HashFile(zip);
+        File.WriteAllText(Path.ChangeExtension(zip, ".sha256"), hash + "  " + Path.GetFileName(zip));
+        return new(zip, hash, 1, new FileInfo(zip).Length, context.StageDirectory);
+    }
+    private static void WriteTrx(string path, int passed, int skipped)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var cases = Enumerable.Range(0, passed + skipped).ToArray();
+        new XDocument(new XElement(ns + "TestRun", new XElement(ns + "Results", cases.Select(index => new XElement(ns + "UnitTestResult",
+            new XAttribute("testId", "test" + index), new XAttribute("executionId", "run" + index), new XAttribute("outcome", index < passed ? "Passed" : "NotExecuted")))),
+            new XElement(ns + "TestDefinitions", cases.Select(index => new XElement(ns + "UnitTest", new XAttribute("id", "test" + index),
+                new XElement(ns + "TestMethod", new XAttribute("className", "Fixture"), new XAttribute("name", "Test" + index))))),
+            new XElement(ns + "ResultSummary", new XAttribute("outcome", "Completed"), new XElement(ns + "Counters", new XAttribute("total", passed + skipped),
+                new XAttribute("executed", passed), new XAttribute("passed", passed), new XAttribute("failed", 0), new XAttribute("notExecuted", skipped))))).Save(path);
+    }
+}
