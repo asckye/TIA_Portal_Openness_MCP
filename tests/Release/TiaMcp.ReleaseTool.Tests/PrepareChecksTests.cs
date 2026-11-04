@@ -181,7 +181,7 @@ public sealed class PrepareChecksTests
         Assert.Equal(actual.Length, actual.Distinct().Count());
         Assert.All(plan.Producers.Where(job => job.Name.Contains("coverage", StringComparison.Ordinal)), job => Assert.DoesNotContain(job, plan.Jobs));
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(Repository.FindRoot(), "tests/test-suites.json"), Repository.FindRoot());
-        Assert.Equal(44, catalog.Count);
+        Assert.Equal(38, catalog.Count);
         var concurrentNames = ReleaseSuiteStage.Groups(catalog)
             .Select(group => group.Where(name => name is not ("studio-gui" or "updater") && !ReleaseFoundationStage.Names.Contains(name)).ToArray())
             .Where(group => group.Length != 0).Select(group => group[0]).Concat(plan.Jobs.Select(job => job.Name)).ToArray();
