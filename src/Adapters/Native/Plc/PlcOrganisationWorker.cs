@@ -86,7 +86,7 @@ namespace TiaMcp.Adapters
                         .ImportTechnologyObjectsFromDirectory(request.SoftwarePath, request.GroupPath, request.FilePath, request.RegexName, request.Overwrite);
                     break;
                     case "ExportTechnologyObjectsToDirectory": reply.Batch = adapter
-                        .ExportTechnologyObjectsToDirectory(request.SoftwarePath, request.FilePath, request.RegexName); break;
+                        .ExportTechnologyObjectsToDirectory(request.SoftwarePath, request.FilePath, request.RegexName, dryRun, request.ExpectedPlanHash); break;
                     case "TraceTagCause": reply.Report = adapter.TraceTagCause(request.SoftwarePath, request.Name, request.RegexName); break;
                     case "TraceTagCauseLive":
                         if (request.Action == "tagMap") reply.TagAddresses = adapter.ReadPlcTraceTagAddresses(request.SoftwarePath);
@@ -136,19 +136,23 @@ namespace TiaMcp.Adapters
                     case "DeletePlcTagTable": reply.Data = adapter.DeletePlcTagTable(request.SoftwarePath, request.Path, dryRun, request.CrossReferences);
                     break;
                     case "DeletePlcType": reply.Data = adapter.DeletePlcType(request.SoftwarePath, request.Path, dryRun, request.CrossReferences); break;
-                    case "DeleteEmptyPlcBlockGroup": reply.Data = adapter.DeleteEmptyPlcBlockGroup(request.SoftwarePath, request.GroupPath, dryRun); break;
-                    case "CreatePlcTypeGroup": reply.Data = adapter.CreatePlcTypeGroup(request.SoftwarePath, request.GroupPath, dryRun); break;
+                    case "DeleteEmptyPlcBlockGroup": step = adapter
+                        .ManagePlcUserGroup(request.SoftwarePath, "blocks", request.GroupPath, "deleteEmpty", dryRun: dryRun); break;
+                    case "CreatePlcTypeGroup": step = adapter.ManagePlcUserGroup(request.SoftwarePath, "types", request.GroupPath, "create", dryRun: dryRun);
+                    break;
                     case "CreatePlcBlockGroup":
-                        reply.Found = adapter.EnsurePlcBlockGroup(request.SoftwarePath, request.GroupPath, out var created) != null;
-                        reply.Created = created.ToArray(); break;
-                    case "MovePlcBlockToGroup": reply.Message = adapter
-                        .MoveBlockToGroup(request.SoftwarePath, request.Name, request.GroupPath, request.AutoCreateGroup); break;
+                        step = adapter.ManagePlcUserGroup(request.SoftwarePath, "blocks", request.GroupPath, "create", dryRun: dryRun); break;
+                    case "MovePlcBlockToGroup": step = adapter
+                        .MoveBlockToGroup(request.SoftwarePath, request.Name, request.GroupPath, request.AutoCreateGroup, request.FilePath, dryRun, request
+                            .ExpectedPlanHash);
+                    break;
                     case "ManagePlcUserGroup": step = adapter
                         .ManagePlcUserGroup(request.SoftwarePath, request.Family, request.GroupPath, request.Action, request.NewName, dryRun); break;
                     case "ManagePlcBlockProtection": step = adapter
                         .ManagePlcBlockProtection(request.SoftwarePath, request.Path, request.Action, request.Password, request.Confirm, dryRun); break;
                     case "ListPlcSystemGroups": step = adapter
                         .ReadPlcSystemGroups(request.SoftwarePath, request.UnitName, request.UnitKind, request.IncludeBlocks, request.MaxDepth); break;
+
                     case "CreatePlcInstanceDb": step = adapter
                         .CreatePlcInstanceDb(request.SoftwarePath, request.Path, request.Name, request.GroupPath, request.AutoNumber, request.Number, dryRun);
                     break;
@@ -228,6 +232,7 @@ namespace TiaMcp.Adapters
                 reply.Failure.Evidence["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
                 reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
                 reply.MayHaveChanged = adapter.MutationStarted; reply.RequiresSessionReset = adapter.MutationStarted;
+                if (request.Operation == "MovePlcBlockToGroup") reply.Failure.Evidence["deleteStarted"] = adapter.MutationStarted;
                 for (Exception? current = error; current != null; current = current.InnerException)
                     if (current.Data["nativeResultEvidence"] is Dictionary<string, object?> evidence)
                         foreach (var pair in evidence) reply.Failure.Evidence[pair.Key] = pair.Value;

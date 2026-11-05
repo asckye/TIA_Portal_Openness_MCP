@@ -11,6 +11,57 @@ namespace TiaMcp.Generation.Planning.Tests
     public sealed class StagedPlanningTests
     {
         public static IEnumerable<object[]> Releases => PlanningFixture.Releases.Select(r => new object[] { r });
+        private static PlanningFixture WriteFixture(string release)
+        {
+            var fixture = new PlanningFixture(release);
+            fixture.Observed.Devices.Clear();
+            fixture.Machine.Target.Project.ProjectIdentity = fixture.Observed.ProjectIdentity = "C:/Projects/Fixture.ap" + release;
+            fixture.Emits[0]!["group"] = "Program";
+            return fixture;
+        }
+        [Theory, MemberData(nameof(Releases))]
+        public void DeviceAndMoveWritesCarryTheirOwnReviewedPreview(string release)
+        {
+            var result = WriteFixture(release).Build();
+            var writes = result.Plan.Steps.Where(step => step.Tool is "CreateDevice" or "MovePlcBlockToGroup").ToArray();
+            Assert.Contains(writes, step => step.Tool == "CreateDevice");
+            Assert.Contains(writes, step => step.Tool == "MovePlcBlockToGroup");
+            foreach (var step in writes)
+            {
+                Assert.Equal("write-preview/1", step.Review?.Rule);
+                Assert.True(StepReviewRules.Supports(step));
+                Assert.False(step.Arguments["dryRun"].GetBoolean());
+                Assert.False(step.Arguments.ContainsKey("expectedPlanHash"));
+                Assert.True((bool?)StepReviewRules.PreviewArguments(step)["dryRun"]);
+                if (step.Tool == "MovePlcBlockToGroup")
+                {
+                    Assert.True(step.Arguments.ContainsKey("targetGroupPath"));
+                    Assert.False(step.Arguments.ContainsKey("groupPath"));
+                }
+            }
+            Assert.All(result.Plan.Steps.Where(step => step.Tool == "CreatePlcBlockGroup"),
+                step => Assert.False(step.Arguments["dryRun"].GetBoolean()));
+        }
+
+        [Theory]
+        [InlineData("CreateDevice")]
+        [InlineData("MovePlcBlockToGroup")]
+        public void WriteReviewRequiresHashAndPlannedProject(string tool)
+        {
+            var result = WriteFixture("21").Build();
+            var step = result.Plan.Steps.First(item => item.Tool == tool);
+            string project = result.Plan.Target.ProjectIdentity!;
+            var good = new JsonObject { ["planHash"] = new string('a', 64), ["projectFile"] = project };
+            var facts = new RunFacts(result.Plan);
+            Assert.True(StepReviewRules.Compare(result.Plan, step, good, facts, 123).Matches);
+            Assert.Equal(new string('a', 64), (string?)StepReviewRules.FinalArguments(step, good)["expectedPlanHash"]);
+            good["planHash"] = "bad";
+            Assert.False(StepReviewRules.Compare(result.Plan, step, good, facts, 123).Matches);
+            Assert.Throws<ArgumentException>(() => StepReviewRules.FinalArguments(step, good));
+            good["planHash"] = new string('a', 64); good["projectFile"] = "C:/Other.ap21";
+            Assert.False(StepReviewRules.Compare(result.Plan, step, good, facts, 123).Matches);
+        }
+
         [Theory, MemberData(nameof(Releases))]
         public void RootSourceImportsCarryApprovedReviewAndBlocksMoveAfterGeneration(string release)
         {

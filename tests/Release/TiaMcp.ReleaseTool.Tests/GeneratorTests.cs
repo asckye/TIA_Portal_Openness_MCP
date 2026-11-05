@@ -272,7 +272,32 @@ public sealed class GeneratorTests
     [InlineData("ExportPlcTypes")]
     [InlineData("ImportPlcBlocksFromDirectory")]
     [InlineData("ImportPlcProgramFromDirectory")]
-    public void FoundationBatchExamplesRequireExactPaths(string name) { var calls = Read(Root, "reference/tool-examples/calls.json"); calls["profiles"]!["plc-foundation"]![name]!["arguments"]!["softwarePath"] = "PLC_1"; Assert.Throws<ReleaseException>(() => ToolUsageGenerator.ValidateFoundation(calls, [])); }
+    public void FoundationBatchExamplesRequireExactPaths(string name) {
+        var calls = Read(Root, "reference/tool-examples/calls.json"); calls["profiles"]!["plc-foundation"]![name]!["arguments"]!["softwarePath"] = "PLC_1";
+        Assert.Throws<ReleaseException>(() => ToolUsageGenerator.ValidateFoundation(Root, calls, []));
+    }
+    [Fact]
+    public void UsageExecutionIdentityRequirementFollowsTheActualContract()
+    {
+        var calls = Read(Root, "reference/tool-examples/calls.json");
+        // File-only source generation has no expectedProjectFile parameter; project writes still require it.
+        calls["profiles"]!["plc-foundation"]!["GeneratePlcSourceFromBlocks"]!["arguments"]!["dryRun"] = false;
+        ToolUsageGenerator.ValidateFoundation(Root, calls, []);
+        var bound = calls["profiles"]!["plc-foundation"]!["CreatePlcTag"]!["arguments"]!.AsObject();
+        bound["dryRun"] = false; bound.Remove("expectedProjectFile");
+        Assert
+            .Contains("Real call requires expectedProjectFile: CreatePlcTag", Assert
+                .Throws<ReleaseException>(() => ToolUsageGenerator.ValidateFoundation(Root, calls, [])).Message);
+        bound["expectedProjectFile"] = "C:/Examples/Project.ap21";
+        ToolUsageGenerator.ValidateFoundation(Root, calls, []);
+    }
+    [Fact]
+    public void UsageExamplesRejectUnknownToolSchemas()
+    {
+        var calls = new JsonObject { ["profiles"] = new JsonObject { ["plc-foundation"] = new JsonObject {
+            ["UnknownUsageTool"] = new JsonObject { ["arguments"] = new JsonObject { ["dryRun"] = false } } } } };
+        Assert.Contains("Unknown tool schema", Assert.Throws<ReleaseException>(() => ToolUsageGenerator.ValidateFoundation(Root, calls, [])).Message);
+    }
     [Fact]
     public void SingleWriterOwnershipIsExplicit()
     {

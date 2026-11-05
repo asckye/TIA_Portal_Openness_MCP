@@ -230,7 +230,8 @@ internal static class FoundationPassiveDiagnostics
         bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey))
             .All(d => names.Contains(d.Name, StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
             && families.SelectMany(family => family.Tools.Where(name => TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, name)))
-                .All(name => names.Contains(name, StringComparer.Ordinal) && PortedToolContract.WiredOperations(name).All(sourceOperations.Contains));
+                .All(name => names.Contains(name, StringComparer.Ordinal)
+                    && PortedToolContract.WiredOperations(name, releaseKey).All(sourceOperations.Contains));
         var roster = new JsonArray();
         int rosterCharacters = 2;
         foreach (var tool in tools.OrderBy(t => t.ProtocolTool.Name, StringComparer.Ordinal).Skip(offset).Take(limit))
@@ -239,7 +240,7 @@ internal static class FoundationPassiveDiagnostics
             var definition = FoundationTools.Definitions.SingleOrDefault(d => d.Name == name);
             bool ported = TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name);
-            var operations = ported ? PortedToolContract.WiredOperations(name) : null;
+            var operations = ported ? PortedToolContract.WiredOperations(name, releaseKey) : null;
             bool engineWorker = !ported && definition == null && EngineHostConfiguration.CurrentOrNull?.Catalog?.Find(name)?.Execution == "worker";
             var row = new JsonObject {
                 ["name"] = name, ["execution"] = ported && operations!.Length != 0 || definition != null && definition.ResponseMember != "ImportStaging"
@@ -331,6 +332,8 @@ internal static class LegacyHostToolRegistry
                 sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });
         tools.Clear(); tools.AddRange(wrapped);
+        CompatibilityTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
+        CanonicalBatchTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
         if (hostPorts && ReleaseCatalogData.Releases[releaseKey].FoundationReadinessBoundary)
         {
             var all = FoundationHostPorts.Create(worker, releaseKey, tools.AsReadOnly(), readiness, apiDirectory);

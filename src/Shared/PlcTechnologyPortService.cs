@@ -28,10 +28,15 @@ namespace TiaMcpServer.Siemens.Services
                         Operation = "ImportTechnologyObjectsFromDirectory", SoftwarePath = softwarePath, GroupPath = folderPath, FilePath = dir, RegexName =
                             regexName, Overwrite = overwrite, DryRun = false
                     }));
-        public ResponseImportBatch ExportTechnologyObjectsToDirectory(string softwarePath, string exportDir, string regexName = "")
-            =>
-                TechnologyBatch(Invoke(new PlcSoftwareRequest {
-                        Operation = "ExportTechnologyObjectsToDirectory", SoftwarePath = softwarePath, FilePath = exportDir, RegexName = regexName }));
+        public ResponseImportBatch ExportTechnologyObjectsToDirectory(string softwarePath, string exportDir, string regexName = "",
+                bool dryRun = true, string expectedPlanHash = "", bool confirm = false, string expectedProjectFile = "")
+        {
+            if (!dryRun && (!confirm || expectedProjectFile != projectIdentity()))
+                throw new AdapterPreconditionException("Export requires confirmation and the reviewed project.");
+            return TechnologyBatch(Invoke(new PlcSoftwareRequest {
+                        Operation = "ExportTechnologyObjectsToDirectory", SoftwarePath = softwarePath, FilePath = exportDir, RegexName = regexName,
+                        DryRun = dryRun, ExpectedPlanHash = expectedPlanHash }));
+        }
         private static HardwareScalar TechnologyScalar(JsonNode? value)
         {
             if (value == null) return new HardwareScalar { Kind = "null" };

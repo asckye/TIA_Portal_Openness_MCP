@@ -18,7 +18,8 @@ public sealed partial class VersionCatalogWiring
         Assert.True(index >= 0, "Missing source fragment: " + value); return index;
     }
     private static string[] FindAll(string pattern, string source) => Regex.Matches(source, pattern).Select(m => m.Groups[1].Value).ToArray();
-    private static string[] Split(string source, string separator, int limit = int.MaxValue) => source.Split(new[] { separator }, limit == int.MaxValue ? limit : limit + 1, StringSplitOptions.None);
+    private static string[] Split(string source, string separator, int limit = int.MaxValue) => source
+        .Split(new[] { separator }, limit == int.MaxValue ? limit : limit + 1, StringSplitOptions.None);
 
     [Fact]
     public void PolicyWrapsFoundationDispatch()
@@ -80,9 +81,9 @@ public sealed partial class VersionCatalogWiring
     public void MoveRefusalAndRecoveryPrecedeCleanup()
     {
         var source = new EngineSources(ROOT, "src/Adapters/Native/Plc").Member("MoveBlockToGroup", owner: "PlcOrganisationAdapter", tool: false);
-        Assert.True(Find(source, "if (block is OB)") < Find(source, "EnsurePlcBlockGroup"));
-        Assert.True(Find(source, "moveVerified = verifyGroup") < Find(source, "finally"));
-        Assert.Contains("if (moveVerified)", Split(source, "finally", 1)[1], StringComparison.Ordinal);
+        Assert.True(Find(source, "if (block is OB)") < Find(source, "var plan ="));
+        Assert.True(Find(source, "if (block is OB)") < Find(source, "PlcMovePolicy.ExportDeleteImportRestore"));
+        Assert.Contains("object.Equals(parent, target)", source, StringComparison.Ordinal);
         Assert.Contains("Recovery export retained", source, StringComparison.Ordinal);
     }
 

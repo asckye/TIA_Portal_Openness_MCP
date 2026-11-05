@@ -28,7 +28,8 @@ KEYS = ("14sp1", "15.1", "16", "17", "18", "19")
 # safe-v4 candidate arguments (mode, expectedPlanHash) are not in the released schemas.
 STAGING_WRITE = ("StageImportFiles", {"files": [{"fileName": "ApprovalProbe.scl", "kind": "scl",
     "content": "FUNCTION ApprovalProbe : Void\nBEGIN\nEND_FUNCTION\n"}], "dryRun": False})
-ENGINE_WRITE = ("CreateDevice", {"orderNumber": "6ES7 515-2AM02-0AB0", "version": "V2.9", "deviceName": "PLC_2"})
+ENGINE_WRITE = ("CreateDevice", {"orderNumber": "6ES7 515-2AM02-0AB0", "version": "V2.9", "deviceName": "PLC_2",
+    "dryRun": False, "confirm": True, "expectedPlanHash": "a" * 64, "expectedProjectFile": "C:/Projects/ApprovalProbe.ap21"})
 FOUNDATION_WRITE = ("CreatePlcTagTable", {"plc": "PLC_1", "group": "", "name": "ExampleTags", "dryRun": True, "confirm": False})
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))

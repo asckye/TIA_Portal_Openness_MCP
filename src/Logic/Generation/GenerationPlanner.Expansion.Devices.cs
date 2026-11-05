@@ -35,7 +35,7 @@ namespace TiaMcp.Logic.Generation
                         Station = station.Id, Name = station.Id, Article = article, Firmware = station.Firmware ?? variant?.Firmware ?? "" };
                     var stationEntry =
                         Add(device, "hardware", "device", "CreateDevice",
-                            Args(("orderNumber", article), ("version", device.Firmware), ("deviceName", device.Name)), "GetProjectTree");
+                            Args(("orderNumber", article), ("version", device.Firmware), ("deviceName", device.Name), ("dryRun", false)), "GetProjectTree");
                     if (article.Length == 0) stationEntry.Unavailable = "Station " + station.Id
                         + " needs an exact catalog article or an observed device; the station kind is not a catalog identifier.";
                     foreach (var module in variant?.Modules ?? new List<HardwarePartRolesItemVariantsItemModulesItem>())
@@ -118,8 +118,7 @@ namespace TiaMcp.Logic.Generation
                     var key = Key(group);
                     if (!entries.TryGetValue(key, out var entry)) entry =
                         Add(group, "plcStructure", null, kind == "blocks" ? "CreatePlcBlockGroup" : "CreatePlcTypeGroup",
-                        kind == "blocks" ? Args(("softwarePath", Software(station)), ("groupPath", group.Name))
-                            : Args(("softwarePath", Software(station)), ("groupPath", group.Name), ("dryRun", false)), "GetProjectTree");
+                        Args(("softwarePath", Software(station)), ("groupPath", group.Name), ("dryRun", false)), "GetProjectTree");
                     if (parent != null) entry.Dependencies.Add(parent.Key);
                     parent = entry;
                 }

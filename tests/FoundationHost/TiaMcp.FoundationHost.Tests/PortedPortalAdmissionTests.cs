@@ -176,7 +176,7 @@ public sealed class PortedPortalAdmissionTests
         }
         if (name == "CreatePlcBlockGroup")
         {
-            Assert.Equal("McpException", (string?)body["data"]?["evidence"]?["exceptionType"]);
+            Assert.Equal("connect-portal", (string?)body["error"]?["details"]?["condition"]);
             Assert.Contains(body["meta"]!["warnings"]!.AsArray(), w => (string?)w!["code"] == "APPROVAL_DISABLED");
         }
         if (name is "PlanOnlineReadOnlyMonitoring" or "PlanOnlineReadOnlyDataProvider")

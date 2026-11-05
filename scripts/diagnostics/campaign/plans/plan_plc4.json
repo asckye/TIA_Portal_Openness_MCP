@@ -337,12 +337,15 @@
 "softwarePath": "MCP_PLC",
 "importPath": "${EXPORT_ROOT}\\mcp46_blocks\\MCP_FC.xml",
 "groupPath": "MCP_G/Sub2",
-"compileAfter": true
+"compileAfter": true,
+"dryRun": true,
+"confirm": false
 },
-"note": "",
+"note": "DES-2 Round 2: whole ordered batch preview, including every canonical item/hash. One approval on the exact batch hash/project executes in order and stops at the first failure. Native/VM acceptance NOT RUN.",
 "expect": "any",
 "keys": [
-"compile"
+"planHash",
+"items"
 ]
 },
 {
@@ -662,11 +665,16 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "dir": "${EXPORT_ROOT}\\mcp46_wt",
-"regexName": ""
+"regexName": "",
+"dryRun": true,
+"confirm": false
 },
-"note": "",
+"note": "DES-2 Round 2: whole ordered batch preview, including every canonical item/hash. One approval on the exact batch hash/project executes in order and stops at the first failure. Native/VM acceptance NOT RUN.",
 "expect": "any",
-"keys": []
+"keys": [
+"planHash",
+"items"
+]
 },
 {
 "tool": "ListPlcForceTables",
@@ -815,12 +823,15 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportDir": "${EXPORT_ROOT}\\mcp46_to",
-"regexName": ""
+"regexName": "",
+"dryRun": true,
+"confirm": false
 },
-"note": "",
+"note": "DES-2 Round 2: whole ordered batch preview, including every canonical item/hash. One approval on the exact batch hash/project executes in order and stops at the first failure. Native/VM acceptance NOT RUN.",
 "expect": "any",
 "keys": [
-"exported"
+"planHash",
+"items"
 ]
 },
 {

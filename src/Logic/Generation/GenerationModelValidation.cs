@@ -165,11 +165,14 @@ namespace TiaMcp.Logic.Generation
                     var rule = review.GetProperty("rule").GetString();
                     string tool = rule == StepReviewRules.Import ? "ImportPlcExternalSource" : rule == StepReviewRules.Generate
                         ? "GenerateBlocksFromExternalSource" : rule == StepReviewRules.Delete ? "DeletePlcExternalSource" : rule == StepReviewRules.Record
-                        ? "PublishGenerationRecord" : "";
+                        ? "PublishGenerationRecord" : rule == StepReviewRules.WritePreview
+                            && step.GetProperty("tool").GetString() is "CreateDevice" or "MovePlcBlockToGroup"
+                            ? step.GetProperty("tool").GetString()! : "";
                     if (tool.Length == 0 || step.GetProperty("tool").GetString() != tool) errors
                         .Add(new GenerationValidationError(path + "/review/rule", "review-rule", "Current preview rule must match the step tool."));
                     var expect = review.GetProperty("expect");
-                    var required = rule == StepReviewRules.Import ? new[] {
+                    var required = rule == StepReviewRules.WritePreview ? new[] { "projectFile" }
+                        : rule == StepReviewRules.Import ? new[] {
                         "softwarePath", "groupPath", "filePath", "inputSha256", "byteCount", "sourceName", "sourcesBefore" }
                         : rule == StepReviewRules.Generate ? new[] {
                             "softwarePath", "groupPath", "sourceName", "generationOption", "resultBasis", "objectKeysBefore" }

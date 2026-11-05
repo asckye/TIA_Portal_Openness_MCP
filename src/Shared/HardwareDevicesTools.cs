@@ -283,24 +283,23 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "CreateDevice"),
-                Description("[L2][Hardware] Add one hardware device with exactly the requested type and name: TypeIdentifier " +
-                "OrderNumber:<orderNumber>/<version> (or a full TypeIdentifier in orderNumber with an empty version), deviceName for the device and its head " +
-                "item. Requires: ConnectPortal followed by AttachOpenProject or OpenProject. One DeviceComposition.CreateWithItem call: no firmware-version " +
-                "stepping, no alternative spelling or model, no renaming retries. A name already used by a device or head item (root, grouped or ungrouped) " +
-                "is refused before the call. When TIA refuses, the unchanged device inventory is verified and the typed refusal lists the hardware-catalog " +
-                "candidates (V18+; earlier releases have no catalog API) to choose again. Find the exact article number and version with " +
-                "SearchHardwareCatalog (V18+) or the TIA type identifier display. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+                Description("[L2][Hardware][WRITE] Compatibility forwarder to CreateHardwareDevice on V18–V21. orderNumber maps to preferredMlfb" +
+                " and version to preferredVersion; both are passed unchanged. Default dryRun=true. Uses the same exact catalog " +
+                "selection, inventory, plan hash, confirm and expectedProjectFile, one create, readback, result and diagnostics. V14" +
+                " SP1–V17 retain the exact native CreateWithItem route with the same preview/hash/project contract. Native " +
+                "behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateDeviceV4(
-            [Description("orderNumber: exact article number as written in the TIA hardware catalog, including its spaces (e.g. '6ES7 211-1BE40-0XB0'), or a " +
-                "full TypeIdentifier ('OrderNumber:.../V4.7'); used verbatim")] string orderNumber,
-            [Description("version: exact catalog version as written in the TypeIdentifier (e.g. 'V4.7'); empty only for a full TypeIdentifier or a module " +
-                "with no or a single installed version (TIA rule)")] string version,
-            [Description("deviceName: name of the new device and its head item; must not be used by any device or head item")] string deviceName)
-            => HardwareContract.Run("CreateDevice", () =>
-            {
+            [Description("Exact catalog article number or full OrderNumber TypeIdentifier, passed unchanged to preferredMlfb.")] string orderNumber,
+            [Description("Exact catalog version; empty for a full TypeIdentifier, passed unchanged to preferredVersion.")] string version,
+            string deviceName, string family = "S7-1500", bool dryRun = true, bool confirm = false,
+            string expectedPlanHash = "", string expectedProjectFile = "")
+            // V18+ forwards to the canonical tool; older releases retain the exact native creation route.
+            => !dryRun && !confirm ? McpServer.V4Reject("CreateDevice", McpServer.InvalidInput("confirm"))
+                : McpServer.RunWritePreview("CreateDevice", dryRun, new { orderNumber, version, deviceName, family },
+                () => HardwareContract.Run("CreateDevice", () => {
                 HardwareContract.RequireProject(_service.HasProject);
                 return AddDevice(orderNumber, version, deviceName);
-            }, write: true, current: true);
+            }, write: true, current: true), expectedPlanHash, expectedProjectFile);
 
         public ResponseMessage AddDevice(
             [Description("orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 " +
@@ -524,18 +523,17 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "CreateHardwareCatalogDevice"),
-                Description("[L2][Hardware]Add one device from the installed TIA hardware catalog (V18+). keyword must be the exact TypeIdentifier of one " +
-                "catalog candidate (from SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked " +
-                "candidates (preferredText only ranks them) so the caller chooses. One DeviceComposition.CreateWithItem call: no best-match guess, no " +
-                "next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the catalog candidates. Native " +
-                "behaviorPolicy=current; V4 native acceptance is pending.")]
+                Description("[L2][Hardware][WRITE] Compatibility forwarder to CreateHardwareDevice on V18–V21. keyword must be one exact " +
+                "OrderNumber TypeIdentifier and maps unchanged to preferredMlfb with preferredVersion empty. preferredText is " +
+                "retained as a compatibility hint and does not rank, guess or retry. Default dryRun=true; same plan hash, " +
+                "confirmation, project identity, create, readback and diagnostics. Native behaviorPolicy=current; V4 native " +
+                "acceptance is pending.")]
         public CallToolResult CreateHardwareCatalogDeviceV4(
-            [Description("keyword: exact catalog TypeIdentifier to create, e.g. 'OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0'; search text (e.g. 'KTP700 Basic " +
-                "PN') is refused with the ranked candidates")] string keyword,
-            [Description("deviceName: name of the new device and its head item, e.g. 'HMI_KTP700_1'")] string deviceName,
-            [Description("preferredText: optional ranking hint for the refusal candidate list, e.g. 'PN 17.0.0.0 landscape'")] string preferredText = "")
-            => HardwareContract.Run("CreateHardwareCatalogDevice", () =>
-            {
+            [Description("Exact OrderNumber TypeIdentifier, passed unchanged to preferredMlfb with empty preferredVersion.")] string keyword,
+            string deviceName, string preferredText = "", string family = "S7-1500", bool dryRun = true, bool confirm = false,
+            string expectedPlanHash = "", string expectedProjectFile = "")
+            // Runtime registration uses CompatibilityTools; this raw declaration remains an offline oracle.
+            => HardwareContract.Run("CreateHardwareCatalogDevice", () => {
                 HardwareContract.RequireProject(_service.HasProject);
                 return AddHardwareCatalogDeviceWithProbe(keyword, deviceName, preferredText);
             }, write: true, current: true);

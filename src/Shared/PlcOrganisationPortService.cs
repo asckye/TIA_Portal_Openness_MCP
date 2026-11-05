@@ -18,7 +18,7 @@ namespace TiaMcpServer.Siemens.Services
         public PlcOrganisationPortService()
             : this(HardwareAddressWorkerBridge.Call, HardwareAddressWorkerBridge.HasProject, HardwareAddressWorkerBridge.ProjectIdentity) { }
 
-        private JsonObject Invoke(PlcSoftwareRequest request)
+        private JsonObject Invoke(PlcSoftwareRequest request, Action? beforeDispatch = null)
         {
             string? unsupported = PlcSoftwareCapabilities
                 .Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Action, request.Family, request.UnitName, request.UnitKind, request
@@ -27,6 +27,7 @@ namespace TiaMcpServer.Siemens.Services
             if (unsupported != null) throw new NotSupportedException(unsupported);
             var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
             if (!request.DryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = projectIdentity(); }
+            beforeDispatch?.Invoke();
             var reply = call(PortedFamilies.ForTool(request.Operation).OperationPrefix + ".ExecutePlcOrganisation", arguments) as JsonObject
                 ?? throw new InvalidOperationException("Missing PLC organisation worker reply.");
             if (reply["Failure"] is JsonObject failure)
@@ -38,17 +39,23 @@ namespace TiaMcpServer.Siemens.Services
                     var error = new PortalException(nativeCode, message,
                         failure["Candidates"] == null ? null : JsonSerializer.Deserialize<string[]>(failure["Candidates"]!.ToJsonString()));
                     if (failure["Evidence"] is JsonObject evidence && evidence.Count > 0) error.Data["nativeResultEvidence"] = evidence.DeepClone();
+                    error.Data["foundationKnownNoMutation"] = (bool?)reply["MayHaveChanged"] == false;
                     throw error;
                 }
-                // A worker refusal raised before its first native mutation stays a typed precondition on the host.
-                if (code == nameof(AdapterPreconditionException) && (bool?)reply["MayHaveChanged"] != true)
-                    throw new AdapterPreconditionException(message, null, false);
-                if (code == nameof(ArgumentException)) throw new ArgumentException(message);
-                if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
-                throw new InvalidOperationException(message);
+                // Keep the typed precondition and its recovery evidence across the worker boundary.
+                Exception mapped = code == nameof(AdapterPreconditionException) && (bool?)reply["MayHaveChanged"] != true
+                    ? new AdapterPreconditionException(message, null, false)
+                    : code == nameof(ArgumentException) ? new ArgumentException(message)
+                    : code == nameof(NotSupportedException) ? new NotSupportedException(message)
+                    : code == nameof(System.IO.IOException) ? new System.IO.IOException(message)
+                    : new InvalidOperationException(message);
+                if (failure["Evidence"] is JsonObject details && details.Count > 0) mapped.Data["nativeResultEvidence"] = details.DeepClone();
+                mapped.Data["foundationKnownNoMutation"] = (bool?)reply["MayHaveChanged"] == false;
+                throw mapped;
             }
             return reply;
         }
+
         private static ResponseMessage Step(JsonObject reply) => new ResponseMessage {
             Message = (string?)reply["Message"] ?? "", Meta = (JsonObject)reply["Meta"]!.DeepClone()
         };
@@ -87,35 +94,59 @@ namespace TiaMcpServer.Siemens.Services
             catch (PlcSoftwareException error) { throw new AdapterPreconditionException(error.Message, "groupPath", isArgument: true, innerException: error); }
         }
         public JsonObject CreatePlcTypeGroup(string softwarePath, string groupPath, bool dryRun = true)
-        {
-            ValidateGroup(groupPath, true);
-            if (!hasProject()) throw new PortalException(PortalErrorCode.InvalidState, "No TIA project is open.");
-            return (JsonObject)Invoke(new PlcSoftwareRequest { Operation = "CreatePlcTypeGroup", SoftwarePath = softwarePath,
-                GroupPath = groupPath, DryRun = dryRun })["Data"]!.DeepClone();
-        }
+            => ManagePlcUserGroup(softwarePath, "types", groupPath, "create", dryRun: dryRun).Meta!;
         public JsonObject DeleteEmptyPlcBlockGroup(string softwarePath, string groupPath, bool dryRun = true)
-        {
-            ValidateGroup(groupPath, false);
-            if (!hasProject()) throw new PortalException(PortalErrorCode.InvalidState, "No TIA project is open.");
-            return (JsonObject)Invoke(new PlcSoftwareRequest { Operation = "DeleteEmptyPlcBlockGroup", SoftwarePath = softwarePath,
-                GroupPath = groupPath, DryRun = dryRun })["Data"]!.DeepClone();
-        }
+            => ManagePlcUserGroup(softwarePath, "blocks", groupPath, "deleteEmpty", dryRun: dryRun).Meta!;
         public object? EnsurePlcBlockGroup(string softwarePath, string groupPath, out List<string> created)
         {
-            created = new List<string>(); if (!hasProject()) return null;
-            var reply = Invoke(new PlcSoftwareRequest { Operation = "CreatePlcBlockGroup", SoftwarePath = softwarePath,
-                GroupPath = groupPath, DryRun = false });
-            created = JsonSerializer.Deserialize<List<string>>(reply["Created"]!.ToJsonString())!;
-            return (bool?)reply["Found"] == true ? reply : null;
+            created = new List<string>();
+            if (!hasProject()) return null;
+            var result = ManagePlcUserGroup(softwarePath, "blocks", groupPath, "create", dryRun: false);
+            if (result.Meta?["result"]?["createdPaths"] is JsonArray paths)
+                created.AddRange(paths.Select(path => path!.GetValue<string>()).Select(path => path.Substring(path.LastIndexOf('/') + 1)));
+            return result;
         }
         public string MoveBlockToGroup(string softwarePath, string blockName, string targetGroupPath, bool autoCreateGroup = true)
+            => MoveBlockToGroup(softwarePath, blockName, targetGroupPath, autoCreateGroup, true, false, "", "").Message ?? "";
+        public ResponseMessage MoveBlockToGroup(string softwarePath, string blockName, string targetGroupPath, bool autoCreateGroup,
+            bool dryRun, bool confirm, string expectedPlanHash, string expectedProjectFile)
         {
-            if (!hasProject()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
-            return (string)Invoke(new PlcSoftwareRequest { Operation = "MovePlcBlockToGroup", SoftwarePath = softwarePath,
-                Name = blockName, GroupPath = targetGroupPath, AutoCreateGroup = autoCreateGroup, DryRun = false })["Message"]!;
+            bool dispatched = false;
+            string recovery = "";
+            try
+            {
+                if (!hasProject()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
+                if (!dryRun && (!confirm || string.IsNullOrWhiteSpace(expectedPlanHash) || expectedProjectFile != projectIdentity()))
+                    throw new AdapterPreconditionException("Move requires confirmation, the reviewed plan hash and exact project file.",
+                        "expectedPlanHash", false);
+                recovery = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath,
+                    "plc-move-" + Guid.NewGuid().ToString("N"), "original.xml");
+                var result = Step(Invoke(new PlcSoftwareRequest { Operation = "MovePlcBlockToGroup", SoftwarePath = softwarePath,
+                    Name = blockName, GroupPath = targetGroupPath, AutoCreateGroup = autoCreateGroup, FilePath = recovery,
+                    DryRun = dryRun, ExpectedPlanHash = expectedPlanHash }, () => dispatched = true));
+                result.Meta!["projectFile"] = projectIdentity();
+                return result;
+            }
+            catch (Exception error)
+            {
+                var evidence = error.Data["nativeResultEvidence"] as JsonObject ?? new JsonObject();
+                error.Data["nativeResultEvidence"] = evidence;
+                bool? deleteStarted = (bool?)evidence["deleteStarted"];
+                bool noDelete = deleteStarted == false || deleteStarted != true && (dryRun || !dispatched
+                    || error.Data["foundationKnownNoMutation"] is true || error.Data["foundationRequestSent"] is false);
+                if (noDelete)
+                {
+                    evidence["deleteStarted"] = false; evidence["nativeMutationIssued"] = false;
+                    evidence.Remove("recoveryExportPath");
+                }
+                else evidence["recoveryExportPath"] ??= recovery;
+                evidence["recoveryExportStatus"] ??= dryRun && !dispatched ? "not-attempted" : "unconfirmed";
+                throw;
+            }
         }
         public ResponseMessage ManagePlcUserGroup(string softwarePath, string family, string groupPath, string action, string newName = "", bool dryRun = true)
         {
+
             var unavailable = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, "ManagePlcUserGroup", action, family);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             if (!hasProject()) return NoProject("ManagePlcUserGroup");

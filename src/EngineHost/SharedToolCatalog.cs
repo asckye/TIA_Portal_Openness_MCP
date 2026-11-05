@@ -8,10 +8,11 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.FoundationHost
 {
-    // Pure duplicate of ConnectPortal followed by AttachOpenProject.
+    // Withdrawn duplicate/composite workflows are absent from discovery and execution catalogs.
     internal static class SharedToolPolicy
     {
         internal static readonly ISet<string> Removed = new HashSet<string>(StringComparer.Ordinal) {
+
             "ConnectProject"
         };
         internal static readonly string[] Bridge = { "FindTools", "CallTool", "PreviewToolCall", "ListToolCategories",
@@ -37,10 +38,12 @@ namespace TiaMcp.FoundationHost
             {
                 var tool = implementation.ProtocolTool;
                 if (TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(tool.Name)
-                    && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(tool.Name) && all.TryGetValue(tool.Name, out var declared))
+                    && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(tool.Name)
+                    && !TiaMcp.Adapters.Contracts.PortedFamilies.CompatibilityTargets.ContainsKey(tool.Name) && all.TryGetValue(tool.Name, out var declared))
                 {
                     var ported = new ToolDescriptor(declared.Name, declared.RawDescription, tool, declared.Classification,
                         declared.Signature, declared.Parameters, declared.DryRun, declared.CandidateFamily,
+
                         declared.Execution == "host" ? "host" : "foundation");
                     all[tool.Name] = ported; unavailable[tool.Name] = ported;
                     continue;

@@ -6793,7 +6793,8 @@
       "family": "F08",
       "example": {
         "softwarePath": "PLC_1",
-        "groupPath": "Examples"
+        "groupPath": "Examples",
+        "dryRun": true
       }
     },
     {
@@ -6865,7 +6866,10 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockName": "FC_Example",
-        "targetGroupPath": "Examples"
+        "targetGroupPath": "Examples",
+        "autoCreateGroup": false,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -6979,7 +6983,9 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "importPath": "C:\\Examples\\exports\\Main.xml"
+        "importPath": "C:\\Examples\\exports\\Main.xml",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -6990,7 +6996,8 @@
         "softwarePath": "PLC_1",
         "folderPath": "",
         "dir": "C:\\Examples\\exports",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -7089,7 +7096,9 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -7165,7 +7174,8 @@
       "example": {
         "orderNumber": "6ES7 515-2AM02-0AB0",
         "version": "V2.9",
-        "deviceName": "PLC_2"
+        "deviceName": "PLC_2",
+        "dryRun": true
       }
     },
     {
@@ -9122,7 +9132,8 @@
       "family": "F08",
       "example": {
         "softwarePath": "PLC_1",
-        "groupPath": "Examples"
+        "groupPath": "Examples",
+        "dryRun": true
       }
     },
     {
@@ -9206,7 +9217,10 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockName": "FC_Example",
-        "targetGroupPath": "Examples"
+        "targetGroupPath": "Examples",
+        "autoCreateGroup": false,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -9331,7 +9345,9 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "importPath": "C:\\Examples\\exports\\Main.xml"
+        "importPath": "C:\\Examples\\exports\\Main.xml",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -9342,7 +9358,8 @@
         "softwarePath": "PLC_1",
         "folderPath": "",
         "dir": "C:\\Examples\\exports",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -9387,7 +9404,9 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -9522,7 +9541,9 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -9676,7 +9697,8 @@
       "example": {
         "orderNumber": "6ES7 515-2AM02-0AB0",
         "version": "V2.9",
-        "deviceName": "PLC_2"
+        "deviceName": "PLC_2",
+        "dryRun": true
       }
     },
     {
@@ -11863,7 +11885,8 @@
       "family": "F08",
       "example": {
         "softwarePath": "PLC_1",
-        "groupPath": "Examples"
+        "groupPath": "Examples",
+        "dryRun": true
       }
     },
     {
@@ -11947,7 +11970,10 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockName": "FC_Example",
-        "targetGroupPath": "Examples"
+        "targetGroupPath": "Examples",
+        "autoCreateGroup": false,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -12072,7 +12098,9 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "importPath": "C:\\Examples\\exports\\Main.xml"
+        "importPath": "C:\\Examples\\exports\\Main.xml",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -12083,7 +12111,8 @@
         "softwarePath": "PLC_1",
         "folderPath": "",
         "dir": "C:\\Examples\\exports",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -12128,7 +12157,9 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -12263,7 +12294,9 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -12521,7 +12554,8 @@
       "example": {
         "orderNumber": "6ES7 515-2AM02-0AB0",
         "version": "V2.9",
-        "deviceName": "PLC_2"
+        "deviceName": "PLC_2",
+        "dryRun": true
       }
     },
     {
@@ -14889,7 +14923,8 @@
       "family": "F08",
       "example": {
         "softwarePath": "PLC_1",
-        "groupPath": "Examples"
+        "groupPath": "Examples",
+        "dryRun": true
       }
     },
     {
@@ -14973,7 +15008,10 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockName": "FC_Example",
-        "targetGroupPath": "Examples"
+        "targetGroupPath": "Examples",
+        "autoCreateGroup": false,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -15098,7 +15136,9 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "importPath": "C:\\Examples\\exports\\Main.xml"
+        "importPath": "C:\\Examples\\exports\\Main.xml",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -15109,7 +15149,8 @@
         "softwarePath": "PLC_1",
         "folderPath": "",
         "dir": "C:\\Examples\\exports",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -15154,7 +15195,9 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -15301,7 +15344,9 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -15610,7 +15655,8 @@
       "example": {
         "orderNumber": "6ES7 515-2AM02-0AB0",
         "version": "V2.9",
-        "deviceName": "PLC_2"
+        "deviceName": "PLC_2",
+        "dryRun": true
       }
     },
     {
@@ -18255,7 +18301,8 @@
       "family": "F08",
       "example": {
         "softwarePath": "PLC_1",
-        "groupPath": "Examples"
+        "groupPath": "Examples",
+        "dryRun": true
       }
     },
     {
@@ -18339,7 +18386,10 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockName": "FC_Example",
-        "targetGroupPath": "Examples"
+        "targetGroupPath": "Examples",
+        "autoCreateGroup": false,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -18474,7 +18524,9 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "importPath": "C:\\Examples\\exports\\Main.xml"
+        "importPath": "C:\\Examples\\exports\\Main.xml",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -18485,7 +18537,8 @@
         "softwarePath": "PLC_1",
         "folderPath": "",
         "dir": "C:\\Examples\\exports",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -18541,7 +18594,9 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -18688,7 +18743,9 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -19008,7 +19065,8 @@
       "example": {
         "orderNumber": "6ES7 515-2AM02-0AB0",
         "version": "V2.9",
-        "deviceName": "PLC_2"
+        "deviceName": "PLC_2",
+        "dryRun": true
       }
     },
     {
@@ -19026,7 +19084,8 @@
       "family": "F18",
       "example": {
         "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
-        "deviceName": "PLC_2"
+        "deviceName": "PLC_2",
+        "dryRun": true
       }
     },
     {
@@ -22804,7 +22863,8 @@
       "family": "F08",
       "example": {
         "softwarePath": "PLC_1",
-        "groupPath": "Examples"
+        "groupPath": "Examples",
+        "dryRun": true
       }
     },
     {
@@ -22888,7 +22948,10 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockName": "FC_Example",
-        "targetGroupPath": "Examples"
+        "targetGroupPath": "Examples",
+        "autoCreateGroup": false,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -23023,7 +23086,9 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "importPath": "C:\\Examples\\exports\\Main.xml"
+        "importPath": "C:\\Examples\\exports\\Main.xml",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -23034,7 +23099,8 @@
         "softwarePath": "PLC_1",
         "folderPath": "",
         "dir": "C:\\Examples\\exports",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -23090,7 +23156,9 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -23237,7 +23305,9 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -23557,7 +23627,8 @@
       "example": {
         "orderNumber": "6ES7 515-2AM02-0AB0",
         "version": "V2.9",
-        "deviceName": "PLC_2"
+        "deviceName": "PLC_2",
+        "dryRun": true
       }
     },
     {
@@ -23575,7 +23646,8 @@
       "family": "F18",
       "example": {
         "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
-        "deviceName": "PLC_2"
+        "deviceName": "PLC_2",
+        "dryRun": true
       }
     },
     {

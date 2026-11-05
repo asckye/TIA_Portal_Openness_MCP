@@ -44,7 +44,7 @@ public sealed class B6TransactionRoutingTests
             return true;
         }, meta));
         Assert.Equal(1, worker.Acquires);
-        Assert.Equal(new[] { "CreatePlcTypeGroup", "ManageDeviceUserGroup", "ManageUnifiedHmiGroup" }, worker.Children);
+        Assert.Equal(new[] { "ManagePlcUserGroup", "ManageDeviceUserGroup", "ManageUnifiedHmiGroup" }, worker.Children);
         Assert.Equal(new[] { "foundation", "foundation", "worker" }, calls.Select(c => catalog.All[c.Item1].Execution));
         Assert.True(worker.DisposedTransaction);
     }
@@ -115,7 +115,8 @@ public sealed class B6TransactionRoutingTests
             Children.Add((string?)args["request"]?["Operation"] ?? "ManageDeviceUserGroup");
             var meta = new JsonObject { ["success"] = true, ["operationSuccess"] = true, ["apiCallSuccess"] = true, ["mayHaveChanged"] = true, ["after"] = new JsonObject() };
             var step = new JsonObject { ["Message"] = "Fixture edit", ["Meta"] = meta };
-            return Task.FromResult<JsonNode?>(operation.EndsWith("ExecutePlcOrganisation") ? new JsonObject { ["Data"] = meta.DeepClone() } : step);
+            return Task.FromResult<JsonNode?>(operation.EndsWith("ExecutePlcOrganisation") && (string?)args["request"]?["Operation"] != "ManagePlcUserGroup"
+                ? new JsonObject { ["Data"] = meta.DeepClone() } : step);
         }
         public Task<Engine.EngineReply> Invoke(string id, string name, JsonObject args, bool preview, CancellationToken token)
         {

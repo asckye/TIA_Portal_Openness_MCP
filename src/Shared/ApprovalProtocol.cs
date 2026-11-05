@@ -40,9 +40,12 @@ namespace TiaOpenness.Shared
         public string? PlanJson { get; set; }
         [System.Text.Json.Serialization.JsonIgnore]
         internal string InvocationArgumentsDigest { get; set; } = "";
+        [System.Text.Json.Serialization.JsonIgnore]
+        internal JsonObject? BatchPlan { get; set; }
         public ApprovalAction[] Operations { get; set; } = Array.Empty<ApprovalAction>();
         public int TimeoutSeconds { get; set; } = 120;
         public DateTimeOffset Deadline { get; set; }
+
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
         public string? Actor { get; set; }
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
@@ -81,9 +84,11 @@ namespace TiaOpenness.Shared
                 OverwritesExisting = Flag(original, "overwrite"), PlanHash = plan ?? digest, ArgumentDigest = digest, ProjectIdentity =
                     Display(target, "identity").ToJsonString(),
                 ParametersJson = display.ToJsonString(), TimeoutSeconds = seconds,
+                BatchPlan = original["batchPlan"]?.DeepClone() as JsonObject,
                 InvocationArgumentsDigest = Hash(Canonical(args)),
                 Version = ActorScope.Actor == ActorScope.Workbench ? 2 : 1,
                 Actor = ActorScope.Actor == ActorScope.Workbench ? ActorScope.Workbench : null,
+
                 OperatorCallId = ActorScope.Actor == ActorScope.Workbench ? ActorScope.OperatorCallId : null,
                 Deadline = DateTimeOffset.UtcNow.AddSeconds(seconds),
                 Operations = outputs.Length == 0
@@ -341,9 +346,40 @@ namespace TiaOpenness.Shared
             internal bool Used;
         }
         private static readonly AsyncLocal<Grant?> Current = new AsyncLocal<Grant?>();
+        internal static IDisposable? EnterForwardedTool(string source, JsonObject arguments, string target, JsonObject forwardedArguments)
+        {
+            var previous = Current.Value;
+            if (previous == null) return null;
+            string Digest(JsonObject value) => PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(value)));
+            if (previous.Used || previous.Tool != source || previous.Digest != Digest(arguments))
+                throw new InvalidOperationException("Compatibility arguments differ from the approved step.");
+            var forwarded = new Grant { Release = previous.Release, Tool = target, Digest = Digest(forwardedArguments),
+                Approval = previous.Approval, SessionKey = previous.SessionKey, RunId = previous.RunId };
+            Current.Value = forwarded;
+            return new Scope(() => { previous.Used |= forwarded.Used; Current.Value = previous; });
+        }
+        internal static IDisposable EnterBatchItem(ApprovalOutcome approval, int index, string tool, JsonObject arguments)
+        {
+            if (approval.Reason != null || Current.Value != null) throw new InvalidOperationException("A granted non-nested batch is required.");
+            var plan = approval.Request.BatchPlan ?? throw new InvalidOperationException("Approved batch plan missing.");
+            var item = plan["items"]![index]!;
+            if ((string?)item["tool"] != tool) throw new InvalidOperationException("Batch item differs from approval.");
+            var expected = item["arguments"]!.DeepClone().AsObject(); expected["dryRun"] = false;
+            if (arguments.ContainsKey("confirm")) expected["confirm"] = true;
+            if (arguments.ContainsKey("expectedProjectFile")) expected["expectedProjectFile"] = plan["expectedProjectFile"]!.DeepClone();
+            if (arguments.ContainsKey("expectedPlanHash")) expected["expectedPlanHash"] = item["canonicalPlanHash"]!.DeepClone();
+            if (PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(expected)) != PendingApproval
+                    .Canonical(ApprovalDisplayPayload.RedactArguments(arguments)))
+                throw new InvalidOperationException("Canonical arguments differ from the approved batch item.");
+            var previous = Current.Value;
+            Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = tool,
+                Digest = PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(arguments))), Approval = approval };
+            return new Scope(() => Current.Value = previous);
+        }
 #if TIA_GENERATION_PLANNER
         internal static IDisposable Enter(ApprovalOutcome approval, TiaMcp.Logic.Generation.GenerationPlanStepsItem step,
             JsonObject arguments, string? previewRequestId = null, string? previewHash = null, object? sessionKey = null, string? runId = null)
+
         {
             if (approval.Reason != null || approval.Request.Kind != "plan") throw new InvalidOperationException("A granted plan is required.");
             if (Current.Value != null) throw new InvalidOperationException("Nested generation grants are refused.");

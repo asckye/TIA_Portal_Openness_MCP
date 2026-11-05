@@ -25,29 +25,34 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly PlcOrganisationPortService _technology;
         public PlcTechnologyTools(PlcOrganisationPortService service) => _technology = service;
-        [McpServerTool(Name = "ExportTechnologyObjectsToDirectory"), Description(
-            "[L2][Category:PLC-TechnologyObjects][PreCondition:ConnectPortal+OpenProject]" +
-            " Batch-export all (or regex-filtered) Technology Objects to XML files in a directory." +
-            " Each TO is saved as '<TOName>.xml'. Returns lists of exported names and any failures." +
-            " Use regexName to filter by TO name, e.g. 'Axis_.*' for all axes. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportTechnologyObjectsToDirectory"),
+                Description("[L2][PLC-Software][WRITE] Preview the complete exact technology-object inventory and each item export plan. One " +
+                "batch plan hash and approval; execute in inventory order, stop on first failure. " +
+                "All eight releases use the same native batch export route and the groups present in the project. " +
+                "Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportTechnologyObjectsToDirectoryV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs'")] string exportDir,
-            [Description("regexName: optional regex filter on TO name; empty = export all")] string regexName = "")
+            [Description("regexName: optional regex filter on TO name; empty = export all")] string regexName = "", bool dryRun = true, bool confirm = false,
+                string expectedPlanHash = "", string expectedProjectFile = "")
             => EngineeringToolContract
-                .Run("ExportTechnologyObjectsToDirectory", true, () => ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName));
+                .Run("ExportTechnologyObjectsToDirectory", !dryRun, () =>
+                    ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName, dryRun, expectedPlanHash,
+                        confirm, expectedProjectFile));
+
 
         public ResponseImportBatch ExportTechnologyObjectsToDirectory(
             string softwarePath,
             string exportDir,
-            string regexName = "")
+            string regexName = "", bool dryRun = true, string expectedPlanHash = "", bool confirm = false, string expectedProjectFile = "")
         {
             try
             {
-                var result = _technology.ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName);
+                var result = _technology.ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName, dryRun,
+                    expectedPlanHash, confirm, expectedProjectFile);
                 // Report the exported and failed counts even when the batch contains no objects.
                 var exportedCount = result.Imported?.Count() ?? 0; var failedCount = result.Failed?.Count() ?? 0;
-                result.Message = $"Exported {exportedCount} technology object(s) to '{exportDir}'. Failed={failedCount}"
+                result.Message = $"{(dryRun ? "Previewed" : "Exported")} {exportedCount} technology object(s) to '{exportDir}'. Failed={failedCount}"
                     + (failedCount > 0 ? ": " + string.Join(" | ", result.Failed!.Take(5).Select(f => f.Path + " -> " + (f.Error ?? "").Split('\n')[0])) : "");
                 // envelope: legacy-existing-meta
                 result.Meta ??= new JsonObject { ["timestamp"] = DateTime.Now };

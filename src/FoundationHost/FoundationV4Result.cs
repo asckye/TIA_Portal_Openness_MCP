@@ -401,6 +401,12 @@ internal static class FoundationV4Result
         return BehaviorCapabilities.Disclose(Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution, reset,
             current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings)));
     }
+    internal static CallToolResult Composite(string release, string name, string id, JsonObject data, Outcome outcome,
+        Execution execution, Error? error = null, bool reset = false)
+        =>
+            Wire(release, name, id, data, outcome, execution, outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial ? Completeness
+                .Partial : Completeness.Complete, error, true, reset);
+
     private static CallToolResult Wire(string release, string name, string id, JsonObject? data, Outcome outcome,
         Execution execution, Completeness completeness, Error? error, bool current, bool reset = false, bool candidate = false, Paging? paging = null)
     {

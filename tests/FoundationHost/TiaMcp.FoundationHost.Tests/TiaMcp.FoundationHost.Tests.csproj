@@ -47,6 +47,8 @@
     <Compile Include="../../../src/FoundationHost/OfflineLadderBuilders.cs" Link="OfflineLadderBuilders.cs" />
     <Compile Include="../../../src/FoundationHost/OfflineLadderTools.cs" Link="OfflineLadderTools.cs" />
 
+    <Compile Include="../../../src/FoundationHost/CompatibilityTools.cs" Link="CompatibilityTools.cs" />
+    <Compile Include="../../../src/FoundationHost/CanonicalBatchTools.cs" Link="CanonicalBatchTools.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationPassiveDiagnostics.cs" Link="FoundationPassiveDiagnostics.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationHostPorts.cs" Link="FoundationHostPorts.cs" />
     <Compile Include="../../../src/FoundationHost/SharedSessionState.cs" Link="SharedSessionState.cs" />

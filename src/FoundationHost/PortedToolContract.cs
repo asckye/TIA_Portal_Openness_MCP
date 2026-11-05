@@ -64,7 +64,7 @@ internal static class PortedToolContract
 
     // The primary module operation comes first; previews and fallback reads are
     // also part of the wiring. Pure builders do not read session state.
-    internal static string[] WiredOperations(string tool) => tool switch
+    internal static string[] WiredOperations(string tool, string release = "21") => tool switch
     {
         "ListPlcSimAdvancedInstances" or "ManagePlcSimAdvancedInstance" or "GetPlcSimAdvancedTags" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario" =>
             new[] { "runtime-channels.ExecutePlcSimAdvanced" },
@@ -122,12 +122,15 @@ internal static class PortedToolContract
         "ExportDeviceAml" => new[] { "hardware-aml.ExportHardwareAml", "ReadState" },
         "ImportDeviceAml" => new[] { "hardware-aml.ImportHardwareAml", "ReadState" },
         "BuildDeviceAmlDocument" => Array.Empty<string>(),
-        "CreateDevice" => new[] { "hardware-devices.HardwareCreateDevice", "ReadState" },
+        "CreateDevice" => release is "14sp1" or "15.1" or "16" or "17"
+            ? new[] { "hardware-devices.HardwareCreateDevice", "ReadState" }
+            : new[] { "AddDeviceWithFallback", "hardware-devices.HardwareCreateDevice", "ReadState" },
         "CreateGsdDevice" => new[] { "hardware-devices.HardwareCreateGsdDevice", "ReadState" },
-        "CreateHardwareCatalogDevice" => new[] { "hardware-devices.HardwareCreateCatalogDevice", "ReadState" },
+        "CreateHardwareCatalogDevice" => new[] { "AddDeviceWithFallback", "ReadState" },
         "ListDevices" => new[] { "hardware-devices.HardwareDescribeDevices", "hardware-devices.HardwareReadPlcNames", "ReadState" },
         "GetDeviceInfo" => new[] { "hardware-devices.HardwareDescribeDeviceAt", "ReadState" },
         "GetDeviceItemInfo" => new[] { "hardware-devices.HardwareDescribeItemAt", "ReadState" },
+
         "GetDeviceItemTree" => new[] { "hardware-devices.HardwareReadItemTree", "ReadState" },
         "SearchInstalledGsdDevices" => new[] { "hardware-devices.HardwareLegacySearchInstalledGsdDevices", "ReadState" },
         "GetDeviceAttributes" => new[] { "hardware-devices.HardwareLegacyDumpDeviceAttributes", "ReadState" },
@@ -185,17 +188,25 @@ internal static class PortedToolContract
             new[] { "openness-reflection.ExecuteOpennessReflection", "ReadState" },
         "CreatePlcBlockGroup" or "CreatePlcTypeGroup" or "DeleteEmptyPlcBlockGroup" or "DeletePlcBlock" or "DeletePlcTagTable" or "DeletePlcType" or "ManagePlcBlockProtection" or "ManagePlcUserGroup" or "MovePlcBlockToGroup" or "ListPlcSystemGroups" =>
             new[] { "plc-organisation.ExecutePlcOrganisation", "ReadState" },
-        "CreatePlcInstanceDb" or "ManagePlcTagDefinition" or "SetPlcProgram" or "GetPlcTagTableConstants" or "ImportPlcBlockVerified" or "BuildAndImportPlcArtifact" or "DescribePlcBlockLogic" or "RepairAndReimportPlcBlock" or "ImportPlcTagTablesFromDirectory" =>
+        "ManagePlcTagDefinition" => new[] { "CreateTag", "CreateUserConstant", "plc-software.ExecutePlcOrganisation", "ReadState" },
+        "CreatePlcInstanceDb" or "SetPlcProgram" or "GetPlcTagTableConstants" or "ImportPlcBlockVerified" or "BuildAndImportPlcArtifact"
+            or "DescribePlcBlockLogic"
+            or "RepairAndReimportPlcBlock" or "ImportPlcTagTablesFromDirectory" =>
             new[] { "plc-software.ExecutePlcOrganisation", "ReadState" },
         "SeedProjectFromReference" => new[] { "plc-software.ExecutePlcOrganisation", "plc-software.SeedReferenceHmi", "ReadState" },
         "ListPlcSoftwareUnits" or "ManagePlcSoftwareUnit" or "SetPlcUnitObjectAccess" or "GetPlcChecksums" or "GetPlcObjectFingerprints" or "ManagePlcBlockWriteProtection" =>
             new[] { "plc-integrity.ExecutePlcOrganisation", "ReadState" },
         "CompileDevice" or "CompileHmiDiagnostics" => new[] { "plc-compile.ExecutePlcOrganisation", "ReadState" },
         "GetPlcBlockEditCapabilities" => new[] { "plc-analysis.ExportBlockDocument", "ReadState" },
-        "GeneratePlcSourceFromBlocks" or "ManagePlcExternalSources" or "GetPlcCrossReferences" => new[] { "plc-sources.ExecutePlcOrganisation", "ReadState" },
+        "ManagePlcExternalSources" => new[] {
+            "ImportPlcExternalSource", "DeletePlcExternalSource", "GenerateBlocksFromExternalSource", "plc-organisation.ExecutePlcOrganisation",
+                "plc-sources.ExecutePlcOrganisation", "ReadState"
+        },
+        "GeneratePlcSourceFromBlocks" or "GetPlcCrossReferences" => new[] { "plc-sources.ExecutePlcOrganisation", "ReadState" },
         _ when PortedFamilies.Contains(tool) && PortedFamilies.ForTool(tool).Name is "F01" or "F02" or "F03" or "F04" => Array.Empty<string>(),
         _ => throw new NotSupportedException("Unregistered ported tool: " + tool)
     };
+
 
     internal static IEnumerable<McpServerTool> Create(IFoundationWorker worker, string release)
     {
@@ -468,7 +479,7 @@ internal sealed partial class FoundationTool
         // the same lane as the eventual request so approval cannot race a rebind.
         using var lane = await AcquireLane(token);
         ActivateLane(lane);
-        var state = PortedToolContract.WiredOperations(tool.Name).Contains("ReadState", StringComparer.Ordinal)
+        var state = PortedToolContract.WiredOperations(tool.Name, portedRelease!).Contains("ReadState", StringComparer.Ordinal)
             ? await worker.Call("ReadState", new JsonObject(), token) : null;
         Func<bool> hasProject = () => !string.IsNullOrEmpty((string?)state?["ProjectFile"]);
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
@@ -600,7 +611,7 @@ internal sealed partial class FoundationTool
             // make legacy write wrappers report unknown even though no operation
             // started; use the retired engine's no-native-call projection for all ports.
             if (missingPortal && !nativeCalls.NativeCallIssued
-                && PortedToolContract.WiredOperations(tool.Name).Any(TiaMcp.PlcWorker.WorkerOperations.RequiresPortal)
+                && PortedToolContract.WiredOperations(tool.Name, portedRelease!).Any(TiaMcp.PlcWorker.WorkerOperations.RequiresPortal)
                 && (portalDispatchRefused || (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown"))
                 return McpServer.V4Result(tool.Name, result.StructuredContent?["data"] is JsonObject data ? (JsonObject)data.DeepClone() : null,
                     new Error(TiaOpenness.Shared.SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)),

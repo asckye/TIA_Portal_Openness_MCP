@@ -70,9 +70,11 @@ namespace TiaMcp.Adapters.Contracts
 
     public sealed class PlcSoftwareRequest
     {
+        public string ExpectedPlanHash { get; set; } = "";
         public string Operation { get; set; } = "";
         public int EntryIndex { get; set; } = -1;
         public string Ip { get; set; } = "";
+
         public HardwareScalar Value { get; set; } = new HardwareScalar { Kind = "null" };
         public MotionConnectionTarget MotionTarget { get; set; } = new MotionConnectionTarget();
         public string TargetError { get; set; } = "";

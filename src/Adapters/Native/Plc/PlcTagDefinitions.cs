@@ -11,12 +11,15 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         public HardwareAddressingReply ManagePlcTagDefinition(PlcSoftwareRequest request)
             => _session.RunHmiStepTool("ManagePlcTagDefinition", meta => {
+                if (request.Action == "create")
+                    throw new NotSupportedException("Tag and constant creation must use the Foundation CreatePlcTag/CreatePlcUserConstant route; update " +
+                    "properties separately.");
                 if (request.ValidationError.Length != 0) throw new ArgumentException(request.ValidationError);
-                string softwarePath = request.SoftwarePath, tablePath = request.Path, name = request.Name, kind = request.Kind, action = request.Action,
-                    dataType = request.DataType, addressOrValue = request.AddressOrValue;
+                string softwarePath = request.SoftwarePath, tablePath = request.Path, name = request.Name, kind = request.Kind, action = request.Action;
                 bool dryRun = request.DryRun;
                 bool writing=action != "read" && !dryRun;
                 using var access=writing ? _session.AcquireHmiEditAccess() : null;
+
                 var plc=_session.ExactPlcForEngineering(softwarePath,writing);
                 var parts=PlcGroupOperations.Parts(tablePath);
                 var group=PlcGroupOperations.Group(plc.TagTableGroup,string.Join("/",parts.Take(parts.Length-1)));
@@ -38,8 +41,6 @@ namespace TiaMcp.Adapters.Native.Plc
                 if(target!=null) foreach(var comment in request.Comments) ResolveCommentItem(TagComment(target),comment.Culture,editingCulture);
                 if(!writing) return "PLC tag/constant read or preview. Native field validation occurs on execution; no modification.";
                 meta["mayHaveChanged"]=true; MutationStarted = true;
-                if(action=="create") target=kind=="tag" ? (object)table.Tags.Create(name,dataType,addressOrValue) : table.UserConstants
-                    .Create(name,dataType,addressOrValue);
                 if(action=="delete") {
                     PlcGroupOperations.Call(target!,"Delete",Type.EmptyTypes);
                     if(PlcGroupOperations.Find(collection,name)!=null) throw new InvalidOperationException("Definition remains after delete.");

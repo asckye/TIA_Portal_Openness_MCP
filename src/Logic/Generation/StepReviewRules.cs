@@ -18,6 +18,7 @@ namespace TiaMcp.Logic.Generation
     // Rules consume existing current-policy results. SafeV4 candidate rules are deliberately absent.
     public static class StepReviewRules
     {
+        public const string WritePreview = "write-preview/1";
         public const string CreateProject = "project-create/1";
         public const string Record = "generation-record/1";
         public const string Import = "external-source-import/1", Generate = "external-source-generate/1", Delete = "external-source-delete/1";
@@ -25,7 +26,8 @@ namespace TiaMcp.Logic.Generation
             [Import] = "ImportPlcExternalSource", [Generate] = "GenerateBlocksFromExternalSource", [Delete] = "DeletePlcExternalSource", [Record] =
                 "PublishGenerationRecord" };
         public static bool Supports(GenerationPlanStepsItem step) => step.Review != null && step.Review.Mode == "tool-preview"
-            && Tools.TryGetValue(step.Review.Rule, out var tool) && tool == step.Tool;
+            && (step.Review.Rule == WritePreview && step.Tool is "CreateDevice" or "MovePlcBlockToGroup"
+                || Tools.TryGetValue(step.Review.Rule, out var tool) && tool == step.Tool);
         public static StepReviewVerdict Transition(JsonObject before, JsonObject after, string predicted, JsonObject tree)
         {
             var verdict = new StepReviewVerdict();
@@ -87,12 +89,32 @@ namespace TiaMcp.Logic.Generation
             if (!Supports(step) || !step.Review!.LateArguments.SequenceEqual(new[] { "expectedPlanHash" }) || step.Arguments.ContainsKey("expectedPlanHash"))
                 throw new ArgumentException("Only the registered preview rule's expectedPlanHash slot may be late-filled.");
         }
-        public static JsonObject Project(JsonObject data) => data.DeepClone().AsObject();
+        public static JsonObject Project(JsonObject data)
+        {
+            var projection = data.DeepClone().AsObject();
+            projection["planHash"] ??= data["evidence"]?["planHash"]?.DeepClone();
+            projection["projectFile"] ??= (data["targetIdentity"]?["identity"]?["projectPath"]
+                ?? data["targetIdentity"]?["projectPath"] ?? data["targetIdentity"]?["projectFile"]
+                ?? data["targetIdentity"]?["project"] ?? data["evidence"]?["projectFile"])?.DeepClone();
+            return projection;
+        }
         public static StepReviewVerdict Compare(GenerationPlan plan, GenerationPlanStepsItem step, JsonObject projection, RunFacts facts, int processId)
         {
             Require(step);
             var review = step.Review!;
             var verdict = new StepReviewVerdict();
+            if (review.Rule == WritePreview)
+            {
+                if (!review.Witness.TryGetValue("planHash", out var hashWitness) || hashWitness != "sha256")
+                    verdict.Different("review.witness.planHash", JsonValue.Create("sha256"), null);
+                if (!review.Expect.TryGetValue("projectFile", out var expectedProject)
+                    || !SameFile(expectedProject.GetString(), plan.Target.ProjectIdentity))
+                    verdict.Different("review.expect.projectFile", JsonValue.Create(plan.Target.ProjectIdentity), null);
+                if (!Hash(String(projection["planHash"]))) verdict.Different("planHash", JsonValue.Create("sha256"), projection["planHash"]);
+                if (!SameFile(String(projection["projectFile"]), plan.Target.ProjectIdentity))
+                    verdict.Different("projectFile", JsonValue.Create(plan.Target.ProjectIdentity), projection["projectFile"]);
+                return verdict;
+            }
             if (review.Rule == Record)
             {
                 foreach (var pair in review.Expect) Equal(pair.Key, JsonNode.Parse(pair.Value.GetRawText()));
@@ -220,6 +242,7 @@ namespace TiaMcp.Logic.Generation
         public static StepReviewVerdict VerifyEffect(GenerationPlan plan, GenerationPlanStepsItem step, JsonObject data, RunFacts facts)
         {
             Require(step); var verdict = new StepReviewVerdict(); var review = step.Review!;
+            if (review.Rule == WritePreview) return verdict;
             if (review.Rule == Record)
             {
                 if (!True(data["executed"]) || !SameFile(String(data["recordPath"]), step.Arguments["recordPath"].GetString())

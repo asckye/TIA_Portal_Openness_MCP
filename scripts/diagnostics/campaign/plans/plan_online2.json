@@ -115,11 +115,16 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportDir": "${EXPORT_ROOT}\\mcp49_to",
-"regexName": ""
+"regexName": "",
+"dryRun": true,
+"confirm": false
 },
-"note": "",
+"note": "DES-2 Round 2: whole ordered batch preview, including every canonical item/hash. One approval on the exact batch hash/project executes in order and stops at the first failure. Native/VM acceptance NOT RUN.",
 "expect": "any",
-"keys": []
+"keys": [
+"planHash",
+"items"
+]
 },
 {
 "tool": "ManageTechnologyObject",

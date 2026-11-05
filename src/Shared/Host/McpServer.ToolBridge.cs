@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
+using TiaOpenness.Shared;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -159,9 +160,11 @@ namespace TiaMcpServer.ModelContextProtocol
 #if TIA_ENGINE_HOST
             if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name)
+                || TiaMcp.Adapters.Contracts.PortedFamilies.CompatibilityTargets.ContainsKey(name)
                 || !UseDeclaredReleasePolicy
                     && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name != "F04"))
             {
+
                 var input = arguments ?? EmptyArguments();
                 var rejected = ToolInvoker.Bind(name, input, out _);
                 if (rejected != null)
@@ -267,6 +270,71 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static ToolArguments EmptyArguments() => new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject()));
         internal static Error InvalidInput(string parameter) =>
             new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
+        private static JsonObject WritePreviewPlan(string tool, object arguments)
+        {
+            var normalized = JsonSerializer.SerializeToNode(arguments);
+#if TIA_ENGINE_HOST
+            var identity = TiaMcp.FoundationHost.EngineHostConfiguration.Current.Worker.Binding?.DeepClone();
+#else
+            bool? connected = null; string? project = null;
+            ReadSessionState(ref connected, ref project);
+            var identity = new JsonObject { ["connected"] = connected, ["project"] = project };
+#endif
+            return new JsonObject { ["plannedChanges"] = TiaOpenness.Shared.CallJournalPayload.RedactArguments(normalized),
+                ["planHash"] = PendingApproval
+                    .Hash(PendingApproval
+                        .Canonical(JsonSerializer.SerializeToNode(new { releaseKey = ReleaseKey, tool, arguments = normalized, targetIdentity = identity }))),
+                ["targetIdentity"] = identity, ["scope"] = "Normalized arguments and target identity; native validation/readback occurs during execution." };
+        }
+        private static Error? WritePlanRefusal(JsonObject plan, string expectedPlanHash, string expectedProjectFile, bool writing)
+        {
+            string? expected = null;
+            if (writing)
+            {
+                if (string.IsNullOrWhiteSpace(expectedProjectFile) || !System.IO.Path.IsPathRooted(expectedProjectFile)
+                    || expectedProjectFile.Length >= 2 && expectedProjectFile[1] == ':'
+                        && (expectedProjectFile.Length < 3 || expectedProjectFile[2] is not ('/' or '\\')))
+                    return InvalidInput("expectedProjectFile");
+                try { expected = TiaMcp.Adapters.Contracts.Candidates.CandidatePrimitives.CanonicalProject(expectedProjectFile); }
+                catch (ArgumentException) /* swallow(parse-fallback): malformed paths are returned as typed input refusals. */
+                { return InvalidInput("expectedProjectFile"); }
+                catch (NotSupportedException) /* swallow(parse-fallback): unsupported path syntax is returned as a typed input refusal. */
+                { return InvalidInput("expectedProjectFile"); }
+                if (expectedPlanHash.Length == 0) return InvalidInput("expectedPlanHash");
+            }
+            if ((writing || expectedPlanHash.Length > 0) && expectedPlanHash != (string?)plan["planHash"])
+                return new Error("Arguments or target changed; review a fresh preview.", new PlanStaleDetails(expectedPlanHash, "arguments-or-target"));
+            if (writing)
+            {
+                string? actual =
+                    (string?)(plan["targetIdentity"]?["identity"]?["projectPath"] ?? plan["targetIdentity"]?["projectFile"] ?? plan["targetIdentity"]
+                        ?["projectPath"] ?? plan["targetIdentity"]?["project"]);
+                if (string.IsNullOrWhiteSpace(actual)) return new Error("No project is bound.", new ProjectNotBoundDetails());
+                if (TiaMcp.Adapters.Contracts.Candidates.CandidatePrimitives.CanonicalProject(actual!) != expected)
+                    return new Error("The project binding differs from expectedProjectFile.", new IdentityMismatchDetails("project-binding", null, null));
+            }
+            return null;
+        }
+        private static CallToolResult WritePlanResult(CallToolResult result, JsonObject plan)
+        {
+            var body = ResultBody(result)?.DeepClone() as JsonObject;
+            if (body?["data"] is JsonObject data)
+            {
+                foreach (var pair in plan) data[pair.Key] = pair.Value?.DeepClone();
+                data["dryRun"] = false;
+                result.StructuredContent = body;
+                result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(body) } };
+            }
+            return result;
+        }
+        internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
+                string expectedProjectFile = "", bool writing = true)
+        {
+            var plan = WritePreviewPlan(tool, arguments);
+            if (dryRun) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
+            if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
+            return WritePlanResult(execute(), plan);
+        }
         internal static Paging OffsetPage(int offset, int limit, int total) => new Paging(PagingMode.Offset, offset, limit,
             (long)offset + limit < total ? offset + limit : (int?)null, null, null, total, (long)offset + limit >= total);
         internal static CallToolResult V4Reject(string tool, Error error, JsonObject? data = null)

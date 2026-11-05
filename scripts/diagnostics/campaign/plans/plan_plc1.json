@@ -864,11 +864,16 @@
 "folderPath": "MCP_Tags",
 "dir": "${EXPORT_ROOT}",
 "regexName": "mcp46_tags",
-"overwrite": true
+"overwrite": true,
+"dryRun": true,
+"confirm": false
 },
-"note": "",
+"note": "DES-2 Round 2: whole ordered batch preview, including every canonical item/hash. One approval on the exact batch hash/project executes in order and stops at the first failure. Native/VM acceptance NOT RUN.",
 "expect": "any",
-"keys": []
+"keys": [
+"planHash",
+"items"
+]
 },
 {
 "tool": "MovePlcBlockToGroup",
@@ -890,11 +895,16 @@
 "softwarePath": "MCP_PLC",
 "importPath": "${EXPORT_ROOT}\\mcp46_FC.xml",
 "groupPath": "MCP_G",
-"compileAfter": false
+"compileAfter": false,
+"dryRun": true,
+"confirm": false
 },
-"note": "",
+"note": "DES-2 Round 2: whole ordered batch preview, including every canonical item/hash. One approval on the exact batch hash/project executes in order and stops at the first failure. Native/VM acceptance NOT RUN.",
 "expect": "any",
-"keys": []
+"keys": [
+"planHash",
+"items"
+]
 },
 {
 "tool": "ImportPlcProgramFromDirectory",

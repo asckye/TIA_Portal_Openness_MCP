@@ -59,6 +59,26 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     var safeEvidence = (JsonObject)nativeEvidence.DeepClone();
                     HostBehavior.SanitizeEvidence(safeEvidence);
+                    if (tool == "MovePlcBlockToGroup" && (bool?)safeEvidence["deleteStarted"] == false)
+                    {
+                        ErrorDetails details = exception is PortalException { Code: PortalErrorCode.NotSupportedOnVersion }
+                            || exception is NotSupportedException ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
+                            : exception is PortalException { Code: PortalErrorCode.NotFound } ? new NotFoundDetails(null)
+                            : exception is ArgumentException || exception is TiaMcp.Adapters.Contracts.AdapterPreconditionException { IsArgument: true }
+                                || exception is PortalException { Code: PortalErrorCode.InvalidParams }
+                                ? new InvalidArgumentDetails(TiaOpenness.Shared.HostFailurePolicy.Parameter(exception) ?? "arguments", Array.Empty<string>())
+                                : new PreconditionFailedDetails("move-admission", null);
+                        return Result(tool, new JsonObject { ["evidence"] = safeEvidence },
+                            new Error(HostBehavior.SafeDiagnostic(exception.Message) ?? "Move refused before source deletion.", details),
+                            Outcome.RejectedBeforeOperation, Completeness.None, current);
+                    }
+                    if (tool == "MovePlcBlockToGroup" && writes && safeEvidence["recoveryExportPath"] != null)
+                        return Result(tool, new JsonObject { ["evidence"] = safeEvidence },
+                            new Error((bool?)safeEvidence["recoveryOnlyCopy"] == true
+                                ? "Move and restoration failed; the only verified recovery copy is '" + (string?)safeEvidence["recoveryExportPath"] + "'."
+                                : "Move did not complete; inspect the restoration result and retained recovery path.",
+                                new OutcomeUnknownDetails("move", new Dictionary<string, JsonElement>())),
+                            Outcome.Unknown, Completeness.Unknown, current, true);
                     if (NativeResultState.TryUnsuccessful(safeEvidence, writes, out var nativeOutcome, out var nativeError, tool))
                         return Result(tool, new JsonObject { ["evidence"] = safeEvidence }, nativeError, nativeOutcome, Completeness.Unknown, current, writes);
                 }

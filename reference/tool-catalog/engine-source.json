@@ -3264,22 +3264,46 @@
       "path": "src/Shared/HardwareDevicesTools.cs",
       "owner": "HardwareDevicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult CreateDeviceV4(\n            [Description(\"orderNumber: exact article number as written in the TIA hardware catalog, including its spaces (e.g. '6ES7 211-1BE40-0XB0'), or a full TypeIdentifier ('OrderNumber:.../V4.7'); used verbatim\")] string orderNumber,\n            [Description(\"version: exact catalog version as written in the TypeIdentifier (e.g. 'V4.7'); empty only for a full TypeIdentifier or a module with no or a single installed version (TIA rule)\")] string version,\n            [Description(\"deviceName: name of the new device and its head item; must not be used by any device or head item\")] string deviceName)",
+      "signature": "public CallToolResult CreateDeviceV4(\n            [Description(\"Exact catalog article number or full OrderNumber TypeIdentifier, passed unchanged to preferredMlfb.\")] string orderNumber,\n            [Description(\"Exact catalog version; empty for a full TypeIdentifier, passed unchanged to preferredVersion.\")] string version,\n            string deviceName, string family = \"S7-1500\", bool dryRun = true, bool confirm = false,\n            string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "orderNumber": {
           "type": "string",
           "default": null,
-          "description": "orderNumber: exact article number as written in the TIA hardware catalog, including its spaces (e.g. '6ES7 211-1BE40-0XB0'), or a full TypeIdentifier ('OrderNumber:.../V4.7'); used verbatim"
+          "description": "Exact catalog article number or full OrderNumber TypeIdentifier, passed unchanged to preferredMlfb."
         },
         "version": {
           "type": "string",
           "default": null,
-          "description": "version: exact catalog version as written in the TypeIdentifier (e.g. 'V4.7'); empty only for a full TypeIdentifier or a module with no or a single installed version (TIA rule)"
+          "description": "Exact catalog version; empty for a full TypeIdentifier, passed unchanged to preferredVersion."
         },
         "deviceName": {
           "type": "string",
-          "default": null,
-          "description": "deviceName: name of the new device and its head item; must not be used by any device or head item"
+          "default": null
+        },
+        "family": {
+          "type": "string",
+          "default": "\"S7-1500\"",
+          "value": "S7-1500"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
         }
       }
     },
@@ -3383,22 +3407,45 @@
       "path": "src/Shared/HardwareDevicesTools.cs",
       "owner": "HardwareDevicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult CreateHardwareCatalogDeviceV4(\n            [Description(\"keyword: exact catalog TypeIdentifier to create, e.g. 'OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0'; search text (e.g. 'KTP700 Basic PN') is refused with the ranked candidates\")] string keyword,\n            [Description(\"deviceName: name of the new device and its head item, e.g. 'HMI_KTP700_1'\")] string deviceName,\n            [Description(\"preferredText: optional ranking hint for the refusal candidate list, e.g. 'PN 17.0.0.0 landscape'\")] string preferredText = \"\")",
+      "signature": "public CallToolResult CreateHardwareCatalogDeviceV4(\n            [Description(\"Exact OrderNumber TypeIdentifier, passed unchanged to preferredMlfb with empty preferredVersion.\")] string keyword,\n            string deviceName, string preferredText = \"\", string family = \"S7-1500\", bool dryRun = true, bool confirm = false,\n            string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "keyword": {
           "type": "string",
           "default": null,
-          "description": "keyword: exact catalog TypeIdentifier to create, e.g. 'OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0'; search text (e.g. 'KTP700 Basic PN') is refused with the ranked candidates"
+          "description": "Exact OrderNumber TypeIdentifier, passed unchanged to preferredMlfb with empty preferredVersion."
         },
         "deviceName": {
           "type": "string",
-          "default": null,
-          "description": "deviceName: name of the new device and its head item, e.g. 'HMI_KTP700_1'"
+          "default": null
         },
         "preferredText": {
           "type": "string",
           "default": "\"\"",
-          "description": "preferredText: optional ranking hint for the refusal candidate list, e.g. 'PN 17.0.0.0 landscape'",
+          "value": ""
+        },
+        "family": {
+          "type": "string",
+          "default": "\"S7-1500\"",
+          "value": "S7-1500"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
           "value": ""
         }
       }
@@ -8812,7 +8859,7 @@
       "path": "src/Shared/PlcOrganisationTools.cs",
       "owner": "PlcOrganisationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult CreatePlcBlockGroupV4(\n            [Description(\"softwarePath: PLC software path, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'\")] string groupPath)",
+      "signature": "public CallToolResult CreatePlcBlockGroupV4(\n            [Description(\"softwarePath: PLC software path, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'\")] string groupPath, bool dryRun = true)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -8823,6 +8870,11 @@
           "type": "string",
           "default": null,
           "description": "groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "value": true
         }
       }
     },
@@ -8831,28 +8883,48 @@
       "path": "src/Shared/PlcOrganisationTools.cs",
       "owner": "PlcOrganisationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult MoveBlockToGroupV4(\n            [Description(\"softwarePath: PLC software path, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"blockName: exact block name to move (searched across all groups)\")] string blockName,\n            [Description(\"targetGroupPath: '/'-separated destination group under Program blocks, e.g. '02_手自动接口'\")] string targetGroupPath,\n            [Description(\"autoCreateGroup: create the target group path if it does not exist (default true)\")] bool autoCreateGroup = true)",
+      "signature": "public CallToolResult MoveBlockToGroupV4(\n            [Description(\"softwarePath: exact PLC software path\")] string softwarePath,\n            [Description(\"blockName: exact group-qualified source block path\")] string blockName,\n            [Description(\"targetGroupPath: exact destination group path\")] string targetGroupPath,\n            [Description(\"autoCreateGroup: create missing destination groups only during approved execution\")] bool autoCreateGroup = true,\n            bool dryRun = true, bool confirm = false, string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
           "default": null,
-          "description": "softwarePath: PLC software path, e.g. 'PLC_1'"
+          "description": "softwarePath: exact PLC software path"
         },
         "blockName": {
           "type": "string",
           "default": null,
-          "description": "blockName: exact block name to move (searched across all groups)"
+          "description": "blockName: exact group-qualified source block path"
         },
         "targetGroupPath": {
           "type": "string",
           "default": null,
-          "description": "targetGroupPath: '/'-separated destination group under Program blocks, e.g. '02_手自动接口'"
+          "description": "targetGroupPath: exact destination group path"
         },
         "autoCreateGroup": {
           "type": "bool",
           "default": "true",
-          "description": "autoCreateGroup: create the target group path if it does not exist (default true)",
+          "description": "autoCreateGroup: create missing destination groups only during approved execution",
           "value": true
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
         }
       }
     },
@@ -9120,7 +9192,7 @@
       "path": "src/Shared/PlcReadModifyTools.cs",
       "owner": "PlcReadModifyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ManagePlcTagDefinitionV4(\n            [Description(\"softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.\")] string softwarePath,\n            [Description(\"tablePath: 'Group/Table' path of the tag table, e.g. 'Default tag table'.\")] string tablePath,\n            [Description(\"name: exact tag or constant name.\")] string name,\n            [Description(\"kind: tag | constant.\")] string kind,\n            [Description(\"action: read | create | update | delete.\")] string action,\n            [Description(\"dataType: for create / update - PLC data type, e.g. Bool, Int, Real.\")] string dataType=\"\",\n            [Description(\"addressOrValue: for create / update - logical address of a tag (e.g. %M0.0, %I0.0) or the value of a constant.\")] string addressOrValue=\"\",\n            [Description(\"properties: Scalar attribute map of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; constants: Value; Comment: text).\")] AttributeMap<Scalar>? properties=null,\n            [Description(\"dryRun: true (default) previews; false executes (project must be offline).\")] bool dryRun=true)",
+      "signature": "public CallToolResult ManagePlcTagDefinitionV4(\n            [Description(\"softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.\")] string softwarePath,\n            [Description(\"tablePath: 'Group/Table' path of the tag table, e.g. 'Default tag table'.\")] string tablePath,\n            [Description(\"name: exact tag or constant name.\")] string name,\n            [Description(\"kind: tag | constant.\")] string kind,\n            [Description(\"action: read | create | update | delete.\")] string action,\n            [Description(\"dataType: for create / update - PLC data type, e.g. Bool, Int, Real.\")] string dataType=\"\",\n            [Description(\"addressOrValue: for create / update - logical address of a tag (e.g. %M0.0, %I0.0) or the value of a \" +\n                \"constant.\")] string addressOrValue=\n                \"\",\n            [Description(\"properties: Scalar attribute map of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / \" +\n                \"LogicalAddress / DataTypeName; constants: Value; Comment: text).\")] AttributeMap<Scalar>\n                ? properties=null,\n            [Description(\"dryRun: true (default) previews; false executes (project must be offline).\")] bool dryRun=true, bool confirm=false,\n                string expectedPlanHash=\"\", string expectedProjectFile=\"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -9170,6 +9242,21 @@
           "default": "true",
           "description": "dryRun: true (default) previews; false executes (project must be offline).",
           "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
         }
       }
     },
@@ -9273,7 +9360,7 @@
       "path": "src/Shared/PlcReadModifyTools.cs",
       "owner": "PlcReadModifyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ManagePlcExternalSourcesV4(\n            [Description(\"softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.\")] string softwarePath,\n            [Description(\"action: list | read | createFromFile | createFromMasterCopy | delete | generateBlocks | createGroup | renameGroup | deleteGroup.\")] string action,\n            [Description(\"name: external source name (read / createFromFile / delete / generateBlocks) or group name (createGroup / renameGroup / deleteGroup).\")] string name=\"\",\n            [Description(\"unitName: software unit holding the sources ('' = the PLC program).\")] string unitName=\"\",\n            [Description(\"unitKind: unit | safety - which unit collection unitName refers to.\")] string unitKind=\"unit\",\n            [Description(\"groupPath: 'Folder/Subfolder' inside the external sources ('' = root).\")] string groupPath=\"\",\n            [Description(\"filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA machine.\")] string filePath=\"\",\n            [Description(\"libraryName: for createFromMasterCopy - global library name ('' = the project library).\")] string libraryName=\"\",\n            [Description(\"masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.\")] string masterCopyPath=\"\",\n            [Description(\"copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.\")] string copyMode=\"\",\n            [Description(\"generateOption: for generateBlocks - None | KeepOnError.\")] string generateOption=\"None\",\n            [Description(\"targetKind: for generateBlocks - block | type ('' = the source decides).\")] string targetKind=\"\",\n            [Description(\"targetGroupPath: for generateBlocks - block / type group that receives the result ('' = root).\")] string targetGroupPath=\"\",\n            [Description(\"newName: for renameGroup.\")] string newName=\"\",\n            [Description(\"confirmDelete: must be true together with dryRun=false for delete / deleteGroup.\")] bool confirmDelete=false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun=true)",
+      "signature": "public CallToolResult ManagePlcExternalSourcesV4(\n            [Description(\"softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.\")] string softwarePath,\n            [Description(\"action: list | read | createFromFile | createFromMasterCopy | delete | generateBlocks | createGroup | renameGroup | \" +\n                \"deleteGroup.\")] string action,\n            [Description(\"name: external source name (read / createFromFile / delete / generateBlocks) or group name (createGroup / renameGroup / \" +\n                \"deleteGroup).\")] string name=\n                \"\",\n            [Description(\"unitName: software unit holding the sources ('' = the PLC program).\")] string unitName=\"\",\n            [Description(\"unitKind: unit | safety - which unit collection unitName refers to.\")] string unitKind=\"unit\",\n            [Description(\"groupPath: 'Folder/Subfolder' inside the external sources ('' = root).\")] string groupPath=\"\",\n            [Description(\"filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA \" +\n                \"machine.\")] string filePath=\n                \"\",\n            [Description(\"libraryName: for createFromMasterCopy - global library name ('' = the project library).\")] string libraryName=\"\",\n            [Description(\"masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.\")] string masterCopyPath=\"\",\n            [Description(\"copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.\")] string copyMode=\"\",\n            [Description(\"generateOption: for generateBlocks - None | KeepOnError.\")] string generateOption=\"None\",\n            [Description(\"targetKind: for generateBlocks - block | type ('' = the source decides).\")] string targetKind=\"\",\n            [Description(\"targetGroupPath: for generateBlocks - block / type group that receives the result ('' = root).\")] string targetGroupPath=\"\",\n            [Description(\"newName: for renameGroup.\")] string newName=\"\",\n            [Description(\"confirmDelete: must be true together with dryRun=false for delete / deleteGroup.\")] bool confirmDelete=false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun=true, bool confirm=false, string expectedPlanHash=\"\",\n                string expectedProjectFile=\"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -9368,6 +9455,21 @@
           "default": "true",
           "description": "dryRun: true (default) previews; false executes.",
           "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
         }
       }
     },
@@ -9466,7 +9568,7 @@
       "path": "src/Shared/PlcReadModifyTools.cs",
       "owner": "PlcReadModifyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult RepairAndReimportBlockV4(\n            [Description(\"softwarePath: PLC software path, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"importPath: block XML path\")] string importPath,\n            [Description(\"groupPath: block group path; use empty for root Program blocks\")] string groupPath = \"\",\n            [Description(\"compileAfter: compile PLC after import\")] bool compileAfter = true,\n            [Description(\"overwrite: false (default) refuses an existing block of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).\")] bool overwrite = false)",
+      "signature": "public CallToolResult RepairAndReimportBlockV4(\n            [Description(\"softwarePath: PLC software path, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"importPath: block XML path\")] string importPath,\n            [Description(\"groupPath: block group path; use empty for root Program blocks\")] string groupPath = \"\",\n            [Description(\"compileAfter: compile PLC after import\")] bool compileAfter = true,\n            [Description(\"overwrite: false (default) refuses an existing block of the same name before the import; true replaces it \" +\n                \"(Siemens.Engineering.ImportOptions.Override).\")] bool overwrite =\n                false, bool dryRun = true, bool confirm = false, string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -9495,6 +9597,26 @@
           "default": "false",
           "description": "overwrite: false (default) refuses an existing block of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
         }
       }
     },
@@ -9522,7 +9644,7 @@
       "path": "src/Shared/PlcReadModifyTools.cs",
       "owner": "PlcReadModifyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ImportPlcTagTablesFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional tag table group path (use empty for root)\")] string folderPath,\n            [Description(\"dir: directory containing PLC tag table XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).\")] bool overwrite = false,\n            [Description(\"unitName: exact standard software unit, V16–V21; empty selects the PLC root. Paths are relative to the selected root.\")] string unitName = \"\",\n            [Description(\"swImportOptions: empty by default; all SWImportOptions are refused for tag tables because their import API has no such overload.\")] string[]? swImportOptions = null,\n            [Description(\"importOptions: optional SkipInactiveCultures OR ActivateInactiveCultures on V19–V21; empty by default. Override remains controlled by overwrite.\")] string[]? importOptions = null,\n            [Description(\"dryRun: false (default) retains the existing directory import behavior; true previews files, unit scope and options without imports.\")] bool dryRun = false)",
+      "signature": "public CallToolResult ImportPlcTagTablesFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional tag table group path (use empty for root)\")] string folderPath,\n            [Description(\"dir: directory containing PLC tag table XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it \" +\n                \"(Siemens.Engineering.ImportOptions.Override).\")] bool overwrite =\n                false,\n            [Description(\"unitName: exact standard software unit, V16–V21; empty selects the PLC root. Paths are relative to the selected \" +\n                \"root.\")] string unitName =\n                \"\",\n            [Description(\"swImportOptions: empty by default; all SWImportOptions are refused for tag tables because their import API has no such \" +\n                \"overload.\")] string[]\n                ? swImportOptions = null,\n            [Description(\"importOptions: optional SkipInactiveCultures OR ActivateInactiveCultures on V19–V21; empty by default. Override \" +\n                \"remains controlled by overwrite.\")] string[]\n                ? importOptions = null,\n            [Description(\"dryRun: true (default) previews the complete ordered batch, unit scope and options without imports.\")] bool dryRun = true,\n                bool confirm = false, string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -9571,9 +9693,24 @@
         },
         "dryRun": {
           "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews the complete ordered batch, unit scope and options without imports.",
+          "value": true
+        },
+        "confirm": {
+          "type": "bool",
           "default": "false",
-          "description": "dryRun: false (default) retains the existing directory import behavior; true previews files, unit scope and options without imports.",
           "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
         }
       }
     },
@@ -9817,7 +9954,7 @@
       "path": "src/Shared/PlcTechnologyTools.cs",
       "owner": "PlcTechnologyTools",
       "domain": "PLC-TechnologyObjects",
-      "signature": "public CallToolResult ExportTechnologyObjectsToDirectoryV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"exportDir: directory to write XML files to, e.g. 'C:\\\\Temp\\\\TOs'\")] string exportDir,\n            [Description(\"regexName: optional regex filter on TO name; empty = export all\")] string regexName = \"\")",
+      "signature": "public CallToolResult ExportTechnologyObjectsToDirectoryV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"exportDir: directory to write XML files to, e.g. 'C:\\\\Temp\\\\TOs'\")] string exportDir,\n            [Description(\"regexName: optional regex filter on TO name; empty = export all\")] string regexName = \"\", bool dryRun = true, bool confirm = false,\n                string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -9833,6 +9970,26 @@
           "type": "string",
           "default": "\"\"",
           "description": "regexName: optional regex filter on TO name; empty = export all",
+          "value": ""
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
           "value": ""
         }
       }
@@ -10036,7 +10193,7 @@
       "path": "src/Shared/PlcWatchTools.cs",
       "owner": "PlcWatchTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ExportPlcWatchTablesToDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"dir: output directory\")] string dir,\n            [Description(\"regexName: optional regex filter applied to table name\")] string regexName = \"\")",
+      "signature": "public CallToolResult ExportPlcWatchTablesToDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"dir: output directory\")] string dir,\n            [Description(\"regexName: optional regex filter applied to table name\")] string regexName = \"\", bool dryRun = true, bool confirm = false,\n                string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10052,6 +10209,26 @@
           "type": "string",
           "default": "\"\"",
           "description": "regexName: optional regex filter applied to table name",
+          "value": ""
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
           "value": ""
         }
       }

@@ -144,6 +144,13 @@ public sealed class StagedGenerationTests
                 }
                 return result;
             }
+            if (name is "CreateDevice" or "MovePlcBlockToGroup")
+            {
+                var preview = new JsonObject { ["projectFile"] = Project, ["planHash"] = new string('a', 64) };
+                if ((bool?)args["dryRun"] == true) return Host.V4Result(name, preview);
+                if ((string?)args["expectedPlanHash"] != (string?)preview["planHash"])
+                    throw new InvalidOperationException("The step did not receive its reviewed tool hash.");
+            }
             if (check?.Invoke() is { } rejected) return rejected;
             if (name == "CompilePlcDiagnostics" && CompileFails) return Host.V4Result(name, new JsonObject { ["errorCount"] = 1 });
             if (name == "CreateDevice") DeviceCreated = true;
@@ -158,7 +165,7 @@ public sealed class StagedGenerationTests
             if (name == "MovePlcBlockToGroup")
             {
                 var block = Worker.Objects.Single(o => o.Name == (string)args["blockName"]!);
-                block.Path = (string)args["groupPath"]! + "/" + block.Name;
+                block.Path = (string)args["targetGroupPath"]! + "/" + block.Name;
             }
             OnWrite?.Invoke();
             return Host.V4Result(name, new JsonObject());
@@ -168,6 +175,16 @@ public sealed class StagedGenerationTests
             ["processStartUtc"] = Created && TransitionFault == "start" ? "2026-10-10T01:00:00Z" : "2026-10-10T00:00:00Z", ["generation"] = BindingGeneration };
         private Descriptor? Ordinary(string name)
         {
+            if (name is "CreateDevice" or "CreatePlcBlockGroup" or "MovePlcBlockToGroup")
+            {
+                var owner = name == "CreateDevice" ? typeof(enginehost::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools)
+                    : typeof(enginehost::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools);
+                string member = name == "MovePlcBlockToGroup" ? "MoveBlockToGroupV4" : name + "V4";
+                enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, owner.GetMethod(member)!,
+                    _ => throw new InvalidOperationException("Metadata only."), out var current, Release);
+                return current;
+            }
+
             var path = new DirectoryInfo(AppContext.BaseDirectory);
             while (path != null && !File.Exists(Path.Combine(path.FullName, "CLAUDE.md"))) path = path.Parent;
             var schemas = BaselineSchemas(Path.Combine(path!.FullName, "manifest/contracts/v4/baseline", Release + ".json"));

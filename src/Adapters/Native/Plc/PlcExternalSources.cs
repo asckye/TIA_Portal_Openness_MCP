@@ -44,11 +44,16 @@ namespace TiaMcp.Adapters.Native.Plc
                 "", string targetGroupPath = "",
             string newName = "", bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcExternalSources", meta => {
+                if (unitName.Length == 0 && (action is "createGroup" or "renameGroup" or "deleteGroup"
+                    || groupPath.Length == 0 && (action is "createFromFile" or "delete"
+                        || action == "generateBlocks" && targetKind.Length == 0 && targetGroupPath.Length == 0 && generateOption == "None")))
+                    throw new NotSupportedException("Ordinary root source operations must dispatch through the Foundation compatibility registry.");
                 bool writing = PlcSourceRules
                     .ValidateExternalSourceRequest(action, name, unitName, unitKind, filePath, libraryName, masterCopyPath, copyMode, generateOption,
                         targetKind, targetGroupPath, newName, confirmDelete, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
+
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
                 PlcExternalSourceSystemGroup root = ExternalSourceRootOf(plc, unit);
                 PlcExternalSourceGroup group = (PlcExternalSourceGroup)PlcGroupOperations.Group(root, groupPath);

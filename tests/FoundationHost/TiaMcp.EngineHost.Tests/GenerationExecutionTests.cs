@@ -121,6 +121,16 @@ public sealed class GenerationExecutionTests : IDisposable
     }
     private ToolDescriptor? Descriptor(string name)
     {
+        if (name is "CreateDevice" or "CreatePlcBlockGroup" or "MovePlcBlockToGroup")
+        {
+            var owner = name == "CreateDevice" ? typeof(TiaMcpServer.ModelContextProtocol.HardwareDevicesTools)
+                : typeof(TiaMcpServer.ModelContextProtocol.PlcOrganisationTools);
+            string member = name == "MovePlcBlockToGroup" ? "MoveBlockToGroupV4" : name + "V4";
+            TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, owner.GetMethod(member)!,
+                _ => throw new InvalidOperationException("Metadata only."), out var current, EngineHostConfiguration.ReleaseKey);
+            return current;
+        }
+
         // This suite injects ordinary step outcomes; the staged suite drives the real source policies.
         if (name == "ImportPlcExternalSource" || name == "GenerateBlocksFromExternalSource") return null;
         if (missingTool && name == "CreatePlcTag") return null;

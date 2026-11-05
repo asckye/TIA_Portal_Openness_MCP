@@ -19,6 +19,9 @@
 - 工作台操作员会话始终使用所选版本的完整工具目录，包括附着到 AI 客户端启动的 lite 宿主时；AI 会话仍保留其选择的目录。
 - 八版统一默认 lite 工具列表：V14 SP1–V19 的客户端现在先看到精简列表，V20/V21 的 lite 列表扩大；`FindTools` / `CallTool` 可访问其余工具，`--profile full` 恢复完整列表。统一展示名称为 `plc-foundation`，提示词按已注册工具过滤。
 - MCP file writes to caller targets outside the output root now require Workbench approval, including UNC targets and handoff output derived from an input report. Cards bind and wrap every full normalized filesystem target, including WRITE/SESSION and multi-target calls; surrounding whitespace is rejected before approval; approval targets over 4096 characters are refused before approval. Git stage/commit always require approval. `GetSessionState` exposes `data.outputRoot`; updates preserve `exports`. Previews and approved generation steps retain their behavior.
+- DES-2：保留设备、PLC 组与声明/源文件兼容转发；恢复四个批工具，整批规范预览绑定一个计划哈希和一次审批，按顺序调用逐项规范入口，首错停止并报告完成/未开始项。 工艺对象目录导出在八个版本统一使用原生路径和项目实际组结构，使用同样的预览和审批；分组导出目录只在执行时创建。
+- MovePlcBlockToGroup 采用预览和计划哈希审批；先保留并核验恢复备份，再删除源块、导入目标并核验父组、名称、编号和语言。目标不一致时提示编译；核验失败先清理目标再恢复原组，清理或恢复失败保留恢复文件及明确证据，未开始修改的 apply 拒绝保留类型化错误且不锁定会话；父组核验使用 SDK 对象相等性。VM 原生确认仍为 NOT RUN。
+- `CreateDevice` remains available on V14 SP1–V17 through the existing native CreateWithItem route with preview, plan hash and bound-project validation; V18–V21 forward to CreateHardwareDevice. Generation previews each device creation and block move before filling its execution hash.
 - Transport checks retain the full profile and check up to four releases at a time, respecting `-MaxParallelism` with deterministic report ordering.
 
 ## [4.0.0-beta.3] - 2026-11-04

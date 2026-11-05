@@ -76,57 +76,61 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 
         public PlcSeedHmiReply ExportTechnologyObjectsToDirectory(
-            string softwarePath, string exportDir, string regexName = "")
+            string softwarePath, string exportDir, string regexName = "", bool dryRun = true, string expectedPlanHash = "")
         {
-            if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
-                _session.PlcSoftwarePath(_session.GetPlcSoftware(softwarePath)), true);
-
-            var exported = new List<string>();
-            var failed = new List<PlcSeedImportFailure>();
-
-            if (IsProjectNull())
+            if (IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project open.");
+            var plc = _session.GetPlcSoftware(softwarePath)
+                ?? throw new PlcSoftwareException("NotFound", "PLC software not found.");
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath, _session.PlcSoftwarePath(plc), true);
+            string root = Path.GetFullPath(exportDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var regex = string.IsNullOrWhiteSpace(regexName) ? null : new Regex(regexName, RegexOptions.IgnoreCase);
+            var selected = EnumerateTechnologyObjectsRecursive(plc)
+                .Where(row => regex == null || regex.IsMatch(WatchNative.Name(row.To) ?? "")).ToArray();
+            var plan = new List<Dictionary<string, object?>>();
+            foreach (var row in selected)
             {
-                failed.Add(new PlcSeedImportFailure { Path = softwarePath, Error = "No project open." });
-                return new PlcSeedHmiReply { Imported = exported, Failed = failed, Meta = BatchRejection("PROJECT_NOT_BOUND") };
+                string name = WatchNative.Name(row.To) ?? "";
+                var parts = row.Folder.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(Uri.UnescapeDataString).Concat(new[] { name }).ToArray();
+                if (parts.Any(part => part.Length == 0 || part == "." || part == ".."
+                    || part.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || part.IndexOf('/') >= 0 || part.IndexOf('\\') >= 0))
+                    throw new AdapterPreconditionException("Technology group and object names must be ordinary path components.");
+                string path = Path.GetFullPath(Path.Combine(root, Path.Combine(parts) + ".xml"));
+                if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new AdapterPreconditionException("Export escapes its directory.");
+                PlcSpecialExportPolicy.Output(path, true);
+                plan.Add(new Dictionary<string, object?> { ["objectPath"] = row.Folder.Length == 0 ? name : row.Folder + "/" + name,
+                    ["outputFile"] = path, ["status"] = "planned" });
             }
-
-            var plc = _session.GetPlcSoftware(softwarePath);
-            if (plc == null)
+            string hash = PlcSpecialExportPolicy.Hash(_session.ReleaseKey, softwarePath, root,
+                _session.BindingIdentity(), _session.SerializeEvidence(new Dictionary<string, object?> { ["items"] = plan }));
+            var meta = new Dictionary<string, object?> { ["planHash"] = hash, ["items"] = plan, ["dryRun"] = dryRun,
+                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["nativeRoute"] = "TechnologyExport" };
+            var exported = new List<string>(); var failed = new List<PlcSeedImportFailure>();
+            if (dryRun) return new PlcSeedHmiReply { Imported = exported, Failed = failed, Meta = meta };
+            if (hash != expectedPlanHash) throw new AdapterPreconditionException("Technology export plan changed; preview again.");
+            _session.ExactPlcForEngineering(softwarePath, false);
+            for (int i = 0; i < selected.Length; i++)
             {
-                failed.Add(new PlcSeedImportFailure { Path = softwarePath, Error = "PLC software not found." + _session.AvailablePlcPathsSuffix() });
-                return new PlcSeedHmiReply { Imported = exported, Failed = failed, Meta = BatchRejection("NOT_FOUND") };
-            }
-
-            try
-            {
-                Directory.CreateDirectory(exportDir);
-                Regex? regex = null;
-                if (!string.IsNullOrWhiteSpace(regexName))
-                    regex = new Regex(regexName, RegexOptions.IgnoreCase);
-
-                foreach (var (item, folder) in EnumerateTechnologyObjectsRecursive(plc))
+                var row = plan[i]; string path = (string)row["outputFile"]!;
+                try
                 {
-                    var name = WatchNative.Name(item) ?? string.Empty;
-                    if (string.IsNullOrEmpty(name)) continue;
-                    if (regex != null && !regex.IsMatch(name)) continue;
-
-                    // TOs of a user folder land in a sub directory of the same name (ImportTechnologyObjectsFromDirectory takes folderPath)
-                    var directory = folder.Length == 0 ? exportDir : Path.Combine(exportDir, folder.Replace('/', Path.DirectorySeparatorChar));
-                    Directory.CreateDirectory(directory);
-                    var path = Path.Combine(directory, name + ".xml");
-                    var evidence = TechnologyExport(item, path);
-                    var err = Equals(evidence["success"], true) ? null : _session.SerializeEvidence(evidence);
-                    var label = folder.Length == 0 ? name : folder + "/" + name;
-                    if (err == null) exported.Add(label);
-                    else failed.Add(new PlcSeedImportFailure { Path = label, Error = err });
+                    PlcSpecialExportPolicy.Output(path, true);
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                    PlcSpecialExportPolicy.Output(path, true);
+                    var evidence = TechnologyExport(selected[i].To, path, false);
+                    row["result"] = evidence;
+                    if (!Equals(evidence["success"], true)) throw new IOException(_session.SerializeEvidence(evidence));
+                    row["status"] = "completed"; exported.Add((string)row["objectPath"]!);
+                }
+                catch (Exception error)
+                {
+                    row["status"] = "failed"; meta["operationSuccess"] = false; meta["mayHaveWrittenFiles"] = true;
+                    failed.Add(new PlcSeedImportFailure { Path = path, Error = error.Message });
+                    foreach (var pending in plan.Skip(i + 1)) pending["status"] = "not-started";
+                    break;
                 }
             }
-            catch (Exception ex)
-            {
-                failed.Add(new PlcSeedImportFailure { Path = exportDir, Error = ex.ToString() });
-            }
-
-            return new PlcSeedHmiReply { Imported = exported, Failed = failed };
+            return new PlcSeedHmiReply { Imported = exported, Failed = failed, Meta = meta };
         }
 
         private static List<(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB To,
@@ -141,7 +145,7 @@ namespace TiaMcp.Adapters.Native.Plc
 #if PLC_TECH_GROUP_READ
                 foreach (var sub in PlcGroupOperations.Items(WatchNative.Groups(group)).Cast<global::Siemens.Engineering.SW.TechnologicalObjects
                         .TechnologicalInstanceDBUserGroup>())
-                    Walk(sub, folder.Length == 0 ? WatchNative.Name(sub) : folder + "/" + WatchNative.Name(sub));
+                    Walk(sub, folder.Length == 0 ? Uri.EscapeDataString(WatchNative.Name(sub)) : folder + "/" + Uri.EscapeDataString(WatchNative.Name(sub)));
 #endif
             }
             Walk(WatchNative.TechnologyGroup(plc), "");

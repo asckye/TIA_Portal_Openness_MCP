@@ -13,7 +13,7 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         public PlcSpecialExportResult ExportPlcWatchTable(string softwarePath,string watchTableName,string exportPath,string expectedPlanHash="",bool dryRun=
-                true)
+                true, string plannedExportRoot="")
         {
             PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey,true);
 #if PLC_WATCH_READ
@@ -44,12 +44,13 @@ namespace TiaMcp.Adapters
 #else
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Export method evidence is unknown for this release.","export-plan",false);
 #endif
-            });
+            },allowPlannedDirectories:plannedExportRoot.Length>0,plannedExportRoot:plannedExportRoot);
 #else
             throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("V14 SP1 watch-table API is absent.","export-plan",false);
 #endif
         }
-        public PlcSpecialExportResult ExportTechnologyObject(string softwarePath,string toName,string exportPath,string expectedPlanHash="",bool dryRun=true)
+        public PlcSpecialExportResult ExportTechnologyObject(string softwarePath,string toName,string exportPath,string expectedPlanHash="",bool dryRun=true,
+                string plannedExportRoot="")
         {
             PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey);
             var selected=ReadSelection(softwarePath);
@@ -87,7 +88,7 @@ namespace TiaMcp.Adapters
 #else
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Export method evidence is unknown for this release.","export-plan",false);
 #endif
-            });
+            },allowPlannedDirectories:plannedExportRoot.Length>0,plannedExportRoot:plannedExportRoot);
         }
     }
 }

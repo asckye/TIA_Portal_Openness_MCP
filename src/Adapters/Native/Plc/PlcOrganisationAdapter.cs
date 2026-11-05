@@ -20,10 +20,10 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         private readonly IPlcOrganisationSession _session;
         internal bool MutationStarted { get; private set; }
-        private readonly object _blockGroupDeleteGate = new object();
         private const int TagPreviewLimit = 200;
         public PlcOrganisationAdapter(IPlcOrganisationSession session) => _session = session;
         private bool IsProjectNull() => _session.IsProjectNull();
+
         private static object? TryGetPropertyValue(object? target, params string[] names)
         {
             if (target == null) return null;
@@ -36,40 +36,7 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 
         public Dictionary<string, object?> DeleteEmptyPlcBlockGroup(string softwarePath, string groupPath, bool dryRun=true)
-        {
-            EmptyPlcGroupPolicy.Parse(groupPath);
-            if (IsProjectNull() || _session.CurrentPortal==null) throw new PlcSoftwareException("InvalidState", "No TIA project is open.");
-            lock (_blockGroupDeleteGate)
-            {
-                using var access = dryRun ? null : _session.AcquireHmiEditAccess();
-                // Destructive operations use the shared exact container resolver, never fuzzy PLC selection.
-                var sc=_session.ResolveSoftwareContainerUncached(softwarePath);
-                var plc=PlcOrganisationPrimitives.SoftwareOrNull(sc) as PlcSoftware
-                    ?? throw new PlcSoftwareException("NotFound", "PLC software not found: " + softwarePath);
-                PlcBlockUserGroup? Find(string[] parts)
-                {
-                    PlcBlockGroup current=PlcOrganisationPrimitives.BlockGroup(plc);
-                    foreach(var name in parts)
-                    {
-                        var matches=PlcOrganisationPrimitives.Groups(current)
-                            .Where(g=>string.Equals(PlcOrganisationPrimitives.Name(g),name,StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
-                        if(matches.Count==0) return null;
-                        if(matches.Count!=1) throw new PlcSoftwareException("InvalidParams","Ambiguous user group: " + name);
-                        current=matches[0];
-                    }
-                    return current as PlcBlockUserGroup ?? throw new PlcSoftwareException("InvalidParams","Only user block groups can be deleted.");
-                }
-                var result=EmptyPlcGroupPolicy
-                    .Execute(groupPath,dryRun,Find,g=>PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Blocks(g)),g=>PlcOrganisationPrimitives
-                        .Count(PlcOrganisationPrimitives.Groups(g)),
-                    ()=>PlcOrganisationPrimitives.StateOrNull(_session.ResolvePlcService<OnlineProvider>(softwarePath,plc))?.ToString() ?? "Unknown",
-                    g=> { MutationStarted = true; PlcOrganisationPrimitives.Delete(g); });
-                result["softwarePath"]=softwarePath;
-                result["resolvedSoftwareName"]=PlcOrganisationPrimitives.Name(plc);
-                result["success"]=true;
-                return result;
-            }
-        }
+            => ManagePlcUserGroup(softwarePath, "blocks", groupPath, "deleteEmpty", dryRun: dryRun).Meta;
 
         private static int CountOf(object? collection)
         {
@@ -135,27 +102,12 @@ namespace TiaMcp.Adapters.Native.Plc
 #endif
 
         public Dictionary<string, object?> CreatePlcTypeGroup(string softwarePath, string groupPath, bool dryRun = true)
-        {
-            PlcGroupCreation.Parse(groupPath);
-            if (IsProjectNull() || _session.CurrentPortal == null)
-                throw new PlcSoftwareException("InvalidState", "No TIA project is open.");
-            lock (_blockGroupDeleteGate)
-            {
-                using var access = dryRun ? null : _session.AcquireHmiEditAccess();
-                var plc = PlcOrganisationPrimitives.SoftwareOrNull(_session.ResolveSoftwareContainerUncached(softwarePath)) as PlcSoftware
-                    ?? throw new PlcSoftwareException("NotFound", "PLC software not found: " + softwarePath);
-                var result = PlcGroupCreation.Execute<PlcTypeGroup>(PlcOrganisationPrimitives.TypeGroup(plc), groupPath, dryRun,
-                    g => PlcOrganisationPrimitives.Groups(g), g => PlcOrganisationPrimitives.Name(g), (g, name) => {
-                        MutationStarted = true; return PlcOrganisationPrimitives.Create(PlcOrganisationPrimitives.Groups(g), name); });
-                result["softwarePath"] = softwarePath;
-                result["resolvedSoftwareName"] = PlcOrganisationPrimitives.Name(plc);
-                return result;
-            }
-        }
+            => ManagePlcUserGroup(softwarePath, "types", groupPath, "create", dryRun: dryRun).Meta;
 
         public HardwareAddressingReply ManagePlcUserGroup(string softwarePath, string family, string groupPath, string action, string newName = "",
                 bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcUserGroup", meta => {
+
                 // Emptiness covers every documented object composition of the group (API audit 2026-10-19 F3, F19):
                 // PlcTypeGroup.Documents (V20/V21) and PlcWatchAndForceTableGroup.ForceTables.
                 var shape = family switch {
@@ -229,142 +181,114 @@ namespace TiaMcp.Adapters.Native.Plc
         public PlcBlockGroup? EnsurePlcBlockGroup(string softwarePath, string groupPath, out List<string> created)
         {
             created = new List<string>();
-            if (IsProjectNull())
-            {
-                return null;
-            }
-
-            var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (PlcOrganisationPrimitives.SoftwareOrNull(softwareContainer) is not PlcSoftware plcSoftware || PlcOrganisationPrimitives
-                    .BlockGroup(plcSoftware) == null)
-            {
-                return null;
-            }
-
-            var groupNames = groupPath.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
-            PlcBlockGroup currentGroup = PlcOrganisationPrimitives.BlockGroup(plcSoftware);
-            foreach (var groupName in groupNames)
-            {
-                var next = PlcOrganisationPrimitives.Groups(currentGroup)
-                    .FirstOrDefault(g => PlcOrganisationPrimitives.Name(g).Equals(groupName, StringComparison.OrdinalIgnoreCase));
-                if (next == null)
-                {
-                    MutationStarted = true;
-                    next = PlcOrganisationPrimitives.Create(PlcOrganisationPrimitives.Groups(currentGroup), groupName);
-                    created.Add(groupName);
-                    _session.GroupCreated(groupName);
-                }
-                currentGroup = next;
-            }
-            return currentGroup;
+            if (IsProjectNull()) return null;
+            var reply = ManagePlcUserGroup(softwarePath, "blocks", groupPath, "create", dryRun: false);
+            if (reply.RequiresSessionReset || reply.MayHaveChanged) MutationStarted = true;
+            if (!reply.Meta.TryGetValue("operationSuccess", out var success) || !Equals(success, true))
+                throw new PlcSoftwareException("OpennessError", reply.Message);
+            if (reply.Meta.TryGetValue("result", out var result) && result is Dictionary<string, object?> details
+                && details.TryGetValue("createdPaths", out var paths) && paths is IEnumerable<object?> values)
+                created.AddRange(values.Select(value => value!.ToString()!).Select(path => path.Substring(path.LastIndexOf('/') + 1)));
+            return _session.GetPlcBlockGroupByPath(softwarePath, groupPath);
         }
 
-        public string MoveBlockToGroup(string softwarePath, string blockName, string targetGroupPath, bool autoCreateGroup = true)
+        public HardwareAddressingReply MoveBlockToGroup(string softwarePath, string blockName, string targetGroupPath, bool autoCreateGroup = true,
+            string recoveryPath = "", bool dryRun = true, string expectedPlanHash = "")
         {
-            if (IsProjectNull())
-            {
-                throw new PlcSoftwareException("InvalidState", "No project is open in TIA Portal");
-            }
-
-            var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (PlcOrganisationPrimitives.SoftwareOrNull(softwareContainer) is not PlcSoftware plcSoftware || PlcOrganisationPrimitives
-                    .BlockGroup(plcSoftware) == null)
-            {
-                throw new PlcSoftwareException("NotFound", $"PlcSoftware not found at '{softwarePath}'");
-            }
-
-            // 1) find the block anywhere by exact name
-            var all = new List<PlcBlock>();
-            _session.GetBlocksRecursive(PlcOrganisationPrimitives.BlockGroup(plcSoftware), all);
-            var block = all.FirstOrDefault(b => PlcOrganisationPrimitives.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase));
-            if (block == null)
-            {
-                throw new PlcSoftwareException("NotFound", $"Block '{blockName}' not found in '{softwarePath}'");
-            }
-
-            // An OB's type, number and event assignment are not verified to survive a delete/import round trip.
-            // Do not delete an original OB through this generic move route.
+            if (IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open in TIA Portal");
+            PlcGroupOperations.Parts(targetGroupPath, true);
+            var block = _session.GetBlock(softwarePath, blockName)
+                ?? throw new PlcSoftwareException("NotFound", $"Block '{blockName}' not found in '{softwarePath}'");
+            var parent = PlcOrganisationPrimitives.Parent(block);
+            var target = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
+            // An OB's type, number and event assignment are not verified to survive the round trip.
             if (block is OB)
             {
-                var existingGroup = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                if (existingGroup != null && ReferenceEquals(PlcOrganisationPrimitives.Parent(block), existingGroup))
-                    return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
+                if (target != null && object.Equals(parent, target))
+                    return new HardwareAddressingReply { Message = "Block is already in the target group.",
+                        Meta = new Dictionary<string, object?>(StringComparer.Ordinal) { ["operationSuccess"] = true, ["mayHaveChanged"] = false,
+                            ["dryRun"] = dryRun, ["plannedChangeCount"] = 0 } };
                 throw new PlcSoftwareException("NotSupportedOnVersion",
                     "Moving organization blocks by export/delete/import is disabled: the OB type, number and event assignment are not verified to survive " +
                         "the round trip. Move this OB in TIA Portal.");
             }
-
-            // API audit 2026-10-19 F22: the round trip deletes the source block. A know-how-protected block exports only its public
-            // interface and cannot be imported again ("Exporting blocks with know-how protection", "Basic principles of
-            // importing/exporting"), and only consistent blocks export ("Exporting blocks"). Both are refused before any change.
             var refusal = PlcMovePolicy.Refusal(block.IsKnowHowProtected, block.IsConsistent);
             if (refusal != null) throw new AdapterPreconditionException(refusal, "blockName", false);
-            int? numberBefore = PlcMovePolicy.Number(((IEngineeringObject)block).GetAttribute("Number"));
-
-            // 2) ensure the target group exists
-            var targetGroup = autoCreateGroup
-                ? EnsurePlcBlockGroup(softwarePath, targetGroupPath, out _)
-                : _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-            if (targetGroup == null)
+            string name = PlcOrganisationPrimitives.Name(block);
+            int number = PlcOrganisationPrimitives.Number(block);
+            string language = PlcOrganisationPrimitives.Language(block).ToString();
+            var plan = new Dictionary<string, object?>(StringComparer.Ordinal) { ["softwarePath"] = softwarePath, ["sourcePath"] = _session.GetBlockPath(block),
+                ["name"] = name, ["number"] = number, ["language"] = language,
+                ["targetGroupPath"] = targetGroupPath, ["autoCreateGroup"] = autoCreateGroup,
+                ["binding"] = _session.BindingIdentity(), ["targetExists"] = target != null };
+            if (target != null) plan["targetBlocks"] = string
+                .Join("|", PlcOrganisationPrimitives.Blocks(target)
+                    .Select(item => PlcOrganisationPrimitives.Name(item) + ":" + PlcOrganisationPrimitives.Number(item))
+                    .OrderBy(value => value, StringComparer.Ordinal));
+            string planJson = _session.SerializeEvidence(plan);
+            string hash;
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+                hash = string
+                    .Concat(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(planJson))
+                        .Select(value => value.ToString("x2", System.Globalization.CultureInfo.InvariantCulture)));
+            var meta = new Dictionary<string, object?>(StringComparer.Ordinal) { ["planHash"] = hash, ["plan"] = plan, ["dryRun"] = dryRun,
+                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["plannedChangeCount"] = target != null && object.Equals(parent, target) ? 0 : 1,
+                ["validationScope"] =
+                    "Source identity/number/consistency and target inventory; the recovery export identity is verified before deletion; target import " +
+                    "failure triggers restoration to the original group."
+                };
+            if (dryRun) return new HardwareAddressingReply { Message = "Move preview; no export, import or deletion.", Meta = meta };
+            if (expectedPlanHash != hash) throw new AdapterPreconditionException("Move plan changed; preview again.", "expectedPlanHash", false);
+            if (target != null && object.Equals(parent, target)) return new HardwareAddressingReply {
+                Message = "Block is already in the target group.", Meta = meta };
+            if (target == null && !autoCreateGroup) throw new AdapterPreconditionException("Target group does not exist.", "targetGroupPath", false);
+            string root = Path.GetFullPath(TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath).TrimEnd(Path.DirectorySeparatorChar) + Path
+                .DirectorySeparatorChar;
+            string recovery = recoveryPath.Length == 0 ? Path.Combine(root, "plc-move-" + Guid.NewGuid().ToString("N"), "original.xml") : Path
+                .GetFullPath(recoveryPath);
+            if (!recovery.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Recovery path is outside the recovery directory.", nameof(recoveryPath));
+            using var editAccess = _session.AcquireHmiEditAccess();
+            var movePlc = _session.ExactPlcForEngineering(softwarePath, true);
+            PlcBlock? imported = null; PlcBlock? restored = null;
+            void Verify(PlcBlock? candidate, object expectedParent)
             {
-                throw new PlcSoftwareException("NotFound",
-                    $"Target block group '{targetGroupPath}' not found (set autoCreateGroup=true to create it)");
+                if (candidate == null || !object.Equals(PlcOrganisationPrimitives.Parent(candidate), expectedParent)
+                    || PlcOrganisationPrimitives.Name(candidate) != name || PlcOrganisationPrimitives.Number(candidate) != number
+                    || PlcOrganisationPrimitives.Language(candidate).ToString() != language)
+                    throw new IOException("The imported block parent/name/number/language could not be verified.");
             }
-
-            // already in the target group?
-            if (ReferenceEquals(PlcOrganisationPrimitives.Parent(block), targetGroup))
-            {
-                return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
-            }
-            if (PlcOrganisationPrimitives.Blocks(targetGroup).Any(b => PlcOrganisationPrimitives.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase)))
-                throw new PlcSoftwareException("InvalidParams",
-                    $"Target group already contains '{blockName}'; relocation never overwrites another block.");
-
-            // 3) export -> delete -> import into target group (no native reparent). Only SimaticML XML is used: it carries the
-            // block number, while SIMATIC SD documents do not store it and TIA assigns a new number on import (STEP 7 help V20,
-            // "Exporting and importing blocks in SIMATIC SD format"). The recovery export includes default values (WithDefaults).
-            var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_move", Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(tempDir);
-            const string method = "xml(SimaticML)";
-            bool moveVerified = false;
-            int? numberAfter = null;
-            try
-            {
-                var xml = Path.Combine(tempDir, blockName + ".xml");
-                PlcOrganisationPrimitives.Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xml)), ExportOptions.WithDefaults);
+            var evidence = PlcMovePolicy.ExportDeleteImportRestore(recovery, name, number, language, () => {
+                TiaMcp.Adapters.PlcBatchImportRecovery.Precheck(); Directory.CreateDirectory(Path.GetDirectoryName(recovery)!);
+                if (File.Exists(recovery)) throw new IOException("The recovery path already exists.");
+                PlcOrganisationPrimitives.Export(block, new FileInfo(recovery), ExportOptions.WithDefaults);
+            }, () => {
                 MutationStarted = true;
                 PlcOrganisationPrimitives.Delete(block);
-                var imp = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks(targetGroup), new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xml)), ImportOptions.None);
-                if (imp == null || imp.Count == 0)
-                {
-                    throw new PlcSoftwareException("ImportFailed",
-                        $"Re-import of '{blockName}' into '{targetGroupPath}' failed (xml)");
+                if (PlcOrganisationPrimitives.Blocks((PlcBlockGroup)parent).Any(item => PlcOrganisationPrimitives.Name(item) == name))
+                    throw new IOException("Source block remains after delete.");
+            }, () => {
+                if (target == null) {
+                    PlcGroupOperations.Manage(PlcOrganisationPrimitives.BlockGroup(movePlc), targetGroupPath, "create", "", false, "Blocks"); target = _session
+                        .GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
                 }
-                var verifyGroup = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                var moved = PlcOrganisationPrimitives.BlocksOrNull(verifyGroup)?
-                    .FirstOrDefault(b => PlcOrganisationPrimitives.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase));
-                numberAfter = moved == null ? null : PlcMovePolicy.Number(((IEngineeringObject)moved).GetAttribute("Number"));
-                var numberChange = PlcMovePolicy.NumberChange(numberBefore, numberAfter);
-                moveVerified = verifyGroup != null && moved != null && numberChange == null;
-                if (verifyGroup == null || moved == null) throw new PlcSoftwareException("ImportFailed",
-                    $"Move of '{blockName}' to '{targetGroupPath}' could not be verified");
-                if (numberChange != null)
-                    throw new PlcSoftwareException("ImportFailed", $"Block '{blockName}' was moved to '{targetGroupPath}' but {numberChange}");
-            }
-            catch (Exception ex)
-            {
-                throw new PlcSoftwareException("ImportFailed",
-                    $"Move failed: {ex.Message}. Recovery export retained at '{tempDir}'; inspect the source and destination before retrying.", null, ex);
-            }
-            finally
-            {
-                // A failed import may have already deleted the source. Never erase
-                // its only recovery export during exception cleanup.
-                if (moveVerified)
-                    try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch {  /* swallow(cleanup): Cleanup after verified relocation must not replace the successful move result. *//* best-effort cleanup */ }
-            }
-
-            return $"Moved '{blockName}' to '{targetGroupPath}' via {method}; block number {PlcMovePolicy.Text(numberAfter)} kept";
+                var copies = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks(target!), new FileInfo(recovery), ImportOptions.None);
+                if (copies == null || copies.Count != 1) throw new IOException("Import did not return exactly one target block.");
+                imported = copies[0];
+                return imported.IsConsistent;
+            }, () => Verify(imported, target!), () => {
+                PlcOrganisationPrimitives.Delete(imported!);
+            }, () => {
+                var copies = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks((PlcBlockGroup)parent),
+                    new FileInfo(recovery), ImportOptions.None);
+                if (copies == null || copies.Count != 1) throw new IOException("Restore did not return exactly one original-group block.");
+                restored = copies[0];
+            }, () => Verify(restored, parent));
+            foreach (var pair in evidence) meta[pair.Key] = pair.Value;
+            meta["operationSuccess"] = true; meta["mayHaveChanged"] = true;
+            string message = "Source exported and verified, deleted, then imported and verified in the target group. Recovery export retained.";
+            if (evidence["importedConsistent"] is false) message += " Compile the imported block before use; it is currently inconsistent.";
+            return new HardwareAddressingReply { Message = message, Meta = meta };
         }
     }
 }

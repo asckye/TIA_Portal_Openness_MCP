@@ -94,8 +94,10 @@ internal static class ToolUsageGenerator
             Require(Strings(example!["tools"]).All(names.Contains), "Programming example links to unknown tool");
             foreach (var asset in example["files"]?.AsArray() ?? []) { var content = Source(root, Text(asset!["path"])); asset["content"] = content; asset["contentSha256"] = Hash(Encoding.UTF8.GetBytes(content)); }
         }
-        var meta = Read(root, "reference/tool-examples/metadata.json"); var calls = Read(root, "reference/tool-examples/calls.json"); var sequences = Read(root, "reference/tool-examples/sequences.json").AsArray();
-        ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools); ValidateFoundation(calls, sequences); ValidateRetest(root, calls, sequences, meta);
+        var meta = Read(root, "reference/tool-examples/metadata.json"); var calls = Read(root, "reference/tool-examples/calls.json"); var sequences =
+            Read(root, "reference/tool-examples/sequences.json").AsArray();
+        ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools); ValidateFoundation(root, calls, sequences);
+        ValidateRetest(root, calls, sequences, meta);
         ValidateSourceHints(root, Read(root, "reference/tool-catalog/EngineSourceExamples.json"));
         // The frozen engine examples stay comparison evidence; the served copy follows the same rule as the catalog examples:
         // it uses the maintained call-library arguments when they exist, and every declared input pattern must hold.
@@ -168,10 +170,15 @@ internal static class ToolUsageGenerator
         }
 
     }
-    internal static void ValidateFoundation(JsonNode calls, JsonArray sequences)
+    internal static void ValidateFoundation(string root, JsonNode calls, JsonArray sequences)
     {
+        var projectBinding = Keys.SelectMany(key => Read(root, $"manifest/contracts/v4/baseline/{key}.json")["tools"]!.AsArray())
+            .GroupBy(tool => Text(tool!["name"]), StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Any(tool => tool!["inputSchema"]!["properties"]!.AsObject().ContainsKey("expectedProjectFile")),
+                    StringComparer.Ordinal);
         void Check(string name, JsonNode args, string location)
         {
+            Require(projectBinding.ContainsKey(name), "Unknown tool schema: " + location);
             if (new[] { "ExportPlcBlocks", "ExportPlcTypes", "ImportPlcBlocksFromDirectory", "ImportPlcProgramFromDirectory" }.Contains(name))
             {
                 var path = Text(args["softwarePath"]);
@@ -179,7 +186,8 @@ internal static class ToolUsageGenerator
                         .Contains("GetProjectTree", StringComparison.Ordinal), "Batch requires exact software path: " + location);
             }
             if ((args["dryRun"]?.GetValue<bool>() == false || args["confirm"]?.GetValue<bool>() == true) && !new[] {
-                    "StageImportFiles", "CleanupStagedImportFiles", "ManageStandardPackage", "ManageMachineDescription" }.Contains(name))
+                    "StageImportFiles", "CleanupStagedImportFiles", "ManageStandardPackage", "ManageMachineDescription" }.Contains(name)
+                    && projectBinding[name])
                 Require(Text(args["expectedProjectFile"]).Length > 0, "Real call requires expectedProjectFile: " + location);
             if (name is "ImportPlcBlocksFromDirectory" or "ImportPlcProgramFromDirectory") {
                 var pattern = Text(args["regexName"]);

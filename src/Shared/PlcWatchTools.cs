@@ -131,13 +131,16 @@ namespace TiaMcpServer.ModelContextProtocol
         // (see RunOnlineMonitoringSafetySelfTest / Test_OnlineMonitoringNoUnsafeToolNames). Use TIA Portal
         // directly for commissioning forces.
         [McpServerTool(Name = "ExportPlcWatchTablesToDirectory"),
-                Description("[L2][PLC-Software]Export all PLC watch/monitor tables to XML files. Read-only against the TIA project. Current native policy; " +
-                "V4 safety behavior is not yet accepted.")]
+                Description("[L2][PLC-Software][WRITE] Preview the complete exact watch-table inventory and each canonical per-table XML export. One batch " +
+                "plan hash and approval; execute in inventory order, stop on the first failure and report completed/not-started items. Default dryRun=true. " +
+                "Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportPlcWatchTablesToDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("dir: output directory")] string dir,
-            [Description("regexName: optional regex filter applied to table name")] string regexName = "")
+            [Description("regexName: optional regex filter applied to table name")] string regexName = "", bool dryRun = true, bool confirm = false,
+                string expectedPlanHash = "", string expectedProjectFile = "")
             => PlcToolContract.Run("ExportPlcWatchTablesToDirectory", true, true, () => ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName));
+
 
         public ResponseImportBatch ExportPlcWatchTablesToDirectory(
             string softwarePath,

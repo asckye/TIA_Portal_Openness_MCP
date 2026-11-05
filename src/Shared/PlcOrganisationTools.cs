@@ -309,103 +309,58 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "CreatePlcTypeGroup"),
-                Description("[L2][PLC-Software][WRITE] Preview or create nested PLC data type (UDT) user groups. Exact groupPath relative to PLC data types, " +
-                "e.g. Common/Motors. Creates missing parents and reuses existing groups. dryRun defaults to true; pass false to create. Uses exact PLC " +
-                "software resolution. Does not create a UDT, save, compile or download. Errors report already-created parents; no automatic rollback. " +
-                "Current native policy; V4 safety behavior is not yet accepted.")]
+                Description("[L2][PLC-Software][WRITE] Create nested type groups through ManagePlcUserGroup (family=types, action=create). Defaults to " +
+                "dryRun=true; execution follows the same Offline, exclusive access, approval and diagnostics. Compatibility forwarder; no separate native " +
+                "implementation. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreatePlcTypeGroupV4(string softwarePath, string groupPath, bool dryRun = true)
             => PlcToolContract.Run("CreatePlcTypeGroup", !dryRun, true, () => CreatePlcTypeGroup(softwarePath, groupPath, dryRun));
 
         public ResponseMessage CreatePlcTypeGroup(string softwarePath, string groupPath, bool dryRun = true)
-        {
-            try
-            {
-                return new ResponseMessage
-                {
-                    Message = dryRun ? "PLC type group creation preview; nothing changed." : "PLC type group path ready.",
-                    Meta = _blocks.CreatePlcTypeGroup(softwarePath, groupPath, dryRun)
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            { throw new McpException("CreatePlcTypeGroup failed: " + ex.Message, ex, McpErrorCode.InternalError); }
-        }
+            => _blocks.ManagePlcUserGroup(softwarePath, "types", groupPath, "create", dryRun: dryRun);
 
         [McpServerTool(Name = "DeleteEmptyPlcBlockGroup"),
-                Description("[L2][PLC-Software][WRITE] Preview or delete exactly one empty PLC user block group. dryRun defaults to true. Requires an exact " +
-                "groupPath relative to Program blocks, e.g. ZZ_MCP_TEST or Parent/Child. Root, nonempty, ambiguous targets are refused. Real deletion " +
-                "requires confirmed Offline state and exclusive access, rechecks contents, calls native Delete and verifies absence. No recursive deletion, " +
-                "save, compile, download or automatic DisconnectOnlinePlc. Current native policy; V4 safety behavior is not yet accepted.")]
+                Description("[L2][PLC-Software][WRITE] Delete one exact empty block group through ManagePlcUserGroup (family=blocks, action=deleteEmpty). " +
+                "Defaults to dryRun=true; execution follows the same Offline, exclusive access, approval and diagnostics. Compatibility forwarder; no " +
+                "separate native implementation. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult DeleteEmptyPlcBlockGroupV4(string softwarePath, string groupPath, bool dryRun=true)
             => PlcToolContract.Run("DeleteEmptyPlcBlockGroup", !dryRun, true, () => DeleteEmptyPlcBlockGroup(softwarePath, groupPath, dryRun));
 
-        public ResponseMessage DeleteEmptyPlcBlockGroup(string softwarePath, string groupPath, bool dryRun=true)
-        {
-            try
-            {
-                var result=_blocks.DeleteEmptyPlcBlockGroup(softwarePath,groupPath,dryRun);
-                return new ResponseMessage {
-                    Message=dryRun ? "Empty PLC group deletion preview; nothing changed." : "Empty PLC user group deleted and absence verified.", Meta=result };
-            }
-            catch(Exception ex) when (ex is not McpException)
-            { throw new McpException("DeleteEmptyPlcBlockGroup failed: " + ex.Message,ex,McpErrorCode.InternalError); }
-        }
+        public ResponseMessage DeleteEmptyPlcBlockGroup(string softwarePath, string groupPath, bool dryRun = true)
+            => _blocks.ManagePlcUserGroup(softwarePath, "blocks", groupPath, "deleteEmpty", dryRun: dryRun);
 
         [McpServerTool(Name = "CreatePlcBlockGroup"),
-                Description("[L2][PLC-Software] Create nested program-block groups, creating missing parents and reusing existing groups. groupPath is " +
-                "relative to Program blocks. Requires ConnectPortal + OpenProject. Organize blocks with MovePlcBlockToGroup. Current native policy; V4 " +
-                "safety behavior is not yet accepted.")]
+                Description("[L2][PLC-Software][WRITE] Create nested block groups through ManagePlcUserGroup (family=blocks, action=create). Defaults to " +
+                "dryRun=true; execution follows the same Offline, exclusive access, approval and diagnostics. Existing groups are reused. Compatibility " +
+                "forwarder; no separate native implementation. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreatePlcBlockGroupV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
-            [Description("groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'")] string groupPath)
-            => PlcToolContract.Run("CreatePlcBlockGroup", true, true, () => CreatePlcBlockGroup(softwarePath, groupPath));
+            [Description("groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'")] string groupPath, bool dryRun = true)
+            => PlcToolContract.Run("CreatePlcBlockGroup", !dryRun, true, () => CreatePlcBlockGroup(softwarePath, groupPath, dryRun));
 
-        public ResponseMessage CreatePlcBlockGroup(
-            string softwarePath,
-            string groupPath)
-        {
-            try
-            {
-                var group = _blocks.EnsurePlcBlockGroup(softwarePath, groupPath, out var created);
-                if (group == null)
-                {
-                    throw new McpException($"Could not create block group '{groupPath}': PlcSoftware not found at '{softwarePath}'", McpErrorCode
-                            .InvalidParams);
-                }
-                return new ResponseMessage
-                {
-                    Message = created.Count > 0
-                        ? $"PLC block group '{groupPath}' ready (created: {string.Join(", ", created)})"
-                        : $"PLC block group '{groupPath}' already existed",
-                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("createdCount", created.Count))
-                };
-            }
-            catch (PortalException pex)
-            {
-                throw new McpException($"Failed creating PLC block group '{groupPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error creating PLC block group '{groupPath}': {ex.Message}", ex, McpErrorCode.InternalError);
-            }
-        }
+        public ResponseMessage CreatePlcBlockGroup(string softwarePath, string groupPath, bool dryRun = true)
+            => _blocks.ManagePlcUserGroup(softwarePath, "blocks", groupPath, "create", dryRun: dryRun);
 
         [McpServerTool(Name = "MovePlcBlockToGroup"),
-                Description("[L2][PLC-Software] Move/organize an existing block into a program-block group (found anywhere by exact name). Openness cannot " +
-                "reparent a block, so this exports the block as SimaticML XML (ExportOptions.WithDefaults), deletes it, and re-imports it into the target " +
-                "group. SIMATIC SD is not used because SD documents do not store the block number. Know-how-protected blocks (their export holds only the " +
-                "interface) and inconsistent blocks are refused before anything is deleted. The block number is compared before and after; a changed number " +
-                "is reported as a failure with the retained recovery export. Organization blocks are refused. autoCreateGroup creates the target group path " +
-                "if missing. Requires: ConnectPortal + OpenProject + block consistent (compile first). After moving, call CompilePlcDiagnostics to confirm 0 " +
-                "errors. Note: avoid moving OBs with event bindings via this round-trip. Current native policy; V4 safety behavior is not yet accepted.")]
+                Description("[L2][PLC-Software][WRITE] Preview an exact block relocation under one plan hash. Apply requires confirm, expectedPlanHash and " +
+                "exact expectedProjectFile. Export and verify a retained WithDefaults recovery backup, then delete the source and import into the target " +
+                "without overwriting. Verify parent/name/number/language; report imported consistency and compile guidance separately. On target import or " +
+                "verification failure, automatically restore the block into the original group; first delete any imported target that failed verification. " +
+                "If target cleanup fails, do not attempt restoration and report the recovery file as the only verified copy. If restoration fails, report " +
+                "the recovery file as the only verified copy. The move operation is not automatically retried; this does not prevent its automatic " +
+                "restoration. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult MoveBlockToGroupV4(
-            [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
-            [Description("blockName: exact block name to move (searched across all groups)")] string blockName,
-            [Description("targetGroupPath: '/'-separated destination group under Program blocks, e.g. '02_手自动接口'")] string targetGroupPath,
-            [Description("autoCreateGroup: create the target group path if it does not exist (default true)")] bool autoCreateGroup = true)
-            => PlcToolContract.Run("MovePlcBlockToGroup", true, true, () => MoveBlockToGroup(softwarePath, blockName, targetGroupPath, autoCreateGroup));
+            [Description("softwarePath: exact PLC software path")] string softwarePath,
+            [Description("blockName: exact group-qualified source block path")] string blockName,
+            [Description("targetGroupPath: exact destination group path")] string targetGroupPath,
+            [Description("autoCreateGroup: create missing destination groups only during approved execution")] bool autoCreateGroup = true,
+            bool dryRun = true, bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
+            => PlcToolContract.Run("MovePlcBlockToGroup", !dryRun, true,
+                () => _blocks
+                    .MoveBlockToGroup(softwarePath, blockName, targetGroupPath, autoCreateGroup, dryRun, confirm, expectedPlanHash, expectedProjectFile));
 
         public ResponseMessage MoveBlockToGroup(
             string softwarePath,
+
             string blockName,
             string targetGroupPath,
             bool autoCreateGroup = true)

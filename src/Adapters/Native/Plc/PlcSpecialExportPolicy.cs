@@ -17,12 +17,14 @@ namespace TiaMcp.Adapters
             using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(builder.ToString()))).Replace("-","")
                 .ToLowerInvariant();
         }
-        private static FileInfo Output(string path)
+        internal static FileInfo Output(string path, bool allowPlannedDirectories = false)
         {
             path=TiaOpenness.Shared.NativeInputPolicy.NormalizeSeparators(path);
             if(!Path.IsPathRooted(path) || !string.Equals(Path.GetFullPath(path),path,StringComparison.OrdinalIgnoreCase)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Canonical absolute export path required.");
-            var file=PlcFoundationPolicy.XmlOutput(path);
+            var file=allowPlannedDirectories ? new FileInfo(path) : PlcFoundationPolicy.XmlOutput(path);
+            if(!file.Extension.Equals(".xml",StringComparison.OrdinalIgnoreCase) || file.Directory==null || file.Exists)
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Choose a new XML export file.","exportPath");
             var name=file.Name;
             if(name.EndsWith(".",StringComparison.Ordinal) || name.EndsWith(" ",StringComparison.Ordinal) || name
                     .IndexOfAny(new[]{'<','>',':','"','/','\\','|','?','*'})>=0 || System.Linq.Enumerable.Any(name,c=>c<32))
@@ -40,13 +42,23 @@ namespace TiaMcp.Adapters
                     .AdapterPreconditionException("Export destination already exists, including a link.");
             }
             catch(FileNotFoundException) /* swallow(env-probe): a missing destination is the required result of the no-overwrite file existence probe */ { }
+            catch(DirectoryNotFoundException) /* swallow(env-probe): preview permits a planned output parent */ { }
             for(var ancestor=file.Directory;ancestor!=null;ancestor=ancestor.Parent)
-                if((ancestor.Attributes & FileAttributes.ReparsePoint)!=0) throw new TiaMcp.Adapters.Contracts
-                    .AdapterPreconditionException("Export directory ancestry cannot contain links or reparse points.");
+            {
+                try
+                {
+                    var attributes=File.GetAttributes(ancestor.FullName);
+                    if((attributes & FileAttributes.Directory)==0 || (attributes & FileAttributes.ReparsePoint)!=0)
+                        throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Export ancestry must contain only ordinary directories.");
+                }
+                catch(FileNotFoundException) /* swallow(env-probe): a planned parent does not exist yet */ { }
+                catch(DirectoryNotFoundException) /* swallow(env-probe): a planned ancestor does not exist yet */ { }
+            }
             return file;
         }
         internal static PlcSpecialExportResult Run(string kind,string release,string project,string software,string path,string output,bool consistent,
-                bool dryRun,string expectedPlanHash,Action requireOffline,Action<FileInfo> export,Func<FileInfo,Action<FileInfo>,string?>? publish=null)
+                bool dryRun,string expectedPlanHash,Action requireOffline,Action<FileInfo> export,Func<FileInfo,Action<FileInfo>,string?>? publish=null,
+                bool allowPlannedDirectories=false, string plannedExportRoot="", Action<string>? createDirectory=null)
         {
             if(kind!="watch-table" && kind!="technology-object") throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Unknown special export kind.");
@@ -55,7 +67,15 @@ namespace TiaMcp.Adapters
                 .AdapterPreconditionException("Exact canonical object path required.");
             if(string.IsNullOrWhiteSpace(project) || string.IsNullOrWhiteSpace(software)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Exact project and software identity required.");
-            var destination=Output(output);
+            if(allowPlannedDirectories)
+            {
+                if(string.IsNullOrWhiteSpace(plannedExportRoot)) throw new TiaMcp.Adapters.Contracts
+                    .AdapterPreconditionException("A validated batch export directory is required.","exportPath");
+                string root=Path.GetFullPath(plannedExportRoot).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+                if(!Path.GetFullPath(output).StartsWith(root,StringComparison.OrdinalIgnoreCase)) throw new TiaMcp.Adapters.Contracts
+                    .AdapterPreconditionException("Export path is outside the validated batch directory.","exportPath");
+            }
+            var destination=Output(output,allowPlannedDirectories);
             var result=new PlcSpecialExportResult {
                 Executed=!dryRun,ProjectFile=project,SoftwarePath=software,ObjectPath=path,OutputFile=destination.FullName,ReleaseKey=release,Kind=kind,
                 Scope=kind=="watch-table"?PlcSupplementaryReadPolicy.WatchScope:PlcSupplementaryReadPolicy.TechnologyReadScope(release),
@@ -70,7 +90,13 @@ namespace TiaMcp.Adapters
                 .AdapterPreconditionException("Execution requires the exact plan hash from a fresh preview.");
             TiaOpenness.Shared.NativeExportPolicy.RequireApply(result.Status);
             requireOffline();
-            Output(destination.FullName);
+            Output(destination.FullName,allowPlannedDirectories);
+            try { (createDirectory ?? (directory => { Directory.CreateDirectory(directory); }))(destination.DirectoryName!); }
+            catch(Exception error)
+            {
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Cannot create the export directory.","exportPath",false,error);
+            }
+            Output(destination.FullName,allowPlannedDirectories);
             try
             {
                 var recovery=(publish??PlcExportPublication.Publish)(destination,export);

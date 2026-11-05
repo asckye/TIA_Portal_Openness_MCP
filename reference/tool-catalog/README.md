@@ -13,6 +13,8 @@
 - `usage-topic-rules.json`: official topic and snippet mappings; project-defined and uncovered wrappers retain the no-direct-example rule.
 - `phase6-groups.json`: frozen archive task memberships used by the remaining Python snapshot transition checks. Batch 4 will migrate this consumer; it never executes a generator.
 
+DES-PORT A updates the ten reviewed compatibility, batch and move signatures and evaluated defaults in `engine-source.json`; CreateDevice remains available on all eight releases.
+
 Port batches update PortedFamilies' per-tool release table, add reviewed data rows where needed, regenerate catalogs and usage, build, then capture. The old-release registration rule remains: a tool is listed only when at least one action is available. Unparsed family rows and unknown overrides fail closed.
 
 `audit-version-tools -PublicApiRoot <SDK-root> [-InputsRoot <bin-build>] [-Output <candidate-directory>]` verifies the two owned catalog files and writes API audit evidence and candidate lists. `audit-tool-usage [-InputsRoot <bin-build>]` is the only writer of `manifest/tool-usage-coverage.json`; `-Records <json>` also accepts the eight distinct, source-hash-checked STDIO receipts from the remaining Python capturers. Capture those receipts under `bin-build`, then run this audit. They cannot run in build-free preflight: they require the same SDK XML, compiled inventories and eight release usage reports produced by the build/capture stages.

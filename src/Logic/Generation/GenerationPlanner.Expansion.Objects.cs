@@ -121,8 +121,8 @@ namespace TiaMcp.Logic.Generation
                     if (model is ProjectBlock)
                         entry.FollowUps
                             .Add(("MovePlcBlockToGroup",
-                                    Args(("softwarePath", Software(model.Station)), ("blockName", model.Name), ("groupPath", group),
-                                        ("autoCreateGroup", false))));
+                                    Args(("softwarePath", Software(model.Station)), ("blockName", model.Name), ("targetGroupPath", group),
+                                        ("autoCreateGroup", false), ("dryRun", false))));
                     else entry.Unavailable = "External-source generation creates types at the root; no current tool can move them to the declared type group.";
                 }
                 return entry;
@@ -134,7 +134,11 @@ namespace TiaMcp.Logic.Generation
             {
                 foreach (var step in plan.Steps)
                 {
-                    if (step.Tool == "ImportPlcExternalSource")
+                    if (step.Tool is "CreateDevice" or "MovePlcBlockToGroup")
+                        step.Review = new GenerationStepReview { Rule = StepReviewRules.WritePreview,
+                            Expect = Args(("projectFile", plan.Target.ProjectIdentity)),
+                            Witness = new Dictionary<string, string> { ["planHash"] = "sha256" } };
+                    else if (step.Tool == "ImportPlcExternalSource")
                     {
                         string file = step.Arguments["filePath"].GetString()!;
                         var artifact = artifacts.Single(a => file.EndsWith("/" + a.Path, StringComparison.Ordinal));

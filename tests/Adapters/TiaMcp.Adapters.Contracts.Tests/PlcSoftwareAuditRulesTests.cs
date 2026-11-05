@@ -10,7 +10,8 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 // (F18, F21, F22, F9), the rename gates (F20), document messages (F10) and the V20 composer withdrawal (2026-10-20 decision).
 public sealed class PlcSoftwareAuditRulesTests
 {
-    private static byte[] Document(string? version) => Encoding.UTF8.GetBytes("<Document>" + (version == null ? "" : "<Engineering version=\"" + version + "\" />")
+    private static byte[] Document(string? version) => Encoding.UTF8
+        .GetBytes("<Document>" + (version == null ? "" : "<Engineering version=\"" + version + "\" />")
         + "<SW.Blocks.FC ID=\"0\"><AttributeList><Name>FC_1</Name><Number>1</Number></AttributeList></SW.Blocks.FC></Document>");
 
     // Each release's own header spelling ("V14 SP1", "V15.1", "V16" ...) parses and is inside its own window.
@@ -26,7 +27,8 @@ public sealed class PlcSoftwareAuditRulesTests
     }
 
     [Theory]
-    [InlineData("V13 SP1", 13, 1)][InlineData("V14", 14, 0)][InlineData("V14 SP1", 14, 1)][InlineData("V15", 15, 0)][InlineData("V15.1", 15, 1)][InlineData("V21", 21, 0)]
+    [InlineData("V13 SP1", 13, 1)][InlineData("V14", 14, 0)][InlineData("V14 SP1", 14, 1)][InlineData("V15", 15, 0)][InlineData("V15.1", 15,
+                1)][InlineData("V21", 21, 0)]
     public void Old_header_spellings_are_comparable(string header, int major, int minor)
     {
         Assert.True(SimaticMlImportWindow.TryParse(header, out var version));
@@ -71,9 +73,14 @@ public sealed class PlcSoftwareAuditRulesTests
     public void A_missing_or_ambiguous_header_is_refused_and_never_added()
     {
         Assert.Throws<AdapterPreconditionException>(() => SimaticMlImportWindow.Require("21", Document(null), "importPath"));
-        var twice = Encoding.UTF8.GetBytes("<Document><Engineering version=\"V21\" /><Engineering version=\"V20\" /><SW.Blocks.FC><AttributeList><Name>A</Name></AttributeList></SW.Blocks.FC></Document>");
-        Assert.Contains("no single Engineering version", Assert.Throws<AdapterPreconditionException>(() => SimaticMlImportWindow.Require("21", twice, "dir")).Message, StringComparison.Ordinal);
-        var malformed = Assert.Throws<AdapterPreconditionException>(() => SimaticMlImportWindow.Require("21", Encoding.UTF8.GetBytes("<Document><Engineering"), "importPath"));
+        var twice = Encoding.UTF8
+            .GetBytes("<Document><Engineering version=\"V21\" /><Engineering version=\"V20\" " +
+            "/><SW.Blocks.FC><AttributeList><Name>A</Name></AttributeList></SW.Blocks.FC></Document>");
+        Assert
+            .Contains("no single Engineering version", Assert.Throws<AdapterPreconditionException>(() => SimaticMlImportWindow.Require("21", twice, "dir"))
+                .Message, StringComparison.Ordinal);
+        var malformed = Assert
+            .Throws<AdapterPreconditionException>(() => SimaticMlImportWindow.Require("21", Encoding.UTF8.GetBytes("<Document><Engineering"), "importPath"));
         Assert.True(malformed.IsArgument);
         var entity = Encoding.UTF8.GetBytes("<!DOCTYPE Document [<!ENTITY x 'V21'>]><Document><Engineering version=\"&x;\" /></Document>");
         Assert.Throws<AdapterPreconditionException>(() => SimaticMlImportWindow.Require("21", entity, "importPath"));
@@ -83,9 +90,13 @@ public sealed class PlcSoftwareAuditRulesTests
     public void The_object_kind_and_name_come_from_the_first_software_object()
     {
         Assert.Equal(("FC", "FC_1"), SimaticMlImportWindow.ReadObject(SimaticMlImportWindow.Load(Document("V21"))));
-        var table = SimaticMlImportWindow.Load(Encoding.UTF8.GetBytes("<Document><Engineering version=\"V20\" /><SW.Tags.PlcTagTable><AttributeList><Name> Tags </Name></AttributeList></SW.Tags.PlcTagTable></Document>"));
+        var table = SimaticMlImportWindow
+            .Load(Encoding.UTF8
+                .GetBytes("<Document><Engineering version=\"V20\" /><SW.Tags.PlcTagTable><AttributeList><Name> Tags " +
+                "</Name></AttributeList></SW.Tags.PlcTagTable></Document>"));
         Assert.Equal(("PlcTagTable", "Tags"), SimaticMlImportWindow.ReadObject(table));
-        Assert.Null(SimaticMlImportWindow.ReadObject(SimaticMlImportWindow.Load(Encoding.UTF8.GetBytes("<Document><Engineering version=\"V20\" /></Document>"))));
+        Assert
+            .Null(SimaticMlImportWindow.ReadObject(SimaticMlImportWindow.Load(Encoding.UTF8.GetBytes("<Document><Engineering version=\"V20\" /></Document>"))));
     }
 
     [Fact]
@@ -108,6 +119,95 @@ public sealed class PlcSoftwareAuditRulesTests
         Assert.Contains("before 17, after 18", PlcMovePolicy.NumberChange(17, 18), StringComparison.Ordinal);
         Assert.Contains("before 17, after (unreadable)", PlcMovePolicy.NumberChange(17, null), StringComparison.Ordinal);
         Assert.Contains("before (unreadable), after 3", PlcMovePolicy.NumberChange(null, 3), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("backup")][InlineData("missing")][InlineData("malformed")][InlineData("wrong-name")][InlineData("wrong-number")][InlineData("wrong-language")]
+    [InlineData("delete-source")][InlineData("import")][InlineData("verify")][InlineData("restore")][InlineData("verify-restore")]
+    [InlineData("success")][InlineData("dry-run")]
+    [InlineData("inconsistent")][InlineData("cleanup-failure")]
+    public void Move_verifies_export_then_deletes_imports_and_restores_the_original_group_on_failure(string phase)
+    {
+        var repository = new DirectoryInfo(AppContext.BaseDirectory);
+        while (repository != null && !File.Exists(Path.Combine(repository.FullName, "AGENTS.md"))) repository = repository.Parent;
+        string root = Path.Combine(repository!.FullName, "bin-build", "move-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); string backup = Path.Combine(root, "original.xml");
+        string xml = Encoding.UTF8.GetString(Document("V21")).Replace("</Number>", "</Number><ProgrammingLanguage>SCL</ProgrammingLanguage>");
+        var sequence = new List<string>(); bool source = true, target = false;
+        void Step(string name) { sequence.Add(name); if (phase == name) throw new IOException(name); }
+        try
+        {
+            Dictionary<string, object?>? result = null;
+            var error = Record.Exception(() => result = PlcMovePolicy.ExportDeleteImportRestore(backup, "FC_1", 1, "SCL",
+                () => {
+                    Step("backup"); if (phase == "missing") return;
+                    File.WriteAllText(backup, phase == "malformed" ? "<Document>" : phase == "wrong-name" ? xml.Replace("FC_1", "Other")
+                        : phase == "wrong-number" ? xml.Replace("<Number>1", "<Number>2") : phase == "wrong-language" ? xml.Replace("SCL", "LAD") : xml);
+                },
+                () => { Step("delete-source"); source = false; },
+                () => {
+                    Step("import"); if (phase is "restore" or "verify-restore") throw new IOException("import"); target = true; return phase != "inconsistent";
+                },
+                () => { Step("verify"); if (phase == "cleanup-failure") throw new IOException("verify"); },
+                () => { Assert.True(target); Step("cleanup"); if (phase == "cleanup-failure") throw new IOException("cleanup"); target = false; },
+                () => { Assert.False(source); Assert.False(target); Step("restore"); source = true; }, () => Step("verify-restore"), phase == "dry-run"));
+            if (phase == "dry-run")
+            {
+                Assert.Null(error); Assert.Empty(sequence); Assert.True(source); Assert.False(File.Exists(backup)); Assert
+                    .Equal(false, result!["mayHaveChanged"]);
+            }
+            else if (phase is "success" or "inconsistent")
+            {
+                Assert.Null(error); Assert.False(source); Assert.Equal(true, result!["importedVerified"]); Assert.Equal(true, result["sourceDeleted"]);
+                Assert.Equal(true, result["mayHaveChanged"]); Assert.Equal(false, result["restored"]);
+                Assert.Equal(phase != "inconsistent", result["importedConsistent"]); Assert.True(target);
+                Assert.False(result.ContainsKey("targetCleanup")); Assert.Equal(false, result["restoreAttempted"]);
+                Assert.Equal(new[] { "backup", "delete-source", "import", "verify" }, sequence);
+            }
+            else
+            {
+                Assert.IsType<IOException>(error);
+                var evidence = Assert.IsType<Dictionary<string, object?>>(error!.Data["nativeResultEvidence"]);
+                Assert.Contains(backup, error.Message, StringComparison.Ordinal);
+                bool beforeDelete = phase is "backup" or "missing" or "malformed" or "wrong-name" or "wrong-number" or "wrong-language";
+                if (beforeDelete) Assert.False(evidence.ContainsKey("recoveryExportPath"));
+                else Assert.Equal(backup, evidence["recoveryExportPath"]);
+                Assert.Equal(!beforeDelete, evidence["deleteStarted"]);
+                Assert.Equal(!beforeDelete, evidence["mayHaveChanged"]); Assert.Equal(!beforeDelete, evidence["nativeMutationIssued"]);
+                if (beforeDelete) { Assert.True(source); Assert.DoesNotContain("delete-source", sequence); }
+                if (phase == "delete-source") { Assert.True(source); Assert.DoesNotContain("import", sequence); }
+                if (phase is "import" or "verify")
+                {
+                    Assert.True(source); Assert.Equal(true, evidence["restored"]); Assert.Equal(true, evidence["restoreAttempted"]);
+                    Assert.Equal(new[] { "restore", "verify-restore" }, sequence.TakeLast(2).ToArray());
+                    if (phase == "verify")
+                    {
+                        Assert.Equal("deleted", evidence["targetCleanup"]); Assert.False(target);
+                        Assert.Equal(new[] { "backup", "delete-source", "import", "verify", "cleanup", "restore", "verify-restore" }, sequence);
+                    }
+                    else Assert.DoesNotContain("cleanup", sequence);
+                }
+                if (phase == "cleanup-failure")
+                {
+                    Assert.False(source); Assert.True(target); Assert.Equal("failed", evidence["targetCleanup"]);
+                    Assert.Equal("cleanup", evidence["targetCleanupError"]); Assert.Equal("verify", evidence["error"]);
+                    Assert.Equal(false, evidence["restored"]); Assert.Equal(false, evidence["restoreAttempted"]);
+                    Assert.Equal(true, evidence["recoveryOnlyCopy"]); Assert.Equal(true, evidence["importedConsistent"]);
+                    Assert.DoesNotContain("restore", sequence); Assert.DoesNotContain("verify-restore", sequence);
+                    Assert.Contains("only verified recovery copy", error.Message, StringComparison.Ordinal);
+                    Assert.Contains(backup, error.Message, StringComparison.Ordinal);
+                }
+                if (phase is "restore" or "verify-restore")
+                {
+                    Assert.Equal(false, evidence["restored"]); Assert.Equal(true, evidence["recoveryOnlyCopy"]);
+                    Assert.Contains("only verified recovery copy", error.Message, StringComparison.Ordinal); Assert
+                        .Contains(backup, error.Message, StringComparison.Ordinal);
+                }
+            }
+            if (File.Exists(backup) && phase is not ("malformed" or "wrong-name" or "wrong-number" or "wrong-language")) Assert
+                .Equal(xml, File.ReadAllText(backup));
+        }
+        finally { Directory.Delete(root, true); }
     }
 
     [Fact]

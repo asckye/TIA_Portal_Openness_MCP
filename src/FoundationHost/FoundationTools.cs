@@ -264,6 +264,8 @@ internal sealed partial class FoundationTool : McpServerTool
                 var report = await PlcCrossReferenceAnalysis.Run(worker, values, cancellationToken).ConfigureAwait(false);
                 return FoundationV4Result.DeviceCandidate(PlcCrossReferenceAnalysis.Result(release, id ?? Guid.NewGuid().ToString("N"), report));
             }
+            if (definition.ResponseMember == "SpecialExport" && CanonicalBatchTools.CurrentExportRoot.Value is string exportRoot)
+                values["plannedExportRoot"] = exportRoot;
             var result=await worker.Call(definition.Operation,values,cancellationToken);
             raw = result?.DeepClone();
             if(definition.ResponseMember is "Connection" or "Projects" or "Bind" or "ProjectMutation" or "ProjectTree") result=V17ProjectEnvelope.Wrap(definition.Name,definition.ResponseMember,result,values["dryRun"]?.GetValue<bool>() ?? false);

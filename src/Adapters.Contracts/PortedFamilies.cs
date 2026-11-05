@@ -455,6 +455,21 @@ namespace TiaMcp.Adapters.Contracts
             ["ManageCommunicationConnection"] = ReleaseRange.Since("21")
         };
 
+        public static readonly IReadOnlyDictionary<string, string> CompatibilityTargets = new Dictionary<string, string>(StringComparer.Ordinal) {
+            ["CreateDevice"] = "CreateHardwareDevice",
+            ["CreateHardwareCatalogDevice"] = "CreateHardwareDevice",
+            ["CreatePlcBlockGroup"] = "ManagePlcUserGroup",
+            ["CreatePlcTypeGroup"] = "ManagePlcUserGroup",
+            ["DeleteEmptyPlcBlockGroup"] = "ManagePlcUserGroup",
+            ["ManagePlcTagDefinition"] = "CreatePlcTag / CreatePlcUserConstant (create only)",
+            ["ManagePlcExternalSources"] =
+                "ImportPlcExternalSource / DeletePlcExternalSource / GenerateBlocksFromExternalSource / ManagePlcUserGroup (ordinary root actions)",
+            ["RepairAndReimportPlcBlock"] = "ImportPlcBlock / CompilePlcDiagnostics (one approved batch)",
+            ["ImportPlcTagTablesFromDirectory"] = "ImportPlcTagTable (one approved batch)",
+            ["ExportPlcWatchTablesToDirectory"] = "ListPlcWatchTables / ExportPlcWatchTable (one approved batch)",
+            ["ExportTechnologyObjectsToDirectory"] = "ExportTechnologyObjectsToDirectory (one approved native batch)"
+        };
+
         public static Family ForTool(string tool) => All.Single(f => f.Tools.Contains(tool, StringComparer.Ordinal));
         public static bool Contains(string tool) => All.Any(f => f.Tools.Contains(tool, StringComparer.Ordinal));
         public static bool IsMigratedDeclaration(string tool) => Contains(tool) && ForTool(tool).Name != "F00";
