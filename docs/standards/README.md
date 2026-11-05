@@ -1,18 +1,19 @@
 # 本项目采用的开发规范
 
-状态：现行 · 最后核对：2026-11-04，master `871d54da`
+状态：现行 · 最后核对：2026-11-05，master `1d07a7ef`
 
-本仓库遵循[《工程开发手册》v1.1](engineering-handbook.html)（通用手册，随仓库保存供离线阅读）；本页只记录采用范围、项目偏差、外部参考和本目录的文件，外部参考一节取代了[参考资料与落地对照](../archive/development/references.md)。与手册冲突时以本页和 [ADR](decisions/README.md) 为准。
+本仓库遵循[《工程开发规范》2.0](https://github.com/asckye/engineering-standards/tree/v2.0)（asckye/engineering-standards，tag `v2.0`）；规范只有这一个来源，本仓库不保存副本（[ADR 0032](decisions/0032-published-engineering-standards.md)）。本页只记录采用范围、项目偏差、外部参考和本目录的文件，外部参考一节取代了[参考资料与落地对照](../archive/development/references.md)。与规范冲突时以本页和 [ADR](decisions/README.md) 为准。
 
 ## 采用范围
 
 | 项目 | 选择 |
 |---|---|
-| 领域规范 | A（MCP 服务）、C（工程软件自动化：TIA Portal Openness）、D（桌面应用：工作台） |
-| 档位 | M（正式产品）；审批、写入安全和防止项目数据损坏的规则按 L 执行 |
-| 必读 | 手册的最小必做清单、黄金路径、任务手册、快速交付；改动涉及的章节 |
-| 任务说明 | 按手册模板 T.4（实现代理任务说明），并加上本仓库 [AGENTS.md](../../AGENTS.md) 的规则 |
-| 完成定义 | 手册第 23 节，加上本仓库的生成器 `-Check`、工具定义契约基线和实机清单要求 |
+| 规范版本 | [通用规范](https://github.com/asckye/engineering-standards/tree/v2.0/general)和[桌面与本机软件](https://github.com/asckye/engineering-standards/tree/v2.0/desktop) 2.0 |
+| 项目类型 | `desktop/`（工作台与本机软件）；`mcp/` 待采纳，采纳前 MCP 服务和工程软件自动化（TIA Portal Openness）按 1.1 的[领域 A](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/a-mcp.md)、[领域 C](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/c-vendor-api.md) |
+| 等级 | M（正式产品）；审批、写入安全和防止项目数据损坏的规则按 L 执行 |
+| 必读 | 通用规范的最小必做清单、黄金路径、任务手册、快速交付；改动涉及的章节 |
+| 任务说明 | 按通用规范模板 [T.4](https://github.com/asckye/engineering-standards/blob/v2.0/general/appendix/t-templates.md#tpl-task)（实现代理任务说明），并加上本仓库 [AGENTS.md](../../AGENTS.md) 的规则 |
+| 完成定义 | 通用规范[第 23 节](https://github.com/asckye/engineering-standards/blob/v2.0/general/23-definition-of-done.md#dod)，加上本仓库的生成器 `-Check`、工具定义契约基线和实机清单要求 |
 
 ## 项目自己的取舍（偏差登记）
 
@@ -23,7 +24,62 @@
 | 工作台视觉 | EplanMcp 工作台设计系统；表格行高 36；审批按钮等权重、拒绝在左、回车不批准、拒绝后不撤销 | [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md) |
 | 用语 | 界面和文档用“服务”“项目”（TIA 的 project） | [ADR 0026](decisions/0026-documentation-structure-and-language.md) |
 | 根目录布局 | `runtime/`、根启动器 `TiaOpenness.exe` 与项目 `bin`/`obj` 保留为忽略的构建输出；checkout 检查依赖与 `manifest/`、`templates/` 同根的运行布局，项目输出沿用 .NET 标准布局。`TiaMcp_Output/` 保留供生态 Python 环境、发布前置检查和产品使用。将 checkout 检查改为从提取的 ZIP 运行安排在 beta.4 之后；`hooks/` 不搬入 `plugin/`，避免旧安装遗留的钩子重复加载 | [ADR 0030 修订](decisions/0030-documentation-and-repository-structure.md#2026-11-04-修订保留运行输出和根目录钩子) |
-| 文档目录 | 开发文档分为 `docs/standards/`、`docs/plan/`、`docs/manuals/`、`docs/archive/`，不用手册第 2.6 节的目录；ADR 在 `docs/standards/decisions/`（手册 DOC-04 写 `docs/adr/`），交接与计划分别在 `docs/plan/progress.md`、`docs/plan/plan.md`（手册 DOC-11） | [ADR 0030](decisions/0030-documentation-and-repository-structure.md) |
+| 文档目录 | 开发文档分为 `docs/standards/`、`docs/plan/`、`docs/manuals/`、`docs/archive/`，不用通用规范第 2.6 节的目录；ADR 在 `docs/standards/decisions/`（通用规范 DOC-04 写 `docs/adr/`），交接与计划分别在 `docs/plan/progress.md`、`docs/plan/plan.md`（通用规范 DOC-11） | [ADR 0030](decisions/0030-documentation-and-repository-structure.md) |
+| 规范版本并存 | 通用规则和桌面规则按 2.0；MCP 和厂商 API 规则按 1.1，链接固定到提交 `ec8e722`（v2.0 已没有这部分正文，也没有 v1.1 tag）。采纳 `mcp/` 时结束 | [ADR 0032](decisions/0032-published-engineering-standards.md) |
+
+## MCP 草案：待采纳
+
+`mcp/`（[工程软件 MCP 开发规范](https://github.com/asckye/engineering-standards/blob/v2.0/mcp/README.md)，草稿 0.1）取代 1.1 的领域 A、C。本项目还没有采纳它，是否采纳、何时采纳由维护者决定。
+
+- 采纳前：MCP 和厂商 API 规则按 1.1，文档写“1.1 MCP-xx”“1.1 VND-xx”，链接固定到提交 `ec8e722`。新旧编号的对应和每处变化见[对照表](https://github.com/asckye/engineering-standards/blob/v2.0/mcp/handbook-mapping.md)。
+- 采纳时：把引用改为新编号，更新本页和 [ADR 0032](decisions/0032-published-engineering-standards.md)，并把下面的差距登记为偏差。对 MUST 的例外写 ADR（G-04），偏离 SHOULD 写一行理由。按 `mcp/` 的要求，已发布的工具名和字段不改名，还在 MCP 旧修订上要写明迁移计划。
+
+下面的清单来自 2026-11-05 的逐条对照（master `3de70327`，MCP 2025-06-18，SDK 0.3.0-preview.4）。对照早于草案定稿，部分规则之后改过措辞，所以这不是合规结论；采纳时按当时的代码和规则重新核对。
+
+### 有差距的 MUST
+
+| 规则 | 差距 |
+|---|---|
+| `PRO-03`、`PRO-08` | 运行在 MCP 2026-07-28 上才适用。项目还在 2025-06-18，迁移时要满足（设计规范偏差 MCP-01、MCP-15） |
+| `PRO-09` | 预览令牌和导出句柄是显式的；项目绑定和会话锁仍是隐式会话状态（设计规范偏差 MCP-01） |
+| `PRO-12` | 普通写工具的计划哈希不消费，客户端重发会再走审批后再次执行 |
+| `PRO-13` | 取消通知已处理，但没有把 HTTP 客户端断开明确当作取消 |
+| `PRO-18` | 不符回 403，但允许列表默认含回环同端口，缺 `Origin` 时放行 |
+| `PRO-19` | 弃用中的 `--http-api-key` 仍接受命令行明文密钥；没有找到连续失败后的限流 |
+| `PRO-21`、`ENG-05` | 调用串行，但等待队列没有长度上限，也没有速率限制（设计规范偏差 MCP-16） |
+| `TL-14` | 顶层都设了 `additionalProperties: false`；90 个嵌套对象有 63 个未封闭，也未声明 JSON Schema 2020-12 |
+| `TL-17` | 211 个写工具中只有 52 个带目标身份参数，其余依赖会话绑定 |
+| `TL-30` | 错误对象没有 `retryable` |
+| `TL-31` | 不少消息没有说明下一步 |
+| `WS-01`、`WS-02` | 没有独立的破坏性级别，审批风险按工具名前缀判定；`BuildDeviceAmlDocument` 会写文件却标 `readOnlyHint: true` |
+| `WS-03` | 命令组固定且经审批，但参数不逐个校验，项目内的测试和配置文件可以含可执行 Python |
+| `WS-04` | 4 个 WRITE 工具没有预览；22 个 FILE 工具没有预览，要按草案对写工具和本地工具的定义逐个判断；通用预览的变更清单只是规范化后的参数 |
+| `WS-07` | `Compile*`（EXECUTE）不经审批 |
+| `WS-09` | 确认按钮有 Alt 访问键；500 毫秒保护只在 AI 切页后生效，请求出现时没有 |
+| `WS-10`、`WS-28` | 不剥除控制字符和双向文字控制符；项目名称和路径会拼进 `data.summary` |
+| `WS-13` | 复核失败多返回 `CONFIRMATION_REQUIRED` 而不是 `PLAN_STALE`；通用哈希不含对象状态指纹，普通工具的计划不是只执行一次 |
+| `WS-17` | `execution` 取值是 `not-started`、`read-only`、`completed`、`partial`、`unknown`：没有 `rolled_back`，确定失败也记 `completed` |
+| `WS-21` | 没有写入编号和结果取回，结果未知后只能锁定并靠人工检查（设计规范偏差 API-09） |
+| `WS-23`、`WS-24` | 结果未知后的锁可以由工具解除（`DisconnectPortal`、`RestartOpennessWorker`），没有人核实；宿主的会话锁只在内存 |
+| `WS-26` | 审计写失败被吞掉，写入照常执行 |
+| `WS-27` | 恢复备份只覆盖部分路径；备份被跳过时只发 `BACKUP_SKIPPED` 警告，不停止 |
+| `WS-29` | 不拒绝 `..`（只规范化），输出路径不查控制字符和保留设备名 |
+| `WS-30` | 输出根内 `overwrite=true` 不需要人确认 |
+| `WS-31` | CFC 导出 zip 的读取没有数量和大小上限 |
+| `WS-32` | WriteGuard 有第二份去敏实现；调用日志默认保存去敏后的参数和结果，项目内容会进日志 |
+| `WS-33` | `install-plc-tools` 运行子进程时没有超时 |
+| `ENG-14` | 只有 8 个工具用 TIA 事务，其余用回滚日志或写明不回滚 |
+| `ENG-15` | 没有逐条行为带编号、版本和日期的 API 笔记 |
+| `ENG-16` | 有运行时拒绝表和崩溃防护，没有统一的禁用 API 列表或编译期拦截 |
+| `VER-01` | 工具规格只写进不入库的任务说明，仓库里没有规格产物 |
+| `VER-02` | 服务器说明不在契约快照内 |
+| `VER-09` | 清单和 `NOT RUN` 记录都有，但 beta.2、beta.3 的 VM 原始结果还没有进入台账 |
+
+### 其他规则
+
+- 有差距的 SHOULD：PRO-01、PRO-02、PRO-07、TL-01–TL-06、TL-08–TL-10、TL-13、TL-15、TL-18、TL-19、TL-25、TL-26、TL-32、TL-34、WS-12、ENG-06、ENG-17、ENG-18、VER-04、VER-05、VER-11–VER-13。已发布的 PascalCase 工具名按 `TL-06` 登记，不改名。
+- 还没有核对：PRO-22、PRO-23、TL-36–TL-39、WS-36–WS-43、ENG-20–ENG-25、VER-14。
+- 目前不适用：PRO-16、WS-16、ENG-04；WS-19 在错误对象加上 `retryable` 后适用。
 
 ## 本目录的文件
 

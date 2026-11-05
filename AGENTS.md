@@ -4,7 +4,7 @@
 
 ## 通用
 
-- 遵循通用《工程开发手册》v1.1（[docs/standards/engineering-handbook.html](docs/standards/engineering-handbook.html)），采用领域 A/C/D、档位 M（审批与数据安全按 L）；项目自己的选择和偏差见 [docs/standards/README.md](docs/standards/README.md)。任务说明按手册模板 T.4，完成按手册第 23 节的完成定义；只写主要功能，不做防御性堆砌和无目标的实验。
+- 遵循[《工程开发规范》2.0](https://github.com/asckye/engineering-standards/tree/v2.0)的 `general/` 和 `desktop/`，等级 M（审批与数据安全按 L）；`mcp/` 是草稿，尚未采纳，MCP 和厂商 API 规则暂按 1.1 的领域 A、C；项目自己的选择和偏差见 [docs/standards/README.md](docs/standards/README.md)。任务说明按通用规范模板 T.4，完成按通用规范第 23 节的完成定义；只写主要功能，不做防御性堆砌和无目标的实验。
 - 规范在 `docs/standards/`（开发、设计、UI、安全、文档各一份，决定在 `docs/standards/decisions/`）；范围、任务状态和放行门槛见 [docs/plan/plan.md](docs/plan/plan.md)，当前状态见 [docs/plan/progress.md](docs/plan/progress.md)，操作步骤见 `docs/manuals/`，逐版缺口见 `docs/reference/openness-coverage.md`。机器地址、PID 和旧会话状态从当前环境确认，不从历史文档推断。
 - 工具示例、语言代码、参数来源、结果解释和官方出处统一在 `reference/tool-examples` 维护，由 `GetToolUsage` 按版本返回；兼容入口复用同一数据，不为个别问题新增规则文档。修改示例后先运行 `dotnet run --project build-tools/release -- generate-catalogs` 和 `dotnet run --project build-tools/release -- generate-tool-usage`，再构建并执行八版检索和功能检查。
 - 本地 SDK、用户工程、设计交接和密钥不纳入发布。第三方来源和许可证保留；纯逻辑优先复用，共用代码与版本 API 差异分别维护。

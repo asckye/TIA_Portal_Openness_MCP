@@ -4,7 +4,7 @@
 
 本文是项目唯一的设计规范，规定运行架构、运行时布局、V4 工具协议、worker 协议、MCP 工具设计、版本差异处理和生成框架的现行规则，并登记仍未关闭的协议偏差；它取代已归档的[设计规范索引](../archive/development/design-spec/README.md)、[4.0 架构概览](../archive/development/design-spec/architecture.md)、[V4 工具协议规范](../archive/development/design-spec/v4-protocol.md)、[worker 通道协议 2](../archive/development/design-spec/worker-protocol.md)、[V4 协议偏差清单](../archive/development/design-spec/deviations/protocol.md)、[统一版本框架](../archive/development/unified-version-framework.md)、[运行时布局](../archive/development/runtime-layout.md)、[响应与异常设计](../archive/development/response-and-errors.md)，以及本文件原先的 MCP 工具设计规范和 `runtime/README.md` 的运行输出说明。
 
-[规范目录](README.md) · [工程开发手册](engineering-handbook.html) · [架构决策记录](decisions/README.md) · [安全标准](security.md) · [开发规范](development.md)
+[规范目录](README.md) · [《工程开发规范》2.0](https://github.com/asckye/engineering-standards/tree/v2.0) · [架构决策记录](decisions/README.md) · [安全标准](security.md) · [开发规范](development.md)
 
 ## 1 范围与依据
 
@@ -12,19 +12,19 @@
 
 | 领域 | 基线 | 本文章节 |
 |---|---|---|
-| MCP 服务 | [手册领域 A](engineering-handbook.html#pa)；[MCP 规范](https://modelcontextprotocol.io/specification/2025-06-18)为主（4.0 协商 2025-06-18，现行修订为 [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)）；[Microsoft REST API Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md) 为辅，只用于错误、分页、长操作和版本 | 第 4、6 节 |
-| 工程软件自动化 | [手册领域 C](engineering-handbook.html#pc) | 第 2、5、7 节 |
-| 桌面应用 | [手册领域 D](engineering-handbook.html#pd)；[工作台界面规范](ui.md) | 第 2.5 节 |
+| MCP 服务 | [《工程开发规范》1.1 领域 A](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/a-mcp.md)；[MCP 规范](https://modelcontextprotocol.io/specification/2025-06-18)为主（4.0 协商 2025-06-18，现行修订为 [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)）；[Microsoft REST API Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md) 为辅，只用于错误、分页、长操作和版本 | 第 4、6 节 |
+| 工程软件自动化 | [《工程开发规范》1.1 领域 C](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/c-vendor-api.md) | 第 2、5、7 节 |
+| 桌面应用 | [《工程开发规范》2.0 桌面与本机软件](https://github.com/asckye/engineering-standards/blob/v2.0/desktop/README.md#pd)；[工作台界面规范](ui.md) | 第 2.5 节 |
 | 基线的选用 | [ADR 0015](decisions/0015-microsoft-design-spec-baseline.md) | 全文 |
 
-不在本文的内容：C# 代码、新工具的开发步骤与测试见[开发规范](development.md)，安全措施 SEC-nn 见[安全标准](security.md)，界面规则见[工作台界面规范](ui.md)，验证与发布步骤见[验证分层](../manuals/validation.md)和[发布流程](../manuals/release.md)。手册的规则编号（如手册 MCP-09、VND-02）与第 9 节的偏差编号（`MCP-nn`、`API-nn`）是两套编号；本文引用手册规则时写“手册 MCP-09”。
+不在本文的内容：C# 代码、新工具的开发步骤与测试见[开发规范](development.md)，安全措施 SEC-nn 见[安全标准](security.md)，界面规则见[工作台界面规范](ui.md)，验证与发布步骤见[验证分层](../manuals/validation.md)和[发布流程](../manuals/release.md)。《工程开发规范》1.1 的规则编号与第 9 节的偏差编号（`MCP-nn`、`API-nn`）是两套编号；本文引用 1.1 的规则时写“1.1 MCP-09”“1.1 VND-02”，采纳 `mcp/` 草案前不改用新编号（见[采用说明](README.md#mcp-草案待采纳)）。
 
 规则冲突时从上到下取上位：
 
 1. 外部契约与安全不变量：已冻结的 V4 契约（`manifest/contracts/v4/baseline/*.json`）、MCP 线上协议、worker 协议 2 的线格式、Siemens Openness 的调用顺序、参数与线程归属、文件格式与 manifest。不得为满足命名或风格改变它们。
 2. 仓库规则：[CLAUDE.md](../../CLAUDE.md)、[AGENTS.md](../../AGENTS.md) 及它们要求遵守的流程文档。
 3. 本文与 [ADR](decisions/README.md)；两者冲突时以较新的 ADR 为准。
-4. 手册、MCP 规范和 Microsoft 来源。
+4. 《工程开发规范》、MCP 规范和 Microsoft 来源。
 5. 所在文件的既有风格：只在偏差处理完成前作为过渡，新文件必须遵守本文。
 
 新工作需要长期偏离 MUST 规则时，先在第 9 节登记再合并；偏差编号不重复使用，规则的严重性只收紧不放宽。改变结构、契约、安全或数据完整性边界、发布规则或外部基线的决定写 ADR（[文档规范](documentation.md)第 14 节）。
@@ -48,8 +48,8 @@
 |---|---|
 | MUST：八个发布键使用同一个宿主程序、同一条调用路径和同一种 worker；除注册的工具集合和官方 API 要求的差异外，不按版本区分逻辑、默认值、文字或包装 | [ADR 0005](decisions/0005-v20-v21-on-foundation-host.md)、[ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md) |
 | MUST：每个 MCP 会话一个 worker：stdio 是一个会话一个 worker，HTTP 的 N 个存活会话对应 N 个 worker | [ADR 0007](decisions/0007-one-worker-per-mcp-session.md) |
-| MUST：只有 worker 接触 Siemens 对象；宿主与 worker 之间只用 worker 协议 2（第 5 节）；Siemens 对象不跨请求持有、不跨进程传递 | 手册 VND-01 |
-| MUST：worker 在所属线程上串行原生调用，V14 SP1–V19 为 STA，V20/V21 为 MTA（`src/Adapters/Policy/PlcLifecyclePolicy.cs`）；不得通过替换某个工具的名称或线程原语改变一个版本的所属单元 | 手册 VND-02 |
+| MUST：只有 worker 接触 Siemens 对象；宿主与 worker 之间只用 worker 协议 2（第 5 节）；Siemens 对象不跨请求持有、不跨进程传递 | 1.1 VND-01 |
+| MUST：worker 在所属线程上串行原生调用，V14 SP1–V19 为 STA，V20/V21 为 MTA（`src/Adapters/Policy/PlcLifecyclePolicy.cs`）；不得通过替换某个工具的名称或线程原语改变一个版本的所属单元 | 1.1 VND-02 |
 | MUST：每个会话一条 Openness 通道，原生调用在会话内串行；不调用 TIA 的工具登记在 `ToolTaxonomy.WithoutTia`，走并发的本地通道，不等待正在运行的原生调用 | `src/Shared/Host/ToolDispatchLanes.cs` |
 | MUST：一个 TIA 进程同时只租给一个 MCP 会话（第 2.4 节） | [ADR 0011](decisions/0011-tia-process-lease-on-all-releases.md) |
 | MUST：MCP 写调用默认在工作台审批，先预检再审批，批准后复核再执行（第 4.10 节） | [ADR 0003](decisions/0003-workbench-approval-for-mcp-writes.md)、[ADR 0004](decisions/0004-precheck-before-approval.md)、SEC-01 |
@@ -330,7 +330,7 @@ runtime/v<发布键>/        （八个发布键相同）
 
 ## 4 V4 协议
 
-V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通道、审批和审计复用。证据来源是 `src/Logic/V4/`（信封、错误、校验、编解码、分页、计划）、`src/Shared/HostFailurePolicy.cs` 与 `src/Shared/Host/McpServer.{ToolBridge,Batch,Exports}.cs`。手册[领域 A](engineering-handbook.html#pa) 的通用规则在此不重复。
+V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通道、审批和审计复用。证据来源是 `src/Logic/V4/`（信封、错误、校验、编解码、分页、计划）、`src/Shared/HostFailurePolicy.cs` 与 `src/Shared/Host/McpServer.{ToolBridge,Batch,Exports}.cs`。1.1 [领域 A](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/a-mcp.md) 的通用规则在此不重复。
 
 ### 4.1 MCP 修订与 V4 会话
 
@@ -647,7 +647,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 ## 6 MCP 工具设计规则
 
-本节是新增或修改 MCP 工具时的项目规则，通用部分见手册[领域 A](engineering-handbook.html#pa) 与[新增工具清单](engineering-handbook.html#mcp-checklist)；协议细节见第 4 节。
+本节是新增或修改 MCP 工具时的项目规则，通用部分见 1.1 [领域 A](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/a-mcp.md) 与[新增工具清单](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/a-mcp.md#mcp-checklist)；协议细节见第 4 节。
 
 ### 6.1 何时新增工具
 
@@ -655,19 +655,19 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 |---|---|
 | MUST：只为官方 Openness API 支持的能力注册工具；一个工具在某个发布键上至少有一个动作能在该版 API 上运行才注册，不支持的动作在原生调用前返回 `UNSUPPORTED_CAPABILITY`，不靠名称推断可用性 | [ADR 0012](decisions/0012-old-release-tool-registration.md)、[ADR 0014](decisions/0014-tool-counts-follow-official-api.md) |
 | MUST：各版本的工具数量随 API 支持而定，不为一致而拉平；数量只由生成目录给出，文档不手写 | [版本工具目录](../reference/version-tool-catalog.md) |
-| SHOULD：先考虑给现有工具加动作或可选参数；新增可选参数是增量变化，新工具会增加模型的上下文负担 | 手册 MCP-34 |
+| SHOULD：先考虑给现有工具加动作或可选参数；新增可选参数是增量变化，新工具会增加模型的上下文负担 | 1.1 MCP-34 |
 | MUST：同一能力只保留一个实现，八个发布键共用一份声明与逻辑，版本 API 差异放在按发布键编译的适配器中 | [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md) |
-| MUST：新工具或契约变化先按[开发流程](../manuals/workflow.md#附录-工具规格模板)附录的模板把工具规格写进任务说明，审查后再实现 | 手册[新增工具清单](engineering-handbook.html#mcp-checklist) |
+| MUST：新工具或契约变化先按[开发流程](../manuals/workflow.md#附录-工具规格模板)附录的模板把工具规格写进任务说明，审查后再实现 | 1.1 [新增工具清单](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/a-mcp.md#mcp-checklist) |
 
 ### 6.2 命名与描述
 
 | 规则 | 依据 |
 |---|---|
-| MUST：工具名是 PascalCase 的“动词 + 领域对象 + 必要限定”，只用 ASCII 字母和数字；缩写写成单词形式（`Plc`、`Hmi`、`OpcUa`、`Db`）；动词取自闭集（含经批准的 `Prefill`、`Publish`），生成器检查全部工具名 | `build-tools/release/CatalogData.cs`；手册 MCP-07 |
-| MUST：名称不暴露 `Json`、`Xml`、`Xlsx` 等序列化格式；`SimaticMl`、`Aml`、`Scl`、`FlgNet` 是领域语言名，保留。单个对象用单数，批量操作用复数；新 `Manage*` 工具 SHOULD 用单数对象类型，已有名称的改名逐项由维护者决定 | 手册 MCP-08 |
+| MUST：工具名是 PascalCase 的“动词 + 领域对象 + 必要限定”，只用 ASCII 字母和数字；缩写写成单词形式（`Plc`、`Hmi`、`OpcUa`、`Db`）；动词取自闭集（含经批准的 `Prefill`、`Publish`），生成器检查全部工具名 | `build-tools/release/CatalogData.cs`；1.1 MCP-07 |
+| MUST：名称不暴露 `Json`、`Xml`、`Xlsx` 等序列化格式；`SimaticMl`、`Aml`、`Scl`、`FlgNet` 是领域语言名，保留。单个对象用单数，批量操作用复数；新 `Manage*` 工具 SHOULD 用单数对象类型，已有名称的改名逐项由维护者决定 | 1.1 MCP-08 |
 | MUST：直接调用、`CallTool`、`PreviewToolCall` 和大响应寄存层都精确匹配工具名；注册时拒绝仅大小写不同的名称 | 第 4.12 节 |
 | MUST：描述以 `[层][域][操作]` 开头，操作类别取自第 4.10 节的闭集 | `ToolMetadata` |
-| SHOULD：描述先写工具做什么和前提条件（是否需要绑定项目、需要离线、是否写入），再写限制与相关工具；不写影响模型使用其他工具的指令 | 手册 MCP-09、MCP-10 |
+| SHOULD：描述先写工具做什么和前提条件（是否需要绑定项目、需要离线、是否写入），再写限制与相关工具；不写影响模型使用其他工具的指令 | 1.1 MCP-09、MCP-10 |
 
 #### 用户可见文案语言
 
@@ -678,11 +678,11 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 | 规则 | 依据 |
 |---|---|
-| MUST：每个工具在 `ToolMetadata`（`src/Logic/ModelContextProtocol/ToolMetadata.cs`）或 `[ToolClassification]` 中登记显式分类，不按名称推断。分类是安全开关：会改变项目、设备、包外文件或 Windows 状态的动作必须落在需要审批的类别中 | 手册 MCP-22 |
-| MUST：注解由实际发布的描述符和 `ToolMetadata` 生成，四个 hint 全部显式输出，按最有副作用的动作与参数组合取值；带 `dryRun` 参数的工具 `readOnlyHint` 为 false；删除、覆盖、属性替换和目录导出覆盖按具体动作决定 `destructiveHint`，`Ensure` 不代表非破坏性；`ONLINE` 的连接与断开、`SESSION`、`EXECUTE`、`UI` 用逐工具取值 | 手册 MCP-22 |
+| MUST：每个工具在 `ToolMetadata`（`src/Logic/ModelContextProtocol/ToolMetadata.cs`）或 `[ToolClassification]` 中登记显式分类，不按名称推断。分类是安全开关：会改变项目、设备、包外文件或 Windows 状态的动作必须落在需要审批的类别中 | 1.1 MCP-22 |
+| MUST：注解由实际发布的描述符和 `ToolMetadata` 生成，四个 hint 全部显式输出，按最有副作用的动作与参数组合取值；带 `dryRun` 参数的工具 `readOnlyHint` 为 false；删除、覆盖、属性替换和目录导出覆盖按具体动作决定 `destructiveHint`，`Ensure` 不代表非破坏性；`ONLINE` 的连接与断开、`SESSION`、`EXECUTE`、`UI` 用逐工具取值 | 1.1 MCP-22 |
 | MUST：`WRITE`、`ONLINE-WRITE` 的实际执行经工作台审批；不得新增绕过审批的入口 | 第 4.10 节；SEC-01 |
-| MUST：写工具提供预览，有 `dryRun` 参数的工具默认预览，预览路径不写项目、文件或在线设备。维护者 2026-11-01 决定每个写入都可预览、多步写入失败时回滚，由 DES-3 实施，尚未完成 | 手册 MCP-23 |
-| MUST：写工具显式要求目标身份：项目文件用 `expectedProjectFile`，`expectedProject` 只表示项目名称；内容摘要用 `expected<对象>Hash`，一次性令牌用 `previewToken` | 第 4.10 节；手册 MCP-14 |
+| MUST：写工具提供预览，有 `dryRun` 参数的工具默认预览，预览路径不写项目、文件或在线设备。维护者 2026-11-01 决定每个写入都可预览、多步写入失败时回滚，由 DES-3 实施，尚未完成 | 1.1 MCP-23 |
+| MUST：写工具显式要求目标身份：项目文件用 `expectedProjectFile`，`expectedProject` 只表示项目名称；内容摘要用 `expected<对象>Hash`，一次性令牌用 `previewToken` | 第 4.10 节；1.1 MCP-14 |
 | MUST：结果未知时返回 `OUTCOME_UNKNOWN`，不自动重放 | 第 4.11 节；[ADR 0008](decisions/0008-worker-timeouts-and-faults.md) |
 
 ### 6.4 参数
@@ -696,7 +696,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 已决定、由 DES-4 实施（维护者 2026-11-01；DES-4 先写参数模型 ADR，合并前以上面的现行规则为准）：
 
-- 参数 schema 按 JSON Schema 2020-12：必填列在 `required`，可选参数省略即未提供，不用 `""` 哨兵；闭集用 `enum`，固定格式用 `pattern`，互斥参数组用 `oneOf`；对象 `additionalProperties: false`（手册 MCP-11）。
+- 参数 schema 按 JSON Schema 2020-12：必填列在 `required`，可选参数省略即未提供，不用 `""` 哨兵；闭集用 `enum`，固定格式用 `pattern`，互斥参数组用 `oneOf`；对象 `additionalProperties: false`（1.1 MCP-11）。
 - 同一概念在全部工具中只有一种规范形式；文件与目录用不同的参数名区分（例如 `exportDirectory` 与 `exportFile`）。
 - 旧参数名在仍有使用的地方保留为有文档的别名，只保留一个主版本，使用时在 `meta` 中给出弃用警告；不得静默改变旧参数的含义。
 
@@ -743,7 +743,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 ## 7 版本差异处理
 
-八个发布键由 `TiaVersionCatalog` 统一解释；原版 V14、V15 不视为 V14 SP1 或 V15.1 的别名，服务包与小版本键也不是主版本号的别名。手册[领域 C](engineering-handbook.html#pc) 的版本规则（VND-06–VND-08）在此适用。
+八个发布键由 `TiaVersionCatalog` 统一解释；原版 V14、V15 不视为 V14 SP1 或 V15.1 的别名，服务包与小版本键也不是主版本号的别名。1.1 [领域 C](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/c-vendor-api.md) 的版本规则（VND-06–VND-08）在此适用。
 
 | 规则 | 位置 |
 |---|---|

@@ -6,10 +6,10 @@
 
 ## 0 用语与基线
 
-- 规范用语 MUST、SHOULD、MAY 按[工程开发手册](engineering-handbook.html)第 0.3 节。手册第 20 节“文档”的规则全部适用，本文不重复，只写本项目的补充和偏差。
+- 规范用语 MUST、SHOULD、MAY 按[《工程开发规范》通用规范](https://github.com/asckye/engineering-standards/blob/v2.0/general/00-purpose.md#purpose-read)第 0.3 节。通用规范[第 20 节“文档”](https://github.com/asckye/engineering-standards/blob/v2.0/general/20-documentation.md#docs)的规则全部适用，本文不重复，只写本项目的补充和偏差。
 - 基线（[ADR 0015](decisions/0015-microsoft-design-spec-baseline.md)）：英文按 [Microsoft Writing Style Guide](https://learn.microsoft.com/en-us/style-guide/welcome/)（下称 MS），中文按 [Chinese (Simplified) Localization Style Guide](https://aka.ms/chinese-simplified-styleguide)（下称 zh-CN 指南）。冲突时依次服从 ADR、本文、基线。
 - `docs/` 下的文档按 zh-CN 指南 §4.1.13 的“文档”标点约定；工作台界面字符串按“软件”约定，见[工作台界面规范](ui.md)。
-- 本文的 DOC-nn 是偏差编号（第 17 节），与手册的规则编号 DOC-nn 无关。
+- 本文的 DOC-nn 是偏差编号（第 17 节），与通用规范的规则编号 DOC-nn 无关。
 
 ## 1 文档位置
 
@@ -21,7 +21,7 @@
 | 用户文档 | `docs/README.md`、`docs/getting-started/`、`docs/guides/`、`docs/troubleshooting/`、`docs/reference/`（逐个文件以 `scripts/operations/delivery-files.json` 为准） | 是 |
 | 发布记录 | `CHANGELOG.md`、`docs/releases/` | 是 |
 | 许可证与图片 | `docs/licenses/`、`docs/assets/` | 是 |
-| 规范 | `docs/standards/`：`README.md`（采用范围、项目偏差、外部参考）、`engineering-handbook.html`、`development.md`、`design.md`、`ui.md`、`security.md`、`documentation.md` | 否 |
+| 规范 | `docs/standards/`：`README.md`（采用范围、项目偏差、外部参考）、`development.md`、`design.md`、`ui.md`、`security.md`、`documentation.md` | 否 |
 | ADR | `docs/standards/decisions/` | 否 |
 | 计划 | `docs/plan/plan.md`（版本、放行门槛、未决决定）、`docs/plan/progress.md`（当前状态、分支、测试者反馈） | 否 |
 | 手册 | `docs/manuals/`：`workflow.md`、`validation.md`、`release.md`、`real-machine-testing.md` | 否 |
@@ -38,7 +38,7 @@
 
 ## 2 语言
 
-一个文件只用一种语言（手册 DOC-03）。各类文档的语言按 [ADR 0026](decisions/0026-documentation-structure-and-language.md)：
+一个文件只用一种语言（通用规范 DOC-03）。各类文档的语言按 [ADR 0026](decisions/0026-documentation-structure-and-language.md)：
 
 | 文档类型 | 位置 | 语言 |
 |---|---|---|
@@ -59,7 +59,7 @@
 
 ## 3 语气与读者
 
-手册 DOC-08、DOC-09 已规定先结论后背景、短句常用词、用“选择”和“你”、只写当前行为。补充：
+通用规范 DOC-08、DOC-09 已规定先结论后背景、短句常用词、用“选择”和“你”、只写当前行为。补充：
 
 | 级别 | 规则 |
 |---|---|
@@ -128,7 +128,7 @@
 
 | 级别 | 规则 |
 |---|---|
-| MUST | 中文与英文、数字之间的空格按手册 DOC-08；全角标点两侧不加空格。 |
+| MUST | 中文与英文、数字之间的空格按通用规范 DOC-08；全角标点两侧不加空格。 |
 | MUST | 行内代码、加粗与相邻中文之间加一个半角空格，与相邻全角标点之间不加。 |
 | MUST | 中文段落在源文件中写成一行，不在句中换行（渲染器会在两个汉字之间插入空格）；英文段落可以按句换行。 |
 
@@ -253,7 +253,7 @@
 
 ## 13 发布记录与 CHANGELOG
 
-变化当次写入 `CHANGELOG.md` 的 `Unreleased`（手册 DOC-06）。
+变化当次写入 `CHANGELOG.md` 的 `Unreleased`（通用规范 DOC-06）。
 
 | 级别 | 规则 |
 |---|---|
@@ -265,11 +265,11 @@
 
 ## 14 ADR 与设计记录
 
-手册第 20.2 节（DOC-04、DOC-05）规定 ADR 的字段、只追加规则、状态值和索引，第 0.4 节规定 AI 代理只能写“提议”状态的 ADR；外部来源见[本项目采用的开发规范](README.md)。
+通用规范第 20.2 节（DOC-04、DOC-05）规定 ADR 的字段、只追加规则、状态值和索引，第 0.4 节规定 AI 代理只能写“提议”状态的 ADR；外部来源见[本项目采用的开发规范](README.md)。
 
 ### 14.1 何时必须写 ADR
 
-手册 G-04 的范围在本项目中包括：
+通用规范 G-04 的范围在本项目中包括：
 
 - 进程、程序集或部署结构（例如宿主与 worker 的划分、引擎退役、工作台附着会话）；
 - MCP 对外契约或其兼容策略（工具命名、信封、注册规则、版本差异处理）；
@@ -285,14 +285,14 @@
 
 | 级别 | 规则 |
 |---|---|
-| MUST | 位置 `docs/standards/decisions/NNNN-<短标题>.md`（手册写 `docs/adr/`，见 ADR 0030）；`NNNN` 四位递增，短标题用小写英文和连字符。 |
+| MUST | 位置 `docs/standards/decisions/NNNN-<短标题>.md`（通用规范写 `docs/adr/`，见 ADR 0030）；`NNNN` 四位递增，短标题用小写英文和连字符。 |
 | MUST | 用中文；标题用陈述句写出决定本身；写好后在 [ADR 索引](decisions/README.md) 登记编号、标题、状态和日期。 |
 | MUST | 已采纳的 ADR 只修正笔误和补链接。决定改变时写新的 ADR，在旧 ADR 末尾追加一行指向新 ADR，并更新索引中的状态。 |
 | MUST | 回溯补写既往决定时，日期写原决定日期，并注明“回溯记录（写于 YYYY-MM-DD）”。 |
 
 ### 14.3 状态值
 
-状态取提议、已采纳、已拒绝、已被 NNNN 取代、已废弃（手册 DOC-05）；只有部分被取代时写“已采纳；<部分>被 NNNN 取代”。
+状态取提议、已采纳、已拒绝、已被 NNNN 取代、已废弃（通用规范 DOC-05）；只有部分被取代时写“已采纳；<部分>被 NNNN 取代”。
 
 ### 14.4 模板
 
@@ -302,7 +302,7 @@
 
 | 级别 | 规则 |
 |---|---|
-| MUST | L2 及以上改动的设计说明按手册第 18.3 节和[开发流程](../manuals/workflow.md)编写；合并实现时，长期有效的规则写进对应的规范文件，决定写成 ADR。设计文档链接 ADR，不在文末维护“维护者决定”小节。 |
+| MUST | L2 及以上改动的设计说明按通用规范第 18.3 节和[开发流程](../manuals/workflow.md)编写；合并实现时，长期有效的规则写进对应的规范文件，决定写成 ADR。设计文档链接 ADR，不在文末维护“维护者决定”小节。 |
 | MUST | 不再新建设计记录目录；已完成的设计记录在 `docs/archive/development/design/`，只读。 |
 | MUST | `bin-build/` 下的草稿不是正式记录，文档不链接 `bin-build/` 路径。 |
 

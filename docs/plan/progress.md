@@ -79,7 +79,7 @@ REVIEW-PORT 会把漏洞扫描带入新工具；目前不能宣称新准备命�
 ## 接续开发先读
 
 1. [CLAUDE.md](../../CLAUDE.md) 和 [AGENTS.md](../../AGENTS.md)：分工、共用规则和合并规则。
-2. [标准说明](../standards/README.md)：采用的手册部分和项目偏差。
+2. [标准说明](../standards/README.md)：采用的规范范围和项目偏差。
 3. [开发计划](plan.md)：各版范围、任务状态、放行门槛和待决定事项。
 4. [验证](../manuals/validation.md)和[发布流程](../manuals/release.md)：检查分层、合并门和发布步骤。
 

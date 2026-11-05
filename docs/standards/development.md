@@ -6,9 +6,9 @@
 
 ## 1 范围与依据
 
-- 本文只写本项目的规则和对通用手册的取舍；手册已有的规则只链接对应章节。
+- 本文只写本项目的规则和对《工程开发规范》通用规范的取舍；通用规范已有的规则只链接对应章节。
 - 不在本文的内容：MCP 工具契约见 [设计规范](design.md)；安全见 [安全标准](security.md)；工作台界面见 [工作台界面规范](ui.md)；文档写作见 [文档规范](documentation.md)；任务流程和检查分档见 [开发流程](../manuals/workflow.md)；命令、作业和输出目录见 [验证分层](../manuals/validation.md)；发布见 [发布流程](../manuals/release.md)。
-- 依据：[《工程开发手册》v1.1](engineering-handbook.html)（领域 A、C、D，档位 M，审批和数据安全按 L，见 [采用说明](README.md)）；[ADR 0015](decisions/0015-microsoft-design-spec-baseline.md)（C# 以 Microsoft 设计准则为基线）；[AGENTS.md](../../AGENTS.md)（Codex 执行规则）；[CLAUDE.md](../../CLAUDE.md)（仓库通用规则）。
+- 依据：[《工程开发规范》2.0](https://github.com/asckye/engineering-standards/tree/v2.0)（`general/` 和 `desktop/`，等级 M，审批和数据安全按 L；MCP 和厂商 API 规则暂按 1.1，见 [采用说明](README.md)）；[ADR 0015](decisions/0015-microsoft-design-spec-baseline.md)（C# 以 Microsoft 设计准则为基线）；[AGENTS.md](../../AGENTS.md)（Codex 执行规则）；[CLAUDE.md](../../CLAUDE.md)（仓库通用规则）。
 - 用语：MUST、SHOULD、MAY 按 [文档规范](documentation.md) 第 0 节；[P] 表示超出或改变 Microsoft 准则的项目规则。
 
 规则冲突时从上到下裁决：
@@ -18,7 +18,7 @@
 | 1 | 外部契约与安全不变量：MCP V4 契约（`manifest/contracts/v4/baseline`）、worker 协议 2 线格式、Openness 调用的顺序、参数和线程归属、文件格式与 manifest。命名或风格规则不得为此改变它们 |
 | 2 | ADR（[索引](decisions/README.md)） |
 | 3 | 本文、AGENTS.md、CLAUDE.md |
-| 4 | 手册与 Microsoft 来源：[Framework Design Guidelines](https://learn.microsoft.com/dotnet/standard/design-guidelines/)（FDG）、[.NET runtime coding style](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md)、[C# coding conventions](https://learn.microsoft.com/dotnet/csharp/fundamentals/coding-style/coding-conventions) |
+| 4 | 《工程开发规范》与 Microsoft 来源：[Framework Design Guidelines](https://learn.microsoft.com/dotnet/standard/design-guidelines/)（FDG）、[.NET runtime coding style](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md)、[C# coding conventions](https://learn.microsoft.com/dotnet/csharp/fundamentals/coding-style/coding-conventions) |
 | 5 | 所在文件的既有风格：只在第 8 节的偏差处理完之前、修改旧文件时沿用；新文件按本文 |
 
 ## 2 代码
@@ -26,7 +26,7 @@
 ### 2.1 适用范围与程序集分级
 
 - 适用于 `src/`、`build-tools/`、`tests/`、`scripts/` 中的 C#；测试与脚本按第 5.9 节放宽。`third_party/`、`reference/`、`sdk/` 和生成文件不适用（B-03、B-08）。
-- C# 的基线是手册 [附录 L1](engineering-handbook.html#lcs) 和 [第 3 节](engineering-handbook.html#code)。本节只列项目规则和取舍；未列出的命名、类型、成员、异常、异步和资源规则按 L1 与 FDG 执行。
+- C# 的基线是通用规范 [附录 L1](https://github.com/asckye/engineering-standards/blob/v2.0/general/languages/l1-csharp.md#lcs) 和 [第 3 节](https://github.com/asckye/engineering-standards/blob/v2.0/general/03-code.md#code)。本节只列项目规则和取舍；未列出的命名、类型、成员、异常、异步和资源规则按 L1 与 FDG 执行。
 - MCP 工具入口方法（`[McpServerTool]`）是独立的表面：C# 方法名不上线，参数名、参数类型和默认值上线，由契约基线冻结（N-12）。
 
 | 级别 | 程序集 | 应用方式 |
@@ -76,7 +76,7 @@
 
 ### 2.3 线程与 Openness 调用
 
-各发布键 PLC worker 的所属线程和单元以 `src/Adapters/Policy/PlcLifecyclePolicy.cs` 为准（线程模型仍待决定，见 [开发进度](../plan/progress.md)）。手册对应章节是 [领域 C.1](engineering-handbook.html#pc-isolation)。
+各发布键 PLC worker 的所属线程和单元以 `src/Adapters/Policy/PlcLifecyclePolicy.cs` 为准（线程模型仍待决定，见 [开发进度](../plan/progress.md)）。对应章节是 1.1 [领域 C.1](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/c-vendor-api.md#pc-isolation)。
 
 | ID | 级别 | 规则 |
 |---|---|---|
@@ -91,7 +91,7 @@
 
 ### 2.4 命名
 
-命名按手册 [附录 L1](engineering-handbook.html#lcs) 和 FDG；以下是项目规则和取舍。
+命名按通用规范 [附录 L1](https://github.com/asckye/engineering-standards/blob/v2.0/general/languages/l1-csharp.md#lcs) 和 FDG；以下是项目规则和取舍。
 
 | ID | 级别 | 规则 |
 |---|---|---|
@@ -114,7 +114,7 @@
 | S-12 | SHOULD [P] | 新代码每行不超过 120 字符，字符串数据、`[Description(...)]` 文本和 URL 除外；既有代码不为行长重新排版（CS-19） |
 | S-15 | SHOULD NOT [P] | 用 `#region`；用类型拆分组织代码，折叠区域会掩盖类型过大 |
 
-注释按手册 [4.4](engineering-handbook.html#quality-comments)，另有以下项目规则：
+注释按通用规范 [4.4](https://github.com/asckye/engineering-standards/blob/v2.0/general/04-quality.md#quality-comments)，另有以下项目规则：
 
 - 注释写代码说不出的原因：不变量、厂商 API 的怪癖和版本差异、线程要求、某个检查为什么存在。原生行为证据写明 TIA 或 PLCSIM 版本和日期，并链接 [真机台账](../reference/real-machine-ledger.md)。
 - 不写产品版本号、维护者归属、`Phase N` 或 `sub-batch` 叙事、迁移墓碑、注释掉的代码和过时的工具数；修复经过改写为当前必须保持的不变量。
@@ -130,13 +130,13 @@ MCP 可见文本（[ADR 待办 B02](decisions/README.md)）：
 
 ### 2.6 复杂度门槛
 
-- 新代码和改动的代码遵守手册 [4.1](engineering-handbook.html#quality-size) 的触发线：方法约 40–60 行，文件约 400–600 行且只含一个类型，圈复杂度约 10–15，嵌套 3 层，参数约 5 个。超过时拆分，或在审查说明中写一行理由（例如厂商要求的固定调用序列）。
-- 按职责拆类型，不靠新增 `partial` 变小（T-10）。同一判断、转换或业务规则（约 5 行以上）第二次出现时合并为共享组件；各版本官方 API 的差异不算重复（手册 Q-03）。
+- 新代码和改动的代码遵守通用规范 [4.1](https://github.com/asckye/engineering-standards/blob/v2.0/general/04-quality.md#quality-size) 的触发线：方法约 40–60 行，文件约 400–600 行且只含一个类型，圈复杂度约 10–15，嵌套 3 层，参数约 5 个。超过时拆分，或在审查说明中写一行理由（例如厂商要求的固定调用序列）。
+- 按职责拆类型，不靠新增 `partial` 变小（T-10）。同一判断、转换或业务规则（约 5 行以上）第二次出现时合并为共享组件；各版本官方 API 的差异不算重复（通用规范 Q-03）。
 - `merge-check` 为所有非纯文档计划生成只报告、不阻塞的复杂度报告（`bin-build/merge-check/complexity-report.md`），只扫描变更的 C# 文件；判读见[验证](../manuals/validation.md#自动审查检查)。
 
 ### 2.7 错误处理
 
-MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`）见 [设计规范](design.md) 第 4.6 节和手册 [领域 A.5](engineering-handbook.html#mcp-errors)；本节规定 C# 代码内部怎样产生和传递错误。
+MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`）见 [设计规范](design.md) 第 4.6 节和 1.1 [领域 A.5](https://github.com/asckye/engineering-standards/blob/ec8e722f332cf4ca2091501896037f350bbeb53f/handbook/domains/a-mcp.md#mcp-errors)；本节规定 C# 代码内部怎样产生和传递错误。
 
 | 层 | 位置 | 错误表达 |
 |---|---|---|
@@ -159,7 +159,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 ### 2.8 依赖
 
-- 新增依赖先写明用途、许可证、维护状况和更轻的替代；运行时依赖由维护者批准（手册 [第 14 节](engineering-handbook.html#deps)）。随包组件的许可证见 [`docs/licenses`](../licenses) 和 [NOTICE.md](../../NOTICE.md)。
+- 新增依赖先写明用途、许可证、维护状况和更轻的替代；运行时依赖由维护者批准（通用规范 [第 14 节](https://github.com/asckye/engineering-standards/blob/v2.0/general/14-dependencies.md#deps)）。随包组件的许可证见 [`docs/licenses`](../licenses) 和 [NOTICE.md](../../NOTICE.md)。
 - NuGet 包版本统一在根目录 `Directory.Packages.props`；.NET 运行时对齐值保留在 `src/Shared/DependencyVersions.props`（与 `build-tools/bundled-dotnet.json` 的运行时一致）；`global.json` 固定 SDK。
 - 分析器只用 .NET SDK 自带的代码样式规则、NetAnalyzers 和 `dotnet format`；不引入新的分析器包（StyleCop、VS Threading Analyzers 等）。
 - B-06（MUST）：契约程序集不引用 Siemens 或 JSON 库；`TiaMcp.Logic` 不引用 Siemens 或 MCP SDK；Siemens 引用只出现在适配器（含工作台的 `src/Studio/Openness`）和 PlcWorker 中（契约工程中的 MSBuild 目标 `RejectNativeAndJsonDependencies`）。
@@ -169,7 +169,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 ### 2.9 分析器、棘轮与工程规则
 
 - 分析器设置在 [`src/Shared/CodeAnalysis.props`](../../src/Shared/CodeAnalysis.props)，由根 `Directory.Build.props` 导入，net48 和 netstandard2.0 目标同样运行 NetAnalyzers。常规规则严重性在根 `.editorconfig` 中维护；38 条发布数据流安全规则由同一 props 的条目表生成 profile 配置，只分析物理 `src/`，不在工程中散布 `NoWarn`。
-- 新代码零新增警告（手册 [Q-15](engineering-handbook.html#quality-analysis)）：`check-analyzer-warnings` 与审查过的基线比较，基线只能删除已消失的条目（`-UpdateBaseline -Complete`）。
+- 新代码零新增警告（通用规范 [Q-15](https://github.com/asckye/engineering-standards/blob/v2.0/general/04-quality.md#quality-analysis)）：`check-analyzer-warnings` 与审查过的基线比较，基线只能删除已消失的条目（`-UpdateBaseline -Complete`）。
 - 确需抑制时用 `[SuppressMessage(..., Justification = "...")]` 或 `.editorconfig` 的路径段，并写明偏差编号；严重性只升不降。
 - 与项目棘轮的约定：CA1031 关闭（与 swallowed 棘轮重复）；CA1303 关闭（与“MCP 响应不做本地化”冲突）；IDE0090 和 IDE0300 系列保持 silent，不批量自动修复（会改变 envelopes 清单统计的令牌模式）。
 - 格式化和重命名单独提交，不与信封改写混在同一差异中；提交后复跑四种 `check-ratchet`（swallowed、comments、mcp-text、envelopes）和读取源码的文本检查（`Test-*Sources.py`）。重命名前先列出测试和脚本中按字符串名反射的成员（`GetField("...")` 等）；织入基线用正式工具重录。
@@ -233,7 +233,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 - 开发机没有 TIA Portal。离线检查证明构建、协议、契约和宿主行为，不证明原生行为；原生结果以 [真机台账](../reference/real-machine-ledger.md) 为准，没有运行时写 `NOT RUN`。
 - 测试不连接 TIA Portal、PLC、虚拟机或外部网络服务；可以使用自己在 127.0.0.1 上启动的合成服务（HTTP 夹具、命名管道夹具），注册套件、preflight 和传输检查不能因此跳过（[AGENTS.md](../../AGENTS.md)“范围”）。
-- 测试证明主要行为和规定的失败路径；不写证明不了主要功能的防御性测试（手册 [第 12 节](engineering-handbook.html#testing)）。
+- 测试证明主要行为和规定的失败路径；不写证明不了主要功能的防御性测试（通用规范 [第 12 节](https://github.com/asckye/engineering-standards/blob/v2.0/general/12-testing.md#testing)）。
 - 具体命令、作业清单、超时和输出目录以 [验证分层](../manuals/validation.md) 为准；什么时候运行哪一档见 [开发流程](../manuals/workflow.md) 第 4 节。维护者 2026-11-03 批准的 SLIM-1 和 NEW-REL-3（已合并）删除了计时与延迟门禁、测试输出一致性检查、重复的构建配置以及八版逐工具响应捕获，本节的规则不依赖这些检查。
 
 ### 5.2 层次
@@ -300,7 +300,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 ### 5.7 时间敏感测试
 
-- 测试不等待真实时间超过 1 秒：注入时钟或计时接缝（`TimeProvider` 一类），计时参数在 CPU 满载时仍成立（手册 TST-05）。
+- 测试不等待真实时间超过 1 秒：注入时钟或计时接缝（`TimeProvider` 一类），计时参数在 CPU 满载时仍成立（通用规范 TST-05）。
 - 仍需真实计时的测试类登记在 `tests/Shared/TimeSensitiveTests.cs` 并写明原因；这份清单只用于调度隔离，不是门禁。
 - 偶发失败时保留证据并定位原因，不靠重跑把结果变绿。认为某项测试不稳定时保持原样，在报告中附证据，由维护者决定。
 
@@ -329,7 +329,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 ## 6 Git 与提交
 
-规则基线是手册 [18.4](engineering-handbook.html#review-git)；任务分支怎样进入 master 见 [开发流程](../manuals/workflow.md) 第 2、5 节。
+规则基线是通用规范 [18.4](https://github.com/asckye/engineering-standards/blob/v2.0/general/18-process-review-git.md#review-git)；任务分支怎样进入 master 见 [开发流程](../manuals/workflow.md) 第 2、5 节。
 
 - master 是唯一长期分支。每个任务从当前 master 建独立 worktree 和 `refactor/<任务 ID>` 分支；审查并通过主机检查后变基到 master，快进推送，合并后删除分支。
 - 有依赖的分支按依赖顺序逐个合并，每个都重新变基并通过合并门；变基后重新生成生成文件，不手工合并它们。
@@ -342,7 +342,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 ## 7 AI 分工
 
-角色表见 [开发流程](../manuals/workflow.md) 第 1 节，Codex 的执行规则见 [AGENTS.md](../../AGENTS.md)，通用规则见手册 [第 19 节](engineering-handbook.html#ai)。
+角色表见 [开发流程](../manuals/workflow.md) 第 1 节，Codex 的执行规则见 [AGENTS.md](../../AGENTS.md)，通用规则见通用规范 [第 19 节](https://github.com/asckye/engineering-standards/blob/v2.0/general/19-ai.md#ai)。
 
 | 角色 | 负责 | 不做 |
 |---|---|---|
@@ -351,7 +351,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | Codex | 在独立 worktree 的沙箱中按任务说明写全部新代码和测试，运行涉及的测试类与 Debug 项目构建，列出留给主机的检查 | 不提交、不推送、不合并；不连接 TIA、PLC、虚拟机或外部网络 |
 
 - 研究、分析和方案比较由 Claude 完成，不交给 Codex。
-- 任务说明按手册模板 [T.4](engineering-handbook.html#tpl-task)，写明根因、涉及的文件和函数、预期设计、允许修改的路径、修改前失败而修改后通过的测试、验证命令和时间预算；需要维护者批准的断言或阈值改变在说明中事先写明。
+- 任务说明按通用规范模板 [T.4](https://github.com/asckye/engineering-standards/blob/v2.0/general/appendix/t-templates.md#tpl-task)，写明根因、涉及的文件和函数、预期设计、允许修改的路径、修改前失败而修改后通过的测试、验证命令和时间预算；需要维护者批准的断言或阈值改变在说明中事先写明。
 - 每次 Codex 交付先由独立的 AI 审查一次（维护者 2026-11-02），再由 Claude 审查 diff 并在主机上运行受影响的检查。
 - 主机检查失败时先定位原因，再带具体问题退回同一 Codex 会话；不反复重跑完整门禁，Claude 不自行打补丁。
 - 同时运行的 Codex 任务数由维护者决定；有依赖的任务串行。

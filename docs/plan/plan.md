@@ -100,6 +100,7 @@ beta.3 之后已合并：CI-FIX（`67ca6816`）、PREP-SLIM（`ccc8f7aa`、`d1a7
 | TRANSPORT-FAST、TRANSPORT-KEEP | 传输检查 `full` 档，每次最多并行 4 个版本；测试客户端复用连接，不再耗尽主机端口 | 已合并（`efc58105`） | 2026-11-04 |
 | GUI-SPACE | 工作台测试窗口放到屏幕外，真实鼠标点不到；按空格的测试等鼠标松开 | 已合并（`7a8ba945`） | 2026-11-04 |
 | COV-V21 | 更正 [Openness 覆盖](../reference/openness-coverage.md)中的 V21 数字（直接引用 1,748，待复核 2,575）和复现命令（`prepare -BuildOnly` 后运行 `audit-version-tools`） | 未开始 | 2026-11-02 |
+| STD-REF | 改为引用已发布的《工程开发规范》2.0（tag `v2.0`），删除本仓库的 HTML 副本；`mcp/` 草案待采纳（[ADR 0032](../standards/decisions/0032-published-engineering-standards.md)） | 已合并 | 2026-11-05 |
 
 ### 2026-11-04 实施决定
 
@@ -210,6 +211,7 @@ beta.4 合并后开始。V21 API 的 6 个 P1 缺口按 API 先行注册，带�
 | D-J1 | P8-31j1（生成框架方案的修订与示例）在 4.0 完成，还是随 P8-31f–i 进入 4.1 |
 | D-D4 | `docs/releases/v3.2.0.md`、`v3.3.0.md` 保留与否 |
 | D-D6 | 4.1 是否把生成的工具矩阵并入版本工具目录 |
+| D-MCP | 是否及何时采纳《工程开发规范》的 `mcp/` 草案；采纳时要登记的偏差见[标准说明](../standards/README.md#mcp-草案待采纳) |
 
 已决定（2026-11-04）：
 

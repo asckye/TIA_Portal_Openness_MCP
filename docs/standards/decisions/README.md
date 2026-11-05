@@ -41,8 +41,9 @@
 | [0027](0027-archify-diagrams.md) | 架构、流程和时序图用 archify 生成，JSON 为源，HTML 与来源记录一起提交 | 已采纳 | 2026-10-22 | — |
 | [0028](0028-workbench-visual-design-eplanmcp.md) | 工作台视觉设计采用 EplanMcp 设计系统（取代 0018、0021 的视觉部分） | 已采纳（实施见 UI-2a…UI-2d） | 2026-11-01 | — |
 | [0029](0029-authoritative-session-state.md) | One managed session view and visible host lifetimes | 已采纳 | 2026-11-01 | — |
-| [0030](0030-documentation-and-repository-structure.md) | 文档和仓库根目录采用本项目自己的结构，取代 ADR 0026 的目录部分 | 已采纳 | 2026-11-03 | — |
+| [0030](0030-documentation-and-repository-structure.md) | 文档和仓库根目录采用本项目自己的结构，取代 ADR 0026 的目录部分 | 已采纳；手册 HTML 副本被 0032 取代 | 2026-11-03 | — |
 | [0031](0031-release-path.md) | 提前准备候选，确认后在五分钟内公开预发布 | 已采纳 | 2026-11-03、2026-11-04 | 不适用 |
+| [0032](0032-published-engineering-standards.md) | 引用已发布的《工程开发规范》2.0，不保存副本；采纳 MCP 草案前 MCP 和厂商 API 规则仍按 1.1 | 已采纳 | 2026-11-05 | 不适用 |
 
 ## 待补写的决定
 

@@ -7,7 +7,7 @@
 ## 证据边界
 
 - 构建、离线套件、契约基线和织入校验只证明接口形状，不证明原生行为；没有真机记录的项写 **NOT RUN**，行为族按 [ADR 0002](../standards/decisions/0002-native-behavior-by-family-acceptance.md) 处理。
-- 只用一次性测试项目或副本；通用做法见手册[实机验证清单](../standards/engineering-handbook.html#checklist-real)。
+- 只用一次性测试项目或副本；通用做法见通用规范[实机验证清单](https://github.com/asckye/engineering-standards/blob/v2.0/general/26-checklists.md#checklist-real)。
 - 结果先记在[开发进度](../plan/progress.md#真机结果)的“真机结果”，复核后写入[真机台账](../reference/real-machine-ledger.md)。
 - Codex、GitHub CI 和本地检查只运行脚本的 `--self-test`，从不运行 live 分支。
 

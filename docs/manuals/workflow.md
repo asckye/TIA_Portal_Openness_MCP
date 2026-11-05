@@ -2,13 +2,13 @@
 
 状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
 
-本文写改动从任务说明到进入 master 的项目做法，附录取代已归档的[工具规格模板](../archive/development/templates/tool-spec.md)；通用流程见[《工程开发手册》](../standards/engineering-handbook.html)第 18、19、23 节，命令见[验证分层](validation.md)，发布见[发布流程](release.md)。
+本文写改动从任务说明到进入 master 的项目做法，附录取代已归档的[工具规格模板](../archive/development/templates/tool-spec.md)；通用流程见[《工程开发规范》通用规范](https://github.com/asckye/engineering-standards/blob/v2.0/general/README.md)第 18、19、23 节，命令见[验证分层](validation.md)，发布见[发布流程](release.md)。
 
 ## 1 角色
 
-职责按手册第 19.1 节，本项目的对应和补充：
+职责按通用规范第 19.1 节，本项目的对应和补充：
 
-| 手册角色 | 本项目 | 补充 |
+| 通用规范的角色 | 本项目 | 补充 |
 |---|---|---|
 | 维护者 | 维护者 | 批准 ADR、检查与断言或阈值的改变、每次发布 |
 | 主导代理 | Claude | 不写新功能代码，合并时的一行变基修正和文档笔误除外 |
@@ -17,16 +17,16 @@
 ## 2 任务生命周期
 
 1. 新事项先进 `bin-build/refactor/tasks/followups.md`（不入库），当天转写到[开发计划](../plan/plan.md)或 ADR；任务说明只引用开发计划的编号。
-2. Claude 定位根因后写任务说明：按手册模板 [T.4](../standards/engineering-handbook.html#tpl-task)，另写 Siemens SDK 路径（`-p:SiemensEngineeringDirectory=<绝对路径>`）、点名的套件、生成器与要重新捕获的基线、留给主机的检查。Codex 的执行规则只在 AGENTS.md 中维护，不复制进说明。
+2. Claude 定位根因后写任务说明：按通用规范模板 [T.4](https://github.com/asckye/engineering-standards/blob/v2.0/general/appendix/t-templates.md#tpl-task)，另写 Siemens SDK 路径（`-p:SiemensEngineeringDirectory=<绝对路径>`）、点名的套件、生成器与要重新捕获的基线、留给主机的检查。Codex 的执行规则只在 AGENTS.md 中维护，不复制进说明。
 3. 从当前 master 建 worktree 和 `refactor/<任务 ID>` 分支；Codex 实现，运行涉及的测试类和 Debug 项目构建，文档变更运行 `check-repository -NoBinaries`。
 4. 独立 AI 先审查交付，Claude 再审查 diff 并在主机运行 `merge-check` 和其余涉及的检查；失败先定位，再带具体问题退回同一 Codex 会话，不反复重跑完整门禁。
 5. 用明确路径提交，变基到 master，通过合并门后快进推送，删除任务分支；更新[开发进度](../plan/progress.md)和任务状态。
 
 ## 3 变更级别与完成条件
 
-级别按手册第 18.3 节。L2 的设计产物是工具规格（附录）或设计说明，新工具和 MCP 契约变化（工具名、参数、返回结构、错误语义）必须写工具规格；L3 另加 ADR（[文档规范](../standards/documentation.md)第 14.1 节）。开始前，L2 的规格已审查，L3 的 ADR 已采纳，依赖的分支已合并。
+级别按通用规范第 18.3 节。L2 的设计产物是工具规格（附录）或设计说明，新工具和 MCP 契约变化（工具名、参数、返回结构、错误语义）必须写工具规格；L3 另加 ADR（[文档规范](../standards/documentation.md)第 14.1 节）。开始前，L2 的规格已审查，L3 的 ADR 已采纳，依赖的分支已合并。
 
-完成条件为手册第 23 节，另加：
+完成条件为通用规范第 23 节，另加：
 
 - 生成文件只由生成器产生：依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，迁移表变化时运行 `generate-release-migration`，各自的 `-Check` 通过。
 - 契约变化通过正式工具重新捕获工具定义快照并逐项解释差异；破坏性变化写入发布说明和迁移表；新增 MCP 文本为英文。全部八版逐工具响应捕获的移除见 [ADR 0031](../standards/decisions/0031-release-path.md)。
@@ -47,7 +47,7 @@
 
 ## 5 提交、发布与资源
 
-- 按手册第 18.4 节（GIT-01、GIT-03、GIT-04、GIT-07）；不手改测试哈希、`manifest/*.json` 中的哈希和生成文件。
+- 按通用规范第 18.4 节（GIT-01、GIT-03、GIT-04、GIT-07）；不手改测试哈希、`manifest/*.json` 中的哈希和生成文件。
 - 构建与发布自动化只在 `build-tools/release` 中用 C# 维护；仓库拒绝新增 PowerShell、batch 和 cmd 文件。
 - 文档改动核对链接、路径、工具适用版本和引用，并运行 `dotnet run --project build-tools/release -- check-repository -NoBinaries`。
 - 每次发布前由维护者确认，发布期间不改代码；4.0 预发布见 [ADR 0020](../standards/decisions/0020-prereleases-tested-by-users.md)，正式版条件见 [ADR 0023](../standards/decisions/0023-release-4-0-final-criteria.md)。

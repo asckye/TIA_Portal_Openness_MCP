@@ -7,7 +7,7 @@
 ## 1 范围与依据
 
 - 适用范围：`src/Studio/Gui`（`TiaOpenness.exe`，WPF，.NET 10，`net10.0-windows`）的全部界面：主窗口、侧边栏与工具栏、8 个一级页面、设置页、确认面板与对话框、提示条、toast 与系统通知、`--mock` 离线演示。测试在 `tests/Studio/TiaOpenness.Gui.Tests`。
-- 视觉与交互的默认值来自共用的 [EplanMcp 工作台设计系统](https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg)（以 Apple HIG 为基础），通用规则见手册[第 21 节 界面设计](engineering-handbook.html#ui)。本文只写本项目的取值、例外和 WPF 落实方式。设计系统取代了 [ADR 0018](decisions/0018-workbench-ant-design.md) 的 Ant Design v5 和 [ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md) 的 Maple Mono 字体，决定与逐条例外（C1–C17）见 [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md)。
+- 视觉与交互的默认值来自共用的 [EplanMcp 工作台设计系统](https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg)（以 Apple HIG 为基础），通用规则见《工程开发规范》通用规范[第 21 节 界面设计](https://github.com/asckye/engineering-standards/blob/v2.0/general/21-ui.md#ui)和[桌面界面](https://github.com/asckye/engineering-standards/blob/v2.0/desktop/ui.md)。本文只写本项目的取值、例外和 WPF 落实方式。设计系统取代了 [ADR 0018](decisions/0018-workbench-ant-design.md) 的 Ant Design v5 和 [ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md) 的 Maple Mono 字体，决定与逐条例外（C1–C17）见 [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md)。
 - 实施状态：4.0.0-beta.3 只含 UI-2a（token、主题、字体、焦点环）；UI-2b（外框、导航、设置页、提示条）、UI-2c（审批页）、UI-2d（其余页面与用词）在 4.0.0-beta.4。本文写目标状态，现状差距登记为偏差 UI-50。
 
 冲突时按下列顺序取上位：
@@ -17,14 +17,14 @@
 | 1 | 审批与 AI 控制红线：[工作台控制设计](../archive/development/design/workbench-control-and-shared-session.md)、[ADR 0003](decisions/0003-workbench-approval-for-mcp-writes.md) | §5 |
 | 2 | WCAG 2.2 A/AA（按 WCAG2ICT 用于桌面软件），以及本文的键盘、焦点、高对比和本地化规则 | §6、§7 |
 | 3 | ADR 0028 对设计系统的例外 | 各节标注 C 编号 |
-| 4 | EplanMcp 工作台设计系统与手册第 21 节 | §2–§4 |
+| 4 | EplanMcp 工作台设计系统与通用规范第 21 节 | §2–§4 |
 | 5 | Microsoft Windows 应用设计与 WPF 指南（设计系统未覆盖的平台行为：对话框、访问键、F6、DPI、UI Automation） | §4.1、§6 |
 
 用词与编号：
 
-- MUST / SHOULD / MAY 的含义同手册。新代码不满足 MUST 不合并；存量差异只能经 §8 的偏差条目处理（改正，或记为有意偏差并写明理由与复审时间）。
+- MUST / SHOULD / MAY 的含义同通用规范。新代码不满足 MUST 不合并；存量差异只能经 §8 的偏差条目处理（改正，或记为有意偏差并写明理由与复审时间）。
 - 规则前缀：LAY 布局、NAV 导航、PLT 平台、TYP 字体、COL 颜色与主题、ICO 图标、CMD 命令、CTL 控件、DLG 对话框与确认、STS 状态与通知、ERR 错误与空状态、APR 审批、AI AI 控制界面、KEY 键盘与焦点、A11Y 可测的无障碍要求、LOC 本地化、TXT 界面文字；UI-nn 是偏差编号。
-- 编号只在本文内有效，与手册的同名编号无关；引用手册规则时写“手册 UI-16”。删除的编号不复用。
+- 编号只在本文内有效，与通用规范的同名编号无关；引用通用规范的规则时写“通用规范 UI-16”。删除的编号不复用。
 - 技术实现名（`Primer.*`、`Ant.*` 资源键，`Themes/Primer.xaml`）是 UI-2a 为资源兼容保留的旧名，不代表采用 Primer 或 Ant 的视觉。
 
 外部依据（2026-10-11 核对；部分 `/windows/apps/design/...` 地址会重定向到 `/windows/apps/develop/...`）：
@@ -201,7 +201,7 @@ WPF 不画 CSS 阴影：测试禁止 `Effect`（`PrimerVocabularyTests`），阴
 
 ## 4 组件
 
-每个可交互组件都定义七种状态（默认、悬停、按下、焦点、禁用、选中、错误），见手册[第 21.7 节](engineering-handbook.html#ui-components)；组件清单与外观以设计系统为准。
+每个可交互组件都定义七种状态（默认、悬停、按下、焦点、禁用、选中、错误），见通用规范[第 21.7 节](https://github.com/asckye/engineering-standards/blob/v2.0/general/21-ui.md#ui-components)；组件清单与外观以设计系统为准。
 
 ### 4.1 WPF 落实
 
@@ -453,7 +453,7 @@ WCAG 2.2 A/AA 是必须达到的底线，按 WCAG2ICT 对非 Web 软件的解释
 
 ### 6.5 验收与测试
 
-- 新增或修改界面的 PR 自查：COL-01 与 TYP-03（无字面颜色和字号）、CTL-02 与 CTL-04（名称与标签）、KEY-03 与 KEY-04（焦点与 Esc）、LOC-01（无硬编码文字）、AI-02 与 APR-02（守卫与焦点），并运行 §6.3 的自动化检查；评审清单见手册[第 21.13 节](engineering-handbook.html#ui-checklist)。
+- 新增或修改界面的 PR 自查：COL-01 与 TYP-03（无字面颜色和字号）、CTL-02 与 CTL-04（名称与标签）、KEY-03 与 KEY-04（焦点与 Esc）、LOC-01（无硬编码文字）、AI-02 与 APR-02（守卫与焦点），并运行 §6.3 的自动化检查；评审清单见通用规范[第 21.13 节](https://github.com/asckye/engineering-standards/blob/v2.0/general/21-ui.md#ui-checklist)。
 - 每次发布前：A11Y-04 键盘脚本、A11Y-07 高对比人工检查、A11Y-08 Narrator 脚本、A11Y-09 两种工作区检查、A11Y-15 AI4W FastPass，结果记入发布证据。
 - 渲染测试覆盖 1024 × 640 与 1366 × 860、中英文、浅色 / 深色 / 高对比；`ThemeSurfaceTests` 与 `AccessibilityTests` 固定三套主题的 token 与对比度；`WorkbenchControlTests` 覆盖 AI 页面白名单。
 - 设计值断言（尺寸、宽度、页数、颜色、字体）按维护者 2026-11-01 的批准随设计系统更新；行为、无障碍、键盘、审批和 AI 红线类断言不放宽。ADR 0028 要求新增的断言：破坏性请求的默认按钮是“拒绝”、回车永不批准写入请求、Esc 不拒绝写入请求、按当前页拒绝 AI、风险等级在宿主侧计算。

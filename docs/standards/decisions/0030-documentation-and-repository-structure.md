@@ -74,3 +74,5 @@
 后续决定修订上述根目录整理范围：根目录 `runtime/` 和各项目的 `bin`/`obj` 保留，不统一搬入 `bin-build/`；`runtime/README.md` 的内容并入设计规范后再删除该文件。`hooks/` 不搬到 `plugin/`，因为早期 beta 安装中的更新器只删除清单内的文件，搬迁会留下仍被自动加载的旧 `hooks/hooks.json`，导致守卫重复执行。REORG-2 负责核对插件清单与钩子加载行为，删除清单键前必须由主导代理在主机验证写入仍被守卫拒绝。
 
 文档在 NEW-REL-3 之后按 DOCS-1、DOCS-2、DOCS-3 顺序集成，再进行 REORG-2、REORG-3 与 beta.3 的 TIDY-1–6。依赖产品分支的 TIDY-7、`src/EngineHost` 改名和 `wrap-long-lines -Check` 合并门留到 beta.4；最新排期见[开发计划](../../plan/plan.md)。本节保留此前决定的历史文字，只修订当前执行范围。
+
+2026-11-05：`docs/standards/engineering-handbook.html` 已删除，本目录不再保存规范副本，见 [ADR 0032](0032-published-engineering-standards.md)。
