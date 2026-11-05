@@ -74,6 +74,37 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         }
     }
 
+    [Theory]
+    [InlineData("14sp1")]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("17")]
+    [InlineData("18")]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Registry_contracts_use_the_requested_release_when_the_host_default_differs(string release)
+    {
+        string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        try
+        {
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            var expected = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false)
+                .Select(tool => JsonSerializer.Serialize(tool.ProtocolTool)).ToArray();
+            string otherRelease = release == "21" ? "20" : "21";
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = otherRelease;
+            var actual = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false)
+                .Select(tool => JsonSerializer.Serialize(tool.ProtocolTool)).ToArray();
+            Assert.Equal(expected, actual);
+            Assert.Equal(otherRelease, enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey);
+        }
+        finally
+        {
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
+        }
+    }
+
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments) =>
         new(DispatchProxy.Create<IMcpServer, ServerProxy>()) { Params = new() {
             Name = name, Arguments = arguments.Deserialize<Dictionary<string, JsonElement>>() } };

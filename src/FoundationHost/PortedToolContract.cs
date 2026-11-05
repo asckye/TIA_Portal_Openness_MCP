@@ -59,7 +59,7 @@ internal static class PortedToolContract
         // The readiness guard of a bridged call asks whether this target refuses its arguments by capability (P8-04j2).
         // The answer depends only on the release, the tool and the arguments, so any registered instance answers it.
         McpServer.PortedCapabilityRefusals[(tool.Release, tool.ProtocolTool.Name)] = tool.RefusesByCapability;
-        return tool.CapabilityAdmission(McpServer.WrapTools(new[] { tool.ValidatedTool() }).Single());
+        return tool.CapabilityAdmission(McpServer.WrapToolsForRelease(new[] { tool.ValidatedTool() }, tool.Release).Single());
     }
 
     // The primary module operation comes first; previews and fallback reads are

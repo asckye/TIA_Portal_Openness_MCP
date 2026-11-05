@@ -192,13 +192,13 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
                 var modeText = new FormattedText(modeCell.Text, System.Globalization.CultureInfo.CurrentUICulture,
                     FlowDirection.LeftToRight, new Typeface(modeCell.FontFamily, modeCell.FontStyle, modeCell.FontWeight, modeCell.FontStretch),
                     modeCell.FontSize, modeCell.Foreground, VisualTreeHelper.GetDpi(modeCell).PixelsPerDip);
-                Assert.InRange(Math.Round(modeText.WidthIncludingTrailingWhitespace, 3, MidpointRounding.AwayFromZero), 1,
-                    Math.Round(modeCell.ActualWidth, 3, MidpointRounding.AwayFromZero));
+                Assert.InRange(modeText.WidthIncludingTrailingWhitespace, 1, modeCell.ActualWidth);
                 list.SelectedItem = model.Processes[^1]; list.ScrollIntoView(list.SelectedItem); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
                 Assert.Equal(model.Processes[^1], model.SelectedProcess);
                 Assert.True(connect.IsEnabled);
                 var last = (ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(39);
-                Assert.InRange(last.TranslatePoint(new Point(), list).Y, 0, list.ActualHeight - last.ActualHeight);
+                Assert.InRange(Math.Round(last.TranslatePoint(new Point(), list).Y, 3, MidpointRounding.AwayFromZero), 0,
+                    Math.Round(list.ActualHeight - last.ActualHeight, 3, MidpointRounding.AwayFromZero));
                 var root = new DirectoryInfo(AppContext.BaseDirectory);
                 while (root != null && !File.Exists(Path.Combine(root.FullName, "AGENTS.md"))) root = root.Parent;
                 Assert.NotNull(root);

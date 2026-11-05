@@ -23,9 +23,10 @@ namespace TiaMcpServer.ModelContextProtocol
             => RecordAdmissionRejection(request, result);
         static partial void RecordAdmissionRejection(RequestContext<CallToolRequestParams> request, CallToolResult result);
 
-        private static IList<McpServerTool> WrapWithVersionPolicy(IList<McpServerTool> tools)
-            => tools.Where(t => VersionToolProblem(t.ProtocolTool.Name).Length == 0)
-                .Select(t => (McpServerTool)new VersionPolicyTool(t)).ToList();
+        private static IList<McpServerTool> WrapWithVersionPolicy(IList<McpServerTool> tools,
+            Func<string, string>? versionProblem = null, string? release = null)
+            => tools.Where(t => (versionProblem ?? VersionToolProblem)(t.ProtocolTool.Name).Length == 0)
+                .Select(t => (McpServerTool)new VersionPolicyTool(t, release)).ToList();
     }
 
     // Outermost on both transports, including isolated worker forwarding. Child
@@ -34,7 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly McpServerTool inner;
         private readonly Tool protocol;
-        internal VersionPolicyTool(McpServerTool tool)
+        internal VersionPolicyTool(McpServerTool tool, string? release = null)
         {
             inner = tool;
             var source = tool.ProtocolTool;
@@ -42,7 +43,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (source.Name is "BuildPlcUdt" or "BuildPlcGlobalDb")
             {
                 var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
-                schema["properties"]!["outputReleaseKey"]!["default"] = HardwareContract.ReleaseKey;
+                schema["properties"]!["outputReleaseKey"]!["default"] = release ?? HardwareContract.ReleaseKey;
                 protocol = new Tool { Name = source.Name, Title = source.Title, Description = source.Description,
                     InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = source.OutputSchema,
                     Annotations = source.Annotations, Meta = source.Meta };
