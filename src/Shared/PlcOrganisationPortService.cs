@@ -149,6 +149,7 @@ namespace TiaMcpServer.Siemens.Services
 
             var unavailable = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, "ManagePlcUserGroup", action, family);
             if (unavailable != null) throw new NotSupportedException(unavailable);
+            ValidateGroup(groupPath, family == "types");
             if (!hasProject()) return NoProject("ManagePlcUserGroup");
             return Step(Invoke(new PlcSoftwareRequest { Operation = "ManagePlcUserGroup", SoftwarePath = softwarePath,
                 Family = family, GroupPath = groupPath, Action = action, NewName = newName, DryRun = dryRun }));

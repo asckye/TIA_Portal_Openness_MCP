@@ -286,7 +286,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][Hardware][WRITE] Compatibility forwarder to CreateHardwareDevice on V18–V21. orderNumber maps to preferredMlfb" +
                 " and version to preferredVersion; both are passed unchanged. Default dryRun=true. Uses the same exact catalog " +
                 "selection, inventory, plan hash, confirm and expectedProjectFile, one create, readback, result and diagnostics. V14" +
-                " SP1–V17 retain the exact native CreateWithItem route with the same preview/hash/project contract. Native " +
+                " SP1–V17 retain the exact native device creation route with the same preview/hash/project contract. Native " +
                 "behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateDeviceV4(
             [Description("Exact catalog article number or full OrderNumber TypeIdentifier, passed unchanged to preferredMlfb.")] string orderNumber,

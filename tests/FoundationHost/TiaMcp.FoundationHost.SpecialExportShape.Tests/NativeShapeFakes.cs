@@ -103,9 +103,12 @@ namespace TiaMcp.Adapters
     internal static class PlcSpecialExportPolicy
     {
         // Stub only: policy behavior has its own tests. Route to the selected fake table.
-        internal static PlcSpecialExportResult Run(string kind,string release,string project,string software,string name,string output,bool consistent,bool dryRun,string hash,Action offline,Action<FileInfo> export)
+        internal static PlcSpecialExportResult Run(string kind, string release, string project, string software, string path, string output,
+            bool consistent, bool dryRun, string expectedPlanHash, Action requireOffline, Action<FileInfo> export,
+            Func<FileInfo, Action<FileInfo>, string?>? publish = null, bool allowPlannedDirectories = false,
+            string plannedExportRoot = "", Action<string>? createDirectory = null)
         {
-            if(!dryRun) { offline(); export(new FileInfo(output)); }
+            if(!dryRun) { requireOffline(); export(new FileInfo(output)); }
             return new();
         }
     }

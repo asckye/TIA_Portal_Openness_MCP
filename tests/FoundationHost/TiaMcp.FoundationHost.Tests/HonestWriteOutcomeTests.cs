@@ -159,6 +159,49 @@ public sealed class HonestWriteOutcomeTests
         Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Delete_empty_PLC_group_validation_precedes_project_lookup(bool hasProject)
+    {
+        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        {
+            using var selected = Host.HardwareContract.UseRelease(release);
+            int projectChecks = 0, workerCalls = 0;
+            var service = new Services.PlcOrganisationPortService(
+                (_, _) => { workerCalls++; throw new InvalidOperationException("No worker call expected."); },
+                () => { projectChecks++; return hasProject; }, () => "fixture");
+            var body = Host.PlcToolContract.Run("DeleteEmptyPlcBlockGroup", true, true,
+                () => service.DeleteEmptyPlcBlockGroup("PLC", "Program blocks", false)).StructuredContent!;
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+            Assert.Equal((0, 0), (projectChecks, workerCalls));
+        }
+    }
+
+    [Theory]
+    [InlineData("blocks", "Program blocks")]
+    [InlineData("types", "PLC data types")]
+    [InlineData("tags", "")]
+    [InlineData("technology", "")]
+    [InlineData("watchTables", "")]
+    [InlineData("externalSources", "")]
+    public void Every_PLC_group_action_validates_its_family_path_before_project_lookup(string family, string path)
+    {
+        using var selected = Host.HardwareContract.UseRelease("21");
+        foreach (string action in new[] { "create", "rename", "deleteEmpty" })
+        {
+            var service = new Services.PlcOrganisationPortService(
+                (_, _) => throw new InvalidOperationException("No worker call expected."),
+                () => throw new InvalidOperationException("No project lookup expected."), () => "fixture");
+            var body = Host.PlcToolContract.Run("ManagePlcUserGroup", true, true,
+                () => service.ManagePlcUserGroup("PLC", family, path, action, "Next", false)).StructuredContent!;
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+            Assert.Equal("groupPath", (string?)body["error"]?["details"]?["parameter"]);
+        }
+    }
+
     public static IEnumerable<object[]> Cases()
     {
         foreach (string contract in new[] { "hardware", "network", "plc", "hmi", "engineering", "drive", "library", "security", "optional" })

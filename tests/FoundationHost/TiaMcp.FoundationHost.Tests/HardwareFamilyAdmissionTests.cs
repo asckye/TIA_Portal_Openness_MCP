@@ -56,6 +56,11 @@ public sealed class HardwareFamilyAdmissionTests
     public void A_typed_creation_refusal_is_rejected_before_operation_with_its_candidates(string release)
     {
         using var selected = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
+        using var worker = new CreationPreviewWorker();
+        using var foundationWorker = new FakeWorker();
+        var shared = LegacyHostToolRegistry.Create(foundationWorker, release, false, hostPorts: false);
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
+        using var session = pipeline.EnterSession();
         var candidates = DeviceCreationRules.CandidateText("6ES7 513-1AM03-0AB0", new[] { "OrderNumber:6ES7 513-1AM03-0AB0/V3.0" });
         int calls = 0;
         var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, _) =>
@@ -65,12 +70,30 @@ public sealed class HardwareFamilyAdmissionTests
             throw DeviceCreationRules.TiaRefusal("OrderNumber:6ES7 513-1AM03-0AB0/V9.9", "PLC_2", "Invalid TypeIdentifier", candidates, "orderNumber/version", new InvalidOperationException("native"));
         }, () => true, () => "C:/Fixture/Fixture.ap21");
         var tool = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
-        var result = tool.CreateDeviceV4("6ES7 513-1AM03-0AB0", "V9.9", "PLC_2").StructuredContent!;
+        var preview = tool.CreateDeviceV4("6ES7 513-1AM03-0AB0", "V9.9", "PLC_2").StructuredContent!;
+        var result = tool.CreateDeviceV4("6ES7 513-1AM03-0AB0", "V9.9", "PLC_2", dryRun: false, confirm: true,
+            expectedPlanHash: (string)preview["data"]!["planHash"]!,
+            expectedProjectFile: (string)preview["data"]!["targetIdentity"]!["identity"]!["projectPath"]!).StructuredContent!;
         Assert.Equal(1, calls);
         Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)result["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
         Assert.Contains("OrderNumber:6ES7 513-1AM03-0AB0/V3.0", (string?)result["error"]?["message"], StringComparison.Ordinal);
+    }
+
+    private sealed class CreationPreviewWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    {
+        public bool Faulted => false;
+        public JsonNode? Binding { get; } = new JsonObject { ["identity"] = new JsonObject {
+            ["processId"] = 123, ["projectPath"] = "C:/Fixture/Fixture.ap21" } };
+        public object SessionKey { get; } = new();
+        public JsonObject Snapshot() => new();
+        public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
+        public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
+        public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
+        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview,
+            CancellationToken token) => throw new NotSupportedException();
+        public void Dispose() { }
     }
 
     public static IEnumerable<object[]> CapabilityBranches()
