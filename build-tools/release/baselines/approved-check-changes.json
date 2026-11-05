@@ -520,6 +520,18 @@
           "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/DraftBetaNotesCarryTheCurrentGeneratedSection( ):624386513e28209980e7257b9ff87ded81b6aed2a2f72d8f00be06a694f478e3:1"
         }
       ]
+    },
+    {
+      "task": "STACK-N-FIX",
+      "maintainerDate": "2026-11-05",
+      "reason": "Maintainer approved in chat on 2026-11-05: OutputRootApprovalTests data rows rewritten to cover old and new parameter names, 168 rows to 285, all 56 tools kept",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "data-row:e99f81a0910aef0b8ca446af48071719e474b3144bd54655e8c73d781bc99e45:1"
+        }
+      ]
     }
   ]
 }
