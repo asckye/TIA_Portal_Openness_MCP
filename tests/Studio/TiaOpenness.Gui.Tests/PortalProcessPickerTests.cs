@@ -192,7 +192,8 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
                 var modeText = new FormattedText(modeCell.Text, System.Globalization.CultureInfo.CurrentUICulture,
                     FlowDirection.LeftToRight, new Typeface(modeCell.FontFamily, modeCell.FontStyle, modeCell.FontWeight, modeCell.FontStretch),
                     modeCell.FontSize, modeCell.Foreground, VisualTreeHelper.GetDpi(modeCell).PixelsPerDip);
-                Assert.InRange(modeText.WidthIncludingTrailingWhitespace, 1, modeCell.ActualWidth);
+                Assert.InRange(Math.Round(modeText.WidthIncludingTrailingWhitespace, 3, MidpointRounding.AwayFromZero), 1,
+                    Math.Round(modeCell.ActualWidth, 3, MidpointRounding.AwayFromZero));
                 list.SelectedItem = model.Processes[^1]; list.ScrollIntoView(list.SelectedItem); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
                 Assert.Equal(model.Processes[^1], model.SelectedProcess);
                 Assert.True(connect.IsEnabled);

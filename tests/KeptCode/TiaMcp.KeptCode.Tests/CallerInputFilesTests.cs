@@ -44,12 +44,19 @@ namespace TiaMcp.Engine.Tests
             string destination = Path.Combine(root, "destination");
             string link = Path.Combine(root, "link");
             Directory.CreateDirectory(destination);
-            var start = new System.Diagnostics.ProcessStartInfo("cmd.exe") { UseShellExecute = false, CreateNoWindow = true };
-            start.ArgumentList.Add("/c"); start.ArgumentList.Add("mklink"); start.ArgumentList.Add("/J");
-            start.ArgumentList.Add(link); start.ArgumentList.Add(destination);
-            using var process = System.Diagnostics.Process.Start(start)!;
-            process.WaitForExit();
-            Assert.Equal(0, process.ExitCode);
+            if (OperatingSystem.IsWindows())
+            {
+                var start = new System.Diagnostics.ProcessStartInfo("cmd.exe") { UseShellExecute = false, CreateNoWindow = true };
+                start.ArgumentList.Add("/c"); start.ArgumentList.Add("mklink"); start.ArgumentList.Add("/J");
+                start.ArgumentList.Add(link); start.ArgumentList.Add(destination);
+                using var process = System.Diagnostics.Process.Start(start)!;
+                process.WaitForExit();
+                Assert.Equal(0, process.ExitCode);
+            }
+            else
+            {
+                Directory.CreateSymbolicLink(link, destination);
+            }
             try
             {
                 Assert.False(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(Path.Combine(link, "x"), root));
