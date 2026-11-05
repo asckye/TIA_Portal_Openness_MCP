@@ -1100,7 +1100,7 @@
       </MultiDataTrigger>
     </Style.Triggers>
   </Style>
-  <Style x:Key="Primer.SyncPreview" TargetType="Button" BasedOn="{StaticResource Primer.Secondary}">
+  <Style x:Key="Primer.SyncPreview" TargetType="Button" BasedOn="{StaticResource Primer.Run}">
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
     <Setter Property="Command" Value="{Binding VersionControl.VcPush}"/>
     <Style.Triggers>
@@ -1109,7 +1109,7 @@
       </DataTrigger>
     </Style.Triggers>
   </Style>
-  <Style x:Key="Primer.SyncRun" TargetType="Button" BasedOn="{StaticResource Primer.Run}">
+  <Style x:Key="Primer.SyncRun" TargetType="Button" BasedOn="{StaticResource Primer.Secondary}">
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
     <Setter Property="Command" Value="{Binding VersionControl.VcPush}"/>
     <Style.Triggers>

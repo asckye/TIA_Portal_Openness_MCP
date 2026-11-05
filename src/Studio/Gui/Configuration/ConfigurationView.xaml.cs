@@ -300,6 +300,9 @@ namespace TiaMcpConfigurator
         {
             if (updatingClientSwitch || e.OriginalSource is not System.Windows.Controls.Primitives.ToggleButton toggle
                 || toggle.DataContext is not ClientProfile profile) return;
+            // Selection bindings also raise Checked while the collection is still updating.
+            if (ItemsControl.ContainerFromElement(ClientChoices, toggle) is ListBoxItem item
+                && toggle.IsChecked == item.IsSelected) return;
             updatingClientSwitch = true;
             try
             {

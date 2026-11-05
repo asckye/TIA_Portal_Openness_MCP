@@ -10,4 +10,13 @@
     <Setter Property="Foreground" Value="{DynamicResource Primer.destructiveText}"/>
     <Setter Property="ContentTemplate"><Setter.Value><DataTemplate><AccessText Text="{Binding}" Foreground="{DynamicResource Primer.destructiveText}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Setter.Value></Setter>
   </Style>
+  <Style x:Key="Primer.ApprovalListPane" TargetType="Border">
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Setter Property="BorderThickness" Value="0,0,1,0"/>
+  </Style>
+  <Style x:Key="Primer.ApprovalDecisionPane" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Primer.bg}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+  </Style>
 </ResourceDictionary>

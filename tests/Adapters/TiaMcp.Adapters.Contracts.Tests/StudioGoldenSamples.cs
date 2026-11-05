@@ -13,7 +13,7 @@ internal static class StudioGoldenSamples
         typeof(ExportedItem), typeof(ExportResult), typeof(BlockKind), typeof(ExportFormat),
         typeof(CompileSeverity), typeof(SessionMode), typeof(SyncDirection), typeof(VcCompareState),
         typeof(WorkspaceInfo), typeof(MappedObjectInfo), typeof(WorkspaceStatusReport),
-        typeof(MappingItem), typeof(MappingResult), typeof(SyncItem), typeof(SyncResult)
+        typeof(MappingItem), typeof(MappingResult), typeof(SyncItem), typeof(SyncResult), typeof(PortalProcessInfo)
     };
 
     // Matches the existing bridge/client's BridgeJson settings, including string enums

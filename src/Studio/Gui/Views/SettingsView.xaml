@@ -1,8 +1,9 @@
 <UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes" x:Class="TiaOpenness.Gui.Views.SettingsView">
   <Grid>
     <Grid.ColumnDefinitions><ColumnDefinition Width="320"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-    <Border BorderBrush="{DynamicResource Primer.divider}" BorderThickness="0,0,1,0" Background="{DynamicResource Primer.sidebar}">
-      <ListBox x:Name="SectionList" ItemContainerStyle="{StaticResource Workbench.SettingsSection}" AutomationProperties.Name="{l:Tr Settings.Sections}" SelectionChanged="OnSectionChanged" BorderThickness="0" Background="Transparent" Margin="8" HorizontalContentAlignment="Stretch">
+    <Border Style="{StaticResource Primer.Workbench.SettingsPane}">
+      <ListBox x:Name="SectionList" ItemContainerStyle="{StaticResource Primer.Workbench.SettingsSection}" AutomationProperties.Name="{l:Tr Settings.Sections}"
+        SelectionChanged="OnSectionChanged" BorderThickness="0" Background="Transparent" Margin="8" HorizontalContentAlignment="Stretch">
         <ListBoxItem x:Name="AppearanceSection" Content="{l:Tr Settings.Appearance}" Tag="Appearance" MinHeight="44"/>
         <ListBoxItem x:Name="ServiceSection" Content="{l:Tr Settings.Engine}" Tag="Service" MinHeight="44"/>
         <ListBoxItem x:Name="AiSection" Content="{l:Tr Control.Section}" Tag="AI" MinHeight="44"/>

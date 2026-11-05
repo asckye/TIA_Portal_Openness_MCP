@@ -9,7 +9,7 @@
     </Border>
     <Grid Grid.Row="1" x:Name="PageBody">
       <Grid.ColumnDefinitions><ColumnDefinition Width="320"/><ColumnDefinition/></Grid.ColumnDefinitions>
-      <Border x:Name="RequestListPane" BorderBrush="{DynamicResource Primer.divider}" BorderThickness="0,0,1,0">
+      <Border x:Name="RequestListPane" Style="{StaticResource Primer.ApprovalListPane}">
         <ListBox x:Name="RequestList" AutomationProperties.Name="{l:Tr Shell.PendingTitle}" Style="{StaticResource Primer.VirtualList}" ItemContainerStyle="{StaticResource Primer.ApprovalItem}" ItemsSource="{Binding VisibleRequests}" SelectedItem="{Binding SelectedRequest, Mode=TwoWay}" SelectionChanged="OnSelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
           <ListBox.ItemTemplate>
             <DataTemplate>
@@ -106,7 +106,8 @@
           <Border Padding="12" Margin="0,12,0,0" Style="{StaticResource Primer.Inset}" Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}"><TextBlock Text="{Binding Note}" TextWrapping="Wrap"/></Border>
         </StackPanel>
       </ScrollViewer>
-        <Border Grid.Row="1" Padding="24,16" Background="{DynamicResource Primer.bg}" BorderBrush="{DynamicResource Primer.divider}" BorderThickness="0,1,0,0" Visibility="{Binding SelectedRequest.Pending, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+        <Border Grid.Row="1" Padding="24,16" Style="{StaticResource Primer.ApprovalDecisionPane}"
+          Visibility="{Binding SelectedRequest.Pending, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
           <Grid x:Name="DecisionArea" DataContext="{Binding SelectedRequest}" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="8"/><ColumnDefinition/></Grid.ColumnDefinitions>
             <Button x:Name="DenyRequest" AutomationProperties.Name="{l:Tr Approval.Deny}" Content="{l:Tr Approval.Deny}" Style="{StaticResource Primer.Answer}" MinHeight="44" IsDefault="{Binding Destructive}" IsCancel="False" IsEnabled="{Binding CanDecide}" Click="OnDeny"/>

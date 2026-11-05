@@ -1,13 +1,5 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Style x:Key="Pages.SyncPreview" TargetType="Button" BasedOn="{StaticResource Primer.Run}">
-    <Setter Property="Command" Value="{Binding VersionControl.VcPush}"/>
-    <Style.Triggers><DataTrigger Binding="{Binding IsChecked,ElementName=ToWorkspace}" Value="False"><Setter Property="Command" Value="{Binding VersionControl.VcPull}"/></DataTrigger></Style.Triggers>
-  </Style>
-  <Style x:Key="Pages.SyncRun" TargetType="Button" BasedOn="{StaticResource Primer.Secondary}">
-    <Setter Property="Command" Value="{Binding VersionControl.VcPush}"/>
-    <Style.Triggers><DataTrigger Binding="{Binding IsChecked,ElementName=ToWorkspace}" Value="False"><Setter Property="Command" Value="{Binding VersionControl.VcPull}"/></DataTrigger></Style.Triggers>
-  </Style>
-  <Style x:Key="Pages.ClientRow" TargetType="ListBoxItem" BasedOn="{StaticResource Primer.ClientRow}">
+  <Style x:Key="Primer.PageClientRow" TargetType="ListBoxItem" BasedOn="{StaticResource Primer.ClientRow}">
     <Setter Property="Margin" Value="0,0,0,4"/>
     <Setter Property="Template">
       <Setter.Value>
@@ -26,7 +18,7 @@
       </Setter.Value>
     </Setter>
   </Style>
-  <DataTemplate x:Key="Pages.ClientContent">
+  <DataTemplate x:Key="Primer.PageClientContent">
     <Grid ToolTip="{Binding Tooltip}">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>

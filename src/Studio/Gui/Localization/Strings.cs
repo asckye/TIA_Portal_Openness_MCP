@@ -135,7 +135,6 @@ internal static partial class Strings
         ("Shell.VersionControl", "Version control", "版本控制"),
         ("Shell.Engineering", "Project", "项目"),
         ("Shell.Brand", "AE Workbench", "自动化工程工作台"),
-        ("Shell.Overview", "Overview", "概览"),
         ("Shell.Settings", "Settings", "设置"),
         ("Shell.Diagnostics", "Export diagnostics", "导出诊断包"),
         ("Shell.DiagnosticsNotConnected", "Diagnostic export is not connected yet.", "诊断包导出尚未接入。"),
@@ -170,7 +169,6 @@ internal static partial class Strings
         ("Settings.EngineVersion", "{0}", "{0}"),
         ("Settings.CheckUpdate", "Check updates", "检查更新"),
         ("Settings.Releases", "GitHub Releases", "GitHub Releases"),
-        ("Settings.Diagnostics", "Diagnostics", "诊断"),
         ("Settings.ConfigDirectory", "Config folder", "配置目录"),
         ("Settings.LogDirectory", "Runtime logs", "运行日志"),
         ("Settings.About", "About", "关于"),
@@ -212,8 +210,6 @@ internal static partial class Strings
                 "TIA Portal 与 AI 客户端在同一台电脑，客户端通过 stdio 按需启动服务，无需地址、端口或密钥。"),
         ("Config.RemoteMode", "VM ↔ Host", "虚拟机 ↔ 宿主机"),
         ("Config.LocalMode", "Same machine", "同一台电脑"),
-        ("Config.RemoteNote", "The TIA machine runs an HTTP service; AI clients connect with a shared secret.", "TIA 电脑运行 HTTP 服务；AI 客户端通过网络和共享密钥连接。"),
-        ("Config.LocalNote", "TIA and the AI client share one PC; the client starts the service over stdio.", "TIA 与 AI 客户端在同一台电脑，通过 stdio 按需启动服务。"),
         ("Config.Installation", "TIA installation", "TIA 安装"),
         ("Config.Version", "Version", "版本"),
         ("Config.InstallPath", "Install path · without Bin", "安装路径 · 不含 Bin"),
@@ -227,7 +223,6 @@ internal static partial class Strings
         ("Config.Stop", "Stop service", "停止服务"),
         ("Config.Generate", "Generate", "生成"),
         ("Config.Show", "Show", "显示"),
-        ("Config.Test", "Test connection", "测试连接"),
         ("Config.Write", "Write client config", "写入客户端配置"),
         ("Config.Summary", "Summary", "连接摘要"),
         ("Config.Service", "Service", "服务"),
@@ -245,7 +240,6 @@ internal static partial class Strings
         ("Config.TestFailed", "Failed. See activity log.", "失败，请查看活动日志。"),
         ("Config.Entries", "{0} entries", "{0} 条记录"),
         ("Config.Entry", "{0} entry", "{0} 条记录"),
-        ("Config.SaveBoth", "Save both sides", "保存两端配置"),
         ("Config.NotChecked", "Not checked yet", "尚未检查"),
         ("Config.RunUpdate", "Update service…", "更新服务…"),
         ("Config.NeedsAttention", "Needs attention", "需要处理"),
@@ -354,9 +348,7 @@ internal static partial class Strings
         ("Primer.Group", "Group path", "组路径"),
         ("Primer.Consistent", "Consistent", "一致"),
 
-        ("Primer.ExportXml", "Export · SimaticML XML", "导出 · SimaticML XML"),
 
-        ("Primer.CompileSoftware", "Compile PLC software", "编译 PLC 软件"),
         ("Primer.Errors", "errors", "个错误"),
         ("Primer.Warnings", "warnings", "条警告"),
         ("Primer.Inspection", "Inspection", "检查"),
@@ -370,8 +362,6 @@ internal static partial class Strings
         ("Primer.NotGitPush", "Not a git push", "不是 git push"),
         ("Primer.ToWorkspace", "→ Workspace", "→ 工作区"),
         ("Primer.ToProject", "→ Project", "→ 项目"),
-        ("Primer.PreviewSync", "Preview sync", "预览同步"),
-        ("Primer.RunSync", "Run sync", "执行同步"),
         ("Primer.MappedObjects", "Mapped objects", "已映射对象"),
         ("Primer.File", "File", "文件"),
         ("Primer.LocalDiff", "Local git diff", "本地 Git 差异"),
@@ -460,7 +450,6 @@ internal static partial class Strings
         ("Config.MissingReleaseTag", "The release page did not provide the latest version tag (API: {0}).", "发布页没有给出最新版本的 tag（API：{0}）"),
         ("Config.UpdateUnreachable", "This machine cannot reach github.com: {0}. Check your network or proxy, then select “Check for updates” again.",
                 "这台机器访问不到 github.com：{0}。检查网络或代理后再点“检查更新”。"),
-        ("Primer.ExportSource", "Export · Source text", "导出 · 源文本"),
         ("Primer.Yes", "Yes", "是"),
         ("Primer.No", "No", "否"),
         ("Primer.Protected", "Protected", "受保护"),
@@ -517,7 +506,6 @@ internal static partial class Strings
                                        "连接并打开项目后\n此处将列出设备"),
 
         // ---- tabs ------------------------------------------------------------------
-        ("Tab.Log",                    "Log", "日志"),
 
         // ---- blocks ----------------------------------------------------------------
 
@@ -561,8 +549,6 @@ internal static partial class Strings
 
         // ---- log -------------------------------------------------------------------
         ("Log.Title",                  "Log", "日志"),
-        ("Log.Copy",                   "Copy", "复制"),
-        ("Log.Clear",                  "Clear", "清空"),
 
         // ---- status bar ------------------------------------------------------------
         ("Status.NotConnected",        "Not connected.", "未连接"),

@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- Restore shared Workbench style usage after the UI redesign, keep configuration headings untrimmed, remove obsolete translations, and prevent list binding updates from opening client-enable confirmations.
+
 ### Changed
 - Transport checks retain the full profile and check up to four releases at a time, respecting `-MaxParallelism` with deterministic report ordering.
 

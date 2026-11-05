@@ -46,6 +46,7 @@ public sealed class AdapterContractTests
     public void FacetsUseOnlyContractValuesAndCapabilitiesCanBeCombined()
     {
         bool ContractValue(Type type) => type == typeof(void) || type.IsPrimitive || type == typeof(string)
+            || (Nullable.GetUnderlyingType(type) is { } valueType && ContractValue(valueType))
             || (type.IsArray && ContractValue(type.GetElementType()!))
             || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyList<>)
                 && ContractValue(type.GetGenericArguments()[0]))

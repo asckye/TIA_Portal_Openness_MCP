@@ -29,7 +29,7 @@
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Border x:Name="Sider" Width="232" Style="{StaticResource Workbench.Sider}">
+        <Border x:Name="Sider" Width="232" Style="{StaticResource Primer.Workbench.Sider}">
           <DockPanel>
             <Grid DockPanel.Dock="Top" Height="64" Margin="16,0,12,0">
               <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -42,24 +42,33 @@
               </StackPanel>
             </Grid>
             <StackPanel DockPanel.Dock="Bottom">
-              <RadioButton x:Name="SettingsButton" AutomationProperties.Name="{l:Tr Shell.Settings}" Content="{l:Tr Shell.Settings}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+," Tag="Settings" ux:Ux.Icon="{DynamicResource Icon.Setting}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick"/>
+              <RadioButton x:Name="SettingsButton" AutomationProperties.Name="{l:Tr Shell.Settings}" Content="{l:Tr Shell.Settings}" GroupName="Pages"
+                AutomationProperties.AcceleratorKey="Ctrl+," Tag="Settings" ux:Ux.Icon="{DynamicResource Icon.Setting}"
+                Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
               <StackPanel x:Name="StatusInformation" Margin="8,8,8,0">
-                <Button x:Name="McpStatusButton" Style="{StaticResource Workbench.StatusButton}" AutomationProperties.Name="{Binding Text,ElementName=McpStatusText}" ToolTip="{Binding Text,ElementName=McpStatusText}" Click="OnMcpStatus">
+                <Button x:Name="McpStatusButton" Style="{StaticResource Primer.Workbench.StatusButton}"
+                  AutomationProperties.Name="{Binding Text,ElementName=McpStatusText}" ToolTip="{Binding Text,ElementName=McpStatusText}" Click="OnMcpStatus">
                   <DockPanel>
                     <Ellipse x:Name="McpStatusDot" AutomationProperties.Name="{Binding Text,ElementName=McpStatusText}" ToolTip="{Binding Text,ElementName=McpStatusText}" Style="{StaticResource Primer.StatusDot}" DockPanel.Dock="Left" Margin="8,0" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="McpStatusText" Style="{StaticResource Workbench.StatusText}" AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+                    <TextBlock x:Name="McpStatusText" Style="{StaticResource Primer.Workbench.StatusText}" AutomationProperties.LiveSetting="Polite"
+                      ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}"/>
                   </DockPanel>
                 </Button>
-                <Button x:Name="SessionStatusButton" Style="{StaticResource Workbench.StatusButton}" AutomationProperties.Name="{Binding Text,ElementName=SessionStatus}" ToolTip="{Binding Text,ElementName=SessionStatus}" Click="OnProjectStatus">
+                <Button x:Name="SessionStatusButton" Style="{StaticResource Primer.Workbench.StatusButton}"
+                  AutomationProperties.Name="{Binding Text,ElementName=SessionStatus}" ToolTip="{Binding Text,ElementName=SessionStatus}"
+                  Click="OnProjectStatus">
                   <DockPanel>
                     <Ellipse x:Name="SessionStatusDot" AutomationProperties.Name="{Binding Text,ElementName=SessionStatus}" ToolTip="{Binding Text,ElementName=SessionStatus}" Style="{StaticResource Primer.StatusDot}" DockPanel.Dock="Left" Margin="8,0" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="SessionStatus" Style="{StaticResource Workbench.StatusText}" AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+                    <TextBlock x:Name="SessionStatus" Style="{StaticResource Primer.Workbench.StatusText}" AutomationProperties.LiveSetting="Polite"
+                      ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}"/>
                   </DockPanel>
                 </Button>
-                <Button x:Name="ApprovalStatusButton" Style="{StaticResource Workbench.StatusButton}" AutomationProperties.Name="{Binding Text,ElementName=ApprovalStatusText}" ToolTip="{Binding Text,ElementName=ApprovalStatusText}" Click="OnApprovalStatus">
+                <Button x:Name="ApprovalStatusButton" Style="{StaticResource Primer.Workbench.StatusButton}"
+                  AutomationProperties.Name="{Binding Text,ElementName=ApprovalStatusText}" ToolTip="{Binding Text,ElementName=ApprovalStatusText}"
+                  Click="OnApprovalStatus">
                   <DockPanel>
                     <Ellipse x:Name="ApprovalStatusDot" AutomationProperties.Name="{Binding Text,ElementName=ApprovalStatusText}" ToolTip="{Binding Text,ElementName=ApprovalStatusText}" Style="{StaticResource Primer.StatusDot}" DockPanel.Dock="Left" Margin="8,0" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="ApprovalStatusText" Style="{StaticResource Workbench.StatusText}"/>
+                    <TextBlock x:Name="ApprovalStatusText" Style="{StaticResource Primer.Workbench.StatusText}"/>
                   </DockPanel>
                 </Button>
               </StackPanel>
@@ -68,13 +77,21 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
               <StackPanel x:Name="SiderMenu">
                 <Grid>
-                  <RadioButton x:Name="RailApprovals" AutomationProperties.Name="{l:Tr Shell.Approvals}" Content="{l:Tr Shell.Approvals}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+1" Tag="Approvals" ux:Ux.Icon="{DynamicResource Icon.Bell}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick"/>
-                  <Button x:Name="PendingBadge" AutomationProperties.Name="{l:Tr Shell.PendingTitle}" Style="{StaticResource Workbench.PendingBadge}" Click="OnApprovals" Visibility="Collapsed"/>
+                  <RadioButton x:Name="RailApprovals" AutomationProperties.Name="{l:Tr Shell.Approvals}" Content="{l:Tr Shell.Approvals}" GroupName="Pages"
+                    AutomationProperties.AcceleratorKey="Ctrl+1" Tag="Approvals" ux:Ux.Icon="{DynamicResource Icon.Bell}"
+                    Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
+                  <Button x:Name="PendingBadge" AutomationProperties.Name="{l:Tr Shell.PendingTitle}" Style="{StaticResource Primer.Workbench.PendingBadge}"
+                    Click="OnApprovals" Visibility="Collapsed"/>
                 </Grid>
-                <RadioButton x:Name="RailEngineering" AutomationProperties.Name="{l:Tr Shell.Engineering}" Content="{l:Tr Shell.Engineering}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+2" Tag="Engineering" ux:Ux.Icon="{DynamicResource Icon.Project}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick"/>
-                <RadioButton x:Name="RailVersionControl" AutomationProperties.Name="{l:Tr Shell.VersionControl}" Content="{l:Tr Shell.VersionControl}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+3" Tag="VersionControl" ux:Ux.Icon="{DynamicResource Icon.Branch}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick"/>
-                <TextBlock Text="{l:Tr Shell.GroupAi}" Style="{StaticResource Workbench.MenuGroup}"/>
-                <RadioButton x:Name="RailCalls" AutomationProperties.Name="{l:Tr Shell.Calls}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+4" Tag="Calls" ux:Ux.Icon="{DynamicResource Icon.Robot}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick">
+                <RadioButton x:Name="RailEngineering" AutomationProperties.Name="{l:Tr Shell.Engineering}" Content="{l:Tr Shell.Engineering}" GroupName="Pages"
+                  AutomationProperties.AcceleratorKey="Ctrl+2" Tag="Engineering" ux:Ux.Icon="{DynamicResource Icon.Project}"
+                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
+                <RadioButton x:Name="RailVersionControl" AutomationProperties.Name="{l:Tr Shell.VersionControl}" Content="{l:Tr Shell.VersionControl}"
+                  GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+3" Tag="VersionControl" ux:Ux.Icon="{DynamicResource Icon.Branch}"
+                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
+                <TextBlock Text="{l:Tr Shell.GroupAi}" Style="{StaticResource Primer.Workbench.MenuGroup}"/>
+                <RadioButton x:Name="RailCalls" AutomationProperties.Name="{l:Tr Shell.Calls}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+4"
+                  Tag="Calls" ux:Ux.Icon="{DynamicResource Icon.Robot}" Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick">
                   <DockPanel>
                     <Border x:Name="CallsCountBadge" DockPanel.Dock="Right" Style="{StaticResource Primer.TabCountBadge}" Tag="{Binding DataContext.Calls.Count,ElementName=CallsContent}" Margin="6,0,0,0">
                       <TextBlock Text="{Binding DataContext.Calls.Count,ElementName=CallsContent}" Style="{StaticResource Primer.CountText}"/>
@@ -82,16 +99,27 @@
                     <TextBlock Text="{l:Tr Shell.Calls}"/>
                   </DockPanel>
                 </RadioButton>
-                <RadioButton x:Name="RailAudit" AutomationProperties.Name="{l:Tr Shell.Audit}" Content="{l:Tr Shell.Audit}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+5" Tag="Audit" ux:Ux.Icon="{DynamicResource Icon.Audit}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick"/>
-                <TextBlock Text="{l:Tr Shell.GroupOperations}" Style="{StaticResource Workbench.MenuGroup}"/>
+                <RadioButton x:Name="RailAudit" AutomationProperties.Name="{l:Tr Shell.Audit}" Content="{l:Tr Shell.Audit}" GroupName="Pages"
+                  AutomationProperties.AcceleratorKey="Ctrl+5" Tag="Audit" ux:Ux.Icon="{DynamicResource Icon.Audit}"
+                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
+                <TextBlock Text="{l:Tr Shell.GroupOperations}" Style="{StaticResource Primer.Workbench.MenuGroup}"/>
                 <Grid>
-                  <RadioButton x:Name="RailEnvironment" AutomationProperties.Name="{l:Tr Shell.Environment}" Content="{l:Tr Shell.Environment}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+6" Tag="Environment" ux:Ux.Icon="{DynamicResource Icon.Health}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick"/>
-                  <Border x:Name="EnvironmentCountBadge" Style="{StaticResource Workbench.AttentionBadge}" Tag="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}" AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}" ToolTip="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}">
+                  <RadioButton x:Name="RailEnvironment" AutomationProperties.Name="{l:Tr Shell.Environment}" Content="{l:Tr Shell.Environment}"
+                    GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+6" Tag="Environment" ux:Ux.Icon="{DynamicResource Icon.Health}"
+                    Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
+                  <Border x:Name="EnvironmentCountBadge" Style="{StaticResource Primer.Workbench.AttentionBadge}"
+                    Tag="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}"
+                    AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}"
+                    ToolTip="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}">
                     <TextBlock Text="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}" Style="{StaticResource Primer.CountText}"/>
                   </Border>
                 </Grid>
-                <RadioButton x:Name="RailLog" AutomationProperties.Name="{l:Tr Shell.Logs}" Content="{l:Tr Shell.Logs}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+7" Tag="Log" ux:Ux.Icon="{DynamicResource Icon.FileText}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick"/>
-                <RadioButton x:Name="RailMcp" AutomationProperties.Name="{l:Tr Desktop.Configuration}" Content="{l:Tr Desktop.Configuration}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+8" Tag="Mcp" ux:Ux.Icon="{DynamicResource Icon.Api}" Style="{StaticResource Workbench.NavItem}" Click="OnRailClick"/>
+                <RadioButton x:Name="RailLog" AutomationProperties.Name="{l:Tr Shell.Logs}" Content="{l:Tr Shell.Logs}" GroupName="Pages"
+                  AutomationProperties.AcceleratorKey="Ctrl+7" Tag="Log" ux:Ux.Icon="{DynamicResource Icon.FileText}"
+                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
+                <RadioButton x:Name="RailMcp" AutomationProperties.Name="{l:Tr Desktop.Configuration}" Content="{l:Tr Desktop.Configuration}" GroupName="Pages"
+                  AutomationProperties.AcceleratorKey="Ctrl+8" Tag="Mcp" ux:Ux.Icon="{DynamicResource Icon.Api}"
+                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
               </StackPanel>
             </ScrollViewer>
           </DockPanel>
@@ -117,12 +145,14 @@
               </StackPanel>
               <Button x:Name="ApprovalsButton" DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Shell.PendingTitle}" Style="{StaticResource Primer.PendingBadge}" Click="OnApprovals" Visibility="Collapsed" Margin="0,0,8,0" shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
               <ContentControl x:Name="PageActions" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
-              <TextBlock x:Name="CurrentPageTitle" Focusable="True" FocusVisualStyle="{StaticResource Primer.Focus}" KeyboardNavigation.IsTabStop="False" AutomationProperties.HeadingLevel="Level1" FontSize="{DynamicResource Ui.FontSize.Heading}" FontWeight="Bold" VerticalAlignment="Center"/>
+              <TextBlock x:Name="CurrentPageTitle" Style="{StaticResource Primer.Workbench.PageTitle}" Focusable="True"
+                FocusVisualStyle="{StaticResource Primer.Focus}" KeyboardNavigation.IsTabStop="False" AutomationProperties.HeadingLevel="Level1"/>
             </DockPanel>
           </Border>
-          <Border x:Name="SafetyBanner" Grid.Row="1" Style="{StaticResource Workbench.SafetyBanner}" Visibility="Collapsed">
+          <Border x:Name="SafetyBanner" Grid.Row="1" Style="{StaticResource Primer.Workbench.SafetyBanner}" Visibility="Collapsed">
             <Grid>
-              <Border x:Name="ApprovalOffPill" AutomationProperties.Name="{l:Tr Shell.ApprovalOff}" Visibility="Collapsed">
+              <Border Style="{StaticResource Primer.Plain}" x:Name="ApprovalOffPill" AutomationProperties.Name="{l:Tr Shell.ApprovalOff}"
+                Visibility="Collapsed">
                 <TextBlock x:Name="ApprovalOffText" AutomationProperties.LiveSetting="Polite" Text="{l:Tr Shell.ApprovalOff}"/>
               </Border>
               <StackPanel x:Name="ControlPrefillHint" Orientation="Horizontal" Visibility="Collapsed">

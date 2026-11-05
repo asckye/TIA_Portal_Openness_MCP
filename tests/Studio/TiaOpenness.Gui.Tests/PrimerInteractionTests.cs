@@ -72,8 +72,8 @@ public class PrimerInteractionTests(WpfContext wpf)
                 var content=(FrameworkElement)window.Content;window.Content=null;
                 var host=new Border { Child=content, DataContext=model };
                 host.Measure(new Size(1200,780));host.Arrange(new Rect(0,0,1200,780));host.UpdateLayout();
-                var preview=Find<Button>(host).Single(b=>Equals(b.Content,"Preview sync"));
-                var run=Find<Button>(host).Single(b=>Equals(b.Content,"Run sync"));
+                var preview=Find<Button>(host).Single(b=>Equals(b.Content,Loc.Current["Pages.PreviewSync"]));
+                var run=Find<Button>(host).Single(b=>Equals(b.Content,Loc.Current["Pages.RunSync"]));
                 Assert.Same(model.VersionControl.VcPush,preview.Command);
                 var direction=(RadioButton)ProjectPageTestSupport.Find(window, "ToWorkspace");
                 direction.IsChecked=false;host.UpdateLayout();

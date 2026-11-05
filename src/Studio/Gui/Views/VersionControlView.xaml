@@ -169,8 +169,10 @@
                   </Grid>
                 </Border>
                 <DockPanel Grid.Row="3" Margin="0,6,0,0">
-                  <Button AutomationProperties.Name="{l:Tr Pages.RunSync}" Content="{l:Tr Pages.RunSync}" Click="OnRun" Style="{StaticResource Pages.SyncRun}" DockPanel.Dock="Right" Height="32" Padding="8,0"/>
-                  <Button AutomationProperties.Name="{l:Tr Pages.PreviewSync}" Content="{l:Tr Pages.PreviewSync}" IsDefault="True" Click="OnPreview" Margin="0,0,8,0" Style="{StaticResource Pages.SyncPreview}" DockPanel.Dock="Right" Height="32" Padding="8,0"/>
+                  <Button AutomationProperties.Name="{l:Tr Pages.RunSync}" Content="{l:Tr Pages.RunSync}" Click="OnRun" Style="{StaticResource Primer.SyncRun}"
+                    DockPanel.Dock="Right" Height="32" Padding="8,0"/>
+                  <Button AutomationProperties.Name="{l:Tr Pages.PreviewSync}" Content="{l:Tr Pages.PreviewSync}" IsDefault="True" Click="OnPreview"
+                    Margin="0,0,8,0" Style="{StaticResource Primer.SyncPreview}" DockPanel.Dock="Right" Height="32" Padding="8,0"/>
                   <TextBlock Text="{Binding ElementName=PageRoot, Path=Tag.SyncSummary}" ToolTip="{Binding Tag.SyncSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="NoWrap"/>
                 </DockPanel>
               </Grid>

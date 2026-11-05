@@ -123,9 +123,9 @@ public partial class MainWindow
         foreach (var item in new[] {
                 RailApprovals, RailEngineering, RailVersionControl, RailCalls, RailAudit, RailEnvironment, RailLog, RailMcp, SettingsButton })
         {
-            string? reason = PageUnavailable((string)item.Tag);
+            LocalizedText? reason = PageUnavailable((string)item.Tag);
             item.IsEnabled = reason == null;
-            item.ToolTip = reason == null ? System.Windows.Automation.AutomationProperties.GetName(item) : Loc.Current[reason];
+            item.ToolTip = reason == null ? System.Windows.Automation.AutomationProperties.GetName(item) : reason.Value.Resolve();
         }
         RailVersion.Text = ViewModels.MainViewModel.AppVersion.TrimStart('v');
         BlocksContent.Visibility = _page == "Engineering" && HasProject ? Visibility.Visible : Visibility.Collapsed;
@@ -148,11 +148,13 @@ public partial class MainWindow
 
     }
 
-    private string? PageUnavailable(string page)
+    private LocalizedText? PageUnavailable(string page)
     {
-        if (_model.OfflineDemo && page is not ("Calls" or "Audit" or "Environment" or "Log")) return "Shell.OfflineUnavailable";
-        if (page == "VersionControl" && !_model.VersionControlPageVisible) return "Shell.VersionControlUnavailable";
-        if (page == "VersionControl" && !HasProject) return "Shell.NoProject";
+        if (_model.OfflineDemo && page is not ("Calls" or "Audit" or "Environment" or "Log"))
+            return LocalizedText.Key("Shell.OfflineUnavailable");
+        if (page == "VersionControl" && !_model.VersionControlPageVisible)
+            return LocalizedText.Key("Shell.VersionControlUnavailable");
+        if (page == "VersionControl" && !HasProject) return LocalizedText.Key("Shell.NoProject");
         return null;
     }
 
@@ -164,7 +166,7 @@ public partial class MainWindow
         {
             _approvalToast = null;
             _featureTitle = LocalizedText.Key("Shell.PageUnavailable");
-            _featureFeedback = LocalizedText.Key(reason);
+            _featureFeedback = reason;
             UpdateFeatureToast(); Toast.Visibility = Visibility.Visible;
             Controls.AccessibleStatus.Announce(ToastMessage);
             return;

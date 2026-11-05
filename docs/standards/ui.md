@@ -74,7 +74,7 @@ token 名称取自设计系统；WPF 实现在 `Themes/Palette.Light.xaml`、`Pa
 | accent-text | #0066CC | #409CFF | HotTrack | `Primer.accent` | 链接、文字按钮、选中的图标 |
 | accent-tint | #E8F1FC | #0A2540 | Window | `Primer.noteBg` | 信息类提示条底，上面文字用 accent-text |
 | destructive | #D70015 | #D70015 | Highlight | `Ant.colorErrorSolid` | 破坏性确认后的实底按钮、破坏性标记（白字 5.4:1） |
-| destructive-text | #D70015 | #FF6961 | WindowText | `Primer.diffRed`、`Ant.colorError` | 破坏性按钮文字、错误说明 |
+| destructive-text | #BD0012 | #FF827A | WindowText | `Primer.destructiveText` | 破坏性按钮文字（普通与悬停底色均 ≥ 4.5:1） |
 | destructive-tint | #FDECEC | #3B1517 | Window | `Ant.colorErrorBg` | 错误提示条、破坏性请求图标底 |
 | warning | #FF9500 | #FF9F0A | WindowText | 无 | 警告图标实底、少于 30 秒的倒计时环；不用于文字 |
 | warning-text | #B25000 | #FFB340 | WindowText | `Primer.warn` | 警告文字、即将超时的时间 |
@@ -85,6 +85,8 @@ token 名称取自设计系统；WPF 实现在 `Themes/Palette.Light.xaml`、`Pa
 | icon-write / icon-destructive / icon-read | #0A84FF / #FF3B30 / #8E8E93 | #0A84FF / #FF453A / #636366 | Window + hc-outline | 无（随 UI-2c） | 审批请求图标底（白色图形） |
 | scrim | 黑 25% | 黑 50% | 黑 80%，浮层另加 hc-outline（维护者 2026-11-03） | `Ant.colorBgMask` | 确认面板与模态层背后的遮罩 |
 | toast-bg | rgba(30,30,30,0.94) | rgba(58,58,60,0.96) | Window | `Ant.colorBgSpotlight` | toast 与工具提示底，上面白字 |
+
+破坏性按钮文字使用独立的 `Primer.destructiveText`：原亮色 `#D70015` 在 `Primer.pill`（`#E5E5EA`）上只有 4.29:1，低于普通文字要求的 4.5:1。表中的亮色与暗色值由 [ThemeSurfaceTests](../../tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs) 固定，并由 [AccessibilityTests](../../tests/Studio/TiaOpenness.Gui.Tests/AccessibilityTests.cs) 检查普通与悬停底色上的对比度。`Primer.diffRed`、`Ant.colorError` 仍表示差异删除与错误说明，不能代替破坏性按钮文字的专用令牌。
 
 ### 2.2 字体
 

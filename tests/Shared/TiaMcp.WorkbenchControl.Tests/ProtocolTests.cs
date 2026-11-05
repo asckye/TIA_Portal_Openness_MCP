@@ -267,8 +267,11 @@ public sealed class ProtocolTests
         var request = new PendingApproval { RequestId = Id, Host = "foundation", ReleaseKey = "19", Tool = "SaveProject",
             PlanHash = new string('a', 64), ArgumentDigest = new string('b', 64), Deadline = new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero),
             Operations = new[] { new ApprovalAction { Tool = "SaveProject", Action = "apply", Target = "project" } } };
-        string expected = "{\"Version\":1,\"Kind\":\"request\",\"Outcome\":null,\"RequestId\":\"" + Id + "\",\"Host\":\"foundation\",\"ReleaseKey\":\"19\",\"Tool\":\"SaveProject\",\"PlanHash\":\"" + new string('a', 64)
-            + "\",\"ArgumentDigest\":\"" + new string('b', 64) + "\",\"ProjectIdentity\":\"{}\",\"ParametersJson\":\"{}\",\"Operations\":[{\"Tool\":\"SaveProject\",\"Action\":\"apply\",\"Target\":\"project\"}],\"TimeoutSeconds\":120,\"Deadline\":\"2030-01-01T00:00:00+00:00\"}";
+        string expected = "{\"Version\":1,\"Kind\":\"request\",\"Outcome\":null,\"RequestId\":\"" + Id
+            + "\",\"Host\":\"foundation\",\"ReleaseKey\":\"19\",\"Tool\":\"SaveProject\",\"Risk\":\"write\",\"RiskAction\":\"execute\","
+            + "\"OverwritesExisting\":false,\"PlanHash\":\"" + new string('a', 64) + "\",\"ArgumentDigest\":\"" + new string('b', 64)
+            + "\",\"ProjectIdentity\":\"{}\",\"ParametersJson\":\"{}\",\"Operations\":[{\"Tool\":\"SaveProject\",\"Action\":\"apply\","
+            + "\"Target\":\"project\"}],\"TimeoutSeconds\":120,\"Deadline\":\"2030-01-01T00:00:00+00:00\"}";
         using var wire = new MemoryStream(); await ApprovalFrames.Write(wire, request, default);
         Assert.Equal(Frame(expected).ToArray(), wire.ToArray());
         wire.Position = 0; await Assert.ThrowsAsync<InvalidDataException>(() => WorkbenchControlFrames.Read<WorkbenchControlRequest>(wire, default));

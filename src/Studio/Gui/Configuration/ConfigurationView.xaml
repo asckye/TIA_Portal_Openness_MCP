@@ -33,7 +33,7 @@
                 <ContentControl x:Name="DetectionChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
                   <TextBlock x:Name="DetectionSource" Style="{StaticResource Primer.StatusText}"/>
                 </ContentControl>
-                <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap"/>
+                <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap" TextTrimming="None"/>
               </DockPanel>
               <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
@@ -70,7 +70,7 @@
                 <ContentControl x:Name="ServiceStateChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
                   <TextBlock x:Name="ServiceStatusText" Style="{StaticResource Primer.StatusText}"/>
                 </ContentControl>
-                <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap"/>
+                <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap" TextTrimming="None"/>
               </DockPanel>
               <Grid x:Name="AddressRow" Grid.Row="2">
                 <Grid.ColumnDefinitions>
@@ -103,7 +103,7 @@
               <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
               <DockPanel Margin="0,0,0,12">
                 <Border x:Name="Step3Icon" Style="{StaticResource Primer.StepIcon}" DockPanel.Dock="Left" Margin="0,0,8,0"><TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-                <TextBlock Text="{l:Tr Mcp.SecretTitle}" Style="{StaticResource Primer.ContainerTitle}"/>
+                <TextBlock Text="{l:Tr Mcp.SecretTitle}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap" TextTrimming="None"/>
               </DockPanel>
               <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
@@ -146,13 +146,18 @@
               <Border Style="{StaticResource Primer.HeaderStrip}">
                 <StackPanel>
                   <DockPanel>
-                    <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,4,0"/>
-                    <TextBlock x:Name="ClientSelection" Focusable="True" AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}" KeyDown="OnClientGuidanceKey" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Cursor="Hand"/>
+                    <TextBlock x:Name="ClientSelection" DockPanel.Dock="Right" Focusable="True"
+                      AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}" KeyDown="OnClientGuidanceKey"
+                      Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Cursor="Hand"/>
+                    <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.ContainerTitle}"
+                      TextWrapping="Wrap" TextTrimming="None" Margin="0,0,4,0"/>
                   </DockPanel>
                   <TextBlock x:Name="RelayNote" TextWrapping="Wrap" Margin="0,4,0,0" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
                 </StackPanel>
               </Border>
-              <ListBox x:Name="ClientChoices" AutomationProperties.Name="{l:Tr Mcp.Clients}" Grid.Row="1" Style="{StaticResource Primer.List}" SelectionMode="Multiple" ItemContainerStyle="{StaticResource Pages.ClientRow}" ItemTemplate="{StaticResource Pages.ClientContent}" Margin="10,10,10,4" Padding="0" VerticalAlignment="Top" PreviewMouseLeftButtonDown="OnClientPreviewMouse" PreviewKeyDown="OnClientPreviewKey">
+              <ListBox x:Name="ClientChoices" AutomationProperties.Name="{l:Tr Mcp.Clients}" Grid.Row="1" Style="{StaticResource Primer.List}"
+                SelectionMode="Multiple" ItemContainerStyle="{StaticResource Primer.PageClientRow}" ItemTemplate="{StaticResource Primer.PageClientContent}"
+                Margin="10,10,10,4" Padding="0" VerticalAlignment="Top" PreviewMouseLeftButtonDown="OnClientPreviewMouse" PreviewKeyDown="OnClientPreviewKey">
                 <ListBox.ItemsPanel>
                   <ItemsPanelTemplate>
                     <UniformGrid Columns="1"/>

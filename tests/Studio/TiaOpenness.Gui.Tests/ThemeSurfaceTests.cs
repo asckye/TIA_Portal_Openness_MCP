@@ -13,6 +13,30 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class ThemeSurfaceTests(WpfContext wpf)
 {
     [Fact]
+    public void Long_page_titles_keep_character_ellipsis_with_the_explicit_style()
+    {
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false);
+            try
+            {
+                var host = WorkbenchRenderTests.CreateHost(window, 1024, 640);
+                var title = (TextBlock)window.FindName("CurrentPageTitle");
+                title.Text = new string('W', 128);
+                host.UpdateLayout();
+                Assert.Equal(TextTrimming.CharacterEllipsis, title.TextTrimming);
+                Assert.Equal(TextWrapping.NoWrap, title.TextWrapping);
+                Assert.True(title.ActualWidth > 0);
+                var fullTitle = new TextBlock { Text = title.Text, FontFamily = title.FontFamily,
+                    FontSize = title.FontSize, FontWeight = title.FontWeight };
+                fullTitle.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                Assert.True(fullTitle.DesiredSize.Width > title.ActualWidth);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Colors_live_in_the_palettes_and_the_vocabulary_warning_count_variant()
     {
         var literal = new Regex(@"#[\da-fA-F]{3,8}\b|\b(?:Colors|Brushes)\.(?!Transparent\b)\w+|\bColor\.From\w+");
@@ -43,7 +67,9 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
             string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText", "Ant.colorPrimary", "Ant.colorPrimaryHover", "Ant.colorPrimaryActive", "Ant.colorLinkHover", "Ant.controlItemBgActiveHover", "Ant.colorWhite", "Ant.colorBorder", "Ant.colorError", "Ant.colorErrorBg", "Ant.colorErrorBorder", "Ant.colorErrorSolid", "Ant.colorErrorSolidHover", "Ant.colorErrorSolidActive", "Ant.colorWarningBorder", "Ant.colorSuccessBorder", "Ant.colorFillSecondary", "Ant.colorBgContainerDisabled", "Ant.colorTextDisabled", "Ant.colorBgMask", "Ant.colorBgSpotlight", "Ant.colorTextLightSolid", "Ant.boxShadowKey", "Ant.boxShadowUmbra", "Ant.boxShadowAmbient"];
             string[] expected = colors.Split(' ');
-            Assert.Equal(keys.Length + 4, palette.Count);
+            Assert.Equal(keys.Length + 5, palette.Count);
+            Assert.Equal(theme == "Light" ? "#FFBD0012" : "#FFFF827A",
+                ((SolidColorBrush)palette["Primer.destructiveText"]).Color.ToString());
             Assert.Equal(Colors.White, ((SolidColorBrush)palette["Primer.onPrimary"]).Color);
             Assert.Equal(theme == "Light" ? "#FFFFFFFF" : "#FF1E1E1E", ((SolidColorBrush)palette["Primer.window"]).Color.ToString());
             Assert.Equal(theme == "Light" ? "#FFEBEBED" : "#FF2A2A2C", ((SolidColorBrush)palette["Primer.sidebar"]).Color.ToString());

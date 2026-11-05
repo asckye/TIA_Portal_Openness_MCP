@@ -45,6 +45,12 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 var provider = Assert.IsAssignableFrom<System.Windows.Automation.Provider.IToggleProvider>(peer.GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle));
                 int previews = 0;
                 configuration.ConfirmClientSelection = profile => { Assert.Same(profiles[1], profile); previews++; return false; };
+                choices.SelectAll(); WpfContext.Drain(); host.UpdateLayout();
+                Assert.Equal(0, previews);
+                Assert.Equal(profiles.Count, choices.SelectedItems.Count);
+                choices.UnselectAll(); WpfContext.Drain(); host.UpdateLayout();
+                Assert.Equal(0, previews);
+                Assert.Empty(choices.SelectedItems);
                 provider.Toggle(); WpfContext.Drain(); host.UpdateLayout();
                 Assert.False(toggle.IsChecked);
                 Assert.Equal(System.Windows.Automation.ToggleState.Off, provider.ToggleState);

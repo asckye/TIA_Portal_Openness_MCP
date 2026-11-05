@@ -234,7 +234,8 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                                 var row = Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(i));
                                 var name = Descendants<TextBlock>(row).Single(text => text.Name == "ClientName");
                                 Assert.Equal(clients[i].DisplayName, name.Text);
-                                Assert.Equal(clients[i].DisplayName, name.ToolTip);
+                                var content = Assert.IsType<Grid>(VisualTreeHelper.GetParent(name));
+                                Assert.Equal(clients[i].Tooltip, content.ToolTip);
                                 AssertClientName(name, context);
                                 Assert.Equal(selected, row.IsSelected);
                             }
@@ -292,9 +293,10 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             if (page == "Mcp")
                             {
                                 AssertWholeWords((TextBlock)window.Configuration!.FindName("PageSubtitle"), context);
-                                var steps = (DependencyObject)window.Configuration!.FindName("SetupSteps");
-                                foreach (string key in new[] { "Config.StepInstallationHint", "Config.StepServiceHint", "Config.StepClientsHint" })
-                                    AssertWholeWords(Descendants<TextBlock>(steps).Single(text => text.Text == Loc.Current[key]), context);
+                                var configuration = window.Configuration!;
+                                foreach (string key in new[] { "Config.Installation", "Config.HttpService", "Mcp.SecretTitle", "Mcp.Clients" })
+                                    AssertWholeWords(Descendants<TextBlock>(configuration).Single(text => text.Text == Loc.Current[key]
+                                        && ReferenceEquals(text.Style, Application.Current.FindResource("Primer.ContainerTitle"))), context);
                             }
                             if (page == "Engineering")
                             {
@@ -311,9 +313,13 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             if (page == "Audit")
                             {
                                 var audit = (DependencyObject)window.FindName("AuditContent");
-                                AssertWholeWords(Descendants<TextBlock>(audit).Single(text => text.Text == Loc.Current["Audit.FileSize"]), context);
                                 foreach (var text in Descendants<TextBlock>(audit).Where(text => text.DataContext is AuditRow row
                                     && (text.Text == row.Type || text.Text == row.Actor))) AssertSingleLine(text, context);
+                            }
+                            if (page == "Log")
+                            {
+                                var log = (DependencyObject)window.FindName("LogContent");
+                                AssertWholeWords(Descendants<TextBlock>(log).Single(text => text.Text == Loc.Current["Audit.FileSize"]), context);
                             }
                             if (page == "Calls")
                             {
@@ -410,9 +416,9 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
         Assert.Equal(Visibility.Visible, text.Visibility);
         Assert.False(string.IsNullOrWhiteSpace(text.Text));
         Assert.Equal(TextWrapping.Wrap, text.TextWrapping);
-        Assert.Equal(TextTrimming.CharacterEllipsis, text.TextTrimming);
+        Assert.Equal(TextTrimming.None, text.TextTrimming);
         Assert.Equal(18, text.LineHeight);
-        Assert.Equal(36, text.MaxHeight);
+        Assert.Equal(double.PositiveInfinity, text.MaxHeight);
         Assert.True(text.ActualWidth > 0, context + ": " + text.Text);
         var probe = Probe(text);
         TextOptions.SetTextFormattingMode(probe, TextOptions.GetTextFormattingMode(text));
