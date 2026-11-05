@@ -210,24 +210,24 @@ def transport_scheduling_self_test():
     slow_stdio = threading.Event()
     fast_http = threading.Event()
 
-    def check_stdio(key):
+    def fake_stdio(key):
         events.append((key, 'stdio'))
         if key == 'slow':
             slow_stdio.set()
             assert fast_http.wait(HANG_GUARD_SECONDS), 'Fast HTTP must not wait for every stdio release'
 
-    def check_http(key):
+    def fake_http(key):
         assert (key, 'stdio') in events, 'Each release must run stdio before HTTP'
         if key == 'fast':
             assert slow_stdio.wait(HANG_GUARD_SECONDS)
             fast_http.set()
         events.append((key, 'http'))
 
-    run_transports(['slow', 'fast'], 2, check_stdio, check_http)
+    run_transports(['slow', 'fast'], 2, fake_stdio, fake_http)
     assert events.index(('fast', 'http')) < events.index(('slow', 'http'))
     assert set(events) == {('slow', 'stdio'), ('fast', 'stdio'), ('slow', 'http'), ('fast', 'http')}
     events.clear()
-    run_transports(['first', 'second'], 1, check_stdio)
+    run_transports(['first', 'second'], 1, fake_stdio)
     assert events == [('first', 'stdio'), ('second', 'stdio')]
 
     releases = list(KEYS)
@@ -518,11 +518,11 @@ def run_releases(releases, max_parallel, check):
 
 
 def run_transports(releases, max_parallel, check_stdio, check_http=None):
-    def check_release(key):
+    def run_release(key):
         check_stdio(key)
         if check_http is not None:
             check_http(key)
-    run_releases(releases, max_parallel, check_release)
+    run_releases(releases, max_parallel, run_release)
 
 
 def plc_transports(args, temp, counts):
