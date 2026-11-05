@@ -78,6 +78,25 @@ dotnet run --project build-tools/release -- check-loosening -Base master -Record
 
 `PlcWorker` 不在解决方案中，缺少发布键时不能直接恢复；其依赖通过 `Logic` 和 `KeptCode.Tests` 扫描。合并门不联网，CI 在每次推送 master、每周及手动触发时扫描，但不阻塞合并；完整 `prepare` 的新扫描负责发布阻塞。规则编译开销由主机测量，不增加计时门槛。
 
+## 质量评分
+
+主导代理可在 `prepare` 前或收到真机结果后按需运行：
+
+```powershell
+dotnet run --project build-tools/release -- scorecard
+dotnet run --project build-tools/release -- scorecard -Base v4.0.0-beta.2 -Output bin-build/scorecard-review -ReviewedSample 4
+```
+
+该命令只读源码和已有结果，不启动测量作业，不进入 `merge-check` 或 `prepare`，不阻塞合并或发布。除选项错误返回 64 外返回 0；输出失败会打印原因。可用 `-PublicApiRoot <目录>` 指定本地八版 SDK，`-Previous <scorecard.json>` 指定比较报告，`-Seed <文本>` 指定抽样种子。分档是待批准的建议，见 [ScorecardBands.cs](../../build-tools/release/ScorecardBands.cs)。报告不设总分；每个维度采用其已测指标最低分，有缺失项则标为 `partial`。
+
+默认输出为主检出的 `bin-build/scorecard/<yyyyMMdd-HHmmss>-<sha>/`，包括 `scorecard.md`、`scorecard.json` 和 `sample.txt`；两个报告均记录耗时，默认比较该目录下最近的已有报告。主检出通过 Git 的公共目录定位，失败时使用当前根目录。`sample.txt` 从基准（默认最近的 `v*` 标签）到 HEAD 变动的 `src/**/*.cs` 按 SHA-256 确定十个文件，默认种子为发布标签；独立 AI 审查者按名字清楚、注释解释原因、方法单一职责和周边一致性评分，再以 `-ReviewedSample` 填入平均分。命令本身不调用 AI。
+
+`merge-check` 完成时向主检出的 `bin-build/scorecard/merge-check-runs.jsonl` 追加 UTC、提交、分支、范围、耗时、失败作业和输出目录；写入失败仅打印一行，不改变退出码。评分读取其中最新且仍存在的输出目录，缺失时尝试当前检出的 `bin-build/merge-check/`。删除 worktree 后其中的 TRX 不再可读，应记为 `not measured`。这些文件全部忽略入库。
+
+真机记录位置和格式见[真机测试](real-machine-testing.md#评分使用的运行记录)。没有来源或不可读为 `not measured`，其他版本有有效记录而当前版本没有为 `no evidence`。主检出 `bin-build/vm-acceptance/4.0/` 的旧开发版记录仅展示行数、涉及工具数和日期范围，标为 `stale`；不提高评分。官方 API 覆盖率来自 SDK 文档成员与适配器织入清单的交集，不证明工具可达或实机可用，反射调用和通用样板 API 不计入，100% 不是目标。性能仅报告合成传输夹具的中位耗时变化，不评分。
+
+命名诊断读取当前运行的 SARIF；运行不是宽范围代码检查或缺少范围记录时，指标及可读性维度标为 `partial`，不把只重建一个项目当作完整测量。验证耗时的窄范围、宽范围中位数均排除纯文档运行。抽样排除已删除文件；文档日期盘点包含 `docs/README.md`。死引用检查失败时，该项分数为 0。
+
 ## 发布前交付包检查
 
 交付包入口是 `prepare`，步骤见[发布流程](release.md)，2026-11-04 实测约 6 分钟。它构建八版交付物、生成 ZIP，在隔离目录测试提取包，并对 checkout 的运行文件与 ZIP 做字节核对。它不构建或运行注册套件。任一交付检查失败都不得写入可发布候选；每项作业运行到底并汇总结果，不因先前失败漏掉后续作业。

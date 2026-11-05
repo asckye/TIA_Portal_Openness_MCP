@@ -19,6 +19,7 @@ internal static partial class ReleaseCommands
     {
         "check-loosening" => CheckLoosening.Run(Root, options),
         "complexity-report" => ComplexityReport.Run(Root, options),
+        "scorecard" => Scorecard.Run(Root, options),
         "check-vulnerable-packages" => VulnerablePackages.Run(Root, options, Dotnet),
         "prepare" => Prepare.Run(Root, options),
         "merge-check" => MergeCheck.Run(Root, options),

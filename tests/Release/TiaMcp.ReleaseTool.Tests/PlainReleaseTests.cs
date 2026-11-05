@@ -142,7 +142,7 @@ public sealed class PlainReleaseTests
     [Fact]
     public void OnlyTheRetainedCommandsArePublic()
     {
-        string[] expected = ["check-loosening", "complexity-report", "check-vulnerable-packages",
+        string[] expected = ["check-loosening", "complexity-report", "scorecard", "check-vulnerable-packages",
             "prepare", "publish-prepared", "upload-draft", "merge-check", "generate-catalogs", "generate-tool-usage",
             "generate-tool-capability-matrix", "generate-tool-counts", "generate-release-migration", "generate-prerelease-notes", "check-tools-list", "audit-version-tools",
             "audit-tool-usage", "check-analyzer-warnings", "check-ratchet", "check-adapter-boundary", "check-bundle-layout", "check-repository",

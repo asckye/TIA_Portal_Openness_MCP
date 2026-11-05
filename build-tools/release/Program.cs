@@ -86,7 +86,7 @@ internal static class CommandLine
 {
     internal static readonly string[] Commands =
     [
-        "check-loosening", "complexity-report", "check-vulnerable-packages",
+        "check-loosening", "complexity-report", "scorecard", "check-vulnerable-packages",
         "merge-check", "prepare", "publish-prepared", "upload-draft", "build-plc-worker-fixtures", "build-solutions", "build-file-programs", "publish-vci-watch", "prepare-decoder-python", "get-bundled-dotnet", "test-suites", "check-analyzer-warnings", "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls", "generate-tool-capability-matrix", "generate-tool-counts", "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list", "generate-prerelease-notes", "wrap-long-lines", "dump-il"
     ];
 }

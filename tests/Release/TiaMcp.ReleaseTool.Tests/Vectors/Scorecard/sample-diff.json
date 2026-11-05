@@ -1,0 +1,9 @@
+{
+  "paths": [
+    "src/Engine/Siemens/Hmi/HmiSnapshot.cs",
+    "src/Adapters.Contracts/AssemblyInfo.cs"
+  ],
+  "retained": [
+    "src/Adapters.Contracts/AssemblyInfo.cs"
+  ]
+}

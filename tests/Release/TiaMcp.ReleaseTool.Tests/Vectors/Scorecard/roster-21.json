@@ -1,0 +1,1540 @@
+{
+  "tools": [
+    {
+      "name": "AnalyzeGlobalLibraryPackage"
+    },
+    {
+      "name": "AnalyzeHmiTemplateReference"
+    },
+    {
+      "name": "AnalyzePlcCrossReferences"
+    },
+    {
+      "name": "AnalyzePlcReferences"
+    },
+    {
+      "name": "AnalyzePlcSclSource"
+    },
+    {
+      "name": "AnalyzeUnifiedHmiTemplateLayout"
+    },
+    {
+      "name": "ApplyGenerationPlan"
+    },
+    {
+      "name": "ApplyToolBatch"
+    },
+    {
+      "name": "ApplyUnifiedHmiLayout"
+    },
+    {
+      "name": "ApplyUnifiedHmiScreenDesign"
+    },
+    {
+      "name": "ApplyUnifiedHmiTheme"
+    },
+    {
+      "name": "ArchiveSavedProject"
+    },
+    {
+      "name": "AttachDeviceNodeToSubnet"
+    },
+    {
+      "name": "AttachOpenProject"
+    },
+    {
+      "name": "AuditEngineeringExports"
+    },
+    {
+      "name": "BindUnifiedHmiButtonPressedTag"
+    },
+    {
+      "name": "BindUnifiedHmiTagDynamization"
+    },
+    {
+      "name": "BuildAndImportPlcArtifact"
+    },
+    {
+      "name": "BuildClassicHmiMinimalPackage"
+    },
+    {
+      "name": "BuildClassicHmiScreen"
+    },
+    {
+      "name": "BuildClassicHmiTagTable"
+    },
+    {
+      "name": "BuildDeviceAmlDocument"
+    },
+    {
+      "name": "BuildFlgNetCall"
+    },
+    {
+      "name": "BuildPlcAliasAlarmLad"
+    },
+    {
+      "name": "BuildPlcFbBlock"
+    },
+    {
+      "name": "BuildPlcFcBlock"
+    },
+    {
+      "name": "BuildPlcGlobalDb"
+    },
+    {
+      "name": "BuildPlcLadFcBlock"
+    },
+    {
+      "name": "BuildPlcSymbolManifestFromPath"
+    },
+    {
+      "name": "BuildPlcTagTable"
+    },
+    {
+      "name": "BuildPlcUdt"
+    },
+    {
+      "name": "BuildProjectScaffold"
+    },
+    {
+      "name": "BuildReleaseDiagnosticReport"
+    },
+    {
+      "name": "BuildReleaseHandoffArtifacts"
+    },
+    {
+      "name": "BuildReleaseManifest"
+    },
+    {
+      "name": "BuildReleaseRunbook"
+    },
+    {
+      "name": "BuildStructuredText"
+    },
+    {
+      "name": "BuildUnifiedHmiButtonActionScript"
+    },
+    {
+      "name": "BuildUnifiedHmiLayoutDesign"
+    },
+    {
+      "name": "BuildUnifiedHmiTemplateApplyDesign"
+    },
+    {
+      "name": "BuildUnifiedHmiTemplateApplyDesignManifest"
+    },
+    {
+      "name": "BuildUnifiedHmiThemeDesign"
+    },
+    {
+      "name": "CallTool"
+    },
+    {
+      "name": "CheckDownloadReadiness"
+    },
+    {
+      "name": "CheckLibraryUpdates"
+    },
+    {
+      "name": "CheckProductUpdate"
+    },
+    {
+      "name": "CleanupStagedImportFiles"
+    },
+    {
+      "name": "ClearExportHandles"
+    },
+    {
+      "name": "CloseProject"
+    },
+    {
+      "name": "CompareLibraries"
+    },
+    {
+      "name": "CompareLibraryObjects"
+    },
+    {
+      "name": "ComparePlcBlockDocuments"
+    },
+    {
+      "name": "CompareProjects"
+    },
+    {
+      "name": "CompareSoftwareToOnline"
+    },
+    {
+      "name": "CompareUnifiedGraphicSelections"
+    },
+    {
+      "name": "CompileDevice"
+    },
+    {
+      "name": "CompileHmiDiagnostics"
+    },
+    {
+      "name": "CompilePlcDiagnostics"
+    },
+    {
+      "name": "CompilePlcSoftware"
+    },
+    {
+      "name": "ConfigureMotionHardwareConnection"
+    },
+    {
+      "name": "ConnectDeviceNodesToProfinetSubnet"
+    },
+    {
+      "name": "ConnectIsolatedPortal"
+    },
+    {
+      "name": "ConnectOnlinePlc"
+    },
+    {
+      "name": "ConnectPortal"
+    },
+    {
+      "name": "ConnectProjectToWorkspace"
+    },
+    {
+      "name": "CreateDevice"
+    },
+    {
+      "name": "CreateGsdDevice"
+    },
+    {
+      "name": "CreateHardwareCatalogDevice"
+    },
+    {
+      "name": "CreateHardwareDevice"
+    },
+    {
+      "name": "CreateLibraryMasterCopy"
+    },
+    {
+      "name": "CreatePlcBlockGroup"
+    },
+    {
+      "name": "CreatePlcInstanceDb"
+    },
+    {
+      "name": "CreatePlcTag"
+    },
+    {
+      "name": "CreatePlcTagTable"
+    },
+    {
+      "name": "CreatePlcTypeGroup"
+    },
+    {
+      "name": "CreatePlcUserConstant"
+    },
+    {
+      "name": "CreateProject"
+    },
+    {
+      "name": "CreateVersionControlWorkspace"
+    },
+    {
+      "name": "DecodePlcSimaticMl"
+    },
+    {
+      "name": "DeleteEmptyPlcBlockGroup"
+    },
+    {
+      "name": "DeleteEmptyUnifiedHmiScreenGroup"
+    },
+    {
+      "name": "DeleteExportHandle"
+    },
+    {
+      "name": "DeleteHmiTag"
+    },
+    {
+      "name": "DeletePlcBlock"
+    },
+    {
+      "name": "DeletePlcExternalSource"
+    },
+    {
+      "name": "DeletePlcTagTable"
+    },
+    {
+      "name": "DeletePlcType"
+    },
+    {
+      "name": "DeleteUnifiedHmiButtonEvent"
+    },
+    {
+      "name": "DeleteUnifiedHmiDynamization"
+    },
+    {
+      "name": "DescribeHmiScreen"
+    },
+    {
+      "name": "DescribeHmiScreenItem"
+    },
+    {
+      "name": "DescribeHmiSoftware"
+    },
+    {
+      "name": "DescribeHmiTag"
+    },
+    {
+      "name": "DescribeHmiTagTable"
+    },
+    {
+      "name": "DescribeObject"
+    },
+    {
+      "name": "DescribeObjectProperty"
+    },
+    {
+      "name": "DescribePlcBlockLogic"
+    },
+    {
+      "name": "DescribeService"
+    },
+    {
+      "name": "DescribeStandardPackage"
+    },
+    {
+      "name": "DescribeUnifiedHmiButtonEventScript"
+    },
+    {
+      "name": "DescribeUnifiedScreenItemType"
+    },
+    {
+      "name": "DisconnectOnlinePlc"
+    },
+    {
+      "name": "DisconnectOnlinePlcs"
+    },
+    {
+      "name": "DisconnectPortal"
+    },
+    {
+      "name": "DownloadPlc"
+    },
+    {
+      "name": "DownloadPlcToFolder"
+    },
+    {
+      "name": "EnsureOpennessUserGroup"
+    },
+    {
+      "name": "EnsureSubnet"
+    },
+    {
+      "name": "EnsureUnifiedHmiButtonAction"
+    },
+    {
+      "name": "EnsureUnifiedHmiButtonEventHandler"
+    },
+    {
+      "name": "EnsureUnifiedHmiConnection"
+    },
+    {
+      "name": "EnsureUnifiedHmiDynamization"
+    },
+    {
+      "name": "EnsureUnifiedHmiScreen"
+    },
+    {
+      "name": "EnsureUnifiedHmiScreenItem"
+    },
+    {
+      "name": "EnsureUnifiedHmiTag"
+    },
+    {
+      "name": "EnsureUnifiedHmiTagTable"
+    },
+    {
+      "name": "ExchangeCfcCharts"
+    },
+    {
+      "name": "ExchangeMotionCamData"
+    },
+    {
+      "name": "ExchangePlcAlarmTextLists"
+    },
+    {
+      "name": "ExchangePlcSupervisions"
+    },
+    {
+      "name": "ExchangeSystemDiagnosticsSettings"
+    },
+    {
+      "name": "ExchangeTestSuiteCase"
+    },
+    {
+      "name": "ExchangeUnifiedScriptModules"
+    },
+    {
+      "name": "ExchangeUnifiedTags"
+    },
+    {
+      "name": "ExportAlarmClasses"
+    },
+    {
+      "name": "ExportAlarmInstanceTexts"
+    },
+    {
+      "name": "ExportAlarmTextLists"
+    },
+    {
+      "name": "ExportDeviceAml"
+    },
+    {
+      "name": "ExportHmiConnection"
+    },
+    {
+      "name": "ExportHmiProgram"
+    },
+    {
+      "name": "ExportHmiScreen"
+    },
+    {
+      "name": "ExportHmiTagTable"
+    },
+    {
+      "name": "ExportOpcUaInterface"
+    },
+    {
+      "name": "ExportPlcBlock"
+    },
+    {
+      "name": "ExportPlcBlockDocuments"
+    },
+    {
+      "name": "ExportPlcBlocks"
+    },
+    {
+      "name": "ExportPlcBlocksDocuments"
+    },
+    {
+      "name": "ExportPlcProDiagInfo"
+    },
+    {
+      "name": "ExportPlcTagTable"
+    },
+    {
+      "name": "ExportPlcType"
+    },
+    {
+      "name": "ExportPlcTypes"
+    },
+    {
+      "name": "ExportPlcWatchTable"
+    },
+    {
+      "name": "ExportPlcWatchTablesToDirectory"
+    },
+    {
+      "name": "ExportProjectTexts"
+    },
+    {
+      "name": "ExportSafetyPrintout"
+    },
+    {
+      "name": "ExportTechnologyObject"
+    },
+    {
+      "name": "ExportTechnologyObjectsToDirectory"
+    },
+    {
+      "name": "ExportUnifiedEngineeringList"
+    },
+    {
+      "name": "ExtractPlcBlockMetrics"
+    },
+    {
+      "name": "FindTools"
+    },
+    {
+      "name": "GenerateAcceptanceReport"
+    },
+    {
+      "name": "GenerateBlocksFromExternalSource"
+    },
+    {
+      "name": "GenerateErrorReport"
+    },
+    {
+      "name": "GenerateOpcUaModelledInterface"
+    },
+    {
+      "name": "GeneratePlcDocumentation"
+    },
+    {
+      "name": "GeneratePlcLoadableFile"
+    },
+    {
+      "name": "GeneratePlcSourceFromBlocks"
+    },
+    {
+      "name": "GenerateSivarc"
+    },
+    {
+      "name": "GetClassicHmiGlobalization"
+    },
+    {
+      "name": "GetClassicHmiScreenTree"
+    },
+    {
+      "name": "GetDccObject"
+    },
+    {
+      "name": "GetDeviceAddressing"
+    },
+    {
+      "name": "GetDeviceAttributes"
+    },
+    {
+      "name": "GetDeviceInfo"
+    },
+    {
+      "name": "GetDeviceIpAddress"
+    },
+    {
+      "name": "GetDeviceItemInfo"
+    },
+    {
+      "name": "GetDeviceItemIoAddresses"
+    },
+    {
+      "name": "GetDeviceItemNetworkInfo"
+    },
+    {
+      "name": "GetDeviceItemTree"
+    },
+    {
+      "name": "GetDevicePlugLocations"
+    },
+    {
+      "name": "GetDriveParameters"
+    },
+    {
+      "name": "GetEnvironmentDiagnostics"
+    },
+    {
+      "name": "GetExportContent"
+    },
+    {
+      "name": "GetGenerationRun"
+    },
+    {
+      "name": "GetHardwareFeatures"
+    },
+    {
+      "name": "GetHmiProgramInfo"
+    },
+    {
+      "name": "GetHmiScreenSnapshot"
+    },
+    {
+      "name": "GetLibraryOverview"
+    },
+    {
+      "name": "GetLibraryType"
+    },
+    {
+      "name": "GetMotionAxisConfiguration"
+    },
+    {
+      "name": "GetNativeInvocationLog"
+    },
+    {
+      "name": "GetObjectIdentifier"
+    },
+    {
+      "name": "GetObjectProperty"
+    },
+    {
+      "name": "GetOnlineDriveParameters"
+    },
+    {
+      "name": "GetOnlineState"
+    },
+    {
+      "name": "GetOpcUaAccessControl"
+    },
+    {
+      "name": "GetOpennessCompatibility"
+    },
+    {
+      "name": "GetOpennessGuidance"
+    },
+    {
+      "name": "GetOpennessWorkerStatus"
+    },
+    {
+      "name": "GetPlcBlockEditCapabilities"
+    },
+    {
+      "name": "GetPlcBlockFingerprints"
+    },
+    {
+      "name": "GetPlcBlockHierarchy"
+    },
+    {
+      "name": "GetPlcBlockInfo"
+    },
+    {
+      "name": "GetPlcBlockScopes"
+    },
+    {
+      "name": "GetPlcChecksums"
+    },
+    {
+      "name": "GetPlcCrossReferences"
+    },
+    {
+      "name": "GetPlcLiveValuesOpcUa"
+    },
+    {
+      "name": "GetPlcLiveValuesS7"
+    },
+    {
+      "name": "GetPlcObjectFingerprints"
+    },
+    {
+      "name": "GetPlcOpcUaConfiguration"
+    },
+    {
+      "name": "GetPlcPutGetAccess"
+    },
+    {
+      "name": "GetPlcRunStateS7"
+    },
+    {
+      "name": "GetPlcSimAdvancedTags"
+    },
+    {
+      "name": "GetPlcTagTableConstants"
+    },
+    {
+      "name": "GetPlcTypeInfo"
+    },
+    {
+      "name": "GetPlcWatchTableCurrentValuesReadOnly"
+    },
+    {
+      "name": "GetPlcWebDiagnostics"
+    },
+    {
+      "name": "GetPlcWebVars"
+    },
+    {
+      "name": "GetPortalConnectionReadiness"
+    },
+    {
+      "name": "GetPortalInfo"
+    },
+    {
+      "name": "GetProjectInfo"
+    },
+    {
+      "name": "GetProjectProtection"
+    },
+    {
+      "name": "GetProjectSettings"
+    },
+    {
+      "name": "GetProjectTopology"
+    },
+    {
+      "name": "GetProjectTree"
+    },
+    {
+      "name": "GetProjectUserManagement"
+    },
+    {
+      "name": "GetSafetyBlockSignatures"
+    },
+    {
+      "name": "GetSessionState"
+    },
+    {
+      "name": "GetSivarcRuleTree"
+    },
+    {
+      "name": "GetSoftwareInfo"
+    },
+    {
+      "name": "GetSoftwareTree"
+    },
+    {
+      "name": "GetTechnologyObjectTree"
+    },
+    {
+      "name": "GetToolUsage"
+    },
+    {
+      "name": "GetUnifiedAlarmCommon"
+    },
+    {
+      "name": "GetUnifiedAuditSettings"
+    },
+    {
+      "name": "GetUnifiedCrossReferences"
+    },
+    {
+      "name": "GetUnifiedFaceplateInstance"
+    },
+    {
+      "name": "GetUnifiedGlobalScript"
+    },
+    {
+      "name": "GetUnifiedGraphicSelection"
+    },
+    {
+      "name": "GetUnifiedHmiButtonEvent"
+    },
+    {
+      "name": "GetUnifiedHmiDynamization"
+    },
+    {
+      "name": "GetUnifiedHmiTexts"
+    },
+    {
+      "name": "GetUnifiedLibraryType"
+    },
+    {
+      "name": "GetUnifiedObjectEvents"
+    },
+    {
+      "name": "GetUnifiedObjectProperties"
+    },
+    {
+      "name": "GetUnifiedPlantObject"
+    },
+    {
+      "name": "GetUnifiedRuntimeAlarms"
+    },
+    {
+      "name": "GetUnifiedRuntimeSettings"
+    },
+    {
+      "name": "GetUnifiedRuntimeTags"
+    },
+    {
+      "name": "GetUnifiedScreenBranch"
+    },
+    {
+      "name": "GetV21EcosystemCatalog"
+    },
+    {
+      "name": "GetVersionControlStatus"
+    },
+    {
+      "name": "GetWorkbenchSelection"
+    },
+    {
+      "name": "GetWorkbenchState"
+    },
+    {
+      "name": "ImportAlarmClasses"
+    },
+    {
+      "name": "ImportAlarmTextLists"
+    },
+    {
+      "name": "ImportDeviceAml"
+    },
+    {
+      "name": "ImportHmiConnection"
+    },
+    {
+      "name": "ImportHmiScreen"
+    },
+    {
+      "name": "ImportHmiScreensFromDirectory"
+    },
+    {
+      "name": "ImportHmiTagTable"
+    },
+    {
+      "name": "ImportHmiTagTablesFromDirectory"
+    },
+    {
+      "name": "ImportLibraryTypeDocuments"
+    },
+    {
+      "name": "ImportMasterCopyFromGlobalLibrary"
+    },
+    {
+      "name": "ImportOpcUaInterface"
+    },
+    {
+      "name": "ImportPlcAlarmInstanceTexts"
+    },
+    {
+      "name": "ImportPlcBlock"
+    },
+    {
+      "name": "ImportPlcBlockDocuments"
+    },
+    {
+      "name": "ImportPlcBlockVerified"
+    },
+    {
+      "name": "ImportPlcBlocksDocuments"
+    },
+    {
+      "name": "ImportPlcBlocksFromDirectory"
+    },
+    {
+      "name": "ImportPlcExternalSource"
+    },
+    {
+      "name": "ImportPlcProgramFromDirectory"
+    },
+    {
+      "name": "ImportPlcTagTable"
+    },
+    {
+      "name": "ImportPlcTagTablesFromDirectory"
+    },
+    {
+      "name": "ImportPlcType"
+    },
+    {
+      "name": "ImportPlcWatchTableOffline"
+    },
+    {
+      "name": "ImportProjectTexts"
+    },
+    {
+      "name": "ImportTechnologyObject"
+    },
+    {
+      "name": "ImportTechnologyObjectsFromDirectory"
+    },
+    {
+      "name": "ImportUnifiedEngineeringList"
+    },
+    {
+      "name": "ImportUnifiedOpcUaAlarms"
+    },
+    {
+      "name": "InitializeEnvironment"
+    },
+    {
+      "name": "InspectSimaticSdCompatibility"
+    },
+    {
+      "name": "InstantiatePlcTemplates"
+    },
+    {
+      "name": "InvokeObject"
+    },
+    {
+      "name": "InvokeService"
+    },
+    {
+      "name": "InvokeUnifiedOpenPipe"
+    },
+    {
+      "name": "ListClassicHmiFaceplates"
+    },
+    {
+      "name": "ListClassicHmiScripts"
+    },
+    {
+      "name": "ListCommunicationConnections"
+    },
+    {
+      "name": "ListDccCharts"
+    },
+    {
+      "name": "ListDeviceItemChannels"
+    },
+    {
+      "name": "ListDevices"
+    },
+    {
+      "name": "ListDriveObjects"
+    },
+    {
+      "name": "ListExportHandles"
+    },
+    {
+      "name": "ListHmiConnections"
+    },
+    {
+      "name": "ListHmiScreenPaths"
+    },
+    {
+      "name": "ListHmiScreens"
+    },
+    {
+      "name": "ListHmiTagTables"
+    },
+    {
+      "name": "ListHmiTags"
+    },
+    {
+      "name": "ListIoSystems"
+    },
+    {
+      "name": "ListNetworkDomains"
+    },
+    {
+      "name": "ListObjectChildren"
+    },
+    {
+      "name": "ListPlcBlocks"
+    },
+    {
+      "name": "ListPlcExternalSources"
+    },
+    {
+      "name": "ListPlcForceTables"
+    },
+    {
+      "name": "ListPlcSimAdvancedInstances"
+    },
+    {
+      "name": "ListPlcSoftwareUnits"
+    },
+    {
+      "name": "ListPlcSystemConstants"
+    },
+    {
+      "name": "ListPlcSystemGroups"
+    },
+    {
+      "name": "ListPlcTagTables"
+    },
+    {
+      "name": "ListPlcTags"
+    },
+    {
+      "name": "ListPlcTypes"
+    },
+    {
+      "name": "ListPlcUserConstants"
+    },
+    {
+      "name": "ListPlcWatchTables"
+    },
+    {
+      "name": "ListPortalProcessProjects"
+    },
+    {
+      "name": "ListSafetyActivationTests"
+    },
+    {
+      "name": "ListSivarcBlockDefinitions"
+    },
+    {
+      "name": "ListSivarcRules"
+    },
+    {
+      "name": "ListStagedImportFiles"
+    },
+    {
+      "name": "ListStandardPackages"
+    },
+    {
+      "name": "ListTechnologyObjects"
+    },
+    {
+      "name": "ListTestSuiteCases"
+    },
+    {
+      "name": "ListToolCategories"
+    },
+    {
+      "name": "ListTransferAreas"
+    },
+    {
+      "name": "ListTransferRoutes"
+    },
+    {
+      "name": "ListUnifiedEngineeringObjects"
+    },
+    {
+      "name": "ListUnifiedGlobalScripts"
+    },
+    {
+      "name": "ListUnifiedHmiApiTypes"
+    },
+    {
+      "name": "ListUnifiedLibraryFolderEntries"
+    },
+    {
+      "name": "ListUnifiedTagDefinitions"
+    },
+    {
+      "name": "ListVersionControlWorkspaces"
+    },
+    {
+      "name": "ManageCfcChartProtection"
+    },
+    {
+      "name": "ManageClassicHmiCycle"
+    },
+    {
+      "name": "ManageClassicHmiFolder"
+    },
+    {
+      "name": "ManageClassicHmiGraphic"
+    },
+    {
+      "name": "ManageClassicHmiScreenObject"
+    },
+    {
+      "name": "ManageClassicHmiScript"
+    },
+    {
+      "name": "ManageClassicHmiTextGraphicList"
+    },
+    {
+      "name": "ManageCommunicationConnection"
+    },
+    {
+      "name": "ManageDcbLibraries"
+    },
+    {
+      "name": "ManageDccBlock"
+    },
+    {
+      "name": "ManageDccChart"
+    },
+    {
+      "name": "ManageDccChartInterface"
+    },
+    {
+      "name": "ManageDccChartPartition"
+    },
+    {
+      "name": "ManageDccPin"
+    },
+    {
+      "name": "ManageDeviceServiceObjects"
+    },
+    {
+      "name": "ManageDeviceUserGroup"
+    },
+    {
+      "name": "ManageDeviceUsers"
+    },
+    {
+      "name": "ManageDriveFunctions"
+    },
+    {
+      "name": "ManageDriveHardwareModule"
+    },
+    {
+      "name": "ManageDriveSafetyAcceptanceTest"
+    },
+    {
+      "name": "ManageDriveSecurity"
+    },
+    {
+      "name": "ManageDriveTelegrams"
+    },
+    {
+      "name": "ManageGenerationArtifacts"
+    },
+    {
+      "name": "ManageGlobalLibrary"
+    },
+    {
+      "name": "ManageHardwareObject"
+    },
+    {
+      "name": "ManageHardwareUtilities"
+    },
+    {
+      "name": "ManageIoSystem"
+    },
+    {
+      "name": "ManageLibraryFolder"
+    },
+    {
+      "name": "ManageLibraryMasterCopy"
+    },
+    {
+      "name": "ManageLibraryType"
+    },
+    {
+      "name": "ManageLibraryTypeVersion"
+    },
+    {
+      "name": "ManageMachineDescription"
+    },
+    {
+      "name": "ManageMotionAxis"
+    },
+    {
+      "name": "ManageMultiuserSession"
+    },
+    {
+      "name": "ManageNetworkDomain"
+    },
+    {
+      "name": "ManageOnlineDriveFunctions"
+    },
+    {
+      "name": "ManageOpcUaAccessControl"
+    },
+    {
+      "name": "ManageOpcUaInterface"
+    },
+    {
+      "name": "ManagePasswordPolicy"
+    },
+    {
+      "name": "ManagePlcAlarmTextList"
+    },
+    {
+      "name": "ManagePlcBlockDocuments"
+    },
+    {
+      "name": "ManagePlcBlockProtection"
+    },
+    {
+      "name": "ManagePlcBlockWriteProtection"
+    },
+    {
+      "name": "ManagePlcCertificate"
+    },
+    {
+      "name": "ManagePlcDataBlockSnapshot"
+    },
+    {
+      "name": "ManagePlcDocuments"
+    },
+    {
+      "name": "ManagePlcExternalSources"
+    },
+    {
+      "name": "ManagePlcGitRepository"
+    },
+    {
+      "name": "ManagePlcProtection"
+    },
+    {
+      "name": "ManagePlcSafety"
+    },
+    {
+      "name": "ManagePlcSimAdvancedInstance"
+    },
+    {
+      "name": "ManagePlcSoftwareUnit"
+    },
+    {
+      "name": "ManagePlcSupervision"
+    },
+    {
+      "name": "ManagePlcTableEntries"
+    },
+    {
+      "name": "ManagePlcTagDefinition"
+    },
+    {
+      "name": "ManagePlcUserGroup"
+    },
+    {
+      "name": "ManagePortInterconnection"
+    },
+    {
+      "name": "ManageProjectCompilationSettings"
+    },
+    {
+      "name": "ManageProjectLanguage"
+    },
+    {
+      "name": "ManageProjectUserManagement"
+    },
+    {
+      "name": "ManageSafetyActivationTest"
+    },
+    {
+      "name": "ManageSafetyActivationTestGroup"
+    },
+    {
+      "name": "ManageSafetyFunction"
+    },
+    {
+      "name": "ManageSafetyFunctionCondition"
+    },
+    {
+      "name": "ManageSafetyGlobalSettings"
+    },
+    {
+      "name": "ManageSivarcBlockDefinition"
+    },
+    {
+      "name": "ManageSivarcRule"
+    },
+    {
+      "name": "ManageSivarcRuleContainer"
+    },
+    {
+      "name": "ManageSivarcScreenLayout"
+    },
+    {
+      "name": "ManageSivarcTableRule"
+    },
+    {
+      "name": "ManageStandardPackage"
+    },
+    {
+      "name": "ManageStartdriveParameter"
+    },
+    {
+      "name": "ManageSyslogServers"
+    },
+    {
+      "name": "ManageTeamcenterConnection"
+    },
+    {
+      "name": "ManageTeamcenterDataset"
+    },
+    {
+      "name": "ManageTeamcenterWorkflow"
+    },
+    {
+      "name": "ManageTechnologyExtensions"
+    },
+    {
+      "name": "ManageTechnologyObject"
+    },
+    {
+      "name": "ManageTestSuiteCase"
+    },
+    {
+      "name": "ManageTransferArea"
+    },
+    {
+      "name": "ManageUmcUsers"
+    },
+    {
+      "name": "ManageUnifiedCwcPackage"
+    },
+    {
+      "name": "ManageUnifiedDynamization"
+    },
+    {
+      "name": "ManageUnifiedEngineeringObject"
+    },
+    {
+      "name": "ManageUnifiedEvent"
+    },
+    {
+      "name": "ManageUnifiedHmiGroup"
+    },
+    {
+      "name": "ManageUnifiedListEntries"
+    },
+    {
+      "name": "ManageUnifiedLoggingTag"
+    },
+    {
+      "name": "ManageUnifiedObjectParts"
+    },
+    {
+      "name": "ManageUnifiedOpcUaAlarmType"
+    },
+    {
+      "name": "ManageUnifiedPlantNode"
+    },
+    {
+      "name": "ManageUnifiedScreenItem"
+    },
+    {
+      "name": "ManageUnifiedScreenLayout"
+    },
+    {
+      "name": "ManageWatchForceTableWebAccess"
+    },
+    {
+      "name": "MonitorPlcWatchTableS7"
+    },
+    {
+      "name": "MovePlcBlockToGroup"
+    },
+    {
+      "name": "OpenProject"
+    },
+    {
+      "name": "PatchPlcBlockDocument"
+    },
+    {
+      "name": "PlanArtifactImportOrder"
+    },
+    {
+      "name": "PlanGlobalLibraryTemplateReuse"
+    },
+    {
+      "name": "PlanHardwareNetworkConfiguration"
+    },
+    {
+      "name": "PlanOnlineReadOnlyDataProvider"
+    },
+    {
+      "name": "PlanOnlineReadOnlyMonitoring"
+    },
+    {
+      "name": "PlanPlcExternalSourceImport"
+    },
+    {
+      "name": "PlanProjectGeneration"
+    },
+    {
+      "name": "PlugDeviceItem"
+    },
+    {
+      "name": "PrefillWorkbenchForm"
+    },
+    {
+      "name": "PreviewToolBatch"
+    },
+    {
+      "name": "PreviewToolCall"
+    },
+    {
+      "name": "ProbeGlobalLibrary"
+    },
+    {
+      "name": "ProbeHardwareHmiConnectionOwnerCandidates"
+    },
+    {
+      "name": "ProbeHardwareHmiConnectionWhitelistedServices"
+    },
+    {
+      "name": "ProbePlcMonitorOnlineCapabilities"
+    },
+    {
+      "name": "ProbeS7CpuIdentity"
+    },
+    {
+      "name": "PublishGenerationRecord"
+    },
+    {
+      "name": "ReleaseUnifiedReadCursor"
+    },
+    {
+      "name": "RenderPlcBlock"
+    },
+    {
+      "name": "RenderPlcBlockDocument"
+    },
+    {
+      "name": "RenderPlcProgramAtlas"
+    },
+    {
+      "name": "RenderPlcVisualDiff"
+    },
+    {
+      "name": "RepairAndReimportPlcBlock"
+    },
+    {
+      "name": "ResolveSivarcExpression"
+    },
+    {
+      "name": "RestartOpennessWorker"
+    },
+    {
+      "name": "RetrieveProjectArchive"
+    },
+    {
+      "name": "RunCapabilitySelfTest"
+    },
+    {
+      "name": "RunClassicHmiOfflineValidationSuite"
+    },
+    {
+      "name": "RunClassicHmiTemporaryImportPreflight"
+    },
+    {
+      "name": "RunHmiActionScriptRecipeSafetySelfTest"
+    },
+    {
+      "name": "RunHmiTemplatePlcSyncPrecheckSuite"
+    },
+    {
+      "name": "RunOfflineReleaseValidationSuite"
+    },
+    {
+      "name": "RunOnlineMonitoringSafetySelfTest"
+    },
+    {
+      "name": "RunPlcCompanionTool"
+    },
+    {
+      "name": "RunPlcSimAdvancedTestScenario"
+    },
+    {
+      "name": "RunReadOnlyToolBatch"
+    },
+    {
+      "name": "RunTestSuiteCase"
+    },
+    {
+      "name": "RunToolTransaction"
+    },
+    {
+      "name": "SamplePlcLiveValuesS7"
+    },
+    {
+      "name": "SaveExportContent"
+    },
+    {
+      "name": "SaveProject"
+    },
+    {
+      "name": "SaveProjectCopy"
+    },
+    {
+      "name": "ScanAccessibleDevices"
+    },
+    {
+      "name": "ScanPlcSourceAnnotations"
+    },
+    {
+      "name": "SearchHardwareCatalog"
+    },
+    {
+      "name": "SearchInstalledGsdDevices"
+    },
+    {
+      "name": "SeedProjectFromReference"
+    },
+    {
+      "name": "SetDeviceAddress"
+    },
+    {
+      "name": "SetDeviceItemAttribute"
+    },
+    {
+      "name": "SetDeviceItemChannel"
+    },
+    {
+      "name": "SetDeviceItemIoAddress"
+    },
+    {
+      "name": "SetOpcUaInterfaceEnabled"
+    },
+    {
+      "name": "SetPlcCpuSettings"
+    },
+    {
+      "name": "SetPlcProgram"
+    },
+    {
+      "name": "SetPlcPutGetAccess"
+    },
+    {
+      "name": "SetPlcUnitObjectAccess"
+    },
+    {
+      "name": "SetPlcWatchTableModifyValue"
+    },
+    {
+      "name": "SetPlcWebOperatingMode"
+    },
+    {
+      "name": "SetUnifiedGlobalScript"
+    },
+    {
+      "name": "SetUnifiedHmiButtonEventScriptCode"
+    },
+    {
+      "name": "SetUnifiedHmiRuntimeState"
+    },
+    {
+      "name": "SetUnifiedLogDuration"
+    },
+    {
+      "name": "SetUnifiedMultilingualProperty"
+    },
+    {
+      "name": "SetUnifiedObjectProperties"
+    },
+    {
+      "name": "SetUnifiedPlantObject"
+    },
+    {
+      "name": "SetUnifiedRuntimeSettings"
+    },
+    {
+      "name": "ShowObjectInEditor"
+    },
+    {
+      "name": "ShowWorkbenchAtlas"
+    },
+    {
+      "name": "ShowWorkbenchBlock"
+    },
+    {
+      "name": "ShowWorkbenchCall"
+    },
+    {
+      "name": "ShowWorkbenchLadder"
+    },
+    {
+      "name": "ShowWorkbenchPage"
+    },
+    {
+      "name": "StageImportFiles"
+    },
+    {
+      "name": "SynchronizeLibrary"
+    },
+    {
+      "name": "SynchronizeVersionControlWorkspace"
+    },
+    {
+      "name": "TraceTagCause"
+    },
+    {
+      "name": "TraceTagCauseLive"
+    },
+    {
+      "name": "UpgradeSivarcDefinitions"
+    },
+    {
+      "name": "UploadDeviceParameters"
+    },
+    {
+      "name": "UploadStationFromPlc"
+    },
+    {
+      "name": "ValidateAutomationContext"
+    },
+    {
+      "name": "ValidateClassicHmiMinimalPackageFiles"
+    },
+    {
+      "name": "ValidateClassicHmiMinimalPackagePlcSync"
+    },
+    {
+      "name": "ValidatePlcDocumentSchemas"
+    },
+    {
+      "name": "ValidateStandardPackage"
+    },
+    {
+      "name": "ValidateUnifiedObject"
+    },
+    {
+      "name": "WriteClassicHmiMinimalPackageFiles"
+    },
+    {
+      "name": "WritePlcSclSourceFile"
+    },
+    {
+      "name": "WritePlcSimAdvancedTags"
+    },
+    {
+      "name": "WritePlcWebVars"
+    },
+    {
+      "name": "WriteUnifiedRuntimeTags"
+    }
+  ]
+}

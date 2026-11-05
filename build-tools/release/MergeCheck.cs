@@ -632,6 +632,7 @@ internal static class MergeCheck
         File.WriteAllText(Path.Combine(output, "timeline.tsv"), Timeline(timings));
         Timed("test-trends", () => MergeTrends(root, output, git));
         Console.Write(Summary(timings, total.Elapsed.TotalSeconds));
+        MergeCheckRuns.Append(root, options, plan, timings, total.Elapsed.TotalSeconds, output, git);
         return timings.Any(row => row.Result.ExitCode != 0) ? 1 : 0;
     }
 

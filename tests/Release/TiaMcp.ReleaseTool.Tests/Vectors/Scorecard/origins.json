@@ -1,0 +1,16 @@
+{
+  "beta2-results.jsonl": "bin-build/vm-test/beta2-20261031/results.jsonl; retain tool/outcome, wrapper name, error code, null nativeMessage and generic server-log evidence only",
+  "verified-examples-v21.json": "bin-build/vm-test/beta2-20261031/verified-examples-v21.json; retain release and all tool keys, omit example arguments",
+  "roster-21.json": "manifest/contracts/v4/baseline/21.json; retain names",
+  "beta2-run.json": "bin-build/refactor/tasks/SCORE-PORT.md; verbatim run metadata example",
+  "beta3-run.json": "bin-build/refactor/tasks/SCORE-PORT.md; verbatim run metadata example",
+  "beta3-lead-tools.md": "bin-build/refactor/vm-test/lead-tools.md; retain first five result rows and first two columns",
+  "sample-diff.json": "git diff --name-only v4.0.0-beta.2 HEAD -- src; trim to one deleted and one retained path",
+  "Version.props": "Version.props; full copy",
+  "review-subjects.txt": "git log master --since=30.days --format=%s; retain task subjects",
+  "naming.sarif": "bin-build/analyzer-warnings/observed/2ADE2680ECFE4D9A96B6C5C60765B4A7C8F61BE09C4E255721AFC39E47F98D63.sarif; retain naming results and driver name/version; omit unrelated rule catalog",
+  "RuntimeToolContract.Map.cs.txt": "src/Shared/RuntimeToolContract.cs; retain namespace/type, Map signature and flat outcome ladder, blank unrelated statements while preserving source line positions",
+  "contracts.csproj.txt": "src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj; full copy",
+  "docs-readme.md.txt": "docs/README.md; full copy, not interpreted as test-project documentation",
+  "standards-readme.md.txt": "docs/standards/README.md; full copy"
+}

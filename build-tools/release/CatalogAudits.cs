@@ -12,6 +12,45 @@ internal static class CatalogAudits
 {
     private const string Method = "Group actual release catalogs and compare official XML members with compiled native call sites.\n\nRead-only against Siemens SDKs; emits identifiers and hashes, never copies SDK files.\nDirect member-name references are evidence of compiled calls, not end-to-end tool coverage.\nOverloads are counted separately in domainSignatures and together in domainMemberNames.\n";
     private static readonly HashSet<string> Boiler = Set("Equals GetHashCode ToString GetEnumerator Any Contains IndexOf CopyTo GetAttribute GetAttributes GetAttributeInfos SetAttribute SetAttributes GetComposition GetCompositionInfos GetInvocationInfos GetCreationInfos GetService GetServiceInfos Invoke Find Count Parent Dispose Clone CompareTo GetType MemberwiseClone Finalize Item".Split(' '));
+    internal static (HashSet<string> Signatures, HashSet<(string Kind, string Owner, string Member)> Members)
+        DocumentedMembers(IEnumerable<string> xmlFiles)
+    {
+        var signatures = new HashSet<string>();
+        var members = new HashSet<(string Kind, string Owner, string Member)>();
+        foreach (var path in xmlFiles)
+        foreach (var element in XDocument.Load(path).Descendants("member"))
+        {
+            var signature = (string?)element.Attribute("name") ?? "";
+            if (!(signature.StartsWith("M:", StringComparison.Ordinal) || signature.StartsWith("P:", StringComparison.Ordinal)) ||
+                signature.StartsWith("M:Siemens.Engineering.Private.", StringComparison.Ordinal) ||
+                signature.StartsWith("P:Siemens.Engineering.Private.", StringComparison.Ordinal) ||
+                signature.Contains("Siemens.Engineering.Compiler.CompileProvider", StringComparison.Ordinal)) continue;
+            var stem = signature[2..].Split('(')[0];
+            var split = stem.LastIndexOf('.');
+            var owner = split < 0 ? "" : stem[..split];
+            var member = stem[(split + 1)..];
+            if (member.Contains('#') || Boiler.Contains(member)) continue;
+            signatures.Add(signature);
+            members.Add((signature[..1], owner, member.Split("``", 2)[0]));
+        }
+        return (signatures, members);
+    }
+
+    internal static HashSet<(string Kind, string Owner, string Member)> CompiledMembers(JsonNode inventory)
+    {
+        var calls = new HashSet<(string Kind, string Owner, string Member)>();
+        foreach (var site in inventory["sites"]!.AsArray())
+        {
+            var match = Regex.Match(Text(site!["member"]), @" (Siemens\.Engineering\.[^ ]+?)::([^\(]+)\(");
+            if (!match.Success) continue;
+            var owner = Regex.Replace(match.Groups[1].Value, "<.*>", "").Replace('/', '.');
+            var member = match.Groups[2].Value;
+            var kind = member.StartsWith("get_", StringComparison.Ordinal) || member.StartsWith("set_", StringComparison.Ordinal) ? "P" : "M";
+            if (kind == "P") member = member[4..];
+            calls.Add((kind, owner, Regex.Replace(member, "<.*>", "")));
+        }
+        return calls;
+    }
     /// <summary>The bin-build/releases/v&lt;version&gt; folder of a release build: the release build record's release label (a pre-release
     /// such as 4.0.0-beta.1 shares the file version 4.0.0.0 with 4.0.0) when its file version matches the tools list, otherwise the
     /// numeric version taken from the file version as before.</summary>
@@ -41,24 +80,12 @@ internal static class CatalogAudits
         {
             var relative = key switch { "14sp1" => "TIA_V14SP1_PublicAPI/V14 SP1", "15.1" => "TIA_V15.1_PublicAPI/V15.1", "21" => "TIA_V21_PublicAPI/V21/net48", _ => $"TIA_V{key}_PublicAPI/V{key}" };
             var api = Path.Combine(apiRoot, relative); var xmlFiles = Directory.GetFiles(api, "Siemens.Engineering*.xml").Where(p => !Path.GetFileName(p).Contains(".AddIn", StringComparison.Ordinal)).Order(PythonStringComparer.Instance).ToArray(); Require(xmlFiles.Length > 0, "No XML: " + api);
-            var signatures = new HashSet<string>(); var members = new HashSet<(string Kind, string Owner, string Member)>();
-            foreach (var path in xmlFiles) foreach (var element in XDocument.Load(path).Descendants("member"))
-            {
-                var signature = (string?)element.Attribute("name") ?? "";
-                if (!(signature.StartsWith("M:", StringComparison.Ordinal) || signature.StartsWith("P:", StringComparison.Ordinal)) || signature.StartsWith("M:Siemens.Engineering.Private.", StringComparison.Ordinal) || signature.StartsWith("P:Siemens.Engineering.Private.", StringComparison.Ordinal) || signature.Contains("Siemens.Engineering.Compiler.CompileProvider", StringComparison.Ordinal)) continue;
-                var stem = signature[2..].Split('(')[0]; var split = stem.LastIndexOf('.'); var owner = split < 0 ? "" : stem[..split]; var member = stem[(split + 1)..];
-                if (member.Contains('#') || Boiler.Contains(member)) continue; signatures.Add(signature); members.Add((signature[..1], owner, member.Split("``", 2)[0]));
-            }
+            var (signatures, members) = DocumentedMembers(xmlFiles);
             string coverage;
             // P8-04l: every release, V20/V21 included, compiles its calls into the PLC worker's adapter (the engine's woven
             // inventory retired with the engine).
             coverage = Path.Combine(input, $"multi-version/adapters/coverage-{key}.json");
-            var calls = new HashSet<(string Kind, string Owner, string Member)>();
-            foreach (var site in Read("", coverage)["sites"]!.AsArray())
-            {
-                var match = Regex.Match(Text(site!["member"]), @" (Siemens\.Engineering\.[^ ]+?)::([^\(]+)\("); if (!match.Success) continue;
-                var owner = Regex.Replace(match.Groups[1].Value, "<.*>", "").Replace('/', '.'); var member = match.Groups[2].Value; var kind = member.StartsWith("get_", StringComparison.Ordinal) || member.StartsWith("set_", StringComparison.Ordinal) ? "P" : "M"; if (kind == "P") member = member[4..]; calls.Add((kind, owner, Regex.Replace(member, "<.*>", "")));
-            }
+            var calls = CompiledMembers(Read("", coverage));
             var observed = members.Intersect(calls).ToHashSet(); var candidates = members.Except(observed).ToArray();
             var byNamespace = candidates.GroupBy(p => p.Owner.Contains('.') ? p.Owner[..p.Owner.LastIndexOf('.')] : p.Owner).Select(g => (Name: g.Key, Count: g.Count())).OrderByDescending(p => p.Count).ThenBy(p => p.Name, PythonStringComparer.Instance).Take(8);
             var hashes = new JsonObject(); foreach (var path in xmlFiles) hashes[Path.GetFileName(path)] = Hash(File.ReadAllBytes(path));
@@ -67,12 +94,7 @@ internal static class CatalogAudits
             if (key is "20" or "21")
             {
                 var plcCoverage = Path.Combine(input, $"multi-version/adapters/coverage-{key}.json");
-                var plcCalls = new HashSet<(string Kind, string Owner, string Member)>();
-                foreach (var site in Read("", plcCoverage)["sites"]!.AsArray())
-                {
-                    var match = Regex.Match(Text(site!["member"]), @" (Siemens\.Engineering\.[^ ]+?)::([^\(]+)\("); if (!match.Success) continue;
-                    var owner = Regex.Replace(match.Groups[1].Value, "<.*>", "").Replace('/', '.'); var member = match.Groups[2].Value; var kind = member.StartsWith("get_", StringComparison.Ordinal) || member.StartsWith("set_", StringComparison.Ordinal) ? "P" : "M"; if (kind == "P") member = member[4..]; plcCalls.Add((kind, owner, Regex.Replace(member, "<.*>", "")));
-                }
+                var plcCalls = CompiledMembers(Read("", plcCoverage));
                 statistics[^1]!["plcCompiledDirectMemberNames"] = members.Intersect(plcCalls).Count();
                 statistics[^1]!["plcCompiledCallInventorySha256"] = Hash(File.ReadAllBytes(plcCoverage));
                 statistics[^1]!["hostCatalogSha256"] = Hash(File.ReadAllBytes(Path.Combine(input, $"multi-version/tools-{key}.json")));

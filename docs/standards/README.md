@@ -38,6 +38,8 @@
 
 计划在 [docs/plan](../plan/plan.md)，操作手册在 [docs/manuals](../manuals/workflow.md)，历史资料在 `docs/archive/`（只读）。
 
+质量评分由 `scorecard` 按需从源码、契约和已有运行结果生成；十四个维度分别报告，涉及版本的指标逐版展示，不合成项目总分。分档集中在 [ScorecardBands.cs](../../build-tools/release/ScorecardBands.cs)，当前标为 `proposed`，待维护者查看首份报告后批准。缺失来源标为 `not measured`，只有其他版本证据时标为 `no evidence`；旧开发版记录标为 `stale`，不参与评分。运行方法和证据边界见[验证](../manuals/validation.md#质量评分)。
+
 ## 外部参考
 
 “基线”是冲突时优先的来源（[ADR 0015](decisions/0015-microsoft-design-spec-baseline.md)），“补充”只在基线没有覆盖时使用；具体采纳了哪些规则写在落地文件中。标“待核实”的来源链接或许可证尚未核实。

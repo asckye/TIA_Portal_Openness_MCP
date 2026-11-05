@@ -1,0 +1,890 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Microsoft (R) Visual C# Compiler",
+          "version": "5.9.0-1.26523.112 (5a2162bea6845eabc1fc721624a43568c65db3b1)",
+          "semanticVersion": "5.9.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CA1716",
+          "ruleIndex": 86,
+          "level": "note",
+          "message": {
+            "text": "Rename type Error so that it no longer conflicts with the reserved language keyword 'Error'. Using a reserved keyword as the name of a type makes it harder for consumers in other languages to use the type."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Error.cs"
+                },
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 25,
+                  "endLine": 15,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1716",
+          "ruleIndex": 86,
+          "level": "note",
+          "message": {
+            "text": "Rename type ToolRecipes.Step so that it no longer conflicts with the reserved language keyword 'Step'. Using a reserved keyword as the name of a type makes it harder for consumers in other languages to use the type."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/ModelContextProtocol/ToolRecipes.cs"
+                },
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 29,
+                  "endLine": 16,
+                  "endColumn": 33
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1716",
+          "ruleIndex": 86,
+          "level": "note",
+          "message": {
+            "text": "Rename namespace TiaOpenness.Shared so that it no longer conflicts with the reserved language keyword 'Shared'. Using a reserved keyword as the name of a namespace makes it harder for consumers in other languages to use the namespace."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/ActorScope.cs"
+                },
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 23,
+                  "endLine": 7,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/AuditLog.cs"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 23,
+                  "endLine": 14,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/AuditInvocation.cs"
+                },
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 23,
+                  "endLine": 7,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/AuditCli.cs"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 23,
+                  "endLine": 5,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/JournalRetention.cs"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 23,
+                  "endLine": 8,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/JournalFileLock.cs"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 23,
+                  "endLine": 10,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/LocalPipeSecurity.cs"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 23,
+                  "endLine": 10,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/SessionBehavior.cs"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 23,
+                  "endLine": 1,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/ApprovalSettings.cs"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 23,
+                  "endLine": 9,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/ApprovalProtocol.cs"
+                },
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 23,
+                  "endLine": 20,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/ApprovalPipe.cs"
+                },
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 23,
+                  "endLine": 15,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/ApprovalResult.cs"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 23,
+                  "endLine": 9,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/WorkbenchControlProtocol.cs"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 23,
+                  "endLine": 8,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/WorkbenchControlFrames.cs"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 23,
+                  "endLine": 9,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/WorkbenchControlPipe.cs"
+                },
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 23,
+                  "endLine": 7,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/OperatorProtocol.cs"
+                },
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 23,
+                  "endLine": 11,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/OperatorPipe.cs"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 23,
+                  "endLine": 8,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/SafetyPolicy.cs"
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 23,
+                  "endLine": 6,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/OpennessEnvironment.cs"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 23,
+                  "endLine": 5,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/NativeInputPolicy.cs"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 23,
+                  "endLine": 5,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/HostFailurePolicy.cs"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 23,
+                  "endLine": 5,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/ProcessLossPolicy.cs"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 23,
+                  "endLine": 3,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/NativePathSelection.cs"
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 23,
+                  "endLine": 4,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/NativeExportPolicy.cs"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 23,
+                  "endLine": 10,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/BundleLayout.cs"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 23,
+                  "endLine": 8,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/DataLocations.cs"
+                },
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 23,
+                  "endLine": 11,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/LocalProcess.cs"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 23,
+                  "endLine": 10,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/ProcessArguments.cs"
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 23,
+                  "endLine": 4,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/CallJournalPayload.cs"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 23,
+                  "endLine": 10,
+                  "endColumn": 29
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Shared/ToolUsageCatalog.cs"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 23,
+                  "endLine": 8,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1720",
+          "ruleIndex": 87,
+          "level": "note",
+          "message": {
+            "text": "Identifier 'String' contains type name"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputValues.cs"
+                },
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 24,
+                  "endLine": 16,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1710",
+          "ruleIndex": 81,
+          "level": "note",
+          "message": {
+            "text": "Rename TiaMcp.Logic.V4.Inputs.AttributeMap<T> to end in either 'Dictionary' or 'Collection'"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputValues.cs"
+                },
+                "region": {
+                  "startLine": 53,
+                  "startColumn": 25,
+                  "endLine": 53,
+                  "endColumn": 37
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1710",
+          "ruleIndex": 81,
+          "level": "note",
+          "message": {
+            "text": "Rename TiaMcp.Logic.V4.Inputs.CompositeAttributeMap to end in either 'Dictionary' or 'Collection'"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/CompositeAttributeMap.cs"
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 25,
+                  "endLine": 33,
+                  "endColumn": 46
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member ParameterRef ParameterRefConverter.Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options), change parameter name type to typeToConvert in order to match the identifier as it has been declared in ParameterRef? JsonConverter<ParameterRef>.Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/ParameterRef.cs"
+                },
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 75,
+                  "endLine": 22,
+                  "endColumn": 79
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member bool AttributeMapConverter.CanConvert(Type type), change parameter name type to typeToConvert in order to match the identifier as it has been declared in bool JsonConverter.CanConvert(Type typeToConvert)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputValues.cs"
+                },
+                "region": {
+                  "startLine": 166,
+                  "startColumn": 46,
+                  "endLine": 166,
+                  "endColumn": 50
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member JsonConverter AttributeMapConverter.CreateConverter(Type type, JsonSerializerOptions options), change parameter name type to typeToConvert in order to match the identifier as it has been declared in JsonConverter? JsonConverterFactory.CreateConverter(Type typeToConvert, JsonSerializerOptions options)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputValues.cs"
+                },
+                "region": {
+                  "startLine": 167,
+                  "startColumn": 60,
+                  "endLine": 167,
+                  "endColumn": 64
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member PropertyStep PropertyStepConverter.Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options), change parameter name type to typeToConvert in order to match the identifier as it has been declared in PropertyStep? JsonConverter<PropertyStep>.Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputValues.cs"
+                },
+                "region": {
+                  "startLine": 143,
+                  "startColumn": 75,
+                  "endLine": 143,
+                  "endColumn": 79
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member ToolArguments ToolArgumentsConverter.Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options), change parameter name type to typeToConvert in order to match the identifier as it has been declared in ToolArguments JsonConverter<ToolArguments>.Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputValues.cs"
+                },
+                "region": {
+                  "startLine": 136,
+                  "startColumn": 76,
+                  "endLine": 136,
+                  "endColumn": 80
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member NativeValue NativeValueConverter.Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options), change parameter name type to typeToConvert in order to match the identifier as it has been declared in NativeValue JsonConverter<NativeValue>.Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputValues.cs"
+                },
+                "region": {
+                  "startLine": 129,
+                  "startColumn": 74,
+                  "endLine": 129,
+                  "endColumn": 78
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member Scalar ScalarConverter.Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options), change parameter name type to typeToConvert in order to match the identifier as it has been declared in Scalar JsonConverter<Scalar>.Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputValues.cs"
+                },
+                "region": {
+                  "startLine": 121,
+                  "startColumn": 69,
+                  "endLine": 121,
+                  "endColumn": 73
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1720",
+          "ruleIndex": 87,
+          "level": "note",
+          "message": {
+            "text": "Identifier 'String' contains type name"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputSchema.cs"
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 35,
+                  "endLine": 33,
+                  "endColumn": 41
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1720",
+          "ruleIndex": 87,
+          "level": "note",
+          "message": {
+            "text": "Identifier 'Integer' contains type name"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputSchema.cs"
+                },
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 35,
+                  "endLine": 41,
+                  "endColumn": 42
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1720",
+          "ruleIndex": 87,
+          "level": "note",
+          "message": {
+            "text": "Identifier 'Object' contains type name"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/InputSchema.cs"
+                },
+                "region": {
+                  "startLine": 63,
+                  "startColumn": 35,
+                  "endLine": 63,
+                  "endColumn": 41
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member CompositeAttributeValue CompositeAttributeValueConverter.Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options), change parameter name type to typeToConvert in order to match the identifier as it has been declared in CompositeAttributeValue JsonConverter<CompositeAttributeValue>.Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/CompositeAttributeMap.cs"
+                },
+                "region": {
+                  "startLine": 90,
+                  "startColumn": 86,
+                  "endLine": 90,
+                  "endColumn": 90
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1725",
+          "ruleIndex": 90,
+          "level": "note",
+          "message": {
+            "text": "In member CompositeAttributeMap CompositeAttributeMapConverter.Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options), change parameter name type to typeToConvert in order to match the identifier as it has been declared in CompositeAttributeMap? JsonConverter<CompositeAttributeMap>.Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Logic/V4/Inputs/CompositeAttributeMap.cs"
+                },
+                "region": {
+                  "startLine": 98,
+                  "startColumn": 84,
+                  "endLine": 98,
+                  "endColumn": 88
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "NewName": "typeToConvert"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
