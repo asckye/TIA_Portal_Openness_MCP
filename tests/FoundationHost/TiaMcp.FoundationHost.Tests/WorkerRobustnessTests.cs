@@ -117,13 +117,15 @@ public sealed class WorkerRobustnessTests
             var catalog = new Engine.FoundationCatalog(release, ports);
             Host.ConfigureToolBridge(catalog, new Engine.WorkerToolInvoker(catalog, Worker, lifetime, ports), () => false, new HashSet<string>());
             Journal.ConfigureOutput(row => Rows.Add(JsonNode.Parse(row)!.AsObject()));
-            engine = ports.Single(tool => tool.ProtocolTool.Name == SessionFixtureTool.Name);
             // Spill checks exercise the original unpaged read. BlockPage deliberately
             // preserves its cursor and is covered by Round2BlockPageTests instead.
             var spillRead = Foundation.FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks")
                 with { Name = "GetPlcBlockHierarchy", Operation = "ReadBlocks", ResponseMember = "Items" };
             shared = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(spillRead, Worker),
                 release, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
+            // V14-V16 use the existing unpaged block-read fixture for the export response.
+            engine = ports.SingleOrDefault(tool => tool.ProtocolTool.Name == SessionFixtureTool.Name)
+                ?? shared;
             Worker.SessionLocked = () => Host.SessionLatched();
             // The first generation starts and reports its status under the production budgets; the scaled budgets above apply
             // from the first operation a test measures (P8-stab-1).
@@ -132,8 +134,9 @@ public sealed class WorkerRobustnessTests
         internal Task<CallToolResult> Call(bool foundation, string? payload = null, CancellationToken token = default)
         {
             var tool = foundation ? shared : engine;
-            var args = !foundation ? new JsonObject { ["category"] = "application", ["name"] = payload ?? "" }
-                : new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = payload ?? "" };
+            var args = tool.ProtocolTool.Name == SessionFixtureTool.Name ? new JsonObject { ["category"] = "application", ["name"] = payload ?? "" }
+                : new JsonObject { ["softwarePath"] = "PLC" };
+            if (ReferenceEquals(tool, shared)) args["regexName"] = payload ?? "";
             var server = DispatchProxy.Create<IMcpServer, ServerProxy>();
             var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(new JsonObject {
                 ["name"] = tool.ProtocolTool.Name, ["arguments"] = args }.ToJsonString()) };
@@ -267,16 +270,21 @@ public sealed class WorkerRobustnessTests
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.False(scope.Worker.Faulted);
     }
-    [Theory, InlineData(false), InlineData(true)]
-    public async Task Oversized_reply_is_a_readable_export_handle(bool shared)
+    public static IEnumerable<object[]> ExportReleases()
     {
-        using var scope = new Scope("oversized"); var result = await scope.Call(shared);
+        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+            foreach (bool shared in new[] { false, true }) yield return new object[] { release, shared };
+    }
+    [Theory, MemberData(nameof(ExportReleases))]
+    public async Task Oversized_reply_is_a_readable_export_handle(string release, bool shared)
+    {
+        using var scope = new Scope("oversized", release); var result = await scope.Call(shared);
         AssertReadableExport(scope, result);
     }
-    [Theory, InlineData(false), InlineData(true)]
-    public async Task Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline(bool shared)
+    [Theory, MemberData(nameof(ExportReleases))]
+    public async Task Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline(string release, bool shared)
     {
-        using var scope = new Scope("oversized-delayed");
+        using var scope = new Scope("oversized-delayed", release);
         var clock = System.Diagnostics.Stopwatch.StartNew();
         var result = await scope.Call(shared);
         AssertReadableExport(scope, result);
@@ -344,10 +352,10 @@ public sealed class WorkerRobustnessTests
         Assert.True((bool?)result.StructuredContent?["ok"], scope.FailureDetails(result));
         Assert.False(scope.Worker.Faulted, scope.FailureDetails(result));
         string id = (string)result.StructuredContent!["data"]!["export"]!["id"]!;
-        var entry = TiaMcpServer.ModelContextProtocol.ExportStore.Get(id);
+        var entry = Engine.SessionExportStore.Get(id);
         Assert.NotNull(entry); Assert.Contains(new string('x', 1000), entry.Content);
         Assert.True(entry.Content.Length > ChannelLimits.ResponseBytes);
-        Assert.Equal(20000, TiaMcpServer.ModelContextProtocol.ExportStore.Slice(id, 0, 20000).Returned);
+        Assert.Equal(20000, Engine.SessionExportStore.Slice(id, 0, 20000).Returned);
         Assert.Empty(Directory.GetFiles(scope.SpillsDirectory));
     }
     [Fact]

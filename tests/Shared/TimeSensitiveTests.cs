@@ -356,12 +356,14 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Human_execution_of_prefilled_MCP_forms_previews_and_requires_the_normal_approval"
             },
             ["TiaOpenness.Gui.Tests.AccessibilityTests"] = new[] {
+                "AI_switch_guard_blocks_access_keys_and_busy_without_a_total_is_indeterminate",
                 "Real_page_and_dialog_automation_peers_have_meaningful_names",
                 "Drawer_and_confirmation_trap_Tab_accept_Escape_and_restore_focus",
                 "Risky_confirmation_defaults_to_the_safe_choice",
                 "Approval_sheet_accepts_Space_and_the_localized_T_access_key"
             },
             ["TiaOpenness.Gui.Tests.ApprovalPageTests"] = new[] {
+                "Destructive_rejection_is_default_and_Enter_on_Approve_rejects",
                 "Enter_never_approves_write_and_Escape_does_not_reject",
                 "Focused_Reject_keeps_its_normal_Enter_activation_for_write_requests",
                 "Destructive_sheet_requires_Space_or_access_key_and_Enter_cancels",

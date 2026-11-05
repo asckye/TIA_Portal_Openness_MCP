@@ -403,6 +403,7 @@ public sealed class VersionControlAdmissionTests
                 : new("", Path.Combine(Root, "worker.exe"), release, engineWorker, "full", registry, null, catalogForTest);
             tools = catalogForTest == null ? pipeline.AllTools : pipeline.Tools.ToArray();
         }
+        internal IDisposable EnterSession() => pipeline.EnterSession();
         internal Task<CallToolResult> Call(string name, object args) => tools.Single(t => t.ProtocolTool.Name == name).InvokeAsync(
             new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
                 Params = new() { Name = name, Arguments = Arguments(JsonSerializer.Serialize(args)) } }).AsTask();

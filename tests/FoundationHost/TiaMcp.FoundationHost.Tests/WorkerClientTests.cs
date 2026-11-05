@@ -87,10 +87,22 @@ public sealed class WorkerDispatchTests
         Xunit.Assert.NotNull(await worker.Call("ReadState", new(), CancellationToken.None));
     }
 
-    [Xunit.Fact]
-    public void Foundation_result_parking_retains_the_complete_response_and_small_results()
+    [Xunit.Theory]
+    [Xunit.InlineData("14sp1")]
+    [Xunit.InlineData("15.1")]
+    [Xunit.InlineData("16")]
+    [Xunit.InlineData("17")]
+    [Xunit.InlineData("18")]
+    [Xunit.InlineData("19")]
+    [Xunit.InlineData("20")]
+    [Xunit.InlineData("21")]
+    public void Foundation_result_parking_retains_the_complete_response_and_small_results(string release)
     {
-        using var worker = new WorkerClient("19", "unused", "unused", false);
+        using var worker = new WorkerClient(release, "unused", "unused", false);
+        using var sessionWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var context = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker);
+        using var exports = context.Exports;
+        using var session = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
         IFoundationWorkerResult parking = worker;
         var small = new CallToolResult { Content = new[] { new TextContentBlock { Text = "{}" } } };
         Xunit.Assert.Same(small, parking.ParkResult(small, "GetSessionState"));
@@ -99,7 +111,7 @@ public sealed class WorkerDispatchTests
         var result = parking.ParkResult(large, "GetSessionState");
         var body = JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)!;
         string id = (string)body["meta"]!["exportId"]!;
-        Xunit.Assert.Equal(text, TiaMcpServer.ModelContextProtocol.ExportStore.Get(id)!.Content);
+        Xunit.Assert.Equal(text, enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(id)!.Content);
         Xunit.Assert.True(((TextContentBlock)result.Content.Single()).Text.Length < text.Length);
         Xunit.Assert.False(((IFoundationSessionWorker)worker).SharedSession);
     }

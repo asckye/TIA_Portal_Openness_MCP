@@ -9,6 +9,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CodeAnalysis" HintPath="$(MSBuildBinPath)/Roslyn/bincore/Microsoft.CodeAnalysis.dll" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp" HintPath="$(MSBuildBinPath)/Roslyn/bincore/Microsoft.CodeAnalysis.CSharp.dll" />
     <Compile Include="../../Shared/SourceFamily.cs" Link="Shared/SourceFamily.cs" />
     <ProjectReference Include="../../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <ProjectReference Include="../../../scripts/diagnostics/TiaMcp.DiagnosticClients/TiaMcp.DiagnosticClients.csproj" />
