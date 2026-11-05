@@ -65,15 +65,21 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
 
         private static bool UseDeclaredReleasePolicy
+            => UsesDeclaredReleasePolicy(ReleaseKey);
+
+        private static bool UsesDeclaredReleasePolicy(string release)
 #if TIA_ENGINE_HOST
-            => TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].WrapPortedTools;
+            => TiaMcp.FoundationHost.ReleaseCatalogData.Releases[release].WrapPortedTools;
 #else
-            => TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).EngineOutputDirectory != null;
+            => TiaMcp.Versioning.TiaVersionCatalog.Get(release).EngineOutputDirectory != null;
 #endif
 
         internal static string VersionToolProblem(string name)
-            => UseDeclaredReleasePolicy
-                ? Siemens.ToolVersionPolicy.ToolProblem(ReleaseKey, name)
+            => VersionToolProblem(ReleaseKey, name);
+
+        internal static string VersionToolProblem(string release, string name)
+            => UsesDeclaredReleasePolicy(release)
+                ? Siemens.ToolVersionPolicy.ToolProblem(release, name)
                 : SessionCatalog() is { } catalog && catalog.Find(name) == null ? "Tool is not registered in this release." : "";
 
         // Old-release registration is a per-session catalog fact. Building a registry happens before any MCP session

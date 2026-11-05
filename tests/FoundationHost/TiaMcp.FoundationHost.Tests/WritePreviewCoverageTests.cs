@@ -162,6 +162,58 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     [InlineData("19")]
     [InlineData("20")]
     [InlineData("21")]
+    public void Clearing_parked_responses_only_deletes_the_calling_sessions_handles(string release)
+    {
+        using var worker = new PlanWorker();
+        var catalog = new HmiTagPathContractTests.DeleteCatalog(release);
+        var current = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog };
+        var other = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog };
+        string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        string currentId = "", otherId = "";
+        try
+        {
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            string Park(string target)
+            {
+                var response = Host.V4Result("GetSessionState", new JsonObject { ["value"] = target });
+                var parked = enginehost::TiaMcpServer.ModelContextProtocol.ResponseGuardTool.Shrink(
+                    response, "GetSessionState", target, force: true);
+                return (string)parked.StructuredContent!["data"]!["export"]!["id"]!;
+            }
+            using (enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(other)) otherId = Park("other");
+            using (enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(current))
+            {
+                currentId = Park("current");
+                var tools = new enginehost::TiaMcpServer.ModelContextProtocol.ExportTools();
+                Assert.Equal(1, (int?)tools.ClearExports(0).StructuredContent!["data"]!["deleted"]);
+                Assert.Equal(0, (int?)tools.ClearExports(0).StructuredContent!["data"]!["deleted"]);
+                Assert.Null(enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(currentId));
+                Assert.True(tools.GetExport(otherId).IsError);
+            }
+            using (enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(other))
+            {
+                Assert.NotNull(enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(otherId));
+                Assert.False(new enginehost::TiaMcpServer.ModelContextProtocol.ExportTools().GetExport(otherId).IsError ?? false);
+            }
+        }
+        finally
+        {
+            current.Exports.Dispose(); other.Exports.Dispose();
+            TiaMcpServer.ModelContextProtocol.ExportStore.Delete(currentId);
+            TiaMcpServer.ModelContextProtocol.ExportStore.Delete(otherId);
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
+        }
+    }
+
+    [Theory]
+    [InlineData("14sp1")]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("17")]
+    [InlineData("18")]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
     public void Every_registered_write_has_a_default_preview_or_an_explicit_plan(string release)
     {
         using var worker = new FakeWorker();

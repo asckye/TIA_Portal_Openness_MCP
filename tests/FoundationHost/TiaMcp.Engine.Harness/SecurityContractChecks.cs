@@ -102,7 +102,8 @@ internal static class SecurityContractChecks
         {
             const string arguments = "{\"activationTest\":\"Acceptance\"}";
             var direct = Invoke("ManageSafetyFunction", arguments);
-            string problem = (string)boundary.GetMethod("VersionToolProblem", All)!.Invoke(null, new object[] { "ManageSafetyFunction" })!;
+            string problem = (string)boundary.GetMethod("VersionToolProblem", All, null, new[] { typeof(string) }, null)!
+                .Invoke(null, new object[] { "ManageSafetyFunction" })!;
             var refusal = Body(direct);
             check(problem.Length > 0 && direct.IsError == true && (string?)refusal["error"]?["code"] == "UNSUPPORTED_CAPABILITY"
                 && (string?)refusal["error"]?["message"] == problem && (string?)refusal["meta"]?["execution"] == "not-started",

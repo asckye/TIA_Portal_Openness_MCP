@@ -16,7 +16,9 @@ using TiaMcp.Logic.V4.Inputs;
 using TiaMcpServer.Siemens;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
 #if TIA_ENGINE_HOST
-using ExportStore = TiaMcp.FoundationHost.SessionExportStore;
+using ResponseExports = TiaMcp.FoundationHost.SessionExportStore;
+#else
+using ResponseExports = TiaMcpServer.ModelContextProtocol.ExportStore;
 #endif
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -35,15 +37,15 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             const string tool = "GetExportContent";
             if (offset < 0 || limit < 0) return PlcExchangeContract.Reject(tool, InvalidInput("offset/limit"), current: false);
-            var entry = ExportStore.Get(exportId);
+            var entry = ResponseExports.Get(exportId);
             if (entry == null) return Missing(tool, exportId);
             if (offset > entry.Length) return PlcExchangeContract.Reject(tool, InvalidInput("offset"), current: false);
             if (limit == 0) limit = ResolvedMaxResponseChars();
-            limit = limit <= 0 ? ExportStore.MaxSliceChars : Math.Min(limit, ExportStore.MaxSliceChars);
-            var slice = ExportStore.SliceRetained(entry, offset, limit);
+            limit = limit <= 0 ? ResponseExports.MaxSliceChars : Math.Min(limit, ResponseExports.MaxSliceChars);
+            var slice = ResponseExports.SliceRetained(entry, offset, limit);
             if (slice.Error != null) return Missing(tool, exportId);
             var export = Describe(entry);
-            return ResponseGuardTool.FitTextPage(slice, length => ExportStore.SliceRetained(entry, offset, length), page =>
+            return ResponseGuardTool.FitTextPage(slice, length => ResponseExports.SliceRetained(entry, offset, length), page =>
                 page.Error != null ? Missing(tool, exportId) : PlcExchangeContract.Result(tool,
                     new JsonObject { ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text },
                     paging: new Paging(PagingMode.Offset, offset, limit, page.NextOffset, null, null,
@@ -57,10 +59,10 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Zero-based offset into the matching in-memory export handles.")] int offset = 0)
         {
             if (limit < 1 || offset < 0) return PlcExchangeContract.Reject("ListExportHandles", InvalidInput(limit < 1 ? "limit" : "offset"), current: false);
-            var matches = ExportStore.List(tool, int.MaxValue);
+            var matches = ResponseExports.List(tool, int.MaxValue);
             if (offset > matches.Count) return PlcExchangeContract.Reject("ListExportHandles", InvalidInput("offset"), current: false);
             var entries = matches.Skip(offset).Take(limit).ToArray();
-            var (count, chars) = ExportStore.Stats();
+            var (count, chars) = ResponseExports.Stats();
             return PlcExchangeContract.Result("ListExportHandles", new JsonObject {
                 ["items"] = new JsonArray(entries.Select(e => (JsonNode)new JsonObject { ["export"] = Describe(e) }).ToArray()),
                 ["count"] = count, ["totalCharacters"] = chars, ["matchingCount"] = matches.Count,
@@ -73,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult SaveExport(string exportId, string outputPath, bool raw = false, bool overwrite = false)
         {
             const string tool = "SaveExportContent";
-            var entry = ExportStore.Get(exportId);
+            var entry = ResponseExports.Get(exportId);
             if (entry == null) return Missing(tool, exportId, current: true);
             if (string.IsNullOrWhiteSpace(outputPath)) return PlcExchangeContract.Reject(tool, InvalidInput("outputPath"));
             string full;
@@ -109,8 +111,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L1][Exports][WRITE] Delete one parked response from this service session. A missing or expired handle returns NOT_FOUND.")]
         public CallToolResult DeleteExport(string exportId)
         {
-            var entry = ExportStore.Get(exportId);
-            if (entry == null || !ExportStore.Delete(exportId)) return Missing("DeleteExportHandle", exportId);
+            var entry = ResponseExports.Get(exportId);
+            if (entry == null || !ResponseExports.Delete(exportId)) return Missing("DeleteExportHandle", exportId);
             return PlcExchangeContract.Result("DeleteExportHandle", new JsonObject { ["export"] = Describe(entry) }, execution: Execution.Completed);
         }
 
@@ -120,8 +122,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult ClearExports(int olderThanHours = 24)
         {
             if (olderThanHours < 0) return PlcExchangeContract.Reject("ClearExportHandles", InvalidInput("olderThanHours"), current: false);
-            int deleted = ExportStore.Clear(olderThanHours);
-            var (count, chars) = ExportStore.Stats();
+            int deleted = ResponseExports.Clear(olderThanHours);
+            var (count, chars) = ResponseExports.Stats();
             return PlcExchangeContract.Result("ClearExportHandles", new JsonObject { ["deleted"] = deleted,
                 ["remaining"] = count, ["remainingCharacters"] = chars }, execution: Execution.Completed);
         }
@@ -161,7 +163,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (JsonException) /* swallow(parse-fallback): a parked plain-text response keeps its text media type */ { }
             return JsonNode.Parse(V4Json.Serialize(new ExportHandle(entry.Id, mediaType, bytes.LongLength,
                 BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(),
-                new DateTimeOffset(entry.CreatedUtc.ToUniversalTime()).AddHours(ExportStore.DefaultTtlHours),
+                new DateTimeOffset(entry.CreatedUtc.ToUniversalTime()).AddHours(ResponseExports.DefaultTtlHours),
                 entry.Tool, entry.Target, new DateTimeOffset(entry.CreatedUtc.ToUniversalTime()), entry.Length)))!.AsObject();
         }
 

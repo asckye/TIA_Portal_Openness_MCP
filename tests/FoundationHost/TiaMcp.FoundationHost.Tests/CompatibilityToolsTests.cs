@@ -98,6 +98,14 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
                 .Select(tool => JsonSerializer.Serialize(tool.ProtocolTool)).ToArray();
             Assert.Equal(expected, actual);
             Assert.Equal(otherRelease, enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey);
+            using var sessionWorker = new HmiTagPathContractTests.PreviewWorker();
+            var catalog = new HmiTagPathContractTests.DeleteCatalog(release);
+            var context = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker) { Catalog = catalog };
+            using var session = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
+            var registered = PortedToolContract.Wrap(new FoundationTool(sessionWorker, release, catalog.Method, "DeleteHmiTag"));
+            Assert.NotNull(catalog.Find("DeleteHmiTag"));
+            Assert.Equal("DeleteHmiTag", registered.ProtocolTool.Name);
+            Assert.Equal(otherRelease, enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey);
         }
         finally
         {

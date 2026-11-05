@@ -2,7 +2,9 @@ using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 #if TIA_ENGINE_HOST
-using ExportStore = TiaMcp.FoundationHost.SessionExportStore;
+using ResponseExports = TiaMcp.FoundationHost.SessionExportStore;
+#else
+using ResponseExports = TiaMcpServer.ModelContextProtocol.ExportStore;
 #endif
 using System;
 using System.Collections.Generic;
@@ -232,7 +234,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // 原子：寄存 + 取头部在同一把锁里完成。分成两步的话，中间别的线程 Put 时
             // 的淘汰可能把我们刚存的挤掉，Slice 就拿到 Error != null、Text=""，
             // 于是模型收到一份「成功但空」的响应 —— 原文既不在上下文也不在句柄里。
-            var (entry, head) = ExportStore.PutAndSliceEntry(toolName, target, full, limit);
+            var (entry, head) = ResponseExports.PutAndSliceEntry(toolName, target, full, limit);
             var id = entry.Id;
             // fail-open：头部都取不到就原样放行完整响应。多花上下文可以接受，丢内容不行。
             if (head.Error != null) return result;
@@ -246,7 +248,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (page.Error != null) throw new InvalidOperationException(page.Message);
                     var data = new JsonObject {
                         ["continuation"] = new JsonObject { ["name"] = "GetExportContent",
-                            ["arguments"] = new JsonObject { ["exportId"] = id, ["offset"] = page.NextOffset, ["limit"] = ExportStore.MaxSliceChars },
+                            ["arguments"] = new JsonObject { ["exportId"] = id, ["offset"] = page.NextOffset, ["limit"] = ResponseExports.MaxSliceChars },
                             ["hint"] =
                                 "Invoke GetExportContent directly or through CallTool with these arguments. Concatenate data.text from this page and each " +
                                 "GetExportContent page, following meta.paging.nextOffset until complete=true, then parse the full original response. " +
@@ -254,7 +256,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             },
                         ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text };
                     var m = original.Meta;
-                    var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ExportStore.MaxSliceChars), page.NextOffset, null, null,
+                    var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ResponseExports.MaxSliceChars), page.NextOffset, null, null,
                         page.TotalLength, page.Eof, PagingUnit.Utf16);
                     var pageMeta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.RequiresSessionReset,
                         m.BehaviorPolicy, m.Completeness, paging, m.Warnings);
@@ -262,7 +264,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                         Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
                 }
-                return FitTextPage(head, length => ExportStore.SliceRetained(entry, 0, length), Render);
+                return FitTextPage(head, length => ResponseExports.SliceRetained(entry, 0, length), Render);
             }
 
             var meta = new JsonObject
