@@ -20,7 +20,7 @@ internal sealed class PrepareBuild
         var revision = ProcessRunner.Run("git", ["rev-parse", "HEAD"], context.Root);
         ProcessRunner.RequireSuccess(revision, "Read prepared source revision");
         var nuget = context.NuGetConfig ?? Path.Combine(context.OutputDirectory, "offline.nuget.config");
-        properties = ["-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:RestoreLockedMode=true",
+        properties = ["-p:TiaSecurityAnalysisProfile=release", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:RestoreLockedMode=true",
             "-p:TiaSharedAdapterPaths=false", "-p:TiaPublicApiRoot=" + context.PublicApiRoot,
             "-p:SourceRevisionId=" + revision.StandardOutput.Trim(),
             "-p:Version=" + context.Version, "-p:FileVersion=" + ReleaseVersions.FileVersionOf(context.Version),

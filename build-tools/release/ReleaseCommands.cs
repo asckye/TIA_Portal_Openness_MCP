@@ -17,6 +17,9 @@ internal static partial class ReleaseCommands
 
     internal static int Run(string command, Options options) => command switch
     {
+        "check-loosening" => CheckLoosening.Run(Root, options),
+        "complexity-report" => ComplexityReport.Run(Root, options),
+        "check-vulnerable-packages" => VulnerablePackages.Run(Root, options, Dotnet),
         "prepare" => Prepare.Run(Root, options),
         "merge-check" => MergeCheck.Run(Root, options),
         "wrap-long-lines" => WrapLongLines.Run(Root, options),

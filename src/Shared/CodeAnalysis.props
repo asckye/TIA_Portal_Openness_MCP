@@ -14,6 +14,45 @@
     <!-- Include the discovered editor configuration in incremental compilation and release cache keys. -->
     <CustomAdditionalCompileInputs Include="$(MSBuildThisFileDirectory)../../.editorconfig" />
   </ItemGroup>
+  <!-- Release taint rules apply to physical src files, including linked sources. -->
+  <PropertyGroup>
+    <TiaSecurityAnalysisProfile Condition="'$(TiaSecurityAnalysisProfile)' == ''">merge</TiaSecurityAnalysisProfile>
+    <_TiaSecurityRoot>$([System.String]::Copy('$(TiaMcpAnalysisRoot)').Replace('\', '/'))/src/</_TiaSecurityRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <_TiaSecurityRule Include="CA2100;CA2305;CA2311;CA2312;CA2321;CA2322;CA2327;CA2328" />
+    <_TiaSecurityRule Include="CA2329;CA2330;CA3001;CA3002;CA3003;CA3004;CA3005;CA3006" />
+    <_TiaSecurityRule Include="CA3007;CA3008;CA3009;CA3010;CA3011;CA3012;CA5380;CA5381" />
+    <_TiaSecurityRule Include="CA5382;CA5383;CA5384;CA5385;CA5386;CA5387;CA5388;CA5389" />
+    <_TiaSecurityRule Include="CA5390;CA5399;CA5400;CA5401;CA5402;CA5403" />
+  </ItemGroup>
+  <Target Name="PrepareSecurityAnalysisProfile" BeforeTargets="CoreCompile">
+    <Error Condition="'$(TiaSecurityAnalysisProfile)' != 'merge' and '$(TiaSecurityAnalysisProfile)' != 'release'" Text="Unknown security analysis profile $(TiaSecurityAnalysisProfile)" />
+    <PropertyGroup>
+      <_TiaSecurityDisabled>@(_TiaSecurityRule->'dotnet_diagnostic.%(Identity).severity = none', '%0A')</_TiaSecurityDisabled>
+      <_TiaSecurityEnabled>@(_TiaSecurityRule->'dotnet_diagnostic.%(Identity).severity = warning', '%0A')</_TiaSecurityEnabled>
+      <_TiaSecurityProfileStamp>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)security-profile.txt', '$(MSBuildProjectDirectory)'))</_TiaSecurityProfileStamp>
+      <_TiaSecurityConfig>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)security-$(TiaSecurityAnalysisProfile).globalconfig', '$(MSBuildProjectDirectory)'))</_TiaSecurityConfig>
+    </PropertyGroup>
+    <ItemGroup>
+      <_TiaSecurityCandidate Remove="@(_TiaSecurityCandidate)" />
+      <_TiaSecuritySource Remove="@(_TiaSecuritySource)" />
+      <_TiaSecurityCandidate Include="@(Compile)"
+          Condition="'$(TiaSecurityAnalysisProfile)' == 'release' and $([System.String]::Copy('%(Compile.FullPath)').Replace('\', '/').StartsWith('$(_TiaSecurityRoot)'))">
+        <NormalizedPath>$([System.String]::Copy('%(FullPath)').Replace('\', '/'))</NormalizedPath>
+        <SourcePath>$([MSBuild]::MakeRelative('$(_TiaSecurityRoot)', '%(FullPath)').Replace('\', '/'))</SourcePath>
+      </_TiaSecurityCandidate>
+      <_TiaSecuritySource Include="@(_TiaSecurityCandidate)"
+          Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('%(_TiaSecurityCandidate.SourcePath)', '(^|/)(obj|bin)(-[^/]*)?/'))" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_TiaSecurityProfileStamp)" Lines="$(TiaSecurityAnalysisProfile)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile File="$(_TiaSecurityConfig)" Overwrite="true" WriteOnlyWhenDifferent="true"
+      Lines="is_global = true%0Aglobal_level = 200%0A$(_TiaSecurityDisabled)%0Adotnet_code_quality.interprocedural_analysis_kind = context_sensitive%0Adotnet_code_quality.max_interprocedural_method_call_chain = 1%0Adotnet_code_quality.max_interprocedural_lambda_or_local_function_call_chain = 1;@(_TiaSecuritySource->'[%(NormalizedPath)]%0A$(_TiaSecurityEnabled)')" />
+    <ItemGroup>
+      <EditorConfigFiles Include="$(_TiaSecurityConfig)" />
+      <CustomAdditionalCompileInputs Include="$(_TiaSecurityConfig);$(_TiaSecurityProfileStamp);$(MSBuildThisFileFullPath)" />
+    </ItemGroup>
+  </Target>
   <!-- Persist compiler diagnostics even when a later traversal skips CoreCompile.
        The report is an incremental output, so a missing report triggers compilation. -->
   <Target Name="PrepareAnalyzerWarningReport" BeforeTargets="CoreCompile" Condition="'$(Language)' == 'C#'">
@@ -43,6 +82,6 @@
       <Output TaskParameter="Items" ItemName="_TiaAnalyzerHashedInputs" />
     </GetFileHash>
     <WriteLinesToFile File="$(_TiaAnalyzerDirectory)/$(_TiaAnalyzerReportId).inputs" Overwrite="true"
-                      Lines="context|$(MSBuildProjectFullPath)|$(TargetFramework)|$([System.String]::Copy('$(DefineConstants)').Replace(';', ','));@(_TiaAnalyzerHashedInputs->'%(FullPath)|%(FileHash)')" />
+                      Lines="context|$(MSBuildProjectFullPath)|$(TargetFramework)|$([System.String]::Copy('$(DefineConstants)').Replace(';', ','))|$(TiaSecurityAnalysisProfile);@(_TiaAnalyzerHashedInputs->'%(FullPath)|%(FileHash)')" />
   </Target>
 </Project>

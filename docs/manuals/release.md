@@ -29,12 +29,14 @@
 dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3
 ```
 
-完整准备按顺序完成构建、暂存校验、ZIP 和摘要生成，再对提取的 ZIP 运行交付检查，然后写候选记录并上传私有草稿，2026-11-04 实测约 6 分钟。注册套件、传输、配置页、原生安全、工具用法与活动输入检查由 `merge-check` 执行，范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 在 `merge-check` 中随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
+完整准备首先运行依赖漏洞扫描，再按顺序完成构建、暂存校验、ZIP 和摘要生成，再对提取的 ZIP 运行交付检查，然后写候选记录并上传私有草稿，2026-11-04 实测约 6 分钟（未计入漏洞扫描）。注册套件、传输、配置页、原生安全、工具用法与活动输入检查由 `merge-check` 执行，范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 在 `merge-check` 中随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
+
+扫描先于任何清理或构建，报告保存在 `bin-build/prepared/<版本>/logs/vulnerable-packages.json`。未批准的 High/Critical 阻止准备；网络或恢复失败、空源、无效报告显示 `not run`，停止并提示恢复网络后重跑，通常约 20 秒内失败，超时上限为 300 秒。离线 `-NuGetConfig` 只用于后续构建；扫描显式使用 nuget.org。`-NoDraftUpload` 也需要完成扫描；`-BuildOnly` 不生成候选，因而跳过扫描。`merge-check`、`upload-draft`、`publish-prepared` 不扫描，公开阶段的 300 秒预算保持不变；不要求 GitHub CI 扫描收据。
 
 | 选项 | 用途与边界 |
 |---|---|
-| `-BuildOnly` | 只构建、暂存校验和打包，不运行交付包检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
-| `-NoDraftUpload` | 完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
+| `-BuildOnly` | 跳过漏洞扫描，只构建、暂存校验和打包，不运行交付包检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
+| `-NoDraftUpload` | 仍须通过漏洞扫描；完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |
 | `-Python`、`-CompanionPython` | 分别指定解码器和 PLC Tools 的解释器绝对路径 |
 | `-MaxParallelism` | 构建并行度，必须为正整数，默认 6 |

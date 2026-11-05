@@ -132,7 +132,7 @@ MCP 可见文本（[ADR 待办 B02](decisions/README.md)）：
 
 - 新代码和改动的代码遵守手册 [4.1](engineering-handbook.html#quality-size) 的触发线：方法约 40–60 行，文件约 400–600 行且只含一个类型，圈复杂度约 10–15，嵌套 3 层，参数约 5 个。超过时拆分，或在审查说明中写一行理由（例如厂商要求的固定调用序列）。
 - 按职责拆类型，不靠新增 `partial` 变小（T-10）。同一判断、转换或业务规则（约 5 行以上）第二次出现时合并为共享组件；各版本官方 API 的差异不算重复（手册 Q-03）。
-- REVIEW-1 在合并档加入只报告、不阻塞的复杂度报告（`complexity-report.md`），尚未合并。
+- `merge-check` 为所有非纯文档计划生成只报告、不阻塞的复杂度报告（`bin-build/merge-check/complexity-report.md`），只扫描变更的 C# 文件；判读见[验证](../manuals/validation.md#自动审查检查)。
 
 ### 2.7 错误处理
 
@@ -168,7 +168,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 ### 2.9 分析器、棘轮与工程规则
 
-- 分析器设置在 [`src/Shared/CodeAnalysis.props`](../../src/Shared/CodeAnalysis.props)，由根 `Directory.Build.props` 导入，net48 和 netstandard2.0 目标同样运行 NetAnalyzers。规则严重性只在根 `.editorconfig` 中维护，不在工程中散布 `NoWarn`。
+- 分析器设置在 [`src/Shared/CodeAnalysis.props`](../../src/Shared/CodeAnalysis.props)，由根 `Directory.Build.props` 导入，net48 和 netstandard2.0 目标同样运行 NetAnalyzers。常规规则严重性在根 `.editorconfig` 中维护；38 条发布数据流安全规则由同一 props 的条目表生成 profile 配置，只分析物理 `src/`，不在工程中散布 `NoWarn`。
 - 新代码零新增警告（手册 [Q-15](engineering-handbook.html#quality-analysis)）：`check-analyzer-warnings` 与审查过的基线比较，基线只能删除已消失的条目（`-UpdateBaseline -Complete`）。
 - 确需抑制时用 `[SuppressMessage(..., Justification = "...")]` 或 `.editorconfig` 的路径段，并写明偏差编号；严重性只升不降。
 - 与项目棘轮的约定：CA1031 关闭（与 swallowed 棘轮重复）；CA1303 关闭（与“MCP 响应不做本地化”冲突）；IDE0090 和 IDE0300 系列保持 silent，不批量自动修复（会改变 envelopes 清单统计的令牌模式）。
@@ -281,7 +281,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | 规划 golden | 设置 `TIA_MCP_UPDATE_GOLDEN=1` 运行 `generation-planning` 套件，移除开关后再正常运行一次（[golden 说明](../../tests/Generation/TiaMcp.Generation.Planning.Tests/Golden/README.md)） |
 | TIA 功能检查 | `check-tia-features -Capture` |
 | 嵌入目录、工具用法、工具数量块、迁移表 | `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`、`generate-release-migration`，按此顺序运行 |
-| 分析器警告基线 | `check-analyzer-warnings -UpdateBaseline -Complete`，只能删除已消失的条目 |
+| 分析器警告基线 | `check-analyzer-warnings -UpdateBaseline -Complete` 只能删除；经维护者批准首次启用新规则时用 `-InitializeRules <csv> -ReviewData <file> -Base <ref>` 审查初始化 |
 
 - 不手改测试哈希、`manifest/*.json` 中的哈希和生成文件（`manifest/tools-list.json`、`src/Shared/ToolUsageData.json`、`docs/reference/tool-matrix.md` 等）。
 - 重新生成基线不授权修改阈值或断言。
@@ -309,7 +309,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 - 删除、跳过、过滤、放宽或重设任何检查、测试、断言、阈值、超时和门禁（含套件的 `minimumPassed`、`maximumSkipped`），都须维护者事先批准（[ADR 待办 B36](decisions/README.md)、[AGENTS.md](../../AGENTS.md)“范围”）。批准记在任务说明或 ADR 中，报告逐项列出。
 - 功能按设计减少用例时，在报告中列出删除的用例和原因，由维护者决定。
 - 重新生成基线（第 5.5 节）是允许的，但不授权改阈值或断言。
-- REVIEW-1（尚未合并）加入阻塞的 `check-loosening`：对照批准清单检查删除的测试、新增的跳过、降低的下限和放大的阈值。
+- `merge-check` 的所有非纯文档计划运行阻塞的 `check-loosening -Base <ref>`。审批按任务分组保存于 `build-tools/release/baselines/approved-check-changes.json`，主导审查者用 `-RecordApprovals` 生成并独立提交；具体流程和已知限制见[验证](../manuals/validation.md#检查变更审批)。
 
 ### 5.9 测试代码的放宽与禁止事项
 

@@ -49,6 +49,7 @@ internal static class Prepare
         var before = tracked.ToDictionary(path => path, path => FileHash.Sha256(Path.Combine(root, path)), StringComparer.Ordinal);
         return WithRunEnvironment(context, () => RequireUnchanged(root, before, options.Has("BuildOnly")), environment =>
         {
+            RequireVulnerabilityScan(root, options, context.Logs);
             new PrepareBuild(context, environment).Run();
             RequireUnchanged(root, before, options.Has("BuildOnly"));
             Timed("stage", () => Stage(context, tracked, environment));
@@ -63,6 +64,19 @@ internal static class Prepare
             return Complete(context, package, options, environment, () => RequireUnchanged(root, before, options.Has("BuildOnly")));
         });
     });
+
+    internal static void RequireVulnerabilityScan(string root, Options options, string logs,
+        Func<string[], string, IDictionary<string, string?>, CommandResult>? run = null)
+    {
+        if (options.Has("BuildOnly")) return;
+        var result = Timed("vulnerable-packages", () => VulnerablePackages.Check(root,
+            run ?? ((arguments, cwd, environment) => ProcessRunner.Run(ReleaseCommands.Dotnet, arguments, cwd,
+                environment, timeoutMilliseconds: 300_000)), Path.Combine(logs, "vulnerable-packages.json")));
+        Console.Write(result.StandardOutput);
+        if (result.ExitCode != 0)
+            throw new ReleaseException(result.StandardOutput.Trim() + "\n" + result.StandardError +
+                (result.ExitCode == 2 ? "\nRerun prepare with network access to NuGet." : ""), result.ExitCode);
+    }
 
     internal static int Complete(PrepareContext context, PreparedPackage package, Options options,
         IDictionary<string, string?> environment, Action requireUnchanged,

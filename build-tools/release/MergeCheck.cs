@@ -466,6 +466,7 @@ internal static class MergeCheck
         }
         var plan = Select(changes, options.Has("All"), catalog, closures, Mentions,
             docsOnly ? [] : FileBasedPrograms.Discover(root), dotnet, python, api, output, parallelism);
+        if (!plan.DocsOnly) CheckLoosening.AddJobs(plan, options.Get("Base", "master"), dotnet, output);
         Console.Write(Describe(plan, table));
         if (options.Has("DryRun")) return 0;
         PrepareBuild.RequireOwnedTree(root, output);
