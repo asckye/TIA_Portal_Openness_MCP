@@ -2658,23 +2658,6 @@
     },
     {
       "rule": "CA2219",
-      "path": "src/Adapters/Native/Plc/PlcDocumentImportPolicy.cs",
-      "line": 127,
-      "column": 26,
-      "endLine": 127,
-      "endColumn": 114,
-      "message": "Do not raise an exception from within a finally clause",
-      "member": "TiaMcp . Adapters/PlcDocumentImportPolicy/Run( PlcDocumentImportRequest r , Func \u003C string [  ] \u003E scan , Func \u003C string , Stream \u003E open , Func \u003C IEnumerable \u003C string \u003E \u003E inventory , Func \u003C string , bool \u003E collision , Action recheck , Func \u003C PlcDocumentImportNative \u003E import )",
-      "anchor": "throw new IOException ( \u0022Input handle cleanup failed before native import.\u0022 , closeFailure ) ; ",
-      "fingerprint": "6bd75f5c8917b01c2b04f7e37060c24d1d81584b3e3b59e3621c05c96b85ec4c",
-      "reason": "post-native-cleanup-evidence",
-      "retirement": "",
-      "contexts": [
-        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2219",
       "path": "src/Shared/Host/GenerationExecutionTools.cs",
       "line": 459,
       "column": 59,
