@@ -452,10 +452,10 @@ public sealed class PrepareChecksTests
     }
 
     private static IEnumerable<PrepareCheckJob> All(PrepareCheckPlan plan) => plan.Jobs;
-    private static PrepareContext Context(string root) => new(root, "4.0.0-beta.3", Path.Combine(root, "sdk"), null,
+    private static PrepareContext Context(string root) => new(root, "4.0.0-beta.4", Path.Combine(root, "sdk"), null,
         "python", "companion-python", Path.Combine(root, "prepared"), new(2026, 11, 3), 1);
     private static Dictionary<string, string?> Environment(string root) => new() { ["TEMP"] = Path.Combine(root, "temp") };
-    private static Options Options(params string[] flags) => TiaMcp.ReleaseTool.Options.Parse(["-Version", "4.0.0-beta.3", .. flags],
+    private static Options Options(params string[] flags) => TiaMcp.ReleaseTool.Options.Parse(["-Version", "4.0.0-beta.4", .. flags],
         new HashSet<string> { "BuildOnly", "NoDraftUpload" });
     private static JsonObject Suite() => new() { ["project"] = "fixture.csproj", ["minimumPassed"] = 2, ["maximumSkipped"] = 0, ["arguments"] = new JsonArray() };
     private static PreparedPackage Package(PrepareContext context)

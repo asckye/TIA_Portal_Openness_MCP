@@ -1,6 +1,6 @@
 # 安全标准与威胁模型
 
-状态：现行 · 最后核对：2026-11-01，master `902a86fe`
+状态：现行 · 最后核对：2026-11-05，beta.4 候选基线 `13eb7725`
 
 [文档目录](../README.md) · [设计规范](design.md) · [开发规范](development.md) · [漏洞报告方式](../../.github/SECURITY.md)
 
@@ -73,7 +73,7 @@
 ### SEC-01 写调用默认须在工作台审批
 
 - 分类为 `WRITE`、`ONLINE-WRITE` 的实际执行，以及 `SaveProject`、`SaveProjectCopy`、`CloseProject`、`StageImportFiles`、`CleanupStagedImportFiles`，在派发前等待工作台审批。预览（`dryRun: true`、`mode: preview`）不审批（[设计规范](design.md) 第 4.10 节）。
-- MCP 向调用方指定的输出根之外写文件也须审批，包含 UNC 目标；根内路径若含重解析点仍按根外处理。输出根为 `<包根>/exports`（checkout 为 `bin-build/exports`）、显式数据目录下的 `exports`，或 `%LOCALAPPDATA%/TiaMcp/exports`；无法创建时所有目标均按根外处理。预览、产品自行选择的输出位置、工作台操作端和已批准的生成计划步骤沿用原行为；空参数由其他调用方输入派生位置时仍检查实际目录。MCP 的 Git stage/commit 无论目录是否在根内均须审批。通过 `GetSessionState data.outputRoot` 查询实际目录。审批卡片对每个文件系统路径分别展示并绑定 `Path.GetFullPath` 规范化后的完整路径，路径不做凭据片段脱敏；其他参数继续脱敏。所有这些路径（包括根内目标、WRITE 和 SESSION 工具路径）带首尾空白时，在发卡前返回 `INVALID_ARGUMENT`。长路径在审批卡片中换行展示。须审批的规范化目标超过 4096 个字符时，在发卡前返回 `INVALID_ARGUMENT`。`BuildReleaseHandoffArtifacts` 的空 `outputDirectory` 取输入报告所在目录，也须检查。
+- MCP 向调用方指定的输出根之外写文件也须审批，包含 UNC 目标；根内路径若含重解析点仍按根外处理。输出根为 `<包根>/exports`（checkout 为 `bin-build/exports`）、显式数据目录下的 `exports`，或 `%LOCALAPPDATA%/TiaMcp/exports`；无法创建时所有目标均按根外处理。预览、产品自行选择的输出位置、工作台操作端和已批准的生成计划步骤沿用原行为；空参数由其他调用方输入派生位置时仍检查实际目录。MCP 的 Git stage/commit 无论目录是否在根内均须审批。通过 `GetSessionState data.outputRoot` 查询实际目录。审批卡片对每个文件系统路径分别展示并绑定 `Path.GetFullPath` 规范化后的完整路径，路径不做凭据片段脱敏；其他参数继续脱敏。所有这些路径（包括根内目标、WRITE 和 SESSION 工具路径）带首尾空白时，在发卡前返回 `INVALID_ARGUMENT`。长路径在审批卡片中换行展示。须审批的规范化目标超过 4096 个字符时，在发卡前返回 `INVALID_ARGUMENT`。`BuildReleaseHandoffArtifacts` 省略 `exportDirectory` 时使用会话输出目录，兼容 `outputDirectory` 别名，显式根外目标仍须审批。
 - 审批默认开启；`approval.settings` 缺失或格式无效时按开启处理。开关变化写入审计。工具不能写 `approval.settings`，包括经短文件名、链接或文件 ID 的写法。
 - 宿主生成请求 nonce，MCP 参数和元数据都不能充当审批令牌；重复的请求号被拒绝；迟到、不匹配或格式错误的决定一律按拒绝处理。
 - 实现：`src/Shared/ApprovalSettings.cs`、`src/Shared/ApprovalPipe.cs`、`src/Shared/ApprovalProtocol.cs`、`src/FoundationHost/FoundationTools.cs`。
@@ -146,7 +146,7 @@
 ### SEC-11 更新器核对完整性
 
 - 更新器从本仓库的 GitHub Releases 获取交付 ZIP，与同一发布的 `.sha256` 比较；解压时核对每个条目都是安全的相对路径；包内交付清单的发布号必须等于标签。
-- 限制：只核对完整性，没有签名或 Authenticode 校验；ZIP 与 `.sha256` 来自同一来源。
+- 限制与接受的风险（维护者 2026-11-04 决定，S3）。更新签名尚未完成，ZIP 与 `.sha256` 来自同一发布。控制 GitHub 账户或发布令牌的人可以同时替换包和摘要，发布恶意更新。此风险由维护者接受，发布账户保护另由 S4 处理。
 - 实现：`src/Updater/Updater.cs`。
 - 测试：`tests/Updater/TiaMcp.Updater.Tests/UpdaterTests.cs`。
 
@@ -169,11 +169,12 @@
 |---|---|---|
 | HTTP 请求的 Origin 与 Host 头 | RELAY-1 已实现每请求校验、403 与审计，含伪造头测试 | 已补齐；新增可信源须显式配置 |
 | HTTP 访问密钥在命令行和客户端配置中是明文 | RELAY-1 的宿主与中继读取 DPAPI 存储；新配置仅含 stdio 中继命令 | 新路径已补齐；弃用的 `--http-api-key` 在下一发布周期移除，旧备份仍可能包含明文 |
-| UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批；输入、预览和审批前的身份检查仍可能查询远程主机，暴露 Windows NTLM 凭据，尚未写出项目内容 | 是否在准入层拒绝 UNC 另行决定；须兼顾已文档化的 UNC 输入和共享项目 |
+| UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批，输入、预览和审批前的身份检查仍可能查询远程主机并暴露 Windows NTLM 凭据 | 维护者 2026-11-04 已决定在 AI 准入层拒绝网络路径，含指向 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。尚未实现，排 4.0 前 |
 | `BuildDeviceAmlDocument` 分类 | 按文件目标审批，但仍为 OFFLINE / readOnlyHint=true | 单独重分类并重捕获八版基线，本任务不改契约 |
-| 更新包没有签名 | 只有同源 `.sha256` | 未决定 |
+| 更新包没有签名（S3） | 只有同一发布的 `.sha256`，GitHub 账户被控制后可发布恶意更新 | 维护者 2026-11-04 接受风险，签名尚未完成，移出 4.0 前实施清单 |
+| 局域网传输未加密（S5） | 使用明文 HTTP，同一网络上的人可以读取访问密钥和 PLC 密码，DPAPI 仅保护本机存储 | 维护者 2026-11-04 接受风险，保留明文 HTTP，移出 4.0 前实施清单。仅在可信网络使用 |
 | 凭据按参数名替换 | 没有 UMAC、PLC 保护、Web 服务器凭据的专用名单 | 新增带凭据参数的工具时按 SEC-06 的命名规则命名，并在测试中证明被替换 |
-| 原生失败的诊断信息 | `NATIVE_OPERATION_FAILED` 的 `nativeMessage` 多数为空 | 维护者 2026-11-01 决定返回去敏后的原生消息首行、原生异常类型、HResult 和关联日志的诊断编号，堆栈只进日志（DES-4，尚未实现；见[设计规范](design.md)第 6.5 节） |
+| 原生失败的诊断信息 | VMFIX-5a 已保留去敏原生原因，结构化 `innererror` 尚未完成 | DES-4 Part 3 排 beta.5，目标仍为原生消息首行、异常类型、HResult 和关联日志诊断编号，堆栈只进日志，见[设计规范](design.md)第 6.5 节 |
 | EplanMCP 的安全借鉴项 | 虚拟机 HTTP 加固、“项目内容是数据”的服务器说明、审批卡清理等 | P8-95a–g，尚未实施 |
 
 ## 7 开发中的安全要求

@@ -32,36 +32,36 @@ public sealed class PrepareTests
     [InlineData(".claude-plugin/plugin.json", "{\"version\":\"3.0.0\"}", "plugin.json")]
     [InlineData(".claude-plugin/marketplace.json", "{\"plugins\":[{\"version\":\"3.0.0\"}]}", "marketplace.json")]
     [InlineData(".claude-plugin/marketplace.json", "{\"plugins\":[]}", "marketplace.json")]
-    [InlineData("CHANGELOG.md", "## [Unreleased]\n## [3.0.0] - 2026-11-02\n## [4.0.0-beta.3] - 2026-11-01", "Newest CHANGELOG")]
-    [InlineData("CHANGELOG.md", "## [4.0.0-beta.3] - 2026-02-30", "real ISO date")]
-    [InlineData("CHANGELOG.md", "## [4.0.0-beta.3] - 2026-1-1", "real ISO date")]
+    [InlineData("CHANGELOG.md", "## [Unreleased]\n## [3.0.0] - 2026-11-02\n## [4.0.0-beta.4] - 2026-11-01", "Newest CHANGELOG")]
+    [InlineData("CHANGELOG.md", "## [4.0.0-beta.4] - 2026-02-30", "real ISO date")]
+    [InlineData("CHANGELOG.md", "## [4.0.0-beta.4] - 2026-1-1", "real ISO date")]
     public void RefusesEachReleaseInputMismatch(string path, string contents, string error)
     {
         using var tree = VersionTree();
         tree.Write(path, contents);
-        Assert.Contains(error, Assert.Throws<ReleaseException>(() => Prepare.RequireVersion(tree.Root, "4.0.0-beta.3")).Message);
+        Assert.Contains(error, Assert.Throws<ReleaseException>(() => Prepare.RequireVersion(tree.Root, "4.0.0-beta.4")).Message);
     }
 
     [Fact]
     public void UsesNewestReleaseDateAndSkipsUnreleased()
     {
         using var tree = VersionTree();
-        Assert.Equal(new DateOnly(2026, 11, 2), Prepare.RequireVersion(tree.Root, "4.0.0-beta.3"));
+        Assert.Equal(new DateOnly(2026, 11, 2), Prepare.RequireVersion(tree.Root, "4.0.0-beta.4"));
     }
 
     [Fact]
     public void RefusesMissingAndStaleNotesWithoutRewritingThem()
     {
         using var tree = VersionTree();
-        Assert.Contains("is missing", Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.3")).Message);
+        Assert.Contains("is missing", Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.4")).Message);
         foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath }) tree.Copy(source);
-        var path = tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.3"), PrereleaseNotes.Begin + "\nstale\n" + PrereleaseNotes.End + "\n");
+        var path = tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.4"), PrereleaseNotes.Begin + "\nstale\n" + PrereleaseNotes.End + "\n");
         var before = File.ReadAllText(path);
-        Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.3"));
+        Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.4"));
         Assert.Equal(before, File.ReadAllText(path));
         File.WriteAllText(path, PrereleaseNotes.Generate(File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.LedgerPath)),
             File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.ChecklistPath))));
-        Prepare.RequireNotes(tree.Root, "4.0.0-beta.3");
+        Prepare.RequireNotes(tree.Root, "4.0.0-beta.4");
     }
 
     [Theory]
@@ -314,7 +314,7 @@ public sealed class PrepareTests
     {
         using var tree = ContextTree();
         if (refusal == "version") tree.Write("Version.props", "<Project><PropertyGroup><TiaMcpRelease>3.0.0</TiaMcpRelease></PropertyGroup></Project>");
-        if (refusal == "notes") File.Delete(Path.Combine(tree.Root, PrereleaseNotes.NotesPath("4.0.0-beta.3")));
+        if (refusal == "notes") File.Delete(Path.Combine(tree.Root, PrereleaseNotes.NotesPath("4.0.0-beta.4")));
         if (refusal == "api") File.Delete(Path.Combine(tree.Root, "sdk", ReleaseCommands.PlcWorkerApi("21").Directory, "Siemens.Engineering.dll"));
         SealRepository(tree);
         if (refusal == "dirty") tree.Write("untracked.txt", "dirty");
@@ -332,10 +332,10 @@ public sealed class PrepareTests
     {
         using var tree = ContextTree();
         SealRepository(tree);
-        tree.Write("bin-build/prepared/4.0.0-beta.3/previous.zip", "previous run");
+        tree.Write("bin-build/prepared/4.0.0-beta.4/previous.zip", "previous run");
         var context = Prepare.CreateContext(tree.Root, ContextOptions(tree.Root, "python.exe"), SuccessfulProbe);
         Assert.Equal(tree.Root, context.Root);
-        Assert.Equal("4.0.0-beta.3", context.Version);
+        Assert.Equal("4.0.0-beta.4", context.Version);
     }
 
     [Fact]
@@ -464,7 +464,7 @@ public sealed class PrepareTests
 
     private static CommandResult SuccessfulProbe(string exe, IEnumerable<string> args, string root, IDictionary<string, string?>? environment) => new(0, "dependencies available", "");
 
-    private static Options ContextOptions(string root, string python) => Options.Parse(["-Version", "4.0.0-beta.3",
+    private static Options ContextOptions(string root, string python) => Options.Parse(["-Version", "4.0.0-beta.4",
         "-Python", Path.Combine(root, python), "-CompanionPython", Path.Combine(root, "python.exe"),
         "-NuGetConfig", Path.Combine(root, "nuget.config")], new HashSet<string>());
 
@@ -472,7 +472,7 @@ public sealed class PrepareTests
     {
         var tree = VersionTree();
         foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath }) tree.Copy(source);
-        tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.3"), PrereleaseNotes.Generate(
+        tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.4"), PrereleaseNotes.Generate(
             File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.LedgerPath)), File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.ChecklistPath))));
         tree.Write("python.exe", "interpreter existence fixture; process probe is injected");
         tree.Write(".gitignore", "bin-build/\n");
@@ -520,17 +520,17 @@ public sealed class PrepareTests
     private static StaticTree VersionTree()
     {
         var tree = new StaticTree();
-        tree.Write("Version.props", "<Project><PropertyGroup><TiaMcpRelease>4.0.0</TiaMcpRelease><TiaMcpPrerelease>beta.3</TiaMcpPrerelease></PropertyGroup></Project>");
-        tree.Write(".claude-plugin/plugin.json", "{\"version\":\"4.0.0-beta.3\"}");
-        tree.Write(".claude-plugin/marketplace.json", "{\"plugins\":[{\"version\":\"4.0.0-beta.3\"}]}");
-        tree.Write("CHANGELOG.md", "## [Unreleased]\n\n## [4.0.0-beta.3] - 2026-11-02\n\n## [3.0.0] - 2025-11-02\n");
-        tree.Write("docs/README.md", "[当前版本说明](releases/v4.0.0-beta.3.md)");
-        tree.Write("docs/plan/plan.md", "# Roadmap 4.0.0-beta.3\n");
+        tree.Write("Version.props", "<Project><PropertyGroup><TiaMcpRelease>4.0.0</TiaMcpRelease><TiaMcpPrerelease>beta.4</TiaMcpPrerelease></PropertyGroup></Project>");
+        tree.Write(".claude-plugin/plugin.json", "{\"version\":\"4.0.0-beta.4\"}");
+        tree.Write(".claude-plugin/marketplace.json", "{\"plugins\":[{\"version\":\"4.0.0-beta.4\"}]}");
+        tree.Write("CHANGELOG.md", "## [Unreleased]\n\n## [4.0.0-beta.4] - 2026-11-02\n\n## [3.0.0] - 2025-11-02\n");
+        tree.Write("docs/README.md", "[当前版本说明](releases/v4.0.0-beta.4.md)");
+        tree.Write("docs/plan/plan.md", "# Roadmap 4.0.0-beta.4\n");
         return tree;
     }
 
-    private static PrepareContext Context(string root) => new(root, "4.0.0-beta.3", Path.Combine(root, "sdk"), null,
-        "python.exe", "companion.exe", Path.Combine(root, "bin-build/prepared/4.0.0-beta.3"), new(2026, 11, 2));
+    private static PrepareContext Context(string root) => new(root, "4.0.0-beta.4", Path.Combine(root, "sdk"), null,
+        "python.exe", "companion.exe", Path.Combine(root, "bin-build/prepared/4.0.0-beta.4"), new(2026, 11, 2));
 
     private static StaticTree ManifestTree()
     {

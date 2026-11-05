@@ -1,42 +1,47 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-04，master `871d54da`
+状态：现行 · 最后核对：2026-11-05，beta.4 候选基线 `13eb7725`
 
-本页记录已核对的主线状态、待集成工作和测试者反馈；范围、顺序与放行门槛见[开发计划](plan.md)。
+本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
-- 公开版本记录：最新正式版为 [v3.3.0](../releases/v3.3.0.md)；最新预发布为 [v4.0.0-beta.3](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.3)（2026-11-04，`1d57c277`），此前为 [v4.0.0-beta.2](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.2)（2026-10-30，`7e9c4c65`）和 [v4.0.0-beta.1](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.1)（2026-10-22，`bc5dcc5a`）。预发布不设为 latest，3.3 更新器不提示。
-- beta.3 已发布，CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)已更新。GitHub CI 的修复（CI-FIX、CI-FIX2）在发布之后合并，结果以最新一次 CI 为准。
-- PIPE-INT/SLIM-1 已合并（`eee7b372`），VMFIX-2 已合并（`93371695`、`b769d196`）。旧文档中的“仍等这两项合并”已不适用。
-- `prepare` 只构建、打包并检查 ZIP（PREP-SLIM），2026-11-04 实测约 6 分钟；`publish-prepared` 公开已封存的候选，beta.3 实测 6.9 秒。
-- 合并门为 `merge-check`：普通 `dotnet` 构建和测试，含 38 个注册套件和两组传输检查；涉及共享代码的合并在 2026-11-04 实测约 21–28 分钟。PLC 模拟检查已删除，发布候选前手动运行 `merge-check -All`；没有 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。
-- 架构：八版 FoundationHost，每个 MCP 会话一个 PLC worker；入口 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`，worker 位于同目录 `worker/`。V20/V21 使用 MTA，V14 SP1–V19 使用 STA；MTA-1 的统一仍列在后续计划。引擎运行文件已退役，源目录残留已由 Q2/Q3 删除。各版工具数见[生成的目录](../reference/version-tool-catalog.md)。
-- 品牌为自动化工程工作台；程序名、插件 ID、MCP 服务名 `tia-portal`、包名和仓库地址保持原有标识。GitHub 仓库改名仍在正式版计划内，未执行。
+- 本次版本为 `4.0.0-beta.4` 候选，版本文件、CHANGELOG 和[发布说明](../releases/v4.0.0-beta.4.md)已准备，尚未公开。现有发布记录仍为正式版 [v3.3.0](../releases/v3.3.0.md)和预发布 [v4.0.0-beta.3](../releases/v4.0.0-beta.3.md)（2026-11-04，`1d57c277`）。预发布不设为 latest，3.3 安装不提示升级。
+- beta.4 已集成默认写入预览、批次与安全移块、回滚日志、参数模型、会话恢复、原生原因、输出根审批、确认词、relay 与工作台页面重绘。所有这些变化仍待真实 TIA Portal 复验。
+- `prepare` 构建、打包、检查 ZIP 并上传私有草稿，完整候选准备已含新鲜依赖漏洞扫描。扫描接入前的构建打包实测约 6 分钟，不能作为含扫描的完整耗时。`publish-prepared` 公开封存候选，300 秒硬预算，beta.3 实测 6.9 秒。
+- 合并门为 `merge-check`，含 38 个注册套件与两组 full 传输检查。FAST-GATE 目标约 10 分钟；2026-11-05 宽范围改动实测 731 秒（约 12 分钟），优化前约 21 分钟。本任务未重跑主机门禁，12 分钟取自本次任务说明的测量汇总。候选前仍需主机 `merge-check -All`，数量门槛保留。没有 nightly，GitHub CI 不阻塞合并。
+- 架构仍为八版 FoundationHost，每个 MCP 会话一个 PLC worker。V20/V21 使用 MTA，V14 SP1–V19 使用 STA，MTA-1 尚待实施。工具列表呈现已统一为 `plc-foundation`，默认 lite，完整行为统一仍由 UNIFY-1 完成。
+- 名称为自动化工程工作台，现有程序、插件、服务和仓库标识继续使用。GitHub 仓库改名尚未执行。
 
-机器地址、PID、worktree 和运行中的检查必须从当前环境确认，不从本页推断。本页不以旧分支提交号证明当前分支是否完成或已验证。
+机器地址、PID 和运行状态须从当前环境确认，本页不据历史记录推断。
 
-## 待集成工作
+## 当前基线中的工作
 
-以下是 2026-11-04 决定的顺序，不是完成比例；具体任务定义和状态在[计划](plan.md)。
-
-| 阶段 | 已知状态 | 下一步 |
+| 任务 | 代码状态 | 后续 |
 |---|---|---|
-| NEW-REL-B、SEC-1 | 已合并（提交见[计划](plan.md)） | 无 |
-| Q1–Q9、CPM | 已合并（提交见[计划](plan.md)） | 无 |
-| NEW-REL-2/3、THIRD-1、主机测试精简 | 已合并（提交见[计划](plan.md)） | 无 |
-| DOCS-1 → DOCS-2 → DOCS-3 | 已合并（`edbf4ef8`） | 无 |
-| REORG-2、REORG-3、TIDY-1–6 | 已合并（`b0b4d9a7`、`edbf4ef8`） | 无 |
-| beta.3 准备与公开 | 已发布（`1d57c277`） | 无 |
-| PREP-SLIM、CI-FIX、CI-FIX2、TRANSPORT-FAST | 已合并（提交见[计划](plan.md)） | 看 GitHub CI 结果 |
-| RELAY-1、UI-INT、UI-2c、P8-84 | 已合并（`d635fbb6`、`0f58eabc`、`400ad350`、`21a8a59a`、`32a8aa1c`、`699e989b`，集成修订 `ccf9b263`） | 真机复验仍待执行 |
-| APR-05 | 进行中：关闭写操作审批的确认词输入与核对尚未实现 | 在现有确认面板增加确认词；普通审批不加输入框 |
-| P8-04n1（N1-PORT） | 已合并（`fb3bb356`、`89ef43c4`、`1a4add6d`）：八版公开 profile 均为 `plc-foundation`，默认精简清单 | 不代表八版原生行为已验证 |
-| VMFIX-3-PORT | 已合并（`8fe022bd`、`871d54da`）：确定失败与未知结果分开，未知结果仍要求重置 | 按计划复验真实导入和失败读回 |
-| OUTROOT-1、DES-PORT、REVIEW-PORT、SCORE-PORT、CI-MSG | 进行中；DES-PORT 分 A/B/C，依次独立合并，取代 DES-INT；REVIEW-PORT、SCORE-PORT 取代旧任务 | 按计划中的 2026-11-04 决定实施，不能提前标记完成 |
-| beta.4 其余工作 | VMFIX-4/5、DES-4 待执行；产品分支合并后执行 TIDY-7、`src/EngineHost` 改名和长行合并门；HANG-GUARD 等待任务说明 | 待编写说明的清单见计划 |
+| PREP-SLIM、CI-FIX/2、TRANSPORT-FAST/KEEP | 已集成 `ccc8f7aa`、`d1a7b042`、`67ca6816`、`3a01f49c`、`e702434f`、`efc58105` | 发布前由主机检查 |
+| RELAY-1、UI-INT、UI-2c、P8-84 | 已集成 relay、重绘页面、审批列表和精确 PID 选择，含 `ccf9b263` 修订 | 待真机复验 |
+| OUTROOT-1、APR-05 | 已集成 `9707cd07`、`76ee906f`、`0b08a09b`，根外写文件审批及关闭审批确认词 | 待真实客户端与工作台复验 |
+| N1-PORT | 已集成 `fb3bb356`、`89ef43c4`、`1a4add6d`，八版默认 lite、同一目录呈现 | 不代表原生行为已统一 |
+| VMFIX-3-PORT、VMFIX-4、VMFIX-5a/5b | 已集成 `8fe022bd`、`76c51b5a`、`8757f27a`、`f902c069`、`a31afbe0`、`93eeb016` | 验证确定失败、未知结果、读排空、绑定与 V21 崩溃保护 |
+| DES-PORT A/B/C、DES-PORT-FIX | 已集成 `e32b0d76`、`61bb78a0`、`1012d0b7`、`fd757a65`，批次、27 个默认预览、回滚和输入内容哈希 | 待真实预览/apply、失败恢复与重启复验 |
+| DES-4 Part 1 | 已集成至 `13eb7725`，参数别名、会话默认目录、无根组合器的 schema | Parts 2、3 推迟到 beta.5 |
+| REVIEW-PORT、SCORE-PORT | 已集成 `16567017`、`5c433428`、`f7465f45`、`90b243e1` | 评分分档未批准，首份评分的来源、统计口径待修订 |
+| HANG-GUARD、FAST-GATE、TREND-ALERT | 已集成 `bc860ac7`、`1c4031b6`、`47437168`、`3c7a1a4b`，GUI 输入先独占，其余分片随后并行 | 保留所有功能和数量门槛，后续看主机趋势 |
+| CI-FIX4 | 已集成 `1d8eb834`、`327c3d82`、`6e4cc3a0`，会话导出句柄隔离、worker 重启清理、请求版本策略 | 多会话和 worker 重启仍待真机确认 |
 
-REVIEW-PORT 会把漏洞扫描带入新工具；目前不能宣称新准备命令已覆盖它。APR-05 正在增加关闭写操作审批时的确认词要求，当前代码尚未实现；该要求不用于每次普通批准。
+## 2026-11-04、2026-11-05 决定与未完成项
+
+完整决定见[计划中的实施决定](plan.md#2026-11-042026-11-05-实施决定)。
+
+- S3 更新签名未完成，维护者接受同一发布摘要无法抵御 GitHub 账户被控制的风险。S5 未实现加密，维护者接受 LAN 明文 HTTP 暴露访问密钥与 PLC 密码的风险，仅在可信网络使用。两项移出 4.0 前实施清单，见[安全标准](../standards/security.md)。
+- S8 D1 A、D2 已定，AI 调用将拒绝网络路径，含 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。仍未实现，排 4.0 前。T3 D1 保留并解释 `rollbackCompleted`，D2 迁移 bridge 路由测试，顺序为 U4/C2 → T2 → T3，S9/U3/S8 可独立进行。
+- VMFIX-6 D1–D5 已批准，纯 ASCII SCL 无 BOM，非 ASCII 保留 BOM 与导入限制说明，词过滤从变量名移到 options，停止迁入旧审批关闭设置，参数细节交 DES-4 Part 2，CreateDevice 确定拒绝的 not-started 分类保留。6a 排队，6b 跟随 Part 2。
+- DES-4 D1–D6 已批准，别名保留至 5.0，规范导出参数和数组 devicePath，项目名与文件身份分开，默认会话目录，空串改动限于改名参数。Part 1 已集成。参数 JSON pointer 与原生 `innererror` 分属 Parts 2、3，2026-11-05 移到 beta.5。
+- UNIFY-1 仍是 4.0 条件，替代 Q6a/Q6b/P8-04n2 并吸收 C9。U1 解除无 API 依据的工艺导出限制，U2 统一无 TIA 与能力准入，U4 保留需实测的 s7res 配对并移除无依据的 None-only 限制，U5 开放旧版 seed HMI，U8 按能力选择生成指纹并兼容历史记录。U3 线程模型留待实机，U6 实机保护保留，U7 V21 builder 保持到 4.1。尚未完成。
+- VMAUTO-1 已取消，先前自动回归方案失效。beta.4 公开后另开 AI 会话，书面指定 VM、工程副本、覆盖与通过规则，只在副本写入，原始结果固定格式保存在 `bin-build/vm-test/<run>/`。归档分支保留，Campaign.Alive 缺陷未修复，正式回归尚未开始。
+- FAST-GATE D1/D2/D4 批准，D3 仅在 Part 2 后仍超 10 分钟时考虑，D5–D8 暂缓。HANG-GUARD 批准的 151 处等待、速度断言与预算调整已集成，WriteGuard 15/20 秒保持。传输每组最多八版，WinError 10055 后共享标记限制为四版。TREND-ALERT 超近期中位数两倍只提示，至少五条历史、最近至多二十条，坏数据与存储失败不改退出码，prepare 显示最近提示。
+- TIDY-7、HOST-RENAME、LONG-LINE-GATE 移到 beta.5 开头，等 DES-4 Parts 2、3 合并，因为未完成分支无法可靠跟随文件拆分和改名。仅 High/Medium 审查发现触发返工，Low 合并后排期并在影响用户时披露。超过三轮审查先停下复核设计，告知维护者。
 
 ## 真机结果
 

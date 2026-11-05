@@ -34,7 +34,7 @@
 ## 排错和版本记录
 
 - [错误解释](troubleshooting/errors.md) · [Openness 限制和已知问题](troubleshooting/openness-limitations.md) · [HMI 快照](troubleshooting/hmi-snapshots.md)
-- [当前版本说明](releases/v4.0.0-beta.3.md) · [变更记录](../CHANGELOG.md) · [历次 GitHub Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) · [许可证](licenses/THIRD-PARTY-NOTICES.md)
+- [当前版本说明](releases/v4.0.0-beta.4.md) · [变更记录](../CHANGELOG.md) · [历次 GitHub Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) · [许可证](licenses/THIRD-PARTY-NOTICES.md)
 
 ## 开发文档
 

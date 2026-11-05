@@ -196,14 +196,14 @@ public sealed class PrereleaseTests
     [Fact]
     public void DraftBetaNotesCarryTheCurrentGeneratedSection()
     {
-        Assert.Null(PrereleaseNotes.CurrentError(Root, "4.0.0-beta.3"));
+        Assert.Null(PrereleaseNotes.CurrentError(Root, "4.0.0-beta.4"));
         Assert.Throws<ReleaseException>(() => PrereleaseNotes.Outputs(Root, "4.0.0"));
     }
 
     [Fact]
     public void DraftBetaNotesSendReportsToThePrereleaseFormWithTheItemNumber()
     {
-        var notes = File.ReadAllText(Path.Combine(Root, PrereleaseNotes.NotesPath("4.0.0-beta.3")));
+        var notes = File.ReadAllText(Path.Combine(Root, PrereleaseNotes.NotesPath("4.0.0-beta.4")));
         var report = notes[notes.IndexOf("## Report problems", StringComparison.Ordinal)..notes.IndexOf(PrereleaseNotes.Begin, StringComparison.Ordinal)];
         Assert.Contains("https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=prerelease_report.md", report, StringComparison.Ordinal);
         Assert.Contains("item number", report, StringComparison.Ordinal);

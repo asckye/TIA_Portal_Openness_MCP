@@ -1,6 +1,6 @@
 # 准备和发布版本
 
-状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
+状态：现行 · 最后核对：2026-11-05，beta.4 候选基线 `13eb7725`
 
 本文说明维护者如何提前构建、检查和上传候选，再在确认后公开预发布，依据 [ADR 0031](../standards/decisions/0031-release-path.md)。
 
@@ -23,10 +23,10 @@
 
 ## 提前准备候选
 
-以下以 `4.0.0-beta.3` 为例。版本号必须与准备好的源文件一致；命令不会替维护者改版本或提交文件。
+以下以 `4.0.0-beta.4` 为例。版本号必须与准备好的源文件一致；命令不会替维护者改版本或提交文件。
 
 ```powershell
-dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3
+dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.4
 ```
 
 完整准备首先运行依赖漏洞扫描，再按顺序完成构建、暂存校验、ZIP 和摘要生成，再对提取的 ZIP 运行交付检查，然后写候选记录并上传私有草稿，2026-11-04 实测约 6 分钟（未计入漏洞扫描）。注册套件、传输、配置页、原生安全、工具用法与活动输入检查由 `merge-check` 执行，范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 在 `merge-check` 中随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
@@ -54,7 +54,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3
 上传失败不会删除通过检查的本地候选。使用准备阶段已经构建的 Debug 发布工具重试：
 
 ```powershell
-dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0.0-beta.3
+dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0.0-beta.4
 ```
 
 命令创建或复用同版本草稿，核对并保留匹配的资产、替换不匹配的资产，草稿最终只有 ZIP 和 `.sha256` 两项资产。草稿说明来自对应版本的发布说明，包含候选提交和未验收边界。成功后回写候选中的 ID；无需重新构建或测试。
@@ -64,7 +64,7 @@ dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0
 维护者先审查准备结果和发布说明，再明确确认发布。确认后保持候选提交及工作树不变，从同一检出运行：
 
 ```powershell
-dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0-beta.3
+dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0-beta.4
 ```
 
 命令先核对候选、HEAD、干净工作树、ZIP 与 sidecar、草稿资产的大小与摘要以及已有标签的目标。核对通过后推送候选提交到 `origin/master`，按需创建 `v<版本>` 标签，将草稿公开为 GitHub 预发布，设置 `make_latest=false`，最后确认公开资产可下载。它不等待 GitHub CI。
@@ -89,4 +89,4 @@ dotnet run --no-build --project build-tools/release -- publish-prepared -Version
 
 GitHub 发布后工作流只验证公开 ZIP 与 `.sha256` 相符；它不再把标签中的旧构建记录当作发布依据，也不证明原生功能正确。
 
-发布后由获授权的测试者和维护者进行 VM 回归。先复测对应修复，再按[预发布真机验证清单](../guides/beta-tester-checklist.md)检查真实行为；VMAUTO-1 的自动化计划见[开发计划](../plan/plan.md)。结果写入[测试者反馈](../plan/progress.md)，复核后进入真机台账。离线检查或预发布公开都不替代真实 TIA 验收。
+发布后由获授权的测试者和维护者进行 VM 回归。先复测对应修复，再按[预发布真机验证清单](../guides/beta-tester-checklist.md)检查真实行为；VMAUTO-1 已取消，改为发布后独立 AI 会话按书面测试说明回归，结果按固定格式保存在 `bin-build/vm-test/<run>/`，见[开发计划](../plan/plan.md)。结果写入[测试者反馈](../plan/progress.md)，复核后进入真机台账。离线检查或预发布公开都不替代真实 TIA 验收。

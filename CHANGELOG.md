@@ -2,58 +2,34 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
 
+## [Unreleased]
+
+## [4.0.0-beta.4] - 2026-11-05
 
 ### Changed
-- `prepare` now builds and packages, then checks the extracted ZIP; registered suites and source/transport checks run in `merge-check`, with `merge-check -All` required before each release candidate. Removed the approved PLC simulation jobs and their dedicated harness modes; package approval and all eight contract checks remain.
-
-## [Unreleased]
-- Report test and successful merge-check job slowdowns against recent median history, and include the latest notice with its commit, UTC time and current-HEAD status in prepare summaries while keeping trend storage failures non-blocking.
-- Run GUI merge checks in four isolated shards with a serial input lane, alongside full-profile transport checks for up to eight releases per process, with a persistent four-release fallback after socket exhaustion.
-- Create default export directories lazily under the configured output root; report an unavailable target per call. Keep alias preflight consistent and publish tool schemas without root combinators for reported client compatibility.
-- Use explicit `exportFile`, `exportDirectory` and `sourceDirectory` parameters and array device paths across releases. Existing path aliases remain supported until 5.0 with `DEPRECATED_PARAMETER` warnings. Omitted required export targets use a stable location under the host session export directory.
-- Behaviour change: `AttachDeviceNodeToSubnet`, `ConnectDeviceNodesToProfinetSubnet`, `CreateGsdDevice`, `CreateVersionControlWorkspace`, `DownloadPlc`, `EnsureSubnet`, `ImportAlarmClasses`, `ImportAlarmTextLists`, `ImportHmiConnection`, `ImportHmiScreen`, `ImportHmiScreensFromDirectory`, `ImportHmiTagTable`, `ImportHmiTagTablesFromDirectory`, `ImportMasterCopyFromGlobalLibrary`, `ImportOpcUaInterface`, `ImportTechnologyObject`, `ImportTechnologyObjectsFromDirectory`, `InvokeObject`, `InvokeService`, `ManageOnlineDriveFunctions`, `SeedProjectFromReference`, `SetDeviceItemAttribute`, `SetOpcUaInterfaceEnabled`, `SetPlcCpuSettings`, `SetPlcWatchTableModifyValue`, `SetUnifiedHmiButtonEventScriptCode`, `SetUnifiedHmiRuntimeState` now preview by default; execution requires `dryRun:false`, the preview `expectedPlanHash`, and the exact bound `expectedProjectFile`. Read actions retain their direct behavior.
-- Roll back captured multi-step engineering writes in reverse order; report exact cleanup tasks when restoration cannot be verified, and apply Unified HMI button actions in one worker request.
-- Replace approved short test deadlines with 120-second hang guards and report performance trends through `merge-check`.
-- Preserve password-policy exception reasons while redacting credential-like error names, native message fields, and private keys before diagnostic truncation.
-- Fix generation planning for connected portals without an open project and compare binding generations as opaque values; keep credential-like error names and native stack frames redacted without losing the native reason.
-- Preserve indented PLC logic and HMI script text in tool results while retaining diagnostic redaction; include native failure details in error messages.
-- Fix verified PLC import lease release, cross-reference export confirmation, generation session identity, and host diagnostic error correlation; report unavailable PLC providers as unsupported capabilities.
-- Read Openness compatibility assemblies on the host for every release, repair the monitoring reflection self-test, and configure serving-host HMI preflight resolution.
+- Behaviour change. `AttachDeviceNodeToSubnet`, `ConnectDeviceNodesToProfinetSubnet`, `CreateGsdDevice`, `CreateVersionControlWorkspace`, `DownloadPlc`, `EnsureSubnet`, `ImportAlarmClasses`, `ImportAlarmTextLists`, `ImportHmiConnection`, `ImportHmiScreen`, `ImportHmiScreensFromDirectory`, `ImportHmiTagTable`, `ImportHmiTagTablesFromDirectory`, `ImportMasterCopyFromGlobalLibrary`, `ImportOpcUaInterface`, `ImportTechnologyObject`, `ImportTechnologyObjectsFromDirectory`, `InvokeObject`, `InvokeService`, `ManageOnlineDriveFunctions`, `SeedProjectFromReference`, `SetDeviceItemAttribute`, `SetOpcUaInterfaceEnabled`, `SetPlcCpuSettings`, `SetPlcWatchTableModifyValue`, `SetUnifiedHmiButtonEventScriptCode`, `SetUnifiedHmiRuntimeState` now preview by default. Execution requires `dryRun:false`, the preview `expectedPlanHash`, and the exact bound `expectedProjectFile`. Read actions retain their direct behavior. Input file contents are bound into the plan hash, and a host restart requires a fresh preview.
+- Use canonical `exportFile`, `exportDirectory`, `sourceDirectory` and array `devicePath` parameters across releases. Existing aliases work until 5.0 with `DEPRECATED_PARAMETER` warnings in `meta`. Omitted required export targets and report directories use a per-session folder under the output root, created on demand. Tool schemas have no root `oneOf`, `allOf` or `anyOf`, with alternatives described and validated at run time, including `PrefillWorkbenchForm` fields.
+- 八版统一默认 lite 工具列表与 `plc-foundation` 展示名称。V14 SP1–V19 的客户端先看到精简列表，V20/V21 的 lite 列表扩大。`FindTools` / `CallTool` 可访问其余工具，`--profile full` 提供完整列表。工作台操作员始终使用所选版本的完整目录，AI 会话保留其选择。
+- V14 SP1–V19 的工具桥接与批处理对本版未提供的已知工具返回 `UNSUPPORTED_CAPABILITY`。V21 已禁用工具也在参数校验前返回该错误。未知名称返回 `TOOL_NOT_FOUND`，回复保留目标和拒绝原因。
+- MCP file writes outside the output root require Workbench approval, including UNC and report-derived targets. Cards show and bind every full normalized target. Surrounding whitespace and approval targets over 4096 characters are refused before approval. Git stage/commit always require approval. `GetSessionState` exposes `data.outputRoot`, and updates preserve `exports`. Turning off write approval requires the localized confirmation word.
+- DES-2 保留设备、PLC 组与声明/源文件兼容转发，恢复四个批工具，以一个计划哈希和一次审批顺序执行，首错停止并报告完成与未开始项。工艺对象目录导出在八版统一使用原生路径和项目实际组结构，目录在执行时创建。
+- `MovePlcBlockToGroup` 先保留并核验恢复备份，再删除源块、导入目标并核验父组、名称、编号和语言。核验失败先清理目标再恢复原组。失败时保留恢复文件和证据。目标不一致时提示编译。未开始修改的拒绝保留类型化错误且不锁定会话。
+- `CreateDevice` on V14 SP1–V17 keeps its native CreateWithItem route with preview and project validation because the newer hardware-catalog route is unavailable there. V18–V21 forward to CreateHardwareDevice. Generation previews device creation and block moves before applying their hashes.
+- Captured multi-step writes roll back in reverse order. Restoration is reported only after read-back verification. Uncertain or unrestored writes remain unknown and require reset. Unified HMI button actions run in one worker request.
+- Export handles belong to their MCP session. Other sessions cannot read or clear them, and restarting the worker clears that session's handles.
+- `prepare` builds, packages and checks the extracted ZIP, with a fresh dependency vulnerability scan for a full candidate. Registered suites and source/transport checks run in `merge-check`. Run `merge-check -All` before each candidate. Security analyzers and the block on unapproved loosened checks are active.
+- `merge-check` reuses traversal builds and shared Foundation timing history, overlaps GUI and full-profile transport checks, and runs four isolated GUI shards with a serial input lane. Transport groups run up to eight releases each, with a persistent four-release fallback after WinError 10055. Approved short test waits use 120-second hang guards. Slowdowns over twice the recent median are informational and included in prepare summaries.
 
 ### Fixed
-- Validate PLC user-group paths before project checks and worker dispatch so invalid paths return `INVALID_ARGUMENT`.
-- 补全 Part A 批处理、移块和兼容入口的预览与确认参数说明，明确计划哈希和项目文件路径来自该工具自身的 dry-run 结果；参数类型、默认值和执行行为不变。
-- `test-suites` logs the full name, first 400 error-message characters and first four stack lines for up to ten distinct failed tests per suite, including sharded runs.
-- Turning off write approval now requires typing the localized confirmation label; empty or incorrect input and Enter cannot disable approval.
-- 工艺对象批导出在原生导出开始前创建目录失败时返回普通拒绝，不再误报结果未知或锁定会话；标签表批导入的名称正则筛选恢复忽略大小写。
-- Preserve verified V21 technology-object pairs and the crash-guard reason through host admission; report missing Unified connections as not found with configuration guidance, include verified screen-property writes in design summaries, and match screen names using the native literal/case rules.
-- Resolve PLC loadable, fingerprint and monitor services from PLC software, CPU ancestors and the device, with typed unsupported-capability results when absent.
-- Guard technology-object creation against the observed V21 crash; only verified type/version pairs are admitted on V21.
-- Bind Unified HMI tags through a verified PLC connection without writing the read-only PlcName property.
-- Apply Unified screen designs, layouts and screen background themes to existing screens without accidental rename requests; preserve indented result text and classify unchanged worker argument refusals as invalid arguments.
-- Preserve earlier writes when a later worker step is refused or times out, refresh approval identities after rebinding, and reject malformed or offset-free diagnostic timestamps.
-
-- Session lifecycle tools preserve healthy bindings after Save As, archive retrieval and isolated startup; typed refusals stay rejected before operation.
-- Timed-out worker reads return `TIMEOUT` and drain before reuse; write timeouts retain the unknown-outcome guard.
-- `GetSessionState` answers from cached host state during recovery, and host-only tools remain available.
-- Disconnect determines `requiresTiaRestart` from outstanding calls and the persistent process lease.
-- PLC hierarchy reads return structure only; the Workbench pages `ListPlcBlocks` to retain block attributes.
-- `GetNativeInvocationLog` supports exact request and inclusive timestamp filters, with a total matched-record count.
-
-- Restore shared Workbench style usage after the UI redesign, keep configuration headings untrimmed, remove obsolete translations, and prevent list binding updates from opening client-enable confirmations.
-
-- 写入结果按可验证证据分类：ExclusiveAccess、密码策略和输入校验的明确拒绝不再误报 `OUTCOME_UNKNOWN`；属性、库和文档导入失败后可证明未改变目标时无需重置会话。其余已派发的未知写入统一锁定会话。
-- 修复 Unified 创建后的集合读回、PROFINET 连接结果、worker 写入执行证据、强制表列表和下载预览结果；缺少开发夹具的离线发布验收在创建报告目录前明确拒绝。
-### Changed
-- V14 SP1–V19 的工具桥接与批处理对“真实存在但本版未提供”的工具返回 `UNSUPPORTED_CAPABILITY`；V21 的已禁用工具也在参数校验前返回此错误。完全未知的名称仍返回 `TOOL_NOT_FOUND`，回复保留目标工具和拒绝原因。
-- 工作台操作员会话始终使用所选版本的完整工具目录，包括附着到 AI 客户端启动的 lite 宿主时；AI 会话仍保留其选择的目录。
-- 八版统一默认 lite 工具列表：V14 SP1–V19 的客户端现在先看到精简列表，V20/V21 的 lite 列表扩大；`FindTools` / `CallTool` 可访问其余工具，`--profile full` 恢复完整列表。统一展示名称为 `plc-foundation`，提示词按已注册工具过滤。
-- MCP file writes to caller targets outside the output root now require Workbench approval, including UNC targets and handoff output derived from an input report. Cards bind and wrap every full normalized filesystem target, including WRITE/SESSION and multi-target calls; surrounding whitespace is rejected before approval; approval targets over 4096 characters are refused before approval. Git stage/commit always require approval. `GetSessionState` exposes `data.outputRoot`; updates preserve `exports`. Previews and approved generation steps retain their behavior.
-- DES-2：保留设备、PLC 组与声明/源文件兼容转发；恢复四个批工具，整批规范预览绑定一个计划哈希和一次审批，按顺序调用逐项规范入口，首错停止并报告完成/未开始项。 工艺对象目录导出在八个版本统一使用原生路径和项目实际组结构，使用同样的预览和审批；分组导出目录只在执行时创建。
-- MovePlcBlockToGroup 采用预览和计划哈希审批；先保留并核验恢复备份，再删除源块、导入目标并核验父组、名称、编号和语言。目标不一致时提示编译；核验失败先清理目标再恢复原组，清理或恢复失败保留恢复文件及明确证据，未开始修改的 apply 拒绝保留类型化错误且不锁定会话；父组核验使用 SDK 对象相等性。VM 原生确认仍为 NOT RUN。
-- `CreateDevice` remains available on V14 SP1–V17 through the existing native CreateWithItem route with preview, plan hash and bound-project validation; V18–V21 forward to CreateHardwareDevice. Generation previews each device creation and block move before filling its execution hash.
-- Transport checks retain the full profile and check up to four releases at a time, respecting `-MaxParallelism` with deterministic report ordering.
-- `merge-check` overlaps GUI and transport checks, prioritizes Foundation with shared timing history, and reuses traversal builds for PLC exchange variants and file programs while preserving every check and result gate.
+- Preserve native failure reasons and password-policy refusals after redacting credential-like names, native message fields, stack frames and private keys before diagnostic truncation. Retain indented PLC logic and HMI script text, and keep host request correlation.
+- Fix generation planning for a connected portal without an open project, compare binding generations as opaque values, and preserve healthy bindings after Save As, archive retrieval and isolated startup, and refresh approval identities after rebinding. Read timeouts return `TIMEOUT` and drain before reuse. Write timeouts retain the unknown-outcome guard. `GetSessionState` answers from cached host state during recovery, and host-only tools remain available. Disconnect determines `requiresTiaRestart` from outstanding calls and the persistent process lease.
+- PLC hierarchy reads return structure only. The Workbench reads block attributes page by page with `ListPlcBlocks`. `GetNativeInvocationLog` supports exact request and inclusive timestamp filters and a total matched-record count. Malformed or offset-free diagnostic timestamps are refused.
+- VMFIX-5b resolves PLC loadable, fingerprint and monitor services from PLC software, CPU ancestors and the device, with typed unsupported results when absent. V21 technology-object creation retains its verified type/version crash guard. Unified HMI tags use a verified PLC connection without writing read-only PlcName, and screen designs, layouts and background themes apply without accidental rename requests.
+- 写入结果按可验证证据分类。ExclusiveAccess、密码策略和输入校验的明确拒绝，以及读回证明未改变的属性、库和文档导入失败，无需重置。已派发且无法证明结果的写入仍锁定会话。保留前序成功写入的证据，修复 PLC 导入租约释放、交叉引用导出确认、PROFINET 结果、强制表列表、下载预览与 Unified 集合读回。
+- Validate PLC user-group paths before project checks and dispatch. Technology-object batch export reports directory-creation failure as an ordinary refusal, and tag-table import name filters match case-insensitively, while screen names follow the native literal and case rules. Batch and move descriptions identify the tool's own preview as the source of its hash and project file.
+- Restore shared Workbench styles after the redesign, keep configuration headings untrimmed, remove obsolete translations, and prevent list binding updates from opening client-enable confirmations. Write-approval disablement rejects empty or incorrect confirmation words and Enter.
+- Read Openness compatibility assemblies on the host for every release, repair the monitoring reflection self-test, and configure serving-host HMI preflight resolution.
+- `test-suites` logs names, error excerpts and stack excerpts for up to ten distinct failures, including sharded runs. Offline release acceptance without a developer fixture refuses before creating a report directory.
 
 ## [4.0.0-beta.3] - 2026-11-04
 - 精简第三方目录：移除未交付的上游测试、文档和 Studio 参考归档，保留交付源码、许可、来源记录及本项目生态桥接检查。

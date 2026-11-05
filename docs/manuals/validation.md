@@ -1,12 +1,12 @@
 # 验证
 
-状态：现行 · 最后核对：2026-11-04，master `871d54da`
+状态：现行 · 最后核对：2026-11-05，beta.4 候选基线 `13eb7725`
 
 本文规定合并检查、发布前完整检查和发布后真机验证的职责，依据 [ADR 0031](../standards/decisions/0031-release-path.md)。
 
 ## 合并检查
 
-合并门 `merge-check` 使用普通 `dotnet build` 和 `dotnet test` 构建、测试受影响的项目，再检查生成内容和仓库规则。调度优化前的宽范围改动在 2026-11-04 实测约 21–28 分钟，当前调度的主机耗时待复测。从仓库根目录运行以下命令。
+合并门 `merge-check` 使用普通 `dotnet build` 和 `dotnet test` 构建、测试受影响的项目，再检查生成内容和仓库规则。FAST-GATE 目标约 10 分钟；2026-11-05 宽范围改动实测 731 秒（约 12 分钟），优化前约 21 分钟。从仓库根目录运行以下命令。
 
 ```powershell
 dotnet run --project build-tools/release -- merge-check
@@ -14,7 +14,7 @@ dotnet run --project build-tools/release -- merge-check
 
 命令按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件。`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取证据或结果缓存。Foundation 的共享计时历史来自主 checkout 的 `bin-build/check-timings`，只决定分片分配，未知测试回退到哈希分桶，数量仍由合并后的 TRX 判定并拒绝重复测试。其他分片调用可通过 `-TimingHistory <目录>` 指定历史，默认使用当前 worktree。Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。
 
-构建完成后，适配器输入、worker 隔离与 updater 并行执行，随后单独执行原生诊断，避免其 Python 进程与 updater 的捆绑进程探测重叠。全部结束后启动套件池，Foundation 优先入池。池结束后执行独占作业，再让 GUI 与两组传输检查并行。GUI 使用四个分片进程，先独占运行鼠标和焦点敏感分片，再并行运行其余三个布局等分片，敏感分片失败后仍完整运行并汇总普通分片，Foundation 等其他套件的各通道继续并发。每个进程使用独立的 TEMP、数据根、审批配置和管道作用域。GUI 合并后的 TRX 保留注册总数门槛及四个派生子集自己的门槛。日志、各作业耗时和带开始、结束偏移的 `timeline.tsv` 写在 `bin-build/merge-check/`，耗时随改动范围和主机负载变化。传输检查始终使用 `full` 档，每组最多并行检查 8 个版本，各版本先完成 stdio 再进入 HTTP。GUI 和各组传输的并发上限还受合并门的 `-MaxParallelism` 限制（设为 1 时串行检查），传输脚本单独调用时默认仍为 4。
+构建完成后，适配器输入、worker 隔离与 updater 并行执行，随后单独执行原生诊断，避免其 Python 进程与 updater 的捆绑进程探测重叠。全部结束后启动套件池，Foundation 优先入池。池结束后执行独占作业，再让 GUI 与两组传输检查并行。GUI 使用四个分片进程，先独占运行鼠标和焦点敏感分片，再并行运行其余三个布局等分片，敏感分片失败后仍完整运行并汇总普通分片，Foundation 等其他套件的各通道继续并发。每个进程使用独立的 TEMP、数据根和审批配置，管道名称从分片独立的设置路径派生。GUI 合并后的 TRX 保留注册总数门槛及四个派生子集自己的门槛。日志、各作业耗时和带开始、结束偏移的 `timeline.tsv` 写在 `bin-build/merge-check/`，耗时随改动范围和主机负载变化。传输检查始终使用 `full` 档，每组最多并行检查 8 个版本，各版本先完成 stdio 再进入 HTTP。GUI 和各组传输的并发上限还受合并门的 `-MaxParallelism` 限制（设为 1 时串行检查），传输脚本单独调用时默认仍为 4。
 
 任一传输检查出现 WinError 10055 时，本轮失败并写入主 checkout 的 `bin-build/transport-parallelism-4.txt`。主 checkout 与共享计时历史使用同一个 `git rev-parse --path-format=absolute --git-common-dir` 定位结果，后续所有 worktree 的合并门将两组传输检查各限制为最多 4 个版本。该标记独立于任务 worktree 及每轮重建的日志目录。标记生效且本轮选择传输检查时，合并门输出一行提示，列出标记的完整路径及清除方式。维护者审查 socket 证据后，可删除提示中的文件以恢复 8 个版本。
 
