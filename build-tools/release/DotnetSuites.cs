@@ -15,6 +15,37 @@ internal static class DotnetSuites
 
     private static readonly XNamespace Ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 
+    internal static string FailureDetails(string path)
+    {
+        try
+        {
+            var output = new StringBuilder();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            var root = XDocument.Load(path).Root;
+            foreach (var row in root?.Element(Ns + "Results")?.Elements(Ns + "UnitTestResult") ?? [])
+            {
+                if ((string?)row.Attribute("outcome") != "Failed") continue;
+                var name = (string?)row.Attribute("testName") ?? (string?)row.Attribute("testId") ?? "Unknown test";
+                if (!seen.Add(name)) continue;
+                output.Append("FAILED TEST: ").AppendLine(name);
+                var error = row.Element(Ns + "Output")?.Element(Ns + "ErrorInfo");
+                var message = error?.Element(Ns + "Message")?.Value;
+                if (!string.IsNullOrEmpty(message))
+                {
+                    output.AppendLine(message[..Math.Min(message.Length, 400)]);
+                    using var stack = new StringReader(error?.Element(Ns + "StackTrace")?.Value ?? "");
+                    for (int line = 0; line < 4 && stack.ReadLine() is { } text; line++) output.AppendLine(text);
+                }
+                if (seen.Count == 10) break;
+            }
+            return output.ToString();
+        }
+        catch (Exception) /* swallow(logging-failure): Supplemental TRX diagnostics must never change the suite result. */
+        {
+            return "";
+        }
+    }
+
     internal static (JsonObject Counts, List<string> Errors) ReadTrx(string path)
     {
         var root = XDocument.Load(path).Root ?? throw new ReleaseException("TRX is missing ResultSummary/Counters");
@@ -180,6 +211,7 @@ internal static class DotnetSuites
         foreach (var (key, value) in counts) summary[key] = value?.DeepClone();
         summary["errors"] = new JsonArray(errors.Select(e => (JsonNode?)JsonValue.Create(e)).ToArray());
         File.WriteAllText(report, PythonJson.Dumps(summary, ensureAscii: false, indent: 2) + "\n", new UTF8Encoding(false));
+        output.Append(FailureDetails(trx));
         output.Append(errors.Count != 0 ? $"FAIL: {name}: {string.Join("; ", errors)}\n" : $"COMPLETE: {counts["passed"]} {name} checks passed\n");
         return new CommandResult(errors.Count == 0 ? 0 : 1, output.ToString(), stderr);
     }

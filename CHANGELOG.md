@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Fixed
+- `test-suites` logs the full name, first 400 error-message characters and first four stack lines for up to ten distinct failed tests per suite, including sharded runs.
 - Restore shared Workbench style usage after the UI redesign, keep configuration headings untrimmed, remove obsolete translations, and prevent list binding updates from opening client-enable confirmations.
 
 - 写入结果按可验证证据分类：ExclusiveAccess、密码策略和输入校验的明确拒绝不再误报 `OUTCOME_UNKNOWN`；属性、库和文档导入失败后可证明未改变目标时无需重置会话。其余已派发的未知写入统一锁定会话。

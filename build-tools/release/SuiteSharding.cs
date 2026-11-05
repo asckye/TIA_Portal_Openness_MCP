@@ -75,7 +75,7 @@ internal static class SuiteSharding
         report["shards"] = new JsonArray(shards.Select(p => (JsonNode?)JsonValue.Create(p)).ToArray());
         report["errors"] = new JsonArray(errors.Select(e => (JsonNode?)JsonValue.Create(e)).ToArray());
         File.WriteAllText(Path.Combine(output, name + ".json"), report.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
-        return new(errors.Count == 0 ? 0 : 1, $"{name}: {report["passed"]} passed; {report["failed"]} failed; {report["skipped"]} skipped\n", string.Join("\n", errors));
+        return new(errors.Count == 0 ? 0 : 1, DotnetSuites.FailureDetails(path) + $"{name}: {report["passed"]} passed; {report["failed"]} failed; {report["skipped"]} skipped\n", string.Join("\n", errors));
     }
 }
 
