@@ -33,17 +33,24 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
             using var model = new FeaturePagesViewModel(approvals, new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(),
                 new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics(), () => FeaturePageFixtures.Now);
             var view = new ApprovalsDrawer { DataContext = model };
-            var host = new Border { Child = view, Width = 480 };
+            var host = new Border { Child = view, Width = 960 };
             try
             {
-                Layout(host, 480, 780);
+                Layout(host, 960, 780);
                 var text = Assert.Single(Descendants<TextBlock>(host), block => block.Text == target);
                 Assert.Equal(TextWrapping.Wrap, text.TextWrapping);
                 Assert.Equal(TextTrimming.None, text.TextTrimming);
                 Assert.True(text.ActualHeight > 29);
-                var row = Assert.IsType<Grid>(VisualTreeHelper.GetParent(text));
+                var row = Assert.IsType<StackPanel>(VisualTreeHelper.GetParent(text));
                 Assert.True(double.IsNaN(row.Height));
                 Assert.True(row.ActualHeight >= text.DesiredSize.Height);
+                var probe = Probe(text);
+                probe.TextWrapping = TextWrapping.Wrap;
+                TextOptions.SetTextFormattingMode(probe, TextOptions.GetTextFormattingMode(text));
+                probe.Measure(new Size(text.ActualWidth, double.PositiveInfinity));
+                Assert.True(text.ActualHeight >= probe.DesiredSize.Height);
+                var bounds = text.TransformToAncestor(row).TransformBounds(new Rect(text.RenderSize));
+                Assert.True(new Rect(row.RenderSize).Contains(bounds));
             }
             finally { host.Child = null; }
         });
