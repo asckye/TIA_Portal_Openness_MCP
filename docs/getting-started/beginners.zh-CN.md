@@ -96,21 +96,21 @@ Get-Content .\<下载的交付包文件名>.sha256
 ```
 成功标志是 AI 能报告实际工程和 PLC，并列出程序块。仅回答“服务连接成功”还没有完成这一步。
 
-V20/V21 默认使用 lite 档，AI 可用 `FindTools` 查找其余工具，再用 `CallTool` 调用。V14 SP1–V19 显示全部注册工具，也支持发现和桥接。让 AI 读取当前服务定义，核对所选版本的参数。
+八个版本默认使用 lite 档，AI 可用 `FindTools` 查找其余工具，再用 `CallTool` 调用；配置 `--profile full` 可显示全部注册工具。让 AI 读取当前服务定义，核对所选版本的参数。
 
 <!-- generated:tool-counts:begin -->
 由 `generate-tool-counts` 从 `manifest/version-tools.json` 和 `ToolProfiles.resx` 生成。以运行时 `tools/list` 为准。
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 280 | 不适用 |
-| V15.1 | 320 | 不适用 |
-| V16 | 349 | 不适用 |
-| V17 | 372 | 不适用 |
-| V18 | 398 | 不适用 |
-| V19 | 474 | 不适用 |
-| V20 | 497 | 81 |
-| V21 | 512 | 84 |
+| V14 SP1 | 280 | 89 |
+| V15.1 | 320 | 92 |
+| V16 | 349 | 93 |
+| V17 | 372 | 93 |
+| V18 | 398 | 95 |
+| V19 | 474 | 95 |
+| V20 | 497 | 98 |
+| V21 | 512 | 101 |
 <!-- generated:tool-counts:end -->
 
 V4 工具返回 `ok`、`data`、`error` 和 `meta`；先检查 `meta.outcome`。结果为 `OUTCOME_UNKNOWN` 时，先核对工程现状，不要自动重复写入。

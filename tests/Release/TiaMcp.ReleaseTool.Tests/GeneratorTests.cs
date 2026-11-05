@@ -15,15 +15,71 @@ public sealed class GeneratorTests
     public void PortedDocumentCandidatesRetainModernFoundationProfiles()
     {
         var data = new CatalogData(Root); var resource = CatalogGenerator.Generate(Root)[CatalogGenerator.Resource];
-        var catalog = JsonNode.Parse(System.Xml.Linq.XDocument.Parse(resource).Descendants("data").Single(e => (string?)e.Attribute("name") == "Catalog").Element("value")!.Value)!;
-        Assert.Equal(new[] { "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments" }, data.FoundationCandidates.Order(StringComparer.Ordinal));
-        foreach (var key in new[] { "20", "21" })
+        var catalog = JsonNode
+            .Parse(System.Xml.Linq.XDocument.Parse(resource).Descendants("data").Single(e => (string?)e.Attribute("name") == "Catalog").Element("value")!
+                .Value)!;
+        Assert
+            .Equal(new[] { "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments" }, data
+                .FoundationCandidates.Order(StringComparer.Ordinal));
+        foreach (var key in Keys)
         {
             var rows = catalog["releases"]![key]!.AsArray().ToDictionary(r => Text(r!["currentName"]));
-            foreach (var name in data.FoundationCandidates) Assert.Contains("plc-foundation", Strings(rows[name]!["profiles"]));
-            foreach (var name in data.Ported[key].Except(data.FoundationCandidates)) Assert.DoesNotContain("plc-foundation", Strings(rows[name]!["profiles"]));
+            foreach (var name in data.FoundationCandidates)
+                if (rows.TryGetValue(name, out var row)) Assert.Equal("plc-foundation", Text(row!["exampleSource"]));
+                else Assert.Contains(name, PortedFamilies.Withheld(data.Families, key));
+            foreach (var name in data.Ported[key].Except(data.FoundationCandidates)) Assert.Equal("full-engine", Text(rows[name]!["exampleSource"]));
         }
     }
+    [Fact]
+    public void Every_release_uses_the_exact_unified_lite_intersection()
+    {
+        var data = new CatalogData(Root);
+        var resource = CatalogGenerator.Generate(Root)[CatalogGenerator.Resource];
+        var catalog = JsonNode
+            .Parse(System.Xml.Linq.XDocument.Parse(resource).Descendants("data").Single(element => (string?)element.Attribute("name") == "Catalog")
+                .Element("value")!.Value)!;
+        var proposal = Set(Read(Root, "reference/tool-catalog/lite-groups.json").AsObject().SelectMany(group => Text(group.Value).Split(' ')));
+        var unified = Set(proposal.Concat(data.Rosters["19"].Except(data.Ported["19"]).Except(data.HostOnly.Keys))
+            .Concat(data.Families["F00"].Tools).Concat(data.Bridge)
+            .Concat(data.HostOnly.Keys.Where(name => !data.Additions.ContainsKey(name)
+                || name is "DescribeStandardPackage" or "PlanProjectGeneration" or "ApplyGenerationPlan")));
+        unified.ExceptWith(data.Removed);
+        foreach (var key in Keys)
+        {
+            var rows = catalog["releases"]![key]!.AsArray();
+            Assert.True(data.Rosters[key].SetEquals(rows.Select(row => Text(row!["currentName"]))));
+            var lite = Set(rows.Where(row => Strings(row!["profiles"]).Contains("lite")).Select(row => Text(row!["currentName"])));
+            Assert.True(lite.SetEquals(unified.Intersect(data.Rosters[key])));
+            Assert.True(lite.IsProperSubsetOf(data.Rosters[key]));
+            Assert.All(rows, row => Assert.Contains("full", Strings(row!["profiles"])));
+            Assert.Equal(rows.Select(row => Text(row!["name"])).Order(StringComparer.Ordinal), rows.Select(row => Text(row!["name"])));
+        }
+        foreach (var key in new[] { "20", "21" })
+            Assert.InRange(proposal.Count(name => data.Rosters[key].Contains(name) || data.Removed.Contains(name)), 50, 65);
+    }
+
+    [Fact]
+    public void Lite_proposal_rejects_unknown_names_before_roster_intersection()
+    {
+        var data = new CatalogData(Root);
+        var proposal = Read(Root, "reference/tool-catalog/lite-groups.json").AsObject()
+            .SelectMany(group => Text(group.Value).Split(' ')).ToArray();
+        CatalogGenerator.ValidateLiteProposal(proposal, data);
+        var error = Assert.Throws<ReleaseException>(() =>
+            CatalogGenerator.ValidateLiteProposal(proposal.Append("MisspelledToolForRegression"), data));
+        Assert.Contains("unknown tool", error.Message);
+    }
+
+    [Theory, InlineData("full-engine"), InlineData("plc-foundation")]
+    public void Each_maintained_schema_variant_is_required_even_when_another_source_has_the_tool(string source)
+    {
+        var data = new CatalogData(Root);
+        var calls = Read(Root, "reference/tool-examples/calls.json");
+        ToolUsageGenerator.ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools);
+        calls["profiles"]![source]!.AsObject().Remove("ManageStartdriveParameter");
+        Assert.Throws<ReleaseException>(() => ToolUsageGenerator.ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools));
+    }
+
     [Theory]
     [InlineData("missing")]
     [InlineData("malformed")]

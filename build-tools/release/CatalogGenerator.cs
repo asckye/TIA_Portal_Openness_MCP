@@ -16,6 +16,12 @@ internal static class CatalogGenerator
         cli["exitCodes"] = new JsonObject { ["0"] = "success", ["2"] = "rejected, doctor not ready or no successful config writes",
             ["3"] = "failed", ["4"] = "partial", ["5"] = "outcome unknown", ["64"] = "syntax error", ["70"] = "runtime resources unavailable" };
     }
+    internal static void ValidateLiteProposal(IEnumerable<string> proposal, CatalogData data)
+    {
+        var known = Set(data.Rosters.Values.SelectMany(names => names).Concat(data.Removed));
+        Require(proposal.All(known.Contains), "Lite proposal contains an unknown tool");
+    }
+
     internal const string Resource = "src/Logic/ModelContextProtocol/ToolProfiles.resx";
     internal static Dictionary<string, string> Generate(string root, bool legacyNames = false, Action<Dictionary<string, string>>? prepareSources = null)
     {
@@ -36,13 +42,25 @@ internal static class CatalogGenerator
         }
         var only21 = Set(Matches(Source(root, "src/Logic/Siemens/ToolVersionPolicy.cs").Split("internal static string ToolProblem", 2)[0], "\\[\"([^\"]+)\"\\]\\s*="));
         var unavailable20 = PortedFamilies.Withheld(data.Families, "20");
-        Require(Set(tools["20"].Select(p => p.Key)).SetEquals(currentNames.Keys.Where(n => !only21.Contains(n) && !only21.Contains(currentNames[n]) && !unavailable20.Contains(currentNames[n]))), "V20 admission policy differs");
-        Require(Set(Strings(Read(root, "manifest/history/contracts-v3/baseline/20.json")["liteTools"])).SetEquals(Strings(Read(root, "manifest/history/contracts-v3/baseline/21.json")["liteTools"])), "Frozen engine lite rosters differ");
-        Require(Source(root, "src/Shared/ToolUsageCatalog.cs").Contains("GuideSelection(string topic)", StringComparison.Ordinal) && Source(root, "src/Logic/ModelContextProtocol/ToolRecipes.cs").Contains("ToolUsageCatalog.Sequences(", StringComparison.Ordinal) && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("ToolUsageCatalog.Examples(", StringComparison.Ordinal) && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("exampleId", StringComparison.Ordinal), "Guide merge proof differs");
-        var calls = Read(root, "reference/tool-examples/calls.json")["profiles"]!; var sourceExamples = Read(root, "reference/tool-catalog/EngineSourceExamples.json");
-        foreach (var key in Keys) Require(data.Rosters[key].All(calls[key is "20" or "21" ? "full-engine" : "plc-foundation"]!.AsObject().ContainsKey), "Missing call examples: " + key);
-        var foundation = string.Join('\n', Directory.GetFiles(Path.Combine(root, "src/FoundationHost"), "*.cs").Order(StringComparer.Ordinal).Select(Repository.ReadSource));
-        var foundationCurrent = Keys.Take(6).ToDictionary(k => k, k => CatalogData.Resolve(tools[k].Select(p => p.Key), Set(data.Rosters[k].Except(data.HostOnly.Keys)), data.Renames));
+        Require(Set(tools["20"].Select(p => p.Key))
+                .SetEquals(currentNames.Keys.Where(n => !only21.Contains(n) && !only21.Contains(currentNames[n]) && !unavailable20.Contains(currentNames[n]))),
+                "V20 admission policy differs");
+        Require(Set(Strings(Read(root, "manifest/history/contracts-v3/baseline/20.json")["liteTools"]))
+                .SetEquals(Strings(Read(root, "manifest/history/contracts-v3/baseline/21.json")["liteTools"])), "Frozen engine lite rosters differ");
+        Require(Source(root, "src/Shared/ToolUsageCatalog.cs").Contains("GuideSelection(string topic)", StringComparison.Ordinal)
+                && Source(root, "src/Logic/ModelContextProtocol/ToolRecipes.cs").Contains("ToolUsageCatalog.Sequences(", StringComparison.Ordinal)
+                && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("ToolUsageCatalog.Examples(", StringComparison.Ordinal)
+                && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("exampleId", StringComparison.Ordinal),
+                "Guide merge proof differs");
+        var calls = Read(root, "reference/tool-examples/calls.json")["profiles"]!; var sourceExamples =
+            Read(root, "reference/tool-catalog/EngineSourceExamples.json");
+        foreach (var key in Keys)
+            Require(data.Rosters[key].All(name => calls.AsObject().Any(profile => profile.Value!.AsObject().ContainsKey(name))), "Missing call examples: "
+                + key);
+        var foundation = string
+            .Join('\n', Directory.GetFiles(Path.Combine(root, "src/FoundationHost"), "*.cs").Order(StringComparer.Ordinal).Select(Repository.ReadSource));
+        var foundationCurrent = Keys.Take(6)
+            .ToDictionary(k => k, k => CatalogData.Resolve(tools[k].Select(p => p.Key), Set(data.Rosters[k].Except(data.HostOnly.Keys)), data.Renames));
         foreach (var key in Keys.Take(6)) foreach (var (old, row) in tools[key])
         {
             if (data.Ported[key].Contains(foundationCurrent[key][old])) continue;
@@ -80,19 +98,29 @@ internal static class CatalogGenerator
                 }
             }
         }
-        var liteGroups = Read(root, "reference/tool-catalog/lite-groups.json").AsObject(); var lite = new Dictionary<string, HashSet<string>>();
+        var liteGroups = Read(root, "reference/tool-catalog/lite-groups.json").AsObject();
+        var proposal = Set(liteGroups.SelectMany(group => Text(group.Value).Split(' ')));
+        Require(proposal.Count == liteGroups.Sum(group => Text(group.Value).Split(' ').Length), "Duplicate lite proposal");
+        ValidateLiteProposal(proposal, data);
+        var proposalByRelease = Keys.Skip(6).ToDictionary(key => key,
+            key => Set(proposal.Where(name => data.Rosters[key].Contains(name) || data.Removed.Contains(name))));
         foreach (var key in Keys.Skip(6))
         {
-            lite[key] = [];
-            foreach (var p in liteGroups) foreach (var target in Text(p.Value).Split(' '))
-            {
-                var old = tools[key].Select(p => p.Key).First(n => data.Renames[n] == target && !CatalogData.Merged.Contains(n)); var current = currentNames[old];
-                if (!calls["full-engine"]!.AsObject().ContainsKey(current)) continue;
-                Require(calls["full-engine"]![current]!["arguments"] is JsonObject && lite[key].Add(target), "Duplicate/missing lite example: " + target);
-            }
-            Require(lite[key].Count is >= 50 and <= 65, "Lite proposal count differs");
+            var availableProposal = proposalByRelease[key];
+            Require(availableProposal.Count is >= 50 and <= 65, "Lite proposal count differs");
         }
-        Require(lite["20"].SetEquals(lite["21"]), "Engine lite proposals differ");
+        Require(proposalByRelease["20"].SetEquals(proposalByRelease["21"]), "Engine lite proposals differ");
+        // Preserve the existing shared Foundation, F00, bridge and host-only additions, and
+        // apply the reviewed proposal as one list before intersecting each release's roster.
+        var unifiedLite = Set(proposal.Concat(data.Rosters["19"].Except(data.Ported["19"]).Except(data.HostOnly.Keys))
+            .Concat(data.Families["F00"].Tools).Concat(data.Bridge)
+            .Concat(data.HostOnly.Keys.Where(name => !data.Additions.ContainsKey(name)
+                || name is "DescribeStandardPackage" or "PlanProjectGeneration" or "ApplyGenerationPlan")));
+        unifiedLite.ExceptWith(data.Removed);
+        var lite = Keys.ToDictionary(key => key, key => Set(unifiedLite.Intersect(data.Rosters[key])));
+        foreach (var key in Keys)
+            Require(lite[key].IsSubsetOf(data.Rosters[key]) && lite[key].SetEquals(unifiedLite.Intersect(data.Rosters[key])),
+                    "Unified lite intersection differs: " + key);
         var ledger = Source(root, "docs/reference/real-machine-ledger.md"); var policies = BehaviorRecords(ledger); var entries = new JsonArray();
         var candidates = data.EngineSource["behaviorCandidates"]!.AsArray().Select(row => (Entry: Text(row!["entry"]), Family: Text(row["family"])))
             .Distinct().OrderBy(p => p.Entry, PythonStringComparer.Instance).ThenBy(p => p.Family, PythonStringComparer.Instance);
@@ -114,25 +142,32 @@ internal static class CatalogGenerator
             {
                 if (CatalogData.Merged.Contains(old)) continue;
                 var current = key is "20" or "21" ? currentNames[old] : foundationCurrent[key][old]; var target = data.Renames[old];
-                rows.Add(new JsonObject { ["name"] = target, ["currentName"] = current, ["sourceName"] = old, ["profiles"] = key is "20" or "21" ? (lite[key].Contains(target) ? new JsonArray("full", "lite") : new JsonArray("full")) : new JsonArray("plc-foundation"), ["arguments"] = Copy(key is "20" or "21" ? sourceExamples[current]!["arguments"]! : calls["plc-foundation"]![current]!["arguments"]!), ["envelopeVersion"] = 4 });
+                rows
+                    .Add(new JsonObject {
+                        ["name"] = target, ["currentName"] = current, ["sourceName"] = old, ["profiles"] = new JsonArray("full"), ["arguments"] =
+                            Copy(key is "20" or "21" ? sourceExamples[current]!["arguments"]! : calls["plc-foundation"]![current]!["arguments"]!),
+                            ["envelopeVersion"] = 4
+                    });
             }
             releases[key] = new JsonArray((key is "20" or "21" ? rows.OrderBy(r => Text(r["name"]), PythonStringComparer.Instance) : rows.AsEnumerable()).ToArray());
             if (key is "20" or "21") engineReleases[key] = Copy(releases[key]!);
         }
         var shared = Set(tools["19"].Select(p => data.Renames[p.Key]).Except(data.Ported["19"]));
-        // These existing Foundation implementations retain their modern profiles
-        // even when the reviewed table withholds them from the older hosts.
+        // These names share a Foundation schema, including F00 tools withheld on some releases.
         shared.UnionWith(data.Families["F00"].Tools);
         foreach (var key in Keys.Skip(6))
         {
-            var rows = releases[key]!.AsArray().Where(r => !data.Removed.Contains(Text(r!["currentName"]))).ToDictionary(r => Text(r!["currentName"]), r => r!.DeepClone());
-            foreach (var entry in releases["19"]!.AsArray()) { var current = Text(entry!["currentName"]); if (data.Ported["19"].Contains(current)) continue; var row = entry.DeepClone(); row["profiles"] = new JsonArray("full", "lite", "plc-foundation"); rows[current] = row; }
+            var rows = releases[key]!.AsArray().Where(r => !data.Removed.Contains(Text(r!["currentName"])))
+                .ToDictionary(r => Text(r!["currentName"]), r => r!.DeepClone());
+            foreach (var entry in releases["19"]!.AsArray()) {
+                var current = Text(entry!["currentName"]); if (data.Ported["19"].Contains(current)) continue; var row = entry.DeepClone(); rows[current] = row;
+            }
             foreach (var (current, entry) in calls["plc-foundation"]!.AsObject())
-                if (!shared.Contains(current) && (!data.Ported[key].Contains(current) || data.FoundationCandidates.Contains(current))) rows[current] = new JsonObject { ["name"] = current, ["currentName"] = current, ["sourceName"] = current, ["profiles"] = new JsonArray("full", "plc-foundation"), ["arguments"] = Copy(entry!["arguments"]!), ["envelopeVersion"] = 4 };
-            // A Foundation-family tool withheld on this release (P8-81d: the V21-format composers on V20) has no row here.
-            var withheldHere = PortedFamilies.Withheld(data.Families, key);
-            foreach (var name in data.Families["F00"].Tools.Where(n => !withheldHere.Contains(n))) rows[name]["profiles"] = new JsonArray("full", "lite", "plc-foundation");
-            foreach (var row in rows.Values.Where(r => !shared.Contains(Text(r["currentName"])))) row["profiles"] = data.Bridge.Contains(Text(row["currentName"])) ? new JsonArray("full", "lite") : new JsonArray(Strings(row["profiles"]).Where(p => p != "lite").Select(s => (JsonNode?)JsonValue.Create(s)).ToArray());
+                if (!shared.Contains(current) && (!data.Ported[key].Contains(current) || data.FoundationCandidates.Contains(current))) rows[current] =
+                    new JsonObject {
+                    ["name"] = current, ["currentName"] = current, ["sourceName"] = current, ["profiles"] = new JsonArray("full", "plc-foundation"),
+                        ["arguments"] = Copy(entry!["arguments"]!), ["envelopeVersion"] = 4
+                };
             releases[key] = new JsonArray(rows.Values.OrderBy(r => Text(r["name"]), PythonStringComparer.Instance).ToArray());
             for (var i = entries.Count - 1; i >= 0; i--) if (Text(entries[i]!["releaseKey"]) == key && data.Removed.Contains(Text(entries[i]!["entry"]))) entries.RemoveAt(i);
             foreach (var entry in entries.Where(e => Text(e!["releaseKey"]) == "19").ToArray())
@@ -140,18 +175,26 @@ internal static class CatalogGenerator
         }
         foreach (var key in Keys)
         {
-            var profile = key is "20" or "21" ? "full-engine" : "plc-foundation";
+            const string profile = "plc-foundation";
             var rows = releases[key]!.AsArray().ToDictionary(r => Text(r!["currentName"]), r => r!.DeepClone());
             foreach (var name in Sorted(data.HostOnly.Keys)) rows[name] = new JsonObject { ["name"] = name, ["currentName"] = name, ["sourceName"] = name,
-                ["profiles"] = key is "20" or "21" ? (data.Additions.ContainsKey(name) && name is not "DescribeStandardPackage" and not "PlanProjectGeneration" and not "ApplyGenerationPlan" ? new JsonArray("full", "plc-foundation") : new JsonArray("full", "lite", "plc-foundation")) : new JsonArray("plc-foundation"), ["arguments"] = Copy(calls[profile]![name]!["arguments"]!), ["envelopeVersion"] = 4 };
+                ["profiles"] = new JsonArray("full", "plc-foundation"), ["arguments"] = Copy(calls[profile]![name]!["arguments"]!), ["envelopeVersion"] = 4 };
             var withheld = PortedFamilies.Withheld(data.Families, key);
             var admitted = rows.Values.Where(row => !withheld.Contains(Text(row["currentName"])));
-            releases[key] = new JsonArray((key is "20" or "21" ? admitted.OrderBy(r => Text(r["name"]), PythonStringComparer.Instance) : admitted.OrderBy(r => data.HostOnly.ContainsKey(Text(r["currentName"])) && !data.Additions.ContainsKey(Text(r["currentName"]))).ThenBy(r => Text(r["sourceName"]), PythonStringComparer.Instance)).ToArray());
+            releases[key] = new JsonArray(admitted.OrderBy(row => Text(row["name"]), StringComparer.Ordinal).ToArray());
             foreach (var row in releases[key]!.AsArray())
             {
                 var name = Text(row!["currentName"]);
-                var exampleProfile = Strings(row["profiles"]).Contains("plc-foundation") ? "plc-foundation" : "full-engine";
-                row["arguments"] = CurrentArguments(name, row["arguments"]!.AsObject(), calls[exampleProfile]?[name]?["arguments"] as JsonObject);
+                bool engineSchema = data.Ported[key].Contains(name) && !data.FoundationCandidates.Contains(name)
+                    || !shared.Contains(name) && !data.HostOnly.ContainsKey(name) && !data.FoundationCandidates.Contains(name)
+                        && !calls["plc-foundation"]!.AsObject().ContainsKey(name);
+                var exampleProfile = engineSchema ? "full-engine" : "plc-foundation";
+                Require(calls[exampleProfile]?[name]?["arguments"] is JsonObject, "Missing schema-specific maintained example: " + key + "/" + name);
+                row["exampleSource"] = exampleProfile;
+                row["profiles"] = lite[key].Contains(name) ? new JsonArray("full", "lite", "plc-foundation") : new JsonArray("full", "plc-foundation");
+                var source = engineSchema && sourceExamples[name]?["arguments"] is JsonObject sourceArguments
+                    ? sourceArguments : row["arguments"]!.AsObject();
+                row["arguments"] = CurrentArguments(name, source, calls[exampleProfile]?[name]?["arguments"] as JsonObject, sourceKeys: engineSchema);
             }
             Require(Set(releases[key]!.AsArray().Select(r => Text(r!["currentName"]))).SetEquals(data.Rosters[key]), "Runtime roster differs: " + key);
             Require(releases[key]!.AsArray().Where(r => Strings(r!["profiles"]).Contains("lite")).All(r => r!["arguments"] is JsonObject), "Missing lite call arguments: " + key);
@@ -268,11 +311,37 @@ internal static class CatalogGenerator
     internal static Dictionary<string, string> VersionOutputs(CatalogData data, bool legacyNames = false)
     {
         var groups = new JsonArray(); var counts = new JsonObject(); var releases = new JsonObject();
-        foreach (var name in Sorted(data.Rosters.Values.SelectMany(r => r).Distinct())) { var keys = Keys.Where(k => data.Rosters[k].Contains(name)).ToArray(); var group = keys.Length == 8 ? "all-releases" : keys.Length == 1 ? "release-only" : "shared-subset"; counts[group] = (counts[group]?.GetValue<int>() ?? 0) + 1; groups.Add(new JsonObject { ["name"] = name, ["releases"] = new JsonArray(keys.Select(s => (JsonNode?)JsonValue.Create(s)).ToArray()), ["group"] = group, ["contract"] = "consult selected host schema; equal names do not guarantee equal contracts" }); }
-        foreach (var key in Keys) releases[key] = new JsonObject { ["profile"] = key is "20" or "21" ? "full-engine" : "plc-foundation", ["toolCount"] = data.Rosters[key].Count, ["tools"] = new JsonArray(Sorted(data.Rosters[key]).Select(s => (JsonNode?)JsonValue.Create(s)).ToArray()) };
-        var record = new JsonObject { ["schemaVersion"] = 1, ["basis"] = "registered Foundation definitions and full-engine ToolCatalog; verified by eight exact contract captures", ["nativeAcceptance"] = "NOT RUN for the newly enabled targets", ["releases"] = releases, ["groupCounts"] = counts, ["tools"] = groups };
-        var lines = new List<string> { "# Generated release tool catalog", "", "Generated by `" + (legacyNames ? "Generate-Phase6Plan.py" : "generate-catalogs") + "` from registered host catalogs. See [scope and contracts](version-tools.md).", "Groups compare current V4 tool names. Read the selected host schema; V20/V21 share the existing Foundation tools and the explicitly ported families. Ported declarations are reflected from shared source; native acceptance remains separate.", "" };
-        foreach (var (group, title) in new[] { ("all-releases", "All eight releases"), ("shared-subset", "Shared by some releases"), ("release-only", "One release only") }) { var selected = groups.Where(t => Text(t!["group"]) == group).ToArray(); lines.AddRange([$"## {title} ({selected.Length})", "", "| Tool | Release keys |", "|---|---|"]); lines.AddRange(selected.Select(t => $"| `{Text(t!["name"])}` | {string.Join(", ", Strings(t["releases"]))} |")); lines.Add(""); }
+        foreach (var name in Sorted(data.Rosters.Values.SelectMany(r => r).Distinct())) {
+            var keys = Keys.Where(k => data.Rosters[k].Contains(name)).ToArray(); var group = keys.Length == 8 ? "all-releases" : keys.Length == 1
+                ? "release-only" : "shared-subset"; counts[group] = (counts[group]?.GetValue<int>() ?? 0) + 1; groups
+                .Add(new JsonObject {
+                    ["name"] = name, ["releases"] = new JsonArray(keys.Select(s => (JsonNode?)JsonValue.Create(s)).ToArray()), ["group"] = group,
+                        ["contract"] =
+                        "consult selected host schema; equal names do not guarantee equal contracts"
+                });
+        }
+        foreach (var key in Keys) releases[key] = new JsonObject {
+            ["profile"] = "plc-foundation", ["toolCount"] = data.Rosters[key].Count, ["tools"] =
+                new JsonArray(Sorted(data.Rosters[key]).Select(s => (JsonNode?)JsonValue.Create(s)).ToArray())
+        };
+        var record = new JsonObject {
+            ["schemaVersion"] = 1, ["basis"] = "registered Foundation definitions and full-engine ToolCatalog; verified by eight exact contract captures",
+                ["nativeAcceptance"] = "NOT RUN for the newly enabled targets", ["releases"] = releases, ["groupCounts"] = counts, ["tools"] = groups
+        };
+        var lines = new List<string> {
+            "# Generated release tool catalog", "", "Generated by `" + (legacyNames ? "Generate-Phase6Plan.py" : "generate-catalogs")
+                + "` from registered host catalogs. See [scope and contracts](version-tools.md).",
+                "Groups compare current V4 tool names. Read the selected host schema; V20/V21 share the existing Foundation tools and the explicitly ported " +
+                "families. Ported declarations are reflected from shared source; native acceptance remains separate.",
+                ""
+        };
+        foreach (var (group, title) in new[] {
+                ("all-releases", "All eight releases"), ("shared-subset", "Shared by some releases"), ("release-only", "One release only") })
+            {
+            var selected = groups.Where(t => Text(t!["group"]) == group).ToArray(); lines
+                .AddRange([$"## {title} ({selected.Length})", "", "| Tool | Release keys |", "|---|---|"]); lines
+                .AddRange(selected.Select(t => $"| `{Text(t!["name"])}` | {string.Join(", ", Strings(t["releases"]))} |")); lines.Add("");
+        }
         return new() { ["manifest/version-tools.json"] = Encode(record), ["docs/reference/version-tool-catalog.md"] = string.Join('\n', lines) };
     }
 }

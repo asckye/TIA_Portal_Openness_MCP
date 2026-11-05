@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static readonly Recipe[] Rows = TiaOpenness.Shared.ToolUsageCatalog.Sequences(engineSource: true)
-            .Where(r => (string?)r?["profile"] == "full-engine")
+            .GroupBy(row => (string)row!["topic"]!, StringComparer.Ordinal).Select(group => group.First())
             .Select(r => new Recipe((string)r!["topic"]!, (string)r["purpose"]!,
                 (string)r["preconditions"]!, (string)r["notes"]!,
                 r["steps"]!.AsArray().Select(s => new Step((string)s!["tool"]!,

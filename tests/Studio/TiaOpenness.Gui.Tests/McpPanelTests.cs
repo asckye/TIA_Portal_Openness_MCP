@@ -164,6 +164,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         await using var host = new McpOperatorFixture(); await using var client = host.Client();
         await client.CreateAsync("19");
         Assert.Equal(new[] { "create" }, host.Actions);
+        Assert.Equal("full", host.Start!.ArgumentList[host.Start.ArgumentList.IndexOf("--profile") + 1]);
         Assert.Contains("--operator-owner", host.Start!.ArgumentList); Assert.Contains("operator", host.Start.ArgumentList);
         Assert.False(host.Start.UseShellExecute); Assert.True(host.Start.CreateNoWindow);
         await client.DetachAsync(); Assert.True(host.Owner!.Disposed); Assert.DoesNotContain(host.Calls, c => c.Name == "DisconnectPortal");

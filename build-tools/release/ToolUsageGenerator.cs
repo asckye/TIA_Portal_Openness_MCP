@@ -152,16 +152,21 @@ internal static class ToolUsageGenerator
     private static string[] SplitLines(string text) => text.Length == 0 ? [] : Regex.Split(text.TrimEnd('\n'), "\\r\\n|[\\n\\r\\v\\f\\x1c-\\x1e\\x85\\u2028\\u2029]");
     internal static void ValidateCoverage(Dictionary<string, HashSet<string>> rosters, JsonNode calls, IEnumerable<string>? sharedFoundation = null)
     {
-        foreach (var profile in new[] { "full-engine", "plc-foundation" })
+        var profiles = calls["profiles"]!.AsObject();
+        var full = Set(rosters.Values.SelectMany(names => names));
+        var foundation = Set(rosters["19"]);
+        foundation.UnionWith(sharedFoundation ?? []);
+        foundation.UnionWith(["ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments"]);
+        // These are maintained schema-variant inventories, not serving profiles. Keep both exact
+        // source inventories while every release selects its live example by tool and schema.
+        var expected = new Dictionary<string, HashSet<string>> { ["full-engine"] = full, ["plc-foundation"] = foundation };
+        Require(Set(profiles.Select(profile => profile.Key)).SetEquals(expected.Keys), "Call example source inventories differ");
+        foreach (var profile in profiles)
         {
-            var expected = Set((profile == "full-engine" ? Keys.Skip(6) : Keys.Take(6)).SelectMany(k => rosters[k]));
-            if (profile == "plc-foundation")
-            {
-                expected.UnionWith(["ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments"]);
-                expected.UnionWith(sharedFoundation ?? []);
-            }
-            Require(expected.SetEquals(calls["profiles"]![profile]!.AsObject().Select(p => p.Key)), "Call example coverage differs: " + profile);
+            Require(expected[profile.Key].SetEquals(profile.Value!.AsObject().Select(pair => pair.Key)), "Call example coverage differs: " + profile.Key);
+            Require(profile.Value!.AsObject().All(pair => pair.Value?["arguments"] is JsonObject), "Missing call example: " + profile.Key);
         }
+
     }
     internal static void ValidateFoundation(JsonNode calls, JsonArray sequences)
     {
@@ -169,11 +174,20 @@ internal static class ToolUsageGenerator
         {
             if (new[] { "ExportPlcBlocks", "ExportPlcTypes", "ImportPlcBlocksFromDirectory", "ImportPlcProgramFromDirectory" }.Contains(name))
             {
-                var path = Text(args["softwarePath"]); Require(path.StartsWith("devices/", StringComparison.Ordinal) || path.Contains("exact softwarePath", StringComparison.Ordinal) && path.Contains("GetProjectTree", StringComparison.Ordinal), "Batch requires exact software path: " + location);
+                var path = Text(args["softwarePath"]);
+                Require(path.StartsWith("devices/", StringComparison.Ordinal) || path.Contains("exact softwarePath", StringComparison.Ordinal) && path
+                        .Contains("GetProjectTree", StringComparison.Ordinal), "Batch requires exact software path: " + location);
             }
-            if ((args["dryRun"]?.GetValue<bool>() == false || args["confirm"]?.GetValue<bool>() == true) && !new[] { "StageImportFiles", "CleanupStagedImportFiles", "ManageStandardPackage", "ManageMachineDescription" }.Contains(name)) Require(Text(args["expectedProjectFile"]).Length > 0, "Real call requires expectedProjectFile: " + location);
-            if (name is "ImportPlcBlocksFromDirectory" or "ImportPlcProgramFromDirectory") { var pattern = Text(args["regexName"]); Require(pattern.Length > 0 && Regex.IsMatch("Main.xml", "\\A(?:" + pattern + ")\\z") && !Regex.IsMatch("Main", "\\A(?:" + pattern + ")\\z"), "Regex must select extension: " + location); }
-            if (name is "BuildPlcUdt" or "BuildPlcGlobalDb") Require(Text(args["outputReleaseKey"]) == "{release}", "Declaration builder must select the serving release: " + location);
+            if ((args["dryRun"]?.GetValue<bool>() == false || args["confirm"]?.GetValue<bool>() == true) && !new[] {
+                    "StageImportFiles", "CleanupStagedImportFiles", "ManageStandardPackage", "ManageMachineDescription" }.Contains(name))
+                Require(Text(args["expectedProjectFile"]).Length > 0, "Real call requires expectedProjectFile: " + location);
+            if (name is "ImportPlcBlocksFromDirectory" or "ImportPlcProgramFromDirectory") {
+                var pattern = Text(args["regexName"]);
+                Require(pattern.Length > 0 && Regex.IsMatch("Main.xml", "\\A(?:" + pattern + ")\\z") && !Regex.IsMatch("Main", "\\A(?:" + pattern + ")\\z"),
+                        "Regex must select extension: " + location);
+            }
+            if (name is "BuildPlcUdt" or "BuildPlcGlobalDb")
+                Require(Text(args["outputReleaseKey"]) == "{release}", "Declaration builder must select the serving release: " + location);
             if (name == "BuildPlcTagTable") Require(!args.AsObject().ContainsKey("outputReleaseKey"), "Tag builder must use the serving default: " + location);
             if (new[] { "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildPlcLadFcBlock" }.Contains(name)) Require(Text(args["outputReleaseKey"]) == "21", "Builder must select V21: " + location);
         }

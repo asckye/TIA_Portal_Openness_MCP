@@ -82,7 +82,7 @@ public sealed partial class PipelineTests
     public void Usage_appends_call_guidance_after_the_default_no_replay_guidance(string release, string name)
     {
         var schema = new JsonObject { ["type"] = "object", ["properties"] = new JsonObject() };
-        var usage = ToolUsageCatalog.Describe(name, release, "full-engine", "", schema);
+        var usage = ToolUsageCatalog.Describe(name, release, "plc-foundation", "", schema);
         using var stream = typeof(ToolUsageCatalog).Assembly.GetManifestResourceStream("TiaMcp.ToolUsage.json")!;
         using var reader = new StreamReader(stream);
         var defaults = JsonNode.Parse(reader.ReadToEnd())!["resultReading"]!["default"]!;

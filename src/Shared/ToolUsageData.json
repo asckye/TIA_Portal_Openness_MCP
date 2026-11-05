@@ -65534,12 +65534,18 @@
       "topic": "connect-project",
       "purpose": "Attach to the TIA process holding the project and read the real names before any other call.",
       "preconditions": "The intended project is already open in TIA Portal. Select its exact row from ListPortalProcessProjects; never infer a process from a project name or PID alone.",
-      "notes": "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else. The process identity values are copied from the same discovery row. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-SESSION is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance.",
+      "notes": "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else. The process identity values are copied from the same discovery row. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-SESSION is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19, 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance.",
       "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "profile": "full-engine",
+      "profile": "plc-foundation",
       "kind": "call-sequence",
       "validation": "Contract checked; native acceptance of this revision NOT RUN.",
       "steps": [

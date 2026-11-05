@@ -121,6 +121,18 @@ def tool(client, name, args=None):
     assert body == result['structuredContent']
     assert body['schemaVersion'] == 4 and body['ok'] and body['error'] is None
     assert body['meta']['tool'] == name and body['meta']['outcome'] == 'succeeded'
+    if body['data'].get('export') and ('text' in body['data'] or 'content' in body['data']):
+        fragments = [body['data'].get('text', body['data'].get('content'))]
+        handle = body['data']['export']['id']
+        offset = body['meta']['paging']['nextOffset']
+        while offset is not None:
+            page = tool(client, 'GetExportContent', {'exportId': handle, 'offset': offset})
+            fragments.append(page['data']['text'])
+            following = page['meta']['paging']['nextOffset']
+            assert following is None or following > offset
+            offset = following
+        body = json.loads(''.join(fragments))
+        assert body['schemaVersion'] == 4 and body['ok'] and body['error'] is None
     return body
 
 
@@ -129,6 +141,9 @@ def exercise(client, key, logfile, expected_before):
         LATENCIES.instrument(client, key, 'http' if isinstance(client, Http) else 'stdio')
     initialized = client.call('initialize', INIT)
     assert 'GetToolUsage' in initialized.get('instructions', '')
+    assert {'tools', 'resources', 'prompts'} <= set(initialized['capabilities'])
+    assert client.call('resources/list', {}) == {'resources': []}
+    assert client.call('resources/templates/list', {}) == {'resourceTemplates': []}
     tools = client.call('tools/list', {})['tools']
     names = {t['name'] for t in tools}
     client._tool_inventory = tools
@@ -182,6 +197,8 @@ def exercise_engine(client, key, close=True, ready=False):
         tool(client, 'GetSessionState')
     # Per-session tool collections must not drop the resource and prompt capabilities of the engine host.
     assert {'tools', 'resources', 'prompts'} <= set(capabilities), capabilities
+    assert client.call('resources/list', {}) == {'resources': []}
+    assert client.call('resources/templates/list', {}) == {'resourceTemplates': []}
     tools = client.call('tools/list', {})['tools']
     client._tool_inventory = tools
     expected = json.loads((ROOT / f'manifest/contracts/v4/baseline/{key}.json').read_text('utf-8'))
@@ -414,8 +431,7 @@ def plc_transports(args, temp, counts):
             with first.request('/mcp/health', auth=False) as response:
                 health = json.load(response)
                 assert health['releaseKey'] == key
-                if full:
-                    assert health['fileVersion'] and health['profile'] == 'full-engine'
+                assert health['fileVersion'] and health['profile'] == 'plc-foundation'
             try:
                 first.request('/mcp/ready', auth=False)
                 raise AssertionError('Unauthenticated readiness accepted')
@@ -510,7 +526,7 @@ def main():
             (temp / ('data-' + key)).mkdir()
             logfile = temp / f'{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile), TIA_MCP_DATA_DIRECTORY=str(temp / ('data-' + key)))
-            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
+            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full', '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
             with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
                 client = Stdio(command, env, stderr)
                 try:
@@ -537,7 +553,7 @@ def main():
             url = f'http://127.0.0.1:{number}'
             logfile = temp / f'http-{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile), TIA_MCP_DATA_DIRECTORY=str(temp / ('data-' + key)))
-            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
+            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full', '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
             with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
                 p = subprocess.Popen(command, env=env, cwd=temp, stderr=stderr, stdout=stderr)
                 try:

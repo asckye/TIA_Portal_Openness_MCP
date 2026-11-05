@@ -8,6 +8,27 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class HmiTagPathCatalogTests
 {
     [Fact]
+    public void Every_release_keeps_the_engine_schema_parameter_set_and_maintained_HMI_values()
+    {
+        string root = Repository.FindRoot();
+        var resource = CatalogGenerator.Generate(root)[CatalogGenerator.Resource];
+        var catalog = JsonNode.Parse(System.Xml.Linq.XDocument.Parse(resource).Descendants("data")
+            .Single(element => (string?)element.Attribute("name") == "Catalog").Element("value")!.Value)!;
+        var frozen = CatalogJson.Read(root, "reference/tool-catalog/EngineSourceExamples.json")["DeleteHmiTag"]!["arguments"]!.AsObject();
+        var maintained = CatalogJson.Read(root, "reference/tool-examples/calls.json")["profiles"]!["full-engine"]!["DeleteHmiTag"]!["arguments"]!.AsObject();
+        foreach (var release in CatalogJson.Keys)
+        {
+            var row = catalog["releases"]![release]!.AsArray().Single(item => (string?)item!["currentName"] == "DeleteHmiTag")!;
+            Assert.Equal("full-engine", (string?)row["exampleSource"]);
+            var arguments = row["arguments"]!.AsObject();
+            Assert.Equal(frozen.Select(pair => pair.Key), arguments.Select(pair => pair.Key));
+            foreach (var (key, value) in arguments)
+                Assert.True(JsonNode.DeepEquals(maintained.ContainsKey(key) ? maintained[key] : frozen[key], value), release + "/DeleteHmiTag/" + key);
+        }
+        Assert.Equal("exact", (string?)frozen["tagTablePath"]);
+    }
+
+    [Fact]
     public void Current_arguments_use_the_library_without_mutating_frozen_evidence()
     {
         var source = new JsonObject { ["tagTablePath"] = "exact", ["tagName"] = "Ready", ["dryRun"] = false };

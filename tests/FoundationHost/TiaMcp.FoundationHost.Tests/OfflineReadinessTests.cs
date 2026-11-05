@@ -59,7 +59,7 @@ public sealed class OfflineReadinessTests
         var shared = LegacyHostToolRegistry.Create(worker, release, false, readinessProvider: Unready, hostPorts: false);
         using var pipeline = new Pipeline(release, worker, shared);
         var target = pipeline.AllTools.Single(tool => tool.ProtocolTool.Name == name);
-        var usage = ToolUsageCatalog.Describe(name, release, release is "20" or "21" ? "full-engine" : "plc-foundation",
+        var usage = ToolUsageCatalog.Describe(name, release, "plc-foundation",
             target.ProtocolTool.Description!, JsonNode.Parse(target.ProtocolTool.InputSchema.GetRawText())!.AsObject());
         var arguments = usage["example"]!["request"]!["params"]!["arguments"]!.DeepClone().AsObject();
         fixture.Bind(name, arguments);

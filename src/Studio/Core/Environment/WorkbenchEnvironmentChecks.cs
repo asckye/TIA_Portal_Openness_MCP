@@ -64,8 +64,8 @@ namespace TiaOpenness.Core.Environment
                 yield return Path.Combine(directory, "worker", "TiaMcp.Adapters.Contracts.dll");
                 yield return Path.Combine(directory, "worker", "TiaMcp.Adapter." + key + ".dll");
                 yield return TiaOpenness.Shared.BundleLayout.WorkerPath(root, key) + ".config";
-                // V20/V21 hosts keep the runtime assembly next to them; delivery-files.json requires it for these two releases.
-                if (release.IsFullEngine) yield return Path.Combine(directory, "TiaMcp.Runtime.dll");
+                // Every release loads the same host dependency graph, including the runtime assembly.
+                yield return Path.Combine(directory, "TiaMcp.Runtime.dll");
             }
         }
     }

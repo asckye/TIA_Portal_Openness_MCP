@@ -21,7 +21,12 @@ public sealed class ToolCountGeneratorTests
         {
             Assert.Contains("`tools/list`", output);
             foreach (var key in CatalogJson.Keys)
-                Assert.Contains("| " + data.Rosters[key].Count + " |", output);
+            {
+                var lite = TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(key)
+                    .Count(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"));
+                Assert.InRange(lite, 1, 128);
+                Assert.Contains("| " + data.Rosters[key].Count + " | " + lite + " |", output);
+            }
             Assert.Equal(output, ToolCountGenerator.Replace(output,
                 output.Split(ToolCountGenerator.Begin + "\n")[1].Split("\n" + ToolCountGenerator.End)[0], path));
         }

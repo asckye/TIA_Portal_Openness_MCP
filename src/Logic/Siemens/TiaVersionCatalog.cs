@@ -20,10 +20,7 @@ namespace TiaMcp.Versioning
         public bool IsRunnable { get; private set; }
         public string RuntimeDirectory { get; private set; }
         public string EngineOutputDirectory { get; private set; }
-        public bool IsFullEngine { get { return MajorVersion >= 20; } }
         public string HostKind { get { return "foundation"; } }
-        public string WorkerKind { get { return "plc"; } }
-        public string SupportState { get { return IsFullEngine ? "existing-engine" : "plc-foundation"; } }
         public string ApiVersion { get { return Key == "14sp1" ? "14.0.1.0" : Key == "15.1" ? "15.1.0.0" : Key + ".0.0.0"; } }
         public string ApiFolder { get { return Key == "14sp1" ? "V14 SP1" : "V" + Key; } }
         public string InstallFolder { get { return "Portal V" + (Key == "14sp1" ? "14" : Key == "15.1" ? "15_1" : Key); } }
@@ -53,7 +50,7 @@ namespace TiaMcp.Versioning
     /// Shared by the engines and configurator. Precise keys intentionally distinguish
     /// V14 SP1 and V15.1; original V14 and V15 are outside the target scope.
     /// Legacy entries use the PLC foundation host and one exact-release worker.
-    /// Existing-engine means a build target exists, not that every tool was validated.
+    /// EngineOutputDirectory records the retained compatibility build target, not native validation.
     /// Keep this file compatible with the configurator's .NET Framework C# 5 compiler.
     /// </summary>
 #if TIA_ADAPTER_INTERNAL_VERSIONING

@@ -18,9 +18,9 @@ public sealed class HmiExampleSelfCheckTests
         while (!File.Exists(Path.Combine(root.FullName, "CLAUDE.md"))) root = root.Parent ?? throw new Exception("Repository not found.");
         var directory = Path.Combine(root.FullName, "reference/tool-examples");
         // Parse every maintained example file, even when it has no calls for this release.
-        var files = Directory.GetFiles(directory, "*.json", SearchOption.AllDirectories).ToDictionary(p => Path.GetRelativePath(directory, p).Replace('\\', '/'), p => JsonNode.Parse(File.ReadAllText(p))!);
-        var profile = release is "20" or "21" ? "full-engine" : "plc-foundation";
-        var calls = files["calls.json"]!["profiles"]![profile]!.AsObject();
+        var files = Directory.GetFiles(directory, "*.json", SearchOption.AllDirectories)
+            .ToDictionary(p => Path.GetRelativePath(directory, p).Replace('\\', '/'), p => JsonNode.Parse(File.ReadAllText(p))!);
+        var calls = files["calls.json"]!["profiles"]!.AsObject();
         var types = files["hmi-item-types.json"]!["releases"]?[release]?.AsArray().Select(v => (string)v!).ToHashSet(StringComparer.Ordinal) ?? [];
         using var worker = new MetadataWorker();
         var catalog = new FoundationCatalog(release, Foundation.LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false));
@@ -29,8 +29,10 @@ public sealed class HmiExampleSelfCheckTests
         foreach (var row in ToolUsageCatalog.ProfileEntries(release).OfType<JsonObject>())
         {
             var name = (string)row["currentName"]!;
-            if (!catalog.All.TryGetValue(name, out var descriptor) || descriptor.Classification?.Domain.StartsWith("HMI", StringComparison.Ordinal) != true) continue;
-            if (calls[name] is not JsonObject example) { errors.Add(name + ": missing maintained example"); continue; }
+            if (!catalog.All.TryGetValue(name, out var descriptor) || descriptor.Classification?.Domain.StartsWith("HMI", StringComparison.Ordinal) != true)
+                continue;
+            var source = (string)row["exampleSource"]!;
+            if (calls[source]?[name] is not JsonObject example) { errors.Add(name + ": missing maintained schema example " + source); continue; }
             var arguments = example["arguments"]!.AsObject();
             Check(name + "/maintained", arguments, descriptor.Tool.InputSchema);
             Check(name + "/served", row["arguments"]!.AsObject(), descriptor.Tool.InputSchema);
@@ -48,7 +50,7 @@ public sealed class HmiExampleSelfCheckTests
                     Check(name + "/" + operation.Key, merged, descriptor.Tool.InputSchema);
                 }
         }
-        foreach (var sequence in files["sequences.json"]!.AsArray().Concat(ToolUsageCatalog.Sequences(engineSource: release is "20" or "21")))
+        foreach (var sequence in files["sequences.json"]!.AsArray().Concat(ToolUsageCatalog.Sequences(engineSource: true)))
         {
             if (sequence!["releaseKeys"] is JsonArray releases && !releases.Any(v => (string?)v == release)) continue;
             foreach (var step in sequence["steps"]!.AsArray())

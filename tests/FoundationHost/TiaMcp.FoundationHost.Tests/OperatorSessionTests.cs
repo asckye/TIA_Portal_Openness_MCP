@@ -30,6 +30,27 @@ public sealed class OperatorSessionTestsPlc
         using (new Fixture("20")) { }
         Assert.Equal("offline session fixture", File.ReadAllText(adapter));
     }
+    [Theory, InlineData("14sp1"), InlineData("19"), InlineData("21")]
+    public async Task Lite_ai_host_exposes_the_full_roster_only_to_its_operator(string release)
+    {
+        using var fixture = new Fixture(release, "lite");
+        using var session = await EngineHost.CreateHostSessionForTest(fixture.Options, false, source => source,
+            CancellationToken.None);
+        await using var ai = await Peer.Ai(session);
+        using var registration = fixture.Register(); using var membership = registration.Register(session);
+        await using var panel = await Peer.Operator(registration, session.SessionKey);
+        var rows = ToolUsageCatalog.ProfileEntries(release);
+        var full = rows.Select(row => (string)row!["currentName"]!).Order(StringComparer.Ordinal).ToArray();
+        var lite = rows.Where(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"))
+            .Select(row => (string)row!["currentName"]!).Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(full, (await panel.ListTools()).Select(tool => tool.Name).Order(StringComparer.Ordinal));
+        Assert.Equal(lite, (await ai.ListTools()).Select(tool => tool.Name).Order(StringComparer.Ordinal));
+        Assert.Equal(full, session.OperatorTools.Select(tool => tool.ProtocolTool.Name).Order(StringComparer.Ordinal));
+        Assert.Equal(lite, session.Tools.Select(tool => tool.ProtocolTool.Name).Order(StringComparer.Ordinal));
+        Assert.Contains("GeneratePlcSourceFromBlocks", full);
+        Assert.DoesNotContain("GeneratePlcSourceFromBlocks", lite);
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Operator_stream_shares_one_existing_worker_and_disconnect_state(string release)
     {
@@ -212,7 +233,7 @@ public sealed class OperatorSessionTestsPlc
         internal readonly Options Options;
         private readonly string previousEngineRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         private readonly string? priorLease = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
-        internal Fixture(string release)
+        internal Fixture(string release, string profile = "full")
         {
             Directory.CreateDirectory(DirectoryPath); Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", DirectoryPath);
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
@@ -221,7 +242,7 @@ public sealed class OperatorSessionTestsPlc
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             Options = new Options { ReleaseKey = release, WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, BundledWorker = false,
                 BundleRoot = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), NativeEnabled = true,
-                Profile = "full" };
+                Profile = profile };
             BundleLayout.Initialize(AppContext.BaseDirectory, Options.BundleRoot);
         }
         // BundleLayout.Initialize selects the bundle process-wide (AppDomain data and TIA_MCP_BUNDLE_ROOT); restore both.

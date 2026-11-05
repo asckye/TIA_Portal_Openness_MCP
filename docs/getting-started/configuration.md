@@ -104,17 +104,17 @@ worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 280 | 不适用 |
-| V15.1 | 320 | 不适用 |
-| V16 | 349 | 不适用 |
-| V17 | 372 | 不适用 |
-| V18 | 398 | 不适用 |
-| V19 | 474 | 不适用 |
-| V20 | 497 | 81 |
-| V21 | 512 | 84 |
+| V14 SP1 | 280 | 89 |
+| V15.1 | 320 | 92 |
+| V16 | 349 | 93 |
+| V17 | 372 | 93 |
+| V18 | 398 | 95 |
+| V19 | 474 | 95 |
+| V20 | 497 | 98 |
+| V21 | 512 | 101 |
 <!-- generated:tool-counts:end -->
 
-V20/V21 默认使用 lite 档，可用 `FindTools` / `CallTool` 访问其余工具，或向宿主传入 `--profile full`。V14 SP1–V19 发布其全部注册工具，也提供发现、桥接和批处理入口。所有版本都用 `GetToolUsage` 读取自己的参数、语言示例和调用序列。修改配置后重启服务与客户端，刷新目录缓存。
+八个版本默认使用 lite 档，可用 `FindTools` / `CallTool` 访问其余工具，或向宿主传入 `--profile full`。八版共用 `plc-foundation` 展示名称，提供发现、桥接和批处理入口。所有版本都用 `GetToolUsage` 读取自己的参数、语言示例和调用序列。修改配置后重启服务与客户端，刷新目录缓存。
 
 Foundation 的单项软件工具接受工程树中的精确 `softwarePath`，也接受唯一的 PLC/device 别名；`plc` 参数使用同一规则。`table` 可传 `ListPlcTagTables` 返回的精确转义路径，或唯一的单段原始 `Name`（包含中文名称）。批量块/类型导出和目录导入保留精确软件路径及组路径要求。`ExportPlcBlock`、`ExportPlcBlocks` 与 `ExportPlcTypes` 接受已有目标目录；`ExportPlcBlock` 的实际输出文件从 `data.outputFile` 读取。变量表等单项 XML 导出的路径类型不同，按当前版本的 `GetToolUsage` 核对。
 

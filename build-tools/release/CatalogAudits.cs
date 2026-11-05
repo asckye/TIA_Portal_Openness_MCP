@@ -124,6 +124,8 @@ internal static class CatalogAudits
     internal static JsonObject UsageFromRecords(string root, JsonObject matrix, JsonNode catalog, JsonArray records)
     {
         var releases = new JsonObject();
+        var runtime = JsonNode.Parse(XDocument.Load(Path.Combine(root, CatalogGenerator.Resource)).Root!.Elements("data")
+            .Single(element => (string?)element.Attribute("name") == "Catalog").Element("value")!.Value)!;
         foreach (var record in records)
         {
             var key = Text(record!["releaseKey"]); Require(!record["exampleCallsExecuted"]!.GetValue<bool>(), "Native usage calls must not execute");
@@ -132,8 +134,10 @@ internal static class CatalogAudits
             var schemas = record["inputSchemas"]?.AsObject() ?? throw new ReleaseException("Actual served input schemas required: " + key);
             Require(Set(schemas.Select(p => p.Key)).SetEquals(Strings(matrix[key]!["tools"])), "Usage schema roster mismatch: " + key);
             ValidateUsageExamples(catalog, schemas, key, record["tools"]!.AsArray()
-                .ToDictionary(t => Text(t!["toolName"]), t => Text(t!["usageProfile"])));
-            var row = new JsonObject(); foreach (var p in record.AsObject().Where(p => p.Key is not "profile" and not "transport" and not "inputSchemas")) row[p.Key] = p.Value?.DeepClone(); releases[key] = row;
+                .ToDictionary(t => Text(t!["toolName"]), t => Text(t!["usageProfile"])),
+                runtime["releases"]![key]!.AsArray().ToDictionary(row => Text(row!["currentName"]), row => Text(row!["exampleSource"])));
+            var row = new JsonObject(); foreach (var p in record.AsObject().Where(p => p.Key is not "profile" and not "transport" and not "inputSchemas"))
+                row[p.Key] = p.Value?.DeepClone(); releases[key] = row;
         }
         Require(Set(releases.Select(p => p.Key)).SetEquals(matrix.Select(p => p.Key)), "Usage release coverage differs"); var union = Set(matrix.SelectMany(p => Strings(p.Value!["tools"]))); Require(union.SetEquals(catalog["tools"]!.AsObject().Select(p => p.Key)), "Missing or obsolete usage mapping");
         return new JsonObject { ["basis"] = "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
@@ -141,9 +145,10 @@ internal static class CatalogAudits
             ["languages"] = new JsonArray(catalog["languages"]!.AsArray().Select(l => Copy(l!["id"]!)).ToArray()), ["relatedOfficialPatternMappings"] = catalog["tools"]!.AsObject().Count(p => Text(p.Value!["relationship"]) == "related-api-patterns"), ["noDirectVendoredExampleMappings"] = catalog["tools"]!.AsObject().Count(p => Text(p.Value!["relationship"]) == "no-direct-official-example"), ["sources"] = Copy(catalog["sources"]!), ["nativeTiaExecuted"] = false, ["releases"] = releases };
     }
 
-    internal static void ValidateUsageExamples(JsonNode catalog, JsonObject schemas, string release, IReadOnlyDictionary<string, string>? usageProfiles = null)
+    internal static void ValidateUsageExamples(JsonNode catalog, JsonObject schemas, string release, IReadOnlyDictionary<string, string>? usageProfiles = null,
+            IReadOnlyDictionary<string, string>? exampleSources = null)
     {
-        var profile = release is "20" or "21" ? "full-engine" : "plc-foundation";
+        const string profile = "plc-foundation";
         var problems = new List<string>();
         void Check(string name, JsonObject arguments, string location)
         {
@@ -155,12 +160,19 @@ internal static class CatalogAudits
         JsonObject Bound(JsonNode arguments) => JsonNode.Parse(arguments.ToJsonString()
             .Replace("{release}", release, StringComparison.Ordinal).Replace("{major}", release is "14sp1" ? "14" : release is "15.1" ? "15" : release, StringComparison.Ordinal)
             .Replace("{extension}", Text(catalog["calls"]!["releaseExtensions"]![release]), StringComparison.Ordinal))!.AsObject();
+        foreach (var name in schemas.Select(pair => pair.Key))
+        {
+            var source = exampleSources?.GetValueOrDefault(name) ?? profile;
+            Require(catalog["calls"]!["profiles"]?[source]?[name] is JsonObject, "Missing served schema example: " + release + "/" + name);
+        }
         foreach (var sourceProfile in catalog["calls"]!["profiles"]!.AsObject())
         foreach (var pair in sourceProfile.Value!.AsObject())
         {
             if (!schemas.ContainsKey(pair.Key)) continue; // A union profile also includes tools from other releases.
             var servedProfile = usageProfiles?.GetValueOrDefault(pair.Key);
-            if (sourceProfile.Key != (string.IsNullOrEmpty(servedProfile) ? profile : servedProfile)) continue;
+            if (!string.IsNullOrEmpty(servedProfile)) Require(servedProfile == profile, "Usage profile differs: " + release + "/" + pair.Key);
+            // Select the maintained variant by the generated tool/schema mapping, never the release family.
+            if (sourceProfile.Key != (exampleSources?.GetValueOrDefault(pair.Key) ?? profile)) continue;
             var entry = pair.Value!; var args = Bound(entry["arguments"]!);
             ToolUsageGenerator.ValidateHints(entry, schemas[pair.Key]!["properties"]!.AsObject().Select(p => p.Key), release + "/" + pair.Key);
             Check(pair.Key, args, sourceProfile.Key + "/" + pair.Key);

@@ -167,10 +167,10 @@ internal static class DeveloperChecks
             var schema = entry.GetProperty("inputSchema");
             var properties = schema.GetProperty("properties").EnumerateObject().Select(parameter => parameter.Name).ToArray();
             var profile = profileRows[name];
-            bool shared = profile["profiles"]!.AsArray().Any(value => (string?)value == "plc-foundation");
+            bool shared = (string?)profile["exampleSource"] == "plc-foundation";
             var usage = (JsonObject)usageType.GetMethod("Describe", All)!.Invoke(null, new object?[] {
-                name, supplementary.Contains(name) ? "20" : release, shared ? "plc-foundation" : "full-engine", description,
-                JsonNode.Parse(schema.GetRawText())!.AsObject(), null, null, "", productNames, null, null
+                name, supplementary.Contains(name) ? "20" : release, "plc-foundation", description,
+                JsonNode.Parse(schema.GetRawText())!.AsObject(), null, null, "", productNames, null, null, null
             })!;
             var example = usage["example"]!["request"]!["params"]!["arguments"]!.AsObject();
             Check(!example.Select(pair => pair.Key).Except(properties).Any()
@@ -278,7 +278,7 @@ internal static class DeveloperChecks
             if (process.ExitCode != 0) throw new InvalidOperationException("Foundation product catalog failed: " + error);
             var product = JsonDocument.Parse(text);
             if (product.RootElement.GetProperty("releaseKey").GetString() != release
-                || product.RootElement.GetProperty("profile").GetString() != "full-engine")
+                || product.RootElement.GetProperty("profile").GetString() != "plc-foundation")
             { product.Dispose(); throw new InvalidDataException("Guard roster requires the matching full product catalog."); }
             return product;
         }

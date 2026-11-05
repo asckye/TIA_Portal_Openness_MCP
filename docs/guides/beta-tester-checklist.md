@@ -9,7 +9,7 @@
 - 按[从 3.3 迁移到 4.0](migrate-3.3-to-4.0.md) 把预发布包解压到新目录，与 3.3 并排安装。
 - 只用工程副本。不要连接生产 PLC；在线、下载类检查只用 PLCSIM Advanced 或测试硬件，并自行判断风险。
 - 写操作先预览（`dryRun: true` 或工具的预览模式），核对后再实际执行并在工作台批准。
-- 调用不熟悉的工具前，先用 `GetToolUsage(toolName, operation)` 取得当前版本的参数和示例。V20/V21 默认是 lite 档，不在列表中的工具用 `FindTools` 查找、`CallTool` 调用。
+- 调用不熟悉的工具前，先用 `GetToolUsage(toolName, operation)` 取得当前版本的参数和示例。八版默认是 lite 档，不在列表中的工具用 `FindTools` 查找、`CallTool` 调用，或用 `--profile full` 列出完整目录；工作台操作员会话始终使用完整目录。
 - 每次测试记下：包文件名和 SHA-256、TIA 版本及已装 Update、发布键（`14sp1`–`21`）、MCP 客户端、审批开或关。
 
 ## 要保留的证据

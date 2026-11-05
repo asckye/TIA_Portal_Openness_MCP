@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import queue
+import re
 import secrets
 import shutil
 import socket
@@ -16,6 +17,7 @@ import time
 import urllib.error
 import urllib.request
 import sys
+import xml.etree.ElementTree as ET
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mcp_results import envelope, successful
 from offline_fixtures import fixture_directory
@@ -42,11 +44,14 @@ def require(condition, message):
         raise AssertionError(message)
 
 
-def sdk_only_installation(public_api: Path, major: int, temp_root: Path) -> Path:
+def sdk_only_installation(public_api: Path, major, temp_root: Path) -> Path:
     """Create a TIA-free installation layout so the real EXE can resolve SDK assemblies."""
-    installation = temp_root / "sdk-only-fixtures" / f"Portal V{major}"
-    destination = installation / "PublicAPI" / f"V{major}"
-    if major == 21:
+    release = str(major)
+    install_suffix = {'14sp1': '14', '15.1': '15_1'}.get(release, release)
+    api_suffix = '14 SP1' if release == '14sp1' else release
+    installation = temp_root / "sdk-only-fixtures" / f"Portal V{install_suffix}"
+    destination = installation / "PublicAPI" / f"V{api_suffix}"
+    if release == '21':
         destination /= "net48"
     require(public_api.is_dir(), f"V{major} PublicAPI directory is missing: {public_api}")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -60,16 +65,50 @@ def self_test():
         public_api = root / "public-api"
         public_api.mkdir()
         (public_api / "Siemens.Engineering.dll").write_bytes(b"test assembly")
-        for major in (20, 21):
+        for major in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21'):
             installation = sdk_only_installation(public_api, major, root / f"v{major}")
-            api = installation / "PublicAPI" / f"V{major}"
-            if major == 21:
+            api = installation / "PublicAPI" / ("V14 SP1" if major == "14sp1" else f"V{major}")
+            if major == "21":
                 api /= "net48"
             require((api / "Siemens.Engineering.dll").read_bytes() == b"test assembly",
                     f"V{major} SDK-only fixture did not copy the public API")
             require(not list(installation.rglob("*.exe")),
                     f"V{major} SDK-only fixture unexpectedly contains an executable")
-    print("PASS SDK-only fixture layouts for V20/V21 contain copied API assemblies and no TIA executable")
+    print("PASS SDK-only fixture layouts for all eight releases contain copied API assemblies and no TIA executable")
+
+
+def prompt_requirements(root):
+    """Derive dependencies from the prompt source, including shared rules and forwarding methods."""
+    from engine_sources import block_after
+    source = (root / 'src/EngineHost/ModelContextProtocol/McpPrompts.cs').read_text(encoding='utf-8-sig')
+    universe = set()
+    for path in (root / 'manifest/contracts/v4/baseline').glob('*.json'):
+        universe.update(tool['name'] for tool in json.loads(path.read_text(encoding='utf-8'))['tools'])
+    shared = set(re.findall(r'\b[A-Z][A-Za-z0-9]+\b', block_after(source, 'private static string WithV4Rules'))) & universe
+    matches = list(re.finditer(r'\[McpServerPrompt\(Name = "([^"]+)"\).*?public static string (\w+)\(', source, re.S))
+    bodies = {match[2]: source[match.end():matches[index + 1].start() if index + 1 < len(matches) else len(source)]
+              for index, match in enumerate(matches)}
+    required = {name: set(re.findall(r'\b[A-Z][A-Za-z0-9]+\b', text)) & universe | shared
+                for name, text in bodies.items()}
+    for _ in bodies:
+        for name, text in bodies.items():
+            for forwarded in set(re.findall(r'\b(\w+)\(', text)) & bodies.keys():
+                required[name].update(required[forwarded])
+    return {match[1]: required[match[2]] for match in matches}
+
+
+def check_prompts(rpc, names, root):
+    requirements = prompt_requirements(root)
+    expected = {name for name, tools in requirements.items() if tools <= names}
+    actual = rpc('prompts/list')['result']['prompts']
+    require(len(actual) == len({prompt['name'] for prompt in actual}), 'Duplicate prompt names')
+    require({prompt['name'] for prompt in actual} == expected, 'Prompt inventory differs from source dependencies')
+    for prompt in actual:
+        arguments = {argument['name']: (False if argument['name'] == 'preservePath' else 1 if argument['name'] in ('fbNumber', 'dbNumber') else 'fixture')
+                     for argument in prompt.get('arguments', [])}
+        reply = rpc('prompts/get', params={'name': prompt['name'], 'arguments': arguments})
+        require('error' not in reply and reply['result']['messages'], 'Registered prompt failed to render: ' + prompt['name'] + ': ' + str(reply))
+    return len(actual)
 
 
 def foundation_host_executable(exe=None):
@@ -101,7 +140,7 @@ def host_command(exe, portal_root, major, transport, profile, public_api=None, *
         exe = foundation_host_executable(exe)
     args = [str(exe), '--bundle-root', str(bundle_root or Path(__file__).resolve().parents[2]),
             '--release-key', str(major)]
-    if plc_worker is not None and profile in ('full', 'lite'):
+    if profile in ('full', 'lite'):
         args += ['--profile', profile]
     if plc_worker is not None:
         require(public_api is not None, 'PLC worker requires its PublicAPI')
@@ -260,7 +299,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exe', required=True, type=Path)
     parser.add_argument('--portal-root', required=True, type=Path)
-    parser.add_argument('--major', required=True, type=int, choices=(20, 21))
+    parser.add_argument('--major', required=True, choices=('14sp1', '15.1', '16', '17', '18', '19', '20', '21'))
     parser.add_argument('--host-harness', type=Path, help='Compatibility argument; MCP always runs in FoundationHost')
     parser.add_argument('--public-api', type=Path)
     parser.add_argument('--plc-worker', type=Path)
@@ -289,7 +328,7 @@ def run(args):
                     'capabilities': {}, 'clientInfo': {'name': 'resource-discovery-test', 'version': '1'}})
                 require('result' in initialized, 'Initialize failed')
                 capabilities = initialized['result']['capabilities']
-                require('resources' in capabilities, 'Resource capability is missing')
+                require({'tools', 'resources', 'prompts'} <= set(capabilities), 'Discovery capability is missing')
                 require(not capabilities['resources'].get('subscribe') and
                         not capabilities['resources'].get('listChanged'),
                         'Unsupported resource subscriptions/notifications advertised')
@@ -305,6 +344,7 @@ def run(args):
                         passed += 1
                 tools = rpc('tools/list')['result']['tools']
                 require(any(tool['name'] == 'GetSessionState' for tool in tools), 'Tools disappeared')
+                check_prompts(rpc, {row['currentName'] for row in json.loads(ET.parse(Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx').find(".//data[@name='Catalog']/value").text)['releases'][str(args.major)]}, Path(__file__).resolve().parents[2])
                 instructions = initialized['result'].get('instructions', '')
                 require('GetToolUsage' in instructions and len(instructions) < 1200,
                         'Initialization should point to the unified library concisely')
@@ -316,8 +356,8 @@ def run(args):
                     decoded = envelope(reply)
                     require(reply['result'].get('structuredContent') == decoded and decoded.get('schemaVersion') == 4 and decoded.get('ok'),
                             'Usage retrieval must return the matching V4 envelope')
-                    if decoded.get('schemaVersion') == 4 and decoded.get('data', {}).get('export') and 'content' in decoded['data']:
-                        pieces = [decoded['data']['content']]
+                    if decoded.get('schemaVersion') == 4 and decoded.get('data', {}).get('export') and ('text' in decoded['data'] or 'content' in decoded['data']):
+                        pieces = [decoded['data'].get('text', decoded['data'].get('content'))]
                         handle = decoded['data']['export']['id']
                         offset = decoded['meta']['paging']['nextOffset']
                         while offset is not None:

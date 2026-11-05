@@ -140,11 +140,16 @@ namespace TiaMcp.Engine.Tests
             }
             foreach (var logical in new[] { "Tags", "TagTables", "Connections", "SystemTags" })
             {
-                check(OpennessReleaseContract.For("19").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("19").ResolveUnifiedCollection(logical, new[] { logical, "Hmi" + logical }) == logical, "documented V19 collection without alias guessing " + logical);
-                check(OpennessReleaseContract.For("20").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("20").ResolveUnifiedCollection(logical, new[] { logical }) == logical, "documented V20 collection " + logical);
-                check(OpennessReleaseContract.For("21").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("21").ResolveUnifiedCollection(logical, new[] { logical }) == logical, "documented V21 collection " + logical);
+                check(OpennessReleaseContract.For("19").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("19")
+                        .ResolveUnifiedCollection(logical, new[] { logical, "Hmi" + logical }) == logical, "documented V19 collection without alias guessing "
+                        + logical);
+                check(OpennessReleaseContract.For("20").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("20")
+                        .ResolveUnifiedCollection(logical, new[] { logical }) == logical, "documented V20 collection " + logical);
+                check(OpennessReleaseContract.For("21").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("21")
+                        .ResolveUnifiedCollection(logical, new[] { logical }) == logical, "documented V21 collection " + logical);
             }
-            try { OpennessReleaseContract.For("19").ResolveUnifiedCollection("Tags", new[] { "HmiTags" }); check(false, "undocumented Unified alias refused"); }
+            try { OpennessReleaseContract.For("19").ResolveUnifiedCollection("Tags", new[] { "HmiTags" }); check(false, "undocumented Unified alias refused");
+            }
             catch (MissingMemberException) { check(true, "undocumented Unified alias refused"); }
             try { OpennessReleaseContract.For("19").ResolveUnifiedCollection("Tags", Array.Empty<string>()); check(false, "missing Unified properties not interpreted as empty collections"); }
             catch (MissingMemberException) { check(true, "missing Unified properties not interpreted as empty collections"); }
@@ -202,7 +207,7 @@ namespace TiaMcp.Engine.Tests
             foreach (var key in keys.Take(6))
             {
                 var entry = TiaVersionCatalog.Get(key);
-                check(entry.IsRunnable && !entry.IsFullEngine && entry.SupportState == "plc-foundation" && entry.RuntimeDirectory == "v" + key && entry.EngineOutputDirectory == null,
+                check(entry.IsRunnable && entry.HostKind == "foundation" && entry.RuntimeDirectory == "v" + key && entry.EngineOutputDirectory == null,
                     key + " uses an exact PLC foundation runtime");
                 check(TiaVersionCatalog.RequireRunnable(key).Key == key, key + " can select its independent runtime");
                 check(Rejects(() => CliOptions.ParseArgs(new[] { "--tia-version", key })), key + " CLI fails closed");

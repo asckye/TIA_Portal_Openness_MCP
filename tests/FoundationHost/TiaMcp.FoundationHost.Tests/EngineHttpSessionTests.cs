@@ -220,7 +220,7 @@ public sealed class EngineHttpSessionTestsPlc
     {
         using var host = await Fixture.Start("21"); using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { BaseAddress = new Uri(host.Url) };
         var health = await client.GetFromJsonAsync<JsonObject>("/mcp/health");
-        Assert.Equal("full-engine", (string?)health!["profile"]); Assert.False(string.IsNullOrWhiteSpace((string?)health["fileVersion"]));
+        Assert.Equal("plc-foundation", (string?)health!["profile"]); Assert.False(string.IsNullOrWhiteSpace((string?)health["fileVersion"]));
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/mcp/ready")).StatusCode);
         client.DefaultRequestHeaders.Authorization = new("Bearer", "fixture-key");
         var ready = await client.GetFromJsonAsync<JsonObject>("/mcp/ready");

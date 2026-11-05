@@ -14,6 +14,14 @@ namespace TiaMcp.FoundationHost;
 
 internal static class SharedReleaseHost
 {
+    internal static System.Text.Json.Nodes.JsonObject CatalogDocument(string release, IEnumerable<Tool> tools,
+        System.Text.Json.Nodes.JsonArray behaviorCapabilities, System.Text.Json.Nodes.JsonObject callDiscipline)
+        => new() {
+            ["releaseKey"] = release, ["profile"] = ReleaseCatalogData.Releases[release].ProfileName,
+            ["behaviorCapabilities"] = behaviorCapabilities.DeepClone(), ["callDiscipline"] = callDiscipline.DeepClone(),
+            ["tools"] = System.Text.Json.JsonSerializer.SerializeToNode(tools, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)
+        };
+
     internal static Task<int> Run(HostOptions options, HostFileLogger logger, CancellationToken stoppingToken = default)
         => RunCore(options, logger, null, stoppingToken);
 
@@ -46,12 +54,8 @@ internal static class SharedReleaseHost
                 HostToolsListWriter.Write(options, pipeline);
                 return 0;
             }
-            var catalog = new System.Text.Json.Nodes.JsonObject { ["releaseKey"] = options.ReleaseKey, ["profile"] = data.ProfileName };
-            if (!data.CatalogCallDiscipline) catalog["nativeAcceptance"] = "NOT RUN";
-            catalog["behaviorCapabilities"] = pipeline.BehaviorCapabilities.DeepClone();
-            if (data.CatalogCallDiscipline) catalog["callDiscipline"] = System.Text.Json.JsonSerializer.SerializeToNode(McpServer.SchemaHintStatistics());
-            catalog["tools"] = System.Text.Json.JsonSerializer
-                .SerializeToNode(pipeline.Tools.Select(t => t.ProtocolTool), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+            var catalog = CatalogDocument(options.ReleaseKey, pipeline.Tools.Select(t => t.ProtocolTool),
+                pipeline.BehaviorCapabilities, McpServer.SchemaHintStatistics());
             Console.WriteLine(catalog.ToJsonString(global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             return 0;
         }
@@ -132,7 +136,7 @@ internal static class SharedReleaseHost
             var services = FoundationHostPorts.CreateServices(worker, options.ReleaseKey, readiness, options.ApiDirectory);
             LocalStabilityTelemetry.StartupStage("session.services.created");
             var pipeline = new EngineHostPipeline("", options.WorkerExe, options.ReleaseKey, services,
-                data.HasLite ? options.Profile : "full", shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest);
+                options.Profile, shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest);
             LocalStabilityTelemetry.StartupStage("session.pipeline.created");
             services.Roster = () => roster!;
             services.ResetExports = pipeline.ResetExports;

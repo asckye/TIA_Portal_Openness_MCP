@@ -124,7 +124,7 @@
 
 #### 工作台控制通道
 
-- 8 个工具属于 `Workbench` 域，八版相同，V20/V21 的 full 与 lite 档都包含：`ShowWorkbenchPage`、`ShowWorkbenchBlock`、`ShowWorkbenchCall`、`ShowWorkbenchLadder`、`ShowWorkbenchAtlas`、`PrefillWorkbenchForm` 为 `UI`，`GetWorkbenchState`、`GetWorkbenchSelection` 为 `READ`。全部登记 `WithoutTia`，可在 `--offline` 宿主上调用。
+- 8 个工具属于 `Workbench` 域，八版相同，每版的 full 与 lite 档都包含：`ShowWorkbenchPage`、`ShowWorkbenchBlock`、`ShowWorkbenchCall`、`ShowWorkbenchLadder`、`ShowWorkbenchAtlas`、`PrefillWorkbenchForm` 为 `UI`，`GetWorkbenchState`、`GetWorkbenchSelection` 为 `READ`。全部登记 `WithoutTia`，可在 `--offline` 宿主上调用。
 - 控制调用不进入 worker、Openness 通道、审批或审计链，只写调用日志和工作台控制日志；结果映射为 V4 信封，`behaviorPolicy=not-applicable`，超时和失败都不锁会话。
 - 协议操作是封闭枚举（`display.page`、`display.block`、`display.call`、`display.ladder`、`display.atlas`、`read.state`、`read.selection`、`prefill.form`），没有审批、审批开关、服务启停或项目执行的消息；工作台端处理器只能拿到窄接口 `IWorkbenchControlSurface`。
 - 可显示的页面只有 `overview`、`blocks`、`versionControl`、`calls`、`audit`、`environment`、`log`，不含 MCP 配置页、设置和审批抽屉。预填表单是工作台源码中的封闭注册表（`inspectionRules`、`blockFilter`、`blockSelection`、`connectProject`、`exportBlocks`、`importBlocks`），每个表单的执行去向只能是“只影响界面”或“经 MCP 工具”；预填成功后仍等待人保留或清除。
@@ -186,7 +186,7 @@
 
 | 发布 | 可执行文件 | 组成 |
 |---|---|---|
-| V14 SP1、V15.1、V16–V19 | `runtime/v<发布键>/TiaMcp.FoundationHost.exe` | FoundationHost 与 PLC worker |
+| V14 SP1、V15.1、V16–V19 | `runtime/v<发布键>/TiaMcp.FoundationHost.exe` | FoundationHost 与 PLC worker；lite 与 full 两档目录 |
 | V20、V21 | `runtime/v<发布键>/TiaMcp.FoundationHost.exe` | FoundationHost 与 PLC worker；lite 与 full 两档目录 |
 | 工作台 | 包根 `TiaOpenness.exe` 启动 `runtime/studio/TiaOpenness.exe` | 一个窗口中的项目操作与 MCP 配置；共享 MCP 会话 |
 
@@ -203,7 +203,7 @@ runtime/v<发布键>/        （八个发布键相同）
 - 每个运行目录的依赖和 `worker/` 必须放在一起；net10 与 net48 依赖分目录，不能混放。V14 SP1 与 V15.1 保留准确的发布键；原版 V14、V15 不在支持范围。
 - `runtime/dotnet` 是随包的 .NET 10 运行时（基础、ASP.NET Core 与 Windows Desktop），FoundationHost 和工作台优先加载；PLC worker 需要 .NET Framework 4.8。只运行 AI 的电脑也保留完整交付包。对应版本的 Siemens PublicAPI 程序集来自已安装的 TIA Portal，不随包分发。
 - 宿主用 EXE 旁的 `release-key.txt` 选择并核对发布键（`--release-key <发布键>` 须与之一致），从 `BundleLayout` 定位 `worker/TiaMcp.PlcWorker.<发布键>.exe`；显式 `--worker-exe` 选择开发 worker。宿主自己生成工具目录，交付包不含引擎程序与 `tool-catalog.json`。
-- 宿主支持 stdio 与带鉴权的 HTTP、`--catalog`、`--public-api`、`--release-key` 和 `--profile`（默认 `lite`，也可用 `TIA_MCP_PROFILE`；只有 V20/V21 有 lite 档）。`--offline` 显式禁用原生 worker 调用；正常启动不附着 TIA，worker 在第一次调用原生工具时启动。
+- 宿主支持 stdio 与带鉴权的 HTTP、`--catalog`、`--public-api`、`--release-key` 和 `--profile`（默认 `lite`，也可用 `TIA_MCP_PROFILE`；八版均有 lite 档，展示名称统一为 `plc-foundation`）。`--offline` 显式禁用原生 worker 调用；正常启动不附着 TIA，worker 在第一次调用原生工具时启动。
 - `CallTool` 是 MCP 工具，不是命令行动词。八版宿主的命令行动词为 `doctor`、`audit verify`、`schema`、`version`、`config`、`install-plc-tools` 和 `help`。
 - 审批请求、审计和调用日志的 host 标记沿用原值：`FoundationV4Tool` 执行的工具为 `foundation`，`src/EngineHost` 的宿主流程（桥接、批次及其审批路径）为 `engine`，八版相同（`src/EngineHost/ReleaseCatalogData.cs`）。
 
@@ -214,14 +214,14 @@ runtime/v<发布键>/        （八个发布键相同）
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 280 | 不适用 |
-| V15.1 | 320 | 不适用 |
-| V16 | 349 | 不适用 |
-| V17 | 372 | 不适用 |
-| V18 | 398 | 不适用 |
-| V19 | 474 | 不适用 |
-| V20 | 497 | 81 |
-| V21 | 512 | 84 |
+| V14 SP1 | 280 | 89 |
+| V15.1 | 320 | 92 |
+| V16 | 349 | 93 |
+| V17 | 372 | 93 |
+| V18 | 398 | 95 |
+| V19 | 474 | 95 |
+| V20 | 497 | 98 |
+| V21 | 512 | 101 |
 <!-- generated:tool-counts:end -->
 
 交付包由 `prepare` 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，排除 `runtime/verification/`；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。文件清单 `manifest/multi-version-build.json` 只在暂存目录生成，不入 Git；工具范围见[版本工具矩阵](../reference/version-tools.md)。已发布的归档保留各自记录的范围。

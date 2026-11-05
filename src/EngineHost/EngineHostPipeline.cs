@@ -103,8 +103,22 @@ namespace TiaMcp.FoundationHost
         }
         // Only the authenticated operator transport selects this view. Nested bridge calls
         // retain this exact context without changing the SDK's MCP session id.
-        internal IReadOnlyList<McpServerTool> OperatorTools => Tools.Select(t =>
-            (McpServerTool)new OperatorSessionTool(this, ((SessionTool)t).Inner)).ToArray();
+        internal IReadOnlyList<McpServerTool> OperatorTools
+        {
+            get
+            {
+                using var session = EnterSession();
+                var advertised = Tools.ToDictionary(tool => tool.ProtocolTool.Name, StringComparer.Ordinal);
+                return AllTools.Select(tool =>
+                {
+                    string name = tool.ProtocolTool.Name;
+                    var inner = ((SessionTool)advertised.GetValueOrDefault(name, tool)).Inner;
+                    if (!advertised.ContainsKey(name) && context.Catalog!.All[name].Execution != "foundation")
+                        inner = McpServer.WrapTools(new[] { inner }).Single();
+                    return (McpServerTool)new OperatorSessionTool(this, inner);
+                }).ToArray();
+            }
+        }
 
         public EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile,
             IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null)
@@ -238,7 +252,9 @@ namespace TiaMcp.FoundationHost
         internal static void RegisterHandlers(IMcpServerBuilder builder, string releaseKey)
         {
             if (!ReleaseCatalogData.Releases[releaseKey].RegisterDiscoveryHandlers) return;
-            McpPromptRegistration.Configure(builder);
+            McpPromptRegistration.Configure(builder, TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(releaseKey)
+                .Select(row => (string)row!["currentName"]!), ReleaseCatalogData.Releases.Keys
+                .SelectMany(key => TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(key)).Select(row => (string)row!["currentName"]!));
             builder
                 .WithListResourcesHandler((_, token) => {
                     token.ThrowIfCancellationRequested();

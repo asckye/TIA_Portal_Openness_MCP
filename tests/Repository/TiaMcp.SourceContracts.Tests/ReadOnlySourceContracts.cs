@@ -74,7 +74,10 @@ public sealed class ReadOnlySourceContracts
         Excludes(Sources.AllText(), "WithPromptsFromAssembly(", "WithToolsFromAssembly failed:");
         // P8-stab-3: HTTP registers the same handlers by release key before any session catalog exists.
         Count(program, "pipeline.RegisterHandlers(mcp);", 1); Count(program, "EngineHostPipeline.RegisterHandlers(mcp, options.ReleaseKey);", 1);
-        Contains(pipeline, "McpPromptRegistration.Configure(builder)");
+        Contains(pipeline, "McpPromptRegistration.Configure(builder,",
+            "ToolUsageCatalog.ProfileEntries(releaseKey)", "ReleaseCatalogData.Releases.Keys");
+        Contains(registration, "var available = roster.ToHashSet(StringComparer.Ordinal)",
+            "var requirements = Requirements(toolUniverse ?? available)", ".All(available.Contains)", "McpServerPrompt.Create(method,");
         Excludes(registration, "catch", "GetTypes("); Contains(registration, "builder.WithPrompts(new[] {");
         Contains(program, "WithStdioServerTransport()", "WithHttpTransport(", "WorkerShutdown.StopAll");
         var containers = new List<string>(); var promptCount = 0;
@@ -86,7 +89,7 @@ public sealed class ReadOnlySourceContracts
             containers.AddRange(found.Select(m => m.Groups[1].Value));
             promptCount += Regex.Matches(source, @"\[McpServerPrompt\(").Count;
         }
-        var registered = Regex.Matches(registration, @"typeof\((\w+)\)").Select(m => m.Groups[1].Value).ToArray();
+        var registered = Regex.Matches(registration, @"WithPrompts\(new\[\] \{ typeof\((\w+)\)").Select(m => m.Groups[1].Value).ToArray();
         Assert.Equal(containers.Order(), registered.Order()); Assert.Equal(registered.Length, registered.Distinct().Count()); Assert.Equal(30, promptCount);
     }
     [Fact]

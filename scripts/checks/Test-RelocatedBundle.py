@@ -200,8 +200,8 @@ class StdioSession:
 def foundation_stdio_command(root: Path, key: str) -> list[str]:
     exe = product_executable(root, key)
     command = [str(exe), "--bundle-root", str(root), "--release-key", key, "--offline"]
-    # V20/V21 default to the lite profile; the baseline roster is the full profile.
-    return command + ["--profile", "full"] if key in ("20", "21") else command
+    # All releases default to lite; the baseline roster is the full profile.
+    return command + ["--profile", "full"]
 
 
 def fake_engine_installations(public_api_root: Path, temp_root: Path) -> dict[str, Path]:

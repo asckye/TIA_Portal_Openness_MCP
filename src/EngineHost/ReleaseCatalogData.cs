@@ -46,33 +46,23 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
     internal static IReadOnlyDictionary<string, ReleaseCatalogData> Releases { get; } =
         new Dictionary<string, ReleaseCatalogData>(StringComparer.Ordinal)
         {
-            ["14sp1"] = Foundation(),
-            ["15.1"] = Foundation(),
-            ["16"] = Foundation(),
-            ["17"] = Foundation(),
-            ["18"] = Foundation(),
-            ["19"] = Foundation(),
-            ["20"] = Declared("20", Array.Empty<string>()),
-            ["21"] = Declared("21", new[] { "14sp1", "15.1", "16", "17", "18", "19", "20" })
+            ["14sp1"] = Foundation("14sp1"),
+            ["15.1"] = Foundation("15.1"),
+            ["16"] = Foundation("16"),
+            ["17"] = Foundation("17"),
+            ["18"] = Foundation("18"),
+            ["19"] = Foundation("19"),
+            ["20"] = Declared("20"),
+            ["21"] = Declared("21")
         };
 
-    private static ReleaseCatalogData Foundation() => new(ToolUsageCatalog.Instructions +
-        " This release uses the PLC foundation catalog. InitializeEnvironment reports environment/session state; ListPortalProcessProjects returns current " +
-            "process/project identities. Only listed contracts are available.",
-        false, false, false, " Native behaviorPolicy=current; V4 native acceptance is pending.",
-        Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>(), StringComparer.OrdinalIgnoreCase,
-        "plc-foundation", new Dictionary<string, string>(StringComparer.Ordinal),
-        new Dictionary<string, string>(StringComparer.Ordinal));
-
-    private static ReleaseCatalogData Declared(string release, IReadOnlyList<string> supplementaryReleases) => new(DiscoveryInstructions, true, true, true, "",
-        ToolUsageCatalog.ProfileEntries(release, engineSource: true).Select(row => (string)row!["currentName"]!)
-            .Concat(new[] { "RetrieveProjectArchive", "SaveProjectCopy", "ManageMultiuserSession", "BuildProjectScaffold", "ConnectIsolatedPortal" })
-            .Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray(),
+    private static ReleaseCatalogData Presentation(string release) => new(DiscoveryInstructions, true, true, true, "",
+        ToolUsageCatalog.ProfileEntries(release).Select(row => (string)row!["currentName"]!)
+            .OrderBy(name => name, StringComparer.Ordinal).ToArray(),
         ToolUsageCatalog.ProfileEntries(release).Where(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"))
-            .Select(row => (string)row!["currentName"]!).ToArray(), supplementaryReleases, StringComparer.Ordinal,
-        "full-engine", ToolUsageCatalog.ProfileEntries(release).ToDictionary(row => (string)row!["currentName"]!,
-            row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "plc-foundation") ? "plc-foundation" : "full-engine",
-            StringComparer.Ordinal), new Dictionary<string, string>(StringComparer.Ordinal)
+            .Select(row => (string)row!["currentName"]!).ToArray(), new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, StringComparer.Ordinal,
+        "plc-foundation", new Dictionary<string, string>(StringComparer.Ordinal),
+        new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["ManagePlcGitRepository"] = "CallToolResult",
             ["RunPlcCompanionTool"] = "CallToolResult",
@@ -80,8 +70,14 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
             ["CheckProductUpdate"] = "CallToolResult",
             ["GenerateAcceptanceReport"] = "CallToolResult",
             ["GetEnvironmentDiagnostics"] = "CallToolResult"
-        }) { ProfileName = "full-engine", RegisterDiscoveryHandlers = true, CatalogCallDiscipline = true, HasManifestCatalog = true,
-            SharedSession = true, MergeWorkerReadiness = true, RevealSessionEndedDiagnostic = true, WrapPortedTools = true, DisclosePortedBehavior = false,
+        }) { RegisterDiscoveryHandlers = true, CatalogCallDiscipline = true, HasManifestCatalog = true };
+
+    // Invocation/disclosure policy is deliberately unchanged until P8-04n2.
+    private static ReleaseCatalogData Foundation(string release) => Presentation(release) with
+        { DeclarationDisclosure = " Native behaviorPolicy=current; V4 native acceptance is pending." };
+
+    private static ReleaseCatalogData Declared(string release) => Presentation(release) with
+        { SharedSession = true, MergeWorkerReadiness = true, RevealSessionEndedDiagnostic = true, WrapPortedTools = true, DisclosePortedBehavior = false,
             ExtendedWorkerStatus = true, StartSupervisorOnRead = true, StatusOutcomeIsFault = false, NativeObservations = true, FoundationReadinessBoundary =
                 false,
             ObservationToolNames = ToolUsageCatalog.ProfileEntries(release, engineSource: true).Select(row => (string)row!["currentName"]!)

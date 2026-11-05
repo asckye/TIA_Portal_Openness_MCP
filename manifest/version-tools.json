@@ -2233,7 +2233,7 @@
       ]
     },
     "20": {
-      "profile": "full-engine",
+      "profile": "plc-foundation",
       "toolCount": 497,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
@@ -2736,7 +2736,7 @@
       ]
     },
     "21": {
-      "profile": "full-engine",
+      "profile": "plc-foundation",
       "toolCount": 512,
       "tools": [
         "AnalyzeGlobalLibraryPackage",

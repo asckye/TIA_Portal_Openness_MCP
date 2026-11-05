@@ -32,9 +32,13 @@ namespace TiaOpenness.Shared
             return rows;
         }
 
+        public static string ExampleSource(string name, string release)
+            => (string?)(Profiles.Value["releases"]?[release] as JsonArray)?.FirstOrDefault(row => (string?)row!["currentName"] == name)?["exampleSource"]
+                ?? "plc-foundation";
+
         private static JsonObject? CurrentHmiCall(string name, string release)
             => TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Domain.StartsWith("HMI", StringComparison.Ordinal) == true
-                ? Data.Value["calls"]?["profiles"]?[release is "20" or "21" ? "full-engine" : "plc-foundation"]?[name] as JsonObject : null;
+                ? Data.Value["calls"]?["profiles"]?[ExampleSource(name, release)]?[name] as JsonObject : null;
 
         // Historical catalog rows remain comparison evidence; live HMI examples come from the maintained call library.
         private static void CurrentHmiArguments(JsonObject row, string release)
@@ -122,11 +126,12 @@ namespace TiaOpenness.Shared
 
         private static JsonObject? CallExample(string name, string release, string profile)
         {
-            var entry = profile is "full-engine" or "engine-source" ? ProfileEntry(name, release, profile == "engine-source") : null;
+            var entry = ProfileEntry(name, release, profile == "engine-source");
+            var exampleSource = profile == "engine-source" ? profile : ExampleSource(name, release);
             var source = (string?)entry?["currentName"] ?? name;
             var row =
                 (CurrentHmiCall(source, release)
-                    ?? (profile == "engine-source" ? Data.Value["engineSourceCalls"]?[source] : Data.Value["calls"]?["profiles"]?[profile]?[source]))
+                    ?? (profile == "engine-source" ? Data.Value["engineSourceCalls"]?[source] : Data.Value["calls"]?["profiles"]?[exampleSource]?[source]))
                 ?.DeepClone();
             if (row == null) return null;
             if (entry != null) row["arguments"] = entry["arguments"]!.DeepClone();
@@ -150,7 +155,8 @@ namespace TiaOpenness.Shared
         }
 
         public static JsonObject Examples(string release, string profile, IEnumerable<string> roster,
-            string language = "", string exampleId = "", string toolName = "", string exampleKind = "all")
+            string language = "", string exampleId = "", string toolName = "", string exampleKind = "all",
+            Func<string, JsonObject?>? schemaFor = null)
         {
             if (exampleKind != "all" && exampleKind != "sequence" && exampleKind != "language")
                 throw new ArgumentException("exampleKind must be all/sequence/language.");
@@ -179,6 +185,18 @@ namespace TiaOpenness.Shared
                 if (exampleKind == "sequence" && !sequenceRecord || exampleKind == "language" && sequenceRecord) continue;
                 bool releaseMatches = row["releaseKeys"]!.AsArray().Any(v => (string?)v == release);
                 bool profileMatches = row["profile"] == null || (string?)row["profile"] == (profile == "engine-source" ? "full-engine" : profile);
+                if (sequenceRecord && schemaFor != null)
+                    profileMatches = row["steps"]!.AsArray().All(step =>
+                    {
+                        var schema = schemaFor((string)step!["tool"]!);
+                        if (schema == null) return false;
+                        var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
+                        var arguments = JsonNode.Parse(step["arguments"]!.ToJsonString().Replace("{release}", release).Replace("{extension}", extension)
+                            .Replace("{major}", release == "14sp1" ? "14" : release == "15.1" ? "15" : release));
+                        return new TiaMcp.Logic.V4.Inputs.InputSchema(System.Text.Json.JsonSerializer.SerializeToElement(schema))
+                            .Validate(System.Text.Json.JsonSerializer.SerializeToElement(arguments), "arguments") == null;
+                    });
+                if (row["profile"] != null) row["profile"] = "plc-foundation";
                 if (exampleKind != "all" && (!releaseMatches || !profileMatches)) continue;
                 row["releaseMatches"] = releaseMatches;
                 row["profileMatches"] = profileMatches;
@@ -195,7 +213,7 @@ namespace TiaOpenness.Shared
             var languageList = (JsonArray)languages.DeepClone();
             foreach (var row in languageList)
                 row!["tools"] = new JsonArray(row["tools"]!.AsArray().Where(t => available.Contains((string)t!)).Select(t => t!.DeepClone()).ToArray());
-            var result = new JsonObject { ["releaseKey"] = release, ["profile"] = profile, ["language"] = language,
+            var result = new JsonObject { ["releaseKey"] = release, ["profile"] = "plc-foundation", ["language"] = language,
                 ["languages"] = languageList, ["examples"] = items,
                 ["retrieval"] =
                     "Use exampleId to read files/content or complete steps. releaseMatches is source scope, not native verification; availableTools are " +
@@ -212,7 +230,8 @@ namespace TiaOpenness.Shared
 
         public static JsonObject Describe(string name, string release, string profile, string description, JsonObject schema,
             string? curatedArguments = null, string? curatedNote = null, string operation = "",
-            IEnumerable<string>? roster = null, JsonObject? resultContract = null, Func<JsonObject, string>? callProblem = null)
+            IEnumerable<string>? roster = null, JsonObject? resultContract = null, Func<JsonObject, string>? callProblem = null,
+            Func<string, JsonObject?>? schemaFor = null)
         {
             var sourceName = profile == "full-engine" ? (string?)ProfileEntry(name, release)?["currentName"] ?? name : name;
             var mapping = Mapping(sourceName);
@@ -300,7 +319,7 @@ namespace TiaOpenness.Shared
             }
             string selectedProblem = releaseProblem.Length > 0 ? releaseProblem : callProblem?.Invoke(args) ?? "";
             var response = new JsonObject {
-                ["toolName"] = name, ["releaseKey"] = release, ["profile"] = profile, ["available"] = true,
+                ["toolName"] = name, ["releaseKey"] = release, ["profile"] = "plc-foundation", ["available"] = true,
                 ["description"] = description, ["inputSchema"] = schema.DeepClone(),
                 ["example"] = new JsonObject { ["origin"] = "project MCP mapping, not Siemens MCP code",
                     ["kind"] = callArguments != null ? "parameterized-call-example" : matches ? "curated-project-example" : "schema-template",
@@ -320,7 +339,7 @@ namespace TiaOpenness.Shared
                 ["resultContract"] = resultContract?.DeepClone() ?? call?["resultContract"]?.DeepClone() ?? new JsonObject {
                     ["description"] = "Result structure and operation-specific fields are described in the exact tool description above." },
                 ["resultReading"] = Reading(resultContract, call),
-                ["examples"] = Examples(release, profile, available, toolName: name)["examples"]!.DeepClone()
+                ["examples"] = Examples(release, profile, available, toolName: name, schemaFor: schemaFor)["examples"]!.DeepClone()
             };
             if (call?["execution"] != null) response["example"]!["execution"] = call["execution"]!.DeepClone();
             if (call?["executionTest"] != null) response["example"]!["executionTest"] = call["executionTest"]!.DeepClone();
@@ -331,8 +350,11 @@ namespace TiaOpenness.Shared
                 "Resolve angle-bracket bindings (also inside JSON) from this operation's target read/self-description before calling. Sample names and paths " +
                 "must also be replaced with the intended target.";
             if (call?["releaseNotes"]?[release] != null) response["example"]!["releaseNote"] = call["releaseNotes"]![release]!.DeepClone();
-            if (Data.Value["toolNotes"]?[name] is JsonNode notes && (notes["profile"] == null || (string?)notes["profile"] == profile))
+            if (Data.Value["toolNotes"]?[name] is JsonNode notes && (notes["profile"] == null || (string?)notes["profile"] == ExampleSource(name, release)))
+            {
                 response["interpretation"] = notes.DeepClone();
+                if (response["interpretation"]?["profile"] != null) response["interpretation"]!["profile"] = "plc-foundation";
+            }
             return response;
         }
 

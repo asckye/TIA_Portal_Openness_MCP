@@ -1,7 +1,7 @@
 """Capture offline tool contracts and reject incompatible input schema changes.
 
-capture starts each built runtime without TIA: V20/V21 through the release host harness over STDIO
-(full and lite profiles), V14 SP1-V19 through `TiaMcp.FoundationHost.exe --catalog`. The foundation host needs
+capture starts every built FoundationHost without TIA over STDIO (full and lite profiles),
+and cross-checks each full roster against `--catalog --profile full`. The foundation host needs
 the ASP.NET Core 10 runtime; when the machine lacks it, point DOTNET_ROOT and DOTNET_ROOT_X64 at a
 private runtime before running capture. compare exits 1 on any breaking change.
 """
@@ -210,7 +210,7 @@ def encode_contract(snapshot):
 
 
 def decode_contract(raw, path):
-    expected_fields = (ENGINE_CONTRACT_FIELDS if raw.get('release') in ('20', '21') else CONTRACT_FIELDS) | {'schemas'}
+    expected_fields = ENGINE_CONTRACT_FIELDS | {'schemas'}
     if set(raw) != expected_fields:
         raise ValueError(f'{path}: contract fields differ; missing={sorted(expected_fields - set(raw))}, '
                          f'unknown={sorted(set(raw) - expected_fields)}')
@@ -247,13 +247,13 @@ def decode_contract(raw, path):
 
 def validate_contract_snapshot(snapshot, path):
     release = snapshot.get('release')
-    expected_fields = ENGINE_CONTRACT_FIELDS if release in ('20', '21') else CONTRACT_FIELDS
+    expected_fields = ENGINE_CONTRACT_FIELDS
     if set(snapshot) != expected_fields:
         raise ValueError(f'{path}: contract fields differ; missing={sorted(expected_fields - set(snapshot))}, '
                          f'unknown={sorted(set(snapshot) - expected_fields)}')
     if type(snapshot['formatVersion']) is not int or snapshot['formatVersion'] != FORMAT_VERSION:
         raise ValueError(f'{path}: expected contract formatVersion {FORMAT_VERSION}')
-    expected_profile = 'full-engine' if release in ('20', '21') else 'plc-foundation'
+    expected_profile = 'plc-foundation'
     if snapshot['profile'] != expected_profile:
         raise ValueError(f'{path}: invalid contract profile')
     if not isinstance(snapshot['tools'], list) or not isinstance(snapshot['behaviorCapabilities'], list):
@@ -333,17 +333,21 @@ def capture(args):
     for release in args.releases:
         exe = executables.get(release, root / 'runtime' / ('v' + release) / 'TiaMcp.FoundationHost.exe')
         snapshot = {'formatVersion': FORMAT_VERSION, 'release': release}
-        if release in ('20', '21'):
-            args.engine_host = requested_host or exe
-            public_api = public_api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
-            if release == '21':
-                public_api /= 'net48'
-            portal_root = (resources.sdk_only_installation(public_api, int(release), fixture_root)
-                           if args.harness is None or args.engine_host else public_api)
+        if release in RELEASES:
+            if release in ('20', '21'):
+                args.engine_host = requested_host or exe
+                public_api = public_api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
+                if release == '21':
+                    public_api /= 'net48'
+                portal_root = (resources.sdk_only_installation(public_api, int(release), fixture_root)
+                               if args.harness is None or args.engine_host else public_api)
+            else:
+                args.engine_host = None
+                public_api, portal_root = None, None
             rosters = {}
             for profile in ('full', 'lite'):
                 server = (engine_host_server(args, release, portal_root, profile, {"TIA_MCP_MAX_RESPONSE_CHARS": "2000000"})
-                          if args.engine_host else resources.server(exe, portal_root, int(release), 'stdio', profile,
+                          if args.engine_host else resources.server(exe, portal_root, release, args.transport, profile,
                                       args.harness.resolve() if args.harness else None, public_api,
                                       env_overrides={"TIA_MCP_MAX_RESPONSE_CHARS": "2000000"}))
                 with server as (rpc, _, logs):
@@ -374,50 +378,24 @@ def capture(args):
                     disclosures = {tool['name']: tool.get('description', '') for tool in tools}
                     for row in table:
                         for entry in row['entries']:
+                            if profile == 'full' and entry not in disclosures:
+                                raise ValueError('Behavior entry absent from full roster: ' + entry)
                             if entry in disclosures and row['state'] == 'current':
                                 text = disclosures[entry]
                                 if 'behaviorPolicy=current' not in text or 'V4 native acceptance is pending' not in text:
                                     raise ValueError('Missing D1 description disclosure: ' + entry)
-            snapshot.update(profile='full-engine', tools=rosters['full'],
+            snapshot.update(profile='plc-foundation', tools=rosters['full'],
                             liteTools=[tool['name'] for tool in rosters['lite']])
             if not set(snapshot['liteTools']) <= {tool['name'] for tool in snapshot['tools']}:
                 raise ValueError('Lite roster contains tools absent from full profile')
-        else:
-            command = [str(exe), '--catalog']
-            if release in executables:
-                # Worktree output has no packaged release-key.txt marker.
-                command.extend(['--release-key', release])
+            command = [str(exe), '--catalog', '--release-key', release, '--profile', 'full']
             result = subprocess.run(command, check=True, capture_output=True,
                                     text=True, encoding='utf-8', timeout=60)
             catalog = json.loads(result.stdout)
-            if args.transport == 'http':
-                with resources.server(exe, None, release, 'http', 'full') as (rpc, _, _):
-                    initialized = rpc('initialize', params={'protocolVersion': '2024-11-05', 'capabilities': {},
-                        'clientInfo': {'name': 'contract-snapshot', 'version': '1'}})
-                    resources.require('result' in initialized, 'Foundation HTTP initialize failed')
-                    rpc('notifications/initialized', notification=True)
-                    tools, cursor, seen = [], None, set()
-                    while True:
-                        reply = rpc('tools/list', params={} if cursor is None else {'cursor': cursor})
-                        resources.require('result' in reply, 'Foundation HTTP tools/list failed')
-                        tools.extend(reply['result']['tools'])
-                        cursor = reply['result'].get('nextCursor')
-                        if cursor is None: break
-                        resources.require(cursor not in seen, 'Repeated Foundation HTTP cursor')
-                        seen.add(cursor)
-                    response = rpc('tools/call', params={'name': 'GetToolUsage', 'arguments': {}})['result']
-                    body = response.get('structuredContent') or json.loads(response['content'][0]['text'])
-                    resources.require(tool_records(tools) == tool_records(catalog['tools']), 'Foundation HTTP/catalog contracts differ')
-                    resources.require(body['data']['behaviorCapabilities'] == catalog['behaviorCapabilities'], 'Foundation HTTP/catalog behavior capabilities differ')
-                    catalog['tools'] = tools
-            snapshot.update(profile='plc-foundation', tools=tool_records(catalog['tools']),
-                            behaviorCapabilities=catalog['behaviorCapabilities'])
-            descriptions = {tool['name']: tool.get('description', '') for tool in catalog['tools']}
-            for row in snapshot['behaviorCapabilities']:
-                for entry in row['entries']:
-                    if row['state'] == 'current' and ('behaviorPolicy=current' not in descriptions[entry]
-                            or 'V4 native acceptance is pending' not in descriptions[entry]):
-                        raise ValueError('Missing Foundation D1 disclosure: ' + entry)
+            resources.require(tool_records(catalog['tools']) == rosters['full'], 'Transport/catalog contracts differ')
+            resources.require(catalog['behaviorCapabilities'] == snapshot['behaviorCapabilities'], 'Transport/catalog behavior capabilities differ')
+            resources.require(catalog['profile'] == 'plc-foundation' and set(catalog) ==
+                              {'releaseKey', 'profile', 'behaviorCapabilities', 'callDiscipline', 'tools'}, 'Catalog presentation differs')
         snapshots[release] = snapshot
         print(f'Captured V{release}: {len(snapshot["tools"])} tools', flush=True)
     # An HTTP host is terminated; its engine worker exits when its channel closes and can hold
@@ -757,10 +735,10 @@ def catalog_rosters(root):
     for release in RELEASES:
         rows = catalog[release]
         names = unique_names([row['currentName'] for row in rows], f'V{release} catalog')
-        profile = 'full' if release in ('20', '21') else 'plc-foundation'
+        profile = 'full'
         full = {row['currentName'] for row in rows if profile in row['profiles']}
         lite = {row['currentName'] for row in rows if 'lite' in row['profiles']}
-        if not full or full != names or (release not in ('20', '21') and lite):
+        if not full or full != names or not lite or not lite < full:
             raise ValueError(f'V{release}: invalid generated full/lite catalog profiles')
         rosters[release] = full, lite
     return rosters
@@ -802,7 +780,7 @@ def verified_contracts(directory, root, parameters=None):
             raise ValueError(f'V{release}: behavior table differs from ledger-derived catalog')
         for tool in snapshot['tools']:
             validate_output(tool)
-            profile = 'plc-foundation' if tool['name'] in foundation_parameters else snapshot['profile']
+            profile = 'plc-foundation' if tool['name'] in foundation_parameters else 'full-engine'
             parameters = contracts.get((profile, tool['name']))
             if parameters is None and tool['name'] not in source_foundation:
                 raise ValueError(f'V{release}: {tool["name"]} is absent from source registrations')
@@ -825,14 +803,11 @@ def verified_contracts(directory, root, parameters=None):
                         and schema['default'] != parameters[name]:
                     raise ValueError(f'V{release}: {tool["name"]}.{name} default differs from source declaration')
         check_current_schemas(snapshot, contracts, root)
-        expected_profile = 'full-engine' if release in ('20', '21') else 'plc-foundation'
+        expected_profile = 'plc-foundation'
         if snapshot['profile'] != expected_profile:
             raise ValueError(f'V{release}: invalid contract profile')
-        if release in ('20', '21'):
-            if unique_names(snapshot['liteTools'], f'V{release} lite roster') != lite:
-                raise ValueError(f'V{release}: lite roster differs from generated catalog')
-        elif 'liteTools' in snapshot:
-            raise ValueError(f'V{release}: Foundation must not advertise a lite roster')
+        if unique_names(snapshot['liteTools'], f'V{release} lite roster') != lite:
+            raise ValueError(f'V{release}: lite roster differs from generated catalog')
     return snapshots
 
 
@@ -915,7 +890,7 @@ def check_current_schemas(snapshot, contracts, root=Path(__file__).resolve().par
         if row['state'] != 'current': continue
         for entry in row['entries']:
             properties = by_name[entry]['inputSchema']['properties']
-            profile = 'plc-foundation' if entry in foundation_names else snapshot['profile']
+            profile = 'plc-foundation' if entry in foundation_names else 'full-engine'
             if (profile, entry) not in contracts: continue
             allowed = contracts[(profile, entry)]
             if set(properties) - set(allowed):

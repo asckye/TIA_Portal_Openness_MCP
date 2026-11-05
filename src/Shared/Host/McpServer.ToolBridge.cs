@@ -67,7 +67,7 @@ namespace TiaMcpServer.ModelContextProtocol
 #if TIA_ENGINE_HOST
             => TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].WrapPortedTools;
 #else
-            => TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine;
+            => TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).EngineOutputDirectory != null;
 #endif
 
         internal static string VersionToolProblem(string name)

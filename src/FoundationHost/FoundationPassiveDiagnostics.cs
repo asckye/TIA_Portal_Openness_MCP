@@ -263,7 +263,7 @@ internal static class FoundationPassiveDiagnostics
             ["contract"] = Contract, ["scope"] = "managed host registration and structural schema checks only",
             ["upstreamResponseCompatible"] = false, ["nativeCertified"] = false,
             ["selectedRelease"] = new JsonObject {
-                ["key"] = release.Key, ["displayName"] = release.DisplayName, ["catalogState"] = release.SupportState, ["catalogMeaning"] =
+                ["key"] = release.Key, ["displayName"] = release.DisplayName, ["catalogState"] = "plc-foundation", ["catalogMeaning"] =
                     "Build-target metadata only; not installed or accepted capability."
             },
             ["host"] = new JsonObject {

@@ -72,7 +72,7 @@
 | 描述前缀 | `[<层>][<域>][<操作>]` |
 | 分类 | UI、SESSION、READ、WRITE、FILE、OFFLINE、ONLINE、ONLINE-WRITE、EXECUTE 之一，登记在 `ToolMetadata` 或 `[ToolClassification]` |
 | 注解 | 四个 hint 的值与理由 |
-| 档位与批处理 | 是否进入 V20/V21 lite 档；`BatchRead`、`BatchWrite` 的值与理由 |
+| 档位与批处理 | 是否进入所选版本的统一 lite 名单；`BatchRead`、`BatchWrite` 的值与理由 |
 | 实现位置 | 声明、共享逻辑、按发布键的适配器 |
 
 ## 3 发布键与 API 证据

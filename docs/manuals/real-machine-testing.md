@@ -72,7 +72,7 @@ python scripts/checks/Test-NativeLifecycle.py --runner tests/FoundationHost/TiaM
 
 ## 工具示例库
 
-工具参数、调用序列、结果解释和官方出处只在 `reference/tool-examples` 维护（`calls.json` 按 `plc-foundation`、`full-engine` 分开，另有 `sequences.json`、`metadata.json`、`languages/catalog.json` 及其源文件），由 `GetToolUsage` 按发布键返回；发现和错误中的内联示例、兼容入口读同一数据。规则见[设计规范](../standards/design.md)第 6.6 节。
+工具参数、调用序列、结果解释和官方出处只在 `reference/tool-examples` 维护（`calls.json` 的 `plc-foundation`、`full-engine` 是按工具与 schema 选择的示例来源，八版对外 profile 均为 `plc-foundation`，另有 `sequences.json`、`metadata.json`、`languages/catalog.json` 及其源文件），由 `GetToolUsage` 按发布键返回；发现和错误中的内联示例、兼容入口读同一数据。规则见[设计规范](../standards/design.md)第 6.6 节。
 
 | `GetToolUsage` 参数 | 返回 |
 |---|---|

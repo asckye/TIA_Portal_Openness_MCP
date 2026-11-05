@@ -13,6 +13,18 @@ public sealed class WorkbenchEnvironmentChecksTests
     [Theory]
     [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
     [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+    public void Every_host_requires_its_shared_runtime_dependency(string release)
+    {
+        string root = Path.GetFullPath("fixture-bundle");
+        var required = EnvironmentBundleFiles.Required(root, release).ToArray();
+        string directory = Path.GetDirectoryName(EnvironmentBundleFiles.Host(root, release));
+        Assert.Contains(Path.Combine(directory, "TiaMcp.Runtime.dll"), required);
+        Assert.Equal(required.Length, required.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
+    [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
     public void Readiness_uses_the_selected_host_and_does_not_borrow_another_release(string release)
     {
         var fixture = new ProbeFixture(); fixture.Context.ReleaseKey = release;

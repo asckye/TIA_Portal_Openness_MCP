@@ -188,7 +188,7 @@
 | Foundation 适配器 | Foundation 适配器 | Foundation adapters | `TiaMcp.Adapter.<发布键>.dll`、`src/Adapters` | 共享适配器、Foundation 代码（混用） | 按发布键编译八次 |
 | 能力族 | 能力族（F01–F35） | capability family | `PortedFamilies` | 族、工具族（混用） | 已移入适配器的称“已移植族” |
 | 工具目录 | 工具目录 | tool catalog | `tools/list` | 工具清单（指运行时目录时） | 分 lite 档和 full 档 |
-| lite 档、full 档 | lite 档、full 档 | lite profile、full profile | `--profile full`、`TIA_MCP_PROFILE` | 精简模式、完整模式 | 只有 V20/V21 有 lite 档 |
+| lite 档、full 档 | lite 档、full 档 | lite profile、full profile | `--profile full`、`TIA_MCP_PROFILE` | 精简模式、完整模式 | 八版默认 lite，`--profile full` 列出完整目录；工作台操作员会话始终使用完整目录 |
 | MCP 会话 | MCP 会话 | MCP session | 不适用 | 连接、会话（与 TIA 会话混用时） | 每个 MCP 会话一个 worker |
 | V4 会话 | V4 会话；上下文清楚时简称会话 | V4 session | 不适用 | 连接（指会话状态时） | 宿主为一个 MCP 会话维护的全部状态：worker、租约、绑定、会话锁、计划、句柄 |
 | worker 代次 | worker 代次 | worker generation | 不适用 | worker 代 | 一次 worker 进程的生命周期；故障后经 `RestartOpennessWorker` 或 `DisconnectPortal` 开始新代次 |

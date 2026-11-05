@@ -31,9 +31,14 @@ internal static class HostToolsListWriter
             && ReleaseCatalogData.Releases[release].ManifestSupplementaryReleases.Any(key => PortedFamilies.Available(key, tool.Name))).ToArray();
         var entries = pipeline.Tools.Select(tool => tool.ProtocolTool).Concat(supplementary.Select(tool => tool.Tool)).ToArray();
         var profiles = ToolUsageCatalog.ProfileEntries(release).ToDictionary(row => (string)row!["currentName"]!, StringComparer.Ordinal);
+        var exampleReleases = entries.ToDictionary(tool => tool.Name, _ => release, StringComparer.Ordinal);
         foreach (var key in ReleaseCatalogData.Releases.Keys)
             foreach (var row in ToolUsageCatalog.ProfileEntries(key).Where(row => supplementary.Any(tool => tool.Name == (string)row!["currentName"]!)))
-                profiles[(string)row!["currentName"]!] = row;
+            {
+                string name = (string)row!["currentName"]!;
+                profiles[name] = row;
+                exampleReleases[name] = key;
+            }
         var methods = typeof(EngineHostPipeline).Assembly.GetTypes().SelectMany(type => type.GetMethods())
             .Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null)
             .ToDictionary(ReleaseCatalogData.Name, StringComparer.Ordinal);
@@ -42,9 +47,9 @@ internal static class HostToolsListWriter
         foreach (var tool in entries)
         {
             var properties = tool.InputSchema.GetProperty("properties").EnumerateObject().Select(parameter => parameter.Name).ToArray();
-            bool shared = profiles[tool.Name]!["profiles"]!.AsArray().Any(value => (string?)value == "plc-foundation");
-            var usage = ToolUsageCatalog.Describe(tool.Name, supplementary.Any(entry => entry.Name == tool.Name) ? "20" : release,
-                shared ? "plc-foundation" : "full-engine", tool.Description ?? "", JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject(), roster: names);
+            bool shared = (string?)profiles[tool.Name]!["exampleSource"] == "plc-foundation";
+            var usage = ToolUsageCatalog.Describe(tool.Name, exampleReleases[tool.Name],
+                "plc-foundation", tool.Description ?? "", JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject(), roster: names);
             var example = usage["example"]!["request"]!["params"]!["arguments"]!.AsObject();
             if (example.Select(pair => pair.Key).Except(properties, StringComparer.Ordinal).Any()
                 || tool.InputSchema.TryGetProperty("required", out var required) && required.EnumerateArray()
@@ -76,6 +81,7 @@ internal static class HostToolsListWriter
         var output = new JsonObject
         {
             ["package"] = options.CatalogPackage,
+            ["profile"] = ReleaseCatalogData.Releases[release].ProfileName,
             ["generatedAt"] = options.CatalogGeneratedAt ?? DateTimeOffset.UtcNow.ToString("o"),
             ["source"] = "FoundationHost V" + release
                 + " full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA " +
@@ -85,8 +91,8 @@ internal static class HostToolsListWriter
             ["workerSha256"] = ArgumentRules.HashFile(options.WorkerExe, FileShare.Read),
             ["toolCount"] = rows.Count,
             ["note"] =
-                "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime " +
-                "tools/list is authoritative.",
+                "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools " +
+                "intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
             ["callDiscipline"] = new JsonObject
             {
                 ["parameters"] = Count("parameters") + parameters.Length,

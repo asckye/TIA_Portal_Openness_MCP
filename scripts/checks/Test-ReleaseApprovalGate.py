@@ -201,8 +201,7 @@ class FoundationStdio:
 @contextmanager
 def foundation_host(exe: Path, key: str, public_api: Path, env: dict[str, str], stderr_path: Path):
     command = [str(exe), "--release-key", key, "--public-api", str(public_api), "--offline", "--transport", "stdio", "--logging", "0"]
-    if key in ("20", "21"):
-        command += ["--profile", "full"]
+    command += ["--profile", "full"]
     host = FoundationStdio(command, env, stderr_path)
     try:
         initialized = host.rpc("initialize", {"protocolVersion": "2024-11-05", "capabilities": {},

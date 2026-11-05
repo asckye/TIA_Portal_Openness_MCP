@@ -31,17 +31,17 @@
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 280 | 不适用 |
-| V15.1 | 320 | 不适用 |
-| V16 | 349 | 不适用 |
-| V17 | 372 | 不适用 |
-| V18 | 398 | 不适用 |
-| V19 | 474 | 不适用 |
-| V20 | 497 | 81 |
-| V21 | 512 | 84 |
+| V14 SP1 | 280 | 89 |
+| V15.1 | 320 | 92 |
+| V16 | 349 | 93 |
+| V17 | 372 | 93 |
+| V18 | 398 | 95 |
+| V19 | 474 | 95 |
+| V20 | 497 | 98 |
+| V21 | 512 | 101 |
 <!-- generated:tool-counts:end -->
 
-V20/V21 默认使用 lite 档，其余通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。八版统一入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；宿主自动使用 `worker/` 下该版本的 PLC worker（V20/V21 的完整目录也由它执行），八版共有工具采用同一份 Foundation 代码、参数和用法。准确范围见[逐版本工具说明](docs/reference/version-tools.md)及当前服务的 `tools/list`。V14 SP1、V15.1 不等于原版 V14、V15。
+八个版本默认使用 lite 档，其余通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。八版统一入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；宿主自动使用 `worker/` 下该版本的 PLC worker（V20/V21 的完整目录也由它执行），八版共有工具采用同一份 Foundation 代码、参数和用法。准确范围见[逐版本工具说明](docs/reference/version-tools.md)及当前服务的 `tools/list`。V14 SP1、V15.1 不等于原版 V14、V15。
 
 AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取本版参数、示例和结果解释；用 `language` 查编程语言示例，用 `exampleId` 取完整源码或调用序列。全部工具共用这套示例入口，官方 API 模式与本项目封装示例分别标明。
 

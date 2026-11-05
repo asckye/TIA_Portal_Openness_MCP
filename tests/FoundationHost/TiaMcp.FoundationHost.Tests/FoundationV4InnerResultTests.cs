@@ -88,6 +88,66 @@ public sealed class FoundationV4InnerResultTests : IDisposable
         Assert.True(JsonNode.DeepEquals(expected.StructuredContent, result.StructuredContent), result.StructuredContent.ToJsonString());
     }
 
+    [Theory]
+    [InlineData("14sp1", "DeletePlcBlock", true)]
+    [InlineData("19", "DeletePlcBlock", true)]
+    [InlineData("14sp1", "DeleteHmiTag", false)]
+    [InlineData("14sp1", "ManageGenerationArtifacts", true)]
+    [InlineData("14sp1", null, true)]
+    [InlineData("19", "DeleteHmiTag", false)]
+    [InlineData("19", "ManageGenerationArtifacts", true)]
+    [InlineData("19", null, true)]
+    [InlineData("20", "DeleteHmiTag", false)]
+    [InlineData("20", "ManageGenerationArtifacts", true)]
+    [InlineData("20", null, false)]
+    [InlineData("21", "DeleteHmiTag", false)]
+    [InlineData("21", "ManageGenerationArtifacts", true)]
+    [InlineData("21", null, false)]
+    public void Public_usage_profile_preserves_master_output_schema(string release, string? toolName, bool mapped)
+    {
+        var schema = JsonNode.Parse("""
+            {"type":"object","properties":{"message":{"type":"string"}}}
+            """);
+        var raw = new JsonObject { ["success"] = true, ["usage"] = new JsonObject {
+            ["profile"] = toolName == null && release is "20" or "21" ? "full-engine" : "plc-foundation",
+            ["outputSchema"] = schema!.DeepClone() } };
+        if (toolName != null) raw["usage"]!["toolName"] = toolName;
+        var result = FoundationV4Result.Host(release, "GetToolUsage", "usage-schema-parity", raw, false);
+        var usage = result.StructuredContent!["data"]!;
+        Assert.True((bool?)result.StructuredContent["ok"]);
+        var expected = schema.DeepClone();
+        if (mapped)
+        {
+            expected!["properties"]!["summary"] = expected["properties"]!["message"]!.DeepClone();
+            expected["properties"]!.AsObject().Remove("message");
+        }
+        Assert.True(JsonNode.DeepEquals(expected, usage["outputSchema"]), usage["outputSchema"]!.ToJsonString());
+        Assert.Equal((string?)raw["usage"]!["profile"], (string?)usage["profile"]);
+        Assert.True(JsonNode.DeepEquals(schema, raw["usage"]!["outputSchema"]));
+    }
+
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Faceplate_sequence_without_tool_name_preserves_the_real_Value_property(string release)
+    {
+        var rows = ToolUsageCatalog.ProfileEntries(release).Select(row => (string)row!["currentName"]!).ToArray();
+        var reference = ToolUsageCatalog.Examples(release, "plc-foundation", rows,
+            exampleId: "sequence/hmi-faceplate-interface");
+        var inner = new ToolUsageTool(release, () => Array.Empty<McpServerTool>());
+        var request = Request("GetToolUsage");
+        request.Params = new CallToolRequestParams { Name = "GetToolUsage",
+            Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                """{"exampleId":"sequence/hmi-faceplate-interface"}""") };
+        var result = await new FoundationV4Tool(inner, release, () => new ApprovalSettings(true, 1)).InvokeAsync(request);
+        var data = result.StructuredContent!["data"]!;
+        Assert.True((bool?)result.StructuredContent["ok"]);
+        var referenceProperties = reference["examples"]![0]!["steps"]![4]!["arguments"]!["properties"]!;
+        var actualProperties = data["examples"]![0]!["steps"]![4]!["arguments"]!["properties"]!;
+        Assert.NotNull(referenceProperties["Value"]);
+        Assert.NotNull(actualProperties["Value"]);
+        Assert.Null(actualProperties["value"]);
+        Assert.True(JsonNode.DeepEquals(referenceProperties, actualProperties));
+    }
+
     [Fact]
     public async Task Generation_diagnostics_are_isolated_between_concurrent_calls_and_stop_after_disposal()
     {

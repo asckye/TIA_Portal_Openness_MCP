@@ -97,7 +97,7 @@ def main():
             options = {'public_api': api.resolve(), 'plc_worker': plc[release]}
             profile = 'full'
         else:
-            exe, installation, options, profile = args.foundation_host, case, {}, 'plc-foundation'
+            exe, installation, options, profile = args.foundation_host, case, {}, 'full'
         server = resources.server(exe.resolve(), installation, release, 'stdio', profile, env_overrides=env, **options)
         with server as (rpc, _, _):
             tools = contracts.initialize(rpc)

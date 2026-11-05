@@ -11,6 +11,8 @@
 - Restore shared Workbench style usage after the UI redesign, keep configuration headings untrimmed, remove obsolete translations, and prevent list binding updates from opening client-enable confirmations.
 
 ### Changed
+- 工作台操作员会话始终使用所选版本的完整工具目录，包括附着到 AI 客户端启动的 lite 宿主时；AI 会话仍保留其选择的目录。
+- 八版统一默认 lite 工具列表：V14 SP1–V19 的客户端现在先看到精简列表，V20/V21 的 lite 列表扩大；`FindTools` / `CallTool` 可访问其余工具，`--profile full` 恢复完整列表。统一展示名称为 `plc-foundation`，提示词按已注册工具过滤。
 - Transport checks retain the full profile and check up to four releases at a time, respecting `-MaxParallelism` with deterministic report ordering.
 
 ## [4.0.0-beta.3] - 2026-11-04

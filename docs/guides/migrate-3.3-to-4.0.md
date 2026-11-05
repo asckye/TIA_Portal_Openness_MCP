@@ -129,7 +129,7 @@ TIA Portal、Openness 组件和许可证仍需单独安装。工作台和宿主�
 - **用法查询**：V20/V21 原来的写作指南和配方查询并入 `GetToolUsage`，按 `toolName`、`operation`、`language` 或 `exampleId` 查询。
 - **按版本移除**：V14 SP1–V19 不再列出 FB、FC、LAD FC、FlgNet 调用、变量表和结构化文本的 XML 生成工具；4.0 中 `BuildPlcFbBlock`、`BuildPlcFcBlock`、`BuildPlcLadFcBlock` 只在 V21 提供，`BuildFlgNetCall`、`BuildPlcTagTable`、`BuildStructuredText` 在 V20/V21 提供。V21 的 SDK 没有 `ExportScadaData`、`ImportSinumerikAlarmTexts`、`InitializeSimotionScripting`、`ManageSinumerikArchive`、`ManageSinumerikSafetyMode` 对应的 API，这五个工具在 V21 上不再列出。V20 上不再列出只有 V21 才有 API 的工具，逐项见迁移表。
 - **V14 SP1–V19 新增工具**：硬件、网络、HMI、库、在线、批处理和发现等工具族加入这些版本，只要该版本的 API 支持其中至少一个动作。各版数量见[逐版本工具说明](../reference/version-tools.md)（英文）和服务的 `tools/list`。
-- **V20/V21 档位**：默认仍为 lite 档，其余工具用 `FindTools` 查找、`CallTool` 调用，或向宿主传入 `--profile full`。
+- **八版档位**：V14 SP1–V19 现在也默认使用 lite 档，V20/V21 的 lite 名单扩大；其余工具用 `FindTools` 查找、`CallTool` 调用，或向宿主传入 `--profile full`。工作台操作员会话始终使用完整目录。
 
 ### 参数
 

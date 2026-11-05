@@ -37,17 +37,17 @@ internal sealed class FoundationCatalog : IToolCatalogView
         Lite = Array.Empty<ToolDescriptor>();
         var merged = new SharedToolCatalog(this, shared, essentials ?? new HashSet<string>(StringComparer.Ordinal));
         var all = merged.All.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
-        // Old-release host declarations retain their existing presentation after the shared overlay.
-        foreach (var pair in declared.Where(_ => !data.UseDeclaredDiscovery))
+        // Host-executed declarations own their presentation; the shared implementation supplies invocation only.
+        foreach (var pair in declared
+                .Where(pair => pair.Value.Execution == "host" && TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(pair.Key) && all
+                    .ContainsKey(pair.Key)))
             all[pair.Key] = pair.Value;
         var order = data.PreferredOrder.Concat(shared.Select(tool => tool.ProtocolTool.Name)).Concat(all.Keys)
             .Distinct(StringComparer.Ordinal).Where(all.ContainsKey);
         All = order.ToDictionary(name => name, name => all[name], data.NameComparer);
         IncludingUnavailable = data.RetainUnavailable
-            ? data.PreferredOrder.Concat(declared.Keys).OrderBy(name => name, StringComparer.Ordinal)
-                .Concat(shared.Select(tool => tool.ProtocolTool.Name)).Distinct(StringComparer.Ordinal)
-                .Where(merged.IncludingUnavailable.ContainsKey)
-                .ToDictionary(name => name, name => merged.IncludingUnavailable[name], data.NameComparer)
+            ? merged.IncludingUnavailable.OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                .ToDictionary(pair => pair.Key, pair => pair.Value, data.NameComparer)
             : All;
         Lite = data.HasLite ? All.Values.Where(tool => essentials?.Contains(tool.Name) == true
             || SharedToolPolicy.Bridge.Contains(tool.Name, StringComparer.Ordinal)).ToArray() : Array.Empty<ToolDescriptor>();

@@ -55,7 +55,7 @@ internal static class PassiveHostDiagnosticsTests
         foreach (var release in TiaVersionCatalog.All)
         foreach (var native in new[] { false, true })
         {
-            using var engineScope = release.IsFullEngine ? EngineHostParity.EnterScope() : null;
+            using var engineScope = release.EngineOutputDirectory != null ? EngineHostParity.EnterScope() : null;
             var worker = new ForbiddenWorker();
             var registry = LegacyHostToolRegistry.Create(worker, release.Key, native);
             check(registry.Where(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name) && PortedToolContract.Families(release.Key).Any(f => f.Tools.Contains(t.ProtocolTool.Name))).Select(t => t.ProtocolTool.Name).Order().SequenceEqual(
@@ -100,7 +100,7 @@ internal static class PassiveHostDiagnosticsTests
         }
         foreach (var release in TiaVersionCatalog.All)
         {
-            using var engineScope = release.IsFullEngine ? EngineHostParity.EnterScope() : null;
+            using var engineScope = release.EngineOutputDirectory != null ? EngineHostParity.EnterScope() : null;
             var worker = new ForbiddenWorker();
             var actual = LegacyHostToolRegistry.Create(worker, release.Key, true);
             var large = actual.Concat(Enumerable.Range(0, 1024 - actual.Count)
@@ -197,8 +197,12 @@ internal static class PassiveHostDiagnosticsTests
         finally { Directory.Delete(apiFixtureRoot, recursive: true); }
         var contractRegistry = LegacyHostToolRegistry.Create(new ForbiddenWorker(), "17", false);
         var duplicate = contractRegistry.Concat(new[] { contractRegistry[0] }).ToArray();
-        check(!FoundationPassiveDiagnostics.Inspect("17", false, duplicate)["checks"]!["uniqueRegisteredNames"]!.GetValue<bool>(), "duplicate registration is a failed check");
-        check(!FoundationPassiveDiagnostics.Inspect("17", false, contractRegistry.Skip(1).ToArray())["checks"]!["foundationOperationsInSourceAllowlist"]!.GetValue<bool>(), "missing wired tool is a failed check");
+        check(!FoundationPassiveDiagnostics.Inspect("17", false, duplicate)["checks"]!["uniqueRegisteredNames"]!.GetValue<bool>(),
+                "duplicate registration is a failed check");
+        check(!FoundationPassiveDiagnostics
+                .Inspect("17", false, contractRegistry.Where(tool => tool.ProtocolTool.Name != "ConnectPortal")
+                    .ToArray())["checks"]!["foundationOperationsInSourceAllowlist"]!
+                .GetValue<bool>(), "missing wired tool is a failed check");
         foreach (var name in expectedPortedOperations.Keys)
             check(!FoundationPassiveDiagnostics.Inspect("17", false, contractRegistry.Where(tool => tool.ProtocolTool.Name != name).ToArray())["checks"]!["foundationOperationsInSourceAllowlist"]!.GetValue<bool>(), "missing ported tool fails the structural check");
         var sourceOperations = TiaMcp.PlcWorker.WorkerOperations.Names.Concat(expectedPortedOperations.Values.SelectMany(operations => operations)).ToHashSet(StringComparer.Ordinal);

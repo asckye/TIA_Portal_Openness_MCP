@@ -27,6 +27,13 @@ public static class PromptRegistrationFixture
         var expected = promptType.GetMethods().Select(m => m.GetCustomAttribute<McpServerPromptAttribute>())
             .Where(a => a != null).Select(a => a!.Name!).OrderBy(n => n).ToArray();
         Check(expected.Length == 30 && expected.Distinct().Count() == 30, "30 unique production prompts must survive");
+        DirectoryInfo? root = new(AppContext.BaseDirectory);
+        while (root != null && !File.Exists(Path.Combine(root.FullName, "manifest/version-tools.json"))) root = root.Parent;
+        using var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(root!.FullName, "manifest/version-tools.json")));
+        var universe = catalog.RootElement.GetProperty("releases").EnumerateObject()
+            .SelectMany(release => release.Value.GetProperty("tools").EnumerateArray().Select(tool => tool.GetString()!))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        foreach (var roster in new string[]?[] { null, universe })
         foreach (var transportSite in new[] { "stdio", "HTTP stream" })
         {
             var services = new ServiceCollection();
@@ -34,7 +41,7 @@ public static class PromptRegistrationFixture
             if (transportSite == "stdio") builder.WithStdioServerTransport();
             else builder.WithStreamServerTransport(Stream.Null, Stream.Null);
             var registration = assembly.GetType("TiaMcpServer.ModelContextProtocol.McpPromptRegistration", true)!;
-            registration.GetMethod("Configure", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { builder });
+            registration.GetMethod("Configure", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object?[] { builder, roster, universe });
             await using var provider = services.BuildServiceProvider();
             var prompts = provider.GetServices<McpServerPrompt>().ToArray();
             Check(prompts.Select(p => p.ProtocolPrompt.Name).OrderBy(n => n).SequenceEqual(expected), "registered prompt inventory differs");

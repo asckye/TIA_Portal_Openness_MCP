@@ -43,6 +43,16 @@ internal static class ToolUsageTests
             var guide = roster.Single(t => t.ProtocolTool.Name == "GetToolUsage");
             async Task<CallToolResult> Call(string args) => await guide.InvokeAsync(new RequestContext<CallToolRequestParams>(server) {
                 Params = new CallToolRequestParams { Name = "GetToolUsage", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args) } });
+            var commonLibrary = JsonNode
+                .Parse(((TextContentBlock)(await Call("{\"exampleId\":\"sequence/connect-project\",\"exampleKind\":\"sequence\"}")).Content.Single())
+                    .Text)!["data"]!;
+            check((string?)commonLibrary["profile"] == "plc-foundation" && (string?)commonLibrary["releaseKey"] == release,
+                "shared connection library uses the public profile and exact release: " + release);
+            var commonSequence = commonLibrary["examples"]!.AsArray().Single()!;
+            check((string?)commonSequence["profile"] == "plc-foundation" && (bool?)commonSequence["releaseMatches"] == true
+                && (bool?)commonSequence["profileMatches"] == true && (bool?)commonSequence["available"] == true
+                && commonSequence["steps"]!.AsArray().All(step => roster.Any(tool => tool.ProtocolTool.Name == (string)step!["tool"]!)),
+                "shared connection sequence matches the actual registered contracts on every release: " + release);
             if (release is not ("20" or "21"))
             {
                 var indexEnvelope = JsonNode.Parse(((TextContentBlock)(await Call("{}")).Content.Single()).Text)!;
@@ -87,6 +97,8 @@ internal static class ToolUsageTests
                 check(response.IsError != true, "usage retrieval: " + release + "/" + tool.ProtocolTool.Name);
                 var usage = JsonNode.Parse(((TextContentBlock)response.Content.Single()).Text)!["data"]!;
                 check(usage["releaseKey"]!.GetValue<string>() == release, "usage has exact release");
+                check((string?)usage["profile"] == "plc-foundation", "every tool usage has the common public profile: " + release + "/" + tool.ProtocolTool
+                        .Name);
                 check(JsonNode.DeepEquals(usage["inputSchema"], JsonNode.Parse(tool.ProtocolTool.InputSchema.GetRawText())), "usage reflects actual schema");
                 if(release is not ("20" or "21"))
                     check((string?)usage["example"]!["kind"]=="parameterized-call-example", "every deployed foundation tool has a maintained call example: "+release+"/"+tool.ProtocolTool.Name+" ("+(string?)usage["example"]!["kind"]+")");

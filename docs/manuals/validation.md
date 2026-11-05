@@ -126,7 +126,7 @@ dotnet run --project build-tools/release -- generate-tool-counts
 
 ### 工具契约兼容检查
 
-八个发布键分别通过 `Snapshot-ToolContracts.py capture --exe` 从对应宿主捕获工具定义，再用 `compare --baseline manifest/contracts/v4/baseline --current <捕获目录>` 检查。基线守护八版工具名称、输入与输出 schema、注解、描述哈希、行为能力及 V20/V21 lite 名单；格式 2 在每个文件的 `schemas` 表中保存输出 schema，由工具的 `outputSchemaSha256` 引用，加载时还原完整输出 schema，捕获文件与基线仍逐字节比较。删除工具或参数、新增必填参数以及类型、枚举、默认值变化均须审查，不能只运行离线 `verify` 代替实际捕获。逐工具响应基线的移除范围见上文；契约快照继续保留。
+八个发布键分别通过 `Snapshot-ToolContracts.py capture --exe` 从对应宿主捕获工具定义，再用 `compare --baseline manifest/contracts/v4/baseline --current <捕获目录>` 检查。基线守护八版工具名称、输入与输出 schema、注解、描述哈希、行为能力及八版 lite 名单；格式 2 在每个文件的 `schemas` 表中保存输出 schema，由工具的 `outputSchemaSha256` 引用，加载时还原完整输出 schema，捕获文件与基线仍逐字节比较。删除工具或参数、新增必填参数以及类型、枚举、默认值变化均须审查，不能只运行离线 `verify` 代替实际捕获。逐工具响应基线的移除范围见上文；契约快照继续保留。
 
 ### 注释与 MCP 中文门禁
 

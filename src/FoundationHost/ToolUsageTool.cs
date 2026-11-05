@@ -71,6 +71,14 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
             if (offset < 0 || limit < 1 || limit > 200) throw new ArgumentException("offset >= 0 and limit 1..200 are required.");
             JsonObject usage;
             var all = roster();
+            var schemas = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
+            JsonObject? SchemaFor(string target)
+            {
+                if (schemas.TryGetValue(target, out var cached)) return cached;
+                var tool = all.FirstOrDefault(item => item.ProtocolTool.Name == target)?.ProtocolTool;
+                if (tool == null) return null;
+                return schemas[target] = JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject();
+            }
             string Profile(string target) => exampleProfile?.Invoke(target) ?? "plc-foundation";
             if (name.Length > 0)
             {
@@ -78,16 +86,19 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                 var target = all.Select(t => t.ProtocolTool).FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase))
                     ?? throw new ArgumentException("Tool is not available in this release: " + name);
                 usage = ToolUsageCatalog.Describe(target.Name, releaseKey, Profile(name), target.Description ?? "",
-                    (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!, operation: operation, roster: all.Select(t => t.ProtocolTool.Name));
+                    (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!, operation: operation, roster: all.Select(t => t.ProtocolTool.Name), schemaFor
+                        : SchemaFor);
                 usage["outputSchema"] = target.OutputSchema.HasValue ? JsonNode.Parse(target.OutputSchema.Value.GetRawText()) : null;
                 usage["resultContract"] = new JsonObject { ["type"] = "Envelope", ["schemaVersion"] = 4 };
                 usage["examples"] = ToolUsageCatalog
-                    .Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name, exampleKind)["examples"]!
+                    .Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name, exampleKind, schemaFor
+                            : SchemaFor)["examples"]!
                     .DeepClone();
             }
             else if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
                 usage = ToolUsageCatalog
-                    .Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, exampleKind: exampleKind);
+                    .Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, exampleKind: exampleKind, schemaFor
+                            : SchemaFor);
             else
             {
                 usage = ToolUsageCatalog.ReadReference(query, id, offset, limit);
@@ -98,7 +109,7 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                     usage["toolCount"] = names.Length;
                     usage["behaviorCapabilities"] = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(ToolUsageTool).Assembly, releaseKey);
                     usage["nextToolOffset"] = offset + limit < names.Length ? JsonValue.Create(offset + limit) : null;
-                    usage["exampleLibrary"] = ToolUsageCatalog.Examples(releaseKey, Profile(name), names);
+                    usage["exampleLibrary"] = ToolUsageCatalog.Examples(releaseKey, Profile(name), names, schemaFor: SchemaFor);
                 }
             }
             return ValueTask

@@ -233,7 +233,8 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
         await DetachAsync().ConfigureAwait(false);
         var start = new ProcessStartInfo(Image(releaseKey)) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = root };
         foreach (string argument in new[] {
-                "--bundle-root", root, "--release-key", releaseKey, "--transport", "operator", "--operator-owner", Environment.ProcessId.ToString() })
+                "--bundle-root", root, "--release-key", releaseKey, "--profile", "full", "--transport", "operator",
+                "--operator-owner", Environment.ProcessId.ToString() })
             start.ArgumentList.Add(argument);
         HostLifecycleService.PrepareWorkbenchHost(start);
         ownedHost = startHost(start);
