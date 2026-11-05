@@ -1,3 +1,4 @@
+extern alias foundationhost;
 using ModelContextProtocol;
 using TiaMcpServer.ModelContextProtocol;
 using Xunit;
@@ -6,6 +7,20 @@ namespace TiaMcp.EngineHost.Tests;
 
 public sealed class SessionToolContractFailureTests
 {
+    [Fact]
+    public void Known_no_mutation_worker_refusal_keeps_its_reason_when_wrapped()
+    {
+        const string reason = "The worker refused Save As before changing the project.";
+        var refusal = new foundationhost::TiaMcp.FoundationHost.WorkerOperationException(reason, -32603, "rejected-before-operation");
+        refusal.Data["foundationKnownNoMutation"] = true;
+        var exception = new McpException("Unexpected error saving the project.", refusal, McpErrorCode.InternalError);
+        var body = SessionToolContract.Failure("SaveProjectCopy", exception, true, false, true).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal(reason, (string?)body["error"]?["message"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+    }
+
     [Fact]
     public void Internal_error_carries_the_request_diagnostic_id()
     {

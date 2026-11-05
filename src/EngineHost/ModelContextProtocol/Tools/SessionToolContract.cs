@@ -47,6 +47,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, !writes || nativeCallIssued, !writes, nativeRead: nativeCallIssued);
             if (!nativeCallIssued && !ContainsInvalidPortalState(exception) && TiaOpenness.Shared.HostFailurePolicy.Precondition(exception) == null
+                && !TiaOpenness.Shared.HostFailurePolicy.KnownNoMutation(exception)
                 && exception is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InternalError })
                 kind = TiaOpenness.Shared.HostFailureKind.InternalError;
             System.Diagnostics.Trace.TraceError("{0}: {1}", InvocationJournal.CorrelationId, exception.ToString());
