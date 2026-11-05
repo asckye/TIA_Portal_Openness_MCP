@@ -12,6 +12,115 @@ using Services = enginehost::TiaMcpServer.Siemens.Services;
 
 public sealed class HonestWriteOutcomeTests
 {
+    [Fact]
+    public void Password_policy_exception_in_evidence_keeps_its_reason()
+    {
+        const string message = "PasswordPolicySettingsException: Password policy cannot be changed.";
+        var data = new JsonObject { ["evidence"] = new JsonObject { ["error"] = message } };
+        TiaMcp.Logic.V4.HostBehavior.SanitizeEvidence(data, evidence: false);
+        Assert.Equal(message, (string?)data["evidence"]?["error"]);
+    }
+
+    [Fact]
+    public void Both_native_message_text_keys_are_sanitized()
+    {
+        var response = new Host.ResponseMessage { Meta = new JsonObject { ["operationSuccess"] = true,
+            ["messageData"] = new JsonObject { ["text"] = "Reason\n   password=hunter2", ["detailText"] = "Detail\n   password=hunter2" },
+            ["detailMessageData"] = new JsonArray(new JsonObject { ["text"] = "Inner\n   password=hunter2" }) } };
+        var body = Host.PlcToolContract.Map("DescribePlcBlockLogic", response, false, true).StructuredContent!;
+        Assert.Equal("Reason", (string?)body["data"]?["evidence"]?["messageData"]?["text"]);
+        Assert.Equal("Inner", (string?)body["data"]?["evidence"]?["detailMessageData"]?[0]?["text"]);
+        Assert.DoesNotContain("hunter2", body.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Native_detail_text_keeps_the_reason_and_removes_multiline_diagnostics()
+    {
+        var response = new Host.ResponseMessage { Meta = new JsonObject { ["operationSuccess"] = false, ["mayHaveChanged"] = false,
+            ["status"] = "ReadOrWriteFailed", ["nativeMessage"] = "Native reason", ["messageData"] = new JsonObject {
+                ["detailText"] = "Native reason\n   at Private.Native.Invoke()" },
+            ["detailMessageData"] = new JsonArray(new JsonObject { ["detailText"] = "Inner reason\nPrivate diagnostic continuation" }) } };
+        var body = Host.PlcToolContract.Map("ImportPlcBlockVerified", response, true, true).StructuredContent!;
+        Assert.Equal("Native reason", (string?)body["data"]?["evidence"]?["messageData"]?["detailText"]);
+        Assert.Equal("Inner reason", (string?)body["data"]?["evidence"]?["detailMessageData"]?[0]?["detailText"]);
+        Assert.DoesNotContain("Private", body.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    public static IEnumerable<object[]> LogicTextCases()
+    {
+        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        {
+            yield return new object[] { release, "SCL", "IF #a THEN\n   #b := TRUE;\n   at := 1;\nEND_IF;" };
+            yield return new object[] { release, "LAD", "Network 1\n   #b\n   at contact" };
+        }
+    }
+
+    [Theory, MemberData(nameof(LogicTextCases))]
+    public void Described_logic_keeps_indented_scl_and_lad_text(string release, string language, string text)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        var response = new Host.ResponseBlockLogic { Readable = text, Language = language,
+            Meta = new JsonObject { ["operationSuccess"] = true } };
+        var body = Host.PlcToolContract.Map("DescribePlcBlockLogic", response, false, true).StructuredContent!;
+        Assert.Equal(text, (string?)body["data"]?["readable"]);
+    }
+
+    [Theory]
+    [InlineData("session"), InlineData("hmi")]
+    public void Indented_scripts_survive_the_shared_result_cleaners(string contract)
+    {
+        const string text = "function read() {\n   at = 1;\n   return at;\n}";
+        var response = new { readable = text, scriptCode = text, globalDefinitionAreaScriptCode = text,
+            meta = new JsonObject { ["operationSuccess"] = true } };
+        var body = (contract == "session" ? Host.SessionToolContract.Map("GetPortalInfo", response, false, true)
+            : Host.HmiExchangeContract.Map("GetHmiProgramInfo", response, false, true)).StructuredContent!;
+        foreach (string key in new[] { "readable", "scriptCode", "globalDefinitionAreaScriptCode" })
+            Assert.Equal(text, (string?)body["data"]?[key]);
+    }
+
+    [Theory]
+    [InlineData("plc")]
+    [InlineData("session")]
+    [InlineData("hmi")]
+    public void Exception_text_in_evidence_is_still_reduced(string contract)
+    {
+        var response = new Host.ResponseMessage { Meta = new JsonObject { ["operationSuccess"] = false,
+            ["nativeMessage"] = "KeyNotFoundException: The given key was not present.\n   at Private.Method()",
+            ["stackTrace"] = "Private.Method()" } };
+        var body = (contract switch {
+            "plc" => Host.PlcToolContract.Map("DescribePlcBlockLogic", response, false, true),
+            "session" => Host.SessionToolContract.Map("GetPortalInfo", response, false, true),
+            _ => Host.HmiExchangeContract.Map("ListHmiTags", response, false, true)
+        }).StructuredContent!;
+        Assert.Equal("KeyNotFoundException: The given key was not present.", (string?)body["data"]?["evidence"]?["nativeMessage"]);
+        Assert.DoesNotContain("Private.Method", body.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Library_failure_message_carries_the_native_detail()
+    {
+        string text = NativeFailureText.Compose("Error when calling method Import", "Action is not supported within ExclusiveAccess.",
+            Array.Empty<string>());
+        var response = new Host.ResponseMessage { Meta = new JsonObject { ["operationSuccess"] = false, ["apiCallSuccess"] = false,
+            ["mayHaveChanged"] = false, ["status"] = "ReadOrWriteFailed", ["nativeMessage"] = text } };
+        var body = Host.LibraryToolContract.Map("ImportLibraryTypeDocuments", response, true).StructuredContent!;
+        Assert.Contains("Action is not supported within ExclusiveAccess.", (string?)body["error"]?["message"], StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Missing_provider_is_unsupported_capability(string release)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        var response = new Host.ResponseMessage { Meta = new JsonObject { ["operationSuccess"] = false,
+            ["mayHaveChanged"] = false, ["status"] = "NotSupportedOnVersion", ["nativeMessage"] = "Provider is unavailable for this CPU." } };
+        var body = Host.PlcToolContract.Map("GetPlcBlockFingerprints", response, false, true).StructuredContent!;
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("Provider is unavailable for this CPU.", (string?)body["error"]?["message"]);
+    }
+
     [Theory]
     [InlineData(true, "Success", 0, true, true)]
     [InlineData(false, "Failure", 1, true, true)]

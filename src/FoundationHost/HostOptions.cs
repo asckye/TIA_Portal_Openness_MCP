@@ -39,6 +39,12 @@ internal sealed class HostOptions
     public string? HostCommand { get; init; }
     public int? OperatorOwner { get; init; }
 
+    internal void ConfigureEngineeringResolver()
+    {
+        TiaMcpServer.Siemens.Engineering.TiaMajorVersion = TiaVersionCatalog.Get(ReleaseKey).MajorVersion;
+        TiaMcpServer.Siemens.Engineering.TiaPortalLocationOverride = TiaPortalLocation;
+    }
+
     internal static void RejectEngineOptions(string[] args, string directory)
     {
         if (args.Any(arg => arg.StartsWith("--engine-", StringComparison.OrdinalIgnoreCase)))

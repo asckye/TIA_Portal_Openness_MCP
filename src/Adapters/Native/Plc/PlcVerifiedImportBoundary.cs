@@ -61,7 +61,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 catch (Exception ex) {
                     if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)) meta["connectionUnavailable"] = true; throw; }
                 finally {
-                    if (exclusive != null && Equals(meta["connectionUnavailable"], true)) meta["exclusiveReleaseSkipped"] = true;
+                    if (exclusive != null && meta.TryGetValue("connectionUnavailable", out var lost) && Equals(lost, true))
+                        meta["exclusiveReleaseSkipped"] = true;
                     else exclusive?.Dispose();
                 }
             });

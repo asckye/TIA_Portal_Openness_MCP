@@ -9,6 +9,34 @@ namespace TiaMcp.Generation.Tests
 {
     public sealed class StepReviewModelTests
     {
+        [Fact]
+        public void Unbound_transition_accepts_the_first_verified_project_identity()
+        {
+            var after = new JsonObject { ["processId"] = 123, ["processStartUtc"] = "2026-11-04T00:00:00Z",
+                ["projectPath"] = "C:/Fixture.ap21", ["generation"] = "c6474692c3e740658035993a02ea915e" };
+            var tree = new JsonObject { ["devices"] = new JsonArray() };
+            Assert.True(StepReviewRules.Transition(new JsonObject(), after, "C:/Fixture.ap21", tree).Matches);
+            after["processId"] = null;
+            Assert.False(StepReviewRules.Transition(new JsonObject(), after, "C:/Fixture.ap21", tree).Matches);
+        }
+
+        [Theory]
+        [InlineData(false, false)]
+        [InlineData(false, true)]
+        [InlineData(true, false)]
+        [InlineData(true, true)]
+        public void Project_transition_compares_generation_as_an_opaque_value(bool guid, bool unchanged)
+        {
+            JsonNode previous = guid ? JsonValue.Create("c6474692c3e740658035993a02ea915e")! : JsonValue.Create(7L)!;
+            JsonNode next = unchanged ? previous.DeepClone()
+                : guid ? JsonValue.Create("ee1d86cbdfd1483c9d772d68c251728a")! : JsonValue.Create(3L)!;
+            var before = new JsonObject { ["processId"] = 123, ["processStartUtc"] = "2026-11-04T00:00:00Z", ["generation"] = previous };
+            var after = (JsonObject)before.DeepClone();
+            after["generation"] = next; after["projectPath"] = "C:/Fixture.ap21";
+            var verdict = StepReviewRules.Transition(before, after, "C:/Fixture.ap21", new JsonObject { ["devices"] = new JsonArray() });
+            Assert.Equal(!unchanged, verdict.Matches);
+        }
+
         [Theory]
         [InlineData("cleanup")]
         [InlineData("record")]

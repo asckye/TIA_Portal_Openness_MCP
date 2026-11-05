@@ -317,6 +317,16 @@ public sealed class PlcCrossReferenceAnalysisTests
     }
 
     [Fact]
+    public async Task Apply_export_carries_confirm_and_the_previewed_project_file()
+    {
+        using var worker = new ExportWorker();
+        await PlcCrossReferenceAnalysis.Run(worker, new JsonObject {
+            ["softwarePath"] = "devices/Station/PLC", ["groupPath"] = "", ["recursive"] = true, ["maxBlocks"] = 2 }, CancellationToken.None);
+        Assert.True((bool?)worker.ApplyArguments?["confirm"]);
+        Assert.Equal("project.ap21", (string?)worker.ApplyArguments?["expectedProjectFile"]);
+    }
+
+    [Fact]
     public async Task One_call_previews_exports_then_analyses_without_native_cross_reference_operations()
     {
         using var worker = new ExportWorker();
@@ -372,11 +382,13 @@ public sealed class PlcCrossReferenceAnalysisTests
     private sealed class ExportWorker : IFoundationWorker
     {
         internal readonly List<string> Calls = new();
+        internal JsonObject? ApplyArguments;
         private string? directory;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
             Assert.Equal("ExportBlocks", operation);
             bool preview = (bool)arguments["dryRun"]!;
+            if (!preview) ApplyArguments = (JsonObject)arguments.DeepClone();
             Calls.Add(operation + (preview ? ":preview" : ":apply"));
             directory = (string)arguments["exportPath"]!;
             if (!preview) Assert.Equal(new string('a', 64), (string?)arguments["expectedInventoryHash"]);

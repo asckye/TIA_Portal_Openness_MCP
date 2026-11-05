@@ -38,8 +38,7 @@ internal sealed class HostDoctorProbe : IHostDoctorProbe, IDisposable
     {
         Options = options;
         release = TiaVersionCatalog.Get(options.ReleaseKey);
-        Engineering.TiaMajorVersion = release.MajorVersion;
-        Engineering.TiaPortalLocationOverride = options.TiaPortalLocation;
+        options.ConfigureEngineeringResolver();
         var readiness = FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
         string? installed = (string?)readiness["environment"]?["tiaInstallPath"];
         apiDirectory = release.FindApiDirectory(options.ApiDirectory) ?? release.FindApiDirectory(installed!) ?? "";

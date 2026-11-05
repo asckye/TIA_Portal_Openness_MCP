@@ -32,7 +32,8 @@ namespace TiaMcp.Logic.Generation
         {
             var verdict = new StepReviewVerdict();
             foreach (string field in new[] { "processId", "processStartUtc" })
-                if (before[field] == null || !JsonNode.DeepEquals(before[field], after[field])) verdict.Different(field, before[field], after[field]);
+                if (after[field] == null || before[field] != null && !JsonNode.DeepEquals(before[field], after[field]))
+                    verdict.Different(field, before[field], after[field]);
             bool samePath = false;
             try {
                 samePath = string
@@ -41,13 +42,7 @@ namespace TiaMcp.Logic.Generation
             }
             catch (ArgumentException ex) { verdict.Differences.Add(new JsonObject { ["field"] = "projectPath.normalization", ["error"] = ex.Message }); }
             if (!samePath) verdict.Different("projectPath", JsonValue.Create(predicted), after["projectPath"]);
-            if (!long
-                    .TryParse(before["generation"]?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
-                        out var previous)
-                    || !long
-                    .TryParse(after["generation"]?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
-                        out var current)
-                    || current <= previous)
+            if (after["generation"] == null || JsonNode.DeepEquals(before["generation"], after["generation"]))
                 verdict.Different("generation", before["generation"], after["generation"]);
             if (!EmptyProject(tree, predicted)) verdict.Different("emptyProject", JsonValue.Create(true), tree);
             return verdict;

@@ -231,9 +231,13 @@ namespace TiaMcp.Adapters
                     try
                     {
                         var data = engineering.MessageData;
-                        meta["messageData"] = new Dictionary<string, object?> { ["text"] = data.Text, ["detailText"] = data.DetailText };
-                        meta["detailMessageData"] = engineering.DetailMessageData
+                        string message = data.Text, detailText = data.DetailText;
+                        meta["messageData"] = new Dictionary<string, object?> { ["text"] = message, ["detailText"] = detailText };
+                        var details = engineering.DetailMessageData
                             .Select(d => new Dictionary<string, object?> { ["text"] = d.Text, ["detailText"] = d.DetailText }).ToArray();
+                        meta["detailMessageData"] = details;
+                        meta["nativeMessage"] = NativeFailureText.Compose(message, detailText,
+                            details.SelectMany(d => new[] { (string?)d["text"], (string?)d["detailText"] }));
                     }
                     catch { /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ }
                 }

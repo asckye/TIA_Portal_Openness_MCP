@@ -143,14 +143,20 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private (string Binding, string Project) Target(bool allowUnbound = false)
         {
-            Read("GetSessionState", requireComplete: false);
-            var data = Read("GetOpennessWorkerStatus");
-            var identity = data["worker"]?["binding"]?["identity"] as JsonObject;
+            var state = Read("GetSessionState", requireComplete: false)["sessionState"];
+            var identity = state?["binding"]?["identity"] as JsonObject;
             string? project = (string?)identity?["projectPath"];
-            if (identity?["processId"] == null || !allowUnbound && string.IsNullOrEmpty(project))
+            if ((bool?)state?["connected"] != true)
                 throw new GenerationCallRejectionException(new Error(SessionBehavior.PortalRequired,
                             new PreconditionFailedDetails("portal-connected", "ConnectPortal")));
-            if (identity?["processStartUtc"] == null || identity?["generation"] == null)
+            if (string.IsNullOrEmpty(project))
+            {
+                if (!allowUnbound)
+                    throw new GenerationCallRejectionException(new Error("No project is open. Open a project before planning for an existing project.",
+                        new ProjectNotBoundDetails()));
+                return (PendingApproval.Canonical(identity ?? new JsonObject()), "");
+            }
+            if (identity?["processId"] == null || identity?["processStartUtc"] == null || identity?["generation"] == null)
                 throw new GenerationCallRejectionException(new Error("Verified process and project binding identity are required.",
                             new PreconditionFailedDetails("generation-identity", project)));
             return (PendingApproval.Canonical(identity), project ?? "");

@@ -46,6 +46,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, null, new Error(resource.Message, new ResourceUnavailableDetails(resource.Resource)),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, !writes || nativeCallIssued, !writes, nativeRead: nativeCallIssued);
+            if (!nativeCallIssued && !ContainsInvalidPortalState(exception) && TiaOpenness.Shared.HostFailurePolicy.Precondition(exception) == null
+                && exception is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InternalError })
+                kind = TiaOpenness.Shared.HostFailureKind.InternalError;
+            System.Diagnostics.Trace.TraceError("{0}: {1}", InvocationJournal.CorrelationId, exception.ToString());
             if (writes && !nativeCallIssued && kind == TiaOpenness.Shared.HostFailureKind.Precondition)
             {
                 var portalStateFailure = ContainsInvalidPortalState(exception);
@@ -67,7 +71,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (priorMutation) data["earlierMutationMayHaveChanged"] = true;
             return Result(tool, data,
                 HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception), reason,
-                    nativeCallIssued ? "tool-call" : "tool-queue"),
+                    nativeCallIssued ? "tool-call" : "tool-queue", diagnosticId: InvocationJournal.CorrelationId),
                 readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind), HostBehavior.CompletenessOf(kind), writes, current);
         }
 
@@ -91,6 +95,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else data["summary"] = data["message"]?.DeepClone();
             data.Remove("message");
             data["evidence"] = evidence;
+            HostBehavior.SanitizeEvidence(data, evidence: false);
             Clean(data);
 
             bool? Flag(string key) => Bool(evidence[key]) ?? Bool(data[key]);
@@ -181,8 +186,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (pair.Key.IndexOf("password", StringComparison.OrdinalIgnoreCase) >= 0
                         || pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0) obj.Remove(pair.Key);
-                    else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text) && text.Contains("\n   "))
-                        obj[pair.Key] = "Diagnostic details retained in the server log.";
                     else Clean(pair.Value);
                 }
             else if (node is JsonArray array) foreach (var child in array) Clean(child);

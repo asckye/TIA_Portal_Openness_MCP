@@ -16,6 +16,55 @@ using Server = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class SharedWorkerRegressionTests
 {
+    public static IEnumerable<object[]> Releases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
+        .Select(release => new object[] { release });
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Online_monitoring_safety_self_test_runs_the_reflection_guard(string release)
+    {
+        using var fixture = new Fixture(release);
+        var services = FoundationHostPorts.CreateServices(fixture.Worker, release, () => new JsonObject { ["ready"] = true }, null);
+        using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
+        using var context = pipeline.EnterSession();
+        var response = new enginehost::TiaMcpServer.ModelContextProtocol.HostMetaTools().RunOnlineMonitoringSafetySelfTest();
+        Assert.Equal("pass", Assert.Single(response.Items!, item => item.Id == "safety.reflection-hard-deny-semantics").Status);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Acceptance_report_writes_both_files(string release)
+    {
+        using var fixture = new Fixture(release);
+        var services = FoundationHostPorts.CreateServices(fixture.Worker, release, () => new JsonObject { ["ready"] = true }, null);
+        using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
+        using var context = pipeline.EnterSession();
+        string directory = Path.Combine(fixture.Root, "acceptance");
+        var response = await new enginehost::TiaMcpServer.ModelContextProtocol.HostMetaTools().GenerateAcceptanceReport(directory);
+        Assert.True(File.Exists(response.MarkdownPath));
+        Assert.True(File.Exists(response.JsonPath));
+        Assert.NotEmpty(File.ReadAllText(response.MarkdownPath));
+        Assert.IsType<JsonObject>(JsonNode.Parse(File.ReadAllText(response.JsonPath)));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Compatibility_reads_host_metadata_while_the_worker_is_faulted(string release)
+    {
+        using var fixture = new Fixture(release);
+        var worker = fixture.Worker;
+        await worker.Observe("status", new(), CancellationToken.None);
+        await Assert.ThrowsAnyAsync<Exception>(() => worker.Call("FixtureUnknown", new(), CancellationToken.None));
+        Assert.True(worker.WorkerFaulted);
+        var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, fixture.Root);
+        string assembly = typeof(TiaMcp.Adapters.Contracts.NativeFailureText).Assembly.Location;
+        string copied = Path.Combine(fixture.Root, "Siemens.Engineering.HostMetadata.dll");
+        File.Copy(assembly, copied);
+        using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
+        using var context = pipeline.EnterSession();
+        var observed = await services.Observe("assemblies", new(), CancellationToken.None);
+        Assert.Equal(copied, (string?)Assert.Single(observed!.AsArray())!["location"]);
+        var response = new enginehost::TiaMcpServer.ModelContextProtocol.EngineeringDiagnosticsTools().GetOpennessCompatibilityV4();
+        Assert.False(response.IsError == true, response.StructuredContent?.ToJsonString());
+    }
+
     public static IEnumerable<object[]> DisconnectCases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .SelectMany(release => new[] { new object[] { release, false }, new object[] { release, true } });
 
@@ -447,6 +496,7 @@ public sealed class SharedWorkerRegressionTests
         private readonly string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "bin-build", "r2-worker-" + Guid.NewGuid().ToString("N")[..8]);
         internal readonly WorkerClient Worker;
+        internal string Root => root;
         internal Fixture(string release)
         {
             this.release = release;

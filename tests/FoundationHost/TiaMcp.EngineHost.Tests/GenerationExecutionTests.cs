@@ -66,10 +66,12 @@ public sealed class GenerationExecutionTests : IDisposable
         EngineHostConfiguration.Worker = new FixtureWorker();
         EngineHostConfiguration.Current.Catalog = new FixtureCatalog();
         return new GenerationExecutionSession(() => root, (name, args, check) => {
-            if (name == "GetSessionState") return Result(name, new JsonObject());
-            if (name == "GetOpennessWorkerStatus") return Result(name, new JsonObject { ["worker"] = new JsonObject { ["binding"] = new JsonObject { ["identity"] = new JsonObject {
+            if (name == "GetSessionState") return Result(name, new JsonObject { ["sessionState"] = new JsonObject {
+                ["connected"] = !noPortal, ["binding"] = new JsonObject { ["identity"] = new JsonObject {
                 ["projectPath"] = noPortal ? null : "C:/Projects/Test.ap" + release, ["processId"] = noPortal ? null : 1234,
                 ["processStartUtc"] = "2026-10-10T00:00:00Z", ["generation"] = bindingGeneration } } } });
+            if (name == "GetOpennessWorkerStatus") return SessionToolContract.Map(name, new ResponseMessage {
+                Meta = new JsonObject { ["worker"] = new JsonObject { ["binding"] = null }, ["operationSuccess"] = true } }, false, false);
             if (name == "GetProjectTree") return Result(name, new JsonObject { ["devices"] = new JsonArray(new JsonObject { ["kind"] = "device", ["name"] = "PLC1", ["articleNumber"] = "6ES7 513-1AL02-0AB0", ["version"] = "V2.0" }) });
             if (name == "GetSoftwareTree") return Result(name, new JsonObject { ["paths"] = new JsonArray() }, incomplete ? "partial" : "complete");
             if (name.StartsWith("List", StringComparison.Ordinal)) return Result(name, new JsonObject { ["items"] = new JsonArray() });
@@ -155,6 +157,14 @@ public sealed class GenerationExecutionTests : IDisposable
     private static CallToolResult Apply(GenerationExecutionSession session, JsonObject plan, bool preview = false)
         => session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, (string)plan["target"]!["projectIdentity"]!, null, preview);
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Plan_uses_the_session_state_binding(string release)
+    {
+        var plan = Plan(Session(release), release);
+        Assert.Equal("C:/Projects/Test.ap" + release, (string?)plan["target"]?["projectIdentity"]);
+        Assert.Equal(0, writes);
+    }
 
     [Theory, MemberData(nameof(Releases))]
     public void SameInputSameHashAndPreviewHasNoApprovalOrWrite(string release)

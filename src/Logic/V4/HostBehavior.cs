@@ -101,7 +101,7 @@ namespace TiaMcp.Logic.V4
 
         internal static Error FailureError(HostFailureKind kind, string? parameter,
             IReadOnlyDictionary<string, JsonElement> evidence, string? nativeMessage = null, string? reason = null, string stage = "approval-precheck",
-            string? condition = null)
+            string? condition = null, string? diagnosticId = null)
             => kind switch
             {
                 HostFailureKind.Argument =>
@@ -114,7 +114,7 @@ namespace TiaMcp.Logic.V4
                 HostFailureKind.Unknown =>
                     new Error("The operation outcome is unknown; inspect the retained evidence before a new session.",
                         new OutcomeUnknownDetails("tool-call", evidence, reason)),
-                HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(null)),
+                HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(diagnosticId)),
                 _ =>
                     new Error("The native read could not be completed.",
                         new NativeOperationFailedDetails(null, nativeMessage ?? EvidenceMessage(evidence), evidence))
@@ -133,13 +133,20 @@ namespace TiaMcp.Logic.V4
             if (end >= 0) message = message.Substring(0, end);
             int inner = message.IndexOf(" ---> ", StringComparison.Ordinal);
             if (inner >= 0) message = message.Substring(0, inner);
-            string json = DiagnosticPayload.Sanitize(JsonSerializer.Serialize(message));
+            var prefix = Regex.Match(message, @"^(?<type>[A-Za-z_][\w.`]*)(?<kind>Exception|Error):\s",
+                RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            string typeName = prefix.Groups["type"].Value;
+            // KeyNotFoundError is the explicitly retained non-credential error name.
+            bool keyNotFound = typeName == "KeyNotFound";
+            if (prefix.Success && prefix.Groups["kind"].Value == "Error" && !keyNotFound && DiagnosticPayload.IsCredentialPairName(typeName))
+                prefix = Match.Empty;
+            string json = DiagnosticPayload.Sanitize(JsonSerializer.Serialize(message.Substring(prefix.Length)));
             try
             {
                 string? safe = JsonSerializer.Deserialize<string>(json);
                 if (safe == null) return null;
                 safe = Regex.Replace(safe, @"(?i)(?<![\w])(?:[a-z]:\\|\\\\)[^\r\n""<>|;]*", "<path>", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
-                return DiagnosticPayload.Bound(safe);
+                return DiagnosticPayload.Bound(prefix.Value + safe);
             }
             catch (Exception error) when (error is JsonException || error is ArgumentException || error is RegexMatchTimeoutException)
             { return "Native operation failed."; }
@@ -155,7 +162,7 @@ namespace TiaMcp.Logic.V4
                 && (reportedCode == -32602 || reportedOutcome == "rejected-before-operation") ? SafeDiagnostic(error.Message) : null;
         }
 
-        internal static void SanitizeEvidence(JsonNode? node, bool evidence = true)
+        internal static void SanitizeEvidence(JsonNode? node, bool evidence = true, bool diagnostic = false)
         {
             if (node is JsonObject obj)
                 foreach (var pair in obj.ToArray())
@@ -164,6 +171,9 @@ namespace TiaMcp.Logic.V4
                         || pair.Key.Equals("sourceCode", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("source", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("content", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("readable", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("scriptCode", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("globalDefinitionAreaScriptCode", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("text", StringComparison.OrdinalIgnoreCase));
                     if (evidence && pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0
                         && (pair.Value is JsonArray || pair.Value is JsonValue stackValue && stackValue.TryGetValue<string>(out _))
@@ -175,16 +185,20 @@ namespace TiaMcp.Logic.V4
                         && (pair.Key.Equals("nativeMessage", StringComparison.OrdinalIgnoreCase)
                             || pair.Key.Equals("workerMessage", StringComparison.OrdinalIgnoreCase)
                             || pair.Key.Equals("message", StringComparison.OrdinalIgnoreCase)
+                            || (evidence || diagnostic) && pair.Key.Equals("detailText", StringComparison.OrdinalIgnoreCase)
+                            || diagnostic && pair.Key.Equals("text", StringComparison.OrdinalIgnoreCase)
                             || pair.Key.Equals("error", StringComparison.OrdinalIgnoreCase)
                             || !sourceText && (text.Contains("\n   at ") || text.Contains(" ---> "))))
                         obj[pair.Key] = SafeDiagnostic(text);
-                    else SanitizeEvidence(pair.Value, evidence || pair.Key.Equals("evidence", StringComparison.OrdinalIgnoreCase));
+                    else SanitizeEvidence(pair.Value, evidence || pair.Key.Equals("evidence", StringComparison.OrdinalIgnoreCase),
+                        diagnostic || pair.Key.Equals("messageData", StringComparison.OrdinalIgnoreCase)
+                            || pair.Key.Equals("detailMessageData", StringComparison.OrdinalIgnoreCase));
                 }
             else if (node is JsonArray rows)
                 for (int index = 0; index < rows.Count; index++)
                     if (rows[index] is JsonValue value && value.TryGetValue<string>(out var text)
-                        && (text.Contains("\n   at ") || text.Contains(" ---> "))) rows[index] = SafeDiagnostic(text);
-                    else SanitizeEvidence(rows[index], evidence);
+                        && (diagnostic || text.Contains("\n   at ") || text.Contains(" ---> "))) rows[index] = SafeDiagnostic(text);
+                    else SanitizeEvidence(rows[index], evidence, diagnostic);
         }
 
         // Host implementation details remain private. A worker's native diagnostic is

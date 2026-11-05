@@ -6,6 +6,11 @@
 - `prepare` now builds and packages, then checks the extracted ZIP; registered suites and source/transport checks run in `merge-check`, with `merge-check -All` required before each release candidate. Removed the approved PLC simulation jobs and their dedicated harness modes; package approval and all eight contract checks remain.
 
 ## [Unreleased]
+- Preserve password-policy exception reasons while redacting credential-like error names, native message fields, and private keys before diagnostic truncation.
+- Fix generation planning for connected portals without an open project and compare binding generations as opaque values; keep credential-like error names and native stack frames redacted without losing the native reason.
+- Preserve indented PLC logic and HMI script text in tool results while retaining diagnostic redaction; include native failure details in error messages.
+- Fix verified PLC import lease release, cross-reference export confirmation, generation session identity, and host diagnostic error correlation; report unavailable PLC providers as unsupported capabilities.
+- Read Openness compatibility assemblies on the host for every release, repair the monitoring reflection self-test, and configure serving-host HMI preflight resolution.
 
 ### Fixed
 - Validate PLC user-group paths before project checks and worker dispatch so invalid paths return `INVALID_ARGUMENT`.

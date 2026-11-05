@@ -165,7 +165,6 @@ internal static class FoundationHostPorts
                     if (profile.NativeObservations) return await ReadFacts();
                     throw new NotSupportedException("Use Windows administration to configure the Siemens TIA Openness group on this release.");
                 case "assemblies":
-                    if (profile.NativeObservations && !useLocalReadiness) return await ReadFacts();
                     var assemblies = new JsonArray();
                     if (Directory.Exists(apiDirectory))
                         foreach (var path in Directory.GetFiles(apiDirectory!, "Siemens.Engineering*.dll"))

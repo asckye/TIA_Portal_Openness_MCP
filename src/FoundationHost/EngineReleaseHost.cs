@@ -116,6 +116,7 @@ internal static class SharedReleaseHost
     private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null, Func<IFoundationSessionWorker,
             IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
+        options.ConfigureEngineeringResolver();
         EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
         WorkerClient worker = CreateWorker(options);
         LocalStabilityTelemetry.StartupStage("session.worker.created");

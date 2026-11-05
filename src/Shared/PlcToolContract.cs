@@ -122,6 +122,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (HostBehavior.UnchangedNativeFailure(evidence, Bool(evidence["operationSuccess"]) ?? Bool(evidence["success"])))
                 return Result(tool, root, HostBehavior.UnchangedNativeError(evidence), writes ? Outcome.Failed : Outcome.ReadFailed, Completeness.Complete,
                     current, writes);
+            if ((string?)evidence["status"] == "NotSupportedOnVersion" && Bool(evidence["mayHaveChanged"]) == false)
+                return Result(tool, root, new Error((string?)evidence["nativeMessage"] ?? "The capability is unavailable on this release.",
+                    new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)),
+                    Outcome.RejectedBeforeOperation, Completeness.None, current, writes);
 
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, root, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current,
@@ -209,9 +213,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase))
                         obj.Remove(pair.Key);
-                    else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text)
-                        && text.Contains("\n   "))
-                        obj[pair.Key] = "Diagnostic details retained in the server log.";
                     else Clean(pair.Value);
                 }
             else if (node is JsonArray array) foreach (var child in array) Clean(child);

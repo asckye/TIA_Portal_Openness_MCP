@@ -41,6 +41,8 @@ internal static class PlcCrossReferenceAnalysis
         BatchExportContract.Validate(preview, true);
         export["expectedInventoryHash"] = (string?)preview?["InventoryHash"] ?? throw new InvalidDataException("Export inventory hash missing.");
         export["dryRun"] = false;
+        export["confirm"] = true;
+        export["expectedProjectFile"] = preview!["ProjectFile"]?.DeepClone();
         token.ThrowIfCancellationRequested();
         var result = await worker.Call("ExportBlocks", export, token).ConfigureAwait(false);
         BatchExportContract.Validate(result, false);

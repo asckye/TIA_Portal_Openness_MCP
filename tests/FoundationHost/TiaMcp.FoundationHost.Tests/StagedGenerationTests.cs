@@ -18,6 +18,29 @@ using Configuration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
 public sealed class StagedGenerationTests
 {
     public static IEnumerable<object[]> Releases => PlanningFixture.Releases.Select(r => new object[] { r });
+    public static IEnumerable<object[]> PlanningStates => PlanningFixture.Releases.SelectMany(release =>
+        new[] { "disconnected-existing", "disconnected-new", "unbound-existing", "unbound-new", "bound-existing" }
+            .Select(state => new object[] { release, state }));
+
+    [Theory, MemberData(nameof(PlanningStates))]
+    public void Planning_uses_the_real_connection_and_project_state(string release, string state)
+    {
+        using var fixture = new Fixture(release, newProject: state.EndsWith("-new", StringComparison.Ordinal));
+        fixture.Connected = !state.StartsWith("disconnected", StringComparison.Ordinal);
+        fixture.Unbound = state.StartsWith("unbound", StringComparison.Ordinal);
+        if (!fixture.Connected || state == "unbound-existing")
+        {
+            var error = Assert.Throws<enginehost::TiaMcpServer.ModelContextProtocol.GenerationCallRejectionException>(() => fixture.Plan());
+            Assert.Contains(fixture.Connected ? "No project is open" : "No TIA Portal is connected", error.Message, StringComparison.Ordinal);
+        }
+        else
+        {
+            var plan = fixture.Plan();
+            Assert.Equal(fixture.Project, (string?)plan["target"]?["projectIdentity"]);
+            Assert.Equal(0, fixture.Worker.Writes);
+        }
+    }
+
     public static IEnumerable<object[]> DecidingFields => PlanningFixture.Releases.SelectMany(r => new[] {
         "status", "release", "projectFile", "processId", "softwarePath", "groupPath", "filePath", "inputSha256", "byteCount", "requestedSourceName", "sourcesBefore",
         "sourceName", "generationOption", "resultBasis", "objectsBefore", "sourceIdentity", "planHash" }.Select(f => new object[] { r, f }));
@@ -28,8 +51,10 @@ public sealed class StagedGenerationTests
         internal readonly string Release, Project;
         internal readonly bool NewProject;
         internal bool Created, DeviceCreated;
+        private int createdStateReads;
         internal string? TransitionFault;
         internal string BindingGeneration = "1";
+        internal bool Connected = true, Unbound;
         internal Worker Worker;
         internal readonly PlanningFixture Planner;
         internal readonly Session Session;
@@ -52,6 +77,7 @@ public sealed class StagedGenerationTests
         {
             Release = release; Project = Path.Combine(Root, "project", "Fixture.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release)).Replace('\\', '/');
             NewProject = newProject;
+            if (release is "20" or "21") BindingGeneration = "ee1d86cbdfd1483c9d772d68c251728a";
             if (newProject) Project = GenerationProjectPath.CreationFile(release, Path.Combine(Root, "project"), "Fixture");
             Directory.CreateDirectory(Path.GetDirectoryName(Project)!);
             Planner = new PlanningFixture(release); Planner.Machine.Target.Project.ProjectIdentity = Project;
@@ -89,7 +115,7 @@ public sealed class StagedGenerationTests
             Worker = new Worker(this);
             foreach (var source in previous.Sources) Worker.Sources.Add(source.Key, source.Value);
             Worker.Objects.AddRange(previous.Objects);
-            BindingGeneration = (int.Parse(BindingGeneration) + 1).ToString();
+            BindingGeneration = Release is "20" or "21" ? Guid.NewGuid().ToString("N") : (int.Parse(BindingGeneration) + 1).ToString();
             ConfigureWorker();
         }
         internal JsonObject Plan(string[]? adopt = null)
@@ -107,8 +133,13 @@ public sealed class StagedGenerationTests
         }
         private CallToolResult Call(string name, JsonObject args, Func<CallToolResult?>? check)
         {
-            if (name == "GetSessionState") return Host.V4Result(name, new JsonObject());
-            if (name == "GetOpennessWorkerStatus") return Host.V4Result(name, new JsonObject { ["worker"] = new JsonObject { ["binding"] = new JsonObject { ["identity"] = Identity() } } });
+            if (name == "GetSessionState")
+            {
+                if (Created) createdStateReads++;
+                return Host.V4Result(name, new JsonObject { ["sessionState"] = new JsonObject {
+                    ["connected"] = Connected, ["binding"] = Identity() is { } identity ? new JsonObject { ["identity"] = identity } : null,
+                    ["workerGeneration"] = 1 } });
+            }
             if (name == "GetProjectTree" && NewProject && !DeviceCreated && TransitionFault != "nonempty") return Host.V4Result(name, new JsonObject { ["tree"] = "```\nFixture\n  Ungrouped devices\n\n```" });
             if (name == "GetProjectTree") return Host.V4Result(name, new JsonObject { ["devices"] = new JsonArray(new JsonObject { ["kind"] = "device", ["name"] = "PLC1", ["articleNumber"] = "synthetic.article", ["version"] = "V1", ["slot"] = 0 }) });
             if (name == "GetSoftwareTree") return Host.V4Result(name, new JsonObject { ["paths"] = new JsonArray(Worker.Objects.Select(o => (JsonNode)new JsonObject { ["kind"] = o.Kind, ["name"] = o.Name, ["objectPath"] = o.Path })
@@ -160,7 +191,9 @@ public sealed class StagedGenerationTests
             if (name == "CreateProject")
             {
                 if (TransitionFault == "rejected") return Host.V4Reject(name, new TiaMcp.Logic.V4.Error("Injected creation refusal.", new TiaMcp.Logic.V4.PreconditionFailedDetails("fixture", null)));
-                Created = true; BindingGeneration = TransitionFault == "epoch" ? "1" : "2";
+                Created = true;
+                if (TransitionFault != "epoch")
+                    BindingGeneration = Release is "20" or "21" ? "c6474692c3e740658035993a02ea915e" : "2";
             }
             if (name == "MovePlcBlockToGroup")
             {
@@ -170,9 +203,23 @@ public sealed class StagedGenerationTests
             OnWrite?.Invoke();
             return Host.V4Result(name, new JsonObject());
         }
-        internal JsonObject Identity() => new() { ["projectPath"] = NewProject && !Created ? null : Created && TransitionFault == "unbound" ? "" : Created && TransitionFault == "path" ? "C:/Wrong/Wrong.ap21" : Created && TransitionFault == "normalized" ? Project.ToLowerInvariant().Replace('\\', '/') : Project,
-            ["processId"] = Created && TransitionFault == "process" ? 124 : 123,
-            ["processStartUtc"] = Created && TransitionFault == "start" ? "2026-10-10T01:00:00Z" : "2026-10-10T00:00:00Z", ["generation"] = BindingGeneration };
+        internal JsonObject? Identity()
+        {
+            bool shared = Release is "20" or "21";
+            bool noProject = NewProject && !Created || Unbound || Created && TransitionFault == "unbound";
+            if (!Connected || shared && noProject) return null;
+            // Shared workers have no pre-create identity; inject their identity drift between the two post-create reads.
+            bool fault = Created && (!shared || createdStateReads <= 1);
+            string generation = shared && Created && TransitionFault == "epoch" && createdStateReads > 1
+                ? "c6474692c3e740658035993a02ea915e" : BindingGeneration;
+            return new JsonObject {
+                ["projectPath"] = noProject ? null : Created && TransitionFault == "path" ? "C:/Wrong/Wrong.ap21"
+                    : Created && TransitionFault == "normalized" ? Project.ToLowerInvariant().Replace('\\', '/') : Project,
+                ["processId"] = fault && TransitionFault == "process" ? 124 : 123,
+                ["processStartUtc"] = fault && TransitionFault == "start" ? "2026-10-10T01:00:00Z" : "2026-10-10T00:00:00Z",
+                ["generation"] = shared ? JsonValue.Create(generation)
+                    : JsonValue.Create(long.Parse(generation, System.Globalization.CultureInfo.InvariantCulture)) };
+        }
         private Descriptor? Ordinary(string name)
         {
             if (name is "CreateDevice" or "CreatePlcBlockGroup" or "MovePlcBlockToGroup")
@@ -225,7 +272,7 @@ public sealed class StagedGenerationTests
         public bool Faulted => false;
         public JsonNode? Binding => fixture.Identity();
         public object SessionKey { get; } = new();
-        public string ApprovalIdentity => fixture.Identity().ToJsonString();
+        public string ApprovalIdentity => fixture.Identity()?.ToJsonString() ?? "{}";
         public bool Poisoned => Uncertain;
         public bool Bundled => false;
         public bool SharedSession => true;
@@ -613,7 +660,7 @@ public sealed class StagedGenerationTests
         var result = f.Apply(); Assert.Equal("partial", (string?)result["meta"]!["outcome"]);
         Assert.Equal("failed", (string?)result["data"]!["status"]); Assert.True(f.Created);
         Assert.Equal(f.Project, (string?)result["data"]!["createdProjects"]![0]);
-        Assert.Equal(f.Project, (string?)f.Identity()["projectPath"]);
+        Assert.Equal(f.Project, (string?)f.Identity()!["projectPath"]);
         Assert.Equal("succeeded", (string?)result["data"]!["steps"]![0]!["status"]);
         Assert.Null(GenerationWriteFence.RefusedRun(f.Worker.SessionKey, release, "SaveProject", "{}"));
     }
@@ -625,7 +672,7 @@ public sealed class StagedGenerationTests
         var result = f.Apply(); Assert.True((bool?)result["ok"], result.ToJsonString());
         Assert.Equal(1, f.Approvals); Assert.True(f.Worker.Generations > 0);
         Assert.True(new GenerationRunStore(Path.Combine(f.Root, "runs"))
-            .TryGetLineage((string)f.Identity()["projectPath"]!, release, out var lineage));
+            .TryGetLineage((string)f.Identity()!["projectPath"]!, release, out var lineage));
         Assert.Equal((string?)result["data"]!["runId"], lineage!["runId"]);
     }
 

@@ -46,7 +46,8 @@ internal static class WorkerObservations
                     ["InvokeObject"] = type.GetMethod("InvokeObject") != null, ["probe"] = context.ReflectionProbe };
             case "reflection-deny":
                 return JsonValue.Create(context.ReflectionType.GetMethod("GetHardDeniedReflectionReason", BindingFlags.NonPublic | BindingFlags.Static)!
-                    .Invoke(null, new object[] { new object(), (string)arguments["kind"]!, (string)arguments["path"]!, (string)arguments["method"]!
+                    .Invoke(null, new object[] { new object(), (string)arguments["kind"]!, (string)arguments["path"]!, (string)arguments["method"]!,
+                        (int)arguments["argumentCount"]!
                         }) as string);
             default:
                 if (operation.StartsWith("session.", StringComparison.Ordinal)) return context.Session(operation.Substring("session.".Length), arguments);

@@ -60,11 +60,20 @@ namespace TiaMcp.Adapters
                     try
                     {
                         var data = engineering.MessageData;
-                        meta["messageData"] = new Dictionary<string, object?> { ["text"] = data.Text, ["detailText"] = data.DetailText };
+                        string message = data.Text, detailText = data.DetailText;
+                        meta["messageData"] = new Dictionary<string, object?> { ["text"] = message, ["detailText"] = detailText };
                         var details = new List<object?>();
+                        var detailTexts = new List<string?>();
                         foreach (var detail in engineering.DetailMessageData)
-                            details.Add(new Dictionary<string, object?> { ["text"] = detail.Text, ["detailText"] = detail.DetailText });
+                        {
+                            string text = detail.Text, detailMessage = detail.DetailText;
+                            details.Add(new Dictionary<string, object?> { ["text"] = text, ["detailText"] = detailMessage });
+                            detailTexts.Add(text);
+                            detailTexts.Add(detailMessage);
+                        }
                         meta["detailMessageData"] = details;
+                        string composed = NativeFailureText.Compose(message, detailText, detailTexts);
+                        if (composed.Length != 0) meta["nativeMessage"] = composed;
                     }
                     catch { /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ }
                 }

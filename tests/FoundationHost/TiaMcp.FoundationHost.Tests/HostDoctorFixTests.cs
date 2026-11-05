@@ -30,6 +30,37 @@ public sealed class HostDoctorFixTests : IDisposable
     private static readonly string[] JsonKeys = { "releaseKey", "fix", "ready", "logs", "diagnostics", "checks", "group", "clients", "report" };
     public static IEnumerable<object[]> Releases() => TiaVersionCatalog.Runnable.Select(release => new object[] { release.Key });
 
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Serving_host_preflight_finds_the_release_installation(string release)
+    {
+        int major = int.Parse(release, CultureInfo.InvariantCulture);
+        string installation = Path.Combine(scratch, "Portal V" + release);
+        string api = Path.Combine(installation, "PublicAPI", "V" + release);
+        Put(Path.GetRelativePath(scratch, Path.Combine(api, "Siemens.Engineering.dll")), "fixture API marker");
+        Put(Path.GetRelativePath(scratch, Path.Combine(installation, "Bin", "Siemens.Automation.Portal.exe")), "fixture portal marker");
+        var previousMajor = Engineering.TiaMajorVersion;
+        var previousLocation = Engineering.TiaPortalLocationOverride;
+        try
+        {
+            Engineering.TiaMajorVersion = 19;
+            Engineering.TiaPortalLocationOverride = null;
+            var options = new foundationhost::TiaMcp.FoundationHost.HostOptions { ReleaseKey = release, WorkerExe = "missing-worker",
+                ApiDirectory = api, BundleRoot = Root(), TiaPortalLocation = installation, NativeEnabled = false, BundledWorker = false };
+            using var session = await foundationhost::TiaMcp.FoundationHost.SharedReleaseHost.CreateHostSession(options, false);
+            var report = enginehost::TiaMcpServer.ModelContextProtocol.ClassicHmiTemporaryImportPreflightSuite
+                .Run(Root(), Path.Combine(scratch, "reports"));
+            Assert.Equal(major, Engineering.TiaMajorVersion);
+            Assert.Equal(api, (string?)report["environment"]?["publicApiPath"]);
+            Assert.True((bool?)report["environment"]?["publicApiExists"]);
+            Assert.True((bool?)report["environment"]?["portalExeExists"]);
+        }
+        finally
+        {
+            Engineering.TiaMajorVersion = previousMajor;
+            Engineering.TiaPortalLocationOverride = previousLocation;
+        }
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void Workbench_fix_arguments_parse_with_the_host_options_of_every_release(string release)
     {

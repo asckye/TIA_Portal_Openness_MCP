@@ -332,7 +332,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string? InvokeReflectionDenyGuard(object guardMethod, string resultKind, string resultPath, string methodName)
         {
             return (string?)HostToolServices
-                .Observe("reflection-deny", new JsonObject { ["kind"] = resultKind, ["path"] = resultPath, ["method"] = methodName });
+                .Observe("reflection-deny", new JsonObject { ["kind"] = resultKind, ["path"] = resultPath, ["method"] = methodName,
+                    ["argumentCount"] = 1 });
         }
 
         private static string DescribeGuardResult(string? result)

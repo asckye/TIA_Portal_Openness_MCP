@@ -17,6 +17,80 @@ namespace TiaMcp.Engine.Tests
         private readonly Xunit.Abstractions.ITestOutputHelper output;
         public V4ProtocolRulesTests(Xunit.Abstractions.ITestOutputHelper output) { this.output = output; }
 
+        [Theory]
+        [InlineData("KeyNotFoundException: The given key 'connectionUnavailable' was not present in the dictionary.")]
+        [InlineData("System.Reflection.TargetParameterCountException: Parameter count mismatch.")]
+        public void Safe_diagnostic_keeps_the_word_after_an_exception_type(string message)
+            => Assert.Equal(message, HostBehavior.SafeDiagnostic(message));
+
+        [Theory]
+        [InlineData("password=abc", "abc")]
+        [InlineData("token: xyz", "xyz")]
+        [InlineData("client.key : private", "private")]
+        [InlineData("KeyNotFoundException: password=abc", "abc")]
+        public void Safe_diagnostic_still_masks_credentials(string message, string secret)
+            => Assert.DoesNotContain(secret, HostBehavior.SafeDiagnostic(message), StringComparison.Ordinal);
+
+        [Theory]
+        [InlineData("PasswordError: hunter2", "hunter2")]
+        [InlineData("apiTokenError: abc", "abc")]
+        public void Credential_markers_are_not_exception_type_prefixes(string message, string secret)
+            => Assert.DoesNotContain(secret, HostBehavior.SafeDiagnostic(message), StringComparison.Ordinal);
+
+        [Theory]
+        [InlineData("PasswordPolicySettingsException: Password policy cannot be changed.")]
+        [InlineData("KeyNotFoundError: The given key was not present.")]
+        public void Exception_suffix_keeps_the_native_reason(string message)
+            => Assert.Equal(message, HostBehavior.SafeDiagnostic(message));
+
+        [Theory]
+        [InlineData("dbPwdError: hunter2", "hunter2")]
+        [InlineData("ApiKeyValueError: abc", "abc")]
+        public void Error_suffix_uses_all_pair_markers(string message, string secret)
+            => Assert.DoesNotContain(secret, HostBehavior.SafeDiagnostic(message), StringComparison.Ordinal);
+
+        [Theory]
+        [InlineData("TargetInvocationException: Error when reading ---> X.PasswordPolicySettingsException: Error text",
+            "TargetInvocationException: Error when reading")]
+        [InlineData("TargetInvocationException: The read failed ---> KeyNotFoundException: The key was not present",
+            "TargetInvocationException: The read failed")]
+        public void Inner_exception_names_do_not_mask_the_outer_reason(string message, string expected)
+            => Assert.Equal(expected, HostBehavior.SafeDiagnostic(message));
+
+        [Fact]
+        public void Exception_prefix_cannot_expose_a_second_line()
+        {
+            string? text = HostBehavior.SafeDiagnostic("FooException:\nhunter2");
+            Assert.Equal("FooException:", text);
+            Assert.DoesNotContain("hunter2", text, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void Both_message_fields_use_diagnostic_context_without_evidence()
+        {
+            var data = new JsonObject { ["messageData"] = new JsonObject {
+                ["text"] = "Reason\npassword=hunter2", ["detailText"] = "Detail\npassword=hunter2" },
+                ["detailMessageData"] = new JsonArray(new JsonObject {
+                    ["text"] = "Inner\npassword=hunter2", ["detailText"] = "Inner detail\npassword=hunter2" }) };
+            HostBehavior.SanitizeEvidence(data, evidence: false);
+            Assert.Equal("Reason", (string?)data["messageData"]?["text"]);
+            Assert.Equal("Detail", (string?)data["messageData"]?["detailText"]);
+            Assert.Equal("Inner", (string?)data["detailMessageData"]?[0]?["text"]);
+            Assert.Equal("Inner detail", (string?)data["detailMessageData"]?[0]?["detailText"]);
+            Assert.DoesNotContain("hunter2", data.ToJsonString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void Qualified_key_error_name_is_redacted()
+            => Assert.DoesNotContain("hunter2", HostBehavior.SafeDiagnostic("PasswordStore.KeyNotFoundError: hunter2"), StringComparison.Ordinal);
+
+        [Theory]
+        [InlineData("PasswordException: hunter2")]
+        [InlineData("TokenException: abc")]
+        [InlineData("KeyNotFoundError: The key was not present")]
+        public void Accepted_type_name_examples_remain_visible(string message)
+            => Assert.Equal(message, HostBehavior.SafeDiagnostic(message));
+
         public static string Unannotated() => "offline";
         public static class ApprovalProbe
         {

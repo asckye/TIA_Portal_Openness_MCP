@@ -24,6 +24,8 @@ namespace TiaOpenness.Shared
         public const string Hidden = "••••";
         public const string Truncated = "\n… [truncated]";
         private static readonly string[] PairMarkers = { "password", "passwd", "pwd", "secret", "token", "key", "credential" };
+        internal static bool IsCredentialPairName(string name)
+            => PairMarkers.Any(marker => name.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0);
         private static readonly JsonSerializerOptions DisplayOptions = new JsonSerializerOptions
         { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
@@ -203,7 +205,7 @@ namespace TiaOpenness.Shared
                 int start = index;
                 while (index < text.Length && NameCharacter(text[index])) index++;
                 string name = text.Substring(start, index - start);
-                if (!PairMarkers.Any(marker => name.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0)) continue;
+                if (!IsCredentialPairName(name)) continue;
                 int delimiter = index;
                 while (delimiter < text.Length && char.IsWhiteSpace(text[delimiter])) delimiter++;
                 if (delimiter == text.Length || text[delimiter] != '=' && text[delimiter] != ':') continue;

@@ -64,6 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
             data["summary"] = data["message"]?.DeepClone();
             data.Remove("message");
             data["evidence"] = evidence;
+            HostBehavior.SanitizeEvidence(data, evidence: false);
             Clean(data);
 
             bool? Flag(string key) => Bool(evidence[key]);
@@ -167,8 +168,6 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)) obj
                     .Remove(pair.Key);
-                else if (pair.Value is JsonValue v && v.TryGetValue<string>(out var text) && text.Contains("\n   "))
-                    obj[pair.Key] = "Diagnostic details retained in the server log.";
                 else Clean(pair.Value);
             }
         }

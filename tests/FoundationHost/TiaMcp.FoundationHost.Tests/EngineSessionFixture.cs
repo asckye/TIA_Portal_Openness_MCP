@@ -34,8 +34,22 @@ internal static class EngineSessionFixture
         ChannelResponse Dispatch(ChannelRequest request)
         {
             if (request.Method == "adapter.HostObserve")
-                return ChannelResponse.Success(((string?)JsonNode.Parse(request.ArgumentsJson)?["operation"] == "assemblies"
-                    ? new JsonArray() : (JsonNode)Status()).ToJsonString());
+            {
+                var observation = JsonNode.Parse(request.ArgumentsJson)!;
+                var arguments = observation["arguments"];
+                string? operation = (string?)observation["operation"];
+                if (operation == "reflection") return ChannelResponse.Success(new JsonObject {
+                    ["guard"] = true, ["DescribeService"] = true, ["InvokeService"] = true, ["InvokeObject"] = true,
+                    ["probe"] = true }.ToJsonString());
+                if (operation == "reflection-deny")
+                {
+                    if ((int?)arguments?["argumentCount"] != 1)
+                        return ChannelResponse.Error(new ChannelFailureException("The reflection guard requires argumentCount=1.",
+                            -32602, ChannelOutcome.RejectedBeforeNative));
+                    return ChannelResponse.Success((string?)arguments?["method"] == "GetAttribute" ? "null" : "\"Reflection write refused.\"");
+                }
+                return ChannelResponse.Success((operation == "assemblies" ? new JsonArray() : (JsonNode)Status()).ToJsonString());
+            }
             if (request.Method == "adapter.FixtureCorrelation") return ChannelResponse.Success(new JsonObject {
                 ["id"] = request.CorrelationId, ["tool"] = request.ToolName }.ToJsonString());
             if (request.Method == "adapter.FixtureSpill")
