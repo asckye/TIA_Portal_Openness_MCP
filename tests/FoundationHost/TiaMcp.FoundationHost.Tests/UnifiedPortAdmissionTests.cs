@@ -593,6 +593,8 @@ public sealed class UnifiedPortAdmissionTests
         }
         if (arguments.ContainsKey("destinationDirectory"))
             arguments["destinationDirectory"] = Path.Combine(TiaOpenness.Shared.DataLocations.Current.OutputRoot, "new-output");
+        // Release 19 calls the raw Foundation tool, below the wrapper that adapts canonical names.
+        if (release == "19") arguments = TiaMcp.Logic.V4.CanonicalToolParameters.LegacyArguments(name, arguments);
         try
         {
             var result = await tool.InvokeAsync(Request(name, arguments));
