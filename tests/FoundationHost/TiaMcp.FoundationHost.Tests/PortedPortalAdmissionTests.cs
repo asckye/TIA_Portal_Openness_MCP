@@ -393,6 +393,17 @@ public sealed class PortedPortalAdmissionTests
         foreach (var key in new[] { "dryRun", "confirm", "confirmProtectionChange" })
             if (properties.TryGetProperty(key, out _)) args[key] = key != "dryRun";
         foreach (var pair in Overrides(name)) args[pair.Key] = pair.Value?.DeepClone();
+        foreach (var group in TiaMcp.Logic.V4.CanonicalToolParameters.Aliases(name).GroupBy(alias => alias.Legacy))
+        {
+            var alternatives = group.Where(alias => properties.TryGetProperty(alias.Canonical, out _)).ToArray();
+            if (args.ContainsKey(group.Key) || alternatives.Length == 0 || alternatives.Any(alias => args.ContainsKey(alias.Canonical))) continue;
+            if (TiaMcp.Logic.V4.CanonicalToolParameters.ValidateAliases(name, args)?.Details
+                is not TiaMcp.Logic.V4.InvalidArgumentDetails missing || missing.Parameter != group.Key) continue;
+            var target = alternatives.FirstOrDefault(alias => alias.Canonical == "sourceDirectory" && (string?)args["action"] == "import")
+                ?? alternatives[0];
+            args[target.Canonical] = Path.Combine(Path.GetTempPath(), "portal-admission", name,
+                target.Canonical == "exportFile" ? "fixture.xml" : "input");
+        }
         // Missing-portal cases need valid HMI paths to reach the portal admission boundary.
         if (TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Domain.StartsWith("HMI", StringComparison.Ordinal) == true)
             foreach (var field in new[] { "screenPath", "folderPath", "groupPath", "plantPath", "typePath" })
@@ -426,6 +437,10 @@ public sealed class PortedPortalAdmissionTests
 
     private static JsonObject Overrides(string name) => JsonNode.Parse(name switch {
         "CompareUnifiedGraphicSelections" => ComparisonArguments(),
+        // The technology-input fixture replaces this legacy field with its real directory after Arguments returns.
+        "ImportTechnologyObjectsFromDirectory" => "{\"dir\":\"Fixture\"}",
+        "ExportPlcWatchTablesToDirectory" => "{\"dir\":\"C:/Exports\"}",
+        "ExportTechnologyObjectsToDirectory" => "{\"exportDir\":\"C:/Exports\"}",
         "BuildAndImportPlcArtifact" =>
             "{\"kind\":\"tagtable\",\"spec\":{\"tableName\":\"Tags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}}",
         "PlanHardwareNetworkConfiguration" => "{\"plan\":{\"operations\":[]}}",

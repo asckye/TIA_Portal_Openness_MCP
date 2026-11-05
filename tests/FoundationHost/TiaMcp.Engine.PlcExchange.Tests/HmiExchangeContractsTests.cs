@@ -44,11 +44,28 @@ namespace PlcExchangeTests
             .ToDictionary(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name!, m => m);
         private static MethodInfo Method(string name) => Methods()[name];
         private static object? Boundary(string name, params object?[] args)
+        {
+            if (name == "ValidateV4Arguments")
+            {
+                string tool = ((MethodInfo)args[0]!).GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                var input = JsonNode.Parse(((JsonElement)args[1]!).GetRawText())!.AsObject();
+                var rawSchema = (JsonElement)args[2]!;
+                var required = rawSchema.TryGetProperty("required", out var fields)
+                    ? fields.EnumerateArray().Select(field => field.GetString()!).ToArray() : Array.Empty<string>();
+                input = CanonicalToolParameters.WithDefaults(tool, input, required, Path.Combine(Path.GetTempPath(), "stack-l-example-exports"));
+                var schema = CanonicalToolParameters.Schema(tool, rawSchema);
+                var error = CanonicalToolParameters.ValidateAliases(tool, input, required, requireOutput: true)
+                    ?? new InputSchema(schema).Validate(JsonSerializer.SerializeToElement(input), "arguments");
+                if (error != null) return error;
+                args[1] = JsonSerializer.SerializeToElement(CanonicalToolParameters.LegacyArguments(tool, input));
+            }
 #if TIA_PLC_EXCHANGE_TESTS
-            => PlcExchangeTarget.Boundary(name, args);
+            return PlcExchangeTarget.Boundary(name, args);
 #else
-            => typeof(McpServer).GetMethods(All).Single(method => method.Name == name && method.GetParameters().Length == args.Length).Invoke(null, args);
+            return typeof(McpServer).GetMethods(All)
+                .Single(method => method.Name == name && method.GetParameters().Length == args.Length).Invoke(null, args);
 #endif
+        }
         private static CallToolResult Map(string tool, object response, bool writes, bool current)
             => (CallToolResult)ToolType("HmiExchangeContract").GetMethod("Map", All)!.Invoke(null, new[] { tool, response, writes, current })!;
         private static string[] ParseNames(string json)
@@ -241,6 +258,23 @@ namespace PlcExchangeTests
                 var example = body["data"]!["example"]!["request"]!["params"]!["arguments"]!;
                 Assert.Null(Boundary("ValidateV4Arguments", Method(name), JsonSerializer.SerializeToElement(example), schema));
             }
+        }
+
+        [Theory]
+        [InlineData("{\"exportFile\":42}")]
+        [InlineData("{\"exportFile\":\"relative.xml\"}")]
+        [InlineData("{\"exportPath\":\"C:/a.xml\",\"exportFile\":\"C:/b.xml\"}")]
+        public void InvalidGroupExamplesRemainRejected(string invalid)
+        {
+            const string name = "ExportHmiScreen";
+            var type = ToolType("ToolUsageTools");
+            var method = type.GetMethod("GetToolUsage")!;
+            var arguments = method.GetParameters().Select(p => p.Name == "toolName" ? name : p.DefaultValue).ToArray();
+            var body = Body((CallToolResult)method.Invoke(Activator.CreateInstance(type), arguments)!);
+            var example = body["data"]!["example"]!["request"]!["params"]!["arguments"]!.DeepClone().AsObject();
+            foreach (var field in JsonNode.Parse(invalid)!.AsObject()) example[field.Key] = field.Value?.DeepClone();
+            var schema = (JsonElement)Boundary("ToolInputSchema", name, Method(name))!;
+            Assert.NotNull(Boundary("ValidateV4Arguments", Method(name), JsonSerializer.SerializeToElement(example), schema));
         }
 
         [Fact]
