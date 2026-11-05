@@ -254,7 +254,7 @@ public sealed partial class UnifiedDesktopTests
         {
             using var lifetime = new DialogLifetime(new WorkbenchMessageBox("fixture", "fixture", buttons, MessageBoxImage.Warning));
             var dialog = (WorkbenchMessageBox)lifetime.Window;
-            dialog.Show(); FlushMenu();
+            WpfContext.ShowWindow(dialog); FlushMenu();
             var choice = DesktopCapture.Descendants<Button>((FrameworkElement)dialog.Content).ElementAt(index);
             typeof(Button).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(choice, null);
             Assert.Equal(expected, dialog.Result);

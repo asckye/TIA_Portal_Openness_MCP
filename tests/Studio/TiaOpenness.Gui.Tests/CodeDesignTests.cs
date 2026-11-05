@@ -69,7 +69,7 @@ public sealed class CodeDesignTests(WpfContext wpf)
             var window = new MainWindow(model, false);
             bool veto = true;
             window.Closing += (_, e) => e.Cancel |= veto;
-            window.Show();
+            WpfContext.ShowWindow(window);
             window.Close();
             Assert.True(window.IsVisible);
             Assert.Equal(0, session.DisposeCalls);

@@ -21,7 +21,7 @@ public sealed class OfflineDemoTests(WpfContext wpf)
         var window = new MainWindow(model, false, diagnostics: new FeaturePageFixtures.Diagnostics());
         try
         {
-            window.Show(); WpfContext.Complete(model.ApplyStartupAsync([flag, "--project", @"D:\NeverOpened.ap21"]));
+            WpfContext.ShowWindow(window); WpfContext.Complete(model.ApplyStartupAsync([flag, "--project", @"D:\NeverOpened.ap21"]));
             Assert.False(model.HasMcpPanel); Assert.False(model.Session.IsConnected);
             Assert.False(model.VersionControlPageVisible);
             Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("RailMcp")).Visibility);

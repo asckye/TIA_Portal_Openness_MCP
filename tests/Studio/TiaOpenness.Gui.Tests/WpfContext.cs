@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Threading;
 using TiaOpenness.Gui;
 using TiaOpenness.Gui.Localization;
@@ -21,6 +23,16 @@ public sealed class WpfContext : IDisposable
 {
     private readonly Thread _thread;
     private Dispatcher? _dispatcher;
+
+    static WpfContext()
+    {
+        // Product-created modal windows bypass ShowWindow; move them before their Loaded handlers run.
+        EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
+            new RoutedEventHandler((sender, args) =>
+            {
+                if (ReferenceEquals(sender, args.OriginalSource)) KeepOffscreen((Window)sender);
+            }));
+    }
 
     public WpfContext()
     {
@@ -88,6 +100,109 @@ public sealed class WpfContext : IDisposable
     });
 
     internal static void Drain() => Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
+
+    internal static void ShowWindow(Window window)
+    {
+        KeepOffscreen(window);
+        window.Show();
+    }
+
+    private static void KeepOffscreen(Window window)
+    {
+        window.WindowStartupLocation = WindowStartupLocation.Manual;
+        window.Left = SystemParameters.VirtualScreenLeft - 10000;
+        window.Top = SystemParameters.VirtualScreenTop - 10000;
+        window.ShowInTaskbar = false;
+        window.ShowActivated = false;
+    }
+
+    internal static void PressSpace(ButtonBase button)
+    {
+        bool clicked = false;
+        RoutedEventHandler onClick = (_, _) => clicked = true;
+        button.AddHandler(ButtonBase.ClickEvent, onClick, true);
+        try
+        {
+            PressSpace(ReadMouse, () =>
+            {
+                clicked = false;
+                RaiseKey(Keyboard.KeyDownEvent);
+                var down = ReadMouse();
+                bool captured = button.IsMouseCaptured;
+                RaiseKey(Keyboard.KeyUpEvent);
+                return new SpacePressResult(clicked, captured, down, ReadMouse());
+            }, releaseCapture: ReleaseCapture);
+        }
+        finally
+        {
+            ReleaseCapture();
+            button.RemoveHandler(ButtonBase.ClickEvent, onClick);
+        }
+
+        void RaiseKey(RoutedEvent routedEvent) => button.RaiseEvent(new KeyEventArgs(
+            Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Space) { RoutedEvent = routedEvent });
+        static SpaceMouseState ReadMouse() => new(Mouse.LeftButton, Mouse.Captured);
+        void ReleaseCapture()
+        {
+            if (button.IsMouseCaptured) button.ReleaseMouseCapture();
+        }
+    }
+
+    // The input seam keeps contention tests deterministic; the real path above always raises both Space events.
+    internal static void PressSpace(Func<SpaceMouseState> readMouse, Func<SpacePressResult> press,
+        TimeProvider? clock = null, Action<TimeSpan>? wait = null, Action? releaseCapture = null)
+    {
+        clock ??= TimeProvider.System;
+        wait ??= WaitForInput;
+        long started = clock.GetTimestamp();
+        for (int attempt = 1; attempt <= 3; attempt++)
+        {
+            SpaceMouseState mouse;
+            while ((mouse = readMouse()).LeftButton == MouseButtonState.Pressed)
+            {
+                var remaining = TimeSpan.FromSeconds(5) - clock.GetElapsedTime(started);
+                if (remaining <= TimeSpan.Zero)
+                    throw new InvalidOperationException($"Space could not wait for the left button to be released within 5 s; {Describe(mouse)}.");
+                wait(remaining < TimeSpan.FromMilliseconds(10) ? remaining : TimeSpan.FromMilliseconds(10));
+            }
+
+            SpacePressResult result;
+            try { result = press(); }
+            finally { releaseCapture?.Invoke(); }
+            if (result.Clicked) return;
+            bool contention = !result.CaptureAcquired || result.AfterKeyDown.LeftButton == MouseButtonState.Pressed
+                || result.AfterKeyUp.LeftButton == MouseButtonState.Pressed;
+            string reason = $"capture acquired={result.CaptureAcquired}; key down: {Describe(result.AfterKeyDown)}; key up: {Describe(result.AfterKeyUp)}";
+            if (!contention || attempt == 3)
+                throw new InvalidOperationException($"Space did not click after {attempt} attempt(s); {reason}.");
+        }
+    }
+
+    internal static void WaitForInput(TimeSpan duration)
+    {
+        var frame = new DispatcherFrame();
+        var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = duration };
+        timer.Tick += (_, _) => frame.Continue = false;
+        timer.Start();
+        try { Dispatcher.PushFrame(frame); }
+        finally { timer.Stop(); }
+    }
+
+    private static string Describe(SpaceMouseState mouse)
+    {
+        string owner = mouse.CaptureOwner switch
+        {
+            FrameworkElement element => $"{element.GetType().Name} '{element.Name}'",
+            null => "<none in WPF>",
+            _ => mouse.CaptureOwner.GetType().Name,
+        };
+        return $"left button={mouse.LeftButton}, capture owner={owner}";
+    }
+
+    internal readonly record struct SpaceMouseState(MouseButtonState LeftButton, IInputElement? CaptureOwner);
+    internal readonly record struct SpacePressResult(bool Clicked, bool CaptureAcquired,
+        SpaceMouseState AfterKeyDown, SpaceMouseState AfterKeyUp);
+
     internal static void Complete(System.Threading.Tasks.Task task)
     {
         if (!task.IsCompleted)

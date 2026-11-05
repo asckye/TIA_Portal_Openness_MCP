@@ -147,7 +147,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
             int checkedControls = 0;
             try
             {
-                window.Show();
+                WpfContext.ShowWindow(window);
                 foreach (string page in Pages)
                 {
                     Navigate(window, page);
@@ -169,7 +169,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 Assert.True(AutomationProperties.GetIsDialog((UIElement)window.FindName("DrawerOverlay")));
                 Assert.Same(window.FindName("DrawerTitle"), Keyboard.FocusedElement);
                 using var dialog = new DialogScope(new WorkbenchMessageBox("fixture", "fixture", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning));
-                dialog.Window.Show(); WpfContext.Drain();
+                WpfContext.ShowWindow(dialog.Window); WpfContext.Drain();
                 Assert.All(DesktopCapture.Descendants<Button>(dialog.Window), button => Assert.False(string.IsNullOrWhiteSpace(
                     UIElementAutomationPeer.CreatePeerForElement(button)!.GetName())));
                 Assert.True(checkedControls >= 60);
@@ -187,7 +187,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
             var window = Window();
             try
             {
-                window.Show();
+                WpfContext.ShowWindow(window);
                 var trigger = (RadioButton)window.FindName("SettingsButton"); trigger.Focus();
                 window.OpenSettings(); WpfContext.Drain();
                 var settings = (Views.SettingsView)window.FindName("SettingsContent");
@@ -247,7 +247,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
         wpf.Run(() =>
         {
             using var dialog = new DialogScope(new WorkbenchMessageBox("fixture", "fixture", buttons, MessageBoxImage.Warning));
-            dialog.Window.Show(); WpfContext.Drain();
+            WpfContext.ShowWindow(dialog.Window); WpfContext.Drain();
             var safe = Assert.Single(DesktopCapture.Descendants<Button>(dialog.Window), b => b.IsDefault);
             Assert.True(safe.IsCancel); Assert.Same(safe, Keyboard.FocusedElement);
             Assert.DoesNotContain("_", UIElementAutomationPeer.CreatePeerForElement(safe)!.GetName());
@@ -268,7 +268,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
             var window = Window();
             try
             {
-                window.Show(); window.OpenSettings();
+                WpfContext.ShowWindow(window); window.OpenSettings();
                 var settings = (Views.SettingsView)window.FindName("SettingsContent"); settings.ShowSection("AI");
                 UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOff")); WpfContext.Drain();
                 var button = (Button)window.FindName("ConfirmApprovalOff");
@@ -285,8 +285,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 }
                 else
                 {
-                    button.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Space) { RoutedEvent = Keyboard.KeyDownEvent });
-                    button.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Space) { RoutedEvent = Keyboard.KeyUpEvent });
+                    WpfContext.PressSpace(button);
                 }
                 Assert.True(clicked);
                 WpfContext.Complete(saved.Task);
@@ -308,7 +307,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
         {
             var buttons = action == Services.ConfirmationAction.ImportBlocks ? MessageBoxButton.YesNoCancel : MessageBoxButton.OKCancel;
             using var dialog = new DialogScope(new WorkbenchMessageBox("fixture", "fixture", buttons, MessageBoxImage.Warning, new(action)));
-            dialog.Window.Show(); WpfContext.Drain();
+            WpfContext.ShowWindow(dialog.Window); WpfContext.Drain();
             var controls = DesktopCapture.Descendants<Button>(dialog.Window).ToArray();
             Assert.Contains(controls, b => Equals(b.Content, Loc.Current[key]));
             Assert.True(Assert.Single(controls, b => b.IsDefault).IsCancel);
@@ -325,7 +324,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
             var window = Window();
             try
             {
-                window.Show(); window.ControlGuard.UiChanged();
+                WpfContext.ShowWindow(window); window.ControlGuard.UiChanged();
                 var button = (UIElement)window.FindName("SettingsButton");
                 var key = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.System)
                     { RoutedEvent = Keyboard.PreviewKeyDownEvent };
@@ -382,7 +381,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 Assert.True(window.MinWidth <= 1024); Assert.True(window.MinHeight <= 640);
                 foreach (string key in new[] { "Caption", "Control", "SmallTitle", "Section", "Title", "Subtitle", "Heading" })
                     window.Resources["Ui.FontSize." + key] = (double)Application.Current.FindResource("Ui.FontSize." + key) * scale;
-                window.Width = 1024; window.Height = 640; window.Show();
+                window.Width = 1024; window.Height = 640; WpfContext.ShowWindow(window);
                 foreach (string theme in new[] { "Light", "Dark", "HighContrast" })
                 {
                     ThemeManager.Current.HighContrastOverride = theme == "HighContrast";

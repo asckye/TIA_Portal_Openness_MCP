@@ -92,7 +92,7 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
             var window = new MainWindow(model, false, new ApprovalServiceStub(), new FeaturePageFixtures.Diagnostics());
             try
             {
-                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot())); window.Show();
+                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot())); WpfContext.ShowWindow(window);
                 window.ControlGuard = new(() => WorkbenchControlTests.TestNow, () => false, () => new Point(0, 0));
                 host.Calls.Clear();
                 var request = WorkbenchControlTests.Request(WorkbenchControlOperation.PrefillForm, Form(form));
@@ -138,7 +138,7 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
             var window = new MainWindow(model, false, new ApprovalServiceStub(), new FeaturePageFixtures.Diagnostics());
             try
             {
-                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot())); window.Show();
+                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot())); WpfContext.ShowWindow(window);
                 window.ControlGuard = new(() => WorkbenchControlTests.TestNow, () => false, () => new Point(0, 0));
                 host.Calls.Clear();
                 Assert.Equal("prefill-field-invalid", window.ApplyControl(WorkbenchControlTests.Request(WorkbenchControlOperation.PrefillForm, arguments)).Refusal?.Condition);
@@ -183,7 +183,7 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
             {
                 model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
                 window = new MainWindow(model, false, approvals, new FeaturePageFixtures.Diagnostics());
-                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot())); window.Show();
+                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot())); WpfContext.ShowWindow(window);
                 window.ControlGuard = new(() => WorkbenchControlTests.TestNow, () => false, () => new Point(0, 0));
                 var arguments = Form(form);
                 if (arguments.Fields is WorkbenchExportBlocksFields export) { export.OutputDirectory = host.Root; export.Format = "SimaticMl"; }

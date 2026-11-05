@@ -37,7 +37,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             RaiseKey(target, Keyboard.PreviewKeyDownEvent, Key.Escape);
             Assert.Equal(ApprovalState.Pending, fixture.Service.Requests.Single().State);
             Assert.False(approve.IsDefault); Assert.False(approve.IsCancel);
-            approve.Focus(); Space(approve);
+            approve.Focus(); WpfContext.PressSpace(approve);
             Assert.Equal(ApprovalState.Approved, fixture.Service.Requests.Single().State);
         });
     }
@@ -102,7 +102,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                 Assert.True(AccessKeyManager.IsKeyRegistered(PresentationSource.FromVisual(confirm), "a"));
                 AccessKeyManager.ProcessKey(PresentationSource.FromVisual(confirm), "a", false);
             }
-            else Space(confirm);
+            else WpfContext.PressSpace(confirm);
             Assert.Equal(ApprovalState.Approved, fixture.Service.Requests.Single().State);
             Assert.Equal(Visibility.Collapsed, sheet.Visibility);
             void Open()
@@ -341,7 +341,6 @@ public sealed class ApprovalPageTests(WpfContext wpf)
         var args = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(element), 0, key) { RoutedEvent = routedEvent };
         element.RaiseEvent(args); return args.Handled;
     }
-    private static void Space(Button button) { RaiseKey(button, Keyboard.KeyDownEvent, System.Windows.Input.Key.Space); RaiseKey(button, Keyboard.KeyUpEvent, System.Windows.Input.Key.Space); }
     private static ApprovalRequest ReviewRequest(ApprovalRisk risk, string id = "req-f379") => FeaturePageFixtures.Request(id) with
     {
         Risk = risk, RiskAction = risk == ApprovalRisk.Destructive ? "delete" : "execute",
@@ -373,7 +372,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                 new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics(), () => Now);
             View = new ApprovalsDrawer { DataContext = Model };
             window = new Window { Content = View, Width = 1100, Height = 900 };
-            window.Show(); WpfContext.Drain(); window.UpdateLayout();
+            WpfContext.ShowWindow(window); WpfContext.Drain(); window.UpdateLayout();
         }
         internal Button Button(string name) => (Button)View.FindName(name);
         public void Dispose() { window.Close(); Model.Dispose(); }

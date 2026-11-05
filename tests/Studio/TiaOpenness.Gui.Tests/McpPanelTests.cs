@@ -244,7 +244,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         wpf.Run(() =>
         {
             model = new MainViewModel(new McpProjectClient(client), new FakeDialogService { Result = DialogResult.OK });
-            window = new MainWindow(model, loadExistingConfiguration: false, approvals: approvals); window.Show();
+            window = new MainWindow(model, loadExistingConfiguration: false, approvals: approvals); WpfContext.ShowWindow(window);
             WpfContext.Complete(model.Engineering.LoadDevicesAsync("Line"));
             Assert.True(model.Engineering.Save.CanExecute(null));
             model.Engineering.Save.Execute(null);
@@ -342,7 +342,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         wpf.Run(() =>
         {
             model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
-            window = new MainWindow(model, loadExistingConfiguration: false, approvals: new ApprovalServiceStub()); window.Show();
+            window = new MainWindow(model, loadExistingConfiguration: false, approvals: new ApprovalServiceStub()); WpfContext.ShowWindow(window);
             WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
             Assert.Contains("fixture AI", model.Panel!.Participants); Assert.Contains("idle", model.Panel.Status);
             Assert.NotEmpty(model.Engineering.Blocks);
@@ -403,7 +403,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         wpf.Run(() =>
         {
             model = new MainViewModel(new McpProjectClient(client), new FakeDialogService { Result = DialogResult.OK });
-            window = new MainWindow(model, loadExistingConfiguration: false, approvals: new ApprovalServiceStub()); window.Show();
+            window = new MainWindow(model, loadExistingConfiguration: false, approvals: new ApprovalServiceStub()); WpfContext.ShowWindow(window);
             WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
             Assert.True(model.Session.IsConnected); Assert.NotEmpty(model.Engineering.Blocks);
             model.Engineering.Save.Execute(null);

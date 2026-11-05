@@ -221,7 +221,7 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
             var window = new PortalProcessPicker(model);
             try
             {
-                window.Show(); window.Activate(); WpfContext.Drain();
+                WpfContext.ShowWindow(window); window.Activate(); WpfContext.Drain();
                 var cancel = (Button)window.FindName("CancelButton");
                 var connect = (Button)window.FindName("ConnectButton");
                 Assert.Same(cancel, Keyboard.FocusedElement);
@@ -256,12 +256,11 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
             var window = new PortalProcessPicker(model);
             try
             {
-                window.Show(); window.Activate(); WpfContext.Drain();
+                WpfContext.ShowWindow(window); window.Activate(); WpfContext.Drain();
                 ((ListBox)window.FindName("ProcessList")).SelectedIndex = 1;
                 var connect = (Button)window.FindName("ConnectButton");
                 connect.Focus();
-                connect.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(connect), 0, Key.Space) { RoutedEvent = Keyboard.KeyDownEvent });
-                connect.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(connect), 0, Key.Space) { RoutedEvent = Keyboard.KeyUpEvent });
+                WpfContext.PressSpace(connect);
                 Assert.Equal(456, model.ResultProcessId);
                 Assert.False(window.IsVisible);
             }
@@ -293,7 +292,7 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
             var owner = new Window { Content = trigger, Width = 1024, Height = 640 };
             try
             {
-                owner.Show(); owner.Activate(); trigger.Focus(); WpfContext.Drain();
+                WpfContext.ShowWindow(owner); owner.Activate(); trigger.Focus(); WpfContext.Drain();
                 bool? matchingOwner = null, safeFocus = null;
                 owner.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ContextIdle, new Action(() =>
                 {

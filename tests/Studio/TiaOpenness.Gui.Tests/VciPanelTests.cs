@@ -112,7 +112,7 @@ public sealed class VciPanelTests(WpfContext wpf)
             try
             {
                 WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
-                window.Show(); window.Navigate("VersionControl");
+                WpfContext.ShowWindow(window); window.Navigate("VersionControl");
                 WpfContext.Complete(model.VersionControl.VcRefreshAsync());
                 Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("RailVersionControl")).Visibility);
                 Assert.Equal("git", Assert.Single(model.VersionControl.Workspaces).Name);
@@ -203,7 +203,7 @@ public sealed class VciPanelTests(WpfContext wpf)
             var window = new MainWindow(model, false, new ApprovalServiceStub(), new FeaturePageFixtures.Diagnostics());
             try
             {
-                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot())); window.Show(); window.Navigate("VersionControl");
+                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot())); WpfContext.ShowWindow(window); window.Navigate("VersionControl");
                 WpfContext.Complete(model.VersionControl.VcRefreshAsync());
                 Assert.Single(model.VersionControl.Workspaces); Assert.True(model.VersionControl.VcStatus.CanExecute(null));
                 Assert.False(model.VersionControl.VcCreate.CanExecute(null));

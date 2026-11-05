@@ -60,7 +60,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         var journal = new FeaturePageFixtures.Journal();
         journal.Replace([journal.Calls[0] with { RequestId = CallId, JournalKey = CallId }]);
         window.ConfigureFeaturePages(journal, new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment());
-        window.Show(); WpfContext.Drain(); client.Calls.Clear();
+        WpfContext.ShowWindow(window); WpfContext.Drain(); client.Calls.Clear();
         return (window, model, client);
     }
     internal static string Scratch(string name) => Path.GetFullPath(Path.Combine(Path.GetTempPath(), "tia-workbench-control-" + name + "-" + Guid.NewGuid().ToString("N")));
@@ -185,7 +185,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         wpf.Run(() =>
         {
             var (window, _, _) = Window(); var modal = new System.Windows.Window { Owner = window, Width = 200, Height = 100 };
-            try { modal.Show(); Assert.Equal("workbench-modal-open", window.ApplyControl(Request()).Refusal?.Condition); }
+            try { WpfContext.ShowWindow(modal); Assert.Equal("workbench-modal-open", window.ApplyControl(Request()).Refusal?.Condition); }
             finally { modal.Close(); window.Close(); }
         });
     }
