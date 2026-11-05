@@ -414,6 +414,33 @@
           "identifier": "TiaOpenness.Gui.Tests.PortalProcessPickerTests/Sheet_layout_names_focus_styles_and_scrolling_fit_the_workbench( AppLanguage language , string theme , double width , double height ):bc6d0fa8f615156a49ce797c0824b2a2e0c3ad4929fd321da4f15fdfce301cf7:1"
         }
       ]
+    },
+    {
+      "task": "STACK-I-FIX",
+      "maintainerDate": "2026-11-05",
+      "reason": "Maintainer approved in chat on 2026-11-05: three tests extended to all eight releases and the export handle read through the session store; the same approval confirms the 14 rows recorded earlier without explicit approval: picker rounding moved, trend row counts, CheckResult signature false positive",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerClientTests.cs",
+          "kind": "test-removed",
+          "identifier": "WorkerDispatchTests/Foundation_result_parking_retains_the_complete_response_and_small_results( ):0e7eca61df90b2eeecf388b0b4a8182a793a017865c3ef236993de959dd34347"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerRobustnessTests/AssertReadableExport( Scope scope , CallToolResult result ):30d629d5f5e7d4afb8f40a2ff39a61c9f571fbf5eb032e7d9dfbd12361caf0a4:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "test-removed",
+          "identifier": "WorkerRobustnessTests/Oversized_reply_is_a_readable_export_handle( bool shared ):6ad1e900a215ee7fbea0c91fcf8c82008e26efc47db3a72543f100073e914b38"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "test-removed",
+          "identifier": "WorkerRobustnessTests/Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline( bool shared ):9a755b3cb43924b0ee6dd2faaaf7f64799ce1b9f0c1e8ee7dbfc5245d2affde9"
+        }
+      ]
     }
   ]
 }
