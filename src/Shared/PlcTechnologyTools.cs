@@ -73,12 +73,22 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportTechnologyObject"),
                 Description("[L2][PLC-Software]Import one PLC Technology Object XML file into PLC software (best-effort) Current native policy; V4 safety " +
-                "behavior is not yet accepted.")]
+                "behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportTechnologyObjectV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional technology object group path (use empty for root)")] string folderPath,
-            [Description("importPath: full file path of Technology Object XML")] string importPath)
-            => EngineeringToolContract.Run("ImportTechnologyObject", true, () => ImportTechnologyObject(softwarePath, folderPath, importPath));
+            [Description("importPath: full file path of Technology Object XML")] string importPath,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportTechnologyObject", dryRun, new { softwarePath, folderPath, importPath }, () => EngineeringToolContract
+                    .Run("ImportTechnologyObject", true, () => ImportTechnologyObject(softwarePath, folderPath, importPath)), expectedPlanHash,
+                    expectedProjectFile);
 
         public ResponseMessage ImportTechnologyObject(
             string softwarePath,
@@ -106,16 +116,25 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportTechnologyObjectsFromDirectory"),
                 Description("[L2][PLC-Software]Batch import PLC technology object .xml files from a directory (best-effort) Current native policy; V4 safety " +
-                "behavior is not yet accepted.")]
+                "behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportTechnologyObjectsFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional technology object group path (use empty for root)")] string folderPath,
             [Description("dir: directory containing technology object XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override (default)")] bool overwrite = true)
-            => EngineeringToolContract
+            [Description("overwrite: true=Override (default)")] bool overwrite = true,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportTechnologyObjectsFromDirectory", dryRun, new { softwarePath, folderPath, dir, regexName, overwrite }, () =>
+                    EngineeringToolContract
                 .Run("ImportTechnologyObjectsFromDirectory", true, () =>
-                    ImportTechnologyObjectsFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
+                    ImportTechnologyObjectsFromDirectory(softwarePath, folderPath, dir, regexName, overwrite)), expectedPlanHash, expectedProjectFile);
 
         public ResponseImportBatch ImportTechnologyObjectsFromDirectory(
             string softwarePath,

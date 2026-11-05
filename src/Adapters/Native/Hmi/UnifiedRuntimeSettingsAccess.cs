@@ -175,7 +175,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["persistence"] =
                 "No save, compile, download, Runtime restart or TIA close. Applied changes remain in the engineering project until separately saved/deployed.";
             meta["atomicity"] = "Multiple settings are not an atomic transaction. No automatic rollback or retry after a write failure.";
-            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview expectedToken is required before writing.");
+            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview previewToken is required before writing.");
             var settings = Settings(hmi, trace);
             var before = new HmiObject(); var desired = new HmiObject(); var requested = new HmiObject();
             var writes = new List<(PropertyInfo p, object value)>();
@@ -196,7 +196,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["actualCount"] = writes.Count;
             if (dryRun) {
                 meta["operationSuccess"] = true; meta["status"] = "Preview";
-                return "Review before/proposed; apply the same changes with dryRun=false and expectedToken. No setting was written.";
+                return "Review before/proposed; apply the same changes with dryRun=false and previewToken. No setting was written.";
             }
             HmiExactAccess.RequireToken(expectedToken, token);
             var applied = new HmiArray(); var readback = new HmiObject(); meta["appliedFields"] = applied; meta["readback"] = readback;

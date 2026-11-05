@@ -34,7 +34,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Ensures 4 HMI tags (StartPB/StopPB/EStop/RunOut) with symbolic PLC binding, and attempts a simple styled Main screen; caption-language " +
                 "selection, V19/V20 pressed-state support and lamp color mapping remain unverified and incomplete steps are reported. Requires: " +
                 "ConnectPortal + OpenProject + PLC + Unified HMI. Call after EnsureUnifiedHmiScreen if you need a fixed screen size. Idempotent. Current " +
-                "native policy; V4 safety behavior is not yet accepted.")]
+                "native policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult EnsureStartStopUnifiedHmiV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
             [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
@@ -44,10 +46,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 "exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)")] string tagTableName =
                 TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
             [Description("plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')")] string plcName = "PLC_1",
-            [Description("connectionName: Unified HMI connection object name (default 'HMI_Connection_1')")] string connectionName = "HMI_Connection_1")
-            => UnifiedHmiContract
+            [Description("connectionName: Unified HMI connection object name (default 'HMI_Connection_1')")] string connectionName = "HMI_Connection_1",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("SetUnifiedHmiRuntimeState", dryRun, new { hmiSoftwarePath, screenName, tagTableName, plcName, connectionName }, () =>
+                    UnifiedHmiContract
                 .Run("SetUnifiedHmiRuntimeState", true, true, () =>
-                    EnsureStartStopUnifiedHmi(hmiSoftwarePath, screenName, tagTableName, plcName, connectionName));
+                    EnsureStartStopUnifiedHmi(hmiSoftwarePath, screenName, tagTableName, plcName, connectionName)), expectedPlanHash, expectedProjectFile);
 
         private static McpException LegacyFailure(Exception error, string message)
             => error is TiaMcp.Adapters.Contracts.AdapterPreconditionException
@@ -523,7 +532,9 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "SetUnifiedHmiButtonEventScriptCode"),
                 Description("[L2][HMI-Unified]Set ScriptCode on a Unified HMI button event ScriptDynamization. SyntaxCheck is OFF by default because on TIA " +
                 "V21 it can crash the Portal process and lose the script (issue #36); pass syntaxCheck=true only when you need that evidence. Current native " +
-                "policy; V4 safety behavior is not yet accepted.")]
+                "policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult SetUnifiedHmiButtonEventScriptCodeV4(
             RequestContext<CallToolRequestParams> context,
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
@@ -536,12 +547,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 "them")] string globalDefinitionAreaScriptCode =
                 "",
             [Description("async: omit to preserve the existing flag; false explicitly disables it")] bool async = false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "",
             [Description("syntaxCheck: run TIA SyntaxCheck after writing. Default false - on TIA V21 this call can crash the Portal process (NonRecoverableException) and lose the just-written script. When false, no syntaxErrorCount is reported: absence means NOT CHECKED, never zero errors.")] bool syntaxCheck = false)
-            => UnifiedHmiContract
+            => McpServer
+                .RunWritePreview("SetUnifiedHmiButtonEventScriptCode", dryRun, new {
+                    hmiSoftwarePath, screenName, buttonName, eventType, scriptCode, globalDefinitionAreaScriptCode = context.Params?.Arguments?
+                        .ContainsKey(nameof(globalDefinitionAreaScriptCode)) == true ? globalDefinitionAreaScriptCode : null, async = context.Params?.Arguments?
+                        .ContainsKey(nameof(async)) == true ? async : (bool?)null, syntaxCheck
+                }, () => UnifiedHmiContract
                 .Run("SetUnifiedHmiButtonEventScriptCode", true, true, () =>
                     SetUnifiedHmiButtonEventScriptCode(hmiSoftwarePath, screenName, buttonName, eventType, scriptCode,
                 context.Params?.Arguments?.ContainsKey(nameof(globalDefinitionAreaScriptCode)) == true ? globalDefinitionAreaScriptCode : null,
-                context.Params?.Arguments?.ContainsKey(nameof(async)) == true ? async : (bool?)null, syntaxCheck));
+                context.Params?.Arguments?.ContainsKey(nameof(async)) == true ? async : (bool?)null, syntaxCheck)), expectedPlanHash, expectedProjectFile);
 
         public ResponseMessage SetUnifiedHmiButtonEventScriptCode(string hmiSoftwarePath,
             string screenName,

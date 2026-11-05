@@ -482,7 +482,9 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ImportMasterCopyFromGlobalLibrary"),
                 Description("[L2][HMI-Library] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document " +
                 "import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen " +
-                "item is modified. Current native policy; V4 native acceptance is pending.")]
+                "item is modified. Current native policy; V4 native acceptance is pending." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportMasterCopyFromGlobalLibraryV4(
             [Description("libraryPath: full path to .al21 file or its containing folder")] string libraryPath,
             [Description("masterCopyName: exact or suffix path/name from ProbeGlobalLibrary MasterCopies readback")] string masterCopyName,
@@ -490,11 +492,19 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("screenName: existing target Unified screen name; create it first with EnsureUnifiedHmiScreen if needed")] string screenName,
             [Description("importedItemName: optional expected item name after import; empty means use masterCopyName leaf")] string importedItemName = "",
             [Description("left: retained input; master-copy screen-item instantiation is refused")] int left = 0,
-            [Description("top: retained input; master-copy screen-item instantiation is refused")] int top = 0)
-            => LibraryToolContract.Run("ImportMasterCopyFromGlobalLibrary", true, true, () =>
+            [Description("top: retained input; master-copy screen-item instantiation is refused")] int top = 0,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportMasterCopyFromGlobalLibrary", dryRun, new {
+                    libraryPath, masterCopyName, hmiSoftwarePath, screenName, importedItemName, left, top }, () => LibraryToolContract
+                    .Run("ImportMasterCopyFromGlobalLibrary", true, true, () =>
             {
                 return ImportMasterCopyFromGlobalLibrary(libraryPath, masterCopyName, hmiSoftwarePath, screenName, importedItemName, left, top);
-            });
+            }), expectedPlanHash, expectedProjectFile);
 
         internal ResponseGlobalLibraryImport ImportMasterCopyFromGlobalLibrary(
             string libraryPath,

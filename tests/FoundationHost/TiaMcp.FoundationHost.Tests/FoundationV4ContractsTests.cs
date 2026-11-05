@@ -209,6 +209,11 @@ public sealed class FoundationV4ContractsTests
     [InlineData("{\"globalDefinitionAreaScriptCode\":\"\"}", "", null)]
     public async Task Script_options_keep_single_schema_types_and_preserve_omission(string options, string? globals, bool? async)
     {
+        using var worker = new WritePreviewCoverageTests.PlanWorker();
+        using var foundationWorker = new FakeWorker();
+        var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var session = pipeline.EnterSession();
         TiaMcp.Adapters.Contracts.UnifiedHmiRequest? dispatched = null;
         int calls = 0;
         var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((operation, workerArguments) =>
@@ -234,6 +239,10 @@ public sealed class FoundationV4ContractsTests
         arguments["buttonName"] = "Start";
         arguments["eventType"] = "Press";
         arguments["scriptCode"] = "new code";
+        var preview = Body(await tool.InvokeAsync(Request("SetUnifiedHmiButtonEventScriptCode", arguments.ToJsonString())));
+        arguments["dryRun"] = false;
+        arguments["expectedPlanHash"] = preview["data"]!["planHash"]!.DeepClone();
+        arguments["expectedProjectFile"] = preview["data"]!["targetIdentity"]!["identity"]!["projectPath"]!.DeepClone();
         Assert.True((bool)Body(await tool.InvokeAsync(Request("SetUnifiedHmiButtonEventScriptCode", arguments.ToJsonString())))["ok"]!);
         Assert.Equal(1, calls);
         Assert.NotNull(dispatched);
@@ -295,9 +304,13 @@ public sealed class FoundationV4ContractsTests
     {
         var worker = new FakeWorker();
         var bridge = Tool("CallTool", worker, release);
-        foreach (var name in new[] { "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" })
+        foreach (var name in new[] {
+                "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags",
+                    "RunPlcSimAdvancedTestScenario"
+            })
         {
-            var json = JsonSerializer.Serialize(new { name, arguments = new Dictionary<string, bool> { ["SnapshotReject"] = true, ["snapshotReject"] = true } });
+            var json = JsonSerializer
+                .Serialize(new { name, arguments = new Dictionary<string, bool> { ["SnapshotReject"] = true, ["snapshotReject"] = true } });
             var result = Body(await bridge.InvokeAsync(Request("CallTool", json)));
             Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]!["code"]);
             Assert.Equal("arguments", (string?)result["error"]!["details"]!["parameter"]);
@@ -328,7 +341,8 @@ public sealed class FoundationV4ContractsTests
     public void OpenProjectKeepsWorkerRefusalReason(string reason)
     {
         var result=Body(FoundationV4Result.Failure("18","OpenProject","fixture",true,true,null,
-            new WorkerOperationException(reason,-32603,"rejected-before-operation","{\"exceptionType\":\"AdapterPreconditionException\",\"isArgument\":false}")));
+            new WorkerOperationException(reason,-32603,"rejected-before-operation",
+                    "{\"exceptionType\":\"AdapterPreconditionException\",\"isArgument\":false}")));
         Assert.Equal("PRECONDITION_FAILED",(string?)result["error"]?["code"]);Assert.Equal(reason,(string?)result["error"]?["message"]);
         Assert.Equal("not-started",(string?)result["meta"]?["execution"]);Assert.False((bool?)result["meta"]?["requiresSessionReset"]);
     }
@@ -363,8 +377,12 @@ public sealed class FoundationV4ContractsTests
         var result = Body(await Tool("BuildPlcUdt").InvokeAsync(Request("BuildPlcUdt", args.ToJsonString())));
         Assert.Equal("LIMIT_EXCEEDED", (string?)result["error"]!["code"]);
         foreach (var rows in new[] { "[{\"Id\":\"X\"}]", "[{\"id\":\"X\",\"priority\":1.5}]", "[{\"id\":\"X\",\"dependencies\":[\"X\"]}]" })
-            Assert.False((bool)Body(await Tool("PlanArtifactImportOrder").InvokeAsync(Request("PlanArtifactImportOrder", "{\"artifacts\":" + rows + "}")))["ok"]!);
-        result = Body(await Tool("PlanArtifactImportOrder").InvokeAsync(Request("PlanArtifactImportOrder", "{\"artifacts\":[{\"id\":\"B\",\"dependencies\":[\"A\"]},{\"id\":\"A\"}]}")));
+            Assert
+                .False((bool)Body(await Tool("PlanArtifactImportOrder")
+                        .InvokeAsync(Request("PlanArtifactImportOrder", "{\"artifacts\":" + rows + "}")))["ok"]!);
+        result =
+            Body(await Tool("PlanArtifactImportOrder")
+                .InvokeAsync(Request("PlanArtifactImportOrder", "{\"artifacts\":[{\"id\":\"B\",\"dependencies\":[\"A\"]},{\"id\":\"A\"}]}")));
         Assert.Equal("[\"A\",\"B\"]", result["data"]!["order"]!.ToJsonString());
     }
 
@@ -382,8 +400,14 @@ public sealed class FoundationV4ContractsTests
             var validation = new InputContract<JsonElement>(new InputSchema(tool.ProtocolTool.InputSchema), new InputBudget()).Read(args, "arguments");
             Assert.True(validation.IsValid, tool.ProtocolTool.Name + ": " + V4Json.Serialize(validation.Error));
             if (tool.ProtocolTool.Name == "BuildAndImportPlcArtifact")
-                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())))["error"]?["code"]);
-            else if (new[] { "BuildPlcUdt", "BuildPlcGlobalDb", "BuildPlcTagTable", "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildPlcLadFcBlock" }.Contains(tool.ProtocolTool.Name))
+                Assert
+                    .Equal("UNSUPPORTED_CAPABILITY", (string?)Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())))["error"]
+                        ?["code"]);
+            else
+                if (new[] {
+                    "BuildPlcUdt", "BuildPlcGlobalDb", "BuildPlcTagTable", "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock",
+                        "BuildPlcLadFcBlock"
+                }.Contains(tool.ProtocolTool.Name))
                 Assert.True((bool)Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())))["ok"]!, tool.ProtocolTool.Name);
         }
     }
@@ -412,10 +436,13 @@ public sealed class FoundationV4ContractsTests
     public void BatchRetainsKnownSuccessUnknownFailureAndNotExecutedInOrder()
     {
         var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlocksFromDirectory");
-        var raw = JsonNode.Parse("{\"Executed\":true,\"RequiresSessionReset\":true,\"Items\":[{\"RelativePath\":\"a.xml\",\"Status\":\"imported\",\"Attempted\":true},{\"RelativePath\":\"b.xml\",\"Status\":\"failed\",\"Attempted\":true,\"Failure\":\"native-outcome-uncertain\"},{\"RelativePath\":\"c.xml\",\"Status\":\"not-attempted\"}]}")!;
+        var raw = JsonNode
+            .Parse("{\"Executed\":true,\"RequiresSessionReset\":true,\"Items\":[{\"RelativePath\":\"a.xml\",\"Status\":\"imported\",\"Attempted\":true},{\"RelativePath\":\"b.xml\",\"Status\":\"failed\",\"Attempted\":true,\"Failure\":\"native-outcome-uncertain\"},{\"RelativePath\":\"c.xml\",\"Status\":\"not-attempted\"}]}")!;
         var result = Body(FoundationV4Result.Worker("19", definition, "batch", new JsonObject { ["dryRun"] = false }, raw, raw));
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
-        Assert.Equal(new[] { "succeeded", "unknown", "rejected-before-operation" }, result["data"]!["items"]!.AsArray().Select(x => (string?)x!["result"]!["meta"]!["outcome"]));
+        Assert
+            .Equal(new[] { "succeeded", "unknown", "rejected-before-operation" }, result["data"]!["items"]!.AsArray()
+                .Select(x => (string?)x!["result"]!["meta"]!["outcome"]));
         raw["Items"]![1]!["Attempted"] = false; raw["Items"]![1]!["Failure"] = "target-recheck-failed";
         result = Body(FoundationV4Result.Worker("19", definition, "batch", new JsonObject { ["dryRun"] = false }, raw, raw));
         Assert.Equal("partial", (string?)result["meta"]!["outcome"]);
@@ -453,7 +480,8 @@ public sealed class FoundationV4ContractsTests
             new WorkerOperationException("Project tree is incomplete.", -32603, "read-failed")));
         Assert.Null(read["error"]!["details"]!["nativeMessage"]);
         var rejected = Body(FoundationV4Result.Failure("19", "ExportPlcBlocks", "x", true, true, null,
-            new WorkerOperationException("Export directory must already exist.", -32602, "rejected-before-operation", "{\"parameter\":\"exportPath\",\"isArgument\":true,\"exceptionType\":\"AdapterPreconditionException\"}")));
+            new WorkerOperationException("Export directory must already exist.", -32602, "rejected-before-operation",
+                    "{\"parameter\":\"exportPath\",\"isArgument\":true,\"exceptionType\":\"AdapterPreconditionException\"}")));
         Assert.Equal("rejected-before-operation", (string?)rejected["meta"]!["outcome"]);
         Assert.Equal("Export directory must already exist.", (string?)rejected["error"]!["message"]);
         Assert.Equal("exportPath", (string?)rejected["error"]!["details"]!["parameter"]);

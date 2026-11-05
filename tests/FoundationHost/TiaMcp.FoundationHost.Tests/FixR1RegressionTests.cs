@@ -35,11 +35,18 @@ public sealed class FixR1RegressionTests
     [InlineData("unknown", "unknown", "OUTCOME_UNKNOWN")]
     public async Task Seed_keeps_confirmed_PLC_writes_and_the_later_HMI_failure_classification(string failure, string outcome, string code)
     {
-        using var scope = EngineHostParity.EnterScope();
-        string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "fix-r1-seed-" + Guid.NewGuid().ToString("N"));
+        using var previewWorker = new WritePreviewCoverageTests.PlanWorker();
+        previewWorker.Identity["identity"]!["projectPath"] = "C:/fixture.ap21";
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", previewWorker, Array.Empty<McpServerTool>());
+        using var previewSession = pipeline.EnterSession();
+        string root = Path
+            .Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "fix-r1-seed-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(root, "plc", "types"));
         Directory.CreateDirectory(Path.Combine(root, "hmi", "tags"));
-        File.WriteAllText(Path.Combine(root, "plc", "types", "T.xml"), "<Document><Engineering version=\"V21\"/><SW.Types.PlcStruct ID=\"0\"><AttributeList><Name>T</Name></AttributeList></SW.Types.PlcStruct></Document>");
+        File
+            .WriteAllText(Path.Combine(root, "plc", "types", "T.xml"),
+                "<Document><Engineering version=\"V21\"/><SW.Types.PlcStruct " +
+                "ID=\"0\"><AttributeList><Name>T</Name></AttributeList></SW.Types.PlcStruct></Document>");
         File.WriteAllText(Path.Combine(root, "hmi", "tags", "Tags.xml"), "<Document><Engineering version=\"V21\"/></Document>");
         using var worker = new SeedWorker(failure);
         try
@@ -49,6 +56,14 @@ public sealed class FixR1RegressionTests
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
                 Params = new() { Name = "SeedProjectFromReference", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
                     JsonSerializer.Serialize(new { plcSoftwarePath = "PLC", hmiSoftwarePath = "HMI", referenceDir = root })) } };
+            var preview = await tool.InvokeAsync(request);
+            request.Params = new CallToolRequestParams { Name = "SeedProjectFromReference",
+                Arguments = new Dictionary<string, JsonElement>(request.Params!.Arguments!) {
+                    ["dryRun"] = JsonSerializer.SerializeToElement(false),
+                    ["expectedPlanHash"] = JsonSerializer.SerializeToElement((string)preview.StructuredContent!["data"]!["planHash"]!),
+                    ["expectedProjectFile"] = JsonSerializer.SerializeToElement(
+                        (string)preview.StructuredContent!["data"]!["targetIdentity"]!["identity"]!["projectPath"]!)
+                } };
             var result = await tool.InvokeAsync(request);
             Assert.Equal(outcome, (string?)result.StructuredContent?["meta"]?["outcome"]);
             Assert.Equal(code, (string?)result.StructuredContent?["error"]?["code"]);
@@ -59,7 +74,9 @@ public sealed class FixR1RegressionTests
         }
         finally
         {
-            Assert.StartsWith(Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build") + Path.DirectorySeparatorChar,
+            Assert
+                .StartsWith(Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build") + Path
+                    .DirectorySeparatorChar,
                 Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase);
             Directory.Delete(root, true);
         }
@@ -70,7 +87,8 @@ public sealed class FixR1RegressionTests
         internal int PlcWrites;
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
         {
-            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject { ["ProcessId"] = 42, ["IsAttached"] = true, ["ProjectFile"] = "C:/fixture.ap21" });
+            if (operation == "ReadState") return Task.FromResult<JsonNode
+                ?>(new JsonObject { ["ProcessId"] = 42, ["IsAttached"] = true, ["ProjectFile"] = "C:/fixture.ap21" });
             if (operation.EndsWith("SeedReferenceHmi", StringComparison.Ordinal))
             {
                 var error = new WorkerOperationException("HMI refused", -32603, failure);
@@ -99,7 +117,8 @@ public sealed class FixR1RegressionTests
         var body = FoundationV4Result.Failure("21", "ListPlcForceTables", "privacy", true, false, null, error).StructuredContent!;
         Assert.DoesNotContain("Secret.Inner", body.ToJsonString()); Assert.DoesNotContain("private", body.ToJsonString());
         Assert.Contains("<path>", (string)body["data"]!["evidence"]!["nativeMessage"]!);
-        var data = new Host.ResponseMessage { Meta = new JsonObject { ["success"] = false, ["nativeMessage"] = inner.ToString(), ["stackTrace"] = "Secret.Inner" } };
+        var data = new Host.ResponseMessage {
+            Meta = new JsonObject { ["success"] = false, ["nativeMessage"] = inner.ToString(), ["stackTrace"] = "Secret.Inner" } };
         var plc = Host.PlcToolContract.Map("ListPlcForceTables", data, false, true).StructuredContent!;
         Assert.DoesNotContain("Secret.Inner", plc.ToJsonString()); Assert.DoesNotContain("private", plc.ToJsonString());
         Assert.Null(HostBehavior.FailureEvidence(nameof(InvalidOperationException), "Internal secret")["workerMessage"].GetString());
@@ -139,7 +158,9 @@ public sealed class FixR1RegressionTests
         using var worker = new WorkerClient("21", exe, AppContext.BaseDirectory, true) { SharedSession = true };
         await worker.Call("Attach", new JsonObject { ["processId"] = Environment.ProcessId }, CancellationToken.None);
         await worker.Call("FixtureLockOnNextFamily", new JsonObject(), CancellationToken.None);
-        var reply = await worker.Call("plc-software.ExecutePlcOrganisation", new JsonObject { ["request"] = new JsonObject { ["Operation"] = "listGroups", ["SoftwarePath"] = "PLC" } }, CancellationToken.None);
+        var reply = await worker
+            .Call("plc-software.ExecutePlcOrganisation", new JsonObject {
+                ["request"] = new JsonObject { ["Operation"] = "listGroups", ["SoftwarePath"] = "PLC" } }, CancellationToken.None);
         Assert.False((bool?)reply?["RequiresSessionReset"] == true);
         var original = FoundationV4Result.Failure("21", "ListPlcForceTables", "family", true, false, null,
             new WorkerOperationException("Native family read failed", -32603, "read-failed"));
@@ -148,8 +169,10 @@ public sealed class FixR1RegressionTests
         Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         Assert.True((bool?)SharedSessionState.For(worker).Snapshot("21")["requiresSessionReset"]);
         var next = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks"), worker);
-        var refusal = await next.InvokeV4Async(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
-            Params = new() { Name = "ListPlcBlocks", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>("{\"softwarePath\":\"PLC\"}") } }, "21", "next", CancellationToken.None);
+        var refusal = await next
+            .InvokeV4Async(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
+            Params = new() { Name = "ListPlcBlocks", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>("{\"softwarePath\":\"PLC\"}") } },
+                "21", "next", CancellationToken.None);
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)refusal.StructuredContent?["error"]?["code"]);
         Assert.True((bool?)refusal.StructuredContent?["meta"]?["requiresSessionReset"]);
     }
@@ -167,7 +190,8 @@ public sealed class FixR1RegressionTests
             await worker.Call("FixtureSlowShutdown", new JsonObject { ["marker"] = marker }, CancellationToken.None);
             var channel = (ChannelClient)typeof(WorkerClient).GetField("channel", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(worker)!;
             channel.Dispose();
-            Task stop = dispose ? Task.Run(worker.Dispose) : Task.Run(async () => { await worker.Call("Disconnect", new JsonObject(), CancellationToken.None); });
+            Task stop = dispose ? Task.Run(worker.Dispose) : Task
+                .Run(async () => { await worker.Call("Disconnect", new JsonObject(), CancellationToken.None); });
             Assert.True(SpinWait.SpinUntil(() => File.Exists(marker), TimeSpan.FromSeconds(5)));
             var clock = Stopwatch.StartNew();
             var snapshot = worker.OperatorSnapshot();

@@ -17548,18 +17548,27 @@
         },
         "performFactoryReset": {
           "arguments": {
-            "action": "performFactoryReset"
+            "action": "performFactoryReset",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           }
         },
         "performRamToRomCopy": {
           "arguments": {
-            "action": "performRamToRomCopy"
+            "action": "performRamToRomCopy",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           }
         },
         "changeActivationState": {
           "arguments": {
             "action": "changeActivationState",
-            "activationState": "Deactivate"
+            "activationState": "Deactivate",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           }
         }
       },
@@ -30984,7 +30993,10 @@
         "CreateGsdDevice": {
           "arguments": {
             "keyword": "<exact catalog TypeIdentifier from SearchInstalledGsdDevices>",
-            "deviceName": "PLC_2"
+            "deviceName": "PLC_2",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "keyword": {
@@ -31127,7 +31139,10 @@
           "arguments": {
             "deviceItemPath": "PLC_1/CPU_1",
             "attributeName": "Name",
-            "value": "TRUE"
+            "value": "TRUE",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -31145,7 +31160,10 @@
               "exactAttributes": {
                 "Name": "PLC_1"
               }
-            }
+            },
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "settings": {
@@ -32031,7 +32049,10 @@
           "arguments": {
             "firstRootPath": "PLC_1",
             "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
-            "subnetName": "PN_IE_1"
+            "subnetName": "PN_IE_1",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -32061,7 +32082,10 @@
           "arguments": {
             "anchorDeviceItemPath": "PLC_1/CPU_1",
             "subnetType": "System:Subnet.Ethernet",
-            "subnetName": "PN_IE_1"
+            "subnetName": "PN_IE_1",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -32072,7 +32096,10 @@
           "arguments": {
             "deviceItemPath": "PLC_1/CPU_1",
             "interfaceIndex": 1,
-            "subnetName": "PN_IE_1"
+            "subnetName": "PN_IE_1",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "anchorDeviceItemPath": {
@@ -35592,7 +35619,10 @@
           "arguments": {
             "plcSoftwarePath": "PLC_1",
             "hmiSoftwarePath": "HMI_RT_1",
-            "referenceDir": "C:\\Examples\\reference"
+            "referenceDir": "C:\\Examples\\reference",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "placeholders": {
@@ -36706,7 +36736,10 @@
             "tableName": "MCP_W/MCP_WT",
             "address": "%M0.0",
             "modifyValue": "TRUE",
-            "trigger": "OnceOnlyAtStart"
+            "trigger": "OnceOnlyAtStart",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -36909,7 +36942,10 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "folderPath": "",
-            "importPath": "C:\\Examples\\exports\\Main.xml"
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -36920,7 +36956,10 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "folderPath": "",
-            "dir": "C:\\Examples\\exports"
+            "dir": "C:\\Examples\\exports",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "regexName": {
@@ -37407,7 +37446,10 @@
             "libraryPath": "C:\\Examples\\Library.al{extension}",
             "masterCopyName": "FB_Motor",
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview"
+            "screenName": "Overview",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "importedItemName": {
@@ -37443,7 +37485,9 @@
           "arguments": {
             "objectKind": "Project",
             "objectPath": "",
-            "methodName": "<method selected from DescribeObject/DescribeService>"
+            "methodName": "<method selected from DescribeObject/DescribeService>",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}"
           },
           "parameters": {
             "methodName": {
@@ -37475,7 +37519,9 @@
             "objectKind": "Project",
             "objectPath": "",
             "serviceTypeSuffix": "<service selected from DescribeObject>",
-            "methodName": "<method selected from DescribeObject/DescribeService>"
+            "methodName": "<method selected from DescribeObject/DescribeService>",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}"
           },
           "parameters": {
             "serviceTypeSuffix": {
@@ -38270,7 +38316,10 @@
         "ImportAlarmClasses": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+            "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -38280,7 +38329,10 @@
         "ImportAlarmTextLists": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+            "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -38290,7 +38342,10 @@
         "ImportOpcUaInterface": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "importPath": "C:\\Examples\\exports\\Main.xml"
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "interfaceType": {
@@ -38484,7 +38539,10 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "interfaceName": "Server interface_1",
-            "enabled": false
+            "enabled": false,
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "interfaceType": {
@@ -38715,7 +38773,10 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "folderPath": "",
-            "importPath": "C:\\Temp\\Screen_1.xml"
+            "importPath": "C:\\Temp\\Screen_1.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "overwrite": {
@@ -38731,7 +38792,10 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "folderPath": "",
-            "importPath": "C:\\Temp\\HmiTags.xml"
+            "importPath": "C:\\Temp\\HmiTags.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "overwrite": {
@@ -38746,7 +38810,10 @@
         "ImportHmiConnection": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "importPath": "C:\\Examples\\exports\\Main.xml"
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "overwrite": {
@@ -38761,7 +38828,10 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "folderPath": "",
-            "dir": "C:\\Examples\\exports"
+            "dir": "C:\\Examples\\exports",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "regexName": {
@@ -38780,7 +38850,10 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "folderPath": "",
-            "dir": "C:\\Examples\\exports"
+            "dir": "C:\\Examples\\exports",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "regexName": {
@@ -40520,7 +40593,10 @@
         "CreateVersionControlWorkspace": {
           "arguments": {
             "workspaceName": "Engineering",
-            "folderPath": ""
+            "folderPath": "",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -41575,7 +41651,10 @@
             "screenName": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down",
-            "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
+            "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "globalDefinitionAreaScriptCode": {
@@ -41598,7 +41677,10 @@
         },
         "SetUnifiedHmiRuntimeState": {
           "arguments": {
-            "hmiSoftwarePath": "HMI_RT_1"
+            "hmiSoftwarePath": "HMI_RT_1",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "screenName": {
@@ -42199,7 +42281,10 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "pgPcInterface": "PLCSIM",
-            "targetIpAddress": "192.168.0.3"
+            "targetIpAddress": "192.168.0.3",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "consistentBlocksOnly": {
@@ -43410,7 +43495,9 @@
               "<exact device item from GetProjectTree>"
             ],
             "confirmOnline": false,
-            "action": "read"
+            "action": "read",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}"
           },
           "parameters": {
             "devicePath": {
@@ -43438,18 +43525,27 @@
             },
             "performFactoryReset": {
               "arguments": {
-                "action": "performFactoryReset"
+                "action": "performFactoryReset",
+                "dryRun": false,
+                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
               }
             },
             "performRamToRomCopy": {
               "arguments": {
-                "action": "performRamToRomCopy"
+                "action": "performRamToRomCopy",
+                "dryRun": false,
+                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
               }
             },
             "changeActivationState": {
               "arguments": {
                 "action": "changeActivationState",
-                "activationState": "Deactivate"
+                "activationState": "Deactivate",
+                "dryRun": false,
+                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
               }
             }
           },
@@ -46348,7 +46444,10 @@
         "CreateGsdDevice": {
           "arguments": {
             "keyword": "<exact catalog TypeIdentifier from SearchInstalledGsdDevices>",
-            "deviceName": "PLC_2"
+            "deviceName": "PLC_2",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "keyword": {
@@ -46601,7 +46700,10 @@
           "arguments": {
             "deviceItemPath": "PLC_1/CPU_1",
             "interfaceIndex": 1,
-            "subnetName": "PN_IE_1"
+            "subnetName": "PN_IE_1",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "anchorDeviceItemPath": {
@@ -47539,7 +47641,10 @@
           "arguments": {
             "firstRootPath": "PLC_1",
             "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
-            "subnetName": "PN_IE_1"
+            "subnetName": "PN_IE_1",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -47709,7 +47814,10 @@
         "CreateVersionControlWorkspace": {
           "arguments": {
             "workspaceName": "Engineering",
-            "folderPath": ""
+            "folderPath": "",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -48143,7 +48251,10 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "pgPcInterface": "PLCSIM",
-            "targetIpAddress": "192.168.0.3"
+            "targetIpAddress": "192.168.0.3",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "consistentBlocksOnly": {
@@ -48222,7 +48333,10 @@
         },
         "SetUnifiedHmiRuntimeState": {
           "arguments": {
-            "hmiSoftwarePath": "HMI_RT_1"
+            "hmiSoftwarePath": "HMI_RT_1",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "screenName": {
@@ -48249,7 +48363,10 @@
           "arguments": {
             "anchorDeviceItemPath": "PLC_1/CPU_1",
             "subnetType": "System:Subnet.Ethernet",
-            "subnetName": "PN_IE_1"
+            "subnetName": "PN_IE_1",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -50519,7 +50636,10 @@
         "ImportAlarmClasses": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+            "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -50529,7 +50649,10 @@
         "ImportAlarmTextLists": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+            "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -50558,7 +50681,10 @@
         "ImportHmiConnection": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "importPath": "C:\\Examples\\exports\\Main.xml"
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "overwrite": {
@@ -50573,7 +50699,10 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "folderPath": "",
-            "importPath": "C:\\Temp\\Screen_1.xml"
+            "importPath": "C:\\Temp\\Screen_1.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "overwrite": {
@@ -50589,7 +50718,10 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "folderPath": "",
-            "dir": "C:\\Examples\\exports"
+            "dir": "C:\\Examples\\exports",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "regexName": {
@@ -50608,7 +50740,10 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "folderPath": "",
-            "importPath": "C:\\Temp\\HmiTags.xml"
+            "importPath": "C:\\Temp\\HmiTags.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "overwrite": {
@@ -50624,7 +50759,10 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "folderPath": "",
-            "dir": "C:\\Examples\\exports"
+            "dir": "C:\\Examples\\exports",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "regexName": {
@@ -50683,7 +50821,10 @@
             "libraryPath": "C:\\Examples\\Library.al{extension}",
             "masterCopyName": "FB_Motor",
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview"
+            "screenName": "Overview",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "importedItemName": {
@@ -50707,7 +50848,10 @@
         "ImportOpcUaInterface": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "importPath": "C:\\Examples\\exports\\Main.xml"
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "interfaceType": {
@@ -51379,7 +51523,10 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "folderPath": "",
-            "importPath": "C:\\Examples\\exports\\Main.xml"
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -51390,7 +51537,10 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "folderPath": "",
-            "dir": "C:\\Examples\\exports"
+            "dir": "C:\\Examples\\exports",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "regexName": {
@@ -51485,7 +51635,9 @@
           "arguments": {
             "objectKind": "Project",
             "objectPath": "",
-            "methodName": "<method selected from DescribeObject/DescribeService>"
+            "methodName": "<method selected from DescribeObject/DescribeService>",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}"
           },
           "parameters": {
             "methodName": {
@@ -51517,7 +51669,9 @@
             "objectKind": "Project",
             "objectPath": "",
             "serviceTypeSuffix": "<service selected from DescribeObject>",
-            "methodName": "<method selected from DescribeObject/DescribeService>"
+            "methodName": "<method selected from DescribeObject/DescribeService>",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}"
           },
           "parameters": {
             "serviceTypeSuffix": {
@@ -54241,7 +54395,9 @@
               "<exact device item from GetProjectTree>"
             ],
             "confirmOnline": false,
-            "action": "read"
+            "action": "read",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}"
           },
           "parameters": {
             "devicePath": {
@@ -54269,18 +54425,27 @@
             },
             "performFactoryReset": {
               "arguments": {
-                "action": "performFactoryReset"
+                "action": "performFactoryReset",
+                "dryRun": false,
+                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
               }
             },
             "performRamToRomCopy": {
               "arguments": {
-                "action": "performRamToRomCopy"
+                "action": "performRamToRomCopy",
+                "dryRun": false,
+                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
               }
             },
             "changeActivationState": {
               "arguments": {
                 "action": "changeActivationState",
-                "activationState": "Deactivate"
+                "activationState": "Deactivate",
+                "dryRun": false,
+                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
               }
             }
           },
@@ -60509,7 +60674,10 @@
           "arguments": {
             "plcSoftwarePath": "PLC_1",
             "hmiSoftwarePath": "HMI_RT_1",
-            "referenceDir": "C:\\Examples\\reference"
+            "referenceDir": "C:\\Examples\\reference",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "placeholders": {
@@ -60535,7 +60703,10 @@
               "exactAttributes": {
                 "Name": "PLC_1"
               }
-            }
+            },
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "settings": {
@@ -60555,7 +60726,10 @@
           "arguments": {
             "deviceItemPath": "PLC_1/CPU_1",
             "attributeName": "Name",
-            "value": "TRUE"
+            "value": "TRUE",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -60586,7 +60760,10 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "interfaceName": "Server interface_1",
-            "enabled": false
+            "enabled": false,
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "interfaceType": {
@@ -60652,7 +60829,10 @@
             "tableName": "MCP_W/MCP_WT",
             "address": "%M0.0",
             "modifyValue": "TRUE",
-            "trigger": "OnceOnlyAtStart"
+            "trigger": "OnceOnlyAtStart",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {},
           "operations": {},
@@ -60710,7 +60890,10 @@
             "screenName": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down",
-            "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
+            "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();",
+            "dryRun": false,
+            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
           },
           "parameters": {
             "globalDefinitionAreaScriptCode": {
@@ -65911,7 +66094,22 @@
             "tableName": "<Group/Table>",
             "address": "%M0.0",
             "modifyValue": "TRUE",
-            "trigger": "OnceOnlyAtStart"
+            "trigger": "OnceOnlyAtStart",
+            "dryRun": true
+          },
+          "expect": "Review data.planHash, data.plannedChanges and the exact bound project file in data.targetIdentity before applying."
+        },
+        {
+          "tool": "SetPlcWatchTableModifyValue",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tableName": "<Group/Table>",
+            "address": "%M0.0",
+            "modifyValue": "TRUE",
+            "trigger": "OnceOnlyAtStart",
+            "dryRun": false,
+            "expectedPlanHash": "<data.planHash from this same preview>",
+            "expectedProjectFile": "<exact bound project file from this same preview's data.targetIdentity>"
           },
           "expect": "meta.readbackVerified true"
         },
@@ -66060,7 +66258,21 @@
             "softwarePath": "PLC_1",
             "pgPcInterface": "PLCSIM",
             "targetIpAddress": "<CPU IP>",
-            "trustDeviceCertificate": true
+            "trustDeviceCertificate": true,
+            "dryRun": true
+          },
+          "expect": "Review data.planHash, data.plannedChanges and the exact bound project file in data.targetIdentity before applying."
+        },
+        {
+          "tool": "DownloadPlc",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "pgPcInterface": "PLCSIM",
+            "targetIpAddress": "<CPU IP>",
+            "trustDeviceCertificate": true,
+            "dryRun": false,
+            "expectedPlanHash": "<data.planHash from this same preview>",
+            "expectedProjectFile": "<exact bound project file from this same preview's data.targetIdentity>"
           },
           "expect": "State Success / Warning"
         },

@@ -57,10 +57,11 @@ namespace TiaMcpServer.ModelContextProtocol
             => TiaOpenness.Shared.BundleLayout.FindInstallRoot(baseDirectory, bundleRoot);
 
         [McpServerTool(Name = "CheckProductUpdate"), Description(
-            "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the " +
+            "[L0][Diagnostics][SESSION] Read-only update check: compares this service's version with the latest GitHub release of the project and reports the "
+                +
                 "delivery ZIP "
                 +
-            "(name, size, download URL, .sha256 sidecar) plus the exact updater command. The engine never replaces its own files: run " +
+            "(name, size, download URL, .sha256 sidecar) plus the exact updater command. The service never replaces its own files: run " +
                 "runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root> and -Check to inspect or without -Check to update. "
                 +
             "It refuses while an engine, Foundation host, worker or Workbench from this bundle runs, lists PIDs and never kills processes; -Rollback " +

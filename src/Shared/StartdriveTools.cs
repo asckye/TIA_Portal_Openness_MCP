@@ -343,8 +343,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][Hardware][ONLINE-WRITE] OnlineDriveFunctionInterface of the connected drive: read reports DriveDomainFunctions / " +
                 "HardwareProjection / FunctionInUse availability and the activation state; performFactoryReset {resetMode " +
                 "ParameterReset|SafetyParameterReset} and performRamToRomCopy (DriveDomainFunctions.PerformFactoryReset / PerformRAMtoROMCopyAllDriveObject) " +
-                "and changeActivationState {activationState} act on the real drive and need confirmOnline=true. No dryRun: the read action is the preview. " +
-                "Current native policy; V4 native acceptance is pending.")]
+                "and changeActivationState {activationState} act on the real drive and need confirmOnline=true. The read action executes without a write " +
+                    "preview. "
+                    +
+                "Current native policy; V4 native acceptance is pending." +
+            " For write actions, default dryRun=true previews; execution requires dryRun=false, expectedPlanHash from that preview, " +
+                "and the exact bound expectedProjectFile. Existing approval/native checks and read actions remain.")]
         public CallToolResult ManageOnlineDriveFunctions(
             string[] devicePath,
             string[] itemPath,
@@ -353,8 +357,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("action: the operation to perform - read | performFactoryReset | performRamToRomCopy | changeActivationState.")] string action="read",
             [Description("resetMode: ParameterReset | SafetyParameterReset.")] string resetMode="",
             [Description("activationState: Deactivate | Activate | DeactivateAndNotPresent.")] string activationState="",
-            [Description("confirmOnline: must be true together with dryRun=false to execute the online drive function.")] bool confirmOnline=false)
-            => DriveToolContract.Run("ManageOnlineDriveFunctions", action != "read", true, () =>
+            [Description("confirmOnline: must be true together with dryRun=false to execute the online drive function.")] bool confirmOnline=false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ManageOnlineDriveFunctions", dryRun && action != "read", new {
+                    devicePath, itemPath, driveObjectNumber, driveObjectIndex, action, resetMode, activationState, confirmOnline }, () => DriveToolContract
+                    .Run("ManageOnlineDriveFunctions", action != "read", true, () =>
             {
                 string devicePathJson = DriveToolContract.Path(devicePath, "devicePath", optional: false);
                 string itemPathJson = DriveToolContract.Path(itemPath, "itemPath", optional: false);
@@ -365,6 +377,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 });
                 return _startdrive
                     .ManageOnlineDriveFunctions(devicePathJson,itemPathJson,driveObjectNumber,driveObjectIndex,action,resetMode,activationState,confirmOnline);
-            });
+            }), expectedPlanHash, expectedProjectFile, writing: action != "read");
     }
 }

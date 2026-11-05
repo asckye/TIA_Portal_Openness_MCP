@@ -2,10 +2,12 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
 
+
 ### Changed
 - `prepare` now builds and packages, then checks the extracted ZIP; registered suites and source/transport checks run in `merge-check`, with `merge-check -All` required before each release candidate. Removed the approved PLC simulation jobs and their dedicated harness modes; package approval and all eight contract checks remain.
 
 ## [Unreleased]
+- Behaviour change: `AttachDeviceNodeToSubnet`, `ConnectDeviceNodesToProfinetSubnet`, `CreateGsdDevice`, `CreateVersionControlWorkspace`, `DownloadPlc`, `EnsureSubnet`, `ImportAlarmClasses`, `ImportAlarmTextLists`, `ImportHmiConnection`, `ImportHmiScreen`, `ImportHmiScreensFromDirectory`, `ImportHmiTagTable`, `ImportHmiTagTablesFromDirectory`, `ImportMasterCopyFromGlobalLibrary`, `ImportOpcUaInterface`, `ImportTechnologyObject`, `ImportTechnologyObjectsFromDirectory`, `InvokeObject`, `InvokeService`, `ManageOnlineDriveFunctions`, `SeedProjectFromReference`, `SetDeviceItemAttribute`, `SetOpcUaInterfaceEnabled`, `SetPlcCpuSettings`, `SetPlcWatchTableModifyValue`, `SetUnifiedHmiButtonEventScriptCode`, `SetUnifiedHmiRuntimeState` now preview by default; execution requires `dryRun:false`, the preview `expectedPlanHash`, and the exact bound `expectedProjectFile`. Read actions retain their direct behavior.
 - Preserve password-policy exception reasons while redacting credential-like error names, native message fields, and private keys before diagnostic truncation.
 - Fix generation planning for connected portals without an open project and compare binding generations as opaque values; keep credential-like error names and native stack frames redacted without losing the native reason.
 - Preserve indented PLC logic and HMI script text in tool results while retaining diagnostic redaction; include native failure details in error messages.

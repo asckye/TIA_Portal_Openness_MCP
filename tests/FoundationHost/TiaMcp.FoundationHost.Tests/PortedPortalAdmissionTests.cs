@@ -155,7 +155,9 @@ public sealed class PortedPortalAdmissionTests
             var result = await entry.InvokeAsync(request);
             var body = result.StructuredContent!.AsObject();
             bool portalNeeded = name == "EnsureUnifiedHmiDynamization" && release == "20";
-            Assert.Equal(unadmittedDesign ? "INVALID_ARGUMENT" : portalNeeded ? "PRECONDITION_FAILED" : "UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+            Assert
+                .Equal(unadmittedDesign ? "INVALID_ARGUMENT" : portalNeeded ? "PRECONDITION_FAILED" : "UNSUPPORTED_CAPABILITY", (string?)body["error"]
+                    ?["code"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
             Assert.Equal(portalNeeded ? 1 : 0, worker.Calls);
@@ -189,6 +191,7 @@ public sealed class PortedPortalAdmissionTests
         {
             arguments["folderPath"] = "";
             arguments[name == "ImportTechnologyObject" ? "importPath" : "dir"] = name == "ImportTechnologyObject" ? inputs.FilePath : inputs.DirectoryPath;
+            arguments["dryRun"] = true;
         }
         var invoker = new Engine.WorkerToolInvoker(catalog, worker, lifetime, tools);
         using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
@@ -208,11 +211,17 @@ public sealed class PortedPortalAdmissionTests
         Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
         if (name is "CreatePlcBlockGroup" or "BuildAndImportPlcArtifact" or "CompileHmiDiagnostics"
             or "TraceTagCause" or "TraceTagCauseLive" or "MonitorPlcWatchTableS7" or "ProbePlcMonitorOnlineCapabilities"
-            or "GetPlcWatchTableCurrentValuesReadOnly" or "ExportPlcWatchTablesToDirectory" or "ExportTechnologyObjectsToDirectory"
-            or "ImportTechnologyObject" or "ImportTechnologyObjectsFromDirectory")
+            or "GetPlcWatchTableCurrentValuesReadOnly" or "ExportPlcWatchTablesToDirectory" or "ExportTechnologyObjectsToDirectory")
         {
             Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
             Assert.Equal("connect-portal", (string?)body["error"]?["details"]?["condition"]);
+        }
+        if (inputs != null)
+        {
+            Assert.True((bool?)body["ok"]);
+            Assert.True((bool?)body["data"]?["dryRun"]);
+            Assert.False((bool?)body["data"]?["mayHaveChanged"]);
+            Assert.Matches("^[0-9a-f]{64}$", (string)body["data"]!["planHash"]!);
         }
         if ((string?)body["error"]?["details"]?["condition"] == "connect-portal")
         {
@@ -242,7 +251,9 @@ public sealed class PortedPortalAdmissionTests
             Assert.Equal(0, worker.Calls);
         }
         Assert.True(worker.Calls <= (name == "SearchInstalledGsdDevices" ? 2 : 1), "A missing portal must not dispatch a native operation: " + name);
-        Assert.Equal(name is "ConnectIsolatedPortal" or "EnsureOpennessUserGroup" or "GetPortalInfo" or "ValidateAutomationContext" ? 1 : 0, admissionWorker.GlobalOperations);
+        Assert
+            .Equal(name is "ConnectIsolatedPortal" or "EnsureOpennessUserGroup" or "GetPortalInfo" or "ValidateAutomationContext" ? 1 : 0, admissionWorker
+                .GlobalOperations);
         var simulation = PortedFamilies.All.Single(family => family.Name == "F04");
         Assert.Equal(PortedFamilies.WorkerTools(simulation).Contains(name) ? 1 : 0, admissionWorker.SimulationOperations);
     }
@@ -280,7 +291,8 @@ public sealed class PortedPortalAdmissionTests
 
     private sealed class DisabledApproval : IDisposable
     {
-        private readonly TiaOpenness.Shared.ApprovalSettings previous = TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
+        private readonly TiaOpenness.Shared.ApprovalSettings previous = TiaOpenness.Shared.ApprovalSettings
+            .Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         internal DisabledApproval() => new TiaOpenness.Shared.ApprovalSettings(false, 1).Save(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         public void Dispose() => previous.Save(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
     }
@@ -292,13 +304,18 @@ public sealed class PortedPortalAdmissionTests
         internal TechnologyInputs()
         {
             Directory.CreateDirectory(DirectoryPath);
-            File.WriteAllText(FilePath, "<Document><SW.TechnologicalObjects.TechnologicalInstanceDB ID=\"0\"><AttributeList><Name>Fixture</Name></AttributeList></SW.TechnologicalObjects.TechnologicalInstanceDB></Document>");
+            File
+                .WriteAllText(FilePath,
+                    "<Document><SW.TechnologicalObjects.TechnologicalInstanceDB " +
+                    "ID=\"0\"><AttributeList><Name>Fixture</Name></AttributeList></SW.TechnologicalObjects.TechnologicalInstanceDB></Document>");
         }
         public void Dispose() => Directory.Delete(DirectoryPath, true);
     }
 
     public static IEnumerable<object[]> LaneCases =>
-        from name in PortedFamilies.All.Where(f => f.Name is "F04" or "F22" or "F33" or "F06" or "F23" or "F35" or "F07" or "F24" or "F25" or "F27" or "F28" or "F29" or "F30" or "F31").SelectMany(f => f.Tools).Where(name => TiaMcpServer.ModelContextProtocol.ToolExecution.Table[name] != "host").Prepend("CreatePlcBlockGroup")
+        from name in PortedFamilies.All
+            .Where(f => f.Name is "F04" or "F22" or "F33" or "F06" or "F23" or "F35" or "F07" or "F24" or "F25" or "F27" or "F28" or "F29" or "F30" or "F31")
+            .SelectMany(f => f.Tools).Where(name => TiaMcpServer.ModelContextProtocol.ToolExecution.Table[name] != "host").Prepend("CreatePlcBlockGroup")
         from cancel in new[] { false, true }
         select new object[] { name, cancel };
 
@@ -392,7 +409,8 @@ public sealed class PortedPortalAdmissionTests
         if (schema.TryGetProperty("oneOf", out var alternatives)) return Sample(alternatives[0]);
         if (!schema.TryGetProperty("type", out var type)) return new JsonObject();
         return type.GetString() switch {
-            "string" => JsonValue.Create("Fixture"), "integer" or "number" => schema.TryGetProperty("minimum", out var minimum) ? JsonNode.Parse(minimum.GetRawText()) : JsonValue.Create(0),
+            "string" => JsonValue.Create("Fixture"), "integer" or "number" => schema.TryGetProperty("minimum", out var minimum) ? JsonNode
+                .Parse(minimum.GetRawText()) : JsonValue.Create(0),
             "boolean" => JsonValue.Create(true), "array" => new JsonArray(Sample(schema.GetProperty("items"))),
             "object" => ObjectSample(schema), _ => null };
     }
@@ -407,9 +425,11 @@ public sealed class PortedPortalAdmissionTests
 
     private static JsonObject Overrides(string name) => JsonNode.Parse(name switch {
         "CompareUnifiedGraphicSelections" => ComparisonArguments(),
-        "BuildAndImportPlcArtifact" => "{\"kind\":\"tagtable\",\"spec\":{\"tableName\":\"Tags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}}",
+        "BuildAndImportPlcArtifact" =>
+            "{\"kind\":\"tagtable\",\"spec\":{\"tableName\":\"Tags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}}",
         "PlanHardwareNetworkConfiguration" => "{\"plan\":{\"operations\":[]}}",
-        "BuildDeviceAmlDocument" => "{\"spec\":{\"projectName\":\"Fixture\",\"devices\":[{\"name\":\"Fixture\",\"typeIdentifier\":\"OrderNumber:6ES7211-1BE40-0XB0/V4.7\",\"deviceItems\":[]}]},\"outputPath\":\"fixture.aml\"}",
+        "BuildDeviceAmlDocument" =>
+            "{\"spec\":{\"projectName\":\"Fixture\",\"devices\":[{\"name\":\"Fixture\",\"typeIdentifier\":\"OrderNumber:6ES7211-1BE40-0XB0/V4.7\",\"deviceItems\":[]}]},\"outputPath\":\"fixture.aml\"}",
         "SetPlcCpuSettings" => "{\"settings\":{\"exactAttributes\":{\"Name\":\"Fixture\"}}}",
         "SetDeviceAddress" or "SetDeviceItemIoAddress" => "{\"ioType\":\"Input\",\"startAddress\":0}",
         "ManagePlcUserGroup" => "{\"family\":\"blocks\",\"action\":\"rename\",\"newName\":\"Next\"}",
@@ -423,7 +443,8 @@ public sealed class PortedPortalAdmissionTests
         "SetDeviceItemChannel" => "{\"channelType\":\"Digital\",\"channelIoType\":\"Input\",\"attributes\":{\"ChannelAddress\":0}}",
         "ManageCommunicationConnection" => "{\"action\":\"delete\"}",
         "SynchronizeLibrary" => "{\"action\":\"updateLibrary\",\"selection\":[{\"folder\":\"\"}]}",
-        "RunToolTransaction" => "{\"calls\":[{\"name\":\"CreatePlcTypeGroup\",\"arguments\":{\"softwarePath\":\"PLC\",\"groupPath\":\"Types\"}}],\"confirmChange\":true}",
+        "RunToolTransaction" =>
+            "{\"calls\":[{\"name\":\"CreatePlcTypeGroup\",\"arguments\":{\"softwarePath\":\"PLC\",\"groupPath\":\"Types\"}}],\"confirmChange\":true}",
         "ManagePlcSimAdvancedInstance" => "{\"action\":\"stop\",\"confirmInstanceChange\":true}",
         "WritePlcSimAdvancedTags" => "{\"values\":[{\"name\":\"Fixture\",\"value\":true}],\"confirmWrite\":true}",
         "RunPlcSimAdvancedTestScenario" => "{\"scenario\":{\"instance\":\"Fixture\",\"mode\":\"default\",\"steps\":[{\"waitMs\":1}]},\"confirmRun\":true}",

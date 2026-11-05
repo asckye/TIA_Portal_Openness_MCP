@@ -314,14 +314,24 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportHmiScreen"),
                 Description("[L2][HMI]Import one HMI screen XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) " +
-                "Current native policy; V4 safety behavior is not yet accepted.")]
+                "Current native policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiScreenV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
                 "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported screen XML")] string importPath,
-            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
-            => HmiExchangeContract.Run("ImportHmiScreen", true, true, () => ImportHmiScreen(softwarePath, folderPath, importPath, overwrite));
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportHmiScreen", dryRun, new { softwarePath, folderPath, importPath, overwrite }, () => HmiExchangeContract
+                    .Run("ImportHmiScreen", true, true, () => ImportHmiScreen(softwarePath, folderPath, importPath, overwrite)), expectedPlanHash,
+                    expectedProjectFile);
 
         public ResponseMessage ImportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
@@ -351,14 +361,24 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportHmiTagTable"),
                 Description("[L2][HMI]Import one HMI tag table XML file into an HMI program (Classic WinCC only; Unified refuses with " +
-                "UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
+                "UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiTagTableV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
                 "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported tag table XML")] string importPath,
-            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
-            => HmiExchangeContract.Run("ImportHmiTagTable", true, true, () => ImportHmiTagTable(softwarePath, folderPath, importPath, overwrite));
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportHmiTagTable", dryRun, new { softwarePath, folderPath, importPath, overwrite }, () => HmiExchangeContract
+                    .Run("ImportHmiTagTable", true, true, () => ImportHmiTagTable(softwarePath, folderPath, importPath, overwrite)), expectedPlanHash,
+                    expectedProjectFile);
 
         public ResponseMessage ImportHmiTagTable(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
@@ -388,12 +408,22 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportHmiConnection"),
                 Description("[L2][HMI]Import one HMI connection XML file into an HMI program (Classic WinCC only; Unified refuses with " +
-                "UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
+                "UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiConnectionV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("importPath: full file path of exported HMI connection XML")] string importPath,
-            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
-            => HmiExchangeContract.Run("ImportHmiConnection", true, true, () => ImportHmiConnection(softwarePath, importPath, overwrite));
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportHmiConnection", dryRun, new { softwarePath, importPath, overwrite }, () => HmiExchangeContract
+                    .Run("ImportHmiConnection", true, true, () => ImportHmiConnection(softwarePath, importPath, overwrite)), expectedPlanHash,
+                    expectedProjectFile);
 
         public ResponseMessage ImportHmiConnection(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
@@ -421,16 +451,25 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportHmiScreensFromDirectory"),
                 Description("[L2][HMI]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native " +
-                "policy; V4 safety behavior is not yet accepted.")]
+                "policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiScreensFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
                 "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
-            => HmiExchangeContract
-                .Run("ImportHmiScreensFromDirectory", true, true, () => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
+            [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportHmiScreensFromDirectory", dryRun, new { softwarePath, folderPath, dir, regexName, overwrite }, () => HmiExchangeContract
+                .Run("ImportHmiScreensFromDirectory", true, true, () => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite)),
+                    expectedPlanHash, expectedProjectFile);
 
         public ResponseImportBatch ImportHmiScreensFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
@@ -460,16 +499,26 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportHmiTagTablesFromDirectory"),
                 Description("[L2][HMI]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native " +
-                "policy; V4 safety behavior is not yet accepted.")]
+                "policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
                 "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
-            => HmiExchangeContract
-                .Run("ImportHmiTagTablesFromDirectory", true, true, () => ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
+            [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportHmiTagTablesFromDirectory", dryRun, new { softwarePath, folderPath, dir, regexName, overwrite }, () =>
+                    HmiExchangeContract
+                .Run("ImportHmiTagTablesFromDirectory", true, true, () => ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite)),
+                    expectedPlanHash, expectedProjectFile);
 
         public ResponseImportBatch ImportHmiTagTablesFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,

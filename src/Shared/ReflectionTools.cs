@@ -184,7 +184,9 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "InvokeObject"),
                 Description("[L2][Reflection]Invoke an Openness method via reflection. Default is read-oriented; set allowWrite=true only after " +
                 "DescribeObject confirms the target method/signature. Only a unique convertible non-generic overload is invoked. Writes to guarded " +
-                "Safety/SafetyValidation, protection and UMAC surfaces must use their dedicated tools.")]
+                "Safety/SafetyValidation, protection and UMAC surfaces must use their dedicated tools." +
+            " For write actions, default dryRun=true previews; execution requires dryRun=false, expectedPlanHash from that preview, " +
+                "and the exact bound expectedProjectFile. Existing approval/native checks and read actions remain.")]
         public CallToolResult InvokeObjectV4(
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
@@ -195,11 +197,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 "machine.")] NativeValue[]
                 ? args = null,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
-            [Description("Allow write/dangerous methods. Default false.")] bool allowWrite = false)
-            => HmiInspectionContract
+            [Description("Allow write/dangerous methods. Default false.")] bool allowWrite = false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("InvokeObject", dryRun && allowWrite, new { objectKind, objectPath, methodName, args, softwarePath, allowWrite }, () =>
+                    HmiInspectionContract
                 .Run("InvokeObject", allowWrite, allowWrite, () =>
                     InvokeObject(objectKind, objectPath, methodName, args == null ? null : args.Select(value => value.Json).ToArray(), softwarePath,
-                        allowWrite));
+                        allowWrite)), expectedPlanHash, expectedProjectFile, writing: allowWrite);
 
         public ResponseObjectValue InvokeObject(
             [Description("Object kind: " +
@@ -274,7 +283,9 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "InvokeService"),
                 Description("[L2][Reflection]GetService bridge: invoke a uniquely convertible non-generic overload on a Siemens.Engineering service (exact " +
                 "full type name or unique suffix). Ambiguous matches are refused. Guarded Safety, SafetyValidation, protection and UMAC writes must use " +
-                "their dedicated tools.")]
+                "their dedicated tools." +
+            " For write actions, default dryRun=true previews; execution requires dryRun=false, expectedPlanHash from that preview, " +
+                "and the exact bound expectedProjectFile. Existing approval/native checks and read actions remain.")]
         public CallToolResult InvokeServiceV4(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: " +
@@ -283,11 +294,18 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Method name (case-insensitive)")] string methodName,
             [Description("JSON array of args, empty for no args")] NativeValue[]? args = null,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
-            [Description("Allow write/dangerous methods. Default false.")] bool allowWrite = false)
-            => HmiInspectionContract
+            [Description("Allow write/dangerous methods. Default false.")] bool allowWrite = false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("InvokeService", dryRun && allowWrite, new {
+                    objectKind, objectPath, serviceTypeSuffix, methodName, args, softwarePath, allowWrite }, () => HmiInspectionContract
                 .Run("InvokeService", allowWrite, allowWrite, () =>
                     InvokeService(objectKind, objectPath, serviceTypeSuffix, methodName, args == null ? null : args.Select(value => value.Json).ToArray(),
-                        softwarePath, allowWrite));
+                        softwarePath, allowWrite)), expectedPlanHash, expectedProjectFile, writing: allowWrite);
 
         public ResponseObjectValue InvokeService(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,

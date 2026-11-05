@@ -134,7 +134,7 @@ namespace TiaMcp.Logic.Generation
             {
                 foreach (var step in plan.Steps)
                 {
-                    if (step.Tool is "CreateDevice" or "MovePlcBlockToGroup")
+                    if (step.Tool is "CreateDevice" or "MovePlcBlockToGroup" or "EnsureSubnet" or "AttachDeviceNodeToSubnet")
                         step.Review = new GenerationStepReview { Rule = StepReviewRules.WritePreview,
                             Expect = Args(("projectFile", plan.Target.ProjectIdentity)),
                             Witness = new Dictionary<string, string> { ["planHash"] = "sha256" } };

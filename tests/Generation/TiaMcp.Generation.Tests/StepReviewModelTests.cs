@@ -47,6 +47,35 @@ namespace TiaMcp.Generation.Tests
             var plan = GenerationDocuments.Load<GenerationPlan>(json.ToJsonString());
             Assert.Contains(phase, plan.Phases); Assert.Contains(phase, GenerationDocuments.Canonical(plan));
         }
+        [Theory]
+        [InlineData("EnsureSubnet")]
+        [InlineData("AttachDeviceNodeToSubnet")]
+        public void Network_write_review_requires_the_planned_project_and_a_tool_hash(string tool)
+        {
+            var plan = new GenerationPlan();
+            plan.Target.ProjectIdentity = "C:/Fixture.ap21";
+            var step = new GenerationPlanStepsItem { Tool = tool, Review = new GenerationStepReview {
+                Rule = StepReviewRules.WritePreview } };
+            step.Review.Expect["projectFile"] = JsonSerializer.SerializeToElement(plan.Target.ProjectIdentity);
+            step.Review.Witness["planHash"] = "sha256";
+            step.Arguments["dryRun"] = JsonSerializer.SerializeToElement(false);
+            step.Arguments["expectedProjectFile"] = JsonSerializer.SerializeToElement(plan.Target.ProjectIdentity);
+            Assert.True(StepReviewRules.Supports(step));
+            Assert.True((bool?)StepReviewRules.PreviewArguments(step)["dryRun"]);
+            var projection = StepReviewRules.Project(new JsonObject { ["planHash"] = new string('a', 64),
+                ["targetIdentity"] = new JsonObject { ["identity"] = new JsonObject { ["projectPath"] = plan.Target.ProjectIdentity } } });
+            Assert.True(StepReviewRules.Compare(plan, step, projection, new RunFacts(plan), 123).Matches);
+            var final = StepReviewRules.FinalArguments(step, projection);
+            Assert.Equal(new string('a', 64), (string?)final["expectedPlanHash"]);
+            Assert.False((bool?)final["dryRun"]);
+            projection["projectFile"] = "C:/Other.ap21";
+            Assert.False(StepReviewRules.Compare(plan, step, projection, new RunFacts(plan), 123).Matches);
+            projection["projectFile"] = plan.Target.ProjectIdentity;
+            projection["planHash"] = "unreviewed";
+            Assert.False(StepReviewRules.Compare(plan, step, projection, new RunFacts(plan), 123).Matches);
+            Assert.Throws<ArgumentException>(() => StepReviewRules.FinalArguments(step, projection));
+        }
+
         [Fact]
         public void OnlyExpectedPlanHashMayBeLateFilled()
         {
@@ -55,7 +84,8 @@ namespace TiaMcp.Generation.Tests
             var preview = StepReviewRules.PreviewArguments(step); Assert.True((bool?)preview["dryRun"]);
             var final = StepReviewRules.FinalArguments(step, new JsonObject { ["planHash"] = new string('a', 64) });
             Assert.Equal(new string('a',64), (string?)final["expectedPlanHash"]); Assert.False((bool?)final["dryRun"]);
-            step.Review.LateArguments.Add("sourceName"); Assert.Throws<ArgumentException>(() => StepReviewRules.FinalArguments(step, new JsonObject { ["planHash"] = new string('a',64) }));
+            step.Review.LateArguments.Add("sourceName"); Assert
+                .Throws<ArgumentException>(() => StepReviewRules.FinalArguments(step, new JsonObject { ["planHash"] = new string('a',64) }));
             step.Review.LateArguments.Remove("sourceName"); step.Arguments["expectedPlanHash"] = JsonSerializer.SerializeToElement("forged");
             Assert.Throws<ArgumentException>(() => StepReviewRules.PreviewArguments(step));
         }

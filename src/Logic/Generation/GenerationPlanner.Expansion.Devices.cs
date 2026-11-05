@@ -58,7 +58,7 @@ namespace TiaMcp.Logic.Generation
                             SubnetType = "IndustrialEthernet", Ip = station.Ip == null ? null : allocator.Ip(station.Id), ProfinetName = station.ProfinetName };
                         var entry =
                             Add(network, "network", "network", "EnsureSubnet",
-                                Args(("anchorDeviceItemPath", path), ("subnetName", network.Name), ("subnetType", network.SubnetType)),
+                                Args(("anchorDeviceItemPath", path), ("subnetName", network.Name), ("subnetType", network.SubnetType), ("dryRun", false)),
                                 "GetDeviceItemNetworkInfo");
                         entry.Unavailable =
                             "IP/PROFINET assignment needs exact writable attribute names from readback; EnsureSubnet alone does not set node addresses.";
@@ -254,12 +254,12 @@ namespace TiaMcp.Logic.Generation
                                 var networkEntry =
                                     Add(network, "network", "network", "EnsureSubnet",
                                         Args(("anchorDeviceItemPath", network.DeviceItemPath), ("subnetName", network.Name),
-                                            ("subnetType", network.SubnetType)),
+                                            ("subnetType", network.SubnetType), ("dryRun", false)),
                                         "GetDeviceItemNetworkInfo");
                                 networkEntry.FollowUps
                                     .Add(("AttachDeviceNodeToSubnet",
                                             Args(("deviceItemPath", network.DeviceItemPath), ("interfaceIndex", network.InterfaceIndex),
-                                                ("subnetName", network.Name))));
+                                                ("subnetName", network.Name), ("dryRun", false))));
                                 if (network.DeviceItemPath.Length == 0 || !extra.ContainsKey("interfaceIndex")) networkEntry.Unavailable =
                                     "Network emit requires an exact device-item path and interface index from readback.";
                                 break;
@@ -275,7 +275,7 @@ namespace TiaMcp.Logic.Generation
                                     Add(hardwareDevice, "hardware", "device", emit.Kind == "hardware.device" ? "CreateDevice" : "PlugDeviceItem",
                                     emit.Kind == "hardware.device"
                                         ? Args(("orderNumber", hardwareDevice.Article), ("version", hardwareDevice.Firmware),
-                                            ("deviceName", hardwareDevice.Name))
+                                            ("deviceName", hardwareDevice.Name), ("dryRun", false))
                                         : Args(("deviceItemPath", hardwareDevice.ParentPath ?? ""), ("orderNumber", hardwareDevice.Article),
                                                 ("version", hardwareDevice.Firmware), ("name", hardwareDevice.Name),
                                                 ("positionNumber", hardwareDevice.Slot ?? -1), ("dryRun", false)),

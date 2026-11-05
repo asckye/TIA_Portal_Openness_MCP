@@ -43,7 +43,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GetOpennessCompatibility"),
-                Description("[L2][Diagnostics][READ] Read this server's loaded Siemens.Engineering assembly file versions and compiled engine capabilities " +
+                Description("[L2][Diagnostics][READ] Read this server's loaded Siemens.Engineering assembly file versions and compiled service capabilities " +
                 "without connecting to TIA. SDK file versions do not establish installed TIA Update/Hotfix: installedPatch remains unknown. Includes links " +
                 "to relevant Siemens V20 SD and V21 stability fixes, native-cross-reference policy and unsupported faceplate-type authoring boundary.")]
         public CallToolResult GetOpennessCompatibilityV4()
@@ -84,7 +84,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetNativeInvocationLog"),
                 Description("[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's " +
-                "configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration " +
+                "configured diagnostics directory. Release builds instrument service-owned Openness methods, properties, reflection and enumeration " +
                 "boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type " +
                 "chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary " +
                 "file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Optional requestId and sinceUtc filters " +

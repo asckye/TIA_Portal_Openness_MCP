@@ -15,7 +15,7 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["operationSuccess"] = false;
             meta["verificationSuccess"] = false; meta["automaticRollback"] = false; meta["compileRequested"] = compile != null;
             PlcDocumentEditing.Parse(candidateXml);
-            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview expectedToken is required.");
+            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview previewToken is required.");
             if (!Path.IsPathRooted(evidenceRoot)) throw new ArgumentException("Absolute evidence directory required.");
             var root = new DirectoryInfo(Path.GetFullPath(evidenceRoot));
             for (var p = root; p != null; p = p.Parent)

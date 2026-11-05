@@ -21,7 +21,9 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
 
         [McpServerTool(Name = "RunReadOnlyToolBatch"),
-                Description("[L2][Meta][READ] Sequentially invoke 1..50 explicit [READ] tools or GetSessionState. Rejects nested orchestration and native " +
+                Description("[L2][Meta][READ] Sequentially invoke 1..50 tools explicitly admitted by BatchRead metadata or GetSessionState. Rejects nested " +
+                    "orchestration and native "
+                        +
                 "cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. " +
                 "External edits can occur; this is not a consistent native snapshot.")]
         [AsyncDispatch(nameof(ReadToolBatchAsync))]
@@ -60,7 +62,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "PreviewToolBatch"),
-                Description("[L2][Meta][READ] Preview 1..50 explicit [WRITE] tools with a bool dryRun parameter. Forces dryRun=true and preserves " +
+                Description("[L2][Meta][READ] Preview 1..50 tools explicitly admitted by BatchWrite metadata with a bool dryRun parameter. Forces " +
+                    "dryRun=true and preserves "
+                        +
                 "confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute previewToken bound to ordered " +
                 "calls, connection identity and previews. No writes, atomic rollback or complete native state coverage.")]
         [AsyncDispatch(nameof(PreviewToolBatchAsync))]

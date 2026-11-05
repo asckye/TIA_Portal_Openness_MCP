@@ -39,15 +39,24 @@ namespace TiaMcpServer.ModelContextProtocol
             "Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace " +
             "afterwards to map the whole project (or one device) automatically. Workspace-language selection at creation is not exposed. " +
             "Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending."
-                + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
+                + " Native behaviorPolicy=current; V4 native acceptance is pending." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult CreateVersionControlWorkspaceV4(
             [Description("workspaceName: name shown in the TIA project tree, e.g. 'git'.")] string workspaceName,
             [Description("folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working " +
-                "tree.")] string folderPath)
-            => LibraryToolContract.Run("CreateVersionControlWorkspace", true, true, () =>
+                "tree.")] string folderPath,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("CreateVersionControlWorkspace", dryRun, new { workspaceName, folderPath }, () => LibraryToolContract
+                    .Run("CreateVersionControlWorkspace", true, true, () =>
             {
                 return CreateVersionControlWorkspace(workspaceName, folderPath);
-            });
+            }), expectedPlanHash, expectedProjectFile);
 
         internal ResponseMessage CreateVersionControlWorkspace(
             string workspaceName,

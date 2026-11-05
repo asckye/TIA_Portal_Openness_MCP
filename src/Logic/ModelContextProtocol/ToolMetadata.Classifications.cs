@@ -455,7 +455,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ProbeHardwareHmiConnectionWhitelistedServices"] = new Classification("L2", "Hardware", "READ", false, false, false, true, false, true, false),
             ["ProbePlcMonitorOnlineCapabilities"] = new Classification("L2", "Online-Monitoring", "READ", false, false, false, true, false, true, false),
             ["ProbeS7CpuIdentity"] = new Classification("L2", "Online-Monitoring", "ONLINE", false, false, false, true, false, true, true),
-            ["ReleaseUnifiedReadCursor"] = new Classification("L2", "HMI-Unified", "READ", false, true, false),
+            ["ReleaseUnifiedReadCursor"] = new Classification("L2", "HMI-Unified", "READ", false, false, false),
             ["RenderPlcBlock"] = new Classification("L2", "PLC-Software", "FILE", false, false, false),
             ["RenderPlcBlockDocument"] = new Classification("L2", "Validation", "FILE", false, false, false),
             ["RenderPlcProgramAtlas"] = new Classification("L2", "PLC-Software", "FILE", false, false, false),

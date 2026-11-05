@@ -559,7 +559,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "replace). PLC data types are imported before blocks, and blocks in the official order (FB/FC, global DB, instance DB, OB). Every PLC file's " +
                 "SimaticML Engineering version must be inside this release's documented import window (checked before the first import; never rewritten). " +
                 "overwrite=false (default) refuses existing PLC types and blocks of the same name before their import; overwrite=true replaces them " +
-                "(Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted.")]
+                "(Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult SeedProjectFromReferenceV4(
             [Description("plcSoftwarePath: path in the project structure to the PLC software")] string plcSoftwarePath,
             [Description("hmiSoftwarePath: path in the project structure to the HMI software")] string hmiSoftwarePath,
@@ -567,10 +569,17 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}")] JsonObject? placeholders = null,
             [Description("overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them " +
                 "(Siemens.Engineering.ImportOptions.Override).")] bool overwrite =
-                false)
-            => PlcToolContract
+                false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("SeedProjectFromReference", dryRun, new { plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite }, () =>
+                    PlcToolContract
                 .Run("SeedProjectFromReference", true, true, () =>
-                    SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite));
+                    SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite)), expectedPlanHash, expectedProjectFile);
 
         public ResponseSeed SeedProjectFromReference(
             string plcSoftwarePath,

@@ -19,7 +19,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public TeamcenterTools(TeamcenterPortService teamcenter) => _teamcenter = teamcenter;
 
         [McpServerTool(Name="ManageTeamcenterConnection"),
-                Description("[L2][VersionControl][WRITE] Teamcenter Gateway connection of this engine session " +
+                Description("[L2][VersionControl][WRITE] Teamcenter Gateway connection of this service session " +
                 "(TiaPortal.GetService<TeamcenterConnectionProvider>): read (connected, group, role, SHA-256 prefix of the session token, provider " +
                 "availability), connect (Connect(userName, password as SecureString - never logged, group, role, hostUrl, instance)), connectSso " +
                 "(ConnectSSO(hostUrl, instance, loginUrl, applicationId); without an active SSO session Teamcenter prompts in a browser), disconnect " +

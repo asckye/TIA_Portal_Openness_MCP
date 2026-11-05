@@ -356,7 +356,22 @@
           "tableName": "<Group/Table>",
           "address": "%M0.0",
           "modifyValue": "TRUE",
-          "trigger": "OnceOnlyAtStart"
+          "trigger": "OnceOnlyAtStart",
+          "dryRun": true
+        },
+        "expect": "Review data.planHash, data.plannedChanges and the exact bound project file in data.targetIdentity before applying."
+      },
+      {
+        "tool": "SetPlcWatchTableModifyValue",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableName": "<Group/Table>",
+          "address": "%M0.0",
+          "modifyValue": "TRUE",
+          "trigger": "OnceOnlyAtStart",
+          "dryRun": false,
+          "expectedPlanHash": "<data.planHash from this same preview>",
+          "expectedProjectFile": "<exact bound project file from this same preview's data.targetIdentity>"
         },
         "expect": "meta.readbackVerified true"
       },
@@ -505,7 +520,21 @@
           "softwarePath": "PLC_1",
           "pgPcInterface": "PLCSIM",
           "targetIpAddress": "<CPU IP>",
-          "trustDeviceCertificate": true
+          "trustDeviceCertificate": true,
+          "dryRun": true
+        },
+        "expect": "Review data.planHash, data.plannedChanges and the exact bound project file in data.targetIdentity before applying."
+      },
+      {
+        "tool": "DownloadPlc",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "pgPcInterface": "PLCSIM",
+          "targetIpAddress": "<CPU IP>",
+          "trustDeviceCertificate": true,
+          "dryRun": false,
+          "expectedPlanHash": "<data.planHash from this same preview>",
+          "expectedProjectFile": "<exact bound project file from this same preview's data.targetIdentity>"
         },
         "expect": "State Success / Warning"
       },

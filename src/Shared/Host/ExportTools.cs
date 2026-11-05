@@ -29,7 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "parsing. Use meta.paging.nextOffset until complete. data.export identifies the full content and its UTF-8 byteLength and SHA-256. Pages may " +
                 "return fewer units to keep serialized text within 20000 characters. Handles last 24 hours in this V4 session.")]
         public CallToolResult GetExport(
-            [Description("Opaque export handle from this engine session.")] string exportId,
+            [Description("Opaque export handle from this service session.")] string exportId,
             [Description("Zero-based UTF-16 code-unit offset.")] int offset = 0,
             [Description("Requested UTF-16 code units; 0 uses the response limit, capped at 20000.")] int limit = 0)
         {
@@ -51,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ListExportHandles"),
-                Description("[L1][Exports][READ] List this engine session's parked responses with content identity and SHA-256. Empty is a complete result. " +
+                Description("[L1][Exports][READ] List this service session's parked responses with content identity and SHA-256. Empty is a complete result. " +
                 "limit caps the returned handles.")]
         public CallToolResult ListExports(string? tool = null, int limit = 20,
             [Description("Zero-based offset into the matching in-memory export handles.")] int offset = 0)
@@ -106,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DeleteExportHandle"),
-                Description("[L1][Exports][WRITE] Delete one parked response from this engine session. A missing or expired handle returns NOT_FOUND.")]
+                Description("[L1][Exports][WRITE] Delete one parked response from this service session. A missing or expired handle returns NOT_FOUND.")]
         public CallToolResult DeleteExport(string exportId)
         {
             var entry = ExportStore.Get(exportId);
@@ -127,7 +127,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static CallToolResult Missing(string tool, string id, bool current = false) => PlcExchangeContract.Reject(tool,
-            new Error("Export handle is missing, expired or evicted in this engine session.", new NotFoundDetails(id)), current: current);
+            new Error("Export handle is missing, expired or evicted in this service session.", new NotFoundDetails(id)), current: current);
         private static JsonObject Describe(ExportEntry entry) => PlcExchangeContract.DescribeExport(entry);
         private static string Payload(string content, out bool unwrapped)
         {

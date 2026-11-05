@@ -335,6 +335,14 @@ namespace TiaMcpServer.ModelContextProtocol
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
             return WritePlanResult(execute(), plan);
         }
+        internal static async Task<CallToolResult> RunWritePreviewAsync(string tool, bool dryRun, object arguments,
+            Func<Task<CallToolResult>> execute, string expectedPlanHash = "", string expectedProjectFile = "", bool writing = true)
+        {
+            var plan = WritePreviewPlan(tool, arguments);
+            if (dryRun) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
+            if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
+            return WritePlanResult(await execute().ConfigureAwait(false), plan);
+        }
         internal static Paging OffsetPage(int offset, int limit, int total) => new Paging(PagingMode.Offset, offset, limit,
             (long)offset + limit < total ? offset + limit : (int?)null, null, null, total, (long)offset + limit >= total);
         internal static CallToolResult V4Reject(string tool, Error error, JsonObject? data = null)

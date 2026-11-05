@@ -26,7 +26,7 @@ namespace TiaMcp.Logic.Generation
             [Import] = "ImportPlcExternalSource", [Generate] = "GenerateBlocksFromExternalSource", [Delete] = "DeletePlcExternalSource", [Record] =
                 "PublishGenerationRecord" };
         public static bool Supports(GenerationPlanStepsItem step) => step.Review != null && step.Review.Mode == "tool-preview"
-            && (step.Review.Rule == WritePreview && step.Tool is "CreateDevice" or "MovePlcBlockToGroup"
+            && (step.Review.Rule == WritePreview && step.Tool is "CreateDevice" or "MovePlcBlockToGroup" or "EnsureSubnet" or "AttachDeviceNodeToSubnet"
                 || Tools.TryGetValue(step.Review.Rule, out var tool) && tool == step.Tool);
         public static StepReviewVerdict Transition(JsonObject before, JsonObject after, string predicted, JsonObject tree)
         {

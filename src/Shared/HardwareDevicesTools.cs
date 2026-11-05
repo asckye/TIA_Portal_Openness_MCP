@@ -155,16 +155,25 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "SetDeviceItemAttribute"),
                 Description("[L2][Hardware]Set one exact DeviceItem attribute by name with type coercion and detailed error return. Use " +
-                "GetDeviceItemInfo/GetDeviceItemNetworkInfo first.")]
+                "GetDeviceItemInfo/GetDeviceItemNetworkInfo first." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult SetDeviceItemAttributeV4(
             [Description("deviceItemPath: path in the project structure to the device item")] string deviceItemPath,
             [Description("attributeName: exact attribute name from GetDeviceItemInfo/GetDeviceItemNetworkInfo")] string attributeName,
-            [Description("value: new value as string; converted based on current attribute type")] string value)
-            => HardwareContract.Run("SetDeviceItemAttribute", () =>
+            [Description("value: new value as string; converted based on current attribute type")] string value,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("SetDeviceItemAttribute", dryRun, new { deviceItemPath, attributeName, value }, () => HardwareContract
+                    .Run("SetDeviceItemAttribute", () =>
             {
                 HardwareContract.RequireProject(_service.HasProject);
                 return SetDeviceItemAttribute(deviceItemPath, attributeName, value);
-            }, write: true, current: false);
+            }, write: true, current: false), expectedPlanHash, expectedProjectFile);
 
         public ResponseMessage SetDeviceItemAttribute(
             [Description("deviceItemPath: path in the project structure to the device item")] string deviceItemPath,
@@ -189,17 +198,24 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "SetPlcCpuSettings"),
                 Description("[L2][Hardware] Set CPU common settings using exactAttributes object only after reading exact attribute names from " +
                 "GetDeviceItemInfo/GetDeviceItemNetworkInfo. The tool writes only those exact attributes, rejects missing/non-writable attributes, and " +
-                "returns readback evidence.")]
+                "returns readback evidence." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult SetPlcCpuSettingsV4(
             [Description("cpuPath: real CPU device-item path resolved from GetProjectTree/GetDeviceItemTree.")] string cpuPath,
             [Description("settings: JSON object { \"exactAttributes\": { \"ExactAttributeNameFromReadback\": \"value\" } }. No aliases or guessed attribute " +
-                "names are accepted.")] CpuSettings settings)
-            => HardwareContract.Run("SetPlcCpuSettings", () =>
+                "names are accepted.")] CpuSettings settings,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer.RunWritePreview("SetPlcCpuSettings", dryRun, new { cpuPath, settings }, () => HardwareContract.Run("SetPlcCpuSettings", () =>
             {
                 var settingsJson = HardwareContract.Cpu(settings);
                 HardwareContract.RequireProject(_service.HasProject);
                 return SetCpuCommonSettings(cpuPath, settingsJson);
-            }, write: true, current: false);
+            }, write: true, current: false), expectedPlanHash, expectedProjectFile);
 
         public ResponseMessage SetCpuCommonSettings(
             [Description("cpuPath: real CPU device-item path resolved from GetProjectTree/GetDeviceItemTree.")] string cpuPath,
@@ -474,16 +490,24 @@ namespace TiaMcpServer.ModelContextProtocol
                 "catalog TypeIdentifier of one candidate (from SearchInstalledGsdDevices or SearchHardwareCatalog); that entry is created once with " +
                 "deviceName. Any other keyword is refused with the ranked candidates (preferredDap only ranks them); GSDML file rows without a catalog " +
                 "TypeIdentifier are never created. One DeviceComposition.CreateWithItem call: no next-candidate retry, no renaming. A TIA refusal is " +
-                "verified by the unchanged device inventory and lists the candidates. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+                "verified by the unchanged device inventory and lists the candidates. Native behaviorPolicy=current; V4 native acceptance is pending." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult CreateGsdDeviceV4(
             [Description("keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates")] string keyword,
             [Description("deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'")] string deviceName,
-            [Description("preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'")] string preferredDap = "")
-            => HardwareContract.Run("CreateGsdDevice", () =>
+            [Description("preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'")] string preferredDap = "",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("CreateGsdDevice", dryRun, new { keyword, deviceName, preferredDap }, () => HardwareContract.Run("CreateGsdDevice", () =>
             {
                 HardwareContract.RequireProject(_service.HasProject);
                 return AddGsdDeviceWithProbe(keyword, deviceName, preferredDap);
-            }, write: true, current: true);
+            }, write: true, current: true), expectedPlanHash, expectedProjectFile);
 
         public ResponseGsdDeviceProbe AddGsdDeviceWithProbe(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'")] string keyword,

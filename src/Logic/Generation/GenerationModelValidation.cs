@@ -166,7 +166,7 @@ namespace TiaMcp.Logic.Generation
                     string tool = rule == StepReviewRules.Import ? "ImportPlcExternalSource" : rule == StepReviewRules.Generate
                         ? "GenerateBlocksFromExternalSource" : rule == StepReviewRules.Delete ? "DeletePlcExternalSource" : rule == StepReviewRules.Record
                         ? "PublishGenerationRecord" : rule == StepReviewRules.WritePreview
-                            && step.GetProperty("tool").GetString() is "CreateDevice" or "MovePlcBlockToGroup"
+                            && step.GetProperty("tool").GetString() is "CreateDevice" or "MovePlcBlockToGroup" or "EnsureSubnet" or "AttachDeviceNodeToSubnet"
                             ? step.GetProperty("tool").GetString()! : "";
                     if (tool.Length == 0 || step.GetProperty("tool").GetString() != tool) errors
                         .Add(new GenerationValidationError(path + "/review/rule", "review-rule", "Current preview rule must match the step tool."));

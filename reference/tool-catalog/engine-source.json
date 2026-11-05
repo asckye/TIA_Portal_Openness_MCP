@@ -1118,7 +1118,7 @@
       "path": "src/Shared/AlarmsTools.cs",
       "owner": "AlarmsTools",
       "domain": "PLC-Alarms",
-      "signature": "public CallToolResult ImportAlarmClassesV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"importPath: existing absolute DAT file written by ExportAlarmClasses\")] string importPath)",
+      "signature": "public CallToolResult ImportAlarmClassesV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"importPath: existing absolute DAT file written by ExportAlarmClasses\")] string importPath,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -1129,6 +1129,24 @@
           "type": "string",
           "default": null,
           "description": "importPath: existing absolute DAT file written by ExportAlarmClasses"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -1156,7 +1174,7 @@
       "path": "src/Shared/AlarmsTools.cs",
       "owner": "AlarmsTools",
       "domain": "PLC-Alarms",
-      "signature": "public CallToolResult ImportAlarmTextListsV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"importPath: full file path to the XLSX file\")] string importPath)",
+      "signature": "public CallToolResult ImportAlarmTextListsV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"importPath: full file path to the XLSX file\")] string importPath,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -1167,6 +1185,24 @@
           "type": "string",
           "default": null,
           "description": "importPath: full file path to the XLSX file"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -3206,7 +3242,7 @@
       "path": "src/Shared/HardwareDevicesTools.cs",
       "owner": "HardwareDevicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult SetDeviceItemAttributeV4(\n            [Description(\"deviceItemPath: path in the project structure to the device item\")] string deviceItemPath,\n            [Description(\"attributeName: exact attribute name from GetDeviceItemInfo/GetDeviceItemNetworkInfo\")] string attributeName,\n            [Description(\"value: new value as string; converted based on current attribute type\")] string value)",
+      "signature": "public CallToolResult SetDeviceItemAttributeV4(\n            [Description(\"deviceItemPath: path in the project structure to the device item\")] string deviceItemPath,\n            [Description(\"attributeName: exact attribute name from GetDeviceItemInfo/GetDeviceItemNetworkInfo\")] string attributeName,\n            [Description(\"value: new value as string; converted based on current attribute type\")] string value,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "deviceItemPath": {
           "type": "string",
@@ -3222,6 +3258,24 @@
           "type": "string",
           "default": null,
           "description": "value: new value as string; converted based on current attribute type"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -3230,7 +3284,7 @@
       "path": "src/Shared/HardwareDevicesTools.cs",
       "owner": "HardwareDevicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult SetPlcCpuSettingsV4(\n            [Description(\"cpuPath: real CPU device-item path resolved from GetProjectTree/GetDeviceItemTree.\")] string cpuPath,\n            [Description(\"settings: JSON object { \\\"exactAttributes\\\": { \\\"ExactAttributeNameFromReadback\\\": \\\"value\\\" } }. No aliases or guessed attribute names are accepted.\")] CpuSettings settings)",
+      "signature": "public CallToolResult SetPlcCpuSettingsV4(\n            [Description(\"cpuPath: real CPU device-item path resolved from GetProjectTree/GetDeviceItemTree.\")] string cpuPath,\n            [Description(\"settings: JSON object { \\\"exactAttributes\\\": { \\\"ExactAttributeNameFromReadback\\\": \\\"value\\\" } }. No aliases or guessed attribute \" +\n                \"names are accepted.\")] CpuSettings settings,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "cpuPath": {
           "type": "string",
@@ -3241,6 +3295,24 @@
           "type": "TiaMcp.Logic.V4.Domain.CpuSettings",
           "default": null,
           "description": "settings: JSON object { \"exactAttributes\": { \"ExactAttributeNameFromReadback\": \"value\" } }. No aliases or guessed attribute names are accepted."
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -3382,7 +3454,7 @@
       "path": "src/Shared/HardwareDevicesTools.cs",
       "owner": "HardwareDevicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult CreateGsdDeviceV4(\n            [Description(\"keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates\")] string keyword,\n            [Description(\"deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'\")] string deviceName,\n            [Description(\"preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'\")] string preferredDap = \"\")",
+      "signature": "public CallToolResult CreateGsdDeviceV4(\n            [Description(\"keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates\")] string keyword,\n            [Description(\"deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'\")] string deviceName,\n            [Description(\"preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'\")] string preferredDap = \"\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "keyword": {
           "type": "string",
@@ -3398,6 +3470,24 @@
           "type": "string",
           "default": "\"\"",
           "description": "preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'",
+          "value": ""
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
           "value": ""
         }
       }
@@ -4028,7 +4118,7 @@
       "path": "src/Shared/HardwareNetworkTools.cs",
       "owner": "HardwareNetworkTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult ConnectDeviceNodesToProfinetSubnet(\n            [Description(\"firstRootPath: first device/device-item root, usually PLC root, e.g. 'PLC_1'\")] string firstRootPath,\n            [Description(\"secondRootPath: second device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'\")] string secondRootPath,\n            [Description(\"subnetName: subnet name to create when the first node is not already connected, e.g. 'PN_IE_1'\")] string subnetName = \"PN_IE_1\")",
+      "signature": "public CallToolResult ConnectDeviceNodesToProfinetSubnet(\n            [Description(\"firstRootPath: first device/device-item root, usually PLC root, e.g. 'PLC_1'\")] string firstRootPath,\n            [Description(\"secondRootPath: second device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'\")] string secondRootPath,\n            [Description(\"subnetName: subnet name to create when the first node is not already connected, e.g. 'PN_IE_1'\")] string subnetName = \"PN_IE_1\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "firstRootPath": {
           "type": "string",
@@ -4045,6 +4135,24 @@
           "default": "\"PN_IE_1\"",
           "description": "subnetName: subnet name to create when the first node is not already connected, e.g. 'PN_IE_1'",
           "value": "PN_IE_1"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -4067,7 +4175,7 @@
       "path": "src/Shared/HardwareNetworkTools.cs",
       "owner": "HardwareNetworkTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult EnsureSubnet(\n            [Description(\"anchorDeviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree; used to create/reuse the subnet from its first PROFINET node.\")] string anchorDeviceItemPath,\n            [Description(\"subnetType: IndustrialEthernet/PROFINET/PN/IE only.\")] string subnetType,\n            [Description(\"subnetName: exact subnet name to create or read back, e.g. PN_IE_1.\")] string subnetName)",
+      "signature": "public CallToolResult EnsureSubnet(\n            [Description(\"anchorDeviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree; used to create/reuse the subnet from its first PROFINET node.\")] string anchorDeviceItemPath,\n            [Description(\"subnetType: IndustrialEthernet/PROFINET/PN/IE only.\")] string subnetType,\n            [Description(\"subnetName: exact subnet name to create or read back, e.g. PN_IE_1.\")] string subnetName,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "anchorDeviceItemPath": {
           "type": "string",
@@ -4083,6 +4191,24 @@
           "type": "string",
           "default": null,
           "description": "subnetName: exact subnet name to create or read back, e.g. PN_IE_1."
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -4091,7 +4217,7 @@
       "path": "src/Shared/HardwareNetworkTools.cs",
       "owner": "HardwareNetworkTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult AttachDeviceNodeToSubnet(\n            [Description(\"deviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree.\")] string deviceItemPath,\n            [Description(\"interfaceIndex: zero-based index among discovered Industrial Ethernet/PROFINET nodes under deviceItemPath.\")] int interfaceIndex,\n            [Description(\"subnetName: existing subnet name to attach to.\")] string subnetName,\n            [Description(\"anchorDeviceItemPath: optional real device-item path used to EnsureSubnet first when subnetName is not found.\")] string anchorDeviceItemPath = \"\")",
+      "signature": "public CallToolResult AttachDeviceNodeToSubnet(\n            [Description(\"deviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree.\")] string deviceItemPath,\n            [Description(\"interfaceIndex: zero-based index among discovered Industrial Ethernet/PROFINET nodes under deviceItemPath.\")] int interfaceIndex,\n            [Description(\"subnetName: existing subnet name to attach to.\")] string subnetName,\n            [Description(\"anchorDeviceItemPath: optional real device-item path used to EnsureSubnet first when subnetName is not found.\")] string anchorDeviceItemPath =\n                \"\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "deviceItemPath": {
           "type": "string",
@@ -4112,6 +4238,24 @@
           "type": "string",
           "default": "\"\"",
           "description": "anchorDeviceItemPath: optional real device-item path used to EnsureSubnet first when subnetName is not found.",
+          "value": ""
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
           "value": ""
         }
       }
@@ -5011,7 +5155,7 @@
       "path": "src/Shared/HmiExchangeTools.cs",
       "owner": "HmiExchangeTools",
       "domain": "HMI",
-      "signature": "public CallToolResult ImportHmiScreenV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.\")] string folderPath,\n            [Description(\"importPath: full file path of exported screen XML\")] string importPath,\n            [Description(\"overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.\")] bool overwrite = false)",
+      "signature": "public CallToolResult ImportHmiScreenV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative \" +\n                \"and backslash paths are refused.\")] string folderPath,\n            [Description(\"importPath: full file path of exported screen XML\")] string importPath,\n            [Description(\"overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.\")] bool overwrite = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -5033,6 +5177,24 @@
           "default": "false",
           "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -5041,7 +5203,7 @@
       "path": "src/Shared/HmiExchangeTools.cs",
       "owner": "HmiExchangeTools",
       "domain": "HMI",
-      "signature": "public CallToolResult ImportHmiTagTableV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.\")] string folderPath,\n            [Description(\"importPath: full file path of exported tag table XML\")] string importPath,\n            [Description(\"overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.\")] bool overwrite = false)",
+      "signature": "public CallToolResult ImportHmiTagTableV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative \" +\n                \"and backslash paths are refused.\")] string folderPath,\n            [Description(\"importPath: full file path of exported tag table XML\")] string importPath,\n            [Description(\"overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.\")] bool overwrite = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -5063,6 +5225,24 @@
           "default": "false",
           "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -5071,7 +5251,7 @@
       "path": "src/Shared/HmiExchangeTools.cs",
       "owner": "HmiExchangeTools",
       "domain": "HMI",
-      "signature": "public CallToolResult ImportHmiConnectionV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"importPath: full file path of exported HMI connection XML\")] string importPath,\n            [Description(\"overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.\")] bool overwrite = false)",
+      "signature": "public CallToolResult ImportHmiConnectionV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"importPath: full file path of exported HMI connection XML\")] string importPath,\n            [Description(\"overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.\")] bool overwrite = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -5088,6 +5268,24 @@
           "default": "false",
           "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -5096,7 +5294,7 @@
       "path": "src/Shared/HmiExchangeTools.cs",
       "owner": "HmiExchangeTools",
       "domain": "HMI",
-      "signature": "public CallToolResult ImportHmiScreensFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.\")] string folderPath,\n            [Description(\"dir: directory containing exported screen XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: default false (native import option None); true explicitly selects Override\")] bool overwrite = false)",
+      "signature": "public CallToolResult ImportHmiScreensFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative \" +\n                \"and backslash paths are refused.\")] string folderPath,\n            [Description(\"dir: directory containing exported screen XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: default false (native import option None); true explicitly selects Override\")] bool overwrite = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -5124,6 +5322,24 @@
           "default": "false",
           "description": "overwrite: default false (native import option None); true explicitly selects Override",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -5132,7 +5348,7 @@
       "path": "src/Shared/HmiExchangeTools.cs",
       "owner": "HmiExchangeTools",
       "domain": "HMI",
-      "signature": "public CallToolResult ImportHmiTagTablesFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.\")] string folderPath,\n            [Description(\"dir: directory containing exported tag table XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: default false (native import option None); true explicitly selects Override\")] bool overwrite = false)",
+      "signature": "public CallToolResult ImportHmiTagTablesFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the HMI software\")] string softwarePath,\n            [Description(\"folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative \" +\n                \"and backslash paths are refused.\")] string folderPath,\n            [Description(\"dir: directory containing exported tag table XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: default false (native import option None); true explicitly selects Override\")] bool overwrite = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -5160,6 +5376,24 @@
           "default": "false",
           "description": "overwrite: default false (native import option None); true explicitly selects Override",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -6259,7 +6493,7 @@
       "path": "src/Shared/LibraryTools.cs",
       "owner": "LibraryTools",
       "domain": "HMI-Library",
-      "signature": "public CallToolResult ImportMasterCopyFromGlobalLibraryV4(\n            [Description(\"libraryPath: full path to .al21 file or its containing folder\")] string libraryPath,\n            [Description(\"masterCopyName: exact or suffix path/name from ProbeGlobalLibrary MasterCopies readback\")] string masterCopyName,\n            [Description(\"hmiSoftwarePath: real Unified HMI software path resolved from GetProjectTree, e.g. HMI_RT_1\")] string hmiSoftwarePath,\n            [Description(\"screenName: existing target Unified screen name; create it first with EnsureUnifiedHmiScreen if needed\")] string screenName,\n            [Description(\"importedItemName: optional expected item name after import; empty means use masterCopyName leaf\")] string importedItemName = \"\",\n            [Description(\"left: retained input; master-copy screen-item instantiation is refused\")] int left = 0,\n            [Description(\"top: retained input; master-copy screen-item instantiation is refused\")] int top = 0)",
+      "signature": "public CallToolResult ImportMasterCopyFromGlobalLibraryV4(\n            [Description(\"libraryPath: full path to .al21 file or its containing folder\")] string libraryPath,\n            [Description(\"masterCopyName: exact or suffix path/name from ProbeGlobalLibrary MasterCopies readback\")] string masterCopyName,\n            [Description(\"hmiSoftwarePath: real Unified HMI software path resolved from GetProjectTree, e.g. HMI_RT_1\")] string hmiSoftwarePath,\n            [Description(\"screenName: existing target Unified screen name; create it first with EnsureUnifiedHmiScreen if needed\")] string screenName,\n            [Description(\"importedItemName: optional expected item name after import; empty means use masterCopyName leaf\")] string importedItemName = \"\",\n            [Description(\"left: retained input; master-copy screen-item instantiation is refused\")] int left = 0,\n            [Description(\"top: retained input; master-copy screen-item instantiation is refused\")] int top = 0,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "libraryPath": {
           "type": "string",
@@ -6298,6 +6532,24 @@
           "default": "0",
           "description": "top: retained input; master-copy screen-item instantiation is refused",
           "value": 0
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -7231,7 +7483,7 @@
       "path": "src/Shared/OnlineDownloadTools.cs",
       "owner": "OnlineDownloadTools",
       "domain": "PLC-Online",
-      "signature": "public CallToolResult DownloadToPlcV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"consistentBlocksOnly: true (default) leaves the AllBlocksDownload prompt unanswered, so TIA aborts instead of downloading all blocks; false answers it with its only selection, download all blocks. ConsistentBlocksDownload is always answered ConsistentDownload; neither value downloads inconsistent blocks - compile first.\")] bool consistentBlocksOnly = true,\n            [Description(\"keepActualValues: true (default) keeps the DB actual values (DataBlockReinitialization: NoAction, so TIA aborts a download that needs reinitialization; V21 DataBlockReinitializationOrKeepActualValues: KeepActualValues); false resets all data values to their start values (StopPlcAndReinitialize) only with stopBeforeDownload=true, otherwise both prompts answer NoAction and TIA aborts - irreversible.\")] bool keepActualValues = true,\n            [Description(\"startAfterDownload: true=automatically set CPU to RUN after download (default), false=leave CPU in STOP\")] bool startAfterDownload = true,\n            [Description(\"stopBeforeDownload: true=automatically stop CPU before download (required for most downloads), false=attempt online download without stopping\")] bool stopBeforeDownload = true,\n            [Description(\"password: optional CPU access password. Required when the CPU has download protection configured. Leave empty for unprotected CPUs.\")] string password = \"\",\n            [Description(\"pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'. Leave empty to auto-pick the adapter that shares a subnet with the CPU. Run CheckDownloadReadiness to see the available names.\")] string pgPcInterface = \"\",\n            [Description(\"targetIpAddress: optional CPU IP to download to, e.g. '192.168.0.1'. Disambiguates which route to use when the project has several CPU interfaces. Leave empty to auto-pick.\")] string targetIpAddress = \"\",\n            [Description(\"userManagementMode: how the UserManagementDownload prompt is answered: keep (default, keeps the online user management data), updateKeepPassword (updates data but keeps online passwords), resetToProject (downloads all user management data and resets to project).\")] string userManagementMode = \"keep\",\n            [Description(\"promptAnswers: structured AttributeMap<string> input.\")] AttributeMap<string> promptAnswers = null!,\n            [Description(\"moduleAccessPassword: optional password for ModuleReadAccessPassword / ModuleWriteAccessPassword prompts; defaults to 'password' when empty. Never logged.\")] string moduleAccessPassword = \"\",\n            [Description(\"blockBindingPassword: optional password for the BlockBindingPassword prompt (know-how protected blocks bound to a CPU/card). Never logged.\")] string blockBindingPassword = \"\",\n            [Description(\"masterSecretPassword: optional password for the PlcMasterSecretPassword prompt. Never logged.\")] string masterSecretPassword = \"\",\n            [Description(\"rhTarget: empty for standard CPUs; primary or backup downloads to that CPU of an R/H system through RHDownloadProvider.DownloadToPrimary/DownloadToBackup (routes and prompts of RHDownloadProvider.Configuration).\")] string rhTarget = \"\",\n            [Description(\"trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the certificates the device presented.\")] bool trustDeviceCertificate = false,\n            [Description(\"allowSafetyProgramDownload: true answers the SafetyProgram prompt (F-program download) with ConsistentDownload; false (default) refuses it and the download stops there.\")] bool allowSafetyProgramDownload = false,\n            [Description(\"allowHardwareDifferences: true answers DifferentTargetConfiguration (differences between configured and target modules) with AcceptAll; false (default) refuses it and the download stops there.\")] bool allowHardwareDifferences = false,\n            [Description(\"allowActiveTestCancel: true answers ActiveTestCanBeAborted / ActiveTestCanPreventDownload (active test and commissioning functions are cancelled) with AcceptAll; false (default) refuses them and the download stops there.\")] bool allowActiveTestCancel = false,\n            [Description(\"allowExpandedDownload: true answers ExpandDownload (the download must be expanded beyond the selection) with Download; false (default) refuses it and the download stops there.\")] bool allowExpandedDownload = false,\n            [Description(\"allowIdentificationDataLoad: true answers LoadIdentificationData (write I&M identification data to the PROFINET IO devices) with LoadData; false (default) refuses it and the download stops there.\")] bool allowIdentificationDataLoad = false,\n            [Description(\"allowNonTlsLogin: false (default) sends a password only where the prompt reports IsSecureCommunication=true or the release cannot report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on V21); true also sends it over a connection that is not TLS-secured.\")] bool allowNonTlsLogin = false,\n            [Description(\"downloadScope: software (default; the Openness download option Software, download software all) or softwareOnlyChanges (the option SoftwareOnlyChanges, download only the changes; V17+).\")] string downloadScope = \"software\")",
+      "signature": "public CallToolResult DownloadToPlcV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"consistentBlocksOnly: true (default) leaves the AllBlocksDownload prompt unanswered, so TIA aborts instead of downloading all \" +\n                \"blocks; false answers it with its only selection, download all blocks. ConsistentBlocksDownload is always answered ConsistentDownload; \" +\n                \"neither value downloads inconsistent blocks - compile first.\")] bool consistentBlocksOnly =\n                true,\n            [Description(\"keepActualValues: true (default) keeps the DB actual values (DataBlockReinitialization: NoAction, so TIA aborts a download that \" +\n                \"needs reinitialization; V21 DataBlockReinitializationOrKeepActualValues: KeepActualValues); false resets all data values to their start \" +\n                \"values (StopPlcAndReinitialize) only with stopBeforeDownload=true, otherwise both prompts answer NoAction and TIA aborts - \" +\n                \"irreversible.\")] bool keepActualValues =\n                true,\n            [Description(\"startAfterDownload: true=automatically set CPU to RUN after download (default), false=leave CPU in STOP\")] bool startAfterDownload =\n                true,\n            [Description(\"stopBeforeDownload: true=automatically stop CPU before download (required for most downloads), false=attempt online download \" +\n                \"without stopping\")] bool stopBeforeDownload =\n                true,\n            [Description(\"password: optional CPU access password. Required when the CPU has download protection configured. Leave empty for unprotected \" +\n                \"CPUs.\")] string password =\n                \"\",\n            [Description(\"pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'. Leave empty to auto-pick \" +\n                \"the adapter that shares a subnet with the CPU. Run CheckDownloadReadiness to see the available names.\")] string pgPcInterface =\n                \"\",\n            [Description(\"targetIpAddress: optional CPU IP to download to, e.g. '192.168.0.1'. Disambiguates which route to use when the project has several \" +\n                \"CPU interfaces. Leave empty to auto-pick.\")] string targetIpAddress =\n                \"\",\n            [Description(\"userManagementMode: how the UserManagementDownload prompt is answered: keep (default, keeps the online user management data), \" +\n                \"updateKeepPassword (updates data but keeps online passwords), resetToProject (downloads all user management data and resets to \" +\n                \"project).\")] string userManagementMode =\n                \"keep\",\n            [Description(\"promptAnswers: structured AttributeMap<string> input.\")] AttributeMap<string> promptAnswers = null!,\n            [Description(\"moduleAccessPassword: optional password for ModuleReadAccessPassword / ModuleWriteAccessPassword prompts; defaults to 'password' \" +\n                \"when empty. Never logged.\")] string moduleAccessPassword =\n                \"\",\n            [Description(\"blockBindingPassword: optional password for the BlockBindingPassword prompt (know-how protected blocks bound to a CPU/card). Never \" +\n                \"logged.\")] string blockBindingPassword =\n                \"\",\n            [Description(\"masterSecretPassword: optional password for the PlcMasterSecretPassword prompt. Never logged.\")] string masterSecretPassword = \"\",\n            [Description(\"rhTarget: empty for standard CPUs; primary or backup downloads to that CPU of an R/H system through \" +\n                \"RHDownloadProvider.DownloadToPrimary/DownloadToBackup (routes and prompts of RHDownloadProvider.Configuration).\")] string rhTarget =\n                \"\",\n            [Description(\"trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the \" +\n                \"connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the \" +\n                \"certificates the device presented.\")] bool trustDeviceCertificate =\n                false,\n            [Description(\"allowSafetyProgramDownload: true answers the SafetyProgram prompt (F-program download) with ConsistentDownload; false (default) \" +\n                \"refuses it and the download stops there.\")] bool allowSafetyProgramDownload =\n                false,\n            [Description(\"allowHardwareDifferences: true answers DifferentTargetConfiguration (differences between configured and target modules) with \" +\n                \"AcceptAll; false (default) refuses it and the download stops there.\")] bool allowHardwareDifferences =\n                false,\n            [Description(\"allowActiveTestCancel: true answers ActiveTestCanBeAborted / ActiveTestCanPreventDownload (active test and commissioning functions \" +\n                \"are cancelled) with AcceptAll; false (default) refuses them and the download stops there.\")] bool allowActiveTestCancel =\n                false,\n            [Description(\"allowExpandedDownload: true answers ExpandDownload (the download must be expanded beyond the selection) with Download; false \" +\n                \"(default) refuses it and the download stops there.\")] bool allowExpandedDownload =\n                false,\n            [Description(\"allowIdentificationDataLoad: true answers LoadIdentificationData (write I&M identification data to the PROFINET IO devices) with \" +\n                \"LoadData; false (default) refuses it and the download stops there.\")] bool allowIdentificationDataLoad =\n                false,\n            [Description(\"allowNonTlsLogin: false (default) sends a password only where the prompt reports IsSecureCommunication=true or the release cannot \" +\n                \"report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on \" +\n                \"V21); true also sends it over a connection that is not TLS-secured.\")] bool allowNonTlsLogin =\n                false,\n            [Description(\"downloadScope: software (default; the Openness download option Software, download software all) or softwareOnlyChanges (the option \" +\n                \"SoftwareOnlyChanges, download only the changes; V17+).\")] string downloadScope =\n                \"software\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -7363,6 +7615,24 @@
           "default": "\"software\"",
           "description": "downloadScope: software (default; the Openness download option Software, download software all) or softwareOnlyChanges (the option SoftwareOnlyChanges, download only the changes; V17+).",
           "value": "software"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -7663,7 +7933,7 @@
       "path": "src/Shared/OpcUaTools.cs",
       "owner": "OpcUaTools",
       "domain": "PLC-OpcUA",
-      "signature": "public CallToolResult SetOpcUaInterfaceEnabledV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"interfaceName: exact name of the interface as shown in GetPlcOpcUaConfiguration\")] string interfaceName,\n            [Description(\"enabled: true to enable, false to disable\")] bool enabled,\n            [Description(\"interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'\")] string interfaceType = \"ServerInterface\")",
+      "signature": "public CallToolResult SetOpcUaInterfaceEnabledV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"interfaceName: exact name of the interface as shown in GetPlcOpcUaConfiguration\")] string interfaceName,\n            [Description(\"enabled: true to enable, false to disable\")] bool enabled,\n            [Description(\"interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'\")] string interfaceType = \"ServerInterface\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -7685,6 +7955,24 @@
           "default": "\"ServerInterface\"",
           "description": "interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'",
           "value": "ServerInterface"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -7723,7 +8011,7 @@
       "path": "src/Shared/OpcUaTools.cs",
       "owner": "OpcUaTools",
       "domain": "PLC-OpcUA",
-      "signature": "public CallToolResult ImportOpcUaInterfaceV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"importPath: full file path to the XML file\")] string importPath,\n            [Description(\"interfaceType: 'ServerInterface' (default) or 'ReferenceNamespace'\")] string interfaceType = \"ServerInterface\")",
+      "signature": "public CallToolResult ImportOpcUaInterfaceV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"importPath: full file path to the XML file\")] string importPath,\n            [Description(\"interfaceType: 'ServerInterface' (default) or 'ReferenceNamespace'\")] string interfaceType = \"ServerInterface\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -7740,6 +8028,24 @@
           "default": "\"ServerInterface\"",
           "description": "interfaceType: 'ServerInterface' (default) or 'ReferenceNamespace'",
           "value": "ServerInterface"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -9719,7 +10025,7 @@
       "path": "src/Shared/PlcReadModifyTools.cs",
       "owner": "PlcReadModifyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult SeedProjectFromReferenceV4(\n            [Description(\"plcSoftwarePath: path in the project structure to the PLC software\")] string plcSoftwarePath,\n            [Description(\"hmiSoftwarePath: path in the project structure to the HMI software\")] string hmiSoftwarePath,\n            [Description(\"referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)\")] string referenceDir,\n            [Description(\"placeholders: JsonObject key-values for replacement in XML, e.g. {\\\"PLC_NAME\\\":\\\"PLC_1\\\"}\")] JsonObject? placeholders = null,\n            [Description(\"overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them (Siemens.Engineering.ImportOptions.Override).\")] bool overwrite = false)",
+      "signature": "public CallToolResult SeedProjectFromReferenceV4(\n            [Description(\"plcSoftwarePath: path in the project structure to the PLC software\")] string plcSoftwarePath,\n            [Description(\"hmiSoftwarePath: path in the project structure to the HMI software\")] string hmiSoftwarePath,\n            [Description(\"referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)\")] string referenceDir,\n            [Description(\"placeholders: JsonObject key-values for replacement in XML, e.g. {\\\"PLC_NAME\\\":\\\"PLC_1\\\"}\")] JsonObject? placeholders = null,\n            [Description(\"overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them \" +\n                \"(Siemens.Engineering.ImportOptions.Override).\")] bool overwrite =\n                false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "plcSoftwarePath": {
           "type": "string",
@@ -9747,6 +10053,24 @@
           "default": "false",
           "description": "overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them (Siemens.Engineering.ImportOptions.Override).",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -9999,7 +10323,7 @@
       "path": "src/Shared/PlcTechnologyTools.cs",
       "owner": "PlcTechnologyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ImportTechnologyObjectV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional technology object group path (use empty for root)\")] string folderPath,\n            [Description(\"importPath: full file path of Technology Object XML\")] string importPath)",
+      "signature": "public CallToolResult ImportTechnologyObjectV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional technology object group path (use empty for root)\")] string folderPath,\n            [Description(\"importPath: full file path of Technology Object XML\")] string importPath,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10015,6 +10339,24 @@
           "type": "string",
           "default": null,
           "description": "importPath: full file path of Technology Object XML"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -10023,7 +10365,7 @@
       "path": "src/Shared/PlcTechnologyTools.cs",
       "owner": "PlcTechnologyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ImportTechnologyObjectsFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional technology object group path (use empty for root)\")] string folderPath,\n            [Description(\"dir: directory containing technology object XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: true=Override (default)\")] bool overwrite = true)",
+      "signature": "public CallToolResult ImportTechnologyObjectsFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional technology object group path (use empty for root)\")] string folderPath,\n            [Description(\"dir: directory containing technology object XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: true=Override (default)\")] bool overwrite = true,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10051,6 +10393,24 @@
           "default": "true",
           "description": "overwrite: true=Override (default)",
           "value": true
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -10158,7 +10518,7 @@
       "path": "src/Shared/PlcWatchTools.cs",
       "owner": "PlcWatchTools",
       "domain": "PLC-Online",
-      "signature": "public CallToolResult SetWatchTableModifyValueV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"tableName: watch table name or group-qualified path (e.g. 'MCP_W/MCP_WT'); a bare name is searched through every group (ambiguity refused) and the table is created at the root only when it exists nowhere\")] string tableName,\n            [Description(\"address: absolute address ('%M0.0', 'DB1.DBX0.0') goes to the row's Address; a symbol ('MyTag', '\\\"DB\\\".Member') goes to its Name (quoted per segment like TIA)\")] string address,\n            [Description(\"modifyValue: value to write, e.g. 'TRUE', '42', '3.14'\")] string modifyValue,\n            [Description(\"trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart | PermanentAtEnd | OnceOnlyAtEnd | OnceOnlyAtStop (default: Permanent)\")] string trigger = \"Permanent\")",
+      "signature": "public CallToolResult SetWatchTableModifyValueV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"tableName: watch table name or group-qualified path (e.g. 'MCP_W/MCP_WT'); a bare name is searched through every group (ambiguity \" +\n                \"refused) and the table is created at the root only when it exists nowhere\")] string tableName,\n            [Description(\"address: absolute address ('%M0.0', 'DB1.DBX0.0') goes to the row's Address; a symbol ('MyTag', '\\\"DB\\\".Member') goes to its Name \" +\n                \"(quoted per segment like TIA)\")] string address,\n            [Description(\"modifyValue: value to write, e.g. 'TRUE', '42', '3.14'\")] string modifyValue,\n            [Description(\"trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart | PermanentAtEnd | OnceOnlyAtEnd | OnceOnlyAtStop (default: Permanent)\")] string trigger =\n                \"Permanent\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10185,6 +10545,24 @@
           "default": "\"Permanent\"",
           "description": "trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart | PermanentAtEnd | OnceOnlyAtEnd | OnceOnlyAtStop (default: Permanent)",
           "value": "Permanent"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -10949,7 +11327,7 @@
       "path": "src/Shared/ReflectionTools.cs",
       "owner": "ReflectionTools",
       "domain": "Reflection",
-      "signature": "public CallToolResult InvokeObjectV4(\n            [Description(\"Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts\")] string objectKind,\n            [Description(\"Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.\")] string objectPath,\n            [Description(\"Method name (case-insensitive)\")] string methodName,\n            [Description(\"JSON array of args, e.g. [\\\"AttrName\\\"]. Empty for no args. DirectoryInfo/FileInfo parameters accept path strings on the MCP machine.\")] NativeValue[]? args = null,\n            [Description(\"softwarePath required for Block/Type and HmiScriptModule/HmiScripts\")] string softwarePath = \"\",\n            [Description(\"Allow write/dangerous methods. Default false.\")] bool allowWrite = false)",
+      "signature": "public CallToolResult InvokeObjectV4(\n            [Description(\"Object kind: \" +\n                \"Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts\")] string objectKind,\n            [Description(\"Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact \" +\n                \"module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.\")] string objectPath,\n            [Description(\"Method name (case-insensitive)\")] string methodName,\n            [Description(\"JSON array of args, e.g. [\\\"AttrName\\\"]. Empty for no args. DirectoryInfo/FileInfo parameters accept path strings on the MCP \" +\n                \"machine.\")] NativeValue[]\n                ? args = null,\n            [Description(\"softwarePath required for Block/Type and HmiScriptModule/HmiScripts\")] string softwarePath = \"\",\n            [Description(\"Allow write/dangerous methods. Default false.\")] bool allowWrite = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "objectKind": {
           "type": "string",
@@ -10983,6 +11361,24 @@
           "default": "false",
           "description": "Allow write/dangerous methods. Default false.",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -11027,7 +11423,7 @@
       "path": "src/Shared/ReflectionTools.cs",
       "owner": "ReflectionTools",
       "domain": "Reflection",
-      "signature": "public CallToolResult InvokeServiceV4(\n            [Description(\"Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts\")] string objectKind,\n            [Description(\"Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.\")] string objectPath,\n            [Description(\"Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable\")] string serviceTypeSuffix,\n            [Description(\"Method name (case-insensitive)\")] string methodName,\n            [Description(\"JSON array of args, empty for no args\")] NativeValue[]? args = null,\n            [Description(\"softwarePath required for Block/Type and HmiScriptModule/HmiScripts\")] string softwarePath = \"\",\n            [Description(\"Allow write/dangerous methods. Default false.\")] bool allowWrite = false)",
+      "signature": "public CallToolResult InvokeServiceV4(\n            [Description(\"Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts\")] string objectKind,\n            [Description(\"Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: \" +\n                \"exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.\")] string objectPath,\n            [Description(\"Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable\")] string serviceTypeSuffix,\n            [Description(\"Method name (case-insensitive)\")] string methodName,\n            [Description(\"JSON array of args, empty for no args\")] NativeValue[]? args = null,\n            [Description(\"softwarePath required for Block/Type and HmiScriptModule/HmiScripts\")] string softwarePath = \"\",\n            [Description(\"Allow write/dangerous methods. Default false.\")] bool allowWrite = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "objectKind": {
           "type": "string",
@@ -11066,6 +11462,24 @@
           "default": "false",
           "description": "Allow write/dangerous methods. Default false.",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -12882,7 +13296,7 @@
       "path": "src/Shared/StartdriveTools.cs",
       "owner": "StartdriveTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult ManageOnlineDriveFunctions(\n            string[] devicePath,\n            string[] itemPath,\n            ushort driveObjectNumber=0,\n            int driveObjectIndex=-1,\n            [Description(\"action: the operation to perform - read | performFactoryReset | performRamToRomCopy | changeActivationState.\")] string action=\"read\",\n            [Description(\"resetMode: ParameterReset | SafetyParameterReset.\")] string resetMode=\"\",\n            [Description(\"activationState: Deactivate | Activate | DeactivateAndNotPresent.\")] string activationState=\"\",\n            [Description(\"confirmOnline: must be true together with dryRun=false to execute the online drive function.\")] bool confirmOnline=false)",
+      "signature": "public CallToolResult ManageOnlineDriveFunctions(\n            string[] devicePath,\n            string[] itemPath,\n            ushort driveObjectNumber=0,\n            int driveObjectIndex=-1,\n            [Description(\"action: the operation to perform - read | performFactoryReset | performRamToRomCopy | changeActivationState.\")] string action=\"read\",\n            [Description(\"resetMode: ParameterReset | SafetyParameterReset.\")] string resetMode=\"\",\n            [Description(\"activationState: Deactivate | Activate | DeactivateAndNotPresent.\")] string activationState=\"\",\n            [Description(\"confirmOnline: must be true together with dryRun=false to execute the online drive function.\")] bool confirmOnline=false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "devicePath": {
           "type": "string[]",
@@ -12925,6 +13339,24 @@
           "default": "false",
           "description": "confirmOnline: must be true together with dryRun=false to execute the online drive function.",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -13708,7 +14140,7 @@
       "path": "src/Shared/UnifiedHmiTools.cs",
       "owner": "UnifiedHmiTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult EnsureStartStopUnifiedHmiV4(\n            [Description(\"hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')\")] string hmiSoftwarePath,\n            [Description(\"screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused. (default 'Main')\")] string screenName = \"Main\",\n            [Description(\"tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)\")] string tagTableName = TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,\n            [Description(\"plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')\")] string plcName = \"PLC_1\",\n            [Description(\"connectionName: Unified HMI connection object name (default 'HMI_Connection_1')\")] string connectionName = \"HMI_Connection_1\")",
+      "signature": "public CallToolResult EnsureStartStopUnifiedHmiV4(\n            [Description(\"hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')\")] string hmiSoftwarePath,\n            [Description(\"screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative \" +\n                \"or backslash paths are refused. (default 'Main')\")] string screenName =\n                \"Main\",\n            [Description(\"tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already \" +\n                \"exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)\")] string tagTableName =\n                TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,\n            [Description(\"plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')\")] string plcName = \"PLC_1\",\n            [Description(\"connectionName: Unified HMI connection object name (default 'HMI_Connection_1')\")] string connectionName = \"HMI_Connection_1\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "hmiSoftwarePath": {
           "type": "string",
@@ -13738,6 +14170,24 @@
           "default": "\"HMI_Connection_1\"",
           "description": "connectionName: Unified HMI connection object name (default 'HMI_Connection_1')",
           "value": "HMI_Connection_1"
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -14210,7 +14660,7 @@
       "path": "src/Shared/UnifiedHmiTools.cs",
       "owner": "UnifiedHmiTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult SetUnifiedHmiButtonEventScriptCodeV4(\n            RequestContext<CallToolRequestParams> context,\n            [Description(\"hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')\")] string hmiSoftwarePath,\n            [Description(\"screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.\")] string screenName,\n            [Description(\"buttonName: HMI button item name\")] string buttonName,\n            [Description(\"eventType: enum value, e.g. Tapped, Down, Up\")] string eventType,\n            [Description(\"scriptCode: JavaScript code for the event\")] string scriptCode,\n            [Description(\"globalDefinitionAreaScriptCode: omit to preserve existing global definitions; empty string explicitly clears them\")] string globalDefinitionAreaScriptCode = \"\",\n            [Description(\"async: omit to preserve the existing flag; false explicitly disables it\")] bool async = false,\n            [Description(\"syntaxCheck: run TIA SyntaxCheck after writing. Default false - on TIA V21 this call can crash the Portal process (NonRecoverableException) and lose the just-written script. When false, no syntaxErrorCount is reported: absence means NOT CHECKED, never zero errors.\")] bool syntaxCheck = false)",
+      "signature": "public CallToolResult SetUnifiedHmiButtonEventScriptCodeV4(\n            RequestContext<CallToolRequestParams> context,\n            [Description(\"hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')\")] string hmiSoftwarePath,\n            [Description(\"screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative \" +\n                \"or backslash paths are refused.\")] string screenName,\n            [Description(\"buttonName: HMI button item name\")] string buttonName,\n            [Description(\"eventType: enum value, e.g. Tapped, Down, Up\")] string eventType,\n            [Description(\"scriptCode: JavaScript code for the event\")] string scriptCode,\n            [Description(\"globalDefinitionAreaScriptCode: omit to preserve existing global definitions; empty string explicitly clears \" +\n                \"them\")] string globalDefinitionAreaScriptCode =\n                \"\",\n            [Description(\"async: omit to preserve the existing flag; false explicitly disables it\")] bool async = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\",\n            [Description(\"syntaxCheck: run TIA SyntaxCheck after writing. Default false - on TIA V21 this call can crash the Portal process (NonRecoverableException) and lose the just-written script. When false, no syntaxErrorCount is reported: absence means NOT CHECKED, never zero errors.\")] bool syntaxCheck = false)",
       "parameters": {
         "context": {
           "type": "RequestContext<CallToolRequestParams>",
@@ -14252,6 +14702,24 @@
           "default": "false",
           "description": "async: omit to preserve the existing flag; false explicitly disables it",
           "value": false
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         },
         "syntaxCheck": {
           "type": "bool",
@@ -15370,7 +15838,7 @@
       "path": "src/Shared/VersionControlTools.cs",
       "owner": "VersionControlTools",
       "domain": "VersionControl",
-      "signature": "public CallToolResult CreateVersionControlWorkspaceV4(\n            [Description(\"workspaceName: name shown in the TIA project tree, e.g. 'git'.\")] string workspaceName,\n            [Description(\"folderPath: existing folder the text files are written to, e.g. 'D:\\\\\\\\repos\\\\\\\\crane-plc'. Use your Git working tree.\")] string folderPath)",
+      "signature": "public CallToolResult CreateVersionControlWorkspaceV4(\n            [Description(\"workspaceName: name shown in the TIA project tree, e.g. 'git'.\")] string workspaceName,\n            [Description(\"folderPath: existing folder the text files are written to, e.g. 'D:\\\\\\\\repos\\\\\\\\crane-plc'. Use your Git working \" +\n                \"tree.\")] string folderPath,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "workspaceName": {
           "type": "string",
@@ -15381,6 +15849,24 @@
           "type": "string",
           "default": null,
           "description": "folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working tree."
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },

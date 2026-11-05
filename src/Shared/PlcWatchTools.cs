@@ -96,7 +96,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "readbackVerified). Project not saved."
                 +
             " Example: SetPlcWatchTableModifyValue('PLC_1', 'Debug_WT', 'DB1.DBX0.0', 'TRUE', 'OnceOnlyAtStart') Current native policy; V4 safety behavior " +
-                "is not yet accepted.")]
+                "is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult SetWatchTableModifyValueV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("tableName: watch table name or group-qualified path (e.g. 'MCP_W/MCP_WT'); a bare name is searched through every group (ambiguity " +
@@ -105,9 +107,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 "(quoted per segment like TIA)")] string address,
             [Description("modifyValue: value to write, e.g. 'TRUE', '42', '3.14'")] string modifyValue,
             [Description("trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart | PermanentAtEnd | OnceOnlyAtEnd | OnceOnlyAtStop (default: Permanent)")] string trigger =
-                "Permanent")
-            => PlcToolContract
-                .Run("SetPlcWatchTableModifyValue", true, true, () => SetWatchTableModifyValue(softwarePath, tableName, address, modifyValue, trigger));
+                "Permanent",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("SetPlcWatchTableModifyValue", dryRun, new { softwarePath, tableName, address, modifyValue, trigger }, () => PlcToolContract
+                .Run("SetPlcWatchTableModifyValue", true, true, () => SetWatchTableModifyValue(softwarePath, tableName, address, modifyValue, trigger)),
+                    expectedPlanHash, expectedProjectFile);
 
         public ResponseMessage SetWatchTableModifyValue(
             string softwarePath,

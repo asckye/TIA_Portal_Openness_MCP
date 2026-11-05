@@ -305,7 +305,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "TIA refuse an untrusted certificate, true answers Trusted; Meta.tlsVerification records the decision and, on V21, the presented certificates."
                 +
             " A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Native " +
-                "behaviorPolicy=current; V4 native acceptance is pending.")]
+                "behaviorPolicy=current; V4 native acceptance is pending." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult DownloadToPlcV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("consistentBlocksOnly: true (default) leaves the AllBlocksDownload prompt unanswered, so TIA aborts instead of downloading all " +
@@ -371,8 +373,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 false,
             [Description("downloadScope: software (default; the Openness download option Software, download software all) or softwareOnlyChanges (the option " +
                 "SoftwareOnlyChanges, download only the changes; V17+).")] string downloadScope =
-                "software")
-            => RuntimeToolContract.Run("DownloadPlc", false, true, () =>
+                "software",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("DownloadPlc", dryRun, new {
+                    softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, password, pgPcInterface, targetIpAddress,
+                        userManagementMode, promptAnswers, moduleAccessPassword, blockBindingPassword, masterSecretPassword, rhTarget, trustDeviceCertificate,
+                        allowSafetyProgramDownload, allowHardwareDifferences, allowActiveTestCancel, allowExpandedDownload, allowIdentificationDataLoad,
+                        allowNonTlsLogin, downloadScope
+                }, () => RuntimeToolContract.Run("DownloadPlc", false, true, () =>
             {
                 return DownloadToPlc(softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, password, pgPcInterface,
                         targetIpAddress, userManagementMode, RuntimeToolContract.Answers(promptAnswers), moduleAccessPassword, blockBindingPassword,
@@ -382,7 +395,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             allowActiveTestCancel,
                         ExpandedDownload = allowExpandedDownload, IdentificationDataLoad = allowIdentificationDataLoad, NonTlsLogin = allowNonTlsLogin },
                             downloadScope);
-            });
+            }), expectedPlanHash, expectedProjectFile);
 
         public ResponseDownload DownloadToPlc(string softwarePath, bool consistentBlocksOnly = true, bool keepActualValues = true, bool startAfterDownload =
                 true, bool stopBeforeDownload = true, string password = "", string pgPcInterface = "", string targetIpAddress = "", string userManagementMode =

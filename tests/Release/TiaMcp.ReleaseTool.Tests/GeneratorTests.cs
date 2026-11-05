@@ -291,6 +291,55 @@ public sealed class GeneratorTests
         bound["expectedProjectFile"] = "C:/Examples/Project.ap21";
         ToolUsageGenerator.ValidateFoundation(Root, calls, []);
     }
+    private static readonly HashSet<string> PreviewWriteTools = new(StringComparer.Ordinal)
+    {
+        "AttachDeviceNodeToSubnet", "ConnectDeviceNodesToProfinetSubnet", "CreateGsdDevice", "CreateVersionControlWorkspace",
+        "DownloadPlc", "EnsureSubnet", "ImportAlarmClasses", "ImportAlarmTextLists", "ImportHmiConnection", "ImportHmiScreen",
+        "ImportHmiScreensFromDirectory", "ImportHmiTagTable", "ImportHmiTagTablesFromDirectory", "ImportMasterCopyFromGlobalLibrary",
+        "ImportOpcUaInterface", "ImportTechnologyObject", "ImportTechnologyObjectsFromDirectory", "InvokeObject", "InvokeService",
+        "ManageOnlineDriveFunctions", "SeedProjectFromReference", "SetDeviceItemAttribute", "SetOpcUaInterfaceEnabled", "SetPlcCpuSettings",
+        "SetPlcWatchTableModifyValue", "SetUnifiedHmiButtonEventScriptCode", "SetUnifiedHmiRuntimeState"
+    };
+
+    public static IEnumerable<object[]> PreviewWriteEffectSequences()
+    {
+        foreach (var sequence in Read(Root, "reference/tool-examples/sequences.json").AsArray())
+            if (sequence!["steps"]!.AsArray().Any(step => PreviewWriteTools.Contains(Text(step!["tool"]))))
+                yield return new object[] { Text(sequence["id"]) };
+    }
+
+    [Theory]
+    [MemberData(nameof(PreviewWriteEffectSequences))]
+    public void PreviewWriteSequencesApplyBeforeFollowingSteps(string sequenceId)
+    {
+        var sequence = Read(Root, "reference/tool-examples/sequences.json").AsArray()
+            .Single(item => Text(item!["id"]) == sequenceId)!;
+        var steps = sequence["steps"]!.AsArray();
+        for (var index = 0; index < steps.Count - 1; index++)
+        {
+            var step = steps[index]!;
+            var tool = Text(step["tool"]);
+            var preview = step["arguments"]!.AsObject();
+            if (!PreviewWriteTools.Contains(tool) || preview["dryRun"]?.GetValue<bool>() == false) continue;
+            // A continuing write recipe must apply the reviewed preview before expecting its effects.
+            var apply = steps[index + 1]!;
+            var arguments = apply["arguments"]!.AsObject();
+            Assert.True(preview["dryRun"]?.GetValue<bool>() == true, sequenceId + ": make the preview explicit for " + tool);
+            Assert.Equal(tool, Text(apply["tool"]));
+            Assert.True(arguments["dryRun"]?.GetValue<bool>() == false, sequenceId + ": apply before continuing after " + tool);
+            Assert.False(string.IsNullOrWhiteSpace(Text(arguments["expectedPlanHash"])));
+            Assert.False(string.IsNullOrWhiteSpace(Text(arguments["expectedProjectFile"])));
+            var previewInputs = preview.DeepClone().AsObject();
+            var applyInputs = arguments.DeepClone().AsObject();
+            foreach (var control in new[] { "dryRun", "expectedPlanHash", "expectedProjectFile" })
+            {
+                previewInputs.Remove(control);
+                applyInputs.Remove(control);
+            }
+            Assert.True(JsonNode.DeepEquals(previewInputs, applyInputs), sequenceId + ": apply the same reviewed arguments for " + tool);
+        }
+    }
+
     [Fact]
     public void UsageExamplesRejectUnknownToolSchemas()
     {

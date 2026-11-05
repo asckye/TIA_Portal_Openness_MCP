@@ -36,7 +36,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var creation=action=="create" ? UnifiedEventOperations.Creation(handlers,eventType,propertyName) : default;
                 var script=action=="update" ? PlcGroupOperations.Get(handler!,"Script") : null;
                 var prepared=script==null ? null : UnifiedRequestScalar.Prepare(script.GetType(),changes);
-                if(!write)return "Event preview. Execute with returned expectedToken; no script execution or syntax check.";
+                if(!write)return "Event preview. Execute with returned previewToken; no script execution or syntax check.";
                 HmiExactAccess.RequireToken(expectedToken,token);
                 int countBefore=action=="create" ? PlcGroupOperations.Items(handlers).Count() : 0;
                 meta["mayHaveChanged"]=true;

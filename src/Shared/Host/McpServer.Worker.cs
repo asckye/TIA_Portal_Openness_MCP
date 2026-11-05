@@ -12,7 +12,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         [McpServerTool(Name = "GetOpennessWorkerStatus"),
                 Description("[L0][Diagnostics][READ] Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, " +
-                "deadline, queue and fault. Available while the worker is hung or faulted. FoundationHost owns one engine worker per MCP session; a healthy " +
+                "deadline, queue and fault. Available while the worker is hung or faulted. FoundationHost owns one PLC worker per MCP session; a healthy " +
                 "worker is not proof of native TIA stability.")]
         [AsyncDispatch(nameof(GetOpennessWorkerStatusV4Async))]
         public static CallToolResult GetOpennessWorkerStatusV4()

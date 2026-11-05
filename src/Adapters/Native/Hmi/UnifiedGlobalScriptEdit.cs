@@ -63,7 +63,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["phase"] = "parseProposedText";
             UnifiedCodecs.ValidateScript(scriptCode);
             meta["syntaxValidation"] = "Esprima parse only; no script execution or TIA SyntaxCheck. Runtime references remain unverified.";
-            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new InvalidOperationException("A preview expectedToken is required before import.");
+            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new InvalidOperationException("A preview previewToken is required before import.");
             var work = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
             var backup = Path.Combine(work, "before");
             meta["backupDirectory"] = backup;
@@ -82,7 +82,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (dryRun)
             {
                 meta["status"] = "Preview"; meta["operationSuccess"] = true;
-                return "Review the complete before/after text. No import performed; apply the SAME content with dryRun=false and this expectedToken.";
+                return "Review the complete before/after text. No import performed; apply the SAME content with dryRun=false and this previewToken.";
             }
             HmiExactAccess.RequireToken(expectedToken, token);
             if (before.Text == scriptCode)

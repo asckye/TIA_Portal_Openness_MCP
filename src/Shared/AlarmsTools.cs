@@ -51,11 +51,20 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject]" +
             " Import PLC alarm classes from a previously exported file." +
             " Overwrites existing alarm class definitions. Run CompilePlcSoftware after import. Current native policy; V4 safety behavior is not yet " +
-                "accepted.")]
+                "accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportAlarmClassesV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("importPath: existing absolute DAT file written by ExportAlarmClasses")] string importPath)
-            => EngineeringToolContract.Run("ImportAlarmClasses", true, () => ImportAlarmClasses(softwarePath, importPath));
+            [Description("importPath: existing absolute DAT file written by ExportAlarmClasses")] string importPath,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportAlarmClasses", dryRun, new { softwarePath, importPath }, () => EngineeringToolContract
+                    .Run("ImportAlarmClasses", true, () => ImportAlarmClasses(softwarePath, importPath)), expectedPlanHash, expectedProjectFile);
 
         public ResponseMessage ImportAlarmClasses(
             string softwarePath,
@@ -90,11 +99,20 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject]" +
             " Import PLC alarm text lists from an XLSX file." +
             " The file must match the format exported by ExportAlarmTextLists." +
-            " Run CompilePlcSoftware after import to validate alarm configuration. Current native policy; V4 safety behavior is not yet accepted.")]
+            " Run CompilePlcSoftware after import to validate alarm configuration. Current native policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportAlarmTextListsV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("importPath: full file path to the XLSX file")] string importPath)
-            => EngineeringToolContract.Run("ImportAlarmTextLists", true, () => ImportAlarmTextLists(softwarePath, importPath));
+            [Description("importPath: full file path to the XLSX file")] string importPath,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportAlarmTextLists", dryRun, new { softwarePath, importPath }, () => EngineeringToolContract
+                    .Run("ImportAlarmTextLists", true, () => ImportAlarmTextLists(softwarePath, importPath)), expectedPlanHash, expectedProjectFile);
 
         public ResponseMessage ImportAlarmTextLists(
             string softwarePath,

@@ -45,7 +45,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static void RequireToken(string? expected, string actual)
         {
             if (string.IsNullOrWhiteSpace(expected) || !string.Equals(expected, actual, StringComparison.Ordinal))
-                throw new PlcSoftwareException("InvalidState", "Content changed or expectedToken missing; read/preview again.");
+                throw new PlcSoftwareException("InvalidState", "Content changed or previewToken missing; read/preview again.");
         }
     }
 }

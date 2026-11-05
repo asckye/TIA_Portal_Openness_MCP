@@ -75,14 +75,23 @@ namespace TiaMcpServer.ModelContextProtocol
             " Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace." +
             " Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU." +
             " interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'." +
-            " Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted.")]
+            " Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult SetOpcUaInterfaceEnabledV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("interfaceName: exact name of the interface as shown in GetPlcOpcUaConfiguration")] string interfaceName,
             [Description("enabled: true to enable, false to disable")] bool enabled,
-            [Description("interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'")] string interfaceType = "ServerInterface")
-            => EngineeringToolContract
-                .Run("SetOpcUaInterfaceEnabled", true, () => SetOpcUaInterfaceEnabled(softwarePath, interfaceName, enabled, interfaceType));
+            [Description("interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'")] string interfaceType = "ServerInterface",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("SetOpcUaInterfaceEnabled", dryRun, new { softwarePath, interfaceName, enabled, interfaceType }, () => EngineeringToolContract
+                .Run("SetOpcUaInterfaceEnabled", true, () => SetOpcUaInterfaceEnabled(softwarePath, interfaceName, enabled, interfaceType)), expectedPlanHash,
+                    expectedProjectFile);
 
         public ResponseMessage SetOpcUaInterfaceEnabled(
             string softwarePath,
@@ -128,12 +137,22 @@ namespace TiaMcpServer.ModelContextProtocol
             " If an interface with the same name (derived from the file name) already exists, it is updated in place." +
             " Otherwise a new interface is created." +
             " Download to PLC after import to apply changes to the CPU." +
-            " interfaceType: 'ServerInterface' (default), 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted.")]
+            " interfaceType: 'ServerInterface' (default), 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted." +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportOpcUaInterfaceV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("importPath: full file path to the XML file")] string importPath,
-            [Description("interfaceType: 'ServerInterface' (default) or 'ReferenceNamespace'")] string interfaceType = "ServerInterface")
-            => EngineeringToolContract.Run("ImportOpcUaInterface", true, () => ImportOpcUaInterface(softwarePath, importPath, interfaceType));
+            [Description("interfaceType: 'ServerInterface' (default) or 'ReferenceNamespace'")] string interfaceType = "ServerInterface",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ImportOpcUaInterface", dryRun, new { softwarePath, importPath, interfaceType }, () => EngineeringToolContract
+                    .Run("ImportOpcUaInterface", true, () => ImportOpcUaInterface(softwarePath, importPath, interfaceType)), expectedPlanHash,
+                    expectedProjectFile);
 
         public ResponseMessage ImportOpcUaInterface(
             string softwarePath,

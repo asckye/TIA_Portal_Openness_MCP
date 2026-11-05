@@ -45,6 +45,7 @@ public sealed class ReadBatchAdmissionTests
     private static readonly IReadOnlyDictionary<string, string> Closed = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["GetUnifiedCrossReferences"] = "19", ["GetExportContent"] = "14sp1",
+        ["ReleaseUnifiedReadCursor"] = "19",
         ["DescribePlcBlockLogic"] = "14sp1", ["GetVersionControlStatus"] = "16", ["SearchHardwareCatalog"] = "18",
         ["SearchInstalledGsdDevices"] = "14sp1",
     };
@@ -127,7 +128,10 @@ public sealed class ReadBatchAdmissionTests
         internal async Task<JsonObject> Call(string name, JsonObject arguments)
         {
             var result = await tools[name].InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, PipelineTests.ServerProxy>())
-                { Params = new CallToolRequestParams { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } });
+                {
+                    Params = new CallToolRequestParams {
+                        Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) }
+                });
             return result.StructuredContent!.AsObject();
         }
 

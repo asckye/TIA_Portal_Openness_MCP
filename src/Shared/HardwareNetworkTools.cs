@@ -526,19 +526,30 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "ConnectDeviceNodesToProfinetSubnet"),
-                Description("[L1][Hardware] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices and connects both to subnetName: an existing subnet of that name in Project.Subnets is joined explicitly, otherwise it is created on the first node (Node.CreateAndConnectToSubnet). A node already attached to another subnet is refused before any write; success is the Node.ConnectedSubnet read-back of both nodes, and the HMI connections are read from the HMI software under the second root. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+                Description("[L1][Hardware] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices and connects both to subnetName: an existing subnet of that name in Project.Subnets is joined explicitly, otherwise it is created on the first node (Node.CreateAndConnectToSubnet). A node already attached to another subnet is refused before any write; success is the Node.ConnectedSubnet read-back of both nodes, and the HMI connections are read from the HMI software under the second root. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending."
+                        +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; " +
+            "execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. " +
+            "Existing approval and native checks remain.")]
         public CallToolResult ConnectDeviceNodesToProfinetSubnet(
             [Description("firstRootPath: first device/device-item root, usually PLC root, e.g. 'PLC_1'")] string firstRootPath,
             [Description("secondRootPath: second device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'")] string secondRootPath,
-            [Description("subnetName: subnet name to create when the first node is not already connected, e.g. 'PN_IE_1'")] string subnetName = "PN_IE_1")
-            => HardwareToolContract.Invoke("ConnectDeviceNodesToProfinetSubnet", false, true, () =>
+            [Description("subnetName: subnet name to create when the first node is not already connected, e.g. 'PN_IE_1'")] string subnetName = "PN_IE_1",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.")]
+            string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("ConnectDeviceNodesToProfinetSubnet", dryRun, new { firstRootPath, secondRootPath, subnetName }, () => HardwareToolContract
+                    .Invoke("ConnectDeviceNodesToProfinetSubnet", false, true, () =>
             {
                 HardwareToolContract.Check(() => {
                     HardwareNetworkLogic.RequireExactName(subnetName, "subnetName");
                     if (subnetName.Any(char.IsControl)) throw new ArgumentException("subnetName must not contain control characters.", nameof(subnetName));
                 });
                 return ConnectDeviceNodesToProfinetSubnetCore(firstRootPath, secondRootPath, subnetName);
-            });
+            }), expectedPlanHash, expectedProjectFile);
 
         [McpServerTool(Name = "PlanHardwareNetworkConfiguration"),
                 Description("[L2][Hardware][OFFLINE] Validate a hardware network operation plan without connecting to TIA Portal or modifying a project. Use this before EnsureSubnet/AttachDeviceNodeToSubnet/SetPlcCpuSettings; rejects guessed paths, unsafe subnet types, invalid IP/mask/gateway, and CPU settings without exactAttributes.")]
@@ -551,28 +562,50 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "EnsureSubnet"),
-                Description("[L2][Hardware] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. An existing subnet of that name in Project.Subnets is reported without changes; otherwise the anchor's free IE node creates it (Node.CreateAndConnectToSubnet). An anchor node attached to another subnet is refused. Returns readback evidence (Project.Subnets, Node.ConnectedSubnet, node path, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+                Description("[L2][Hardware] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. An existing subnet of that name in Project.Subnets is reported without changes; otherwise the anchor's free IE node creates it (Node.CreateAndConnectToSubnet). An anchor node attached to another subnet is refused. Returns readback evidence (Project.Subnets, Node.ConnectedSubnet, node path, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending."
+                        +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; " +
+            "execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. " +
+            "Existing approval and native checks remain.")]
         public CallToolResult EnsureSubnet(
             [Description("anchorDeviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree; used to create/reuse the subnet from its first PROFINET node.")] string anchorDeviceItemPath,
             [Description("subnetType: IndustrialEthernet/PROFINET/PN/IE only.")] string subnetType,
-            [Description("subnetName: exact subnet name to create or read back, e.g. PN_IE_1.")] string subnetName)
-            => HardwareToolContract.Invoke("EnsureSubnet", false, true, () =>
+            [Description("subnetName: exact subnet name to create or read back, e.g. PN_IE_1.")] string subnetName,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.")]
+            string expectedProjectFile =
+                "")
+            => McpServer
+                .RunWritePreview("EnsureSubnet", dryRun, new { anchorDeviceItemPath, subnetType, subnetName }, () => HardwareToolContract
+                    .Invoke("EnsureSubnet", false, true, () =>
             {
                 return EnsureSubnetCore(anchorDeviceItemPath, subnetType, subnetName);
-            });
+            }), expectedPlanHash, expectedProjectFile);
 
         [McpServerTool(Name = "AttachDeviceNodeToSubnet"),
-                Description("[L2][Hardware] Attach one real device network node to an existing PROFINET subnet (found in Project.Subnets) with Node.ConnectToSubnet and verify Node.ConnectedSubnet. A node already on that subnet is left unchanged; a node attached to another subnet is refused (no implicit disconnect). deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+                Description("[L2][Hardware] Attach one real device network node to an existing PROFINET subnet (found in Project.Subnets) with Node.ConnectToSubnet and verify Node.ConnectedSubnet. A node already on that subnet is left unchanged; a node attached to another subnet is refused (no implicit disconnect). deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending."
+                        +
+            " Default dryRun=true returns a planHash for the normalized arguments and target identity; " +
+            "execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. " +
+            "Existing approval and native checks remain.")]
         public CallToolResult AttachDeviceNodeToSubnet(
             [Description("deviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree.")] string deviceItemPath,
             [Description("interfaceIndex: zero-based index among discovered Industrial Ethernet/PROFINET nodes under deviceItemPath.")] int interfaceIndex,
             [Description("subnetName: existing subnet name to attach to.")] string subnetName,
             [Description("anchorDeviceItemPath: optional real device-item path used to EnsureSubnet first when subnetName is not found.")] string anchorDeviceItemPath =
+                "",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.")]
+            string expectedProjectFile =
                 "")
-            => HardwareToolContract.Invoke("AttachDeviceNodeToSubnet", false, true, () =>
+            => McpServer
+                .RunWritePreview("AttachDeviceNodeToSubnet", dryRun, new { deviceItemPath, interfaceIndex, subnetName, anchorDeviceItemPath }, () =>
+                    HardwareToolContract.Invoke("AttachDeviceNodeToSubnet", false, true, () =>
             {
                 return AttachDeviceNodeToSubnetCore(deviceItemPath, interfaceIndex, subnetName, anchorDeviceItemPath);
-            });
+            }), expectedPlanHash, expectedProjectFile);
 
         [McpServerTool(Name = "ProbeHardwareHmiConnectionOwnerCandidates"),
                 Description("[L2][Hardware]Enumerate candidate owner objects for hardware HMI connection creation without calling GetService on each high-level object.")]
