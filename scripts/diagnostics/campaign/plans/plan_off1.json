@@ -366,11 +366,13 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "importPath": "${EXPORT_ROOT}\\mcp46_opcua.xml",
-"interfaceType": "server"
+"interfaceType": "server",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "GetOpcUaAccessControl",
@@ -632,11 +634,13 @@
 "tool": "ImportHmiConnection",
 "args": {
 "softwarePath": "HMI_RT_1",
-"importPath": "${EXPORT_ROOT}\\nope.xml"
+"importPath": "${EXPORT_ROOT}\\nope.xml",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "SeedProjectFromReference",
@@ -644,11 +648,13 @@
 "plcSoftwarePath": "MCP_PLC",
 "hmiSoftwarePath": "HMI_RT_2",
 "referenceDir": "${EXPORT_ROOT}\\mcp46_release",
-"placeholders": {}
+"placeholders": {},
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "SaveProject",

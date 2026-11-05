@@ -83,11 +83,13 @@
 "scriptCode": "export function Btn_OnTapped(item, x, y, modifiers, trigger) {\n  Tags(\"MCP_Run\").Write(1);\n}",
 "globalDefinitionAreaScriptCode": "",
 "async": false,
-"syntaxCheck": true
+"syntaxCheck": true,
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "GetUnifiedObjectEvents",
@@ -765,13 +767,15 @@
 "screenName": "MCP_StartStop",
 "tagTableName": "MCP_SS",
 "plcName": "MCP_PLC",
-"connectionName": "MCP_Conn"
+"connectionName": "MCP_Conn",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
 "keys": [
 "created"
-]
+],
+"apply": true
 },
 {
 "tool": "BuildUnifiedHmiTemplateApplyDesign",

@@ -291,6 +291,26 @@ public sealed class GeneratorTests
         bound["expectedProjectFile"] = "C:/Examples/Project.ap21";
         ToolUsageGenerator.ValidateFoundation(Root, calls, []);
     }
+    [Theory]
+    [InlineData("plc-foundation", "InvokeObject")]
+    [InlineData("full-engine", "InvokeObject")]
+    [InlineData("plc-foundation", "InvokeService")]
+    [InlineData("full-engine", "InvokeService")]
+    [InlineData("plc-foundation", "ManageOnlineDriveFunctions")]
+    [InlineData("full-engine", "ManageOnlineDriveFunctions")]
+    public void ReadExamplesUseTheApprovalFreeReadMode(string profile, string tool)
+    {
+        var arguments = Read(Root, "reference/tool-examples/calls.json")["profiles"]![profile]![tool]!["arguments"]!;
+        Assert.True((bool?)arguments["dryRun"]);
+        Assert.Null(arguments["expectedProjectFile"]);
+        if (tool is "InvokeObject" or "InvokeService")
+        {
+            Assert.Equal("GetAttributeInfos", Text(arguments["methodName"]));
+            Assert.NotEqual(true, (bool?)arguments["allowWrite"]);
+        }
+        else Assert.Equal("read", Text(arguments["action"]));
+    }
+
     private static readonly HashSet<string> PreviewWriteTools = new(StringComparer.Ordinal)
     {
         "AttachDeviceNodeToSubnet", "ConnectDeviceNodesToProfinetSubnet", "CreateGsdDevice", "CreateVersionControlWorkspace",

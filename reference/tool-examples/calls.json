@@ -9681,9 +9681,8 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "<method selected from DescribeObject/DescribeService>",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+          "methodName": "GetAttributeInfos",
+          "dryRun": true
         },
         "parameters": {
           "methodName": {
@@ -9715,9 +9714,8 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "<service selected from DescribeObject>",
-          "methodName": "<method selected from DescribeObject/DescribeService>",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+          "methodName": "GetAttributeInfos",
+          "dryRun": true
         },
         "parameters": {
           "serviceTypeSuffix": {
@@ -15692,8 +15690,7 @@
           ],
           "confirmOnline": false,
           "action": "read",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+          "dryRun": true
         },
         "parameters": {
           "devicePath": {
@@ -23831,9 +23828,8 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "<method selected from DescribeObject/DescribeService>",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+          "methodName": "GetAttributeInfos",
+          "dryRun": true
         },
         "parameters": {
           "methodName": {
@@ -23865,9 +23861,8 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "<service selected from DescribeObject>",
-          "methodName": "<method selected from DescribeObject/DescribeService>",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+          "methodName": "GetAttributeInfos",
+          "dryRun": true
         },
         "parameters": {
           "serviceTypeSuffix": {
@@ -26592,8 +26587,7 @@
           ],
           "confirmOnline": false,
           "action": "read",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+          "dryRun": true
         },
         "parameters": {
           "devicePath": {

@@ -11,6 +11,28 @@ using Xunit;
 public sealed class HardwareFamilyAdmissionTests
 {
     [Theory]
+    [InlineData("14sp1")]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("17")]
+    [InlineData("18")]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void RefusedNetworkLeaseIsTypedAndUnchanged(string release)
+    {
+        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => JsonValue.Create(
+            "Result: NOT CONNECTED: exclusive access refused; nothing changed. Fixture refusal\nRollback evidence: " +
+            "{\"operationSuccess\":false,\"failureCode\":\"PRECONDITION_FAILED\",\"mayHaveChanged\":false}"), () => true, () => "fixture");
+        var result = ApplyConnection(new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service), "PLC", "HMI", release: release).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)result["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+        Assert.False((bool?)result["meta"]?["requiresSessionReset"]);
+        Assert.False((bool?)result["data"]?["mayHaveChanged"]);
+    }
+
+    [Theory]
     [InlineData("20")]
     [InlineData("21")]
     public void Unattached_connection_refuses_without_claiming_an_unknown_write(string release)

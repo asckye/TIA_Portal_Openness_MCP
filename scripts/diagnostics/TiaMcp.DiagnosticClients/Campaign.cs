@@ -98,12 +98,32 @@ public sealed class Campaign
             var step = plan[i]!.AsObject(); var tool = (string)step["tool"]!;
             var arguments = Expand(step["args"] ?? new JsonObject(), exportRoot, last)!.AsObject();
             var expect = (string?)step["expect"] ?? "ok";
-            var timer = System.Diagnostics.Stopwatch.StartNew(); var value = CallRaw(tool, arguments); timer.Stop();
+            if ((bool?)step["apply"] == true && (bool?)arguments["dryRun"] != true)
+                throw new ArgumentException("An apply row must start with dryRun=true: " + tool);
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            var value = CallRaw(tool, arguments);
+            JsonObject? preview = null;
+            if ((bool?)step["apply"] == true && Classify(value).Ok && !McpSession.ResetRequired(value))
+            {
+                preview = value.DeepClone().AsObject();
+                var reviewed = ResultFields(preview);
+                string? hash = (string?)reviewed["planHash"];
+                string? project = (string?)(reviewed["projectFile"] ?? reviewed["targetIdentity"]?["identity"]?["projectPath"]
+                    ?? reviewed["targetIdentity"]?["projectFile"] ?? reviewed["targetIdentity"]?["projectPath"] ?? reviewed["targetIdentity"]?["project"]);
+                if ((bool?)reviewed["dryRun"] != true || string.IsNullOrWhiteSpace(hash) || string.IsNullOrWhiteSpace(project))
+                    throw new InvalidOperationException("Apply requires a successful dry-run preview with planHash and project file: " + tool);
+                arguments["dryRun"] = false;
+                arguments["expectedPlanHash"] = hash;
+                arguments["expectedProjectFile"] = project;
+                value = CallRaw(tool, arguments);
+            }
+            timer.Stop();
             var (ok, text) = Classify(value); var fields = ResultFields(value);
             if (fields["exportId"] is JsonValue id && id.TryGetValue<string>(out var export)) last = export;
             var state = Alive(); var verdict = Verdict(value, expect); var keys = new JsonObject();
             foreach (var key in step["keys"]?.AsArray() ?? []) if (fields.ContainsKey((string)key!)) keys[(string)key!] = fields[(string)key!]?.DeepClone();
             var rec = new JsonObject { ["i"] = i, ["tool"] = tool, ["args"] = arguments, ["expect"] = expect, ["ok"] = ok, ["verdict"] = verdict, ["text"] = Trim(text, 600), ["secs"] = Math.Round(timer.Elapsed.TotalSeconds, 1), ["note"] = step["note"]?.DeepClone() ?? JsonValue.Create(""), ["contract"] = "v4", ["outcome"] = value["meta"]?["outcome"]?.DeepClone(), ["execution"] = value["meta"]?["execution"]?.DeepClone(), ["keys"] = keys, ["tia"] = state };
+            if (preview != null) rec["preview"] = preview;
             ledger.WriteLine(redact(PythonJson.Dumps(rec, ensureAscii: false))); ledger.Flush();
             output.WriteLine(redact(string.Format(CultureInfo.InvariantCulture, "{0,3} {1,-4} {2,-36} {3,5:F1}s {4}", i, verdict, tool, timer.Elapsed.TotalSeconds, Trim(text, 150).Replace('\n', ' '))));
             foreach (var field in keys) output.WriteLine(redact("         " + field.Key + " = " + Trim(PythonJson.Dumps(field.Value, ensureAscii: false), 500)));

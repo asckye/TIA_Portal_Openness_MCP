@@ -317,26 +317,30 @@
 "args": {
 "softwarePath": "HMI_RT_1",
 "folderPath": "MCP_TagFolder",
-"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\MCP_HmiTags.xml"
+"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\MCP_HmiTags.xml",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
 "keys": [
 "verified"
-]
+],
+"apply": true
 },
 {
 "tool": "ImportHmiScreen",
 "args": {
 "softwarePath": "HMI_RT_1",
 "folderPath": "MCP_ScreenFolder",
-"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\MCP_Screen.xml"
+"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\MCP_Screen.xml",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
 "keys": [
 "verified"
-]
+],
+"apply": true
 },
 {
 "tool": "ListHmiTagTables",
@@ -468,11 +472,13 @@
 "folderPath": "MCP_ScreenFolder",
 "dir": "${EXPORT_ROOT}\\mcp46_hmi\\program",
 "regexName": "MCP_Screen",
-"overwrite": true
+"overwrite": true,
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ImportHmiTagTablesFromDirectory",
@@ -481,11 +487,13 @@
 "folderPath": "MCP_TagFolder",
 "dir": "${EXPORT_ROOT}\\mcp46_hmi\\program",
 "regexName": "MCP_HmiTags",
-"overwrite": true
+"overwrite": true,
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ManageClassicHmiScreenObject",

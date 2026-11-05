@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -35,6 +36,26 @@ namespace TiaOpenness.Shared
         // Hash inputs have no display limits. Do not substitute secrets collected from
         // other positions: that would make an ordinary argument depend on the secret.
         public static JsonNode? RedactArguments(JsonNode? node)
+            => TransformArguments(node, _ => JsonValue.Create(Hidden));
+
+        // A single immutable process key protects secrets and invalidates previews on restart.
+        // Each call owns its HMAC instance, so concurrent previews share no mutable crypto state.
+        private static readonly byte[] PlanSecretKey = CreatePlanSecretKey();
+        private static byte[] CreatePlanSecretKey()
+        {
+            var key = new byte[32];
+            using (var random = RandomNumberGenerator.Create()) random.GetBytes(key);
+            return key;
+        }
+        internal static JsonNode? ProtectPlanArguments(JsonNode? node) => TransformArguments(node, SecretDigest);
+        internal static string PlanHostLifetime => SecretDigest(JsonValue.Create("host-lifetime")).GetValue<string>();
+        private static JsonNode SecretDigest(JsonNode? node)
+        {
+            using var hmac = new HMACSHA256(PlanSecretKey);
+            return JsonValue.Create("hmac-sha256:" + BitConverter.ToString(hmac.ComputeHash(Encoding.UTF8.GetBytes(node?.ToJsonString() ?? "null")))
+                .Replace("-", "").ToLowerInvariant())!;
+        }
+        private static JsonNode? TransformArguments(JsonNode? node, Func<JsonNode?, JsonNode?> secret)
         {
             if (node is JsonObject obj)
             {
@@ -42,18 +63,19 @@ namespace TiaOpenness.Shared
                 var result = new JsonObject();
                 foreach (var pair in obj)
                     result[pair.Key] = Sensitive(pair.Key) || named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase)
-                        ? JsonValue.Create(Hidden) : RedactArguments(pair.Value);
+                        ? secret(pair.Value) : TransformArguments(pair.Value, secret);
                 return result;
             }
-            if (node is JsonArray array) return new JsonArray(array.Select(RedactArguments).ToArray());
+            if (node is JsonArray array) return new JsonArray(array.Select(item => TransformArguments(item, secret)).ToArray());
             if (node is JsonValue value && value.TryGetValue<string>(out var text))
             {
                 if (Embedded(text, out var embedded))
                 {
-                    var redacted = RedactArguments(embedded);
-                    return JsonNode.DeepEquals(embedded, redacted) ? node.DeepClone() : JsonValue.Create(redacted?.ToJsonString());
+                    var transformed = TransformArguments(embedded, secret);
+                    return JsonNode.DeepEquals(embedded, transformed) ? node.DeepClone() : JsonValue.Create(transformed?.ToJsonString());
                 }
-                return JsonValue.Create(Text(text, new HashSet<string>(StringComparer.Ordinal), 0, boundedText: true));
+                return JsonValue.Create(Text(text, new HashSet<string>(StringComparer.Ordinal), 0, boundedText: true,
+                    replaceSecret: value => secret(JsonValue.Create(value))!.GetValue<string>()));
             }
             return node?.DeepClone();
         }
@@ -171,31 +193,35 @@ namespace TiaOpenness.Shared
             catch (JsonException) /* swallow(privacy): malformed embedded JSON is hidden by the text boundary */ { return false; }
         }
 
-        private static string Text(string text, HashSet<string> secrets, int depth, bool boundedText)
+        private static string Text(string text, HashSet<string> secrets, int depth, bool boundedText, Func<string, string>? replaceSecret = null)
         {
             if (boundedText && text.Length > ArgumentTextLimit) return text;
             if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
             {
-                if (depth >= 16 || !Embedded(text, out var embedded)) return Hidden;
+                if (depth >= 16 || !Embedded(text, out var embedded)) return replaceSecret == null ? Hidden : replaceSecret(text);
                 Scrub(embedded, secrets, depth + 1, boundedText);
                 text = embedded?.ToJsonString(DisplayOptions) ?? "null";
             }
             foreach (var secret in secrets.OrderByDescending(s => s.Length)) text = text.Replace(secret, Hidden);
+            replaceSecret ??= _ => Hidden;
             // Only the bounded approval path uses timeout-free scans. Journal rows keep
             // their existing regexes, timeout and output. Pair names are scanned once:
             // the journal regex retries a whole dotted name at every word boundary.
             var timeout = boundedText ? Regex.InfiniteMatchTimeout : TimeSpan.FromSeconds(1);
             var options = boundedText ? RegexOptions.CultureInvariant : RegexOptions.None;
-            text = Regex.Replace(text, @"(?i)\b(Bearer|Basic)\s+[^\s""'<>\\,;]+", "$1 " + Hidden, options, timeout);
-            text = boundedText ? RedactPairs(text, null)
+            text = Regex.Replace(text, @"(?i)\b(Bearer|Basic)\s+[^\s""'<>\\,;]+",
+                match => match.Groups[1].Value + " " + replaceSecret(match.Value.Substring(match.Groups[1].Length).TrimStart()), options, timeout);
+            text = boundedText ? RedactPairs(text, null, replaceSecret)
                 : Regex
-                    .Replace(text, @"(?i)\b([\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*[=:]\s*)[^\s&;,""'<>]+", "$1" + Hidden,
+                    .Replace(text, @"(?i)\b([\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*[=:]\s*)[^\s&;,""'<>]+",
+                        match => match.Groups[1].Value + replaceSecret(match.Value.Substring(match.Groups[1].Length)),
                         RegexOptions.None, timeout);
-            text = Regex.Replace(text, @"(?i)(https?://)[^/\s@]+@", "$1" + Hidden + "@", options, timeout);
-            return Regex.Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", Hidden, options, timeout);
+            text = Regex.Replace(text, @"(?i)(https?://)[^/\s@]+@",
+                match => match.Groups[1].Value + replaceSecret(match.Value.Substring(match.Groups[1].Length).TrimEnd('@')) + "@", options, timeout);
+            return Regex.Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", match => replaceSecret(match.Value), options, timeout);
         }
 
-        private static string RedactPairs(string text, HashSet<string>? secrets)
+        private static string RedactPairs(string text, HashSet<string>? secrets, Func<string, string>? replaceSecret = null)
         {
             StringBuilder? output = null;
             int copied = 0, index = 0;
@@ -220,7 +246,7 @@ namespace TiaOpenness.Shared
                 else
                 {
                     output ??= new StringBuilder(text.Length);
-                    output.Append(text, copied, value - copied).Append(Hidden);
+                    output.Append(text, copied, value - copied).Append(replaceSecret == null ? Hidden : replaceSecret(secret));
                     copied = end;
                 }
                 index = end;

@@ -12,6 +12,235 @@ using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelper output)
 {
+    [Theory]
+    [InlineData("14sp1")]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("17")]
+    [InlineData("18")]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task InputContentsAreBoundAcrossPreviewAndApply(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "preview-files-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            string file = Path.Combine(root, "Screen.xml");
+            File.WriteAllText(file, "<Document>A</Document>");
+            var arguments = new JsonObject { ["importPath"] = file };
+            int calls = 0;
+            CallToolResult Execute() { calls++; return Host.V4Result("ImportHmiScreen", new JsonObject(), completed: true); }
+            string Hash() => (string)Host.RunWritePreview("ImportHmiScreen", true, arguments, Execute).StructuredContent!["data"]!["planHash"]!;
+            string hash = Hash();
+            DateTime timestamp = File.GetLastWriteTimeUtc(file);
+            File.WriteAllText(file, "<Document>B</Document>");
+            File.SetLastWriteTimeUtc(file, timestamp);
+            Assert.NotEqual(hash, Hash());
+            var stale = await Host.RunWritePreviewAsync("ImportHmiScreen", false, arguments, () => Task.FromResult(Execute()), hash, "C:/Projects/original.ap21");
+            Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
+            Assert.Contains("file changed", (string)stale.StructuredContent["error"]!["message"]!);
+            Assert.Equal(0, calls);
+            string fresh = Hash();
+            Assert.True((bool?)Host.RunWritePreview("ImportHmiScreen", false, arguments, Execute, fresh, "C:/Projects/original.ap21").StructuredContent!["ok"]);
+            Assert.Equal(1, calls);
+            File.Delete(file);
+            var missing = Host.RunWritePreview("ImportHmiScreen", true, arguments, Execute);
+            Assert.Equal("INVALID_ARGUMENT", (string?)missing.StructuredContent!["error"]!["code"]);
+            var deleted = Host.RunWritePreview("ImportHmiScreen", false, arguments, Execute, fresh, "C:/Projects/original.ap21");
+            Assert.Equal("PLAN_STALE", (string?)deleted.StructuredContent!["error"]!["code"]);
+            Assert.Equal(1, calls);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void DirectoryPlansBindNestedContentsNamesAndMembershipInSortedOrder()
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "preview-directory-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "nested"));
+        try
+        {
+            string first = Path.Combine(root, "A.xml"), nested = Path.Combine(root, "nested", "B.xml");
+            File.WriteAllText(nested, "<Document>B</Document>"); File.WriteAllText(first, "<Document>A</Document>");
+            int calls = 0;
+            CallToolResult Execute() { calls++; return Host.V4Result("ImportHmiScreensFromDirectory", new JsonObject(), completed: true); }
+            var args = new { dir = root };
+            string Hash() => (string)Host.RunWritePreview("ImportHmiScreensFromDirectory", true, args, Execute).StructuredContent!["data"]!["planHash"]!;
+            string original = Hash();
+            File.Delete(first); File.WriteAllText(first, "<Document>A</Document>");
+            Assert.Equal(original, Hash());
+            File.WriteAllText(nested, "<Document>C</Document>"); Assert.NotEqual(original, Hash());
+            File.WriteAllText(nested, "<Document>B</Document>"); Assert.Equal(original, Hash());
+            string renamed = Path.Combine(root, "nested", "C.xml");
+            File.Move(nested, renamed); Assert.NotEqual(original, Hash());
+            File.Move(renamed, nested); Assert.Equal(original, Hash());
+            File.WriteAllText(renamed, "<Document>C</Document>"); Assert.NotEqual(original, Hash());
+            File.Delete(nested); Assert.NotEqual(original, Hash());
+            var stale = Host.RunWritePreview("ImportHmiScreensFromDirectory", false, args, Execute, original, "C:/Projects/original.ap21");
+            Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
+            Assert.Equal(0, calls);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Theory]
+    [InlineData("password", "weak-secret")]
+    [InlineData("nested", "{\"name\":\"password\",\"value\":\"weak-secret\"}")]
+    [InlineData("embedded", "{\"token\":\"weak-secret\"}")]
+    [InlineData("text", "Bearer weak-secret")]
+    [InlineData("text", "{password=weak-secret")]
+    [InlineData("text", "password=weak-secret")]
+    [InlineData("text", "https://user:weak-secret@example.invalid/")]
+    public void SecretPlanHashesAreStableKeyedAndRejectChangedSecrets(string field, string value)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var arguments = new JsonObject { [field] = field == "nested" ? JsonNode.Parse(value) : JsonValue.Create(value) };
+        int calls = 0;
+        CallToolResult Execute() { calls++; return Host.V4Result("DownloadPlc", new JsonObject(), completed: true); }
+        JsonObject Preview() => Host.RunWritePreview("DownloadPlc", true, arguments, Execute).StructuredContent!["data"]!.AsObject();
+        var preview = Preview(); string hash = (string)preview["planHash"]!;
+        Assert.Equal(hash, (string?)Preview()["planHash"]);
+        Assert.DoesNotContain("weak-secret", preview.ToJsonString());
+        var unkeyed = new JsonObject { ["releaseKey"] = "21", ["tool"] = "DownloadPlc", ["arguments"] = arguments.DeepClone(),
+            ["inputFiles"] = new JsonArray(), ["targetIdentity"] = worker.Identity.DeepClone() };
+        unkeyed["hostLifetime"] = (string?)typeof(Host).Assembly.GetType("TiaOpenness.Shared.CallJournalPayload")!
+            .GetProperty("PlanHostLifetime", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
+        Assert.NotEqual(TiaOpenness.Shared.PendingApproval.Hash(TiaOpenness.Shared.PendingApproval.Canonical(unkeyed)), hash);
+        unkeyed.Remove("hostLifetime");
+        unkeyed.Remove("inputFiles");
+        Assert.NotEqual(TiaOpenness.Shared.PendingApproval.Hash(TiaOpenness.Shared.PendingApproval.Canonical(unkeyed)), hash);
+        if (field == "nested") arguments[field]!["value"] = "another-secret";
+        else arguments[field] = value.Replace("weak-secret", "another-secret", StringComparison.Ordinal);
+        Assert.NotEqual(hash, (string?)Preview()["planHash"]);
+        var stale = Host.RunWritePreview("DownloadPlc", false, arguments, Execute, hash, "C:/Projects/original.ap21");
+        Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
+        Assert.Equal(0, calls);
+    }
+
+    [Fact]
+    public void FileListsAndDirectoryFileNamesUseTheSameInputSelectionAsValidation()
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "preview-selection-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            string first = Path.Combine(root, "A.xml"), second = Path.Combine(root, "B.xml");
+            File.WriteAllText(first, "<Document>A</Document>"); File.WriteAllText(second, "<Document>B</Document>");
+            CallToolResult Execute() => throw new InvalidOperationException("A preview must not execute.");
+            string Hash(object args) => (string)Host.RunWritePreview("ImportUnifiedHmiTags", true, args, Execute).StructuredContent!["data"]!["planHash"]!;
+            var selected = new { directory = root, fileName = "A.xml" };
+            string original = Hash(selected);
+            File.WriteAllText(second, "<Document>C</Document>"); Assert.Equal(original, Hash(selected));
+            var list = new { files = new[] { first, second } };
+            string listed = Hash(list);
+            File.WriteAllText(second, "<Document>D</Document>"); Assert.NotEqual(listed, Hash(list));
+            File.WriteAllText(first, "<Document>E</Document>"); Assert.NotEqual(original, Hash(selected));
+            var ordered = new JsonObject { ["inputPath"] = first, ["templateFile"] = second };
+            var reordered = new JsonObject { ["templateFile"] = second, ["inputPath"] = first };
+            Assert.Equal(Hash(ordered), Hash(reordered));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void SecretDigestsChangeWithTheHostLifetime()
+    {
+        JsonNode? Digest()
+        {
+            var context = new System.Runtime.Loader.AssemblyLoadContext("preview-key-" + Guid.NewGuid().ToString("N"), isCollectible: true);
+            try
+            {
+                var assembly = context.LoadFromAssemblyPath(typeof(Host).Assembly.Location);
+                var payload = assembly.GetType("TiaOpenness.Shared.CallJournalPayload", throwOnError: true)!;
+                var protectedArguments = (JsonNode?)payload.GetMethod("ProtectPlanArguments", BindingFlags.NonPublic | BindingFlags.Static)!
+                    .Invoke(null, new object[] { new JsonObject { ["password"] = "weak-secret" } });
+                var lifetime = (string)payload.GetProperty("PlanHostLifetime", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
+                return new JsonObject { ["arguments"] = protectedArguments, ["lifetime"] = lifetime };
+            }
+            finally { context.Unload(); }
+        }
+        var first = Digest()!; var second = Digest()!;
+        Assert.False(JsonNode.DeepEquals(first["arguments"], second["arguments"]));
+        Assert.NotEqual((string?)first["lifetime"], (string?)second["lifetime"]);
+    }
+
+    [Fact]
+    public void StructuredSecretsRetainCanonicalArgumentOrdering()
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        string Hash(JsonObject args) => (string)Host.RunWritePreview("DownloadPlc", true, args,
+            () => throw new InvalidOperationException("Preview must not execute.")).StructuredContent!["data"]!["planHash"]!;
+        var first = JsonNode.Parse("{\"credential\":{\"user\":\"sample\",\"password\":\"weak\"}}")!.AsObject();
+        var reordered = JsonNode.Parse("{\"credential\":{\"password\":\"weak\",\"user\":\"sample\"}}")!.AsObject();
+        Assert.Equal(Hash(first), Hash(reordered));
+    }
+
+    [Fact]
+    public void InvokeServiceReadDispatchesWithoutApprovalInputs()
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        int calls = 0;
+        var service = new enginehost::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
+            calls++;
+            Assert.True((bool?)arguments["dryRun"]);
+            Assert.False((bool?)arguments["request"]?["AllowWrite"]);
+            Assert.Equal("GetAttributeInfos", (string?)arguments["request"]?["MethodName"]);
+            Assert.False(arguments.ContainsKey("confirm"));
+            return new JsonObject { ["Observation"] = new JsonObject { ["Message"] = "read", ["Meta"] = new JsonObject { ["success"] = true } } };
+        }, () => throw new InvalidOperationException("A read must not request a write identity."));
+        var result = new enginehost::TiaMcpServer.ModelContextProtocol.ReflectionTools(service)
+            .InvokeServiceV4("Project", "", "PlcChecksumProvider", "GetAttributeInfos");
+        Assert.True((bool?)result.StructuredContent!["ok"]);
+        Assert.Equal(1, calls);
+    }
+
+    [Fact]
+    public void ReadExamplesDispatchReadsWithDefaultPreviewFlagAndNoApprovalInputs()
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        int reflectionCalls = 0, driveCalls = 0;
+        var reflection = new enginehost::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
+            reflectionCalls++;
+            Assert.True((bool?)arguments["dryRun"]);
+            Assert.False((bool?)arguments["request"]?["AllowWrite"]);
+            Assert.False(arguments.ContainsKey("confirm"));
+            Assert.Equal("GetAttributeInfos", (string?)arguments["request"]?["MethodName"]);
+            return new JsonObject { ["Observation"] = new JsonObject { ["Message"] = "read", ["Meta"] = new JsonObject { ["success"] = true } } };
+        }, () => throw new InvalidOperationException("A read must not request the bound write identity."));
+        var drives = new enginehost::TiaMcpServer.Siemens.Services.StartdriveService((_, arguments) => {
+            driveCalls++;
+            Assert.True((bool?)arguments["dryRun"]);
+            Assert.False((bool?)arguments["request"]?["IsWrite"]);
+            Assert.False(arguments.ContainsKey("confirm"));
+            return new JsonObject { ["Message"] = "read", ["Meta"] = new JsonObject { ["success"] = true } };
+        }, () => throw new InvalidOperationException("A read must not request the bound write identity."));
+        var reflected = new enginehost::TiaMcpServer.ModelContextProtocol.ReflectionTools(reflection).InvokeObjectV4("Project", "", "GetAttributeInfos");
+        var online = new enginehost::TiaMcpServer.ModelContextProtocol.StartdriveTools(drives).ManageOnlineDriveFunctions(new[] { "Drive" }, new[] { "Axis" });
+        Assert.True((bool?)reflected.StructuredContent!["ok"]);
+        Assert.True((bool?)online.StructuredContent!["ok"]);
+        Assert.Equal(1, reflectionCalls);
+        Assert.Equal(1, driveCalls);
+    }
+
     [Fact]
     public void Plan_hash_matches_normalized_arguments_and_rejects_changed_arguments_or_target_before_execution()
     {
@@ -329,6 +558,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         arguments["dryRun"] = true;
         arguments.Remove("expectedPlanHash");
         arguments.Remove("expectedProjectFile");
+        using var inputs = new PreviewInputFixture(arguments);
         if (name is "InvokeObject" or "InvokeService") arguments["allowWrite"] = true;
         if (name == "ManageOnlineDriveFunctions") arguments["action"] = "performRamToRomCopy";
         foreach (string field in new[] { "dryRun", "expectedPlanHash", "expectedProjectFile" })
@@ -344,6 +574,28 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.Equal("read-only", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.Matches("^[0-9a-f]{64}$", (string)result.StructuredContent!["data"]!["planHash"]!);
         Assert.Equal(0, worker.Calls);
+    }
+
+    private sealed class PreviewInputFixture : IDisposable
+    {
+        private readonly string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "bin-build", "preview-example-" + Guid.NewGuid().ToString("N"));
+        internal PreviewInputFixture(JsonObject arguments)
+        {
+            Directory.CreateDirectory(root);
+            // These previews read caller bytes but never invoke the native format parser.
+            // Use the maintained SIMATIC XML fixture for the file contents.
+            string xml = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                "templates", "mcp-full-e2e-verify", "import", "MCP_E2E_Tags.xml");
+            if (arguments.ContainsKey("importPath")) arguments["importPath"] = xml;
+            foreach (string parameter in new[] { "dir", "referenceDir", "libraryPath" })
+                if (arguments.ContainsKey(parameter))
+                {
+                    File.Copy(xml, Path.Combine(root, "MCP_E2E_Tags.xml"), overwrite: true);
+                    arguments[parameter] = root;
+                }
+        }
+        public void Dispose() => Directory.Delete(root, true);
     }
 
     internal sealed class PlanWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker

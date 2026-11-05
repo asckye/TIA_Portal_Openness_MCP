@@ -10,6 +10,46 @@ public sealed class CheckTheoryAttribute : TheoryAttribute { }
 
 public sealed class PromptRegistrationChecks
 {
+    [Fact]
+    public void StartStopPromptAppliesTheReviewedPlan()
+    {
+        string prompt = TiaMcpServer.ModelContextProtocol.McpPrompts.CreateStartStopHmi("HMI", "Screen");
+        Assert.Contains("dryRun=true", prompt);
+        Assert.Contains("dryRun=false", prompt);
+        Assert.Contains("expectedPlanHash", prompt);
+        Assert.Contains("expectedProjectFile", prompt);
+        Assert.Contains("same inputs", prompt);
+        Assert.True(prompt.IndexOf("dryRun=true", StringComparison.Ordinal) < prompt.IndexOf("dryRun=false", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void LayoutPromptAppliesAfterInspectingThePreview()
+    {
+        string recipe = TiaMcpServer.ModelContextProtocol.McpPrompts.ApplyHmiLayout("HMI", "Screen")
+            .Split("V4 operating rules:", StringSplitOptions.None)[0];
+        Assert.Contains("dryRun=true", recipe);
+        Assert.Contains("dryRun=false", recipe);
+        Assert.Contains("same layout", recipe);
+        Assert.True(recipe.IndexOf("dryRun=true", StringComparison.Ordinal) < recipe.IndexOf("dryRun=false", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AllPromptsCarrySchemaAwareWriteApplyInstructions()
+    {
+        var methods = typeof(TiaMcpServer.ModelContextProtocol.McpPrompts).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(method => method.GetCustomAttributesData().Any(attribute => attribute.AttributeType.Name == "McpServerPromptAttribute"));
+        foreach (var method in methods)
+        {
+            var args = method.GetParameters().Select(parameter => parameter.ParameterType == typeof(string)
+                ? (object)"sample" : parameter.ParameterType == typeof(bool) ? true : 1).ToArray();
+            string prompt = (string)method.Invoke(null, args)!;
+            Assert.Contains("For a requested write", prompt);
+            Assert.Contains("same business inputs", prompt);
+            Assert.Contains("only when those parameters are declared", prompt);
+            Assert.Contains("before the next write", prompt);
+        }
+    }
+
     [CheckTheory]
     [MemberData(nameof(Rows), DisableDiscoveryEnumeration = true)]
     public void Check(CheckRow row) => row.Verify();

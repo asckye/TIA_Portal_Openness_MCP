@@ -763,21 +763,25 @@
 "tool": "ImportAlarmClasses",
 "args": {
 "softwarePath": "MCP_PLC",
-"importPath": "${EXPORT_ROOT}\\mcp46_alarmclasses.xlsx"
+"importPath": "${EXPORT_ROOT}\\mcp46_alarmclasses.xlsx",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ImportAlarmTextLists",
 "args": {
 "softwarePath": "MCP_PLC",
-"importPath": "${EXPORT_ROOT}\\mcp46_textlists.xlsx"
+"importPath": "${EXPORT_ROOT}\\mcp46_textlists.xlsx",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ImportPlcAlarmInstanceTexts",
@@ -846,11 +850,13 @@
 "softwarePath": "MCP_PLC",
 "interfaceName": "",
 "enabled": true,
-"interfaceType": ""
+"interfaceType": "",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ExportOpcUaInterface",

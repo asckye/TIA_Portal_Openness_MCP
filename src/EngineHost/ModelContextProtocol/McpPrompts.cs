@@ -17,6 +17,7 @@ V4 operating rules:
 - On meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the target and reset the session when required. Never replay a write automatically.
 - D1 native behavior remains current for all applicable families and releases; L5 is NOT RUN. Treat UNVERIFIED_BEHAVIOR as a warning. Do not infer safe-v4 behavior or use candidate parameters.
 - Do not save or close a project unless the user explicitly requested that action. Perform save and close as separate, explicit calls.
+- For a requested write whose schema has dryRun, call dryRun=true and inspect a successful preview. Then call the same tool with the same business inputs and dryRun=false, obtaining Workbench approval. Pass the returned planHash as expectedPlanHash and the exact returned project file as expectedProjectFile only when those parameters are declared; supply required confirm* flags according to GetToolUsage. Inspect the apply result before the next write. A requested change is not complete at preview.
 - MCP WRITE and ONLINE-WRITE calls require Workbench approval before dispatch. Approval is per request; a denial, timeout or unavailable Workbench rejects the operation before it starts. MCP clients cannot approve their own calls. Audit events are in data/logs/audit; verify them with the Workbench audit view or `""tia audit verify`"". A valid hash chain cannot prove that the complete log was retained.";
         }
 
@@ -164,13 +165,13 @@ If the intended process is not connected, use ListPortalProcessProjects and the 
         [McpServerPrompt(Name = "CreateStartStopHmi"), Description("Create a motor start/stop Unified HMI screen")]
         public static string CreateStartStopHmi(string hmiSoftwarePath, string screenName)
         {
-            return WithV4Rules($@"Use GetToolUsage to inspect the schema for SetUnifiedHmiRuntimeState. Call it with hmiSoftwarePath={hmiSoftwarePath} and the typed fields needed to create or update screen {screenName}. Do not assume arguments from older shortcut tools. Inspect returned data; save only if separately requested.");
+            return WithV4Rules($@"Use GetToolUsage to inspect the schema for SetUnifiedHmiRuntimeState. Call it with hmiSoftwarePath={hmiSoftwarePath} and the typed fields needed to create or update screen {screenName}. Do not assume arguments from older shortcut tools. First call dryRun=true and inspect the preview. Then call the same tool with the same inputs, dryRun=false, expectedPlanHash from the preview and expectedProjectFile from its targetIdentity project path; obtain Workbench approval for this apply step. Inspect returned data; save only if separately requested.");
         }
 
         [McpServerPrompt(Name = "ApplyHmiLayout"), Description("Build and apply a Unified HMI screen layout")]
         public static string ApplyHmiLayout(string hmiSoftwarePath, string screenName)
         {
-            return WithV4Rules($@"Use GetToolUsage for BuildUnifiedHmiLayoutDesign and ApplyUnifiedHmiLayout. Pass layout as an object to both tools, with schema-defined grid and item fields; never JSON-encode the object. Apply the resulting layout to hmiSoftwarePath={hmiSoftwarePath}, screenName={screenName} after inspecting the design result and obtaining approval. Save only if separately requested.");
+            return WithV4Rules($@"Use GetToolUsage for BuildUnifiedHmiLayoutDesign and ApplyUnifiedHmiLayout. Pass layout as an object to both tools, with schema-defined grid and item fields; never JSON-encode the object. After inspecting the design result, call ApplyUnifiedHmiLayout with hmiSoftwarePath={hmiSoftwarePath}, screenName={screenName}, the layout object and dryRun=true. Inspect that preview, then call ApplyUnifiedHmiLayout with the same layout and target, dryRun=false, and Workbench approval. Inspect the apply result. Save only if separately requested.");
         }
 
         [McpServerPrompt(Name = "CreateClassicHmiScreen"), Description("Build and import a Classic HMI screen package")]

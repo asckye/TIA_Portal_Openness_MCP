@@ -231,11 +231,13 @@
 "tableName": "MCP_WT",
 "address": "%I0.0",
 "modifyValue": "TRUE",
-"trigger": "OnceOnlyAtStart"
+"trigger": "OnceOnlyAtStart",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "DisconnectOnlinePlcs",

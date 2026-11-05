@@ -482,7 +482,7 @@
 "softwarePath": "MCP_PLC",
 "allowWrite": false
 },
-"note": "",
+"note": "Read only; no apply step.",
 "expect": "any",
 "keys": []
 },
@@ -496,7 +496,7 @@
 "softwarePath": "",
 "allowWrite": false
 },
-"note": "",
+"note": "Read only; no apply step.",
 "expect": "any",
 "keys": []
 },

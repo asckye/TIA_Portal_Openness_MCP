@@ -102,7 +102,8 @@
 "moduleAccessPassword": "",
 "blockBindingPassword": "",
 "masterSecretPassword": "",
-"rhTarget": ""
+"rhTarget": "",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
@@ -110,7 +111,8 @@
 "state",
 "errors",
 "prompts"
-]
+],
+"apply": true
 },
 {
 "tool": "GetOnlineState",
@@ -229,11 +231,13 @@
 "tableName": "MCP_WT",
 "address": "%M0.0",
 "modifyValue": "TRUE",
-"trigger": "OnceOnlyAtStart"
+"trigger": "OnceOnlyAtStart",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "UploadDeviceParameters",

@@ -33,7 +33,12 @@ in plan arguments (including embedded JSON/XML strings) to
 that exact directory. Create its export/scratch directories in the test
 environment before using the plan. Exports must never go to the desktop.
 
-The 21 plans are frozen JSON generated once from Python, with LF and no BOM.
+The 21 plans are maintained JSON, with LF and no BOM. A row with `apply: true`
+first previews with `args.dryRun: true`, then applies the same arguments with
+`dryRun: false`, the returned `planHash` and bound project file. A failed or
+unknown preview never applies; missing preview evidence stops the runner.
+The ledger retains the preview beside the final result. Read-only rows do not
+apply; rows intended only to preview must say so in their note.
 Their historical project names, device names, addresses and native actions
 still require review for the selected test environment. The plans are live
 acceptance inputs; static schema validation does not execute them. A run

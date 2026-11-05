@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using System.Threading;
 using TiaOpenness.Shared;
@@ -55,6 +56,54 @@ namespace TiaMcp.Logic.V4
         {
             RefuseHumanSettingsTargets(arguments);
             ValidateNativeFile(tool, arguments);
+            foreach (var input in Inputs(tool, arguments))
+            {
+                try { NativeInputPolicy.RequireReadable(input.Path, input.Parameter, input.Directory); }
+                catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) when (
+                    arguments["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && !preview
+                    && TextArgument(arguments, "expectedPlanHash").Length > 0)
+                {
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                        "Input file changed or became unreadable; preview again.", input.Parameter, error.IsArgument, error);
+                }
+            }
+            string projectParameter = tool == "OpenProject" ? "path" : tool == "ConnectProject" ? "projectPath"
+                : tool == "OpenLocalSession" ? "localSessionPath" : "";
+            if (projectParameter.Length > 0 && TextArgument(arguments, projectParameter) is string project && project.Length > 0)
+                NativeInputPolicy.RequireExists(project, projectParameter);
+        }
+
+        internal static JsonArray Snapshot(string tool, JsonObject arguments)
+        {
+            RefuseHumanSettingsTargets(arguments);
+            var inputs = new JsonArray();
+            foreach (var input in Inputs(tool, arguments).OrderBy(item => item.Parameter, StringComparer.Ordinal)
+                .ThenBy(item => item.Path, StringComparer.Ordinal))
+            {
+                var files = NativeInputPolicy.Read(input.Parameter, () =>
+                {
+                    string full = NativeInputPolicy.FullPath(input.Path);
+                    var entries = new JsonArray();
+                    var paths = input.Directory ? System.IO.Directory.EnumerateFiles(full, "*", SearchOption.AllDirectories)
+                        .OrderBy(path => path, StringComparer.Ordinal) : new[] { full }.AsEnumerable();
+                    foreach (string path in paths)
+                    {
+                        using var stream = NativeInputPolicy.OpenRead(path, input.Parameter);
+                        using var sha = SHA256.Create();
+                        string hash = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+                        string name = input.Directory ? path.Substring(full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Length + 1)
+                            .Replace('\\', '/') : Path.GetFileName(full);
+                        entries.Add(new JsonObject { ["name"] = name, ["sha256"] = hash });
+                    }
+                    return entries;
+                });
+                inputs.Add(new JsonObject { ["parameter"] = input.Parameter, ["files"] = files });
+            }
+            return inputs;
+        }
+
+        private static IEnumerable<(string Parameter, string Path, bool Directory)> Inputs(string tool, JsonObject arguments)
+        {
             string? action = arguments["action"] is JsonValue actionValue && actionValue.TryGetValue<string>(out var actionText) ? actionText : null;
             bool import = tool.StartsWith("Import", StringComparison.Ordinal) || tool == "PlanPlcExternalSourceImport"
                 || tool == "RepairAndReimportPlcBlock"
@@ -82,15 +131,14 @@ namespace TiaMcp.Logic.V4
                 if (tool == "OpenProject" && pair.Key == "path" || tool == "ConnectProject" && pair.Key == "projectPath"
                     || tool == "OpenLocalSession" && pair.Key == "localSessionPath")
                 {
-                    NativeInputPolicy.RequireExists(path, pair.Key);
                     continue;
                 }
                 if (!input) continue;
                 // Unified exchange imports identify a file by directory + fileName.
                 if (pair.Key == "directory" && import && arguments["fileName"] is JsonValue fileValue
                     && fileValue.TryGetValue<string>(out var fileName) && !string.IsNullOrEmpty(fileName))
-                    NativeInputPolicy.RequireReadable(Path.Combine(path, fileName), "fileName");
-                else NativeInputPolicy.RequireReadable(path, pair.Key,
+                    yield return ("fileName", Path.Combine(path, fileName), false);
+                else yield return (pair.Key, path,
                     pair.Key is "dir" or "directoryPath" or "directory" or "sourceDir" or "referenceDir" or "templateDirectory" or "schemaDirectory"
                     || pair
                         .Key is "inputPath" or "path" or "libraryPath" or "plcXmlPath" or "referenceGlobalLibraryPath" or "referenceProjectPath" or "apiPath"
@@ -98,7 +146,7 @@ namespace TiaMcp.Logic.V4
             }
             if ((import || tool == "BuildPlcSymbolManifestFromPath") && arguments["files"] is JsonArray files)
                 foreach (var file in files)
-                    if (file is JsonValue fileValue && fileValue.TryGetValue<string>(out var path)) NativeInputPolicy.RequireReadable(path, "files");
+                    if (file is JsonValue fileValue && fileValue.TryGetValue<string>(out var path)) yield return ("files", path, false);
         }
 
         internal static void RefuseHumanSettingsTargets(JsonObject arguments)

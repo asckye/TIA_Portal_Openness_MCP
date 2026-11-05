@@ -358,16 +358,29 @@ namespace TiaMcp.Adapters
         {
             var evidence = new Dictionary<string, object?> { ["firstRootPath"] = plcRootPath, ["secondRootPath"] = hmiRootPath, ["subnetName"] = subnetName };
             bool nestedWrite = EngineeringWriteJournal.Active;
-            using var editAccess = nestedWrite || HardwareProjectMissing() ? null : EngineeringPlcSession.AcquireHmiEditAccess();
-            var report = EngineeringWriteJournal.RunReported(evidence, () => {
-                string result = Connect();
-                evidence["operationSuccess"] = result.IndexOf("Result: ConnectToSubnet: OK", StringComparison.Ordinal) >= 0;
-                return result;
-            }, error => {
-                if (HmiReadPolicy.ConnectionUnavailable(error)) evidence["connectionUnavailable"] = true;
-                return "Result: NOT CONNECTED: " + HardwareExceptionDetail(error);
-            });
-            return evidence["operationSuccess"] is true ? report : report + "\nRollback evidence: " + EngineeringPlcSession.SerializeEvidence(evidence);
+            IDisposable? editAccess = null;
+            bool operationStarted = false;
+            try
+            {
+                var report = EngineeringWriteJournal.RunReported(evidence, () => {
+                    editAccess = nestedWrite || HardwareProjectMissing() ? null : EngineeringPlcSession.AcquireHmiEditAccess();
+                    operationStarted = true;
+                    string result = Connect();
+                    evidence["operationSuccess"] = result.IndexOf("Result: ConnectToSubnet: OK", StringComparison.Ordinal) >= 0;
+                    return result;
+                }, error => {
+                    if (!operationStarted)
+                    {
+                        evidence["failureCode"] = "PRECONDITION_FAILED";
+                        evidence["mayHaveChanged"] = false;
+                        return "Result: NOT CONNECTED: exclusive access refused; nothing changed. " + HardwareExceptionDetail(error);
+                    }
+                    if (HmiReadPolicy.ConnectionUnavailable(error)) evidence["connectionUnavailable"] = true;
+                    return "Result: NOT CONNECTED: " + HardwareExceptionDetail(error);
+                });
+                return evidence["operationSuccess"] is true ? report : report + "\nRollback evidence: " + EngineeringPlcSession.SerializeEvidence(evidence);
+            }
+            finally { editAccess?.Dispose(); }
 
             string Connect()
             {

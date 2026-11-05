@@ -348,14 +348,16 @@
 "tool": "ImportAlarmClasses",
 "args": {
 "softwarePath": "MCP_PLC",
-"importPath": "${EXPORT_ROOT}\\mcp47_alarmclasses.dat"
+"importPath": "${EXPORT_ROOT}\\mcp47_alarmclasses.dat",
+"dryRun": true
 },
 "note": "",
 "expect": "ok",
 "keys": [
 "state",
 "errorCount"
-]
+],
+"apply": true
 },
 {
 "tool": "ExportAlarmClasses",
@@ -397,11 +399,13 @@
 "tool": "ImportAlarmTextLists",
 "args": {
 "softwarePath": "MCP_PLC",
-"importPath": "${EXPORT_ROOT}\\nope.xlsx"
+"importPath": "${EXPORT_ROOT}\\nope.xlsx",
+"dryRun": true
 },
 "note": "file missing -> honest error",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ExchangePlcSupervisions",
@@ -557,13 +561,15 @@
 "args": {
 "firstRootPath": "MCP_PLC",
 "secondRootPath": "MCP_TP700",
-"subnetName": "MCP_PN"
+"subnetName": "MCP_PN",
+"dryRun": true
 },
 "note": "",
 "expect": "ok",
 "keys": [
 "subnetName"
-]
+],
+"apply": true
 },
 {
 "tool": "PlugDeviceItem",
@@ -850,13 +856,15 @@
 "args": {
 "softwarePath": "HMI_RT_1",
 "folderPath": "MCP_ScreenFolder",
-"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\Classic_HMI_Minimal_Package_Screen.xml"
+"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\Classic_HMI_Minimal_Package_Screen.xml",
+"dryRun": true
 },
 "note": "",
 "expect": "ok",
 "keys": [
 "verified"
-]
+],
+"apply": true
 },
 {
 "tool": "ListHmiScreens",
@@ -922,11 +930,13 @@
 "folderPath": "MCP_ScreenFolder",
 "dir": "${EXPORT_ROOT}\\mcp46_hmi",
 "regexName": "Classic_HMI_Minimal_Package_Screen",
-"overwrite": true
+"overwrite": true,
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ManageSivarcScreenLayout",
@@ -1033,11 +1043,13 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "importPath": "${EXPORT_ROOT}\\nope_opcua.xml",
-"interfaceType": "server"
+"interfaceType": "server",
+"dryRun": true
 },
 "note": "missing file -> honest error, no interface created",
 "expect": "error",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "GetPlcOpcUaConfiguration",
@@ -1067,7 +1079,7 @@
 "softwarePath": "",
 "allowWrite": false
 },
-"note": "",
+"note": "Read only; no apply step.",
 "expect": "ok",
 "keys": []
 },
@@ -1082,7 +1094,7 @@
 "softwarePath": "MCP_PLC",
 "allowWrite": false
 },
-"note": "",
+"note": "Read only; no apply step.",
 "expect": "any",
 "keys": []
 },

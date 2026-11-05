@@ -278,7 +278,8 @@ namespace TiaMcpServer.ModelContextProtocol
             new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
         private static JsonObject WritePreviewPlan(string tool, object arguments)
         {
-            var normalized = JsonSerializer.SerializeToNode(arguments);
+            var normalized = JsonSerializer.SerializeToNode(arguments)!.AsObject();
+            var inputs = CallerInputFiles.Snapshot(tool, normalized);
 #if TIA_ENGINE_HOST
             var identity = TiaMcp.FoundationHost.EngineHostConfiguration.Current.Worker.Binding?.DeepClone();
 #else
@@ -289,8 +290,11 @@ namespace TiaMcpServer.ModelContextProtocol
             return new JsonObject { ["plannedChanges"] = TiaOpenness.Shared.CallJournalPayload.RedactArguments(normalized),
                 ["planHash"] = PendingApproval
                     .Hash(PendingApproval
-                        .Canonical(JsonSerializer.SerializeToNode(new { releaseKey = ReleaseKey, tool, arguments = normalized, targetIdentity = identity }))),
-                ["targetIdentity"] = identity, ["scope"] = "Normalized arguments and target identity; native validation/readback occurs during execution." };
+                        .Canonical(JsonSerializer.SerializeToNode(new {
+                            releaseKey = ReleaseKey, tool,
+                            arguments = TiaOpenness.Shared.CallJournalPayload.ProtectPlanArguments(JsonNode.Parse(PendingApproval.Canonical(normalized))),
+                            hostLifetime = TiaOpenness.Shared.CallJournalPayload.PlanHostLifetime, inputFiles = inputs, targetIdentity = identity }))),
+                ["targetIdentity"] = identity, ["scope"] = "Normalized arguments, input file contents and target identity; native validation/readback occurs during execution." };
         }
         private static Error? WritePlanRefusal(JsonObject plan, string expectedPlanHash, string expectedProjectFile, bool writing)
         {
@@ -309,7 +313,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (expectedPlanHash.Length == 0) return InvalidInput("expectedPlanHash");
             }
             if ((writing || expectedPlanHash.Length > 0) && expectedPlanHash != (string?)plan["planHash"])
-                return new Error("Arguments or target changed; review a fresh preview.", new PlanStaleDetails(expectedPlanHash, "arguments-or-target"));
+                return new Error("Arguments, target, or input file changed; preview again.", new PlanStaleDetails(expectedPlanHash, "arguments-or-target"));
             if (writing)
             {
                 string? actual =
@@ -336,7 +340,14 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
                 string expectedProjectFile = "", bool writing = true)
         {
-            var plan = WritePreviewPlan(tool, arguments);
+            JsonObject plan;
+            try { plan = WritePreviewPlan(tool, arguments); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            {
+                return !dryRun && expectedPlanHash.Length > 0
+                    ? V4Reject(tool, new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
+                    : TargetFailure(tool, error, false);
+            }
             if (dryRun) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
             return WritePlanResult(execute(), plan);
@@ -344,7 +355,14 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static async Task<CallToolResult> RunWritePreviewAsync(string tool, bool dryRun, object arguments,
             Func<Task<CallToolResult>> execute, string expectedPlanHash = "", string expectedProjectFile = "", bool writing = true)
         {
-            var plan = WritePreviewPlan(tool, arguments);
+            JsonObject plan;
+            try { plan = WritePreviewPlan(tool, arguments); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            {
+                return !dryRun && expectedPlanHash.Length > 0
+                    ? V4Reject(tool, new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
+                    : TargetFailure(tool, error, false);
+            }
             if (dryRun) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
             return WritePlanResult(await execute().ConfigureAwait(false), plan);

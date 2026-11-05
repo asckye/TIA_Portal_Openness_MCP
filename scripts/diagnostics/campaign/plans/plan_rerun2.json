@@ -53,13 +53,15 @@
 "args": {
 "softwarePath": "HMI_RT_1",
 "folderPath": "MCP_ScreenFolder",
-"importPath": "${EXPORT_ROOT}\\mcp47_hmi\\MCP800_Screen.xml"
+"importPath": "${EXPORT_ROOT}\\mcp47_hmi\\MCP800_Screen.xml",
+"dryRun": true
 },
 "note": "800x480 matches the TP700",
 "expect": "any",
 "keys": [
 "verified"
-]
+],
+"apply": true
 },
 {
 "tool": "ListHmiScreens",
@@ -125,11 +127,13 @@
 "folderPath": "MCP_ScreenFolder",
 "dir": "${EXPORT_ROOT}\\mcp47_hmi",
 "regexName": "MCP800_Screen",
-"overwrite": true
+"overwrite": true,
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ManageSivarcScreenLayout",
@@ -255,11 +259,13 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "importPath": "${EXPORT_ROOT}\\nope_opcua.xml",
-"interfaceType": "server"
+"interfaceType": "server",
+"dryRun": true
 },
 "note": "missing file",
 "expect": "error",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "RunOnlineMonitoringSafetySelfTest",
@@ -280,7 +286,7 @@
 "softwarePath": "",
 "allowWrite": false
 },
-"note": "",
+"note": "Read only; no apply step.",
 "expect": "ok",
 "keys": []
 },
@@ -295,7 +301,7 @@
 "softwarePath": "MCP_PLC",
 "allowWrite": false
 },
-"note": "",
+"note": "Read only; no apply step.",
 "expect": "any",
 "keys": []
 },

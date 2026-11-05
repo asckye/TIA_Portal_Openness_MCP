@@ -402,11 +402,13 @@
 "scriptCode": "export function Btn_OnClick(item, x, y, modifiers, trigger) {\n  Tags(\"MCP_Run\").Write(1);\n}",
 "globalDefinitionAreaScriptCode": "",
 "async": false,
-"syntaxCheck": true
+"syntaxCheck": true,
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "BindUnifiedHmiButtonPressedTag",
@@ -417,8 +419,14 @@
 "tagName": "MCP_Run"
 },
 "applicability": {
-"20": {"applicable": false, "reason": "The official V20 HmiButton API has no PressedStateTags member."},
-"21": {"applicable": true, "reason": "The official V21 HmiButton API exposes PressedStateTags."}
+"20": {
+"applicable": false,
+"reason": "The official V20 HmiButton API has no PressedStateTags member."
+},
+"21": {
+"applicable": true,
+"reason": "The official V21 HmiButton API exposes PressedStateTags."
+}
 },
 "note": "",
 "expect": "any",

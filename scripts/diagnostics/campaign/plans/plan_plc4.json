@@ -855,13 +855,15 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "folderPath": "MCP_TO",
-"importPath": "${EXPORT_ROOT}\\mcp46_axis.xml"
+"importPath": "${EXPORT_ROOT}\\mcp46_axis.xml",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
 "keys": [
 "verified"
-]
+],
+"apply": true
 },
 {
 "tool": "ImportTechnologyObjectsFromDirectory",
@@ -870,11 +872,13 @@
 "folderPath": "MCP_TO",
 "dir": "${EXPORT_ROOT}\\mcp46_to",
 "regexName": "",
-"overwrite": true
+"overwrite": true,
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ListTechnologyObjects",

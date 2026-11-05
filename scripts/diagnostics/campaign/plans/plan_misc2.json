@@ -419,11 +419,13 @@
 "screenName": "",
 "importedItemName": "",
 "left": 0,
-"top": 0
+"top": 0,
+"dryRun": true
 },
 "note": "HMI-oriented helper; block master copy",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ManageGlobalLibrary",
@@ -494,13 +496,15 @@
 "tool": "CreateVersionControlWorkspace",
 "args": {
 "workspaceName": "MCP_WS",
-"folderPath": "${EXPORT_ROOT}\\mcp46_vci"
+"folderPath": "${EXPORT_ROOT}\\mcp46_vci",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
 "keys": [
 "after"
-]
+],
+"apply": true
 },
 {
 "tool": "ListVersionControlWorkspaces",

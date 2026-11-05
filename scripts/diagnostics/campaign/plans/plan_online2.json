@@ -35,7 +35,8 @@
 "tableName": "MCP_WT",
 "address": "%M0.0",
 "modifyValue": "TRUE",
-"trigger": "OnceOnlyAtStart"
+"trigger": "OnceOnlyAtStart",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
@@ -44,7 +45,8 @@
 "refusedAttributes",
 "readbackVerified",
 "entryCreated"
-]
+],
+"apply": true
 },
 {
 "tool": "SetPlcWatchTableModifyValue",
@@ -53,7 +55,8 @@
 "tableName": "MCP_WT",
 "address": "\"MCP_Start\"",
 "modifyValue": "FALSE",
-"trigger": "Permanent"
+"trigger": "Permanent",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
@@ -62,7 +65,8 @@
 "refusedAttributes",
 "readbackVerified",
 "entryCreated"
-]
+],
+"apply": true
 },
 {
 "tool": "ExportPlcWatchTable",
@@ -80,11 +84,13 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "folderPath": "MCP_TO",
-"importPath": "${EXPORT_ROOT}\\mcp48_pid.xml"
+"importPath": "${EXPORT_ROOT}\\mcp48_pid.xml",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ListTechnologyObjects",
@@ -174,7 +180,8 @@
 "moduleAccessPassword": "",
 "blockBindingPassword": "",
 "masterSecretPassword": "",
-"rhTarget": ""
+"rhTarget": "",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
@@ -183,7 +190,8 @@
 "targetAddress",
 "targetAddressSource",
 "downloadState"
-]
+],
+"apply": true
 },
 {
 "tool": "ConnectOnlinePlc",

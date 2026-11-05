@@ -160,6 +160,66 @@ public sealed class ScriptClientTests
         Assert.Equal(2, client.Requests.Count); Assert.Contains("UNCONFIRMED", ledger.ToString()); Assert.Contains("stop without retry or cleanup", output.ToString());
     }
     [Fact]
+    public void CampaignAppliesTheReviewedPreviewAndRecordsBothResults()
+    {
+        const string hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        var client = new FixtureRpc((_, p) => Reply((string?)p?["name"] == "WriteFixture" && (bool?)p?["arguments"]?["dryRun"] == true
+            ? Value(data: new JsonObject { ["dryRun"] = true, ["planHash"] = hash,
+                ["targetIdentity"] = new JsonObject { ["identity"] = new JsonObject { ["projectPath"] = "C:/fixture.ap21" } } }) : Value()));
+        var campaign = new Campaign(client, ["WriteFixture", "GetSessionState"]);
+        var plan = new JsonArray(new JsonObject { ["tool"] = "WriteFixture", ["apply"] = true,
+            ["args"] = new JsonObject { ["dryRun"] = true, ["name"] = "same" } });
+        var ledger = new StringWriter();
+        campaign.Run(plan, 0, "C:/bundle/exports/run", ledger, new StringWriter());
+        Assert.Equal(3, client.Requests.Count);
+        var applied = client.Requests[1].Params!["arguments"]!;
+        Assert.False((bool)applied["dryRun"]!);
+        Assert.Equal(hash, (string?)applied["expectedPlanHash"]);
+        Assert.Equal("C:/fixture.ap21", (string?)applied["expectedProjectFile"]);
+        Assert.Equal("same", (string?)applied["name"]);
+        Assert.True((bool)plan[0]!["args"]!["dryRun"]!);
+        Assert.NotNull(JsonNode.Parse(ledger.ToString())!["preview"]);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CampaignNeverAppliesAFailedOrIncompletePreview(bool success)
+    {
+        var client = new FixtureRpc((_, _) => Reply(Value(success)));
+        var campaign = new Campaign(client, ["WriteFixture", "GetSessionState"]);
+        var plan = new JsonArray(new JsonObject { ["tool"] = "WriteFixture", ["apply"] = true,
+            ["args"] = new JsonObject { ["dryRun"] = true } });
+        if (success) Assert.Throws<InvalidOperationException>(() => campaign.Run(plan, 0, "C:/bundle/exports/run", new StringWriter(), new StringWriter()));
+        else campaign.Run(plan, 0, "C:/bundle/exports/run", new StringWriter(), new StringWriter());
+        Assert.DoesNotContain(client.Requests, request => (bool?)request.Params?["arguments"]?["dryRun"] == false);
+    }
+
+    [Fact]
+    public void AllReviewedCampaignWritesApplyAndReadRowsStayReadOnly()
+    {
+        var names = new HashSet<string>(("AttachDeviceNodeToSubnet ConnectDeviceNodesToProfinetSubnet CreateGsdDevice CreateVersionControlWorkspace " +
+            "DownloadPlc EnsureSubnet ImportAlarmClasses ImportAlarmTextLists ImportHmiConnection ImportHmiScreen ImportHmiScreensFromDirectory " +
+            "ImportHmiTagTable ImportHmiTagTablesFromDirectory ImportMasterCopyFromGlobalLibrary ImportOpcUaInterface ImportTechnologyObject " +
+            "ImportTechnologyObjectsFromDirectory InvokeObject InvokeService ManageOnlineDriveFunctions SeedProjectFromReference SetDeviceItemAttribute " +
+            "SetOpcUaInterfaceEnabled SetPlcCpuSettings SetPlcWatchTableModifyValue SetUnifiedHmiButtonEventScriptCode SetUnifiedHmiRuntimeState").Split(' '), StringComparer.Ordinal);
+        int writes = 0, reads = 0;
+        var directory = Path.Combine(Repository.FindRoot(Environment.CurrentDirectory), "scripts/diagnostics/campaign/plans");
+        foreach (string file in Directory.GetFiles(directory, "plan_*.json"))
+        foreach (var row in JsonNode.Parse(File.ReadAllText(file))!.AsArray())
+        {
+            string tool = (string)row!["tool"]!;
+            if (!names.Contains(tool)) continue;
+            bool read = tool is "InvokeObject" or "InvokeService" && (bool?)row["args"]?["allowWrite"] != true
+                || tool == "ManageOnlineDriveFunctions" && (string?)row["args"]?["action"] == "read";
+            if (read) { reads++; Assert.Contains("Read only", (string)row["note"]!); Assert.Null(row["apply"]); }
+            else { writes++; Assert.True((bool?)row["apply"]); Assert.True((bool?)row["args"]?["dryRun"]); }
+        }
+        Assert.Equal(49, writes);
+        Assert.Equal(6, reads);
+    }
+
+    [Fact]
     public void PlanPathsExpandRecursivelyWithoutMutatingFrozenData()
     {
         var args = new JsonObject { ["path"] = "${EXPORT_ROOT}\\x.xml", ["nested"] = new JsonArray(new JsonObject { ["id"] = "LAST" }), ["json"] = "{\"path\":\"${EXPORT_ROOT}\\\\x.xml\"}" };

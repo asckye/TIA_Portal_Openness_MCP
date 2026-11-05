@@ -112,7 +112,7 @@
 ### SEC-06 敏感值与诊断信息不外泄
 
 - 键名含 password、passwd、secret、token、credential、authorization，或以 key、keys 结尾（`releaseKey` 除外），或等于 `pwd`、`sk` 的参数值被替换为占位符；同级 `name`/`key` 为敏感名时，`value` 也被替换。自由文本中的 Bearer/Basic 令牌、`name=value` 形式的密钥、URL 用户信息和 PEM 私钥被清除。
-- 审批摘要、计划哈希和审计记录在计算哈希前先做同样的替换，因此敏感值不进入摘要；应用时可以使用与预览不同的密码。
+- 审批摘要和审计记录使用上述去敏规则。写入预览的计划哈希沿用同一敏感值识别规则，但将敏感值替换为 HMAC-SHA-256，密钥随机生成并仅保存在宿主进程内存中；应用须使用预览时相同的密码，宿主重启后须重新预览。计划还绑定输入文件的 SHA-256，以及输入目录中按相对名称排序的全部文件摘要；内容变化后须重新预览。
 - V4 信封的 `details` 和 `data` 不含堆栈与凭据：`Clean()` 删除键名含 `stack` 或等于 `password` 的字段，把多行堆栈文本替换为固定占位；`HostBehavior.SafeDiagnostic` 把盘符和 UNC 路径替换为 `<path>`。
 - 限制：替换按参数名匹配。UMAC、PLC 保护和 Web 服务器凭据只有在参数名符合上述规则时才被替换，没有单独的名单。
 - 实现：`src/Shared/CallJournalPayload.cs`、`src/Shared/ApprovalProtocol.cs`、`src/Shared/PlcToolContract.cs`、`src/Logic/V4/HostBehavior.cs`。

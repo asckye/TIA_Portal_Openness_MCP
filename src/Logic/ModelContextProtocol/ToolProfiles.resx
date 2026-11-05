@@ -6788,9 +6788,8 @@
       "example": {
         "objectKind": "Project",
         "objectPath": "",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -6801,9 +6800,8 @@
         "objectKind": "Project",
         "objectPath": "",
         "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -8063,8 +8061,7 @@
         ],
         "confirmOnline": false,
         "action": "read",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "dryRun": true
       }
     },
     {
@@ -9169,9 +9166,8 @@
       "example": {
         "objectKind": "Project",
         "objectPath": "",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -9182,9 +9178,8 @@
         "objectKind": "Project",
         "objectPath": "",
         "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -10737,8 +10732,7 @@
         ],
         "confirmOnline": false,
         "action": "read",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "dryRun": true
       }
     },
     {
@@ -11973,9 +11967,8 @@
       "example": {
         "objectKind": "Project",
         "objectPath": "",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -11986,9 +11979,8 @@
         "objectKind": "Project",
         "objectPath": "",
         "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -13698,8 +13690,7 @@
         ],
         "confirmOnline": false,
         "action": "read",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "dryRun": true
       }
     },
     {
@@ -15071,9 +15062,8 @@
       "example": {
         "objectKind": "Project",
         "objectPath": "",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -15084,9 +15074,8 @@
         "objectKind": "Project",
         "objectPath": "",
         "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -16987,8 +16976,7 @@
         ],
         "confirmOnline": false,
         "action": "read",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "dryRun": true
       }
     },
     {
@@ -18515,9 +18503,8 @@
       "example": {
         "objectKind": "Project",
         "objectPath": "",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -18528,9 +18515,8 @@
         "objectKind": "Project",
         "objectPath": "",
         "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -20552,8 +20538,7 @@
         ],
         "confirmOnline": false,
         "action": "read",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "dryRun": true
       }
     },
     {
@@ -23155,9 +23140,8 @@
       "example": {
         "objectKind": "Project",
         "objectPath": "",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -23168,9 +23152,8 @@
         "objectKind": "Project",
         "objectPath": "",
         "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}"
+        "methodName": "GetAttributeInfos",
+        "dryRun": true
       }
     },
     {
@@ -29128,7 +29111,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -29145,7 +29128,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -39051,7 +39034,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -39068,7 +39051,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -46905,7 +46888,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -46922,7 +46905,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -52918,7 +52901,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -52935,7 +52918,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -59485,7 +59468,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -59502,7 +59485,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -66529,7 +66512,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -66546,7 +66529,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -73960,7 +73943,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -73977,7 +73960,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -82639,7 +82622,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -82656,7 +82639,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -91400,7 +91383,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4
       },
@@ -91415,7 +91398,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4
       },
@@ -98738,7 +98721,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4
       },
@@ -98753,7 +98736,7 @@
           "objectKind": "Project",
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
-          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+          "methodName": "GetAttributeInfos"
         },
         "envelopeVersion": 4
       },

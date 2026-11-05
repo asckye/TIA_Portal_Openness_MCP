@@ -39,6 +39,23 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
+        public void Missing_input_keeps_preview_refusal_and_tells_an_apply_to_preview_again()
+        {
+            string input = Path.Combine(root, "Missing.xml");
+            var preview = Assert.Throws<AdapterPreconditionException>(() => McpServer.ValidateCallerInputFiles("ImportHmiScreen",
+                new JsonObject { ["importPath"] = input, ["dryRun"] = true }.ToJsonString()));
+            Assert.Equal("importPath", preview.ParamName);
+            Assert.True(preview.IsArgument);
+            Assert.Contains("The input file cannot be read", preview.Message);
+            var apply = Assert.Throws<AdapterPreconditionException>(() => McpServer.ValidateCallerInputFiles("ImportHmiScreen",
+                new JsonObject { ["importPath"] = input, ["dryRun"] = false, ["expectedPlanHash"] = new string('a', 64) }.ToJsonString()));
+            Assert.Equal(preview.ParamName, apply.ParamName);
+            Assert.Equal(preview.IsArgument, apply.IsArgument);
+            Assert.Contains("Input file changed", apply.Message);
+            Assert.Contains("preview again", apply.Message);
+        }
+
+        [Fact]
         public void Junction_below_root_is_outside_but_ancestors_are_not_walked()
         {
             string destination = Path.Combine(root, "destination");

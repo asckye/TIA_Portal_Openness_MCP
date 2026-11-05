@@ -17,6 +17,25 @@ public sealed class ReadOnlySourceContracts
     private static void Count(string source, string value, int expected) => Assert.Equal(expected, Regex.Matches(source, Regex.Escape(value)).Count);
 
     [Fact]
+    public void NetworkLeaseAcquisitionIsInsideTheFailureBoundaryForAllThreeTools()
+    {
+        var legacy = Read("src/Adapters/Native/Hardware/HardwareLegacyWrites.cs");
+        foreach (string signature in new[] { "public HardwareAddressingReply HardwareEnsureSubnet(",
+            "public HardwareAddressingReply HardwareAttachDeviceNodeToSubnet(" })
+        {
+            string body = EngineSources.BlockAfter(legacy, signature);
+            Assert.Contains("AcquireHmiEditAccess()", EngineSources.BlockAfter(body, "try"));
+            Assert.Contains("[\"mayHaveChanged\"] = false", body);
+        }
+        string connect = EngineSources.BlockAfter(Read("src/Adapters/Native/Hardware/HardwareNetworkLegacy.cs"),
+            "public string HardwareProbeConnectDeviceNodesToSubnet(");
+        string guarded = EngineSources.BlockAfter(connect, "EngineeringWriteJournal.RunReported(evidence, () =>");
+        Assert.Contains("AcquireHmiEditAccess()", guarded);
+        Assert.Contains("exclusive access refused; nothing changed", connect);
+        Assert.Contains("[\"failureCode\"] = \"PRECONDITION_FAILED\"", connect);
+    }
+
+    [Fact]
     public void PlcExchangeReferencesRemoveVariantOutputProperties()
     {
         var project = XDocument.Load(Path.Combine(Root, "tests/FoundationHost/TiaMcp.PlcExchange.Tests/TiaMcp.PlcExchange.Tests.csproj"));

@@ -122,27 +122,31 @@
 "args": {
 "anchorDeviceItemPath": "MCP_PLC/PROFINET 接口_1",
 "subnetType": "Ethernet",
-"subnetName": "MCP_PN"
+"subnetName": "MCP_PN",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
 "keys": [
 "subnetName",
 "nodePath"
-]
+],
+"apply": true
 },
 {
 "tool": "ConnectDeviceNodesToProfinetSubnet",
 "args": {
 "firstRootPath": "MCP_PLC",
 "secondRootPath": "MCP_TP700",
-"subnetName": "MCP_PN"
+"subnetName": "MCP_PN",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
 "keys": [
 "subnetName"
-]
+],
+"apply": true
 },
 {
 "tool": "AttachDeviceNodeToSubnet",
@@ -150,11 +154,13 @@
 "deviceItemPath": "MCP_S120",
 "interfaceIndex": 0,
 "subnetName": "MCP_PN",
-"anchorDeviceItemPath": "MCP_PLC/PROFINET 接口_1"
+"anchorDeviceItemPath": "MCP_PLC/PROFINET 接口_1",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "GetProjectTopology",
@@ -571,11 +577,13 @@
 "args": {
 "deviceItemPath": "MCP_DI",
 "attributeName": "Comment",
-"value": "MCP DI"
+"value": "MCP DI",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "SetPlcCpuSettings",
@@ -585,11 +593,13 @@
 "exactAttributes": {
 "Comment": "MCP CPU"
 }
-}
+},
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ManageHardwareObject",
@@ -617,11 +627,13 @@
 "args": {
 "deviceItemPath": "MCP_DI",
 "attributeName": "Name",
-"value": "MCP_DI2"
+"value": "MCP_DI2",
+"dryRun": true
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"apply": true
 },
 {
 "tool": "ManageHardwareObject",
