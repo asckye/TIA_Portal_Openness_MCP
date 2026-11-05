@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using TiaMcp.Adapters.Contracts;
 
@@ -268,6 +269,48 @@ namespace TiaMcp.Adapters.Native.Hmi
                 || string.IsNullOrWhiteSpace(expectedPartner) || string.IsNullOrWhiteSpace(driver) || string.IsNullOrWhiteSpace(address))
                 throw new NotSupportedException("Existing Unified connection partner/driver/address could not be verified for '" + expectedPartner
                     + "'. Configure it through TIA or ManageUnifiedEngineeringObject and confirm the readback. No guessed properties were written.");
+        }
+
+        internal static string UnifiedTagConnection(object connections, string expectedPartner, string connectionName)
+        {
+            const string Guidance = "Configure it in TIA Portal or with ManageUnifiedEngineeringObject, " +
+                "then verify it with EnsureUnifiedHmiConnection.";
+            object connection;
+            if (!string.IsNullOrWhiteSpace(connectionName))
+                connection = Find(connections, connectionName)
+                    ?? throw new PlcSoftwareException("NotFound", "Unified connection not found. " + Guidance);
+            else
+            {
+                var matches = Items(connections).Where(item => string.Equals(Get(item, "Partner") as string,
+                    expectedPartner, StringComparison.OrdinalIgnoreCase)).ToArray();
+                if (matches.Length == 0)
+                    throw new PlcSoftwareException("NotFound", "No Unified connection for the PLC partner. " + Guidance);
+                if (matches.Length > 1)
+                    throw new ArgumentException("Several Unified connections match the PLC partner; pass connectionName.");
+                connection = matches[0];
+            }
+            RequireConnection(connection, expectedPartner);
+            return Name(connection);
+        }
+
+        internal static string UnifiedDesignSummary(string screenName, HmiArray writeResults, int screenWriteCount, int itemsProcessed, int failed)
+        {
+            int screenWrites = writeResults.Take(screenWriteCount).OfType<HmiObject>().Count(row => row["verified"] is true);
+            return $"Applied Unified HMI design to '{screenName}'. screenPropertiesWritten={screenWrites}, " +
+                $"itemsProcessed={itemsProcessed}, failed={failed}.";
+        }
+
+        internal static HmiObject UnifiedTagBindingChanges(string connectionName, string plcTagSymbol, string hmiDataType, string address)
+        {
+            bool absolute = !string.IsNullOrWhiteSpace(address) || plcTagSymbol.StartsWith("%", StringComparison.Ordinal)
+                || Regex.IsMatch(plcTagSymbol, @"^(DB|IW|QW|ID|QD|IB|QB|MB|MW|MD)\d", RegexOptions.IgnoreCase);
+            return new HmiObject {
+                ["Connection"] = connectionName,
+                ["AccessMode"] = absolute ? "AbsoluteAccess" : "SymbolicAccess",
+                ["Address"] = absolute ? (string.IsNullOrWhiteSpace(address) ? plcTagSymbol : address.Trim()) : "",
+                ["PlcTag"] = absolute ? "" : plcTagSymbol.Replace("\"", string.Empty),
+                ["DataType"] = hmiDataType
+            };
         }
 
         internal static void BeforeOpaqueImport(object existing, bool overwrite, IDictionary<string, object?> evidence)

@@ -69,6 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (evidence["records"] is JsonArray records) data["items"] = records.DeepClone();
             else if (evidence["itemResults"] is JsonArray results) data["items"] = results.DeepClone();
             string? nativeMessage = HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]);
+            HostBehavior.SanitizeEvidence(data, evidence: false);
             Clean(data);
             if (nativeMessage != null) evidence["nativeMessage"] = nativeMessage;
 
@@ -190,10 +191,6 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var pair in obj.ToArray())
                 if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)) obj
                     .Remove(pair.Key);
-                else if (!pair.Key.Equals("ScriptCode", StringComparison.OrdinalIgnoreCase)
-                    && !pair.Key.Equals("GlobalDefinitionAreaScriptCode", StringComparison.OrdinalIgnoreCase)
-                    && pair.Value is JsonValue value && value.TryGetValue<string>(out var text) && text.Contains("\n   "))
-                    obj[pair.Key] = "Diagnostic details retained in the server log.";
                 else Clean(pair.Value);
         }
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,

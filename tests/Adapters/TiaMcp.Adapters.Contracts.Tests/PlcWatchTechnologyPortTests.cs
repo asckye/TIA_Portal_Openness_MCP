@@ -8,6 +8,34 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class PlcWatchTechnologyPortTests
 {
     [Theory]
+    [InlineData("21", "TO_PositioningAxis", "6.0", "create", true)]
+    [InlineData("21", "TO_PositioningAxis", "5.0", "create", false)]
+    [InlineData("21", "TO_SpeedAxis", "5.0", "create", false)]
+    [InlineData("21", "PID_Compact", "2.3", "create", false)]
+    [InlineData("21", "Unverified", "5.0", "create", true)]
+    [InlineData("21", "Unverified", "6.0", "read", false)]
+    [InlineData("21", "TO_PositioningAxis", "6.0", "read", false)]
+    [InlineData("14sp1", "TO_PositioningAxis", "6.0", "create", false)]
+    [InlineData("15.1", "TO_PositioningAxis", "6.0", "create", false)]
+    [InlineData("16", "TO_PositioningAxis", "6.0", "create", false)]
+    [InlineData("17", "TO_PositioningAxis", "6.0", "create", false)]
+    [InlineData("18", "TO_PositioningAxis", "6.0", "create", false)]
+    [InlineData("19", "TO_PositioningAxis", "6.0", "create", false)]
+    [InlineData("20", "TO_PositioningAxis", "6.0", "create", false)]
+    public void TechnologyCreateGuardsTheVerifiedV21Pairs(string release, string type, string version, string action, bool refused)
+    {
+        string? reason = PlcB4Capabilities.Unsupported(release, new PlcSoftwareRequest {
+            Operation = "ManageTechnologyObject", TypeIdentifier = type, Version = version, Action = action });
+        Assert.Equal(refused, reason != null);
+        if (refused)
+        {
+            Assert.Contains("real V21 crash", reason!);
+            Assert.Contains("not an API difference", reason!);
+            foreach (string pair in new[] { "TO_PositioningAxis 5.0", "TO_SpeedAxis 5.0", "PID_Compact 2.3" }) Assert.Contains(pair, reason!);
+        }
+    }
+
+    [Theory]
     [InlineData("14sp1", 4, 6)]
     [InlineData("15.1", 11, 7)]
     [InlineData("16", 11, 9)]

@@ -11,6 +11,179 @@ using Xunit;
 
 public sealed class FoundationV4ContractsTests
 {
+    [Theory]
+    [InlineData("Main%20Screen", "main%20screen", true)]
+    [InlineData("Main%20Screen", "Main Screen", false)]
+    [InlineData("/Group/Main%20Screen", "main screen", true)]
+    [InlineData("Overview", "overview", true)]
+    public async Task Screen_design_name_matches_native_literal_and_case_rules(string target, string name, bool accepted)
+    {
+        foreach (string release in new[] { "19", "20", "21" })
+        {
+            using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+            using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+            var tool = DesignTool("ApplyUnifiedHmiScreenDesign", (_, _) => throw new InvalidOperationException("Preview must not dispatch."));
+            var args = new JsonObject { ["hmiSoftwarePath"] = "HMI", ["screenName"] = target, ["dryRun"] = true,
+                ["design"] = new JsonObject { ["screen"] = new JsonObject { ["name"] = name }, ["items"] = new JsonArray() } };
+            var body = Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiScreenDesign", args.ToJsonString())));
+            Assert.Equal(accepted, (bool?)body["ok"]);
+            if (!accepted) Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        }
+    }
+
+    private static JsonObject UsageArguments(string tool, string profile)
+    {
+        string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        return JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference/tool-examples/calls.json")))!
+            ["profiles"]![profile]![tool]!["arguments"]!.DeepClone().AsObject();
+    }
+
+    private static McpServerTool DesignTool(string name, Func<string, JsonObject, JsonNode?> call)
+    {
+        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService(call, () => "C:/Fixture/Project.ap21");
+        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
+        return name switch {
+            "ApplyUnifiedHmiTheme" => McpServerTool.Create(tools.ApplyUnifiedHmiThemeV4),
+            "ApplyUnifiedHmiLayout" => McpServerTool.Create(tools.ApplyUnifiedHmiLayoutV4),
+            _ => McpServerTool.Create(tools.ApplyUnifiedHmiScreenDesignJsonV4)
+        };
+    }
+
+    private static JsonObject DesignSuccess() => new() {
+        ["Value"] = new JsonObject { ["Meta"] = new JsonObject { ["operationSuccess"] = true, ["mayHaveChanged"] = true } } };
+
+    [Theory]
+    [InlineData("19", "plc-foundation")] [InlineData("20", "plc-foundation")] [InlineData("21", "plc-foundation")]
+    [InlineData("19", "full-engine")] [InlineData("20", "full-engine")] [InlineData("21", "full-engine")]
+    public async Task ApplyUnifiedHmiTheme_example_previews_and_dispatches_only_screen_and_items(string release, string profile)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        int calls = 0;
+        var tool = DesignTool("ApplyUnifiedHmiTheme", (operation, args) => {
+            calls++;
+            Assert.Equal("hmi-unified.ExecuteUnifiedHmi", operation);
+            var request = args["request"]!.Deserialize<TiaMcp.Adapters.Contracts.UnifiedHmiRequest>()!;
+            Assert.True(JsonNode.DeepEquals(JsonNode.Parse("{\"screen\":{\"BackColor\":\"0xFFFFFFFF\"},\"items\":[]}"),
+                JsonNode.Parse(request.DesignJson)));
+            return DesignSuccess();
+        });
+        var arguments = UsageArguments("ApplyUnifiedHmiTheme", profile);
+        Assert.True((bool)Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiTheme", arguments.ToJsonString())))["ok"]!);
+        Assert.Equal(0, calls);
+        arguments["dryRun"] = false;
+        Assert.True((bool)Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiTheme", arguments.ToJsonString())))["ok"]!);
+        Assert.Equal(1, calls);
+    }
+
+    [Theory]
+    [InlineData("19", "plc-foundation")] [InlineData("20", "plc-foundation")] [InlineData("21", "plc-foundation")]
+    [InlineData("19", "full-engine")] [InlineData("20", "full-engine")] [InlineData("21", "full-engine")]
+    public async Task ApplyUnifiedHmiLayout_with_screen_dispatches_without_Name(string release, string profile)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        int calls = 0;
+        var tool = DesignTool("ApplyUnifiedHmiLayout", (_, args) => {
+            calls++;
+            var request = args["request"]!.Deserialize<TiaMcp.Adapters.Contracts.UnifiedHmiRequest>()!;
+            var design = JsonNode.Parse(request.DesignJson)!.AsObject();
+            Assert.Equal(new[] { "screen", "items" }, design.Select(p => p.Key));
+            Assert.Null(design["screen"]!["Name"]);
+            Assert.Equal(800, (int)design["screen"]!["Width"]!);
+            return DesignSuccess();
+        });
+        var arguments = UsageArguments("ApplyUnifiedHmiLayout", profile);
+        arguments["screenName"] = "/Group/Overview%20Screen";
+        arguments["layout"]!["screen"] = new JsonObject { ["name"] = "Overview Screen", ["width"] = 800 };
+        Assert.True((bool)Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiLayout", arguments.ToJsonString())))["ok"]!);
+        Assert.Equal(0, calls);
+        arguments["dryRun"] = false;
+        Assert.True((bool)Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiLayout", arguments.ToJsonString())))["ok"]!);
+        Assert.Equal(1, calls);
+    }
+
+    [Theory]
+    [InlineData("19", "plc-foundation")] [InlineData("20", "plc-foundation")] [InlineData("21", "plc-foundation")]
+    [InlineData("19", "full-engine")] [InlineData("20", "full-engine")] [InlineData("21", "full-engine")]
+    public async Task ApplyUnifiedHmiScreenDesign_usage_example_previews(string release, string profile)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        int calls = 0;
+        var tool = DesignTool("ApplyUnifiedHmiScreenDesign", (_, args) => {
+            calls++;
+            var request = args["request"]!.Deserialize<TiaMcp.Adapters.Contracts.UnifiedHmiRequest>()!;
+            Assert.Null(JsonNode.Parse(request.DesignJson)!["screen"]!["Name"]);
+            return DesignSuccess();
+        });
+        var arguments = UsageArguments("ApplyUnifiedHmiScreenDesign", profile);
+        Assert.True((bool)Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiScreenDesign", arguments.ToJsonString())))["ok"]!);
+        Assert.Equal(0, calls);
+        arguments["dryRun"] = false;
+        Assert.True((bool)Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiScreenDesign", arguments.ToJsonString())))["ok"]!);
+        Assert.Equal(1, calls);
+    }
+
+    [Theory]
+    [InlineData("19")] [InlineData("20")] [InlineData("21")]
+    public async Task Screen_design_naming_another_screen_is_INVALID_ARGUMENT(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        int calls = 0;
+        var tool = DesignTool("ApplyUnifiedHmiScreenDesign", (_, _) => { calls++; return DesignSuccess(); });
+        var arguments = UsageArguments("ApplyUnifiedHmiScreenDesign", "plc-foundation");
+        arguments["design"]!["screen"]!["name"] = "Other";
+        foreach (bool dryRun in new[] { true, false })
+        {
+            arguments["dryRun"] = dryRun;
+            var body = Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiScreenDesign", arguments.ToJsonString())));
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]!["code"]);
+            Assert.Contains("renaming is refused", (string?)body["error"]!["message"]);
+        }
+        Assert.Equal(0, calls);
+    }
+
+    [Theory]
+    [InlineData("19", false)] [InlineData("20", false)] [InlineData("21", false)]
+    [InlineData("19", true)] [InlineData("20", true)] [InlineData("21", true)]
+    [InlineData("19", null)] [InlineData("20", null)] [InlineData("21", null)]
+    public async Task Worker_argument_refusal_with_no_change_is_INVALID_ARGUMENT(string release, bool? changed)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        int calls = 0;
+        var tool = DesignTool("ApplyUnifiedHmiTheme", (_, _) => {
+            calls++;
+            return new JsonObject { ["MayHaveChanged"] = changed,
+                ["Failure"] = new JsonObject { ["Code"] = "ArgumentException", ["Message"] = "Native property value refused." } };
+        });
+        var arguments = UsageArguments("ApplyUnifiedHmiTheme", "plc-foundation");
+        arguments["dryRun"] = false;
+        var body = Body(await tool.InvokeAsync(Request("ApplyUnifiedHmiTheme", arguments.ToJsonString())));
+        Assert.Equal(changed == true ? "OUTCOME_UNKNOWN" : "INVALID_ARGUMENT", (string?)body["error"]!["code"]);
+        Assert.Equal(1, calls);
+    }
+
+    [Theory]
+    [InlineData("19")] [InlineData("20")] [InlineData("21")]
+    public void Unified_result_keeps_indented_text_fields(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        const string text = "first\n   second";
+        const string source = "first\n   at legitimate text";
+        var response = new { Data = new { text = source, ScriptCode = text, GlobalDefinitionAreaScriptCode = text },
+            Meta = new { operationSuccess = true, nativeStackTrace = "hidden stack", password = "hidden secret" } };
+        var body = Body(enginehost::TiaMcpServer.ModelContextProtocol.UnifiedHmiContract.Map("ReadUnifiedScriptModule", response, false, true));
+        Assert.Equal(source, (string?)body["data"]!["text"]);
+        Assert.Equal(text, (string?)body["data"]!["scriptCode"]);
+        Assert.Equal(text, (string?)body["data"]!["globalDefinitionAreaScriptCode"]);
+        Assert.Null(body["data"]!["evidence"]!["nativeStackTrace"]);
+        Assert.Null(body["data"]!["evidence"]!["password"]);
+    }
+
     private static readonly HashSet<string> LegacyNames = JsonNode.Parse(File.ReadAllText(Path.Combine(
         TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "reference/tool-catalog/v3-v4-renames.json")))!.AsObject()
         .Where(pair => pair.Key != pair.Value!.GetValue<string>()).Select(pair => pair.Key).ToHashSet(StringComparer.Ordinal);

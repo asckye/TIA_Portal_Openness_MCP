@@ -402,8 +402,9 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("copyMode", out var copyMode) ? copyMode.GetString() ?? "" : "",
             arguments.TryGetValue("generateOption", out var generateOption) ? generateOption.GetString() ?? "None" : "None") != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
-        var b4 = new PlcSoftwareRequest { Operation = tool.Name, Action = actionName };
         string Text(string name) => arguments.TryGetValue(name, out var value) ? value.GetString() ?? "" : "";
+        var b4 = new PlcSoftwareRequest { Operation = tool.Name, Action = actionName,
+            TypeIdentifier = Text("typeIdentifier"), Version = Text("version") };
         if (family.Name == "F26")
         {
             if (UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, Text("itemType"), Text("dynamizationType")) != null)
@@ -446,8 +447,9 @@ internal sealed partial class FoundationTool
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (HmiCapabilities.Unsupported(portedRelease!, tool.Name) != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
-        if (PlcB4Capabilities.Unsupported(portedRelease!, b4) != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        if (PlcB4Capabilities.Unsupported(portedRelease!, b4) is string b4Reason)
+            return McpServer.V4TargetReject(tool.Name,
+                new Error(b4Reason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true);
         if (OptionalProductCapabilities.Unsupported(portedRelease!, tool.Name,
             arguments.TryGetValue("category", out var optionalCategory) ? optionalCategory.GetString() ?? "" : "",
             arguments.TryGetValue("kind", out var optionalKind) ? optionalKind.GetString() ?? "" : "", actionName,

@@ -162,7 +162,11 @@ namespace TiaMcp.Adapters.Native.Plc
                         continue;
                     }
 
-                    var svc = TryGetService(plc, st);
+                    var svc = suffix == "OnlineProvider"
+                        ? _session.ResolvePlcService<Siemens.Engineering.Online.OnlineProvider>(softwarePath, plc)
+                        : suffix == "DownloadProvider"
+                            ? (object?)_session.ResolvePlcService<Siemens.Engineering.Download.DownloadProvider>(softwarePath, plc)
+                            : TryGetService(plc, st);
                     services.Add(new Dictionary<string, object?>
                     {
                         ["suffix"] = suffix,

@@ -128,7 +128,8 @@ internal sealed partial class OnlineDownloadAdapter
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset>=0, limit 1..500 required.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var provider = _session.ResolvePlcService<FingerprintDataProvider>(softwarePath, plc)
-                    ?? throw new NotSupportedException("FingerprintDataProvider unavailable for this PLC/version.");
+                    ?? throw new PlcSoftwareException("NotSupportedOnVersion",
+                        "FingerprintDataProvider is not exposed for this CPU on this release.");
                 var configuration = OnlinePrimitives.Configuration(provider)
                     ?? throw new PortalException(PortalErrorCode.InvalidState, "No connection configuration; configure the CPU network interface first.");
                 var candidates = new List<OnlineDataPolicy.RouteCandidate>();
@@ -225,7 +226,8 @@ internal sealed partial class OnlineDownloadAdapter
                     throw new ArgumentException("targetOption must be one of: " + string.Join("/", Enum.GetNames(typeof(TargetOption)))
                         + " (Siemens.Engineering.SW.Loader.TargetOption).");
                 var option = (TargetOption)Enum.Parse(typeof(TargetOption), targetOption)!;
-                var service = plc.GetService<LoadableProvider>() ?? throw new NotSupportedException("LoadableProvider unavailable.");
+                var service = _session.ResolvePlcService<LoadableProvider>(softwarePath, plc)
+                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "LoadableProvider is not exposed for this CPU on this release.");
                 var blocks = objectKind == "blocks" ? names.Select(n => (PlcBlock)_session.ExactMasterCopyPlcSource(softwarePath, n, true)).ToArray() : Array
                     .Empty<PlcBlock>();
 #if PLC_UNITS

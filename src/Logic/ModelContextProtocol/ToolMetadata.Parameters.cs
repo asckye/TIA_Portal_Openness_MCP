@@ -1391,7 +1391,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ManageTechnologyObject.objectPath"] = new ParameterHint("\"\\u003CFolder/Name\\u003E\""),
             ["ManageTechnologyObject.action"] = new ParameterHint("\"read\"", "read", "create", "delete", "setParameter"),
             ["ManageTechnologyObject.typeIdentifier"] = new ParameterHint("\"\\u003CtypeIdentifier\\u003E\""),
-            ["ManageTechnologyObject.version"] = new ParameterHint("\"V2.9\""),
+            ["ManageTechnologyObject.version"] = new ParameterHint("\"5.0\""),
             ["ManageTechnologyObject.parameter"] = new ParameterHint("\"\\u003Cparameter\\u003E\""),
             ["ManageTechnologyObject.value"] = new ParameterHint("\"\\u003Cvalue\\u003E\""),
             ["ManageTestSuiteCase.category"] = new ParameterHint("\"styleGuide\"", "styleGuide", "application", "system"),

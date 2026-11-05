@@ -7,6 +7,13 @@ namespace TiaMcp.Adapters.Contracts
         public static string? Unsupported(string release, PlcSoftwareRequest request)
         {
             int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
+            // Guard a real V21 crash, not an API difference. Extend these pairs only after native verification.
+            if (version == 21 && request.Operation == "ManageTechnologyObject" && request.Action == "create"
+                && !((request.TypeIdentifier == "TO_PositioningAxis" || request.TypeIdentifier == "TO_SpeedAxis") && request.Version == "5.0")
+                && !(request.TypeIdentifier == "PID_Compact" && request.Version == "2.3"))
+                return "V21 crash protection (not an API difference): create accepts only verified pairs TO_PositioningAxis 5.0, " +
+                    "TO_SpeedAxis 5.0 or PID_Compact 2.3. Other pairs are refused because a real V21 crash lost unsaved work; " +
+                    "verified pairs can be added after native verification.";
             if (request.Operation == "ManagePlcSoftwareUnit" && version < 18 && request.Properties.ContainsKey("NamespacePreset"))
                 return "PlcUnitBase.NamespacePreset requires V18.";
             if (request.Operation == "ManagePlcTableEntries" && version < 17 && request.Action != "createComment")

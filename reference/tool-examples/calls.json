@@ -9258,7 +9258,7 @@
             "requiresBinding": true
           },
           "version": {
-            "exampleValue": "<version from target discovery>",
+            "exampleValue": "5.0",
             "requiresBinding": true
           },
           "parameter": {
@@ -9275,7 +9275,9 @@
           },
           "create": {
             "arguments": {
-              "action": "create"
+              "action": "create",
+              "typeIdentifier": "TO_PositioningAxis",
+              "version": "5.0"
             }
           },
           "delete": {
@@ -9292,7 +9294,10 @@
           }
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V21 crash protection permits create only for verified pairs TO_PositioningAxis 5.0, TO_SpeedAxis 5.0 and PID_Compact 2.3. This is not an API difference; additional pairs require native verification."
+        ]
       },
       "CheckLibraryUpdates": {
         "arguments": {},
@@ -13112,7 +13117,8 @@
           "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
         ],
         "notes": [
-          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics.",
+          "The target screen must already exist. screen.name, when supplied, must match the target; renaming is refused."
         ]
       },
       "ApplyUnifiedHmiScreenDesign": {
@@ -13155,7 +13161,8 @@
           "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
         ],
         "notes": [
-          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics.",
+          "The target screen must already exist. screen.name, when supplied, must match the target; renaming is refused."
         ]
       },
       "ApplyUnifiedHmiTheme": {
@@ -13186,7 +13193,9 @@
           "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
         ],
         "notes": [
-          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics.",
+          "The target screen must already exist. screen.name, when supplied, must match the target; renaming is refused.",
+          "Applies only Page/Background to screen BackColor; item palette colors are not applied."
         ]
       },
       "BindUnifiedHmiTagDynamization": {
@@ -18700,7 +18709,8 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
         "notes": [
-          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics.",
+          "The target screen must already exist. screen.name, when supplied, must match the target; renaming is refused."
         ]
       },
       "ApplyUnifiedHmiScreenDesign": {
@@ -18740,7 +18750,8 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
         "notes": [
-          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics.",
+          "The target screen must already exist. screen.name, when supplied, must match the target; renaming is refused."
         ]
       },
       "ApplyUnifiedHmiTheme": {
@@ -18768,7 +18779,9 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
         "notes": [
-          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics.",
+          "The target screen must already exist. screen.name, when supplied, must match the target; renaming is refused.",
+          "Applies only Page/Background to screen BackColor; item palette colors are not applied."
         ]
       },
       "ArchiveSavedProject": {
@@ -29320,7 +29333,7 @@
             "requiresBinding": true
           },
           "version": {
-            "exampleValue": "<version from target discovery>",
+            "exampleValue": "5.0",
             "requiresBinding": true
           },
           "parameter": {
@@ -29337,7 +29350,9 @@
           },
           "create": {
             "arguments": {
-              "action": "create"
+              "action": "create",
+              "typeIdentifier": "TO_PositioningAxis",
+              "version": "5.0"
             }
           },
           "delete": {
@@ -29354,7 +29369,10 @@
           }
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V21 crash protection permits create only for verified pairs TO_PositioningAxis 5.0, TO_SpeedAxis 5.0 and PID_Compact 2.3. This is not an API difference; additional pairs require native verification."
+        ]
       },
       "ManageTestSuiteCase": {
         "arguments": {

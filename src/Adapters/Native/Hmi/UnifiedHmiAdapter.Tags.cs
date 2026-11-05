@@ -42,7 +42,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         private void BindUnifiedHmiTagToPlcSymbol(object tag, string connectionName, string plcName,
             string plcTagSymbol, string hmiDataType, HmiArray writeResults, string address = "")
         {
-            var prepared = UnifiedRequestScalar.Prepare(tag.GetType(), UnifiedTagBindingChanges(connectionName, plcName, plcTagSymbol, hmiDataType, address));
+            var prepared = UnifiedRequestScalar.Prepare(tag.GetType(),
+                HmiExchangePolicy.UnifiedTagBindingChanges(connectionName, plcTagSymbol, hmiDataType, address));
             var evidence = new HmiObject();
             try { UnifiedRequestScalar.Apply(tag, prepared, evidence); }
             finally
@@ -50,21 +51,6 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (evidence["mayHaveChanged"] is true) _session.MarkHmiChanged();
                 foreach (var pair in evidence) writeResults.Add(pair.Key + "=" + pair.Value);
             }
-        }
-
-        private static HmiObject UnifiedTagBindingChanges(string connectionName, string plcName, string plcTagSymbol, string hmiDataType, string address)
-        {
-            bool absolute = !string.IsNullOrWhiteSpace(address) || plcTagSymbol.StartsWith("%", StringComparison.Ordinal)
-                || Regex.IsMatch(plcTagSymbol, @"^(DB|IW|QW|ID|QD|IB|QB|MB|MW|MD)\d", RegexOptions.IgnoreCase);
-            var changes = new HmiObject {
-                ["DataType"] = hmiDataType,
-                ["AccessMode"] = absolute ? "AbsoluteAccess" : "SymbolicAccess",
-                ["Address"] = absolute ? (string.IsNullOrWhiteSpace(address) ? plcTagSymbol : address.Trim()) : "",
-                ["PlcTag"] = absolute ? "" : NormalizeControllerTagName(plcTagSymbol)
-            };
-            if (!string.IsNullOrWhiteSpace(plcName)) changes["PlcName"] = plcName;
-            if (!string.IsNullOrWhiteSpace(connectionName)) changes["Connection"] = connectionName;
-            return changes;
         }
 
         public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "",
@@ -75,13 +61,18 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 EngineeringInputValidation.NameOrAbsolutePath(tagTableName);
                 var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
+                var partner = _session.GetSoftwareContainer(plcName)?.Parent as DeviceItem
+                    ?? throw new PlcSoftwareException("NotFound", "Exact PLC software partner not found: " + plcName);
+                connectionName = HmiExchangePolicy.UnifiedTagConnection(
+                    TryGetPropertyValue(sw, "Connections") ?? throw new NotSupportedException("Unified Connections unavailable."),
+                    partner.Name, connectionName);
                 // Check the documented Create return type before creating either a table or tag.
                 // Unsupported binding properties must not leave a newly created internal tag behind.
                 var deviceTags = TryGetPropertyValue(sw, "Tags") ?? throw new NotSupportedException("Unified Tags unavailable.");
                 var existingTag = HmiExchangePolicy.Find(deviceTags, tagName);
                 var tagType = existingTag?.GetType() ?? deviceTags.GetType().GetMethod("Create", new[] { typeof(string), typeof(string) })?.ReturnType
                     ?? throw new NotSupportedException("Documented Tags.Create(name, tagTableName) unavailable.");
-                UnifiedRequestScalar.Prepare(tagType, UnifiedTagBindingChanges(connectionName, plcName, plcTag, hmiDataType, address));
+                UnifiedRequestScalar.Prepare(tagType, HmiExchangePolicy.UnifiedTagBindingChanges(connectionName, plcTag, hmiDataType, address));
                 var tagTable = EnsureHmiTagTableObject(sw, tagTableName);
                 var tags = TryGetPropertyValue(tagTable, "Tags");
                 if (tags == null) throw new InvalidOperationException($"Tags collection not found on tag table '{tagTableName}'.");

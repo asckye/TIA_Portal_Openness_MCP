@@ -346,9 +346,16 @@ namespace TiaMcp.Adapters
             public object? ResolvePlcTagTableGroup(PlcSoftware plc) => plc.TagTableGroup;
             public T? ResolvePlcService<T>(string path, PlcSoftware plc) where T : class, IEngineeringService
             {
+                var service = plc.GetService<T>();
+                if (service != null) return service;
                 var selected = engine.ReadSelection(path);
-                return (selected.Context as IEngineeringServiceProvider)?.GetService<T>()
-                    ?? (selected.DeviceContext as IEngineeringServiceProvider)?.GetService<T>();
+                for (var item = selected.Context as Siemens.Engineering.HW.DeviceItem; item != null;
+                    item = item.Parent as Siemens.Engineering.HW.DeviceItem)
+                {
+                    service = ((IEngineeringServiceProvider)item).GetService<T>();
+                    if (service != null) return service;
+                }
+                return (selected.DeviceContext as IEngineeringServiceProvider)?.GetService<T>();
             }
             public PlcSoftware ExactPlcForEngineering(string path, bool write)
             {

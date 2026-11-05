@@ -38,12 +38,11 @@ namespace TiaMcp.Adapters.Native.Plc
                 {
                     if (target != null) throw new InvalidOperationException("Technology object already exists.");
                     if (string.IsNullOrWhiteSpace(typeIdentifier)) throw new ArgumentException("Official technology type identifier required.");
-                    // Validate the technology version before parsing. Native observation: 1515F FW V2.9 uses TO V6.0.
-                    // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
+                    // The technology-object version is separate from the CPU firmware version.
+                    // V21 create pairs are checked by PlcB4Capabilities before worker dispatch to guard a real crash.
                     if (!Version.TryParse(version, out var apiVersion) || apiVersion.Major < 1)
-                        throw new ArgumentException("version must be the technology object version as 'major.minor', e.g. \"6.0\" (TIA V17 / FW 2.9), " +
-                            "\"7.0\" (FW 3.0), \"8.0\" (FW 3.1); got '"
-                                + version + "'. TIA rejects a version the CPU firmware does not support.");
+                        throw new ArgumentException("version must be the technology object version as 'major.minor', e.g. \"5.0\"; got '"
+                            + version + "'. Use a verified type/version pair supported by the CPU.");
                     meta["typeIdentifier"] = typeIdentifier; meta["version"] = version;
                     if (writing)
                     {

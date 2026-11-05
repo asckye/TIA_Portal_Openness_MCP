@@ -14,6 +14,96 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class HmiBetaFixTests
     {
+        public sealed class ThemeScreen { public string BackColor { get; set; } = "0xFF000000"; }
+
+        [Theory]
+        [InlineData(true, 1)]
+        [InlineData(false, 0)]
+        public void Theme_summary_reports_only_verified_screen_property_writes(bool succeeds, int expected)
+        {
+            var screen = new ThemeScreen();
+            var result = UnifiedUiModelLogic.VerifiedWrite(screen, "BackColor", "0xFFFFFFFF", () => {
+                if (succeeds) screen.BackColor = "0xFFFFFFFF";
+                return succeeds;
+            });
+            result["path"] = "screen";
+            Assert.Equal(succeeds, result["verified"]);
+            var itemNamedScreen = new HmiObject { ["path"] = "screen", ["verified"] = true };
+            var summary = HmiExchangePolicy.UnifiedDesignSummary("Overview", new HmiArray(result, itemNamedScreen), 1, 0, succeeds ? 0 : 1);
+            Assert.Contains("screenPropertiesWritten=" + expected, summary);
+            Assert.Contains("itemsProcessed=0", summary);
+            Assert.DoesNotContain("changed=0", summary);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("Missing")]
+        public void Missing_Unified_connection_reports_not_found_with_true_guidance(string connectionName)
+        {
+            var error = Assert.Throws<PlcSoftwareException>(() =>
+                HmiExchangePolicy.UnifiedTagConnection(Array.Empty<TagConnection>(), "CPU", connectionName));
+            Assert.Equal("NotFound", error.Code);
+            Assert.Contains("TIA Portal", error.Message);
+            Assert.Contains("ManageUnifiedEngineeringObject", error.Message);
+            Assert.DoesNotContain("create it with EnsureUnifiedHmiConnection", error.Message);
+            var response = new TiaMcpServer.ModelContextProtocol.ResponseMessage { Meta = new JsonObject {
+                ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["v4FailureCode"] = error.Code,
+                ["nativeMessage"] = error.Message } };
+            var body = TiaMcpServer.ModelContextProtocol.UnifiedHmiContract.Map("EnsureUnifiedHmiTag", response, true, true).StructuredContent!;
+            Assert.Equal("NOT_FOUND", (string?)body["error"]?["code"]);
+        }
+
+        public sealed class BoundTag
+        {
+            public string PlcName => "DerivedFromConnection";
+            public string Connection { get; set; } = "";
+            public string AccessMode { get; set; } = "";
+            public string Address { get; set; } = "";
+            public string PlcTag { get; set; } = "";
+            public string DataType { get; set; } = "";
+        }
+
+        public sealed class TagConnection
+        {
+            public string Name { get; set; } = "";
+            public string Partner { get; set; } = "CPU";
+            public string CommunicationDriver => "SIMATIC S7 1200/1500";
+            public string InitialAddress => "192.0.2.1";
+        }
+
+        [Theory]
+        [InlineData("", "\"Db\".Ready", "SymbolicAccess", "", "Db.Ready")]
+        [InlineData("%M0.0", "Ready", "AbsoluteAccess", "%M0.0", "")]
+        public void Unified_tag_binding_never_writes_PlcName(string address, string symbol, string mode, string expectedAddress, string expectedTag)
+        {
+            var changes = HmiExchangePolicy.UnifiedTagBindingChanges("Verified", symbol, "Bool", address);
+            var prepared = UnifiedRequestScalar.Prepare(typeof(BoundTag), changes);
+            Assert.Equal(new[] { "Connection", "AccessMode", "Address", "PlcTag", "DataType" }, prepared.Select(p => p.Property.Name));
+            var tag = new BoundTag();
+            UnifiedRequestScalar.Apply(tag, prepared, new HmiObject());
+            Assert.Equal("DerivedFromConnection", tag.PlcName);
+            Assert.Equal("Verified", tag.Connection);
+            Assert.Equal(mode, tag.AccessMode);
+            Assert.Equal(expectedAddress, tag.Address);
+            Assert.Equal(expectedTag, tag.PlcTag);
+        }
+
+        [Fact]
+        public void Unified_tag_connection_selected_by_partner()
+        {
+            var first = new TagConnection { Name = "First" };
+            var second = new TagConnection { Name = "Second" };
+            var other = new TagConnection { Name = "Other", Partner = "OtherCPU" };
+            Assert.Equal("First", HmiExchangePolicy.UnifiedTagConnection(new[] { first, other }, "CPU", ""));
+            var absent = Assert.Throws<PlcSoftwareException>(() => HmiExchangePolicy.UnifiedTagConnection(new[] { other }, "CPU", ""));
+            Assert.Equal("NotFound", absent.Code);
+            Assert.Contains("Configure it in TIA Portal", absent.Message);
+            var ambiguous = Assert.Throws<ArgumentException>(() => HmiExchangePolicy.UnifiedTagConnection(new[] { first, second }, "CPU", ""));
+            Assert.Contains("pass connectionName", ambiguous.Message);
+            Assert.Equal("Second", HmiExchangePolicy.UnifiedTagConnection(new[] { first, second }, "CPU", "Second"));
+            Assert.Throws<NotSupportedException>(() => HmiExchangePolicy.UnifiedTagConnection(new[] { other }, "CPU", "Other"));
+        }
+
         private static void AssertArgumentRefusal(Action action)
         {
             var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(action);

@@ -486,10 +486,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["textReadback"] = textReadback;
                 meta["persistence"] = "Not saved by this tool; partial changes may remain in the open project on failure.";
 
+                int screenWriteCount = 0;
                 if (root["screen"] is HmiObject screenProps)
                 {
                     if (screenProps.Count > 0) meta["mayHaveChanged"] = true;
                     ApplyJsonProperties(screen, screenProps, failed, writeResults, "screen");
+                    screenWriteCount = writeResults.Count;
                 }
 
                 var itemArray = root["items"] as HmiArray
@@ -611,7 +613,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     throw new InvalidOperationException($"Unified HMI design apply had {failed.Count} failed writes: {string.Join(" | ", failed.Select(x => x?.ToString() ?? string.Empty))}");
                 }
-                return $"Applied Unified HMI design to '{screenName}'. changed={changed.Count}, failed={failed.Count}.";
+                return HmiExchangePolicy.UnifiedDesignSummary(screenName, writeResults, screenWriteCount, changed.Count, failed.Count);
             });
         }
 

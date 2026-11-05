@@ -12,6 +12,63 @@ using Xunit;
 
 public sealed class PortedPortalAdmissionTests
 {
+    [Theory]
+    [InlineData("TO_PositioningAxis", "5.0", false)]
+    [InlineData("TO_SpeedAxis", "5.0", false)]
+    [InlineData("PID_Compact", "2.3", false)]
+    [InlineData("TO_PositioningAxis", "6.0", true)]
+    public async Task RefusePortedCapability_uses_the_verified_technology_pair(string type, string version, bool refused)
+    {
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(contextWorker, "21");
+        foreach (bool combined in new[] { false, true })
+        {
+            using var worker = new TechnologyWorker();
+            using var lifetime = new Host.ImportStagingHostLifetime();
+            var tools = LegacyHostToolRegistry.Create(worker, "21", false);
+            var catalog = new Catalog("21");
+            var invoker = new Engine.WorkerToolInvoker(catalog, contextWorker, lifetime, tools);
+            using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(contextWorker) {
+                Catalog = catalog, Invoker = invoker });
+            var tool = combined ? Host.McpServer.WrapTools(new[] { invoker.CreateTool(catalog.All["ManageTechnologyObject"]) }).Single()
+                : tools.Single(t => t.ProtocolTool.Name == "ManageTechnologyObject");
+            var args = new JsonObject { ["softwarePath"] = "PLC", ["objectPath"] = "Axis", ["action"] = "create",
+                ["typeIdentifier"] = type, ["version"] = version, ["dryRun"] = true };
+            var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                Params = new() { Name = "ManageTechnologyObject",
+                    Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
+            var body = (await tool.InvokeAsync(request)).StructuredContent!;
+            if (refused)
+            {
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+                Assert.Contains("V21 crash protection", (string?)body["error"]?["message"]);
+                Assert.Contains("not an API difference", (string?)body["error"]?["message"]);
+                Assert.Equal(0, worker.Calls);
+            }
+            else
+            {
+                Assert.True((bool?)body["ok"] == true, body.ToJsonString());
+                Assert.Equal(1, worker.TechnologyCalls);
+            }
+        }
+    }
+
+    private sealed class TechnologyWorker : IFoundationWorker
+    {
+        internal int Calls, TechnologyCalls;
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            Calls++;
+            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject {
+                ["ProcessId"] = 123, ["IsAttached"] = true, ["ProjectFile"] = "C:/Fixture.ap21" });
+            Assert.Equal("plc-technology.ExecutePlcOrganisation", operation);
+            TechnologyCalls++;
+            return Task.FromResult<JsonNode?>(new JsonObject { ["Message"] = "Technology preview", ["Meta"] = new JsonObject {
+                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["dryRun"] = true } });
+        }
+        public void Dispose() { }
+    }
+
     [Theory, InlineData(false), InlineData(true)]
     public async Task Dispatched_unknown_write_latches_and_undispatched_refusal_does_not(bool refusal)
     {

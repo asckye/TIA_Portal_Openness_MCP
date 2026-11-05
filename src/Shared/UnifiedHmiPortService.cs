@@ -65,7 +65,12 @@ namespace TiaMcpServer.Siemens.Services
                 string code = (string?)failure["Code"] ?? "";
                 string message = (string?)failure["Message"] ?? "Unified HMI operation failed.";
                 if (Enum.TryParse<PortalErrorCode>(code, out var native)) throw new PortalException(native, message);
-                if (code == nameof(ArgumentException)) throw new ArgumentException(message);
+                if (code == nameof(ArgumentException))
+                {
+                    if ((bool?)reply["MayHaveChanged"] != true)
+                        throw new AdapterPreconditionException(message, null, isArgument: true);
+                    throw new InvalidOperationException(message);
+                }
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
                 throw new InvalidOperationException(message);
             }

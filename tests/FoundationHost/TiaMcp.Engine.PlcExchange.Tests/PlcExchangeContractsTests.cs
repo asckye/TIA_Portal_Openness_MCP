@@ -20,6 +20,26 @@ namespace PlcExchangeTests
 {
     public sealed class PlcExchangeContractsTests : IDisposable
     {
+        [Theory]
+        [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
+        public void GeneratePlcLoadableFileMissingProviderIsUnsupportedCapability(string release)
+        {
+            var configuration = HostType("TiaMcp.FoundationHost.EngineHostConfiguration");
+            var field = configuration.GetField("ReleaseKey", BindingFlags.Static | BindingFlags.NonPublic)!;
+            var previous = field.GetValue(null);
+            try
+            {
+                field.SetValue(null, release);
+                var response = new ResponseMessage { Message = "LoadableProvider is not exposed for this CPU on this release.",
+                    Meta = new JsonObject { ["status"] = "NotSupportedOnVersion", ["mayHaveChanged"] = false, ["operationSuccess"] = false } };
+                var body = Body((CallToolResult)Type("PlcExchangeContract").GetMethod("Map", BindingFlags.NonPublic | BindingFlags.Static)!
+                    .Invoke(null, new object?[] { "GeneratePlcLoadableFile", response, true, true, null })!);
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]!["code"]);
+                Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
+            }
+            finally { field.SetValue(null, previous); }
+        }
+
         [Fact]
         public void Completed_worker_write_reports_known_side_effects()
         {

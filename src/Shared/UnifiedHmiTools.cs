@@ -146,7 +146,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("plcName: required exact PLC software name for symbolic binding; discover it from project reads.")] string plcName,
             [Description("plcTag: required exact PLC tag name/path; discover it from PLC tag reads.")] string plcTag,
             [Description("hmiDataType: HMI data type, e.g. Bool, Int, Real, String")] string hmiDataType = "Bool",
-            [Description("connectionName: HMI connection name; empty keeps current/auto")] string connectionName = "",
+            [Description("connectionName: existing HMI connection for plcName; empty selects the single connection with the matching PLC partner. " +
+                "Pass an explicit name if several match.")] string connectionName = "",
             [Description("address: optional absolute PLC address, e.g. %DB200.DBX0.0. When supplied it is written as the verified HMI runtime address while " +
                 "plcTag remains available as the symbolic reference.")] string address =
                 "",
@@ -290,7 +291,13 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, designJson, strict, dryRun);
+                var design = ScreenDesign(screenName, JsonNode.Parse(designJson)!.AsObject());
+                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design.ToJsonString(), strict, dryRun);
+            }
+            catch (ArgumentException ex)
+            {
+                var refusal = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(ex.Message, ex.ParamName, isArgument: true, innerException: ex);
+                throw LegacyFailure(refusal, refusal.Message);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -308,7 +315,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ApplyUnifiedHmiTheme"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
-                "[L2][HMI-Unified] Apply a theme/palette to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; " +
+                "[L2][HMI-Unified] Apply only the theme Page/Background color to an existing Unified HMI screen BackColor. Item palette colors are not " +
+                "applied. Requires a connected TIA project; " +
                 "verify with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ApplyUnifiedHmiThemeV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
@@ -325,8 +333,13 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var design = HmiDesignBuilder.BuildUnifiedHmiThemeDesignJson(themeJson).Data?.ToJsonString() ?? "{}";
-                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design, dryRun: dryRun);
+                var design = ScreenDesign(screenName, HmiDesignBuilder.BuildUnifiedHmiThemeDesignJson(themeJson).Data!);
+                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design.ToJsonString(), dryRun: dryRun);
+            }
+            catch (ArgumentException ex)
+            {
+                var refusal = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(ex.Message, ex.ParamName, isArgument: true, innerException: ex);
+                throw LegacyFailure(refusal, refusal.Message);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -353,13 +366,32 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var design = HmiDesignBuilder.BuildUnifiedHmiLayoutDesignJson(layoutJson).Data?.ToJsonString() ?? "{}";
-                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design, dryRun: dryRun);
+                var design = ScreenDesign(screenName, HmiDesignBuilder.BuildUnifiedHmiLayoutDesignJson(layoutJson).Data!);
+                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design.ToJsonString(), dryRun: dryRun);
+            }
+            catch (ArgumentException ex)
+            {
+                var refusal = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(ex.Message, ex.ParamName, isArgument: true, innerException: ex);
+                throw LegacyFailure(refusal, refusal.Message);
             }
             catch (Exception ex) when (ex is not McpException)
             {
                 throw LegacyFailure(ex, $"Unexpected error applying Unified HMI layout: {ex.Message}{McpHints.Recovery(ex)}");
             }
+        }
+
+        private static JsonObject ScreenDesign(string screenName, JsonObject built)
+        {
+            var screen = built["screen"]?.DeepClone() as JsonObject ?? new JsonObject();
+            if (screen["Name"] is JsonNode name)
+            {
+                string target = screenName.StartsWith("/", StringComparison.Ordinal)
+                    ? Uri.UnescapeDataString(screenName.Substring(screenName.LastIndexOf('/') + 1)) : screenName;
+                if (!string.Equals(name.GetValue<string>(), target, StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("design.screen.name must name the target screen; renaming is refused");
+                screen.Remove("Name");
+            }
+            return new JsonObject { ["screen"] = screen, ["items"] = built["items"]?.DeepClone() ?? new JsonArray() };
         }
 
         [McpServerTool(Name = "BindUnifiedHmiButtonPressedTag"),
