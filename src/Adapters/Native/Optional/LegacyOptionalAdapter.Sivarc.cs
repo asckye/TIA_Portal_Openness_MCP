@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -242,9 +243,17 @@ internal sealed partial class LegacyOptionalAdapter
         if (_request.Action == "create") target = Call(collection, "Create", parts.Last());
         if (copy != null) target = Call(collection, "CreateFrom", copy, EnumValue("Siemens.Engineering.SiVArc.CreateOptions", _request.CreateOption));
         OptionalScalars.Apply(target!, OptionalScalars.Prepare(target!.GetType(), properties), meta);
-        foreach (var pair in resolved) target.GetType().GetProperty(pair.Key)!.SetValue(target, pair.Value);
-        if (devices.Count != 0) ((IEngineeringObject)target)
-            .SetAttributes(devices.Select(p => new KeyValuePair<string, object>(p.Key, p.Value!.OptionalValue<bool>())).ToList());
+        EngineeringWriteJournal.CaptureProperties(target!, resolved.Select(pair => target!.GetType().GetProperty(pair.Key)!));
+        foreach (var pair in resolved) {
+            var property = target!.GetType().GetProperty(pair.Key)!; EngineeringWriteJournal.Property(target, property); property.SetValue(target, pair.Value);
+        }
+        if (devices.Count != 0)
+        {
+            var changes = devices.Select(p => new KeyValuePair<string, object>(p.Key, p.Value!.OptionalValue<bool>())).ToList();
+            var set = typeof(IEngineeringObject).GetMethod("SetAttributes", new[] { typeof(IEnumerable<KeyValuePair<string, object>>) })!;
+            EngineeringWriteJournal.BeforeCall(target!, set, new object[] { changes });
+            ((IEngineeringObject)target!).SetAttributes(changes);
+        }
         meta["after"] = Row(target);
         return "SiVArc rule operation completed; no generation or save.";
     }
@@ -303,6 +312,7 @@ internal sealed partial class LegacyOptionalAdapter
                 var item = Items(Get(text, "Items"))
                     .SingleOrDefault(v => Convert.ToString(Optional(Get(Get(v, "Language"), "Culture"), "Name"), CultureInfo.InvariantCulture) == pair.Key)
                     ?? throw new ArgumentException("Project language unavailable: " + pair.Key);
+                EngineeringWriteJournal.Property(item, item.GetType().GetProperty("Text")!);
                 item.GetType().GetProperty("Text")!.SetValue(item, pair.Value!.OptionalValue<string>());
             }
         }

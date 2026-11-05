@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -130,6 +131,7 @@ internal sealed partial class LegacyOptionalAdapter
             : HmiScalar.ConvertValue(requested.Scalar, current?.GetType() ?? typeof(object));
         if (!writing) return "Offline parameter write preview; nothing changed.";
         meta["mayHaveChanged"] = true;
+        EngineeringWriteJournal.Property(target, target.GetType().GetProperty("Value")!);
         target.GetType().GetProperty("Value")!.SetValue(target, value);
         meta["after"] = ParameterRow(Parameter(parametersView, _request.Parameter) ?? target, true);
         return "Offline parameter changed and read back; no download or online device command.";

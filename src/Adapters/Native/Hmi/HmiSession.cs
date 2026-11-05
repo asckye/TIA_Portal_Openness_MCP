@@ -87,7 +87,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     MayHaveChanged |= meta["mayHaveChanged"] is true;
                     foreach (var pair in meta) values[pair.Key] = pair.Value;
                 }
-            }, requiresProject);
+            }, requiresProject, writing: !request.DryRun);
             return new HmiMessage { Message = reply.Message, Meta = reply.Meta };
         }
         public void RecordHmiReadFault(HmiObject meta) => engine.RecordHmiFault(meta);

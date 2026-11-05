@@ -9,10 +9,10 @@ namespace TiaMcp.Adapters.Native.Hmi
     {
         private readonly PlcFoundationEngine engine;
         private readonly HmiSession hmi;
-        internal UnifiedSession(PlcFoundationEngine engine)
+        internal UnifiedSession(PlcFoundationEngine engine, bool readOnly)
         {
             this.engine = engine;
-            hmi = new HmiSession(engine, engine.UnifiedPlcSession, new HmiRequest());
+            hmi = new HmiSession(engine, engine.UnifiedPlcSession, new HmiRequest { DryRun = readOnly });
         }
         public object? CurrentProject => engine.UnifiedPlcSession.CurrentProject;
         public object ResolveHmiSoftwareOrThrow(string path) => hmi.ResolveHmiSoftwareOrThrow(path);

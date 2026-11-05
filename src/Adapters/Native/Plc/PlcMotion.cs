@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -224,6 +225,7 @@ namespace TiaMcp.Adapters.Native.Plc
                                 ?? throw new NotSupportedException("TechnologicalObject property unavailable.");
                             if (reference.SetMethod?.IsPublic != true) throw new NotSupportedException("TechnologicalObject is not writable.");
                             meta["mayHaveChanged"] = true; MutationStarted = true;
+                            EngineeringWriteJournal.Property(existing, reference);
                             reference.SetValue(existing, masterObject);
                             if (!Equals(reference.GetValue(existing), masterObject))
                                 throw new InvalidOperationException("TechnologicalObject readback differs.");

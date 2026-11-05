@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
 using System;
@@ -103,6 +104,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 throw new NotSupportedException("Official Scripts.Import(DirectoryInfo) -> bool is unavailable.");
             meta["phase"] = "import"; meta["importMethod"] = "HmiSoftware.Scripts.Import(DirectoryInfo)";
             meta["apiCallSuccess"] = false; meta["importAttempted"] = true; meta["mayHaveChanged"] = true;
+            EngineeringWriteJournal.Record(softwarePath + "/Scripts/" + moduleName + ": restore the complete module from " + backup
+                + " after comparing retained before/after files; automatic native import reversal is unverified",
+                () => throw new NotSupportedException("Native module import has no verified inverse."));
             bool returned = (bool)import.Invoke(scripts, new object[] { new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(candidate)) })!;
             meta["apiCallSuccess"] = true; meta["importReturned"] = returned;
             if (!returned)
@@ -120,7 +124,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["status"] = match ? "Verified" : "ReadbackMismatch";
             return match
                 ? "Selected module imported and exact full-text readback verified. Project remains unsaved; navigation targets still require separate review."
-                : "Import returned true but complete script text differs on readback. Inspect before/after/readback; no automatic retry or rollback.";
+                : "Import returned true but complete script text differs on readback. Inspect before/after/readback; no automatic native import reversal; " +
+                    "inspect cleanupRequired.";
         }
     }
 }

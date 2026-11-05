@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections.Generic;
 using TiaMcp.Adapters.Contracts;
@@ -12,8 +13,11 @@ namespace TiaMcp.Adapters
         public Func<Dictionary<string, object?>?>? ReadEngineeringHmiReadFault { get; set; }
         public Action<string, string>? WriteEngineeringHmiTrace { get; set; }
         private Dictionary<string, object?>? hmiReadFault;
-        internal HardwareAddressingReply RunHmiStep(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject)
+        internal HardwareAddressingReply RunHmiStep(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject, bool writing = true)
         {
+            var operation = action;
+            action = !writing ? operation : meta => EngineeringWriteJournal.Run(meta, () => operation(meta),
+                () => EngineeringPlcSession.AcquireHmiEditAccess());
             if (EngineeringServicesStep != null) return EngineeringServicesStep(tool, requiresProject, meta => {
                 meta["mayHaveChanged"] = false;
                 return action(meta);
@@ -48,6 +52,9 @@ namespace TiaMcp.Adapters
             }
             catch (Exception error)
             {
+                for (Exception? cause = error; cause != null; cause = cause.InnerException)
+                    if (cause.Data["nativeResultEvidence"] is Dictionary<string, object?> recovery)
+                        foreach (var pair in recovery) meta[pair.Key] = pair.Value;
                 EngineeringPlcSession.RecordExportFailure(error);
                 meta["error"] = error.ToString();
                 meta["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
@@ -83,7 +90,8 @@ namespace TiaMcp.Adapters
             }
             reply.RequiresSessionReset = meta.TryGetValue("requiresExplicitRebind", out var blocked) && blocked is true
                 || meta.TryGetValue("connectionUnavailable", out var unavailable) && unavailable is true
-                || meta.TryGetValue("mayHaveChanged", out var changed) && changed is true
+                || !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial")
+                    && meta.TryGetValue("mayHaveChanged", out var changed) && changed is true
                     && (meta.TryGetValue("operationSuccess", out var success) && success is false
                         || meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true);
             return reply;

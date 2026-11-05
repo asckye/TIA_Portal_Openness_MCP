@@ -6,10 +6,12 @@
     <!-- The worker fault fixtures are outside the solutions; keep this build's configuration so they reach the bin/Release paths the tests open. -->
     <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform></PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj" Aliases="adaptertests" />
     <Compile Include="../../Shared/SourceFamily.cs" Link="Shared/SourceFamily.cs" />
     <Compile Include="../../Shared/DecoderRuntimeFixture.cs" Link="Shared/DecoderRuntimeFixture.cs" />
     <Compile Include="../../../src/Shared/HttpAccessKeyStore.cs" Link="Shared/HttpAccessKeyStore.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
+    <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" />
     <Compile Include="../../Generation/TiaMcp.Generation.Planning.Tests/PlanningFixture.cs" Link="Generation/PlanningFixture.cs" />
     <Compile Include="../../../src/FoundationHost/GenerationTool.cs" Link="GenerationTool.cs" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj" ReferenceOutputAssembly="false" />

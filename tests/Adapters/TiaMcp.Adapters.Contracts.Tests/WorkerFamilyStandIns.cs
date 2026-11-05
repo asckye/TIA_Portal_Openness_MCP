@@ -20,9 +20,25 @@ namespace Siemens.Engineering
         public string DetailText { get; set; } = "native detail";
     }
 }
-namespace Siemens.Engineering.SW { public sealed class PlcSoftware { public Blocks.PlcBlockGroup BlockGroup { get; } = new(); } }
-namespace Siemens.Engineering.SW.Blocks { public sealed class PlcBlockGroup { public HW.NativeNamedList<PlcBlockGroup> Groups { get; } = new();
-    public HW.NativeNamedList<OB> Blocks { get; } = new(); } }
+namespace Siemens.Engineering.SW { public sealed class PlcSoftware { public Blocks.PlcBlockGroup BlockGroup { get; } = new(); public string Name => "PLC"; } }
+namespace Siemens.Engineering.SW.Blocks
+{
+    public sealed class PlcBlockGroup
+    {
+        public string Name { get; set; } = "root";
+        public PlcBlockGroup? Parent { get; set; }
+        public HW.NativeNamedList<PlcBlockGroup> Groups { get; } = new();
+        public HW.NativeNamedList<OB> Blocks { get; } = new();
+        public PlcBlockGroup()
+        {
+            Groups.CreateFactory = name => {
+                if (name == "C") throw new InvalidOperationException("Third group refused.");
+                return new PlcBlockGroup { Name = name, Parent = this };
+            };
+        }
+        public void Delete() => Parent!.Groups.Remove(this);
+    }
+}
 namespace Siemens.Engineering.HW { public sealed class DeviceItem : HardwareObject { public List<Address> Addresses { get; } = new();
     public ChannelComposition Channels { get; } = new(); } }
 namespace Siemens.Engineering.Online
@@ -130,6 +146,7 @@ namespace TiaMcp.Adapters
             { _engine.FamilyCalls.Add("hardware:" + string.Join("/", devices) + ":" + string.Join("/", items)); return _engine.FamilyObject; }
             public string SerializeEvidence(Dictionary<string, object?> evidence) => JsonSerializer.Serialize(evidence);
             public bool IsProjectNull() => _engine.EngineeringProjectMissing!();
+            public IDisposable AcquireHmiEditAccess() => new System.IO.MemoryStream();
             public void RecordExportFailure(Exception error) => _engine.ExportFailures++;
             public void LogEngineeringFailure(Exception error, string message) => _engine.FamilyCalls.Add("log:" + message);
             public string GetPlcBlockGroupPath(Siemens.Engineering.SW.Blocks.PlcBlockGroup group) => "Folder/Subfolder";

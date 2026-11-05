@@ -165,7 +165,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
             Clean(data);
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)) {
-                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
+                    ? Completeness.Partial : Completeness.Complete;
+            }
             if (outcome != Outcome.Succeeded) data.Remove("summary");
             if (data["items"] is JsonArray lines)
                 for (int i = 0; i < lines.Count; i++)

@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
 using System;
@@ -174,7 +175,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["expectedCount"] = changes.Count; meta["actualCount"] = 0; meta["nextCursor"] = null; meta["truncated"] = false;
             meta["persistence"] =
                 "No save, compile, download, Runtime restart or TIA close. Applied changes remain in the engineering project until separately saved/deployed.";
-            meta["atomicity"] = "Multiple settings are not an atomic transaction. No automatic rollback or retry after a write failure.";
+            meta["atomicity"] = "Captured public values are restored on failure; inspect rollbackCompleted and cleanupRequired.";
             if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview previewToken is required before writing.");
             var settings = Settings(hmi, trace);
             var before = new HmiObject(); var desired = new HmiObject(); var requested = new HmiObject();
@@ -201,11 +202,13 @@ namespace TiaMcp.Adapters.Native.Hmi
             HmiExactAccess.RequireToken(expectedToken, token);
             var applied = new HmiArray(); var readback = new HmiObject(); meta["appliedFields"] = applied; meta["readback"] = readback;
             meta["dataComplete"] = false; meta["actualCount"] = 0;
+            EngineeringWriteJournal.CaptureProperties(settings, writes.Select(write => write.p));
             foreach (var write in writes)
             {
                 var field = write.p.Name;
                 if (UnifiedRequestValues.Same(before[field]!.Field("value"), desired[field])) continue;
                 meta["phase"] = "write:" + field; meta["writeAttempted"] = true; meta["mayHaveChanged"] = true; meta["apiCallSuccess"] = false;
+                EngineeringWriteJournal.Property(settings, write.p);
                 Call(trace, "/RuntimeSettings/" + field + "/$set", () => { write.p.SetValue(settings, write.value); return null; });
                 meta["apiCallSuccess"] = true; applied.Add(field);
                 readback[field] = Evidence(settings, write.p, trace);
@@ -216,7 +219,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                         new HmiArray(MigrationRead
                             .Failure("/RuntimeSettings/" + field, "ReadbackMismatch", reason
                                 : "Setter returned but readback differs; remaining writes were not attempted."));
-                    return "Write returned but readback mismatched. Partial changes may exist; inspect before/proposed/readback. No retry or rollback.";
+                    return "Write returned but readback mismatched. Partial changes may exist; inspect before/proposed/readback. Inspect rollbackCompleted " +
+                        "and cleanupRequired.";
                 }
             }
             // Re-read all requested fields after the last setter to detect any
@@ -233,7 +237,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["verificationSuccess"] = failures.Count == 0; meta["operationSuccess"] = failures.Count == 0;
             meta["status"] = failures.Count > 0 ? "ReadbackMismatch" : applied.Count == 0 ? "Unchanged" : "Verified";
             return failures.Count == 0 ? "Requested runtime settings readback verified; no save or deployment performed."
-                : "Final readback detected coupled or rejected changes. Inspect evidence; no automatic rollback.";
+                : "Final readback detected coupled or rejected changes. Inspect evidence; inspect rollbackCompleted and cleanupRequired.";
         }
     }
 }

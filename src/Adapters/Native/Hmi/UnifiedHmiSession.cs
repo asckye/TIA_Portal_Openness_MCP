@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -49,6 +50,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 var info = target.GetType().GetProperty(property, BindingFlags.Public | BindingFlags.Instance);
                 if (info == null || !info.CanWrite) return false;
+                EngineeringWriteJournal.Property(target, info);
                 info.SetValue(target, CoerceReflectionValue(value, info.PropertyType));
                 return true;
             }

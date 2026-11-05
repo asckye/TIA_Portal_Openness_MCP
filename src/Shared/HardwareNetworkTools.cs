@@ -207,7 +207,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (NativeResultState.TryUnsuccessful(evidence, !readOnly, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : readOnly ? Execution.ReadOnly
                         : Execution.Completed,
-                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current);
+                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : nativeOutcome == Outcome.Partial ? Completeness.Partial : Completeness.Complete,
+                        current);
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None
                 : outcome == Outcome.Unknown || outcome == Outcome.ReadFailed ? Completeness.Unknown
                 : incomplete ? Completeness.Partial : Completeness.Complete;
@@ -701,6 +702,10 @@ namespace TiaMcpServer.ModelContextProtocol
                         0 ? firstRootPath : secondRootPath;
                 }
                 else if (invalidSubnet) meta["failureCode"] = "INVALID_ARGUMENT";
+                const string rollbackMarker = "\nRollback evidence: ";
+                int rollbackAt = report.LastIndexOf(rollbackMarker, StringComparison.Ordinal);
+                if (rollbackAt >= 0 && JsonNode.Parse(report.Substring(rollbackAt + rollbackMarker.Length)) is JsonObject rollback)
+                    foreach (var pair in rollback) meta[pair.Key] = pair.Value?.DeepClone();
                 if (!_hardware.HasProject)
                 {
                     meta["failureCode"] = "PROJECT_NOT_BOUND";

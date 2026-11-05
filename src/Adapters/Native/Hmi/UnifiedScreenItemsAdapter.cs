@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections.Generic;
 using TiaMcp.Adapters.Contracts;
@@ -134,6 +135,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                         ?? throw new InvalidOperationException("Native Create<T> returned null."));
                 if (action == "create")
                 {
+                    EngineeringWriteJournal.Created(item, softwarePath + "/Screens/" + screenPath + "/ScreenItems/" + itemName, collection: items);
                     meta["apiCallSuccess"] = true;
                     item = UnifiedUiModelLogic.VerifyCreated(
                         () => items = PlcGroupOperations.Get(HmiExactAccess.Screen(_session.ExactUnifiedRoot(softwarePath), screenPath), "ScreenItems"),
@@ -151,12 +153,13 @@ namespace TiaMcp.Adapters.Native.Hmi
                     textResults.Add(result);
                     if (!result["verified"]!.GetValue<bool>())
                         throw new InvalidOperationException(edit.Name + " culture=" + edit.Culture + ": " + result["error"]
-                            + ". Earlier edits are not rolled back.");
+                            + ". Inspect rollbackCompleted and cleanupRequired.");
                 }
                 meta["apiCallSuccess"] = true; meta["after"] = ScreenItemSnapshot(item, Math.Min(depth, 1)); meta["countAfter"] = PlcGroupOperations
                     .Items(items).Count();
                 return "Screen item " + action
-                    + " completed and read back (nested properties, colors and texts verified). No save/compile/download; partial edits are not rolled back.";
+                    + " completed and read back (nested properties, colors and texts verified). No save/compile/download; inspect rollbackCompleted and " +
+                    "cleanupRequired on failure.";
             });
     }
 }

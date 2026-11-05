@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,7 +23,8 @@ namespace TiaMcp.Adapters.Native.Plc
             => Method(target, name, signature) ?? throw new NotSupportedException("Official " + name + " is unavailable on " + target.GetType().FullName + ".");
         private static object? Invoke(object target, MethodInfo method, params object?[] args)
         {
-            try { return method.Invoke(target, args); }
+            EngineeringWriteJournal.BeforeCall(target, method, args!);
+            try { var result = method.Invoke(target, args); EngineeringWriteJournal.CreatedResult(method, result, target); return result; }
             catch (TargetInvocationException ex) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw(); throw; }
         }
         private static object? Prop(object value, string name) => value.GetType().GetProperty(name)?.GetValue(value);
@@ -82,17 +84,19 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static void Apply(object target, List<(string Name, object? Value)> changes, Dictionary<string, object?> meta)
         {
             var set = Require(target, "SetAttribute", typeof(string), typeof(object)); var get = Require(target, "GetAttribute", typeof(string));
+            EngineeringWriteJournal.CaptureAttributes(target, changes.Select(change => change.Name), name => Invoke(target, get, name));
             var applied = new PlcB5Array(); meta["appliedAttributes"] = applied;
             foreach (var (name, value) in changes)
             {
                 meta["mayHaveChanged"] = true; meta["lastAttemptedAttribute"] = name;
+                EngineeringWriteJournal.Attribute(target, name, () => Invoke(target, get, name), previous => Invoke(target, set, name, previous));
                 Invoke(target, set, name, value);
                 applied.Add(name);
                 var readback = Invoke(target, get, name);
                 if (!Equals(readback, value) && !string
                         .Equals(Convert.ToString(readback, CultureInfo.InvariantCulture), Convert.ToString(value, CultureInfo.InvariantCulture),
                             StringComparison.Ordinal))
-                    throw new InvalidOperationException("Attribute readback differs: " + name + ". Changes are not rolled back.");
+                    throw new InvalidOperationException("Attribute readback differs: " + name + ". Inspect rollbackCompleted and cleanupRequired.");
             }
         }
         internal static List<string> CompositionNames(object target)

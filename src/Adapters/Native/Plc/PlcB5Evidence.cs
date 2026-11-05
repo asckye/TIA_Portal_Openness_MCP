@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -89,6 +90,7 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 var property = target.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
                 if (property?.CanWrite != true) return false;
+                EngineeringWriteJournal.Property(target, property);
                 property.SetValue(target, value); return true;
             }
             catch { /* swallow(native-fallback): Unsupported property conversion or assignment reports false to the original caller fallback. */ return false; }

@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
 using System;
@@ -96,7 +97,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["dependencyImpact"] = "Not analyzed. Deletion may invalidate references; preview does not imply absence of references.";
                 if (dryRun) return "Preview only. Public API shape and scalar property conversions checked; TIA semantic validation occurs during execution.";
                 meta["mayHaveChanged"] = true;
-                if (action == "create") target = PlcGroupOperations.Call(collection, "Create", new[] { typeof(string) }, name);
+                if (action == "create")
+                {
+                    target = PlcGroupOperations.Call(collection, "Create", new[] { typeof(string) }, name);
+                }
                 if (action == "delete")
                 {
                     PlcGroupOperations.Call(target!, "Delete", Type.EmptyTypes);
@@ -108,7 +112,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     UnifiedRequestScalar.Apply(target!, prepared, meta);
                     meta["after"] = UnifiedRequestScalar.Read(target!);
                 }
-                meta["persistence"] = "Not saved, compiled or downloaded. Partial edits are not rolled back.";
+                meta["persistence"] = "Not saved, compiled or downloaded. Inspect rollbackCompleted and cleanupRequired on failure.";
                 return "Native Unified object operation completed; requested scalar writes read back. Full semantic validity is not asserted.";
             });
     }

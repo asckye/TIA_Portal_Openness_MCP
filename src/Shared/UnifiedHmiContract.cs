@@ -77,6 +77,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, refusal, Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success") ?? Flag(evidence, "ok") ?? Flag(data, "ok");
             if (Flag(data, "ok") == false || Flag(evidence, "ok") == false || Flag(evidence, "success") == false) success = false;
+            if (NativeResultState.TryRollback(evidence, writes, out var rollbackOutcome, out var rollbackError, tool))
+                return Result(tool, data, rollbackError, rollbackOutcome,
+                    rollbackOutcome == Outcome.Unknown ? Completeness.Unknown : rollbackOutcome == Outcome.Partial ? Completeness.Partial : Completeness.None,
+                    writes, current);
             var status = evidence["status"]?.ToString();
             var rejection = evidence["v4Rejection"]?.ToString();
             if (evidence["v4ArgumentError"] is JsonObject argumentError)

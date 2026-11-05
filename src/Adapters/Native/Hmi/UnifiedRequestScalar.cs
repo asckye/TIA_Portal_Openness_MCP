@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
 using System;
@@ -48,13 +49,15 @@ namespace TiaMcp.Adapters.Native.Hmi
             var applied = new HmiArray(); meta["appliedProperties"] = applied;
             // Check the entire batch, including externally prepared lists, before its first write.
             TiaMcp.Adapters.Libraries.LibraryPolicy.GuardKnownTypeWrites(UnifiedRequestValues.Major, target.GetType(), changes.Select(p => p.Property.Name));
+            EngineeringWriteJournal.CaptureProperties(target, changes.Select(change => change.Property));
             foreach (var change in changes)
             {
                 meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
+                EngineeringWriteJournal.Property(target, change.Property);
                 change.Property.SetValue(target, change.Value);
                 applied.Add(change.Property.Name);
                 if (!SameValue(change.Property.GetValue(target), change.Value))
-                    throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
+                    throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ".");
             }
         }
     }

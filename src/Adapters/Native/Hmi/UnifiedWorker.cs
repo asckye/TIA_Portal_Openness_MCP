@@ -52,7 +52,7 @@ namespace TiaMcp.Adapters
             HmiValues.TraceWriter = WriteEngineeringHmiTrace;
             HmiValues.ExportFailure = EngineeringPlcSession.RecordExportFailure;
             var reply = new HmiReply();
-            var session = new UnifiedSession(this);
+            var session = new UnifiedSession(this, request.DryRun);
             try
             {
                 switch (request.Operation)

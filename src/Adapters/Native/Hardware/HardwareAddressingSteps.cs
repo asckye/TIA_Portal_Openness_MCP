@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -121,7 +122,7 @@ namespace TiaMcp.Adapters
                     "Address StartAddress/Length/IoType, controller owner paths and official dynamic attributes; HwIdentifiers; " +
                     "AddressController/HwIdentifierController registrations when the item is a controller.";
                 return "Addressing of the hardware object read; no modification.";
-            });
+            }, writing: false);
         }
 
         public HardwareAddressingReply UpdateHardwareAddress(HardwareAddressUpdate update, bool dryRun = true)
@@ -201,8 +202,12 @@ namespace TiaMcp.Adapters
             return meta;
         }
 
-        private HardwareAddressingReply RunHardwareAddressStep(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject = true)
+        private HardwareAddressingReply RunHardwareAddressStep(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject = true,
+                bool writing = true)
         {
+            var operation = action;
+            action = !writing ? operation : meta => EngineeringWriteJournal.Run(meta, () => operation(meta),
+                () => EngineeringPlcSession.AcquireHmiEditAccess());
             if (EngineeringStep != null && requiresProject) return EngineeringStep(tool, meta => {
                 meta["mayHaveChanged"] = false;
                 return action(meta);
@@ -224,6 +229,9 @@ namespace TiaMcp.Adapters
             }
             catch (Exception ex)
             {
+                for (Exception? cause = ex; cause != null; cause = cause.InnerException)
+                    if (cause.Data["nativeResultEvidence"] is Dictionary<string, object?> recovery)
+                        foreach (var pair in recovery) meta[pair.Key] = pair.Value;
                 meta["error"] = ex.ToString(); meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
                 meta["status"] = ex.GetBaseException() is HardwareAddressingException failure ? failure.Status : "ReadOrWriteFailed";
                 if (ex.GetBaseException() is EngineeringException engineering)
@@ -242,7 +250,8 @@ namespace TiaMcp.Adapters
                     catch { /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ }
                 }
                 reply.RequiresSessionReset = TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)
-                    || reply.MayHaveChanged && !meta.ContainsKey("after");
+                    || reply.MayHaveChanged && !meta.ContainsKey("after")
+                        && !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial");
                 reply.Message = tool + " failed";
             }
             return reply;

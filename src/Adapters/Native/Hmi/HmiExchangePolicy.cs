@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,6 +14,12 @@ namespace TiaMcp.Adapters.Native.Hmi
     // Shared preflight and exact lookup rules; no native writes or fallback names.
     internal static class HmiExchangePolicy
     {
+        internal static void CompleteSteps(IDictionary<string, object?> meta, IEnumerable<object?> steps)
+        {
+            meta["success"] = steps.All(step => step is IDictionary<string, object?> fields
+                && (fields.TryGetValue("informational", out var info) && info is true || fields.TryGetValue("ok", out var ok) && ok is true));
+            meta["operationSuccess"] = meta["success"];
+        }
         internal static string ExportOption(string value)
         {
             if (value != "None" && value != "WithDefaults" && value != "WithReadOnly")
@@ -169,8 +176,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ?? throw new NotSupportedException("Documented TagTables.Create(string) unavailable.");
             beforeWrite();
             try {
-                return VerifyParent(create.Invoke(tables, new object[] { name }) ?? throw new InvalidOperationException("Tag table creation returned null."),
-                        root);
+                var created = create.Invoke(tables, new object[] { name }) ?? throw new InvalidOperationException("Tag table creation returned null.");
+                EngineeringWriteJournal.Created(created, "TagTables/" + nameOrPath, collection: tables);
+                return VerifyParent(created, root);
             }
             catch (TargetInvocationException error) when (error.InnerException != null)
             { throw new InvalidOperationException(error.InnerException.GetType().FullName + ": " + error.InnerException.Message, error.InnerException); }
@@ -216,12 +224,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                     throw new NotSupportedException("Property type does not match the documented value: " + change.Key);
                 prepared.Add((property!, value));
             }
+            EngineeringWriteJournal.CaptureProperties(target, prepared.Select(change => change.Property));
             foreach (var change in prepared)
             {
+                EngineeringWriteJournal.Property(target, change.Property);
                 beforeWrite();
                 change.Property.SetValue(target, change.Value);
                 if (!Equals(change.Property.GetValue(target), change.Value))
-                    throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
+                    throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ".");
             }
         }
 
@@ -249,6 +259,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 var create = tags.GetType().GetMethod("Create", new[] { typeof(string), typeof(string) })
                     ?? throw new NotSupportedException("Documented Tags.Create(name, tagTableName) unavailable.");
+                EngineeringWriteJournal.Creating(() => Find(tags, name), "Tags/" + tableName + "/" + name);
                 beforeWrite();
                 tag = create.Invoke(tags, new object[] { name, tableName })
                     ?? throw new InvalidOperationException("Tag creation returned null.");

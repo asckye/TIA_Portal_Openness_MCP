@@ -86,7 +86,7 @@ namespace TiaMcp.Adapters
                     "TransferArea and MulticastableTransferArea scalars, address rows, mapping rules and official dynamic attributes (per-attribute failures " +
                     "listed).";
                 return "Transfer areas of the interface read; no modification.";
-            });
+            }, writing: false);
 #else
         public HardwareAddressingReply HardwareReadTransferAreas(string[] devicePathJson, string[] itemPathJson, int positionNumber = -1,
                 int extendedPositionNumber = -1, int offset = 0, int limit = 100) =>

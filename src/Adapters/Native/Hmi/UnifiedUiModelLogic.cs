@@ -1,4 +1,6 @@
 #if TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Adapters.Native.Engineering;
+using TiaMcp.Adapters.Contracts;
 using UnifiedObject = TiaMcp.Adapters.Native.Hmi.HmiObject;
 using UnifiedArray = TiaMcp.Adapters.Native.Hmi.HmiArray;
 using UnifiedNode = System.Object;
@@ -250,16 +252,28 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static void ApplyNested(object target, List<Edit> edits, UnifiedObject meta)
         {
             var applied = new UnifiedArray(); meta["appliedProperties"] = applied;
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+            foreach (var edit in edits)
+            {
+                object owner = target;
+                foreach (var step in edit.Path) owner = FindProperty(owner.GetType(), step)!.GetValue(owner)
+                    ?? throw new InvalidOperationException("Nested object is null: " + step);
+                EngineeringWriteJournal.CaptureProperties(owner, new[] { edit.Property });
+            }
+#endif
             foreach (var edit in edits)
             {
                 object owner = target;
                 foreach (var step in edit.Path) owner = FindProperty(owner.GetType(), step)!.GetValue(owner)
                     ?? throw new InvalidOperationException("Nested object is null: " + step);
                 meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = edit.Name;
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+                EngineeringWriteJournal.Property(owner, edit.Property);
+#endif
                 edit.Property.SetValue(owner, edit.Value);
                 applied.Add(edit.Name);
                 if (!SameValue(edit.Property.GetValue(owner), edit.Value))
-                    throw new InvalidOperationException("Property readback differs: " + edit.Name + ". Changes are not rolled back.");
+                    throw new InvalidOperationException("Property readback differs: " + edit.Name + ". Inspect rollbackCompleted and cleanupRequired.");
             }
         }
 

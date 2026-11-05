@@ -241,9 +241,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage };
             }
             if (NativeResultState.TryUnsuccessful(data, write, out var nativeOutcome, out var nativeError, tool))
-                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed
-                        : Execution.ReadOnly,
-                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current, writes: write);
+                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : nativeOutcome == Outcome.Partial
+                        ? Execution.Partial : write ? Execution.Completed : Execution.ReadOnly,
+                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : nativeOutcome == Outcome.Partial ? Completeness.Partial : Completeness.Complete,
+                        current: current, writes: write);
             bool changed = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
             // A documented Openness refusal (P8-81c F4) carries an explicit condition and never poisons the session.
             if ((string?)data["status"] == "PreconditionFailed" && data["precondition"] is JsonValue && success != true)
@@ -315,9 +316,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["confirmed"] = observation.Confirmed, ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage } };
             foreach (var pair in observation.Fields) data[pair.Key] = pair.Value?.DeepClone();
             if (NativeResultState.TryUnsuccessful(data, write, out var nativeOutcome, out var nativeError, tool))
-                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed
-                        : Execution.ReadOnly,
-                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current, writes: write);
+                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : nativeOutcome == Outcome.Partial
+                        ? Execution.Partial : write ? Execution.Completed : Execution.ReadOnly,
+                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : nativeOutcome == Outcome.Partial ? Completeness.Partial : Completeness.Complete,
+                        current: current, writes: write);
             if (observation.Issued > observation.Confirmed) return Result(tool, data,
                 new Error("An issued write outcome is unknown; inspect state before another write.", new OutcomeUnknownDetails(observation.Stage,
                     Evidence(data))),

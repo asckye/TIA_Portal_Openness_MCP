@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -74,16 +75,21 @@ namespace TiaMcp.Adapters.Hardware
             meta["requestedProperties"] = properties.ToDictionary(p => p.Key, p => HardwareAddressingPolicy.ConvertValue(p.Value, typeof(object)));
             meta["requestedAttributes"] = attributes.ToDictionary(p => p.Key, p => HardwareAddressingPolicy.ConvertValue(p.Value, typeof(object)));
             if (!write) return;
+            EngineeringWriteJournal.CaptureProperties(target, prepared.Select(change => change.Property));
+            if (attributes.Count > 0) EngineeringWriteJournal
+                .CaptureAttributes(target, attributes.Keys, name => ((IEngineeringObject)target).GetAttribute(name));
             if (prepared.Count > 0)
             {
                 var applied = new List<string>(); meta["appliedProperties"] = applied;
                 foreach (var change in prepared)
                 {
                     meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
+                    EngineeringWriteJournal.Property(target, change.Property);
                     change.Property.SetValue(target, change.Value);
                     applied.Add(change.Property.Name);
                     if (!HardwareAddressingPolicy.SameValue(change.Property.GetValue(target), change.Value))
-                        throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
+                        throw new InvalidOperationException("Property readback differs: " + change.Property.Name
+                                + ". Inspect rollbackCompleted and cleanupRequired.");
                 }
             }
             if (attributes.Count > 0) SetDynamicAttributes((IEngineeringObject)target, attributes, meta);
@@ -92,6 +98,7 @@ namespace TiaMcp.Adapters.Hardware
         public static void SetDynamicAttributes(IEngineeringObject target, Dictionary<string, HardwareScalar> attributes, Dictionary<string, object?> meta)
         {
             bool previouslyChanged = meta.TryGetValue("mayHaveChanged", out var changed) && changed is true;
+            EngineeringWriteJournal.CaptureAttributes(target, attributes.Keys, name => target.GetAttribute(name));
             var applied = new List<string>(); meta["appliedAttributes"] = applied;
             if (attributes.Count > 1)
             {
@@ -100,6 +107,7 @@ namespace TiaMcp.Adapters.Hardware
                 foreach (var pair in attributes)
                 {
                     object? current = null; try { current = target.GetAttribute(pair.Key); } catch { /* swallow(probe-optional): An unreadable current value leaves conversion untyped; the native write and readback still validate the requested value. */ }
+                    EngineeringWriteJournal.Attribute(target, pair.Key, () => target.GetAttribute(pair.Key), value => target.SetAttribute(pair.Key, value));
                     pairs
                         .Add(new KeyValuePair<string,
                             object>(pair.Key, HardwareAddressingPolicy.ConvertValue(pair.Value, current?.GetType() ?? typeof(object))!));
@@ -134,7 +142,7 @@ namespace TiaMcp.Adapters.Hardware
                     if (refusedNames.Contains(pair.Key)) continue;
                     applied.Add(pair.Key);
                     if (!HardwareAddressingPolicy.SameValue(target.GetAttribute(pair.Key), pair.Value))
-                        throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");
+                        throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Inspect rollbackCompleted and cleanupRequired.");
                 }
                 if (refused.Count > 0)
                     throw new InvalidOperationException("TIA refused " + refused.Count
@@ -153,6 +161,7 @@ namespace TiaMcp.Adapters.Hardware
                 }
                 var value = HardwareAddressingPolicy.ConvertValue(pair.Value, current?.GetType() ?? typeof(object));
                 meta["mayHaveChanged"] = true; meta["lastAttemptedAttribute"] = pair.Key;
+                EngineeringWriteJournal.Attribute(target, pair.Key, () => target.GetAttribute(pair.Key), previous => target.SetAttribute(pair.Key, previous));
                 try { target.SetAttribute(pair.Key, value); }
                 catch
                 {
@@ -163,7 +172,7 @@ namespace TiaMcp.Adapters.Hardware
                 }
                 applied.Add(pair.Key);
                 if (!HardwareAddressingPolicy.SameValue(target.GetAttribute(pair.Key), value))
-                    throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");
+                    throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Inspect rollbackCompleted and cleanupRequired.");
             }
         }
     }

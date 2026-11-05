@@ -1,4 +1,6 @@
 #if TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Adapters.Native.Engineering;
+using TiaMcp.Adapters.Contracts;
 using UnifiedObject = TiaMcp.Adapters.Native.Hmi.HmiObject;
 using UnifiedArray = TiaMcp.Adapters.Native.Hmi.HmiArray;
 using UnifiedNode = System.Object;
@@ -105,6 +107,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 result["mayHaveChanged"] = true;
                 result["state"] = "Unknown";
                 string? setterError = null;
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+                EngineeringWriteJournal.Property(target.Item, textProperty);
+#endif
                 try { textProperty.SetValue(target.Item, expected); result["setterCompleted"] = true; }
                 catch (Exception ex) { setterError = (ex.InnerException ?? ex).Message; }
                 // Read even when a setter throws: it may already have changed the object.

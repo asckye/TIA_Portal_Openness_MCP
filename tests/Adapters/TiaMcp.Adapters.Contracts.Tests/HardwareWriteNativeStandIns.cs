@@ -7,6 +7,7 @@ using TiaMcp.Adapters.Hardware;
 // exception mapping, property conversion and failure readbacks are production code.
 namespace Siemens.Engineering
 {
+    public sealed class EngineeringAttributeInfo { public string Name { get; set; } = ""; }
     public interface IEngineeringService { }
     public interface IEngineeringServiceProvider { public T? GetService<T>() where T : class, IEngineeringService; }
     public enum ArchiveMode { Compressed }
@@ -51,14 +52,43 @@ namespace Siemens.Engineering.HW
         public List<string> Calls { get; } = new();
         public Exception? AttributeFailure { get; set; }
         public T? GetService<T>() where T : class, IEngineeringService => Services.TryGetValue(typeof(T), out var value) ? (T)value : null;
+        public virtual IEnumerable<EngineeringAttributeInfo> GetAttributeInfos() => Array.Empty<EngineeringAttributeInfo>();
         public virtual object GetAttribute(string name) { Calls.Add("get:" + name); return false; }
         public virtual void SetAttribute(string name, object? value) { Calls.Add("set:" + name); if (AttributeFailure != null) throw AttributeFailure; }
     }
     public sealed class NativeNamedList<T> : List<T> where T : class
     {
+        public Func<string, T>? CreateFactory { get; set; }
+        public T Create(string name) { var item = CreateFactory!(name); Add(item); return item; }
         public T? Find(string name) => this.FirstOrDefault(value => value.GetType().GetProperty("Name")?.GetValue(value)?.ToString() == name);
     }
-    public sealed class Node : HardwareObject { public Subnet? ConnectedSubnet { get; set; } }
+    public sealed class Node : HardwareObject
+    {
+        private Subnet? connected;
+        public Action<Subnet>? Attached { get; set; }
+        public bool FailWrite { get; set; }
+        public bool FailUndo { get; set; }
+        private bool lost;
+        public Subnet? ConnectedSubnet { get { if (lost) throw new ObjectDisposedException("portal"); return connected; } set => connected = value; }
+        public Subnet CreateAndConnectToSubnet(string name)
+        {
+            var subnet = new Subnet { Name = name };
+            Attached?.Invoke(subnet);
+            ConnectToSubnet(subnet);
+            return subnet;
+        }
+        public void ConnectToSubnet(Subnet subnet)
+        {
+            connected = subnet;
+            if (FailWrite) { lost = true; throw new ObjectDisposedException("portal"); }
+            if (FailUndo) throw new InvalidOperationException("Write failed after attaching.");
+        }
+        public void DisconnectFromSubnet()
+        {
+            if (FailUndo) throw new ObjectDisposedException("portal");
+            connected = null;
+        }
+    }
     public class DeviceGroup : HardwareObject { public List<Device> Devices { get; } = new(); }
     public sealed class DeviceUserGroup : DeviceGroup { public List<DeviceUserGroup> Groups { get; } = new(); }
     public sealed class Subnet : HardwareObject { public List<IoSystem> IoSystems { get; } = new(); }
@@ -180,7 +210,7 @@ namespace TiaMcp.Adapters
         private object? TryGetPropertyValue(object value, string name) => null;
         private string? TryGetName(object? value) => null;
         private string? ReadNodeAddress(object value) => null;
-        private bool IsIndustrialEthernetNode(object value) => false;
+        private bool IsIndustrialEthernetNode(object value) => ReferenceEquals(value, RollbackNode);
         private Siemens.Engineering.SW.PlcSoftware? ResolvePlc(string name) => null;
         private (Siemens.Engineering.SW.PlcSoftware Value, string Path) ReadSelection(string name) => (FamilyPlc, name);
         internal Siemens.Engineering.Project? SecurityProject => project;

@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -36,7 +37,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 ?? target.GetType().GetInterfaces().Where(i => i.FullName == "Siemens.Engineering.IEngineeringObject").Select(i => i.GetMethod(method, types))
                     .FirstOrDefault(m => m != null)
                 ?? throw new NotSupportedException(target.GetType().FullName + "." + method + " signature is unavailable.");
-            try { return info.Invoke(target, args)!; }
+            EngineeringWriteJournal.BeforeCall(target, info, args);
+            try { var result = info.Invoke(target, args); EngineeringWriteJournal.CreatedResult(info, result, target); return result!; }
             catch (TargetInvocationException ex) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw(); throw; }
         }
         internal static object Group(object root, string path, string firstGroups = "Groups", Func<string, string[]>? pathParts = null)
@@ -89,7 +91,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 {
                     result["mayHaveChanged"] = true;
                     if (dynamicName) Call(target, "SetAttribute", new[] { typeof(string), typeof(object) }, "Name", newName);
-                    else property!.SetValue(target, newName);
+                    else { EngineeringWriteJournal.Property(target, property!); property!.SetValue(target, newName); }
                     if (!string.Equals(Get(target, "Name").ToString(), newName, StringComparison.Ordinal))
                         throw new InvalidOperationException("Rename returned but readback differs.");
                     result["changed"] = true;

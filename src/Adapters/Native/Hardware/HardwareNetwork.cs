@@ -156,7 +156,7 @@ namespace TiaMcp.Adapters
                     "IoSystem Name/Number/Subnet, ConnectedIoDevices owner paths, HwIdentifiers and the official dynamic attributes (per-attribute failures " +
                     "listed); IoController/IoConnector rows when scoped by interface.";
                 return "IO systems read; no modification.";
-            });
+            }, writing: false);
 
         public HardwareAddressingReply HardwareManageIoSystem(string[] devicePathJson, string[] itemPathJson, string action, string name = "",
                 string subnetName = "", string ioSystemName = "",
@@ -275,7 +275,7 @@ namespace TiaMcp.Adapters
                 meta["scope"] =
                     "SyncDomain/MrpDomain scalars, participant owner paths and official dynamic attributes; MrpInstances of the subnet's interface items.";
                 return "Domain settings of the subnet read; no modification.";
-            });
+            }, writing: false);
 #else
         public HardwareAddressingReply HardwareReadNetworkDomains(string subnetName, int offset = 0, int limit = 100) =>
             throw new NotSupportedException("This hardware API is unavailable in this release.");
@@ -389,7 +389,7 @@ namespace TiaMcp.Adapters
                     "(failures listed)"
                     + (includeLinkedTags ? "; linkedTags = PLC tags linked to the channel via PlcTagProvider.GetLinkedTags (V21)." : ".");
                 return "Channels of the device item read; no modification.";
-            });
+            }, writing: false);
 
         public HardwareAddressingReply HardwareUpdateDeviceItemChannel(string[] devicePathJson, string[] itemPathJson, string channelType, string channelIoType,
                 int channelNumber, Dictionary<string, HardwareScalar> attributesJson, bool dryRun = true)

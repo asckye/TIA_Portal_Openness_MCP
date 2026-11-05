@@ -97,6 +97,9 @@ namespace TiaMcpServer.Siemens.Services
                         EventType = eventType, ScriptCode = scriptCode, GlobalDefinitionAreaScriptCode = globalDefinitionAreaScriptCode, Async = @async,
                         SyntaxCheck = syntaxCheck, DryRun = false
                 });
+        public ResponseMessage ApplyUnifiedHmiButtonAction(string software, string screen, string button, string eventType, string scriptCode, bool syntaxCheck)
+            => Invoke<ResponseMessage>(new UnifiedHmiRequest { Operation = "EnsureUnifiedHmiButtonAction", HmiSoftwarePath = software, ScreenName = screen,
+                ButtonName = button, EventType = eventType, ScriptCode = scriptCode, SyntaxCheck = syntaxCheck, DryRun = false });
         public ResponseMessage EnsureUnifiedHmiDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName,
                 string dynamizationType = "", bool dryRun = true)
             =>

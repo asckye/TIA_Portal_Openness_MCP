@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -261,7 +262,10 @@ internal sealed partial class LegacyOptionalAdapter
         }
         if (_request.Action == "create" && scalarProperties.Count != 0) OptionalScalars
             .Apply(target!, OptionalScalars.Prepare(target!.GetType(), scalarProperties), meta);
-        if (partition != null) target!.GetType().GetProperty("Partition")!.SetValue(target, partition);
+        if (partition != null) {
+            var property = target!.GetType().GetProperty("Partition")!; EngineeringWriteJournal.Property(target, property); property
+                .SetValue(target, partition);
+        }
         if (_request.SequenceIndex >= 0)
         {
             Call(target!, "MoveInRuntimeSequence", (uint)_request.SequenceIndex);

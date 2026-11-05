@@ -180,7 +180,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (data["offset"] != null && Count(data, "limit") > 0) paging = McpServer.OffsetPage(Count(data, "offset"), Count(data, "limit"), total);
             Sanitize(data);
             if (NativeResultState.TryUnsuccessful(data, !readOnly, out var nativeOutcome, out var nativeError, tool)) {
-                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
+                    ? Completeness.Partial : Completeness.Complete;
+            }
             return Result(tool, data, error, outcome, completeness, current, readOnly, paging);
         }
 

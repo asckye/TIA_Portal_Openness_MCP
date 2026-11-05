@@ -85,7 +85,8 @@ namespace TiaMcp.Logic.V4
         {
             if (node is JsonObject obj)
             {
-                if (TryUnsuccessful(obj, false, out _, out _, tool)) return obj;
+                if (obj["rollbackCompleted"]?.ToString() == "true" || obj["cleanupRequired"] is JsonArray cleanup && cleanup.Count > 0
+                    || TryUnsuccessful(obj, false, out _, out _, tool)) return obj;
                 foreach (var pair in obj) { var found = FindUnsuccessful(pair.Value, tool); if (found != null) return found; }
             }
             else if (node is JsonArray array)
@@ -95,6 +96,7 @@ namespace TiaMcp.Logic.V4
 
         public static bool TryUnsuccessful(JsonObject evidence, bool writes, out Outcome outcome, out Error? error, string? tool = null)
         {
+            if (TryRollback(evidence, writes, out outcome, out error, tool)) return true;
             if (TryFailure(evidence, writes, out outcome, out error, tool)) return true;
             bool returned = evidence["nativeResultReturned"] is JsonValue flag && flag.TryGetValue<bool>(out var value) && value;
             if (!returned || Succeeded(evidence, tool)) return false;
@@ -106,11 +108,37 @@ namespace TiaMcp.Logic.V4
             return true;
         }
 
+        public static bool TryRollback(JsonObject evidence, bool writes, out Outcome outcome, out Error? error, string? tool = null)
+        {
+            outcome = Outcome.Unknown;
+            error = null;
+            bool cleanup = evidence["cleanupRequired"] is JsonArray tasks && tasks.Count > 0;
+            if (!writes || !evidence.ContainsKey("rollbackCompleted") && !cleanup) return false;
+            bool Flag(string name) => evidence[name] is JsonValue flag && flag.TryGetValue<bool>(out var value) && value;
+            string result = WriteRollbackPolicy.Outcome(Flag("rollbackCompleted"), Flag("connectionUnavailable") || Flag("requiresExplicitRebind"),
+                Flag("writeOutcomeUnknown"), Flag("unrestoredWrite"), Flag("rollbackRefused"), Flag("rollbackReachable"));
+            if (result == "restored")
+            {
+                outcome = Outcome.Failed;
+                error = new Error("The write failed; captured writes were restored and verified.",
+                    new NativeOperationFailedDetails(null, null, Evidence(evidence, tool)));
+            }
+            else if (result == "partial")
+            {
+                outcome = Outcome.Partial;
+                error = new Error("The reachable target refused compensation; perform the listed cleanup.", new PartialFailureDetails(0, 0, 0));
+            }
+            else error = new Error("Restoration could not be established. Inspect the retained evidence and reset the session.",
+                new OutcomeUnknownDetails("rollback", Evidence(evidence, tool)));
+            return true;
+        }
+
         private static Dictionary<string, JsonElement> Evidence(JsonObject evidence, string? tool = null)
         {
             var keys = new[] {
                 "nativeState", "nativeStateType", "nativeResultReturned", "mayHaveChanged", "logFilePath", "nativeMessages", "targetFile", "targetFiles",
-                    "recoveryDirectory"
+                    "recoveryDirectory", "rollbackCompleted", "rollbackScope", "restoredChanges", "cleanupRequired",
+                    "rollbackRefused", "rollbackReachable", "unrestoredWrite", "connectionUnavailable", "writeOutcomeUnknown"
             };
             var details = keys.Where(evidence.ContainsKey).ToDictionary(k => k, k => JsonSerializer.SerializeToElement(evidence[k]), StringComparer.Ordinal);
             if (!details.ContainsKey("nativeStateType") && EnumType(evidence, tool) is string type)

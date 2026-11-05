@@ -70,7 +70,12 @@ namespace TiaMcp.Adapters.Contracts
         // The evidence bag preserves the released step wrapper's optional fields.
         // Values are managed scalars, arrays and dictionaries; never native handles.
         public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>(StringComparer.Ordinal);
-        public bool RequiresSessionReset { get; set; }
+        private bool requiresSessionReset;
+        public bool RequiresSessionReset
+        {
+            get => requiresSessionReset || Meta.TryGetValue("requiresSessionReset", out var value) && value is true;
+            set => requiresSessionReset = value;
+        }
         public bool MayHaveChanged
         {
             get => mayHaveChanged || Meta.TryGetValue("mayHaveChanged", out var value) && Equals(value, true);

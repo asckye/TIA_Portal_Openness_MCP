@@ -650,13 +650,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     };
                     return new ResponseMessage { Message = "Unified HMI button action preview; no native calls or writes.", Meta = recipe };
                 }
-                var ensure = _service.EnsureUnifiedHmiButtonEventHandler(hmiSoftwarePath, screenName, buttonName, eventType, dryRun: false);
-                var set = _service.SetUnifiedHmiButtonEventScriptCode(hmiSoftwarePath, screenName, buttonName, eventType, script, null, null, syntaxCheck);
-                recipe["applyStatus"] = set.Meta?["success"]?.GetValue<bool>() == true ? "applied" : "apply-failed";
-                recipe["ensureMessage"] = ensure.Message ?? "";
-                recipe["ensureMeta"] = ensure.Meta?.DeepClone();
-                recipe["setMessage"] = set.Message ?? "";
-                recipe["setMeta"] = set.Meta?.DeepClone();
+                var applied = _service.ApplyUnifiedHmiButtonAction(hmiSoftwarePath, screenName, buttonName, eventType, script, syntaxCheck);
+                if (applied.Meta != null) foreach (var pair in applied.Meta) recipe[pair.Key] = pair.Value?.DeepClone();
+                recipe["applyStatus"] = applied.Meta?["operationSuccess"]?.GetValue<bool>() == true ? "applied" : "apply-failed";
                 return new ResponseMessage
                 {
                     Message = "Unified HMI button action applied via generated recipe.",

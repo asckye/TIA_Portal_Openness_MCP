@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -51,6 +52,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         var culture = comment.Culture; var text = comment.Text;
                         var item=ResolveCommentItem(TagComment(target!),culture,editingCulture);
                         meta["lastAttemptedProperty"]="Comment["+(item.Language?.Culture?.Name ?? "?")+"]";
+                        EngineeringWriteJournal.Property(item, item.GetType().GetProperty("Text")!);
                         item.Text=text;
                         if(item.Text!=text)
                             throw new InvalidOperationException("Comment readback differs for culture "+(item.Language?.Culture?.Name ?? culture)+".");

@@ -83,6 +83,9 @@ namespace TiaMcp.Adapters
                         .SetUnifiedHmiButtonEventScriptCode(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType, request
                             .ScriptCode, request.GlobalDefinitionAreaScriptCode, request.Async, request.SyntaxCheck);
                     break;
+                    case "EnsureUnifiedHmiButtonAction": reply.Value = new UnifiedHmiAdapter(session)
+                        .EnsureUnifiedHmiButtonAction(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType,
+                            request.ScriptCode, request.SyntaxCheck); break;
                     case "EnsureUnifiedHmiDynamization": reply.Value = new UnifiedHmiAdapter(session)
                         .EnsureUnifiedHmiDynamization(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.PropertyName, request
                             .DynamizationType);
@@ -135,9 +138,15 @@ namespace TiaMcp.Adapters
             }
             reply.MayHaveChanged = session.MayHaveChanged;
             if (reply.Failure != null) reply.RequiresSessionReset = session.MayHaveChanged;
-            if (reply.Value is HmiMessage message) reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var reset)
-                && reset is true
-                || session.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success) && success is false;
+            if (reply.Value is HmiMessage message)
+            {
+                bool restored = message.Meta.TryGetValue("rollbackCompleted", out var rollback) && rollback is true;
+                if (restored) reply.MayHaveChanged = false;
+                bool partial = message.Meta.TryGetValue("rollbackOutcome", out var outcome) && outcome as string == "partial";
+                reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var reset) && reset is true
+                    || !restored && !partial
+                        && session.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success) && success is false;
+            }
             return reply;
         }
     }

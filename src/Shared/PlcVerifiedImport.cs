@@ -54,6 +54,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new InvalidOperationException("Preview no longer matches binding/current block/candidate. No import attempted.");
             verifyBinding();
             meta["phase"] = "import"; meta["mayHaveChanged"] = true;
+            meta["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = binding, ["restoreFrom"] = beforePath,
+                ["action"] =
+                    "Compare the exact block with the retained original backup and restore it manually if needed; do not replay an unconfirmed import." });
             import(plannedPath); // An exception exits immediately: no second native call or automatic retry.
             meta["importReturned"] = true;
             if (compile != null) { meta["phase"] = "compile"; verifyBinding(); compile(); meta["compileReturned"] = true; }
@@ -64,6 +67,7 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["afterPath"] = afterPath; meta["actualFingerprint"] = PlcDocumentEditing.HashText(actual);
             meta["verificationSuccess"] = matches; meta["operationSuccess"] = matches;
             meta["status"] = matches ? "DocumentReadbackMatched" : "DocumentReadbackMismatch";
+            if (matches) meta.Remove("cleanupRequired");
             meta["phase"] = "complete";
             return matches
                 ? "Imported and re-exported document matches after identifier normalization. Inspect compileRequested/compileReturned for compilation; " +

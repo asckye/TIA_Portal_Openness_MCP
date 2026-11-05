@@ -128,7 +128,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     Outcome.RejectedBeforeOperation, Completeness.None, current, writes);
 
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool))
-                return Result(tool, root, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current,
+                return Result(tool, root, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : nativeOutcome == Outcome
+                        .Partial ? Completeness.Partial : Completeness.Complete, current,
                         writes);
             bool? Flag(string key) => Bool(evidence[key]) ?? Bool(root[key]);
             string? Text(string key) => (evidence[key] ?? root[key])?.ToString();

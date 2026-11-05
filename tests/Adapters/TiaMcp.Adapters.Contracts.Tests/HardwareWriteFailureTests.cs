@@ -74,7 +74,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal(2, target.AttributeReads);
     }
 
-    private static (PlcFoundationEngine Engine, Siemens.Engineering.TiaPortal Portal, Siemens.Engineering.Project Project,
+    internal static (PlcFoundationEngine Engine, Siemens.Engineering.TiaPortal Portal, Siemens.Engineering.Project Project,
         Siemens.Engineering.HW.DeviceItem Cpu, Siemens.Engineering.HW.Features.SysLogConfigurationManager Syslog) NativeFixture(string release = "21",
             bool bindProject = true)
     {

@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,9 +17,11 @@ internal static class OptionalNativeOperations
             .Where(m => m.GetParameters().Select((p, i) => arguments[i] == null ? !p.ParameterType.IsValueType
                 : p.ParameterType.IsInstanceOfType(arguments[i])).All(match => match)).ToArray();
         if (candidates.Length != 1) throw new NotSupportedException("Exact official overload unavailable: " + target.GetType().FullName + "." + method);
-        try { return candidates[0].Invoke(target, arguments); }
+        EngineeringWriteJournal.BeforeCall(target, candidates[0], arguments!);
+        try { var result = candidates[0].Invoke(target, arguments); EngineeringWriteJournal.CreatedResult(candidates[0], result, target); return result; }
         catch (TargetInvocationException error)
         {
+            if (method is "Create" or "CreateFrom") EngineeringWriteJournal.Unrestored(target.GetType().Name + "/" + method);
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error.InnerException ?? error).Throw();
             throw;
         }
@@ -44,6 +47,7 @@ internal static class OptionalNativeOperations
             ?? throw new NotSupportedException("Official TelegramNumber property unavailable.");
         if (property.SetMethod?.IsPublic != true) throw new NotSupportedException("Official TelegramNumber setter unavailable.");
         beforeWrite();
+        EngineeringWriteJournal.Property(telegram, property);
         property.SetValue(telegram, number);
     }
 
@@ -72,6 +76,7 @@ internal static class OptionalNativeOperations
             return (entry, property, value);
         }).ToArray();
         beforeWrite();
-        foreach (var row in prepared) row.property.SetValue(row.entry, row.value);
+        foreach (var row in prepared) EngineeringWriteJournal.CaptureProperties(row.entry, new[] { row.property });
+        foreach (var row in prepared) { EngineeringWriteJournal.Property(row.entry, row.property); row.property.SetValue(row.entry, row.value); }
     }
 }

@@ -1,4 +1,6 @@
 #if TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Adapters.Native.Engineering;
+using TiaMcp.Adapters.Contracts;
 using UnifiedObject = TiaMcp.Adapters.Native.Hmi.HmiObject;
 using UnifiedArray = TiaMcp.Adapters.Native.Hmi.HmiArray;
 using UnifiedNode = System.Object;
@@ -36,8 +38,12 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (!createIfMissing) throw UnifiedAccess.Error("NotFound", "Event not found: " + name);
             var create = handlers.GetType().GetMethod("Create", new[] { enumType })
                 ?? throw UnifiedAccess.Error("NotSupportedOnVersion", "Event Create(enum) is unavailable.");
-            return create.Invoke(handlers, new[] { value })
+            var created = create.Invoke(handlers, new[] { value })
                 ?? throw UnifiedAccess.Error("OpennessError", "Event creation returned null.");
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+            EngineeringWriteJournal.Created(created, handlers.GetType().FullName + "/" + name, () => find.Invoke(handlers, new[] { value }) == null);
+#endif
+            return created;
         }
     }
 }

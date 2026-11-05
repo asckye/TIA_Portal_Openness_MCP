@@ -116,7 +116,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 && offset >= 0 && limit > 0) paging = McpServer.OffsetPage(offset.Value, limit.Value, total);
             Clean(data);
             if (NativeResultState.TryUnsuccessful(data, writes, out var nativeOutcome, out var nativeError, tool)) {
-                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+                outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
+                    ? Completeness.Partial : Completeness.Complete;
+            }
             if (outcome == Outcome.Succeeded) data["summary"] = response.Message;
             if (data["records"] is JsonArray records) { data.Remove("records"); data["items"] = records; }
             var warnings = new List<Warning> { new Warning(WarningCode.UnverifiedBehavior,

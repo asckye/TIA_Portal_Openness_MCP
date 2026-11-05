@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using TiaMcpServer.Siemens;
 using System.Collections.Generic;
@@ -78,7 +79,7 @@ namespace TiaMcp.Adapters.Native.Security
                 meta["mayHaveChanged"] = true;
                 if (existing is WatchTableAccessRule existingWatch) existingWatch.Access = requested;
                 else if (existing is ForceTableAccessRule existingForce) existingForce.Access = requested;
-                else if (existing != null) accessProperty!.SetValue(existing, requested);
+                else if (existing != null) { EngineeringWriteJournal.Property(existing, accessProperty!); accessProperty!.SetValue(existing, requested); }
                 else Create();
                 var after = Existing() ?? throw new InvalidOperationException("Rule missing after assign.");
                 if (!Equals(after.GetType().GetProperty("Access")?.GetValue(after), requested))

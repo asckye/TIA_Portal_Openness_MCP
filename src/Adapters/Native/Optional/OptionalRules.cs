@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.IO;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace TiaMcp.Adapters.Native.Optional
         internal static void SetAvailableProperty(object target, string name, object? value)
         {
             var property = target.GetType().GetProperty(name) ?? throw new NotSupportedException("The requested SiVArc property is unavailable: " + name);
+            EngineeringWriteJournal.Property(target, property);
             property.SetValue(target, value);
         }
         internal static void ValidatePagination(int offset, int limit)

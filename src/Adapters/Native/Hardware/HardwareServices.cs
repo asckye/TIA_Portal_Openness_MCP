@@ -91,7 +91,7 @@ namespace TiaMcp.Adapters
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
                 meta["scope"] = "Scalar properties of Siemens.Engineering.HW.CommunicationConnections.* plus link names; complex members excluded.";
                 return "Communication connections of the exact hardware object read; no modification.";
-            });
+            }, writing: false);
 #else
         public HardwareAddressingReply HardwareReadCommunicationConnections(string[] devicePathJson, string[] itemPathJson = null!, int offset = 0, int limit =
                 100) =>
@@ -253,7 +253,7 @@ namespace TiaMcp.Adapters
                 meta["scope"] =
                     "Catalog of Siemens.Engineering.HW.Features.* from the V21 XML docs; presence via GetService<T>, scalar values only. Nothing written.";
                 return "Hardware feature services probed on the exact hardware object; read-only.";
-            });
+            }, writing: false);
 
 #if PLC_HARDWARE_CERTIFICATES
         private static Dictionary<string, object?> HardwareCertificateServiceRow(CertificateSupportedService service) => new Dictionary<string, object?>

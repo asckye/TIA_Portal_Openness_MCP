@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 #if HMI_UNIFIED
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
@@ -38,17 +39,19 @@ namespace TiaMcp.Adapters.Native.Hmi
             EngineeringInputValidation.NameOrAbsolutePath(screenName);
             EngineeringInputValidation.NameOrAbsolutePath(tagTableName);
             var meta = HmiMeta.Basic(false);
+            using var journal = new EngineeringWriteJournal();
 
             var steps = new HmiArray();
             meta["steps"] = steps;
 
-            void Step(string name, bool ok, string? detail = null)
+            void Step(string name, bool ok, string? detail = null, bool informational = false)
             {
                 var o = new HmiObject
                 {
                     ["step"] = name,
                     ["ok"] = ok
                 };
+                if (informational) o["informational"] = true;
                 if (!string.IsNullOrWhiteSpace(detail)) o["detail"] = detail;
                 steps.Add(o);
             }
@@ -320,7 +323,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                             // No universal way here without knowing specific dynamization classes;
                             // return signatures so next iteration can target correct Create overload.
-                            Step("dyn:LAMP_Run", false, "Not implemented yet (see CreateSignatures)");
+                            Step("dyn:LAMP_Run", false, "Not implemented yet (see CreateSignatures)", informational: true);
                         }
                     }
                 }
@@ -330,8 +333,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
 
                 // envelope: legacy-single-verdict
-                meta["success"] = steps.All(step => step?.Field("ok") is true);
-                meta["operationSuccess"] = meta["success"];
+                HmiExchangePolicy.CompleteSteps(meta, steps);
                 return new HmiMessage
                 {
                     Message = "Unified HMI start/stop skeleton created (best-effort).",
@@ -343,7 +345,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 Step("exception", false, HmiMeta.Failure(meta, ex));
                 return new HmiMessage { Message = "Failed creating HMI skeleton", Meta = meta };
             }
-            finally { meta["mayHaveChanged"] = _session.MayHaveChanged || meta["mayHaveChanged"] is true; }
+            finally
+            {
+                if (meta["operationSuccess"] is true) journal.Commit();
+                else journal.Rollback(meta);
+                meta["mayHaveChanged"] = meta["rollbackCompleted"] is true ? false : _session.MayHaveChanged || meta["mayHaveChanged"] is true;
+            }
 
         }
 
@@ -374,6 +381,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (mCreate == null) throw new InvalidOperationException($"Create(string) not found on {screens.GetType().FullName}.");
                     meta["mayHaveChanged"] = true;
                     screen = InvokeCreate(mCreate, screens, new object[] { createName });
+                    EngineeringWriteJournal.Created(screen, hmiSoftwarePath + "/Screens/" + screenName, collection: screens);
                     action = "created";
                 }
 
@@ -637,8 +645,16 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var mCreate = pressedStateTags.GetType().GetMethod("Create", Type.EmptyTypes);
                     if (mCreate == null) throw new InvalidOperationException($"Create() not found on {pressedStateTags.GetType().FullName}.");
+                    bool tracked = false;
+                    EngineeringWriteJournal.Record(hmiSoftwarePath + "/Screens/" + screenName + "/" + buttonName + "/PressedStateTags/" + tagName
+                        + ": reconcile unconfirmed anonymous part creation",
+                        () => { if (!tracked) throw new NotSupportedException("Create did not return an exact public object to delete safely."); });
                     meta["mayHaveChanged"] = true;
                     existing = InvokeCreate(mCreate, pressedStateTags, Array.Empty<object>());
+                    if (existing != null) EngineeringWriteJournal
+                        .Created(existing, hmiSoftwarePath + "/Screens/" + screenName + "/" + buttonName + "/PressedStateTags/" + tagName,
+                            () => FindPressedStateTag(pressedStateTags, tagName) == null);
+                    tracked = existing != null;
                     action = "created";
                 }
 
@@ -738,6 +754,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     meta["mayHaveChanged"] = true;
                     handler = InvokeCreate(create, eventHandlers, new[] { enumValue });
+                    EngineeringWriteJournal.Created(handler, hmiSoftwarePath + "/Screens/" + screenName + "/" + buttonName + "/EventHandlers/" + eventType,
+                        () => find == null ? throw new NotSupportedException("Event Find unavailable.") : find
+                            .Invoke(eventHandlers, new[] { enumValue }) == null);
                     action = "created";
                 }
 
@@ -752,6 +771,18 @@ namespace TiaMcp.Adapters.Native.Hmi
 
             static string eventValueToText(object value) => value.ToString() ?? string.Empty;
         }
+        public HmiMessage EnsureUnifiedHmiButtonAction(string software, string screen, string button, string eventType, string scriptCode, bool syntaxCheck)
+            => _session.RunHmiStepTool("EnsureUnifiedHmiButtonAction", meta => {
+                var ensure = EnsureUnifiedHmiButtonEventHandler(software, screen, button, eventType);
+                meta["ensureMeta"] = ensure.Meta;
+                if (!ensure.Meta.TryGetValue("operationSuccess", out var ensured) || ensured is not true)
+                    throw new InvalidOperationException("Event creation did not complete.");
+                var set = SetUnifiedHmiButtonEventScriptCode(software, screen, button, eventType, scriptCode, null, null, syntaxCheck);
+                meta["setMeta"] = set.Meta;
+                if (!set.Meta.TryGetValue("operationSuccess", out var written) || written is not true)
+                    throw new InvalidOperationException("Event script write did not complete.");
+                return "Unified HMI button action applied and read back.";
+            });
 
         public HmiMessage EnsureUnifiedHmiDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName,
                 string dynamizationType = "")
@@ -797,6 +828,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                     {
                         meta["mayHaveChanged"] = true;
                         var created = createMethods[0].MakeGenericMethod(candidate).Invoke(dynamizations, new object[] { propertyName });
+                        EngineeringWriteJournal
+                            .Created(created, hmiSoftwarePath + "/Screens/" + screenName + "/" + itemName + "/Dynamizations/" + propertyName, collection
+                                    : dynamizations);
                         if (created == null) continue;
 
                         meta["action"] = "created";
@@ -849,6 +883,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                     meta["mayHaveChanged"] = true;
                     dyn = create.MakeGenericMethod(tagDynType).Invoke(dynamizations, new object[] { propertyName });
+                    EngineeringWriteJournal
+                        .Created(dyn, hmiSoftwarePath + "/Screens/" + screenName + "/" + itemName + "/Dynamizations/" + propertyName, collection
+                            : dynamizations);
                     action = "created";
                 }
 
@@ -870,7 +907,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["members"] = string.Join(" | ", _session.DescribeMembers(dyn, 120).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
                 meta["after"] = UnifiedRequestScalar.Read(dyn);
                 if (results.Any(r => r!.Field("verified") is not true))
-                    throw new InvalidOperationException("Tag dynamization write/readback failed; inspect writeResults. Partial edits are not rolled back.");
+                    throw new InvalidOperationException("Tag dynamization write/readback failed; inspect writeResults. Inspect rollbackCompleted and " +
+                    "cleanupRequired.");
 
                 return $"Tag dynamization for '{itemName}.{propertyName}' bound to '{tagName}'.";
             });
@@ -903,7 +941,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             var create = collection.GetType().GetMethod("Create", new[] { typeof(string) });
             if (create == null) throw new NotSupportedException("Documented Create(string) unavailable on " + collection.GetType().FullName);
             _session.MarkHmiChanged();
-            return InvokeCreate(create, collection, new object[] { name });
+            var created = InvokeCreate(create, collection, new object[] { name });
+            EngineeringWriteJournal.Created(created, collection.GetType().FullName + "/" + name, collection: collection);
+            return created;
         }
 
         private static object? InvokeCreate(MethodInfo method, object target, object[] args)
@@ -949,7 +989,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             var create = items.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 .Single(m => m.Name == "Create" && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1
                     && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string));
-            return create.MakeGenericMethod(itemClrType).Invoke(items, new object[] { itemName });
+            var created = create.MakeGenericMethod(itemClrType).Invoke(items, new object[] { itemName });
+            EngineeringWriteJournal.Created(created, items.GetType().FullName + "/" + itemName, collection: items);
+            return created;
         }
 
         private static object? FindPressedStateTag(object pressedStateTags, string tagName)
@@ -996,6 +1038,9 @@ namespace TiaMcp.Adapters.Native.Hmi
         private void ApplyJsonProperties(object target, HmiObject props, HmiArray failed, HmiArray writeResults, string path, string typeHint = "",
                 bool allowAttributeFallback = true)
         {
+            EngineeringWriteJournal
+                .CaptureProperties(target, props.Select(pair => UnifiedUiModelLogic.FindProperty(target.GetType(), pair.Key))
+                    .Where(property => property?.GetMethod?.IsPublic == true && property.SetMethod?.IsPublic == true).Cast<PropertyInfo>());
             foreach (var kv in props)
             {
                 var schemaError = ValidateUnifiedHmiDesignProperty(typeHint, kv.Key);
@@ -1061,6 +1106,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 object? oldValue = null;
                 try { oldValue = get?.Invoke(target, new object[] { attributeName }); } catch /* swallow(probe-optional): An unreadable old attribute value leaves the supplied value uncoerced. */ { }
                 var typed = oldValue == null ? value : _session.CoerceReflectionValue(value, oldValue.GetType());
+                EngineeringWriteJournal
+                    .Attribute(target, attributeName, () => get == null ? throw new NotSupportedException("Public GetAttribute unavailable.") : get
+                        .Invoke(target, new object[] { attributeName }),
+                    previous => set.Invoke(target, new[] { attributeName, previous }));
                 set.Invoke(target, new[] { attributeName, typed });
                 return true;
             }

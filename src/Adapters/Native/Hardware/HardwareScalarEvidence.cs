@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,15 +45,20 @@ namespace TiaMcp.Adapters.Hardware
 
         internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> changes, Dictionary<string, object?> meta)
         {
-            var applied = new List<object?>(); meta["appliedProperties"] = applied;
-            foreach (var change in changes)
-            {
-                meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
-                change.Property.SetValue(target, change.Value);
-                applied.Add(change.Property.Name);
-                if (!HardwareAddressingPolicy.SameValue(change.Property.GetValue(target), change.Value))
-                    throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
-            }
+            EngineeringWriteJournal.Run(meta, () => {
+                var applied = new List<object?>(); meta["appliedProperties"] = applied;
+                EngineeringWriteJournal.CaptureProperties(target, changes.Select(change => change.Property));
+                foreach (var change in changes)
+                {
+                    meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
+                    EngineeringWriteJournal.Property(target, change.Property);
+                    change.Property.SetValue(target, change.Value);
+                    applied.Add(change.Property.Name);
+                    if (!HardwareAddressingPolicy.SameValue(change.Property.GetValue(target), change.Value))
+                        throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ".");
+                }
+                return "Scalar writes read back.";
+            }, inspectVerdict: false);
         }
     }
 }
