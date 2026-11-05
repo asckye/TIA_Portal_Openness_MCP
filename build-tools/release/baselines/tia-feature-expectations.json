@@ -843,6 +843,16 @@
     ]
   },
   {
+    "project": "tests/Fixtures/TiaMcp.UnifiedWorker.Fixture/TiaMcp.UnifiedWorker.Fixture.csproj",
+    "properties": {},
+    "targetFramework": "net10.0",
+    "defineConstants": [
+      "HMI_UNIFIED",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
     "project": "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "14sp1"
