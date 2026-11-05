@@ -2554,7 +2554,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a316c518ba28d1c6ff0a8eb4ebddd6120f54fa3eeba20fd5711c386feb4c516e",
+      "descriptionSha256": "b6eee4d48435dc9132660cae57f0c57a80dd07dad7bcaeeed8072c155e536639",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11856,29 +11856,45 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e253e11d4ae7b675274460d7c7435d10324e748849e7f4332df1bde188c9bab8",
+      "descriptionSha256": "e3339b4995d59e41545abb308cbbc234afb3413539499afc86035e756e13b4dd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
+          },
           "deviceName": {
-            "description": "deviceName: name of the new device and its head item; must not be used by any device or head item",
-            "examples": [
-              "PLC_2"
-            ],
+            "description": "Exact foundation argument: deviceName",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "family": {
+            "default": "S7-1500",
+            "description": "family: descriptive device family label (default S7-1500); does not select the device.",
             "type": "string"
           },
           "orderNumber": {
-            "description": "orderNumber: exact article number as written in the TIA hardware catalog, including its spaces (e.g. '6ES7 211-1BE40-0XB0'), or a full TypeIdentifier ('OrderNumber:.../V4.7'); used verbatim",
-            "examples": [
-              "6ES7 515-2AM02-0AB0"
-            ],
+            "description": "Exact foundation argument: preferredMlfb",
             "type": "string"
           },
           "version": {
-            "description": "version: exact catalog version as written in the TypeIdentifier (e.g. 'V4.7'); empty only for a full TypeIdentifier or a module with no or a single installed version (TIA rule)",
-            "examples": [
-              "V2.9"
-            ],
+            "description": "Exact foundation argument: preferredVersion",
             "type": "string"
           }
         },
@@ -11933,21 +11949,46 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "efc2a429286815712f09671a6ac43d6c94d1ee871ffb6fc1a396ef5e3a5d0b75",
+      "descriptionSha256": "cc5d7c1953184af1b7554cb5473d2034040c8452d412d33c7c7cc0d8fae8dfae",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
+          },
           "deviceName": {
-            "description": "deviceName: name of the new device and its head item, e.g. 'HMI_KTP700_1'",
+            "description": "Exact foundation argument: deviceName",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "family": {
+            "default": "S7-1500",
+            "description": "family: descriptive device family label (default S7-1500); does not select the device.",
             "type": "string"
           },
           "keyword": {
-            "description": "keyword: exact catalog TypeIdentifier to create, e.g. 'OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0'; search text (e.g. 'KTP700 Basic PN') is refused with the ranked candidates",
+            "description": "Exact foundation argument: preferredMlfb",
             "type": "string"
           },
           "preferredText": {
             "default": "",
-            "description": "preferredText: optional ranking hint for the refusal candidate list, e.g. 'PN 17.0.0.0 landscape'",
+            "description": "Compatibility hint only; exact keyword is passed unchanged. No ranking or fallback.",
             "type": "string"
           }
         },
@@ -12076,21 +12117,26 @@
     },
     {
       "annotations": {
-        "destructiveHint": false,
-        "idempotentHint": true,
+        "destructiveHint": true,
+        "idempotentHint": false,
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "192f9c0365d809f62a4e87033d1d9ff8c283cb0431873371627589841eb6dce2",
+      "descriptionSha256": "654f3fc25cc8c04812a76a650c307e48cc91f5546658fdfff8d909b8131a9de0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
           "groupPath": {
-            "description": "groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'",
+            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
             "type": "string"
           },
           "softwarePath": {
-            "description": "softwarePath: PLC software path, e.g. 'PLC_1'",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
           }
         },
@@ -12267,18 +12313,18 @@
     },
     {
       "annotations": {
-        "destructiveHint": false,
+        "destructiveHint": true,
         "idempotentHint": false,
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "615943af7489862778b54dc53ac58ba10ca129fd14235811abceeda665d15b25",
+      "descriptionSha256": "0337bd830d474c57cf0242aa213bee54381af32ec63ca1bb6485455145f71b72",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "description": "dryRun: true (default) previews; false executes.",
             "type": "boolean"
           },
           "groupPath": {
@@ -12467,13 +12513,13 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8c8e31b8231edd6ea786ca86ecef6f0836ebfefdce7ca3ffa0157cc6f31ad77b",
+      "descriptionSha256": "1058b3fe914c6125681f17406481c7c3225299f64346bf7dd85b9fde73d3a5e4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "description": "dryRun: true (default) previews; false executes.",
             "type": "boolean"
           },
           "groupPath": {
@@ -14000,7 +14046,7 @@
           },
           "connectionName": {
             "default": "",
-            "description": "connectionName: HMI connection name; empty keeps current/auto",
+            "description": "connectionName: existing HMI connection for plcName; empty selects the single connection with the matching PLC partner. Pass an explicit name if several match.",
             "type": "string"
           },
           "dryRun": {
@@ -15536,12 +15582,32 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7fb771139cc717eb39a9f90c5961e03ced9d95aec3df459abb86c25d3c2e7b0d",
+      "descriptionSha256": "dd26aaa2e27737b4c2db8b13d34a82774316c99c14b2dc06685b57233282c6ce",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
+          },
           "dir": {
             "description": "dir: output directory",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "regexName": {
@@ -15746,10 +15812,30 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e3b9c3c03a83295a45450fe74781ce44dddab4f0b8de47ca96ff85b5be9c7c00",
+      "descriptionSha256": "e8fae81d4688e3c35ac3e9713941c4394d2c2b2f89593e36cafc3f30ac600eef",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "exportDir": {
             "description": "exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs'",
             "type": "string"
@@ -21162,18 +21248,33 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "cbf1f96a8e89ca4b3b2446790b270f15d2c3b20f3c5f80e2970efc0e8865cebd",
+      "descriptionSha256": "0b352e02f42b2376b824e2faa3aeb8afe738f3ae46ca25cd80ba5126e07c959e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
+          },
           "dir": {
             "description": "dir: directory containing PLC tag table XML files",
             "type": "string"
           },
           "dryRun": {
-            "default": false,
-            "description": "dryRun: false (default) retains the existing directory import behavior; true previews files, unit scope and options without imports.",
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
           },
           "folderPath": {
             "description": "folderPath: optional tag table group path (use empty for root)",
@@ -28010,7 +28111,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0408d48ff45adf19c0c90a317e44b70d379026d433074608aeb5365ca5f72486",
+      "descriptionSha256": "50278a25dd4ee88fe293720656fd02e7ec1b4a5d6ee591376875ca89277d04cc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -28031,6 +28132,11 @@
               "list"
             ],
             "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
           },
           "confirmDelete": {
             "default": false,
@@ -28058,6 +28164,16 @@
               true
             ],
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
           },
           "filePath": {
             "default": "",
@@ -28826,7 +28942,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a16bba933bf79c1b331099a04915a4f72e6fcff434f922ab03a15fb544f7aae7",
+      "descriptionSha256": "9da80afc3b8673ea92a190cddb240c2869a418ee4698f0aac3883ffa0027aff8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -28851,6 +28967,11 @@
             ],
             "type": "string"
           },
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
+          },
           "dataType": {
             "default": "",
             "description": "dataType: for create / update - PLC data type, e.g. Bool, Int, Real.",
@@ -28866,6 +28987,16 @@
               true
             ],
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
           },
           "kind": {
             "description": "kind: tag | constant.",
@@ -32595,25 +32726,45 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "50312d7e7ed4b18677cdfbff79045c3a1091f4afe25932d30bcddee8c5cec2c7",
+      "descriptionSha256": "253ac54084ba02570156ddf86acfe0c3f19a81e8c1c16f511f5b3d03c3e15f79",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "autoCreateGroup": {
             "default": true,
-            "description": "autoCreateGroup: create the target group path if it does not exist (default true)",
+            "description": "autoCreateGroup: create missing destination groups only during approved execution",
             "type": "boolean"
           },
           "blockName": {
-            "description": "blockName: exact block name to move (searched across all groups)",
+            "description": "blockName: exact group-qualified source block path",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "softwarePath": {
-            "description": "softwarePath: PLC software path, e.g. 'PLC_1'",
+            "description": "softwarePath: exact PLC software path",
             "type": "string"
           },
           "targetGroupPath": {
-            "description": "targetGroupPath: '/'-separated destination group under Program blocks, e.g. '02_手自动接口'",
+            "description": "targetGroupPath: exact destination group path",
             "type": "string"
           }
         },
@@ -34244,7 +34395,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3f5f53a8bbc259a322219875d4bf451eb69a7213a4d7bd90f997c731c7ba775a",
+      "descriptionSha256": "5f4c55ab96c0552365c933e930dcf3f694e1bdfd483728d27757c940b5b54b57",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -34252,6 +34403,26 @@
             "default": true,
             "description": "compileAfter: compile PLC after import",
             "type": "boolean"
+          },
+          "confirm": {
+            "default": false,
+            "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
           },
           "groupPath": {
             "default": "",
