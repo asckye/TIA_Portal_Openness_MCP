@@ -14,7 +14,7 @@
   <ItemGroup><Reference Include="System.Web.Extensions" /></ItemGroup>
   <!-- Compile-only SDK/JSON types; runtime dependencies resolve beside the loaded EXE.
        Keep transitive build targets so net48 uses its inbox System.ValueTuple. -->
-  <ItemGroup><PackageReference Include="ModelContextProtocol.Core" IncludeAssets="compile" /></ItemGroup>
+  <ItemGroup><PackageReference Include="ModelContextProtocol.Core" IncludeAssets="compile" /><PackageReference Include="Microsoft.Bcl.Memory" IncludeAssets="compile" /></ItemGroup>
   <ItemGroup><PackageReference Include="System.Net.ServerSentEvents" IncludeAssets="compile" /></ItemGroup>
   <ItemGroup><PackageReference Include="System.Text.Json" IncludeAssets="compile;buildTransitive" /></ItemGroup>
   <ItemGroup><None Update="Golden/*.txt" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
