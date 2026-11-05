@@ -2,6 +2,8 @@
 from offline_fixtures import verify_owned_process_image
 import argparse
 import hashlib
+import http.client
+import io
 from contextlib import contextmanager
 import json
 import os
@@ -15,7 +17,7 @@ import subprocess
 import threading
 import time
 import urllib.error
-import urllib.request
+import urllib.parse
 import sys
 import xml.etree.ElementTree as ET
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -25,6 +27,64 @@ from tool_usage_checks import check_usage, unwrap_usage
 
 _HTTP_PORT_LOCK = threading.Lock()
 _HTTP_PORTS = set()
+
+
+class PersistentHttp:
+    def __init__(self, url, timeout=15):
+        self.url = url.rstrip('/')
+        address = urllib.parse.urlsplit(self.url)
+        # HTTPConnection connects directly and never reads proxy environment settings.
+        self.connection = http.client.HTTPConnection(address.hostname, address.port, timeout=timeout)
+        self.timeout = timeout
+        self.response = None
+
+    def drain(self):
+        if self.response is not None:
+            try:
+                self.response.read()
+            finally:
+                self.response.close()
+                self.response = None
+
+    @contextmanager
+    def response_context(self, response):
+        try:
+            yield response
+        finally:
+            self.drain()
+
+    def request(self, path, method='GET', body=None, headers=None, timeout=None):
+        self.drain()
+        self.connection.timeout = self.timeout if timeout is None else timeout
+        if self.connection.sock is not None:
+            self.connection.sock.settimeout(self.connection.timeout)
+        for attempt in range(2):
+            reused = self.connection.sock is not None
+            try:
+                self.connection.request(method, path, body=body, headers=headers or {})
+                response = self.connection.getresponse()
+                break
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, http.client.RemoteDisconnected) as error:
+                self.connection.close()
+                # A peer may close an idle keep-alive socket without a Connection: close header.
+                if not reused or attempt:
+                    raise urllib.error.URLError(error) from error
+            except OSError as error:
+                self.connection.close()
+                raise urllib.error.URLError(error) from error
+        self.response = response
+        if response.status >= 400:
+            error = urllib.error.HTTPError(self.url + path, response.status, response.reason,
+                                           response.headers, io.BytesIO(response.read()))
+            self.drain()
+            raise error
+        return self.response_context(response)
+
+    def close(self):
+        if self.response is not None:
+            self.response.close()
+            self.response = None
+        self.connection.close()
 
 
 def allocate_http_port():
@@ -186,7 +246,6 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
     port = 0
     if transport == 'http':
         port = allocate_http_port()
-    endpoint = f'http://127.0.0.1:{port}/mcp'
     key = secrets.token_urlsafe(24)
     foundation = True
     bundle_root = (env_overrides or {}).get('TIA_MCP_BUNDLE_ROOT') or os.environ.get('TIA_MCP_BUNDLE_ROOT') or str(Path(__file__).resolve().parents[2])
@@ -216,7 +275,7 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
                threading.Thread(target=drain_stderr, daemon=True)]
     for reader in readers:
         reader.start()
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    client = PersistentHttp(f'http://127.0.0.1:{port}', timeout=rpc_timeout)
 
     session_id = None
     def http(body, authorized=True):
@@ -226,8 +285,7 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
             headers['Authorization'] = 'Bearer ' + key
         if foundation and session_id:
             headers['Mcp-Session-Id'] = session_id
-        request = urllib.request.Request(endpoint, json.dumps(body).encode('utf-8'), headers)
-        with opener.open(request, timeout=rpc_timeout) as response:
+        with client.request('/mcp', 'POST', json.dumps(body).encode('utf-8'), headers) as response:
             session_id = response.headers.get('Mcp-Session-Id', session_id)
             raw = response.read().decode('utf-8')
             if response.headers.get('Content-Type', '').startswith('text/event-stream'):
@@ -268,9 +326,9 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
             while True:
                 require(process.poll() is None, 'HTTP server exited at startup: ' + ''.join(errors))
                 try:
-                    request = urllib.request.Request(endpoint + ('/health' if foundation else '/ready'),
-                                                     headers={'Authorization': 'Bearer ' + key} if foundation else {'X-API-Key': key})
-                    with opener.open(request, timeout=2) as response:
+                    with client.request('/mcp' + ('/health' if foundation else '/ready'),
+                                        headers={'Authorization': 'Bearer ' + key} if foundation else {'X-API-Key': key},
+                                        timeout=2) as response:
                         if json.load(response).get('status' if foundation else 'mcpHostReady'):
                             break
                 except (urllib.error.URLError, TimeoutError):
@@ -279,6 +337,7 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
                 time.sleep(0.1)
         yield rpc, http, errors
     finally:
+        client.close()
         process.stdin.close()
         try:
             process.wait(timeout=stdio_exit_timeout if transport == 'stdio' else 0.2)

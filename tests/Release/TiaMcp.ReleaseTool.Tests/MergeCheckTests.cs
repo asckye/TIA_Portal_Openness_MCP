@@ -243,6 +243,19 @@ public sealed class MergeCheckTests
     }
 
     [Theory]
+    [InlineData("scripts/checks/Test-FoundationTransport.py")]
+    [InlineData("scripts/checks/Test-ResourceDiscovery.py")]
+    [InlineData("Directory.Build.props")]
+    public void TransportClientChangesSelectLoopbackSelfTests(string path)
+    {
+        var plan = Select([path]);
+        var check = Assert.Single(plan.Checks, job => job.Name == "Test-FoundationTransport");
+        Assert.Equal(new[] { "scripts/checks/Test-FoundationTransport.py", "--self-test" }, check.Arguments);
+        Assert.Contains(plan.Checks, job => job.Name == "foundation-transport");
+        Assert.Contains(plan.Checks, job => job.Name == "foundation-transport-plc");
+    }
+
+    [Theory]
     [InlineData("src/Adapters/V17/x.cs")]
     [InlineData("src/Adapters/Native/x.cs")]
     [InlineData("src/PlcWorker/new.cs")]

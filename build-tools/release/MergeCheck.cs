@@ -221,6 +221,8 @@ internal static class MergeCheck
         foreach (var script in new[] { "Test-ReleaseApprovalGate.py", "Test-RelocatedBundle.py", "Test-ReleaseSmoke.py", "Compare-NativeCallOrder.py",
             "Test-NativeLifecycle.py", "Test-NativeMcpSession.py", "Test-ResourceDiscovery.py" })
             if (Changed(script)) Py(Path.GetFileNameWithoutExtension(script), script, "--self-test");
+        if (Changed("Test-FoundationTransport.py", "Test-ResourceDiscovery.py"))
+            Py("Test-FoundationTransport", "Test-FoundationTransport.py", "--self-test");
         if (Changed("Snapshot-ToolContracts.py", "phase6_groups.py", "snapshot_text_migration.py", "offline_fixtures.py")) Py("contract-self-test", "Snapshot-ToolContracts.py", "self-test");
         if (Changed("Test-V21Ecosystem.py")) Py("ecosystem-self-test", "Test-V21Ecosystem.py", "--self-test", "--output", Path.Combine(output, "ecosystem"));
         if (Changed("Test-CampaignInputs.py", "Test-CampaignInputs.cs"))
@@ -259,7 +261,7 @@ internal static class MergeCheck
         bool transport = plan.Wide || changes.Any(path =>
             new[] { "src/FoundationHost", "src/EngineHost", "src/WorkerChannel", "src/PlcWorker", "src/Shared",
                 "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture" }.Any(dir => Under(path, dir))
-            || path == "scripts/checks/Test-FoundationTransport.py");
+            || path is "scripts/checks/Test-FoundationTransport.py" or "scripts/checks/Test-ResourceDiscovery.py");
         bool worker = plan.Wide || changes.Any(path =>
             new[] { "src/PlcWorker", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/EngineHost", "src/FoundationHost",
                 "src/Shared", "reference/tool-catalog", "reference/tool-examples", "build-tools/native-call-weaver", "tests/FoundationHost/TiaMcp.Engine.Native.Tests",

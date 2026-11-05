@@ -2,7 +2,7 @@
 from offline_fixtures import verify_owned_process_image
 import argparse
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 import ctypes
 try:
     from ctypes import wintypes
@@ -11,6 +11,7 @@ except ValueError:  # some Python builds cannot load wintypes outside Windows
 from tool_usage_checks import check_usage
 import json
 import importlib.util
+import http.server
 import os
 from pathlib import Path
 from ported_families import RELEASES
@@ -24,7 +25,6 @@ import time
 import traceback
 from call_latency import Samples
 import urllib.error
-import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
 KEYS = list(RELEASES)
@@ -79,6 +79,7 @@ class Stdio:
 class Http:
     def __init__(self, url, key='fixture-key'):
         self.url, self.sid, self.seq, self.key = url, None, 0, key
+        self.http = resources.PersistentHttp(url)
 
     def request(self, path, method='GET', body=None, auth=True):
         headers = {'Accept': 'application/json, text/event-stream', 'MCP-Protocol-Version': '2025-03-26'}
@@ -88,8 +89,7 @@ class Http:
             headers['Mcp-Session-Id'] = self.sid
         if body is not None:
             headers['Content-Type'] = 'application/json'
-        req = urllib.request.Request(self.url + path, data=None if body is None else json.dumps(body).encode(), headers=headers, method=method)
-        return urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=15)
+        return self.http.request(path, method, None if body is None else json.dumps(body).encode(), headers)
 
     def call(self, method, params):
         self.seq += 1
@@ -110,8 +110,97 @@ class Http:
         return reply['result']
 
     def close(self):
-        with self.request('/mcp', 'DELETE') as response:
-            assert response.status in (200, 202, 204)
+        try:
+            with self.request('/mcp', 'DELETE') as response:
+                assert response.status in (200, 202, 204)
+        finally:
+            self.http.close()
+
+
+def self_test():
+    class Server(http.server.ThreadingHTTPServer):
+        daemon_threads = True
+        connections = 0
+
+        def get_request(self):
+            connection = super().get_request()
+            self.connections += 1
+            return connection
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        protocol_version = 'HTTP/1.1'
+
+        def log_message(self, *args):
+            pass
+
+        def do_GET(self):
+            body = b'{"ok": true}'
+            self.send_response(401 if self.path == '/unauthorized' else 200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(body)))
+            if self.path == '/close':
+                self.send_header('Connection', 'close')
+            self.end_headers()
+            self.wfile.write(body)
+            if self.path == '/silent-close':
+                self.close_connection = True
+
+        def do_POST(self):
+            request = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            body = ('data: ' + json.dumps({'jsonrpc': '2.0', 'id': request['id'],
+                                         'result': {'ok': True}}) + '\n\n: drained\n\n').encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/event-stream')
+            self.send_header('Mcp-Session-Id', 'fixture-session')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_DELETE(self):
+            self.send_response(204)
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+
+    with Server(('127.0.0.1', 0), Handler) as server:
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        client = Http(f'http://127.0.0.1:{server.server_port}')
+        try:
+            for _ in range(10):
+                with client.request('/json') as response:
+                    assert json.load(response) == {'ok': True}
+            assert server.connections == 1, ('Expected one TCP connection for ten requests', server.connections)
+            try:
+                client.request('/unauthorized')
+                raise AssertionError('Expected HTTPError')
+            except urllib.error.HTTPError as error:
+                assert error.code == 401
+                assert json.load(error) == {'ok': True}
+            with client.request('/json') as response:
+                assert response.read(1) == b'{'
+            assert client.call('ping', {}) == {'ok': True}
+            assert client.sid == 'fixture-session'
+            with client.request('/json') as response:
+                assert json.load(response) == {'ok': True}
+            assert server.connections == 1, 'Errors and partially read responses must reuse the connection'
+            with client.request('/close') as response:
+                assert json.load(response) == {'ok': True}
+            with client.request('/json') as response:
+                assert json.load(response) == {'ok': True}
+            assert server.connections == 2, 'Expected reconnection after server close'
+            with client.request('/silent-close') as response:
+                assert json.load(response) == {'ok': True}
+            with client.request('/json') as response:
+                assert json.load(response) == {'ok': True}
+            assert server.connections == 3, 'Expected reconnection after an unannounced server close'
+            client.close()
+            assert client.http.connection.sock is None, 'Client close must close its socket'
+        finally:
+            client.http.close()
+            server.shutdown()
+            thread.join(timeout=15)
+            assert not thread.is_alive()
+    print('COMPLETE: 7 HTTP client self-tests passed; 0 failed (reuse, HTTPError, drain, SSE, announced/unannounced reconnect, close)')
 
 
 def tool(client, name, args=None):
@@ -403,14 +492,16 @@ def plc_transports(args, temp, counts):
             unready = []
             with resources.server(host, api, key, 'http', 'full', public_api=api, plc_worker=worker,
                                   sdk_ready=False, env_overrides=env, rpc_timeout=15, startup_timeout=60,
-                                  process_observer=unready.append):
+                                  process_observer=unready.append), ExitStack() as clients:
                 # Keep the no-TIA HTTP readiness and schema refusals as well as the ready session proof below.
                 command = unready[0].args
                 url = command[command.index('--http-prefix') + 1].rstrip('/')
                 secret = command[command.index('--http-api-key') + 1]
                 unready_first = Http(url, secret)
+                clients.callback(unready_first.http.close)
                 exercise_engine(unready_first, key, ready=False)
                 unready_second = Http(url, secret)
+                clients.callback(unready_second.http.close)
                 if CHECK_PROFILE == 'merge':
                     exercise_isolation(unready_second, unready_first, key, full=True)
                     unready_second.close()
@@ -422,12 +513,14 @@ def plc_transports(args, temp, counts):
         with resources.server(host, portal, key, 'http', 'full', public_api=api, plc_worker=worker,
                               sdk_ready=full, env_overrides=env, process_observer=owned.append,
                               evidence_directory=evidence_directory, rpc_timeout=15, startup_timeout=60,
-                              sdk_installation=full) as (_, _, _):
+                              sdk_installation=full) as (_, _, _), ExitStack() as clients:
             process = owned[0]
             command = process.args
             url = command[command.index('--http-prefix') + 1].rstrip('/')
             secret = command[command.index('--http-api-key') + 1]
             first, second = Http(url, secret), Http(url, secret)
+            clients.callback(first.http.close)
+            clients.callback(second.http.close)
             with first.request('/mcp/health', auth=False) as response:
                 health = json.load(response)
                 assert health['releaseKey'] == key
@@ -554,10 +647,12 @@ def main():
             logfile = temp / f'http-{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile), TIA_MCP_DATA_DIRECTORY=str(temp / ('data-' + key)))
             command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full', '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
-            with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
+            with ExitStack() as clients, (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
                 p = subprocess.Popen(command, env=env, cwd=temp, stderr=stderr, stdout=stderr)
                 try:
                     first, second = Http(url), Http(url)
+                    clients.callback(first.http.close)
+                    clients.callback(second.http.close)
                     # Hosted runners can start the host slowly; an early exit fails at once with the host log.
                     deadline = time.monotonic() + 60
                     while True:
@@ -613,4 +708,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if sys.argv[1:] == ['--self-test']:
+        self_test()
+    else:
+        main()
