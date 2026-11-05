@@ -81,7 +81,7 @@ beta.3 之后已合并：CI-FIX（`67ca6816`）、PREP-SLIM（`ccc8f7aa`、`d1a7
 | Q10a、Q10b | 声明式工具清单的读取与生成，Q6c 后续另行评估 | 排队（UNIFY-1 之后，Q10b 任务说明待写） | 2026-11-02 |
 | DES-PORT A/B/C（取代 DES-INT，承接 DES-2、DES-3） | 统一兼容转发、批次、安全移块、27 个工具默认预览与失败回滚，生成步骤使用自己的预览哈希 | 已集成（A `e32b0d76`，B `61bb78a0`，C `1012d0b7`） | 2026-11-04 |
 | DES-PORT-FIX | 补诊断计划真实 apply、提示词与读示例，计划哈希绑定输入内容与宿主生命周期，修正独占访问拒绝 | 已集成（`fd757a65`），仅离线验证 | 2026-11-04 |
-| DES-4 Part 1 | 统一参数与一代兼容别名，缺省会话导出目录，根 schema 无组合器，[ADR 0032](../standards/decisions/0032-canonical-tool-parameters.md) | 已集成（`4aef120b`、`250a68c1`、`185d80ce`、`13eb7725`） | 2026-11-04 |
+| DES-4 Part 1 | 统一参数与一代兼容别名，缺省会话导出目录，根 schema 无组合器，[ADR 0033](../standards/decisions/0033-canonical-tool-parameters.md) | 已集成（`4aef120b`、`250a68c1`、`185d80ce`、`13eb7725`） | 2026-11-04 |
 | VMFIX-3 | 写入结果如实（R2/R4）：确定的结果不报 `OUTCOME_UNKNOWN`、不要求会话重置；独占访问；`ImportDeviceAml` 只在 V21 移出独占访问；已批准 `HmiDryRunTests`、`PortedPortalAdmissionTests` 及第 5 轮 `HonestWriteSources` 两项替换断言；保留的结果映射测试移入 KeptCode/FoundationHost，已删除引擎路径不再移植 | 已合并（VMFIX-3-PORT，`8fe022bd`、`871d54da`） | 2026-11-02 |
 | VMFIX-4 | 会话生命周期与恢复（R3/R5），绑定纪元、TIA 重启判断、读超时排空、重置关口、日志过滤 | 已集成（`76c51b5a`、`8757f27a`），待真机复验 | 2026-11-04 |
 | VMFIX-5a、VMFIX-5b | 结果映射、去敏和原生原因，PLC 服务解析、V21 工艺对象崩溃保护、Unified 标签和画面修复 | 已集成（`f902c069`、`a31afbe0`、`93eeb016`），待真机复验 | 2026-11-04 |

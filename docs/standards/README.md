@@ -21,7 +21,7 @@
 |---|---|---|
 | 支持的版本 | TIA Portal V14 SP1、V15.1、V16–V21 八个版本，功能按各版本官方 API 注册 | [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md) |
 | 合并与发布 | 主机合并门 `merge-check`，FAST-GATE 目标约 10 分钟，当前宽范围运行报告约 12 分钟，优化前约 21 分钟。候选前手动运行 `merge-check -All`。`prepare` 构建、打包、检查 ZIP 并上传私有草稿，扫描接入前实测约 6 分钟，`publish-prepared` 公开的硬预算为 300 秒。取消 nightly，GitHub CI 不阻塞合并 | [ADR 0031](decisions/0031-release-path.md)与[进度](../plan/progress.md) |
-| MCP-11 输入 schema | 工具 `inputSchema` 根节点不使用 `oneOf`、`allOf`、`anyOf`，以兼容拒绝根组合器的客户端。互斥参数和表单字段规则写入描述并在运行时拒绝不合法组合，嵌套属性仍可用组合器。目录测试守住全部八版，`PrefillWorkbenchForm` 使用平铺 schema | 维护者 2026-11-04 决定，DES-4 Part 1。[ADR 0032](decisions/0032-canonical-tool-parameters.md)与[设计规范](design.md) |
+| MCP-11 输入 schema | 工具 `inputSchema` 根节点不使用 `oneOf`、`allOf`、`anyOf`，以兼容拒绝根组合器的客户端。互斥参数和表单字段规则写入描述并在运行时拒绝不合法组合，嵌套属性仍可用组合器。目录测试守住全部八版，`PrefillWorkbenchForm` 使用平铺 schema | 维护者 2026-11-04 决定，DES-4 Part 1。[ADR 0033](decisions/0033-canonical-tool-parameters.md)与[设计规范](design.md) |
 | 工作台视觉 | EplanMcp 工作台设计系统；表格行高 36；审批按钮等权重、拒绝在左、回车不批准、拒绝后不撤销 | [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md) |
 | 用语 | 界面和文档用“服务”“项目”（TIA 的 project） | [ADR 0026](decisions/0026-documentation-structure-and-language.md) |
 | 根目录布局 | `runtime/`、根启动器 `TiaOpenness.exe` 与项目 `bin`/`obj` 保留为忽略的构建输出；checkout 检查依赖与 `manifest/`、`templates/` 同根的运行布局，项目输出沿用 .NET 标准布局。`TiaMcp_Output/` 保留供生态 Python 环境、发布前置检查和产品使用。将 checkout 检查改为从提取的 ZIP 运行安排在 beta.4 之后；`hooks/` 不搬入 `plugin/`，避免旧安装遗留的钩子重复加载 | [ADR 0030 修订](decisions/0030-documentation-and-repository-structure.md#2026-11-04-修订保留运行输出和根目录钩子) |

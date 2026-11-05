@@ -687,7 +687,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 ### 6.4 参数
 
-规范形式、逐工具路径别名和缺省导出位置见 [ADR 0032](decisions/0032-canonical-tool-parameters.md)。文件输出用 `exportFile`，目录输出用 `exportDirectory`，设备路径用名称数组；旧参数保留至 5.0 并返回 `DEPRECATED_PARAMETER`。项目名称与项目文件身份仍为两个独立断言。
+规范形式、逐工具路径别名和缺省导出位置见 [ADR 0033](decisions/0033-canonical-tool-parameters.md)。文件输出用 `exportFile`，目录输出用 `exportDirectory`，设备路径用名称数组；旧参数保留至 5.0 并返回 `DEPRECATED_PARAMETER`。项目名称与项目文件身份仍为两个独立断言。
 
 现行规则：
 
@@ -696,7 +696,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 - MUST：操作选择器用 `action`（另有既有的 `kind`、`mode`、`operation`）；自定义的选择值用 camelCase，Siemens 原生枚举名保持原样。
 - 现状偏差：部分可选字符串参数用 `""` 作为缺省哨兵（API-35）；同一概念在不同工具中的形式不一致，例如导出目标有的是目录、有的是新文件，`devicePath` 有的是字符串、有的是数组。
 
-参数模型已由 ADR 0032 落地；本节其余错误与诊断要求由 DES-4 后续部分实施：
+参数模型已由 ADR 0033 落地；本节其余错误与诊断要求由 DES-4 后续部分实施：
 
 - 参数 schema 按 JSON Schema 2020-12：必填列在 `required`，可选参数省略即未提供，不用 `""` 哨兵；闭集用 `enum`，固定格式用 `pattern`，互斥参数的选择规则写在各参数说明中，并在运行时校验；对象 `additionalProperties: false`（1.1 MCP-11）。
 - MUST：任何已发布工具的 `inputSchema` 根层均不得包含 `oneOf`、`allOf` 或 `anyOf`；嵌套对象或字段仍可使用。维护者 2026-11-04 收到用户报告，称 Claude API 对根层组合返回 400，导致整个工具列表被拒绝；这是兼容性用户报告，不是官方规范保证。条件必填、互斥与工作台表单的封闭字段必须保留运行时拒绝，不能仅删除 schema 约束。
