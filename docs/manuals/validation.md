@@ -16,6 +16,8 @@ dotnet run --project build-tools/release -- merge-check
 
 构建完成后，适配器输入、worker 隔离与 updater 并行执行，随后单独执行原生诊断，避免其 Python 进程与 updater 的捆绑进程探测重叠。全部结束后启动套件池，Foundation 优先入池。池结束后执行独占作业，再让 GUI 与传输检查并行。日志、各作业耗时和带开始、结束偏移的 `timeline.tsv` 写在 `bin-build/merge-check/`，耗时随改动范围和主机负载变化。传输检查始终使用 `full` 档，每次最多并行检查 4 个版本，并遵循合并门的 `-MaxParallelism` 设置（设为 1 时串行检查）。
 
+`merge-check` 将本次测试指标和各成功作业的耗时与主 checkout 历史中同指标、同单位最近至多 20 条记录的中位数比较，至少有 5 条历史且本次值严格超过中位数的 2 倍时，在摘要和 `bin-build/merge-check/trend-notice.txt` 中列出 `Slower than usual` 提示、指标、当前值、中位数与比值。提示及历史缺失、坏行或读写失败均不改变退出码，异常以单行说明，提示文件首行记录提交和 UTC 时间，`prepare` 摘要会输出该文件并标明来源提交是否为当前 HEAD，旧文件的来源标为未知。
+
 GitHub CI 保留独立检查，但不阻塞合并，也不代替本机检查。不再设置 nightly；每个发布候选前由主机手动运行 `merge-check -All`，覆盖全部 38 个注册套件及源码检查。审查时核对实际运行的项目、失败与阻塞项，而非只看命令退出或旧结果缓存。
 
 Codex 沙箱只构建受影响的 Debug 项目并运行涉及的测试类；例如把 `<测试类全名>` 替换为实际改动的类名：

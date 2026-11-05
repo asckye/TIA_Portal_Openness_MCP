@@ -96,7 +96,9 @@ public sealed class MergeCheckTests
         tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
         tree.Write("tests/one.csproj", "<Project />");
         var result = MergeCheck.Run(tree.Root, Options.Parse([], Program.BooleanOptions), (_, _, _, _) => new(0, "", ""),
-            args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" ? "README.md\0" : "", ""));
+            args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" ? "README.md\0"
+                : args.Contains("--git-common-dir") ? Path.Combine(tree.Root, ".git")
+                : args.Contains("HEAD") ? "revision" : "", ""));
         Assert.Equal(0, result);
         var rows = File.ReadAllLines(Path.Combine(tree.Root, "bin-build/merge-check/timeline.tsv"));
         Assert.Equal("name\tstart_seconds\tend_seconds\telapsed_seconds\texit_code", rows[0]);
@@ -252,7 +254,9 @@ public sealed class MergeCheckTests
                 ? "COMPLETE: 1 native harness safety checks passed; live TIA tests NOT RUN" : "Passed: 157\n", "");
         }
         var result = MergeCheck.Run(tree.Root, Options.Parse(["-All", "-MaxParallelism=4", "-PublicApiRoot=" + sdk, "-Python=" + python], Program.BooleanOptions),
-            Process, args => new(0, args[0] == "merge-base" ? "abc" : "", ""), (_, _) => 0);
+            Process, args => new(0, args[0] == "merge-base" ? "abc"
+                : args.Contains("--git-common-dir") ? Path.Combine(tree.Root, ".git")
+                : args.Contains("HEAD") ? "revision" : "", ""), (_, _) => 0);
         Assert.Equal(0, result); Assert.Equal(expected, finished); Assert.Equal(updater ? 1 : 0, updaterRuns);
         var snapshot = calls.ToArray();
         Assert.Single(snapshot, args => args.Length > 1 && args[0] == "msbuild"
@@ -723,7 +727,9 @@ public sealed class MergeCheckTests
         {
             commands.Enqueue(arguments.ElementAt(1));
             return new(0, "", "");
-        }, args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" ? "README.md\0" : "", ""),
+        }, args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" ? "README.md\0"
+            : args.Contains("--git-common-dir") ? Path.Combine(tree.Root, ".git")
+            : args.Contains("HEAD") ? "revision" : "", ""),
             (_, _) => throw new InvalidOperationException("No decoder preparation for docs"));
         Assert.Equal(0, result);
         Assert.Equal(new[] { "check-dead-tool-references", "check-repository", "generate-tool-counts" }, commands.Order());
@@ -759,10 +765,15 @@ public sealed class MergeCheckTests
         Assert.Equal(failedCheck ? 1 : 0, result);
         Assert.Equal(3, calls);
         string[] rows = File.ReadAllLines(Path.Combine(output, "trend.jsonl"));
-        Assert.Equal(3, rows.Length);
+        Assert.Equal(3, rows.Count(row => ((string?)JsonNode.Parse(row)!["metric"])!.StartsWith("sample-", StringComparison.Ordinal)));
+        string[] successfulJobs = failedCheck
+            ? ["selection", "check-dead-tool-references", "generate-tool-counts"]
+            : ["selection", "check-dead-tool-references", "generate-tool-counts", "check-repository", "suite-stage"];
+        Assert.Equal(successfulJobs.Order(), rows.Select(row => (string)JsonNode.Parse(row)!["metric"]!)
+            .Where(metric => metric.StartsWith("timing:", StringComparison.Ordinal)).Select(metric => metric[7..]).Order());
         Assert.All(rows, row => Assert.False(JsonNode.Parse(row)!.AsObject().ContainsKey("head")));
         string[] accumulated = File.ReadAllLines(history);
-        Assert.Equal(4, accumulated.Length);
+        Assert.Equal(rows.Length + 1, accumulated.Length);
         Assert.Equal("previous", (string?)JsonNode.Parse(accumulated[0])!["metric"]);
         foreach (string row in accumulated.Skip(1))
         {
@@ -823,7 +834,9 @@ public sealed class MergeCheckTests
             }
             return new(failure == "build" && args.Contains("-t:Build") || failure == "check" && args.Contains("check-tools-list") ? 1 : 0, "", "");
         }
-        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc" : args[0] == "rev-parse" ? Path.Combine(tree.Root, ".git")
+        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc"
+            : args.Contains("--git-common-dir") ? Path.Combine(tree.Root, ".git")
+            : args[0] == "rev-parse" ? "revision"
             : args[0] == "diff" && args[^1] == "HEAD" ? "source.cs\0" : "", "");
         int decoderCalls = 0;
         var result = MergeCheck.Run(tree.Root, Options.Parse(["-PublicApiRoot", sdk, "-Python", python], new HashSet<string>()), Process, Git,
@@ -889,7 +902,10 @@ public sealed class MergeCheckTests
             return new(0, args.SequenceEqual(new[] { "--self-test" })
                 ? "COMPLETE: 1 native harness safety checks passed; live TIA tests NOT RUN" : "", "");
         }
-        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" && args[^1] == "HEAD" ? source + "\0" : "", "");
+        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc"
+            : args[0] == "diff" && args[^1] == "HEAD" ? source + "\0"
+            : args.Contains("--git-common-dir") ? Path.Combine(tree.Root, ".git")
+            : args.Contains("HEAD") ? "revision" : "", "");
         var result = MergeCheck.Run(tree.Root, Options.Parse(["-PublicApiRoot", sdk, "-Python", python], Program.BooleanOptions), Process, Git, (_, _) => 0);
         Assert.True(result == 0, string.Join("\n", Directory.EnumerateFiles(Path.Combine(tree.Root, "bin-build/merge-check"), "*.log")
             .Select(File.ReadAllText).Where(text => text.Contains("Exit code: 1", StringComparison.Ordinal))));

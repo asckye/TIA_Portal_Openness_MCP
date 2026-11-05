@@ -29,7 +29,7 @@ internal static class Prepare
     internal static readonly string[] GeneratedPaths =
         ["manifest/package-manifest.json", "manifest/delivery.json", "manifest/tools-list.json", InventoryPath];
 
-    internal static int RunWithTimings(Func<int> action)
+    internal static int RunWithTimings(Func<int> action, string? root = null)
     {
         var timings = new PrepareTimings();
         try { return action(); }
@@ -39,7 +39,50 @@ internal static class Prepare
             if (!timings.HasFailures) PrepareTimings.RecordFailure("prepare", error.Message);
             return error is ReleaseException release ? release.ExitCode : 1;
         }
-        finally { timings.Dispose(); }
+        finally
+        {
+            timings.Dispose();
+            if (root is not null)
+            {
+                string notice = Path.Combine(root, "bin-build/merge-check/trend-notice.txt");
+                try
+                {
+                    if (File.Exists(notice))
+                    {
+                        string contents = File.ReadAllText(notice);
+                        using var reader = new StringReader(contents);
+                        string header = reader.ReadLine() ?? "";
+                        var provenance = Regex.Match(header,
+                            @"\ATrend notice from commit (?<head>\S+) at (?<utc>\S+)\z");
+                        if (provenance.Success)
+                        {
+                            string relation;
+                            try
+                            {
+                                string currentHead = Git(root, "rev-parse", "HEAD");
+                                relation = currentHead == provenance.Groups["head"].Value
+                                    ? "current HEAD" : "differs from current HEAD " + currentHead;
+                            }
+                            catch (ReleaseException)
+                            { /* swallow(logging-failure): Git lookup failure cannot fail an optional trend notice. */
+                                relation = "current HEAD unavailable";
+                            }
+                            Console.WriteLine(header + " (" + relation + ")");
+                            Console.Write(reader.ReadToEnd());
+                        }
+                        else if (contents.Length != 0)
+                        {
+                            Console.WriteLine("Trend notice provenance unavailable (legacy file).");
+                            Console.Write(contents);
+                        }
+                    }
+                }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                { /* swallow(logging-failure): An optional trend notice cannot fail release preparation. */
+                    Console.WriteLine($"Skipped trend notice read: {error.GetType().Name}.");
+                }
+            }
+        }
     }
 
     internal static int Run(string root, Options options) => RunWithTimings(() =>
@@ -63,7 +106,7 @@ internal static class Prepare
             Console.WriteLine($"Package: {package.ZipPath}\nSHA-256: {package.Sha256}\nFiles: {package.FileCount}\nSize: {package.Size} bytes");
             return Complete(context, package, options, environment, () => RequireUnchanged(root, before, options.Has("BuildOnly")));
         });
-    });
+    }, root);
 
     internal static void RequireVulnerabilityScan(string root, Options options, string logs,
         Func<string[], string, IDictionary<string, string?>, CommandResult>? run = null)
