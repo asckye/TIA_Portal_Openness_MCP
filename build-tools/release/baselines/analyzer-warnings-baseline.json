@@ -2741,6 +2741,1270 @@
       "contexts": [
         "ordinary|tests/FoundationHost/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
       ]
+    },
+    {
+      "rule": "CA5386",
+      "path": "src/Shared/Host/McpServer.Maintenance.cs",
+      "line": 42,
+      "column": 53,
+      "endLine": 42,
+      "endColumn": 79,
+      "message": "Avoid hardcoding SecurityProtocolType Tls12, and instead use SecurityProtocolType.SystemDefault to allow the operating system to choose the best Transport Layer Security protocol to use.",
+      "member": "TiaMcpServer . ModelContextProtocol/McpServer/CreateUpdateClient( )",
+      "anchor": "SecurityProtocolType . Tls12 ",
+      "fingerprint": "15a5d6b5677963653065c189d14bca750933b06de15eecd7d4dec9acbca9e3e0",
+      "reason": "net48 must request TLS 1.2 itself: the framework default can negotiate lower on older Windows",
+      "retirement": "",
+      "contexts": [
+        "ordinary|src/EngineHost/TiaMcp.EngineHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_ENGINE_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5386",
+      "path": "src/Studio/Gui/Configuration/UpdateCheck.cs",
+      "line": 168,
+      "column": 53,
+      "endLine": 168,
+      "endColumn": 79,
+      "message": "Avoid hardcoding SecurityProtocolType Tls12, and instead use SecurityProtocolType.SystemDefault to allow the operating system to choose the best Transport Layer Security protocol to use.",
+      "member": "TiaMcpConfigurator/UpdateCheck/Latest( string installed , string repository )",
+      "anchor": "SecurityProtocolType . Tls12 ",
+      "fingerprint": "49fbd88fde03b89bac1e72484cd715e130f072ccaa2cbaae7c6523298ffbca26",
+      "reason": "net48 must request TLS 1.2 itself: the framework default can negotiate lower on older Windows",
+      "retirement": "",
+      "contexts": [
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5386",
+      "path": "src/Updater/Updater.Release.cs",
+      "line": 146,
+      "column": 53,
+      "endLine": 146,
+      "endColumn": 79,
+      "message": "Avoid hardcoding SecurityProtocolType Tls12, and instead use SecurityProtocolType.SystemDefault to allow the operating system to choose the best Transport Layer Security protocol to use.",
+      "member": "TiaMcp . Updater/UpdaterEngine/Download( string url , string destination , int timeoutSeconds , UpdaterOptions options )",
+      "anchor": "SecurityProtocolType . Tls12 ",
+      "fingerprint": "ea22e9a71d13b89bf6042354d34ec379390a79b0143ff03cee4665766d52638c",
+      "reason": "net48 must request TLS 1.2 itself: the framework default can negotiate lower on older Windows",
+      "retirement": "",
+      "contexts": [
+        "ordinary|src/Updater/TiaMcp.Updater.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5389",
+      "path": "src/Updater/Updater.cs",
+      "line": 278,
+      "column": 41,
+      "endLine": 278,
+      "endColumn": 125,
+      "message": "When creating path for \u0027FileStream.FileStream(string path, FileMode mode, FileAccess access, FileShare share) in method string UpdaterEngine.ExtractPackage(string zipFile, string extraction, Action\u003Cstring\u003E say)\u0027 from relative archive item path to extract file and the source is an untrusted zip archive, make sure to sanitize relative archive item path \u0027string ZipArchiveEntry.FullName in method string UpdaterEngine.ExtractPackage(string zipFile, string extraction, Action\u003Cstring\u003E say)\u0027",
+      "member": "TiaMcp . Updater/UpdaterEngine/ExtractPackage( string zipFile , string extraction , Action \u003C string \u003E say )",
+      "anchor": "new FileStream ( Prefix ( target ) , FileMode . CreateNew , FileAccess . Write , FileShare . None ) ",
+      "fingerprint": "0cbba36121a6c5aaa5d0210f9d3c1974ea49d3895d8aa6da810a37b2e6edf71a",
+      "reason": "false positive: the entry name passes IsSafeRelativePath just above, and an unsafe entry refuses the whole ZIP",
+      "retirement": "",
+      "contexts": [
+        "ordinary|src/Updater/TiaMcp.Updater.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "scripts/operations/vci-watch/WindowsProcesses.cs",
+      "line": 23,
+      "column": 91,
+      "endLine": 23,
+      "endColumn": 115,
+      "message": "The method CreateToolhelp32Snapshot didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . DiagnosticClients/WindowsProcesses/CreateToolhelp32Snapshot( uint flags , uint pid )",
+      "anchor": "CreateToolhelp32Snapshot ",
+      "fingerprint": "759018c7a55d51230820c8f6599b75c9c81d9b33f072e679b070411da1e1ea69",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|scripts/diagnostics/TiaMcp.DiagnosticClients/TiaMcp.DiagnosticClients.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "scripts/operations/vci-watch/WindowsProcesses.cs",
+      "line": 27,
+      "column": 56,
+      "endLine": 27,
+      "endColumn": 81,
+      "message": "The method NtQueryInformationProcess didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . DiagnosticClients/WindowsProcesses/NtQueryInformationProcess( SafeProcessHandle process , int informationClass , IntPtr information , int length , out int required )",
+      "anchor": "NtQueryInformationProcess ",
+      "fingerprint": "2baee0dcf5d6ec5eb93fbd45e8acfb419901963c7a5a70c0f962a4ce966f9e7b",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|scripts/diagnostics/TiaMcp.DiagnosticClients/TiaMcp.DiagnosticClients.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "scripts/operations/vci-watch/WindowsProcesses.cs",
+      "line": 26,
+      "column": 94,
+      "endLine": 26,
+      "endColumn": 105,
+      "message": "The method OpenProcess didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . DiagnosticClients/WindowsProcesses/OpenProcess( uint access , bool inherit , int pid )",
+      "anchor": "OpenProcess ",
+      "fingerprint": "b66e686bedc9e718f61ea674302c9b1994790c1f5d87644f13a8f9b45cb9a0ea",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|scripts/diagnostics/TiaMcp.DiagnosticClients/TiaMcp.DiagnosticClients.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "scripts/operations/vci-watch/WindowsProcesses.cs",
+      "line": 24,
+      "column": 148,
+      "endLine": 24,
+      "endColumn": 163,
+      "message": "The method Process32FirstW didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . DiagnosticClients/WindowsProcesses/Process32FirstW( SafeFileHandle snapshot , ref Entry entry )",
+      "anchor": "Process32FirstW ",
+      "fingerprint": "742f47091557018befa8163f8f25372999603b7a5da3552a5ff58cd8a695944f",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|scripts/diagnostics/TiaMcp.DiagnosticClients/TiaMcp.DiagnosticClients.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "scripts/operations/vci-watch/WindowsProcesses.cs",
+      "line": 25,
+      "column": 148,
+      "endLine": 25,
+      "endColumn": 162,
+      "message": "The method Process32NextW didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . DiagnosticClients/WindowsProcesses/Process32NextW( SafeFileHandle snapshot , ref Entry entry )",
+      "anchor": "Process32NextW ",
+      "fingerprint": "81c0ff698cfc45460ee1c4072b1a3b40516ee785c33b9a896019662f19416f95",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|scripts/diagnostics/TiaMcp.DiagnosticClients/TiaMcp.DiagnosticClients.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/FoundationHost/WorkerJob.cs",
+      "line": 57,
+      "column": 32,
+      "endLine": 57,
+      "endColumn": 56,
+      "message": "The method AssignProcessToJobObject didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . FoundationHost/WorkerJob/AssignProcessToJobObject( IntPtr job , IntPtr process )",
+      "anchor": "AssignProcessToJobObject ",
+      "fingerprint": "066e48d4bed805cad5908a89863a3f861c31a0100ed18b9b08e17da827d72dbe",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/FoundationHost/WorkerJob.cs",
+      "line": 59,
+      "column": 32,
+      "endLine": 59,
+      "endColumn": 43,
+      "message": "The method CloseHandle didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . FoundationHost/WorkerJob/CloseHandle( IntPtr handle )",
+      "anchor": "CloseHandle ",
+      "fingerprint": "a69367434af81eb3ba2c56b077d1f85ba871fdcf5a70e750f21f96092640d50c",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/FoundationHost/WorkerJob.cs",
+      "line": 53,
+      "column": 34,
+      "endLine": 53,
+      "endColumn": 49,
+      "message": "The method CreateJobObject didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . FoundationHost/WorkerJob/CreateJobObject( IntPtr attributes , string ? name )",
+      "anchor": "CreateJobObject ",
+      "fingerprint": "8fd93575a0eb5e0e7576ac17585c3d0deaaf5a8e044dbda2a5bed4e3d1d8222a",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/FoundationHost/WorkerJob.cs",
+      "line": 55,
+      "column": 32,
+      "endLine": 55,
+      "endColumn": 55,
+      "message": "The method SetInformationJobObject didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . FoundationHost/WorkerJob/SetInformationJobObject( IntPtr job , int informationClass , ref ExtendedLimits information , uint length )",
+      "anchor": "SetInformationJobObject ",
+      "fingerprint": "693487b38551f19e3940e40b28e2fb35fc7a088de15c9992c99b4043837e3c2e",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/FoundationHost/WorkerJob.cs",
+      "line": 149,
+      "column": 32,
+      "endLine": 149,
+      "endColumn": 53,
+      "message": "The method SetConsoleCtrlHandler didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . FoundationHost/WorkerShutdown/SetConsoleCtrlHandler( ConsoleHandler handler , bool add )",
+      "anchor": "SetConsoleCtrlHandler ",
+      "fingerprint": "e829600988eedcc19cb286006fba2d26e7abb2af6fb1dfef46f43fb58ec5b2dc",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Logic/Generation/GenerationRegex.cs",
+      "line": 172,
+      "column": 40,
+      "endLine": 172,
+      "endColumn": 52,
+      "message": "The method ClockGetTime didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . Logic . Generation/GenerationRegex/NativeMethods/ClockGetTime( int clock , out TimeSpec time )",
+      "anchor": "ClockGetTime ",
+      "fingerprint": "be9b76068ef4bb7d34ccc3dcbca057e68d456f841a947cc3cadfc6d0f0d2fde8",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Logic/Generation/GenerationRegex.cs",
+      "line": 165,
+      "column": 43,
+      "endLine": 165,
+      "endColumn": 59,
+      "message": "The method GetCurrentThread didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . Logic . Generation/GenerationRegex/NativeMethods/GetCurrentThread( )",
+      "anchor": "GetCurrentThread ",
+      "fingerprint": "1d38157d7c884b23cb4822072fb1cf85ecb8719d44a5b9a5c53f47ba8c154c16",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Logic/Generation/GenerationRegex.cs",
+      "line": 169,
+      "column": 41,
+      "endLine": 169,
+      "endColumn": 55,
+      "message": "The method GetThreadTimes didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . Logic . Generation/GenerationRegex/NativeMethods/GetThreadTimes( IntPtr thread , out long creation , out long exit , out long kernel , out long user )",
+      "anchor": "GetThreadTimes ",
+      "fingerprint": "737c868c18f4942123df0c7fa991c430c839b5e84df42d27f93a72fcbc9c46b2",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/ApprovalSettings.cs",
+      "line": 92,
+      "column": 46,
+      "endLine": 92,
+      "endColumn": 58,
+      "message": "The method OpenIdentity didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/ApprovalSettings/OpenIdentity( string path , uint access , uint share , IntPtr security , uint creation , uint flags , IntPtr template )",
+      "anchor": "OpenIdentity ",
+      "fingerprint": "ee2e32b69f6193f86d324e7a0f8b5f078f3c779b8275516bf780c241c4436c08",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/ApprovalSettings.cs",
+      "line": 94,
+      "column": 76,
+      "endLine": 94,
+      "endColumn": 88,
+      "message": "The method ReadIdentity didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/ApprovalSettings/ReadIdentity( SafeFileHandle handle , out FileIdentity identity )",
+      "anchor": "ReadIdentity ",
+      "fingerprint": "da203ff724755f1470c404b609e08921efeb16248d238bc0231f7430da466cdc",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/AuditLog.cs",
+      "line": 135,
+      "column": 36,
+      "endLine": 135,
+      "endColumn": 62,
+      "message": "The method GetFileInformationByHandle didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/AuditLog/GetFileInformationByHandle( SafeFileHandle file , out FileInformation information )",
+      "anchor": "GetFileInformationByHandle ",
+      "fingerprint": "5c69e9d6efc7f68e09400cb81e07c703f4fae5dd7013fc3d1f42f408ee1a9474",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
+      "line": 357,
+      "column": 36,
+      "endLine": 357,
+      "endColumn": 47,
+      "message": "The method CloseHandle didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcpServer . Runtime/EnvironmentDoctor/CloseHandle( IntPtr hObject )",
+      "anchor": "CloseHandle ",
+      "fingerprint": "14e1d7fd0b0862265898d6207588fc0b560ffcd6912508ce19042488b97af539",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/EngineHost/TiaMcp.EngineHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_ENGINE_HOST,TRACE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,HMI_UNIFIED,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SEED_HMI_IMPORT,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,HMI_UNIFIED,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,OPCUA_NO_EXTENSION,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,OPCUA_NO_UNITS,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|tests/Fixtures/TiaMcp.Offline.Fixtures/TiaMcp.Offline.Fixtures.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_ADAPTER_INTERNAL_VERSIONING,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
+      "line": 353,
+      "column": 38,
+      "endLine": 353,
+      "endColumn": 49,
+      "message": "The method CreateFileW didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcpServer . Runtime/EnvironmentDoctor/CreateFileW( string lpFileName , uint dwDesiredAccess , uint dwShareMode , IntPtr lpSecurityAttributes , uint dwCreationDisposition , uint dwFlagsAndAttributes , IntPtr hTemplateFile )",
+      "anchor": "CreateFileW ",
+      "fingerprint": "6ec84d84b5743cf2c4a068e8c3a7756e3bb65c1b3899cdae5107e1cd616fb524",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/EngineHost/TiaMcp.EngineHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_ENGINE_HOST,TRACE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,HMI_UNIFIED,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SEED_HMI_IMPORT,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,HMI_UNIFIED,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,OPCUA_NO_EXTENSION,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,OPCUA_NO_UNITS,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|tests/Fixtures/TiaMcp.Offline.Fixtures/TiaMcp.Offline.Fixtures.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_ADAPTER_INTERNAL_VERSIONING,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/HttpAccessKeyStore.cs",
+      "line": 37,
+      "column": 36,
+      "endLine": 37,
+      "endColumn": 52,
+      "message": "The method CryptProtectData didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/HttpAccessKeyStore/CryptProtectData( ref Blob input , IntPtr description , IntPtr entropy , IntPtr reserved , IntPtr prompt , int flags , out Blob output )",
+      "anchor": "CryptProtectData ",
+      "fingerprint": "8e02ba9b56ad8a7c22875e71fa35e0c585249b3e2a586d6caab7d3fe6ca91c00",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/HttpAccessKeyStore.cs",
+      "line": 41,
+      "column": 36,
+      "endLine": 41,
+      "endColumn": 54,
+      "message": "The method CryptUnprotectData didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/HttpAccessKeyStore/CryptUnprotectData( ref Blob input , IntPtr description , IntPtr entropy , IntPtr reserved , IntPtr prompt , int flags , out Blob output )",
+      "anchor": "CryptUnprotectData ",
+      "fingerprint": "ac1e7e8be63d3108b3f7aff7ddcb52c5727f6fe94ef7dddc8739c0e11eb7f877",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/HttpAccessKeyStore.cs",
+      "line": 44,
+      "column": 38,
+      "endLine": 44,
+      "endColumn": 47,
+      "message": "The method LocalFree didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/HttpAccessKeyStore/LocalFree( IntPtr memory )",
+      "anchor": "LocalFree ",
+      "fingerprint": "17998858104769b39c41f158f436323510acc7bf3c2e17b8cd3db8891940825e",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/JournalFileLock.cs",
+      "line": 54,
+      "column": 36,
+      "endLine": 54,
+      "endColumn": 46,
+      "message": "The method CancelIoEx didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/JournalFileLock/CancelIoEx( SafeFileHandle file , IntPtr overlapped )",
+      "anchor": "CancelIoEx ",
+      "fingerprint": "dc4985020fda7fa111ef373a24cb62b054e8280ded51ddd2f66f7570e9c3877f",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/JournalFileLock.cs",
+      "line": 52,
+      "column": 36,
+      "endLine": 52,
+      "endColumn": 55,
+      "message": "The method GetOverlappedResult didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/JournalFileLock/GetOverlappedResult( SafeFileHandle file , IntPtr overlapped , out uint transferred , bool wait )",
+      "anchor": "GetOverlappedResult ",
+      "fingerprint": "2f47412dd188ce09de052db8eaba3203d555a27e5946d47e4b317766ad6675ec",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/JournalFileLock.cs",
+      "line": 50,
+      "column": 36,
+      "endLine": 50,
+      "endColumn": 46,
+      "message": "The method LockFileEx didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/JournalFileLock/LockFileEx( SafeFileHandle file , uint flags , uint reserved , uint low , uint high , IntPtr overlapped )",
+      "anchor": "LockFileEx ",
+      "fingerprint": "9b2cb1e8a454506112186a890b091ac1c9fe93d05b918b742cd01bcc6977b3e9",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/LocalPipeSecurity.cs",
+      "line": 92,
+      "column": 76,
+      "endLine": 92,
+      "endColumn": 127,
+      "message": "The method ConvertStringSecurityDescriptorToSecurityDescriptor didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/LocalPipeSecurity/ConvertStringSecurityDescriptorToSecurityDescriptor( string text , uint revision , out IntPtr descriptor , out uint size )",
+      "anchor": "ConvertStringSecurityDescriptorToSecurityDescriptor ",
+      "fingerprint": "4b26e9de9964d2fa332cfc692f2f05c25c71484703dbf7b0bd7cd6f2c6816bea",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/LocalPipeSecurity.cs",
+      "line": 95,
+      "column": 46,
+      "endLine": 95,
+      "endColumn": 61,
+      "message": "The method CreateNamedPipe didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/LocalPipeSecurity/CreateNamedPipe( string name , uint mode , uint pipeMode , uint instances , uint outputSize , uint inputSize , uint timeout , ref SecurityAttributes attributes )",
+      "anchor": "CreateNamedPipe ",
+      "fingerprint": "25b76f2dbe718260bfc2cde00e2ced04932c290444eec76b452352c15fb82e73",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/LocalPipeSecurity.cs",
+      "line": 101,
+      "column": 76,
+      "endLine": 101,
+      "endColumn": 103,
+      "message": "The method GetNamedPipeClientProcessId didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/LocalPipeSecurity/GetNamedPipeClientProcessId( SafePipeHandle pipe , out uint pid )",
+      "anchor": "GetNamedPipeClientProcessId ",
+      "fingerprint": "8939022056bcb8a30714f978d281426578eca2bc60fa2d6d19cb8f0a4df6b0d0",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/LocalPipeSecurity.cs",
+      "line": 99,
+      "column": 76,
+      "endLine": 99,
+      "endColumn": 103,
+      "message": "The method GetNamedPipeServerProcessId didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/LocalPipeSecurity/GetNamedPipeServerProcessId( SafePipeHandle pipe , out uint pid )",
+      "anchor": "GetNamedPipeServerProcessId ",
+      "fingerprint": "adddc990eaf4d48fa67b77420ecf7c6c54fc23437465a3c335b983b10b7923d9",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/LocalPipeSecurity.cs",
+      "line": 97,
+      "column": 66,
+      "endLine": 97,
+      "endColumn": 75,
+      "message": "The method LocalFree didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/LocalPipeSecurity/LocalFree( IntPtr memory )",
+      "anchor": "LocalFree ",
+      "fingerprint": "7b9e5a7c505aa808877daf2b44ba6c8128a3243610600870d3f2c445414c2f56",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/LocalPipeSecurity.cs",
+      "line": 105,
+      "column": 98,
+      "endLine": 105,
+      "endColumn": 109,
+      "message": "The method OpenProcess didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/LocalPipeSecurity/OpenProcess( uint access , [ MarshalAs ( UnmanagedType . Bool ) ] bool inherit , uint pid )",
+      "anchor": "OpenProcess ",
+      "fingerprint": "e988775ca3ff9402ecf5855b8198184a3c1a54e82dd5329a27d73b3b16ef7741",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/LocalPipeSecurity.cs",
+      "line": 108,
+      "column": 76,
+      "endLine": 108,
+      "endColumn": 92,
+      "message": "The method OpenProcessToken didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/LocalPipeSecurity/OpenProcessToken( IntPtr process , uint access , out SafeAccessTokenHandle token )",
+      "anchor": "OpenProcessToken ",
+      "fingerprint": "5b17af2669b51c30fb8599e937f1e0bcfde96156a0995a67052f38859c66645f",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/LocalPipeSecurity.cs",
+      "line": 103,
+      "column": 76,
+      "endLine": 103,
+      "endColumn": 101,
+      "message": "The method QueryFullProcessImageName didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/LocalPipeSecurity/QueryFullProcessImageName( SafeProcessHandle process , uint flags , StringBuilder image , ref uint size )",
+      "anchor": "QueryFullProcessImageName ",
+      "fingerprint": "845a66e5d27e755ab4659e84144a6c0695322d04b01c7e9fa1abce981f779c09",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/NativeExportPolicy.cs",
+      "line": 15,
+      "column": 46,
+      "endLine": 15,
+      "endColumn": 57,
+      "message": "The method CreateFileW didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/NativeExportPolicy/CreateFileW( string path , uint access , uint share , IntPtr security , uint creation , uint flags , IntPtr template )",
+      "anchor": "CreateFileW ",
+      "fingerprint": "971209de3e6635fbfbde73ca8eefc1e75748ab60ad0384c5bbfc563f802befa8",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/NativeExportPolicy.cs",
+      "line": 17,
+      "column": 36,
+      "endLine": 17,
+      "endColumn": 62,
+      "message": "The method SetFileInformationByHandle didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Shared/NativeExportPolicy/SetFileInformationByHandle( SafeFileHandle handle , int information , ref int disposition , uint size )",
+      "anchor": "SetFileInformationByHandle ",
+      "fingerprint": "28a988958256dd07385e4be446bc3ea23701cf6f19e825af62934a3745e66ccb",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
+        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/WindowsOpennessGroupPlatform.cs",
+      "line": 71,
+      "column": 32,
+      "endLine": 71,
+      "endColumn": 48,
+      "message": "The method NetApiBufferFree didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcpServer . Siemens/WindowsOpennessGroupPlatform/NetApiBufferFree( IntPtr buffer )",
+      "anchor": "NetApiBufferFree ",
+      "fingerprint": "c19e5ac9c1f755706ec08ca00104a5ecd3abcc46adaf191ecd70ba05acb69e70",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,HMI_UNIFIED,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SEED_HMI_IMPORT,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,HMI_UNIFIED,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,OPCUA_NO_EXTENSION,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,OPCUA_NO_UNITS,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|tests/FoundationHost/TiaMcp.Engine.DiagnosticMembership.Tests/TiaMcp.Engine.DiagnosticMembership.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Shared/WindowsOpennessGroupPlatform.cs",
+      "line": 67,
+      "column": 32,
+      "endLine": 67,
+      "endColumn": 55,
+      "message": "The method NetLocalGroupGetMembers didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcpServer . Siemens/WindowsOpennessGroupPlatform/NetLocalGroupGetMembers( string ? serverName , string localGroupName , uint level , out IntPtr buffer , uint preferredMaximumLength , out uint entriesRead , out uint totalEntries , ref UIntPtr resumeHandle )",
+      "anchor": "NetLocalGroupGetMembers ",
+      "fingerprint": "31bbd956a5a41bec36a299bf5412329cf9a1f3cbd5169d61b9e87cb500d6d2f7",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,HMI_UNIFIED,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SEED_HMI_IMPORT,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,HMI_UNIFIED,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,OPCUA_NO_EXTENSION,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,OPCUA_NO_UNITS,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|src/PlcWorker/TiaMcp.PlcWorker.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PROJECT_SCAFFOLD,RELEASE,TIA_PLC_WORKER_OPENNESS_GROUP,TRACE,WORKER_PROPERTY_ADMISSION,WORKER_SESSION_LIFECYCLE",
+        "ordinary|tests/FoundationHost/TiaMcp.Engine.DiagnosticMembership.Tests/TiaMcp.Engine.DiagnosticMembership.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Studio/Core/Environment/WindowsEnvironmentSources.cs",
+      "line": 187,
+      "column": 35,
+      "endLine": 187,
+      "endColumn": 54,
+      "message": "The method GetExtendedTcpTable didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Core . Environment/WindowsEnvironmentSources/GetExtendedTcpTable( IntPtr table , ref int size , bool order , int addressFamily , int tableClass , int reserved )",
+      "anchor": "GetExtendedTcpTable ",
+      "fingerprint": "bba82fba7670d565d02537914cf1d9b803fb2e470bfe3eeb68ded94d83fc7b7c",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Studio/Core/Environment/WindowsEnvironmentSources.cs",
+      "line": 184,
+      "column": 35,
+      "endLine": 184,
+      "endColumn": 51,
+      "message": "The method NetApiBufferFree didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Core . Environment/WindowsEnvironmentSources/NetApiBufferFree( IntPtr buffer )",
+      "anchor": "NetApiBufferFree ",
+      "fingerprint": "ac2600a663d3a8673ebf9127d5d121d9c0236b96bcf6f21ef91e670c33f89dff",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Studio/Core/Environment/WindowsEnvironmentSources.cs",
+      "line": 180,
+      "column": 35,
+      "endLine": 180,
+      "endColumn": 58,
+      "message": "The method NetLocalGroupGetMembers didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Core . Environment/WindowsEnvironmentSources/NetLocalGroupGetMembers( string serverName , string groupName , int level , out IntPtr buffer , int preferredMaximumLength , out int entriesRead , out int totalEntries , ref IntPtr resumeHandle )",
+      "anchor": "NetLocalGroupGetMembers ",
+      "fingerprint": "b36e524c8c7e5495e673c0598f891f844c6f903cdf5c8088a08132ef75b6aeab",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
+        "ordinary|src/Studio/Core/TiaOpenness.Core.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Studio/Gui/Control/ControlInputGuard.cs",
+      "line": 42,
+      "column": 72,
+      "endLine": 42,
+      "endColumn": 84,
+      "message": "The method GetCursorPos didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Gui . ControlChannel/ControlInputGuard/GetCursorPos( out CursorPoint point )",
+      "anchor": "GetCursorPos ",
+      "fingerprint": "017769dc33a0442a0462136e2c6f1b559c28eb776a2fe51f86bfbd29f733aa18",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Studio/Gui/Control/WorkbenchControlServer.cs",
+      "line": 237,
+      "column": 72,
+      "endLine": 237,
+      "endColumn": 99,
+      "message": "The method GetNamedPipeClientProcessId didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaOpenness . Gui . ControlChannel/WorkbenchControlServer/GetNamedPipeClientProcessId( SafePipeHandle pipe , out uint pid )",
+      "anchor": "GetNamedPipeClientProcessId ",
+      "fingerprint": "a9964376c2d0ba3a2f3536381a83a570a0b6f2b8cdd99c685e616deaec4ea015",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 101,
+      "column": 32,
+      "endLine": 101,
+      "endColumn": 56,
+      "message": "The method AssignProcessToJobObject didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/AssignProcessToJobObject( SafeFileHandle job , SafeFileHandle process )",
+      "anchor": "AssignProcessToJobObject ",
+      "fingerprint": "8dbfae5207779af89e7c4572bc1a19a9c9e7080f6356b3026bd8a634eb5f76d3",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 97,
+      "column": 42,
+      "endLine": 97,
+      "endColumn": 57,
+      "message": "The method CreateJobObject didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/CreateJobObject( IntPtr attributes , string ? name )",
+      "anchor": "CreateJobObject ",
+      "fingerprint": "549cc5acefcb722749fb7abccf4fb36e0cc01a6a08e9e663ab33d6381d826e25",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 93,
+      "column": 32,
+      "endLine": 93,
+      "endColumn": 45,
+      "message": "The method CreateProcess didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/CreateProcess( string application , StringBuilder command , IntPtr processAttributes , IntPtr threadAttributes , bool inheritHandles , uint flags , IntPtr environment , string ? directory , ref StartupInfo startup , out ProcessInfo information )",
+      "anchor": "CreateProcess ",
+      "fingerprint": "ac1460ad00ceba21c1a31b956e77d15935582bb3e903c281445da63504ce9487",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 113,
+      "column": 32,
+      "endLine": 113,
+      "endColumn": 47,
+      "message": "The method DuplicateHandle didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/DuplicateHandle( IntPtr sourceProcess , IntPtr source , IntPtr targetProcess , out SafeFileHandle target , uint access , bool inherit , uint options )",
+      "anchor": "DuplicateHandle ",
+      "fingerprint": "391a259252fb4e0c085ed6f4c0d435a6eee7764144a29165337440c21d5e7445",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 111,
+      "column": 34,
+      "endLine": 111,
+      "endColumn": 51,
+      "message": "The method GetCurrentProcess didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/GetCurrentProcess( )",
+      "anchor": "GetCurrentProcess ",
+      "fingerprint": "204e812cd75fb991b93123d0854093aa9f23c1a86524b79604b50b49adc13e6f",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 107,
+      "column": 32,
+      "endLine": 107,
+      "endColumn": 50,
+      "message": "The method GetExitCodeProcess didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/GetExitCodeProcess( SafeFileHandle process , out uint exitCode )",
+      "anchor": "GetExitCodeProcess ",
+      "fingerprint": "e50f96b1f6a4350d5c7ddf99671cd0f706872fb4f3b7ce35b9da3f2dbb44a29c",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 109,
+      "column": 34,
+      "endLine": 109,
+      "endColumn": 46,
+      "message": "The method GetStdHandle didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/GetStdHandle( int id )",
+      "anchor": "GetStdHandle ",
+      "fingerprint": "8de324a84cc0cba8f65f29110233930968e9ed258bcc4fc6bc6d63ce96835d71",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 116,
+      "column": 32,
+      "endLine": 116,
+      "endColumn": 57,
+      "message": "The method QueryFullProcessImageName didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/QueryFullProcessImageName( SafeFileHandle process , uint flags , StringBuilder path , ref uint size )",
+      "anchor": "QueryFullProcessImageName ",
+      "fingerprint": "2d3e3767df146aec1207f914717ebabdd6fb52439411fed8f53784f7df7df30f",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 103,
+      "column": 32,
+      "endLine": 103,
+      "endColumn": 44,
+      "message": "The method ResumeThread didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/ResumeThread( SafeFileHandle thread )",
+      "anchor": "ResumeThread ",
+      "fingerprint": "0afe2508415d3c4f12d7aa3a9c303fd8efaa918ce095991a668385d12ff69ca5",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 99,
+      "column": 32,
+      "endLine": 99,
+      "endColumn": 55,
+      "message": "The method SetInformationJobObject didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/SetInformationJobObject( SafeFileHandle job , int informationClass , ref ExtendedLimits limits , uint size )",
+      "anchor": "SetInformationJobObject ",
+      "fingerprint": "7392b76b1419ddc35852e68ea3e8626debabe44aa8476d57d120dd07a567ecd6",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 118,
+      "column": 32,
+      "endLine": 118,
+      "endColumn": 48,
+      "message": "The method TerminateProcess didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/TerminateProcess( SafeFileHandle process , uint exitCode )",
+      "anchor": "TerminateProcess ",
+      "fingerprint": "890535e295808f64331b58c94434fc0fcb58668c3c15304bed48dc680d899e2a",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "src/Tools/PluginLauncher/HostProcess.cs",
+      "line": 105,
+      "column": 32,
+      "endLine": 105,
+      "endColumn": 51,
+      "message": "The method WaitForSingleObject didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "TiaMcp . PluginLauncher/HostProcess/WaitForSingleObject( SafeFileHandle handle , uint milliseconds )",
+      "anchor": "WaitForSingleObject ",
+      "fingerprint": "91af6cc9dd70a84e0a039f2d07226154fb6ed8f85d7c7bc67be2e33ee4097831",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VersionControlAdmissionTests.cs",
+      "line": 436,
+      "column": 32,
+      "endLine": 436,
+      "endColumn": 46,
+      "message": "The method CreateHardLink didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "VersionControlAdmissionTests/CreateHardLink( string fileName , string existingFileName , IntPtr securityAttributes )",
+      "anchor": "CreateHardLink ",
+      "fingerprint": "02c01a3a54d3e18b50b1bb03a6652aaaa6f5c593ad551ff294726a502a66220e",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5392",
+      "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VersionControlAdmissionTests.cs",
+      "line": 438,
+      "column": 32,
+      "endLine": 438,
+      "endColumn": 48,
+      "message": "The method GetShortPathName didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
+      "member": "VersionControlAdmissionTests/GetShortPathName( string longPath , StringBuilder shortPath , uint bufferLength )",
+      "anchor": "GetShortPathName ",
+      "fingerprint": "917db31db6d53bf6c104835db830bb010d5e699bd92231fbeba7b11e124a378a",
+      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
+      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
+      "contexts": [
+        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5394",
+      "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/OfflineAnalysisTests.cs",
+      "line": 464,
+      "column": 64,
+      "endLine": 464,
+      "endColumn": 78,
+      "message": "Random is an insecure random number generator. Use cryptographically secure random number generators when randomness is required for security.",
+      "member": "TiaMcp . Engine . Tests/OfflineAnalysisTests/RandomSeq( Random rng )",
+      "anchor": "rng . Next ( 0 , 4 ) ",
+      "fingerprint": "4b864f82b56872b8ce575849eaf9c9fc4b2cab07961c87d27e68ad56fd83542c",
+      "reason": "test data only: a seeded Random makes the test repeatable; nothing security-related uses it",
+      "retirement": "",
+      "contexts": [
+        "ordinary|tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_ADAPTER_INTERNAL_VERSIONING,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5394",
+      "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/OfflineAnalysisTests.cs",
+      "line": 462,
+      "column": 21,
+      "endLine": 462,
+      "endColumn": 36,
+      "message": "Random is an insecure random number generator. Use cryptographically secure random number generators when randomness is required for security.",
+      "member": "TiaMcp . Engine . Tests/OfflineAnalysisTests/RandomSeq( Random rng )",
+      "anchor": "rng . Next ( 0 , 12 ) ",
+      "fingerprint": "b45cc0b2aac2b6c4c5dfab259120d7135bb44d70f7fe0b02c762ee82fa55a106",
+      "reason": "test data only: a seeded Random makes the test repeatable; nothing security-related uses it",
+      "retirement": "",
+      "contexts": [
+        "ordinary|tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_ADAPTER_INTERNAL_VERSIONING,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5399",
+      "path": "src/FoundationHost/StdioHttpRelay.cs",
+      "line": 12,
+      "column": 50,
+      "endLine": 14,
+      "endColumn": 46,
+      "message": "HttpClient is created without enabling CheckCertificateRevocationList",
+      "member": "TiaMcp . FoundationHost/StdioHttpRelay/CreateClient( )",
+      "anchor": "new ( new HttpClientHandler { Proxy = new RemoteProxyPolicy ( ) , UseProxy = true , AllowAutoRedirect = false } ) { Timeout = Timeout . InfiniteTimeSpan } ",
+      "fingerprint": "e6572eea3a384b71650cb229b6ffa65d5fdda636d65e2c943fb3e27fbea40695",
+      "reason": "relay and proxy check reach a configured local or LAN endpoint; S5 was declined by the maintainer on 2026-11-04",
+      "retirement": "",
+      "contexts": [
+        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
+    },
+    {
+      "rule": "CA5399",
+      "path": "src/Studio/Gui/Services/ProxyConnectionInspector.cs",
+      "line": 71,
+      "column": 28,
+      "endLine": 71,
+      "endColumn": 89,
+      "message": "HttpClient is created without enabling CheckCertificateRevocationList",
+      "member": "TiaOpenness . Gui . Services/ProxyConnectionInspector/Probe( Uri endpoint , Uri ? proxy )",
+      "anchor": "new HttpClient ( handler ) { Timeout = TimeSpan . FromSeconds ( 8 ) } ",
+      "fingerprint": "74adb709b3e92d5ad50af8cc453b064b45e2d7fbd7338f70235abfb36e31416c",
+      "reason": "relay and proxy check reach a configured local or LAN endpoint; S5 was declined by the maintainer on 2026-11-04",
+      "retirement": "",
+      "contexts": [
+        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
+      ]
+    },
+    {
+      "rule": "CA5400",
+      "path": "src/OnlineChannels/S7WebApiChannel.cs",
+      "line": 375,
+      "column": 24,
+      "endLine": 379,
+      "endColumn": 14,
+      "message": "HttpClient may be created without enabling CheckCertificateRevocationList",
+      "member": "TiaMcpServer . Runtime/S7WebApiChannel/AcquireAsync( string key , string host , string username , string password , bool ignoreCert , int budget , bool forceNew )",
+      "anchor": "new HttpClient ( handler ) { BaseAddress = new Uri ( \u0022https://\u0022 \u002B host \u002B \u0022/\u0022 ) , Timeout = TimeSpan . FromMilliseconds ( budget ) } ",
+      "fingerprint": "1098bcd7cb243e4f2b09a8c6a53fbb63de0300ec960f8d0e8c373272f4410841",
+      "reason": "PLC web server with a device certificate, usually no reachable revocation list; the channel has its own certificate policy",
+      "retirement": "",
+      "contexts": [
+        "ordinary|src/OnlineChannels/TiaMcp.OnlineChannels.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
+      ]
     }
+  ],
+  "initializedRules": [
+    "CA2100",
+    "CA2303",
+    "CA2304",
+    "CA2305",
+    "CA2306",
+    "CA2307",
+    "CA2308",
+    "CA2309",
+    "CA2310",
+    "CA2311",
+    "CA2312",
+    "CA2313",
+    "CA2314",
+    "CA2315",
+    "CA2316",
+    "CA2317",
+    "CA2318",
+    "CA2319",
+    "CA2320",
+    "CA2321",
+    "CA2322",
+    "CA2323",
+    "CA2324",
+    "CA2325",
+    "CA2326",
+    "CA2327",
+    "CA2328",
+    "CA2329",
+    "CA2330",
+    "CA3001",
+    "CA3002",
+    "CA3003",
+    "CA3004",
+    "CA3005",
+    "CA3006",
+    "CA3007",
+    "CA3008",
+    "CA3009",
+    "CA3010",
+    "CA3011",
+    "CA3012",
+    "CA5350",
+    "CA5351",
+    "CA5352",
+    "CA5353",
+    "CA5354",
+    "CA5355",
+    "CA5356",
+    "CA5357",
+    "CA5358",
+    "CA5359",
+    "CA5360",
+    "CA5361",
+    "CA5362",
+    "CA5363",
+    "CA5364",
+    "CA5365",
+    "CA5366",
+    "CA5367",
+    "CA5368",
+    "CA5369",
+    "CA5370",
+    "CA5371",
+    "CA5372",
+    "CA5373",
+    "CA5374",
+    "CA5375",
+    "CA5376",
+    "CA5377",
+    "CA5378",
+    "CA5379",
+    "CA5380",
+    "CA5381",
+    "CA5382",
+    "CA5383",
+    "CA5384",
+    "CA5385",
+    "CA5386",
+    "CA5387",
+    "CA5388",
+    "CA5389",
+    "CA5390",
+    "CA5391",
+    "CA5392",
+    "CA5393",
+    "CA5394",
+    "CA5395",
+    "CA5396",
+    "CA5397",
+    "CA5398",
+    "CA5399",
+    "CA5400",
+    "CA5401",
+    "CA5402",
+    "CA5403"
   ]
 }
