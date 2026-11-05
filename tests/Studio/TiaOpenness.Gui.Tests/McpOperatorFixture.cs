@@ -32,7 +32,7 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     internal bool HoldApproval, RejectPreview, RejectApply;
     internal bool CandidatePolicies;
     internal bool GenerationRunActive;
-    internal bool InvalidGenericPreview;
+    internal bool MissingCreationPlanHash;
     private readonly Dictionary<string, JsonObject> schemas = [];
     internal Action<ApprovalRequest>? ApprovalRequested;
     internal string? HandshakeError;
@@ -137,7 +137,7 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             apply = (bool?)arguments["dryRun"] == false || (string?)arguments["mode"] == "apply";
         if (apply && schema["properties"]?["expectedPlanHash"] != null && (string?)arguments["expectedPlanHash"] != new string('a', 64))
             throw new InvalidDataException("The apply request did not preserve the reviewed plan hash.");
-        if (apply || name == "CreateVersionControlWorkspace" && schema["properties"]?["mode"] == null)
+        if (apply)
         {
             if (GenerationRunActive) return Envelope(name, new(), "PRECONDITION_FAILED", "generation-run-active");
             if (HoldApproval) ApprovalRequested?.Invoke(FeaturePageFixtures.Request("panel-call") with { Actor = "workbench",
@@ -150,7 +150,13 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
         if (preview && RejectPreview) return Envelope(name, new(), "PRECONDITION_FAILED");
         JsonObject data = name switch
         {
-            "PreviewToolCall" when InvalidGenericPreview => new() { ["ok"] = false, ["summary"] = "NOT READY: invalid arguments" },
+            "CreateVersionControlWorkspace" when preview => new() {
+                ["plannedChanges"] = new JsonObject { ["workspaceName"] = arguments["workspaceName"]?.DeepClone(),
+                    ["folderPath"] = arguments["folderPath"]?.DeepClone() },
+                ["planHash"] = MissingCreationPlanHash ? null : new string('a', 64),
+                ["targetIdentity"] = state["binding"]?.DeepClone(),
+                ["scope"] = "Normalized arguments and target identity; native validation/readback occurs during execution.",
+                ["dryRun"] = true, ["mayHaveChanged"] = false },
             "ListPortalProcessProjects" => new() { ["processes"] = new JsonArray(new JsonObject { ["processId"] = 123, ["projectPath"] = @"D:\fixture\Line.ap19", ["osStartTimeUtc"] = "2026-10-10T12:00:00.0000000Z" }) },
             "GetProjectTree" => new() { ["value"] = "Line\n  PlcSoftware: PLC_1 [softwarePath=devices/Station/PLC_1]" },
             "ListPlcBlocks" => new() { ["items"] = new JsonArray(Block()) },

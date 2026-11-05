@@ -343,7 +343,7 @@ public sealed class EngineHttpSessionTestsPlc
                 start.ArgumentList.Add("--fixture-scaled-worker-budgets"); start.ArgumentList.Add(timeouts);
             }
             start.Environment["TIA_MCP_DATA_DIRECTORY"] = directory; start.Environment["TiaPortalLocation"] = "";
-            if (gracefulShutdown) start.Environment["DOTNET_SHUTDOWNTIMEOUTSECONDS"] = "3";
+            if (gracefulShutdown) start.Environment["DOTNET_SHUTDOWNTIMEOUTSECONDS"] = "15";
             start.Environment["TIA_MCP_FIXTURE_LEASE_ROOT"] = Path.Combine(directory, "leases");
             // Release checks set their own diagnostics root; the journal assertions read this host's data directory.
             start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(directory, "diagnostics");

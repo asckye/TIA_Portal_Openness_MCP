@@ -148,10 +148,20 @@ public sealed class WriteGuardPortTests
             }));
         }
 
-        fixture.ExpectDeny(fixture.Call(watch, new JsonObject()), watch);
-        fixture.ExpectDeny(fixture.Call(watch, new JsonObject { ["dryRun"] = true }), watch);
-        fixture.ExpectAllow(fixture.Call(watch, new JsonObject(), ("TIA_MCP_ALLOW_ONLINE_WRITE", "1")));
-        fixture.ExpectDeny(fixture.Call(bridge, new JsonObject { ["name"] = watch, ["arguments"] = new JsonObject { ["dryRun"] = true } }), watch);
+        foreach (string target in new[] { watch, "DownloadPlc" })
+        {
+            foreach (var arguments in new[] { new JsonObject(), new JsonObject { ["dryRun"] = true } })
+            {
+                fixture.ExpectAllow(fixture.Call(target, arguments));
+                fixture.ExpectAllow(fixture.Call(bridge, new JsonObject { ["name"] = target, ["arguments"] = arguments.DeepClone() }));
+            }
+            var apply = new JsonObject { ["dryRun"] = false };
+            fixture.ExpectDeny(fixture.Call(target, apply), target);
+            fixture.ExpectDeny(fixture.Call(bridge, new JsonObject { ["name"] = target, ["arguments"] = apply.DeepClone() }), target);
+            fixture.ExpectAllow(fixture.Call(target, apply, ("TIA_MCP_ALLOW_ONLINE_WRITE", "1")));
+            fixture.ExpectAllow(fixture.Call(bridge, new JsonObject { ["name"] = target, ["arguments"] = apply.DeepClone() },
+                ("TIA_MCP_ALLOW_ONLINE_WRITE", "1")));
+        }
 
         var secretArguments = new JsonObject
         {

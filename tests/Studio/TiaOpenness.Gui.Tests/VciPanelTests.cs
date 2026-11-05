@@ -1,6 +1,7 @@
 using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -94,6 +95,12 @@ public sealed class VciPanelTests(WpfContext wpf)
             Assert.False(pending.IsCompleted); Assert.Equal(0, host.ExecutedWrites);
             Assert.Equal("workbench", request?.Actor); Assert.NotNull(request?.OperatorCallId);
             Assert.Contains(host.Calls, c => c.Name == tool);
+            if (!candidate && tool == "CreateVersionControlWorkspace")
+            {
+                Assert.Equal(new[] { tool, tool }, host.Calls.Select(c => c.Name));
+                Assert.Equal(new[] { true, false }, host.Calls.Select(c => (bool)c.Arguments["dryRun"]!));
+                Assert.Equal(new string('a', 64), (string?)host.Calls.Last().Arguments["expectedPlanHash"]);
+            }
             host.Approval.TrySetResult(true); await pending;
             Assert.Equal(1, host.ExecutedWrites); Assert.Equal(0, bridge.Reads); Assert.Equal(0, bridge.Writes);
         }
@@ -158,7 +165,11 @@ public sealed class VciPanelTests(WpfContext wpf)
             Assert.StartsWith("vci/", (string?)host.Calls.Last().Arguments["route"]);
         }
         else if (tool == "CreateVersionControlWorkspace")
-            Assert.Equal(new[] { "PreviewToolCall", tool }, host.Calls.Select(c => c.Name));
+        {
+            Assert.Equal(new[] { tool, tool }, host.Calls.Select(c => c.Name));
+            Assert.Equal(new[] { true, false }, host.Calls.Select(c => (bool)c.Arguments["dryRun"]!));
+            Assert.Equal(new string('a', 64), (string?)host.Calls.Last().Arguments["expectedPlanHash"]);
+        }
         else Assert.Equal(new[] { true, false }, host.Calls.Select(c => (bool)c.Arguments["dryRun"]!));
         host.Approval.TrySetResult(true); await pending;
         Assert.Equal(1, host.ExecutedWrites);
@@ -182,12 +193,15 @@ public sealed class VciPanelTests(WpfContext wpf)
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Invalid_generic_creation_preview_is_not_an_apply_permission(string release)
     {
-        await using var host = new McpOperatorFixture(release) { InvalidGenericPreview = true }; host.BindProject();
+        await using var host = new McpOperatorFixture(release) { MissingCreationPlanHash = true }; host.BindProject();
         await using var client = host.Client(); await client.AttachAsync(Assert.Single(await client.DiscoverAsync(release)));
         using var project = new McpProjectClient(client); using var vci = new McpVersionControlClient(project);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => vci.VcCreateWorkspaceAsync("git", host.Root));
-        Assert.Equal("PreviewToolCall", Assert.Single(host.Calls).Name); Assert.Equal(0, host.ExecutedWrites);
-        Assert.False(host.Pending.Task.IsCompleted); Assert.Contains("NOT READY", project.LastEnvelope);
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() => vci.VcCreateWorkspaceAsync("git", host.Root));
+        var preview = Assert.Single(host.Calls);
+        Assert.Equal("CreateVersionControlWorkspace", preview.Name);
+        Assert.True((bool?)preview.Arguments["dryRun"]);
+        Assert.Equal(0, host.ExecutedWrites);
+        Assert.False(host.Pending.Task.IsCompleted); Assert.Contains("plan hash", error.Message);
     }
 
     [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
