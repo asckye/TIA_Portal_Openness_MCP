@@ -2,18 +2,24 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcp.ReleaseTool;
 
-// Three capacity lanes share the machine; sensitive partitions retain serial order.
+// Sensitive partitions retain serial order. GUI input runs before the layout lanes.
 internal static class PlainShards
 {
     internal static IReadOnlyList<PipelineResult> RunLanes(string output, int parallelism,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)> ordinary,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)> sensitiveZero,
-        IReadOnlyList<(string Name, Func<PipelineResult> Run)> sensitiveOne)
+        IReadOnlyList<(string Name, Func<PipelineResult> Run)> sensitiveOne, bool sensitiveFirst = false)
     {
         var lanes = new[] { (Jobs: ordinary, Limit: parallelism), (Jobs: sensitiveZero, Limit: 1), (Jobs: sensitiveOne, Limit: 1) };
-        return Task.WhenAll(lanes.Select((lane, index) => Task.Run(() => lane.Jobs.Count == 0
+        IReadOnlyList<PipelineResult> RunLane(int index) => lanes[index].Jobs.Count == 0
             ? Array.Empty<PipelineResult>()
-            : ParallelPipeline.Run(lane.Jobs, Path.Combine(output, "lane-" + index), lane.Limit, continueOnFailure: true))))
+            : ParallelPipeline.Run(lanes[index].Jobs, Path.Combine(output, "lane-" + index), lanes[index].Limit, continueOnFailure: true);
+        if (sensitiveFirst)
+        {
+            var sensitive = RunLane(1).Concat(RunLane(2)).ToArray();
+            return RunLane(0).Concat(sensitive).ToArray();
+        }
+        return Task.WhenAll(Enumerable.Range(0, lanes.Length).Select(index => Task.Run(() => RunLane(index))))
             .GetAwaiter().GetResult().SelectMany(rows => rows).ToArray();
     }
 
@@ -46,13 +52,10 @@ internal static class PlainShards
                         plan: plan.Path, reserveSensitive: reserve, process: process, sensitiveShards: sensitiveCount);
                     return new(name + "-shard-" + index, result.ExitCode, result.StandardOutput, result.StandardError);
                 }))).ToArray();
-            // GUI has one input process and at most three layout processes on the shared desktop.
-            // A single-slot caller also serializes the input lane against all layout processes.
-            var rows = studioGui && parallelism == 1
-                ? ParallelPipeline.Run(jobs, directory, 1, continueOnFailure: true)
-                : RunLanes(directory, studioGui ? Math.Max(1, parallelism - 1) : parallelism, jobs.Take(ordinaryCount).ToArray(),
+            // Finish GUI input on the shared desktop before starting its parallel layout processes.
+            var rows = RunLanes(directory, studioGui ? Math.Max(1, parallelism - 1) : parallelism, jobs.Take(ordinaryCount).ToArray(),
                 jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] == 0).ToArray(),
-                jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] != 0).ToArray());
+                jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] != 0).ToArray(), sensitiveFirst: studioGui);
             failures.AddRange(rows.Where(row => row.ExitCode != 0).Select(row => row.Name + ": " + row.StandardError));
             SuiteCosts.Record(name, directory, history, jobs.Length);
             try

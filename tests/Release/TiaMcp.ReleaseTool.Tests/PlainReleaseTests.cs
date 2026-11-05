@@ -21,7 +21,8 @@ public sealed class PlainReleaseTests
             ["arguments"] = new JsonArray(), ["minimumPassed"] = 100, ["maximumSkipped"] = 0 };
         var options = Options.Parse(["-Suite=studio-gui", "-Shards=" + shards, "-MaxParallelism=" + parallelism,
             "-ResultsDirectory=" + tree.Root], Program.BooleanOptions);
-        using var overlap = new Barrier(parallelism == 1 ? 1 : shards);
+        using var overlap = new Barrier(parallelism == 1 ? 1 : Math.Max(1, shards - 1));
+        using var input = new Barrier(1);
         int calls = 0, active = 0;
         var result = PlainShards.Run(tree.Root, options, new JsonObject { ["studio-gui"] = suite }, (_, arguments, _, env) =>
         {
@@ -30,21 +31,132 @@ public sealed class PlainReleaseTests
             Assert.Equal(shards == 1 ? null : "1", env["TIA_MCP_TEST_SENSITIVE_SHARDS"]);
             int running = Interlocked.Increment(ref active);
             if (parallelism == 1) Assert.Equal(1, running);
-            Assert.True(overlap.SignalAndWait(TestDeadlines.Hang));
-            var args = arguments.ToArray();
-            var directory = args[Array.IndexOf(args, "--results-directory") + 1];
-            var path = Path.Combine(directory, "studio-gui.trx");
-            DotnetSuiteSelfTests.SyntheticTrx(path, Enumerable.Repeat("Passed", 100).ToArray());
-            var document = XDocument.Load(path);
-            foreach (var attribute in document.Descendants().Attributes().Where(a => a.Name.LocalName is "id" or "testId" or "executionId" or "testName"))
-                attribute.Value += "-" + env["TIA_MCP_TEST_SHARD_INDEX"];
-            document.Save(path);
+            bool sensitive = shards > 1 && env["TIA_MCP_TEST_SHARD_INDEX"] == (shards - 1).ToString();
+            Assert.True((sensitive ? input : overlap).SignalAndWait(TestDeadlines.Hang));
+            WriteShardTrx(arguments, env, "studio-gui");
             Interlocked.Increment(ref calls);
             Interlocked.Decrement(ref active);
             return new(0, "passed", "");
         });
         Assert.Equal(shards, calls);
         Assert.Equal(0, result.ExitCode);
+    }
+
+    [Theory]
+    [InlineData(1, false)]
+    [InlineData(1, true)]
+    [InlineData(4, false)]
+    [InlineData(4, true)]
+    public async Task GuiInputFinishesAloneBeforeOrdinaryShardsEvenAfterFailure(int parallelism, bool fail)
+    {
+        using var tree = new StaticTree();
+        var suite = new JsonObject { ["project"] = "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
+            ["arguments"] = new JsonArray(), ["minimumPassed"] = 100, ["maximumSkipped"] = 0 };
+        var options = Options.Parse(["-Suite=studio-gui", "-Shards=4", "-MaxParallelism=" + parallelism,
+            "-ResultsDirectory=" + tree.Root], Program.BooleanOptions);
+        using var sensitiveStarted = new ManualResetEventSlim();
+        using var releaseSensitive = new ManualResetEventSlim();
+        using var sensitiveFinished = new ManualResetEventSlim();
+        using var ordinaryStarted = new ManualResetEventSlim();
+        using var ordinaryOverlap = new Barrier(parallelism == 1 ? 1 : 3);
+        int calls = 0;
+        var running = Task.Run(() => PlainShards.Run(tree.Root, options,
+            new JsonObject { ["studio-gui"] = suite }, (_, arguments, _, env) =>
+            {
+                int index = int.Parse(env!["TIA_MCP_TEST_SHARD_INDEX"]!);
+                bool sensitive = index == 3;
+                try
+                {
+                    if (sensitive)
+                    {
+                        sensitiveStarted.Set();
+                        Assert.True(releaseSensitive.Wait(TestDeadlines.Hang));
+                    }
+                    else
+                    {
+                        ordinaryStarted.Set();
+                        Assert.True(sensitiveFinished.IsSet);
+                        Assert.True(ordinaryOverlap.SignalAndWait(TestDeadlines.Hang));
+                    }
+                    bool failed = fail && index is 0 or 3;
+                    WriteShardTrx(arguments, env, "studio-gui", failed);
+                    Interlocked.Increment(ref calls);
+                    return new(failed ? 1 : 0, "", failed ? "fixture shard " + index : "");
+                }
+                finally { if (sensitive) sensitiveFinished.Set(); }
+            }));
+        CommandResult result;
+        try
+        {
+            Assert.True(sensitiveStarted.Wait(TestDeadlines.Hang));
+            Assert.False(ordinaryStarted.IsSet);
+        }
+        finally
+        {
+            releaseSensitive.Set();
+            result = await running.WaitAsync(TestDeadlines.Hang);
+        }
+        Assert.True(ordinaryStarted.IsSet);
+        Assert.Equal(4, calls);
+        Assert.Equal(fail ? 1 : 0, result.ExitCode);
+        var counts = DotnetSuites.ReadTrx(Path.Combine(tree.Root, "studio-gui.trx")).Counts;
+        Assert.Equal(400, (int?)counts["passed"]);
+        Assert.Equal(fail ? 2 : 0, (int?)counts["failed"]);
+        if (fail)
+        {
+            Assert.Contains("studio-gui-shard-3", result.StandardError);
+            Assert.Contains("studio-gui-shard-0", result.StandardError);
+        }
+    }
+
+    [Fact]
+    public async Task FoundationOrdinaryAndBothSensitiveLanesStillOverlap()
+    {
+        using var tree = new StaticTree();
+        var suite = new JsonObject { ["project"] = "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
+            ["arguments"] = new JsonArray(), ["minimumPassed"] = 100, ["maximumSkipped"] = 0 };
+        var options = Options.Parse(["-Suite=foundation-api", "-Shards=4", "-MaxParallelism=3",
+            "-ResultsDirectory=" + tree.Root], Program.BooleanOptions);
+        using var allLanesStarted = new CountdownEvent(3);
+        using var release = new ManualResetEventSlim();
+        var started = new int[3];
+        int calls = 0;
+        var running = Task.Run(() => PlainShards.Run(tree.Root, options,
+            new JsonObject { ["foundation-api"] = suite }, (_, arguments, _, env) =>
+            {
+                int index = int.Parse(env!["TIA_MCP_TEST_SHARD_INDEX"]!);
+                int count = int.Parse(env["TIA_MCP_TEST_SHARD_COUNT"]!);
+                int lane = index < count - 2 ? 0 : index - (count - 2) + 1;
+                if (Interlocked.Exchange(ref started[lane], 1) == 0) allLanesStarted.Signal();
+                Assert.True(release.Wait(TestDeadlines.Hang));
+                WriteShardTrx(arguments, env, "foundation-api");
+                Interlocked.Increment(ref calls);
+                return new(0, "passed", "");
+            }));
+        CommandResult result;
+        try { Assert.True(allLanesStarted.Wait(TestDeadlines.Hang)); }
+        finally
+        {
+            release.Set();
+            result = await running.WaitAsync(TestDeadlines.Hang);
+        }
+        Assert.Equal(new[] { 1, 1, 1 }, started);
+        Assert.Equal(5, calls);
+        Assert.Equal(0, result.ExitCode);
+    }
+
+    private static void WriteShardTrx(IEnumerable<string> arguments, IDictionary<string, string?> environment,
+        string suite, bool failed = false)
+    {
+        var args = arguments.ToArray();
+        string directory = args[Array.IndexOf(args, "--results-directory") + 1];
+        string path = Path.Combine(directory, suite + ".trx");
+        string[] outcomes = Enumerable.Repeat("Passed", 100).Concat(failed ? new[] { "Failed" } : []).ToArray();
+        DotnetSuiteSelfTests.SyntheticTrx(path, outcomes);
+        var document = XDocument.Load(path);
+        foreach (var attribute in document.Descendants().Attributes().Where(a => a.Name.LocalName is "id" or "testId" or "executionId" or "testName"))
+            attribute.Value += "-" + environment["TIA_MCP_TEST_SHARD_INDEX"];
+        document.Save(path);
     }
 
     [Theory]
