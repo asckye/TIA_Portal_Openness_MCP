@@ -103,8 +103,12 @@ public partial class MainWindow
         CommandManager.InvalidateRequerySuggested();
     }
     private void OnShellLanguageChanged(object? sender, EventArgs e) { UpdateLanguage(); UpdateShell(); }
-    private void UpdateLanguage() => Language = System.Windows.Markup.XmlLanguage.GetLanguage(
-        Loc.Current.Language == AppLanguage.Chinese ? "zh-CN" : "en-US");
+    private void UpdateLanguage()
+    {
+        Language = System.Windows.Markup.XmlLanguage.GetLanguage(Loc.Current.Language == AppLanguage.Chinese ? "zh-CN" : "en-US");
+        ApprovalOffConfirmationLabel.Text = Loc.Current.T("Settings.ConfirmOffPrompt", ApprovalOffConfirmationWord);
+        UpdateApprovalOffConfirmation();
+    }
     private void UpdateShell()
     {
         if (_featuresDisposed) return;
@@ -248,6 +252,8 @@ public partial class MainWindow
     }
     private void OnDisableApprovalRequested(object? sender, EventArgs e)
     {
+        ApprovalOffConfirmation.Clear();
+        UpdateApprovalOffConfirmation();
         ConfirmOverlay.Visibility = Visibility.Visible;
         _confirmFocus?.Dispose();
         _confirmFocus = new Controls.ModalPane(ConfirmOverlay, CancelApprovalOff, CancelApprovalConfirmation);
@@ -263,8 +269,27 @@ public partial class MainWindow
         // C6: Enter always remains safe, including when the destructive button has focus.
         if (e.Key == Key.Enter || e.Key == Key.System && e.SystemKey == Key.Enter) e.Handled = true;
     }
+    private string ApprovalOffConfirmationWord
+    {
+        get
+        {
+            string label = Loc.Current["Settings.TurnOff"];
+            // The confirmation word excludes both inline and trailing access-key markers.
+            int accessKey = label.IndexOf("(_", StringComparison.Ordinal);
+            return (accessKey < 0 ? label : label[..accessKey]).Replace("_", "", StringComparison.Ordinal).Trim();
+        }
+    }
+    private bool IsApprovalOffConfirmed => string.Equals(ApprovalOffConfirmation.Text.Trim(), ApprovalOffConfirmationWord,
+        StringComparison.OrdinalIgnoreCase);
+    private void UpdateApprovalOffConfirmation() => ConfirmApprovalOff.IsEnabled = IsApprovalOffConfirmed;
+    private void OnApprovalOffConfirmationChanged(object sender, TextChangedEventArgs e) => UpdateApprovalOffConfirmation();
     private void OnCancelApprovalOff(object sender, RoutedEventArgs e) => CancelApprovalConfirmation();
-    private async void OnConfirmApprovalOff(object sender, RoutedEventArgs e) { await SetApprovalEnabled(false); CancelApprovalConfirmation(); }
+    private async void OnConfirmApprovalOff(object sender, RoutedEventArgs e)
+    {
+        if (ConfirmOverlay.Visibility != Visibility.Visible || !IsApprovalOffConfirmed) return;
+        await SetApprovalEnabled(false);
+        CancelApprovalConfirmation();
+    }
     private async Task SetApprovalEnabled(bool enabled)
     {
         try { await Task.Run(() => Approvals.Enabled = enabled); }

@@ -146,6 +146,7 @@ public sealed partial class UnifiedDesktopTests
                 ClickControl((Button)window.FindName("CancelApprovalOff"));
                 Assert.True(window.Approvals.Enabled);
                 ClickControl((RadioButton)settings.FindName("ApprovalOff"));
+                ((TextBox)window.FindName("ApprovalOffConfirmation")).Text = Loc.Current.Language == AppLanguage.Chinese ? "关闭审批" : "Turn off approval";
                 ClickApprovalControl((Button)window.FindName("ConfirmApprovalOff"), window.Approvals, nameof(window.Approvals.Enabled));
                 Assert.False(window.Approvals.Enabled);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);

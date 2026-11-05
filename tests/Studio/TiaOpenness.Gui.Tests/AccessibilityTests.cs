@@ -201,6 +201,8 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 Assert.False(settings.IsEnabled);
                 var cancel = (Button)window.FindName("CancelApprovalOff");
                 Assert.True(cancel.IsDefault); Assert.True(cancel.IsCancel); Assert.Same(cancel, Keyboard.FocusedElement);
+                var confirmation = (TextBox)window.FindName("ApprovalOffConfirmation");
+                confirmation.Text = Loc.Current.Language == AppLanguage.Chinese ? "关闭审批" : "Turn off approval";
                 cancel.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
                 var turnOff = (Button)window.FindName("ConfirmApprovalOff");
                 Assert.Same(turnOff, Keyboard.FocusedElement);
@@ -211,6 +213,8 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 Assert.True(window.Approvals.Enabled);
                 Assert.Equal(Visibility.Visible, sheet.Visibility);
                 ((UIElement)Keyboard.FocusedElement).MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+                Assert.Same(confirmation, Keyboard.FocusedElement);
+                confirmation.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
                 Assert.Same(cancel, Keyboard.FocusedElement);
                 Escape(cancel); WpfContext.Drain();
                 Assert.Equal(Visibility.Collapsed, sheet.Visibility);
@@ -272,6 +276,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 var settings = (Views.SettingsView)window.FindName("SettingsContent"); settings.ShowSection("AI");
                 UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOff")); WpfContext.Drain();
                 var button = (Button)window.FindName("ConfirmApprovalOff");
+                ((TextBox)window.FindName("ApprovalOffConfirmation")).Text = language == AppLanguage.Chinese ? "关闭审批" : "Turn off approval";
                 var saved = new System.Threading.Tasks.TaskCompletionSource();
                 bool clicked = false; button.Click += (_, _) => clicked = true;
                 window.Approvals.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(window.Approvals.Enabled)) saved.TrySetResult(); };

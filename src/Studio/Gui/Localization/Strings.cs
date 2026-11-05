@@ -179,6 +179,7 @@ internal static partial class Strings
                 "Write operations from AI clients will run immediately without manual approval. All calls are still recorded in the audit log.",
                 "关闭后，AI 客户端发起的写操作将直接执行，不再需要人工批准。所有调用仍会记录到审计日志。"),
         ("Settings.TurnOff", "_Turn off approval", "关闭审批(_T)"),
+        ("Settings.ConfirmOffPrompt", "Type “{0}” to confirm.", "输入“{0}”以确认。"),
         ("Mcp.Clients", "AI clients", "AI 客户端"),
         ("Mcp.ClientsNote", "Writes MCP connection info only · undetected clients still writable", "仅写入 MCP 连接信息 · 未检测到的仍可写入"),
         ("Mcp.ClientCounts", "· {0} selected · {1} detected", "· 已选 {0} 个 · 检测到 {1} 个"),

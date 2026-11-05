@@ -231,10 +231,15 @@
             <TextBlock Text="{l:Tr Settings.ConfirmOffTitle}" FontSize="{DynamicResource Ui.FontSize.DialogTitle}" FontWeight="SemiBold"/>
           </DockPanel>
           <TextBlock Text="{l:Tr Settings.ConfirmOffDescription}" FontSize="{DynamicResource Ui.FontSize.Control}" TextWrapping="Wrap" Margin="34,8,0,12" Style="{StaticResource Primer.Text.textMuted}"/>
+          <TextBlock x:Name="ApprovalOffConfirmationLabel" Style="{StaticResource Primer.InputLabel}" TextWrapping="Wrap"/>
+          <TextBox x:Name="ApprovalOffConfirmation" Style="{StaticResource Primer.Input}" Margin="0,0,0,16"
+            AutomationProperties.Name="{Binding Text,ElementName=ApprovalOffConfirmationLabel}"
+            AutomationProperties.LabeledBy="{Binding ElementName=ApprovalOffConfirmationLabel}"
+            TextChanged="OnApprovalOffConfirmationChanged" PreviewKeyDown="OnConfirmApprovalKeyDown"/>
           <Grid>
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <Button AutomationProperties.Name="{l:Tr Shell.Cancel}" x:Name="CancelApprovalOff" HorizontalAlignment="Left" IsDefault="True" IsCancel="True" Content="{l:Tr Shell.Cancel}" Style="{StaticResource Primer.Secondary}" Click="OnCancelApprovalOff"/>
-            <Button AutomationProperties.Name="{l:Tr Settings.TurnOff}" x:Name="ConfirmApprovalOff" Grid.Column="1" PreviewKeyDown="OnConfirmApprovalKeyDown" Content="{l:Tr Settings.TurnOff}" Style="{StaticResource Primer.WarningAction}" Click="OnConfirmApprovalOff"/>
+            <Button AutomationProperties.Name="{l:Tr Settings.TurnOff}" x:Name="ConfirmApprovalOff" Grid.Column="1" IsEnabled="False" PreviewKeyDown="OnConfirmApprovalKeyDown" Content="{l:Tr Settings.TurnOff}" Style="{StaticResource Primer.WarningAction}" Click="OnConfirmApprovalOff"/>
           </Grid>
         </StackPanel>
       </Border>
