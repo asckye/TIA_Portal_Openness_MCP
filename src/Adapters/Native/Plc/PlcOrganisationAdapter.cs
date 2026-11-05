@@ -117,7 +117,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 meta["mayHaveChanged"] = true;
                 using (var secure = PlcProtectionPolicy.ToSecureString(password))
                 {
-                    if (expected) PlcOrganisationPrimitives.Protect(provider, secure); else PlcOrganisationPrimitives.Unprotect(provider, secure);
+                    if (!EngineeringCredentialRules.TrySetPassword(() => {
+                        if (expected) PlcOrganisationPrimitives.Protect(provider, secure); else PlcOrganisationPrimitives.Unprotect(provider, secure);
+                    }, meta)) return EngineeringCredentialRules.PasswordPolicyRefusal;
                 }
                 meta["apiCallSuccess"] = true;
                 meta["after"] = new Dictionary<string, object?> { ["isKnowHowProtected"] = PlcOrganisationPrimitives.IsKnowHowProtected(block) };

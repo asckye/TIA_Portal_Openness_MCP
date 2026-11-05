@@ -46,8 +46,9 @@ public sealed class WorkerFamilyCallbackTests
         Assert.Equal("preflight:document", engine.PlcB5DocumentPreflight!("document"));
         engine.EngineeringRecordExportPath!("output.xml");
         Assert.Equal("output.xml", engine.WorkerAnalysisExportPath);
-        engine.AdmitHardwareAmlExport!("output.aml");
-        Assert.Equal("output.aml", HardwareAmlPolicy.LastPath);
+        string output = System.IO.Path.Combine(AppContext.BaseDirectory, "output-" + Guid.NewGuid().ToString("N") + ".aml");
+        Assert.Null(Record.Exception(() => engine.AdmitHardwareAmlExport!(output)));
+        Assert.Throws<ArgumentException>(() => engine.AdmitHardwareAmlExport!("output.aml"));
         engine.UpdateEngineeringReflectionLookupPaths!(" Available PLC paths: PLC");
         Assert.Equal(" Available PLC paths: PLC", engine.EngineeringReflectionLookupPaths!());
         Assert.Same(engine.FamilyPlc, Assert.Single(engine.OnlinePlcs!()));

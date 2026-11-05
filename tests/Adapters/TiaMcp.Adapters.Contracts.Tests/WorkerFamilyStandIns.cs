@@ -20,9 +20,11 @@ namespace Siemens.Engineering
         public string DetailText { get; set; } = "native detail";
     }
 }
-namespace Siemens.Engineering.SW { public sealed class PlcSoftware { } }
-namespace Siemens.Engineering.SW.Blocks { public sealed class PlcBlockGroup { } }
-namespace Siemens.Engineering.HW { public sealed class DeviceItem { } }
+namespace Siemens.Engineering.SW { public sealed class PlcSoftware { public Blocks.PlcBlockGroup BlockGroup { get; } = new(); } }
+namespace Siemens.Engineering.SW.Blocks { public sealed class PlcBlockGroup { public HW.NativeNamedList<PlcBlockGroup> Groups { get; } = new();
+    public HW.NativeNamedList<OB> Blocks { get; } = new(); } }
+namespace Siemens.Engineering.HW { public sealed class DeviceItem : HardwareObject { public List<Address> Addresses { get; } = new();
+    public ChannelComposition Channels { get; } = new(); } }
 namespace Siemens.Engineering.Online
 {
     public enum OnlineState { Offline, Online, Unknown }
@@ -39,15 +41,7 @@ namespace TiaMcp.Adapters.Native.Hmi
     {
         public static bool ConnectionUnavailable(Exception error) => HmiReadPolicy.ConnectionUnavailable(error);
     }
-    public static class HmiValues
-    {
-        public static object? DeepClone(object? value)
-        {
-            if (value is Dictionary<string, object?> fields) return fields.ToDictionary(pair => pair.Key, pair => DeepClone(pair.Value));
-            if (value is IList list) return list.Cast<object?>().Select(DeepClone).ToList();
-            return value;
-        }
-    }
+
     public static class HmiReadTrace
     {
         public static readonly List<(string Path, string Row)> Lines = new();
@@ -65,17 +59,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 }
 namespace TiaMcp.Adapters
 {
-    public static class HardwareAmlPolicy
-    {
-        public static string? LastPath { get; private set; }
-        public static void RequireExportTarget(string path) => LastPath = path;
-    }
     public sealed partial class PlcFoundationEngine
     {
-        public Func<string, Func<Dictionary<string, object?>, string>, HardwareAddressingReply>? EngineeringStep { get; set; }
         public Func<string, bool, Func<Dictionary<string, object?>, string>, HardwareAddressingReply>? EngineeringServicesStep { get; set; }
-        public Func<string, string, object?>? ResolveEngineeringBlock { get; set; }
-        public Func<string, object?>? ResolveEngineeringDevice { get; set; }
         public Func<string, object?>? ResolveEngineeringItem { get; set; }
         public Func<string, object?>? ResolveEngineeringSoftwareContainer { get; set; }
         public Func<string, string, object>? ResolveEngineeringHmiScreen { get; set; }
@@ -95,7 +81,6 @@ namespace TiaMcp.Adapters
         public Func<object, string>? EngineeringLibraryOptionKind { get; set; }
         public Func<object, string>? EngineeringBlockGroupPath { get; set; }
         public Action<string?>? EngineeringRecordExportPath { get; set; }
-        public Action<string>? AdmitHardwareAmlExport { get; set; }
         public Action<string?>? UpdateEngineeringReflectionLookupPaths { get; set; }
         public Func<string?>? EngineeringReflectionLookupPaths { get; set; }
         private string? reflectionLookupPaths;
@@ -103,7 +88,7 @@ namespace TiaMcp.Adapters
         private OrganisationSession? EngineeringPlcOrganisationSession;
         private OrganisationSession EngineeringPlcSession => EngineeringPlcOrganisationSession ?? new OrganisationSession(this);
         public readonly List<string> FamilyCalls = new();
-        public readonly object FamilyObject = new();
+        public readonly object FamilyObject = new Siemens.Engineering.HW.Device();
         public readonly Siemens.Engineering.SW.PlcSoftware FamilyPlc = new();
         public readonly Siemens.Engineering.HW.DeviceItem FamilyItem = new();
         public readonly Siemens.Engineering.Online.OnlineProvider FamilyProvider = new();
@@ -112,7 +97,8 @@ namespace TiaMcp.Adapters
         public int ExportFailures { get; private set; }
         public bool OrganisationSessionConfigured => EngineeringPlcOrganisationSession != null;
         public void ReleaseFamilyState() => _resetWorkerFamilyState?.Invoke();
-        private object HardwareLegacyDevice(string path) { FamilyCalls.Add("device:" + path); return FamilyObject; }
+        private Siemens.Engineering.HW.Device HardwareLegacyDevice(string path) { FamilyCalls.Add("device:" + path);
+            return (Siemens.Engineering.HW.Device)FamilyObject; }
         private Siemens.Engineering.HW.DeviceItem HardwareLegacyItem(string path) { FamilyCalls.Add("item:" + path); return FamilyItem; }
         private static object DefaultLibraryValue(object value) => value;
         private static object DefaultHmiSoftware(OrganisationSession session, string path) => session.GetSoftwareContainer(path).Software;

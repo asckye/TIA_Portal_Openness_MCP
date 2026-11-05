@@ -14,6 +14,13 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class HmiBetaFixTests
     {
+        private static void AssertArgumentRefusal(Action action)
+        {
+            var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(action);
+            Assert.True(refusal.IsArgument);
+            Assert.IsType<ArgumentException>(refusal.InnerException);
+        }
+
         [Flags] public enum WindowFlag { None = 0, Title = 1, Close = 2 }
         [Flags] public enum VisibleAlarms : ulong { None = 0, Pending = 1, Acknowledged = 1UL << 63 }
         public enum PlainEnum { None = 0, Title = 1, Close = 2, Both = 3 }
@@ -147,7 +154,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             int nativeCalls = 0;
             var request = new UnifiedHmiRequest { Operation = "EnsureUnifiedHmiTag", PlcName = plcName, PlcTag = plcTag };
             var service = new ProbeService(() => nativeCalls++);
-            Assert.Throws<ArgumentException>(() => service.Call(request));
+            AssertArgumentRefusal(() => service.Call(request));
             Assert.Equal(0, nativeCalls);
             UnifiedHmiInputValidation.PlcBinding("ExactPLC", "DifferentTag");
         }
@@ -167,9 +174,9 @@ namespace TiaMcp.Adapters.Contracts.Tests
             int nativeCalls = 0;
             var service = new ProbeService(() => nativeCalls++);
             foreach (var type in new[] { "HmiFaceplateContainer", "HmiCustomWebControlContainer", "HmiCustomWidgetContainer" })
-                Assert.Throws<ArgumentException>(() => service.Call(new UnifiedHmiRequest {
+                AssertArgumentRefusal(() => service.Call(new UnifiedHmiRequest {
                     Operation = "ManageUnifiedScreenItem", ScreenPath = "/Overview", Action = "create", ItemType = type, DryRun = dryRun }));
-            Assert.Throws<ArgumentException>(() => service.Call(new UnifiedHmiRequest {
+            AssertArgumentRefusal(() => service.Call(new UnifiedHmiRequest {
                 Operation = "ManageUnifiedScreenItem", ScreenPath = "/Overview", Action = "create", ItemType = "HmiButton", ContainedType = "unexpected", DryRun = dryRun }));
             Assert.Equal(0, nativeCalls);
         }

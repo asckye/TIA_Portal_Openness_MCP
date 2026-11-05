@@ -125,6 +125,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["dryRun"] = dryRun; meta["destination"] = dir.FullName; meta["projectModified"] = false;
                 if (dryRun) return "Native export preview; no file written.";
                 dir.Create();
+                meta["mayHaveWrittenFiles"] = true;
                 var native = PlcGroupOperations.Call(collection, "Export", signature, dir, name);
                 meta["apiCallSuccess"] = true;
                 var files = PlcGroupOperations.Items(native)

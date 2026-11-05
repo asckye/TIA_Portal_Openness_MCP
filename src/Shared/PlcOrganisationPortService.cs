@@ -84,7 +84,7 @@ namespace TiaMcpServer.Siemens.Services
         internal static void ValidateGroup(string path, bool types)
         {
             try { PlcOrganisationPaths.Parse(path, types); }
-            catch (PlcSoftwareException error) { throw new PortalException(PortalErrorCode.InvalidParams, error.Message); }
+            catch (PlcSoftwareException error) { throw new AdapterPreconditionException(error.Message, "groupPath", isArgument: true, innerException: error); }
         }
         public JsonObject CreatePlcTypeGroup(string softwarePath, string groupPath, bool dryRun = true)
         {

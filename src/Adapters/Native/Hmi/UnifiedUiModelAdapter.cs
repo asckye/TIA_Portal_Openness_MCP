@@ -87,11 +87,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                     var created = PlcGroupOperations
                         .Call(composition, "Create", creation.Method.GetParameters().Select(p => p.ParameterType).ToArray(), creation.Args);
                     meta["apiCallSuccess"] = true;
-                    var items = PlcGroupOperations.Items(composition).ToArray();
-                    var index = Array.IndexOf(items, created);
-                    if (index < 0 || items.Length != countBefore + 1)
-                        throw new InvalidOperationException("Create returned but the part is not present exactly once in the composition.");
-                    meta["partIndex"] = index; meta["after"] = UnifiedUiModelLogic.Scalars(created);
+                    created = UnifiedUiModelLogic.VerifyCreated(
+                        () => composition = UnifiedUiModelLogic.Composition(UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath),
+                            objectPathJson), collectionProperty),
+                        created, partName, countBefore);
+                    meta["after"] = UnifiedUiModelLogic.Scalars(created);
                 }
                 else if (action == "delete")
                 {
@@ -150,6 +150,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     entries.Count;
                 if (dryRun) return "Dynamization " + action + " preview; native Create<T>/setter shape and conversions checked, no native write.";
                 if (action == "delete" && !confirmDelete) throw new ArgumentException("delete requires confirmDelete=true.");
+                int countBefore = action == "create" ? PlcGroupOperations.Items(dynamizations).Count() : 0;
                 meta["mayHaveChanged"] = true;
                 if (action == "delete")
                 {
@@ -177,10 +178,13 @@ namespace TiaMcp.Adapters.Native.Hmi
                         added.Add(new HmiObject { ["kind"] = entry.Kind, ["applied"] = entryMeta["appliedProperties"]?.DeepClone() });
                     }
                 }
-                var after = UnifiedUiModelLogic.FindDynamization(dynamizations, propertyName)
-                    ?? throw new InvalidOperationException("Dynamization missing after write.");
+                object FreshDynamizations() => PlcGroupOperations.Get(UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath),
+                    objectPathJson), "Dynamizations");
+                if (action == "create") UnifiedUiModelLogic.VerifyCreated(FreshDynamizations, dyn, null, countBefore);
+                var after = UnifiedUiModelLogic.FindDynamization(FreshDynamizations(),
+                    propertyName) ?? throw new InvalidOperationException("Dynamization missing after write.");
                 if (after.GetType() != type) throw new InvalidOperationException("Readback dynamization type differs: " + after.GetType().FullName);
-                meta["exists"] = true; meta["after"] = UnifiedUiModelLogic.Tree(after, 4);
+                meta["exists"] = true; meta["after"] = UnifiedUiModelLogic.Tree(action == "create" ? dyn : after, 4);
                 return "Dynamization " + action
                     + " completed; scalar writes read back. Native semantic validity (tag existence, formula) is not asserted; no save/compile/download.";
             });
@@ -222,11 +226,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (PlcGroupOperations.Find(composition, name) != null) throw new InvalidOperationException("Screen already exists: " + name);
                     meta["name"] = name;
                     if (dryRun) return "Screen create preview; no native write.";
+                    int countBefore = PlcGroupOperations.Items(composition).Count();
                     meta["mayHaveChanged"] = true;
-                    PlcGroupOperations.Call(composition, "Create", new[] { typeof(string) }, name); meta["apiCallSuccess"] = true;
-                    // Create<T>/Create return a proxy distinct from the one Find() returns; verify by exact name, not by reference.
-                    var created = PlcGroupOperations.Find(composition, name)
-                        ?? throw new InvalidOperationException("Create returned but the screen is not found by name.");
+                    var created = PlcGroupOperations.Call(composition, "Create", new[] { typeof(string) }, name); meta["apiCallSuccess"] = true;
+                    created = UnifiedUiModelLogic.VerifyCreated(() => UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath),
+                        objectPathJson), created, name, countBefore);
                     meta["after"] = UnifiedUiModelLogic.Scalars(created);
                     return "Screen created and read back. No save/compile/download.";
                 }

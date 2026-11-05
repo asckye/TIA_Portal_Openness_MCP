@@ -15,7 +15,10 @@ namespace TiaMcp.Adapters
 
         private HardwareAddressingReply RunEngineeringServicesStep(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject = true)
         {
-            if (EngineeringServicesStep != null) return EngineeringServicesStep(tool, requiresProject, action);
+            if (EngineeringServicesStep != null) return EngineeringServicesStep(tool, requiresProject, meta => {
+                meta["mayHaveChanged"] = false;
+                return action(meta);
+            });
             return RunHardwareAddressStep(tool, action, requiresProject);
         }
 

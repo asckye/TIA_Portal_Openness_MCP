@@ -84,13 +84,16 @@ namespace TiaMcp.Adapters
                 HardwareAmlPolicy.RequireConfirmation(confirmImport, dryRun);
                 var source = HardwareAmlPolicy.InputFile(filePath);
                 var log = HardwareAmlPolicy.Plan(logFilePath);
-                using var exclusive = dryRun ? null : HardwareEditAccess();
+                meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false;
+                using var exclusive = !dryRun && ReleaseKey != "21" ? HardwareEditAccess() : null;
+                if (!dryRun && ReleaseKey == "21") HardwareWriteAdmission();
                 var cax = project!.GetService<CaxProvider>() ?? throw new NotSupportedException("CaxProvider unavailable for this project.");
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 meta["importOption"] = option.ToString();
                 meta["sourceFile"] = HardwareAmlPolicy.Verify(source); meta["plannedLogFile"] = log.FullName;
                 meta["deviceCountBefore"] = EnumerateAllDevices().Count();
                 if (dryRun) return "CAx/AutomationML import preview; source hashed, nothing imported.";
+                try
+                {
 #if PLC_CAX_TRANSFER_RESULT
                 // V19+: Import(FileInfo, CaxImportOptions) returns a TransferResult with structured messages and no log file.
                 meta["mayHaveChanged"] = true;
@@ -119,6 +122,13 @@ namespace TiaMcp.Adapters
                 return "CAx/AutomationML import returned true (native log hashed); imported content not semantically verified. Project not saved, compiled " +
                     "or downloaded.";
 #endif
+                }
+                catch
+                {
+                    try { meta["deviceCountAfter"] = EnumerateAllDevices().Count(); }
+                    catch { /* swallow(probe-optional): import remains unknown when even the device count is unavailable. */ }
+                    throw;
+                }
             });
         }
     }

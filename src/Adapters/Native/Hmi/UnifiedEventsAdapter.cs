@@ -37,13 +37,21 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var script=action=="update" ? PlcGroupOperations.Get(handler!,"Script") : null;
                 var prepared=script==null ? null : UnifiedRequestScalar.Prepare(script.GetType(),changes);
                 if(!write)return "Event preview. Execute with returned expectedToken; no script execution or syntax check.";
-                HmiExactAccess.RequireToken(expectedToken,token);meta["mayHaveChanged"]=true;
-                if(action=="create")handler=PlcGroupOperations.Call(handlers,"Create",creation.Types,creation.Values);
+                HmiExactAccess.RequireToken(expectedToken,token);
+                int countBefore=action=="create" ? PlcGroupOperations.Items(handlers).Count() : 0;
+                meta["mayHaveChanged"]=true;
+                object FreshHandlers()=>PlcGroupOperations.Get(UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath),objectPathJson),
+                    propertyName=="" ? "EventHandlers" : "PropertyEventHandlers");
+                if(action=="create")
+                {
+                    handler=PlcGroupOperations.Call(handlers,"Create",creation.Types,creation.Values);
+                    UnifiedUiModelLogic.VerifyCreated(FreshHandlers,handler,null,countBefore);
+                }
                 else if(action=="delete")PlcGroupOperations.Call(handler!,"Delete",Type.EmptyTypes);
                 else UnifiedRequestScalar.Apply(script!,prepared!,meta);
-                var after=UnifiedEventOperations.Find(handlers,eventType,propertyName);
+                var after=UnifiedEventOperations.Find(FreshHandlers(),eventType,propertyName);
                 if(action=="delete" ? after!=null : after==null)throw new InvalidOperationException("Event presence readback differs.");
-                meta["exists"]=after!=null;if(after!=null)meta["after"]=HmiExactAccess.EventDto(after);
+                meta["exists"]=after!=null;if(after!=null)meta["after"]=HmiExactAccess.EventDto(action=="create" ? handler! : after);
                 return "Native event operation and readback completed. No script executed, project save/compile/download, or automatic Portal close.";
             });
     }

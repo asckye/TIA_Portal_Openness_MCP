@@ -153,7 +153,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
             Outcome outcome;
             Error? error = null;
-            if (unknown || write && verdict != true && (issued || !started.HasValue) && applied == 0
+            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
+            else if (HostBehavior.UnchangedNativeFailure(evidence, verdict))
+            { outcome = write ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence); }
+            else if (unknown || write && verdict != true && (issued || !started.HasValue) && applied == 0
                 && Bool(evidence, "postStateKnown") != true && status != "InvalidState" && status != "HmiReadSessionBlocked" && status != "NotFound")
             { outcome = Outcome.Unknown; error = Failure(true, evidence); }
             else if (write && applied > 0 && verdict != true)

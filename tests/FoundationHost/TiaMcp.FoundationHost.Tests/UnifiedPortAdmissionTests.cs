@@ -14,6 +14,13 @@ using Xunit;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class UnifiedPortAdmissionTests
 {
+    private static void AssertArgumentRefusal(Action action)
+    {
+        var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(action);
+        Assert.True(refusal.IsArgument);
+        Assert.IsType<ArgumentException>(refusal.InnerException);
+    }
+
     [Theory]
     [InlineData("GetUnifiedScreenBranch")]
     [InlineData("GetUnifiedGlobalScript")]
@@ -271,8 +278,8 @@ public sealed class UnifiedPortAdmissionTests
         int calls = 0;
         var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, _) => { calls++; throw new InvalidOperationException(); },
             () => { calls++; throw new InvalidOperationException(); });
-        Assert.Throws<ArgumentException>(() => service.EnsureUnifiedHmiTagTable("HMI", path));
-        Assert.Throws<ArgumentException>(() => service.EnsureUnifiedHmiTag("HMI", path, "Ready", plcName: "PLC_Source", plcTag: "PlcReady"));
+        AssertArgumentRefusal(() => service.EnsureUnifiedHmiTagTable("HMI", path));
+        AssertArgumentRefusal(() => service.EnsureUnifiedHmiTag("HMI", path, "Ready", plcName: "PLC_Source", plcTag: "PlcReady"));
         Assert.Equal(0, calls);
     }
 

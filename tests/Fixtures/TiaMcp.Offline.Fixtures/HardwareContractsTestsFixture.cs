@@ -198,7 +198,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageDeviceUsers(string devicePathJson, string itemPathJson, string family, string action, string userName, string password, string permissionsJson, bool active, string newName, bool confirmDelete, bool dryRun) => Next();
         public ResponseMessage ManagePortInterconnection(string devicePathJson, string itemPathJson, string action, string partnerDevicePathJson, string partnerItemPathJson, bool dryRun) => Next();
         public List<NetworkAttribute>? GetDeviceItemNetworkInfo(string path) { Calls++; return new List<NetworkAttribute>(); }
-        public string ProbeConnectDeviceNodesToSubnet(string first, string second, string subnet) { Calls++; return "ConnectToSubnet: OK"; }
+        public string ProbeConnectDeviceNodesToSubnet(string first, string second, string subnet) { Calls++; return "Result: ConnectToSubnet: OK"; }
         public ResponseMessage EnsureSubnet(string anchor, string type, string subnet) => Next();
         public ResponseMessage AttachDeviceNodeToSubnet(string path, int index, string subnet, string anchor) => Next();
         public List<string> ProbeHardwareHmiConnectionOwnerCandidates(string plc, string hmi, bool deep) { Calls++; return new List<string>(); }

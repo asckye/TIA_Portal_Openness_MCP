@@ -5,11 +5,11 @@ using System.Security;
 using Siemens.Engineering;
 #if SECURITY_UMAC
 using Siemens.Engineering.Umac;
+using TiaMcp.Adapters.Native.Security;
 #endif
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
 using TiaMcp.Adapters.Native.Hmi;
-using TiaMcp.Adapters.Native.Security;
 namespace TiaMcp.Adapters;
 public sealed partial class PlcFoundationEngine
 {
@@ -25,7 +25,7 @@ public sealed partial class PlcFoundationEngine
 #if SECURITY_PROJECT_PROTECTION
         private SecurityResult ProjectProtection()
             => RunSecurityStep("GetProjectProtection", meta => {
-                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                meta["mayHaveWrittenFiles"] = false;
                 var boundProject = project!;
                 bool complete = true;
                 var projectRow = HmiScalar.Read(boundProject); meta["project"] = projectRow; complete &= projectRow["dataComplete"]!.GetValue<bool>();
@@ -83,6 +83,11 @@ public sealed partial class PlcFoundationEngine
         var reply = RunHmiStep(tool, values => {
             var meta = new HmiObject(values);
             try { return action(meta); }
+            catch (Exception error)
+            {
+                EngineeringCredentialRules.TryRecordRefusal(error, meta);
+                throw;
+            }
             finally { foreach (var pair in meta) values[pair.Key] = pair.Value; }
         }, requiresProject: true);
         return new SecurityResult { Message = reply.Message, Meta = reply.Meta,

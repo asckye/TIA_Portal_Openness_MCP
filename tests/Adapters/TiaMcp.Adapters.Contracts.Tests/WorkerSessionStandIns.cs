@@ -9,20 +9,17 @@ namespace Siemens.Engineering {
     public sealed class TiaPortal {
         public TiaPortalMode Mode { get; }
         public TiaPortal(TiaPortalMode mode = TiaPortalMode.WithoutUserInterface) { Mode = mode; }
+        public FakeProjects Projects { get; } = new();
         public int ExclusiveCalls;
-        public IDisposable ExclusiveAccess(string text) { ExclusiveCalls++; return Process.GetCurrentProcess(); }
+        public Exception? ExclusiveFailure { get; set; }
+        public IDisposable ExclusiveAccess(string text) { ExclusiveCalls++; if (ExclusiveFailure != null) throw ExclusiveFailure;
+            return Process.GetCurrentProcess(); }
     }
-    public sealed class Project {
+    public sealed partial class Project {
         private FileInfo _path = null!;
         private string _name = "";
         public FileInfo Path { get { TiaMcpServer.ModelContextProtocol.InvocationJournal.Calls.Add("project.Path"); return _path; } set { _path = value; } }
         public string Name { get { TiaMcpServer.ModelContextProtocol.InvocationJournal.Calls.Add("project.Name"); return _name; } set { _name = value; } }
-    }
-}
-namespace TiaMcpServer.Siemens {
-    public enum PortalErrorCode { InvalidState }
-    public sealed class PortalException : Exception {
-        public PortalException(PortalErrorCode code, string message, Exception? inner = null) : base(message, inner) { }
     }
 }
 namespace TiaMcpServer.ModelContextProtocol {
@@ -32,14 +29,6 @@ namespace TiaMcpServer.ModelContextProtocol {
     }
 }
 namespace TiaMcp.Adapters.Native.Session { public sealed class FakeSession { } }
-namespace TiaMcp.Adapters.Native.Hmi {
-    public sealed class HmiObject : Dictionary<string,object?> {
-        public HmiObject(Dictionary<string,object?> values) : base(values) { }
-    }
-    public static class HmiMeta {
-        public static Dictionary<string,object?> Basic(bool ok, params (string,object?)[] values) => new();
-    }
-}
 namespace TiaMcp.Adapters {
     internal static class OpennessRefusalMapping {
         internal static T Run<T>(string operation, bool credentialsGiven, Func<T> call) => call();
@@ -59,10 +48,7 @@ namespace TiaMcp.Adapters {
         public void ClearCalls() => TiaMcpServer.ModelContextProtocol.InvocationJournal.Calls.Clear();
         public string ReleaseKey { get; }
         public bool HasEngineeringTransaction { get; set; }
-        public Func<bool>? EngineeringProjectMissing { get; set; }
         public Func<string>? ProjectValidationTree { get; set; }
-        public Func<IDisposable>? AcquireEngineeringEditAccess { get; set; }
-        public Action<string>? SharedFamilyMutationIdentity { get; set; }
         public Func<object?>? HmiBindingIdentity { get; set; }
         public Func<SeedHmiRequest,PlcSeedHmiReply>? SeedReferenceHmiImport { get; set; }
         public readonly Siemens.Engineering.TiaPortal Connection = new();

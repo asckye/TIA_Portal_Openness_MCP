@@ -87,7 +87,11 @@ namespace TiaMcpServer.ModelContextProtocol
             string status = evidence["status"]?.ToString() ?? "";
             bool projectMissing = status == "InvalidState" && !evidence.ContainsKey("apiCallSuccess") && !issued;
             Outcome outcome; Error? error = null;
-            if (unknown || writes && issued && success != true && !knownFalse)
+            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
+            else if (unknown || writes && issued && success != true && !knownFalse)
             { outcome = Outcome.Unknown; error = Unknown(); }
             else if (writes && knownFalse)
             {
@@ -112,8 +116,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 error = new Error(nativeMessage ?? "The option-package request was rejected before execution.", details);
             }
             else if (success == true) outcome = Outcome.Succeeded;
-            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
-            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
             else if (!writes) { outcome = Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
             else if (Flag(evidence, "mayHaveChanged") == false && Flag(evidence, "mayHaveWrittenFiles") != true)
             {

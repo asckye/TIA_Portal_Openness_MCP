@@ -80,7 +80,13 @@ namespace TiaMcpServer.ModelContextProtocol
                         .RejectedBeforeOperation, Completeness.None);
             }
             using var export = CallerInputFiles.ObserveExport(tool, arguments);
-            return McpServer.ExportFailureResult(tool, Run(tool, true, operation), export);
+            var result = Run(tool, true, operation);
+            if (result.StructuredContent?["data"] is JsonObject data
+                && data["evidence"] is JsonObject evidence && HostBehavior.UnchangedNativeFailure(evidence, false, allowWrittenFiles: true)
+                && result.StructuredContent["meta"]?["outcome"]?.ToString() is "unknown" or "failed")
+                return Result(tool, (JsonObject)data.DeepClone(), NativeFailure(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString())),
+                    Outcome.Failed, Completeness.Complete, true);
+            return McpServer.ExportFailureResult(tool, result, export);
         }
         private static bool? Flag(JsonObject obj, string key)
             => obj[key] is JsonValue v && v.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
@@ -118,18 +124,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 || state != null && !nativeKnown || evidence.ContainsKey("nativeState") && state == null || reset && issued);
             if (failed > 0) { success = false; unknown |= writes && !before && !nativeKnown; }
             Outcome outcome; Error? error = null;
-            if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
+            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
+            else if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
             { outcome = Outcome.Unknown; error = Unknown(); }
             else if (projectMissing)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "HmiReadSessionBlocked")
-            {
-                outcome = Outcome.RejectedBeforeOperation; error =
-                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("engineering-session"));
-            }
+            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The session requires an explicit reset.",
+                new SessionResetRequiredDetails("engineering-session")); }
             else if (success == true) outcome = Outcome.Succeeded;
-            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
-            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
             else if (before)
             {
                 outcome = Outcome.RejectedBeforeOperation;

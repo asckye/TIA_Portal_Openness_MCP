@@ -9,6 +9,9 @@ namespace TiaMcp.Adapters.Libraries
     // clean-up, type and version details, detailed object comparison, global library infos and archiving). No Siemens dependency.
     internal static class LibraryPolicy
     {
+        internal static bool CanUseDocumentImportCountProof(string importOptions, string createOptions, bool hasTargetEnvironment)
+            => importOptions == "None" && createOptions == "None" && !hasTargetEnvironment;
+
         // Siemens V20/V21, "Creating new type from document" / "Updating type
         // from document": project library only, and basename must be unambiguous.
         internal static void ValidateDocumentImportScope(int major, bool projectLibrary,

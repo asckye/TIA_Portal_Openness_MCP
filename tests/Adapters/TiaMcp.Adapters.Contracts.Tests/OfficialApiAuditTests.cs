@@ -11,6 +11,17 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class OfficialApiAuditTests
     {
+        [Theory]
+        [InlineData("None", "None", false, true)]
+        [InlineData("None", "Override", false, false)]
+        [InlineData("None", "None", true, false)]
+        [InlineData("None", "Override", true, false)]
+        [InlineData("SkipInactiveCultures", "None", false, false)]
+        [InlineData("ActivateInactiveCultures", "None", false, false)]
+        public void Library_document_count_proof_excludes_overrides_and_target_instances(string importOptions, string createOptions, bool environment,
+            bool expected)
+            => Assert.Equal(expected, LibraryPolicy.CanUseDocumentImportCountProof(importOptions, createOptions, environment));
+
         private static OpennessReflection Reflection(object target)
             => new(new ReflectionSession((_, _, _, _) => target, () => null));
         private static HardwareScalar Text(string value) => new() { Kind = "string", Text = value };

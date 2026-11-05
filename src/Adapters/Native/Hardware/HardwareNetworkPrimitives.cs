@@ -15,6 +15,14 @@ namespace TiaMcp.Adapters
     {
         private IDisposable HardwareEditAccess() => AcquireEngineeringEditAccess != null ? AcquireEngineeringEditAccess()
             : HasEngineeringTransaction ? new EngineeringAmbientAccess() : Portal().ExclusiveAccess(ExclusiveAccessText());
+        private void HardwareWriteAdmission()
+        {
+            Check();
+            if (EngineeringProjectMissing?.Invoke() == true || project == null)
+                throw new AdapterPreconditionException("No project is bound.", "project-binding", null);
+            if (HasEngineeringTransaction)
+                throw new AdapterPreconditionException("CAx import cannot run inside an engineering transaction.", "exclusive-access", null);
+        }
         private static IEngineeringServiceProvider HardwareServiceProvider(object target)
             => target as IEngineeringServiceProvider ?? throw new NotSupportedException("Selected object is not a service provider.");
         private static bool HardwareDisposedOnly(Exception error) => error.GetBaseException().GetType().Name == "EngineeringObjectDisposedException";

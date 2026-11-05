@@ -25,6 +25,21 @@ namespace TiaMcp.Adapters.Native.Hmi
     // Unified UI model helpers shared by events, parts, dynamizations, screens, lists, alarm and audit readers.
     internal static class UnifiedUiModelLogic
     {
+        internal static object VerifyCreated(Func<object> freshComposition, object? created, string? name, int countBefore)
+        {
+            if (created == null) throw new InvalidOperationException("Native Create returned null.");
+            var fresh = freshComposition();
+            if (!string.IsNullOrEmpty(name))
+            {
+                if (!string.Equals(UnifiedGroups.Get(created, "Name").ToString(), name, StringComparison.Ordinal)
+                    || UnifiedGroups.Find(fresh, name!) == null)
+                    throw new InvalidOperationException("Create returned but the named object is missing from the fresh composition.");
+            }
+            else if (UnifiedGroups.Items(fresh).Count() != countBefore + 1)
+                throw new InvalidOperationException("Create returned but the fresh composition did not grow by one.");
+            return created;
+        }
+
         private static readonly string[] BackLinks = { "Parent", "Owner", "Project", "Portal", "Site", "Container", "Device", "AssignedHmiDevice" };
         internal const string DynamizationNamespace = "Siemens.Engineering.HmiUnified.UI.Dynamization.";
         internal static readonly IReadOnlyDictionary<string, string> DynamizationKinds = new Dictionary<string, string>(StringComparer.Ordinal)

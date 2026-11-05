@@ -71,7 +71,9 @@ namespace TiaMcp.Adapters
             return new PlcDocumentImportContext {Request=r,Scan=()=>PlcDocumentImportPolicy.Scan(r),Open=path=> {
                 var file=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));PlcDocumentImportPolicy.SafePath(file);
                 return TiaOpenness.Shared.NativeInputPolicy.OpenRead(path,"importPath");
-            },Inventory=Inventory,Collision=name=>names.Any(n=>string.Equals(n,name,StringComparison.OrdinalIgnoreCase)),Recheck=recheck,Import=()=> {
+            },Inventory=Inventory,Exists=name=>Documents.Blocks(BatchGroup(BlockGroups(Documents.BlockGroup(ReadSelection(softwarePath).Value)),
+                groupPath)).Any(block=>string.Equals(Documents.Name(block),name,StringComparison.OrdinalIgnoreCase)),Collision=name=>names.Any(n=>
+                string.Equals(n,name,StringComparison.OrdinalIgnoreCase)),Recheck=recheck,Import=()=> {
                 // Exactly one typed native call. Exact V20/V21 SDK XML: None = "Throw if exists".
                 // It does NOT promise atomicity, normalization, rollback or race-free preflight.
                 var native=Documents
@@ -92,6 +94,7 @@ namespace TiaMcp.Adapters
                             .InventoryItem(object.Equals(Documents.Parent(b),target)?groupPath:"<unverified-parent>",Documents.Name(b),b.GetType().Name,
                                 "returned"))
                         .ToArray();
+                    outcome.IdentitiesRead=true;
                     if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(native)) || imported.Length!=1 || Documents
                             .Name(imported[0])!=fileNameWithoutExtension || imported[0].GetType().Name!="GlobalDB" || !object
                             .Equals(Documents.Parent(imported[0]),target))

@@ -91,6 +91,7 @@ namespace TiaMcp.Adapters.Hardware
 
         public static void SetDynamicAttributes(IEngineeringObject target, Dictionary<string, HardwareScalar> attributes, Dictionary<string, object?> meta)
         {
+            bool previouslyChanged = meta.TryGetValue("mayHaveChanged", out var changed) && changed is true;
             var applied = new List<string>(); meta["appliedAttributes"] = applied;
             if (attributes.Count > 1)
             {
@@ -142,10 +143,24 @@ namespace TiaMcp.Adapters.Hardware
             }
             foreach (var pair in attributes)
             {
-                object? current = null; try { current = target.GetAttribute(pair.Key); } catch { /* swallow(probe-optional): An unreadable current value leaves conversion untyped; the native write and readback still validate the requested value. */ }
+                bool beforeReadable = false;
+                object? current = null;
+                try { current = target.GetAttribute(pair.Key); beforeReadable = true; }
+                catch
+                {
+                    /* swallow(probe-optional): An unreadable current value leaves conversion untyped;
+                       the native write and readback still validate the requested value. */
+                }
                 var value = HardwareAddressingPolicy.ConvertValue(pair.Value, current?.GetType() ?? typeof(object));
                 meta["mayHaveChanged"] = true; meta["lastAttemptedAttribute"] = pair.Key;
-                target.SetAttribute(pair.Key, value);
+                try { target.SetAttribute(pair.Key, value); }
+                catch
+                {
+                    if (applied.Count == 0 && HardwareAddressingPolicy.UnchangedAfterFailedSet(beforeReadable, current, () =>
+                        target.GetAttribute(pair.Key)) && !previouslyChanged)
+                        meta["mayHaveChanged"] = false;
+                    throw;
+                }
                 applied.Add(pair.Key);
                 if (!HardwareAddressingPolicy.SameValue(target.GetAttribute(pair.Key), value))
                     throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");

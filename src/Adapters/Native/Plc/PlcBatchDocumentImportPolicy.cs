@@ -12,9 +12,10 @@ namespace TiaMcp.Adapters
         internal Func<string,Stream> Open=null!;
         internal Func<IEnumerable<string>> Inventory=null!;
         internal Func<string,bool> Collision=null!;
+        internal Func<string,bool> Exists=null!;
         internal Action Recheck=null!;
         internal Func<PlcDocumentImportNative> Import=null!;
-        internal PlcDocumentImportResult Run()=>PlcDocumentImportPolicy.Run(Request,Scan,Open,Inventory,Collision,Recheck,Import);
+        internal PlcDocumentImportResult Run()=>PlcDocumentImportPolicy.Run(Request,Scan,Open,Inventory,Collision,Recheck,Import,Exists);
     }
     internal static class PlcBatchDocumentImportPolicy
     {

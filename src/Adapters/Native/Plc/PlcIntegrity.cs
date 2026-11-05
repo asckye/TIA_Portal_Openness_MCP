@@ -365,18 +365,21 @@ namespace TiaMcp.Adapters.Native.Plc
                         || (action == "change" && PlcProtectionPolicy.ContainsInvalidPasswordCharacter(newPassword, invalid)))
                     throw new ArgumentException("Password contains characters rejected by the native password policy.");
                 if (!writing) return "Write-protection preview; no changes.";
-                meta["mayHaveChanged"] = true; MutationStarted = true;
+                meta["mayHaveChanged"] = true;
                 using (var secure = PlcProtectionPolicy.ToSecureString(password))
                 using (var next = action == "change" ? PlcProtectionPolicy.ToSecureString(newPassword) : null)
                 {
-                    switch (action)
-                    {
-                        case "define": provider.Define(secure); break;
-                        case "protect": provider.Protect(secure); break;
-                        case "unprotect": provider.Unprotect(secure); break;
-                        case "change": provider.Change(secure, next!); break;
-                        default: provider.Change(secure, null); break;   // remove: official "Change(pwd, null)" drops password and protection
-                    }
+                    if (!EngineeringCredentialRules.TrySetPassword(() => {
+                        switch (action)
+                        {
+                            case "define": provider.Define(secure); break;
+                            case "protect": provider.Protect(secure); break;
+                            case "unprotect": provider.Unprotect(secure); break;
+                            case "change": provider.Change(secure, next!); break;
+                            default: provider.Change(secure, null); break;   // remove: official "Change(pwd, null)" drops password and protection
+                        }
+                    }, meta)) return EngineeringCredentialRules.PasswordPolicyRefusal;
+                    MutationStarted = true;
                 }
                 meta["apiCallSuccess"] = true; meta["after"] = State();
                 bool expectedDefined = action != "remove", expectedProtected = action == "protect" || (action == "change" && provider.IsProtected);

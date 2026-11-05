@@ -64,7 +64,7 @@ namespace TiaMcp.PlcWorker
                 Lock(response.Failure?.Message ?? TiaOpenness.Shared.SessionBehavior.Recovery);
                 if (response.Failure != null || !WorkerOperations.IsFamilyOperation(request.Method.Substring("adapter.".Length)))
                     return ChannelResponse.Error(new ChannelFailureException(Fault!, -32603, ChannelOutcome.Unknown,
-                        response.Failure?.EvidenceJson ?? "null"));
+                        response.Failure?.EvidenceJson ?? response.ResultJson));
                 return response;
             }
             try { _refresh(); }

@@ -825,7 +825,9 @@
     "properties": {},
     "targetFramework": "net10.0",
     "defineConstants": [
+      "PROJECT_EXCHANGE",
       "RELEASE",
+      "SECURITY_DEVICE_SYSLOG",
       "TRACE",
       "WORKER_SESSION_LIFECYCLE"
     ]

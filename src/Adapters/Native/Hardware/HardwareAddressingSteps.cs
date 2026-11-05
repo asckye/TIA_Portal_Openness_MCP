@@ -141,7 +141,7 @@ namespace TiaMcp.Adapters
                     throw new HardwareAddressingException("NotFound", matches.Length == 0 ? "No address with that IoType/StartAddress on the item."
                         : "Ambiguous address identity.");
                 var address = matches[0];
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["ownerPath"] = HardwareOwnerPath(item); meta["before"] = AddressRow(address);
+                meta["dryRun"] = dryRun; meta["ownerPath"] = HardwareOwnerPath(item); meta["before"] = AddressRow(address);
                 meta["restrictions"] =
                     "Changing StartAddress may move the opposite IoType of the same module and never rewires tags; packed addresses are unsupported.";
                 OB? ob = null;
@@ -203,7 +203,10 @@ namespace TiaMcp.Adapters
 
         private HardwareAddressingReply RunHardwareAddressStep(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject = true)
         {
-            if (EngineeringStep != null && requiresProject) return EngineeringStep(tool, action);
+            if (EngineeringStep != null && requiresProject) return EngineeringStep(tool, meta => {
+                meta["mayHaveChanged"] = false;
+                return action(meta);
+            });
             var reply = new HardwareAddressingReply();
             var meta = LegacyResponseMetadata.Step(DateTime.Now, tool);
             reply.Meta = meta;
@@ -215,6 +218,7 @@ namespace TiaMcp.Adapters
                     reply.Message = "Project is null";
                     return reply;
                 }
+                meta["mayHaveChanged"] = false;
                 reply.Message = action(meta);
                 LegacyResponseMetadata.Complete(meta);
             }

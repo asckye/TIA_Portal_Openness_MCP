@@ -6,6 +6,47 @@ using Xunit;
 public sealed class HmiDryRunTests
 {
     [Fact]
+    public void Legacy_untyped_worker_failure_keeps_internal_error()
+    {
+        int calls = 0;
+        var service = new UnifiedHmiService((_, _) => { calls++; throw new InvalidOperationException("Native result unavailable."); }, () => "fixture");
+        var tools = new TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
+        var error = Assert.Throws<ModelContextProtocol.McpException>(() => tools.EnsureUnifiedHmiScreen("HMI", "Screen", dryRun: false));
+        Assert.Equal(ModelContextProtocol.McpErrorCode.InternalError, error.ErrorCode);
+        Assert.IsType<InvalidOperationException>(error.InnerException);
+        Assert.Equal(1, calls);
+    }
+
+    [Theory]
+    [InlineData("screen")]
+    [InlineData("table")]
+    [InlineData("tag")]
+    [InlineData("connection")]
+    [InlineData("design")]
+    public void Legacy_validation_refusal_is_invalid_params_without_dispatch(string operation)
+    {
+        int calls = 0, identities = 0;
+        var service = new UnifiedHmiService((_, _) => { calls++; throw new InvalidOperationException("Unexpected worker call."); },
+            () => { identities++; return "fixture"; });
+        var tools = new TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
+        var error = Assert.Throws<ModelContextProtocol.McpException>(() => {
+            switch (operation)
+            {
+                case "screen": tools.EnsureUnifiedHmiScreen("HMI", "/"); break;
+                case "table": tools.EnsureUnifiedHmiTagTable("HMI", "/"); break;
+                case "tag": tools.EnsureUnifiedHmiTag("HMI", "Tags", "Flag", plcName: "", plcTag: "Flag"); break;
+                case "connection": tools.EnsureUnifiedHmiConnection("HMI", "", "PLC"); break;
+                default: tools.ApplyUnifiedHmiScreenDesignJson("HMI", "Screen", "{\"screen\":{\"Name\":\"Renamed\"},\"items\":[]}"); break;
+            }
+        });
+        Assert.Equal(ModelContextProtocol.McpErrorCode.InvalidParams, error.ErrorCode);
+        var refusal = Assert.IsType<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(error.InnerException);
+        Assert.True(refusal.IsArgument);
+        Assert.IsType<ArgumentException>(refusal.InnerException);
+        Assert.Equal((0, 0), (calls, identities));
+    }
+
+    [Fact]
     public void Legacy_services_preview_by_default_without_dispatch_or_identity_reads()
     {
         int calls = 0, identities = 0;
@@ -37,8 +78,9 @@ public sealed class HmiDryRunTests
         foreach (var method in tools) Assert.Equal(true, method.GetParameters().Single(p => p.Name == "dryRun").DefaultValue);
         foreach (var dryRun in new[] { true, false })
         {
-            Assert.Throws<ArgumentException>(() => service.ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", "/Overview", "{\"screen\":{\"Name\":\"Renamed\"},\"items\":[]}", dryRun: dryRun));
-            Assert.Throws<ArgumentException>(() => service.EnsureUnifiedHmiConnection("HMI_RT_1", "", "ExactPLC", dryRun));
+            Assert.Throws<AdapterPreconditionException>(() => service.ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", "/Overview",
+                "{\"screen\":{\"Name\":\"Renamed\"},\"items\":[]}", dryRun: dryRun));
+            Assert.Throws<AdapterPreconditionException>(() => service.EnsureUnifiedHmiConnection("HMI_RT_1", "", "ExactPLC", dryRun));
         }
         Assert.Equal((0, 0), (calls, identities));
         service.EnsureUnifiedHmiScreen("HMI_RT_1", "/Overview", dryRun: false);

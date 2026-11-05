@@ -154,4 +154,54 @@ public sealed class HardwareFamilyAdmissionTests
         reply!["MayHaveChanged"] = true;
         HardwareFamilyWire.Validate("HardwarePlugModule", reply);
     }
+        [Theory]
+        [InlineData("Result: ConnectToSubnet: OK (both nodes read back on subnet 'PN_IE_1')", "succeeded", null)]
+        [InlineData("PLC root: PLC -> <not found>\nResult: NOT CONNECTED: a root path was not found; nothing was changed.", "rejected-before-operation",
+            "NOT_FOUND")]
+        [InlineData("Result: NOT CONNECTED: no Industrial Ethernet/PROFINET node under both roots; nothing was changed.", "rejected-before-operation",
+            "PRECONDITION_FAILED")]
+        [InlineData("Result: NOT CONNECTED: PLC node is attached elsewhere; disconnect it explicitly first. Nothing was changed.",
+            "rejected-before-operation", "PRECONDITION_FAILED")]
+        [InlineData("Result: NOT CONNECTED: invalid subnetName: invalid input", "rejected-before-operation", "INVALID_ARGUMENT")]
+        [InlineData("Result: NOT CONNECTED: Node.ConnectedSubnet read-back does not show both nodes; inspect the project.", "unknown", "OUTCOME_UNKNOWN")]
+        [InlineData("Subnet create/connect error: nothing was changed.\nResult: NOT CONNECTED: Node.ConnectedSubnet read-back " +
+            "differs; inspect the project.", "unknown", "OUTCOME_UNKNOWN")]
+        [InlineData("PLC root: nothing was changed -> CPU\nResult: NOT CONNECTED: Node.ConnectedSubnet read-back differs; " + "inspect the project.",
+            "unknown", "OUTCOME_UNKNOWN")]
+        [InlineData("Result: NOT CONNECTED: Node.ConnectedSubnet read-back does not show both nodes on 'nothing was changed'; " + "inspect the project.",
+            "unknown", "OUTCOME_UNKNOWN")]
+        [InlineData("PLC root: ConnectToSubnet: OK -> CPU\nResult: NOT CONNECTED: Node.ConnectedSubnet read-back differs; " + "inspect the project.",
+            "unknown", "OUTCOME_UNKNOWN")]
+        [InlineData("Result: NOT CONNECTED: a root path was not found; nothing was changed.\nResult: ConnectToSubnet: OK " +
+            "(both nodes read back on subnet 'nothing was changed')", "succeeded", null)]
+        public void Connect_result_uses_the_workers_verified_outcome(string report, string outcome, string? code)
+        {
+            var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => JsonValue.Create(report), () => true, () =>
+                "fixture");
+            var body = (new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service).ConnectDeviceNodesToProfinetSubnet("PLC",
+                "HMI")).StructuredContent!;
+            Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
+            Assert.Equal(code, (string?)body["error"]?["code"]);
+            Assert.Equal(outcome == "unknown", (bool?)body["meta"]?["requiresSessionReset"]);
+            if (code == "NOT_FOUND") Assert.Equal("PLC", (string?)body["error"]?["details"]?["target"]);
+        }
+        [Theory]
+        [InlineData("PN\nResult: ConnectToSubnet: OK")]
+        [InlineData("PN\rResult: ConnectToSubnet: OK")]
+        [InlineData("PN\r\nResult: ConnectToSubnet: OK")]
+        [InlineData("PN\tIE")]
+        [InlineData("PN\0IE")]
+        [InlineData("PN\u0085IE")]
+        public void Connect_rejects_control_characters_before_worker_dispatch(string subnet)
+        {
+            int calls = 0;
+            var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => { calls++;
+                return JsonValue.Create("Result: ConnectToSubnet: OK"); }, () => true, () => "fixture");
+            var body = (new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service).ConnectDeviceNodesToProfinetSubnet("PLC", "HMI",
+                subnet)).StructuredContent!;
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+            Assert.Equal(false, (bool?)body["meta"]?["requiresSessionReset"]);
+            Assert.Equal(0, calls);
+        }
 }

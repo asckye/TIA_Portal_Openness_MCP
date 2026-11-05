@@ -110,7 +110,7 @@ namespace TiaMcp.Adapters
                 using var access = dryRun ? null : HardwareEditAccess();
                 var owner = ExactHardware(devicePathJson, itemPathJson);
                 var composition = HardwareRequireConnectionComposition(owner);
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["owner"] = HardwareScalarEvidence.Read(owner);
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["owner"] = HardwareScalarEvidence.Read(owner);
                 int before = HardwareGroupOperations.Items(composition).Count(); meta["countBefore"] = before;
                 if (action == "delete")
                 {
@@ -194,8 +194,7 @@ namespace TiaMcp.Adapters
                     : HardwareServiceProvider(ExactHardware(devicePathJson, itemPathJson));
                 var provider = owner.GetService<SystemdiagnosticsSettingsDataProvider>()
                     ?? throw new NotSupportedException("SystemdiagnosticsSettingsDataProvider unavailable on the selected owner.");
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false; meta["ownerType"] = owner
-                    .GetType().FullName;
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false; meta["ownerType"] = owner.GetType().FullName;
                 if (action == "export")
                 {
                     var file = HardwareAmlPolicy.Plan(filePath); meta["plannedFile"] = file.FullName;
@@ -297,8 +296,7 @@ namespace TiaMcp.Adapters
                 bool write = action != "read" && !dryRun;
                 using var access = write ? HardwareEditAccess() : null;
                 var owner = ExactHardware(devicePathJson, itemPathJson);
-                meta["family"] = family; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["ownerPath"] =
-                    HardwareOwnerPath(owner);
+                meta["family"] = family; meta["action"] = action; meta["dryRun"] = dryRun; meta["ownerPath"] = HardwareOwnerPath(owner);
                 if (properties.Count > 0) meta["requestedProperties"] = HardwareScalarEvidence.Requested(properties);
                 switch (family)
                 {
@@ -471,7 +469,7 @@ namespace TiaMcp.Adapters
                 string[] itemPathJson = null!, string filePath = "", string password = "", bool dryRun = true)
             => RunHardwareAddressStep("ManageHardwareUtilities", meta => {
                 HardwareUtilityPolicy.ValidateHardwareUtilityRequest(action, typeIdentifier, devicePathJson, filePath, password, dryRun);
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 if (action == "list")
                 {
                     meta["records"] = new List<object
@@ -555,7 +553,7 @@ namespace TiaMcp.Adapters
                     throw new ArgumentException("action must be one of: deleteDevice/deleteItem/moveItem/copyItem (case-sensitive).");
                 using var access = dryRun ? null : HardwareEditAccess();
                 var source = ExactHardware(devicePathJson, itemPathJson);
-                meta["source"] = HardwareScalarEvidence.Read(source); meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                meta["source"] = HardwareScalarEvidence.Read(source); meta["action"] = action; meta["dryRun"] = dryRun;
                 meta["dependencyImpact"] =
                     "Hardware descendants and dependent software/configuration can be affected. No online action or download is performed.";
                 if (action == "deleteDevice")

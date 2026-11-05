@@ -53,7 +53,12 @@ namespace TiaMcpServer.ModelContextProtocol
             bool knownFile = Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") == true && data["file"] is JsonObject;
             string status = data["status"]?.ToString() ?? "";
             Outcome outcome; Execution execution; Error? error = null;
-            if (issued && (reset || success != true && !knownFailure && !knownFile))
+            if (HostBehavior.DocumentedRefusal(data) is Error refusal)
+            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
+            else if (HostBehavior.UnchangedNativeFailure(data, success))
+            { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
+                HostBehavior.UnchangedNativeError(data, nativeMessage); }
+            else if (issued && (reset || success != true && !knownFailure && !knownFile))
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
             else if (knownFailure)
             { outcome = Outcome.Failed; execution = Execution.Completed; error = NativeFailure(nativeMessage); }
@@ -83,20 +88,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     : status == "NotFound" ? new Error("The requested security target was not found.", new NotFoundDetails(null))
                     : new Error("Access to the security operation was denied.", new AccessDeniedDetails(tool, null));
             }
-            else if (success != true && status == "PreconditionFailed" && data["precondition"] is JsonValue)
-            {
-                // A documented Openness refusal (P8-81c F4) carries an explicit condition and never poisons the session.
-                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
-                error = new Error(HostBehavior.SafeDiagnostic((string?)data["refusal"]) ?? "TIA Portal refused the operation.",
-                    new PreconditionFailedDetails((string?)data["precondition"], null));
-            }
             else if (success == true)
             { outcome = Outcome.Succeeded; execution = readOnly ? Execution.ReadOnly : Execution.Completed; }
-            else if (HostBehavior.UnchangedNativeFailure(data, success))
-            {
-                outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
-                    NativeFailure(nativeMessage);
-            }
             else if (readOnly)
             { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = NativeFailure(nativeMessage); }
             else if (Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") != true)

@@ -105,7 +105,7 @@ namespace TiaMcp.Adapters
                 if (action == "delete" || action == "deleteMappingRule") HardwareServicesPolicy.RequireConfirmation(confirmDelete, "confirmDelete", dryRun);
                 using var access = dryRun ? null : HardwareEditAccess();
                 var network = HardwareRequireNetworkInterface(ExactHardware(devicePathJson, itemPathJson), "itemPathJson");
-                meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["interfaceOwnerPath"] =
+                meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["interfaceOwnerPath"] =
                     HardwareOwnerPath(network);
                 if (kind == "multicast")
                 {

@@ -6,6 +6,51 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class WorkerSessionCallbackTests
 {
+    [Fact]
+    public void Missing_mutation_evidence_cannot_be_recorded_as_a_refusal()
+    {
+        var meta = new Dictionary<string, object?>();
+        var error = new AdapterPreconditionException("ExclusiveAccess refused.", "exclusive-access", null);
+        Assert.False(EngineeringCredentialRules.TryRecordRefusal(error, meta));
+        Assert.Empty(meta);
+    }
+
+    [Fact]
+    public void Exclusive_access_refusal_is_a_typed_precondition()
+    {
+        var native = new InvalidOperationException("ExclusiveAccess refused.");
+        var refusal = Assert.Throws<AdapterPreconditionException>(() =>
+            TiaMcp.Adapters.Session.SessionCallbackPrimitives.EditAccess(true, () => { }, () => false, () => throw native));
+        Assert.Equal("exclusive-access", refusal.Condition);
+        Assert.Same(native, refusal.InnerException);
+        Assert.Contains(native.Message, refusal.Message);
+    }
+
+    [Fact]
+    public void Exclusive_access_process_loss_is_rethrown_unchanged()
+    {
+        var native = new System.Runtime.InteropServices.COMException("Process unavailable.");
+        Assert.Same(native, Assert.Throws<System.Runtime.InteropServices.COMException>(() =>
+            TiaMcp.Adapters.Session.SessionCallbackPrimitives.EditAccess(true, () => { }, () => false, () => throw native)));
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void Documented_refusal_preserves_a_prior_write(bool changed)
+    {
+        var meta = new Dictionary<string, object?> { ["mayHaveChanged"] = changed };
+        var error = new AdapterPreconditionException("ExclusiveAccess refused.", "exclusive-access", new InvalidOperationException());
+        Assert.Equal(!changed, EngineeringCredentialRules.TryRecordRefusal(error, meta));
+        Assert.Equal(changed, meta["mayHaveChanged"]);
+        if (!changed)
+        {
+            Assert.Equal("PreconditionFailed", meta["status"]);
+            Assert.Equal("exclusive-access", meta["precondition"]);
+            Assert.Equal(error.Message, meta["refusal"]);
+            Assert.Equal(false, meta["operationSuccess"]);
+            Assert.Equal(false, meta["apiCallSuccess"]);
+        }
+    }
+
     [Theory]
     [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void Lifecycle_callbacks_capture_full_identity_and_release_without_rebinding(string release)

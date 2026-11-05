@@ -20,6 +20,24 @@ namespace PlcExchangeTests
 {
     public sealed class PlcExchangeContractsTests : IDisposable
     {
+        [Fact]
+        public void Completed_worker_write_reports_known_side_effects()
+        {
+            var body = Map("{\"operationSuccess\":true,\"mayHaveChanged\":true}");
+            Assert.Equal(1, (int?)body["data"]?["executionEvidence"]?["issued"]);
+            Assert.Equal(1, (int?)body["data"]?["executionEvidence"]?["confirmed"]);
+            Assert.True((bool)body["data"]!["executionEvidence"]!["knownSideEffects"]!);
+            Assert.Equal("completed", (string?)body["data"]?["executionEvidence"]?["stage"]);
+        }
+
+        [Fact]
+        public void Read_reports_read_stage()
+        {
+            var body = Map("{\"operationSuccess\":true}", false);
+            Assert.Equal("read", (string?)body["data"]?["executionEvidence"]?["stage"]);
+            Assert.Equal(0, (int?)body["data"]?["executionEvidence"]?["issued"]);
+        }
+
         private static readonly Assembly Host = typeof(enginehost::TiaMcp.FoundationHost.EngineHostPipeline).Assembly;
         private static Type HostType(string name) => Host.GetType(name, true)!;
         public PlcExchangeContractsTests()

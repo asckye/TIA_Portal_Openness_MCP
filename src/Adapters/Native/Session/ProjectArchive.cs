@@ -11,9 +11,9 @@ namespace TiaMcp.Adapters.Native.Session
 {
     internal static class ProjectArchive
     {
-        internal static HmiObject Create(object project, string archivePath, bool dryRun = true)
-            => Create(project, archivePath, archivePath.EndsWith(".zap20", StringComparison.OrdinalIgnoreCase) ? "20" : "21", dryRun);
-        internal static HmiObject Create(object project,string archivePath,string release,bool dryRun=true)
+        internal static HmiObject Create(object project, string archivePath, Action<Exception> recordFailure, bool dryRun = true)
+            => Create(project, archivePath, archivePath.EndsWith(".zap20", StringComparison.OrdinalIgnoreCase) ? "20" : "21", recordFailure, dryRun);
+        internal static HmiObject Create(object project,string archivePath,string release,Action<Exception> recordFailure,bool dryRun=true)
         {
             var method=project.GetType().GetMethods().SingleOrDefault(m=>m.Name=="Archive"&&m.GetParameters().Length==3&&
                 m.GetParameters()[0].ParameterType==typeof(DirectoryInfo)&&m.GetParameters()[1].ParameterType==typeof(string)&&
@@ -42,8 +42,9 @@ namespace TiaMcp.Adapters.Native.Session
             var result=new HmiObject{["success"]=true,["dryRun"]=dryRun,["path"]=path,["kind"]="NativeProjectArchive",
                 ["mode"]="Compressed",["retrievalTested"]=false,["projectSavedByTool"]=false};
             if(dryRun)return result;
+            result["mayHaveWrittenFiles"] = true;
             var export=TiaMcp.Adapters.Native.Plc.EngineeringFileExport
-                .Export(new ArchiveWriter(project,method,Enum.Parse(mode,"Compressed")),path,false,HmiValues.ExportFailure!);
+                .Export(new ArchiveWriter(project,method,Enum.Parse(mode,"Compressed")),path,false,recordFailure);
             foreach(var kv in export)result[kv.Key]=kv.Value?.DeepClone();
             result["operationSuccess"]=result["success"]?.DeepClone();
             return result;

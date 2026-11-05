@@ -16,7 +16,7 @@ namespace TiaMcp.Adapters
     internal sealed class PlcDocumentImportNative
     {
         internal string State="unknown";
-        internal bool Success,ExistsVerified;
+        internal bool Success,ExistsVerified,IdentitiesRead;
         internal string[] Identities=new string[0],Messages=new string[0];
     }
     internal static class PlcDocumentImportPolicy
@@ -104,8 +104,8 @@ namespace TiaMcp.Adapters
             return inventory.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
         }
         internal static string InventoryItem(string group,string name,string kind,string identity)=>Field(group)+Field(name)+Field(kind)+Field(identity);
-        internal static PlcDocumentImportResult Run(PlcDocumentImportRequest r,Func<string[]> scan,Func<string,Stream> open,Func<IEnumerable<string>> inventory,
-                Func<string,bool> collision,Action recheck,Func<PlcDocumentImportNative> import)
+        internal static PlcDocumentImportResult Run(PlcDocumentImportRequest r,Func<string[]> scan,Func<string,Stream> open,
+            Func<IEnumerable<string>> inventory,Func<string,bool> collision,Action recheck,Func<PlcDocumentImportNative> import,Func<string,bool> exists)
         {
             ValidateOptions(r);
             if(r.ProcessId<=0 || string.IsNullOrEmpty(r.TargetIdentity) || string.IsNullOrEmpty(r.Project) || string.IsNullOrEmpty(r.Software)) throw new TiaMcp
@@ -119,7 +119,7 @@ namespace TiaMcp.Adapters
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Incomplete or ambiguous document pair.");
             var streams=new List<Stream>();
             PlcDocumentImportResult? outcome=null;
-            try
+            PlcDocumentImportResult Execute()
             {
                 var bytes=new Dictionary<string,byte[]>();
                 foreach(var path in paths) {var stream=open(path);streams.Add(stream);bytes.Add(path,Read(stream));}
@@ -153,32 +153,53 @@ namespace TiaMcp.Adapters
                 for(int i=0;i<streams.Count;i++) if(Hash(Read(streams[i]))!=Hash(bytes[paths[i]])) throw new IOException("Input bytes changed after preview.");
                 // From this point every exception is potentially partially mutating, even a null/non-Success result.
                 result.Executed=true;result.Attempted=true;result.MayHaveChanged=true;result.NativeState="unknown";
+                bool absenceCanProveUnchanged=true;
                 try
                 {
                     var native=import();
+                    absenceCanProveUnchanged=native==null;
                     if(native==null) throw new InvalidDataException("Native result was null.");
+                    absenceCanProveUnchanged=!native.Success && native.State=="Failure" && native.IdentitiesRead && native.Identities.Length==0;
                     result.NativeState=native.State;result.ImportedIdentities=native.Identities;result.Messages=native.Messages;
                     if(!native.Success || native.Identities.Length!=1 || native.Identities[0]!=InventoryItem(r.Group,name,"GlobalDB","returned") || !native
                             .ExistsVerified)
                         throw new InvalidDataException("Native Success, one exact GlobalDB identity and exact target existence were not established.");
                     result.Status="imported";result.ExistsVerified=true;
                 }
-                catch(Exception) /* swallow(native-fallback): an attempted import can have mutated the project, so failure returns unknown outcome and requires reset */ {result.Status="unknown";result.Error="native-outcome-uncertain-inspect-before-new-session";result.RequiresSessionReset=true;}
+                catch(Exception error)
+                {
+                    var cause=error.GetBaseException();
+                    result.Messages=result.Messages.Concat(new[]{cause.GetType().FullName+": "+cause.Message}).ToArray();
+                    result.Status="unknown";result.Error="native-outcome-uncertain-inspect-before-new-session";result.RequiresSessionReset=true;
+                    try
+                    {
+                        if(absenceCanProveUnchanged && !exists(name))
+                        {result.Status="failed";result.Error="native-import-failed-target-absent";result.MayHaveChanged=false;result.RequiresSessionReset=
+                            false;}
+                    }
+                    catch(Exception readback) { /* swallow(probe-optional): a failed lookup leaves the import unknown. */ result.Messages=
+                        result.Messages.Concat(new[]{"Readback: "+readback.GetBaseException().Message}).ToArray();}
+                }
                 return result;
             }
-            finally
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo? failure=null;
+            try {outcome=Execute();}
+            catch(Exception error) { /* swallow(cleanup): release every input, then rethrow the original exception with its stack. */ failure=
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error);}
+            Exception? closeFailure=null;
+            foreach(var stream in streams)try {stream.Dispose();}catch(Exception ex) {closeFailure=ex;}
+            if(closeFailure!=null)
             {
-                Exception? closeFailure=null;
-                foreach(var stream in streams)try {stream.Dispose();}catch(Exception ex) {closeFailure=ex;}
-                if(closeFailure!=null)
+                if(outcome!=null && outcome.Attempted)
                 {
-                    if(outcome!=null && outcome.Attempted) {
-                        outcome.Status="unknown";outcome.ExistsVerified=false;outcome.Error="native-outcome-uncertain-inspect-before-new-session";outcome
-                            .RequiresSessionReset=true;
-                    }
-                    else throw new IOException("Input handle cleanup failed before native import.",closeFailure);
+                    outcome.Messages=outcome.Messages.Concat(new[]{"Input cleanup: "+closeFailure.GetBaseException().Message}).ToArray();
+                    if(outcome.MayHaveChanged) {outcome.Status="unknown";outcome.ExistsVerified=false;outcome.Error=
+                        "native-outcome-uncertain-inspect-before-new-session";outcome.RequiresSessionReset=true;}
                 }
+                else throw new IOException("Input handle cleanup failed before native import.",closeFailure);
             }
+            failure?.Throw();
+            return outcome!;
         }
     }
     // Complete admission grammar for a deliberately tiny DB subset, NOT a Siemens compiler.

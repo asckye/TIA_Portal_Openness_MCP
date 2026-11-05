@@ -53,6 +53,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         item.Text=text;
                         if(item.Text!=text)
                             throw new InvalidOperationException("Comment readback differs for culture "+(item.Language?.Culture?.Name ?? culture)+".");
+                        ((List<object?>)meta["appliedProperties"]!).Add(meta["lastAttemptedProperty"]);
                     }
                     meta["after"]=HardwareScalarEvidence.Read(target!); meta["commentAfter"]=CommentItems(TagComment(target!));
                 }

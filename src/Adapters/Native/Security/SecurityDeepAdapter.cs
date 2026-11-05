@@ -60,7 +60,7 @@ namespace TiaMcp.Adapters.Native.Security
             string[] devicePathJson = null!, string[] itemPathJson = null!, string serverAddress = "", int serverPort = 0, bool confirmDelete = false,
                 bool dryRun = true)
             => _session.RunHmiStepTool("ManageSyslogServers", meta => {
-                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                meta["mayHaveWrittenFiles"] = false;
                 var properties = Properties(false); var attributes = Properties(true);
                 _session.Validate("syslog");
                 if (attributes.Count > 0 && (scope != "plc" || action != "update"))
@@ -70,7 +70,7 @@ namespace TiaMcp.Adapters.Native.Security
                 foreach (var attribute in attributes.Keys) SecurityRules.RequireApprovedAttribute(attribute, SecurityAttributePolicy.SyslogNames);
                 bool write = action != "read" && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
-                meta["scope"] = scope; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                meta["scope"] = scope; meta["action"] = action; meta["dryRun"] = dryRun;
                 if (scope == "plc")
                 {
                     var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
@@ -91,28 +91,27 @@ namespace TiaMcp.Adapters.Native.Security
                     meta["requestedProperties"] = properties.DeepClone(); meta["requestedAttributes"] = attributes.DeepClone();
                     if (!write) return "PLC syslog " + action
                         + " preview; nothing changed (S7-1500 firmware 3.1 or later; TLS protocols need certificate attributes).";
-                    meta["mayHaveChanged"] = true;
                     switch (action)
                     {
                         case "update":
-                            if (properties.TryGetValue("EnableSystemLogging", out var enable)) {
-                                manager.EnableSystemLogging = enable!.GetValue<bool>(); if (manager.EnableSystemLogging != enable.GetValue<bool>())
-                                    throw new InvalidOperationException("EnableSystemLogging readback differs.");
-                            }
-                            if (properties.TryGetValue("TransportProtocol", out var protocol)) {
-                                var value = (SysLogTransportProtocolType)Enum.Parse(typeof(SysLogTransportProtocolType), protocol!.ToString()); manager
-                                    .TransportProtocol = value; if (manager.TransportProtocol != value)
-                                    throw new InvalidOperationException("TransportProtocol readback differs.");
-                            }
+                            if (properties.TryGetValue("EnableSystemLogging", out var enable)) { var value = enable!.GetValue<bool>();
+                                meta["mayHaveChanged"] = true; manager.EnableSystemLogging = value; if (manager.EnableSystemLogging !=
+                                value) throw new InvalidOperationException("EnableSystemLogging readback differs."); }
+                            if (properties.TryGetValue("TransportProtocol", out var protocol)) { var value =
+                                (SysLogTransportProtocolType)Enum.Parse(typeof(SysLogTransportProtocolType), protocol!.ToString()!);
+                                meta["mayHaveChanged"] = true; manager.TransportProtocol = value; if (manager.TransportProtocol !=
+                                value) throw new InvalidOperationException("TransportProtocol readback differs."); }
                             if (attributes.Count > 0) _session.SetDynamicAttributes((IEngineeringObject)owner, attributes, meta);
                             break;
                         case "createServer":
+                            meta["mayHaveChanged"] = true;
                             var created = manager.SysLogServerConfiguration.Create(serverAddress, (ushort)serverPort);
                             meta["created"] = new HmiObject { ["address"] = created.SysLogServerAddress, ["port"] = created.SysLogServerPort };
-                            if (manager.SysLogServerConfiguration.Find(serverAddress) == null)
-                                throw new InvalidOperationException("Create returned but Find(address) does not see the new server.");
+                            if (manager.SysLogServerConfiguration.Find(serverAddress) ==
+                                null) throw new InvalidOperationException("Create returned but Find(address) does not see the new server.");
                             break;
                         case "deleteServer":
+                            meta["mayHaveChanged"] = true;
                             existing!.Delete();
                             if (manager.SysLogServerConfiguration.Find(serverAddress) != null)
                                 throw new InvalidOperationException("Delete returned but the server is still found by address.");
@@ -240,12 +239,12 @@ namespace TiaMcp.Adapters.Native.Security
         public SecurityResult ManagePasswordPolicy(string action = "read", string target = "", string propertiesJson = "{}", bool confirmChange = false,
                 bool dryRun = true)
             => _session.RunHmiStepTool("ManagePasswordPolicy", meta => {
-                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                meta["mayHaveWrittenFiles"] = false;
                 var properties = Properties(false);
                 _session.Validate("policy");
                 bool write = action == "update" && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                meta["action"] = action; meta["dryRun"] = dryRun;
                 if (action == "read")
                 {
                     var targets = string.IsNullOrEmpty(target) ? SecurityCatalog.PolicyTargets : new[] { target };
@@ -308,13 +307,12 @@ namespace TiaMcp.Adapters.Native.Security
         public SecurityResult ManageUmcUsers(string kind = "user", string action = "read", string name = "", string newName = "", string roleName = "",
             string serverUserName = "", string serverPassword = "", bool confirmChange = false, bool dryRun = true, int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("ManageUmcUsers", meta => {
-                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                meta["mayHaveWrittenFiles"] = false;
                 var request = UmcPlan();
                 _session.Validate("pagination");
                 bool write = request.Writes && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
-                meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["credentialsProvided"] = !string
-                    .IsNullOrEmpty(serverPassword);
+                meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["credentialsProvided"] = !string.IsNullOrEmpty(serverPassword);
                 EngineeringCredentialRules.AuthenticationScope? secure = string.IsNullOrEmpty(serverPassword) ? null : new EngineeringCredentialRules
                     .AuthenticationScope(serverPassword);
                 try

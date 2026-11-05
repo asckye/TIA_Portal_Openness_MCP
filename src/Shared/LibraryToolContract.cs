@@ -122,18 +122,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 || Flag(data, "imported") == true;
             if (writes && success != true && knownPartial && nativeKnown) succeeded = Math.Max(1, succeeded);
             Outcome outcome; Error? error = null;
-            if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
+            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
+            else if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
             { outcome = Outcome.Unknown; error = Unknown(); }
             else if (projectMissing)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "HmiReadSessionBlocked")
-            {
-                outcome = Outcome.RejectedBeforeOperation; error =
-                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("engineering-session"));
-            }
+            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The session requires an explicit reset.",
+                new SessionResetRequiredDetails("engineering-session")); }
             else if (success == true) outcome = Outcome.Succeeded;
-            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
-            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = NativeFailure(nativeMessage); }
             else if (before)
             {
                 outcome = Outcome.RejectedBeforeOperation;
@@ -187,18 +187,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 || MissingRows("groupCount", "groups") || MissingRows("folderCount", "folders") || MissingRows("ruleCount", "rules")
                 || obj.Any(p => p.Key.EndsWith("Error", StringComparison.Ordinal) && p.Value != null || Incomplete(p.Value));
         }
-        private static void Clean(JsonNode? node)
+        private static void Clean(JsonNode? node, bool diagnostic = false)
         {
-            if (node is JsonArray array) { foreach (var item in array) Clean(item); return; }
+            if (node is JsonArray array) { foreach (var item in array) Clean(item, diagnostic); return; }
             if (!(node is JsonObject obj)) return;
             foreach (var pair in obj.ToArray())
             {
-                if (pair.Key == "timestamp" || pair.Key == "messageData" || pair.Key == "detailMessageData" || pair.Key == "lastFailure"
-                    || pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key
-                        .Equals("password", StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
+                if (pair.Key == "timestamp" || pair.Key == "lastFailure"
+                    || pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password",
+                        StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
+                else if (diagnostic && (pair.Key == "text" || pair.Key == "detailText") && pair.Value is JsonValue text &&
+                    text.TryGetValue<string>(out var detail))
+                    obj[pair.Key] = HostBehavior.SafeDiagnostic(detail);
                 else if ((pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) && pair.Value != null) obj[pair.Key] =
                     "Native diagnostic details are retained in the server log.";
-                else Clean(pair.Value);
+                else Clean(pair.Value, diagnostic || pair.Key is "messageData" or "detailMessageData");
             }
         }
         private static Error NativeFailure(string? nativeMessage = null) =>

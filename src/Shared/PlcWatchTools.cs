@@ -63,7 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Items = names,
                     Message = $"{names.Count} force table(s) found.",
-                    Meta = new JsonObject { ["softwarePath"] = softwarePath, ["timestamp"] = DateTime.Now }
+                    Meta = new JsonObject { ["softwarePath"] = softwarePath, ["timestamp"] = DateTime.Now, ["operationSuccess"] = true }
                 };
             }
             catch (Exception ex) when (ex is not McpException)

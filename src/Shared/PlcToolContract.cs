@@ -97,6 +97,12 @@ namespace TiaMcpServer.ModelContextProtocol
             HostBehavior.SanitizeEvidence(root, evidence: false);
             Clean(root);
 
+            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+                return Result(tool, root, refusal, Outcome.RejectedBeforeOperation, Completeness.None, current, writes);
+            if (HostBehavior.UnchangedNativeFailure(evidence, Bool(evidence["operationSuccess"]) ?? Bool(evidence["success"])))
+                return Result(tool, root, HostBehavior.UnchangedNativeError(evidence), writes ? Outcome.Failed : Outcome.ReadFailed, Completeness.Complete,
+                    current, writes);
+
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, root, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current,
                         writes);

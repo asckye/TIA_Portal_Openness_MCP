@@ -49,6 +49,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Run("SetUnifiedHmiRuntimeState", true, true, () =>
                     EnsureStartStopUnifiedHmi(hmiSoftwarePath, screenName, tagTableName, plcName, connectionName));
 
+        private static McpException LegacyFailure(Exception error, string message)
+            => error is TiaMcp.Adapters.Contracts.AdapterPreconditionException
+                ? new McpException(error.Message, error, McpErrorCode.InvalidParams)
+                : new McpException(message, error, McpErrorCode.InternalError);
+
         public ResponseMessage EnsureStartStopUnifiedHmi(string hmiSoftwarePath,
             string screenName = "Main",
             string tagTableName = TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
@@ -62,8 +67,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error ensuring unified HMI start/stop: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
-                        .InternalError);
+                throw LegacyFailure(ex, $"Unexpected error ensuring unified HMI start/stop: {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -90,14 +94,13 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 return _service.EnsureUnifiedHmiScreen(hmiSoftwarePath, screenName, width, height, dryRun);
             }
-            catch (ArgumentException ex)
+            catch (Exception ex) when (ex is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException)
             {
                 throw new McpException(ex.Message, ex, McpErrorCode.InvalidParams);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error ensuring HMI screen '{screenName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
-                        .InternalError);
+                throw LegacyFailure(ex, $"Unexpected error ensuring HMI screen '{screenName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -120,14 +123,13 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 return _service.EnsureUnifiedHmiTagTable(hmiSoftwarePath, tagTableName, dryRun);
             }
-            catch (ArgumentException ex)
+            catch (Exception ex) when (ex is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException)
             {
                 throw new McpException(ex.Message, ex, McpErrorCode.InvalidParams);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error ensuring HMI tag table '{tagTableName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
-                        .InternalError);
+                throw LegacyFailure(ex, $"Unexpected error ensuring HMI tag table '{tagTableName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -172,13 +174,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     .EnsureUnifiedHmiTag(hmiSoftwarePath, tagTableName, tagName, hmiDataType, plcName, plcTag, connectionName, address, requireVerifiedBinding,
                         dryRun);
             }
-            catch (ArgumentException ex)
+            catch (Exception ex) when (ex is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException)
             {
                 throw new McpException(ex.Message, ex, McpErrorCode.InvalidParams);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error ensuring HMI tag '{tagName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error ensuring HMI tag '{tagName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -203,8 +205,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error ensuring HMI connection '{connectionName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
-                        .InternalError);
+                throw LegacyFailure(ex, $"Unexpected error ensuring HMI connection '{connectionName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -243,8 +244,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error ensuring HMI screen item '{itemName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
-                        .InternalError);
+                throw LegacyFailure(ex, $"Unexpected error ensuring HMI screen item '{itemName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -294,8 +294,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error applying Unified HMI design to '{screenName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode
-                        .InternalError);
+                throw LegacyFailure(ex, $"Unexpected error applying Unified HMI design to '{screenName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -331,7 +330,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error applying Unified HMI theme: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error applying Unified HMI theme: {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -359,7 +358,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error applying Unified HMI layout: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error applying Unified HMI layout: {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -388,8 +387,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error binding button '{buttonName}' to tag '{tagName}': {ex.Message}{McpHints.Recovery(ex)}", ex,
-                        McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error binding button '{buttonName}' to tag '{tagName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -416,7 +414,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error listing Unified HMI API types: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error listing Unified HMI API types: {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -447,8 +445,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error ensuring button event handler '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}", ex,
-                        McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error ensuring button event handler '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -487,8 +484,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error describing button event script '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}", ex,
-                        McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error describing button event script '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -532,8 +528,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error setting button event script '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}", ex,
-                        McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error setting button event script '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -617,8 +612,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error applying Unified HMI button action '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}",
-                        ex, McpErrorCode.InternalError);
+                throw LegacyFailure(ex,
+                    $"Unexpected error applying Unified HMI button action '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -652,8 +647,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error ensuring dynamization '{itemName}.{propertyName}': {ex.Message}{McpHints.Recovery(ex)}", ex,
-                        McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error ensuring dynamization '{itemName}.{propertyName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
 
@@ -690,8 +684,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error binding tag dynamization '{itemName}.{propertyName}': {ex.Message}{McpHints.Recovery(ex)}", ex,
-                        McpErrorCode.InternalError);
+                throw LegacyFailure(ex, $"Unexpected error binding tag dynamization '{itemName}.{propertyName}': {ex.Message}{McpHints.Recovery(ex)}");
             }
         }
     }

@@ -68,13 +68,16 @@ internal static class DocumentImportContract
         }
         else
         {
-            if(!Flag("Executed") || !Flag("Attempted") || !Flag("MayHaveChanged") || status is not ("imported" or "unknown")
-                    || Flag("RequiresSessionReset")!=(status=="unknown") || Flag("ExistsVerified")!=(status=="imported"))
-                throw new InvalidDataException("Conflicting attempted document outcome.");
+            if(!Flag("Executed") || !Flag("Attempted") || Flag("MayHaveChanged")!=(status!="failed") ||
+                status is not ("imported" or "unknown" or "failed") || Flag("RequiresSessionReset")!=(status=="unknown") || Flag("ExistsVerified")!=
+                (status=="imported"))throw new InvalidDataException("Conflicting attempted document outcome.");
             string Field(string text)=>text.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)+":"+text;
             var identity=Field(Text("GroupPath"))+Field(Text("DeclaredName"))+Field("GlobalDB")+Field("returned");
-            if(status=="imported" && (Text("NativeState")!="Success" || Text("Error")!="" || imported.Count!=1 || imported[0]!.GetValue<string>()!=identity))
-                throw new InvalidDataException("Import success lacks exact identity evidence.");
+            if(status=="imported" && (Text("NativeState")!="Success" || Text("Error")!="" || imported.Count!=1 || imported[0]!.GetValue<string>()!=
+                identity))throw new InvalidDataException("Import success lacks exact identity evidence.");
+            if(status=="failed" && (Text("Error")!="native-import-failed-target-absent" || imported.Count!=0
+                || string.Equals(Text("NativeState"),"Success",StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidDataException("Failed import lacks no-import and absent-target proof.");
             if(status=="unknown" && Text("Error")!="native-outcome-uncertain-inspect-before-new-session")
                 throw new InvalidDataException("Unknown outcome missing uncertainty disclosure.");
             if(request["confirm"]?.GetValue<bool>()!=true || Text("ProjectFile")!=request["expectedProjectFile"]?.GetValue<string>()

@@ -135,11 +135,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (action == "create")
                 {
                     meta["apiCallSuccess"] = true;
-                    // Openness returns a fresh proxy from Create<T>; Find() yields another proxy for the same object, so identity is checked by exact name and count, never by reference.
-                    item = PlcGroupOperations.Find(items, itemName)
-                        ?? throw new InvalidOperationException("Create returned but the item is not found by name.");
-                    if (PlcGroupOperations.Items(items).Count() != countBefore + 1)
-                        throw new InvalidOperationException("Create returned but the item count did not grow by one.");
+                    item = UnifiedUiModelLogic.VerifyCreated(
+                        () => items = PlcGroupOperations.Get(HmiExactAccess.Screen(_session.ExactUnifiedRoot(softwarePath), screenPath), "ScreenItems"),
+                        item, itemName, countBefore);
                     if (UnifiedScreenItemLogic.RequiresContainedType(type)) meta["containedTypeReadback"] = UnifiedScreenItemLogic
                         .ReadContainedType(item, containedType);
                 }

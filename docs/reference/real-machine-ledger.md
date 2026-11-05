@@ -10,6 +10,10 @@
 
 ## 未发布改动的验收边界
 
+VMFIX-3 Round 2：**NOT RUN**。V14 SP1、V15.1、V16、V17、V18、V19、V20 的 ImportDeviceAml 保留原有 ExclusiveAccess 路径；需分别在工程副本上确认导入、失败后的工程状态及设备计数。只有 V21 按已记录的 reset 13 证据在 ExclusiveAccess 外导入，仍需复测。库文档 Override、带目标环境及非 None 选项的失败保持未知结果，不能只凭类型/版本数量未变判为未写入。
+
+VMFIX-3（2026-11-03）：**NOT RUN**。需在 V21 工程副本上复验 ExclusiveAccess 占用拒绝、通道属性未改变读回、三类密码策略拒绝、无 ExclusiveAccess 的 AML 导入、库类型/版本导入失败详情和数量读回、文件夹中的 Unified 屏幕及无名部件创建、文档导入失败后的声明名称查找、PROFINET 连接、报警文本导出、HMI 输入拒绝、未知写入的会话锁存、worker 执行证据、标签注释、强制表列表及下载预览。库导入仍保留 ExclusiveAccess；其他导入族的 ExclusiveAccess 兼容性留待 VM 回归。主题负载和标签绑定功能修复由 VMFIX-5b 负责。本任务仅使用离线与本机合成夹具，没有连接 TIA Portal、PLC 或 VM。
+
 VMFIX-2（当前任务分支，2026-11-02）：**NOT RUN**。在 V21 工程副本上复验报警、OPC UA、SiVArc、Startdrive/DCC、Safety 的正常、不支持与失败回复，确认后续读取无需重置；复验 8 个 Unified 分页读取工具的目录示例及续页、事件脚本正文、分组 PLC/HMI 的名称与项目树路径探测、缺失目标及 HMI 快捷操作的原生失败原因。本任务仅使用离线夹具，没有连接 TIA Portal、PLC 或 VM。
 
 下列改动已合并到 master，只有离线证据；正式版本发布前必须在真机上完成并记录，否则不得发布（预发布见上方例外）。

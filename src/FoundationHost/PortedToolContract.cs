@@ -488,6 +488,9 @@ internal sealed partial class FoundationTool
             try
             {
                 operationDispatched = true;
+                if (!TiaMcp.PlcWorker.WorkerOperations.IsReadOnly(operation)
+                    && (bool?)input["dryRun"] != true)
+                    InvocationJournal.NativeCallStarted();
                 var reply = worker.Call(operation, input, token).GetAwaiter().GetResult();
                 var objectReply = reply as JsonObject;
                 lastReply = objectReply;

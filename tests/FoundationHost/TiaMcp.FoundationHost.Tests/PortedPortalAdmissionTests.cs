@@ -12,6 +12,46 @@ using Xunit;
 
 public sealed class PortedPortalAdmissionTests
 {
+    [Theory, InlineData(false), InlineData(true)]
+    public async Task Dispatched_unknown_write_latches_and_undispatched_refusal_does_not(bool refusal)
+    {
+        using var approval = new DisabledApproval();
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(contextWorker, "21");
+        using var worker = new OutcomeWorker();
+        string name = refusal ? "EnsureUnifiedHmiTag" : "CreatePlcTypeGroup";
+        var tool = LegacyHostToolRegistry.Create(worker, "21", false).Single(t => t.ProtocolTool.Name == name);
+        object key = new();
+        var previous = Host.McpServer.ApprovalSessionKeyForTests;
+        Host.McpServer.ApprovalSessionKeyForTests = () => key;
+        try
+        {
+            using var journal = Host.InvocationJournal.BeginNativeCallScope();
+            var arguments = refusal ? new JsonObject { ["hmiSoftwarePath"] = "HMI", ["tagTableName"] = "Tags", ["tagName"] = "Flag",
+                ["plcName"] = "", ["plcTag"] = "DB.Flag", ["dryRun"] = false }
+                : new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "NewGroup", ["dryRun"] = false };
+            var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
+            var result = await tool.InvokeAsync(request);
+            result = Host.McpServer.ObserveSessionOutcome(name, result, true, Host.InvocationJournal.NativeCallIssued);
+            Assert.Equal(!refusal, Host.InvocationJournal.NativeCallIssued);
+            Assert.Equal(refusal ? "rejected-before-operation" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+            Assert.Equal(!refusal, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+            Assert.Equal(!refusal, Host.McpServer.SessionPrecheckRefusal("CreatePlcTypeGroup") != null);
+        }
+        finally { Host.McpServer.ApprovalSessionKeyForTests = previous; }
+    }
+
+    private sealed class OutcomeWorker : IFoundationWorker
+    {
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+            => Task.FromResult<JsonNode?>(operation == "ReadState"
+                ? new JsonObject { ["ProcessId"] = 123, ["IsAttached"] = true, ["ProjectFile"] = "C:/Fixture.ap21" }
+                : new JsonObject { ["Data"] = new JsonObject { ["meta"] = new JsonObject {
+                    ["operationSuccess"] = false, ["mayHaveChanged"] = true, ["requiresSessionReset"] = true } } });
+        public void Dispose() { }
+    }
+
     [Theory]
     [InlineData("EnsureUnifiedHmiScreenItem", false)]
     [InlineData("EnsureUnifiedHmiScreenItem", true)]
@@ -177,7 +217,7 @@ public sealed class PortedPortalAdmissionTests
             GlobalOperations++;
             // These global entries may dispatch without a portal. Refuse the
             // synthetic operation before native access or Windows group edits.
-            throw new InvalidOperationException("Synthetic global operation refused before native access.");
+            throw new AdapterPreconditionException("Synthetic global operation refused before native access.", "fixture-global-admission", null);
         }
     }
 

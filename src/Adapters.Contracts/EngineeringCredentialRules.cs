@@ -26,6 +26,24 @@ public static partial class EngineeringCredentialRules
         }
     }
 
+    // Preserve the typed admission exception before unwrapping its native cause.
+    public static bool TryRecordRefusal(Exception error, IDictionary<string, object?> meta)
+    {
+        if (!meta.TryGetValue("mayHaveChanged", out var changed) || changed is not false) return false;
+        for (Exception? cause = error; cause != null; cause = cause.InnerException)
+            if (cause is AdapterPreconditionException refusal)
+            {
+                meta["mayHaveChanged"] = false;
+                meta["operationSuccess"] = false;
+                meta["apiCallSuccess"] = false;
+                meta["status"] = "PreconditionFailed";
+                meta["precondition"] = refusal.Condition ?? refusal.ParamName ?? "native-admission";
+                meta["refusal"] = refusal.Message;
+                return true;
+            }
+        return false;
+    }
+
     private static bool PasswordPolicyViolation(Exception error)
     {
         for (Exception? current = error; current != null; current = current.InnerException)

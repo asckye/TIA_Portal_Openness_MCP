@@ -214,23 +214,30 @@ namespace TiaMcp.Adapters.Native.Security
                         break;
 #if SECURITY_MASTER_SECRET
                     case "protectMasterSecret":
-                        secretProvider!.Protect(secure!);
+                        if (!EngineeringCredentialRules.TrySetPassword(() => secretProvider!.Protect(secure!), meta))
+                            return EngineeringCredentialRules.PasswordPolicyRefusal;
                         break;
                     case "changeMasterSecret":
-                        secretProvider!.ChangePassword(secure!, secureNew!);
+                        if (!EngineeringCredentialRules.TrySetPassword(() => secretProvider!.ChangePassword(secure!, secureNew!), meta))
+                            return EngineeringCredentialRules.PasswordPolicyRefusal;
                         break;
                     case "unprotectMasterSecret":
-                        if (secure != null) secretProvider!.Unprotect(secure); else secretProvider!.Unprotect();
+                        if (!EngineeringCredentialRules.TrySetPassword(() => { if (secure != null) secretProvider!.Unprotect(secure);
+                            else secretProvider!.Unprotect(); }, meta))
+                            return EngineeringCredentialRules.PasswordPolicyRefusal;
                         break;
                     case "resetMasterSecret":
-                        secretProvider!.Reset();
+                        if (!EngineeringCredentialRules.TrySetPassword(() => secretProvider!.Reset(), meta))
+                            return EngineeringCredentialRules.PasswordPolicyRefusal;
                         break;
 #endif
                     case "protectAllConfiguration":
 #if !SECURITY_ALL_CONFIGURATION
                         throw new NotSupportedException("ProtectAllPlcConfiguration / ProtectAllPlcConfigurationWithPassword exist in the V21 PublicAPI only.");
 #else
-                        if (secure != null) secretProvider!.ProtectAllPlcConfigurationWithPassword(secure); else secretProvider!.ProtectAllPlcConfiguration();
+                        if (!EngineeringCredentialRules.TrySetPassword(() => { if (secure !=
+                            null) secretProvider!.ProtectAllPlcConfigurationWithPassword(secure); else secretProvider!.ProtectAllPlcConfiguration(); }, meta))
+                            return EngineeringCredentialRules.PasswordPolicyRefusal;
                         break;
 #endif
                     case "unprotectAllConfiguration":

@@ -225,11 +225,28 @@ namespace TiaMcp.Logic.V4
             Outcome.RejectedBeforeOperation => Execution.NotStarted, Outcome.ReadFailed => Execution.ReadOnly,
             Outcome.Failed => Execution.Completed, Outcome.Partial => Execution.Partial, Outcome.Unknown => Execution.Unknown,
             _ => mutation ? Execution.Completed : Execution.ReadOnly };
+        internal static Error? DocumentedRefusal(JsonObject evidence)
+        {
+            if (evidence["status"]?.ToString() != "PreconditionFailed"
+                || evidence["mayHaveChanged"] is JsonValue value && value.TryGetValue<bool>(out var changed) && changed
+                || string.IsNullOrWhiteSpace(evidence["precondition"]?.ToString())) return null;
+            return new Error(SafeDiagnostic(evidence["refusal"]?.ToString()) ?? "TIA Portal refused the operation.",
+                new PreconditionFailedDetails(evidence["precondition"]!.ToString(), null));
+        }
+
+        internal static Error UnchangedNativeError(JsonObject evidence, string? fallback = null)
+        {
+            string? message = SafeDiagnostic(evidence["nativeMessage"]?.ToString() ?? fallback);
+            return new Error(message ?? "The native operation failed without changing the target.",
+                new NativeOperationFailedDetails(null, message, new Dictionary<string, JsonElement>()));
+        }
+
         // A negative worker verdict with explicit unchanged evidence is known, even for a write-declared tool.
-        internal static bool UnchangedNativeFailure(JsonObject evidence, bool? success)
+        internal static bool UnchangedNativeFailure(JsonObject evidence, bool? success, bool allowWrittenFiles = false)
         {
             bool? Flag(string name) => evidence[name] is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
-            return success == false && Flag("apiCallSuccess") == false && Flag("mayHaveChanged") == false && Flag("mayHaveWrittenFiles") != true
+            return success == false && Flag("apiCallSuccess") == false && Flag("mayHaveChanged") == false && (allowWrittenFiles ||
+                Flag("mayHaveWrittenFiles") != true)
                 && Flag("mayHaveExternalEffects") != true && Flag("operationStarted") != true
                 && Flag("requiresSessionReset") != true && Flag("requiresExplicitRebind") != true
                 && evidence["v4Rejection"] == null && evidence["rejectionCode"] == null

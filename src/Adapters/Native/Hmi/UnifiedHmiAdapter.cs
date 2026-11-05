@@ -488,6 +488,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                 if (root["screen"] is HmiObject screenProps)
                 {
+                    if (screenProps.Count > 0) meta["mayHaveChanged"] = true;
                     ApplyJsonProperties(screen, screenProps, failed, writeResults, "screen");
                 }
 
@@ -522,6 +523,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                         var action = "updated";
                         if (item == null)
                         {
+                            meta["mayHaveChanged"] = true;
                             item = CreateUnifiedScreenItem(items, name!, itemClrType, typeHint!);
                             action = "created";
                             itemStatus["created"] = item != null;
@@ -536,6 +538,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                                 HmiString(itemNode, "culture") ?? "zh-CN");
 
                         itemStatus["mayHaveChanged"] = true;
+                        meta["mayHaveChanged"] = true;
                         if (itemNode["left"] != null)
                             ApplyJsonProperties(item, new HmiObject { ["Left"] = itemNode["left"] }, failed, writeResults, name!, allowAttributeFallback
                                 : false);
@@ -632,6 +635,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var mCreate = pressedStateTags.GetType().GetMethod("Create", Type.EmptyTypes);
                     if (mCreate == null) throw new InvalidOperationException($"Create() not found on {pressedStateTags.GetType().FullName}.");
+                    meta["mayHaveChanged"] = true;
                     existing = InvokeCreate(mCreate, pressedStateTags, Array.Empty<object>());
                     action = "created";
                 }
@@ -730,6 +734,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var action = "exists";
                 if (handler == null)
                 {
+                    meta["mayHaveChanged"] = true;
                     handler = InvokeCreate(create, eventHandlers, new[] { enumValue });
                     action = "created";
                 }
@@ -840,6 +845,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                                 .ParameterType == typeof(string));
                     if (create == null) throw new InvalidOperationException($"Create<T>(string) not found on {dynamizations.GetType().FullName}.");
 
+                    meta["mayHaveChanged"] = true;
                     dyn = create.MakeGenericMethod(tagDynType).Invoke(dynamizations, new object[] { propertyName });
                     action = "created";
                 }

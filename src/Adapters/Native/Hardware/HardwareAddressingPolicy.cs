@@ -9,6 +9,14 @@ namespace TiaMcp.Adapters.Hardware
 {
     public static class HardwareAddressingPolicy
     {
+        public static bool UnchangedAfterFailedSet(bool beforeReadable, object? before, Func<object?> readAfter)
+        {
+            object? after;
+            try { after = readAfter(); }
+            catch { /* swallow(probe-optional): two unavailable reads prove the attribute is not exposed. */ return !beforeReadable; }
+            return beforeReadable && SameValue(before, after);
+        }
+
         public static readonly IReadOnlyList<string> AddressAttributes = Array
             .AsReadOnly(new string[] { "Context", "ProcessImage", "IsochronousMode", "InterruptObNumber" });
         public static readonly IReadOnlyList<string> IoTypes = Array.AsReadOnly(new string[] { "None", "Input", "Output", "Diagnosis", "Substitute" });

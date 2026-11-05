@@ -8,6 +8,16 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class HardwareAddressingTests
 {
+    [Fact]
+    public void Failed_set_with_unchanged_readback_is_unchanged()
+    {
+        Assert.True(HardwareAddressingPolicy.UnchangedAfterFailedSet(true, 3, () => 3));
+        Assert.True(HardwareAddressingPolicy.UnchangedAfterFailedSet(false, null, () => throw new InvalidOperationException("Unavailable")));
+        Assert.False(HardwareAddressingPolicy.UnchangedAfterFailedSet(true, 3, () => 4));
+        Assert.False(HardwareAddressingPolicy.UnchangedAfterFailedSet(true, 3, () => throw new InvalidOperationException("Unavailable")));
+        Assert.False(HardwareAddressingPolicy.UnchangedAfterFailedSet(false, null, () => 3));
+    }
+
     [Theory]
     [InlineData("14sp1")]
     [InlineData("15.1")]

@@ -281,7 +281,9 @@ namespace TiaMcp.Adapters.Native.Plc
             catch (Exception ex)
             {
                 _session.RecordExportFailure(ex);
-                return new PlcB5Reply { Message = $"Export failed: {ex.GetBaseException().Message}", Meta = ResponseMeta.Unstamped(false) };
+                return new PlcB5Reply { Message = $"Export failed: {ex.GetBaseException().Message}", Meta = ResponseMeta.Unstamped(false,
+                    ("operationSuccess", false), ("apiCallSuccess", false), ("mayHaveChanged", false),
+                    ("mayHaveWrittenFiles", File.Exists(exportPath)), ("nativeMessage", ex.GetBaseException().Message)) };
             }
         }
 

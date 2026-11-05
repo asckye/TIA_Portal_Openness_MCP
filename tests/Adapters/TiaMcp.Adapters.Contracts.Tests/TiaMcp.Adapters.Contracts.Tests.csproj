@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../../Shared/Xunit.props" />
   <PropertyGroup>
-    <RootNamespace>TiaMcp.Adapters.Contracts.Tests</RootNamespace><TargetFramework>net10.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+    <RootNamespace>TiaMcp.Adapters.Contracts.Tests</RootNamespace><TargetFramework>net10.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile><AssemblyVersion>21.0.0.0</AssemblyVersion><DefineConstants>$(DefineConstants);SECURITY_DEVICE_SYSLOG;PROJECT_EXCHANGE</DefineConstants><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <PropertyGroup>
     <!-- Exercise both current-release callback registrations against managed Siemens stand-ins. -->
     <DefineConstants>$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
@@ -14,12 +14,31 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiExchangePolicy.cs" Link="Hmi/HmiExchangePolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/EngineeringFileExport.cs" Link="Hmi/EngineeringFileExport.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiEngineeringSteps.cs" Link="Hmi/HmiEngineeringSteps.cs" />
+    <Compile Include="../../../src/Adapters/Native/Security/ProjectProtection.cs" Link="Security/ProjectProtection.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingSteps.cs" Link="Hardware/HardwareAddressingSteps.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetwork.cs" Link="Hardware/HardwareNetwork.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkPrimitives.cs" Link="Hardware/HardwareNetworkPrimitives.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAml.cs" Link="Hardware/HardwareAml.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAmlPolicy.cs" Link="Hardware/HardwareAmlPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwarePath.cs" Link="Hardware/HardwarePath.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareGroupCreation.cs" Link="Hardware/HardwareGroupCreation.cs" />
+    <Compile Include="../../../src/Adapters/Native/Security/SecurityCatalog.cs" Link="Security/SecurityCatalog.cs" />
+    <Compile Include="../../../src/Adapters/Native/Security/SecurityCatalog.Deep.cs" Link="Security/SecurityCatalog.Deep.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkPolicy.cs" Link="Hardware/HardwareNetworkPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareServicesPolicy.cs" Link="Hardware/HardwareServicesPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareGroupOperations.cs" Link="Hardware/HardwareGroupOperations.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareScalarEvidence.cs" Link="Hardware/HardwareScalarEvidence.cs" />
+    <Compile Include="../../../src/Adapters/Native/Security/SecurityDeepAdapter.cs" Link="Security/SecurityDeepAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Security/SecuritySession.cs" Link="Security/SecuritySession.cs" />
+    <Compile Include="../../../src/Adapters/Native/Security/SecurityRules.cs" Link="Security/SecurityRules.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiValues.cs" Link="Hmi/HmiValues.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerProjectScaffold.cs" Link="WorkerProjectScaffold.cs" />
     <Compile Include="../../../src/Logic/ModelContextProtocol/Builders/S7ResScanner.cs" Link="S7ResScanner.cs" />
     <Compile Include="../../../src/Shared/shared-native/SessionCallbackPrimitives.cs" Link="Session/SessionCallbackPrimitives.cs" />
     <Compile Include="../../../src/Shared/shared-native/SessionProcessIdentity.cs" Link="Session/SessionProcessIdentity.cs" />
     <Compile Include="../../../src/Shared/shared-native/WorkerSessionCallbacks.cs" Link="Session/WorkerSessionCallbacks.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/ProjectLifecycleWorker.cs" Link="Session/ProjectLifecycleWorker.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/ProjectArchive.cs" Link="Session/ProjectArchive.cs" />
     <Compile Include="../../../src/Adapters/Policy/PlcLifecyclePolicy.cs" Link="Session/PlcLifecyclePolicy.cs" />
     <Compile Include="../../../src/Logic/Siemens/ProjectBindingIdentity.cs" Link="Session/ProjectBindingIdentity.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="Session/TiaVersionCatalog.cs" />
@@ -45,6 +64,7 @@
     <Compile Include="../../../src/PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" Link="HardwareAddressingPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressPrimitives.cs" Link="HardwareAddressPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="ModelContextProtocol" />

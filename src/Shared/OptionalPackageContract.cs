@@ -96,19 +96,22 @@ namespace TiaMcpServer.ModelContextProtocol
             int imported = (data["imported"] as JsonArray)?.Count ?? 0;
             bool knownPartial = verificationFailed && imported > 0
                 || success == false && nativeKnown && (data["file"] is JsonObject || data["output"] is JsonObject);
-            Outcome outcome = unknown ? Outcome.Unknown : rejection != null ? Outcome.RejectedBeforeOperation
+            var refusal = HostBehavior.DocumentedRefusal(data);
+            Outcome outcome = refusal != null ? Outcome.RejectedBeforeOperation : unknown ? Outcome.Unknown : rejection !=
+                null ? Outcome.RejectedBeforeOperation
                 : success == true ? Outcome.Succeeded : knownPartial ? Outcome.Partial
-                : writes && (nativeKnown || unchangedFailure) || verificationFailed ? Outcome.Failed : writes && !notStarted ? Outcome.Unknown : Outcome
-                    .ReadFailed;
-            string failureMessage = HostBehavior.SafeDiagnostic(response.Message)
-                ?? (outcome == Outcome.RejectedBeforeOperation && rejection == "UNSUPPORTED_CAPABILITY"
+                : writes && (nativeKnown || unchangedFailure) || verificationFailed ? Outcome.Failed : writes &&
+                    !notStarted ? Outcome.Unknown : Outcome.ReadFailed;
+            string failureMessage = HostBehavior.SafeDiagnostic(response.Message) ?? (outcome == Outcome.RejectedBeforeOperation && rejection ==
+                "UNSUPPORTED_CAPABILITY"
                 && (tool == "ExchangeCfcCharts" || tool == "ManageCfcChartProtection") && data["unsupportedReason"] is JsonValue reason
                 && reason.TryGetValue<string>(out var guardReason) ? guardReason : "The optional-package operation did not establish success.");
-            Error? error = outcome == Outcome.Succeeded ? null : new Error(failureMessage,
+            Error? error = refusal ?? (outcome == Outcome.Succeeded ? null : new Error(failureMessage,
                 outcome == Outcome.Unknown ? new OutcomeUnknownDetails("optional-package-operation", new Dictionary<string, JsonElement>())
                 : outcome == Outcome.Partial ? new PartialFailureDetails(imported, imported > 0 ? 1 : 0, 0)
                 : outcome == Outcome.RejectedBeforeOperation ? Rejection(rejection!, tool)
-                : new NativeOperationFailedDetails(null, HostBehavior.SafeDiagnostic(response.Message), new Dictionary<string, JsonElement>()));
+                : new NativeOperationFailedDetails(null, HostBehavior.SafeDiagnostic(data["nativeMessage"]?.ToString() ?? response.Message),
+                    new Dictionary<string, JsonElement>())));
             bool incomplete = Incomplete(data) || tool == "ExchangeCfcCharts"
                 && (data["action"]?.ToString() == "import" || data["action"]?.ToString() == "export")
                 || data.ContainsKey("contentVerified") && Flag(data, "contentVerified") != true;

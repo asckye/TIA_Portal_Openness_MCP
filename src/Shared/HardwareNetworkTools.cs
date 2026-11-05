@@ -118,7 +118,6 @@ namespace TiaMcpServer.ModelContextProtocol
             // The topology lists root, grouped and ungrouped devices; an empty list
             // is still an observed list, while an unbound project has no such list.
             if (tool == "GetProjectTopology" && data["devices"] is JsonArray) success = true;
-            if (tool == "ConnectDeviceNodesToProfinetSubnet") success = null;
             if (tool == "SetPlcPutGetAccess" && Flag(evidence, "writeOutcomeKnown") != true
                 && Flag(evidence, "mayHaveChanged") == true) success = null;
             if (tool == "CompileDevice" && evidence["effectiveState"] != null)
@@ -137,13 +136,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 || evidence["file"] is JsonObject && Flag(evidence, "mayHaveWrittenFiles") == true && Flag(evidence, "mayHaveChanged") == false;
             string status = evidence["failureCode"]?.ToString() ?? evidence["status"]?.ToString() ?? "";
             Outcome outcome; Execution execution; Error? error = null;
-            if (tool == "ConnectDeviceNodesToProfinetSubnet" && status == "PROJECT_NOT_BOUND" && !issued)
-            {
-                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
-                    new Error("No project is bound.", new ProjectNotBoundDetails());
-            }
-            else
-                if (nestedUnknown || !readOnly && success != true && !knownFailure && !knownPartial && (issued || tool == "ConnectDeviceNodesToProfinetSubnet"))
+            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
+                HostBehavior.UnchangedNativeError(evidence); }
+            else if (tool == "ConnectDeviceNodesToProfinetSubnet" && status == "PROJECT_NOT_BOUND" && !issued)
+            { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("No project is bound.",
+                new ProjectNotBoundDetails()); }
+            else if (nestedUnknown || !readOnly && success != true && !knownFailure && !knownPartial && issued)
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
             else if (!readOnly && success != true && knownPartial)
             {
@@ -532,6 +533,10 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("subnetName: subnet name to create when the first node is not already connected, e.g. 'PN_IE_1'")] string subnetName = "PN_IE_1")
             => HardwareToolContract.Invoke("ConnectDeviceNodesToProfinetSubnet", false, true, () =>
             {
+                HardwareToolContract.Check(() => {
+                    HardwareNetworkLogic.RequireExactName(subnetName, "subnetName");
+                    if (subnetName.Any(char.IsControl)) throw new ArgumentException("subnetName must not contain control characters.", nameof(subnetName));
+                });
                 return ConnectDeviceNodesToProfinetSubnetCore(firstRootPath, secondRootPath, subnetName);
             });
 
@@ -638,11 +643,14 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var report = _hardware.ProbeConnectDeviceNodesToSubnet(firstRootPath, secondRootPath, subnetName);
-                var success =
-                    report.IndexOf("ConnectToSubnet: OK", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    (report.IndexOf("already connected to subnet", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                     report.IndexOf("connectedSubnet=<none>", StringComparison.OrdinalIgnoreCase) < 0);
-
+                string resultLine = report.Split('\n').Select(line => line.TrimEnd('\r'))
+                    .LastOrDefault(line => line.StartsWith("Result: ", StringComparison.Ordinal)) ?? "";
+                bool success = resultLine.StartsWith("Result: ConnectToSubnet: OK", StringComparison.Ordinal);
+                bool missing = resultLine == "Result: NOT CONNECTED: a root path was not found; nothing was changed.";
+                bool unchanged = missing || resultLine == "Result: NOT CONNECTED: no Industrial Ethernet/PROFINET node under both roots; nothing was changed."
+                    || resultLine.StartsWith("Result: NOT CONNECTED: ", StringComparison.Ordinal)
+                        && resultLine.EndsWith("; disconnect it explicitly first. Nothing was changed.", StringComparison.Ordinal);
+                bool invalidSubnet = resultLine.StartsWith("Result: NOT CONNECTED: invalid subnetName:", StringComparison.Ordinal);
                 var meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,
@@ -652,6 +660,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["subnetName"] = subnetName,
                     ["report"] = report
                 };
+                meta["mayHaveChanged"] = !unchanged && !invalidSubnet;
+                if (unchanged)
+                {
+                    meta["failureCode"] = missing ? "NOT_FOUND" : "PRECONDITION_FAILED";
+                    if (missing) meta["target"] = report.IndexOf("PLC root: " + firstRootPath + " -> <not found>", StringComparison.Ordinal) >=
+                        0 ? firstRootPath : secondRootPath;
+                }
+                else if (invalidSubnet) meta["failureCode"] = "INVALID_ARGUMENT";
                 if (!_hardware.HasProject)
                 {
                     meta["failureCode"] = "PROJECT_NOT_BOUND";

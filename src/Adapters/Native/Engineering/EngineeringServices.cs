@@ -36,7 +36,7 @@ namespace TiaMcp.Adapters
                     ["activeCultures"]=new List<object?>(settings.ActiveLanguages.Select(x=>(object)x.Culture.Name).ToArray()),
                     ["editingCulture"]=settings.EditingLanguage?.Culture.Name,
                     ["referenceCulture"]=settings.ReferenceLanguage?.Culture.Name };
-                meta["before"]=Snapshot(); meta["dryRun"]=dryRun; meta["mayHaveChanged"]=false;
+                meta["before"]=Snapshot(); meta["dryRun"]=dryRun;
                 if(action=="read") return "Project active, editing and reference languages read.";
                 var selected=settings.Languages.Find(CultureInfo.GetCultureInfo(culture))
                     ?? throw new NotSupportedException("Language not supported by this project.");
@@ -86,7 +86,7 @@ namespace TiaMcp.Adapters
                 if (project!.GetType().GetMethod("ImportProjectTexts", signature) == null)
                     throw new NotSupportedException("Native project text import unavailable.");
                 using var access = dryRun ? null : HardwareEditAccess();
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["filePath"] = file.FullName; meta["updateSourceLanguage"] = updateSourceLanguage;
+                meta["dryRun"] = dryRun; meta["filePath"] = file.FullName; meta["updateSourceLanguage"] = updateSourceLanguage;
                 if (!dryRun) {
                     meta["mayHaveChanged"] = true;
                     var result = PlcGroupOperations.Call(project, "ImportProjectTexts", signature, file, updateSourceLanguage);
@@ -157,7 +157,7 @@ namespace TiaMcp.Adapters
             => RunEngineeringServicesStep("ShowObjectInEditor", meta => {
                 EngineeringServicesPolicy.ObjectSelection(kind, devicePath, itemPath, softwarePath, objectPath, "");
                 var target = ExactIdentifiableObject(kind, devicePath, itemPath, softwarePath, objectPath, meta);
-                meta["kind"] = kind; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["object"] = IdentifiedObjectRow(target);
+                meta["kind"] = kind; meta["dryRun"] = dryRun; meta["object"] = IdentifiedObjectRow(target);
                 IShowable showable = target as IShowable
                     ?? throw new NotSupportedException(target.GetType().Name
                         + " does not implement IShowable (Device and the STEP 7 blocks / types / tag tables / watch and force tables do).");
@@ -174,13 +174,11 @@ namespace TiaMcp.Adapters
 #if ENGINEERING_COMPILATION_PROPERTIES || ENGINEERING_COMPILATION_SERVICES
         public HardwareAddressingReply ManageProjectCompilationSettings(string action, Dictionary<string, bool> values, bool dryRun = true)
             => RunEngineeringServicesStep("ManageProjectCompilationSettings", meta => {
-                meta["mayHaveChanged"] = false;
                 bool writing = action == "update" && !dryRun;
                 using var access = writing ? HardwareEditAccess() : null;
-                var project = this.project as global::Siemens.Engineering.Project
-                    ?? throw new NotSupportedException("The bound project is a " + this.project?.GetType().Name
-                        + "; the compilation settings live on Siemens.Engineering.Project.");
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                var project = this.project as global::Siemens.Engineering.Project ?? throw new NotSupportedException("The bound project is a " +
+                    this.project?.GetType().Name + "; the compilation settings live on Siemens.Engineering.Project.");
+                meta["action"] = action; meta["dryRun"] = dryRun;
 #if ENGINEERING_COMPILATION_PROPERTIES
                 meta["access"] =
                     "Project.IsSimulationDuringBlockCompilationEnabled / IsVirtualPlcDuringBlockCompilationEnabled (V20 properties; V21 replaced them by " +
@@ -281,7 +279,7 @@ namespace TiaMcp.Adapters
         public HardwareAddressingReply CompareLibraries(string leftLibraryName = "", string rightLibraryName = "", bool includeIdentical = false, int maxDepth =
                 8, int offset = 0, int limit = 100)
             => RunEngineeringServicesStep("CompareLibraries", meta => {
-                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                meta["mayHaveWrittenFiles"] = false;
                 EngineeringServicesPolicy.LibraryPair(leftLibraryName, rightLibraryName);
                 EngineeringEvidence.ValidatePage(offset, limit); EngineeringEvidence.ValidateDepth(maxDepth);
                 if (portal == null) throw new PlcSoftwareException("InvalidState", "Connect to TIA first.");
@@ -349,7 +347,7 @@ namespace TiaMcp.Adapters
             string[] targetDevicePath, string[] targetItemPath, string targetLibraryName = "", bool includeIdentical = false, int maxDepth = 8, int offset = 0,
                 int limit = 100, bool sameDevicePaths = false)
             => RunEngineeringServicesStep("CompareProjects", meta => {
-                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                meta["mayHaveWrittenFiles"] = false;
                 EngineeringServicesPolicy.Comparison(kind, softwarePath, devicePath, targetProjectName, targetSoftwarePath, targetDevicePath, sameDevicePaths);
                 EngineeringEvidence.ValidatePage(offset, limit); EngineeringEvidence.ValidateDepth(maxDepth);
                 meta["kind"] = kind; meta["scope"] =
@@ -388,7 +386,7 @@ namespace TiaMcp.Adapters
         // ---- Settings / custom identity ----
         public HardwareAddressingReply ReadProjectSettings(string folderPath = "", string customIdentityKey = "", int offset = 0, int limit = 100)
             => RunEngineeringServicesStep("GetProjectSettings", meta => {
-                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                meta["mayHaveWrittenFiles"] = false;
                 EngineeringEvidence.ValidatePage(offset, limit);
                 if (portal == null) throw new PlcSoftwareException("InvalidState", "Connect to TIA first.");
                 var parts = PlcGroupOperations.Parts(folderPath, true);

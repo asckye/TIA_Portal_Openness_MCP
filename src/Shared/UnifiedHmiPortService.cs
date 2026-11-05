@@ -22,21 +22,28 @@ namespace TiaMcpServer.Siemens.Services
 
         protected T Invoke<T>(UnifiedHmiRequest request)
         {
-            UnifiedHmiInputValidation.Request(request);
-            if (request.Operation == "EnsureUnifiedHmiTagTable" || request.Operation == "EnsureUnifiedHmiTag"
-                || request.Operation == "SetUnifiedHmiRuntimeState") EngineeringInputValidation.NameOrAbsolutePath(request.TagTableName);
-            if (request.Operation == "EnsureUnifiedHmiScreen" || request.Operation == "SetUnifiedHmiRuntimeState")
-                EngineeringInputValidation.NameOrAbsolutePath(request.ScreenName);
-            foreach (string input in new[] { request.DesignJson, request.PropertiesJson })
+            try
             {
-                if (string.IsNullOrEmpty(input)) continue;
-                try { request.Inputs[input] = Input(JsonNode.Parse(input)); }
-                catch (JsonException error)
+                UnifiedHmiInputValidation.Request(request);
+                if (request.Operation == "EnsureUnifiedHmiTagTable" || request.Operation == "EnsureUnifiedHmiTag"
+                    || request.Operation == "SetUnifiedHmiRuntimeState") EngineeringInputValidation.NameOrAbsolutePath(request.TagTableName);
+                if (request.Operation == "EnsureUnifiedHmiScreen" || request.Operation == "SetUnifiedHmiRuntimeState")
+                    EngineeringInputValidation.NameOrAbsolutePath(request.ScreenName);
+                foreach (string input in new[] { request.DesignJson, request.PropertiesJson })
                 {
-                    request.Inputs[input] = new UnifiedHmiInput { Kind = "error", Text = error.Message };
+                    if (string.IsNullOrEmpty(input)) continue;
+                    try { request.Inputs[input] = Input(JsonNode.Parse(input)); }
+                    catch (JsonException error)
+                    {
+                        request.Inputs[input] = new UnifiedHmiInput { Kind = "error", Text = error.Message };
+                    }
                 }
+                UnifiedHmiInputValidation.Request(request);
             }
-            UnifiedHmiInputValidation.Request(request);
+            catch (ArgumentException error)
+            {
+                throw new AdapterPreconditionException(error.Message, error.ParamName, isArgument: true, innerException: error);
+            }
             if (request.DryRun && UnifiedHmiInputValidation.LegacyWrite(request.Operation))
                 return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(UnifiedHmiInputValidation.Preview(request)))!;
             var arguments = new JsonObject

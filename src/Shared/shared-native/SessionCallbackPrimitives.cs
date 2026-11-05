@@ -60,8 +60,17 @@ namespace TiaMcp.Adapters.Session
         }
 
         public static IDisposable EditAccess(bool connected, Action verify, Func<bool> transactionActive,
-            Func<IDisposable> exclusive) => BeginEditAccess(connected, verify, transactionActive) ?? exclusive();
-
+            Func<IDisposable> exclusive)
+        {
+            var ambient = BeginEditAccess(connected, verify, transactionActive);
+            if (ambient != null) return ambient;
+            try { return exclusive(); }
+            catch (Exception error) when (TiaOpenness.Shared.ProcessLossPolicy.Reason(error) == null)
+            {
+                throw new AdapterPreconditionException("TIA Portal did not grant exclusive access: " + error.GetBaseException().Message,
+                    "exclusive-access", error);
+            }
+        }
         public static PlcSeedHmiReply SeedImport(SeedHmiRequest request, Func<HmiRequest, bool, HmiReply> execute,
             Func<object?, PlcSeedHmiReply> render)
         {

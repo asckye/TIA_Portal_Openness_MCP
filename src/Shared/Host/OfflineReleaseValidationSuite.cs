@@ -22,14 +22,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new ArgumentException("Report directory is required.", nameof(reportDirectory));
 
             workspaceRoot = Path.GetFullPath(workspaceRoot);
+            var plcFixtureDir = Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify");
+            var hmiTemplateDir = Path.Combine(workspaceRoot, "docs", "hmi_templates");
+            var hmiTemplateMappingPath = Path.Combine(workspaceRoot, "docs", "hmi_template_mappings", "tia-hmi-template-plc-mapping.release.json");
+
+            foreach (string directory in new[] { plcFixtureDir, hmiTemplateDir })
+                if (!Directory.Exists(directory))
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Release fixture directory is missing: " + directory,
+                        "release-fixtures", null);
+            if (!File.Exists(hmiTemplateMappingPath))
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Release fixture mapping is missing: " + hmiTemplateMappingPath,
+                    "release-fixtures", null);
+
             Directory.CreateDirectory(reportDirectory);
             var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var suiteDir = Path.Combine(reportDirectory, "suite_" + stamp);
             Directory.CreateDirectory(suiteDir);
-
-            var plcFixtureDir = Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify");
-            var hmiTemplateDir = Path.Combine(workspaceRoot, "docs", "hmi_templates");
-            var hmiTemplateMappingPath = Path.Combine(workspaceRoot, "docs", "hmi_template_mappings", "tia-hmi-template-plc-mapping.release.json");
 
             var plcSuite = PlcBuilderOfflineValidationSuite.Run(plcFixtureDir, Path.Combine(suiteDir, "plc_builder"), workspaceRoot);
             var classicSuite = ClassicHmiOfflineValidationSuite.Run(Path.Combine(suiteDir, "classic_hmi"));

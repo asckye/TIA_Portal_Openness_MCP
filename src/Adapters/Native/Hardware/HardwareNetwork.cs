@@ -167,7 +167,7 @@ namespace TiaMcp.Adapters
                 if (action == "delete") HardwareServicesPolicy.RequireConfirmation(confirmDelete, "confirmDelete", dryRun);
                 using var access = dryRun ? null : HardwareEditAccess();
                 var network = HardwareRequireNetworkInterface(ExactHardware(devicePathJson, itemPathJson), "itemPathJson");
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["interfaceOwnerPath"] = HardwareOwnerPath(network);
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["interfaceOwnerPath"] = HardwareOwnerPath(network);
                 if (action == "connect" || action == "disconnect")
                 {
                     var connector = HardwareGroupOperations.Items(network.IoConnectors).Cast<IoConnector>().FirstOrDefault()
@@ -290,7 +290,7 @@ namespace TiaMcp.Adapters
                 if (action == "delete") HardwareServicesPolicy.RequireConfirmation(confirmDelete, "confirmDelete", dryRun);
                 using var access = dryRun ? null : HardwareEditAccess();
                 var subnet = HardwareExactSubnet(subnetName);
-                meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["name"] = name;
+                meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["name"] = name;
                 // Every navigation starts from the subnet service again: compositions cached across a Create/Delete are stale.
                 Func<object> composition = kind == "sync"
                     ? () =>
@@ -398,10 +398,11 @@ namespace TiaMcp.Adapters
                     throw new ArgumentException("channelType, channelIoType and channelNumber are required.");
                 var attributes = HardwareNetworkPolicy.ParseObject(attributesJson, "attributesJson");
                 if (attributes.Count == 0) throw new ArgumentException("attributesJson must name at least one attribute.");
+                meta["dryRun"] = dryRun;
                 using var access = dryRun ? null : HardwareEditAccess();
                 var item = HardwareRequireDeviceItem(ExactHardware(devicePathJson, itemPathJson), "itemPathJson");
                 var channel = HardwareExactChannel(item, channelType, channelIoType, channelNumber);
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["ownerPath"] = HardwareOwnerPath(item);
+                meta["ownerPath"] = HardwareOwnerPath(item);
                 var names = attributes.Select(p => p.Key).ToArray();
                 meta["before"] = HardwareChannelRow(channel, names); meta["requestedAttributes"] = HardwareScalarEvidence.Requested(attributes);
                 var modes = HardwareChannelAttributeModes(channel);
@@ -423,7 +424,7 @@ namespace TiaMcp.Adapters
             => RunHardwareAddressStep("ManageDeviceUserGroup", meta => {
                 HardwareNetworkPolicy.RequireOneOf(action, HardwareNetworkPolicy.DeviceGroupActions, "action");
                 using var access = action != "read" && !dryRun ? HardwareEditAccess() : null;
-                meta["groupPath"] = groupPath; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                meta["groupPath"] = groupPath; meta["action"] = action; meta["dryRun"] = dryRun;
                 if (action == "read")
                 {
                     Dictionary<string, object?> GroupRow(DeviceGroup g) => new Dictionary<string, object?>
@@ -458,7 +459,7 @@ namespace TiaMcp.Adapters
                 bool write = action != "read" && !dryRun;
                 using var access = write ? HardwareEditAccess() : null;
                 var port = HardwareRequireHardwareService<NetworkPort>(ExactHardware(devicePathJson, itemPathJson), "itemPathJson");
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["port"] = HardwarePortRow(port);
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["port"] = HardwarePortRow(port);
                 if (action == "read") { meta["apiCallSuccess"] = true; meta["dataComplete"] = true; return "Port interconnections read; no modification."; }
                 var partner = HardwareRequireHardwareService<NetworkPort>(ExactHardware(partnerDevicePathJson, partnerItemPathJson), "partnerItemPathJson");
                 meta["partner"] = HardwarePortRow(partner);

@@ -243,15 +243,15 @@ namespace TiaMcpServer.ModelContextProtocol
             if (NativeResultState.TryUnsuccessful(data, write, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed
                         : Execution.ReadOnly,
-                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
+                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current, writes: write);
             bool changed = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
             // A documented Openness refusal (P8-81c F4) carries an explicit condition and never poisons the session.
             if ((string?)data["status"] == "PreconditionFailed" && data["precondition"] is JsonValue && success != true)
             {
                 var refused = new Error(HostBehavior.SafeDiagnostic((string?)data["refusal"]) ?? "TIA Portal refused the operation.",
                     new PreconditionFailedDetails((string?)data["precondition"], null));
-                return changed ? Result(tool, data, refused, Outcome.Failed, Execution.Completed, Completeness.None, current: current)
-                    : Reject(tool, refused, data, current);
+                return changed ? Result(tool, data, refused, Outcome.Failed, Execution.Completed, Completeness.None, current: current, writes: write)
+                    : Reject(tool, refused, data, current, write);
             }
             bool unknown = observation != null && observation.Issued > observation.Confirmed
                 || (string?)data["outcome"] == "unknown" || Flag(data, "outcomeUnknown") == true
@@ -262,31 +262,32 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data,
                     new Error("An issued write could not be confirmed; do not replay it.",
                         new OutcomeUnknownDetails(observation?.Stage ?? "native-call", Evidence(data))),
-                Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current);
+                Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current, writes: write);
             int succeeded = Count(data, "exportedBlocks") + Count(data, "succeededFiles");
             int failed = Count(data, "skippedBlocks");
             int skipped = Count(data, "notAttemptedFiles");
-            if ((string?)data["outcome"] == "partial" || write
-                    && (succeeded > 0 && (failed > 0 || skipped > 0 || success == false) || observation?.Changed == true && success != true))
+            if ((string?)data["outcome"] == "partial" || write && (succeeded > 0 && (failed > 0 || skipped > 0 || success == false) ||
+                observation?.Changed == true && success != true))
                 return Result(tool, data, new Error("The operation has confirmed partial results.",
                     succeeded > 0 && failed + skipped > 0 ? new PartialFailureDetails(succeeded, failed, skipped) : new PartialFailureDetails(0, 0, 0)),
-                    Outcome.Partial, Execution.Partial, Completeness.Partial, current: current);
+                    Outcome.Partial, Execution.Partial, Completeness.Partial, current: current, writes: write);
             if (success == true)
             {
                 bool incomplete = Flag(data, "dataComplete") == false || Flag(data, "complete") == false || ContainsTruncation(data);
                 bool unverified = data.ContainsKey("contentVerified") && Flag(data, "contentVerified") != true;
                 return Result(tool, data, execution: write ? Execution.Completed : Execution.ReadOnly,
-                    completeness: incomplete ? Completeness.Partial : unverified ? Completeness.Unknown : Completeness.Complete, current: current);
+                    completeness: incomplete ? Completeness.Partial : unverified ? Completeness.Unknown : Completeness.Complete, current: current,
+                        writes: write);
             }
             if (Flag(data, "requiresExplicitRebind") == true) return Reject(tool,
-                new Error("The session must be rebound before another operation.", new SessionResetRequiredDetails("native-session")), data, current);
+                new Error("The session must be rebound before another operation.", new SessionResetRequiredDetails("native-session")), data, current, write);
             if (!changed && new[] { "InvalidState", "InvalidParams", "NotFound", "NotSupportedOnVersion" }.Contains((string?)data["status"]))
-                return Reject(tool, StatusError(data), data, current);
+                return Reject(tool, StatusError(data), data, current, write);
             if (Flag(data, "queried") == false || write && !changed && (observation == null || observation.Issued == 0))
-                return Reject(tool, StatusError(data), data, current);
+                return Reject(tool, StatusError(data), data, current, write);
             return Result(tool, data, new Error("The native operation did not complete successfully.",
                 new NativeOperationFailedDetails((string?)data["status"], null, Evidence(data))), write ? Outcome.Failed : Outcome.ReadFailed,
-                write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: current);
+                write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: current, writes: write);
         }
         private static bool ContainsTruncation(JsonNode? node)
         {
@@ -316,19 +317,19 @@ namespace TiaMcpServer.ModelContextProtocol
             if (NativeResultState.TryUnsuccessful(data, write, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed
                         : Execution.ReadOnly,
-                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
+                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current, writes: write);
             if (observation.Issued > observation.Confirmed) return Result(tool, data,
-                new Error("An issued write outcome is unknown; inspect state before another write.",
-                        new OutcomeUnknownDetails(observation.Stage, Evidence(data))),
-                Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current);
+                new Error("An issued write outcome is unknown; inspect state before another write.", new OutcomeUnknownDetails(observation.Stage,
+                    Evidence(data))),
+                Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current, writes: write);
             if (observation.Changed || observation.Confirmed > 0) return Result(tool, data,
                 new Error("Confirmed effects remain, but result reporting did not complete.", new PartialFailureDetails(0, 0, 0)),
-                Outcome.Partial, Execution.Partial, Completeness.Partial, current: current);
+                Outcome.Partial, Execution.Partial, Completeness.Partial, current: current, writes: write);
             if (exception is TiaMcp.Adapters.Contracts.AdapterPreconditionException admission)
             {
                 var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(admission, false, !write);
                 return Reject(tool, HostBehavior.FailureError(kind, admission.ParamName, Evidence(data),
-                    HostBehavior.AdmissionDiagnostic(admission), condition: admission.Condition), data, current);
+                    HostBehavior.AdmissionDiagnostic(admission), condition: admission.Condition), data, current, write);
             }
             Error? error = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
@@ -342,17 +343,32 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error =
                     new Error("The input file or directory was not found.", new NotFoundDetails(null));
             }
-            if (error != null || write)
-                return Reject(tool, error ?? new Error("The operation was rejected before its write.", new PreconditionFailedDetails("native-exchange", null)),
-                    data, current);
+            if (error != null || write) return Reject(tool, error ?? new Error("The operation was rejected before its write.",
+                new PreconditionFailedDetails("native-exchange", null)), data, current, write);
             return Result(tool, data, new Error("The native read did not complete.", new NativeOperationFailedDetails(null, null, Evidence(data))),
-                Outcome.ReadFailed, Execution.ReadOnly, Completeness.None, current: current);
+                Outcome.ReadFailed, Execution.ReadOnly, Completeness.None, current: current, writes: write);
         }
-        internal static CallToolResult Reject(string tool, Error error, JsonObject? data = null, bool current = true)
-            => Result(tool, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: current);
+        internal static CallToolResult Reject(string tool, Error error, JsonObject? data = null, bool current = true, bool? writes = null)
+            => Result(tool, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: current, writes: writes);
         internal static CallToolResult Result(string tool, JsonObject? data, Error? error = null, Outcome? outcome = null,
-            Execution? execution = null, Completeness? completeness = null, Paging? paging = null, bool current = false)
+            Execution? execution = null, Completeness? completeness = null, Paging? paging = null, bool current = false, bool? writes = null)
         {
+            if (data != null && (writes.HasValue || data.ContainsKey("executionEvidence")))
+            {
+                var observed = data["executionEvidence"] as JsonObject;
+                bool write = writes ?? execution is Execution.Completed or Execution.Partial or Execution.Unknown;
+                int issued = Math.Max(observed == null ? 0 : Count(observed, "issued"),
+                    Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true ? 1 : 0);
+                bool succeeded = (outcome ?? Outcome.Succeeded) == Outcome.Succeeded;
+                bool rejected = write && outcome == Outcome.RejectedBeforeOperation;
+                string? stage = (string?)observed?["stage"];
+                data["executionEvidence"] = new JsonObject {
+                    ["issued"] = issued,
+                    ["confirmed"] = succeeded && write ? issued : observed == null ? 0 : Count(observed, "confirmed"),
+                    ["knownSideEffects"] = observed != null && Flag(observed, "knownSideEffects") == true || succeeded && write && issued > 0,
+                    ["stage"] = !string.IsNullOrEmpty(stage) && (stage != "admission" || rejected) ? stage
+                        : !write ? "read" : rejected ? "admission" : succeeded ? "completed" : "native-call" };
+            }
             var warnings = new List<Warning>();
             if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
             if (current) warnings

@@ -14,7 +14,7 @@ internal static class BatchDocumentImportTests
  {
   string fixtureRoot=Path.Combine(Path.GetTempPath(),"tia-batch-document-import-tests"), projectFile=Path.Combine(fixtureRoot,"p.ap21"), documentDirectory=Path.Combine(fixtureRoot,"documents");
   int calls=0,closed=0;bool closeFailure=false;var inventory=new List<string>();var modes=new Dictionary<string,string>();
-  PlcDocumentImportContext[] Contexts(params string[] names)=>names.Select(name=>new PlcDocumentImportContext {
+  PlcDocumentImportContext[] Contexts(params string[] names)=>names.Select(name=>new PlcDocumentImportContext {Exists=_=>true,
    Request=new PlcDocumentImportRequest{Release="21",Project=projectFile,Software="PLC",Group="",Directory=documentDirectory,Name=name,ProcessId=1,TargetIdentity="same"},
    Scan=()=>new[]{Path.Combine(documentDirectory,name+".s7dcl")},Open=_=>new Tracking(Encoding.ASCII.GetBytes("DATA_BLOCK "+name+" VAR x:Bool; END_VAR END_DATA_BLOCK"),()=>{closed++;if(closeFailure)throw new IOException();}),
    Inventory=()=>inventory.ToArray(),Collision=n=>inventory.Any(x=>x==PlcDocumentImportPolicy.InventoryItem("",n,"GlobalDB",n+"-id")),Recheck=()=>{},

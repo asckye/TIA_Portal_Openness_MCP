@@ -14,6 +14,34 @@ namespace TiaMcp.Engine.Tests;
 
 public sealed class HmiB3Tests
 {
+    public sealed class CreatedProxy { public string Name { get; set; } = ""; }
+
+    [Fact]
+    public void Created_screen_in_folder_is_verified_on_a_fresh_composition()
+    {
+        var old = Array.Empty<CreatedProxy>();
+        var returned = new CreatedProxy { Name = "Overview" };
+        var fresh = new[] { new CreatedProxy { Name = "Overview" } };
+        Assert.Empty(old);
+        Assert.Same(returned, UnifiedUiModelLogic.VerifyCreated(() => fresh, returned, "Overview", old.Length));
+        Assert.NotSame(returned, fresh[0]);
+    }
+
+    [Fact]
+    public void Created_unnamed_part_is_verified_by_count_delta()
+    {
+        var returned = new object();
+        Assert.Same(returned, UnifiedUiModelLogic.VerifyCreated(() => new[] { new object(), new object() }, returned, null, 1));
+    }
+
+    [Fact]
+    public void Missing_object_after_create_still_fails_verification()
+    {
+        Assert.Throws<InvalidOperationException>(() => UnifiedUiModelLogic.VerifyCreated(() => Array.Empty<CreatedProxy>(), new CreatedProxy { Name =
+            "Missing" }, "Missing", 0));
+        Assert.Throws<InvalidOperationException>(() => UnifiedUiModelLogic.VerifyCreated(() => Array.Empty<object>(), new object(), null, 0));
+    }
+
     [Fact]
     public void Skeleton_failure_retains_the_native_cause_without_a_diagnostic_stack()
     {

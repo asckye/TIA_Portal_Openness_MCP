@@ -91,7 +91,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string state = data["downloadState"]?.ToString() ?? data["state"]?.ToString() ?? "";
             if (tool == "GetOnlineState") success = state.Length > 0 && state != "Unknown";
             if (tool == "CompareSoftwareToOnline") success = data["entries"] is JsonArray && data["summary"] is JsonObject;
-            if (tool == "DownloadPlc" || tool == "DownloadPlcToFolder")
+            if ((tool == "DownloadPlc" || tool == "DownloadPlcToFolder") && (!readOnly || NativeResultState.State(data) != null))
                 success = NativeResultState.Succeeded(data, tool) && success != false;
             if (data["refusal"] != null) status = "CONFIRMATION_REQUIRED";
 

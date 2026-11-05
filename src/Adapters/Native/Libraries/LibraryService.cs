@@ -211,6 +211,21 @@ namespace TiaMcp.Adapters
             ["contents"] = new List<object?>(PlcGroupOperations.Items(copy.ContentDescriptions).Cast<MasterCopyContentDescription>()
                 .Select(c => (object)new Dictionary<string, object?> { ["contentName"] = c.ContentName, ["contentType"] = c.ContentType?.FullName }).ToArray())
         };
+        private static int LibraryTypeCount(LibraryTypeFolder folder)
+            => PlcGroupOperations.Items(folder.Types).Count()
+                + PlcGroupOperations.Items(folder.Folders).Cast<LibraryTypeUserFolder>().Sum(LibraryTypeCount);
+
+        private static void RecordUnchangedLibraryImport(Dictionary<string, object?> meta, int before, Func<int> countAfter, bool canProveUnchanged)
+        {
+            try
+            {
+                int after = countAfter();
+                meta["countAfter"] = after;
+                if (canProveUnchanged && before == after) meta["mayHaveChanged"] = false;
+            }
+            catch { /* swallow(probe-optional): a failed readback cannot clear an uncertain import. */ }
+        }
+
         private Dictionary<string, object?> TypeFolderTree(LibraryTypeFolder folder, string path, int depth, int maxDepth, ref int items, int maxItems)
         {
             var row = new Dictionary<string, object?> { ["path"] = path, ["name"] = folder.Name, ["folderClass"] = folder.GetType().Name };
@@ -473,9 +488,18 @@ namespace TiaMcp.Adapters
                     // Version import: LibraryTypeVersionComposition.CreateFromDocuments on an existing type ("Updating type from document").
                     var type=ExactLibraryType(library,typePath);meta["typePath"]=typePath;meta["createOptions"]=createOptions;meta["before"]=TypeRow(type,true);
                     if(dryRun)return "Library version document import preview; CreateOptions.None fails natively if an in-work version exists.";
-                    using var access=HardwareEditAccess();meta["mayHaveChanged"]=true;
-                    VersionCreateTransferResults result=environment==null?type.Versions.CreateFromDocuments(file.Directory!,fileName,create,options):type
-                        .Versions.CreateFromDocuments(file.Directory!,fileName,environment,create,options);
+                    using var access=HardwareEditAccess();
+                    bool countProof = LibraryPolicy.CanUseDocumentImportCountProof(importOptions, createOptions, environment != null);
+                    int versionCountBefore = PlcGroupOperations.Items(type.Versions).Count();
+                    meta["mayHaveChanged"]=true;
+                    VersionCreateTransferResults result;
+                    try { result=environment==null?type.Versions.CreateFromDocuments(file.Directory!,fileName,create,
+                        options):type.Versions.CreateFromDocuments(file.Directory!,fileName,environment,create,options); }
+                    catch
+                    {
+                        RecordUnchangedLibraryImport(meta, versionCountBefore, () => PlcGroupOperations.Items(type.Versions).Count(), countProof);
+                        throw;
+                    }
                     meta["transferResultState"]=result.TransferResultState.ToString();
 
                     meta["messages"]=new List<object
@@ -492,9 +516,19 @@ namespace TiaMcp.Adapters
                 var folder=EngineeringLibraryFolder(library,folderPath,"TypeFolder");
                 var types=(LibraryTypeComposition)PlcGroupOperations.Get(folder,"Types");
                 if(dryRun)return "Library native document import preview; type/dependency semantics checked on execution.";
-                using var edit=HardwareEditAccess();meta["mayHaveChanged"]=true;
-                TypeCreateTransferResults created=environment==null?types.CreateFromDocuments(file.Directory!,fileName,options):types
-                    .CreateFromDocuments(file.Directory!,fileName,environment,options);
+                using var edit=HardwareEditAccess();
+                var libraryRoot = (LibraryTypeFolder)PlcGroupOperations.Get(library, "TypeFolder");
+                bool typeCountProof = LibraryPolicy.CanUseDocumentImportCountProof(importOptions, createOptions, environment != null);
+                int countBefore = LibraryTypeCount(libraryRoot);
+                meta["mayHaveChanged"]=true;
+                TypeCreateTransferResults created;
+                try { created=environment==null?types.CreateFromDocuments(file.Directory!,fileName,options):types.CreateFromDocuments(file.Directory!,
+                    fileName,environment,options); }
+                catch
+                {
+                    RecordUnchangedLibraryImport(meta, countBefore, () => LibraryTypeCount(libraryRoot), typeCountProof);
+                    throw;
+                }
                 meta["transferResultState"]=created.TransferResultState.ToString();
 
                 meta["messages"]=new List<object

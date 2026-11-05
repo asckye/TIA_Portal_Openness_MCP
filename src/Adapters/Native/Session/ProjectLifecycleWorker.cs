@@ -147,7 +147,7 @@ public sealed partial class PlcFoundationEngine
 #if PROJECT_EXCHANGE
         return RunProjectLifecycleStep("ArchiveSavedProject", meta => {
             using var exclusive = dryRun ? null : SecurityEditAccess();
-            var result = ProjectArchive.Create(project!, archivePath, ReleaseKey, dryRun);
+            var result = ProjectArchive.Create(project!, archivePath, ReleaseKey, EngineeringPlcSession.RecordExportFailure, dryRun);
             foreach (var field in result) meta[field.Key] = field.Value?.DeepClone();
             meta["operationSuccess"] = result["success"]?.DeepClone();
             return dryRun ? "Native project archive preview; no file written."

@@ -10,6 +10,8 @@
 ### Fixed
 - Restore shared Workbench style usage after the UI redesign, keep configuration headings untrimmed, remove obsolete translations, and prevent list binding updates from opening client-enable confirmations.
 
+- 写入结果按可验证证据分类：ExclusiveAccess、密码策略和输入校验的明确拒绝不再误报 `OUTCOME_UNKNOWN`；属性、库和文档导入失败后可证明未改变目标时无需重置会话。其余已派发的未知写入统一锁定会话。
+- 修复 Unified 创建后的集合读回、PROFINET 连接结果、worker 写入执行证据、强制表列表和下载预览结果；缺少开发夹具的离线发布验收在创建报告目录前明确拒绝。
 ### Changed
 - V14 SP1–V19 的工具桥接与批处理对“真实存在但本版未提供”的工具返回 `UNSUPPORTED_CAPABILITY`；V21 的已禁用工具也在参数校验前返回此错误。完全未知的名称仍返回 `TOOL_NOT_FOUND`，回复保留目标工具和拒绝原因。
 - 工作台操作员会话始终使用所选版本的完整工具目录，包括附着到 AI 客户端启动的 lite 宿主时；AI 会话仍保留其选择的目录。

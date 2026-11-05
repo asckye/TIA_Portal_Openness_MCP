@@ -52,6 +52,8 @@ namespace TiaMcp.Engine.Tests
                 Calls.Add(target + ":" + dryRun);
                 var data = new JsonObject { ["target"] = target };
                 if (dryRun || verdict == "success") return McpServer.V4Result("WriteFixture", data);
+                if (verdict == "refused") return PlcToolContract.Run("CreatePlcTypeGroup", true, true,
+                    () => throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("ExclusiveAccess refused.", "exclusive-access", null));
                 if (verdict == "okOnly") return new CallToolResult { Content = new[] { new TextContentBlock { Text = "{\"ok\":true}" } } };
                 bool unknown = verdict == "unknown";
                 return McpServer.V4Result("WriteFixture", data, McpServer.InvalidInput("target"),
@@ -68,6 +70,16 @@ namespace TiaMcp.Engine.Tests
                 .AddSingleton<TiaMcpServer.Siemens.Portal>().AddSingleton<SessionTools>().BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();
+        [Fact]
+        public void Batch_with_a_refused_item_is_not_unknown()
+        {
+            var preview = Body(McpServer.PreviewToolBatch(new[] { Call("WriteFixture", "{\"target\":\"A\",\"verdict\":\"refused\"}") }, "Fixture"));
+            var applied = Body(McpServer.ApplyToolBatch((string)preview["data"]!["token"]!));
+            Assert.Equal("PRECONDITION_FAILED", (string?)applied["data"]?["items"]?[0]?["result"]?["error"]?["code"]);
+            Assert.NotEqual("unknown", (string?)applied["meta"]?["outcome"]);
+            Assert.False((bool)applied["meta"]!["requiresSessionReset"]!);
+        }
+
         private static ToolArguments Args(string json = "{}") => new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json));
         private static JsonObject Body(CallToolResult result) => McpServer.ResultBody(result)!.AsObject();
         private static string? Code(CallToolResult result) => (string?)Body(result)["error"]?["code"];

@@ -37,8 +37,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, null, new Error(error.GetBaseException().Message,
                     new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             }
-            catch (Exception) /* swallow(privacy): escaped writes have no confirmed outcome; diagnostics stay in the existing log */
+            catch (Exception error) /* swallow(privacy): escaped writes have no confirmed outcome; diagnostics stay in the existing log */
             {
+                if (TiaOpenness.Shared.HostFailurePolicy.Precondition(error) is TiaMcp.Adapters.Contracts.AdapterPreconditionException refusal)
+                    return Result(tool, null,
+                        HostBehavior.FailureError(refusal.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.
+                        Precondition,
+                        refusal.ParamName, HostBehavior.FailureEvidence(refusal.GetType().Name), HostBehavior.SafeDiagnostic(refusal.Message),
+                            condition: refusal.Condition),
+                        Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
                 return Result(tool, null, writes ? Unknown(new JsonObject()) : NativeFailure(new JsonObject()),
                     writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes, current);
             }
@@ -65,6 +72,8 @@ namespace TiaMcpServer.ModelContextProtocol
             Clean(data);
             if (nativeMessage != null) evidence["nativeMessage"] = nativeMessage;
 
+            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+                return Result(tool, data, refusal, Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success") ?? Flag(evidence, "ok") ?? Flag(data, "ok");
             if (Flag(data, "ok") == false || Flag(evidence, "ok") == false || Flag(evidence, "success") == false) success = false;
             var status = evidence["status"]?.ToString();
@@ -89,6 +98,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, new Error(nativeMessage ?? "The HMI request was rejected before the operation.", details),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             }
+            if (HostBehavior.UnchangedNativeFailure(evidence, Flag(evidence, "operationSuccess") ?? Flag(evidence, "success")))
+                return Result(tool, data, HostBehavior.UnchangedNativeError(evidence), writes ? Outcome.Failed : Outcome.ReadFailed,
+                    Completeness.Complete, writes, current);
             if (evidence["applyStatus"]?.ToString() == "rejected")
                 return Result(tool, data, McpServer.InvalidInput("actionKind"), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (tool == "ManageUnifiedListEntries" && evidence["action"]?.ToString() != "read" && Flag(evidence, "entriesSupported") == false)

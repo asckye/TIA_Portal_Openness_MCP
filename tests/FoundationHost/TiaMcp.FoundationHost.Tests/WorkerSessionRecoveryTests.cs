@@ -9,6 +9,17 @@ using Xunit;
 public sealed class WorkerSessionRecoveryTests
 {
     [Fact]
+    public void Reset_requesting_reply_keeps_its_evidence()
+    {
+        var outcome = new WorkerSessionOutcomeState(); outcome.MarkUncertain();
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { }, () => { }, () => { });
+        const string evidence = "{\"Status\":\"unknown\",\"Error\":\"native failure\",\"NativeState\":\"Error\",\"RequiresSessionReset\":true}";
+        var response = recovery.Synchronize(new ChannelRequest(1, "adapter.ImportFromDocuments", "{}", (_, _) => { }), ChannelResponse.Success(evidence));
+        Assert.Equal(ChannelOutcome.Unknown, response.Failure!.Outcome);
+        Assert.Equal(evidence, response.Failure.EvidenceJson);
+    }
+
+    [Fact]
     public void Lease_disposal_records_failed_shutdown_without_throwing_or_releasing_uncertain_ownership()
     {
         string repository = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);

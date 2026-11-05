@@ -14,7 +14,10 @@ namespace TiaMcp.Adapters
         private Dictionary<string, object?>? hmiReadFault;
         internal HardwareAddressingReply RunHmiStep(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject)
         {
-            if (EngineeringServicesStep != null) return EngineeringServicesStep(tool, requiresProject, action);
+            if (EngineeringServicesStep != null) return EngineeringServicesStep(tool, requiresProject, meta => {
+                meta["mayHaveChanged"] = false;
+                return action(meta);
+            });
             return RunHmiStepCore(tool, action, requiresProject);
         }
         private HardwareAddressingReply RunHmiStepCore(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject)
@@ -39,6 +42,7 @@ namespace TiaMcp.Adapters
                     meta["error"] = "Project is null"; meta["status"] = "InvalidState"; meta["operationSuccess"] = false;
                     reply.Message = "Project is null"; return reply;
                 }
+                meta["mayHaveChanged"] = false;
                 reply.Message = action(meta);
                 LegacyResponseMetadata.Complete(meta);
             }
@@ -64,6 +68,7 @@ namespace TiaMcp.Adapters
                     }
                     catch { /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ }
                 }
+                EngineeringCredentialRules.TryRecordRefusal(error, meta);
                 if (HmiReadSafety.ConnectionUnavailable(error)) RecordHmiFault(meta);
                 reply.Message = tool + " failed";
             }
