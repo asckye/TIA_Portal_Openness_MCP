@@ -848,7 +848,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "Main",
-          "exportPath": "<existing caller-selected export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -864,10 +864,10 @@
           "blockPath": {
             "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath: the group-qualified path such as 07_Miscellaneous/FC_Ready (a bare name finds only root blocks). Preserve escaped group segments. ListPlcBlocks rows carry path=null and do not supply it."
           },
-          "exportPath": {
+          "exportDirectory": {
             "meaning": "Existing absolute directory selected by the caller; never pass Main.xml here. The tool writes <block>.xml inside this directory and refuses an existing file.",
             "requiresBinding": true,
-            "exampleValue": "<existing caller-selected export directory>"
+            "exampleValue": "C:\\TIA_MCP\\exports"
           },
           "preservePath": {
             "exampleValue": false,
@@ -924,7 +924,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "exportPath": "<existing caller-selected batch export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -940,10 +940,10 @@
           "groupPath": {
             "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
-          "exportPath": {
+          "exportDirectory": {
             "meaning": "Existing absolute directory, prepared/selected before the preview. Batch XML exports do not create it and never overwrite files.",
             "requiresBinding": true,
-            "exampleValue": "<existing caller-selected batch export directory>"
+            "exampleValue": "C:\\TIA_MCP\\exports"
           },
           "recursive": {
             "exampleValue": false,
@@ -1009,7 +1009,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "tagTableName": "默认变量表",
-          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -1030,10 +1030,10 @@
             ],
             "exampleValue": "默认变量表"
           },
-          "exportPath": {
+          "exportFile": {
             "meaning": "New absolute .xml file path in an existing directory, unlike ExportPlcBlock which takes a directory. Existing outputs are refused.",
             "requiresBinding": true,
-            "exampleValue": "<new absolute Tags.xml file in an existing caller-selected directory>"
+            "exampleValue": "C:\\TIA_MCP\\exports\\ExportPlcTagTable.xml"
           },
           "expectedProjectFile": {
             "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -1086,7 +1086,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -1102,7 +1102,7 @@
           "watchTableName": {
             "meaning": "Supply watchTableName according to this tool description; values below refer to the example project."
           },
-          "exportPath": {
+          "exportFile": {
             "meaning": "Absolute path for a new output file in an existing directory; existing files are never overwritten."
           },
           "expectedPlanHash": {
@@ -1149,7 +1149,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -1165,7 +1165,7 @@
           "toName": {
             "meaning": "Supply toName according to this tool description; values below refer to the example project."
           },
-          "exportPath": {
+          "exportFile": {
             "meaning": "Absolute path for a new output file in an existing directory; existing files are never overwritten."
           },
           "expectedPlanHash": {
@@ -1215,7 +1215,7 @@
       "ExportPlcType": {
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -1229,7 +1229,7 @@
             ],
             "exampleValue": "<exact softwarePath from GetProjectTree>"
           },
-          "exportPath": {
+          "exportDirectory": {
             "meaning": "Absolute path for a new .xml file inside an existing directory; existing files are never overwritten."
           },
           "typePath": {
@@ -1288,7 +1288,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "exportPath": "<existing caller-selected batch export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -1304,10 +1304,10 @@
           "groupPath": {
             "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
-          "exportPath": {
+          "exportDirectory": {
             "meaning": "Existing absolute directory, prepared/selected before the preview. Batch XML exports do not create it and never overwrite files.",
             "requiresBinding": true,
-            "exampleValue": "<existing caller-selected batch export directory>"
+            "exampleValue": "C:\\TIA_MCP\\exports"
           },
           "recursive": {
             "exampleValue": false,
@@ -1906,7 +1906,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "dir": "<existing dedicated import directory containing only intended native XML files>",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -1924,10 +1924,10 @@
           "groupPath": {
             "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
-          "dir": {
+          "sourceDirectory": {
             "meaning": "Select a dedicated existing directory containing only the intended native XML files. The bounded scan examines the directory; a desktop with thousands of files can exceed it before regex filtering.",
             "requiresBinding": true,
-            "exampleValue": "<existing dedicated import directory containing only intended native XML files>"
+            "exampleValue": "C:\\TIA_MCP\\imports"
           },
           "regexName": {
             "exampleValue": "^Main\\.xml$",
@@ -2836,7 +2836,7 @@
       "RenderPlcBlock": {
         "arguments": {
           "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-          "outputPath": "<new absolute Block.html in an existing caller-selected directory>"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "parameters": {
           "inputPath": {
@@ -2849,9 +2849,9 @@
               "ExportPlcBlocks"
             ]
           },
-          "outputPath": {
+          "exportFile": {
             "requiresBinding": true,
-            "exampleValue": "<new absolute Block.html in an existing caller-selected directory>",
+            "exampleValue": "C:\\TIA_MCP\\exports\\RenderPlcBlock.xml",
             "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation.",
             "meaning": "New absolute .html file in an existing directory; existing outputs are refused."
           }
@@ -2867,7 +2867,7 @@
       "RenderPlcProgramAtlas": {
         "arguments": {
           "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-          "outputPath": "<new absolute Atlas.html in an existing caller-selected directory>"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "parameters": {
           "inputPath": {
@@ -2880,9 +2880,9 @@
               "ExportPlcBlocks"
             ]
           },
-          "outputPath": {
+          "exportFile": {
             "requiresBinding": true,
-            "exampleValue": "<new absolute Atlas.html in an existing caller-selected directory>",
+            "exampleValue": "C:\\TIA_MCP\\exports\\RenderPlcProgramAtlas.xml",
             "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation.",
             "meaning": "New absolute .html file in an existing directory; existing outputs are refused."
           }
@@ -2964,7 +2964,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -2983,7 +2983,7 @@
       "ExportPlcBlocksDocuments": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false,
           "groupPath": "<exact caller-selected block group containing the intended FB blocks>"
@@ -3083,7 +3083,9 @@
       },
       "GetDeviceIpAddress": {
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -3255,7 +3257,9 @@
       },
       "GetDeviceInfo": {
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -3315,7 +3319,9 @@
       },
       "GetDeviceAttributes": {
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {
           "nameFilter": {
@@ -4353,7 +4359,7 @@
               }
             ]
           },
-          "outputPath": "C:\\Examples\\generated\\Example.aml"
+          "exportFile": "C:\\Examples\\generated\\Example.aml"
         },
         "parameters": {
           "referenceAmlPath": {
@@ -4371,8 +4377,10 @@
       },
       "ExportDeviceAml": {
         "arguments": {
-          "devicePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\Device.aml"
+          "devicePath": [
+            "PLC_1"
+          ],
+          "exportFile": "C:\\Examples\\exports\\Device.aml"
         },
         "parameters": {},
         "operations": {},
@@ -4618,7 +4626,7 @@
       "BuildReleaseHandoffArtifacts": {
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "outputDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\Examples\\generated"
         },
         "parameters": {},
         "operations": {},
@@ -4735,7 +4743,7 @@
       },
       "GenerateAcceptanceReport": {
         "arguments": {
-          "outputDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\Temp\\mcp-report",
           "includeProjectTree": true
         },
         "parameters": {
@@ -4771,7 +4779,7 @@
             "exampleValue": "<recommendedNextActions from this operation's target or user input>",
             "requiresBinding": true
           },
-          "outputDirectory": {
+          "exportDirectory": {
             "exampleValue": "C:\\Examples\\generated"
           }
         },
@@ -5025,7 +5033,7 @@
       "SaveExportContent": {
         "arguments": {
           "exportId": "<exportId from response>",
-          "outputPath": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\Temp\\blocks.json"
         },
         "parameters": {
           "exportId": {
@@ -5047,7 +5055,7 @@
       },
       "AnalyzePlcReferences": {
         "arguments": {
-          "directory": "C:\\Temp\\exports",
+          "sourceDirectory": "C:\\Temp\\exports",
           "action": "callers",
           "target": "FB_Pump"
         },
@@ -5207,8 +5215,8 @@
       },
       "GeneratePlcDocumentation": {
         "arguments": {
-          "directory": "C:\\Examples\\exports",
-          "outputPath": "C:\\Examples\\generated\\documentation.md"
+          "sourceDirectory": "C:\\Examples\\exports",
+          "exportFile": "C:\\Examples\\generated\\documentation.md"
         },
         "parameters": {
           "title": {
@@ -5235,7 +5243,7 @@
       "InstantiatePlcTemplates": {
         "arguments": {
           "templatePath": "C:\\Examples\\templates\\Block.xml",
-          "outputDirectory": "C:\\Examples\\generated",
+          "exportDirectory": "C:\\Examples\\generated",
           "dryRun": true,
           "rows": [
             {
@@ -5272,7 +5280,7 @@
           "expectedDocumentHash": {
             "requiresBinding": true
           },
-          "outputPath": {
+          "exportFile": {
             "exampleValue": "C:\\Examples\\generated\\result.xml"
           }
         },
@@ -5297,7 +5305,7 @@
           "mermaidDirection": {
             "exampleValue": "LR"
           },
-          "outputPath": {
+          "exportFile": {
             "exampleValue": "C:\\Examples\\generated\\result.xml"
           },
           "maxChars": {
@@ -5314,7 +5322,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "outputPath": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\Examples\\generated\\result.xml"
         },
         "parameters": {},
         "operations": {},
@@ -5325,7 +5333,7 @@
       },
       "ScanPlcSourceAnnotations": {
         "arguments": {
-          "directory": "C:\\Examples\\exports"
+          "sourceDirectory": "C:\\Examples\\exports"
         },
         "parameters": {
           "recursive": {
@@ -5359,7 +5367,7 @@
       "WritePlcSclSourceFile": {
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "outputPath": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\Temp\\FC_Add.scl"
         },
         "parameters": {},
         "operations": {},
@@ -5507,13 +5515,13 @@
       },
       "ManageUnifiedCwcPackage": {
         "arguments": {
-          "directory": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "action": "inspect"
         },
         "parameters": {
-          "outputPath": {
-            "exampleValue": "<new absolute path outside source folder using suggestedFileName GUID.zip>",
+          "exportFile": {
+            "exampleValue": "C:\\TIA_MCP\\exports\\ManageUnifiedCwcPackage.xml",
             "requiresBinding": true
           },
           "expectedPackageHash": {
@@ -5628,7 +5636,7 @@
               "action": "export",
               "packageId": "tiamcp.basic",
               "version": "1.0.0",
-              "outputPath": "C:/Standards/basic.zip",
+              "exportFile": "C:/Standards/basic.zip",
               "dryRun": true
             },
             "meaning": "Preview export; execute only with the returned expectedPlanHash and Workbench approval."
@@ -7311,9 +7319,9 @@
                   ]
                 }
               },
-              "outputPath": "C:/MachineInputs/exported-basic",
               "format": "csv",
-              "dryRun": true
+              "dryRun": true,
+              "exportDirectory": "C:/MachineInputs/exported-basic"
             },
             "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
           },
@@ -7322,9 +7330,9 @@
               "action": "exportTemplate",
               "packageId": "tiamcp.basic",
               "version": "1.0.0",
-              "outputPath": "C:/MachineInputs/basic-template",
               "format": "csv",
-              "dryRun": true
+              "dryRun": true,
+              "exportDirectory": "C:/MachineInputs/basic-template"
             },
             "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
           }
@@ -7778,7 +7786,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -8768,7 +8776,7 @@
       "ExportPlcWatchTablesToDirectory": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "dir": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -9080,7 +9088,7 @@
       "ExportTechnologyObjectsToDirectory": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportDir": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -9152,7 +9160,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -10389,7 +10397,7 @@
       "ExportAlarmClasses": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "parameters": {},
         "operations": {},
@@ -10398,7 +10406,7 @@
       "ExportAlarmInstanceTexts": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
         },
         "parameters": {
           "includeInfoText": {
@@ -10417,7 +10425,7 @@
       "ExportAlarmTextLists": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "parameters": {},
         "operations": {},
@@ -10427,7 +10435,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
         },
         "parameters": {
           "interfaceType": {
@@ -10460,7 +10468,7 @@
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
           "namespaceUri": "urn:example:plc",
-          "outputPath": "C:\\Examples\\generated\\result.xml",
+          "exportFile": "C:\\Examples\\generated\\result.xml",
           "dryRun": true
         },
         "parameters": {
@@ -10901,7 +10909,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "parameters": {
@@ -10917,7 +10925,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "parameters": {
@@ -10932,7 +10940,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "parameters": {
@@ -10946,7 +10954,7 @@
       "ExportHmiProgram": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "exportOptions": "WithDefaults"
         },
         "parameters": {
@@ -11022,7 +11030,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -11044,7 +11052,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -12068,7 +12076,9 @@
       },
       "GetPlcPutGetAccess": {
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -12076,7 +12086,9 @@
       },
       "SetPlcPutGetAccess": {
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "dryRun": true
         },
         "parameters": {
@@ -17838,7 +17850,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "action": "export",
-          "directory": "C:\\Examples\\exports",
           "dryRun": true
         },
         "parameters": {
@@ -17859,11 +17870,14 @@
         },
         "operations": {
           "export": {
-            "arguments": {}
+            "arguments": {
+              "exportDirectory": "C:\\Examples\\exports"
+            }
           },
           "import": {
             "arguments": {
-              "action": "import"
+              "action": "import",
+              "sourceDirectory": "C:\\Examples\\exports"
             }
           }
         },
@@ -17876,7 +17890,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "action": "export",
-          "directory": "C:\\Examples\\exports",
           "dryRun": true,
           "moduleName": "Status",
           "fileName": "Status.js"
@@ -17889,13 +17902,13 @@
         "operations": {
           "export": {
             "arguments": {
-              "directory": "C:\\Examples\\scripts"
+              "exportDirectory": "C:\\Examples\\scripts"
             }
           },
           "import": {
             "arguments": {
               "action": "import",
-              "directory": "C:\\Examples\\scripts"
+              "sourceDirectory": "C:\\Examples\\scripts"
             }
           }
         },
@@ -18706,7 +18719,7 @@
       },
       "AnalyzePlcReferences": {
         "arguments": {
-          "directory": "C:\\Temp\\exports",
+          "sourceDirectory": "C:\\Temp\\exports",
           "action": "callers",
           "target": "FB_Pump"
         },
@@ -19090,7 +19103,7 @@
               }
             ]
           },
-          "outputPath": "C:\\Examples\\generated\\Example.aml"
+          "exportFile": "C:\\Examples\\generated\\Example.aml"
         },
         "parameters": {
           "referenceAmlPath": {
@@ -20503,7 +20516,9 @@
       },
       "GetDeviceAttributes": {
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {
           "nameFilter": {
@@ -21063,7 +21078,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "action": "export",
-          "directory": "C:\\Examples\\exports",
           "dryRun": true,
           "moduleName": "Status",
           "fileName": "Status.js"
@@ -21076,13 +21090,13 @@
         "operations": {
           "export": {
             "arguments": {
-              "directory": "C:\\Examples\\scripts"
+              "exportDirectory": "C:\\Examples\\scripts"
             }
           },
           "import": {
             "arguments": {
               "action": "import",
-              "directory": "C:\\Examples\\scripts"
+              "sourceDirectory": "C:\\Examples\\scripts"
             }
           }
         },
@@ -21092,7 +21106,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "action": "export",
-          "directory": "C:\\Examples\\exports",
           "dryRun": true
         },
         "parameters": {
@@ -21113,11 +21126,14 @@
         },
         "operations": {
           "export": {
-            "arguments": {}
+            "arguments": {
+              "exportDirectory": "C:\\Examples\\exports"
+            }
           },
           "import": {
             "arguments": {
-              "action": "import"
+              "action": "import",
+              "sourceDirectory": "C:\\Examples\\exports"
             }
           }
         },
@@ -21126,7 +21142,7 @@
       "ExportAlarmClasses": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "parameters": {},
         "operations": {},
@@ -21135,7 +21151,7 @@
       "ExportAlarmInstanceTexts": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
         },
         "parameters": {
           "includeInfoText": {
@@ -21154,7 +21170,7 @@
       "ExportAlarmTextLists": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "parameters": {},
         "operations": {},
@@ -21162,8 +21178,10 @@
       },
       "ExportDeviceAml": {
         "arguments": {
-          "devicePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\Device.aml"
+          "devicePath": [
+            "PLC_1"
+          ],
+          "exportFile": "C:\\Examples\\exports\\Device.aml"
         },
         "parameters": {},
         "operations": {},
@@ -21177,7 +21195,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "parameters": {
@@ -21191,7 +21209,7 @@
       "ExportHmiProgram": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "exportOptions": "WithDefaults"
         },
         "parameters": {
@@ -21212,7 +21230,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "parameters": {
@@ -21228,7 +21246,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "parameters": {
@@ -21243,7 +21261,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
         },
         "parameters": {
           "interfaceType": {
@@ -21257,7 +21275,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "Main",
-          "exportPath": "<existing caller-selected export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -21273,10 +21291,10 @@
           "blockPath": {
             "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath: the group-qualified path such as 07_Miscellaneous/FC_Ready (a bare name finds only root blocks). Preserve escaped group segments. ListPlcBlocks rows carry path=null and do not supply it."
           },
-          "exportPath": {
+          "exportDirectory": {
             "meaning": "Existing absolute directory selected by the caller; never pass Main.xml here. The tool writes <block>.xml inside this directory and refuses an existing file.",
             "requiresBinding": true,
-            "exampleValue": "<existing caller-selected export directory>"
+            "exampleValue": "C:\\TIA_MCP\\exports"
           },
           "preservePath": {
             "exampleValue": false,
@@ -21333,7 +21351,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "exportPath": "<existing caller-selected batch export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -21349,10 +21367,10 @@
           "groupPath": {
             "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
-          "exportPath": {
+          "exportDirectory": {
             "meaning": "Existing absolute directory, prepared/selected before the preview. Batch XML exports do not create it and never overwrite files.",
             "requiresBinding": true,
-            "exampleValue": "<existing caller-selected batch export directory>"
+            "exampleValue": "C:\\TIA_MCP\\exports"
           },
           "recursive": {
             "exampleValue": false,
@@ -21436,7 +21454,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "tagTableName": "默认变量表",
-          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -21457,10 +21475,10 @@
             ],
             "exampleValue": "默认变量表"
           },
-          "exportPath": {
+          "exportFile": {
             "meaning": "New absolute .xml file path in an existing directory, unlike ExportPlcBlock which takes a directory. Existing outputs are refused.",
             "requiresBinding": true,
-            "exampleValue": "<new absolute Tags.xml file in an existing caller-selected directory>"
+            "exampleValue": "C:\\TIA_MCP\\exports\\ExportPlcTagTable.xml"
           },
           "expectedProjectFile": {
             "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -21512,7 +21530,7 @@
       "ExportPlcType": {
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -21526,7 +21544,7 @@
             ],
             "exampleValue": "<exact softwarePath from GetProjectTree>"
           },
-          "exportPath": {
+          "exportDirectory": {
             "meaning": "Absolute path for a new .xml file inside an existing directory; existing files are never overwritten."
           },
           "typePath": {
@@ -21585,7 +21603,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "exportPath": "<existing caller-selected batch export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -21601,10 +21619,10 @@
           "groupPath": {
             "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
-          "exportPath": {
+          "exportDirectory": {
             "meaning": "Existing absolute directory, prepared/selected before the preview. Batch XML exports do not create it and never overwrite files.",
             "requiresBinding": true,
-            "exampleValue": "<existing caller-selected batch export directory>"
+            "exampleValue": "C:\\TIA_MCP\\exports"
           },
           "recursive": {
             "exampleValue": false,
@@ -21670,7 +21688,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -21686,7 +21704,7 @@
           "watchTableName": {
             "meaning": "Supply watchTableName according to this tool description; values below refer to the example project."
           },
-          "exportPath": {
+          "exportFile": {
             "meaning": "Absolute path for a new output file in an existing directory; existing files are never overwritten."
           },
           "expectedPlanHash": {
@@ -21732,7 +21750,7 @@
       "ExportPlcWatchTablesToDirectory": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "dir": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -21796,7 +21814,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -21812,7 +21830,7 @@
           "toName": {
             "meaning": "Supply toName according to this tool description; values below refer to the example project."
           },
-          "exportPath": {
+          "exportFile": {
             "meaning": "Absolute path for a new output file in an existing directory; existing files are never overwritten."
           },
           "expectedPlanHash": {
@@ -21862,7 +21880,7 @@
       "ExportTechnologyObjectsToDirectory": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportDir": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -21930,7 +21948,7 @@
       },
       "GenerateAcceptanceReport": {
         "arguments": {
-          "outputDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\Temp\\mcp-report",
           "includeProjectTree": true
         },
         "parameters": {
@@ -22025,7 +22043,7 @@
             "exampleValue": "<recommendedNextActions from this operation's target or user input>",
             "requiresBinding": true
           },
-          "outputDirectory": {
+          "exportDirectory": {
             "exampleValue": "C:\\Examples\\generated"
           }
         },
@@ -22038,7 +22056,7 @@
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
           "namespaceUri": "urn:example:plc",
-          "outputPath": "C:\\Examples\\generated\\result.xml",
+          "exportFile": "C:\\Examples\\generated\\result.xml",
           "dryRun": true
         },
         "parameters": {
@@ -22064,8 +22082,8 @@
       },
       "GeneratePlcDocumentation": {
         "arguments": {
-          "directory": "C:\\Examples\\exports",
-          "outputPath": "C:\\Examples\\generated\\documentation.md"
+          "sourceDirectory": "C:\\Examples\\exports",
+          "exportFile": "C:\\Examples\\generated\\documentation.md"
         },
         "parameters": {
           "title": {
@@ -22145,7 +22163,9 @@
       },
       "GetDeviceInfo": {
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -22157,7 +22177,9 @@
       },
       "GetDeviceIpAddress": {
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -22562,7 +22584,9 @@
       },
       "GetPlcPutGetAccess": {
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -22911,7 +22935,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -22952,7 +22976,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -23180,7 +23204,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "dir": "<existing dedicated import directory containing only intended native XML files>",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -23198,10 +23222,10 @@
           "groupPath": {
             "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
-          "dir": {
+          "sourceDirectory": {
             "meaning": "Select a dedicated existing directory containing only the intended native XML files. The bounded scan examines the directory; a desktop with thousands of files can exceed it before regex filtering.",
             "requiresBinding": true,
-            "exampleValue": "<existing dedicated import directory containing only intended native XML files>"
+            "exampleValue": "C:\\TIA_MCP\\imports"
           },
           "regexName": {
             "exampleValue": "^Main\\.xml$",
@@ -23555,7 +23579,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -23730,7 +23754,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -29862,13 +29886,13 @@
       },
       "ManageUnifiedCwcPackage": {
         "arguments": {
-          "directory": "C:\\Examples\\exports",
+          "sourceDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "action": "inspect"
         },
         "parameters": {
-          "outputPath": {
-            "exampleValue": "<new absolute path outside source folder using suggestedFileName GUID.zip>",
+          "exportFile": {
+            "exampleValue": "C:\\TIA_MCP\\exports\\ManageUnifiedCwcPackage.xml",
             "requiresBinding": true
           },
           "expectedPackageHash": {
@@ -30655,7 +30679,7 @@
           "expectedDocumentHash": {
             "requiresBinding": true
           },
-          "outputPath": {
+          "exportFile": {
             "exampleValue": "C:\\Examples\\generated\\result.xml"
           }
         },
@@ -32350,7 +32374,7 @@
           "mermaidDirection": {
             "exampleValue": "LR"
           },
-          "outputPath": {
+          "exportFile": {
             "exampleValue": "C:\\Examples\\generated\\result.xml"
           },
           "maxChars": {
@@ -32364,7 +32388,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "outputPath": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\Examples\\generated\\result.xml"
         },
         "parameters": {},
         "operations": {},
@@ -32787,7 +32811,7 @@
       },
       "ScanPlcSourceAnnotations": {
         "arguments": {
-          "directory": "C:\\Examples\\exports"
+          "sourceDirectory": "C:\\Examples\\exports"
         },
         "parameters": {
           "recursive": {
@@ -33059,7 +33083,9 @@
       },
       "SetPlcPutGetAccess": {
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "dryRun": true
         },
         "parameters": {
@@ -33682,7 +33708,7 @@
       },
       "WriteClassicHmiMinimalPackageFiles": {
         "arguments": {
-          "outputDirectory": "C:\\Examples\\generated",
+          "exportDirectory": "C:\\Examples\\generated",
           "package": {
             "name": "Example",
             "screenDesign": {
@@ -33722,7 +33748,7 @@
       "WritePlcSclSourceFile": {
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "outputPath": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\Temp\\FC_Add.scl"
         },
         "parameters": {},
         "operations": {},
@@ -33835,7 +33861,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -33854,7 +33880,7 @@
       "ExportPlcBlocksDocuments": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false,
           "groupPath": "<exact caller-selected block group containing the intended FB blocks>"
@@ -34026,7 +34052,7 @@
       "SaveExportContent": {
         "arguments": {
           "exportId": "<exportId from response>",
-          "outputPath": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\Temp\\blocks.json"
         },
         "parameters": {
           "exportId": {
@@ -34520,7 +34546,7 @@
       "InstantiatePlcTemplates": {
         "arguments": {
           "templatePath": "C:\\Examples\\templates\\Block.xml",
-          "outputDirectory": "C:\\Examples\\generated",
+          "exportDirectory": "C:\\Examples\\generated",
           "dryRun": true,
           "rows": [
             {
@@ -34682,7 +34708,7 @@
       "BuildReleaseHandoffArtifacts": {
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "outputDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\Examples\\generated"
         },
         "parameters": {},
         "operations": {},
@@ -34750,7 +34776,7 @@
       "RenderPlcBlock": {
         "arguments": {
           "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-          "outputPath": "<new absolute Block.html in an existing caller-selected directory>"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "parameters": {
           "inputPath": {
@@ -34763,9 +34789,9 @@
               "ExportPlcBlocks"
             ]
           },
-          "outputPath": {
+          "exportFile": {
             "requiresBinding": true,
-            "exampleValue": "<new absolute Block.html in an existing caller-selected directory>",
+            "exampleValue": "C:\\TIA_MCP\\exports\\RenderPlcBlock.xml",
             "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation.",
             "meaning": "New absolute .html file in an existing directory; existing outputs are refused."
           }
@@ -34781,7 +34807,7 @@
       "RenderPlcProgramAtlas": {
         "arguments": {
           "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-          "outputPath": "<new absolute Atlas.html in an existing caller-selected directory>"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "parameters": {
           "inputPath": {
@@ -34794,9 +34820,9 @@
               "ExportPlcBlocks"
             ]
           },
-          "outputPath": {
+          "exportFile": {
             "requiresBinding": true,
-            "exampleValue": "<new absolute Atlas.html in an existing caller-selected directory>",
+            "exampleValue": "C:\\TIA_MCP\\exports\\RenderPlcProgramAtlas.xml",
             "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation.",
             "meaning": "New absolute .html file in an existing directory; existing outputs are refused."
           }
@@ -35585,7 +35611,7 @@
               "action": "export",
               "packageId": "tiamcp.basic",
               "version": "1.0.0",
-              "outputPath": "C:/Standards/basic.zip",
+              "exportFile": "C:/Standards/basic.zip",
               "dryRun": true
             },
             "meaning": "Preview export; execute only with the returned expectedPlanHash and Workbench approval."
@@ -37268,9 +37294,9 @@
                   ]
                 }
               },
-              "outputPath": "C:/MachineInputs/exported-basic",
               "format": "csv",
-              "dryRun": true
+              "dryRun": true,
+              "exportDirectory": "C:/MachineInputs/exported-basic"
             },
             "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
           },
@@ -37279,9 +37305,9 @@
               "action": "exportTemplate",
               "packageId": "tiamcp.basic",
               "version": "1.0.0",
-              "outputPath": "C:/MachineInputs/basic-template",
               "format": "csv",
-              "dryRun": true
+              "dryRun": true,
+              "exportDirectory": "C:/MachineInputs/basic-template"
             },
             "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
           }

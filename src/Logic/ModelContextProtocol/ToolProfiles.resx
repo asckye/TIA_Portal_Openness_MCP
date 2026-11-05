@@ -5859,7 +5859,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "outputDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\Examples\\generated"
       }
     },
     {
@@ -5926,7 +5926,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "outputDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\Temp\\mcp-report",
         "includeProjectTree": true
       }
     },
@@ -6079,7 +6079,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "outputPath": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\Temp\\blocks.json"
       }
     },
     {
@@ -6087,7 +6087,7 @@
       "entry": "AnalyzePlcReferences",
       "family": "F02",
       "example": {
-        "directory": "C:\\Temp\\exports",
+        "sourceDirectory": "C:\\Temp\\exports",
         "action": "callers",
         "target": "FB_Pump"
       }
@@ -6130,8 +6130,8 @@
       "entry": "GeneratePlcDocumentation",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports",
-        "outputPath": "C:\\Examples\\generated\\documentation.md"
+        "sourceDirectory": "C:\\Examples\\exports",
+        "exportFile": "C:\\Examples\\generated\\documentation.md"
       }
     },
     {
@@ -6140,7 +6140,7 @@
       "family": "F02",
       "example": {
         "templatePath": "C:\\Examples\\templates\\Block.xml",
-        "outputDirectory": "C:\\Examples\\generated",
+        "exportDirectory": "C:\\Examples\\generated",
         "dryRun": true,
         "rows": [
           {
@@ -6184,7 +6184,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "outputPath": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\Examples\\generated\\result.xml"
       }
     },
     {
@@ -6192,7 +6192,7 @@
       "entry": "ScanPlcSourceAnnotations",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports"
+        "sourceDirectory": "C:\\Examples\\exports"
       }
     },
     {
@@ -6210,7 +6210,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "outputPath": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\Temp\\FC_Add.scl"
       }
     },
     {
@@ -6502,7 +6502,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -6513,7 +6513,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -6524,7 +6524,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -6534,7 +6534,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "exportOptions": "WithDefaults"
       }
     },
@@ -6583,7 +6583,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -6596,7 +6596,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -7012,7 +7012,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -7116,7 +7116,7 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -7209,7 +7209,9 @@
       "entry": "GetDeviceInfo",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -7241,7 +7243,9 @@
       "entry": "GetDeviceAttributes",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -7508,7 +7512,7 @@
             }
           ]
         },
-        "outputPath": "C:\\Examples\\generated\\Example.aml"
+        "exportFile": "C:\\Examples\\generated\\Example.aml"
       }
     },
     {
@@ -7516,8 +7520,10 @@
       "entry": "ExportDeviceAml",
       "family": "F21",
       "example": {
-        "devicePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\Device.aml"
+        "devicePath": [
+          "PLC_1"
+        ],
+        "exportFile": "C:\\Examples\\exports\\Device.aml"
       }
     },
     {
@@ -7546,7 +7552,9 @@
       "entry": "GetDeviceIpAddress",
       "family": "F19",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -8089,7 +8097,7 @@
       "example": {
         "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "watchTableName": "Watch_1",
-        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
       }
@@ -8187,7 +8195,9 @@
       "entry": "GetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -8195,7 +8205,9 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1",
+        "devicePath": [
+          "PLC_1"
+        ],
         "dryRun": true
       }
     },
@@ -8237,7 +8249,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "outputDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\Examples\\generated"
       }
     },
     {
@@ -8304,7 +8316,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "outputDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\Temp\\mcp-report",
         "includeProjectTree": true
       }
     },
@@ -8457,7 +8469,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "outputPath": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\Temp\\blocks.json"
       }
     },
     {
@@ -8465,7 +8477,7 @@
       "entry": "AnalyzePlcReferences",
       "family": "F02",
       "example": {
-        "directory": "C:\\Temp\\exports",
+        "sourceDirectory": "C:\\Temp\\exports",
         "action": "callers",
         "target": "FB_Pump"
       }
@@ -8508,8 +8520,8 @@
       "entry": "GeneratePlcDocumentation",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports",
-        "outputPath": "C:\\Examples\\generated\\documentation.md"
+        "sourceDirectory": "C:\\Examples\\exports",
+        "exportFile": "C:\\Examples\\generated\\documentation.md"
       }
     },
     {
@@ -8518,7 +8530,7 @@
       "family": "F02",
       "example": {
         "templatePath": "C:\\Examples\\templates\\Block.xml",
-        "outputDirectory": "C:\\Examples\\generated",
+        "exportDirectory": "C:\\Examples\\generated",
         "dryRun": true,
         "rows": [
           {
@@ -8562,7 +8574,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "outputPath": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\Examples\\generated\\result.xml"
       }
     },
     {
@@ -8570,7 +8582,7 @@
       "entry": "ScanPlcSourceAnnotations",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports"
+        "sourceDirectory": "C:\\Examples\\exports"
       }
     },
     {
@@ -8588,7 +8600,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "outputPath": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\Temp\\FC_Add.scl"
       }
     },
     {
@@ -8880,7 +8892,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -8891,7 +8903,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -8902,7 +8914,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -8912,7 +8924,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "exportOptions": "WithDefaults"
       }
     },
@@ -8961,7 +8973,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -8974,7 +8986,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -9413,7 +9425,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -9463,7 +9475,7 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -9600,7 +9612,7 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -9660,7 +9672,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -9671,7 +9683,7 @@
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
         "namespaceUri": "urn:example:plc",
-        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "exportFile": "C:\\Examples\\generated\\result.xml",
         "dryRun": true
       }
     },
@@ -9777,7 +9789,9 @@
       "entry": "GetDeviceInfo",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -9809,7 +9823,9 @@
       "entry": "GetDeviceAttributes",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -10109,7 +10125,7 @@
             }
           ]
         },
-        "outputPath": "C:\\Examples\\generated\\Example.aml"
+        "exportFile": "C:\\Examples\\generated\\Example.aml"
       }
     },
     {
@@ -10117,8 +10133,10 @@
       "entry": "ExportDeviceAml",
       "family": "F21",
       "example": {
-        "devicePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\Device.aml"
+        "devicePath": [
+          "PLC_1"
+        ],
+        "exportFile": "C:\\Examples\\exports\\Device.aml"
       }
     },
     {
@@ -10147,7 +10165,9 @@
       "entry": "GetDeviceIpAddress",
       "family": "F19",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -10772,7 +10792,7 @@
       "example": {
         "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "watchTableName": "Watch_1",
-        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
       }
@@ -10891,7 +10911,9 @@
       "entry": "GetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -10899,7 +10921,9 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1",
+        "devicePath": [
+          "PLC_1"
+        ],
         "dryRun": true
       }
     },
@@ -11029,7 +11053,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "outputDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\Examples\\generated"
       }
     },
     {
@@ -11096,7 +11120,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "outputDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\Temp\\mcp-report",
         "includeProjectTree": true
       }
     },
@@ -11249,7 +11273,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "outputPath": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\Temp\\blocks.json"
       }
     },
     {
@@ -11257,7 +11281,7 @@
       "entry": "AnalyzePlcReferences",
       "family": "F02",
       "example": {
-        "directory": "C:\\Temp\\exports",
+        "sourceDirectory": "C:\\Temp\\exports",
         "action": "callers",
         "target": "FB_Pump"
       }
@@ -11300,8 +11324,8 @@
       "entry": "GeneratePlcDocumentation",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports",
-        "outputPath": "C:\\Examples\\generated\\documentation.md"
+        "sourceDirectory": "C:\\Examples\\exports",
+        "exportFile": "C:\\Examples\\generated\\documentation.md"
       }
     },
     {
@@ -11310,7 +11334,7 @@
       "family": "F02",
       "example": {
         "templatePath": "C:\\Examples\\templates\\Block.xml",
-        "outputDirectory": "C:\\Examples\\generated",
+        "exportDirectory": "C:\\Examples\\generated",
         "dryRun": true,
         "rows": [
           {
@@ -11354,7 +11378,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "outputPath": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\Examples\\generated\\result.xml"
       }
     },
     {
@@ -11362,7 +11386,7 @@
       "entry": "ScanPlcSourceAnnotations",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports"
+        "sourceDirectory": "C:\\Examples\\exports"
       }
     },
     {
@@ -11380,7 +11404,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "outputPath": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\Temp\\FC_Add.scl"
       }
     },
     {
@@ -11681,7 +11705,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -11692,7 +11716,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -11703,7 +11727,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -11713,7 +11737,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "exportOptions": "WithDefaults"
       }
     },
@@ -11762,7 +11786,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -11775,7 +11799,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -12214,7 +12238,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -12264,7 +12288,7 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -12401,7 +12425,7 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -12443,7 +12467,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -12498,7 +12522,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
       }
     },
     {
@@ -12507,7 +12531,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
       }
     },
     {
@@ -12543,7 +12567,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -12554,7 +12578,7 @@
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
         "namespaceUri": "urn:example:plc",
-        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "exportFile": "C:\\Examples\\generated\\result.xml",
         "dryRun": true
       }
     },
@@ -12691,7 +12715,9 @@
       "entry": "GetDeviceInfo",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -12723,7 +12749,9 @@
       "entry": "GetDeviceAttributes",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -13044,7 +13072,7 @@
             }
           ]
         },
-        "outputPath": "C:\\Examples\\generated\\Example.aml"
+        "exportFile": "C:\\Examples\\generated\\Example.aml"
       }
     },
     {
@@ -13052,8 +13080,10 @@
       "entry": "ExportDeviceAml",
       "family": "F21",
       "example": {
-        "devicePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\Device.aml"
+        "devicePath": [
+          "PLC_1"
+        ],
+        "exportFile": "C:\\Examples\\exports\\Device.aml"
       }
     },
     {
@@ -13082,7 +13112,9 @@
       "entry": "GetDeviceIpAddress",
       "family": "F19",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -13759,7 +13791,7 @@
       "example": {
         "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "watchTableName": "Watch_1",
-        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
       }
@@ -13949,7 +13981,9 @@
       "entry": "GetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -13957,7 +13991,9 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1",
+        "devicePath": [
+          "PLC_1"
+        ],
         "dryRun": true
       }
     },
@@ -14114,7 +14150,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "outputDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\Examples\\generated"
       }
     },
     {
@@ -14181,7 +14217,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "outputDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\Temp\\mcp-report",
         "includeProjectTree": true
       }
     },
@@ -14334,7 +14370,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "outputPath": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\Temp\\blocks.json"
       }
     },
     {
@@ -14342,7 +14378,7 @@
       "entry": "AnalyzePlcReferences",
       "family": "F02",
       "example": {
-        "directory": "C:\\Temp\\exports",
+        "sourceDirectory": "C:\\Temp\\exports",
         "action": "callers",
         "target": "FB_Pump"
       }
@@ -14385,8 +14421,8 @@
       "entry": "GeneratePlcDocumentation",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports",
-        "outputPath": "C:\\Examples\\generated\\documentation.md"
+        "sourceDirectory": "C:\\Examples\\exports",
+        "exportFile": "C:\\Examples\\generated\\documentation.md"
       }
     },
     {
@@ -14395,7 +14431,7 @@
       "family": "F02",
       "example": {
         "templatePath": "C:\\Examples\\templates\\Block.xml",
-        "outputDirectory": "C:\\Examples\\generated",
+        "exportDirectory": "C:\\Examples\\generated",
         "dryRun": true,
         "rows": [
           {
@@ -14439,7 +14475,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "outputPath": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\Examples\\generated\\result.xml"
       }
     },
     {
@@ -14447,7 +14483,7 @@
       "entry": "ScanPlcSourceAnnotations",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports"
+        "sourceDirectory": "C:\\Examples\\exports"
       }
     },
     {
@@ -14465,7 +14501,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "outputPath": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\Temp\\FC_Add.scl"
       }
     },
     {
@@ -14491,7 +14527,7 @@
       "entry": "ManageUnifiedCwcPackage",
       "family": "F03",
       "example": {
-        "directory": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "action": "inspect"
       }
@@ -14776,7 +14812,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -14787,7 +14823,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -14798,7 +14834,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -14808,7 +14844,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "exportOptions": "WithDefaults"
       }
     },
@@ -14857,7 +14893,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -14870,7 +14906,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -15309,7 +15345,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -15359,7 +15395,7 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -15511,7 +15547,7 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -15553,7 +15589,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -15619,7 +15655,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
       }
     },
     {
@@ -15628,7 +15664,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
       }
     },
     {
@@ -15637,7 +15673,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
       }
     },
     {
@@ -15707,7 +15743,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -15718,7 +15754,7 @@
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
         "namespaceUri": "urn:example:plc",
-        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "exportFile": "C:\\Examples\\generated\\result.xml",
         "dryRun": true
       }
     },
@@ -15855,7 +15891,9 @@
       "entry": "GetDeviceInfo",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -15887,7 +15925,9 @@
       "entry": "GetDeviceAttributes",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -16219,7 +16259,7 @@
             }
           ]
         },
-        "outputPath": "C:\\Examples\\generated\\Example.aml"
+        "exportFile": "C:\\Examples\\generated\\Example.aml"
       }
     },
     {
@@ -16227,8 +16267,10 @@
       "entry": "ExportDeviceAml",
       "family": "F21",
       "example": {
-        "devicePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\Device.aml"
+        "devicePath": [
+          "PLC_1"
+        ],
+        "exportFile": "C:\\Examples\\exports\\Device.aml"
       }
     },
     {
@@ -16257,7 +16299,9 @@
       "entry": "GetDeviceIpAddress",
       "family": "F19",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -17082,7 +17126,7 @@
       "example": {
         "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "watchTableName": "Watch_1",
-        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
       }
@@ -17309,7 +17353,9 @@
       "entry": "GetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -17317,7 +17363,9 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1",
+        "devicePath": [
+          "PLC_1"
+        ],
         "dryRun": true
       }
     },
@@ -17514,7 +17562,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "outputDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\Examples\\generated"
       }
     },
     {
@@ -17581,7 +17629,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "outputDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\Temp\\mcp-report",
         "includeProjectTree": true
       }
     },
@@ -17734,7 +17782,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "outputPath": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\Temp\\blocks.json"
       }
     },
     {
@@ -17742,7 +17790,7 @@
       "entry": "AnalyzePlcReferences",
       "family": "F02",
       "example": {
-        "directory": "C:\\Temp\\exports",
+        "sourceDirectory": "C:\\Temp\\exports",
         "action": "callers",
         "target": "FB_Pump"
       }
@@ -17785,8 +17833,8 @@
       "entry": "GeneratePlcDocumentation",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports",
-        "outputPath": "C:\\Examples\\generated\\documentation.md"
+        "sourceDirectory": "C:\\Examples\\exports",
+        "exportFile": "C:\\Examples\\generated\\documentation.md"
       }
     },
     {
@@ -17795,7 +17843,7 @@
       "family": "F02",
       "example": {
         "templatePath": "C:\\Examples\\templates\\Block.xml",
-        "outputDirectory": "C:\\Examples\\generated",
+        "exportDirectory": "C:\\Examples\\generated",
         "dryRun": true,
         "rows": [
           {
@@ -17839,7 +17887,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "outputPath": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\Examples\\generated\\result.xml"
       }
     },
     {
@@ -17847,7 +17895,7 @@
       "entry": "ScanPlcSourceAnnotations",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports"
+        "sourceDirectory": "C:\\Examples\\exports"
       }
     },
     {
@@ -17865,7 +17913,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "outputPath": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\Temp\\FC_Add.scl"
       }
     },
     {
@@ -17916,7 +17964,7 @@
       "entry": "ManageUnifiedCwcPackage",
       "family": "F03",
       "example": {
-        "directory": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "action": "inspect"
       }
@@ -18217,7 +18265,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -18228,7 +18276,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -18239,7 +18287,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -18249,7 +18297,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "exportOptions": "WithDefaults"
       }
     },
@@ -18298,7 +18346,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -18311,7 +18359,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -18760,7 +18808,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -18821,7 +18869,7 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -18973,7 +19021,7 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -19015,7 +19063,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -19081,7 +19129,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
       }
     },
     {
@@ -19090,7 +19138,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
       }
     },
     {
@@ -19099,7 +19147,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
       }
     },
     {
@@ -19180,7 +19228,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -19191,7 +19239,7 @@
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
         "namespaceUri": "urn:example:plc",
-        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "exportFile": "C:\\Examples\\generated\\result.xml",
         "dryRun": true
       }
     },
@@ -19350,7 +19398,9 @@
       "entry": "GetDeviceInfo",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -19382,7 +19432,9 @@
       "entry": "GetDeviceAttributes",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -19731,7 +19783,7 @@
             }
           ]
         },
-        "outputPath": "C:\\Examples\\generated\\Example.aml"
+        "exportFile": "C:\\Examples\\generated\\Example.aml"
       }
     },
     {
@@ -19739,8 +19791,10 @@
       "entry": "ExportDeviceAml",
       "family": "F21",
       "example": {
-        "devicePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\Device.aml"
+        "devicePath": [
+          "PLC_1"
+        ],
+        "exportFile": "C:\\Examples\\exports\\Device.aml"
       }
     },
     {
@@ -19769,7 +19823,9 @@
       "entry": "GetDeviceIpAddress",
       "family": "F19",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -20644,7 +20700,7 @@
       "example": {
         "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "watchTableName": "Watch_1",
-        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
       }
@@ -20871,7 +20927,9 @@
       "entry": "GetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -20879,7 +20937,9 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1",
+        "devicePath": [
+          "PLC_1"
+        ],
         "dryRun": true
       }
     },
@@ -21086,7 +21146,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "outputDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\Examples\\generated"
       }
     },
     {
@@ -21153,7 +21213,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "outputDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\Temp\\mcp-report",
         "includeProjectTree": true
       }
     },
@@ -21306,7 +21366,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "outputPath": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\Temp\\blocks.json"
       }
     },
     {
@@ -21314,7 +21374,7 @@
       "entry": "AnalyzePlcReferences",
       "family": "F02",
       "example": {
-        "directory": "C:\\Temp\\exports",
+        "sourceDirectory": "C:\\Temp\\exports",
         "action": "callers",
         "target": "FB_Pump"
       }
@@ -21357,8 +21417,8 @@
       "entry": "GeneratePlcDocumentation",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports",
-        "outputPath": "C:\\Examples\\generated\\documentation.md"
+        "sourceDirectory": "C:\\Examples\\exports",
+        "exportFile": "C:\\Examples\\generated\\documentation.md"
       }
     },
     {
@@ -21367,7 +21427,7 @@
       "family": "F02",
       "example": {
         "templatePath": "C:\\Examples\\templates\\Block.xml",
-        "outputDirectory": "C:\\Examples\\generated",
+        "exportDirectory": "C:\\Examples\\generated",
         "dryRun": true,
         "rows": [
           {
@@ -21411,7 +21471,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "outputPath": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\Examples\\generated\\result.xml"
       }
     },
     {
@@ -21419,7 +21479,7 @@
       "entry": "ScanPlcSourceAnnotations",
       "family": "F02",
       "example": {
-        "directory": "C:\\Examples\\exports"
+        "sourceDirectory": "C:\\Examples\\exports"
       }
     },
     {
@@ -21437,7 +21497,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "outputPath": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\Temp\\FC_Add.scl"
       }
     },
     {
@@ -21559,7 +21619,7 @@
       "entry": "ManageUnifiedCwcPackage",
       "family": "F03",
       "example": {
-        "directory": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "action": "inspect"
       }
@@ -21900,7 +21960,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -21911,7 +21971,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -21922,7 +21982,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -21932,7 +21992,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "exportOptions": "WithDefaults"
       }
     },
@@ -21981,7 +22041,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -21994,7 +22054,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -22679,7 +22739,6 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "action": "export",
-        "directory": "C:\\Examples\\exports",
         "dryRun": true
       }
     },
@@ -22690,7 +22749,6 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "action": "export",
-        "directory": "C:\\Examples\\exports",
         "dryRun": true,
         "moduleName": "Status",
         "fileName": "Status.js"
@@ -23397,7 +23455,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -23458,7 +23516,7 @@
       "family": "F12",
       "example": {
         "softwarePath": "PLC_1",
-        "dir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -23610,7 +23668,7 @@
       "family": "F13",
       "example": {
         "softwarePath": "PLC_1",
-        "exportDir": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
       }
@@ -23652,7 +23710,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports",
+        "sourceDirectory": "C:\\Examples\\exports",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -23718,7 +23776,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
       }
     },
     {
@@ -23727,7 +23785,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
       }
     },
     {
@@ -23736,7 +23794,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
       }
     },
     {
@@ -23817,7 +23875,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -23828,7 +23886,7 @@
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
         "namespaceUri": "urn:example:plc",
-        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "exportFile": "C:\\Examples\\generated\\result.xml",
         "dryRun": true
       }
     },
@@ -23987,7 +24045,9 @@
       "entry": "GetDeviceInfo",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -24019,7 +24079,9 @@
       "entry": "GetDeviceAttributes",
       "family": "F18",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -24368,7 +24430,7 @@
             }
           ]
         },
-        "outputPath": "C:\\Examples\\generated\\Example.aml"
+        "exportFile": "C:\\Examples\\generated\\Example.aml"
       }
     },
     {
@@ -24376,8 +24438,10 @@
       "entry": "ExportDeviceAml",
       "family": "F21",
       "example": {
-        "devicePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\Device.aml"
+        "devicePath": [
+          "PLC_1"
+        ],
+        "exportFile": "C:\\Examples\\exports\\Device.aml"
       }
     },
     {
@@ -24406,7 +24470,9 @@
       "entry": "GetDeviceIpAddress",
       "family": "F19",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": [
+          "PLC_1"
+        ]
       }
     },
     {
@@ -26647,7 +26713,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -26662,7 +26728,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -26677,7 +26743,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -26691,7 +26757,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4,
@@ -26788,7 +26856,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -26806,7 +26874,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -26825,7 +26893,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -26842,7 +26910,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false,
           "groupPath": "&lt;exact caller-selected block group containing the intended FB blocks&gt;"
@@ -26879,7 +26947,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -26897,7 +26965,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -26917,7 +26985,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -26936,7 +27004,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -27018,7 +27086,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -27304,7 +27372,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -27318,7 +27388,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -27332,7 +27404,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -27855,7 +27929,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -28808,7 +28884,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -32928,7 +33004,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -32956,7 +33032,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -33540,7 +33616,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36605,7 +36683,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36620,7 +36698,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36635,7 +36713,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36649,7 +36727,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4,
@@ -36746,7 +36826,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -36764,7 +36844,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -36783,7 +36863,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -36800,7 +36880,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false,
           "groupPath": "&lt;exact caller-selected block group containing the intended FB blocks&gt;"
@@ -36837,7 +36917,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -36855,7 +36935,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -36875,7 +36955,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -36894,7 +36974,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -36961,7 +37041,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -37247,7 +37327,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -37261,7 +37343,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -37275,7 +37359,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -37812,7 +37898,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -38765,7 +38853,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -43004,7 +43092,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -43032,7 +43120,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -43616,7 +43704,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -45438,7 +45528,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4,
@@ -45519,7 +45611,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -45538,7 +45630,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -45557,7 +45649,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -45575,7 +45667,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -45595,7 +45687,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -45803,7 +45895,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -45817,7 +45911,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -45831,7 +45927,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -46704,7 +46802,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -49288,7 +49386,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -49316,7 +49414,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -51215,7 +51313,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4,
@@ -51312,7 +51412,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -51331,7 +51431,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -51350,7 +51450,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -51368,7 +51468,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -51388,7 +51488,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -51407,7 +51507,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -51667,7 +51767,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -51681,7 +51783,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -51695,7 +51799,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -52173,7 +52279,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -52701,7 +52809,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -55582,7 +55690,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -55610,7 +55718,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -56048,7 +56156,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -57634,7 +57744,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -57649,7 +57759,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -57663,7 +57773,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4,
@@ -57760,7 +57872,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -57779,7 +57891,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -57798,7 +57910,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -57816,7 +57928,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -57836,7 +57948,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -57855,7 +57967,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -57906,7 +58018,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -58153,7 +58265,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -58167,7 +58281,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -58181,7 +58297,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -58675,7 +58793,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -59250,7 +59370,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -62423,7 +62543,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -62451,7 +62571,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -62889,7 +63009,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -64560,7 +64682,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -64575,7 +64697,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -64590,7 +64712,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -64604,7 +64726,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4,
@@ -64701,7 +64825,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -64720,7 +64844,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -64756,7 +64880,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -64774,7 +64898,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -64794,7 +64918,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -64813,7 +64937,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -64895,7 +65019,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -65142,7 +65266,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -65156,7 +65282,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -65170,7 +65298,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -65664,7 +65794,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -66280,7 +66412,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -69632,7 +69764,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -69660,7 +69792,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -70117,7 +70249,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -71933,7 +72067,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -71948,7 +72082,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -71963,7 +72097,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -71977,7 +72111,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4,
@@ -72074,7 +72210,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -72093,7 +72229,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -72129,7 +72265,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -72147,7 +72283,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -72167,7 +72303,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -72186,7 +72322,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -72268,7 +72404,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -72536,7 +72672,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -72550,7 +72688,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -72564,7 +72704,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -73075,7 +73217,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -73691,7 +73835,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -77338,7 +77482,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -77366,7 +77510,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -77854,7 +77998,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -80317,7 +80463,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -80332,7 +80478,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -80347,7 +80493,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -80361,7 +80507,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4,
@@ -80458,7 +80606,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -80477,7 +80625,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -80513,7 +80661,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -80531,7 +80679,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
@@ -80551,7 +80699,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -80570,7 +80718,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -80652,7 +80800,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportFile": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -80920,7 +81068,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -80934,7 +81084,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -80948,7 +81100,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -81459,7 +81613,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -82353,7 +82509,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "sourceDirectory": "C:\\TIA_MCP\\imports",
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
@@ -86388,7 +86544,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -86416,7 +86572,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -86947,7 +87103,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -89342,7 +89500,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
         "envelopeVersion": 4
       },
@@ -89355,7 +89513,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
         "envelopeVersion": 4
       },
@@ -89368,7 +89526,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
         "envelopeVersion": 4
       },
@@ -89380,7 +89538,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4
@@ -89464,7 +89624,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;"
+          "exportPath": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -89491,7 +89651,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportPath": "C:\\Examples\\exports",
           "regexName": ""
         },
         "envelopeVersion": 4
@@ -89535,7 +89695,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;"
+          "exportPath": "C:\\Examples\\exports\\ExportPlcTagTable.xml"
         },
         "envelopeVersion": 4
       },
@@ -89548,7 +89708,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportPath": "C:\\Examples\\exports",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -89562,7 +89722,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;"
+          "exportPath": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -89576,7 +89736,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportPlcWatchTable.xml"
         },
         "envelopeVersion": 4
       },
@@ -89645,7 +89805,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -89891,7 +90051,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -89903,7 +90065,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -89915,7 +90079,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -90351,7 +90517,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -91129,7 +91297,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "dir": "C:\\Examples\\exports",
           "dryRun": true,
           "overwrite": false,
           "regexName": "^Main\\.xml$"
@@ -93649,7 +93817,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
         },
         "envelopeVersion": 4
       },
@@ -93672,7 +93840,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
         },
         "envelopeVersion": 4
       },
@@ -94183,7 +94351,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -96711,7 +96881,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
         "envelopeVersion": 4
       },
@@ -96724,7 +96894,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
         "envelopeVersion": 4
       },
@@ -96737,7 +96907,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
         "envelopeVersion": 4
       },
@@ -96749,7 +96919,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
+          "devicePath": [
+            "PLC_1"
+          ],
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4
@@ -96833,7 +97005,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;"
+          "exportPath": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -96860,7 +97032,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "exportPath": "C:\\Examples\\exports",
           "regexName": ""
         },
         "envelopeVersion": 4
@@ -96904,7 +97076,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;"
+          "exportPath": "C:\\Examples\\exports\\ExportPlcTagTable.xml"
         },
         "envelopeVersion": 4
       },
@@ -96917,7 +97089,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "exportPath": "C:\\Examples\\exports",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -96931,7 +97103,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;"
+          "exportPath": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -96945,7 +97117,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportPlcWatchTable.xml"
         },
         "envelopeVersion": 4
       },
@@ -97001,7 +97173,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -97247,7 +97419,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -97259,7 +97433,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -97271,7 +97447,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -97719,7 +97897,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -98497,7 +98677,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
+          "dir": "C:\\Examples\\exports",
           "dryRun": true,
           "overwrite": false,
           "regexName": "^Main\\.xml$"
@@ -101122,7 +101302,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
+          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
         },
         "envelopeVersion": 4
       },
@@ -101145,7 +101325,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
         },
         "envelopeVersion": 4
       },
@@ -101656,7 +101836,9 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },

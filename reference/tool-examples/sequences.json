@@ -115,7 +115,7 @@
         "tool": "WritePlcSclSourceFile",
         "arguments": {
           "sclContent": "<complete FUNCTION / FUNCTION_BLOCK / DATA_BLOCK text>",
-          "outputPath": "C:\\Temp\\<Block>.scl"
+          "exportFile": "C:\\Temp\\<Block>.scl"
         },
         "expect": "Meta reports the file written"
       },
@@ -867,7 +867,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "Main",
-          "exportPath": "<existing caller-selected export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -930,7 +930,7 @@
         "tool": "SaveExportContent",
         "arguments": {
           "exportId": "<exportId>",
-          "outputPath": "C:\\Temp\\<name>.json"
+          "exportFile": "C:\\Temp\\<name>.json"
         },
         "expect": "Save the parked response identified by the same data.export.id; inspect the V4 path result."
       }
@@ -1327,7 +1327,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "Main",
-          "exportPath": "<existing caller-selected export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -1338,7 +1338,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "Main",
-          "exportPath": "<existing caller-selected export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": false,
           "confirm": true,
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
@@ -1350,7 +1350,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "tagTableName": "默认变量表",
-          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -1361,7 +1361,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "tagTableName": "默认变量表",
-          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": false,
           "confirm": true,
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
@@ -1373,7 +1373,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "exportPath": "<existing caller-selected batch export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -1384,7 +1384,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "exportPath": "<existing caller-selected batch export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": false,
           "confirm": true,
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -1418,7 +1418,7 @@
         "tool": "RenderPlcBlock",
         "arguments": {
           "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-          "outputPath": "<new absolute Block.html in an existing caller-selected directory>"
+          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
         },
         "expect": "New self-contained HTML; input is the completed block export data.outputFile."
       },
@@ -1426,7 +1426,7 @@
         "tool": "RenderPlcProgramAtlas",
         "arguments": {
           "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-          "outputPath": "<new absolute Atlas.html in an existing caller-selected directory>"
+          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
         },
         "expect": "One block XML is valid; alternatively select a block-only directory. A tag-table XML causes Every XML input must contain a PLC block."
       },
@@ -1607,7 +1607,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tagTableName": "<existing caller-selected table>",
-          "exportPath": "C:\\Examples\\exports\\Tags.xml",
+          "exportFile": "C:\\Examples\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -1618,7 +1618,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tagTableName": "<existing caller-selected table>",
-          "exportPath": "C:\\Examples\\exports\\Tags.xml",
+          "exportFile": "C:\\Examples\\exports\\Tags.xml",
           "dryRun": false,
           "confirm": true,
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
@@ -1725,7 +1725,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -1736,7 +1736,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\Examples\\exports",
           "dryRun": false,
           "confirm": true,
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
@@ -1821,7 +1821,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "tagTableName": "默认变量表",
-          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -1844,7 +1844,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "tagTableName": "默认变量表",
-          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -1855,7 +1855,7 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "Main",
-          "exportPath": "<existing caller-selected export directory>",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
           "confirm": false
         },
@@ -2757,9 +2757,9 @@
           "action": "exportTemplate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "outputPath": "C:/MachineInputs/basic-template",
           "format": "csv",
-          "dryRun": true
+          "dryRun": true,
+          "exportDirectory": "C:/MachineInputs/basic-template"
         },
         "expect": "Preview package-generated CSV template, then fill and import it."
       }
@@ -2818,9 +2818,9 @@
           "action": "exportTemplate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "outputPath": "C:/MachineInputs/basic-template",
           "format": "csv",
-          "dryRun": true
+          "dryRun": true,
+          "exportDirectory": "C:/MachineInputs/basic-template"
         },
         "expect": "Preview package-generated CSV template, then fill and import it."
       }

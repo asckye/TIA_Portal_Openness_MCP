@@ -551,7 +551,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         // Unconfigured services make any accidental service access fail; published admission is covered separately.
         var constructor = method.DeclaringType!.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Single();
         var target = constructor.Invoke(new object?[constructor.GetParameters().Length]);
-        var tool = McpServerTool.Create(method, target);
+        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), "21");
         var path = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "reference", "tool-examples", "calls.json");
         var arguments = JsonNode.Parse(File.ReadAllText(path))!["profiles"]!["plc-foundation"]![name]!["arguments"]!.DeepClone().AsObject();

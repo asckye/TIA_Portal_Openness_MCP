@@ -164,6 +164,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static async Task<CallToolResult> CallToolCoreAsync(string name, ToolArguments? arguments, Func<Task<CallToolResult?>>? beforeDispatch = null)
         {
 #if TIA_ENGINE_HOST
+            arguments = TiaMcp.FoundationHost.CanonicalParameterTool.ApplyDefaults(name, arguments ?? EmptyArguments(), out var defaultError);
+            if (defaultError != null) return V4Reject(name, defaultError);
             if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.CompatibilityTargets.ContainsKey(name)

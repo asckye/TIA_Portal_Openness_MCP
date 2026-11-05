@@ -79,6 +79,30 @@ namespace TiaMcp.FoundationHost
         internal SessionExports Exports { get; set; } = new();
         internal GenerationExecutionSession Generation { get; } = new();
         internal string? HttpSessionId;
+        internal string? ExportDirectory;
+        internal Func<string?> OutputRoot = () => TiaOpenness.Shared.DataLocations.Current.OutputRoot;
+        private readonly object exportDirectoryGate = new();
+        private readonly string exportSession = Guid.NewGuid().ToString("N");
+        private bool exportDirectoryPrepared;
+        internal string? GetExportDirectory(bool prepare)
+        {
+            lock (exportDirectoryGate)
+            {
+                if (ExportDirectory == null)
+                {
+                    string? root = OutputRoot();
+                    if (root == null) return null;
+                    ExportDirectory = Path.Combine(root, exportSession);
+                    exportDirectoryPrepared = false;
+                }
+                if (prepare && !exportDirectoryPrepared)
+                {
+                    Directory.CreateDirectory(ExportDirectory);
+                    exportDirectoryPrepared = true;
+                }
+                return ExportDirectory;
+            }
+        }
         internal volatile bool Ended;
     }
 
@@ -180,6 +204,7 @@ namespace TiaMcp.FoundationHost
             if (context.Ended) throw new InvalidOperationException("The MCP engine session has ended; initialize a new session.");
             return EngineHostConfiguration.Enter(context);
         }
+
         internal IDisposable EnterOperatorSession()
         {
             var session = EnterSession();
@@ -201,7 +226,7 @@ namespace TiaMcp.FoundationHost
                     default)
             {
                 using var session = owner.EnterOperatorSession();
-                return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+                return await CanonicalParameterTool.InvokeWithDefaults(inner, request, cancellationToken).ConfigureAwait(false);
             }
         }
         internal void ResetExports()
@@ -224,7 +249,7 @@ namespace TiaMcp.FoundationHost
                     && !ReferenceEquals(EngineHostConfiguration.OperatorSession.Value, owner.context))
                     throw new InvalidOperationException("The tool belongs to a different MCP engine session.");
                 using var session = owner.EnterSession();
-                return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+                return await CanonicalParameterTool.InvokeWithDefaults(inner, request, cancellationToken).ConfigureAwait(false);
             }
         }
         internal IDisposable RegisterStagingSession(string id) => RegisterStagingSession(id, false);

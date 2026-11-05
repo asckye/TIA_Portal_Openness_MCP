@@ -57,6 +57,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
         var args = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
         var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget()).Read(args, "arguments");
         if (validation.Error != null) return FoundationV4Result.Reject(release, tool.Name, id, validation.Error);
+        if (operation == WorkbenchControlOperation.PrefillForm && ValidatePrefill(args) is { } prefillError)
+            return FoundationV4Result.Reject(release, tool.Name, id, prefillError);
         WorkbenchControlArguments arguments;
         try { arguments = (WorkbenchControlArguments)JsonSerializer.Deserialize(args.GetRawText(),
             WorkbenchControlProtocol.ArgumentType(operation), WorkbenchControlProtocol.Json)!; }
@@ -105,6 +107,22 @@ internal sealed class WorkbenchControlTool : McpServerTool
         catch (OperationCanceledException) /* swallow(privacy): cancellation never exposes private transport exception text */
         { return FoundationV4Result.Reject(release, tool.Name, id, new("Workbench request cancelled.", new CancelledDetails("workbench-control"))); }
     }
+    private static Error? ValidatePrefill(JsonElement args)
+    {
+        string form = args.GetProperty("form").GetString()!;
+        string mode = args.GetProperty("mode").GetString()!;
+        string[] expected = mode == "clear" ? Array.Empty<string>() : form switch {
+            "inspectionRules" => new[] { "namePattern" }, "blockFilter" => new[] { "filter" },
+            "blockSelection" => new[] { "softwarePath", "blockPaths" }, "connectProject" => new[] { "projectPath" },
+            "exportBlocks" => new[] { "outputDirectory", "format" }, _ => new[] { "paths", "overwrite" }
+        };
+        var fields = args.GetProperty("fields").EnumerateObject().Select(field => field.Name).ToArray();
+        if (fields.Length == expected.Length && expected.All(fields.Contains)) return null;
+        return new Error(mode == "clear" ? "Clear requires an empty fields object."
+            : "Set for " + form + " requires exactly these fields: " + string.Join(", ", expected) + ".",
+            new InvalidArgumentDetails("/fields", Array.Empty<string>()));
+    }
+
     internal static CallToolResult Map(WorkbenchControlResponse response, string release, string name, string id, WorkbenchControlOperation operation)
     {
         bool read = operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection;
@@ -166,7 +184,9 @@ internal sealed class WorkbenchControlTool : McpServerTool
                 "limit" => "Maximum checked blocks in this page, from 1 to 256; default 100.",
                 "form" => "Allowed form receiving the prefill; execution and approval forms are excluded.",
                 "mode" => "Set an awaiting-human-confirmation prefill or clear this MCP session's prefill.",
-                "fields" => "Closed fields for the selected form; clear requires an empty object.",
+                "fields" => "Supply exactly the selected form's fields for set; supply an empty object for clear. " +
+                    "inspectionRules: namePattern; blockFilter: filter; blockSelection: softwarePath and blockPaths; " +
+                    "connectProject: projectPath; exportBlocks: outputDirectory and format; importBlocks: paths and overwrite.",
                 _ => throw new InvalidOperationException("Unknown Workbench argument.") };
             properties[name] = value; if (mandatory) required.Add(name);
         }
@@ -202,22 +222,7 @@ internal sealed class WorkbenchControlTool : McpServerTool
                 allFields["overwrite"] = new JsonObject { ["type"] = "boolean" };
                 foreach (string field in new[] { "projectPath", "outputDirectory", "format", "paths", "overwrite" })
                     allFields[field]!["description"] = "Human-confirmed MCP panel prefill: " + field + ". Paths are absolute local paths; no existence probe.";
-                var branches = new JsonArray();
-                foreach (string form in new[] { "inspectionRules", "blockFilter", "blockSelection", "connectProject", "exportBlocks", "importBlocks" })
-                    foreach (string mode in new[] { "set", "clear" })
-                    {
-                        string[] fields = mode == "clear" ? Array.Empty<string>() : form == "inspectionRules" ? new[] { "namePattern" }
-                            : form == "blockFilter" ? new[] { "filter" } : form == "blockSelection" ? new[] { "softwarePath", "blockPaths" }
-                            : form == "connectProject" ? new[] { "projectPath" } : form == "exportBlocks" ? new[] { "outputDirectory", "format" }
-                            : new[] { "paths", "overwrite" };
-                        var fieldProperties = new JsonObject();
-                        foreach (string field in fields) fieldProperties[field] = properties["fields"]!["properties"]![field]!.DeepClone();
-                        branches.Add(new JsonObject { ["properties"] = new JsonObject { ["form"] = new JsonObject { ["const"] = form },
-                            ["mode"] = new JsonObject { ["const"] = mode }, ["fields"] = new JsonObject { ["type"] = "object",
-                                ["additionalProperties"] = false, ["properties"] = fieldProperties, ["required"] =
-                                    new JsonArray(fields.Select(field => (JsonNode)JsonValue.Create(field)!).ToArray()) } } });
-                    }
-                schema["oneOf"] = branches; break;
+                break;
         }
         return JsonSerializer.SerializeToElement(schema);
     }

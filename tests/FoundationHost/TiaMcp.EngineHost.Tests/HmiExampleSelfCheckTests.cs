@@ -66,6 +66,9 @@ public sealed class HmiExampleSelfCheckTests
         void Check(string name, JsonObject args, JsonElement schema)
         {
             checkedCalls++;
+            string tool = name.Split('/')[0];
+            if (TiaMcp.Logic.V4.CanonicalToolParameters.ValidateAliases(tool, args) is { } aliasError)
+                errors.Add(name + ": " + aliasError.Message);
             if (schema.TryGetProperty("required", out var required))
                 foreach (var field in required.EnumerateArray())
                     if (!args.ContainsKey(field.GetString()!)) errors.Add(name + ": missing required argument " + field.GetString());

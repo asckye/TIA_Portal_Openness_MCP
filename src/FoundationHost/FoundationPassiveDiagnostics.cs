@@ -2,6 +2,7 @@
 extern alias enginehost;
 using EngineHostConfiguration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
 using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using CanonicalParameterTool = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -334,6 +335,10 @@ internal static class LegacyHostToolRegistry
         tools.Clear(); tools.AddRange(wrapped);
         CompatibilityTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
         CanonicalBatchTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
+        for (int i = 0; i < tools.Count; i++)
+            if (TiaMcp.Logic.V4.CanonicalToolParameters.Aliases(tools[i].ProtocolTool.Name).Count != 0
+                || TiaMcp.Logic.V4.CanonicalToolParameters.HasStringDevice(tools[i].ProtocolTool.Name))
+                tools[i] = new CanonicalParameterTool(tools[i], releaseKey);
         if (hostPorts && ReleaseCatalogData.Releases[releaseKey].FoundationReadinessBoundary)
         {
             var all = FoundationHostPorts.Create(worker, releaseKey, tools.AsReadOnly(), readiness, apiDirectory);

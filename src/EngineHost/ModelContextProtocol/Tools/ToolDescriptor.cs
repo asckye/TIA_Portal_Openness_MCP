@@ -51,6 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public ToolDryRunDescriptor DryRun { get; }
         public string? CandidateFamily { get; }
         public string Execution { get; }
+        internal IReadOnlyList<string> ImplementationRequired { get; set; }
 
         public ToolDescriptor(string name, string rawDescription, Tool tool, ToolDescriptorClassification? classification,
             string signature, IReadOnlyList<ToolParameterDescriptor> parameters, ToolDryRunDescriptor dryRun,
@@ -58,6 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             Name = name; RawDescription = rawDescription; Tool = tool; Classification = classification;
             Signature = signature; Parameters = parameters; DryRun = dryRun; CandidateFamily = candidateFamily; Execution = execution;
+            ImplementationRequired = parameters.Where(parameter => parameter.Required).Select(parameter => parameter.Name).ToArray();
         }
     }
 

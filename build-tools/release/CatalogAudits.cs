@@ -177,6 +177,7 @@ internal static class CatalogAudits
             Require(schemas[name] is JsonObject, "Example tool is absent from the served catalog: " + location);
             var schema = new TiaMcp.Logic.V4.Inputs.InputSchema(JsonSerializer.SerializeToElement(schemas[name]));
             var error = schema.Validate(JsonSerializer.SerializeToElement(arguments), "arguments");
+            error ??= TiaMcp.Logic.V4.CanonicalToolParameters.ValidateAliases(name, arguments);
             if (error != null) problems.Add(release + "/" + location + ": " + TiaMcp.Logic.V4.V4Json.Serialize(error));
         }
         JsonObject Bound(JsonNode arguments) => JsonNode.Parse(arguments.ToJsonString()

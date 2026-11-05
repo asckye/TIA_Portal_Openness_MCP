@@ -33,6 +33,11 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static async Task<CallToolResult> PreviewToolCallAsync(string name, ToolArguments? arguments = null)
         {
             var args = arguments ?? EmptyArguments();
+#if TIA_ENGINE_HOST
+            // Resolve availability without validating a pending session directory as an explicit caller target.
+            _ = TiaMcp.FoundationHost.CanonicalParameterTool.ApplyDefaults(name, args, out var defaultError, prepareDirectory: false);
+            if (defaultError != null) return V4Reject("PreviewToolCall", defaultError);
+#endif
             var error = ToolInvoker.Bind(name, args, out _);
             if (error != null) error = TargetInputError(name, args, error);
             if (error != null && (error.Code != ErrorCode.InvalidArgument || CatalogView.Find(name) == null)) return V4Reject("PreviewToolCall", error);
@@ -40,8 +45,16 @@ namespace TiaMcpServer.ModelContextProtocol
             if (error != null)
             {
                 report.Meta!["validationError"] = JsonSerializer.SerializeToNode(error, V4BindingJson);
-                var fields = new InputSchema(CatalogView.Find(name)!.Tool.InputSchema).ValidateFields(args.Json);
-                report.Meta["validationErrors"] = JsonSerializer.SerializeToNode(fields.Count == 0 ? new[] { error } : fields, V4BindingJson);
+                var fields = new InputSchema(CatalogView.Find(name)!.Tool.InputSchema).ValidateFields(args.Json).ToList();
+#if TIA_ENGINE_HOST
+                var target = CatalogView.Find(name)!;
+                var aliasError = CanonicalToolParameters.ValidateAliases(name, JsonNode.Parse(args.Json.GetRawText())!.AsObject(),
+                    target.ImplementationRequired);
+                if (aliasError?.Details is InvalidArgumentDetails aliasDetails
+                    && !fields.Any(field => field.Details is InvalidArgumentDetails details && details.Parameter == aliasDetails.Parameter))
+                    fields.Insert(0, aliasError);
+#endif
+                report.Meta["validationErrors"] = JsonSerializer.SerializeToNode(fields.Count == 0 ? new[] { error } : fields.ToArray(), V4BindingJson);
                 report.Meta["ok"] = false;
                 report.Message = "NOT READY: " + error.Message;
                 return InfrastructureResult("PreviewToolCall", report, reportOnly: true);
@@ -134,6 +147,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var specs = SpecsOf(method);
             var report = PreflightLogic.Analyze(specs, args);
+#if TIA_ENGINE_HOST
+            if (CanonicalToolParameters.ValidateAliases(canonical, args, method.ImplementationRequired) is { } aliasProblem)
+            {
+                var details = (InvalidArgumentDetails)aliasProblem.Details;
+                if (details.Parameter is { } parameter && CanonicalToolParameters.Aliases(canonical).Any(alias => alias.Legacy == parameter)
+                    && !args.ContainsKey(parameter)) report.Missing.Add(parameter);
+                else report.TypeProblems.Add(aliasProblem.Message);
+            }
+#endif
 
             string description = ToolDescription(method);
             var tag = ToolTaxonomy.For(canonical);

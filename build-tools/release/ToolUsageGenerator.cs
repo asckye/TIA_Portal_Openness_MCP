@@ -227,7 +227,20 @@ internal static class ToolUsageGenerator
             foreach (var key in keys)
             {
                 var tools = Read(root, $"manifest/contracts/v4/baseline/{key}.json")["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!["inputSchema"]!);
-                foreach (var step in sequence["steps"]!.AsArray()) { var schema = tools[Text(step!["tool"])]; var a = step["arguments"]!.AsObject(); Require(Strings(schema["required"]).All(a.ContainsKey) && a.All(p => schema["properties"]!.AsObject().ContainsKey(p.Key)), "Sequence schema mismatch: " + topic); if (!full && a["dryRun"]?.GetValue<bool>() == false) Require(a["confirm"]?.GetValue<bool>() == true && Text(a["expectedProjectFile"]).Length > 0, "Sequence identity lesson: " + topic); }
+                foreach (var step in sequence["steps"]!.AsArray())
+                {
+                    string name = Text(step!["tool"]);
+                    var schema = tools[name];
+                    var supplied = step["arguments"]!.AsObject();
+                    Require(TiaMcp.Logic.V4.CanonicalToolParameters.ValidateAliases(name, supplied) == null,
+                        "Sequence alias conflict: " + topic);
+                    var a = TiaMcp.Logic.V4.CanonicalToolParameters.LegacyArguments(name, supplied);
+                    Require(Strings(schema["required"]).All(a.ContainsKey)
+                        && a.All(p => schema["properties"]!.AsObject().ContainsKey(p.Key)), "Sequence schema mismatch: " + topic);
+                    if (!full && a["dryRun"]?.GetValue<bool>() == false)
+                        Require(a["confirm"]?.GetValue<bool>() == true && Text(a["expectedProjectFile"]).Length > 0,
+                            "Sequence identity lesson: " + topic);
+                }
             }
         }
         var table = indexed["sequence/foundation-tag-table-round-trip"]; var block = indexed["sequence/foundation-block-round-trip"];

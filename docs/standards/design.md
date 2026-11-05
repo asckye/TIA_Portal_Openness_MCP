@@ -687,6 +687,8 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 ### 6.4 参数
 
+规范形式、逐工具路径别名和缺省导出位置见 [ADR 0032](decisions/0032-canonical-tool-parameters.md)。文件输出用 `exportFile`，目录输出用 `exportDirectory`，设备路径用名称数组；旧参数保留至 5.0 并返回 `DEPRECATED_PARAMETER`。项目名称与项目文件身份仍为两个独立断言。
+
 现行规则：
 
 - MUST：参数名用 camelCase；Unified 主题 `palette` 中 Siemens 原生的键名（如 `Background`）例外。路径参数以 `Path`、`File`、`Directory` 结尾（`exportDir`、`sourceDir` 是既有例外）。
@@ -694,9 +696,10 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 - MUST：操作选择器用 `action`（另有既有的 `kind`、`mode`、`operation`）；自定义的选择值用 camelCase，Siemens 原生枚举名保持原样。
 - 现状偏差：部分可选字符串参数用 `""` 作为缺省哨兵（API-35）；同一概念在不同工具中的形式不一致，例如导出目标有的是目录、有的是新文件，`devicePath` 有的是字符串、有的是数组。
 
-已决定、由 DES-4 实施（维护者 2026-11-01；DES-4 先写参数模型 ADR，合并前以上面的现行规则为准）：
+参数模型已由 ADR 0032 落地；本节其余错误与诊断要求由 DES-4 后续部分实施：
 
-- 参数 schema 按 JSON Schema 2020-12：必填列在 `required`，可选参数省略即未提供，不用 `""` 哨兵；闭集用 `enum`，固定格式用 `pattern`，互斥参数组用 `oneOf`；对象 `additionalProperties: false`（1.1 MCP-11）。
+- 参数 schema 按 JSON Schema 2020-12：必填列在 `required`，可选参数省略即未提供，不用 `""` 哨兵；闭集用 `enum`，固定格式用 `pattern`，互斥参数的选择规则写在各参数说明中，并在运行时校验；对象 `additionalProperties: false`（1.1 MCP-11）。
+- MUST：任何已发布工具的 `inputSchema` 根层均不得包含 `oneOf`、`allOf` 或 `anyOf`；嵌套对象或字段仍可使用。维护者 2026-11-04 收到用户报告，称 Claude API 对根层组合返回 400，导致整个工具列表被拒绝；这是兼容性用户报告，不是官方规范保证。条件必填、互斥与工作台表单的封闭字段必须保留运行时拒绝，不能仅删除 schema 约束。
 - 同一概念在全部工具中只有一种规范形式；文件与目录用不同的参数名区分（例如 `exportDirectory` 与 `exportFile`）。
 - 旧参数名在仍有使用的地方保留为有文档的别名，只保留一个主版本，使用时在 `meta` 中给出弃用警告；不得静默改变旧参数的含义。
 
@@ -710,7 +713,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 ### 6.6 示例
 
 - MUST：工具参数、调用序列、结果解释和官方出处只在 `reference/tool-examples` 中维护，由 `GetToolUsage` 按发布键返回；兼容入口复用同一数据，不另写规则文档（[真机测试](../manuals/real-machine-testing.md#工具示例库)）。
-- MUST：每个注册工具和动作都有示例；示例使用所选发布键的真实 schema；项目相关的值（项目、PLC、组、路径）放在绑定和参数来源中，不写成看似通用的常量；`validation` 文字如实写明验证范围，例如“离线预览，原生执行 NOT RUN”。
+- MUST：每个注册工具和动作都有示例；示例使用所选发布键的真实 schema，并通过运行时参数别名与互斥校验；项目相关的值（项目、PLC、组、路径）放在绑定和参数来源中，不写成看似通用的常量；`validation` 文字如实写明验证范围，例如“离线预览，原生执行 NOT RUN”。
 - MUST：示例带在真实 TIA Portal 上正确的参数，让 AI 客户端第一次调用就能成功（维护者 2026-11-01）；核对结果记入[真机台账](../reference/real-machine-ledger.md)。示例数据中如何标记“已真机核对”尚未决定。
 - 修改示例后依次运行 `generate-catalogs`、`generate-tool-usage`，再构建并执行八版检索和功能检查。
 

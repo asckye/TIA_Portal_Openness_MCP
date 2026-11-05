@@ -44,10 +44,11 @@ internal sealed class FoundationCatalog : IToolCatalogView
             all[pair.Key] = pair.Value;
         var order = data.PreferredOrder.Concat(shared.Select(tool => tool.ProtocolTool.Name)).Concat(all.Keys)
             .Distinct(StringComparer.Ordinal).Where(all.ContainsKey);
-        All = order.ToDictionary(name => name, name => all[name], data.NameComparer);
+        All = order.ToDictionary(name => name, name => CanonicalParameterTool.Describe(all[name]), data.NameComparer);
         IncludingUnavailable = data.RetainUnavailable
             ? merged.IncludingUnavailable.OrderBy(pair => pair.Key, StringComparer.Ordinal)
-                .ToDictionary(pair => pair.Key, pair => pair.Value, data.NameComparer)
+                .ToDictionary(pair => pair.Key,
+                    pair => All.TryGetValue(pair.Key, out var available) ? available : CanonicalParameterTool.Describe(pair.Value), data.NameComparer)
             : All;
         Lite = data.HasLite ? All.Values.Where(tool => essentials?.Contains(tool.Name) == true
             || SharedToolPolicy.Bridge.Contains(tool.Name, StringComparer.Ordinal)).ToArray() : Array.Empty<ToolDescriptor>();

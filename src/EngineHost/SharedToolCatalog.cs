@@ -45,6 +45,8 @@ namespace TiaMcp.FoundationHost
                         declared.Signature, declared.Parameters, declared.DryRun, declared.CandidateFamily,
 
                         declared.Execution == "host" ? "host" : "foundation");
+                    if (implementation is CanonicalParameterTool portedParameters)
+                        ported.ImplementationRequired = portedParameters.ImplementationRequired;
                     all[tool.Name] = ported; unavailable[tool.Name] = ported;
                     continue;
                 }
@@ -54,7 +56,7 @@ namespace TiaMcp.FoundationHost
                 var parameters = tool.InputSchema.GetProperty("properties").EnumerateObject().Select(p => {
                     string type = p.Value.TryGetProperty("type", out var t) ? t.GetString()! : "object";
                     string? fallback = p.Value.TryGetProperty("default", out var d) ? d.GetRawText() : null;
-                    return new ToolParameterDescriptor(p.Name, type, type switch {
+                    return new ToolParameterDescriptor(p.Name, type, p.Value.TryGetProperty("anyOf", out _) ? typeof(JsonElement).FullName! : type switch {
                         "string" => typeof(string).FullName!, "integer" => typeof(int).FullName!, "boolean" => typeof(bool).FullName!,
                         "array" => typeof(JsonElement).FullName!,
                         _ => typeof(TiaMcp.Logic.V4.Inputs.ToolArguments).FullName! }, required.Contains(p.Name), fallback,
@@ -65,6 +67,7 @@ namespace TiaMcp.FoundationHost
                 var descriptor = new ToolDescriptor(tool.Name, tool.Description ?? "", tool, SharedClassification(tool),
                     tool.Name + "(" + string.Join(", ", parameters.Select(p => p.Name + ": " + p.FriendlyType)) + ")", parameters,
                     new ToolDryRunDescriptor(parameters.Any(p => p.Name == "dryRun"), true), null, "foundation");
+                if (implementation is CanonicalParameterTool canonical) descriptor.ImplementationRequired = canonical.ImplementationRequired;
                 all[tool.Name] = descriptor; unavailable[tool.Name] = descriptor;
             }
             All = all; IncludingUnavailable = unavailable;

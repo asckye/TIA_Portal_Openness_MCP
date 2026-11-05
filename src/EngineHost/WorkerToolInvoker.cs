@@ -109,8 +109,14 @@ namespace TiaMcp.FoundationHost
                 foreach (var input in calls.EnumerateArray()) { family = Target(input); if (family != null) break; }
             family ??= Families(tool, arguments);
             if (family != null || typedFamiliesOnly) return family;
-            var shape = new InputSchema(schema).Validate(arguments, "arguments");
+            bool canonical = CanonicalToolParameters.Aliases(tool.Name).Count != 0 || CanonicalToolParameters.HasStringDevice(tool.Name);
+            var shape = (canonical ? CanonicalToolParameters.ValidateAliases(tool.Name,
+                JsonNode.Parse(arguments.GetRawText())!.AsObject(), tool.ImplementationRequired) : null)
+                ?? new InputSchema(schema).Validate(arguments, "arguments");
             if (shape != null) return shape;
+            if (canonical)
+                arguments = JsonSerializer.SerializeToElement(CanonicalToolParameters.LegacyArguments(tool.Name,
+                    JsonNode.Parse(arguments.GetRawText())!.AsObject()));
             foreach (var parameter in tool.Parameters)
             {
                 var type = ParameterType(parameter.ClrType);
@@ -138,6 +144,20 @@ namespace TiaMcp.FoundationHost
         public McpServerTool CreateTool(ToolDescriptor tool) => new InfrastructureInputTool(new CatalogTool(this, tool), tool);
 
         private async Task<ToolInvocationResult> DispatchAsync(ToolDescriptor tool, ToolArguments arguments, bool preview)
+        {
+            if (tool.Execution == "foundation") return await DispatchCoreAsync(tool, arguments, preview).ConfigureAwait(false);
+            if (CanonicalToolParameters.Aliases(tool.Name).Count == 0 && !CanonicalToolParameters.HasStringDevice(tool.Name))
+                return await DispatchCoreAsync(tool, arguments, preview).ConfigureAwait(false);
+            var input = JsonNode.Parse(arguments.Json.GetRawText())!.AsObject();
+            var prepared = CanonicalParameterTool.ApplyDefaults(tool.Name, arguments, out var error);
+            if (error != null) return new ToolInvocationResult(CanonicalParameterTool.Reject(McpServer.ReleaseKey, tool.Name, error), false);
+            var effective = JsonNode.Parse(prepared.Json.GetRawText())!.AsObject();
+            var adapted = new ToolArguments(JsonSerializer.SerializeToElement(CanonicalToolParameters.LegacyArguments(tool.Name, effective)));
+            var result = await DispatchCoreAsync(tool, adapted, preview).ConfigureAwait(false);
+            return new ToolInvocationResult(CanonicalParameterTool.Decorate(tool.Name, input, result.Result), result.NativeCallIssued);
+        }
+
+        private async Task<ToolInvocationResult> DispatchCoreAsync(ToolDescriptor tool, ToolArguments arguments, bool preview)
         {
             if (tool.Execution == "foundation")
             {

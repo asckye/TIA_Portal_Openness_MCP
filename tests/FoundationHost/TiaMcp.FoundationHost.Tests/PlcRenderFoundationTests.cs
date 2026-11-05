@@ -26,7 +26,14 @@ public sealed class PlcRenderFoundationTests
             {
                 var tool = tools.Single(t => t.ProtocolTool.Name == name);
                 Assert.DoesNotContain("Native behaviorPolicy=current", tool.ProtocolTool.Description);
-                Assert.Equal(new[] { "inputPath", "outputPath" }, tool.ProtocolTool.InputSchema.GetProperty("required").EnumerateArray().Select(p => p.GetString()));
+                Assert.Equal(new[] { "inputPath" },
+                    tool.ProtocolTool.InputSchema.GetProperty("required").EnumerateArray().Select(p => p.GetString()));
+                var properties = tool.ProtocolTool.InputSchema.GetProperty("properties");
+                Assert.Equal("string", properties.GetProperty("exportFile").GetProperty("type").GetString());
+                var alias = properties.GetProperty("outputPath");
+                Assert.Equal("string", alias.GetProperty("type").GetString());
+                Assert.Contains("Deprecated alias", alias.GetProperty("description").GetString());
+                Assert.Contains("5.0", alias.GetProperty("description").GetString());
                 async Task<Envelope> Call(object args, CancellationToken cancellationToken = default)
                 {
                     var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>())
@@ -40,6 +47,7 @@ public sealed class PlcRenderFoundationTests
                 Assert.True(result.Ok, result.Error?.Message);
                 Assert.Equal(release, result.Meta.ReleaseKey);
                 Assert.Equal(BehaviorPolicy.NotApplicable, result.Meta.BehaviorPolicy);
+                Assert.Contains(result.Meta.Warnings, warning => warning.Code == WarningCode.DeprecatedParameter);
                 result = await Call(new { inputPath = input, outputPath = Path.Combine(output, name + ".html") });
                 Assert.Equal(ErrorCode.AlreadyExists, result.Error!.Code);
                 result = await Call(new { inputPath = 123, outputPath = Path.Combine(output, "unused.html") });
@@ -50,6 +58,18 @@ public sealed class PlcRenderFoundationTests
                 Assert.Equal(ErrorCode.Cancelled, result.Error!.Code);
                 Assert.Equal(BehaviorPolicy.NotApplicable, result.Meta.BehaviorPolicy);
                 Assert.False(File.Exists(Path.Combine(output, "cancelled.html")));
+                string canonicalOutput = Path.Combine(output, name + "-canonical.html");
+                result = await Call(new { inputPath = input, exportFile = canonicalOutput });
+                Assert.True(result.Ok, result.Error?.Message);
+                Assert.True(File.Exists(canonicalOutput));
+                Assert.DoesNotContain(result.Meta.Warnings, warning => warning.Code == WarningCode.DeprecatedParameter);
+                string conflictingCanonical = Path.Combine(output, name + "-conflict-canonical.html");
+                string conflictingLegacy = Path.Combine(output, name + "-conflict-legacy.html");
+                result = await Call(new { inputPath = input, exportFile = conflictingCanonical, outputPath = conflictingLegacy });
+                Assert.Equal(ErrorCode.InvalidArgument, result.Error!.Code);
+                Assert.Equal(Execution.NotStarted, result.Meta.Execution);
+                Assert.False(File.Exists(conflictingCanonical));
+                Assert.False(File.Exists(conflictingLegacy));
             }
             Assert.Equal(0, worker.Calls);
         }

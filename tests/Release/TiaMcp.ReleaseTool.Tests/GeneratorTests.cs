@@ -11,6 +11,15 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class GeneratorTests
 {
     private static string Root => Repository.FindRoot();
+
+    private static JsonObject CurrentInputSchemas(string key)
+    {
+        return Read(Root, "manifest/contracts/v4/baseline/" + key + ".json")["tools"]!.AsArray()
+            .ToDictionary(tool => Text(tool!["name"]), tool => JsonNode.Parse(TiaMcp.Logic.V4.CanonicalToolParameters.Schema(
+                Text(tool!["name"]), System.Text.Json.JsonSerializer.SerializeToElement(tool["inputSchema"])).GetRawText())!.AsObject())
+            .ToJsonObject();
+    }
+
     [Fact]
     public void PortedDocumentCandidatesRetainModernFoundationProfiles()
     {
@@ -440,7 +449,7 @@ public sealed class GeneratorTests
     {
         var matrix = Read(Root, "manifest/version-tools.json")["releases"]!.AsObject(); var catalog = Read(Root, "src/Shared/ToolUsageData.json"); var records = new JsonArray();
         foreach (var key in Keys) records.Add(new JsonObject { ["releaseKey"] = key, ["profile"] = "full", ["transport"] = "stdio", ["exampleCallsExecuted"] = false, ["registeredToolCount"] = Copy(matrix[key]!["toolCount"]!), ["checkedToolCount"] = Copy(matrix[key]!["toolCount"]!), ["tools"] = new JsonArray(Strings(matrix[key]!["tools"]).Select(n => (JsonNode)new JsonObject { ["toolName"] = n }).ToArray()), ["offlineCallExamplesExecuted"] = new JsonArray(),
-            ["inputSchemas"] = Read(Root, "manifest/contracts/v4/baseline/" + key + ".json")["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!["inputSchema"]!.DeepClone().AsObject()).ToJsonObject() });
+            ["inputSchemas"] = CurrentInputSchemas(key) });
         var result = CatalogAudits.UsageFromRecords(Root, matrix, catalog, records); Assert.Equal(8, result["releases"]!.AsObject().Count); Assert.Equal(Hash(Encoding.UTF8.GetBytes(Source(Root, "src/Shared/ToolUsageData.json"))), Text(result["catalogSha256"])); Assert.Null(result["releases"]!["21"]!["profile"]);
         records[0]!["exampleCallsExecuted"] = true; Assert.Throws<ReleaseException>(() => CatalogAudits.UsageFromRecords(Root, matrix, catalog, records)); records[0]!["exampleCallsExecuted"] = false;
         records[0]!["checkedToolCount"] = 0; Assert.Throws<ReleaseException>(() => CatalogAudits.UsageFromRecords(Root, matrix, catalog, records)); records[0]!["checkedToolCount"] = Copy(matrix["14sp1"]!["toolCount"]!);
@@ -454,7 +463,7 @@ public sealed class GeneratorTests
         var matrix = Read(Root, "manifest/version-tools.json")["releases"]!.AsObject(); var release = Text(Read(Root, "manifest/delivery.json")["release"]);
         JsonObject Receipt(string key, string profile = "full", string transport = "stdio") => new JsonObject { ["releaseKey"] = key, ["profile"] = profile, ["transport"] = transport, ["exampleCallsExecuted"] = false, ["allSourceTextRetrievedAndHashChecked"] = true,
             ["registeredToolCount"] = Copy(matrix[key]!["toolCount"]!), ["checkedToolCount"] = Copy(matrix[key]!["toolCount"]!), ["tools"] = new JsonArray(Strings(matrix[key]!["tools"]).Select(n => (JsonNode)new JsonObject { ["toolName"] = n }).ToArray()), ["offlineCallExamplesExecuted"] = new JsonArray(),
-            ["inputSchemas"] = Read(Root, "manifest/contracts/v4/baseline/" + key + ".json")["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!["inputSchema"]!.DeepClone().AsObject()).ToJsonObject() };
+            ["inputSchemas"] = CurrentInputSchemas(key) };
         var input = Path.Combine(Root, "bin-build", "usage-audit-" + Guid.NewGuid().ToString("N")); var receipts = Path.Combine(input, "receipts.json");
         void Put(string relative, JsonNode value) { var path = Path.Combine(input, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, Encode(value), new UTF8Encoding(false)); }
         try
@@ -488,7 +497,7 @@ public sealed class GeneratorTests
         var matrix = Read(Root, "manifest/version-tools.json")["releases"]!.AsObject();
         JsonObject Receipt(string key) => new JsonObject { ["releaseKey"] = key, ["exampleCallsExecuted"] = false, ["allSourceTextRetrievedAndHashChecked"] = true,
             ["registeredToolCount"] = Copy(matrix[key]!["toolCount"]!), ["checkedToolCount"] = Copy(matrix[key]!["toolCount"]!), ["tools"] = new JsonArray(Strings(matrix[key]!["tools"]).Select(n => (JsonNode)new JsonObject { ["toolName"] = n }).ToArray()), ["offlineCallExamplesExecuted"] = new JsonArray(),
-            ["inputSchemas"] = Read(Root, "manifest/contracts/v4/baseline/" + key + ".json")["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!["inputSchema"]!.DeepClone().AsObject()).ToJsonObject() };
+            ["inputSchemas"] = CurrentInputSchemas(key) };
         var input = Path.Combine(Root, "bin-build", "usage-audit-" + Guid.NewGuid().ToString("N")); var receipts = Path.Combine(input, "receipts.json");
         void Put(string relative, JsonNode value) { var path = Path.Combine(input, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, Encode(value), new UTF8Encoding(false)); }
         try

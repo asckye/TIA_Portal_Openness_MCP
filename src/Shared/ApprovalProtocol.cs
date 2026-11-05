@@ -228,7 +228,8 @@ namespace TiaOpenness.Shared
         private static readonly HashSet<string> FileSystemKeys = new HashSet<string>(StringComparer.Ordinal)
         {
             "allowedFilePath", "apiPath", "archivePath", "csvPath", "destinationDirectory", "destinationPath", "dir", "directory",
-            "directoryPath", "evidenceDirectory", "exportDir", "exportPath", "filePath", "importPath", "inputPath", "leftFilePath",
+            "directoryPath", "evidenceDirectory", "exportDir", "exportPath", "exportFile", "exportDirectory", "sourceDirectory",
+            "filePath", "importPath", "inputPath", "leftFilePath",
             "libraryPath", "logFilePath", "mappingFilePath", "newProjectPath", "offlineReleaseSuiteJsonPath", "outputDirectory", "outputPath",
             "plcXmlPath", "projectPath", "recordPath", "referenceAmlPath", "referenceDir", "referenceGlobalLibraryPath", "referenceProjectPath",
             "reportDirectory", "reportPath", "repositoryPath", "rightFilePath", "schemaDirectory", "sourceDir", "templateDirectory",
@@ -260,6 +261,9 @@ namespace TiaOpenness.Shared
 
         internal static IEnumerable<KeyValuePair<string, string>> Arguments(string tool, JsonObject arguments)
         {
+            foreach (string canonical in new[] { "exportFile", "exportDirectory" })
+                if (arguments[canonical] is JsonValue value && value.TryGetValue<string>(out var canonicalPath) && canonicalPath.Length != 0)
+                    yield return new KeyValuePair<string, string>(canonical, canonicalPath);
             string action = TextArgument(arguments, "action");
             string? parameter = tool switch
             {
