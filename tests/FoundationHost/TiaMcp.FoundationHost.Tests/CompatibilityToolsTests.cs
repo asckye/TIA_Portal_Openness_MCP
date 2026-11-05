@@ -10,6 +10,70 @@ using Xunit;
 
 public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper output)
 {
+    private static readonly Dictionary<string, string[]> DescribedPartAParameters = new() {
+        ["ExportPlcWatchTablesToDirectory"] = ["dryRun", "confirm", "expectedPlanHash", "expectedProjectFile"],
+        ["ExportTechnologyObjectsToDirectory"] = ["dryRun", "confirm", "expectedPlanHash", "expectedProjectFile"],
+        ["ImportPlcTagTablesFromDirectory"] = ["dryRun", "confirm", "expectedPlanHash", "expectedProjectFile"],
+        ["RepairAndReimportPlcBlock"] = ["dryRun", "confirm", "expectedPlanHash", "expectedProjectFile"],
+        ["MovePlcBlockToGroup"] = ["dryRun", "confirm", "expectedPlanHash", "expectedProjectFile"],
+        ["CreateDevice"] = ["family", "dryRun", "confirm", "expectedPlanHash", "expectedProjectFile"],
+        ["CreateHardwareCatalogDevice"] = ["family", "dryRun", "confirm", "expectedPlanHash", "expectedProjectFile"],
+        ["CreatePlcBlockGroup"] = ["dryRun"],
+        ["ManagePlcTagDefinition"] = ["confirm", "expectedPlanHash", "expectedProjectFile"],
+        ["ManagePlcExternalSources"] = ["confirm", "expectedPlanHash", "expectedProjectFile"]
+    };
+
+    [Fact]
+    public void Part_A_declared_parameters_have_descriptions_and_preview_provenance()
+    {
+        var declarations = typeof(enginehost::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools).Assembly.GetTypes()
+            .SelectMany(type => type.GetMethods()).Select(method => new {
+                Method = method, Tool = method.GetCustomAttribute<McpServerToolAttribute>()?.Name
+            }).Where(row => row.Tool != null && DescribedPartAParameters.ContainsKey(row.Tool)).ToDictionary(row => row.Tool!);
+        foreach (var (tool, names) in DescribedPartAParameters)
+        {
+            var parameters = declarations[tool].Method.GetParameters().ToDictionary(parameter => parameter.Name!);
+            foreach (string name in names)
+                AssertParameterDescription(name, parameters[name].GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description);
+        }
+    }
+
+    [Theory]
+    [InlineData("14sp1")]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("17")]
+    [InlineData("18")]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Part_A_served_parameters_keep_descriptions_on_every_release(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var roster = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false).Select(tool => tool.ProtocolTool)
+            .ToDictionary(tool => tool.Name);
+        foreach (var (tool, names) in DescribedPartAParameters)
+        {
+            if (!PortedFamilies.Available(release, tool)) { Assert.DoesNotContain(tool, roster.Keys); continue; }
+            var properties = roster[tool].InputSchema.GetProperty("properties");
+            foreach (string name in names)
+            {
+                Assert.True(properties.GetProperty(name).TryGetProperty("description", out var description), release + ": " + tool + "." + name);
+                AssertParameterDescription(name, description.GetString());
+            }
+        }
+    }
+
+    private static void AssertParameterDescription(string name, string? description)
+    {
+        Assert.False(string.IsNullOrWhiteSpace(description), name + " needs a description");
+        if (name is "expectedPlanHash" or "expectedProjectFile")
+        {
+            Assert.Contains("this tool", description, StringComparison.Ordinal);
+            Assert.Contains("dry-run", description, StringComparison.Ordinal);
+        }
+    }
+
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments) =>
         new(DispatchProxy.Create<IMcpServer, ServerProxy>()) { Params = new() {
             Name = name, Arguments = arguments.Deserialize<Dictionary<string, JsonElement>>() } };

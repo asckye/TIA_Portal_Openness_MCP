@@ -53,7 +53,8 @@ internal static class CanonicalBatchTools
             var properties = input["properties"]!.AsObject();
             foreach (var field in new[] { "dryRun", "confirm", "expectedPlanHash", "expectedProjectFile" })
                 properties[field] = new JsonObject { ["type"] = field is "dryRun" or "confirm" ? "boolean" : "string",
-                    ["default"] = field == "dryRun" ? JsonValue.Create(true) : field == "confirm" ? JsonValue.Create(false) : JsonValue.Create("") };
+                    ["default"] = field == "dryRun" ? JsonValue.Create(true) : field == "confirm" ? JsonValue.Create(false) : JsonValue.Create(""),
+                    ["description"] = CompatibilityTools.PreviewParameterDescriptions[field] };
             tool = new Tool { Name = declaration.Name, Title = declaration.Title,
                 Description = declaration.Description
                     + " Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval " +

@@ -334,7 +334,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "forwarder; no separate native implementation. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreatePlcBlockGroupV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
-            [Description("groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'")] string groupPath, bool dryRun = true)
+            [Description("groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'")] string groupPath,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true)
             => PlcToolContract.Run("CreatePlcBlockGroup", !dryRun, true, () => CreatePlcBlockGroup(softwarePath, groupPath, dryRun));
 
         public ResponseMessage CreatePlcBlockGroup(string softwarePath, string groupPath, bool dryRun = true)
@@ -353,7 +354,12 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("blockName: exact group-qualified source block path")] string blockName,
             [Description("targetGroupPath: exact destination group path")] string targetGroupPath,
             [Description("autoCreateGroup: create missing destination groups only during approved execution")] bool autoCreateGroup = true,
-            bool dryRun = true, bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
             => PlcToolContract.Run("MovePlcBlockToGroup", !dryRun, true,
                 () => _blocks
                     .MoveBlockToGroup(softwarePath, blockName, targetGroupPath, autoCreateGroup, dryRun, confirm, expectedPlanHash, expectedProjectFile));

@@ -291,8 +291,14 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult CreateDeviceV4(
             [Description("Exact catalog article number or full OrderNumber TypeIdentifier, passed unchanged to preferredMlfb.")] string orderNumber,
             [Description("Exact catalog version; empty for a full TypeIdentifier, passed unchanged to preferredVersion.")] string version,
-            string deviceName, string family = "S7-1500", bool dryRun = true, bool confirm = false,
-            string expectedPlanHash = "", string expectedProjectFile = "")
+            string deviceName,
+            [Description("family: descriptive device family label (default S7-1500); does not select the device.")] string family = "S7-1500",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
             // V18+ forwards to the canonical tool; older releases retain the exact native creation route.
             => !dryRun && !confirm ? McpServer.V4Reject("CreateDevice", McpServer.InvalidInput("confirm"))
                 : McpServer.RunWritePreview("CreateDevice", dryRun, new { orderNumber, version, deviceName, family },
@@ -530,8 +536,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 "acceptance is pending.")]
         public CallToolResult CreateHardwareCatalogDeviceV4(
             [Description("Exact OrderNumber TypeIdentifier, passed unchanged to preferredMlfb with empty preferredVersion.")] string keyword,
-            string deviceName, string preferredText = "", string family = "S7-1500", bool dryRun = true, bool confirm = false,
-            string expectedPlanHash = "", string expectedProjectFile = "")
+            string deviceName, string preferredText = "",
+            [Description("family: descriptive device family label (default S7-1500); does not select the device.")] string family = "S7-1500",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
             // Runtime registration uses CompatibilityTools; this raw declaration remains an offline oracle.
             => HardwareContract.Run("CreateHardwareCatalogDevice", () => {
                 HardwareContract.RequireProject(_service.HasProject);

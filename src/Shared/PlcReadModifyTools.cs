@@ -109,8 +109,12 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("properties: Scalar attribute map of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / " +
                 "LogicalAddress / DataTypeName; constants: Value; Comment: text).")] AttributeMap<Scalar>
                 ? properties=null,
-            [Description("dryRun: true (default) previews; false executes (project must be offline).")] bool dryRun=true, bool confirm=false,
-                string expectedPlanHash="", string expectedProjectFile="")
+            [Description("dryRun: true (default) previews; false executes (project must be offline).")] bool dryRun=true,
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
         {
             Func<ResponseMessage> invoke = () => ManagePlcTagDefinition(softwarePath, tablePath, name, kind, action, dataType, addressOrValue, dryRun: dryRun);
             if (properties != null)
@@ -253,8 +257,12 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("targetGroupPath: for generateBlocks - block / type group that receives the result ('' = root).")] string targetGroupPath="",
             [Description("newName: for renameGroup.")] string newName="",
             [Description("confirmDelete: must be true together with dryRun=false for delete / deleteGroup.")] bool confirmDelete=false,
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true, bool confirm=false, string expectedPlanHash="",
-                string expectedProjectFile="")
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true,
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
         {
             return PlcExchangeContract
                 .Run("ManagePlcExternalSources", () =>
@@ -360,7 +368,13 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("compileAfter: compile PLC after import")] bool compileAfter = true,
             [Description("overwrite: false (default) refuses an existing block of the same name before the import; true replaces it " +
                 "(Siemens.Engineering.ImportOptions.Override).")] bool overwrite =
-                false, bool dryRun = true, bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
+                false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
             => PlcToolContract
                 .Run("RepairAndReimportPlcBlock", true, true, () => RepairAndReimportBlock(softwarePath, importPath, groupPath, compileAfter, overwrite));
 
@@ -500,7 +514,11 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("importOptions: optional SkipInactiveCultures OR ActivateInactiveCultures on V19–V21; empty by default. Override remains controlled by overwrite.")] string[]
                 ? importOptions = null,
             [Description("dryRun: true (default) previews the complete ordered batch, unit scope and options without imports.")] bool dryRun = true,
-                bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
             => PlcToolContract
                 .Run("ImportPlcTagTablesFromDirectory", !dryRun, true, () =>
                     ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite, unitName, swImportOptions, importOptions, dryRun));

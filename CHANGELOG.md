@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Fixed
+- 补全 Part A 批处理、移块和兼容入口的预览与确认参数说明，明确计划哈希和项目文件路径来自该工具自身的 dry-run 结果；参数类型、默认值和执行行为不变。
 - `test-suites` logs the full name, first 400 error-message characters and first four stack lines for up to ten distinct failed tests per suite, including sharded runs.
 - Turning off write approval now requires typing the localized confirmation label; empty or incorrect input and Enter cannot disable approval.
 - 工艺对象批导出在原生导出开始前创建目录失败时返回普通拒绝，不再误报结果未知或锁定会话；标签表批导入的名称正则筛选恢复忽略大小写。

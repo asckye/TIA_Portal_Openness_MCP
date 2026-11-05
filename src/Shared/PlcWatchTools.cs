@@ -137,8 +137,13 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult ExportPlcWatchTablesToDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("dir: output directory")] string dir,
-            [Description("regexName: optional regex filter applied to table name")] string regexName = "", bool dryRun = true, bool confirm = false,
-                string expectedPlanHash = "", string expectedProjectFile = "")
+            [Description("regexName: optional regex filter applied to table name")] string regexName = "",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
             => PlcToolContract.Run("ExportPlcWatchTablesToDirectory", true, true, () => ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName));
 
 

@@ -33,8 +33,13 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult ExportTechnologyObjectsToDirectoryV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs'")] string exportDir,
-            [Description("regexName: optional regex filter on TO name; empty = export all")] string regexName = "", bool dryRun = true, bool confirm = false,
-                string expectedPlanHash = "", string expectedProjectFile = "")
+            [Description("regexName: optional regex filter on TO name; empty = export all")] string regexName = "",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile =
+                "")
             => EngineeringToolContract
                 .Run("ExportTechnologyObjectsToDirectory", !dryRun, () =>
                     ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName, dryRun, expectedPlanHash,

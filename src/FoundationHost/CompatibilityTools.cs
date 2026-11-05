@@ -19,6 +19,13 @@ namespace TiaMcp.FoundationHost;
 // Compatibility names dispatch the already wrapped canonical tool. They own no native calls, approval or result mapping.
 internal static class CompatibilityTools
 {
+    internal static readonly IReadOnlyDictionary<string, string> PreviewParameterDescriptions = new Dictionary<string, string> {
+        ["dryRun"] = "dryRun: true (default) previews; false executes.",
+        ["confirm"] = "confirm: must be true together with dryRun=false to execute the previewed change.",
+        ["expectedPlanHash"] = "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+        ["expectedProjectFile"] = "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+    };
+
     internal sealed record Mapping(string Target, IReadOnlyDictionary<string, string> Parameters, IReadOnlyDictionary<string, string> Fixed);
     internal static readonly IReadOnlyDictionary<string, Mapping> Mappings = new Dictionary<string, Mapping>(StringComparer.Ordinal) {
         ["CreateDevice"] =
@@ -69,6 +76,10 @@ internal static class CompatibilityTools
             this.target = target; this.mapping = mapping; this.release = release; this.identity = identity;
             var schema = JsonNode.Parse(target.ProtocolTool.InputSchema.GetRawText())!.AsObject();
             var properties = schema["properties"]!.AsObject();
+            foreach (var (name, description) in PreviewParameterDescriptions)
+                if (properties[name] is JsonObject property) property["description"] = description;
+            if (properties["family"] is JsonObject family)
+                family["description"] = "family: descriptive device family label (default S7-1500); does not select the device.";
             var required = schema["required"]?.AsArray();
             foreach (var fixedParameter in mapping.Fixed.Keys)
             {
@@ -134,7 +145,7 @@ internal static class CompatibilityTools
             foreach (string field in ConfirmationFields) properties[field] = new JsonObject {
                 ["type"] = field == "confirm" ? "boolean" : "string",
                 ["default"] = field == "confirm" ? JsonValue.Create(false) : JsonValue.Create(""),
-                ["description"] = "Canonical Foundation confirmation for forwarded actions; preview first."
+                ["description"] = PreviewParameterDescriptions[field]
             };
             tool = new Tool {
                 Name = source.Name, Description = source.Description + " Canonical targets: " + TiaMcp.Adapters.Contracts.PortedFamilies
