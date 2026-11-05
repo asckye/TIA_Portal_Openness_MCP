@@ -13,9 +13,10 @@ public sealed class OutputRootApprovalTests
 {
     public static IEnumerable<object[]> WhitespaceTargets()
     {
-        foreach (var pair in ExpectedOutputs)
-            foreach (string path in new[] { @" ..\..\Startup\evil.cmd", @"D:\outside\target ", " " })
-                yield return new object[] { pair.Key, pair.Value, path };
+        foreach (var pair in OutputCoverage)
+            foreach (string parameter in pair.Value.Names)
+                foreach (string path in new[] { @" ..\..\Startup\evil.cmd", @"D:\outside\target ", " " })
+                    yield return new object[] { pair.Key, parameter, path };
         foreach (var pair in AdditionalWriteTargets())
             foreach (string path in new[] { @" ..\..\Startup\evil.cmd", @"D:\outside\target ", " " })
                 yield return new object[] { pair[0], pair[1], path };
@@ -551,65 +552,73 @@ public sealed class OutputRootApprovalTests
         }
     }
 
-    private static readonly IReadOnlyDictionary<string, string> ExpectedOutputs = new Dictionary<string, string>
+    private sealed record OutputParameters(string Canonical, string? Alias = null, string? AdditionalCanonical = null)
     {
-        ["ExportAlarmClasses"] = "exportPath",
-        ["ExportAlarmInstanceTexts"] = "exportPath",
-        ["ExportAlarmTextLists"] = "exportPath",
-        ["ExportDeviceAml"] = "exportPath",
-        ["ExportHmiConnection"] = "exportPath",
-        ["ExportHmiScreen"] = "exportPath",
-        ["ExportHmiTagTable"] = "exportPath",
-        ["ExportOpcUaInterface"] = "exportPath",
-        ["ExportPlcBlock"] = "exportPath",
-        ["ExportPlcBlockDocuments"] = "exportPath",
-        ["ExportPlcBlocks"] = "exportPath",
-        ["ExportPlcBlocksDocuments"] = "exportPath",
-        ["ExportPlcTagTable"] = "exportPath",
-        ["ExportPlcType"] = "exportPath",
-        ["ExportPlcTypes"] = "exportPath",
-        ["ExportPlcWatchTable"] = "exportPath",
-        ["ExportTechnologyObject"] = "exportPath",
-        ["ExportProjectTexts"] = "filePath",
-        ["ExportSafetyPrintout"] = "filePath",
-        ["ExportScadaData"] = "filePath",
-        ["GeneratePlcLoadableFile"] = "filePath",
-        ["GeneratePlcSourceFromBlocks"] = "filePath",
-        ["ExchangeSystemDiagnosticsSettings"] = "filePath",
-        ["ManageHardwareUtilities"] = "filePath",
-        ["GenerateOpcUaModelledInterface"] = "outputPath",
-        ["GeneratePlcDocumentation"] = "outputPath",
-        ["PatchPlcBlockDocument"] = "outputPath",
-        ["RenderPlcBlock"] = "outputPath",
-        ["RenderPlcBlockDocument"] = "outputPath",
-        ["RenderPlcProgramAtlas"] = "outputPath",
-        ["RenderPlcVisualDiff"] = "outputPath",
-        ["SaveExportContent"] = "outputPath",
-        ["WritePlcSclSourceFile"] = "outputPath",
-        ["ManageUnifiedCwcPackage"] = "outputPath",
-        ["BuildDeviceAmlDocument"] = "outputPath",
-        ["BuildReleaseHandoffArtifacts"] = "outputDirectory",
-        ["GenerateAcceptanceReport"] = "outputDirectory",
-        ["GenerateErrorReport"] = "outputDirectory",
-        ["InstantiatePlcTemplates"] = "outputDirectory",
-        ["WriteClassicHmiMinimalPackageFiles"] = "outputDirectory",
-        ["ExportHmiProgram"] = "exportDir",
-        ["ExportTechnologyObjectsToDirectory"] = "exportDir",
-        ["DownloadPlcToFolder"] = "destinationDirectory",
-        ["ExportUnifiedEngineeringList"] = "destinationDirectory",
-        ["ExchangeUnifiedTags"] = "directory",
-        ["ExchangeUnifiedScriptModules"] = "directory",
-        ["ArchiveSavedProject"] = "archivePath",
-        ["AuditEngineeringExports"] = "reportPath",
-        ["ScanPlcSourceAnnotations"] = "csvPath",
-        ["ExportPlcProDiagInfo"] = "directoryPath",
-        ["ExportPlcWatchTablesToDirectory"] = "dir",
-        ["ManagePlcGitRepository"] = "repositoryPath",
-        ["RunClassicHmiOfflineValidationSuite"] = "reportDirectory",
-        ["RunClassicHmiTemporaryImportPreflight"] = "reportDirectory",
-        ["RunHmiTemplatePlcSyncPrecheckSuite"] = "reportDirectory",
-        ["RunOfflineReleaseValidationSuite"] = "reportDirectory",
+        internal IEnumerable<string> Names => new[] { Canonical, Alias, AdditionalCanonical }.OfType<string>();
+    }
+
+    private static readonly IReadOnlyDictionary<string, OutputParameters> OutputCoverage = new Dictionary<string, OutputParameters>
+    {
+        ["ExportAlarmClasses"] = new("exportFile", "exportPath"),
+        ["ExportAlarmInstanceTexts"] = new("exportFile", "exportPath"),
+        ["ExportAlarmTextLists"] = new("exportFile", "exportPath"),
+        ["ExportDeviceAml"] = new("exportFile", "exportPath", "exportDirectory"),
+        ["ExportHmiConnection"] = new("exportFile", "exportPath"),
+        ["ExportHmiScreen"] = new("exportFile", "exportPath"),
+        ["ExportHmiTagTable"] = new("exportFile", "exportPath"),
+        ["ExportOpcUaInterface"] = new("exportFile", "exportPath"),
+        ["ExportPlcBlock"] = new("exportDirectory", "exportPath"),
+        ["ExportPlcBlockDocuments"] = new("exportDirectory", "exportPath"),
+        ["ExportPlcBlocks"] = new("exportDirectory", "exportPath"),
+        ["ExportPlcBlocksDocuments"] = new("exportDirectory", "exportPath"),
+        ["ExportPlcTagTable"] = new("exportFile", "exportPath"),
+        ["ExportPlcType"] = new("exportDirectory", "exportPath"),
+        ["ExportPlcTypes"] = new("exportDirectory", "exportPath"),
+        ["ExportPlcWatchTable"] = new("exportFile", "exportPath"),
+        ["ExportTechnologyObject"] = new("exportFile", "exportPath"),
+        ["ExportProjectTexts"] = new("filePath"),
+        ["ExportSafetyPrintout"] = new("filePath"),
+        ["ExportScadaData"] = new("filePath"),
+        ["GeneratePlcLoadableFile"] = new("filePath"),
+        ["GeneratePlcSourceFromBlocks"] = new("filePath"),
+        ["ExchangeSystemDiagnosticsSettings"] = new("filePath"),
+        ["ManageHardwareUtilities"] = new("filePath"),
+        ["GenerateOpcUaModelledInterface"] = new("exportFile", "outputPath"),
+        ["GeneratePlcDocumentation"] = new("exportFile", "outputPath"),
+        ["PatchPlcBlockDocument"] = new("exportFile", "outputPath"),
+        ["RenderPlcBlock"] = new("exportFile", "outputPath"),
+        ["RenderPlcBlockDocument"] = new("exportFile", "outputPath"),
+        ["RenderPlcProgramAtlas"] = new("exportFile", "outputPath"),
+        ["RenderPlcVisualDiff"] = new("exportFile", "outputPath"),
+        ["SaveExportContent"] = new("exportFile", "outputPath"),
+        ["WritePlcSclSourceFile"] = new("exportFile", "outputPath"),
+        ["ManageUnifiedCwcPackage"] = new("exportFile", "outputPath"),
+        ["BuildDeviceAmlDocument"] = new("exportFile", "outputPath"),
+        ["BuildReleaseHandoffArtifacts"] = new("exportDirectory", "outputDirectory"),
+        ["GenerateAcceptanceReport"] = new("exportDirectory", "outputDirectory"),
+        ["GenerateErrorReport"] = new("exportDirectory", "outputDirectory"),
+        ["InstantiatePlcTemplates"] = new("exportDirectory", "outputDirectory"),
+        ["WriteClassicHmiMinimalPackageFiles"] = new("exportDirectory", "outputDirectory"),
+        ["ExportHmiProgram"] = new("exportDirectory", "exportDir"),
+        ["ExportTechnologyObjectsToDirectory"] = new("exportDirectory", "exportDir"),
+        ["DownloadPlcToFolder"] = new("destinationDirectory"),
+        ["ExportUnifiedEngineeringList"] = new("destinationDirectory"),
+        ["ExchangeUnifiedTags"] = new("exportDirectory", "directory"),
+        ["ExchangeUnifiedScriptModules"] = new("exportDirectory", "directory"),
+        ["ArchiveSavedProject"] = new("archivePath"),
+        ["AuditEngineeringExports"] = new("reportPath"),
+        ["ScanPlcSourceAnnotations"] = new("csvPath"),
+        ["ExportPlcProDiagInfo"] = new("directoryPath"),
+        ["ExportPlcWatchTablesToDirectory"] = new("exportDirectory", "dir"),
+        ["ManagePlcGitRepository"] = new("repositoryPath"),
+        ["RunClassicHmiOfflineValidationSuite"] = new("reportDirectory"),
+        ["RunClassicHmiTemporaryImportPreflight"] = new("reportDirectory"),
+        ["RunHmiTemplatePlcSyncPrecheckSuite"] = new("reportDirectory"),
+        ["RunOfflineReleaseValidationSuite"] = new("reportDirectory"),
     };
+
+    private static readonly IReadOnlyDictionary<string, string> ExpectedOutputs =
+        OutputCoverage.ToDictionary(pair => pair.Key, pair => pair.Value.Canonical);
 
     [Fact]
     public void All_eight_file_catalogs_have_explicit_output_coverage()
@@ -628,6 +637,21 @@ public sealed class OutputRootApprovalTests
             wrong.Remove("reportDirectory");
             wrong["outputDirectory"] = "outputDirectory";
             return CallerInputFiles.OutputTargets(tool, wrong);
+        }
+        Assert.ThrowsAny<Xunit.Sdk.XunitException>(() => AssertOutputCoverage(MutatedTargets));
+    }
+
+    [Theory]
+    [InlineData("exportFile")]
+    [InlineData("outputPath")]
+    public void Completeness_rejects_an_undetected_canonical_parameter_or_alias(string parameter)
+    {
+        IEnumerable<string> MutatedTargets(string tool, JsonObject arguments)
+        {
+            if (tool != "SaveExportContent") return CallerInputFiles.OutputTargets(tool, arguments);
+            var missing = arguments.DeepClone().AsObject();
+            missing.Remove(parameter);
+            return CallerInputFiles.OutputTargets(tool, missing);
         }
         Assert.ThrowsAny<Xunit.Sdk.XunitException>(() => AssertOutputCoverage(MutatedTargets));
     }
@@ -659,6 +683,8 @@ public sealed class OutputRootApprovalTests
                 }
                 var args = new JsonObject();
                 foreach (var property in properties) args[property.Key] = property.Key;
+                if (OutputCoverage.TryGetValue(name, out var coverage))
+                    foreach (string parameter in coverage.Names) args[parameter] = coverage.Canonical;
                 bool output = false;
                 foreach (string action in actions)
                 {
@@ -671,6 +697,18 @@ public sealed class OutputRootApprovalTests
                     }
                 }
                 if (IsFile(metadata, name)) Assert.True(output || exceptions.Contains(name), name);
+                if (coverage != null)
+                    foreach (string parameter in coverage.Names)
+                    {
+                        Assert.True(properties.ContainsKey(parameter), name + ": expected schema parameter " + parameter);
+                        bool detected = false;
+                        foreach (string action in actions)
+                        {
+                            var isolated = new JsonObject { [parameter] = coverage.Canonical, ["action"] = action };
+                            if (targets(name, isolated).Contains(coverage.Canonical)) detected = true;
+                        }
+                        Assert.True(detected, name + ": undetected output parameter " + parameter);
+                    }
             }
         }
         Assert.Equal(ExpectedOutputs.Keys.OrderBy(name => name), schemaCovered.OrderBy(name => name));

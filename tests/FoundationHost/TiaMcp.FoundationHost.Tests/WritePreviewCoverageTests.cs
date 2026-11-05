@@ -558,7 +558,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         arguments["dryRun"] = true;
         arguments.Remove("expectedPlanHash");
         arguments.Remove("expectedProjectFile");
-        using var inputs = new PreviewInputFixture(arguments);
+        using var inputs = new PreviewInputFixture(name, arguments);
         if (name is "InvokeObject" or "InvokeService") arguments["allowWrite"] = true;
         if (name == "ManageOnlineDriveFunctions") arguments["action"] = "performRamToRomCopy";
         foreach (string field in new[] { "dryRun", "expectedPlanHash", "expectedProjectFile" })
@@ -580,7 +580,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         private readonly string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "bin-build", "preview-example-" + Guid.NewGuid().ToString("N"));
-        internal PreviewInputFixture(JsonObject arguments)
+        internal PreviewInputFixture(string tool, JsonObject arguments)
         {
             Directory.CreateDirectory(root);
             // These previews read caller bytes but never invoke the native format parser.
@@ -588,7 +588,11 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             string xml = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
                 "templates", "mcp-full-e2e-verify", "import", "MCP_E2E_Tags.xml");
             if (arguments.ContainsKey("importPath")) arguments["importPath"] = xml;
-            foreach (string parameter in new[] { "dir", "referenceDir", "libraryPath" })
+            var inputDirectories = new[] { "dir", "referenceDir", "libraryPath" }.Concat(
+                TiaMcp.Logic.V4.CanonicalToolParameters.Aliases(tool)
+                    .Where(alias => alias.Canonical == "sourceDirectory")
+                    .SelectMany(alias => new[] { alias.Legacy, alias.Canonical })).Distinct();
+            foreach (string parameter in inputDirectories)
                 if (arguments.ContainsKey(parameter))
                 {
                     File.Copy(xml, Path.Combine(root, "MCP_E2E_Tags.xml"), overwrite: true);

@@ -310,11 +310,16 @@ public sealed class UnifiedPortAdmissionTests
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments)
         => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) { Params = new() { Name = name,
             Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
-    private static JsonObject Arguments(string name)
+    private static JsonObject Arguments(string name, string? action = null)
     {
         var root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(Path.GetDirectoryName(typeof(UnifiedPortAdmissionTests).Assembly.Location)!);
         var source = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference/tool-examples/calls.json")))!;
-        return source["profiles"]!["full-engine"]![name]!["arguments"]!.DeepClone().AsObject();
+        var example = source["profiles"]!["full-engine"]![name]!;
+        var arguments = example["arguments"]!.DeepClone().AsObject();
+        if (action != null && name is "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules"
+            && example["operations"]?[action]?["arguments"] is JsonObject operation)
+            foreach (var pair in operation) arguments[pair.Key] = pair.Value?.DeepClone();
+        return arguments;
     }
 
     [Theory]
@@ -569,7 +574,7 @@ public sealed class UnifiedPortAdmissionTests
             ? new FoundationV4Tool(PortedToolContract.Create(worker, release).Single(t => t.ProtocolTool.Name == name),
                 release, approvalWait: Wait)
             : tools.Single(t => t.ProtocolTool.Name == name);
-        var arguments = Arguments(name); arguments["dryRun"] = preview;
+        var arguments = Arguments(name, action); arguments["dryRun"] = preview;
         if (name is "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" or "ImportUnifiedOpcUaAlarms") arguments["action"] = action;
         if (release == "19" && name == "ManageUnifiedEngineeringObject") arguments["category"] = "alarmClasses";
         var directory = Path.Combine(AppContext.BaseDirectory, "unified-approval", Guid.NewGuid().ToString("N"));
@@ -577,8 +582,9 @@ public sealed class UnifiedPortAdmissionTests
         var input = Path.Combine(directory, "input.xml"); File.WriteAllText(input, "<Document />");
         foreach (var field in new[] { "filePath", "xmlPath" })
             if (arguments.ContainsKey(field)) arguments[field] = input;
-        if (arguments.ContainsKey("directory")) arguments["directory"] = action == "export"
-            ? TiaOpenness.Shared.DataLocations.Current.OutputRoot : directory;
+        foreach (string parameter in new[] { "directory", "exportDirectory", "sourceDirectory" })
+            if (arguments.ContainsKey(parameter)) arguments[parameter] = action == "export"
+                ? TiaOpenness.Shared.DataLocations.Current.OutputRoot : directory;
         if (name == "ExchangeUnifiedScriptModules")
         {
             var script = Path.Combine(directory, arguments["fileName"]!.GetValue<string>());
