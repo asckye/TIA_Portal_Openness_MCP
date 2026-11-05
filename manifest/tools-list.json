@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.3_20261104",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-05T05:33:23.5047052+00:00",
+  "generatedAt": "2026-11-05T06:45:08.6013383+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "0014aeac4c8afac250f8a44cfd97cb994315fa06958f5755f08640c98e6715d6",
-  "workerSha256": "17fe6b49a4dcf08be3aa5647a0834a5a4f154f889da3a21d3991976cd033a7bd",
+  "workerSha256": "8c641e43dd2d52291e146062b7379d6e973d836c824e3f437f9ea548876c96a2",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2685,
+    "parameters": 2766,
     "parametersUndocumented": 850,
     "parametersFromVocabulary": 699,
     "toolsWithUndocumentedParameters": 216,
     "toolsWithEnumHints": 164,
     "enumHints": 255,
-    "defaultHints": 1519,
+    "defaultHints": 1600,
     "examplesCurated": 517,
     "recipes": 40
   },
@@ -1491,10 +1491,13 @@
         "action",
         "resetMode",
         "activationState",
-        "confirmOnline"
+        "confirmOnline",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Hardware][ONLINE-WRITE] OnlineDriveFunctionInterface of the connected drive: read reports DriveDomainFunctions / HardwareProjection / FunctionInUse availability and the activation state; performFactoryReset {resetMode ParameterReset|SafetyParameterReset} and performRamToRomCopy (DriveDomainFunctions.PerformFactoryReset / PerformRAMtoROMCopyAllDriveObject) and changeActivationState {activationState} act on the real drive and need confirmOnline=true. No dryRun: the read action is the preview. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageOnlineDriveFunctions\"), optionally operation or language.",
-      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"confirmOnline\":false,\"action\":\"read\"}"
+      "description": "[L2][Hardware][ONLINE-WRITE] OnlineDriveFunctionInterface of the connected drive: read reports DriveDomainFunctions / HardwareProjection / FunctionInUse availability and the activation state; performFactoryReset {resetMode ParameterReset|SafetyParameterReset} and performRamToRomCopy (DriveDomainFunctions.PerformFactoryReset / PerformRAMtoROMCopyAllDriveObject) and changeActivationState {activationState} act on the real drive and need confirmOnline=true. The read action executes without a write preview. Current native policy; V4 native acceptance is pending. For write actions, default dryRun=true previews; execution requires dryRun=false, expectedPlanHash from that preview, and the exact bound expectedProjectFile. Existing approval/native checks and read actions remain. Examples: GetToolUsage(toolName: \"ManageOnlineDriveFunctions\"), optionally operation or language.",
+      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"confirmOnline\":false,\"action\":\"read\",\"dryRun\":true}"
     },
     {
       "name": "ManageNetworkDomain",
@@ -1641,7 +1644,7 @@
         "limit",
         "offset"
       ],
-      "description": "[L1][Exports][READ] List this engine session's parked responses with content identity and SHA-256. Empty is a complete result. limit caps the returned handles. Example: {\"tool\":\"ListPlcBlocks\",\"limit\":10} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ListExportHandles\"), optionally operation or language.",
+      "description": "[L1][Exports][READ] List this service session's parked responses with content identity and SHA-256. Empty is a complete result. limit caps the returned handles. Example: {\"tool\":\"ListPlcBlocks\",\"limit\":10} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ListExportHandles\"), optionally operation or language.",
       "example": "{\"tool\":\"ListPlcBlocks\",\"limit\":10}"
     },
     {
@@ -1815,10 +1818,13 @@
         "methodName",
         "softwarePath",
         "allowWrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile",
         "args"
       ],
-      "description": "[L2][Reflection][WRITE]GetService bridge: invoke a uniquely convertible non-generic overload on a Siemens.Engineering service (exact full type name or unique suffix). Ambiguous matches are refused. Guarded Safety, SafetyValidation, protection and UMAC writes must use their dedicated tools. Examples: GetToolUsage(toolName: \"InvokeService\"), optionally operation or language.",
-      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"serviceTypeSuffix\":\"\\u003Cservice selected from DescribeObject\\u003E\",\"methodName\":\"\\u003Cmethod selected from DescribeObject/DescribeService\\u003E\"}"
+      "description": "[L2][Reflection][WRITE]GetService bridge: invoke a uniquely convertible non-generic overload on a Siemens.Engineering service (exact full type name or unique suffix). Ambiguous matches are refused. Guarded Safety, SafetyValidation, protection and UMAC writes must use their dedicated tools. For write actions, default dryRun=true previews; execution requires dryRun=false, expectedPlanHash from that preview, and the exact bound expectedProjectFile. Existing approval/native checks and read actions remain. Examples: GetToolUsage(toolName: \"InvokeService\"), optionally operation or language.",
+      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"serviceTypeSuffix\":\"\\u003Cservice selected from DescribeObject\\u003E\",\"methodName\":\"\\u003Cmethod selected from DescribeObject/DescribeService\\u003E\",\"dryRun\":true}"
     },
     {
       "name": "InvokeObject",
@@ -1835,10 +1841,13 @@
         "methodName",
         "softwarePath",
         "allowWrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile",
         "args"
       ],
-      "description": "[L2][Reflection][WRITE]Invoke an Openness method via reflection. Default is read-oriented; set allowWrite=true only after DescribeObject confirms the target method/signature. Only a unique convertible non-generic overload is invoked. Writes to guarded Safety/SafetyValidation, protection and UMAC surfaces must use their dedicated tools. Examples: GetToolUsage(toolName: \"InvokeObject\"), optionally operation or language.",
-      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"methodName\":\"\\u003Cmethod selected from DescribeObject/DescribeService\\u003E\"}"
+      "description": "[L2][Reflection][WRITE]Invoke an Openness method via reflection. Default is read-oriented; set allowWrite=true only after DescribeObject confirms the target method/signature. Only a unique convertible non-generic overload is invoked. Writes to guarded Safety/SafetyValidation, protection and UMAC surfaces must use their dedicated tools. For write actions, default dryRun=true previews; execution requires dryRun=false, expectedPlanHash from that preview, and the exact bound expectedProjectFile. Existing approval/native checks and read actions remain. Examples: GetToolUsage(toolName: \"InvokeObject\"), optionally operation or language.",
+      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"methodName\":\"\\u003Cmethod selected from DescribeObject/DescribeService\\u003E\",\"dryRun\":true}"
     },
     {
       "name": "ListHmiScreens",
@@ -1944,10 +1953,13 @@
         "folderPath",
         "dir",
         "regexName",
-        "overwrite"
+        "overwrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE]Batch import PLC technology object .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportTechnologyObjectsFromDirectory\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\"}"
+      "description": "[L2][PLC-Software][WRITE]Batch import PLC technology object .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportTechnologyObjectsFromDirectory\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true}"
     },
     {
       "name": "ImportTechnologyObject",
@@ -1961,10 +1973,13 @@
       "parameters": [
         "softwarePath",
         "folderPath",
-        "importPath"
+        "importPath",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE]Import one PLC Technology Object XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportTechnologyObject\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
+      "description": "[L2][PLC-Software][WRITE]Import one PLC Technology Object XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportTechnologyObject\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"dryRun\":true}"
     },
     {
       "name": "ImportProjectTexts",
@@ -2818,10 +2833,13 @@
         "screenName",
         "tagTableName",
         "plcName",
-        "connectionName"
+        "connectionName",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][HMI-Unified][WRITE] SHORTCUT for motor start/stop HMI. Verifies an existing connection using exact Partner/CommunicationDriver/InitialAddress readback before any writes; unverified automatic configuration refuses and stops the shortcut. Ensures 4 HMI tags (StartPB/StopPB/EStop/RunOut) with symbolic PLC binding, and attempts a simple styled Main screen; caption-language selection, V19/V20 pressed-state support and lamp color mapping remain unverified and incomplete steps are reported. Requires: ConnectPortal + OpenProject + PLC + Unified HMI. Call after EnsureUnifiedHmiScreen if you need a fixed screen size. Idempotent. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SetUnifiedHmiRuntimeState\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\"}"
+      "description": "[L2][HMI-Unified][WRITE] SHORTCUT for motor start/stop HMI. Verifies an existing connection using exact Partner/CommunicationDriver/InitialAddress readback before any writes; unverified automatic configuration refuses and stops the shortcut. Ensures 4 HMI tags (StartPB/StopPB/EStop/RunOut) with symbolic PLC binding, and attempts a simple styled Main screen; caption-language selection, V19/V20 pressed-state support and lamp color mapping remain unverified and incomplete steps are reported. Requires: ConnectPortal + OpenProject + PLC + Unified HMI. Call after EnsureUnifiedHmiScreen if you need a fixed screen size. Idempotent. Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"SetUnifiedHmiRuntimeState\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "SetUnifiedHmiButtonEventScriptCode",
@@ -2840,10 +2858,13 @@
         "scriptCode",
         "globalDefinitionAreaScriptCode",
         "async",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile",
         "syntaxCheck"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Set ScriptCode on a Unified HMI button event ScriptDynamization. SyntaxCheck is OFF by default because on TIA V21 it can crash the Portal process and lose the script (issue #36); pass syntaxCheck=true only when you need that evidence. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SetUnifiedHmiButtonEventScriptCode\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"scriptCode\":\"HMIRuntime.Tags(\\u0022Ready\\u0022).Read();\"}"
+      "description": "[L2][HMI-Unified][WRITE]Set ScriptCode on a Unified HMI button event ScriptDynamization. SyntaxCheck is OFF by default because on TIA V21 it can crash the Portal process and lose the script (issue #36); pass syntaxCheck=true only when you need that evidence. Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"SetUnifiedHmiButtonEventScriptCode\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"scriptCode\":\"HMIRuntime.Tags(\\u0022Ready\\u0022).Read();\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "SetUnifiedGlobalScript",
@@ -2901,10 +2922,13 @@
         "tableName",
         "address",
         "modifyValue",
-        "trigger"
+        "trigger",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc][ONLINE-WRITE] Configure a watch table entry to write a value to a PLC variable once (or on a trigger). This is an OFFLINE CONFIGURATION step — the value is written to the PLC only when TIA Portal is online and the trigger fires. Trigger options: Permanent (every cycle), PermanentAtStart (every cycle, at scan start), OnceOnlyAtStart (single write at scan start), PermanentAtEnd, OnceOnlyAtEnd, OnceOnlyAtStop. Use ConnectOnlinePlc before calling this for the write to reach the PLC. SAFETY: the target is a variable in the physical CPU, not a simulation. The moment the trigger fires the value lands on the real address — if that address is a coil, a valve, a contactor or a drive enable, the machine moves at that instant, with no acknowledgement step. Before calling, know exactly what the address drives and confirm nobody is at or inside the machine. The resulting physical motion is NOT undone by calling this tool again with another value; the equipment stays wherever it moved to. Not a Force: this writes the value once per trigger event and the variable then follows PLC logic again (a force would keep overriding the program continuously). This server exposes no tool for force entries — ListPlcForceTables only lists them; use TIA Portal directly to force a value. Implementation (2.7.50): the typed Openness API cannot create tag rows (PlcWatchTable.Entries.Create() only makes comment rows), so the table is exported, the row added or updated in the SimaticML and the table re-imported (override mode) into its own group; the row is read back (meta.after, readbackVerified). Project not saved. Example: SetPlcWatchTableModifyValue('PLC_1', 'Debug_WT', 'DB1.DBX0.0', 'TRUE', 'OnceOnlyAtStart') Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"tableName\":\"MCP_W/MCP_WT\",\"address\":\"%M0.0\",\"modifyValue\":\"TRUE\",\"trigger\":\"OnceOnlyAtStart\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"SetPlcWatchTableModifyValue\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"tableName\":\"MCP_W/MCP_WT\",\"address\":\"%M0.0\",\"modifyValue\":\"TRUE\",\"trigger\":\"OnceOnlyAtStart\"}"
+      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc][ONLINE-WRITE] Configure a watch table entry to write a value to a PLC variable once (or on a trigger). This is an OFFLINE CONFIGURATION step — the value is written to the PLC only when TIA Portal is online and the trigger fires. Trigger options: Permanent (every cycle), PermanentAtStart (every cycle, at scan start), OnceOnlyAtStart (single write at scan start), PermanentAtEnd, OnceOnlyAtEnd, OnceOnlyAtStop. Use ConnectOnlinePlc before calling this for the write to reach the PLC. SAFETY: the target is a variable in the physical CPU, not a simulation. The moment the trigger fires the value lands on the real address — if that address is a coil, a valve, a contactor or a drive enable, the machine moves at that instant, with no acknowledgement step. Before calling, know exactly what the address drives and confirm nobody is at or inside the machine. The resulting physical motion is NOT undone by calling this tool again with another value; the equipment stays wherever it moved to. Not a Force: this writes the value once per trigger event and the variable then follows PLC logic again (a force would keep overriding the program continuously). This server exposes no tool for force entries — ListPlcForceTables only lists them; use TIA Portal directly to force a value. Implementation (2.7.50): the typed Openness API cannot create tag rows (PlcWatchTable.Entries.Create() only makes comment rows), so the table is exported, the row added or updated in the SimaticML and the table re-imported (override mode) into its own group; the row is read back (meta.after, readbackVerified). Project not saved. Example: SetPlcWatchTableModifyValue('PLC_1', 'Debug_WT', 'DB1.DBX0.0', 'TRUE', 'OnceOnlyAtStart') Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Example: {\"softwarePath\":\"PLC_1\",\"tableName\":\"MCP_W/MCP_WT\",\"address\":\"%M0.0\",\"modifyValue\":\"TRUE\",\"trigger\":\"OnceOnlyAtStart\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"SetPlcWatchTableModifyValue\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"tableName\":\"MCP_W/MCP_WT\",\"address\":\"%M0.0\",\"modifyValue\":\"TRUE\",\"trigger\":\"OnceOnlyAtStart\",\"dryRun\":true}"
     },
     {
       "name": "SetPlcUnitObjectAccess",
@@ -2971,10 +2995,13 @@
       "returnType": "CallToolResult",
       "parameters": [
         "cpuPath",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile",
         "settings"
       ],
-      "description": "[L2][Hardware][WRITE] Set CPU common settings using exactAttributes object only after reading exact attribute names from GetDeviceItemInfo/GetDeviceItemNetworkInfo. The tool writes only those exact attributes, rejects missing/non-writable attributes, and returns readback evidence. Examples: GetToolUsage(toolName: \"SetPlcCpuSettings\"), optionally operation or language.",
-      "example": "{\"cpuPath\":\"PLC_1/CPU_1\",\"settings\":{\"exactAttributes\":{\"Name\":\"PLC_1\"}}}"
+      "description": "[L2][Hardware][WRITE] Set CPU common settings using exactAttributes object only after reading exact attribute names from GetDeviceItemInfo/GetDeviceItemNetworkInfo. The tool writes only those exact attributes, rejects missing/non-writable attributes, and returns readback evidence. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"SetPlcCpuSettings\"), optionally operation or language.",
+      "example": "{\"cpuPath\":\"PLC_1/CPU_1\",\"settings\":{\"exactAttributes\":{\"Name\":\"PLC_1\"}},\"dryRun\":true}"
     },
     {
       "name": "SetOpcUaInterfaceEnabled",
@@ -2989,10 +3016,13 @@
         "softwarePath",
         "interfaceName",
         "enabled",
-        "interfaceType"
+        "interfaceType",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][WRITE] Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace. Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU. interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SetOpcUaInterfaceEnabled\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"enabled\":false}"
+      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][WRITE] Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace. Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU. interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"SetOpcUaInterfaceEnabled\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"enabled\":false,\"dryRun\":true}"
     },
     {
       "name": "SetDeviceItemIoAddress",
@@ -3045,10 +3075,13 @@
       "parameters": [
         "deviceItemPath",
         "attributeName",
-        "value"
+        "value",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Hardware][WRITE]Set one exact DeviceItem attribute by name with type coercion and detailed error return. Use GetDeviceItemInfo/GetDeviceItemNetworkInfo first. Examples: GetToolUsage(toolName: \"SetDeviceItemAttribute\"), optionally operation or language.",
-      "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"attributeName\":\"Name\",\"value\":\"TRUE\"}"
+      "description": "[L2][Hardware][WRITE]Set one exact DeviceItem attribute by name with type coercion and detailed error return. Use GetDeviceItemInfo/GetDeviceItemNetworkInfo first. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"SetDeviceItemAttribute\"), optionally operation or language.",
+      "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"attributeName\":\"Name\",\"value\":\"TRUE\",\"dryRun\":true}"
     },
     {
       "name": "SetUnifiedLogDuration",
@@ -3291,7 +3324,7 @@
         "operations",
         "expectedProject"
       ],
-      "description": "[L2][Meta][READ] Sequentially invoke 1..50 explicit [READ] tools or GetSessionState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot. Examples: GetToolUsage(toolName: \"RunReadOnlyToolBatch\"), optionally operation or language.",
+      "description": "[L2][Meta][READ] Sequentially invoke 1..50 tools explicitly admitted by BatchRead metadata or GetSessionState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot. Examples: GetToolUsage(toolName: \"RunReadOnlyToolBatch\"), optionally operation or language.",
       "example": "{\"operations\":[{\"name\":\"GetOpennessGuidance\",\"arguments\":{\"query\":\"threading\"}}]}"
     },
     {
@@ -3345,10 +3378,13 @@
         "hmiSoftwarePath",
         "referenceDir",
         "placeholders",
-        "overwrite"
+        "overwrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE]Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace). PLC data types are imported before blocks, and blocks in the official order (FB/FC, global DB, instance DB, OB). Every PLC file's SimaticML Engineering version must be inside this release's documented import window (checked before the first import; never rewritten). overwrite=false (default) refuses existing PLC types and blocks of the same name before their import; overwrite=true replaces them (Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SeedProjectFromReference\"), optionally operation or language.",
-      "example": "{\"plcSoftwarePath\":\"PLC_1\",\"hmiSoftwarePath\":\"HMI_RT_1\",\"referenceDir\":\"C:\\\\Examples\\\\reference\"}"
+      "description": "[L2][PLC-Software][WRITE]Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace). PLC data types are imported before blocks, and blocks in the official order (FB/FC, global DB, instance DB, OB). Every PLC file's SimaticML Engineering version must be inside this release's documented import window (checked before the first import; never rewritten). overwrite=false (default) refuses existing PLC types and blocks of the same name before their import; overwrite=true replaces them (Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"SeedProjectFromReference\"), optionally operation or language.",
+      "example": "{\"plcSoftwarePath\":\"PLC_1\",\"hmiSoftwarePath\":\"HMI_RT_1\",\"referenceDir\":\"C:\\\\Examples\\\\reference\",\"dryRun\":true}"
     },
     {
       "name": "SetUnifiedMultilingualProperty",
@@ -4457,7 +4493,7 @@
         "applicationId",
         "dryRun"
       ],
-      "description": "[L2][VersionControl][WRITE] Teamcenter Gateway connection of this engine session (TiaPortal.GetService<TeamcenterConnectionProvider>): read (connected, group, role, SHA-256 prefix of the session token, provider availability), connect (Connect(userName, password as SecureString - never logged, group, role, hostUrl, instance)), connectSso (ConnectSSO(hostUrl, instance, loginUrl, applicationId); without an active SSO session Teamcenter prompts in a browser), disconnect (Disconnect(info)). One connection per session; the info object stays in engine memory for ManageTeamcenterDataset / ManageTeamcenterWorkflow. Default preview; project unchanged. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageTeamcenterConnection\"), optionally operation or language.",
+      "description": "[L2][VersionControl][WRITE] Teamcenter Gateway connection of this service session (TiaPortal.GetService<TeamcenterConnectionProvider>): read (connected, group, role, SHA-256 prefix of the session token, provider availability), connect (Connect(userName, password as SecureString - never logged, group, role, hostUrl, instance)), connectSso (ConnectSSO(hostUrl, instance, loginUrl, applicationId); without an active SSO session Teamcenter prompts in a browser), disconnect (Disconnect(info)). One connection per session; the info object stays in engine memory for ManageTeamcenterDataset / ManageTeamcenterWorkflow. Default preview; project unchanged. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageTeamcenterConnection\"), optionally operation or language.",
       "example": "{\"dryRun\":true,\"action\":\"read\"}"
     },
     {
@@ -5061,7 +5097,7 @@
         "operations",
         "expectedProject"
       ],
-      "description": "[L2][Meta][READ] Preview 1..50 explicit [WRITE] tools with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute previewToken bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage. Examples: GetToolUsage(toolName: \"PreviewToolBatch\"), optionally operation or language.",
+      "description": "[L2][Meta][READ] Preview 1..50 tools explicitly admitted by BatchWrite metadata with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute previewToken bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage. Examples: GetToolUsage(toolName: \"PreviewToolBatch\"), optionally operation or language.",
       "example": "{\"expectedProject\":\"Example\",\"operations\":[{\"name\":\"ManagePlcExternalSources\",\"arguments\":{\"softwarePath\":\"PLC_1\",\"action\":\"createGroup\",\"name\":\"ExampleSources\",\"dryRun\":true}}]}"
     },
     {
@@ -5544,7 +5580,7 @@
       "parameters": [
         "exportId"
       ],
-      "description": "[L1][Exports][WRITE] Delete one parked response from this engine session. A missing or expired handle returns NOT_FOUND. Example: {\"exportId\":\"\\u003CexportId from response\\u003E\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DeleteExportHandle\"), optionally operation or language.",
+      "description": "[L1][Exports][WRITE] Delete one parked response from this service session. A missing or expired handle returns NOT_FOUND. Example: {\"exportId\":\"\\u003CexportId from response\\u003E\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DeleteExportHandle\"), optionally operation or language.",
       "example": "{\"exportId\":\"\\u003CexportId from response\\u003E\"}"
     },
     {
@@ -5609,10 +5645,13 @@
       "returnType": "CallToolResult",
       "parameters": [
         "workspaceName",
-        "folderPath"
+        "folderPath",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][VersionControl][WRITE] Create a VCI workspace pointing at a folder on disk — normally the working tree of a Git repository, so every synchronized export lands where Git can commit it. Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace afterwards to map the whole project (or one device) automatically. Workspace-language selection at creation is not exposed. Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateVersionControlWorkspace\"), optionally operation or language.",
-      "example": "{\"workspaceName\":\"Engineering\",\"folderPath\":\"\"}"
+      "description": "[L2][VersionControl][WRITE] Create a VCI workspace pointing at a folder on disk — normally the working tree of a Git repository, so every synchronized export lands where Git can commit it. Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace afterwards to map the whole project (or one device) automatically. Workspace-language selection at creation is not exposed. Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"CreateVersionControlWorkspace\"), optionally operation or language.",
+      "example": "{\"workspaceName\":\"Engineering\",\"folderPath\":\"\",\"dryRun\":true}"
     },
     {
       "name": "CreateProject",
@@ -5828,10 +5867,13 @@
       "parameters": [
         "keyword",
         "deviceName",
-        "preferredDap"
+        "preferredDap",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Hardware][WRITE]Add one third-party GSD/GSDML device from the installed TIA hardware catalog (V18+). keyword must be the exact catalog TypeIdentifier of one candidate (from SearchInstalledGsdDevices or SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredDap only ranks them); GSDML file rows without a catalog TypeIdentifier are never created. One DeviceComposition.CreateWithItem call: no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the candidates. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateGsdDevice\"), optionally operation or language.",
-      "example": "{\"keyword\":\"\\u003Cexact catalog TypeIdentifier from SearchInstalledGsdDevices\\u003E\",\"deviceName\":\"PLC_2\"}"
+      "description": "[L2][Hardware][WRITE]Add one third-party GSD/GSDML device from the installed TIA hardware catalog (V18+). keyword must be the exact catalog TypeIdentifier of one candidate (from SearchInstalledGsdDevices or SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredDap only ranks them); GSDML file rows without a catalog TypeIdentifier are never created. One DeviceComposition.CreateWithItem call: no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the candidates. Native behaviorPolicy=current; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"CreateGsdDevice\"), optionally operation or language.",
+      "example": "{\"keyword\":\"\\u003Cexact catalog TypeIdentifier from SearchInstalledGsdDevices\\u003E\",\"deviceName\":\"PLC_2\",\"dryRun\":true}"
     },
     {
       "name": "DeleteEmptyPlcBlockGroup",
@@ -6290,10 +6332,13 @@
       "parameters": [
         "anchorDeviceItemPath",
         "subnetType",
-        "subnetName"
+        "subnetName",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Hardware][WRITE] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. An existing subnet of that name in Project.Subnets is reported without changes; otherwise the anchor's free IE node creates it (Node.CreateAndConnectToSubnet). An anchor node attached to another subnet is refused. Returns readback evidence (Project.Subnets, Node.ConnectedSubnet, node path, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"EnsureSubnet\"), optionally operation or language.",
-      "example": "{\"anchorDeviceItemPath\":\"PLC_1/CPU_1\",\"subnetType\":\"System:Subnet.Ethernet\",\"subnetName\":\"PN_IE_1\"}"
+      "description": "[L2][Hardware][WRITE] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. An existing subnet of that name in Project.Subnets is reported without changes; otherwise the anchor's free IE node creates it (Node.CreateAndConnectToSubnet). An anchor node attached to another subnet is refused. Returns readback evidence (Project.Subnets, Node.ConnectedSubnet, node path, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"EnsureSubnet\"), optionally operation or language.",
+      "example": "{\"anchorDeviceItemPath\":\"PLC_1/CPU_1\",\"subnetType\":\"System:Subnet.Ethernet\",\"subnetName\":\"PN_IE_1\",\"dryRun\":true}"
     },
     {
       "name": "EnsureOpennessUserGroup",
@@ -6364,10 +6409,13 @@
         "allowIdentificationDataLoad",
         "allowNonTlsLogin",
         "downloadScope",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile",
         "promptAnswers"
       ],
-      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware+CheckDownloadReadiness][ONLINE-WRITE] Download the compiled PLC program to the physical CPU over the network. The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload). SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior. Workflow: ConnectPortal → OpenProject → CompilePlcSoftware → CheckDownloadReadiness → DownloadPlc → GetOnlineState. The PLC must be offline (call DisconnectOnlinePlc first): the route is applied with ConnectionConfiguration.ApplyConfiguration, which throws while the device is online, and the download connects by itself. On success State=Success or Warning. On Error check Errors[] for details. Prompt answers: StopModules / StartModules follow stopBeforeDownload / startAfterDownload, DataBlockReinitialization follows keepActualValues, AllBlocksDownload follows consistentBlocksOnly, UserManagementDownload follows userManagementMode; destructive prompts answer NoAction; promptAnswers names others. Refused unless the request allows them: SafetyProgram (allowSafetyProgramDownload), DifferentTargetConfiguration (allowHardwareDifferences), ActiveTestCanBeAborted / ActiveTestCanPreventDownload (allowActiveTestCancel), ExpandDownload (allowExpandedDownload) and LoadIdentificationData (allowIdentificationDataLoad); the download stops at such a prompt and the result names it and the parameter that allows it. The approval request lists every prompt answer the call will give (promptAnswerPlan). On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU); Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong; an explicit route that ApplyConfiguration does not apply is refused, only an automatic pick continues unconfirmed (Meta.routeApplied=false). S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=false (default) makes TIA refuse an untrusted certificate, true answers Trusted; Meta.tlsVerification records the decision and, on V21, the presented certificates. A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DownloadPlc\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\"}"
+      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware+CheckDownloadReadiness][ONLINE-WRITE] Download the compiled PLC program to the physical CPU over the network. The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload). SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior. Workflow: ConnectPortal → OpenProject → CompilePlcSoftware → CheckDownloadReadiness → DownloadPlc → GetOnlineState. The PLC must be offline (call DisconnectOnlinePlc first): the route is applied with ConnectionConfiguration.ApplyConfiguration, which throws while the device is online, and the download connects by itself. On success State=Success or Warning. On Error check Errors[] for details. Prompt answers: StopModules / StartModules follow stopBeforeDownload / startAfterDownload, DataBlockReinitialization follows keepActualValues, AllBlocksDownload follows consistentBlocksOnly, UserManagementDownload follows userManagementMode; destructive prompts answer NoAction; promptAnswers names others. Refused unless the request allows them: SafetyProgram (allowSafetyProgramDownload), DifferentTargetConfiguration (allowHardwareDifferences), ActiveTestCanBeAborted / ActiveTestCanPreventDownload (allowActiveTestCancel), ExpandDownload (allowExpandedDownload) and LoadIdentificationData (allowIdentificationDataLoad); the download stops at such a prompt and the result names it and the parameter that allows it. The approval request lists every prompt answer the call will give (promptAnswerPlan). On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU); Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong; an explicit route that ApplyConfiguration does not apply is refused, only an automatic pick continues unconfirmed (Meta.routeApplied=false). S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=false (default) makes TIA refuse an untrusted certificate, true answers Trusted; Meta.tlsVerification records the decision and, on V21, the presented certificates. A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Native behaviorPolicy=current; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Example: {\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DownloadPlc\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\",\"dryRun\":true}"
     },
     {
       "name": "DisconnectPortal",
@@ -6824,10 +6872,13 @@
         "deviceItemPath",
         "interfaceIndex",
         "subnetName",
-        "anchorDeviceItemPath"
+        "anchorDeviceItemPath",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Hardware][WRITE] Attach one real device network node to an existing PROFINET subnet (found in Project.Subnets) with Node.ConnectToSubnet and verify Node.ConnectedSubnet. A node already on that subnet is left unchanged; a node attached to another subnet is refused (no implicit disconnect). deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"AttachDeviceNodeToSubnet\"), optionally operation or language.",
-      "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"interfaceIndex\":1,\"subnetName\":\"PN_IE_1\"}"
+      "description": "[L2][Hardware][WRITE] Attach one real device network node to an existing PROFINET subnet (found in Project.Subnets) with Node.ConnectToSubnet and verify Node.ConnectedSubnet. A node already on that subnet is left unchanged; a node attached to another subnet is refused (no implicit disconnect). deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"AttachDeviceNodeToSubnet\"), optionally operation or language.",
+      "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"interfaceIndex\":1,\"subnetName\":\"PN_IE_1\",\"dryRun\":true}"
     },
     {
       "name": "ArchiveSavedProject",
@@ -7114,10 +7165,13 @@
       "parameters": [
         "firstRootPath",
         "secondRootPath",
-        "subnetName"
+        "subnetName",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L1][Hardware][WRITE] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices and connects both to subnetName: an existing subnet of that name in Project.Subnets is joined explicitly, otherwise it is created on the first node (Node.CreateAndConnectToSubnet). A node already attached to another subnet is refused before any write; success is the Node.ConnectedSubnet read-back of both nodes, and the HMI connections are read from the HMI software under the second root. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"firstRootPath\":\"PLC_1\",\"secondRootPath\":\"HMI_KTP700_1/HMI_KTP700_1.IE_CP_1\",\"subnetName\":\"PN_IE_1\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ConnectDeviceNodesToProfinetSubnet\"), optionally operation or language.",
-      "example": "{\"firstRootPath\":\"PLC_1\",\"secondRootPath\":\"HMI_KTP700_1/HMI_KTP700_1.IE_CP_1\",\"subnetName\":\"PN_IE_1\"}"
+      "description": "[L1][Hardware][WRITE] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices and connects both to subnetName: an existing subnet of that name in Project.Subnets is joined explicitly, otherwise it is created on the first node (Node.CreateAndConnectToSubnet). A node already attached to another subnet is refused before any write; success is the Node.ConnectedSubnet read-back of both nodes, and the HMI connections are read from the HMI software under the second root. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Example: {\"firstRootPath\":\"PLC_1\",\"secondRootPath\":\"HMI_KTP700_1/HMI_KTP700_1.IE_CP_1\",\"subnetName\":\"PN_IE_1\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ConnectDeviceNodesToProfinetSubnet\"), optionally operation or language.",
+      "example": "{\"firstRootPath\":\"PLC_1\",\"secondRootPath\":\"HMI_KTP700_1/HMI_KTP700_1.IE_CP_1\",\"subnetName\":\"PN_IE_1\",\"dryRun\":true}"
     },
     {
       "name": "ConfigureMotionHardwareConnection",
@@ -7398,7 +7452,7 @@
         "repository",
         "timeoutSeconds"
       ],
-      "description": "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact updater command. The engine never replaces its own files: run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root> and -Check to inspect or without -Check to update. It refuses while an engine, Foundation host, worker or Workbench from this bundle runs, lists PIDs and never kills processes; -Rollback restores the previous install. The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal. Example: {} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CheckProductUpdate\"), optionally operation or language.",
+      "description": "[L0][Diagnostics][SESSION] Read-only update check: compares this service's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact updater command. The service never replaces its own files: run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root> and -Check to inspect or without -Check to update. It refuses while an engine, Foundation host, worker or Workbench from this bundle runs, lists PIDs and never kills processes; -Rollback restores the previous install. The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal. Example: {} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CheckProductUpdate\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -8258,10 +8312,13 @@
       "parameters": [
         "softwarePath",
         "importPath",
-        "interfaceType"
+        "interfaceType",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][WRITE] Import an OPC UA server interface or reference namespace from an XML file. If an interface with the same name (derived from the file name) already exists, it is updated in place. Otherwise a new interface is created. Download to PLC after import to apply changes to the CPU. interfaceType: 'ServerInterface' (default), 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportOpcUaInterface\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
+      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][WRITE] Import an OPC UA server interface or reference namespace from an XML file. If an interface with the same name (derived from the file name) already exists, it is updated in place. Otherwise a new interface is created. Download to PLC after import to apply changes to the CPU. interfaceType: 'ServerInterface' (default), 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportOpcUaInterface\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"dryRun\":true}"
     },
     {
       "name": "ImportMasterCopyFromGlobalLibrary",
@@ -8279,10 +8336,13 @@
         "screenName",
         "importedItemName",
         "left",
-        "top"
+        "top",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][HMI-Library][WRITE] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen item is modified. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportMasterCopyFromGlobalLibrary\"), optionally operation or language.",
-      "example": "{\"libraryPath\":\"C:\\\\Examples\\\\Library.al21\",\"masterCopyName\":\"FB_Motor\",\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\"}"
+      "description": "[L2][HMI-Library][WRITE] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen item is modified. Current native policy; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportMasterCopyFromGlobalLibrary\"), optionally operation or language.",
+      "example": "{\"libraryPath\":\"C:\\\\Examples\\\\Library.al21\",\"masterCopyName\":\"FB_Motor\",\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "ImportLibraryTypeDocuments",
@@ -8322,10 +8382,13 @@
         "folderPath",
         "dir",
         "regexName",
-        "overwrite"
+        "overwrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][HMI][WRITE]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportHmiTagTablesFromDirectory\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\"}"
+      "description": "[L2][HMI][WRITE]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportHmiTagTablesFromDirectory\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "ImportHmiTagTable",
@@ -8340,10 +8403,13 @@
         "softwarePath",
         "folderPath",
         "importPath",
-        "overwrite"
+        "overwrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][HMI][WRITE]Import one HMI tag table XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\HmiTags.xml\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportHmiTagTable\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\HmiTags.xml\"}"
+      "description": "[L2][HMI][WRITE]Import one HMI tag table XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Example: {\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\HmiTags.xml\",\"dryRun\":false,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportHmiTagTable\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\HmiTags.xml\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "ImportHmiScreensFromDirectory",
@@ -8359,10 +8425,13 @@
         "folderPath",
         "dir",
         "regexName",
-        "overwrite"
+        "overwrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][HMI][WRITE]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportHmiScreensFromDirectory\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\"}"
+      "description": "[L2][HMI][WRITE]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportHmiScreensFromDirectory\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "ImportHmiScreen",
@@ -8377,10 +8446,13 @@
         "softwarePath",
         "folderPath",
         "importPath",
-        "overwrite"
+        "overwrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][HMI][WRITE]Import one HMI screen XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\Screen_1.xml\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportHmiScreen\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\Screen_1.xml\"}"
+      "description": "[L2][HMI][WRITE]Import one HMI screen XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Example: {\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\Screen_1.xml\",\"dryRun\":false,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportHmiScreen\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\Screen_1.xml\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "ImportHmiConnection",
@@ -8394,10 +8466,13 @@
       "parameters": [
         "softwarePath",
         "importPath",
-        "overwrite"
+        "overwrite",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][HMI][WRITE]Import one HMI connection XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportHmiConnection\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
+      "description": "[L2][HMI][WRITE]Import one HMI connection XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportHmiConnection\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "ImportDeviceAml",
@@ -8429,10 +8504,13 @@
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "importPath"
+        "importPath",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][WRITE] Import PLC alarm text lists from an XLSX file. The file must match the format exported by ExportAlarmTextLists. Run CompilePlcSoftware after import to validate alarm configuration. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportAlarmTextLists\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmTextLists.xlsx\"}"
+      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][WRITE] Import PLC alarm text lists from an XLSX file. The file must match the format exported by ExportAlarmTextLists. Run CompilePlcSoftware after import to validate alarm configuration. Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportAlarmTextLists\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmTextLists.xlsx\",\"dryRun\":true}"
     },
     {
       "name": "ImportAlarmClasses",
@@ -8445,10 +8523,13 @@
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "importPath"
+        "importPath",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][WRITE] Import PLC alarm classes from a previously exported file. Overwrites existing alarm class definitions. Run CompilePlcSoftware after import. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportAlarmClasses\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmClasses.dat\"}"
+      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][WRITE] Import PLC alarm classes from a previously exported file. Overwrites existing alarm class definitions. Run CompilePlcSoftware after import. Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportAlarmClasses\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmClasses.dat\",\"dryRun\":true}"
     },
     {
       "name": "GetWorkbenchState",
@@ -9524,7 +9605,7 @@
       "method": "GetOpennessWorkerStatusV4",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L0][Diagnostics][READ] Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. FoundationHost owns one engine worker per MCP session; a healthy worker is not proof of native TIA stability. Examples: GetToolUsage(toolName: \"GetOpennessWorkerStatus\"), optionally operation or language.",
+      "description": "[L0][Diagnostics][READ] Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. FoundationHost owns one PLC worker per MCP session; a healthy worker is not proof of native TIA stability. Examples: GetToolUsage(toolName: \"GetOpennessWorkerStatus\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -9555,7 +9636,7 @@
       "method": "GetOpennessCompatibilityV4",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L2][Diagnostics][READ] Read this server's loaded Siemens.Engineering assembly file versions and compiled engine capabilities without connecting to TIA. SDK file versions do not establish installed TIA Update/Hotfix: installedPatch remains unknown. Includes links to relevant Siemens V20 SD and V21 stability fixes, native-cross-reference policy and unsupported faceplate-type authoring boundary. Examples: GetToolUsage(toolName: \"GetOpennessCompatibility\"), optionally operation or language.",
+      "description": "[L2][Diagnostics][READ] Read this server's loaded Siemens.Engineering assembly file versions and compiled service capabilities without connecting to TIA. SDK file versions do not establish installed TIA Update/Hotfix: installedPatch remains unknown. Includes links to relevant Siemens V20 SD and V21 stability fixes, native-cross-reference policy and unsupported faceplate-type authoring boundary. Examples: GetToolUsage(toolName: \"GetOpennessCompatibility\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -9668,7 +9749,7 @@
         "requestId",
         "sinceUtc"
       ],
-      "description": "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Optional requestId and sinceUtc filters apply before take; matchedRecords counts all matches. Example: {\"take\":100} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetNativeInvocationLog\"), optionally operation or language.",
+      "description": "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument service-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Optional requestId and sinceUtc filters apply before take; matchedRecords counts all matches. Example: {\"take\":100} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetNativeInvocationLog\"), optionally operation or language.",
       "example": "{\"take\":100}"
     },
     {

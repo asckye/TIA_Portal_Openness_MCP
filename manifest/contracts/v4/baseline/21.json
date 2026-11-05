@@ -2745,7 +2745,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "578ae294d5fdaf150c627fe28859bd49ae6e0b8fa0ad7545b8758737a910a8c7",
+      "descriptionSha256": "563018baa6f7cce6de9ce3d74e5416a5d58b57d731e70d7a8758c52262bcb3b3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -2756,6 +2756,21 @@
           },
           "deviceItemPath": {
             "description": "deviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "interfaceIndex": {
@@ -9603,7 +9618,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "9d6ecd2582985ebac18669261f0e8bf374f821a14b6636db6f501ee84db4963c",
+      "descriptionSha256": "ef1a3cfd17701da6517e661fe75d5cb18f260cf0f23d3e59a13bf822d01c590f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14193,10 +14208,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9ff82854205c64beae47ecd27a50eb1c174fbbe97c6ed3981ad897ea0c73ec68",
+      "descriptionSha256": "822a8970c6c33b64ffc0af251733a8d7abd960319b1111002a7f3ac6770f5745",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "firstRootPath": {
             "description": "firstRootPath: first device/device-item root, usually PLC root, e.g. 'PLC_1'",
             "examples": [
@@ -14450,12 +14480,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "52188ba35ede079516e784b24ac9c38bb7a3d3e4edb5ba14a70c35d6b37d227c",
+      "descriptionSha256": "6da9503e88731fa37e5c658cc0d8b4c05e8ed77d60b7788c589865530880e3db",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "deviceName": {
             "description": "deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "keyword": {
@@ -14990,10 +15035,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d6636d86b59487eaab53451b62e7d40dc92d4bb92b37559dbad8700ffee52e45",
+      "descriptionSha256": "39b3ca4777c4d9b308f66baa5217325da3c0bc4e3abf52bf560c3f67ffb01860",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "folderPath": {
             "description": "folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working tree.",
             "type": "string"
@@ -15116,7 +15176,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3ed396262d29cefd557b866c3bf3b64a2e1e31575b88b72fd26fe3a2a0180619",
+      "descriptionSha256": "7a201da3c7b634accd1f63f321df63e43e251af22ff7987a2d4ff02000a66465",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15993,7 +16053,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8cfa9a426db20dde28437e03092a1c8ac55192e9132140d351119f7255b86748",
+      "descriptionSha256": "6f3a6c859beeb5035274450141b2ed4d8639959d14a90dc6622faa900191e1d8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16040,6 +16100,21 @@
           "downloadScope": {
             "default": "software",
             "description": "downloadScope: software (default; the Openness download option Software, download software all) or softwareOnlyChanges (the option SoftwareOnlyChanges, download only the changes; V17+).",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "keepActualValues": {
@@ -16232,12 +16307,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0c96adb7cfc7b2dbc249570d84043edf5e6088b1670d8e904623a5bf65723bf3",
+      "descriptionSha256": "be7bb7e2326317e5c262596a81c9e892312d61230d1d8bdbb5ca0151cb00b2e8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "anchorDeviceItemPath": {
             "description": "anchorDeviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree; used to create/reuse the subnet from its first PROFINET node.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "subnetName": {
@@ -19538,7 +19628,7 @@
         "additionalProperties": false,
         "properties": {
           "exportId": {
-            "description": "Opaque export handle from this engine session.",
+            "description": "Opaque export handle from this service session.",
             "examples": [
               "<exportId from response>"
             ],
@@ -19838,7 +19928,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "78db7211068002caf375d555dea500ce1570235a74b53e58fe1ee9a05ab34158",
+      "descriptionSha256": "ff32c3da019df9a1411427421b60e7340bf63758bcda1f55d7a29cdf80a1c5dc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20156,7 +20246,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "9971a059bd5cb784e3cec48040352bbcfa3790587bad8cbf8164aefd2c252479",
+      "descriptionSha256": "7e7f8aa9a9a3871c92a314e74524ab83a89159eaa45b74bc2f4cfdb56b68e1e0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -20211,7 +20301,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "344e3c89c3e52f174453eae529641583a64360f993f6166a4914309d270e1d5d",
+      "descriptionSha256": "86103493804f2a4786cb92d72ff620dc74b8060bf9e826dfd310c58a3e3f3830",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -22649,10 +22739,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2b8fcadc5a036d5692356da5e04d2703a7402533c9a538244cd47544ba125483",
+      "descriptionSha256": "ce72e3e43fc0550c761568eaf98d1fc4e599cd133092a23d74c135de853fae8e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "importPath": {
             "description": "importPath: existing absolute DAT file written by ExportAlarmClasses",
             "type": "string"
@@ -22678,10 +22783,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d85166c365ccfb57fa2c241bb9397180a251a065eb394b78f1774c8f9b0baa3c",
+      "descriptionSha256": "e7303a58d83b73f10520aeb4a193ff9e7f717f934f4ce4ff8a736a29a891f231",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "importPath": {
             "description": "importPath: full file path to the XLSX file",
             "type": "string"
@@ -22756,10 +22876,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9a994fc4d7e5d865566232adda40c27ff33e08d9268e4650ec823ac7ed12aa95",
+      "descriptionSha256": "a4b9fab64267813525628015c67e2031b8abfb45f13b72e87996db0580d6ae40",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "importPath": {
             "description": "importPath: full file path of exported HMI connection XML",
             "type": "string"
@@ -22790,10 +22925,34 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "719b8d7145e78816c60d6c6dcd8a97d3bb39edb51cd10fd565ebf09957b175eb",
+      "descriptionSha256": "a03e3c2bca326974a781218d77ffc7d44040debae158c8cf4e6deaa9387dc9d8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "examples": [
+              "<planHash from this tool's preview for these arguments and bound project>"
+            ],
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "examples": [
+              "C:/Examples/Project.ap21"
+            ],
+            "type": "string"
+          },
           "folderPath": {
             "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
@@ -22838,12 +22997,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b7eb9b0414bab66c8580ce8a15a20176210669ab34796a6709b5db0cd94c1185",
+      "descriptionSha256": "aaf95eb7f967449899cad1e0135a252162ae139cef44635a6bafaff196812ed9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dir": {
             "description": "dir: directory containing exported screen XML files",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "folderPath": {
@@ -22882,10 +23056,34 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e035ea3de43211aa0f0e6fe3412f6cd57e9e3d0c18018aee77c62a7e096d51da",
+      "descriptionSha256": "48cda18a59b0c6ee7cbe4225ffc1c3a96d81f3b310ea40338f1c65d706e1d055",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "examples": [
+              "<planHash from this tool's preview for these arguments and bound project>"
+            ],
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "examples": [
+              "C:/Examples/Project.ap21"
+            ],
+            "type": "string"
+          },
           "folderPath": {
             "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
@@ -22930,12 +23128,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1ca2559e94702a70968feb1d990068584f8bd0f5f61ecd2875c10393275ef5ee",
+      "descriptionSha256": "fc40a3617279c6b4492daafb9a87dba3982f55cb7f816d72aaae2273ba7d942c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dir": {
             "description": "dir: directory containing exported tag table XML files",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "folderPath": {
@@ -23052,10 +23265,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "fe65ec025a139129e4b5dcd9609918ce2bd2d61b72cc07134eeb4e2b298d0b27",
+      "descriptionSha256": "f25d0be0f31ec390c2da420009f44c599b131671e006a918ae88c3556c7b3496",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: real Unified HMI software path resolved from GetProjectTree, e.g. HMI_RT_1",
             "type": "string"
@@ -23106,10 +23334,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "cdad00102e1b279a99baf28004fe98ac5fdbeec2223afbed2f7e8f86c32cf0bc",
+      "descriptionSha256": "1528228b6b7d6fe1b064f8ce81292bc0ffa9e3fdc362ea1ab4bda82d0ef15b5a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "importPath": {
             "description": "importPath: full file path to the XML file",
             "type": "string"
@@ -24026,10 +24269,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "61129355929ce267e3dca606f82171d1a42926339374828f768cc440b6a68be6",
+      "descriptionSha256": "f384cf42390785b53a99598798c8668c004ea877a042092e86b40281de1545fc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "folderPath": {
             "description": "folderPath: optional technology object group path (use empty for root)",
             "type": "string"
@@ -24060,12 +24318,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a55f821ff8e6b267a286b5f22bbe44b212a0b41b7a0f56a103f0d59fcc1382c0",
+      "descriptionSha256": "c0699be462588cc9c5c2d31a7ad0defacd7a1f3f0488ad83be172c041ddc0cf3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dir": {
             "description": "dir: directory containing technology object XML files",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "folderPath": {
@@ -24343,7 +24616,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1ee5eb45db439386c64aa5de55b5eb0bb9a331be0b94e4ccdceb5362466e98d2",
+      "descriptionSha256": "6d8b7792b7598fdfd352bda1d5c8f15b1aec770399e3b7e7a10a24cfe5ae05be",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -24426,6 +24699,21 @@
             },
             "type": "array"
           },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "methodName": {
             "description": "Method name (case-insensitive)",
             "type": "string"
@@ -24476,7 +24764,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "6582cc313fa97fdc8d8f508940242d418122ff6b2a71cdc949d56d154c2c9ec9",
+      "descriptionSha256": "5f4786224180ab16c028ce8476d578a2404d8473c42005eb237093c733ffe153",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -24558,6 +24846,21 @@
               "x-maxUtf8Bytes": 10485760
             },
             "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
           },
           "methodName": {
             "description": "Method name (case-insensitive)",
@@ -25403,7 +25706,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "c4b1cfaa6065bb17a1b2f9b76d48a59455cb0feabd5ba1734f53b531f16c3bf9",
+      "descriptionSha256": "311ca7040e9d9c484ebe080c65fcfe15231f8af857ea5ba55ec9ce19ab9ccd8c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -30124,7 +30427,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "af80897745753977d43d1c8aacd4fbbbc56633c3c9ac6452b9b7b8abb95ead6e",
+      "descriptionSha256": "9331f1d00c1151f25516b99679a65349c0578016c373a641ed4409067cccefe4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -30170,6 +30473,21 @@
             "default": 0,
             "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
             "type": "integer"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
           },
           "itemPath": {
             "items": {
@@ -33637,7 +33955,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "314c9c7fa4daee711688459028464dc2b5eb7c43e43cce61be370b62cc18d878",
+      "descriptionSha256": "1b20edeaa631f62fd094f5bf895cec310d7ce3e59e43e2920771315cfded0436",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -37201,7 +37519,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "93bc4872a03f14b9c8b2064274d1c7c01393b937e3d40760f2ea74c0faf34d91",
+      "descriptionSha256": "57010c47a0775ee38226b9eaaf2e5df7816af08fb6ffbc26d1f2e92526c3967f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -38266,7 +38584,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "4324d70f2d3b3b121626cd4224996d05f395cbd00b8a80b503e6cb5f1f73b039",
+      "descriptionSha256": "8ed108e4b1a2ae664234e6c5289d7880328e7d2f56be710387de6ae263d242ac",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -38750,10 +39068,25 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0cdd63fbf293ce75d434a7a70563867d069f47e00db186e43ff401d91b7f7794",
+      "descriptionSha256": "ea422cd28ac1a8b0c3f3c6a2a26af04833b6bf39a3c22b619403caa6748e7db3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path in the project structure to the HMI software",
             "type": "string"
@@ -38898,7 +39231,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ae9b2728b42bd71c7676c033636b8650a926cb82ba27fdea50efccfa28768919",
+      "descriptionSha256": "ef32aa32ec009997c93eba38e2b3b939c2573b4b819ec696de77e72c3921463e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -38908,6 +39241,21 @@
           },
           "deviceItemPath": {
             "description": "deviceItemPath: path in the project structure to the device item",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "value": {
@@ -39057,13 +39405,28 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1dfe3120874cdfcf549e70e885bf5d644493e1d1cde05bc9b27e54605be72286",
+      "descriptionSha256": "b7adb95e00d56ae0a3db7a92b3d09551f9c151ceb492bb10f94aa2ef2c10da49",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
           "enabled": {
             "description": "enabled: true to enable, false to disable",
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
           },
           "interfaceName": {
             "description": "interfaceName: exact name of the interface as shown in GetPlcOpcUaConfiguration",
@@ -39096,12 +39459,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "03b6bb3e459e2a3219011280f9608314e675ff74f6105f927e4d6820cd2bb872",
+      "descriptionSha256": "c49428e013bc8237addae14a91aaf62b338f53ce4940d2461fb9050ba9960c14",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "cpuPath": {
             "description": "cpuPath: real CPU device-item path resolved from GetProjectTree/GetDeviceItemTree.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "settings": {
@@ -39278,7 +39656,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2375fe611d0ef9d40cb06a77237fdba002c53f8632c871bbd60aa69314bb0054",
+      "descriptionSha256": "8f745c7e0ae0eed26a9152e5ed73886e93e8c12a680fa47aa1732c41ac986b5b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -39287,6 +39665,21 @@
             "examples": [
               "%M0.0"
             ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "modifyValue": {
@@ -39453,7 +39846,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ceb86f24e9903679eb07ad5f3fe5940cbd38be305abef8f4ff451c0ec92144ad",
+      "descriptionSha256": "c04eeadaee131457b559bcc75726a7bf0f18d880a543664cd589533f28e9ab04",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -39466,8 +39859,23 @@
             "description": "buttonName: HMI button item name",
             "type": "string"
           },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
           "eventType": {
             "description": "eventType: enum value, e.g. Tapped, Down, Up",
+            "type": "string"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "globalDefinitionAreaScriptCode": {
@@ -39512,13 +39920,28 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c6718e22256d1f0a8795bbafea4758f6800598de603e1661db22c2fb8b780726",
+      "descriptionSha256": "fdaaabb22e4f82da7a4a3e233e58ac394af2820dd1dd2a358689b3ff9cc88194",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "connectionName": {
             "default": "HMI_Connection_1",
             "description": "connectionName: Unified HMI connection object name (default 'HMI_Connection_1')",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
           "hmiSoftwarePath": {
