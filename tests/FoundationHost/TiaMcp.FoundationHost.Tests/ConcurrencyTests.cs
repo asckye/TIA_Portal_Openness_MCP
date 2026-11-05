@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using TiaMcp.FoundationHost;
 using Xunit;
 
@@ -10,14 +11,14 @@ public sealed class ConcurrencyTests
     {
         using var first = Worker(); using var second = Worker();
         var held = await first.AcquireLane(CancellationToken.None);
-        using (await second.AcquireLane(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(2))) { }
+        using (await second.AcquireLane(CancellationToken.None).WaitAsync(TestDeadlines.Hang)) { }
         using var cancel = new CancellationTokenSource();
         var queued = first.AcquireLane(cancel.Token);
         Assert.False(queued.IsCompleted);
         cancel.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await queued);
         held!.Dispose();
-        using (await first.AcquireLane(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(2))) { }
+        using (await first.AcquireLane(CancellationToken.None).WaitAsync(TestDeadlines.Hang)) { }
     }
 
     [Fact]
@@ -27,7 +28,7 @@ public sealed class ConcurrencyTests
         using var held = await worker.AcquireLane(CancellationToken.None);
         var renderer = FoundationTools.Create(worker, "19").OfType<FoundationTool>()
             .First(tool => !tool.IsNative);
-        Assert.Null(await renderer.AcquireLane(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Null(await renderer.AcquireLane(CancellationToken.None).WaitAsync(TestDeadlines.Hang));
     }
 
     [Fact]
@@ -39,8 +40,8 @@ public sealed class ConcurrencyTests
         var queued = native.AcquireLane(CancellationToken.None);
         Assert.False(queued.IsCompleted);
         held!.Dispose();
-        using var acquired = await queued.WaitAsync(TimeSpan.FromSeconds(2));
+        using var acquired = await queued.WaitAsync(TestDeadlines.Hang);
         WorkerClient.ActivateLane(acquired);
-        Assert.Null(await native.AcquireLane(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Null(await native.AcquireLane(CancellationToken.None).WaitAsync(TestDeadlines.Hang));
     }
 }

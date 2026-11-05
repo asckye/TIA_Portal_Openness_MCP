@@ -1,5 +1,6 @@
 extern alias foundationhost;
 extern alias enginehost;
+using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -115,15 +116,15 @@ public sealed class WorkerDispatchTests
         // The refusal happens before the first real await, on this thread.
         await Xunit.Assert.ThrowsAsync<FileNotFoundException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
         bool taken = false;
-        var probe = new Thread(() => { taken = Monitor.TryEnter(sync, TimeSpan.FromSeconds(2)); if (taken) Monitor.Exit(sync); });
-        probe.Start(); Xunit.Assert.True(probe.Join(TimeSpan.FromSeconds(10)));
+        var probe = new Thread(() => { taken = Monitor.TryEnter(sync, TestDeadlines.Hang); if (taken) Monitor.Exit(sync); });
+        probe.Start(); Xunit.Assert.True(probe.Join(TestDeadlines.Hang));
         Xunit.Assert.True(taken);
         Exception? second = null;
         var next = new Thread(() => {
             try { worker.Call("ReadState", new JsonObject(), CancellationToken.None).GetAwaiter().GetResult(); }
             catch (Exception error) { second = error; }
         });
-        next.Start(); Xunit.Assert.True(next.Join(TimeSpan.FromSeconds(10)));
+        next.Start(); Xunit.Assert.True(next.Join(TestDeadlines.Hang));
         Xunit.Assert.IsType<FileNotFoundException>(second);
         Xunit.Assert.False(worker.Poisoned);
     }

@@ -1,4 +1,5 @@
 extern alias foundationhost;
+using TiaMcp.Engine.Tests.Shared;
 using Xunit;
 using System.Text.Json.Nodes;
 using System.Diagnostics;
@@ -102,7 +103,8 @@ public sealed class EngineWorkerClientTests
                 WorkerShutdown.StopAll();
             }
             else worker.Dispose();
-            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10));
+            Assert.True(watch.Elapsed < TestDeadlines.Hang);
+            TestDeadlines.Report("worker.session-stop", watch.Elapsed.TotalMilliseconds, "ms");
             Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(root, "123-1.lease")));
         }
         finally { Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", previous); Directory.Delete(root, true); }
@@ -124,11 +126,13 @@ public sealed class EngineWorkerClientTests
             if (answeredUnknown) await Assert.ThrowsAnyAsync<Exception>(() => running);
             else
             {
-                for (int i = 0; i < 500 && !File.Exists(Path.Combine(root, "busy")); i++) await Task.Delay(10);
+                using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+                while (!File.Exists(Path.Combine(root, "busy"))) await Task.Delay(10, deadline.Token);
                 Assert.True(File.Exists(Path.Combine(root, "busy")));
             }
             var watch = Stopwatch.StartNew(); worker.Dispose();
-            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(2));
+            Assert.True(watch.Elapsed < TestDeadlines.Hang);
+            TestDeadlines.Report("worker.dispose-busy", watch.Elapsed.TotalMilliseconds, "ms");
             if (!answeredUnknown) await Assert.ThrowsAnyAsync<Exception>(() => running);
             string path = Path.Combine(root, "123-1.lease");
             for (int i = 0; i < 100; i++)

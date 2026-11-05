@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using TiaMcp.Adapters;
 using Xunit;
 
@@ -25,7 +26,7 @@ public sealed class StudioThreadGuardTests
         var thread = new Thread(() => { try { action(); } catch (Exception ex) { failure = ex; } });
         if (OperatingSystem.IsWindows()) thread.SetApartmentState(apartment);
         thread.Start();
-        Assert.True(thread.Join(TimeSpan.FromSeconds(10)));
+        Assert.True(thread.Join(TestDeadlines.Hang));
         if (failure != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
     }
 

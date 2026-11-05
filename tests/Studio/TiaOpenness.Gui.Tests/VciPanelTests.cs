@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,7 +90,7 @@ public sealed class VciPanelTests(WpfContext wpf)
                 "ConnectProjectToWorkspace" => vci.VcMapProjectAsync("git", "Station", false),
                 _ => vci.VcSyncAsync("git", SyncDirection.WorkspaceToProject, false),
             };
-            await host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await host.Pending.Task.WaitAsync(TestDeadlines.Hang);
             Assert.False(pending.IsCompleted); Assert.Equal(0, host.ExecutedWrites);
             Assert.Equal("workbench", request?.Actor); Assert.NotNull(request?.OperatorCallId);
             Assert.Contains(host.Calls, c => c.Name == tool);
@@ -147,7 +148,7 @@ public sealed class VciPanelTests(WpfContext wpf)
             "ConnectProjectToWorkspace" => vci.VcMapProjectAsync("git", "Station", false),
             _ => vci.VcSyncAsync("git", SyncDirection.WorkspaceToProject, false),
         };
-        await host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await host.Pending.Task.WaitAsync(TestDeadlines.Hang);
         Assert.False(pending.IsCompleted); Assert.Equal(0, host.ExecutedWrites);
         Assert.Equal("workbench", request?.Actor); Assert.NotNull(request?.OperatorCallId);
         if (candidate)
@@ -212,7 +213,7 @@ public sealed class VciPanelTests(WpfContext wpf)
                     Assert.True(command.CanExecute(null));
                 host.HoldApproval = true;
                 pending = vci.VcSyncAsync("git", SyncDirection.WorkspaceToProject, false);
-                WpfContext.Complete(host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+                WpfContext.Complete(host.Pending.Task.WaitAsync(TestDeadlines.Hang));
                 Assert.False(pending.IsCompleted); Assert.Equal(0, host.ExecutedWrites);
                 Assert.Equal("workbench", request?.Actor); Assert.NotNull(request?.OperatorCallId);
                 host.Approval.TrySetResult(true); WpfContext.Complete(pending);

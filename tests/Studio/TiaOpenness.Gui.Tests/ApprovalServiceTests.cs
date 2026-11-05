@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.IO;
 using System.Linq;
@@ -25,14 +26,14 @@ public sealed class ApprovalServiceTests
         service.NewRequest += (_, row) => arrived.TrySetResult(row);
         var request = PendingApproval.Create("foundation", "21", tool, arguments, null, 120);
         var call = ApprovalClient.Wait(request, new ApprovalSettings(true, 120), CancellationToken.None, pipe);
-        var row = await arrived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var row = await arrived.Task.WaitAsync(TestDeadlines.Hang);
         Assert.Equal(expected, row.Risk);
         if (tool == "ImportPlcBlock") Assert.Single(row.Risks);
         now = request.Deadline; service.Refresh();
         Assert.Equal(ApprovalState.TimedOut, service.Requests.Single().State);
         Assert.False(service.Approve(row.Id)); Assert.Equal(0, service.PendingCount);
         service.Dispose();
-        Assert.NotNull((await call.WaitAsync(TimeSpan.FromSeconds(5))).Reason);
+        Assert.NotNull((await call.WaitAsync(TestDeadlines.Hang)).Reason);
         Assert.Equal(ApprovalState.TimedOut, service.Requests.Single().State);
     }
 
@@ -45,16 +46,16 @@ public sealed class ApprovalServiceTests
         var second = new TaskCompletionSource<ApprovalRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
         service.NewRequest += (_, row) => { if (!first.TrySetResult(row)) second.TrySetResult(row); };
         var call1 = ApprovalClient.Wait(PendingApproval.Create("foundation", "21", "WriteFixture", "{}", null, 120), new ApprovalSettings(), CancellationToken.None, pipe);
-        var row1 = await first.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var row1 = await first.Task.WaitAsync(TestDeadlines.Hang);
         var call2 = ApprovalClient.Wait(PendingApproval.Create("foundation", "21", "WriteFixture", "{}", null, 120), new ApprovalSettings(), CancellationToken.None, pipe);
-        var row2 = await second.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var row2 = await second.Task.WaitAsync(TestDeadlines.Hang);
         Assert.False(service.Approve(row2.Id)); Assert.False(service.Deny(row2.Id));
         Assert.True(service.Approve(row1.Id));
-        var approved = await call1.WaitAsync(TimeSpan.FromSeconds(5));
+        var approved = await call1.WaitAsync(TestDeadlines.Hang);
         Assert.False(service.CanDecide(row2.Id)); Assert.False(service.Deny(row2.Id));
         await ApprovalClient.Complete(approved, "succeeded", pipe);
         await Eventually(service, () => service.Requests.First().State == ApprovalState.Completed);
-        Assert.True(service.Deny(row2.Id)); Assert.Equal("denied", (await call2.WaitAsync(TimeSpan.FromSeconds(5))).Reason);
+        Assert.True(service.Deny(row2.Id)); Assert.Equal("denied", (await call2.WaitAsync(TestDeadlines.Hang)).Reason);
     }
     [Fact]
     public async Task Workbench_v2_write_stays_pending_until_the_same_approval_card_is_decided()
@@ -68,11 +69,11 @@ public sealed class ApprovalServiceTests
         using (ActorScope.EnterWorkbench("attached-session", operatorId))
             request = PendingApproval.Create("foundation", "19", "WriteFixture", "{}", null, 5);
         var call = ApprovalClient.Wait(request, new ApprovalSettings(true, 5), CancellationToken.None, pipe, audit);
-        var row = await arrived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var row = await arrived.Task.WaitAsync(TestDeadlines.Hang);
         Assert.Equal("workbench", row.Actor); Assert.Equal(operatorId, row.OperatorCallId);
         Assert.Equal(ApprovalState.Pending, row.State); Assert.False(call.IsCompleted);
         Assert.True(service.Approve(row.Id));
-        var result = await call.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Null(result.Reason);
+        var result = await call.WaitAsync(TestDeadlines.Hang); Assert.Null(result.Reason);
         await ApprovalClient.Complete(result, "succeeded", pipe);
         await Eventually(service, () => service.Requests.Single().State == ApprovalState.Completed);
         Assert.Equal("workbench", Assert.Single(audit.Read()).Actor); Assert.True(audit.Verify().Passed);
@@ -89,11 +90,11 @@ public sealed class ApprovalServiceTests
         service.NewRequest += (_, row) => arrived.TrySetResult(row);
         var request = PendingApproval.Create("engine", "21", "WriteFixture", "{\"blockPath\":\"PLC/DB\"}", "{\"projectFile\":\"project.ap21\"}", 5);
         var call = ApprovalClient.Wait(request, new ApprovalSettings(true, 5), CancellationToken.None, pipe, audit);
-        var row = await arrived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var row = await arrived.Task.WaitAsync(TestDeadlines.Hang);
         Assert.Equal(request.RequestId, row.Id); Assert.Equal(request.PlanHash, row.PlanHash);
         Assert.Contains("project.ap21", row.Project); Assert.Single(row.Operations); Assert.Equal(1, service.PendingCount);
         Assert.True(approve ? service.Approve(row.Id) : service.Deny(row.Id)); Assert.False(service.Approve(row.Id));
-        var result = await call.WaitAsync(TimeSpan.FromSeconds(5));
+        var result = await call.WaitAsync(TestDeadlines.Hang);
         Assert.Equal(approve ? null : "denied", result.Reason);
         if (approve)
         {
@@ -110,7 +111,7 @@ public sealed class ApprovalServiceTests
         using var service = new ApprovalService(Path.Combine(root, "approval.settings"), pipe);
         using (var client = new System.IO.Pipes.NamedPipeClientStream(".", pipe, System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.Asynchronous))
         {
-            await client.ConnectAsync(1000);
+            await client.ConnectAsync(TestDeadlines.HangMilliseconds);
             await ApprovalFrames.Write(client, new ApprovalDecision { RequestId = "self", Decision = "granted" }, CancellationToken.None);
         }
         Assert.Empty(service.Requests);
@@ -118,8 +119,8 @@ public sealed class ApprovalServiceTests
         service.NewRequest += (_, _) => arrived.TrySetResult(true);
         var request = PendingApproval.Create("foundation", "19", "WriteFixture", "{}", null, 5);
         var call = ApprovalClient.Wait(request, new ApprovalSettings(true, 5), CancellationToken.None, pipe);
-        await arrived.Task.WaitAsync(TimeSpan.FromSeconds(5)); service.Dispose();
-        Assert.Equal("workbench-unavailable", (await call.WaitAsync(TimeSpan.FromSeconds(5))).Reason);
+        await arrived.Task.WaitAsync(TestDeadlines.Hang); service.Dispose();
+        Assert.Equal("workbench-unavailable", (await call.WaitAsync(TestDeadlines.Hang)).Reason);
         Assert.All(service.Requests, r => Assert.Equal(ApprovalState.Disconnected, r.State));
     }
     [Fact]
@@ -137,7 +138,7 @@ public sealed class ApprovalServiceTests
         var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs e) { if (check()) ready.TrySetResult(); }
         service.PropertyChanged += Changed;
-        try { if (check()) ready.TrySetResult(); await ready.Task.WaitAsync(TimeSpan.FromSeconds(2)); Assert.True(check()); }
+        try { if (check()) ready.TrySetResult(); await ready.Task.WaitAsync(TestDeadlines.Hang); Assert.True(check()); }
         finally { service.PropertyChanged -= Changed; }
     }
 }

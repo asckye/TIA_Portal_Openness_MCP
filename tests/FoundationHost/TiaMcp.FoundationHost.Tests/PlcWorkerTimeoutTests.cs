@@ -1,4 +1,5 @@
 extern alias foundationhost;
+using TiaMcp.Engine.Tests.Shared;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -748,7 +749,7 @@ public sealed class PlcWorkerRobustnessTests
         }
         internal async Task WaitForDispatch(string operation)
         {
-            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
             while (!ReadLog().Contains("\"operation\":\"" + operation + "\"", StringComparison.Ordinal))
                 await Task.Delay(10, deadline.Token);
         }
@@ -820,7 +821,7 @@ public sealed class PlcWorkerRobustnessTests
     [Fact]
     public async Task Plc_compile_preview_uses_default_instead_of_the_compile_override()
     {
-        using var scope = new PlcTimeoutScope("19", "{\"default\":2,\"compile\":0.2}");
+        using var scope = new PlcTimeoutScope("19", "{\"default\":30,\"compile\":0.2}");
         await scope.WarmGenerationUnderProductionBudgets();
         var preview = new TiaMcp.Adapters.PlcCompileResult { Executed = false, ProjectFile = Path.Combine(AppContext.BaseDirectory, "fixture.ap19") };
         var reply = await scope.Worker.Call("CompileSoftware", new() { ["dryRun"] = true, ["softwarePath"] = "PLC_1",
@@ -848,11 +849,12 @@ public sealed class PlcWorkerRobustnessTests
     [Fact]
     public async Task Plc_default_seconds_and_first_attach_budget_apply_once_per_generation()
     {
-        using var scope = new PlcTimeoutScope("19", "{\"firstAttach\":3}", defaultSeconds: 1);
-        // Read-only state queries do not consume the first-attach budget: the first Attach runs on 3 s
+        using var scope = new PlcTimeoutScope("19", "{\"firstAttach\":30}", defaultSeconds: 1);
+        // Read-only state queries do not consume the first-attach budget: the first Attach runs on 30 s
         // and the second on the scaled default (1 s).
         await scope.WarmGenerationUnderProductionBudgets();
-        await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+        using (new ProductionWorkerBudgets(scope.Worker))
+            await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         var args = new JsonObject { ["processId"] = Environment.ProcessId, ["fixtureDelayMilliseconds"] = 1300 };
         await scope.Worker.Call("Attach", args, CancellationToken.None);
         Assert.False(scope.Worker.Poisoned);
@@ -867,7 +869,7 @@ public sealed class PlcWorkerRobustnessTests
     [Fact]
     public async Task Plc_cancellation_before_dispatch_is_CANCELLED_and_after_dispatch_keeps_the_result()
     {
-        using var scope = new PlcTimeoutScope("19", "{\"default\":2,\"compile\":3}");
+        using var scope = new PlcTimeoutScope("19", "{\"default\":30,\"compile\":30}");
         await scope.WarmGenerationUnderProductionBudgets();
         using var before = new CancellationTokenSource(); before.Cancel();
         var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => scope.Worker.Call("CompileSoftware", new(), before.Token));

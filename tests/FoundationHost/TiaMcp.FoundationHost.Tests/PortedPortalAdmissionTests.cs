@@ -1,4 +1,5 @@
 extern alias enginehost;
+using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -341,7 +342,7 @@ public sealed class PortedPortalAdmissionTests
             else
             {
                 held.Dispose();
-                using var acquired = await pending.WaitAsync(TimeSpan.FromSeconds(2));
+                using var acquired = await pending.WaitAsync(TestDeadlines.Hang);
                 enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(acquired);
                 Assert.Equal(1, worker.Activations);
             }

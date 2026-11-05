@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.IO;
 using System.Linq;
@@ -178,7 +179,7 @@ namespace TiaMcp.Engine.Tests
             var result = await ApprovalClient.Wait(request, new ApprovalSettings(), CancellationToken.None, name, audit);
             System.Diagnostics.Trace.Listeners.Remove(trace);
             Assert.False(result.Reason == "workbench-unavailable", traceText.ToString());
-            await response.WaitAsync(TimeSpan.FromSeconds(5));
+            await response.WaitAsync(TestDeadlines.Hang);
             Assert.Equal(decision == "granted" && mismatch == "none" ? null : "denied", result.Reason);
             Assert.Equal("denied", (await ApprovalClient.Wait(request, new ApprovalSettings(), CancellationToken.None, name, audit)).Reason);
             Assert.True(audit.Verify().Passed);

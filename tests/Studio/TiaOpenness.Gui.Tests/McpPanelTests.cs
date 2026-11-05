@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -65,13 +66,13 @@ public sealed class McpPanelTests(WpfContext wpf)
         client.StateChanged += (_, state) => { if ((long?)state["revision"] == 100) updated.TrySetResult(true); };
         record["sessions"]![0]!["revision"] = 100L;
         File.WriteAllText(host.Host.RegistrationPath, record.ToJsonString());
-        await updated.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await updated.Task.WaitAsync(TestDeadlines.Hang);
         Assert.False(detached); Assert.Equal(host.Key, client.SessionKey);
         var ended = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         client.Detached += (_, _) => ended.TrySetResult(true);
         record["sessions"] = new JsonArray();
         File.WriteAllText(host.Host.RegistrationPath, record.ToJsonString());
-        await ended.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await ended.Task.WaitAsync(TestDeadlines.Hang);
         Assert.Null(client.SessionKey);
     }
 
@@ -99,7 +100,7 @@ public sealed class McpPanelTests(WpfContext wpf)
             "ImportPlcBlock" => new() { ["softwarePath"] = "devices/Station/PLC_1", ["groupPath"] = "", ["importPath"] = Path.Combine(host.Root, "Main.xml") },
             "CompilePlcSoftware" => new() { ["softwarePath"] = "devices/Station/PLC_1" }, _ => new() };
         var pending = project.Write(tool, args);
-        await host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await host.Pending.Task.WaitAsync(TestDeadlines.Hang);
         Assert.False(pending.IsCompleted); Assert.Equal(0, host.ExecutedWrites);
         Assert.Equal(new[] { true, false }, host.Calls.Select(c => (bool)c.Arguments["dryRun"]!));
         Assert.Equal(new[] { false, true }, host.Calls.Select(c => (bool)c.Arguments["confirm"]!));
@@ -150,7 +151,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         var seen = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         client.StateChanged += (_, s) => { if ((bool?)s["sessionLocked"] == true) seen.TrySetResult(true); };
         await host.Notify(s => { s["sessionLocked"] = true; s["worker"]!["state"] = "poisoned"; s["lane"] = new JsonObject { ["tool"] = "CompilePlcSoftware", ["actor"] = "mcp" }; });
-        await seen.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await seen.Task.WaitAsync(TestDeadlines.Hang);
         var old = host.Snapshot(); old["revision"] = 1L; old["sessionLocked"] = false; client.Merge(old);
         Assert.True((bool?)client.State!["sessionLocked"]);
         var other = host.Snapshot(); other["sessionKey"] = Guid.NewGuid().ToString("N"); other["revision"] = 100L; client.Merge(other);
@@ -158,7 +159,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         client.Detached += (_, _) => detached.TrySetResult(true);
         await host.Notify(s => { s["worker"]!["state"] = "disconnected"; s["endedBy"] = "mcp"; s["endReason"] = "session-ended"; });
-        await detached.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await detached.Task.WaitAsync(TestDeadlines.Hang);
         Assert.Null(client.SessionKey); Assert.Equal("mcp", (string?)client.State!["endedBy"]);
         Assert.DoesNotContain(host.Actions, a => a == "create");
     }
@@ -187,11 +188,11 @@ public sealed class McpPanelTests(WpfContext wpf)
         var owner = new McpOperatorFixture.FakeOwnedHost(host.Host.Pid) { AutoExit = false };
         await using var client = host.Client(owner); await client.CreateAsync("19");
         var closing = dispose ? client.DisposeAsync().AsTask() : client.DetachAsync();
-        await owner.Waiting.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await owner.Waiting.Task.WaitAsync(TestDeadlines.Hang);
         Assert.Null(client.SessionKey); Assert.False(closing.IsCompleted);
         Assert.False(owner.Disposed); Assert.False(owner.Forced);
         owner.Exited.TrySetResult(true);
-        await closing.WaitAsync(TimeSpan.FromSeconds(5));
+        await closing.WaitAsync(TestDeadlines.Hang);
         Assert.True(owner.Disposed); Assert.False(owner.Forced);
         Assert.DoesNotContain(host.Calls, call => call.Name == "DisconnectPortal");
     }
@@ -202,15 +203,15 @@ public sealed class McpPanelTests(WpfContext wpf)
         var owner = new McpOperatorFixture.FakeOwnedHost(host.Host.Pid) { AutoExit = false };
         await using var client = host.Client(owner); await client.CreateAsync("19");
         var detaching = client.DetachAsync();
-        await owner.Waiting.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await owner.Waiting.Task.WaitAsync(TestDeadlines.Hang);
         var disposing = client.DisposeAsync().AsTask();
         await Task.Delay(50);
         Assert.False(disposing.IsCompleted); Assert.False(owner.Disposed); Assert.False(owner.Forced);
         owner.Exited.TrySetResult(true);
-        await Task.WhenAll(detaching, disposing).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(detaching, disposing).WaitAsync(TestDeadlines.Hang);
         Assert.Equal(1, owner.WaitCalls); Assert.True(owner.Disposed); Assert.False(owner.Forced);
     }
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task Owned_session_forces_only_after_the_shutdown_timeout_and_traces_it()
     {
         await using var host = new McpOperatorFixture();
@@ -221,10 +222,10 @@ public sealed class McpPanelTests(WpfContext wpf)
         try
         {
             var closing = client.DetachAsync();
-            await owner.Waiting.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await owner.Waiting.Task.WaitAsync(TestDeadlines.Hang);
             await Task.Delay(TimeSpan.FromTicks(timing.Grace.Ticks * 101 / 200));
             Assert.False(owner.Forced); Assert.False(owner.Disposed); Assert.False(closing.IsCompleted);
-            await closing.WaitAsync(TimeSpan.FromSeconds(15));
+            await closing.WaitAsync(TestDeadlines.Hang);
             Assert.True(owner.Forced); Assert.True(owner.Disposed);
             Assert.True(McpSessionClient.OwnedHostExitTimeout > TimeSpan.FromSeconds(10));
             // Keep the original 19.8 / 20 lower bound with the injected grace.
@@ -253,7 +254,7 @@ public sealed class McpPanelTests(WpfContext wpf)
             Assert.True(model.Engineering.Save.CanExecute(null));
             model.Engineering.Save.Execute(null);
         });
-        await host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await host.Pending.Task.WaitAsync(TestDeadlines.Hang);
         wpf.Run(() =>
         {
             WpfContext.Drain();
@@ -264,7 +265,7 @@ public sealed class McpPanelTests(WpfContext wpf)
             window.Features.Decide(Assert.Single(window.Features.Requests), approve);
             host.Approval.SetResult(approve);
         });
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
         while (wpf.Run(() => model!.Engineering.Save.IsRunning)) await Task.Delay(10, deadline.Token);
         wpf
             .Run(() => {
@@ -299,7 +300,7 @@ public sealed class McpPanelTests(WpfContext wpf)
     {
         await using var host = new McpOperatorFixture { HoldApproval = true }; await using var client = host.Client(); await Attach(client, host);
         using var project = new McpProjectClient(client);
-        var call = project.SaveProjectAsync(); await host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var call = project.SaveProjectAsync(); await host.Pending.Task.WaitAsync(TestDeadlines.Hang);
         client.CancelPending(); await Assert.ThrowsAnyAsync<OperationCanceledException>(() => call);
         Assert.Equal(host.Key, client.SessionKey); Assert.Equal(0, host.ExecutedWrites);
         Assert.DoesNotContain(host.Calls, c => c.Name == "DisconnectPortal");
@@ -348,7 +349,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         await using var host = new McpOperatorFixture { HoldApproval = true }; await using var client = host.Client(); await Attach(client, host);
         using var project = new McpProjectClient(client);
         var call = project.ExportBlocksAsync("devices/Station/PLC_1", ["Main"], host.Root, ExportFormat.Source);
-        await host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await host.Pending.Task.WaitAsync(TestDeadlines.Hang);
         Assert.False(call.IsCompleted); Assert.Equal(0, host.ExecutedWrites);
         Assert.Equal(new[] { true, false }, host.Calls.Select(c => (bool)c.Arguments["dryRun"]!));
         Assert.All(host.Calls, c => { Assert.Equal("GeneratePlcSourceFromBlocks", c.Name); Assert.Null(c.Arguments["confirm"]); Assert.Null(c.Arguments["expectedProjectFile"]); });
@@ -371,7 +372,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         client.Detached += (_, _) => detached.TrySetResult(true);
         await host.Notify(s => { s["worker"]!["state"] = "disconnected"; s["endedBy"] = "mcp"; s["endReason"] = "session-ended"; });
-        await detached.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await detached.Task.WaitAsync(TestDeadlines.Hang);
         wpf.Run(() =>
         {
             WpfContext.Drain(); Assert.False(model!.Panel!.Attached); Assert.Contains("mcp", model.Panel.Ended);
@@ -399,7 +400,7 @@ public sealed class McpPanelTests(WpfContext wpf)
                 "Compile" => model!.Engineering.Compile, _ => model!.Engineering.Inspect };
             Assert.True(command.CanExecute(null)); command.Execute(null);
         });
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
         while (wpf.Run(() => command!.IsRunning)) await Task.Delay(10, deadline.Token);
         // A shared-state notification can start the project load after the command itself has finished;
         // the shared activity stays busy (and VcRefresh disabled) until that load completes.
@@ -429,8 +430,8 @@ public sealed class McpPanelTests(WpfContext wpf)
             Assert.True(model.Session.IsConnected); Assert.NotEmpty(model.Engineering.Blocks);
             model.Engineering.Save.Execute(null);
         });
-        await host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await host.Pending.Task.WaitAsync(TestDeadlines.Hang);
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
         while (wpf.Run(() => model!.Engineering.Save.IsRunning)) await Task.Delay(10, deadline.Token);
         wpf.Run(() =>
         {

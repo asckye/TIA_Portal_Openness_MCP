@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Net;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
@@ -112,7 +113,7 @@ public sealed class ScriptClientTests
     {
         using var probe = new HttpProbe(new Connection("http://fixture.invalid/mcp", "Bearer fixture"), timeoutSeconds: 1, handler: new WaitingHttpFixture());
         var request = Task.Run(() => McpSession.Tools(probe));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => request.WaitAsync(TimeSpan.FromSeconds(5)));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => request.WaitAsync(TestDeadlines.Hang));
     }
     [Fact]
     public void CredentialsNeverReachOutputErrorOrLedger()

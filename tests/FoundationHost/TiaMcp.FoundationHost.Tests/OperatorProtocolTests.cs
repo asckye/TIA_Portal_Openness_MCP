@@ -1,4 +1,5 @@
 extern alias foundationhost;
+using TiaMcp.Engine.Tests.Shared;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Security.Principal;
@@ -46,7 +47,7 @@ public sealed class OperatorProtocolTests
     {
         using var fixture = new SessionTests.Fixture("21"); using var registration = fixture.Register();
         var error = await Assert.ThrowsAsync<InvalidDataException>(() => SessionTests.Peer.Operator(registration, null,
-            "create", true, _ => throw new InvalidDataException("fixture session startup failed")).WaitAsync(TimeSpan.FromSeconds(5)));
+            "create", true, _ => throw new InvalidDataException("fixture session startup failed")).WaitAsync(TestDeadlines.Hang));
         Assert.Equal("fixture session startup failed", error.Message); Assert.Empty(registration.List());
     }
     [Theory]
@@ -150,15 +151,15 @@ public sealed class OperatorProtocolTests
         try
         {
             await client.DisposeAsync().AsTask().WaitAsync(SessionTests.Peer.ShutdownBudget); stream.Dispose();
-            await shutdownStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await shutdownStarted.Task.WaitAsync(TestDeadlines.Hang);
             Assert.False(endpoint.Completion.IsCompleted); Assert.Equal("BUSY\n", File.ReadAllText(lease));
             using var another = holdStream || transport == "http" ? listener.Connect() : null;
-            await shutdownCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await shutdownCompleted.Task.WaitAsync(TestDeadlines.Hang);
             Assert.True(elapsed.Elapsed >= TimeSpan.FromSeconds(3)); Assert.Equal("RELEASED\n", File.ReadAllText(lease));
             if (transport == "operator")
             {
                 if (holdStream) { Assert.False(endpoint.Completion.IsCompleted); another!.Dispose(); }
-                await endpoint.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+                await endpoint.Completion.WaitAsync(TestDeadlines.Hang);
                 Assert.False(File.Exists(registration.FilePath));
             }
             else
@@ -226,12 +227,13 @@ public sealed class OperatorProtocolTests
             // Windows denies replacing this handle. POSIX permits it and must retain the same atomic publication.
             if (OperatingSystem.IsWindows())
             {
-                await retrying.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                await retrying.Task.WaitAsync(TestDeadlines.Hang);
                 Assert.False(publishing.IsCompleted);
             }
             if (releaseLock) reader.Dispose();
-            await publishing.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(timer.Elapsed < TimeSpan.FromSeconds(5));
+            await publishing.WaitAsync(TestDeadlines.Hang);
+            Assert.True(timer.Elapsed < TestDeadlines.Hang);
+            TestDeadlines.Report("operator.publish-retry", timer.Elapsed.TotalMilliseconds, "ms");
             if (releaseLock || !OperatingSystem.IsWindows())
             {
                 Assert.Empty(errors);
@@ -247,7 +249,7 @@ public sealed class OperatorProtocolTests
             }
             Assert.Empty(Directory.EnumerateFiles(Path.GetDirectoryName(registration.FilePath)!, "*.tmp"));
         }
-        finally { reader.Dispose(); await publishing.WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally { reader.Dispose(); await publishing.WaitAsync(TestDeadlines.Hang); }
         registration.Publish();
         Assert.Equal(1, (int)JsonNode.Parse(File.ReadAllText(registration.FilePath))!["version"]!);
     }
@@ -269,8 +271,8 @@ public sealed class OperatorProtocolTests
         string sid = LocalPipeSecurity.CurrentSid, name = "operator-security-" + Guid.NewGuid().ToString("N");
         using var server = OperatorPipe.CreateServer(name, sid, true);
         using var client = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Identification);
-        using var deadline = new CancellationTokenSource(TimeSpan.FromMilliseconds(1000));
-        var accepting = server.WaitForConnectionAsync(deadline.Token); await client.ConnectAsync(1000, deadline.Token); await accepting.WaitAsync(TimeSpan.FromMilliseconds(1000));
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+        var accepting = server.WaitForConnectionAsync(deadline.Token); await client.ConnectAsync(TestDeadlines.HangMilliseconds, deadline.Token); await accepting.WaitAsync(TestDeadlines.Hang);
         int? peer = OperatorPipe.VerifiedClient(server, wrongSid ? "S-1-5-21-1-2-3-1001" : sid,
             wrongImage ? Path.Combine(Path.GetTempPath(), Path.GetFileName(Environment.ProcessPath!)) : Environment.ProcessPath!);
         Assert.Equal(wrongSid || wrongImage ? null : (int?)Environment.ProcessId, peer);

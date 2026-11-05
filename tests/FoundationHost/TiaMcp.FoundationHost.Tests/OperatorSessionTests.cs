@@ -1,5 +1,6 @@
 extern alias foundationhost;
 extern alias enginehost;
+using TiaMcp.Engine.Tests.Shared;
 using System.IO.Pipelines;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -224,7 +225,7 @@ public sealed class OperatorSessionTestsPlc
 
     private static async Task WaitUntilBusy(Fixture fixture)
     {
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var timeout = new CancellationTokenSource(TestDeadlines.Hang);
         while (!File.Exists(Path.Combine(fixture.DirectoryPath, "busy"))) await Task.Delay(10, timeout.Token);
     }
 
@@ -265,9 +266,9 @@ public sealed class OperatorSessionTestsPlc
 
     internal sealed class Peer : IAsyncDisposable
     {
-        internal static readonly TimeSpan HandshakeBudget = TimeSpan.FromSeconds(5);
+        internal static readonly TimeSpan HandshakeBudget = TestDeadlines.Hang;
         internal static readonly TimeSpan RequestBudget = TimeSpan.FromSeconds(120);
-        internal static readonly TimeSpan ShutdownBudget = TimeSpan.FromSeconds(5);
+        internal static readonly TimeSpan ShutdownBudget = TestDeadlines.Hang;
         internal readonly IMcpClient Client;
         private readonly Stream hostStream, clientStream;
         internal OperatorHandshakeResult? Handshake;

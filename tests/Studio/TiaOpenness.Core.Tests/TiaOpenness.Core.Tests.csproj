@@ -25,6 +25,7 @@
   <ItemGroup>
     <Compile Include="../../Shared/ShardFramework.cs" Link="Shared/ShardFramework.cs" />
     <Compile Include="../../Shared/TimeSensitiveTests.cs" Link="Shared/TimeSensitiveTests.cs" />
+    <Compile Include="../../Shared/TestDeadlines.cs" Link="Shared/TestDeadlines.cs" />
     <AssemblyAttribute Include="Xunit.TestFrameworkAttribute">
       <_Parameter1>TiaMcp.Engine.Tests.Shared.ShardFramework</_Parameter1>
       <_Parameter2>$(AssemblyName)</_Parameter2>

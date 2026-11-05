@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Security.AccessControl;
@@ -19,11 +20,11 @@ public sealed class PipeSecurityTests
     private static async Task Connected(Func<NamedPipeServerStream, NamedPipeClientStream, string, Task> test)
     {
         string sid = LocalPipeSecurity.CurrentSid, name = Name();
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var timeout = new CancellationTokenSource(TestDeadlines.Hang);
         using var server = WorkbenchControlPipe.CreateServer(name, sid, true);
         using var client = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Identification);
         var accept = server.WaitForConnectionAsync(timeout.Token);
-        await client.ConnectAsync(250, timeout.Token); await accept;
+        await client.ConnectAsync(TestDeadlines.HangMilliseconds, timeout.Token); await accept;
         // Windows impersonation is available only after the server has read client data.
         await client.WriteAsync(new byte[] { 1 }, timeout.Token); var data = new byte[1];
         Assert.Equal(1, await server.ReadAsync(data, timeout.Token));

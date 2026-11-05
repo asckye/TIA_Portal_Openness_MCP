@@ -5,7 +5,7 @@ and cross-checks each full roster against `--catalog --profile full`. The founda
 the ASP.NET Core 10 runtime; when the machine lacks it, point DOTNET_ROOT and DOTNET_ROOT_X64 at a
 private runtime before running capture. compare exits 1 on any breaking change.
 """
-from offline_fixtures import verify_owned_process_image
+from offline_fixtures import HANG_GUARD_SECONDS, verify_owned_process_image
 import argparse
 from collections import Counter
 import hashlib
@@ -125,7 +125,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
         if session_id:
             headers['Mcp-Session-Id'] = session_id
         request = urllib.request.Request(endpoint, json.dumps(body).encode('utf-8'), headers)
-        with opener.open(request, timeout=25) as response:
+        with opener.open(request, timeout=HANG_GUARD_SECONDS) as response:
             session_id = response.headers.get('Mcp-Session-Id', session_id)
             raw = response.read().decode('utf-8')
             if response.headers.get('Content-Type', '').startswith('text/event-stream'):
@@ -145,7 +145,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
             if notification:
                 return None
             while True:
-                raw = output.get(timeout=25)
+                raw = output.get(timeout=HANG_GUARD_SECONDS)
                 if raw is None:
                     raise ValueError('EngineHost exited: ' + ''.join(errors))
                 reply = json.loads(raw)
@@ -156,7 +156,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
         return reply
     try:
         if transport == 'http':
-            deadline = time.monotonic() + 25
+            deadline = time.monotonic() + HANG_GUARD_SECONDS
             while True:
                 if process.poll() is not None:
                     raise ValueError('EngineHost exited: ' + ''.join(errors))

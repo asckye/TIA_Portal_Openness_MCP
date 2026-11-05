@@ -1,5 +1,5 @@
 """Exercise resource discovery against a real EXE over STDIO and HTTP; never connect to TIA."""
-from offline_fixtures import verify_owned_process_image
+from offline_fixtures import HANG_GUARD_SECONDS, verify_owned_process_image
 import argparse
 import hashlib
 import http.client
@@ -30,7 +30,7 @@ _HTTP_PORTS = set()
 
 
 class PersistentHttp:
-    def __init__(self, url, timeout=15):
+    def __init__(self, url, timeout=HANG_GUARD_SECONDS):
         self.url = url.rstrip('/')
         address = urllib.parse.urlsplit(self.url)
         # HTTPConnection connects directly and never reads proxy environment settings.
@@ -217,7 +217,7 @@ def host_command(exe, portal_root, major, transport, profile, public_api=None, *
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
            *, env_overrides=None, process_observer=None, evidence_directory=None,
            plc_worker=None, sdk_ready=True,
-           rpc_timeout=25, startup_timeout=25, stdio_exit_timeout=3, sdk_installation=True):
+           rpc_timeout=HANG_GUARD_SECONDS, startup_timeout=HANG_GUARD_SECONDS, stdio_exit_timeout=3, sdk_installation=True):
     # HTTP configuration watchers must not observe other checks' mutable tree.
     with fixture_directory('host-content-root-') as content_root:
         inputs = dict(env_overrides=env_overrides, process_observer=process_observer,
@@ -240,7 +240,7 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
 def _server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
            *, env_overrides=None, process_observer=None, evidence_directory=None, content_root=None,
            plc_worker=None, sdk_ready=True,
-           rpc_timeout=25, startup_timeout=25, stdio_exit_timeout=3):
+           rpc_timeout=HANG_GUARD_SECONDS, startup_timeout=HANG_GUARD_SECONDS, stdio_exit_timeout=3):
     exe = Path(exe).resolve()
     if portal_root is not None: portal_root = Path(portal_root).resolve()
     port = 0

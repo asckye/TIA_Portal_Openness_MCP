@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -279,7 +280,7 @@ namespace TiaMcp.Updater.Tests
                 { WorkingDirectory = repository, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
                 using (Process check = Process.Start(powershell))
                 {
-                    bool exited = check.WaitForExit(15000);
+                    bool exited = check.WaitForExit(TestDeadlines.HangMilliseconds);
                     if (!exited) { try { check.Kill(); } catch { } }
                     string output = check.StandardOutput.ReadToEnd(), error = check.StandardError.ReadToEnd();
                     Assert.True(exited, "The extracted offline preflight did not finish.");

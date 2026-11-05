@@ -1,4 +1,5 @@
 extern alias foundationhost;
+using TiaMcp.Engine.Tests.Shared;
 internal static class Program
 {
     private static int Main(string[] args) => TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() => Run(args));
@@ -108,7 +109,7 @@ internal sealed class FixtureStartupPressure : IDisposable
     {
         busyStopping.Cancel();
         foreach (var thread in busy)
-            if (!thread.Join(5000)) throw new InvalidOperationException("Owned HTTP startup pressure thread did not exit.");
+            if (!thread.Join(TestDeadlines.HangMilliseconds)) throw new InvalidOperationException("Owned HTTP startup pressure thread did not exit.");
         busyStopping.Dispose(); catalogReleased.Dispose();
     }
 }

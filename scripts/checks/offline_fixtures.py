@@ -7,6 +7,9 @@ import time
 import uuid
 
 
+HANG_GUARD_SECONDS = 120
+
+
 @contextmanager
 def fixture_directory(prefix='offline-fixture-'):
     parent = (Path(__file__).resolve().parents[2] / 'bin-build').resolve()

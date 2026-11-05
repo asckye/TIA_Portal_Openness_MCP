@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -347,7 +348,7 @@ namespace TiaMcp.Engine.Tests
                 return Task.CompletedTask;
             }, TimeSpan.FromMilliseconds(5)))
             {
-                await two.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                await two.Task.WaitAsync(TestDeadlines.Hang);
             }
             int ended = calls;
             await Task.Delay(20);

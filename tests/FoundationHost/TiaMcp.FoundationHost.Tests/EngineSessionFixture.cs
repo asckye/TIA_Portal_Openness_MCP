@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -134,7 +135,13 @@ internal static class EngineSessionFixture
         try { server.Run(); }
         finally
         {
-            if (slowShutdownMarker != null) { File.WriteAllText(slowShutdownMarker, "stopping"); Thread.Sleep(2000); }
+            if (slowShutdownMarker != null)
+            {
+                File.WriteAllText(slowShutdownMarker, "stopping");
+                Xunit.Assert.True(SpinWait.SpinUntil(() => File.Exists(slowShutdownMarker + ".release"), TestDeadlines.Hang),
+                    "Slow shutdown fixture was not released.");
+                File.Delete(slowShutdownMarker + ".release");
+            }
             if (!uncertain) lease?.ReleaseCleanly(); lease?.Dispose();
         }
         return 0;

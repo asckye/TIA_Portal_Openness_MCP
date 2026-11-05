@@ -176,7 +176,7 @@ public sealed class FoundationProcessLeaseTests
     public async Task Process_gone_is_refused_without_native_dispatch()
     {
         using var session = new Session(); using var target = Start("target");
-        Assert.Equal("READY", await Line(target)); Assert.Equal(Path.GetFullPath(Path.ChangeExtension(typeof(FoundationProcessLeaseTests).Assembly.Location, ".exe")), Path.GetFullPath(target.MainModule!.FileName), ignoreCase: true); target.Kill(); Assert.True(target.WaitForExit(5000));
+        Assert.Equal("READY", await Line(target)); Assert.Equal(Path.GetFullPath(Path.ChangeExtension(typeof(FoundationProcessLeaseTests).Assembly.Location, ".exe")), Path.GetFullPath(target.MainModule!.FileName), ignoreCase: true); target.Kill(); Assert.True(target.WaitForExit(TestDeadlines.HangMilliseconds));
         var failure = session.Boundary.Dispatch(Attach(target.Id)).Failure!;
         Assert.Equal(ChannelOutcome.RejectedBeforeNative, failure.Outcome);
         Assert.Equal(0, session.NativeCalls);
@@ -227,7 +227,7 @@ public sealed class FoundationProcessLeaseTests
     {
         using var session = new Session(); using var host = Start("job", session.Root, session.Pid.ToString());
         int pid = int.Parse((await Line(host))!); using var worker = Process.GetProcessById(pid);
-        host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(5000)); Assert.True(worker.WaitForExit(5000));
+        host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.Equal("IDLE\n", File.ReadAllText(session.FilePath));
         var response = session.Boundary.Dispatch(Attach(session.Pid));
         Assert.Null(response.Failure);
@@ -255,7 +255,7 @@ public sealed class FoundationProcessLeaseTests
         using var session = new Session(); using var host = Start("job", session.Root, session.Pid.ToString());
         int pid = int.Parse((await Line(host))!); using var worker = Process.GetProcessById(pid);
         Assert.Equal("BUSY", await Command(host, "busy"));
-        host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(5000)); Assert.True(worker.WaitForExit(5000));
+        host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.Equal("BUSY\n", File.ReadAllText(session.FilePath));
         Assert.Equal(SessionBehavior.LeaseNotReleased, session.Boundary.Dispatch(Attach(session.Pid)).Failure!.Message);
         Assert.Equal(0, session.NativeCalls);
@@ -267,7 +267,7 @@ public sealed class FoundationProcessLeaseTests
         using var session = new Session(); using var host = Start("shutdown", session.Root, session.Pid.ToString(), release);
         using var worker = Process.GetProcessById(int.Parse((await Line(host))!));
         host.StandardInput.WriteLine("exit");
-        Assert.True(host.WaitForExit(10000)); Assert.True(host.ExitCode == 0, FixtureExit.Describe(host.ExitCode, host.StandardError.ReadToEnd())); Assert.Equal(0, host.ExitCode); Assert.True(worker.WaitForExit(10000));
+        Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert.True(host.ExitCode == 0, FixtureExit.Describe(host.ExitCode, host.StandardError.ReadToEnd())); Assert.Equal(0, host.ExitCode); Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(session.Root, session.Pid + "-1.lease")));
     }
 
@@ -296,11 +296,11 @@ public sealed class FoundationProcessLeaseTests
     public void Durable_request_state_overhead_is_measured()
     {
         using var session = new Session(); using var lease = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
-        const int count = 1000;
+        const int count = 100;
         var watch = Stopwatch.StartNew();
         for (int i = 0; i < count; i++) { lease.BeginRequest(); lease.CompleteRequest(false); }
         double milliseconds = watch.Elapsed.TotalMilliseconds / count;
-        Console.WriteLine("LEASE_OVERHEAD requests=" + count + " millisecondsPerRequest=" + milliseconds.ToString("F6", System.Globalization.CultureInfo.InvariantCulture));
+        TestDeadlines.Report("lease.durable-request", milliseconds, "ms/request");
         lease.ReleaseCleanly();
     }
 
@@ -313,14 +313,14 @@ public sealed class FoundationProcessLeaseTests
     }
     private static async Task<string?> Line(Process process)
     {
-        string? line = await process.StandardOutput.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        string? line = await process.StandardOutput.ReadLineAsync().WaitAsync(TestDeadlines.Hang);
         if (line == null && process.HasExited)
             throw new InvalidOperationException(FixtureExit.Describe(process.ExitCode, await process.StandardError.ReadToEndAsync()));
         return line;
     }
     private static async Task<string?> Command(Process process, string command) { process.StandardInput.WriteLine(command); return await Line(process); }
     private static async Task Stop(Process process)
-    { process.StandardInput.Close(); await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(10)); Assert.True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, await process.StandardError.ReadToEndAsync())); Assert.Equal(0, process.ExitCode); }
+    { process.StandardInput.Close(); await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang); Assert.True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, await process.StandardError.ReadToEndAsync())); Assert.Equal(0, process.ExitCode); }
 
     internal static int RunFixture(string[] args)
     {

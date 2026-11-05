@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Text.Json;
 using ModelContextProtocol;
 using TiaMcp.FoundationHost;
@@ -62,7 +63,7 @@ internal static class ExportPublicationTests
                     {
                         PlcExportPublication.Publish(Output("simultaneous"),f=>{
                             File.WriteAllText(f.FullName,"<Document producer=\""+label+"\"/>");
-                            if(!barrier.SignalAndWait(TimeSpan.FromSeconds(10))) throw new TimeoutException("Concurrent test rendezvous failed.");
+                            if(!barrier.SignalAndWait(TestDeadlines.Hang)) throw new TimeoutException("Concurrent test rendezvous failed.");
                         });
                         return (label,error:(IOException?)null);
                     }

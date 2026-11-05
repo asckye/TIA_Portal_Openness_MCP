@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -197,7 +198,7 @@ public sealed class CallJournalTests : IDisposable
         var changed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         reader.Changed += (_, _) => changed.TrySetResult(true);
         File.WriteAllLines(Path.Combine(root, "calls-live.jsonl"), Rows("live", result: Envelope()));
-        await changed.Task.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Single(reader.Calls);
+        await changed.Task.WaitAsync(TestDeadlines.Hang); Assert.Single(reader.Calls);
         reader.Dispose(); File.Delete(Path.Combine(root, "calls-live.jsonl")); reader.Poll(); Assert.Single(reader.Calls);
     }
 

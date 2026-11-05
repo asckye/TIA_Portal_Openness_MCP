@@ -36,6 +36,7 @@ import json
 import os
 from pathlib import Path
 from ported_families import RELEASES
+from offline_fixtures import HANG_GUARD_SECONDS
 import queue
 import shutil
 import subprocess
@@ -773,7 +774,7 @@ def invoke_reflection_probe(bundle_root: Path, dotnet_runtime: Path, probe_dll: 
 def invoke_updater_source_refusal(updater: Path, source_root: Path) -> str:
     result = subprocess.run([str(updater), "-InstallRoot", str(source_root), "-Check"],
                             cwd=updater.parent, text=True, encoding="utf-8", errors="replace",
-                            timeout=20, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                            timeout=HANG_GUARD_SECONDS, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     if result.returncode == 0 or "source checkout" not in result.stdout.lower():
         raise CheckFailure(f"Updater did not refuse a source checkout (exit={result.returncode}): {result.stdout[-2000:]}")
     return result.stdout.strip()
@@ -797,7 +798,7 @@ def root_launcher_probe(bundle_root: Path, probe_output: Path, launcher: Path) -
         started = subprocess.run([str(launcher), "--launcher-target", str(marker)], cwd=bundle_root,
                                  env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, timeout=30, check=False)
-        deadline = time.monotonic() + 15
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         while time.monotonic() < deadline and not marker.is_file():
             time.sleep(0.1)
         if not marker.is_file():
@@ -811,7 +812,7 @@ def root_launcher_probe(bundle_root: Path, probe_output: Path, launcher: Path) -
     finally:
         # The launcher returns before its target exits; the target keeps its image locked for a moment after writing
         # the marker, so restoring the Studio files retries briefly instead of failing on a sharing violation.
-        deadline = time.monotonic() + 20
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         for name, content in backups.items():
             target = studio / name
             while True:

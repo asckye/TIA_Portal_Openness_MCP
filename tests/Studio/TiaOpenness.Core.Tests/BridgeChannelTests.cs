@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +24,7 @@ namespace TiaOpenness.Core.Tests;
 public sealed class BridgeChannelTests
 {
     private static string BridgeExe => Path.Combine(AppContext.BaseDirectory, "bridge", "TiaOpenness.Bridge.exe");
-    private static TimeSpan Budget => TimeSpan.FromSeconds(10);
+    private static TimeSpan Budget => TestDeadlines.Hang;
     private static ChannelClient Channel(BridgeClient client) => (ChannelClient)typeof(BridgeClient)
         .GetField("_channel", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(client)!;
     private static Process Child(BridgeClient client) => (Process)typeof(BridgeClient)
@@ -84,7 +85,7 @@ public sealed class BridgeChannelTests
         finally
         {
             channel.Dispose();
-            if (!process.WaitForExit(5000)) { process.Kill(); process.WaitForExit(); }
+            if (!process.WaitForExit(TestDeadlines.HangMilliseconds)) { process.Kill(); process.WaitForExit(); }
             await diagnostics;
         }
     }
@@ -270,7 +271,7 @@ public sealed class BridgeChannelTests
         {
             if (Interlocked.Exchange(ref killed, 1) != 0) return;
             Child(bridge).Kill();
-            Assert.True(Child(bridge).WaitForExit(5000));
+            Assert.True(Child(bridge).WaitForExit(TestDeadlines.HangMilliseconds));
         };
         // The bounded pipe fills with progress while the client kills the child,
         // so a complete reply cannot race ahead of the kill.
@@ -291,7 +292,7 @@ public sealed class BridgeChannelTests
         bridge.Start(BridgeExe, forceMock: true);
         using var process = Process.GetProcessById(Child(bridge).Id);
         bridge.Dispose();
-        Assert.True(process.WaitForExit(5000));
+        Assert.True(process.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.False(bridge.IsRunning);
         bridge.Dispose();
     }

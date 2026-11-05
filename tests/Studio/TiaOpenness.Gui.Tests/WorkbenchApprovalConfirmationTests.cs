@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Windows;
 using System.Windows.Automation;
@@ -47,7 +48,7 @@ public sealed class WorkbenchApprovalConfirmationTests(WpfContext wpf)
                     if (e.PropertyName == nameof(IApprovalService.Enabled)) saved.TrySetResult();
                 };
                 UnifiedDesktopTests.ClickControl(submit);
-                WpfContext.Complete(saved.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+                WpfContext.Complete(saved.Task.WaitAsync(TestDeadlines.Hang));
                 Assert.False(window.Approvals.Enabled);
             }
             finally { window.Close(); }
@@ -110,7 +111,7 @@ public sealed class WorkbenchApprovalConfirmationTests(WpfContext wpf)
                     if (e.PropertyName == nameof(IApprovalService.Enabled)) saved.TrySetResult();
                 };
                 UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOn"));
-                WpfContext.Complete(saved.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+                WpfContext.Complete(saved.Task.WaitAsync(TestDeadlines.Hang));
                 Assert.True(window.Approvals.Enabled);
                 Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("ConfirmOverlay")).Visibility);
             }

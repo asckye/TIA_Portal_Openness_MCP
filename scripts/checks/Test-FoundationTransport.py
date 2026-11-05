@@ -1,5 +1,5 @@
 """Exercise real MCP STDIO/HTTP hosts against a separate synthetic worker. No TIA calls."""
-from offline_fixtures import verify_owned_process_image
+from offline_fixtures import HANG_GUARD_SECONDS, verify_owned_process_image
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, nullcontext
@@ -65,14 +65,14 @@ class Stdio:
         self.p.stdin.write(json.dumps({'jsonrpc': '2.0', 'id': self.seq, 'method': method, 'params': params}) + '\n')
         self.p.stdin.flush()
         while True:
-            reply = json.loads(self.lines.get(timeout=15))
+            reply = json.loads(self.lines.get(timeout=HANG_GUARD_SECONDS))
             if reply.get('id') == self.seq:
                 assert 'error' not in reply, reply
                 return reply['result']
 
     def close(self):
         self.p.stdin.close()
-        self.p.wait(timeout=15)
+        self.p.wait(timeout=HANG_GUARD_SECONDS)
         assert self.p.returncode == 0, fixture_exit_description(self.p.returncode, log_tail(self.log))
 
 
@@ -469,7 +469,7 @@ def plc_transports(args, temp, counts):
             owned = []
             with resources.server(host, portal, key, 'stdio', 'full', public_api=api, plc_worker=worker,
                                   sdk_ready=ready, env_overrides=env, evidence_directory=evidence_directory,
-                                  rpc_timeout=15, startup_timeout=60, stdio_exit_timeout=15,
+                                  rpc_timeout=HANG_GUARD_SECONDS, startup_timeout=60, stdio_exit_timeout=HANG_GUARD_SECONDS,
                                   process_observer=owned.append, sdk_installation=full) as (rpc, _, stderr_lines):
                 client = SharedStdio(rpc)
                 counts[key] = exercise_engine(client, key, ready=ready) if full else exercise(client, key, logfile, 0)
@@ -491,7 +491,7 @@ def plc_transports(args, temp, counts):
         if full:
             unready = []
             with resources.server(host, api, key, 'http', 'full', public_api=api, plc_worker=worker,
-                                  sdk_ready=False, env_overrides=env, rpc_timeout=15, startup_timeout=60,
+                                  sdk_ready=False, env_overrides=env, rpc_timeout=HANG_GUARD_SECONDS, startup_timeout=60,
                                   process_observer=unready.append), ExitStack() as clients:
                 # Keep the no-TIA HTTP readiness and schema refusals as well as the ready session proof below.
                 command = unready[0].args
@@ -512,7 +512,7 @@ def plc_transports(args, temp, counts):
         owned = []
         with resources.server(host, portal, key, 'http', 'full', public_api=api, plc_worker=worker,
                               sdk_ready=full, env_overrides=env, process_observer=owned.append,
-                              evidence_directory=evidence_directory, rpc_timeout=15, startup_timeout=60,
+                              evidence_directory=evidence_directory, rpc_timeout=HANG_GUARD_SECONDS, startup_timeout=60,
                               sdk_installation=full) as (_, _, _), ExitStack() as clients:
             process = owned[0]
             command = process.args
@@ -548,7 +548,7 @@ def plc_transports(args, temp, counts):
                         exercise_isolation(client, first, key)
                     else:
                         exercise(client, key, logfile, before)
-                    deadline = time.monotonic() + 10
+                    deadline = time.monotonic() + HANG_GUARD_SECONDS
                     while sum(json.loads(line)['stage'] == 'exit' for line in logfile.read_text('utf-8').splitlines()) < (1 if client is first else 2):
                         assert time.monotonic() < deadline
                         time.sleep(.05)
@@ -562,7 +562,7 @@ def plc_transports(args, temp, counts):
                     nonces = [worker_nonce(handle) for handle in handles]
                     assert len(set(nonces)) == 2, 'Session workers reused a launch nonce'
                     first.close()
-                    deadline = time.monotonic() + 10
+                    deadline = time.monotonic() + HANG_GUARD_SECONDS
                     while sum(kernel.WaitForSingleObject(handle, 0) == 0 for handle in handles) != 1:
                         assert time.monotonic() < deadline, 'Session deletion did not terminate exactly one worker'
                         time.sleep(.05)
@@ -675,7 +675,7 @@ def main():
                         assert json.load(response)['mcpHostReady']
                     exercise(first, key, logfile, 0)
                     # Wait for session deletion to close the first synthetic child.
-                    deadline = time.monotonic() + 10
+                    deadline = time.monotonic() + HANG_GUARD_SECONDS
                     while '"exit"' not in logfile.read_text('utf-8'):
                         assert time.monotonic() < deadline
                         time.sleep(.05)

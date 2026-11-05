@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -32,9 +33,9 @@ public sealed partial class PipelineTests
             try { await release.Task.WaitAsync(token); } finally { Interlocked.Decrement(ref active); }
         }) })[0];
         var calls = Enumerable.Range(0, 12).Select(_ => tool.InvokeAsync(Request("BuildStructuredText")).AsTask()).ToArray();
-        try { await entered.Task.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Equal(8, active); }
+        try { await entered.Task.WaitAsync(TestDeadlines.Hang); Assert.Equal(8, active); }
         finally { release.TrySetResult(); }
-        await Task.WhenAll(calls).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(calls).WaitAsync(TestDeadlines.Hang);
         Assert.Equal(8, maximum);
     }
 
@@ -66,7 +67,7 @@ public sealed partial class PipelineTests
         using var held = await (Task<IDisposable?>)acquire.Invoke(null, new object[] { "GetSessionState", first.Worker.SessionKey, CancellationToken.None })!;
         using var second = new Fixture();
         using var independent = await ((Task<IDisposable?>)acquire.Invoke(null, new object[] { "GetSessionState", second.Worker.SessionKey, CancellationToken.None })!)
-            .WaitAsync(TimeSpan.FromSeconds(5));
+            .WaitAsync(TestDeadlines.Hang);
     }
 
     [Fact]
@@ -79,12 +80,12 @@ public sealed partial class PipelineTests
         var write = Task.Run(() => fixture.Call("SaveProject", "{}"));
         try
         {
-            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True((bool?)(await Task.Run(() => fixture.Call("GetSessionState", "{}")).WaitAsync(TimeSpan.FromSeconds(5))).StructuredContent?["ok"]);
+            await entered.Task.WaitAsync(TestDeadlines.Hang);
+            Assert.True((bool?)(await Task.Run(() => fixture.Call("GetSessionState", "{}")).WaitAsync(TestDeadlines.Hang)).StructuredContent?["ok"]);
             Assert.DoesNotContain("SaveProject", fixture.Worker.Calls);
         }
         finally { grant.TrySetResult(); }
-        await write.WaitAsync(TimeSpan.FromSeconds(5));
+        await write.WaitAsync(TestDeadlines.Hang);
         Assert.Contains("SaveProject", fixture.Worker.Calls);
     }
 

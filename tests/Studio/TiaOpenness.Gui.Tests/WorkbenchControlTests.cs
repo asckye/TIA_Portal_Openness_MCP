@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -405,7 +406,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
                 using var processing = window.Dispatcher.DisableProcessing();
                 entered.Set(); release.Wait(TimeSpan.FromSeconds(2));
             }));
-            Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
+            Assert.True(entered.Wait(TestDeadlines.Hang));
             try
             {
                 using var server = new WorkbenchControlServer(window.ControlSurface, window.Dispatcher, _ => Environment.ProcessPath!);
@@ -432,7 +433,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             using var processing = window.Dispatcher.DisableProcessing();
             entered.Set(); release.Wait(TimeSpan.FromSeconds(4));
         }));
-        Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
+        Assert.True(entered.Wait(TestDeadlines.Hang));
         try
         {
             var first = Request(now: now); var pending = server.Execute(first);
@@ -467,7 +468,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             using var processing = window.Dispatcher.DisableProcessing();
             entered.Set(); release.Wait(TimeSpan.FromSeconds(2));
         }));
-        Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
+        Assert.True(entered.Wait(TestDeadlines.Hang));
         try
         {
             var request = Request(); request.DeadlineUtc = DateTimeOffset.UtcNow.AddMilliseconds(150);
@@ -477,7 +478,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             Assert.Equal(closing ? "workbench-closing" : "workbench-deadline", response.Refusal?.Condition);
             release.Set();
             await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ContextIdle);
-            server.Dispose(); await server.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+            server.Dispose(); await server.Completion.WaitAsync(TestDeadlines.Hang);
             Assert.Equal(0, applied);
         }
         finally { release.Set(); server.Dispose(); wpf.Run(window.Close); }
@@ -496,7 +497,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             using (window.Dispatcher.DisableProcessing())
             {
                 Interlocked.Increment(ref applied); entered.Set();
-                if (!release.Wait(TimeSpan.FromSeconds(10))) throw new TimeoutException("Started control fixture was not released.");
+                if (!release.Wait(TestDeadlines.Hang)) throw new TimeoutException("Started control fixture was not released.");
             }
             finished = DateTimeOffset.UtcNow;
             if (failure == 1) throw new InvalidOperationException("Started control fixture failed.");
@@ -508,12 +509,12 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         {
             var request = Request(); request.DeadlineUtc = DateTimeOffset.UtcNow.AddMilliseconds(150);
             var pending = server.Execute(request);
-            Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
+            Assert.True(entered.Wait(TestDeadlines.Hang));
             if (closing) server.Dispose();
             await Task.Delay(200);
             Assert.False(pending.IsCompleted);
             release.Set();
-            var response = await pending.WaitAsync(TimeSpan.FromSeconds(2));
+            var response = await pending.WaitAsync(TestDeadlines.Hang);
             Assert.Equal(failure == 0 ? WorkbenchControlStatus.Done : WorkbenchControlStatus.Failed, response.Status);
             Assert.True(finished > request.DeadlineUtc);
             Assert.Equal(1, applied);

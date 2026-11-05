@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -67,7 +68,8 @@ namespace TiaMcp.Engine.Tests
             var watch = Stopwatch.StartNew();
             string digest = CanonicalJson.ArgumentHash(element);
             watch.Stop();
-            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), "4 MiB argument hash took " + watch.Elapsed);
+            Assert.True(watch.Elapsed < TestDeadlines.Hang, "4 MiB argument hash took " + watch.Elapsed);
+            TestDeadlines.Report("import-staging.hash-4mib", watch.Elapsed.TotalMilliseconds, "ms");
             Assert.Equal(digest, CanonicalJson.ArgumentHash(element));
             string json = args.ToJsonString();
             var first = PendingApproval.Create("fixture", "21", "StageImportFiles", json, "{}", 120);

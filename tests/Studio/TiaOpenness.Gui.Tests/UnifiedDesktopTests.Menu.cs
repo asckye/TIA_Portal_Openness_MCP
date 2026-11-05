@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,7 @@ public sealed partial class UnifiedDesktopTests
         try
         {
             ClickControl(button);
-            WpfContext.Complete(changed.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+            WpfContext.Complete(changed.Task.WaitAsync(TestDeadlines.Hang));
         }
         finally { approvals.PropertyChanged -= OnChanged; }
     }
@@ -199,10 +200,10 @@ public sealed partial class UnifiedDesktopTests
             {
                 var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
                 ClickControl((RadioButton)settings.FindName("Timeout300"));
-                Assert.True(approvals.Entered.Wait(TimeSpan.FromSeconds(10)));
+                Assert.True(approvals.Entered.Wait(TestDeadlines.Hang));
                 Assert.Equal(120, approvals.TimeoutSeconds);
                 approvals.Release.Set();
-                WpfContext.Complete(approvals.Saved.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+                WpfContext.Complete(approvals.Saved.Task.WaitAsync(TestDeadlines.Hang));
                 Assert.Equal(300, approvals.TimeoutSeconds);
             }
             finally { approvals.Release.Set(); window.Close(); }
@@ -221,7 +222,7 @@ public sealed partial class UnifiedDesktopTests
             set
             {
                 Entered.Set();
-                if (!Release.Wait(TimeSpan.FromSeconds(10))) throw new TimeoutException("Fixture save was not released.");
+                if (!Release.Wait(TestDeadlines.Hang)) throw new TimeoutException("Fixture save was not released.");
                 inner.TimeoutSeconds = value; Saved.TrySetResult(true);
             }
         }

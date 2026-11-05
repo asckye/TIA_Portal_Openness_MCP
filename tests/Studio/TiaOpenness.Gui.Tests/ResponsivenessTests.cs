@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -6,6 +7,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -109,7 +111,8 @@ public sealed class ResponsivenessTests(WpfContext wpf)
         for (int i = 0; i < 10; i++) monitor.Request();
         await Task.Delay(200); Assert.Equal(stopped, work);
         monitor.SetActive(true);
-        for (int i = 0; i < 100 && work == stopped; i++) await Task.Delay(10);
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+        while (work == stopped) await Task.Delay(10, deadline.Token);
         Assert.True(work > stopped);
     }
 
@@ -220,10 +223,10 @@ public sealed class ResponsivenessTests(WpfContext wpf)
         {
             Task verify = null!; wpf.Run(() => { verify = model.VerifyAsync(); });
             Assert.False(verify.IsCompleted); bool responsive = false; wpf.Run(() => responsive = true); Assert.True(responsive);
-            lease.Dispose(); await verify.WaitAsync(TimeSpan.FromSeconds(5));
+            lease.Dispose(); await verify.WaitAsync(TestDeadlines.Hang);
             using var settingLock = JournalFileLock.Acquire(retention + ".lock");
             Task save = null!; wpf.Run(() => { save = model.SetRetentionAsync(128, true); });
-            wpf.Run(() => { }); Assert.False(save.IsCompleted); settingLock.Dispose(); await save.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Equal(128, service.FileSizeMb);
+            wpf.Run(() => { }); Assert.False(save.IsCompleted); settingLock.Dispose(); await save.WaitAsync(TestDeadlines.Hang); Assert.Equal(128, service.FileSizeMb);
         }
         finally { wpf.Run(() => model.Dispose()); }
     }

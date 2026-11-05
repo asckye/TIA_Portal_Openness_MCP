@@ -26,7 +26,7 @@ public sealed class PluginLauncherTests
         process.StandardInput.Close();
         string output = await process.StandardOutput.ReadToEndAsync();
         string error = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
         Assert.NotEqual(0, process.ExitCode); Assert.Equal("", output);
         Assert.Contains("TIA MCP plugin launcher:", error);
         Assert.Contains("TIA_MCP_BUNDLE_ROOT", error);
@@ -52,7 +52,7 @@ public sealed class PluginLauncherTests
         using var fixture = new LauncherFixture();
         using var process = fixture.Start(null, "V19"); process.StandardInput.Close();
         string error = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
         Assert.NotEqual(0, process.ExitCode); Assert.Contains("TIA_MCP_RELEASE_KEY", error);
         Assert.Equal("", await process.StandardOutput.ReadToEndAsync());
     }
@@ -102,7 +102,7 @@ public sealed class PluginLauncherTests
         string expected = TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey(fixture.Bundle);
         using var process = fixture.Start(null, null); process.StandardInput.Close();
         string error = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
         Assert.True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, error)); Assert.Equal(0, process.ExitCode);
         using var receipt = JsonDocument.Parse(error);
         Assert.Equal(new[] { "--release-key", expected }, receipt.RootElement.GetProperty("args").EnumerateArray().Select(a => a.GetString()));
@@ -119,7 +119,7 @@ public sealed class PluginLauncherTests
         await process.StandardInput.BaseStream.WriteAsync(payload); process.StandardInput.Close();
         using var output = new MemoryStream(); await process.StandardOutput.BaseStream.CopyToAsync(output);
         string error = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
         Assert.True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, error)); Assert.Equal(0, process.ExitCode); Assert.Equal(payload, output.ToArray());
         using var receipt = JsonDocument.Parse(error);
         Assert.Equal(new[] { "--release-key", "19" }.Concat(extra), receipt.RootElement.GetProperty("args").EnumerateArray().Select(a => a.GetString()));
@@ -134,7 +134,7 @@ public sealed class PluginLauncherTests
         using var process = fixture.Start(null, "19", "--fixture-exit-code", exitCode.ToString(System.Globalization.CultureInfo.InvariantCulture));
         process.StandardInput.Close();
         string error = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
         Assert.True(process.ExitCode == exitCode, FixtureExit.Describe(process.ExitCode, error)); Assert.Equal(exitCode, process.ExitCode);
         using var receipt = JsonDocument.Parse(error);
         Assert.Equal(fixture.Bundle, receipt.RootElement.GetProperty("root").GetString());
@@ -148,7 +148,7 @@ public sealed class PluginLauncherTests
         using var process = fixture.Start(null, "19", "--fixture-exit-code", "invalid");
         process.StandardInput.Close();
         string error = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
         Assert.True(process.ExitCode == 86, FixtureExit.Describe(process.ExitCode, error));
         Assert.Equal(86, process.ExitCode);
         Assert.Single(error.Split('\n'), line => line.StartsWith("FIXTURE_UNHANDLED_EXCEPTION System.FormatException: ", StringComparison.Ordinal));
@@ -159,11 +159,11 @@ public sealed class PluginLauncherTests
     {
         using var fixture = new LauncherFixture();
         using var launcher = fixture.Start(null, "19", "--fixture-wait");
-        string? line = await launcher.StandardOutput.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        string? line = await launcher.StandardOutput.ReadLineAsync().WaitAsync(TestDeadlines.Hang);
         using var child = Process.GetProcessById(int.Parse(line!, System.Globalization.CultureInfo.InvariantCulture));
         Assert.Equal(Path.GetFullPath(fixture.Host), child.MainModule!.FileName, StringComparer.OrdinalIgnoreCase);
         fixture.StopOwned(launcher);
-        await child.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        await child.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
         Assert.True(child.HasExited);
     }
 

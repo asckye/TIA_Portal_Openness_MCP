@@ -1,5 +1,6 @@
 extern alias foundationhost;
 extern alias enginehost;
+using TiaMcp.Engine.Tests.Shared;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
@@ -84,7 +85,7 @@ public sealed class SharedWorkerRegressionTests
             Assert.True(channel.InFlight);
             await fixture.WaitBusy();
         }
-        else { WorkerShutdown.KillOwned(child); Assert.True(child.WaitForExit(5000)); }
+        else { WorkerShutdown.KillOwned(child); Assert.True(child.WaitForExit(TestDeadlines.HangMilliseconds)); }
         var ack = await worker.Call("Disconnect", new(), CancellationToken.None);
         Assert.Equal(busy, (bool?)ack?["RequiresTiaRestart"]);
         Assert.False((bool?)ack?["WorkerAcknowledged"]);
@@ -110,7 +111,7 @@ public sealed class SharedWorkerRegressionTests
                 productionPending = productionChannel.CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
                 await fixture.WaitBusy();
             }
-            else { WorkerShutdown.KillOwned(productionChild); Assert.True(productionChild.WaitForExit(5000)); }
+            else { WorkerShutdown.KillOwned(productionChild); Assert.True(productionChild.WaitForExit(TestDeadlines.HangMilliseconds)); }
             await production.Call("Disconnect", new(), CancellationToken.None);
             if (productionPending != null) await Assert.ThrowsAnyAsync<Exception>(() => productionPending);
             var error = await Assert.ThrowsAnyAsync<Exception>(() => production.Call("ReadState", new(), CancellationToken.None));
@@ -246,7 +247,7 @@ public sealed class SharedWorkerRegressionTests
         var worker = fixture.Worker;
         using var lane = await worker.AcquireLane(CancellationToken.None);
         WorkerClient.ActivateLane(lane);
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
         await worker.PrepareReadiness(deadline.Token);
         Assert.True((bool?)worker.SharedStatus?["readiness"]?["ready"]);
         Assert.Null(await worker.AcquireLane(deadline.Token));
@@ -272,7 +273,7 @@ public sealed class SharedWorkerRegressionTests
         if (properties.TryGetProperty("mode", out _)) arguments["mode"] = "preview";
         if (properties.TryGetProperty("dryRun", out _)) arguments["dryRun"] = true;
         var elapsed = Stopwatch.StartNew();
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
         string? deadlinePool = null;
         using var deadlineRegistration = deadline.Token.Register(() => Volatile.Write(ref deadlinePool, PoolState()));
         var result = await Task.Run(async () => {
@@ -314,7 +315,7 @@ public sealed class SharedWorkerRegressionTests
                 Assert.True(Path.GetFullPath(executable).StartsWith(root, StringComparison.OrdinalIgnoreCase));
                 Assert.Equal(Path.GetFullPath(executable), child.MainModule!.FileName, ignoreCase: true);
                 WorkerShutdown.KillOwned(child);
-                Assert.True(child.WaitForExit(5000));
+                Assert.True(child.WaitForExit(TestDeadlines.HangMilliseconds));
             }
         }
         string result = await stdout; string errors = await stderr;
@@ -517,7 +518,7 @@ public sealed class SharedWorkerRegressionTests
         internal void ClearBusy() => File.Delete(Path.Combine(root, "busy"));
         internal async Task WaitBusy()
         {
-            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
             while (!File.Exists(Path.Combine(root, "busy"))) await Task.Delay(10, deadline.Token);
         }
         public void Dispose()

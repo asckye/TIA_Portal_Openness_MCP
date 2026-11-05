@@ -28,7 +28,8 @@ public sealed class EngineHttpSessionTestsPlc
     public async Task Http_listens_under_cpu_pressure_before_constructing_session_tools(string release)
     {
         using var host = await Fixture.Start(release, startupPressure: true);
-        Assert.True(host.StartupElapsed < TimeSpan.FromSeconds(10), host.StartupDiagnostics());
+        Assert.True(host.StartupElapsed < TestDeadlines.Hang, host.StartupDiagnostics());
+        TestDeadlines.Report("http-session.startup", host.StartupElapsed.TotalMilliseconds, "ms");
         // Health must precede catalog construction. Release the catalog barrier, then prove initialize still builds usable tools.
         await host.ReleaseCatalog();
         using var session = new Session(host.Url); await session.Initialize();
@@ -126,7 +127,7 @@ public sealed class EngineHttpSessionTestsPlc
         Assert.False((bool?)detached["data"]?["workerAcknowledged"]);
         Assert.Contains("restart that TIA instance", (string?)detached["data"]?["recoveryMessage"]);
         await running;
-        Assert.True(worker.WaitForExit(5000));
+        Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.Equal("BUSY\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "323-1.lease")));
         await a.End();
     }
@@ -166,7 +167,7 @@ public sealed class EngineHttpSessionTestsPlc
         await b.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
         Assert.Equal(generationA, (long?)(await a.Tool("GetOpennessWorkerStatus"))["data"]!["evidence"]!["worker"]!["generation"]);
         Assert.False(processA.HasExited);
-        Assert.True(processB.WaitForExit(5000));
+        Assert.True(processB.WaitForExit(TestDeadlines.HangMilliseconds));
         await a.Tool("DisconnectPortal");
         var refused = await a.Tool("GetSessionState", ok: false);
         Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
@@ -174,11 +175,11 @@ public sealed class EngineHttpSessionTestsPlc
         int currentB = (int)(await b.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var workerB = Process.GetProcessById(currentB);
         await a.End();
-        Assert.True(processA.WaitForExit(5000));
+        Assert.True(processA.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.False(workerB.HasExited);
         await b.Tool("GetSessionState");
         await b.End();
-        Assert.True(workerB.WaitForExit(5000));
+        Assert.True(workerB.WaitForExit(TestDeadlines.HangMilliseconds));
         using var c = new Session(host.Url); await c.Initialize(); await c.Tool("GetSessionState"); await c.End();
     }
 
@@ -244,14 +245,15 @@ public sealed class EngineHttpSessionTestsPlc
         await upload.GetStream().WriteAsync(bytes);
         await Task.Delay(100);
         host.Stop();
-        Assert.True(worker.WaitForExit(5000), "Session worker outlived graceful host shutdown.");
+        Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds), "Session worker outlived graceful host shutdown.");
+        Assert.False(await host.WaitForExit(TimeSpan.Zero));
         // Kestrel drains the incomplete request using the fixture's shutdown grace.
         Assert.True(await host.WaitForExit(TimeSpan.FromSeconds(40)), "HTTP shutdown did not drain within its bound.");
     }
 
     private sealed class Session(string url) : IDisposable
     {
-        private readonly HttpClient client = new(new HttpClientHandler { UseProxy = false }) { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(20) };
+        private readonly HttpClient client = new(new HttpClientHandler { UseProxy = false }) { BaseAddress = new Uri(url), Timeout = TestDeadlines.Hang };
         private int sequence;
         internal string? Id;
         internal async Task<JsonNode> Call(string method, JsonObject input)
@@ -403,7 +405,7 @@ public sealed class EngineHttpSessionTestsPlc
         private async Task RequireRunning()
         {
             if (!process.HasExited) return;
-            await exited.WaitAsync(TimeSpan.FromSeconds(5)); // Drain redirected stderr before reporting the startup error.
+            await exited.WaitAsync(TestDeadlines.Hang); // Drain redirected stderr before reporting the startup error.
             string stderr = LogTail(Path.Combine(directory, "host-error.log"));
             var error = new InvalidOperationException("Fixture host " + FixtureExit.Describe(process.ExitCode, stderr) + ": " + StartupDiagnostics());
             error.Data["fixtureExitCode"] = process.ExitCode; error.Data["fixtureStderr"] = stderr;
@@ -420,7 +422,7 @@ public sealed class EngineHttpSessionTestsPlc
             if (!process.HasExited)
             {
                 Assert.Equal(Path.GetFullPath(image), Path.GetFullPath(process.MainModule!.FileName), ignoreCase: true);
-                process.Kill(); Assert.True(process.WaitForExit(5000), "Owned fixture host did not exit.");
+                process.Kill(); Assert.True(process.WaitForExit(TestDeadlines.HangMilliseconds), "Owned fixture host did not exit.");
             }
             process.Dispose();
         }

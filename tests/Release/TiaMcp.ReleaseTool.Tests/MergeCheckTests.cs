@@ -730,6 +730,52 @@ public sealed class MergeCheckTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TrendFilesAreMergedAfterTheStage(bool failedCheck)
+    {
+        using var tree = new StaticTree();
+        tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
+        tree.Write("tests/one.csproj", "<Project />");
+        string output = Path.Combine(tree.Root, "bin-build/merge-check");
+        string main = Path.Combine(tree.Root, "main");
+        string history = tree.Write("main/bin-build/trend.jsonl", "{\"metric\":\"previous\",\"value\":1,\"unit\":\"ms\"}\n");
+        const string head = "0123456789012345678901234567890123456789";
+        int calls = 0;
+        CommandResult Process(string executable, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
+        {
+            Assert.False(File.Exists(Path.Combine(output, "trend.jsonl")));
+            string directory = Assert.IsType<string>(env!["TIA_MCP_TEST_TREND_DIR"]);
+            Assert.Equal(Path.Combine(output, "trend"), directory);
+            Directory.CreateDirectory(directory);
+            int call = Interlocked.Increment(ref calls);
+            File.WriteAllText(Path.Combine(directory, "trend-" + call + ".jsonl"),
+                new JsonObject { ["metric"] = "sample-" + call, ["value"] = call * 1_000_000, ["unit"] = "ms" }.ToJsonString() + "\n");
+            return new(failedCheck && arguments.Contains("check-repository") ? 7 : 0, "", "");
+        }
+        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "base" : args[0] == "diff" ? "README.md\0"
+            : args.Contains("--git-common-dir") ? Path.Combine(main, ".git") : args.Contains("HEAD") ? head : "", "");
+        int result = MergeCheck.Run(tree.Root, Options.Parse([], new HashSet<string>()), Process, Git);
+        Assert.Equal(failedCheck ? 1 : 0, result);
+        Assert.Equal(3, calls);
+        string[] rows = File.ReadAllLines(Path.Combine(output, "trend.jsonl"));
+        Assert.Equal(3, rows.Length);
+        Assert.All(rows, row => Assert.False(JsonNode.Parse(row)!.AsObject().ContainsKey("head")));
+        string[] accumulated = File.ReadAllLines(history);
+        Assert.Equal(4, accumulated.Length);
+        Assert.Equal("previous", (string?)JsonNode.Parse(accumulated[0])!["metric"]);
+        foreach (string row in accumulated.Skip(1))
+        {
+            var value = JsonNode.Parse(row)!;
+            Assert.Equal(head, (string?)value["head"]);
+            Assert.True(DateTimeOffset.TryParse((string?)value["utc"], out var utc));
+            Assert.Equal(TimeSpan.Zero, utc.Offset);
+        }
+        Assert.Equal(rows.Select(row => (string?)JsonNode.Parse(row)!["metric"]),
+            accumulated.Skip(1).Select(row => (string?)JsonNode.Parse(row)!["metric"]));
+    }
+
+    [Theory]
     [InlineData(null, false, false)]
     [InlineData(null, true, false)]
     [InlineData("build", false, false)]

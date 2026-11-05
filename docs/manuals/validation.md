@@ -101,7 +101,7 @@ dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.
 
 维护者在 2026-11-03 批准以下移除，工具清理已由 NEW-REL-3 执行。
 
-- 延迟、耗时及性能增长门槛；性能数据用于趋势报告。功能测试的短时限后续改为防挂起保护，由计划中的 HANG-GUARD 任务实施，不能自行放宽现有断言。
+- 延迟、耗时及性能增长门槛。HANG-GUARD 已将批准清单中的短时限改为 120 秒防挂起保护，故意触发超时的预算、功能断言和数量门槛继续保留。测试耗时以 `TREND` 和 JSONL 记录，`merge-check` 汇总到 `bin-build/merge-check/trend.jsonl`，并带 UTC 时间和 HEAD 追加到主 checkout 的 `bin-build/trend.jsonl`，不按性能值判定通过或失败。
 - HTTP 稳定性压测（包括 c8/c16 和重复轮次）。普通 HTTP 功能、传输、审批及故障恢复检查保留。
 - 独占静默阶段及围绕它的 CPU/内存调度。
 - 套件普通输出与隔离输出的 `suite-output-parity` 比较。

@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
@@ -489,6 +491,7 @@ internal static class MergeCheck
         void ConfigureTests(IDictionary<string, string?> env)
         {
             ReleaseCommands.ConfigureDecoderTestEnvironment(env, root, options);
+            env["TIA_MCP_TEST_TREND_DIR"] = Path.Combine(output, "trend");
             // Synthetic projects created by checks must not become build-gate inputs.
             env["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
         }
@@ -626,8 +629,44 @@ internal static class MergeCheck
         foreach (var (name, source) in plan.Derived.Where(pair => pair.Value != "foundation-api"))
             Timed("derived-" + name, () => DerivedSuiteGates.Evaluate(name, catalog[name]!.AsObject(), Path.Combine(suiteOutput, source, source + ".trx"), Path.Combine(suiteOutput, name), source));
         File.WriteAllText(Path.Combine(output, "timeline.tsv"), Timeline(timings));
+        Timed("test-trends", () => MergeTrends(root, output, git));
         Console.Write(Summary(timings, total.Elapsed.TotalSeconds));
         return timings.Any(row => row.Result.ExitCode != 0) ? 1 : 0;
+    }
+
+    private static CommandResult MergeTrends(string root, string output, Func<string[], CommandResult> git)
+    {
+        string directory = Path.Combine(output, "trend");
+        string[] rows = Directory.Exists(directory)
+            ? Directory.EnumerateFiles(directory, "trend-*.jsonl").Order(StringComparer.Ordinal).SelectMany(File.ReadAllLines).ToArray()
+            : [];
+        File.WriteAllLines(Path.Combine(output, "trend.jsonl"), rows, new UTF8Encoding(false));
+        if (rows.Length == 0) return new(0, "No test trend samples.\n", "");
+        var head = git(["rev-parse", "HEAD"]);
+        ProcessRunner.RequireSuccess(head, "Read test trend revision");
+        var common = git(["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+        ProcessRunner.RequireSuccess(common, "Locate test trend history");
+        string main = Directory.GetParent(Path.GetFullPath(Path.Combine(root, common.StandardOutput.Trim())))!.FullName;
+        string history = Path.Combine(main, "bin-build", "trend.jsonl");
+        string utc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+        string[] stamped = rows.Select(row =>
+        {
+            var value = JsonNode.Parse(row)!.AsObject();
+            value["utc"] = utc;
+            value["head"] = head.StandardOutput.Trim();
+            return value.ToJsonString();
+        }).ToArray();
+        string identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(history)));
+        using var append = new Mutex(false, "TiaMcp.TestTrends." + identity);
+        try { append.WaitOne(); }
+        catch (AbandonedMutexException) { /* The previous writer exited; this process now owns the mutex. */ }
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(history)!);
+            File.AppendAllLines(history, stamped, new UTF8Encoding(false));
+        }
+        finally { append.ReleaseMutex(); }
+        return new(0, $"Recorded {rows.Length} test trend samples.\n", "");
     }
 
     internal static CommandResult CheckResult(string name, CommandResult result, string output)

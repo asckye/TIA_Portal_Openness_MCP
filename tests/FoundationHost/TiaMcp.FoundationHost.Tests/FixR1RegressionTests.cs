@@ -1,5 +1,6 @@
 extern alias enginehost;
 extern alias foundationhost;
+using TiaMcp.Engine.Tests.Shared;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -184,26 +185,40 @@ public sealed class FixR1RegressionTests
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.21.dll"), "offline session fixture");
         string marker = Path.Combine(AppContext.BaseDirectory, "fix-r1-stopping-" + Guid.NewGuid().ToString("N"));
         using var worker = new WorkerClient("21", exe, AppContext.BaseDirectory, true);
+        Task? stop = null;
         try
         {
             await worker.Call("Attach", new JsonObject { ["processId"] = Environment.ProcessId }, CancellationToken.None);
             await worker.Call("FixtureSlowShutdown", new JsonObject { ["marker"] = marker }, CancellationToken.None);
             var channel = (ChannelClient)typeof(WorkerClient).GetField("channel", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(worker)!;
             channel.Dispose();
-            Task stop = dispose ? Task.Run(worker.Dispose) : Task
-                .Run(async () => { await worker.Call("Disconnect", new JsonObject(), CancellationToken.None); });
-            Assert.True(SpinWait.SpinUntil(() => File.Exists(marker), TimeSpan.FromSeconds(5)));
-            var clock = Stopwatch.StartNew();
-            var snapshot = worker.OperatorSnapshot();
-            while ((bool?)snapshot["stopping"] != true && !stop.IsCompleted)
+            stop = dispose ? Task.Run(worker.Dispose) : Task.Run(async () => { await worker.Call("Disconnect", new JsonObject(), CancellationToken.None); });
+            Assert.True(SpinWait.SpinUntil(() => File.Exists(marker), TestDeadlines.Hang));
+            // EOF can reach the fixture before the parent enters its stopping path.
+            var snapshot = await Task.Run(async () =>
             {
-                await Task.Yield(); snapshot = worker.OperatorSnapshot();
-            }
-            Assert.True(clock.Elapsed < TimeSpan.FromSeconds(1), "Managed snapshot waited for worker shutdown: " + clock.Elapsed);
+                var current = worker.OperatorSnapshot();
+                while ((bool?)current["stopping"] != true && !stop.IsCompleted)
+                {
+                    await Task.Yield();
+                    current = worker.OperatorSnapshot();
+                }
+                return current;
+            }).WaitAsync(TestDeadlines.Hang);
             Assert.True((bool?)snapshot["stopping"]);
+            Assert.False(stop.IsCompleted);
             Assert.Equal("Stopping", (string?)worker.SupervisorSnapshot(new JsonObject())["state"]);
-            await stop;
         }
-        finally { if (File.Exists(marker)) File.Delete(marker); }
+        finally
+        {
+            File.WriteAllText(marker + ".release", "");
+            try { if (stop != null) await stop.WaitAsync(TestDeadlines.Hang); }
+            finally
+            {
+                worker.Dispose();
+                File.Delete(marker);
+                File.Delete(marker + ".release");
+            }
+        }
     }
 }

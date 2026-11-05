@@ -1,4 +1,5 @@
 extern alias enginehost;
+using TiaMcp.Engine.Tests.Shared;
 using System.IO.Pipes;
 using System.Reflection;
 using System.Security.Principal;
@@ -141,19 +142,37 @@ public sealed class WorkbenchControlHostTests
         string audit = DataLocations.Current.AuditDirectory;
         Directory.CreateDirectory(audit);
         var before = Directory.GetFiles(audit).ToDictionary(path => path, File.ReadAllBytes);
+        var beforeCall = DateTimeOffset.UtcNow;
         var result = await Tool(index, worker, Client(server)).InvokeAsync(Request(WorkbenchControlTools.Names[index], Arguments(index)));
+        var afterCall = DateTimeOffset.UtcNow;
         Assert.True((bool?)result.StructuredContent?["ok"]);
         Assert.Equal(server.Request!.RequestId, (string?)result.StructuredContent?["meta"]?["requestId"]);
         Assert.Equal(Environment.ProcessId, server.Request.Origin.HostProcessId);
         Assert.Equal(worker.Project, server.Request.Origin.BoundProjectFile);
         Assert.Matches("^[0-9a-f]{16}$", server.Request.Origin.McpSession);
         Assert.Equal((WorkbenchControlOperation)index, server.Request.Operation);
-        Assert.InRange((server.Request.DeadlineUtc - DateTimeOffset.UtcNow).TotalSeconds, 0, index is 5 or 6 ? 2 : 5);
+        AssertDeadlineWindow(server.Request.DeadlineUtc, beforeCall, afterCall, index);
         Assert.Equal("not-applicable", (string?)result.StructuredContent?["meta"]?["behaviorPolicy"]);
         Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         Assert.Equal(before.Keys.Order(), Directory.GetFiles(audit).Order());
         foreach (var pair in before) Assert.Equal(pair.Value, File.ReadAllBytes(pair.Key));
     }
+
+    private static void AssertDeadlineWindow(DateTimeOffset deadline, DateTimeOffset before, DateTimeOffset after, int index)
+        => Assert.InRange(deadline, before, after + TimeSpan.FromSeconds(index is 5 or 6 ? 2 : 5));
+
+    [Theory, MemberData(nameof(Operations))]
+    public void Request_deadline_window_rejects_a_longer_operation_budget(int index)
+    {
+        var before = new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var after = before.AddMilliseconds(20);
+        var budget = TimeSpan.FromSeconds(index is 5 or 6 ? 2 : 5);
+        AssertDeadlineWindow(before, before, after, index);
+        AssertDeadlineWindow(after + budget, before, after, index);
+        Assert.Throws<Xunit.Sdk.InRangeException>(() => AssertDeadlineWindow(before.AddTicks(-1), before, after, index));
+        Assert.Throws<Xunit.Sdk.InRangeException>(() => AssertDeadlineWindow(after + budget + TimeSpan.FromSeconds(1), before, after, index));
+    }
+
     [Theory, MemberData(nameof(Refusals))]
     public async Task Every_typed_error_preserves_details_and_status_without_session_lock(int errorCode, bool failed)
     {
@@ -429,7 +448,7 @@ public sealed class WorkbenchControlHostTests
     {
         string name = "TiaMcp.Workbench.fixture." + Guid.NewGuid().ToString("N");
         using var pipe = WorkbenchControlPipe.CreateServer(name, LocalPipeSecurity.CurrentSid, true);
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        using var timeout = new CancellationTokenSource(TestDeadlines.Hang);
         var serving = Task.Run(async () => {
             await pipe.WaitForConnectionAsync(timeout.Token);
             var request = await WorkbenchControlFrames.Read<WorkbenchControlRequest>(pipe, timeout.Token);

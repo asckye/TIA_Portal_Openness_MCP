@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -15,7 +16,7 @@ public sealed class HostLifecycleTests
     internal static readonly HostLifecycleTiming ShortTiming = new(TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(20), TimeSpan.FromSeconds(2));
     // Windows timer granularity can signal the grace deadline slightly early.
     private static readonly TimeSpan GraceTimerTolerance = TimeSpan.FromMilliseconds(20);
-    private static readonly HostLifecycleTiming CooperativeTiming = ShortTiming with { Grace = TimeSpan.FromSeconds(15), ConfirmationWait = TimeSpan.FromSeconds(15) };
+    private static readonly HostLifecycleTiming CooperativeTiming = ShortTiming with { Grace = TestDeadlines.Hang, ConfirmationWait = TestDeadlines.Hang };
     private static Task Stop(VisibleHost host, Func<VisibleHost, Task>? requestShutdown = null,
         Func<VisibleHost, Task<bool>>? confirmForce = null, HostLifecycleTiming? timing = null)
         => HostLifecycleService.Stop(host, requestShutdown, confirmForce, timing ?? CooperativeTiming);
@@ -223,7 +224,7 @@ public sealed class HostLifecycleTests
                 confirmationRequested.TrySetResult(true);
                 return await confirmation.Task;
             }, ShortTiming);
-            await Task.WhenAny(confirmationRequested.Task, stopping).WaitAsync(TimeSpan.FromSeconds(5));
+            await Task.WhenAny(confirmationRequested.Task, stopping).WaitAsync(TestDeadlines.Hang);
             if (stopping.IsFaulted) await stopping;
             Assert.False(stopping.IsCompleted); Assert.False(process.HasExited);
             await Task.Delay(ShortTiming.PollInterval);

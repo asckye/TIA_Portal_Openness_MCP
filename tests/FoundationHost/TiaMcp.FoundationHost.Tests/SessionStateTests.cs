@@ -1,5 +1,6 @@
 extern alias enginehost;
 extern alias foundationhost;
+using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -55,14 +56,14 @@ public sealed class SessionStateTests
             var pending = ai.Tool(tool.ProtocolTool.Name);
             try
             {
-                await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                await entered.Task.WaitAsync(TestDeadlines.Hang);
                 Assert.False(pending.IsCompleted);
                 Assert.False(session.TryBeginHostShutdown()); Assert.False(registration.TryBeginShutdown());
                 Assert.True((bool?)session.Snapshot()["callInProgress"]);
                 Assert.Equal("busy", (string?)session.Snapshot()["worker"]?["state"]);
                 Assert.Equal(count, changes); Assert.Equal(count, published.Count);
             }
-            finally { release.TrySetResult(true); await pending.WaitAsync(TimeSpan.FromSeconds(5)); }
+            finally { release.TrySetResult(true); await pending.WaitAsync(TestDeadlines.Hang); }
             Assert.Equal(count + 1, changes); Assert.Equal(count + 1, published.Count);
             Assert.All(published, state => {
                 Assert.False((bool?)state["callInProgress"]);

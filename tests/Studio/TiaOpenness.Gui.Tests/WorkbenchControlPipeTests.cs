@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Buffers.Binary;
 using System.IO;
@@ -21,8 +22,8 @@ public sealed class WorkbenchControlPipeTests(WpfContext wpf)
         PipeOptions.Asynchronous, TokenImpersonationLevel.Identification);
     private static async Task<WorkbenchControlResponse> Send(string name, WorkbenchControlRequest request)
     {
-        using var client = Client(name); using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(6));
-        await client.ConnectAsync(1000, limit.Token);
+        using var client = Client(name); using var limit = new CancellationTokenSource(TestDeadlines.Hang);
+        await client.ConnectAsync(TestDeadlines.HangMilliseconds, limit.Token);
         Assert.True(WorkbenchControlPipe.ServerMatches(client, LocalPipeSecurity.CurrentSid, Environment.ProcessPath!));
         await WorkbenchControlFrames.Write(client, request, limit.Token);
         return await WorkbenchControlFrames.ReadResponse(client, request.RequestId, limit.Token);
@@ -94,8 +95,8 @@ public sealed class WorkbenchControlPipeTests(WpfContext wpf)
             _ => { Interlocked.Increment(ref resolved); return Environment.ProcessPath!; }, name, _ => { }, Scratch("invalid") + ".jsonl");
         try
         {
-            server.Start(); using var pipe = Client(name); using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-            await pipe.ConnectAsync(1000, limit.Token);
+            server.Start(); using var pipe = Client(name); using var limit = new CancellationTokenSource(TestDeadlines.Hang);
+            await pipe.ConnectAsync(TestDeadlines.HangMilliseconds, limit.Token);
             string json = JsonSerializer.Serialize(Request(), WorkbenchControlProtocol.Json);
             json = condition switch { "unknown" => json.Replace("display.page", "execute.native"),
                 "duplicate" => json.Replace("\"version\":1", "\"version\":1,\"version\":1"), "approval" => "{\"decision\":\"granted\"}", _ => json };

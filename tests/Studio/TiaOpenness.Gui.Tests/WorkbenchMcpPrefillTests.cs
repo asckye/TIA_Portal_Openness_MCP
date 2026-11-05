@@ -1,8 +1,10 @@
+using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -193,7 +195,7 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 command = form == 3 ? model.Session.OpenProject : form == 4 ? model.Engineering.Export : model.Engineering.Import;
                 Assert.True(command.CanExecute(null)); command.Execute(null);
             });
-            await host.Pending.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await host.Pending.Task.WaitAsync(TestDeadlines.Hang);
             wpf.Run(() =>
             {
                 Assert.True(command!.IsRunning); Assert.Equal(0, host.ExecutedWrites);
@@ -209,7 +211,8 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 if (form == 5) Assert.All(calls, c => { Assert.Equal(Path.Combine(host.Root, "Main.xml"), (string?)c.Arguments["importPath"]); Assert.True((bool?)c.Arguments["overwrite"]); });
                 window.Features.Decide(Assert.Single(window.Features.Requests), true); host.Approval.SetResult(true);
             });
-            for (int i = 0; i < 500 && wpf.Run(() => command!.IsRunning); i++) await Task.Delay(10);
+            using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+            while (wpf.Run(() => command!.IsRunning)) await Task.Delay(10, deadline.Token);
             Assert.False(wpf.Run(() => command!.IsRunning)); Assert.Equal(1, host.ExecutedWrites);
             Assert.Contains("\"schemaVersion\": 4", wpf.Run(() => model!.LastEnvelope));
         }

@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Channels;
@@ -21,7 +22,7 @@ public sealed class ProtocolTests
         Assert.Equal("{\"detached\":true}", await wire.Client.CallAsync("adapter.Disconnect", "{}", BindingChange.MayAdvance, false, Budget));
         Assert.Equal(2, wire.Output.Writes.Count);
     }
-    internal static readonly TimeSpan Budget = TimeSpan.FromSeconds(3);
+    internal static readonly TimeSpan Budget = TestDeadlines.Hang;
 
     [Fact]
     public async Task Answered_project_unknown_allows_the_independent_simulator_without_clearing_the_latch()

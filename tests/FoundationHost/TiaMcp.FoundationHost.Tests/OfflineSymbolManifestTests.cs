@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Xml.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -136,8 +137,8 @@ internal static class OfflineSymbolManifestTests
                 var start = new System.Diagnostics.ProcessStartInfo("/usr/bin/mkfifo") { UseShellExecute = false };
                 start.ArgumentList.Add(Path.Combine(root, "pipe.xml"));
                 using var process = System.Diagnostics.Process.Start(start)!;
-                check(process.WaitForExit(5000) && process.ExitCode == 0, "manifest owned FIFO fixture created");
-                var fifo = await Task.Run(() => Build("pipe.xml")).WaitAsync(TimeSpan.FromSeconds(3));
+                check(process.WaitForExit(TestDeadlines.HangMilliseconds) && process.ExitCode == 0, "manifest owned FIFO fixture created");
+                var fifo = await Task.Run(() => Build("pipe.xml")).WaitAsync(TestDeadlines.Hang);
                 check(fifo.ToJsonString().Contains("empty-or-special-file-rejected"), "manifest zero-length FIFO rejected before open");
             }
             using var cts = new CancellationTokenSource(); cts.Cancel(); bool cancelled = false;

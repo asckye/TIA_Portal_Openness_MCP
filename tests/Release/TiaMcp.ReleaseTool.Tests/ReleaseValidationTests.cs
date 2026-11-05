@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using TiaMcp.ReleaseTool;
 using TiaMcp.BuildCommon;
 using System.Text.Json;
@@ -143,7 +144,7 @@ public sealed class ReleaseValidationTests
         {
         using var runningStarted = new ManualResetEventSlim();
         var error = Assert.Throws<ReleaseException>(() => ParallelPipeline.Run(
-                [("failure", () => { Assert.True(runningStarted.Wait(TimeSpan.FromSeconds(5))); return new PipelineResult("failure", 7, "", "failed"); }),
+                [("failure", () => { Assert.True(runningStarted.Wait(TestDeadlines.Hang)); return new PipelineResult("failure", 7, "", "failed"); }),
                  ("running", () => { runningStarted.Set(); Thread.Sleep(80); runningFinished = true; return new PipelineResult("running", 0, "", ""); }),
                  ("queued", () => { queuedStarted = true; return new PipelineResult("queued", 0, "", ""); })], directory, maxParallelism: 2));
             Assert.Contains("failure", error.Message);
@@ -163,7 +164,7 @@ public sealed class ReleaseValidationTests
         PipelineResult FailAfterBothStart(string name, int exitCode)
         {
             bothStarted.Signal();
-            Assert.True(bothStarted.Wait(TimeSpan.FromSeconds(5)));
+            Assert.True(bothStarted.Wait(TestDeadlines.Hang));
             var version = name == "release-v20" ? "20" : "21";
             return new PipelineResult(name, exitCode, "v" + version, "failure " + version);
         }

@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Diagnostics;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
@@ -237,7 +238,7 @@ public sealed class PlainReleaseTests
                 using var process = Process.GetProcessById(pid);
                 // Kill(entireProcessTree: true) waits for the parent only. Keep the
                 // child handle until its asynchronous termination releases the image.
-                Assert.True(process.WaitForExit(5000));
+                Assert.True(process.WaitForExit(TestDeadlines.HangMilliseconds));
                 Assert.True(process.HasExited);
             }
             catch (ArgumentException) { }

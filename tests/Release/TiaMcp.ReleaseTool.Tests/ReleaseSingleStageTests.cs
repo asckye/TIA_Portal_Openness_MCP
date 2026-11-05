@@ -1,3 +1,4 @@
+using TiaMcp.Engine.Tests.Shared;
 using System.Text.Json.Nodes;
 using System.Collections.Concurrent;
 using System.Xml.Linq;
@@ -184,7 +185,7 @@ public sealed class ReleaseSingleStageTests
             var count = Interlocked.Increment(ref active);
             try
             {
-                if (name is "first" or "independent") Assert.True(simultaneous.SignalAndWait(TimeSpan.FromSeconds(10)));
+                if (name is "first" or "independent") Assert.True(simultaneous.SignalAndWait(TestDeadlines.Hang));
                 if (name == "studio-gui") Assert.Equal(1, count);
                 order.Enqueue("test:" + name);
                 WriteTrx(args, 1, 0);
@@ -221,7 +222,7 @@ public sealed class ReleaseSingleStageTests
         {
             var args = arguments.ToArray();
             if (args[0] == "build") return new(0, "built", "");
-            Assert.True(ordinaryStarted.Wait(TimeSpan.FromSeconds(10)));
+            Assert.True(ordinaryStarted.Wait(TestDeadlines.Hang));
             Assert.Equal(1, Interlocked.Increment(ref active));
             try { order.Add(Path.GetFileName(args[Array.IndexOf(args, "--results-directory") + 1])); WriteTrx(args, 1, 0); }
             finally { Interlocked.Decrement(ref active); }
