@@ -1,1 +1,332 @@
-{"format":2,"tasks":[]}
+{
+  "format": 2,
+  "tasks": [
+    {
+      "task": "REVIEW-PORT",
+      "maintainerDate": "2026-11-05",
+      "reason": "REVIEW-PORT.md decision D1, approved by the maintainer: record existing warnings of the newly enabled rules once",
+      "items": [
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:017769dc33a0442a0462136e2c6f1b559c28eb776a2fe51f86bfbd29f733aa18:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:02c01a3a54d3e18b50b1bb03a6652aaaa6f5c593ad551ff294726a502a66220e:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:066e48d4bed805cad5908a89863a3f861c31a0100ed18b9b08e17da827d72dbe:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:0afe2508415d3c4f12d7aa3a9c303fd8efaa918ce095991a668385d12ff69ca5:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:0cbba36121a6c5aaa5d0210f9d3c1974ea49d3895d8aa6da810a37b2e6edf71a:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:1098bcd7cb243e4f2b09a8c6a53fbb63de0300ec960f8d0e8c373272f4410841:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:14e1d7fd0b0862265898d6207588fc0b560ffcd6912508ce19042488b97af539:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:15a5d6b5677963653065c189d14bca750933b06de15eecd7d4dec9acbca9e3e0:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:17998858104769b39c41f158f436323510acc7bf3c2e17b8cd3db8891940825e:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:1d38157d7c884b23cb4822072fb1cf85ecb8719d44a5b9a5c53f47ba8c154c16:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:204e812cd75fb991b93123d0854093aa9f23c1a86524b79604b50b49adc13e6f:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:25b76f2dbe718260bfc2cde00e2ced04932c290444eec76b452352c15fb82e73:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:28a988958256dd07385e4be446bc3ea23701cf6f19e825af62934a3745e66ccb:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:2baee0dcf5d6ec5eb93fbd45e8acfb419901963c7a5a70c0f962a4ce966f9e7b:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:2d3e3767df146aec1207f914717ebabdd6fb52439411fed8f53784f7df7df30f:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:2f47412dd188ce09de052db8eaba3203d555a27e5946d47e4b317766ad6675ec:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:31bbd956a5a41bec36a299bf5412329cf9a1f3cbd5169d61b9e87cb500d6d2f7:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:391a259252fb4e0c085ed6f4c0d435a6eee7764144a29165337440c21d5e7445:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:49fbd88fde03b89bac1e72484cd715e130f072ccaa2cbaae7c6523298ffbca26:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:4b26e9de9964d2fa332cfc692f2f05c25c71484703dbf7b0bd7cd6f2c6816bea:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:4b864f82b56872b8ce575849eaf9c9fc4b2cab07961c87d27e68ad56fd83542c:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:549cc5acefcb722749fb7abccf4fb36e0cc01a6a08e9e663ab33d6381d826e25:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:5b17af2669b51c30fb8599e937f1e0bcfde96156a0995a67052f38859c66645f:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:5c69e9d6efc7f68e09400cb81e07c703f4fae5dd7013fc3d1f42f408ee1a9474:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:693487b38551f19e3940e40b28e2fb35fc7a088de15c9992c99b4043837e3c2e:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:6ec84d84b5743cf2c4a068e8c3a7756e3bb65c1b3899cdae5107e1cd616fb524:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:737c868c18f4942123df0c7fa991c430c839b5e84df42d27f93a72fcbc9c46b2:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:7392b76b1419ddc35852e68ea3e8626debabe44aa8476d57d120dd07a567ecd6:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:742f47091557018befa8163f8f25372999603b7a5da3552a5ff58cd8a695944f:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:74adb709b3e92d5ad50af8cc453b064b45e2d7fbd7338f70235abfb36e31416c:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:759018c7a55d51230820c8f6599b75c9c81d9b33f072e679b070411da1e1ea69:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:7b9e5a7c505aa808877daf2b44ba6c8128a3243610600870d3f2c445414c2f56:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:81c0ff698cfc45460ee1c4072b1a3b40516ee785c33b9a896019662f19416f95:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:845a66e5d27e755ab4659e84144a6c0695322d04b01c7e9fa1abce981f779c09:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:890535e295808f64331b58c94434fc0fcb58668c3c15304bed48dc680d899e2a:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:8939022056bcb8a30714f978d281426578eca2bc60fa2d6d19cb8f0a4df6b0d0:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:8dbfae5207779af89e7c4572bc1a19a9c9e7080f6356b3026bd8a634eb5f76d3:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:8de324a84cc0cba8f65f29110233930968e9ed258bcc4fc6bc6d63ce96835d71:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:8e02ba9b56ad8a7c22875e71fa35e0c585249b3e2a586d6caab7d3fe6ca91c00:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:8fd93575a0eb5e0e7576ac17585c3d0deaaf5a8e044dbda2a5bed4e3d1d8222a:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:917db31db6d53bf6c104835db830bb010d5e699bd92231fbeba7b11e124a378a:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:91af6cc9dd70a84e0a039f2d07226154fb6ed8f85d7c7bc67be2e33ee4097831:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:971209de3e6635fbfbde73ca8eefc1e75748ab60ad0384c5bbfc563f802befa8:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:9b2cb1e8a454506112186a890b091ac1c9fe93d05b918b742cd01bcc6977b3e9:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:a69367434af81eb3ba2c56b077d1f85ba871fdcf5a70e750f21f96092640d50c:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:a9964376c2d0ba3a2f3536381a83a570a0b6f2b8cdd99c685e616deaec4ea015:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:ac1460ad00ceba21c1a31b956e77d15935582bb3e903c281445da63504ce9487:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:ac1e7e8be63d3108b3f7aff7ddcb52c5727f6fe94ef7dddc8739c0e11eb7f877:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:ac2600a663d3a8673ebf9127d5d121d9c0236b96bcf6f21ef91e670c33f89dff:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:adddc990eaf4d48fa67b77420ecf7c6c54fc23437465a3c335b983b10b7923d9:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:b36e524c8c7e5495e673c0598f891f844c6f903cdf5c8088a08132ef75b6aeab:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:b45cc0b2aac2b6c4c5dfab259120d7135bb44d70f7fe0b02c762ee82fa55a106:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:b66e686bedc9e718f61ea674302c9b1994790c1f5d87644f13a8f9b45cb9a0ea:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:bba82fba7670d565d02537914cf1d9b803fb2e470bfe3eeb68ded94d83fc7b7c:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:be9b76068ef4bb7d34ccc3dcbca057e68d456f841a947cc3cadfc6d0f0d2fde8:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:c19e5ac9c1f755706ec08ca00104a5ecd3abcc46adaf191ecd70ba05acb69e70:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:da203ff724755f1470c404b609e08921efeb16248d238bc0231f7430da466cdc:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:dc4985020fda7fa111ef373a24cb62b054e8280ded51ddd2f66f7570e9c3877f:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:e50f96b1f6a4350d5c7ddf99671cd0f706872fb4f3b7ce35b9da3f2dbb44a29c:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:e6572eea3a384b71650cb229b6ffa65d5fdda636d65e2c943fb3e27fbea40695:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:e829600988eedcc19cb286006fba2d26e7abb2af6fb1dfef46f43fb58ec5b2dc:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:e988775ca3ff9402ecf5855b8198184a3c1a54e82dd5329a27d73b3b16ef7741:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:ea22e9a71d13b89bf6042354d34ec379390a79b0143ff03cee4665766d52638c:1"
+        },
+        {
+          "path": "build-tools/release/baselines/analyzer-warnings-baseline.json",
+          "kind": "baseline-grown",
+          "identifier": "/entries:ee2e32b69f6193f86d324e7a0f8b5f078f3c779b8275516bf780c241c4436c08:1"
+        }
+      ]
+    }
+  ]
+}
