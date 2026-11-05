@@ -1,15 +1,15 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.3_20261104",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-05T04:32:07.4037890+00:00",
+  "generatedAt": "2026-11-05T05:33:23.5047052+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "0014aeac4c8afac250f8a44cfd97cb994315fa06958f5755f08640c98e6715d6",
-  "workerSha256": "f4fe6f3d7ff5da0c11ea824a6c1ed166c625a61ea4f8d00e25d925f77ac8c101",
+  "workerSha256": "17fe6b49a4dcf08be3aa5647a0834a5a4f154f889da3a21d3991976cd033a7bd",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2683,
+    "parameters": 2685,
     "parametersUndocumented": 850,
     "parametersFromVocabulary": 699,
     "toolsWithUndocumentedParameters": 216,
@@ -5869,7 +5869,7 @@
         "orderNumber",
         "version"
       ],
-      "description": "[L2][Hardware][WRITE] Compatibility forwarder to CreateHardwareDevice on V18–V21. orderNumber maps to preferredMlfb and version to preferredVersion; both are passed unchanged. Default dryRun=true. Uses the same exact catalog selection, inventory, plan hash, confirm and expectedProjectFile, one create, readback, result and diagnostics. V14 SP1–V17 retain the exact native CreateWithItem route with the same preview/hash/project contract. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CreateDevice\"), optionally operation or language. Compatibility forwarder to CreateHardwareDevice; identical preview, approval, diagnostics and result envelope. orderNumber -> preferredMlfb; version -> preferredVersion",
+      "description": "[L2][Hardware][WRITE] Compatibility forwarder to CreateHardwareDevice on V18–V21. orderNumber maps to preferredMlfb and version to preferredVersion; both are passed unchanged. Default dryRun=true. Uses the same exact catalog selection, inventory, plan hash, confirm and expectedProjectFile, one create, readback, result and diagnostics. V14 SP1–V17 retain the exact native device creation route with the same preview/hash/project contract. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CreateDevice\"), optionally operation or language. Compatibility forwarder to CreateHardwareDevice; identical preview, approval, diagnostics and result envelope. orderNumber -> preferredMlfb; version -> preferredVersion",
       "example": "{\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -8826,7 +8826,7 @@
       "parameters": [
         "softwarePath"
       ],
-      "description": "[PLC foundation; native unverified][READ] [v17-read-safe-v1] Actual nested block groups, including empty groups. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetPlcBlockHierarchy\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][READ] [v17-read-safe-v1] Actual nested block groups, including empty groups; structure only; use ListPlcBlocks or GetPlcBlockInfo for details. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetPlcBlockHierarchy\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\"}"
     },
     {
@@ -9664,9 +9664,11 @@
       "method": "GetNativeInvocationLogV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "take"
+        "take",
+        "requestId",
+        "sinceUtc"
       ],
-      "description": "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Example: {\"take\":100} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetNativeInvocationLog\"), optionally operation or language.",
+      "description": "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Optional requestId and sinceUtc filters apply before take; matchedRecords counts all matches. Example: {\"take\":100} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetNativeInvocationLog\"), optionally operation or language.",
       "example": "{\"take\":100}"
     },
     {

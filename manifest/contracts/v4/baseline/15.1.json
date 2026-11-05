@@ -5459,7 +5459,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b2b6a93275db04997f97b1857bad954473a460563d789a8e12a43c79d07ebaef",
+      "descriptionSha256": "61216fd79fce2cde1013e070ce66ee01fe4da94a5243bb60e9a73cfe65328bd4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -8903,10 +8903,18 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "ed0d40d029fd6986c6074ce3828e300067c69cc0c173514dc8ee950f855871dc",
+      "descriptionSha256": "449035e9e6e3be554b728be4ff7d49e9b10965443d161698bcee14c42eff4530",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "requestId": {
+            "description": "Exact request id to match.",
+            "type": "string"
+          },
+          "sinceUtc": {
+            "description": "Inclusive ISO 8601 timestamp. Requires Z or a numeric offset; timestamps without an offset are rejected.",
+            "type": "string"
+          },
           "take": {
             "default": 100,
             "description": "Number of recent entries, 1..500.",
@@ -9218,7 +9226,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "8385b5e1455b663e741a43b4f1bcdaa06e22a9d199434d5c85ad924ecdc81092",
+      "descriptionSha256": "f5dcca4896686781c2bf3de7d145c179339daef9ace20fff99f3c8f917582f1d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
