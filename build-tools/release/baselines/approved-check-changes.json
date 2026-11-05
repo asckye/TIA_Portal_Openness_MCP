@@ -453,6 +453,73 @@
           "identifier": "PlcRenderFoundationTests/Both_renderers_use_shared_logic_and_never_dispatch_a_worker( string release ):e18400f488c72efd95e551deddf5987845fce2c26972073e1f1d90cd632958eb:1"
         }
       ]
+    },
+    {
+      "task": "NOTES-B4",
+      "maintainerDate": "2026-11-05",
+      "reason": "Maintainer approved in chat on 2026-11-05: WarningCode count 12 to 13 for DEPRECATED_PARAMETER, and 11 PrepareTests and PrereleaseTests rows change only the version beta.3 to beta.4",
+      "items": [
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4EnvelopeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4EnvelopeTests/NewTypesHaveNoSiemensOrMcpSdkReferences( ):71acd8920b1789eb7a918a9badc875ccc18c0417cee5dd74506e9c5716d5632c:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/CreateContextAcceptsTheSmallCleanRepository( ):c36afefd0cd7c6732b72c7dd774a4624e6c012738ce836372520d134ac80bc33:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):5b406eedb1cfd124230dfb483530786449131621513047ba037344650cc0f120:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):7608bcd2e3e114320903a7f3f456c9a245e83c4e4d9192dcbb9020ca48219776:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):aa83564df46049ab225c146ab8fd6106c642df5bd15ed226df9ead214c951722:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):dc203e301a0312bab76e5cbbc58710d2447feeff6d4e384828e1788baffa149b:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):ed21a922b27567b5026ce06501bf3c5cb02289b0b2b9d226b2960166c562eb2a:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesMissingAndStaleNotesWithoutRewritingThem( ):61769d8b77f7a6dad897b73f4219bc7f70b855f405019f5f984c62d82de2000a:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesMissingAndStaleNotesWithoutRewritingThem( ):d9475bb195ca624f045b0af3280571cfdb823b9332e395bdd6a099d841559d5b:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesMissingAndStaleNotesWithoutRewritingThem( ):d9475bb195ca624f045b0af3280571cfdb823b9332e395bdd6a099d841559d5b:2"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/UsesNewestReleaseDateAndSkipsUnreleased( ):e39f5f7e2d396067943dfb963ed6d54eca8c8a2d3f4eed67fcb51b346e0a799f:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/DraftBetaNotesCarryTheCurrentGeneratedSection( ):624386513e28209980e7257b9ff87ded81b6aed2a2f72d8f00be06a694f478e3:1"
+        }
+      ]
     }
   ]
 }
