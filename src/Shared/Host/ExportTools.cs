@@ -343,6 +343,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error =
                     new Error("The input file or directory was not found.", new NotFoundDetails(null));
             }
+            if (!write && TiaOpenness.Shared.HostFailurePolicy.WorkerReadTimeout(exception))
+                return Result(tool, data, new Error("The worker read timed out; retry when it has finished.", new TimeoutDetails("worker-read")),
+                    Outcome.ReadFailed, Execution.ReadOnly, Completeness.Unknown, current: current, writes: false);
+            if (write && TiaOpenness.Shared.HostFailurePolicy.WorkerOutcomeUnknown(exception))
+                return Result(tool, data, new Error("The worker reply was lost; inspect state before another write.",
+                    new OutcomeUnknownDetails("native-exchange", Evidence(data))), Outcome.Unknown, Execution.Unknown,
+                    Completeness.Unknown, current: current, writes: write);
             if (error != null || write) return Reject(tool, error ?? new Error("The operation was rejected before its write.",
                 new PreconditionFailedDetails("native-exchange", null)), data, current, write);
             return Result(tool, data, new Error("The native read did not complete.", new NativeOperationFailedDetails(null, null, Evidence(data))),

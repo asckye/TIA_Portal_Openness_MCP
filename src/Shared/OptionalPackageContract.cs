@@ -22,15 +22,7 @@ namespace TiaMcpServer.ModelContextProtocol
             || Flag(data, "mayHaveWrittenFiles") == true || Flag(data, "mayHaveExternalEffects") == true
             || Flag(data, "operationStarted") == true;
 
-        // Marks set by the host's worker client: the request was sent and its acknowledgement
-        // was lost (unknown native outcome), or it exceeded the worker frame before sending.
-        private static bool WorkerMark(Exception exception, string mark, bool sent)
-        {
-            for (Exception? cause = exception; cause != null; cause = cause.InnerException)
-                if (cause.Data["foundationRequestSent"] is bool value && value == sent && cause.Data[mark] != null) return true;
-            return false;
-        }
-        private static bool WorkerOutcomeLost(Exception exception) => WorkerMark(exception, "workerOutcomeUnknown", true);
+        private static bool WorkerOutcomeLost(Exception exception) => TiaOpenness.Shared.HostFailurePolicy.WorkerOutcomeUnknown(exception);
 
         internal static void RecordFailure(JsonObject data, Exception exception)
         {
@@ -38,7 +30,8 @@ namespace TiaMcpServer.ModelContextProtocol
             data["failureType"] = cause.GetType().Name;
             if (Issued(data) || WorkerOutcomeLost(exception)) return;
             data["operationNotStarted"] = true;
-            string? code = WorkerMark(exception, "workerLimitBytes", false) ? "LIMIT_EXCEEDED" : cause is PortalException portal ? portal.Code switch
+            string? code = TiaOpenness.Shared.HostFailurePolicy.WorkerMark(exception, "workerLimitBytes", false) ? "LIMIT_EXCEEDED"
+                : cause is PortalException portal ? portal.Code switch
             {
                 PortalErrorCode.InvalidParams => "INVALID_ARGUMENT",
                 PortalErrorCode.NotFound => "NOT_FOUND",

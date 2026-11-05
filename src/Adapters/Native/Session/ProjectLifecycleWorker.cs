@@ -45,8 +45,9 @@ public sealed partial class PlcFoundationEngine
     {
         Check();
         if (portal != null || project != null || lifecycle.IsLocalSession)
-            throw new PortalException(PortalErrorCode.InvalidState,
-                "ConnectIsolatedPortal: this MCP session already owns a TIA connection. Start a fresh MCP process before calling ConnectIsolatedPortal.");
+            throw new AdapterPreconditionException(
+                "ConnectIsolatedPortal: this MCP session already owns a TIA connection. Start a fresh MCP process before calling ConnectIsolatedPortal.",
+                "session", false);
         if (ProjectConnectionCreated == null)
             throw new InvalidOperationException("The shared process lease owner is unavailable for isolated creation.");
         ProjectClearConnectError?.Invoke();

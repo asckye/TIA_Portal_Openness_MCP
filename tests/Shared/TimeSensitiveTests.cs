@@ -19,6 +19,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["PlcWorkerRobustnessTests"] = "One-second startup/default budgets and 1.3-second synthetic native calls.",
             ["PlcFixtureWorkerRobustnessTests"] = "Two-second worker startup/default budget and injected fault deadlines.",
             ["SharedWorkerRegressionTests"] = "Cold worker readiness and compile wrapper inside a two-second request deadline.",
+            ["TiaMcp.WorkerChannel.Tests.ReadDrainTests"] = "Worker read deadlines and draining replies.",
             ["FoundationRecoveryTests"] = "Worker answered-unknown detach and reattach within the scaled worker budgets.",
             ["EngineWorkerClientTests"] = "Worker startup and disposal measured against ten/two-second bounds.",
             ["FoundationProcessLeaseTests"] = "Child readiness/exit bounds and durable-request overhead measurement.",
@@ -90,15 +91,22 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Cancellation_before_dispatch_is_a_queue_refusal"
             },
             ["PlcFixtureWorkerRobustnessTests"] = new[] {
+                "Timed_out_write_keeps_the_unknown_outcome_guard",
                 "Plc_faults_lock_the_host_and_require_explicit_restart"
             },
             ["SharedWorkerRegressionTests"] = new[] {
                 "CallTool_compile_wrapper_observes_cold_readiness_inside_the_target_lane"
             },
+            ["TiaMcp.WorkerChannel.Tests.ReadDrainTests"] = new[] {
+                "Timed_out_read_drains_and_the_channel_stays_usable", "Timed_out_write_still_poisons", "Status_read_after_a_call_still_poisons"
+            },
             ["FoundationRecoveryTests"] = new[] {
                 "Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach"
             },
             ["PlcWorkerRobustnessTests"] = new[] {
+                "Plc_over_budget_read_is_TIMEOUT_and_the_session_recovers",
+                "Disconnect_waits_for_a_draining_read_and_detaches_cleanly",
+                "Status_refused_by_a_draining_read_does_not_latch_a_worker_fault",
                 "Plc_long_compile_and_import_complete_with_scaled_production_budgets",
                 "Plc_scaled_long_call_still_fails_with_only_the_default_budget",
                 "Plc_compile_preview_uses_default_instead_of_the_compile_override",

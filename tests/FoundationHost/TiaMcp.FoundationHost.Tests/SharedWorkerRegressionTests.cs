@@ -37,7 +37,7 @@ public sealed class SharedWorkerRegressionTests
         }
         else { WorkerShutdown.KillOwned(child); Assert.True(child.WaitForExit(5000)); }
         var ack = await worker.Call("Disconnect", new(), CancellationToken.None);
-        Assert.True((bool?)ack?["RequiresTiaRestart"]);
+        Assert.Equal(busy, (bool?)ack?["RequiresTiaRestart"]);
         Assert.False((bool?)ack?["WorkerAcknowledged"]);
         if (pending != null) await Assert.ThrowsAnyAsync<Exception>(() => pending);
         var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);

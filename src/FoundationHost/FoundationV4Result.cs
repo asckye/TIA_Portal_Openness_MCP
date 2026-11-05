@@ -97,6 +97,10 @@ internal static class FoundationV4Result
         return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
             new Error(cause + " " + fix, new ResourceUnavailableDetails("tia-openness-environment")), false);
     }
+    internal static CallToolResult HostSessionState(string release, string id, JsonObject state)
+        => Wire(release, "GetSessionState", id, new JsonObject { ["sessionState"] = state }, Outcome.Succeeded,
+            Execution.ReadOnly, Completeness.Complete, null, true);
+
     internal static CallToolResult HostFailure(string release, string name, string id)
         => Wire(release, name, id, null, Outcome.ReadFailed, Execution.ReadOnly, Completeness.None,
             new Error("Foundation host operation failed.", new InternalErrorDetails(id)), false);
@@ -121,6 +125,17 @@ internal static class FoundationV4Result
             null)
     {
         var data = evidence == null ? null : Object(evidence);
+        if (exception != null && TiaOpenness.Shared.HostFailurePolicy.PriorMutation(exception))
+        {
+            data ??= new JsonObject();
+            data["earlierMutationMayHaveChanged"] = true;
+            return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
+                new Error("An earlier operation may have changed state; inspect the whole tool outcome before further writes.",
+                    new OutcomeUnknownDetails("tool-call", Empty)), true, true);
+        }
+        if (exception?.Data["workerReadTimeout"] is true)
+            return Wire(release, name, id, data, Outcome.ReadFailed, Execution.ReadOnly, Completeness.Unknown,
+                new Error("The worker read timed out; retry when it has finished.", new TimeoutDetails("worker-read")), true, false);
         var worker = exception as WorkerOperationException;
         string? exceptionType = exception?.GetType().Name;
         if (worker?.EvidenceJson != null && worker.EvidenceJson != "null")

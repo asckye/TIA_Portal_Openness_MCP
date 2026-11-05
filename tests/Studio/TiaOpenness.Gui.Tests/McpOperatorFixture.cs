@@ -154,7 +154,8 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             "ListPortalProcessProjects" => new() { ["processes"] = new JsonArray(new JsonObject { ["processId"] = 123, ["projectPath"] = @"D:\fixture\Line.ap19", ["osStartTimeUtc"] = "2026-10-10T12:00:00.0000000Z" }) },
             "GetProjectTree" => new() { ["value"] = "Line\n  PlcSoftware: PLC_1 [softwarePath=devices/Station/PLC_1]" },
             "ListPlcBlocks" => new() { ["items"] = new JsonArray(Block()) },
-            "GetPlcBlockHierarchy" => new() { ["name"] = "Program blocks", ["blocks"] = new JsonArray(Block()), ["groups"] = new JsonArray() },
+            "GetPlcBlockHierarchy" => new() { ["name"] = "Program blocks", ["blocks"] = new JsonArray(new JsonObject {
+                ["name"] = "Main", ["typeName"] = "OB", ["programmingLanguage"] = "LAD" }), ["groups"] = new JsonArray() },
             "GetPlcBlockInfo" => Block(),
             "CompilePlcSoftware" => new() { ["state"] = "Success", ["errorCount"] = 0, ["warningCount"] = 0 },
             "ListVersionControlWorkspaces" => new() { ["evidence"] = new JsonObject { ["workspaces"] = new JsonArray(new JsonObject {
@@ -185,12 +186,29 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             data["items"] = new JsonArray(new JsonObject { ["result"] = new JsonObject { ["data"] = new JsonObject {
                 ["files"] = new JsonArray(new JsonObject { ["path"] = file }) } } });
         }
-        if (name == "AttachOpenProject") await Notify(s => s["binding"] = new JsonObject { ["processId"] = 123, ["projectFile"] = @"D:\fixture\Line.ap19", ["bindingEpoch"] = 1 });
-        if (name == "DisconnectPortal") await Notify(s => { s["worker"]!["state"] = "disconnected"; s["endedBy"] = "workbench"; s["endReason"] = "disconnect"; });
+        if (name == "AttachOpenProject")
+            await Notify(s => s["binding"] = new JsonObject { ["processId"] = 123, ["projectFile"] = @"D:\fixture\Line.ap19", ["bindingEpoch"] = 1 });
+        if (name == "DisconnectPortal")
+            await Notify(s => { s["worker"]!["state"] = "disconnected"; s["endedBy"] = "workbench"; s["endReason"] = "disconnect"; });
+        if (name == "ListPlcBlocks" && PageBlocks)
+        {
+            bool next = (string?)arguments["cursor"] == "next-page";
+            var block = Block();
+            block["name"] = next ? "Second" : "Main";
+            block["path"] = next ? "Folder/Second" : "Main";
+            data["items"] = new JsonArray(block);
+            var paged = Envelope(name, data);
+            paged.StructuredContent!["meta"]!["paging"] = new JsonObject {
+                ["mode"] = "cursor", ["offset"] = null, ["limit"] = 100, ["nextOffset"] = null,
+                ["cursor"] = next ? "next-page" : null, ["nextCursor"] = next ? null : "next-page", ["total"] = 2, ["complete"] = next };
+            paged.Content = [new TextContentBlock { Text = paged.StructuredContent.ToJsonString() }];
+            return paged;
+        }
         return Envelope(name, data);
     }
     private static JsonObject Block() => new() { ["name"] = "Main", ["typeName"] = "OB", ["programmingLanguage"] = "LAD", ["isConsistent"] = true,
         ["isKnowHowProtected"] = false, ["attributes"] = new JsonArray(new JsonObject { ["name"] = "Number", ["value"] = 1 }) };
+    internal bool PageBlocks { get; init; }
     private CallToolResult Envelope(string name, JsonObject data, string? code = null, string condition = "fixture")
     {
         var envelope = new JsonObject { ["schemaVersion"] = 4, ["ok"] = code == null, ["data"] = data,

@@ -18,6 +18,15 @@
 - Guard technology-object creation against the observed V21 crash; only verified type/version pairs are admitted on V21.
 - Bind Unified HMI tags through a verified PLC connection without writing the read-only PlcName property.
 - Apply Unified screen designs, layouts and screen background themes to existing screens without accidental rename requests; preserve indented result text and classify unchanged worker argument refusals as invalid arguments.
+- Preserve earlier writes when a later worker step is refused or times out, refresh approval identities after rebinding, and reject malformed or offset-free diagnostic timestamps.
+
+- Session lifecycle tools preserve healthy bindings after Save As, archive retrieval and isolated startup; typed refusals stay rejected before operation.
+- Timed-out worker reads return `TIMEOUT` and drain before reuse; write timeouts retain the unknown-outcome guard.
+- `GetSessionState` answers from cached host state during recovery, and host-only tools remain available.
+- Disconnect determines `requiresTiaRestart` from outstanding calls and the persistent process lease.
+- PLC hierarchy reads return structure only; the Workbench pages `ListPlcBlocks` to retain block attributes.
+- `GetNativeInvocationLog` supports exact request and inclusive timestamp filters, with a total matched-record count.
+
 - Restore shared Workbench style usage after the UI redesign, keep configuration headings untrimmed, remove obsolete translations, and prevent list binding updates from opening client-enable confirmations.
 
 - 写入结果按可验证证据分类：ExclusiveAccess、密码策略和输入校验的明确拒绝不再误报 `OUTCOME_UNKNOWN`；属性、库和文档导入失败后可证明未改变目标时无需重置会话。其余已派发的未知写入统一锁定会话。

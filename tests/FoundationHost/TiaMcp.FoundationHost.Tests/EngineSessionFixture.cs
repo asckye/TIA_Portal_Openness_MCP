@@ -8,7 +8,9 @@ using TiaOpenness.Shared;
 
 internal static class EngineSessionFixture
 {
-    internal const string LeaseMessage = "The prior MCP owner did not release this TIA instance cleanly. Native outcome is unknown. Inspect diagnostics and restart that TIA instance before reconnecting; do not erase the lease to bypass this guard.";
+    internal const string LeaseMessage =
+        "The prior MCP owner did not release this TIA instance cleanly. Native outcome is unknown. Inspect diagnostics and restart that TIA instance before " +
+        "reconnecting; do not erase the lease to bypass this guard.";
     internal static int Run(string[] args)
     {
         string release = args[Array.IndexOf(args, "--native-session") + 1];
@@ -43,6 +45,8 @@ internal static class EngineSessionFixture
                     Environment.GetEnvironmentVariable("TIA_MCP_WORKER_SPILLS_DIRECTORY") ?? DataLocations.Current.WorkerSpillsDirectory, full));
             }
             var input = JsonNode.Parse(request.ArgumentsJson)!.AsObject();
+            if (request.Method == "adapter.FixtureEpochAdvance") { epoch++; return ChannelResponse.Success("{}"); }
+            if (request.Method == "adapter.FixtureMarkUncertain") { uncertain = true; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.FixtureNoProject") { hasProject = false; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.FixtureSlowShutdown") { slowShutdownMarker = (string)input["marker"]!; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.FixtureLockOnNextFamily") { lockOnNextFamily = true; return ChannelResponse.Success("{}"); }

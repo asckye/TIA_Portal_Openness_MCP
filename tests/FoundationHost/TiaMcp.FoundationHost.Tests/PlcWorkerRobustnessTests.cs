@@ -16,13 +16,14 @@ public sealed class PlcFixtureWorkerRobustnessTests
     {
         private readonly string? previous = Environment.GetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT");
         internal WorkerClient Worker { get; }
-        internal Scope(string release, string mode)
+        internal Scope(string release, string mode, string timeoutConfig = "{\"default\":2}")
         {
             Assert.True(File.Exists(Fixture), Fixture);
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(Fixture)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", mode);
             Worker = new WorkerClient(release, Fixture, Path.GetDirectoryName(Fixture)!, true,
-                timeoutConfig: "{\"default\":2}") { Bundled = false, WithUi = true, TiaPortalLocation = "C:/fixture Portal V" + release };
+                timeoutConfig: timeoutConfig) {
+                    Bundled = false, DrainBudget = TimeSpan.FromMilliseconds(20), WithUi = true, TiaPortalLocation = "C:/fixture Portal V" + release };
             // Start the worker under the production budgets; the scaled 2-s default applies from the first operation a test
             // measures (P8-stab-1). The fixture faults only the armed request, so this status read never consumes a fault.
             using (new ProductionWorkerBudgets(Worker)) Worker.Observe("status", new(), CancellationToken.None).GetAwaiter().GetResult();
@@ -78,18 +79,28 @@ public sealed class PlcFixtureWorkerRobustnessTests
         using var request = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
         await scope.Arm("ReadState");
         var error = await Assert.ThrowsAnyAsync<Exception>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
-        Assert.True(scope.Worker.Poisoned, error.ToString());
+        Assert.Equal(mode != "hang", scope.Worker.Poisoned);
         Assert.True((bool?)error.Data["foundationRequestSent"]);
-        Assert.True((bool?)error.Data["foundationSessionPoisoned"]);
-        if (mode == "tia-lost") Assert.Equal("unknown", Assert.IsType<WorkerOperationException>(error).Outcome);
-        else Assert.IsType<ChannelFaultException>(error);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+        Assert.Equal(mode != "hang", (bool?)error.Data["foundationSessionPoisoned"]);
+        if (mode == "hang")
+        {
+            Assert.Equal("read-failed", Assert.IsType<WorkerOperationException>(error).Outcome);
+            var refused = await Assert.ThrowsAsync<WorkerOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+            Assert.Equal("worker-read-running", refused.Condition);
+        }
+        else
+        {
+            if (mode == "tia-lost") Assert.Equal("unknown", Assert.IsType<WorkerOperationException>(error).Outcome);
+            else Assert.IsType<ChannelFaultException>(error);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+        }
         Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", null);
         scope.VerifyChild();
         // The explicit restart and the next generation's first read run under the production budgets (P8-stab-1).
         using var production = new ProductionWorkerBudgets(scope.Worker);
         var restarted = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restarted["restarted"]); Assert.True((bool?)restarted["requiresExplicitRebind"]);
+        if (mode == "hang") Assert.True((bool?)restarted["requiresTiaRestart"]);
         Assert.False(scope.Worker.Poisoned);
         var state = await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         Assert.Equal(release, (string?)state?["ReleaseKey"]);
@@ -109,12 +120,14 @@ public sealed class PlcFixtureWorkerRobustnessTests
         var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
         var result = await tool.InvokeAsync(request);
-        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Equal(mode == "hang" ? "read-failed" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal(mode != "hang", (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        if (mode == "hang") Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
-        Assert.True(scope.Worker.Poisoned);
+        Assert.Equal(mode != "hang", scope.Worker.Poisoned);
         var refused = await tool.InvokeAsync(request);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
+        Assert.Equal(mode == "hang" ? "PRECONDITION_FAILED" : "SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
+        if (mode == "hang") Assert.Equal("worker-read-running", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
     }
 
     [Theory, MemberData(nameof(Faults))]
@@ -131,12 +144,26 @@ public sealed class PlcFixtureWorkerRobustnessTests
         var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
         var result = await tool.InvokeAsync(request);
-        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Equal(mode == "hang" ? "read-failed" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal(mode != "hang", (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        if (mode == "hang") Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
-        Assert.True(scope.Worker.Poisoned);
+        Assert.Equal(mode != "hang", scope.Worker.Poisoned);
         var refused = await tool.InvokeAsync(request);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
+        Assert.Equal(mode == "hang" ? "PRECONDITION_FAILED" : "SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
+        if (mode == "hang") Assert.Equal("worker-read-running", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+    }
+
+    [Theory, InlineData("15.1"), InlineData("19"), InlineData("21")]
+    public async Task Timed_out_write_keeps_the_unknown_outcome_guard(string release)
+    {
+        using var scope = new Scope(release, "hang", "{\"default\":2,\"archive\":0.2}");
+        using var request = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "SaveProjectCopy");
+        await scope.Arm("project-lifecycle.ArchiveSaveProjectCopy");
+        await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("project-lifecycle.ArchiveSaveProjectCopy",
+            new() { ["path"] = "fixture", ["dryRun"] = false }, CancellationToken.None));
+        Assert.True(scope.Worker.Poisoned);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
     }
 
     public static IEnumerable<object[]> Keys() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(key => new object[] { key });

@@ -38,8 +38,15 @@ namespace TiaMcpServer.ModelContextProtocol
             if (ApprovalSessionOverride.Value is { } test) return test();
             object? key = null; ApprovalSessionKey(ref key); return key;
         }
+        internal static bool SessionLatched()
+        {
+            var key = CurrentApprovalSession();
+            return key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown;
+        }
+
         internal static CallToolResult? SessionPrecheckRefusal(string name)
         {
+            if (name == "GetSessionState" || ToolTaxonomy.HostOnlyDuringReset(name)) return null;
             if (SessionBehavior.IsRecoveryTool(name) || ToolTaxonomy.DispatchesTargets(name)) return null;
             if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
                 && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04") return null;

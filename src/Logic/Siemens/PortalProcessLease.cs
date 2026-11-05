@@ -29,7 +29,7 @@ namespace TiaMcpServer.Siemens
             {
                 string previous;
                 using (var reader = new StreamReader(handle, Encoding.UTF8, false, 1024, true)) previous = reader.ReadToEnd();
-                if (previous.Length != 0 && previous != "RELEASED\n" && previous != "IDLE\n")
+                if (RefusesContent(previous))
                     throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.LeaseNotReleased);
                 lease.PreviousOwnerEndedIdle = previous == "IDLE\n";
                 lease.Write("BUSY\n");
@@ -37,6 +37,22 @@ namespace TiaMcpServer.Siemens
             }
             catch { lease.Dispose(); throw; }
         }
+        private static bool RefusesContent(string previous) => previous.Length != 0 && previous != "RELEASED\n" && previous != "IDLE\n";
+
+        internal static bool RefusesAdmission(string root, int pid, long startUtcTicks)
+        {
+            string key = pid.ToString(CultureInfo.InvariantCulture) + "-" + startUtcTicks.ToString(CultureInfo.InvariantCulture);
+            try
+            {
+                using (var handle = new FileStream(Path.Combine(root, key + ".lease"), FileMode.Open, FileAccess.Read, FileShare.None))
+                using (var reader = new StreamReader(handle, Encoding.UTF8)) return RefusesContent(reader.ReadToEnd());
+            }
+            catch (FileNotFoundException) /* swallow(env-probe): no persistent lease means admission is available */ { return false; }
+            catch (DirectoryNotFoundException) /* swallow(env-probe): no lease directory means admission is available */ { return false; }
+            catch (IOException) /* swallow(env-probe): a locked or unreadable lease must retain the restart guard */ { return true; }
+            catch (UnauthorizedAccessException) /* swallow(env-probe): inaccessible lease state cannot prove admission is available */ { return true; }
+        }
+
         internal void BeginRequest() { if (state != "UNCERTAIN\n") Write("BUSY\n"); }
         internal void CompleteRequest(bool uncertain) => Write(uncertain || state == "UNCERTAIN\n" ? "UNCERTAIN\n" : "IDLE\n");
         private void Write(string value)

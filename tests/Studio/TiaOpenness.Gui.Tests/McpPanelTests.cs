@@ -23,6 +23,10 @@ public sealed class McpPanelTests(WpfContext wpf)
         => await client.AttachAsync(Assert.Single(await client.DiscoverAsync(host.Host.ReleaseKey)));
 
     [Fact]
+    public void Receipt_label_keeps_the_middle_dot_separator()
+        => Assert.Equal("ListPlcBlocks · result", new McpProjectClient.Receipt("ListPlcBlocks", "result", "{}").Label);
+
+    [Fact]
     public async Task Registration_reader_allows_concurrent_write_and_keeps_the_previous_record_until_replaced()
     {
         await using var host = new McpOperatorFixture();
@@ -262,7 +266,24 @@ public sealed class McpPanelTests(WpfContext wpf)
         });
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         while (wpf.Run(() => model!.Engineering.Save.IsRunning)) await Task.Delay(10, deadline.Token);
-        wpf.Run(() => { Assert.Equal(approve ? 1 : 0, host.ExecutedWrites); Assert.Contains(approve ? "\"ok\": true" : "ACCESS_DENIED", model!.LastEnvelope); window!.Close(); });
+        wpf
+            .Run(() => {
+                Assert.Equal(approve ? 1 : 0, host.ExecutedWrites); Assert.Contains(approve ? "\"ok\": true" : "ACCESS_DENIED", model!.LastEnvelope); window!
+                    .Close();
+            });
+    }
+    [Fact]
+    public async Task List_blocks_pages_and_keeps_consistency_and_number()
+    {
+        await using var host = new McpOperatorFixture { PageBlocks = true };
+        await using var client = host.Client();
+        await Attach(client, host);
+        using var project = new McpProjectClient(client);
+        var blocks = await project.ListBlocksAsync("devices/Station/PLC_1");
+        Assert.Equal(new[] { "Main", "Folder/Second" }, blocks.Select(block => block.Path));
+        Assert.All(blocks, block => { Assert.True(block.IsConsistent); Assert.Equal(1, block.Number); });
+        Assert.Equal(2, host.Calls.Count);
+        Assert.All(host.Calls, call => { Assert.Equal("ListPlcBlocks", call.Name); Assert.Equal(100, (int?)call.Arguments["limit"]); });
     }
     [Fact]
     public async Task Inspection_uses_MCP_facts_and_does_not_report_unknown_references_as_dead_code()
@@ -271,7 +292,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         using var project = new McpProjectClient(client);
         var report = await project.InspectAsync("devices/Station/PLC_1", null);
         Assert.Equal(1, report.BlocksScanned); Assert.DoesNotContain(report.Findings, f => f.RuleId == "DEAD-001");
-        Assert.Equal(new[] { "ListPlcBlocks", "GetPlcBlockHierarchy", "GetPlcBlockInfo" }, host.Calls.Select(c => c.Name));
+        Assert.Equal(new[] { "ListPlcBlocks", "GetPlcBlockInfo" }, host.Calls.Select(c => c.Name));
     }
     [Fact]
     public async Task Cancel_ends_only_the_panels_pending_call()

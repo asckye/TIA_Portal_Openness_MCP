@@ -26,6 +26,12 @@ return TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() =>
         var operation = request.Method.Substring("adapter.".Length);
         var values = JsonNode.Parse(request.ArgumentsJson)!;
         Record(new { stage = "call", pid = Environment.ProcessId, operation, request.Id, request.Method });
+        if (values["fixtureGate"] is JsonValue gateValue)
+        {
+            string gate = gateValue.GetValue<string>();
+            File.WriteAllText(gate + ".dispatched", "");
+            while (!File.Exists(gate + ".release")) Thread.Sleep(5);
+        }
         if (fault == "delay") Thread.Sleep(values["fixtureDelayMilliseconds"]?.GetValue<int>() ?? 0);
         if (fault == "broken-pipe") Environment.Exit(0);
         if (fault == "timeout" || fault == "timeout-attach" && operation == "Attach") Thread.Sleep(10000);

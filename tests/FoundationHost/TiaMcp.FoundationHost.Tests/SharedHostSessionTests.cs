@@ -22,8 +22,9 @@ public sealed class SharedHostSessionTests
         var fault = await panel.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, false);
         Assert.True((string?)fault["meta"]?["outcome"] == "unknown", fault.ToJsonString());
         Assert.True((bool?)session.Snapshot()["sessionLocked"], session.Snapshot().ToJsonString());
-        var refused = await ai.Tool("GetSessionState", ok: false);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)refused["error"]?["code"]);
+        var state = await ai.Tool("GetSessionState");
+        Assert.True((bool?)state["data"]?["sessionState"]?["requiresSessionReset"]);
+        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await ai.Tool("GetProjectInfo", ok: false))["error"]?["code"]);
     }
 
     [Theory]
@@ -214,7 +215,10 @@ public sealed class SharedHostSessionTests
             Assert.True(pipeline.SessionLocked);
             Assert.Equal("ChannelFailureException", (string?)services.Snapshot()["fault"]?["cause"]);
             Assert.Equal("FixtureUnknown", (string?)services.Snapshot()["fault"]?["operation"]);
-            Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await Tool("ReadState").InvokeAsync(Request())).StructuredContent?["error"]?["code"]);
+            var state = (await Tool("ReadState").InvokeAsync(Request())).StructuredContent!;
+            Assert.True((bool?)state["ok"]);
+            Assert.True((bool?)state["data"]?["sessionState"]?["requiresSessionReset"]);
+            Assert.NotNull(enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SessionPrecheckRefusal("GetProjectInfo"));
             var restarted = await services.Restart(true, CancellationToken.None);
             Assert.True((bool?)restarted["success"]);
             Assert.True((bool?)restarted["requiresExplicitRebind"]);

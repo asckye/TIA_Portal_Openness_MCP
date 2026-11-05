@@ -37,8 +37,11 @@ public sealed class PlcSimReadinessTests
         Assert.Equal(0, simulator.UncertainMarks);
         if (latched)
         {
-            Assert.Equal("SESSION_RESET_REQUIRED", (string?)Host.SessionPrecheckRefusal("GetSessionState")?.StructuredContent?["error"]?["code"]);
-            var project = new FoundationV4Tool(new FoundationTool(new Definition("GetProjectInfo", "Project", "Fixture project read.", Array.Empty<Argument>()), simulator), release);
+            Assert.True(Host.SessionLatched());
+            var project =
+                new FoundationV4Tool(new FoundationTool(new Definition("GetProjectInfo", "Project", "Fixture project read.", Array.Empty<Argument>()),
+                        simulator),
+                    release);
             var refused = (await project.InvokeAsync(Request("GetProjectInfo", new JsonObject()))).StructuredContent!;
             Assert.Equal("SESSION_RESET_REQUIRED", (string?)refused["error"]?["code"]);
             Assert.Equal(0, simulator.ProjectCalls);
@@ -79,7 +82,7 @@ public sealed class PlcSimReadinessTests
         Assert.Equal(1, simulator.Executions);
         Assert.Equal(0, simulator.UncertainMarks);
         Host.ObserveSessionOutcome(name, result, write: true, nativeCallIssued: true);
-        Assert.Null(Host.SessionPrecheckRefusal("GetSessionState"));
+        Assert.False(Host.SessionLatched());
         Assert.False(simulator.Poisoned);
     }
 

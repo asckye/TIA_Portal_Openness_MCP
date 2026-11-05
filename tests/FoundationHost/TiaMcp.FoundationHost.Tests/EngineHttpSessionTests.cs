@@ -59,7 +59,8 @@ public sealed class EngineHttpSessionTestsPlc
         Assert.Equal("Fixture native outcome unknown.", (string?)unknown["error"]?["message"]);
         Assert.NotNull(unknown["data"]?["fixturePid"]);
         string prior = (string)unknown["meta"]!["requestId"]!;
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetSessionState", ok: false))["error"]?["code"]);
+        Assert.True((bool?)(await a.Tool("GetSessionState"))["data"]?["sessionState"]?["requiresSessionReset"]);
+        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetProjectInfo", ok: false))["error"]?["code"]);
         var detached = await a.Tool("CallTool", new() { ["name"] = "DisconnectPortal", ["arguments"] = new JsonObject() });
         Assert.True((bool?)detached["data"]?["workerAcknowledged"]);
         Assert.False((bool?)detached["data"]?["requiresTiaRestart"]);
@@ -188,7 +189,8 @@ public sealed class EngineHttpSessionTestsPlc
         using var a = new Session(host.Url); using var b = new Session(host.Url);
         await a.Initialize(); await b.Initialize();
         await a.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetSessionState", ok: false))["error"]?["code"]);
+        Assert.True((bool?)(await a.Tool("GetSessionState"))["data"]?["sessionState"]?["requiresSessionReset"]);
+        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetProjectInfo", ok: false))["error"]?["code"]);
         await b.Tool("GetSessionState"); await b.Tool(SessionFixtureTool.Name);
         var stageArgs = new JsonObject { ["files"] = new JsonArray(new JsonObject { ["fileName"] = "fixture.scl", ["kind"] = "scl", ["content"] = "FUNCTION Fixture : Void\nBEGIN\nEND_FUNCTION" }), ["dryRun"] = false };
         await b.Tool("StageImportFiles", stageArgs, metadata: new JsonObject { ["tiaMcpStagingSession"] = "caller-peer-token", ["other"] = "kept" });
@@ -236,7 +238,9 @@ public sealed class EngineHttpSessionTestsPlc
         using var worker = Process.GetProcessById(pid);
         // Hold a POST body open: shutdown must cancel transport reads as well as session workers.
         using var upload = new TcpClient(); await upload.ConnectAsync("127.0.0.1", new Uri(host.Url).Port);
-        var bytes = System.Text.Encoding.ASCII.GetBytes("POST /mcp HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer fixture-key\r\nContent-Type: application/json\r\nContent-Length: 1000\r\n\r\n{");
+        var bytes = System.Text.Encoding.ASCII
+            .GetBytes("POST /mcp HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer fixture-key\r\nContent-Type: application/json\r\nContent-Length: " +
+            "1000\r\n\r\n{");
         await upload.GetStream().WriteAsync(bytes);
         await Task.Delay(100);
         host.Stop();

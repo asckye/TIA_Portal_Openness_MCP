@@ -39,7 +39,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (exception.Data[WorkerDispatchedExceptionDataKey] is true)
                 nativeCallIssued = true;
-            if (exception is TiaOpenness.Shared.BundleResourceUnavailableException resource)
+            bool priorMutation = TiaOpenness.Shared.HostFailurePolicy.PriorMutation(exception);
+            if (priorMutation) nativeCallIssued = true;
+            else if (writes && TiaOpenness.Shared.HostFailurePolicy.KnownNoMutation(exception)) nativeCallIssued = false;
+            if (!priorMutation && exception is TiaOpenness.Shared.BundleResourceUnavailableException resource)
                 return Result(tool, null, new Error(resource.Message, new ResourceUnavailableDetails(resource.Resource)),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, !writes || nativeCallIssued, !writes, nativeRead: nativeCallIssued);
@@ -48,7 +51,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var portalStateFailure = ContainsInvalidPortalState(exception);
                 var details = new PreconditionFailedDetails(portalStateFailure ? "engine-state" : "native-call-not-issued", null);
                 return Result(tool, new JsonObject { ["evidence"] = new JsonObject { ["exceptionType"] = exception.GetType().Name } },
-                    new Error(HostBehavior.AdmissionDiagnostic(exception) ?? "The session precondition was not satisfied; no native operation was started.",
+                    new Error(HostBehavior.SafeDiagnostic(exception.GetBaseException().Message)
+                        ?? "The session precondition was not satisfied; no native operation was started.",
                             details),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             }
@@ -59,7 +63,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 ? TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception) : null;
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
             bool readCancelled = !writes && nativeCallIssued && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
-            return Result(tool, new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) },
+            var data = new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) };
+            if (priorMutation) data["earlierMutationMayHaveChanged"] = true;
+            return Result(tool, data,
                 HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception), reason,
                     nativeCallIssued ? "tool-call" : "tool-queue"),
                 readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind), HostBehavior.CompletenessOf(kind), writes, current);

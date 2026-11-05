@@ -211,7 +211,7 @@ namespace TiaMcp.FoundationHost
         }
         internal bool SessionLocked
         {
-            get { using var session = EnterSession(); return McpServer.SessionPrecheckRefusal("GetSessionState") != null; }
+            get { using var session = EnterSession(); return McpServer.SessionLatched(); }
         }
         private sealed class SessionTool(EngineHostPipeline owner, McpServerTool inner) : McpServerTool
         {

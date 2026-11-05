@@ -30,7 +30,8 @@ internal static class Program
         var identity = new ChannelIdentity(options.ReleaseKey, Hash(exe),
             Hash(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + options.ReleaseKey + ".dll")),
             System.Diagnostics.Process.GetCurrentProcess().Id, options.Nonce);
-        bool lost = false, bound = false;
+        bool lost = false, bound = false, projectClosed = false;
+        int attachedPid = 123;
         long epoch = 0;
         string? faultMethod = null, faultTool = null, faultCorrelation = null, savedAs = null;
         string Spill(string raw, string? mode)
@@ -52,7 +53,8 @@ internal static class Program
             if (request.Method == "adapter.HostObserve")
                 return ChannelResponse.Success(JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey,
                     diagnosticsDirectory = Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY"),
-                    readiness = new { ready = true }, binding = bound ? new { projectPath = "C:/fixture.ap" + options.ReleaseKey } : null,
+                    readiness = new { ready = true }, binding = bound ? new {
+                        projectPath = projectClosed ? null : savedAs ?? "C:/fixture.ap" + options.ReleaseKey } : null,
                     session = new { isConnected = bound } }));
             if (lost) return ChannelResponse.Error(new ChannelFailureException("Explicit restart required.", -32603, ChannelOutcome.RejectedBeforeNative));
             if (request.Method == "adapter.project-lifecycle.EnsureOpennessUserGroup"
@@ -63,17 +65,11 @@ internal static class Program
             if (request.Method == "adapter.project-lifecycle.ReadProjectLifecycleBinding")
                 return ChannelResponse.Success(JsonSerializer.Serialize(new System.Collections.Generic.Dictionary<string, object?>
                 {
-                    ["identity"] = new { projectPath = savedAs ?? "C:\\fixture\\P.ap" + options.ReleaseKey, projectName = "P" }, ["fault"] = null,
+                    ["identity"] = new { projectPath = projectClosed ? null : savedAs ?? "C:\\fixture\\P.ap" + options.ReleaseKey,
+                        projectName = projectClosed ? null : "P" }, ["fault"] = null,
                     ["instanceReserved"] = true, ["verifiedLive"] = false,
                     ["note"] = "Cached binding only. Project access verifies PID/start time/full path/name; no implicit rebind."
                 }));
-            if (request.Method == "adapter.project-lifecycle.ArchiveSaveProjectCopy")
-            {
-                string path = JsonNode.Parse(request.ArgumentsJson)!["path"]!.GetValue<string>();
-                if (path.Contains("malformed")) return ChannelResponse.Success("{\"Saved\":true}");
-                savedAs = path;
-                return ChannelResponse.Success("true");
-            }
             // EngineeringTransaction's plain replies: the scope id, a member flag, and void for commit and dispose.
             if (request.Method == "adapter.engineering-services.BeginEngineeringTransaction") return ChannelResponse.Success("\"fixture-scope\"");
             if (request.Method == "adapter.engineering-services.ReadEngineeringTransaction") return ChannelResponse.Success("true");
@@ -96,15 +92,55 @@ internal static class Program
             string? mode = target ? fixtureMode : null;
             var injected = mode == null ? null : WorkerFaultInjection.PlcBeforeDispatch(typeof(Program).Assembly, request, _ => lost = true);
             if (injected != null) return injected;
+            if (request.Method == "adapter.project-lifecycle.ArchiveSaveProjectCopy")
+            {
+                string path = JsonNode.Parse(request.ArgumentsJson)!["path"]!.GetValue<string>();
+                if (path.Contains("malformed")) return ChannelResponse.Success("{\"Saved\":true}");
+                if (path.Contains("refused")) return ChannelResponse.Error(new ChannelFailureException(
+                    "Save As needs a single-user project.", -32603, ChannelOutcome.RejectedBeforeNative,
+                    "{\"exceptionType\":\"AdapterPreconditionException\",\"condition\":\"session\"}"));
+                savedAs = path; projectClosed = false;
+                bound = true; epoch++;
+                return ChannelResponse.Success("true");
+            }
+            if (request.Method == "adapter.project-lifecycle.ExecuteMultiuserSession")
+            {
+                var args = JsonNode.Parse(request.ArgumentsJson)!["request"]!;
+                bool committed = (string?)args["Action"] == "commit" && (bool?)args["DryRun"] == false;
+                if (committed) { savedAs = null; projectClosed = true; epoch++; }
+                return Step("{\"operationSuccess\":true}", committed);
+            }
+            if (request.Method == "adapter.project-lifecycle.ConnectIsolatedPortal")
+            {
+                if (bound) return ChannelResponse.Error(new ChannelFailureException(
+                    "This session already owns a TIA connection.", -32603, ChannelOutcome.RejectedBeforeNative,
+                    "{\"exceptionType\":\"AdapterPreconditionException\",\"condition\":\"session\"}"));
+                bound = true; epoch++;
+                return Step("{\"operationSuccess\":true}", false);
+            }
+            if (request.Method == "adapter.project-lifecycle.RetrieveProjectArchive")
+            {
+                var args = JsonNode.Parse(request.ArgumentsJson)!["request"]!;
+                bool refused = args["ArchivePath"]!.GetValue<string>().Contains("refused");
+                if (!refused && (bool?)args["DryRun"] == false) { bound = true; epoch++; }
+                return Step(refused
+                    ? "{\"operationSuccess\":false,\"status\":\"PreconditionFailed\",\"mayHaveChanged\":false}"
+                    : "{\"operationSuccess\":true}", !refused && (bool?)args["DryRun"] == false);
+            }
             if (request.Method == "adapter.Attach")
             {
+                attachedPid = (int)JsonNode.Parse(request.ArgumentsJson)!["processId"]!;
                 bound = true; epoch++;
-                return ChannelResponse.Success("{\"Stage\":\"attached\",\"OwnsPortal\":false,\"AttemptedPids\":[123],\"Strategy\":\"explicit\",\"LaunchMode\":\"attach\"}");
+                return ChannelResponse.Success(new JsonObject { ["Stage"] = "attached", ["OwnsPortal"] = false,
+                    ["AttemptedPids"] = new JsonArray(attachedPid), ["Strategy"] = "explicit", ["LaunchMode"] = "attach" }.ToJsonString());
             }
             if (request.Method == "adapter.Disconnect")
             {
                 bound = false; epoch++;
-                return ChannelResponse.Success("{\"Stage\":\"disconnected\",\"SessionState\":\"terminal\",\"Strategy\":\"non-owning-attachment-only\",\"WorkerAcknowledged\":true,\"Detached\":true,\"SavedProject\":false,\"ClosedProject\":false,\"LaunchMode\":\"never\"}");
+                return ChannelResponse
+                    .Success("{\"Stage\":\"disconnected\",\"SessionState\":\"terminal\"," +
+                        "\"Strategy\":\"non-owning-attachment-only\",\"WorkerAcknowledged\":true,\"Detached\":true," +
+                        "\"SavedProject\":false,\"ClosedProject\":false,\"LaunchMode\":\"never\"}");
             }
             if (mode == "slow" && request.Method != "adapter.ReadState") Slow();
             string padding = mode is "oversized" or "oversized-delayed" ? new string('x', ChannelLimits.ResponseBytes) : "fixture";
@@ -117,17 +153,25 @@ internal static class Program
                 return ChannelResponse.WithSpill(step, () => Spill(step, mode));
             }
             string raw = request.Method == "adapter.ReadBlocks" ? new JsonArray(new JsonObject { ["Name"] = padding }).ToJsonString()
-                : request.Method == "adapter.plc-paging.ReadBlockPage" ? new JsonObject { ["Items"] = new JsonArray(new JsonObject { ["Name"] = padding, ["Path"] = "fixture" }),
+                : request.Method == "adapter.plc-paging.ReadBlockPage" ? new JsonObject {
+                    ["Items"] = new JsonArray(new JsonObject { ["Name"] = padding, ["Path"] = "fixture" }),
                     ["Offset"] = 0, ["Total"] = 1, ["NextCursor"] = null }.ToJsonString()
-                : JsonSerializer.Serialize(new { ReleaseKey = options.ReleaseKey, IsAttached = bound, ProcessId = bound ? (int?)123 : null,
+                : JsonSerializer.Serialize(new { ReleaseKey = options.ReleaseKey, IsAttached = bound, ProcessId = bound ? (int?)attachedPid : null,
                     // Fault scenarios have a synthetic project so normal ReadState
                     // prechecks can admit the operation that will receive the fault.
-                    ProjectFile = bound || !string.IsNullOrEmpty(fixtureMode) ? "C:/fixture.ap" + options.ReleaseKey : null, WithUi = options.WithUi,
+                    ProjectFile = projectClosed ? null : savedAs
+                        ?? (bound || !string.IsNullOrEmpty(fixtureMode) ? "C:/fixture.ap" + options.ReleaseKey : null),
+                    WithUi = options.WithUi,
                     TiaPortalLocation = Environment.GetEnvironmentVariable("TiaPortalLocation") });
             return ChannelResponse.WithSpill(raw, () => Spill(raw, mode));
         }).Run();
         return 0;
     }
+
+    private static ChannelResponse Step(string meta, bool changed) => ChannelResponse.Success(new JsonObject {
+        ["Message"] = "Fixture lifecycle result.", ["Meta"] = JsonNode.Parse(meta),
+        ["RequiresSessionReset"] = false, ["MayHaveChanged"] = changed, ["BlockReadsAfterUncertain"] = true
+    }.ToJsonString());
 
     // Replies whose shape the host checks member for member, as their worker producers write them: the PUT/GET dictionaries
     // (PutGetAccess.GetPutGetAccess, HardwareSecurityAdapter.SetPutGetAccess), PlcSeedHmiReply and the scaffold primitives of
@@ -158,7 +202,8 @@ internal static class Program
                 missing = reply != null && reply.ContainsKey("note") ? "note" : "rawValue";
                 break;
             case "adapter.plc-software.SeedReferenceHmi":
-                reply = new Dictionary<string, object?> { ["Message"] = null, ["Imported"] = new[] { "Screen_1" }, ["Failed"] = new object[0], ["Meta"] = meta };
+                reply = new Dictionary<string, object?> { ["Message"] = null, ["Imported"] = new[] { "Screen_1" }, ["Failed"] = new object[0], ["Meta"] = meta
+                };
                 missing = "Meta";
                 break;
             case "adapter.project-lifecycle.ExecuteProjectScaffoldPrimitive":
@@ -166,12 +211,15 @@ internal static class Program
                 reply = ((string?)request?["Kind"]) switch
                 {
                     "addDevice" => new Dictionary<string, object?> { ["Ok"] = true, ["DeviceName"] = text[2], ["Family"] = text[3], ["MlfbUsed"] = text[0],
-                        ["VersionUsed"] = text[1], ["Attempts"] = new[] { text[0] }, ["Error"] = null, ["Message"] = "Device '" + text[2] + "' added (one exact create call)", ["Meta"] = meta },
+                        ["VersionUsed"] = text[1], ["Attempts"] = new[] { text[0] }, ["Error"] = null, ["Message"] = "Device '" + text[2]
+                            + "' added (one exact create call)", ["Meta"] = meta },
                     "compile" => new Dictionary<string, object?> { ["State"] = "Success", ["ErrorCount"] = 0, ["WarningCount"] = 0, ["Errors"] = new string[0],
-                        ["Warnings"] = new string[0], ["Info"] = new string[0], ["RawMessages"] = new string[0], ["Message"] = "Software '" + text[0] + "' compile state=Success", ["Meta"] = meta },
+                        ["Warnings"] = new string[0], ["Info"] = new string[0], ["RawMessages"] = new string[0], ["Message"] = "Software '" + text[0]
+                            + "' compile state=Success", ["Meta"] = meta },
                     "hmiInfo" => new Dictionary<string, object?> { ["Name"] = text[0], ["ProgramType"] = "Unified", ["Screens"] = new string[0],
                         ["Message"] = "HMI program info retrieved from '" + text[0] + "'", ["Meta"] = meta },
-                    "hmiConnect" => new Dictionary<string, object?> { ["Meta"] = meta, ["Message"] = null, ["ObjectKind"] = "HmiConnection", ["ObjectPath"] = text[1],
+                    "hmiConnect" => new Dictionary<string, object?> {
+                        ["Meta"] = meta, ["Message"] = null, ["ObjectKind"] = "HmiConnection", ["ObjectPath"] = text[1],
                         ["TypeName"] = null, ["Members"] = null },
                     _ => new Dictionary<string, object?> { ["Message"] = "fixture " + (string?)request?["Kind"], ["Meta"] = meta },
                 };

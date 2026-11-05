@@ -68,6 +68,8 @@ internal sealed class SharedSessionState
         return new JsonObject { ["binding"] = identity == null ? null : new JsonObject { ["identity"] = identity },
             ["connected"] = !ended && connected,
             ["workerGeneration"] = transport["generation"]?.DeepClone(),
+            ["priorUnknownRequestId"] = transport["priorUnknownRequestId"]?.DeepClone(),
+            ["workerFault"] = transport["workerFault"]?.DeepClone(),
             ["disconnected"] = ended, ["requiresSessionReset"] = locked, ["switches"] = switches };
     }
     internal JsonObject OperatorSnapshot(string release)

@@ -226,7 +226,9 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return Recorded(fenced);
             if (inner is FoundationTool { Ported: true } ported && ported.RefusePortedCapability(args) is { } unavailable)
                 return Recorded(unavailable);
-            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true })
+            if (tool.Name is not ("DisconnectPortal" or "GetSessionState")
+                && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true } resetTool
+                && (!resetTool.Ported || PortedToolContract.WiredOperations(tool.Name).Length != 0))
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.SessionReset(), true));
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool
@@ -319,7 +321,9 @@ internal sealed class FoundationV4Tool : McpServerTool
                 lane = await targetLaneTool.AcquireLane(cancellationToken);
                 targetLaneTool.ActivateLane(lane);
             }
-            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true })
+            if (tool.Name is not ("DisconnectPortal" or "GetSessionState")
+                && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true } resetAfterLane
+                && (!resetAfterLane.Ported || PortedToolContract.WiredOperations(tool.Name).Length != 0))
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.SessionReset(), true));
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args), dispatched: true) is { } dispatchFenced)
@@ -371,6 +375,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                             new CancelledDetails(sharedSession ? "tool-queue" : "host"))));
         }
         catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
+        { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
+        catch (WorkerOperationException ex) when (ex.Condition == "worker-read-running")
         { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)
         { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments"))); }

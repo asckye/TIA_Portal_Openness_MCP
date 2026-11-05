@@ -11,6 +11,8 @@ internal sealed record Definition(string Name, string Operation, string Descript
 
 internal static class FoundationTools
 {
+    private const string BlockHierarchyDescription = "[v17-read-safe-v1] Actual nested block groups, including empty groups; structure only; " +
+        "use ListPlcBlocks or GetPlcBlockInfo for details. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error.";
     private static Argument S(string name) => new(name);
     private static Argument Dry() => new("dryRun", "boolean", false, true);
     private const string UmacUser = "umacUserName: UMAC user of a protected project; give it together with umacPassword. Empty for an unprotected project.";
@@ -44,7 +46,7 @@ internal static class FoundationTools
         new("CloseProject","CloseProject","[v17-project-safe-v1] Close only an unmodified project/local session opened by this worker. No implicit save, discard, commit or TIA termination.",new[]{Dry()},"ProjectMutation"),
         new("GetProjectTree","ReadProjectTree","[v17-project-safe-v1] Actual device groups, devices, nested items and software, including ungrouped devices and exact software paths.",Array.Empty<Argument>(),"ProjectTree"),
         new("ListPlcBlocks","ReadBlocks","[v17-read-safe-v1] V17 block fields and case-insensitive regex. Accepts unique PLC/device/group aliases or exact address; rejects ambiguity and unused path segments.",new[]{S("softwarePath"),new Argument("regexName","string",false,"")},"Items"),
-        new("GetPlcBlockHierarchy","ReadBlockHierarchy","[v17-read-safe-v1] Actual nested block groups, including empty groups. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error.",new[]{S("softwarePath")},"Root"),
+        new("GetPlcBlockHierarchy","ReadBlockHierarchy",BlockHierarchyDescription,new[]{S("softwarePath")},"Root"),
         new("DisconnectPortal","Disconnect","[acknowledged-disconnect-candidate] End this worker session. An attached existing process is only detached; a TIA Portal this session started (ConnectIsolatedPortal) is disposed, which closes a headless instance, and is refused while a project is open in it (SaveProject and CloseProject first). No project required; no save, project close, launch or automatic reconnect. Idle disconnect never starts a worker. An idle responsive worker can detach after an unknown outcome; an in-flight, unresponsive or lost worker is terminated with requiresTiaRestart=true. Subsequent Attach requires a new MCP session. Native acceptance NOT RUN.",Array.Empty<Argument>(),"Disconnect"),
         new("ListPlcTypes","ReadTypes","[v17-read-safe-v1] V17 type fields and case-insensitive regex. Accepts unique PLC/device/group aliases or exact address; rejects ambiguity and unused path segments.",new[]{S("softwarePath"),new Argument("regexName","string",false,"")},"Items"),
         new("ListPlcTagTables","ReadTagTableNames","[v17-read-safe-v1] V17 root-group tag-table name list. Accepts unique PLC/device/group aliases or exact address; native failures are errors, not empty success.",new[]{S("softwarePath")},"Items"),
@@ -266,6 +268,12 @@ internal sealed partial class FoundationTool : McpServerTool
             }
             if (definition.ResponseMember == "SpecialExport" && CanonicalBatchTools.CurrentExportRoot.Value is string exportRoot)
                 values["plannedExportRoot"] = exportRoot;
+            if (definition.Name == "GetSessionState" && (SessionRequiresReset || worker is WorkerClient { DrainingRead: true }))
+            {
+                var state = SharedSessionState.For(worker).Snapshot(release!);
+                if (SessionRequiresReset) state["requiresSessionReset"] = true;
+                return FoundationV4Result.HostSessionState(release!, id!, state);
+            }
             var result=await worker.Call(definition.Operation,values,cancellationToken);
             raw = result?.DeepClone();
             if(definition.ResponseMember is "Connection" or "Projects" or "Bind" or "ProjectMutation" or "ProjectTree") result=V17ProjectEnvelope.Wrap(definition.Name,definition.ResponseMember,result,values["dryRun"]?.GetValue<bool>() ?? false);

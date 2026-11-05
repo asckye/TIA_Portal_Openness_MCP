@@ -39,6 +39,9 @@ public sealed class McpProjectClient : IProjectClient
         if (!IsRunning) throw new InvalidOperationException("Select and attach an MCP session first.");
     }
     internal async Task<JsonObject> Read(string tool, Dictionary<string, object?>? arguments = null, CancellationToken token = default)
+        => (await ReadEnvelopeAsync(tool, arguments, token))["data"] as JsonObject ?? new();
+
+    private async Task<JsonObject> ReadEnvelopeAsync(string tool, Dictionary<string, object?>? arguments = null, CancellationToken token = default)
     {
         var envelope = await Session.CallAsync(tool, arguments ?? new(), token);
         LastEnvelope = envelope.ToJsonString(new() { WriteIndented = true });
@@ -53,7 +56,7 @@ public sealed class McpProjectClient : IProjectClient
             string code = (string?)envelope["error"]?["code"] ?? "INTERNAL_ERROR";
             throw new InvalidOperationException(code + ": " + EngineResultText.Error(code) + " " + (string?)envelope["error"]?["message"]);
         }
-        return envelope["data"] as JsonObject ?? new();
+        return envelope;
     }
     private bool Supports(string tool, string parameter) => Session.ToolSchema(tool)?["properties"]?[parameter] != null;
     internal async Task<JsonObject> Write(string tool, Dictionary<string, object?> arguments, CancellationToken token = default, string? expectedProject = null)
@@ -169,16 +172,17 @@ public sealed class McpProjectClient : IProjectClient
     private static string Escape(string name) => Uri.EscapeDataString(name);
     public async Task<List<BlockInfo>> ListBlocksAsync(string deviceId)
     {
-        var data = await Read("GetPlcBlockHierarchy", new() { ["softwarePath"] = deviceId });
         var result = new List<BlockInfo>();
-        void Walk(JsonObject group, string path)
+        string? cursor = null;
+        do
         {
-            foreach (var block in (group["blocks"] as JsonArray ?? new()).OfType<JsonObject>())
-                result.Add(Block(block, (string?)block["path"] ?? path + Escape((string?)block["name"] ?? "")));
-            foreach (var child in (group["groups"] as JsonArray ?? new()).OfType<JsonObject>())
-                Walk(child, path + Escape((string?)child["name"] ?? "") + "/");
-        }
-        Walk(data["root"] as JsonObject ?? data, "");
+            var arguments = new Dictionary<string, object?> { ["softwarePath"] = deviceId, ["limit"] = 100 };
+            if (cursor != null) arguments["cursor"] = cursor;
+            var envelope = await ReadEnvelopeAsync("ListPlcBlocks", arguments);
+            foreach (var block in (envelope["data"]?["items"] as JsonArray ?? new()).OfType<JsonObject>())
+                result.Add(Block(block, (string?)block["path"] ?? Escape((string?)block["name"] ?? "")));
+            cursor = (string?)envelope["meta"]?["paging"]?["nextCursor"];
+        } while (!string.IsNullOrEmpty(cursor));
         return result;
     }
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format)
@@ -232,7 +236,6 @@ public sealed class McpProjectClient : IProjectClient
     }
     public async Task<InspectionReport> InspectAsync(string deviceId, string? blockNamePattern)
     {
-        await Read("ListPlcBlocks", new() { ["softwarePath"] = deviceId });
         var blocks = await ListBlocksAsync(deviceId);
         var facts = new List<BlockInfo>();
         foreach (var block in blocks)

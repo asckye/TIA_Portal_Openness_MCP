@@ -4801,7 +4801,10 @@
         "arguments": {
           "take": 100
         },
-        "parameters": {},
+        "parameters": {
+          "requestId": { "exampleValue": "request-123", "description": "Exact journal request id; filtering precedes take." },
+          "sinceUtc": { "exampleValue": "2026-11-04T00:00:00Z", "description": "Inclusive ISO 8601 timestamp with Z or a numeric offset; filtering precedes take." }
+        },
         "operations": {},
         "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
         "inline": true,
@@ -31183,7 +31186,10 @@
         "arguments": {
           "take": 100
         },
-        "parameters": {},
+        "parameters": {
+          "requestId": { "exampleValue": "request-123", "description": "Exact journal request id; filtering precedes take." },
+          "sinceUtc": { "exampleValue": "2026-11-04T00:00:00Z", "description": "Inclusive ISO 8601 timestamp with Z or a numeric offset; filtering precedes take." }
+        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true

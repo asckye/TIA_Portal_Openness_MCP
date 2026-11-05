@@ -89,8 +89,44 @@ internal static class DisconnectTests
     }
 }
 
+[Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class FoundationRecoveryTests
 {
+    [Theory, InlineData("14sp1"), InlineData("19"), InlineData("21")]
+    public Task Idle_worker_after_a_channel_fault_with_an_idle_lease_needs_no_TIA_restart(string release)
+        => LeaseRestart(release, false);
+
+    [Theory, InlineData("14sp1"), InlineData("19"), InlineData("21")]
+    public Task Uncertain_lease_keeps_the_TIA_restart_guard(string release) => LeaseRestart(release, true);
+
+    private static async Task LeaseRestart(string release, bool uncertain)
+    {
+        string root = Path.Combine(AppContext.BaseDirectory, "lease-restart-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string? previous = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
+        Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", root);
+        try
+        {
+            string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(
+                Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+            using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) {
+                Bundled = false, LeasesDirectoryForTest = root, ProcessStartTicksForTest = _ => 1 };
+            await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
+            if (uncertain) await worker.Call("FixtureMarkUncertain", new(), CancellationToken.None);
+            await Assert.ThrowsAsync<TiaMcp.WorkerChannel.ChannelFaultException>(() =>
+                worker.Call("FixtureEpochAdvance", new(), CancellationToken.None));
+            var reply = await worker.Call("Disconnect", new(), CancellationToken.None);
+            Assert.Equal(uncertain, (bool?)reply?["RequiresTiaRestart"]);
+            Assert.False((bool?)reply?["WorkerAcknowledged"]);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", previous);
+            Directory.Delete(root, true);
+        }
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
     public async Task Foundation_channel_preserves_both_lease_refusals_without_poisoning(string release)
     {

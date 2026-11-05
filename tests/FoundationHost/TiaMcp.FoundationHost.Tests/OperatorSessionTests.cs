@@ -114,8 +114,9 @@ public sealed class OperatorSessionTestsPlc
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
         await panel.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, false);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await ai.Tool("GetSessionState", ok: false))["error"]?["code"]);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await panel.Tool("GetSessionState", ok: false))["error"]?["code"]);
+        Assert.True((bool?)(await ai.Tool("GetSessionState"))["data"]?["sessionState"]?["requiresSessionReset"]);
+        Assert.True((bool?)(await panel.Tool("GetSessionState"))["data"]?["sessionState"]?["requiresSessionReset"]);
+        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await ai.Tool("GetProjectInfo", ok: false))["error"]?["code"]);
         Assert.Equal("workbench", (string?)session.Snapshot()["endedBy"]); Assert.True((bool?)session.Snapshot()["sessionLocked"]);
         await separate.Tool("GetSessionState");
         long? before = (long?)session.Snapshot()["worker"]?["generation"];

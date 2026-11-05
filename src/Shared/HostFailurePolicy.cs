@@ -33,6 +33,26 @@ namespace TiaOpenness.Shared
             return null;
         }
 
+        internal static bool WorkerMark(Exception error, string mark, bool sent)
+        {
+            for (var cause = error; cause != null; cause = cause.InnerException)
+                if (cause.Data["foundationRequestSent"] is bool value && value == sent && cause.Data[mark] != null) return true;
+            return false;
+        }
+
+        internal static bool WorkerOutcomeUnknown(Exception error) => WorkerMark(error, "workerOutcomeUnknown", true);
+
+        private static bool Marked(Exception error, string mark)
+        {
+            for (var cause = error; cause != null; cause = cause.InnerException)
+                if (cause.Data[mark] is true) return true;
+            return false;
+        }
+
+        internal static bool KnownNoMutation(Exception error) => Marked(error, "foundationKnownNoMutation");
+        internal static bool PriorMutation(Exception error) => Marked(error, "foundationPriorMutation");
+        internal static bool WorkerReadTimeout(Exception error) => Marked(error, "workerReadTimeout");
+
         internal static bool SuppressAdmissionDiagnostic(Exception error)
         {
             for (var cause = error; cause != null; cause = cause.InnerException)
@@ -44,7 +64,8 @@ namespace TiaOpenness.Shared
             string? reportedOutcome = null, int? reportedCode = null, string? reportedExceptionType = null, bool nativeRead = true)
         {
             error = Unwrap(error);
-            if (dispatched && error.Data["workerOutcomeUnknown"] is true) return HostFailureKind.Unknown;
+            if (PriorMutation(error)) return HostFailureKind.Unknown;
+            if (dispatched && WorkerOutcomeUnknown(error)) return HostFailureKind.Unknown;
             if (Precondition(error) is AdapterPreconditionException precondition)
                 return precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition;
             if (reportedCode == -32602 && (!dispatched || readOnly || reportedOutcome == "rejected-before-operation")) return HostFailureKind.Argument;

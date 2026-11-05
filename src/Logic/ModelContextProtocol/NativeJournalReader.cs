@@ -9,7 +9,9 @@ namespace TiaMcp.Logic.ModelContextProtocol
 {
     public static class NativeJournalReader
     {
-        public static JsonObject Read(string root, int take)
+        public static JsonObject Read(string root, int take) => Read(root, take, null, null);
+
+        public static JsonObject Read(string root, int take, string? requestId, DateTimeOffset? sinceUtc)
         {
             if (take < 1 || take > 500) throw new ArgumentException("take must be 1..500.");
             if (!Path.IsPathRooted(root)) throw new ArgumentException("Diagnostics directory must be absolute.");
@@ -17,7 +19,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 .Where(f => f.Name.EndsWith(".jsonl", StringComparison.Ordinal) || f.Name.EndsWith(".jsonl.previous", StringComparison.Ordinal))
                 .OrderBy(f => f.LastWriteTimeUtc).ThenBy(f => f.Name, StringComparer.Ordinal).ToArray() : Array.Empty<FileInfo>();
             var rows = new List<(DateTimeOffset Time, long Order, JsonNode Row)>();
-            int malformed = 0;
+            int malformed = 0, matched = 0;
             long order = 0;
             foreach (var file in files)
                 using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
@@ -33,6 +35,11 @@ namespace TiaMcp.Logic.ModelContextProtocol
                                 .TryParse(row["utc"]?.ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None,
                                     out var utc)
                                 ? utc : new DateTimeOffset(file.LastWriteTimeUtc);
+                            if (requestId != null && !string.Equals((string?)row["id"], requestId, StringComparison.Ordinal)) continue;
+                            if (sinceUtc.HasValue && (!DateTimeOffset.TryParse((string?)row["utc"],
+                                System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var recorded)
+                                || recorded < sinceUtc.Value)) continue;
+                            matched++;
                             rows.Add((time, order++, row));
                             rows.Sort((a, b) => { int timeOrder = a.Time.CompareTo(b.Time); return timeOrder != 0 ? timeOrder : a.Order.CompareTo(b.Order); });
                             if (rows.Count > take) rows.RemoveAt(0);
@@ -40,7 +47,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
                         catch (JsonException) /* swallow(parse-fallback): count partial or malformed journal rows and preserve the remaining crash evidence */ { malformed++; }
                     }
             return new JsonObject { ["success"] = true, ["directory"] = root,
-                ["records"] = new JsonArray(rows.Select(r => r.Row).ToArray()), ["malformedLines"] = malformed, ["filesRead"] = files.Length };
+                ["records"] = new JsonArray(rows.Select(r => r.Row).ToArray()), ["malformedLines"] = malformed, ["matchedRecords"] = matched, ["filesRead"] =
+                    files.Length };
         }
     }
 }

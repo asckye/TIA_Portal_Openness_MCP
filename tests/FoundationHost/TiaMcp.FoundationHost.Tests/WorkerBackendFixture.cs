@@ -14,11 +14,11 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     private readonly Foundation.WorkerClient plc;
     private readonly Foundation.FoundationHostPorts.Services services;
     private readonly bool faultFixture;
-    internal WorkerBackendFixture(Foundation.HostOptions options, string? spills = null)
+    internal WorkerBackendFixture(Foundation.HostOptions options, string? spills = null, TimeSpan? drainBudget = null)
     {
         plc = new Foundation.WorkerClient(options.ReleaseKey, options.WorkerExe,
             options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
-            { Bundled = options.BundledWorker, SharedSession = true, SpillsDirectoryForTest = spills };
+            { Bundled = options.BundledWorker, SharedSession = true, SpillsDirectoryForTest = spills, DrainBudget = drainBudget ?? TimeSpan.FromMinutes(2) };
         faultFixture = Path.GetFileName(options.WorkerExe) == "TiaMcp.PlcWorker.FaultFixture.exe";
         services = Foundation.FoundationHostPorts.CreateServices(Inner, options.ReleaseKey,
             () => new JsonObject { ["ready"] = true }, options.ApiDirectory);

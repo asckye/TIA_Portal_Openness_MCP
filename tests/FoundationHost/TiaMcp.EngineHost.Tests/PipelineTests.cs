@@ -131,7 +131,7 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
         fixture.Worker.Unknown = true; fixture.Worker.Native = native;
         await fixture.Call("SaveProject", "{}");
         int calls = fixture.Worker.Calls.Count;
-        var result = await fixture.Call("GetSessionState", "{}");
+        var result = await fixture.Call("SaveProject", "{}");
         Assert.Equal(locked ? "SESSION_RESET_REQUIRED" : "OUTCOME_UNKNOWN", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal(locked ? calls : calls + 1, fixture.Worker.Calls.Count);
         Assert.True((bool?)(await fixture.Call("ListExportHandles", "{}")).StructuredContent?["ok"]);
@@ -152,7 +152,7 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
     {
         using var fixture = new Fixture(); fixture.Worker.Limited = true; fixture.Worker.Native = true;
         Assert.Equal("LIMIT_EXCEEDED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await fixture.Call("GetSessionState", "{}")).StructuredContent?["error"]?["code"]);
+        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
     }
 
     [Fact]
@@ -184,7 +184,7 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
         Assert.Empty(fixture.Worker.Calls);
         fixture.Worker.Unknown = true; fixture.Worker.Native = true;
         await fixture.Call("CallTool", "{\"name\":\"SaveProject\",\"arguments\":{}}");
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await fixture.Call("GetSessionState", "{}")).StructuredContent?["error"]?["code"]);
+        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
     }
 
     [Theory]

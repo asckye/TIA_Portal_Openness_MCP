@@ -107,8 +107,11 @@ public sealed class WorkerRobustnessTests
             // A successful 16/32 MiB spill includes serialization and a durable disk flush.
             // Keep the short deadline for injected faults, not as a performance gate for CI disks.
             string budget = mode is "oversized" or "oversized-delayed" ? "30" : "0.8";
-            Worker = new Client(new Options { ReleaseKey = release, WorkerExe = exe, ApiDirectory = Path.GetDirectoryName(exe)!, BundleRoot = AppContext.BaseDirectory,
-                NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":" + budget + ",\"compile\":0.8,\"firstAttach\":1.2}" }, SpillsDirectory);
+            Worker =
+                new Client(new Options {
+                    ReleaseKey = release, WorkerExe = exe, ApiDirectory = Path.GetDirectoryName(exe)!, BundleRoot = AppContext.BaseDirectory,
+                NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":" + budget + ",\"compile\":0.8,\"firstAttach\":1.2}" },
+                    SpillsDirectory, TimeSpan.FromMilliseconds(20));
             Engine.EngineHostConfiguration.ReleaseKey = release; Engine.EngineHostConfiguration.Worker = Worker;
             var ports = Foundation.LegacyHostToolRegistry.Create(Worker, release, true, hostPorts: false);
             var catalog = new Engine.FoundationCatalog(release, ports);
@@ -121,7 +124,7 @@ public sealed class WorkerRobustnessTests
                 with { Name = "GetPlcBlockHierarchy", Operation = "ReadBlocks", ResponseMember = "Items" };
             shared = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(spillRead, Worker),
                 release, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
-            Worker.SessionLocked = () => Host.SessionPrecheckRefusal("GetSessionState") != null;
+            Worker.SessionLocked = () => Host.SessionLatched();
             // The first generation starts and reports its status under the production budgets; the scaled budgets above apply
             // from the first operation a test measures (P8-stab-1).
             using (Worker.ProductionBudgets()) Worker.Status(CancellationToken.None).GetAwaiter().GetResult();
@@ -184,12 +187,18 @@ public sealed class WorkerRobustnessTests
     {
         using var scope = new Scope(mode, release);
         var result = await scope.Call(shared);
-        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        bool draining = mode == "hang";
+        Assert.Equal(draining ? "read-failed" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal(!draining, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        if (draining) Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await scope.Call(!shared)).StructuredContent?["error"]?["code"]);
+        var refused = await scope.Call(!shared);
+        Assert.Equal(draining ? "PRECONDITION_FAILED" : "SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
+        if (draining) Assert.Equal("worker-read-running", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
         var previous = scope.Worker.Snapshot();
-        Assert.Equal("Faulted", (string?)previous["state"]); Assert.True((bool?)previous["sessionLocked"]); Assert.NotNull(previous["fault"]);
+        Assert.Equal(!draining, (string?)previous["state"] == "Faulted");
+        Assert.Equal(!draining, (bool?)previous["sessionLocked"]);
+        Assert.Equal(!draining, previous["fault"] != null);
         Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED");
         object key = scope.Worker.SessionKey;
         scope.ClearFault();
@@ -199,7 +208,8 @@ public sealed class WorkerRobustnessTests
         var restart = await scope.Worker.Restart(true, CancellationToken.None);
         Assert.True((bool?)restart["success"]); Assert.True((bool?)restart["requiresExplicitRebind"]);
         Assert.NotSame(key, scope.Worker.SessionKey); Assert.Null(scope.Worker.Binding);
-        Assert.NotNull(restart["worker"]?["previousGenerations"]?[0]?["fault"]);
+        Assert.Equal(!draining, restart["worker"]?["previousGenerations"]?[0]?["fault"] != null);
+        if (draining) Assert.True((bool?)restart["requiresTiaRestart"]);
         Assert.False(scope.Worker.Poisoned);
         await scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None);
         Assert.NotNull(scope.Worker.Binding);

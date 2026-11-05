@@ -99,25 +99,66 @@ public sealed class FamilyPlainReplyTests
 
     public static TheoryData<string, string, string> AcceptedWithRequest() => new()
     {
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"), "{\"found\":false,\"message\":\"No project open.\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"), "{\"found\":false,\"device\":\"PLC_1\",\"message\":\"m\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"), "{\"found\":true,\"device\":\"PLC_1\",\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"enabled\":false,\"rawValue\":\"\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":false,\"failureCode\":\"PROJECT_NOT_BOUND\",\"message\":\"m\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":false,\"failureCode\":\"UNSUPPORTED_CAPABILITY\",\"device\":\"PLC_1\",\"message\":\"m\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":false,\"mayHaveChanged\":true,\"writeOutcomeKnown\":false,\"device\":\"PLC_1\",\"attributeName\":\"a\",\"message\":\"m\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":false,\"mayHaveChanged\":true,\"writeOutcomeKnown\":false,\"device\":\"PLC_1\",\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"before\":\"\",\"after\":\"\",\"note\":\"n\"}" },
+        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"), "{\"found\":false,\"message\":\"No project open.\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"),
+                "{\"found\":false,\"device\":\"PLC_1\",\"message\":\"m\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"),
+                "{\"found\":true,\"device\":\"PLC_1\",\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"enabled\":false,\"rawValue\":\"\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"),
+                "{\"ok\":false,\"failureCode\":\"PROJECT_NOT_BOUND\",\"message\":\"m\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"),
+                "{\"ok\":false,\"failureCode\":\"UNSUPPORTED_CAPABILITY\",\"device\":\"PLC_1\",\"message\":\"m\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"),
+                "{\"ok\":false,\"mayHaveChanged\":true,\"writeOutcomeKnown\":false,\"device\":\"PLC_1\",\"attributeName\":\"a\",\"message\":\"m\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"),
+                "{\"ok\":false,\"mayHaveChanged\":true,\"writeOutcomeKnown\":false,\"device\":\"PLC_1\"," +
+                    "\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"before\":\"\",\"after\":\"\",\"note\":\"n\"}"
+        },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManagePlcProtection"), SecurityReply() },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManageWatchForceTableWebAccess"), SecurityReply() },
-        { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "save"), "{\"Message\":\"Local project saved\",\"Meta\":{\"success\":true}}" },
-        { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "addDevice"), "{\"Ok\":false,\"DeviceName\":\"PLC_1\",\"Family\":\"f\",\"MlfbUsed\":null,\"VersionUsed\":null,\"Attempts\":null,\"Error\":\"e\",\"Message\":\"m\",\"Meta\":{\"success\":false}}" },
-        { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "compile"), "{\"State\":\"Error\",\"ErrorCount\":null,\"WarningCount\":2,\"Errors\":[\"e\"],\"Warnings\":[],\"Info\":[],\"RawMessages\":[],\"Message\":\"m\",\"Meta\":{}}" },
-        { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "hmiInfo"), "{\"Name\":null,\"ProgramType\":null,\"Screens\":null,\"Message\":\"m\",\"Meta\":{}}" },
-        { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "hmiConnect"), "{\"Meta\":{},\"Message\":\"m\",\"ObjectKind\":\"k\",\"ObjectPath\":\"p\",\"TypeName\":\"t\",\"Members\":[]}" },
+        {
+            "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "save"),
+                "{\"Message\":\"Local project saved\",\"Meta\":{\"success\":true}}"
+        },
+        {
+            "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "addDevice"),
+                "{\"Ok\":false,\"DeviceName\":\"PLC_1\",\"Family\":\"f\",\"MlfbUsed\":null,\"VersionUsed\":null," +
+                    "\"Attempts\":null,\"Error\":\"e\",\"Message\":\"m\",\"Meta\":{\"success\":false}}"
+        },
+        {
+            "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "compile"),
+                "{\"State\":\"Error\",\"ErrorCount\":null,\"WarningCount\":2,\"Errors\":[\"e\"],\"Warnings\":[]," +
+                    "\"Info\":[],\"RawMessages\":[],\"Message\":\"m\",\"Meta\":{}}"
+        },
+        {
+            "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "hmiInfo"),
+                "{\"Name\":null,\"ProgramType\":null,\"Screens\":null,\"Message\":\"m\",\"Meta\":{}}"
+        },
+        {
+            "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "hmiConnect"),
+                "{\"Meta\":{},\"Message\":\"m\",\"ObjectKind\":\"k\",\"ObjectPath\":\"p\",\"TypeName\":\"t\",\"Members\":[]}"
+        },
         { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "hmiTag"), "{\"Message\":null,\"Meta\":{}}" },
         { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":null,\"Imported\":[\"S\"],\"Failed\":[{\"Path\":\"p\",\"Error\":null}],\"Meta\":{\"success\":true}}" },
         { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":\"m\",\"Imported\":null,\"Failed\":null,\"Meta\":null}" },
         { "plc-online.ExecuteOnline", "{}", Contract },
-        { "plc-online.ExecuteOnline", "{}", "{\"Value\":null,\"Failure\":{\"Code\":\"c\",\"Message\":\"m\"},\"MayHaveChanged\":true,\"RequiresSessionReset\":true,\"BlockReadsAfterUncertain\":true}" },
+        {
+            "plc-online.ExecuteOnline", "{}",
+                "{\"Value\":null,\"Failure\":{\"Code\":\"c\",\"Message\":\"m\"},\"MayHaveChanged\":true," +
+                    "\"RequiresSessionReset\":true,\"BlockReadsAfterUncertain\":true}"
+        },
         { "hmi-generic.ExecuteHmi", "{}", Hmi },
         { "hmi-classic.ExecuteHmi", "{}", Hmi },
         { "hmi-unified.ExecuteUnifiedHmi", "{}", Hmi },
@@ -125,9 +166,20 @@ public sealed class FamilyPlainReplyTests
         { "hmi-unified-exchange.ExecuteUnified", "{}", Hmi },
         { "hmi-unified-exchange.ReleaseUnifiedReadCursor", "{}", Hmi },
         { "hmi-unified-model.ExecuteUnified", "{}", Hmi },
-        { "libraries.ExecuteLibrary", "{}", "{\"Step\":{\"Message\":\"m\",\"Meta\":{},\"RequiresSessionReset\":false,\"MayHaveChanged\":false},\"Probe\":null,\"Import\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}" },
-        { "openness-reflection.ExecuteOpennessReflection", "{}", "{\"Observation\":{\"Kind\":\"k\"},\"Failure\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}" },
-        { "hardware-devices.HardwareCreateCatalogDevice", "{}", "{\"Device\":{\"Name\":\"PLC_1\"},\"Candidate\":{\"TypeIdentifier\":\"t\"},\"Candidates\":[],\"Attempts\":[\"t\"],\"Error\":null}" },
+        {
+            "libraries.ExecuteLibrary", "{}",
+                "{\"Step\":{\"Message\":\"m\",\"Meta\":{},\"RequiresSessionReset\":false,\"MayHaveChanged\":false}," +
+                    "\"Probe\":null,\"Import\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false," +
+                    "\"BlockReadsAfterUncertain\":true}"
+        },
+        {
+            "openness-reflection.ExecuteOpennessReflection", "{}",
+                "{\"Observation\":{\"Kind\":\"k\"},\"Failure\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}"
+        },
+        {
+            "hardware-devices.HardwareCreateCatalogDevice", "{}",
+                "{\"Device\":{\"Name\":\"PLC_1\"},\"Candidate\":{\"TypeIdentifier\":\"t\"},\"Candidates\":[],\"Attempts\":[\"t\"],\"Error\":null}"
+        },
         { "hardware-devices.HardwareCreateDeviceFallback", "{}", "{\"Device\":null,\"MlfbUsed\":null,\"VersionUsed\":null,\"Attempts\":[],\"Error\":\"e\"}" },
     };
 
@@ -143,7 +195,11 @@ public sealed class FamilyPlainReplyTests
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"), "{\"found\":false,\"message\":\"m\",\"extra\":1}" },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"), "{\"ok\":false,\"failureCode\":\"NOT_FOUND\",\"message\":\"m\"}" },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":true,\"message\":\"m\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":true,\"mayHaveChanged\":false,\"writeOutcomeKnown\":true,\"device\":\"PLC_1\",\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"before\":\"\",\"after\":\"\",\"note\":\"n\"}" },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"),
+                "{\"ok\":true,\"mayHaveChanged\":false,\"writeOutcomeKnown\":true,\"device\":\"PLC_1\"," +
+                    "\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"before\":\"\",\"after\":\"\",\"note\":\"n\"}"
+        },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"found\":false,\"message\":\"m\"}" },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManagePlcProtection"), "{\"found\":false,\"message\":\"m\"}" },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManageWatchForceTableWebAccess"), "{\"found\":false,\"message\":\"m\"}" },
@@ -199,6 +255,9 @@ public sealed class FamilyPlainReplyTests
         var result = await Task.Run(() => tools.SaveAsProject(copy));
         Assert.Equal(original, result.PreviousProjectFile);
         Assert.Equal(copy, result.NewProjectFile);
+        var channel = (TiaMcp.WorkerChannel.ChannelClient)typeof(WorkerClient)
+            .GetField("channel", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(worker)!;
+        Assert.Equal(1, channel.BindingEpoch);
         Assert.False(worker.Poisoned);
         Assert.Equal(release, (string?)(await worker.Call("ReadState", new JsonObject(), CancellationToken.None))?["ReleaseKey"]);
     }

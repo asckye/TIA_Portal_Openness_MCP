@@ -42,6 +42,9 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly HashSet<string> SessionReaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             { "InitializeEnvironment", "GetEnvironmentDiagnostics", "PreviewToolCall" };
 
+        public static bool HostOnlyDuringReset(string name) => ToolExecution.Table.TryGetValue(name, out var owner) && owner == "host"
+            && !SessionReaders.Contains(name) && name is not ("GenerateAcceptanceReport" or "RunOnlineMonitoringSafetySelfTest");
+
         public static bool IsSafeWithoutTia(string name) => WithoutTia.Contains(name);
         // File analysis, update discovery and SDK type inspection do not borrow a portal.
         private static readonly HashSet<string> WithoutPortal = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

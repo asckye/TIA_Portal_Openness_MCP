@@ -17,7 +17,7 @@ namespace TiaMcp.WorkerChannel
         private readonly Task receiver;
         private Pending? pending;
         private long sequence, epoch;
-        private bool verified, poisoned, recoveryOnly, unknown, disposed;
+        private bool verified, poisoned, recoveryOnly, unknown, unanswered, disposed;
         private Exception? lastFault;
         public Exception? LastFault { get { lock (gate) return lastFault; } }
         public bool Poisoned { get { lock (gate) return poisoned || recoveryOnly; } }
@@ -25,6 +25,20 @@ namespace TiaMcp.WorkerChannel
         public bool CanCallIndependentRuntime {
             get { lock (gate) return profile != ChannelProfile.Studio && verified && !poisoned && !disposed && pending == null; } }
         public bool InFlight { get { lock (gate) return pending?.Dispatched == true && !pending.Replied; } }
+        public bool Draining { get { lock (gate) return pending?.Draining == true; } }
+        public async Task<bool> WaitForDrain(TimeSpan timeout)
+        {
+            Task completion;
+            lock (gate)
+            {
+                if (pending?.Draining != true) return true;
+                completion = pending.Completion.Task;
+            }
+            await Task.WhenAny(completion, Task.Delay(timeout)).ConfigureAwait(false);
+            lock (gate) return pending?.Draining != true && !poisoned;
+        }
+
+        public bool Unanswered { get { lock (gate) return unanswered; } }
         public bool OutcomeUnknown { get { lock (gate) return unknown; } }
         public long BindingEpoch { get { lock (gate) return epoch; } }
         public long LastRequestId { get { lock (gate) return sequence; } }
@@ -52,10 +66,11 @@ namespace TiaMcp.WorkerChannel
 
         public Task<string> CallAsync(string method, string argumentsJson, BindingChange bindingChange,
             bool readOnly, TimeSpan timeout, CancellationToken token = default, bool firstAttach = false, string? correlationId = null)
-            => CallToolAsync(method, argumentsJson, bindingChange, readOnly, timeout, firstAttach, correlationId, null, token);
+            => CallToolAsync(method, argumentsJson, bindingChange, readOnly, timeout, firstAttach, correlationId, null, false, token);
 
         public async Task<string> CallToolAsync(string method, string argumentsJson, BindingChange bindingChange,
-            bool readOnly, TimeSpan timeout, bool firstAttach, string? correlationId, string? toolName, CancellationToken token = default)
+            bool readOnly, TimeSpan timeout, bool firstAttach, string? correlationId, string? toolName, bool drainOnTimeout = false, CancellationToken token =
+                default)
         {
             token.ThrowIfCancellationRequested();
             Pending call;
@@ -64,6 +79,9 @@ namespace TiaMcp.WorkerChannel
             lock (gate)
             {
                 RequireUsable(method);
+                if (pending?.Draining == true) throw new ChannelFailureException(
+                    "A timed-out read is still running in the worker; retry when it has finished.", -32603, ChannelOutcome.RejectedBeforeNative,
+                    "{\"exceptionType\":\"AdapterPreconditionException\",\"condition\":\"worker-read-running\"}");
                 if (!verified) throw Poison(new IOException("Worker hello has not been verified."));
                 if (pending != null) throw Poison(new IOException("Concurrent worker call; session stopped."));
                 if (!ChannelCodec.ValidMethod(method, profile)) throw new ArgumentException(profile == ChannelProfile.Foundation
@@ -94,16 +112,29 @@ namespace TiaMcp.WorkerChannel
                 if (response.Failure != null) throw response.Failure;
                 return response.ResultJson;
             }
+            catch (TimeoutException) when (drainOnTimeout && readOnly && profile == ChannelProfile.Foundation && BeginDrain(call))
+            { throw new ChannelReadTimeoutException(); }
             catch (ChannelFailureException ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
             catch (ChannelFailureException) { throw; } // Project requests remain refused; detach and the independent simulator are available.
             catch (Exception ex) { throw Poison(ex); }
-            finally { lock (gate) if (ReferenceEquals(pending, call)) pending = null; }
+            finally { lock (gate) if (ReferenceEquals(pending, call) && !call.Draining) pending = null; }
+        }
+
+        private bool BeginDrain(Pending call)
+        {
+            lock (gate)
+            {
+                if (!call.Written || poisoned) return false;
+                if (!call.Replied) call.Draining = true;
+                return true;
+            }
         }
 
         private async Task<ChannelResponse> Exchange(byte[] bytes, Pending call)
         {
             await output.WriteAsync(bytes, 0, bytes.Length, lifetime.Token).ConfigureAwait(false);
             await output.FlushAsync(lifetime.Token).ConfigureAwait(false);
+            lock (gate) call.Written = true;
             return await call.Completion.Task.ConfigureAwait(false);
         }
 
@@ -154,6 +185,7 @@ namespace TiaMcp.WorkerChannel
                                 ChannelCodec.Fields(root, "jsonrpc", "id", "bindingEpochBefore", "bindingEpochAfter", "result", "error");
                                 if (pending == null || pending.Replied || ChannelCodec.Number(root, "id") != pending.Id)
                                     throw new IOException("Unknown, old or duplicate worker reply id.");
+                                pending.Answered = true;
                                 var response = ChannelCodec.Response(root, profile);
                                 long before = ChannelCodec.Number(root, "bindingEpochBefore"), after = ChannelCodec.Number(root, "bindingEpochAfter");
                                 var change = response.Failure == null ? pending.Change
@@ -175,6 +207,7 @@ namespace TiaMcp.WorkerChannel
                                     unknown = true;
                                     lastFault ??= new IOException("Worker reported an unknown native outcome.");
                                 }
+                                if (pending.Draining) pending = null;
                             }
                         }
                         // Consumer callbacks must not hold the state lock or block timeout/cancel.
@@ -200,6 +233,7 @@ namespace TiaMcp.WorkerChannel
             {
                 poisoned = true;
                 lastFault ??= cause;
+                unanswered |= pending?.Dispatched == true && !pending.Answered;
                 unknown |= pending?.Dispatched == true;
                 var fault = new ChannelFaultException(cause.Message, unknown, cause);
                 hello.TrySetException(fault);
@@ -249,7 +283,7 @@ namespace TiaMcp.WorkerChannel
             internal readonly long Id, Before;
             internal readonly BindingChange Change;
             internal readonly bool ReadOnly;
-            internal bool Dispatched, Replied;
+            internal bool Dispatched, Replied, Answered, Written, Draining;
             internal int Progress;
             internal readonly TaskCompletionSource<ChannelResponse> Completion =
                 new TaskCompletionSource<ChannelResponse>(TaskCreationOptions.RunContinuationsAsynchronously);

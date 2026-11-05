@@ -41,7 +41,7 @@ public sealed class SharedPipelineTests
         public JsonNode? Binding => new JsonObject { ["projectPath"] = "C:/fixture.ap21" };
         public object SessionKey { get; } = new();
         public string ApprovalIdentity => Binding!.ToJsonString();
-        public bool Poisoned => Host.SessionPrecheckRefusal("GetSessionState") != null;
+        public bool Poisoned => Host.SessionLatched();
         public bool Bundled => false;
         public bool SharedSession => true;
         public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => null;
@@ -104,7 +104,9 @@ public sealed class SharedPipelineTests
         using var scope = new Scope(); scope.Worker.EngineUnknown = true;
         Host.ToolInvoker.Invoke(SessionFixtureTool.Name, new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
         var result = await scope.Foundation("GetSessionState").InvokeAsync(Scope.Request("GetSessionState", new()));
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.True((bool?)result.StructuredContent?["ok"]);
+        Assert.True((bool?)result.StructuredContent?["data"]?["sessionState"]?["requiresSessionReset"]);
+        Assert.NotNull(Host.SessionPrecheckRefusal("GetProjectInfo"));
         Assert.Equal(0, scope.Worker.FoundationCalls); Assert.Equal(1, scope.Worker.EngineCalls);
     }
 

@@ -481,8 +481,17 @@ internal sealed partial class FoundationTool
         // the same lane as the eventual request so approval cannot race a rebind.
         using var lane = await AcquireLane(token);
         ActivateLane(lane);
-        var state = PortedToolContract.WiredOperations(tool.Name, portedRelease!).Contains("ReadState", StringComparer.Ordinal)
-            ? await worker.Call("ReadState", new JsonObject(), token) : null;
+        JsonNode? state;
+        try
+        {
+            state = PortedToolContract.WiredOperations(tool.Name, portedRelease!).Contains("ReadState", StringComparer.Ordinal)
+                ? await worker.Call("ReadState", new JsonObject(), token) : null;
+        }
+        catch (WorkerOperationException error) when (error.Condition == "worker-read-running")
+        {
+            return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                false, false, null, error);
+        }
         Func<bool> hasProject = () => !string.IsNullOrEmpty((string?)state?["ProjectFile"]);
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
         bool missingPortal = state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true && !hasProject();
@@ -491,6 +500,15 @@ internal sealed partial class FoundationTool
         JsonObject? nativeDiagnostics = null;
         JsonObject? lastReply = null;
         bool operationDispatched = false;
+        bool priorMutation = false;
+        void RecordFailure(Exception error)
+        {
+            workerFailure = error;
+            priorMutation |= TiaOpenness.Shared.HostFailurePolicy.PriorMutation(error);
+            error.Data["foundationPriorMutation"] = priorMutation;
+            error.Data["foundationKnownNoMutation"] = !priorMutation && (error is WorkerOperationException { KnownNoMutation: true }
+                || error.Data["foundationRequestSent"] is false);
+        }
         JsonNode? Call(string operation, JsonObject input)
         {
             if (missingPortal && TiaMcp.PlcWorker.WorkerOperations.RequiresPortal(operation))
@@ -498,25 +516,26 @@ internal sealed partial class FoundationTool
                 portalDispatchRefused = true;
                 throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.PortalRequired);
             }
+            bool mayWrite = !TiaMcp.PlcWorker.WorkerOperations.IsReadOnly(operation) && (bool?)input["dryRun"] != true;
             try
             {
                 operationDispatched = true;
-                if (!TiaMcp.PlcWorker.WorkerOperations.IsReadOnly(operation)
-                    && (bool?)input["dryRun"] != true)
-                    InvocationJournal.NativeCallStarted();
+                if (mayWrite) InvocationJournal.NativeCallStarted();
                 var reply = worker.Call(operation, input, token).GetAwaiter().GetResult();
                 var objectReply = reply as JsonObject;
                 lastReply = objectReply;
                 nativeDiagnostics = FoundationV4Result.NativeDiagnostics(reply) ?? nativeDiagnostics;
+                priorMutation |= mayWrite;
                 return reply;
             }
             catch (WorkerOperationException error) when (PortedToolContract.IsDeviceRefusal(operation, error))
-            { throw PortedToolContract.DeviceRefusal(error); }
+            {
+                RecordFailure(error);
+                throw PortedToolContract.DeviceRefusal(error);
+            }
             catch (Exception error)
             {
-                workerFailure = error;
-                error.Data["foundationKnownNoMutation"] = error is WorkerOperationException { KnownNoMutation: true }
-                    || error.Data["foundationRequestSent"] is false;
+                RecordFailure(error);
                 throw;
             }
         }
@@ -621,16 +640,25 @@ internal sealed partial class FoundationTool
             bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
                 && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var preview)
                     ? preview.ValueKind == JsonValueKind.True : portedDescriptor.DryRun.Default));
+            bool claimsNotStarted = (string?)result.StructuredContent?["meta"]?["outcome"] == "rejected-before-operation"
+                || (string?)result.StructuredContent?["meta"]?["execution"] is "not-started" or "read-only";
+            if (claimsNotStarted && workerFailure != null && TiaOpenness.Shared.HostFailurePolicy.PriorMutation(workerFailure))
+                return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                    true, true, lastReply, workerFailure);
+            if (claimsNotStarted && workerFailure?.Data["workerReadTimeout"] is true)
+                return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                    true, false, null, workerFailure);
             result = FoundationV4Result
                 .WorkerFailure(result, portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId), mutation, workerFailure);
-            return FoundationV4Result.ReconcileWorker(result, SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
+            return FoundationV4Result
+                .ReconcileWorker(result, operationDispatched && SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
         }
         catch (TargetInvocationException error) when (error.InnerException != null)
         {
             if (FoundationV4Result.Classified(lastReply))
                 return FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
                     StructuredContent = lastReply.DeepClone(), Content = new[] { new TextContentBlock { Text = lastReply.ToJsonString() } } },
-                    SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
+                    operationDispatched && SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
             var cause = workerFailure ?? error.InnerException;
             bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
                 && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var dry)
@@ -653,7 +681,8 @@ internal sealed partial class FoundationTool
             var result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                 operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
                     : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, lastReply?["Failure"] != null ? lastReply : null, cause);
-            return FoundationV4Result.ReconcileWorker(result, SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
+            return FoundationV4Result
+                .ReconcileWorker(result, operationDispatched && SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
         }
     }
 }

@@ -610,6 +610,80 @@ public sealed class PlcWorkerRobustnessTests
         Assert.Equal("default", WorkerTimeoutPolicy.PlcFamily("project-lifecycle.ExecuteProjectScaffoldPrimitive", args));
     }
 
+    [Theory, InlineData("14sp1"), InlineData("19"), InlineData("21")]
+    public async Task Plc_over_budget_read_is_TIMEOUT_and_the_session_recovers(string release)
+    {
+        using var scope = new PlcTimeoutScope(release, "{\"default\":0.1}");
+        await scope.WarmGenerationUnderProductionBudgets();
+        string gate = scope.Log + ".gate";
+        try
+        {
+            var error = await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Call(
+                "ReadBlocks", new() { ["fixtureGate"] = gate }, CancellationToken.None));
+            Assert.True(File.Exists(gate + ".dispatched"));
+            var result = Foundation.FoundationV4Result.Failure(release, "ListPlcBlocks", "read-timeout", true, false, null, error);
+            Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
+            Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+            Assert.True(scope.Worker.DrainingRead);
+            Assert.False(scope.Worker.Poisoned);
+            var refused = await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() =>
+                scope.Worker.Call("ReadState", new(), CancellationToken.None));
+            Assert.Equal("worker-read-running", refused.Condition);
+            File.WriteAllText(gate + ".release", "");
+            var channel = (ChannelClient)typeof(Foundation.WorkerClient).GetField("channel",
+                BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scope.Worker)!;
+            Assert.True(await channel.WaitForDrain(TimeSpan.FromSeconds(5)));
+            await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+        }
+        finally
+        {
+            File.WriteAllText(gate + ".release", "");
+            File.Delete(gate + ".dispatched");
+        }
+    }
+
+    [Fact]
+    public async Task Disconnect_waits_for_a_draining_read_and_detaches_cleanly()
+    {
+        using var scope = new PlcTimeoutScope("19", "{\"default\":0.1}");
+        await scope.WarmGenerationUnderProductionBudgets();
+        string gate = scope.Log + ".gate";
+        try
+        {
+            await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Call(
+                "ReadBlocks", new() { ["fixtureGate"] = gate }, CancellationToken.None));
+            var disconnect = scope.Worker.Call("Disconnect", new(), CancellationToken.None);
+            Assert.False(disconnect.IsCompleted);
+            File.WriteAllText(gate + ".release", "");
+            var reply = await disconnect;
+            Assert.True((bool?)reply?["WorkerAcknowledged"]);
+            Assert.False((bool?)reply?["RequiresTiaRestart"] == true);
+        }
+        finally
+        {
+            File.WriteAllText(gate + ".release", "");
+            File.Delete(gate + ".dispatched");
+        }
+    }
+
+    [Fact]
+    public async Task Status_refused_by_a_draining_read_does_not_latch_a_worker_fault()
+    {
+        using var scope = new PlcTimeoutScope("21", "{\"default\":0.1}");
+        await scope.WarmGenerationUnderProductionBudgets();
+        string gate = scope.Log + ".status-gate";
+        try
+        {
+            await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Call(
+                "ReadBlocks", new() { ["fixtureGate"] = gate }, CancellationToken.None));
+            await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Observe("status", new(), CancellationToken.None));
+            Assert.False(scope.Worker.WorkerFaulted);
+            Assert.False(scope.Worker.Poisoned);
+        }
+        finally { File.WriteAllText(gate + ".release", ""); }
+    }
+
     private sealed class PlcTimeoutScope : IDisposable
     {
         internal readonly Foundation.WorkerClient Worker;
