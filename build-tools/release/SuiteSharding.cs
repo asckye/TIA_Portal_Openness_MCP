@@ -86,7 +86,8 @@ internal static class SuiteSharding
 internal sealed record ShardPlan(string Path, double[] Costs, int MeasuredCases = int.MaxValue, int[]? SensitivePartitions = null);
 internal static class SuiteCosts
 {
-    internal static ShardPlan Prepare(string name, string directory, string historyDirectory, string? baseline, int fallback, bool reserveSensitive = false, int sensitiveShards = 1)
+    internal static ShardPlan Prepare(string name, string directory, string historyDirectory, string? baseline, int fallback, bool reserveSensitive = false, int sensitiveShards = 1,
+        int? fixedShards = null)
     {
         Directory.CreateDirectory(historyDirectory); Directory.CreateDirectory(directory);
         var history = Path.Combine(historyDirectory, name + ".json");
@@ -109,6 +110,7 @@ internal static class SuiteCosts
         // Keep the original total partition budget when adding a dedicated
         // method lane. At least one ordinary partition remains for unknown cases.
         if (reserveSensitive) count = Math.Max(1, count - Math.Max(0, sensitiveShards - 1));
+        if (fixedShards.HasValue) count = Math.Max(1, fixedShards.Value - (reserveSensitive ? sensitiveShards : 0));
         var (assignments, totals) = Balance(planned, count);
         var sensitivePartitions = new List<int>();
         if (reserveSensitive)
@@ -125,7 +127,7 @@ internal static class SuiteCosts
                 double seconds = measured.Values.Sum();
                 // An indivisible long producer plus a few cheap cases does not
                 // become faster by adding another process just for those cases.
-                int partitions = fallback == 1 || seconds - measured.Values.DefaultIfEmpty().Max() <= 55 ? 1
+                int partitions = fixedShards.HasValue || fallback == 1 || seconds - measured.Values.DefaultIfEmpty().Max() <= 55 ? 1
                     : Math.Max(1, Math.Min(measured.Count, (int)Math.Ceiling(seconds / 55)));
                 var (sensitiveAssignments, sensitiveCosts) = Balance(measured, partitions);
                 assignments.Add("S:partition:" + partition, totals.Length);

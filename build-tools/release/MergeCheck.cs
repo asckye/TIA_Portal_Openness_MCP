@@ -11,6 +11,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class MergeCheck
 {
+    private static readonly object TransportFallbackGate = new();
     internal const string ConfigurationProject = "tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj";
     internal const string DiagnosticsProject = "tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj";
     internal sealed record Evaluation(string[] Inputs, string[] Projects);
@@ -125,7 +126,7 @@ internal static class MergeCheck
 
     internal static Plan Select(string[] changes, bool all, JsonObject catalog, IReadOnlyDictionary<string, HashSet<string>> closures,
         Func<string, string, bool> mentions, IEnumerable<string> filePrograms, string dotnet, string python, string api, string output,
-        int parallelism = 4)
+        int parallelism = 4, string? transportFallback = null)
     {
         var plan = new Plan { DocsOnly = !all && changes.All(Documentation) };
         void Tool(string name, params string[] args) => plan.Checks.Add(new(name, dotnet, [typeof(Program).Assembly.Location, name, .. args]));
@@ -202,7 +203,7 @@ internal static class MergeCheck
         foreach (var program in filePrograms.Where(program => plan.Wide || changes.Contains(program, StringComparer.OrdinalIgnoreCase)))
             Reason(plan.Builds, "file:" + program, plan.Wide ? "wide change" : program);
         AddChecks(plan, changes, dotnet, python, api, output);
-        AddWorkerChecks(plan, changes, parallelism, dotnet, python, api, output);
+        AddWorkerChecks(plan, changes, parallelism, dotnet, python, api, output, transportFallback);
         return plan;
     }
 
@@ -265,7 +266,8 @@ internal static class MergeCheck
     internal const string AdapterDiagnosticsProject = "tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj";
     internal const string CampaignProgram = "scripts/checks/Test-CampaignInputs.cs";
 
-    private static void AddWorkerChecks(Plan plan, string[] changes, int parallelism, string dotnet, string python, string api, string output)
+    private static void AddWorkerChecks(Plan plan, string[] changes, int parallelism, string dotnet, string python, string api, string output,
+        string? transportFallback)
     {
         bool transport = plan.Wide || changes.Any(path =>
             new[] { "src/FoundationHost", "src/EngineHost", "src/WorkerChannel", "src/PlcWorker", "src/Shared",
@@ -290,7 +292,7 @@ internal static class MergeCheck
         if (transport)
         {
             Reason(plan.Builds, TransportFixtureProject, reason);
-            var maxParallel = Math.Min(4, parallelism).ToString(CultureInfo.InvariantCulture);
+            var maxParallel = TransportParallelism(transportFallback, parallelism).ToString(CultureInfo.InvariantCulture);
             const string fixture = "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe";
             Py("foundation-transport", "Test-FoundationTransport.py", true, "--max-parallel", maxParallel, "--host-exe", host, "--fixture", fixture,
                 "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--temp-root", Path.Combine(output, "transport-temp"),
@@ -321,6 +323,12 @@ internal static class MergeCheck
                 "--plc-worker", ReleaseCommands.ReleasePlcFixture(output, key), "--output", Path.Combine(output, "campaign-v" + key + "-plc"));
         }
     }
+
+    internal static string TransportFallbackPath(string root, Func<string[], CommandResult> git) =>
+        Path.Combine(Path.GetDirectoryName(TimingHistory(root, git))!, "transport-parallelism-4.txt");
+
+    internal static int TransportParallelism(string? transportFallback, int parallelism) =>
+        Math.Min(File.Exists(transportFallback) ? 4 : 8, parallelism);
 
     internal static IDictionary<string, string?> CheckEnvironment(Job job, string output, string api,
         IDictionary<string, string?> environment)
@@ -447,6 +455,7 @@ internal static class MergeCheck
         if (!docsOnly) options = Options.Parse([.. options.Arguments(), "-Python=" + python], new HashSet<string>());
         int parallelism = FastSuites.Positive(options, "MaxParallelism", Math.Max(1, Environment.ProcessorCount - 4));
         var output = Path.Combine(root, "bin-build/merge-check");
+        var transportFallback = docsOnly ? null : TransportFallbackPath(root, git);
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root);
         DerivedSuiteGates.IncludeApprovedSubsets(catalog);
         var context = new PrepareContext(root, "", api, nuget, python, python, output, DateOnly.FromDateTime(DateTime.Today), parallelism);
@@ -466,9 +475,12 @@ internal static class MergeCheck
             return paths.Any(path => Under(path, directory) || Under(path, "tests/Shared"));
         }
         var plan = Select(changes, options.Has("All"), catalog, closures, Mentions,
-            docsOnly ? [] : FileBasedPrograms.Discover(root), dotnet, python, api, output, parallelism);
+            docsOnly ? [] : FileBasedPrograms.Discover(root), dotnet, python, api, output, parallelism, transportFallback);
         if (!plan.DocsOnly) CheckLoosening.AddJobs(plan, options.Get("Base", "master"), dotnet, output);
         Console.Write(Describe(plan, table));
+        if (File.Exists(transportFallback) && plan.Checks.Any(job => job.Name.StartsWith("foundation-transport", StringComparison.Ordinal)))
+            Console.WriteLine("Transport release concurrency is capped at 4 by " + transportFallback
+                + ". After maintainer review, delete this marker to restore the cap of 8.");
         if (options.Has("DryRun")) return 0;
         PrepareBuild.RequireOwnedTree(root, output);
         if (Directory.Exists(output)) Directory.Delete(output, true);
@@ -565,7 +577,7 @@ internal static class MergeCheck
             var executable = Path.GetDirectoryName(job.Executable) is { Length: > 0 }
                 ? Path.GetFullPath(job.Executable, root) : job.Executable;
             var result = process(executable, job.Arguments, root, checkEnvironment);
-            return CheckResult(job.Name, result, output);
+            return CheckResult(job.Name, result, output, transportFallback);
         });
         var preSuite = UpdaterCompanionChecks(plan).Select(job => (job.Name, (Func<PipelineResult>)(() =>
         {
@@ -589,7 +601,7 @@ internal static class MergeCheck
             var result = Check(job); return new(job.Name, result.ExitCode, result.StandardOutput, result.StandardError);
         }))).ToList();
         var suites = new JsonObject();
-        foreach (var name in plan.Suites.Keys.Where(name => !plan.Derived.ContainsKey(name) && name is not ("foundation-api" or "updater"))) suites[name] = catalog[name]!.DeepClone();
+        foreach (var name in plan.Suites.Keys.Where(name => !plan.Derived.ContainsKey(name) && name is not ("foundation-api" or "updater" or "studio-gui"))) suites[name] = catalog[name]!.DeepClone();
         var priority = new List<(string Name, Func<PipelineResult> Run)>();
         if (plan.Suites.ContainsKey("foundation-api")) priority.Add(("foundation-api", () =>
         {
@@ -616,14 +628,38 @@ internal static class MergeCheck
             env!["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = args[0] == "build" ? Path.Combine(output, "analyzers") : null;
             return Timed(name, () => process(exe, args, cwd, env));
         };
+        var postSuite = new List<(string Name, Func<PipelineResult> Run)>();
+        if (plan.Suites.ContainsKey("studio-gui")) postSuite.Add(("studio-gui", () =>
+        {
+            var result = Timed("studio-gui", () =>
+            {
+                var options = Options.Parse(["-Suite=studio-gui", "-Shards=4", "-MaxParallelism=" + Math.Min(4, parallelism).ToString(CultureInfo.InvariantCulture),
+                    "-NoBuild", "-Dotnet=" + dotnet, "-ResultsDirectory=" + Path.Combine(suiteOutput, "studio-gui"),
+                    "-TimingHistory=" + TimingHistory(root, git)], Program.BooleanOptions);
+                return PlainShards.Run(root, options, catalog, (exe, args, cwd, env) =>
+                {
+                    ConfigureTests(env!);
+                    env!["RestoreConfigFile"] = nuget;
+                    env["TIA_MCP_OFFLINE_NUGET_CONFIG"] = nuget;
+                    env["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+                    env["MSBUILDDISABLENODEREUSE"] = "1";
+                    env["TIA_MCP_PRODUCTION_RELEASE"] = null;
+                    env["TIA_MCP_BUILD_CACHE_DISABLED"] = null;
+                    ReleaseSuiteStage.ConfigureStudio(env!, api);
+                    return Timed("studio-gui-shard-" + env!["TIA_MCP_TEST_SHARD_INDEX"], () => process(exe, args, cwd, env));
+                });
+            });
+            return new("studio-gui", result.ExitCode, result.StandardOutput, result.StandardError);
+        }));
+        postSuite.AddRange(plan.Checks.Where(job => job.PostSuite).Select(job => (job.Name, (Func<PipelineResult>)(() =>
+        {
+            var result = Check(job); return new(job.Name, result.ExitCode, result.StandardOutput, result.StandardError);
+        }))));
         Timed("suite-stage", () =>
         {
             ReleaseSuiteStage.Run(root, suites, suiteOutput, api, dotnet, nuget, parallelism, SuiteRun,
                 ConfigureTests, additional,
-                postSuiteJobs: plan.Checks.Where(job => job.PostSuite).Select(job => (job.Name, (Func<PipelineResult>)(() =>
-                {
-                    var result = Check(job); return new(job.Name, result.ExitCode, result.StandardOutput, result.StandardError);
-                }))).ToArray(),
+                postSuiteJobs: postSuite,
                 prebuilt: plan.Builds.Keys.Where(key => key.EndsWith(".csproj", StringComparison.Ordinal)).ToHashSet(StringComparer.OrdinalIgnoreCase),
                 priorityJobs: priority, prebuiltVariants: variants);
             return new(0, "", "");
@@ -758,8 +794,20 @@ internal static class MergeCheck
         return notice.ToString();
     }
 
-    internal static CommandResult CheckResult(string name, CommandResult result, string output)
+    internal static CommandResult CheckResult(string name, CommandResult result, string output, string? transportFallback = null)
     {
+        if (name.StartsWith("foundation-transport", StringComparison.Ordinal)
+            && (result.StandardOutput + result.StandardError).Contains("WinError 10055", StringComparison.OrdinalIgnoreCase))
+        {
+            var fallback = transportFallback ?? throw new ReleaseException("Missing shared transport fallback path.");
+            lock (TransportFallbackGate)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(fallback)!);
+                File.WriteAllText(fallback, "WinError 10055: transport release parallelism is limited to 4 until maintainer review.\n");
+            }
+            return result with { ExitCode = 1, StandardError = result.StandardError
+                + "\nWinError 10055: transport check failed. Subsequent merge checks use at most 4 releases per transport process. Fallback: " + fallback };
+        }
         if (result.ExitCode != 0) return result;
         if (name is "adapter-inputs" or "worker-isolation")
         {

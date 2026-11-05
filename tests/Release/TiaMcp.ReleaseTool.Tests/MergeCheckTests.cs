@@ -8,6 +8,124 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class MergeCheckTests
 {
+    [Theory]
+    [InlineData("none")]
+    [InlineData("minimum")]
+    [InlineData("skip")]
+    [InlineData("source")]
+    public void StudioGuiIsShardedInMergeCheckWithItsOwnGates(string failure)
+    {
+        using var tree = new StaticTree();
+        var sdk = WriteSdk(tree);
+        var python = tree.Write("python.exe", "fixture");
+        Directory.CreateDirectory(Path.Combine(tree.Root, "build-tools"));
+        var registrations = DotnetSuites.LoadCatalog(Path.Combine(StaticCheckVectorTests.Root, "tests/test-suites.json"), StaticCheckVectorTests.Root);
+        string[] derived = ["crash-evidence", "mcp-panel", "workbench-control", "workbench-vci-prefill"];
+        var catalog = new JsonObject();
+        foreach (string name in derived.Prepend("studio-gui")) catalog[name] = registrations[name]!.DeepClone();
+        catalog["ordinary"] = Suite("tests/ordinary.csproj");
+        catalog["updater"] = Suite("tests/updater.csproj");
+        foreach (string project in catalog.Select(pair => (string)pair.Value!["project"]!).Distinct())
+            tree.Write(project, "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+        tree.Write("tests/test-suites.json", catalog.ToJsonString());
+        using var guiEntered = new ManualResetEventSlim();
+        using var transportsEntered = new CountdownEvent(2);
+        int updaterFinished = 0, ordinaryFinished = 0, guiCalls = 0;
+        var environments = new ConcurrentBag<string>();
+        CommandResult Process(string exe, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
+        {
+            var args = arguments.ToArray();
+            if (args[0] == "test")
+            {
+                var directory = args[Array.IndexOf(args, "--results-directory") + 1];
+                if (env!.ContainsKey("TIA_MCP_TEST_SHARD_INDEX") && env["TIA_MCP_TEST_SHARD_INDEX"] != null)
+                {
+                    Assert.Equal(1, Volatile.Read(ref updaterFinished));
+                    Assert.Equal(1, Volatile.Read(ref ordinaryFinished));
+                    Assert.Equal("4", env["TIA_MCP_TEST_SHARD_COUNT"]);
+                    Assert.Equal("1", env["TIA_MCP_TEST_SENSITIVE_SHARDS"]);
+                    Assert.Equal("1", env["TIA_MCP_CHECK_NO_BUILD"]);
+                    Assert.Equal(sdk, env["TIA_MCP_TEST_PUBLIC_API_ROOT"]);
+                    Assert.Equal(env["TEMP"], env["TIA_MCP_RELEASE_TEMP_ROOT"]);
+                    Assert.Null(env["TIA_MCP_BUNDLE_ROOT"]);
+                    Assert.Null(env["TIA_MCP_ANALYZER_REPORT_DIRECTORY"]);
+                    Assert.Equal("enabled=true\ntimeoutSeconds=120\n", File.ReadAllText(Path.Combine(env["TIA_MCP_DATA_DIRECTORY"]!, "config/approval.settings")));
+                    Assert.Contains("--no-build", args);
+                    environments.Add(env["TEMP"]!);
+                    if (env["TIA_MCP_TEST_SHARD_INDEX"] == "0")
+                    {
+                        guiEntered.Set();
+                        Assert.True(transportsEntered.Wait(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+                    }
+                    string path = Path.Combine(directory, "studio-gui.trx");
+                    var classes = Enumerable.Repeat("Layout", 750);
+                    if (env["TIA_MCP_TEST_SHARD_INDEX"] == "3") classes = classes
+                        .Concat(Enumerable.Repeat("CrashEvidencePortTests", 7))
+                        .Concat(Enumerable.Repeat("McpPanelTests", 48))
+                        .Concat(Enumerable.Repeat("WorkbenchControlTests", failure == "minimum" ? 95 : 96))
+                        .Concat(Enumerable.Repeat("VciPanelTests", 63));
+                    WriteTrx(path, classes.ToArray());
+                    if (failure == "skip" && env["TIA_MCP_TEST_SHARD_INDEX"] == "0")
+                    {
+                        var document = XDocument.Load(path);
+                        foreach (var row in document.Descendants().Where(row => row.Name.LocalName == "UnitTestResult").Take(5))
+                            row.SetAttributeValue("outcome", "NotExecuted");
+                        var counters = document.Descendants().Single(row => row.Name.LocalName == "Counters");
+                        counters.SetAttributeValue("passed", 745); counters.SetAttributeValue("executed", 745);
+                        counters.SetAttributeValue("notExecuted", 5);
+                        document.Save(path);
+                    }
+                    Interlocked.Increment(ref guiCalls);
+                    return new(failure == "source" && env["TIA_MCP_TEST_SHARD_INDEX"] == "0" ? 1 : 0, "fixture", "");
+                }
+                string name = Path.GetFileName(directory);
+                if (name == "updater") Volatile.Write(ref updaterFinished, 1);
+                if (name == "ordinary") Volatile.Write(ref ordinaryFinished, 1);
+                WriteTrx(Path.Combine(directory, name + ".trx"), [name]);
+            }
+            if (args[0].EndsWith("Test-FoundationTransport.py", StringComparison.Ordinal) && !args.Contains("--self-test"))
+            {
+                Assert.Equal(1, Volatile.Read(ref updaterFinished));
+                Assert.Equal(1, Volatile.Read(ref ordinaryFinished));
+                Assert.True(guiEntered.Wait(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+                transportsEntered.Signal();
+            }
+            if (args[0].EndsWith("Test-NativeDiagnostics.py", StringComparison.Ordinal))
+            {
+                var directory = args[Array.IndexOf(args, "--output") + 1];
+                Directory.CreateDirectory(directory);
+                File.WriteAllText(Path.Combine(directory, "result.json"), "{\"behaviorChecks\":36,\"rejectionChecks\":5,\"nativeTiaExecuted\":false}");
+            }
+            if (args[0] == "run")
+            {
+                var index = Array.IndexOf(args, "--evidence-directory");
+                if (index >= 0)
+                {
+                    Directory.CreateDirectory(args[index + 1]);
+                    string file = args.Contains("src/Adapters/build/Test-AdapterInputs.cs") ? "input-results.json" : "worker-isolation-results.json";
+                    File.WriteAllText(Path.Combine(args[index + 1], file), "{}");
+                }
+            }
+            return new(0, args.SequenceEqual(new[] { "--self-test" })
+                ? "COMPLETE: 1 native harness safety checks passed; live TIA tests NOT RUN" : "Passed: 157\n", "");
+        }
+        var result = MergeCheck.Run(tree.Root, Options.Parse(["-All", "-MaxParallelism=4", "-PublicApiRoot=" + sdk, "-Python=" + python], Program.BooleanOptions),
+            Process, args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "rev-parse" ? Path.Combine(tree.Root, ".git") : "", ""), (_, _) => 0);
+        Assert.Equal(failure == "none" ? 0 : 1, result);
+        Assert.Equal(4, guiCalls); Assert.Equal(4, environments.Distinct().Count());
+        var output = Path.Combine(tree.Root, "bin-build/merge-check/suites");
+        Assert.True(File.Exists(Path.Combine(output, "studio-gui/studio-gui.trx")));
+        foreach (string name in derived.Prepend("studio-gui"))
+        {
+            var report = JsonNode.Parse(File.ReadAllText(Path.Combine(output, name, name + ".json")))!;
+            Assert.Equal((int)catalog[name]!["minimumPassed"]!, (int)report["minimumPassed"]!);
+            Assert.Equal((int)catalog[name]!["maximumSkipped"]!, (int)report["maximumSkipped"]!);
+            if (name != "studio-gui") Assert.Equal("studio-gui", (string?)report["derivedFrom"]);
+            bool failed = failure == "skip" && name == "studio-gui" || failure == "minimum" && name == "workbench-control";
+            Assert.Equal(failed, report["errors"]!.AsArray().Count > 0);
+        }
+    }
+
     private static JsonObject Suite(string project, params string[] arguments) => new()
     {
         ["project"] = project, ["arguments"] = new JsonArray(arguments.Select(arg => (JsonNode?)JsonValue.Create(arg)).ToArray()),
@@ -124,6 +242,34 @@ public sealed class MergeCheckTests
             Assert.Equal(new[] { "rev-parse", "--path-format=absolute", "--git-common-dir" }, args);
             return new(0, Path.Combine(tree.Root, "main", ".git") + "\n", "");
         }));
+    }
+
+    [Fact]
+    public void SharedTransportFallbackPrintsItsPathAndRemovalInstructionOnce()
+    {
+        using var tree = new StaticTree();
+        var sdk = WriteSdk(tree);
+        var python = tree.Write("python.exe", "fixture");
+        tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
+        tree.Write("tests/one.csproj", "<Project />");
+        Directory.CreateDirectory(Path.Combine(tree.Root, "build-tools"));
+        var fallback = Path.GetFullPath(tree.Write("main/bin-build/transport-parallelism-4.txt", "WinError 10055\n"));
+        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc"
+            : args[0] == "rev-parse" ? Path.Combine(tree.Root, "main", ".git") : "", "");
+        using var captured = new StringWriter();
+        var previous = Console.Out;
+        try
+        {
+            Console.SetOut(captured);
+            Assert.Equal(0, MergeCheck.Run(tree.Root,
+                Options.Parse(["-All", "-DryRun", "-MaxParallelism=16", "-PublicApiRoot=" + sdk, "-Python=" + python], Program.BooleanOptions),
+                (_, _, _, _) => throw new InvalidOperationException("Dry run must not launch checks."), Git));
+        }
+        finally { Console.SetOut(previous); }
+        var line = Assert.Single(captured.ToString().Split('\n'),
+            candidate => candidate.Contains("Transport release concurrency is capped at 4", StringComparison.Ordinal));
+        Assert.Contains(fallback, line);
+        Assert.Contains("After maintainer review, delete this marker to restore the cap of 8.", line);
     }
 
     [Fact]

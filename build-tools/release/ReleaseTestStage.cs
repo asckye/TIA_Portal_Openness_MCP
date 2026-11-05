@@ -30,6 +30,19 @@ internal static class ReleaseSuiteStage
 {
     internal static readonly string[] StudioSuites = ["studio-core", "studio-gui"];
 
+    internal static void ConfigureStudio(IDictionary<string, string?> environment, string api)
+    {
+        environment["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api;
+        environment["TIA_MCP_RELEASE_TEMP_ROOT"] = environment["TEMP"];
+        environment["TIA_MCP_CHECK_NO_BUILD"] = "1";
+        environment["PYTHONIOENCODING"] = "utf-8";
+        environment["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
+        environment["TIA_MCP_BUNDLE_ROOT"] = null;
+        var config = Path.Combine(environment["TIA_MCP_DATA_DIRECTORY"]!, "config");
+        Directory.CreateDirectory(config);
+        File.WriteAllText(Path.Combine(config, "approval.settings"), "enabled=true\ntimeoutSeconds=120\n");
+    }
+
     internal static string[][] Groups(JsonObject catalog) => catalog
         .GroupBy(pair => pair.Value!["project"]!.GetValue<string>(), StringComparer.OrdinalIgnoreCase)
         .Select(group => group.Select(pair => pair.Key).ToArray()).ToArray();
@@ -77,17 +90,7 @@ internal static class ReleaseSuiteStage
                 env["TIA_MCP_PRODUCTION_RELEASE"] = null;
                 env["TIA_MCP_BUILD_CACHE_DISABLED"] = null;
                 if (StudioSuites.Contains(name))
-                {
-                    env["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api;
-                    env["TIA_MCP_RELEASE_TEMP_ROOT"] = env["TEMP"];
-                    env["TIA_MCP_CHECK_NO_BUILD"] = "1";
-                    env["PYTHONIOENCODING"] = "utf-8";
-                    env["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
-                    env["TIA_MCP_BUNDLE_ROOT"] = null;
-                    var config = Path.Combine(env["TIA_MCP_DATA_DIRECTORY"]!, "config");
-                    Directory.CreateDirectory(config);
-                    File.WriteAllText(Path.Combine(config, "approval.settings"), "enabled=true\ntimeoutSeconds=120\n");
-                }
+                    ConfigureStudio(env, api);
                 var identity = Identity(name);
                 if (prebuiltVariants?.TryGetValue(name, out var variantOutput) == true)
                 {

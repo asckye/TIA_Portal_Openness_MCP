@@ -14,7 +14,9 @@ dotnet run --project build-tools/release -- merge-check
 
 命令按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件。`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取证据或结果缓存。Foundation 的共享计时历史来自主 checkout 的 `bin-build/check-timings`，只决定分片分配，未知测试回退到哈希分桶，数量仍由合并后的 TRX 判定并拒绝重复测试。其他分片调用可通过 `-TimingHistory <目录>` 指定历史，默认使用当前 worktree。Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。
 
-构建完成后，适配器输入、worker 隔离与 updater 并行执行，随后单独执行原生诊断，避免其 Python 进程与 updater 的捆绑进程探测重叠。全部结束后启动套件池，Foundation 优先入池。池结束后执行独占作业，再让 GUI 与传输检查并行。日志、各作业耗时和带开始、结束偏移的 `timeline.tsv` 写在 `bin-build/merge-check/`，耗时随改动范围和主机负载变化。传输检查始终使用 `full` 档，每次最多并行检查 4 个版本，并遵循合并门的 `-MaxParallelism` 设置（设为 1 时串行检查）。
+构建完成后，适配器输入、worker 隔离与 updater 并行执行，随后单独执行原生诊断，避免其 Python 进程与 updater 的捆绑进程探测重叠。全部结束后启动套件池，Foundation 优先入池。池结束后执行独占作业，再让 GUI 与两组传输检查并行。GUI 使用四个分片进程，其中一个串行执行鼠标和焦点测试，其余三个执行布局等测试。每个进程使用独立的 TEMP、数据根、审批配置和管道作用域。GUI 合并后的 TRX 保留注册总数门槛及四个派生子集自己的门槛。日志、各作业耗时和带开始、结束偏移的 `timeline.tsv` 写在 `bin-build/merge-check/`，耗时随改动范围和主机负载变化。传输检查始终使用 `full` 档，每组最多并行检查 8 个版本，各版本先完成 stdio 再进入 HTTP。GUI 和各组传输的并发上限还受合并门的 `-MaxParallelism` 限制（设为 1 时串行检查），传输脚本单独调用时默认仍为 4。
+
+任一传输检查出现 WinError 10055 时，本轮失败并写入主 checkout 的 `bin-build/transport-parallelism-4.txt`。主 checkout 与共享计时历史使用同一个 `git rev-parse --path-format=absolute --git-common-dir` 定位结果，后续所有 worktree 的合并门将两组传输检查各限制为最多 4 个版本。该标记独立于任务 worktree 及每轮重建的日志目录。标记生效且本轮选择传输检查时，合并门输出一行提示，列出标记的完整路径及清除方式。维护者审查 socket 证据后，可删除提示中的文件以恢复 8 个版本。
 
 `merge-check` 将本次测试指标和各成功作业的耗时与主 checkout 历史中同指标、同单位最近至多 20 条记录的中位数比较，至少有 5 条历史且本次值严格超过中位数的 2 倍时，在摘要和 `bin-build/merge-check/trend-notice.txt` 中列出 `Slower than usual` 提示、指标、当前值、中位数与比值。提示及历史缺失、坏行或读写失败均不改变退出码，异常以单行说明，提示文件首行记录提交和 UTC 时间，`prepare` 摘要会输出该文件并标明来源提交是否为当前 HEAD，旧文件的来源标为未知。
 

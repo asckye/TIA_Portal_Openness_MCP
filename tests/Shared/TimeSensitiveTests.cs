@@ -326,7 +326,16 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Snapshot_is_frozen_paginated_and_reads_while_dispatcher_is_blocked",
                 "Queue_is_bounded_FIFO_and_per_origin_inflight_is_limited",
                 "Expired_and_closing_queued_requests_never_apply",
-                "Started_requests_report_the_actual_result_after_the_deadline"
+                "Started_requests_report_the_actual_result_after_the_deadline",
+                "AI_page_whitelist_is_the_unchanged_protocol_enum_and_Blocks_aliases_Project",
+                "Locating_keeps_checks_and_places_focus_on_the_page_title",
+                "Root_click_and_key_guard_blocks_action_for_500ms_without_deciding",
+                "Stationary_cursor_layout_moves_do_not_mark_human_activity",
+                "Changed_screen_position_marks_human_activity_without_stationary_moves_extending_it",
+                "Discrete_Wpf_input_marks_human_activity_for_1500ms",
+                "Injected_human_source_controls_UI_refusal_independently_of_Wpf_input",
+                "Unavailable_cursor_sample_does_not_invent_human_activity",
+                "Actual_decision_button_is_protected_by_root_preview_handlers"
             },
             ["TiaOpenness.Gui.Tests.McpPanelTests"] = new[] {
                 "Every_write_previews_then_waits_for_a_separate_approval",
@@ -345,6 +354,37 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Gui.Tests.WorkbenchMcpPrefillTests"] = new[] {
                 "Registered_execution_commands_are_attributed_MCP_panel_commands",
                 "Human_execution_of_prefilled_MCP_forms_previews_and_requires_the_normal_approval"
+            },
+            ["TiaOpenness.Gui.Tests.AccessibilityTests"] = new[] {
+                "Real_page_and_dialog_automation_peers_have_meaningful_names",
+                "Drawer_and_confirmation_trap_Tab_accept_Escape_and_restore_focus",
+                "Risky_confirmation_defaults_to_the_safe_choice",
+                "Approval_sheet_accepts_Space_and_the_localized_T_access_key"
+            },
+            ["TiaOpenness.Gui.Tests.ApprovalPageTests"] = new[] {
+                "Enter_never_approves_write_and_Escape_does_not_reject",
+                "Focused_Reject_keeps_its_normal_Enter_activation_for_write_requests",
+                "Destructive_sheet_requires_Space_or_access_key_and_Enter_cancels",
+                "Selection_history_title_focus_feedback_and_redaction_stay_per_request"
+            },
+            ["TiaOpenness.Gui.Tests.PortalProcessPickerTests"] = new[] {
+                "Initial_focus_is_Cancel_and_Enter_or_Escape_never_connect_even_on_Connect",
+                "Space_on_Connect_returns_the_keyboard_selected_PID",
+                "Modal_Cancel_returns_no_PID_and_restores_the_owners_keyboard_focus"
+            },
+            ["TiaOpenness.Gui.Tests.WorkbenchApprovalConfirmationTests"] = new[] {
+                "Enter_is_inert_and_cancel_or_escape_preserves_approval_and_reopening_clears_input"
+            },
+            ["TiaOpenness.Gui.Tests.WpfContextTests"] = new[] {
+                "Space_wait_pumps_the_queued_mouse_release",
+                "Space_releases_capture_left_by_an_aborted_press",
+                "Space_releases_capture_when_key_delivery_throws",
+                "Space_retries_only_the_failed_mouse_contended_press",
+                "Space_reports_mouse_and_capture_after_three_failed_presses",
+                "Space_does_not_retry_a_failure_without_mouse_contention",
+                "Space_waits_in_small_steps_until_release_before_each_press",
+                "Space_fails_after_five_seconds_without_pressing_a_held_mouse",
+                "Space_on_a_focused_button_raises_both_keys_and_clicks_once_per_press"
             },
             ["TiaOpenness.Gui.Tests.NetworkHelperTests"] = new[] {
                 "Network_helper_reports_bad_arguments_and_exits_without_crashing",

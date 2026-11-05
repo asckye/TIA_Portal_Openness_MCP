@@ -11,6 +11,43 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class PlainReleaseTests
 {
     [Theory]
+    [InlineData(1, 1)]
+    [InlineData(4, 1)]
+    [InlineData(4, 4)]
+    public void GuiShardCountIncludesTheInputLaneAndSingleShardCiRemainsSerial(int shards, int parallelism)
+    {
+        using var tree = new StaticTree();
+        var suite = new JsonObject { ["project"] = "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
+            ["arguments"] = new JsonArray(), ["minimumPassed"] = 100, ["maximumSkipped"] = 0 };
+        var options = Options.Parse(["-Suite=studio-gui", "-Shards=" + shards, "-MaxParallelism=" + parallelism,
+            "-ResultsDirectory=" + tree.Root], Program.BooleanOptions);
+        using var overlap = new Barrier(parallelism == 1 ? 1 : shards);
+        int calls = 0, active = 0;
+        var result = PlainShards.Run(tree.Root, options, new JsonObject { ["studio-gui"] = suite }, (_, arguments, _, env) =>
+        {
+            Assert.Equal(shards.ToString(), env!["TIA_MCP_TEST_SHARD_COUNT"]);
+            Assert.Equal(shards == 1 ? null : "1", env["TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD"]);
+            Assert.Equal(shards == 1 ? null : "1", env["TIA_MCP_TEST_SENSITIVE_SHARDS"]);
+            int running = Interlocked.Increment(ref active);
+            if (parallelism == 1) Assert.Equal(1, running);
+            Assert.True(overlap.SignalAndWait(TestDeadlines.Hang));
+            var args = arguments.ToArray();
+            var directory = args[Array.IndexOf(args, "--results-directory") + 1];
+            var path = Path.Combine(directory, "studio-gui.trx");
+            DotnetSuiteSelfTests.SyntheticTrx(path, Enumerable.Repeat("Passed", 100).ToArray());
+            var document = XDocument.Load(path);
+            foreach (var attribute in document.Descendants().Attributes().Where(a => a.Name.LocalName is "id" or "testId" or "executionId" or "testName"))
+                attribute.Value += "-" + env["TIA_MCP_TEST_SHARD_INDEX"];
+            document.Save(path);
+            Interlocked.Increment(ref calls);
+            Interlocked.Decrement(ref active);
+            return new(0, "passed", "");
+        });
+        Assert.Equal(shards, calls);
+        Assert.Equal(0, result.ExitCode);
+    }
+
+    [Theory]
     [InlineData("tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj")]
     [InlineData("tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj")]
     public void StudioShardsLeaveBundleSelectionToTheFixture(string project)

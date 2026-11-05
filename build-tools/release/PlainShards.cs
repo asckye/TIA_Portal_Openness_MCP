@@ -29,11 +29,13 @@ internal static class PlainShards
             var unit = SuiteBuild.Suite(suite);
             var directory = Path.Combine(output, name);
             var history = Path.GetFullPath(options.Get("TimingHistory", Path.Combine(root, "bin-build/check-timings")));
-            bool reserve = TimeSensitiveTests.ReserveShard(unit.Project);
             var api = PublicApiRoot(name, suite, options);
             var shards = suite["minimumPassed"]!.GetValue<int>() >= 100 ? FastSuites.Positive(options, "Shards", 8) : 1;
+            bool studioGui = name == "studio-gui";
+            bool reserve = TimeSensitiveTests.ReserveShard(unit.Project) && (!studioGui || shards > 1);
             var plan = SuiteCosts.Prepare(name, directory, history, null, shards,
-                reserve, reserve ? TimeSensitiveTests.ReservedShardCount(unit.Project) : 1);
+                reserve, reserve ? TimeSensitiveTests.ReservedShardCount(unit.Project) : 1,
+                fixedShards: studioGui ? shards : null);
             int sensitiveCount = plan.SensitivePartitions?.Length ?? 0;
             int ordinaryCount = plan.Costs.Length - sensitiveCount;
             var jobs = Enumerable.Range(0, plan.Costs.Length).Select(index =>
@@ -44,7 +46,11 @@ internal static class PlainShards
                         plan: plan.Path, reserveSensitive: reserve, process: process, sensitiveShards: sensitiveCount);
                     return new(name + "-shard-" + index, result.ExitCode, result.StandardOutput, result.StandardError);
                 }))).ToArray();
-            var rows = RunLanes(directory, parallelism, jobs.Take(ordinaryCount).ToArray(),
+            // GUI has one input process and at most three layout processes on the shared desktop.
+            // A single-slot caller also serializes the input lane against all layout processes.
+            var rows = studioGui && parallelism == 1
+                ? ParallelPipeline.Run(jobs, directory, 1, continueOnFailure: true)
+                : RunLanes(directory, studioGui ? Math.Max(1, parallelism - 1) : parallelism, jobs.Take(ordinaryCount).ToArray(),
                 jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] == 0).ToArray(),
                 jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] != 0).ToArray());
             failures.AddRange(rows.Where(row => row.ExitCode != 0).Select(row => row.Name + ": " + row.StandardError));

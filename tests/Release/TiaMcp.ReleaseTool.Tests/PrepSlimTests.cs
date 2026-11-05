@@ -86,9 +86,9 @@ public sealed class PrepSlimTests
 
     [Theory]
     [InlineData(false, 1, "1")]
-    [InlineData(false, 16, "4")]
+    [InlineData(false, 16, "8")]
     [InlineData(true, 1, "1")]
-    [InlineData(true, 16, "4")]
+    [InlineData(true, 16, "8")]
     public void TransportChecksRespectParallelismAndKeepFullProfile(bool all, int parallelism, string expected)
     {
         const string path = "src/WorkerChannel/Channel.cs";
@@ -103,6 +103,72 @@ public sealed class PrepSlimTests
             Assert.InRange(index, 0, job.Arguments.Length - 2);
             Assert.Equal(expected, job.Arguments[index + 1]);
         }
+    }
+
+    [Theory]
+    [InlineData(0, 16, 4)]
+    [InlineData(1, 1, 1)]
+    [InlineData(1, 3, 3)]
+    [InlineData(1, 16, 4)]
+    public void SocketExhaustionFailsAndPersistsTheFourReleaseFallback(int exitCode, int parallelism, int expected)
+    {
+        using var tree = new StaticTree();
+        var output = Path.Combine(tree.Root, "bin-build/merge-check");
+        var fallback = MergeCheck.TransportFallbackPath(tree.Root, _ => new(0, Path.Combine(tree.Root, ".git"), ""));
+        Directory.CreateDirectory(output);
+        Assert.Equal(Math.Min(8, parallelism), MergeCheck.TransportParallelism(fallback, parallelism));
+        var failure = new CommandResult(exitCode, "", "urllib.error.URLError: <urlopen error [WinError 10055] No buffer space>");
+        var result = MergeCheck.CheckResult("foundation-transport-plc", failure, output, fallback);
+        Assert.Equal(1, result.ExitCode);
+        Assert.Contains(failure.StandardError, result.StandardError);
+        Assert.Contains("Subsequent merge checks use at most 4", result.StandardError);
+        Assert.True(File.Exists(fallback));
+        Directory.Delete(output, true);
+        var plan = MergeCheck.Select([], true, new JsonObject(), new Dictionary<string, HashSet<string>>(),
+            (_, _) => false, [], "dotnet", "python", "sdk", output, parallelism, fallback);
+        foreach (var job in plan.Checks.Where(job => job.Name.StartsWith("foundation-transport", StringComparison.Ordinal)))
+            Assert.Equal(expected.ToString(System.Globalization.CultureInfo.InvariantCulture), job.Arguments[Array.IndexOf(job.Arguments, "--max-parallel") + 1]);
+    }
+
+    [Fact]
+    public void OtherTransportFailuresKeepTheApprovedLimit()
+    {
+        using var tree = new StaticTree();
+        var output = Path.Combine(tree.Root, "merge-check");
+        var fallback = MergeCheck.TransportFallbackPath(tree.Root, _ => new(0, Path.Combine(tree.Root, ".git"), ""));
+        var failure = new CommandResult(1, "", "[WinError 10048] Address already in use");
+        Assert.Equal(failure, MergeCheck.CheckResult("foundation-transport", failure, output, fallback));
+        Assert.Equal(8, MergeCheck.TransportParallelism(fallback, 16));
+        Assert.False(File.Exists(fallback));
+    }
+
+    [Fact]
+    public void SocketExhaustionFallbackSurvivesTheOriginatingWorktree()
+    {
+        using var tree = new StaticTree();
+        var first = Path.Combine(tree.Root, "worktree-one");
+        var second = Path.Combine(tree.Root, "worktree-two");
+        Directory.CreateDirectory(first);
+        Directory.CreateDirectory(second);
+        CommandResult Git(string[] args)
+        {
+            Assert.Equal(new[] { "rev-parse", "--path-format=absolute", "--git-common-dir" }, args);
+            return new(0, Path.Combine(tree.Root, "main", ".git") + "\n", "");
+        }
+        var fallback = MergeCheck.TransportFallbackPath(first, Git);
+        Assert.Equal(Path.Combine(tree.Root, "main", "bin-build", "transport-parallelism-4.txt"), fallback);
+        var failure = new CommandResult(1, "", "[WinError 10055] No buffer space");
+        Assert.Equal(1, MergeCheck.CheckResult("foundation-transport", failure, Path.Combine(first, "bin-build/merge-check"), fallback).ExitCode);
+        Assert.StartsWith(tree.Root + Path.DirectorySeparatorChar, first, StringComparison.OrdinalIgnoreCase);
+        Directory.Delete(first, true);
+        var shared = MergeCheck.TransportFallbackPath(second, Git);
+        Assert.Equal(fallback, shared);
+        Assert.True(File.Exists(shared));
+        var plan = MergeCheck.Select([], true, new JsonObject(), new Dictionary<string, HashSet<string>>(),
+            (_, _) => false, [], "dotnet", "python", "sdk", Path.Combine(second, "bin-build/merge-check"), 16, shared);
+        var transports = plan.Checks.Where(job => job.Name.StartsWith("foundation-transport", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(2, transports.Length);
+        Assert.All(transports, job => Assert.Equal("4", job.Arguments[Array.IndexOf(job.Arguments, "--max-parallel") + 1]));
     }
 
     [Theory]

@@ -2,7 +2,7 @@
 from offline_fixtures import HANG_GUARD_SECONDS, verify_owned_process_image
 import argparse
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import ExitStack, nullcontext
+from contextlib import ExitStack, nullcontext, redirect_stderr
 import ctypes
 try:
     from ctypes import wintypes
@@ -12,6 +12,7 @@ from tool_usage_checks import check_usage
 import json
 import importlib.util
 import http.server
+import io
 import os
 from pathlib import Path
 from ported_families import RELEASES
@@ -201,6 +202,80 @@ def self_test():
             thread.join(timeout=15)
             assert not thread.is_alive()
     print('COMPLETE: 7 HTTP client self-tests passed; 0 failed (reuse, HTTPError, drain, SSE, announced/unannounced reconnect, close)')
+    transport_scheduling_self_test()
+
+
+def transport_scheduling_self_test():
+    events = []
+    slow_stdio = threading.Event()
+    fast_http = threading.Event()
+
+    def check_stdio(key):
+        events.append((key, 'stdio'))
+        if key == 'slow':
+            slow_stdio.set()
+            assert fast_http.wait(HANG_GUARD_SECONDS), 'Fast HTTP must not wait for every stdio release'
+
+    def check_http(key):
+        assert (key, 'stdio') in events, 'Each release must run stdio before HTTP'
+        if key == 'fast':
+            assert slow_stdio.wait(HANG_GUARD_SECONDS)
+            fast_http.set()
+        events.append((key, 'http'))
+
+    run_transports(['slow', 'fast'], 2, check_stdio, check_http)
+    assert events.index(('fast', 'http')) < events.index(('slow', 'http'))
+    assert set(events) == {('slow', 'stdio'), ('fast', 'stdio'), ('slow', 'http'), ('fast', 'http')}
+    events.clear()
+    run_transports(['first', 'second'], 1, check_stdio)
+    assert events == [('first', 'stdio'), ('second', 'stdio')]
+
+    releases = list(KEYS)
+    together = threading.Barrier(8)
+    completed = []
+
+    def check_eight(key):
+        together.wait(HANG_GUARD_SECONDS)
+        completed.append(key)
+
+    run_releases(releases, 8, check_eight)
+    assert sorted(completed) == sorted(releases), 'All eight releases must complete'
+    completed.clear()
+
+    def check_failure(key):
+        completed.append(key)
+        raise RuntimeError('fixture failure ' + key)
+
+    with redirect_stderr(io.StringIO()) as errors:
+        try:
+            run_releases(releases, 8, check_failure)
+            raise AssertionError('Release failures must propagate')
+        except RuntimeError as error:
+            assert str(error) == 'fixture failure ' + releases[0]
+    assert sorted(completed) == sorted(releases), 'A failure must not skip another release'
+    assert all('FAILED release ' + key + ':' in errors.getvalue() for key in releases)
+
+    class ExhaustedConnection:
+        sock = None
+        closed = False
+
+        def request(self, *args, **kwargs):
+            error = OSError('fixture socket buffer exhaustion')
+            error.winerror = 10055
+            raise error
+
+        def close(self):
+            self.closed = True
+
+    client = Http('http://127.0.0.1:1')
+    client.http.connection = ExhaustedConnection()
+    try:
+        client.request('/mcp/health', auth=False)
+        raise AssertionError('Socket exhaustion must fail outside readiness retries')
+    except RuntimeError as error:
+        assert 'WinError 10055' in str(error)
+        assert client.http.connection.closed
+    print('COMPLETE: 5 transport scheduling self-tests passed; 0 failed (per-release order, stdio-only, eight releases, failure collection, socket exhaustion)')
 
 
 def tool(client, name, args=None):
@@ -442,6 +517,14 @@ def run_releases(releases, max_parallel, check):
         raise failures[0]
 
 
+def run_transports(releases, max_parallel, check_stdio, check_http=None):
+    def check_release(key):
+        check_stdio(key)
+        if check_http is not None:
+            check_http(key)
+    run_releases(releases, max_parallel, check_release)
+
+
 def plc_transports(args, temp, counts):
     """All eight releases use the same launcher, transports and session lifetime checks."""
     evidence = {}
@@ -639,8 +722,6 @@ def main():
             calls = [r for r in records if r['stage'] == 'call']
             assert [r['Id'] for r in calls] == [1, 2, 3], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
-        run_releases(releases, args.max_parallel, check_stdio)
-
         def check_http(key):
             number = resources.allocate_http_port()
             url = f'http://127.0.0.1:{number}'
@@ -690,8 +771,7 @@ def main():
                 finally:
                     verify_owned_process_image(p)
                     p.terminate(); p.wait(10)
-        if not args.stdio_only:
-            run_releases(releases, args.max_parallel, check_http)
+        run_transports(releases, args.max_parallel, check_stdio, None if args.stdio_only else check_http)
     usage_reports = [report for key in args.releases for report in USAGE_REPORTS[key]]
     counts = {key: counts[key] for key in args.releases}
     (args.output / 'tool-usage.json').write_text(json.dumps(usage_reports, indent=2) + '\n', encoding='utf-8')

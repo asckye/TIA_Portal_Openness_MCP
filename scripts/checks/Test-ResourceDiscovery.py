@@ -71,6 +71,9 @@ class PersistentHttp:
                     raise urllib.error.URLError(error) from error
             except OSError as error:
                 self.connection.close()
+                if getattr(error, 'winerror', None) == 10055:
+                    # Readiness retries must not hide exhaustion from the merge gate's concurrency fallback.
+                    raise RuntimeError('WinError 10055: socket buffer exhaustion') from error
                 raise urllib.error.URLError(error) from error
         self.response = response
         if response.status >= 400:

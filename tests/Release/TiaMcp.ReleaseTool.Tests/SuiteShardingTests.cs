@@ -10,6 +10,28 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class SuiteShardingTests
 {
     [Fact]
+    public void GuiHistoryKeepsThreeLayoutShardsAndOneInputShard()
+    {
+        using var tree = new StaticTree();
+        var history = new Dictionary<string, double>(StringComparer.Ordinal);
+        for (int index = 0; index < 20; index++) history["T:Layout.Case" + index] = 60;
+        const string cls = "TiaOpenness.Gui.Tests.ApprovalPageTests";
+        foreach (string method in TimeSensitiveTests.Methods[cls]) history["T:" + cls + "." + method] = 60;
+        tree.Write("history/studio-gui.json", JsonSerializer.Serialize(history));
+        var plan = SuiteCosts.Prepare("studio-gui", Path.Combine(tree.Root, "results"), Path.Combine(tree.Root, "history"),
+            null, 4, reserveSensitive: true, fixedShards: 4);
+        Assert.Equal(4, plan.Costs.Length);
+        Assert.Equal(new[] { 0 }, plan.SensitivePartitions);
+        var assignments = File.ReadAllLines(plan.Path).Select(line => line.Split('\t')).ToDictionary(
+            fields => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(fields[0])),
+            fields => int.Parse(fields[1], System.Globalization.CultureInfo.InvariantCulture), StringComparer.Ordinal);
+        Assert.All(history.Keys.Where(key => key.StartsWith("T:Layout.", StringComparison.Ordinal)),
+            key => Assert.InRange(assignments[key], 0, 2));
+        Assert.All(history.Keys.Where(key => key.StartsWith("T:" + cls, StringComparison.Ordinal)),
+            key => Assert.Equal(3, assignments["S:" + key]));
+    }
+
+    [Fact]
     public void RecordDropsKeysOfACompleteRun()
     {
         using var tree = new StaticTree();
