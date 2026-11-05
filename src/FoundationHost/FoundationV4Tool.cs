@@ -209,6 +209,13 @@ internal sealed class FoundationV4Tool : McpServerTool
                 .Read(argumentsInput, "arguments");
             if (validation.Error != null)
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            try { TiaOpenness.Shared.ApprovalOutputTargets.ValidateWhitespace(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()); }
+            catch (ArgumentException error)
+            {
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                    new Error("Filesystem targets must not have leading or trailing whitespace.",
+                        new InvalidArgumentDetails(error.ParamName ?? "arguments", Array.Empty<string>()))));
+            }
             if (SoftwareUnitCapabilityError(release, tool.Name, args) is { } unitCapability)
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id, unitCapability, true));
             try { CallerInputFiles.RefuseHumanSettingsTargets(JsonSerializer.SerializeToNode(args)!.AsObject()); }
@@ -302,7 +309,10 @@ internal sealed class FoundationV4Tool : McpServerTool
                     : await approvalWait(pending, settings, cancellationToken);
                 capture(approval);
                 if (approval.Reason != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                    HostBehavior.Confirmation(approval.Reason, pending.PlanHash, id)));
+                    HostBehavior.Confirmation(approval.Reason, pending.PlanHash, id,
+                        inner is not FoundationTool { IsWrite: true } && inner is not GenerationTool
+                            && tool.Name != "ManagePlcGitRepository"
+                            && CallerInputFiles.WritesOutsideOutputRoot(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()))));
             }
             if (inner is FoundationTool targetLaneTool)
             {

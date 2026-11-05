@@ -577,14 +577,16 @@ public sealed class UnifiedPortAdmissionTests
         var input = Path.Combine(directory, "input.xml"); File.WriteAllText(input, "<Document />");
         foreach (var field in new[] { "filePath", "xmlPath" })
             if (arguments.ContainsKey(field)) arguments[field] = input;
-        if (arguments.ContainsKey("directory")) arguments["directory"] = directory;
+        if (arguments.ContainsKey("directory")) arguments["directory"] = action == "export"
+            ? TiaOpenness.Shared.DataLocations.Current.OutputRoot : directory;
         if (name == "ExchangeUnifiedScriptModules")
         {
             var script = Path.Combine(directory, arguments["fileName"]!.GetValue<string>());
             File.WriteAllText(script, "export function Fixture() { return 1; }");
             File.WriteAllText(Path.ChangeExtension(script, ".yml"), "Name: Status\n");
         }
-        if (arguments.ContainsKey("destinationDirectory")) arguments["destinationDirectory"] = Path.Combine(directory, "new-output");
+        if (arguments.ContainsKey("destinationDirectory"))
+            arguments["destinationDirectory"] = Path.Combine(TiaOpenness.Shared.DataLocations.Current.OutputRoot, "new-output");
         try
         {
             var result = await tool.InvokeAsync(Request(name, arguments));

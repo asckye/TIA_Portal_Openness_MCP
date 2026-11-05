@@ -94,6 +94,17 @@ namespace TiaMcpServer.ModelContextProtocol
             Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
         {
             if (ApprovalPreviewDepth.Value > 0) return null;
+            var args = JsonNode.Parse(arguments)!.AsObject();
+            try
+            {
+                ApprovalOutputTargets.ValidateWhitespace(name, args);
+                if (ApprovalWrite(name, arguments)) ApprovalOutputTargets.Normalize(name, args);
+            }
+            catch (ArgumentException error)
+            {
+                return V4Reject(name, new Error("Filesystem target is invalid or too long to display.",
+                    new InvalidArgumentDetails(error.ParamName ?? "arguments", Array.Empty<string>())));
+            }
             var fenced = GenerationFenceRefusal(name, arguments);
             if (fenced != null) return fenced;
             var reset = SessionPrecheckRefusal(name);
@@ -106,7 +117,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 try { ValidateCallerInputFiles(name, arguments); }
                 catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { return TargetFailure(name, error, false); }
             }
-            var args = JsonNode.Parse(arguments)!.AsObject();
             if (HostBehavior.LegacyBatchImport(name, args)) return null;
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
                 TryDryRunDefault(name, out _) || HostBehavior.IsSingleXmlImport(name))) return null;
@@ -205,10 +215,15 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult ApprovalRefusal(ApprovalOutcome approval)
             => ApprovalRefusalAsync(approval).GetAwaiter().GetResult();
         internal static Task<CallToolResult> ApprovalRefusalAsync(ApprovalOutcome approval)
-            => FinishApprovalAsync(V4Reject(approval.Request.Tool, new Error(approval.Request.Tool == "SaveExportContent"
-                ? "MCP cannot write Workbench approval settings." : "Workbench confirmation is required before this write.",
-                approval.Reason == "cancelled" ? (ErrorDetails)new CancelledDetails("approval-wait")
-                    : new ConfirmationRequiredDetails(approval.Reason!, approval.Request.PlanHash, approval.Request.RequestId))), approval);
+            => FinishApprovalAsync(V4Reject(approval.Request.Tool, approval.Administrative
+                ? new Error("MCP cannot write Workbench approval settings.",
+                    new ConfirmationRequiredDetails(approval.Reason!, approval.Request.PlanHash, approval.Request.RequestId))
+                : approval.Reason == "cancelled"
+                    ? new Error("Workbench confirmation is required before this write.", new CancelledDetails("approval-wait"))
+                : HostBehavior.Confirmation(approval.Reason!, approval.Request.PlanHash, approval.Request.RequestId,
+                    !IsWriteTool(approval.Request.Tool) && approval.Request.Tool != "ManagePlcGitRepository"
+                        && TiaMcp.Logic.V4.CallerInputFiles.WritesOutsideOutputRoot(approval.Request.Tool,
+                        JsonNode.Parse(approval.Request.ParametersJson)!.AsObject()))), approval);
         internal static CallToolResult ChangedApprovalRefusal(ApprovalOutcome approval)
             => ChangedApprovalRefusalAsync(approval).GetAwaiter().GetResult();
         internal static async Task<CallToolResult> ChangedApprovalRefusalAsync(ApprovalOutcome approval)

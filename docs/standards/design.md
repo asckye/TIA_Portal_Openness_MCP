@@ -512,7 +512,7 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 |---|---|---|
 | `GetExportContent(exportId, offset, limit)` | READ | 每片序列化后不超过 20,000 个字符；句柄不存在、过期或被淘汰时返回 `NOT_FOUND`，需重跑原工具 |
 | `ListExportHandles(tool?, offset, limit)` | READ | offset 分页 |
-| `SaveExportContent(exportId, outputPath, raw, overwrite=false)` | FILE | 写入带 BOM 的 UTF-8，`raw=true` 保存完整原文；目标已存在且未给 `overwrite=true` 时返回 `ALREADY_EXISTS`；写入开始后 I/O 失败返回 `OUTCOME_UNKNOWN`（`file-write`）；指向 `approval.settings` 等管理目标（含短文件名、默认数据流和链接）时在文件操作前以 `CONFIRMATION_REQUIRED`（`denied`）拒绝并审计 |
+| `SaveExportContent(exportId, outputPath, raw, overwrite=false)` | FILE | 写入带 BOM 的 UTF-8，`raw=true` 保存完整原文；目标已存在且未给 `overwrite=true` 时返回 `ALREADY_EXISTS`；写入开始后 I/O 失败返回 `OUTCOME_UNKNOWN`（`file-write`）；输出根之外的目标须工作台审批；指向 `approval.settings` 或 `.git` 等管理目标（含别名和链接）时先按 Human-only 规则拒绝，审批不能覆盖 |
 | `DeleteExportHandle(exportId)`、`ClearExportHandles(olderThanHours=24)` | WRITE | 只清理进程内句柄；`olderThanHours=0` 清除全部 |
 
 句柄只能在签发它的会话中读取和清理，有效期 24 小时；存储全进程共用，最多 32 条、共 8,000,000 个字符，按 LRU 淘汰。worker 通道的超大回复处理见第 5 节。
@@ -530,7 +530,8 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 | `ExchangeSystemDiagnosticsSettings`、`ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules` | 只有 `action=import` 审批 |
 | `GetEnvironmentDiagnostics` | 只有 `fix=true` 审批（默认 `false`） |
 | `EnsureOpennessUserGroup` | 始终审批 |
-| `FILE`、`ONLINE`、`SESSION`、`EXECUTE`，以及连接、附着、打开和断开 | 不审批；会写入的动作必须改登记为写类别 |
+| `FILE`、`ONLINE`、`SESSION`、`EXECUTE`，以及连接、附着、打开和断开 | 除下列文件目标规则外不审批；新增写动作须登记为写类别 |
+| MCP 调用向调用方指定的输出根之外写文件（含 `BuildDeviceAmlDocument`） | 按写调用审批；预览、产品自行选择的输出位置、工作台操作端及已批准的生成计划步骤沿用原行为；空参数由其他调用方输入派生位置时仍检查实际目录。MCP 的 Git stage/commit 无论目录是否在根内均须审批。输出根由 `GetSessionState` 的 `data.outputRoot` 返回；根及其子路径须无重解析点 |
 
 预览与确认参数：
 

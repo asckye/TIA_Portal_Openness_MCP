@@ -113,7 +113,8 @@ public sealed class VersionControlAdmissionTests
     [InlineData("21")]
     public async Task Git_refuses_an_implicitly_discovered_bare_repository_inside_a_working_tree(string release)
     {
-        using var fixture = new FileToolFixture(release);
+        using var approval = new GrantedApproval();
+        using var fixture = new FileToolFixture(release, approvalWait: GrantedApproval.Wait);
         await Git(fixture.Root, "init");
         await Git(fixture.Root, "config", "user.name", "SEC-1 fixture");
         await Git(fixture.Root, "config", "user.email", "sec1@example.invalid");
@@ -138,6 +139,17 @@ public sealed class VersionControlAdmissionTests
         Assert.Contains("safe.bareRepository", result.StructuredContent!.ToJsonString(), StringComparison.OrdinalIgnoreCase);
         Succeeded(await fixture.Call("ManagePlcGitRepository", new { repositoryPath = fixture.Root, action = "history" }));
         Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    private sealed class GrantedApproval : IDisposable
+    {
+        private readonly Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings, CancellationToken,
+            Task<TiaOpenness.Shared.ApprovalOutcome>>? previous = Host.McpServer.ApprovalWaitOverrideForTests;
+        internal GrantedApproval() => Host.McpServer.ApprovalWaitOverrideForTests = Wait;
+        internal static Task<TiaOpenness.Shared.ApprovalOutcome> Wait(TiaOpenness.Shared.PendingApproval card,
+            TiaOpenness.Shared.ApprovalSettings settings, CancellationToken token)
+            => Task.FromResult(new TiaOpenness.Shared.ApprovalOutcome(card, false, null));
+        public void Dispose() => Host.McpServer.ApprovalWaitOverrideForTests = previous;
     }
 
     private sealed class HumanSettingsFile : IDisposable
@@ -274,7 +286,8 @@ public sealed class VersionControlAdmissionTests
     [InlineData("21")]
     public async Task Real_git_ignores_fsmonitor_hooks_and_signing_for_status_stage_and_commit(string release)
     {
-        using var fixture = new FileToolFixture(release);
+        using var approval = new GrantedApproval();
+        using var fixture = new FileToolFixture(release, approvalWait: GrantedApproval.Wait);
         await Git(fixture.Root, "init");
         await Git(fixture.Root, "config", "user.name", "SEC-1 fixture");
         await Git(fixture.Root, "config", "user.email", "sec1@example.invalid");
@@ -352,19 +365,43 @@ public sealed class VersionControlAdmissionTests
         return await output;
     }
 
-    private sealed class FileToolFixture : IDisposable
+    internal sealed class FileToolFixture : IDisposable
     {
         internal readonly HardwareAddressingAdmissionTests.UnboundWorker Worker = new();
-        internal readonly string Root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
-            "bin-build", "sec1-fixtures", Guid.NewGuid().ToString("N"));
+        internal readonly string Root = Path.Combine(TiaOpenness.Shared.DataLocations.Current.OutputRoot,
+            "sec1-fixtures", Guid.NewGuid().ToString("N"));
         private readonly IReadOnlyList<McpServerTool> tools;
         private readonly enginehost::TiaMcp.FoundationHost.EngineHostPipeline pipeline;
-        internal FileToolFixture(string release, bool previewExport = false)
+        private readonly string previousRelease;
+        private readonly string? previousProfile;
+        internal FileToolFixture(string release, bool previewExport = false,
+            Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings, CancellationToken,
+                Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null, IFoundationWorker? worker = null,
+            Func<Host.IToolCatalogView, Host.IToolCatalogView>? catalogForTest = null, McpServerTool? replacementTool = null)
         {
+            previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+            previousProfile = catalogForTest == null ? null : Host.McpServer.ResolvedProfile();
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            using var registration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+                new enginehost::TiaMcp.FoundationHost.EngineSessionContext(Worker));
             Directory.CreateDirectory(Root);
-            IFoundationWorker target = previewExport ? new ExportPreviewWorker() : Worker;
-            pipeline = new(release, Worker, LegacyHostToolRegistry.Create(target, release, false, hostPorts: false));
-            tools = pipeline.AllTools;
+            IFoundationWorker target = worker ?? (previewExport ? new ExportPreviewWorker() : Worker);
+            var registry = LegacyHostToolRegistry.Create(target, release, false, hostPorts: false).ToList();
+            if (approvalWait != null)
+            {
+                foreach (var raw in FoundationTools.Create(target, release).Concat(OfflineXmlTools.Create())
+                    .Concat(PortedToolContract.Create(target, release)))
+                {
+                    int index = registry.FindIndex(tool => tool.ProtocolTool.Name == raw.ProtocolTool.Name);
+                    if (index >= 0) registry[index] = new FoundationV4Tool(raw, release, approvalWait: approvalWait);
+                }
+            }
+            if (replacementTool != null)
+                registry[registry.FindIndex(tool => tool.ProtocolTool.Name == replacementTool.ProtocolTool.Name)] = replacementTool;
+            var engineWorker = target as enginehost::TiaMcp.FoundationHost.IEngineWorker ?? Worker;
+            pipeline = catalogForTest == null ? new(release, engineWorker, registry)
+                : new("", Path.Combine(Root, "worker.exe"), release, engineWorker, "full", registry, null, catalogForTest);
+            tools = catalogForTest == null ? pipeline.AllTools : pipeline.Tools.ToArray();
         }
         internal Task<CallToolResult> Call(string name, object args) => tools.Single(t => t.ProtocolTool.Name == name).InvokeAsync(
             new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
@@ -372,6 +409,8 @@ public sealed class VersionControlAdmissionTests
         public void Dispose()
         {
             pipeline.Dispose(); Worker.Dispose();
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+            if (previousProfile != null) Host.McpServer.SetProfileOverride(previousProfile);
             foreach (string path in Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories))
                 File.SetAttributes(path, FileAttributes.Normal);
             Directory.Delete(Root, true);

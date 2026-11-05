@@ -394,7 +394,8 @@ namespace TiaMcp.Updater
         private static bool IsProtectedRoot(string relative)
         {
             string first = relative.Split('/')[0];
-            return new[] { "data", "staging", ".previous", ".update", "TiaMcp_Output", ".git", "bin-build" }.Contains(first, StringComparer.OrdinalIgnoreCase);
+            return new[] { "data", "exports", "staging", ".previous", ".update", "TiaMcp_Output", ".git", "bin-build" }
+                .Contains(first, StringComparer.OrdinalIgnoreCase);
         }
         private static string Combine(string root, string relative) {
             return root.TrimEnd('\\', '/') + Path.DirectorySeparatorChar + relative.Replace('/', Path.DirectorySeparatorChar); }

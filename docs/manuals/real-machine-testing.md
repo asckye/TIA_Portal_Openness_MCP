@@ -15,7 +15,7 @@
 
 依据 [ADR 0020](../standards/decisions/0020-prereleases-tested-by-users.md)：每个预发布和每批修复都在 VM 上按[预发布真机验证清单](../guides/beta-tester-checklist.md)回归。VM 地址、TIA 进程号和项目名从当前环境确认，不写进文档。
 
-1. 在 VM 上解压待测包，先测 V21，再测其他已安装的版本。导出和临时文件写到 `<包根>/exports/<run>`，不放桌面。
+1. 在 VM 上解压待测包，先测 V21，再测其他已安装的版本。导出和临时文件写到 `GetSessionState` 返回的 `data.outputRoot` 下的 `<run>`（默认 `<包根>/exports/<run>`），不放桌面；MCP 写到输出根之外须工作台审批。
 2. 审批开关由维护者决定（逐条批准或由维护者关闭）；端点令牌不打印、不复制。
 3. 逐个工具测试：先用 `FindTools` 或 `GetToolUsage` 取参数；写操作先预览，再只对自己建的测试对象执行；没有测试 PLC 时，在线和下载类只预览。驱动、Safety、在线等高风险族放在最后，只读或预览。
 4. 每项记为通过、缺陷、按设计拒绝（写明缺少的前提）或未测；照工具自己的示例调用仍失败时，算示例的缺陷。返回 `OUTCOME_UNKNOWN` 或 `SESSION_RESET_REQUIRED` 时停止其他原生调用，先记录再恢复会话。

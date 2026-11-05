@@ -294,6 +294,7 @@ internal sealed partial class FoundationTool : McpServerTool
                 if (definition.Name == "GetSessionState" && reply.StructuredContent?["data"] is JsonObject data)
                 {
                     data["sessionState"] = SharedSessionState.For(worker).Snapshot(release);
+                    data["outputRoot"] = TiaOpenness.Shared.DataLocations.Current.OutputRoot;
                     reply.Content = new[] { new TextContentBlock { Text = reply.StructuredContent.ToJsonString() } };
                 }
                 return reply;

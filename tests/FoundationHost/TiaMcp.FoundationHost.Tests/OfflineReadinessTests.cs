@@ -143,7 +143,7 @@ public sealed class OfflineReadinessTests
         private readonly object? previousBundle = AppDomain.CurrentDomain.GetData(BundleSelection);
         // BundleLayout.Initialize also sets this process-wide variable; restore it with the selection.
         private readonly string? previousRootVariable = Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT");
-        private readonly string root = Path.Combine(Path.GetTempPath(), "offline-readiness-" + Guid.NewGuid().ToString("N"));
+        private readonly string root = Path.Combine(DataLocations.Current.OutputRoot, "offline-readiness-" + Guid.NewGuid().ToString("N"));
         internal Files()
         {
             BundleLayout.Initialize(AppContext.BaseDirectory, TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory));

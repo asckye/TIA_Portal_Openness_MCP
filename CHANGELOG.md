@@ -17,6 +17,7 @@
 - V14 SP1–V19 的工具桥接与批处理对“真实存在但本版未提供”的工具返回 `UNSUPPORTED_CAPABILITY`；V21 的已禁用工具也在参数校验前返回此错误。完全未知的名称仍返回 `TOOL_NOT_FOUND`，回复保留目标工具和拒绝原因。
 - 工作台操作员会话始终使用所选版本的完整工具目录，包括附着到 AI 客户端启动的 lite 宿主时；AI 会话仍保留其选择的目录。
 - 八版统一默认 lite 工具列表：V14 SP1–V19 的客户端现在先看到精简列表，V20/V21 的 lite 列表扩大；`FindTools` / `CallTool` 可访问其余工具，`--profile full` 恢复完整列表。统一展示名称为 `plc-foundation`，提示词按已注册工具过滤。
+- MCP file writes to caller targets outside the output root now require Workbench approval, including UNC targets and handoff output derived from an input report. Cards bind and wrap every full normalized filesystem target, including WRITE/SESSION and multi-target calls; surrounding whitespace is rejected before approval; approval targets over 4096 characters are refused before approval. Git stage/commit always require approval. `GetSessionState` exposes `data.outputRoot`; updates preserve `exports`. Previews and approved generation steps retain their behavior.
 - Transport checks retain the full profile and check up to four releases at a time, respecting `-MaxParallelism` with deterministic report ordering.
 
 ## [4.0.0-beta.3] - 2026-11-04

@@ -20,6 +20,36 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class WorkbenchFontStyleTests(WpfContext wpf)
 {
     [Fact]
+    public void Approval_filesystem_target_wraps_and_its_row_grows_to_show_the_tail()
+    {
+        wpf.Run(() =>
+        {
+            string target = @"D:\exports\" + string.Join("\\", Enumerable.Repeat("review-this-directory", 18)) + @"\Startup\evil.cmd";
+            var approvals = FeaturePageFixtures.Approvals(false);
+            approvals.Receive(FeaturePageFixtures.Request() with
+            {
+                Operations = [new(LocalizedText.Literal("Export"), target, "SaveExportContent")]
+            });
+            using var model = new FeaturePagesViewModel(approvals, new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(),
+                new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics(), () => FeaturePageFixtures.Now);
+            var view = new ApprovalsDrawer { DataContext = model };
+            var host = new Border { Child = view, Width = 480 };
+            try
+            {
+                Layout(host, 480, 780);
+                var text = Assert.Single(Descendants<TextBlock>(host), block => block.Text == target);
+                Assert.Equal(TextWrapping.Wrap, text.TextWrapping);
+                Assert.Equal(TextTrimming.None, text.TextTrimming);
+                Assert.True(text.ActualHeight > 29);
+                var row = Assert.IsType<Grid>(VisualTreeHelper.GetParent(text));
+                Assert.True(double.IsNaN(row.Height));
+                Assert.True(row.ActualHeight >= text.DesiredSize.Height);
+            }
+            finally { host.Child = null; }
+        });
+    }
+
+    [Fact]
     public void Font_tokens_use_only_the_system_chains()
     {
         wpf.Run(() =>

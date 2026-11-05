@@ -34,6 +34,22 @@ namespace TiaOpenness.Shared.Tests
         private DataLocations Resolve(string? configured = null, string? output = null) =>
             DataLocations.Resolve(output ?? Output, configured!, Local, Temp);
 
+        [Fact]
+        public void Output_root_uses_bundle_checkout_configured_and_fallback_locations()
+        {
+            Assert.Equal(Path.Combine(Bundle, "exports"), Resolve().OutputRoot);
+            Put(Path.Combine(Bundle, "TiaPortalOpenness.slnx"), "<Solution />");
+            Assert.Equal(Path.Combine(Bundle, "bin-build", "exports"), Resolve().OutputRoot);
+            string configured = Path.Combine(scratch, "configured");
+            Assert.Equal(Path.Combine(configured, "exports"), Resolve(configured).OutputRoot);
+            var fallback = DataLocations.Resolve(Temp, null!, Local, Temp);
+            Assert.Equal(Path.Combine(Local, "TiaMcp", "exports"), fallback.OutputRoot);
+            Assert.True(Directory.Exists(fallback.OutputRoot));
+            string blocked = Path.Combine(scratch, "blocked-output"); File.WriteAllText(blocked, "file");
+            Assert.Null(DataLocations.Resolve(Temp, blocked, Local, Temp).OutputRoot);
+            Assert.Null(DataLocations.Resolve(Temp, null!, blocked, Temp).OutputRoot);
+        }
+
         [Theory]
         [InlineData("14sp1")]
         [InlineData("15.1")]

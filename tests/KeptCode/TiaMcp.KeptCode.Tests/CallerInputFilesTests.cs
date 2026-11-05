@@ -13,7 +13,63 @@ namespace TiaMcp.Engine.Tests
         public CallerInputFilesTests() => Directory.CreateDirectory(root);
         public void Dispose() => Directory.Delete(root, true);
 
+        [Theory]
+        [InlineData("", true)]
+        [InlineData("a/b", true)]
+        [InlineData("a/../b", true)]
+        [InlineData("../x", false)]
+        [InlineData("a/../../x", false)]
+        public void Output_root_normalizes_relative_segments(string relative, bool inside)
+        {
+            Assert.Equal(inside, TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(Path.Combine(root, relative), root));
+            Assert.True(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(root.ToUpperInvariant() + "/a", root));
+            Assert.False(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(root + "-evil/a", root));
+            Assert.False(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(root, null));
+        }
+
+        [Theory]
+        [InlineData(@"\\127.0.0.1\share\x")]
+        [InlineData(@"\\localhost\c$\x")]
+        [InlineData(@"\\.\pipe\x")]
+        public void Network_and_device_targets_are_outside(string target)
+        {
+            Assert.False(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(target, root));
+            Assert.False(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(target, target));
+            Assert.False(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(@"\\?\" + root + @"\x", root));
+        }
+
+        [Fact]
+        public void Junction_below_root_is_outside_but_ancestors_are_not_walked()
+        {
+            string destination = Path.Combine(root, "destination");
+            string link = Path.Combine(root, "link");
+            Directory.CreateDirectory(destination);
+            var start = new System.Diagnostics.ProcessStartInfo("cmd.exe") { UseShellExecute = false, CreateNoWindow = true };
+            start.ArgumentList.Add("/c"); start.ArgumentList.Add("mklink"); start.ArgumentList.Add("/J");
+            start.ArgumentList.Add(link); start.ArgumentList.Add(destination);
+            using var process = System.Diagnostics.Process.Start(start)!;
+            process.WaitForExit();
+            Assert.Equal(0, process.ExitCode);
+            try
+            {
+                Assert.False(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(Path.Combine(link, "x"), root));
+                Directory.CreateDirectory(Path.Combine(link, "exports"));
+                Assert.True(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(Path.Combine(link, "exports", "x"),
+                    Path.Combine(link, "exports")));
+            }
+            finally { Directory.Delete(link); }
+        }
+
         private static string Arguments(string key, string path) => new JsonObject { [key] = path }.ToJsonString();
+
+        [Fact]
+        public void Malformed_selectors_leave_type_validation_to_the_tool_boundary()
+        {
+            Assert.Empty(TiaMcp.Logic.V4.CallerInputFiles.OutputTargets("ManageHardwareUtilities",
+                new JsonObject { ["action"] = true, ["filePath"] = Path.Combine(root, "out.xml") }));
+            Assert.Equal(new[] { Path.Combine(root, "out.pdf") }, TiaMcp.Logic.V4.CallerInputFiles.OutputTargets("ExportSafetyPrintout",
+                new JsonObject { ["printer"] = true, ["filePath"] = Path.Combine(root, "out.pdf") }));
+        }
 
         [Theory]
         [InlineData("ExportAlarmInstanceTexts", "exportPath", ".xlsx")]

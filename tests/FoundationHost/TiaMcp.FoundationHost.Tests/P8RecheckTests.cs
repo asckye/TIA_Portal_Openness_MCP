@@ -252,7 +252,7 @@ public sealed class P8RecheckTests
     [InlineData("19", "RunHmiTemplatePlcSyncPrecheckSuite")]
     public async Task Opened_offline_tools_execute_with_current_policy_and_no_worker_calls(string release, string name)
     {
-        string scratch = Path.Combine(Path.GetTempPath(), "p8-opened-" + Guid.NewGuid().ToString("N"));
+        string scratch = Path.Combine(TiaOpenness.Shared.DataLocations.Current.OutputRoot, "p8-opened-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(scratch);
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);

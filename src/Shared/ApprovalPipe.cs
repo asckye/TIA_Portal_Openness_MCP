@@ -43,8 +43,9 @@ namespace TiaOpenness.Shared
         internal bool Disabled { get; }
         internal string? Reason { get; }
         internal bool Delegated { get; }
-        internal ApprovalOutcome(PendingApproval request, bool disabled, string? reason, bool delegated = false)
-        { Request = request; Disabled = disabled; Reason = reason; Delegated = delegated; }
+        internal bool Administrative { get; }
+        internal ApprovalOutcome(PendingApproval request, bool disabled, string? reason, bool delegated = false, bool administrative = false)
+        { Request = request; Disabled = disabled; Reason = reason; Delegated = delegated; Administrative = administrative; }
     }
 
     internal static class ApprovalClient
@@ -56,7 +57,7 @@ namespace TiaOpenness.Shared
             var log = AuditLog.Current;
             try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash, request.EffectiveActor); }
             catch (Exception ex) { Trace.TraceWarning("Approval decision audit unavailable: " + ex.GetType().Name); }
-            return new ApprovalOutcome(request, false, "denied");
+            return new ApprovalOutcome(request, false, "denied", administrative: true);
         }
         internal static async Task Complete(ApprovalOutcome approval, string outcome, string? pipeName = null)
         {

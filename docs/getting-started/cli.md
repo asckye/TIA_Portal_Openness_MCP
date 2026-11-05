@@ -87,8 +87,10 @@ Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python
 
 worker 超时预算为：默认 120 秒，每个代次首次附着 300 秒，编译、传输、导入导出、归档和库更新 30 分钟。`--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可取消；派发后等待真实结果，超时或通道故障不重放原生操作。
 
-MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认须经工作台审批。`dryRun=true` 和候选工具 `mode=preview` 不等待审批。`SaveProject`、`SaveProjectCopy` 和 `CloseProject` 实际执行同样须审批；连接、附着、打开和分离不审批。拒绝、120 秒默认超时或工作台不可用会在派发前返回 `CONFIRMATION_REQUIRED`。审批、执行与响应共享 requestId。
+MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认须经工作台审批。`dryRun=true` 和候选工具 `mode=preview` 不等待审批。`SaveProject`、`SaveProjectCopy` 和 `CloseProject` 实际执行同样须审批；连接、附着、打开和分离不审批。拒绝、120 秒默认超时或工作台不可用会在派发前返回 `CONFIRMATION_REQUIRED`。审批、执行与响应共享 requestId。MCP 向调用方指定的输出根之外写文件也须审批；用 `GetSessionState` 的 `data.outputRoot` 查询可免审批的输出目录（根内重解析点除外），预览和工作台选择的文件目标沿用原行为。
 
-审批和审计的参数摘要、包含参数的计划哈希都先排除密码、凭据、密钥和令牌，使用与调用日志一致的固定占位符。仅更换这些值不会改变摘要或使预览计划失效；实际调用仍接收原始值。非敏感参数与工程身份仍参与审批复核。详见[审批与审计配置](configuration.md#v4-结果审批与审计)。
+审批卡片逐项显示并绑定完整规范化文件系统路径，长路径自动换行，路径中形如 `key=` 的片段也保留；带首尾空白的路径在发卡前返回 `INVALID_ARGUMENT`。须审批的目标超过 4096 个字符时在发卡前返回 `INVALID_ARGUMENT`。`BuildReleaseHandoffArtifacts` 留空输出目录时按输入报告的父目录检查；MCP 的 Git `stage`、`commit` 在输出根内也须审批。
+
+除审批中的完整输出目标外，审批和审计的参数摘要、包含参数的计划哈希都先排除密码、凭据、密钥和令牌，使用与调用日志一致的固定占位符。仅更换这些凭据值不会改变摘要或使预览计划失效；实际调用仍接收原始值。非敏感参数与工程身份仍参与审批复核。详见[审批与审计配置](configuration.md#v4-结果审批与审计)。
 
 八个版本都可用 `GetOpennessWorkerStatus` 查看代次与故障。`OUTCOME_UNKNOWN` 后先核对工程和调用日志，再用 `DisconnectPortal` 恢复，或显式调用 `RestartOpennessWorker`；重新连接后必须重新绑定工程。详见 [worker 与恢复](../guides/openness-worker-isolation.md)。

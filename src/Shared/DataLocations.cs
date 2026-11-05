@@ -36,6 +36,7 @@ namespace TiaOpenness.Shared
         private readonly bool explicitDataRoot;
         private static readonly object LogGate = new object();
         private readonly Lazy<string> configDirectory;
+        private readonly Lazy<string> outputRoot;
         private readonly Lazy<string> uiFilePath;
 
         internal static DataLocations Current => ProcessLocations.Value;
@@ -53,6 +54,7 @@ namespace TiaOpenness.Shared
             this.temporaryDirectory = temporaryDirectory;
             this.explicitDataRoot = explicitDataRoot;
             configDirectory = new Lazy<string>(PrepareConfig);
+            outputRoot = new Lazy<string>(PrepareOutputRoot);
             uiFilePath = new Lazy<string>(PrepareUi);
         }
 
@@ -131,6 +133,13 @@ namespace TiaOpenness.Shared
             Root != null ? Path.Combine(Root, "diagnostics") : UserPath(localApplicationData, "TiaMcp/diagnostics", "DIAGNOSTIC_WRITE_FAILED");
         internal string LeasesDirectory => At("leases", Path.Combine(localApplicationData, "TiaMcp", "instance-leases"));
         internal string ConfigDirectory => configDirectory.Value;
+        internal string OutputRoot => outputRoot.Value;
+        private string PrepareOutputRoot()
+        {
+            string primary = Root == null ? null : Path.Combine(explicitDataRoot ? Root : Path.GetDirectoryName(Root), "exports");
+            try { return WritableDirectory(primary, FallbackPath(localApplicationData, "TiaMcp/exports"), "IO_FAILED"); }
+            catch (IOException) /* swallow(env-probe): no usable output root means every caller target needs approval */ { return null; }
+        }
         internal string UiFilePath => uiFilePath.Value;
         internal string LogsDirectory =>
             WritableDirectory(Root == null ? null : Path.Combine(Root, "logs"), FallbackPath(temporaryDirectory, "TiaMcp/logs"), "IO_FAILED");

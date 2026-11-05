@@ -28,10 +28,14 @@ namespace TiaMcp.Logic.V4
                 else if (defaultPreview) return false;
             }
             if (tool is "ExchangeSystemDiagnosticsSettings" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules")
-                return args["action"] is JsonValue action && action.TryGetValue<string>(out var operation) && operation == "import";
+                if (args["action"] is JsonValue action && action.TryGetValue<string>(out var operation) && operation == "import") return true;
+            if (tool == "ManagePlcGitRepository" && ActorScope.Actor == ActorScope.Mcp
+                && args["action"] is JsonValue gitAction && gitAction.TryGetValue<string>(out var gitOperation)
+                && gitOperation is "stage" or "commit") return true;
             if (tool == "GetEnvironmentDiagnostics")
                 return args["fix"] is JsonValue fix && fix.TryGetValue<bool>(out var repair) && repair;
-            return classifiedWrite || tool is "EnsureOpennessUserGroup" or "SaveProject" or "SaveProjectCopy" or "CloseProject";
+            return classifiedWrite || tool is "EnsureOpennessUserGroup" or "SaveProject" or "SaveProjectCopy" or "CloseProject"
+                || CallerInputFiles.WritesOutsideOutputRoot(tool, args);
         }
 
         internal static bool NeedsPrecheck(bool internalPreview, bool write, bool enabled, bool hasPreview)
@@ -213,9 +217,11 @@ namespace TiaMcp.Logic.V4
                     ["recoveryDirectory"] = JsonSerializer.SerializeToElement(data?["recoveryDirectory"]) });
 
         internal static Error SessionReset() => new Error(SessionBehavior.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown"));
-        internal static Error Confirmation(string reason, string? hash, string? id)
+        internal static Error Confirmation(string reason, string? hash, string? id, bool outsideOutputRoot = false)
             => reason == "cancelled" ? new Error("Request cancelled before operation.", new CancelledDetails("approval-wait"))
-                : new Error("Workbench confirmation is required before this write.", new ConfirmationRequiredDetails(reason, hash, id));
+                : new Error("Workbench confirmation is required before this write."
+                    + (outsideOutputRoot ? " Write under the output root (GetSessionState data.outputRoot) to skip confirmation." : ""),
+                    new ConfirmationRequiredDetails(reason, hash, id));
         internal static Outcome OutcomeOf(HostFailureKind kind) => kind == HostFailureKind.Unknown ? Outcome.Unknown
             : kind is HostFailureKind.ReadFailed or HostFailureKind.InternalError ? Outcome.ReadFailed : Outcome.RejectedBeforeOperation;
         internal static Execution ExecutionOf(HostFailureKind kind) => kind == HostFailureKind.Unknown ? Execution.Unknown

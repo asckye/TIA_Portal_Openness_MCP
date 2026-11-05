@@ -14,6 +14,8 @@ public sealed class PlcRenderFoundationTests
     {
         string root = Path.Combine(Path.GetTempPath(), "foundation-render-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
+        string output = Path.Combine(TiaOpenness.Shared.DataLocations.Current.OutputRoot, Path.GetFileName(root));
+        Directory.CreateDirectory(output);
         try
         {
             string input = Path.Combine(root, "Main.xml");
@@ -34,20 +36,20 @@ public sealed class PlcRenderFoundationTests
                     Assert.Equal(JsonDocument.Parse(text).RootElement.GetRawText(), result.StructuredContent!.ToJsonString());
                     return V4Json.Deserialize<Envelope>(text);
                 }
-                var result = await Call(new { inputPath = input, outputPath = Path.Combine(root, name + ".html") });
+                var result = await Call(new { inputPath = input, outputPath = Path.Combine(output, name + ".html") });
                 Assert.True(result.Ok, result.Error?.Message);
                 Assert.Equal(release, result.Meta.ReleaseKey);
                 Assert.Equal(BehaviorPolicy.NotApplicable, result.Meta.BehaviorPolicy);
-                result = await Call(new { inputPath = input, outputPath = Path.Combine(root, name + ".html") });
+                result = await Call(new { inputPath = input, outputPath = Path.Combine(output, name + ".html") });
                 Assert.Equal(ErrorCode.AlreadyExists, result.Error!.Code);
-                result = await Call(new { inputPath = 123, outputPath = Path.Combine(root, "unused.html") });
+                result = await Call(new { inputPath = 123, outputPath = Path.Combine(output, "unused.html") });
                 Assert.Equal(ErrorCode.InvalidArgument, result.Error!.Code);
                 Assert.Equal(Execution.NotStarted, result.Meta.Execution);
                 Assert.Equal(BehaviorPolicy.NotApplicable, result.Meta.BehaviorPolicy);
-                result = await Call(new { inputPath = input, outputPath = Path.Combine(root, "cancelled.html") }, new CancellationToken(true));
+                result = await Call(new { inputPath = input, outputPath = Path.Combine(output, "cancelled.html") }, new CancellationToken(true));
                 Assert.Equal(ErrorCode.Cancelled, result.Error!.Code);
                 Assert.Equal(BehaviorPolicy.NotApplicable, result.Meta.BehaviorPolicy);
-                Assert.False(File.Exists(Path.Combine(root, "cancelled.html")));
+                Assert.False(File.Exists(Path.Combine(output, "cancelled.html")));
             }
             Assert.Equal(0, worker.Calls);
         }
@@ -55,6 +57,7 @@ public sealed class PlcRenderFoundationTests
         {
             Assert.StartsWith(Path.GetFullPath(Path.GetTempPath()), Path.GetFullPath(root));
             Directory.Delete(root, true);
+            Directory.Delete(output, true);
         }
     }
 }

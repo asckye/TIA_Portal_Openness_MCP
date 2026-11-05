@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
@@ -9,6 +10,45 @@ namespace TiaMcp.Logic.V4
 {
     internal static class CallerInputFiles
     {
+        internal static bool IsInsideOutputRoot(string path, string? root)
+        {
+            if (string.IsNullOrWhiteSpace(root) || string.IsNullOrWhiteSpace(path)) return false;
+            try
+            {
+                string target = Path.GetFullPath(path.Trim());
+                if (target.StartsWith(@"\\", StringComparison.Ordinal)) return false;
+                string boundary = Path.GetFullPath(root!.Trim()).TrimEnd(Path.DirectorySeparatorChar);
+                if (!target.Equals(boundary, StringComparison.OrdinalIgnoreCase)
+                    && !target.StartsWith(boundary + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return false;
+                // Check only the root and its descendants: install ancestors may themselves be junctions.
+                string current = boundary;
+                string[] descendants = target.Substring(boundary.Length).Split(new[] { Path.DirectorySeparatorChar },
+                    StringSplitOptions.RemoveEmptyEntries);
+                for (int index = 0; ; index++)
+                {
+                    try { if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0) return false; }
+                    catch (FileNotFoundException) /* swallow(env-probe): missing children end the existing ancestry; the root must exist */
+                    { return index != 0; }
+                    catch (DirectoryNotFoundException) /* swallow(env-probe): missing children end the existing ancestry; the root must exist */
+                    { return index != 0; }
+                    if (index == descendants.Length) return true;
+                    current = Path.Combine(current, descendants[index]);
+                }
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or System.Security.SecurityException)
+            { return false; }
+        }
+
+        internal static IEnumerable<string> OutputTargets(string tool, JsonObject arguments)
+            => ApprovalOutputTargets.Arguments(tool, arguments).Select(pair => pair.Value);
+
+        internal static bool WritesOutsideOutputRoot(string tool, JsonObject arguments)
+            => ActorScope.Actor == ActorScope.Mcp
+                && OutputTargets(tool, arguments).Any(path => !IsInsideOutputRoot(path, DataLocations.Current.OutputRoot));
+
+        private static string TextArgument(JsonObject arguments, string name)
+            => arguments[name] is JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
+
         // These argument names denote caller files, never engineering object paths.
         // Output checks use the explicit native-format table, not the input-file heuristic.
         internal static void Validate(string tool, JsonObject arguments)
@@ -97,7 +137,7 @@ namespace TiaMcp.Logic.V4
 
         private static (string Parameter, string[] Extensions, bool Output)? NativeFile(string tool, JsonObject arguments)
         {
-            string action = (string?)arguments["action"] ?? "";
+            string action = TextArgument(arguments, "action");
             switch (tool)
             {
                 case "ExportAlarmInstanceTexts": case "ExportAlarmTextLists": return ("exportPath", new[] { ".xlsx" }, true);
@@ -120,7 +160,8 @@ namespace TiaMcp.Logic.V4
                 case "ManageClassicHmiCycle": case "ManageClassicHmiTextGraphicList":
                     return action is "export" or "import" ? ("filePath", new[] { ".xml" }, action == "export") : null;
                 case "ExportSafetyPrintout"
-                    : return ("filePath", (string?)arguments["printer"] is "MicrosoftXpsDocumentWriter" ? new[] { ".xps", ".oxps" } : new[] { ".pdf" }, true);
+                    : return ("filePath", TextArgument(arguments, "printer") is "MicrosoftXpsDocumentWriter"
+                        ? new[] { ".xps", ".oxps" } : new[] { ".pdf" }, true);
                 default: return null;
             }
         }

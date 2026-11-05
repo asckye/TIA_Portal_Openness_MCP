@@ -53,7 +53,8 @@ namespace TiaOpenness.Shared
             string? identity, int seconds, string? requestId = null)
         {
             var original = JsonNode.Parse(arguments)!.AsObject();
-            var args = ApprovalDisplayPayload.RedactArguments(original)!.AsObject();
+            var outputs = ApprovalOutputTargets.Normalize(tool, original);
+            var args = ReviewArguments(tool, original);
             var target = JsonNode.Parse(identity ?? "{}")!.AsObject();
             foreach (string key in new[] { "expectedProjectFile", "projectFile", "projectPath", "projectName", "processId", "processStartUtc", "workspaceRoot"
                 })
@@ -62,8 +63,18 @@ namespace TiaOpenness.Shared
                 ["identity"] = ApprovalDisplayPayload.RedactArguments(target), ["arguments"] = args.DeepClone() }));
             string? plan = args["expectedPlanHash"] is JsonValue value && value.TryGetValue<string>(out var hash) && IsHash(hash) ? hash : null;
             var display = Display(original, tool);
+            foreach (var output in outputs) display[output.Key] = output.Value;
+            if (Encoding.UTF8.GetByteCount(display.ToJsonString()) > 64 * 1024)
+            {
+                display = new JsonObject { ["displayTruncated"] = true };
+                foreach (var output in outputs) display[output.Key] = output.Value;
+            }
+            if (Encoding.UTF8.GetByteCount(display.ToJsonString()) > 64 * 1024)
+                throw new ArgumentException("Filesystem targets exceed the approval display limit.", nameof(arguments));
             var objects = display.Where(p => p.Key.EndsWith("Path", StringComparison.Ordinal) || p.Key.EndsWith("Name", StringComparison.Ordinal)
-                || p.Key == "plc" || p.Key == "target").Select(p => p.Key + "=" + p.Value?.ToJsonString()).ToArray();
+                || p.Key.EndsWith("Directory", StringComparison.Ordinal) || p.Key.EndsWith("Dir", StringComparison.Ordinal)
+                || p.Key == "dir" || p.Key == "directory" || p.Key == "plc" || p.Key == "target")
+                .Select(p => p.Key + "=" + p.Value?.ToJsonString()).ToArray();
             string risk = ClassifyRisk(tool, original);
             return new PendingApproval { RequestId = requestId ?? Guid.NewGuid().ToString("N"), Host = host, ReleaseKey = release,
                 Tool = tool, Risk = risk, RiskAction = risk == "write" ? "execute" : Deletes(tool, original) ? "delete" : "online",
@@ -75,8 +86,10 @@ namespace TiaOpenness.Shared
                 Actor = ActorScope.Actor == ActorScope.Workbench ? ActorScope.Workbench : null,
                 OperatorCallId = ActorScope.Actor == ActorScope.Workbench ? ActorScope.OperatorCallId : null,
                 Deadline = DateTimeOffset.UtcNow.AddSeconds(seconds),
-                Operations = new[] { new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool,
-                    Target = string.Join(" · ", objects) } } };
+                Operations = outputs.Length == 0
+                    ? new[] { new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool, Target = string.Join(" · ", objects) } }
+                    : outputs.Select(output => new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool,
+                        Target = output.Value }).ToArray() };
         }
         // This is host policy, independent of MCP destructiveHint (which also covers ordinary overwrites).
         internal static string ClassifyRisk(string tool, JsonObject arguments)
@@ -93,7 +106,13 @@ namespace TiaOpenness.Shared
             || Flag(arguments, "confirmDelete") || Flag(arguments, "deleteAtTarget");
         internal static bool Flag(JsonObject arguments, string name) => arguments.Any(p => p.Key.Equals(name, StringComparison.OrdinalIgnoreCase)
             && p.Value is JsonValue flag && flag.TryGetValue<bool>(out var enabled) && enabled);
-        // The digest above binds the redacted arguments. Human review never carries
+        internal static JsonObject ReviewArguments(string tool, JsonObject original)
+        {
+            var args = ApprovalDisplayPayload.RedactArguments(original)!.AsObject();
+            foreach (var output in ApprovalOutputTargets.Normalize(tool, original)) args[output.Key] = output.Value;
+            return args;
+        }
+        // The digest binds full output paths and redacted non-path arguments. Human review never carries
         // file contents, and every display is bounded independently of the transport.
         private static JsonObject Display(JsonObject args, string tool)
         {
@@ -198,6 +217,118 @@ namespace TiaOpenness.Shared
             return node?.ToJsonString() ?? "null";
         }
     }
+    // Caller output paths are shared by admission and approval display; other values retain normal redaction.
+    internal static class ApprovalOutputTargets
+    {
+        private static readonly HashSet<string> FileSystemKeys = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "allowedFilePath", "apiPath", "archivePath", "csvPath", "destinationDirectory", "destinationPath", "dir", "directory",
+            "directoryPath", "evidenceDirectory", "exportDir", "exportPath", "filePath", "importPath", "inputPath", "leftFilePath",
+            "libraryPath", "logFilePath", "mappingFilePath", "newProjectPath", "offlineReleaseSuiteJsonPath", "outputDirectory", "outputPath",
+            "plcXmlPath", "projectPath", "recordPath", "referenceAmlPath", "referenceDir", "referenceGlobalLibraryPath", "referenceProjectPath",
+            "reportDirectory", "reportPath", "repositoryPath", "rightFilePath", "schemaDirectory", "sourceDir", "templateDirectory",
+            "templatePath", "workingDirectory", "xmlPath"
+        };
+
+        private static IEnumerable<KeyValuePair<string, string>> ReviewTargets(string tool, JsonObject arguments)
+        {
+            var paths = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var pair in arguments)
+            {
+                bool fileSystem = FileSystemKeys.Contains(pair.Key)
+                    || pair.Key == "folderPath" && tool == "CreateVersionControlWorkspace"
+                    || pair.Key == "sourcePath" && tool is "ManageStandardPackage" or "ValidateStandardPackage";
+                if (fileSystem && pair.Value is JsonValue value && value.TryGetValue<string>(out var path) && path.Length != 0)
+                    paths[pair.Key] = path;
+            }
+            foreach (var pair in Arguments(tool, arguments))
+                if (!paths.ContainsKey(pair.Key)) paths[pair.Key] = pair.Value;
+            return paths;
+        }
+
+        internal static void ValidateWhitespace(string tool, JsonObject arguments)
+        {
+            foreach (var pair in ReviewTargets(tool, arguments))
+                if (!string.Equals(pair.Value, pair.Value.Trim(), StringComparison.Ordinal))
+                    throw new ArgumentException("Filesystem targets must not have leading or trailing whitespace.", pair.Key);
+        }
+
+        internal static IEnumerable<KeyValuePair<string, string>> Arguments(string tool, JsonObject arguments)
+        {
+            string action = TextArgument(arguments, "action");
+            string? parameter = tool switch
+            {
+                "ExportAlarmClasses" or "ExportAlarmInstanceTexts" or "ExportAlarmTextLists" or "ExportDeviceAml"
+                    or "ExportHmiConnection" or "ExportHmiScreen" or "ExportHmiTagTable" or "ExportOpcUaInterface"
+                    or "ExportTechnologyObject" or "ExportPlcBlock" or "ExportPlcBlockDocuments" or "ExportPlcBlocks" or "ExportPlcBlocksDocuments"
+                    or "ExportPlcTagTable" or "ExportPlcType" or "ExportPlcTypes" or "ExportPlcWatchTable" => "exportPath",
+                "ExportProjectTexts" or "ExportSafetyPrintout" or "GeneratePlcSourceFromBlocks"
+                    or "ExportScadaData" or "GeneratePlcLoadableFile" => "filePath",
+                "ExchangeSystemDiagnosticsSettings" when action == "export" => "filePath",
+                "ManageHardwareUtilities" when action is "exportCardReaderPsc" or "exportOpcUa" => "filePath",
+                "GenerateOpcUaModelledInterface" or "GeneratePlcDocumentation" or "PatchPlcBlockDocument" or "RenderPlcBlock"
+                    or "RenderPlcBlockDocument" or "RenderPlcProgramAtlas" or "RenderPlcVisualDiff" or "SaveExportContent"
+                    or "WritePlcSclSourceFile" or "BuildDeviceAmlDocument" => "outputPath",
+                "ManageUnifiedCwcPackage" when action == "build" => "outputPath",
+                "BuildReleaseHandoffArtifacts" or "GenerateAcceptanceReport" or "GenerateErrorReport" or "InstantiatePlcTemplates"
+                    or "WriteClassicHmiMinimalPackageFiles" => "outputDirectory",
+                "ExportHmiProgram" or "ExportTechnologyObjectsToDirectory" => "exportDir",
+                "DownloadPlcToFolder" or "ExportUnifiedEngineeringList" => "destinationDirectory",
+                "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" when action == "export" => "directory",
+                "ArchiveSavedProject" => "archivePath",
+                "AuditEngineeringExports" => "reportPath",
+                "ScanPlcSourceAnnotations" => "csvPath",
+                "ExportPlcProDiagInfo" => "directoryPath",
+                "ExportPlcWatchTablesToDirectory" => "dir",
+                "ManagePlcGitRepository" when action is "stage" or "commit" => "repositoryPath",
+                "RunClassicHmiOfflineValidationSuite" or "RunClassicHmiTemporaryImportPreflight"
+                    or "RunHmiTemplatePlcSyncPrecheckSuite" or "RunOfflineReleaseValidationSuite" => "reportDirectory",
+                "ExchangePlcAlarmTextLists" or "ExchangePlcSupervisions" or "ManageSivarcScreenLayout"
+                    or "ManageClassicHmiCycle" or "ManageClassicHmiTextGraphicList" when action == "export" => "filePath",
+                "ExchangeCfcCharts" when action != "import" => "filePath",
+                "ExchangeMotionCamData" when action.StartsWith("export", StringComparison.Ordinal) => "filePath",
+                _ => null
+            };
+            if (parameter == null) yield break;
+            string path = TextArgument(arguments, parameter);
+            if (string.IsNullOrWhiteSpace(path) && tool == "BuildReleaseHandoffArtifacts")
+            {
+                string input = TextArgument(arguments, "offlineReleaseSuiteJsonPath");
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    try { path = Path.GetDirectoryName(Path.GetFullPath(input))!; }
+                    catch (Exception error) when (error is ArgumentException or IOException)
+                    {
+                        /* swallow(env-probe): invalid derived paths reach normal argument rejection before approval */
+                        path = input;
+                    }
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(path)) yield return new KeyValuePair<string, string>(parameter, path);
+        }
+
+        internal static KeyValuePair<string, string>[] Normalize(string tool, JsonObject arguments)
+        {
+            ValidateWhitespace(tool, arguments);
+            var normalized = ReviewTargets(tool, arguments).Select(pair =>
+            {
+                string fullPath;
+                try { fullPath = Path.GetFullPath(pair.Value); }
+                catch (PathTooLongException error) { throw new ArgumentException("Output target is too long to display.", pair.Key, error); }
+                if (fullPath.Length > 4096) throw new ArgumentException("Output target is too long to display.", pair.Key);
+                return new KeyValuePair<string, string>(pair.Key, fullPath);
+            }).ToArray();
+            var display = new JsonObject { ["displayTruncated"] = true };
+            foreach (var pair in normalized) display[pair.Key] = pair.Value;
+            if (Encoding.UTF8.GetByteCount(display.ToJsonString()) > 64 * 1024)
+                throw new ArgumentException("Filesystem targets exceed the approval display limit.", nameof(arguments));
+            return normalized;
+        }
+
+        private static string TextArgument(JsonObject arguments, string name)
+            => arguments[name] is JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
+    }
+
     // An in-process, single-step grant. It is never accepted from MCP arguments or pipe metadata.
     internal static class GenerationStepApproval
     {
@@ -236,8 +367,8 @@ namespace TiaOpenness.Shared
                 throw new InvalidOperationException("Final arguments or review differ from the approved step.");
             var previous = Current.Value;
             Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = step.Tool,
-                Digest = PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(arguments))), Approval = approval, SessionKey =
-                    sessionKey, RunId = runId };
+                Digest = PendingApproval.Hash(PendingApproval.Canonical(PendingApproval.ReviewArguments(step.Tool, arguments))),
+                Approval = approval, SessionKey = sessionKey, RunId = runId };
             return new Scope(() => Current.Value = previous);
         }
 #endif
@@ -246,7 +377,8 @@ namespace TiaOpenness.Shared
             var grant = Current.Value;
             return grant != null && (!grant.Used || dispatched) && ReferenceEquals(grant.SessionKey, sessionKey)
                 && grant.RunId == runId && grant.Release == release && grant.Tool == tool
-                && grant.Digest == PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(JsonNode.Parse(arguments))));
+                && grant.Digest == PendingApproval.Hash(PendingApproval.Canonical(
+                    PendingApproval.ReviewArguments(tool, JsonNode.Parse(arguments)!.AsObject())));
         }
         internal static ApprovalOutcome? Match(PendingApproval request)
         {

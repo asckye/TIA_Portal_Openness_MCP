@@ -244,6 +244,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     break;
                 case "FILE":
                     list.Add("Reads or writes files on the engine's machine (the TIA host, not the client); paths are host paths.");
+                    list.Add("MCP writes outside GetSessionState data.outputRoot require Workbench confirmation; previews do not.");
                     break;
                 case "OFFLINE":
                     list.Add("Pure offline computation; no TIA session needed.");
