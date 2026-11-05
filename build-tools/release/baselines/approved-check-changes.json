@@ -441,6 +441,18 @@
           "identifier": "WorkerRobustnessTests/Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline( bool shared ):9a755b3cb43924b0ee6dd2faaaf7f64799ce1b9f0c1e8ee7dbfc5245d2affde9"
         }
       ]
+    },
+    {
+      "task": "DES-4-P1",
+      "maintainerDate": "2026-11-05",
+      "reason": "Maintainer approved in chat on 2026-11-04: PlcRenderFoundationTests.cs:29 required becomes inputPath only, with new assertions on both output properties, alias deprecation, either form accepted and both refused",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcRenderFoundationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcRenderFoundationTests/Both_renderers_use_shared_logic_and_never_dispatch_a_worker( string release ):e18400f488c72efd95e551deddf5987845fce2c26972073e1f1d90cd632958eb:1"
+        }
+      ]
     }
   ]
 }
