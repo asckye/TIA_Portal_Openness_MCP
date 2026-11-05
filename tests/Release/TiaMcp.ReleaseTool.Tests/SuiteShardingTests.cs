@@ -9,6 +9,86 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class SuiteShardingTests
 {
+    [Fact]
+    public void RecordDropsKeysOfACompleteRun()
+    {
+        using var tree = new StaticTree();
+        var history = Path.Combine(tree.Root, "history");
+        tree.Write("history/sample.json", "{\"T:Removed.Test\":100}");
+        var trx = tree.Write("results/shard-0/sample.trx", """
+            <TestRun><TestDefinitions><UnitTest id="one"><TestMethod className="Current" name="Test" /></UnitTest></TestDefinitions>
+            <Results><UnitTestResult testId="one" testName="Current.Test" duration="00:00:02" /></Results></TestRun>
+            """);
+        tree.Write("results/shard-5/sample.trx", File.ReadAllText(trx).Replace("Current", "Stale", StringComparison.Ordinal));
+        var directory = Path.GetDirectoryName(Path.GetDirectoryName(trx))!;
+        SuiteCosts.Record("sample", directory, history, expectedShards: 2);
+        var partial = JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(Path.Combine(history, "sample.json")))!;
+        Assert.Equal(100, partial["T:Removed.Test"]);
+        SuiteCosts.Record("sample", directory, history, expectedShards: 1);
+        var complete = JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(Path.Combine(history, "sample.json")))!;
+        Assert.Equal(new[] { "T:Current.Test" }, complete.Keys);
+        Assert.Equal(2, complete["T:Current.Test"]);
+    }
+
+    [Fact]
+    public void PlanFromSharedHistorySplitsAnExpensiveClass()
+    {
+        using var tree = new StaticTree();
+        tree.Write("history/sample.json", "{\"T:Expensive.First\":60,\"T:Expensive.Second\":60}");
+        tree.Write("history/sample.classes.json", JsonSerializer.Serialize(new Dictionary<string, SuiteCosts.ClassCost>
+        {
+            ["Expensive"] = new(120, 120, 2, DateTime.UtcNow)
+        }));
+        var plan = SuiteCosts.Prepare("sample", Path.Combine(tree.Root, "new-worktree/results"), Path.Combine(tree.Root, "history"), null, 8);
+        var assignments = File.ReadAllLines(plan.Path).Select(line => line.Split('\t')).ToArray();
+        Assert.Equal(2, assignments.Length);
+        Assert.Equal(2, assignments.Select(row => row[1]).Distinct().Count());
+        Assert.Equal(120, plan.Costs.Sum());
+    }
+
+    [Fact]
+    public async Task TimingHistoryOptionIsReadAndWrittenAtomically()
+    {
+        using var tree = new StaticTree();
+        var history = Path.Combine(tree.Root, "history");
+        tree.Write("history/sample.json", "{\"T:Current.Test\":2}");
+        tree.Write("history/sample.classes.json", "{}");
+        var suite = new JsonObject { ["project"] = "fixture.csproj", ["arguments"] = new JsonArray(), ["minimumPassed"] = 1, ["maximumSkipped"] = 0 };
+        var options = Options.Parse(["-Suite=sample", "-TimingHistory=" + history, "-ResultsDirectory=" + Path.Combine(tree.Root, "results")], Program.BooleanOptions);
+        var result = PlainShards.Run(tree.Root, options, new JsonObject { ["sample"] = suite }, (_, _, _, environment) =>
+        {
+            var directory = Path.GetDirectoryName(environment!["TIA_MCP_TEST_CASE_TIMINGS"])!;
+            File.WriteAllText(Path.Combine(directory, "sample.trx"), """
+                <TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+                <TestDefinitions><UnitTest id="one"><TestMethod className="Current" name="Test" /></UnitTest></TestDefinitions>
+                <Results><UnitTestResult testId="one" executionId="run" testName="Current.Test" outcome="Passed" duration="00:00:03" /></Results>
+                <ResultSummary outcome="Completed"><Counters total="1" executed="1" passed="1" failed="0" notExecuted="0" /></ResultSummary></TestRun>
+                """);
+            return new(0, "", "");
+        });
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal(3, JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(Path.Combine(history, "sample.json")))!["T:Current.Test"]);
+        Assert.False(Directory.Exists(Path.Combine(tree.Root, "bin-build/check-timings")));
+        var output = Path.Combine(tree.Root, "results/sample");
+        using var stop = new CancellationTokenSource();
+        using var started = new ManualResetEventSlim();
+        var reader = Task.Run(() =>
+        {
+            started.Set();
+            while (!stop.IsCancellationRequested)
+            {
+                using var costs = SuiteCosts.ReadHistory<JsonDocument>(Path.Combine(history, "sample.json"));
+                using var classes = SuiteCosts.ReadHistory<JsonDocument>(Path.Combine(history, "sample.classes.json"));
+                Assert.Equal(JsonValueKind.Object, costs.RootElement.ValueKind);
+                Assert.Equal(JsonValueKind.Object, classes.RootElement.ValueKind);
+            }
+        });
+        Assert.True(started.Wait(TimeSpan.FromSeconds(120)));
+        try { for (int index = 0; index < 20; index++) SuiteCosts.Record("sample", output, history, expectedShards: 1); }
+        finally { stop.Cancel(); await reader; }
+        Assert.Empty(Directory.EnumerateFiles(history, "*.tmp"));
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(2)]

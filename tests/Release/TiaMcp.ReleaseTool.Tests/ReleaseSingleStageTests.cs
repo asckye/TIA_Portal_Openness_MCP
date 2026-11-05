@@ -11,6 +11,92 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class ReleaseSingleStageTests
 {
     [Fact]
+    public void GuiAndPostSuiteJobsOverlapAfterTheUpdater()
+    {
+        using var tree = new StaticTree();
+        var catalog = new JsonObject { ["updater"] = Suite("updater.csproj", 1, 0), ["studio-gui"] = Suite("gui.csproj", 1, 0) };
+        using var overlap = new Barrier(2);
+        int active = 0, updaterFinished = 0;
+        CommandResult Process(string _, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
+        {
+            var args = arguments.ToArray();
+            if (args[0] == "build") return new(0, "built", "");
+            var name = Path.GetFileName(args[Array.IndexOf(args, "--results-directory") + 1]);
+            Interlocked.Increment(ref active);
+            try
+            {
+                if (name == "updater") Assert.Equal(1, Volatile.Read(ref active));
+                else
+                {
+                    Assert.Equal(1, Volatile.Read(ref updaterFinished));
+                    Assert.True(overlap.SignalAndWait(TimeSpan.FromSeconds(120)));
+                }
+                WriteTrx(args, 1, 0);
+            }
+            finally { Interlocked.Decrement(ref active); }
+            if (name == "updater") Interlocked.Exchange(ref updaterFinished, 1);
+            return new(0, "passed", "");
+        }
+        var result = ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 2, Process,
+            postSuiteJobs: [("transport", () =>
+            {
+                Assert.Equal(1, Volatile.Read(ref updaterFinished));
+                Interlocked.Increment(ref active);
+                try { Assert.True(overlap.SignalAndWait(TimeSpan.FromSeconds(120))); }
+                finally { Interlocked.Decrement(ref active); }
+                return new("transport", 0, "passed", "");
+            })]);
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public void FoundationStartsBeforeOrdinarySuites()
+    {
+        using var tree = new StaticTree();
+        var order = new List<string>();
+        var catalog = new JsonObject { ["ordinary"] = Suite("ordinary.csproj", 1, 0) };
+        ReleaseSuiteStage.Run(tree.Root, catalog, tree.Root, tree.Root, "dotnet", null, 1,
+            (_, arguments, _, _) =>
+            {
+                var args = arguments.ToArray();
+                if (args[0] == "test") { order.Add("ordinary"); WriteTrx(args, 1, 0); }
+                return new(0, "", "");
+            }, additionalJobs: [("check", () => { order.Add("check"); return new("check", 0, "", ""); })],
+            priorityJobs: [("foundation-api", () => { order.Add("foundation-api"); return new("foundation-api", 0, "", ""); })]);
+        Assert.Equal(new[] { "foundation-api", "ordinary", "check" }, order);
+    }
+
+    [Fact]
+    public void PrebuiltVariantIsNotBuiltAgainAndKeepsItsOutput()
+    {
+        using var tree = new StaticTree();
+        tree.Write("shared.csproj", "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+        var catalog = new JsonObject();
+        var outputs = new Dictionary<string, string>();
+        foreach (var key in new[] { "20", "21" })
+        {
+            var name = "plc-exchange-worker-v" + key;
+            var suite = Suite("shared.csproj", 1, 0);
+            suite["arguments"] = new JsonArray("-p:EngineRelease=" + key);
+            catalog[name] = suite;
+            outputs[name] = Path.Combine(tree.Root, "compiled", name);
+        }
+        var tested = new List<string>();
+        ReleaseSuiteStage.Run(tree.Root, catalog, Path.Combine(tree.Root, "results"), tree.Root, "dotnet", null, 2,
+            (_, arguments, _, env) =>
+            {
+                var args = arguments.ToArray();
+                Assert.Equal("test", args[0]); Assert.Contains("--no-build", args);
+                var name = Path.GetFileName(args[Array.IndexOf(args, "--results-directory") + 1]);
+                Assert.Equal(outputs[name], args[Array.IndexOf(args, "--output") + 1]);
+                Assert.Equal(Path.Combine(tree.Root, "bin", "Release", "net10.0"), env!["TIA_MCP_TEST_REGISTERED_OUTPUT"]);
+                tested.Add(name); WriteTrx(args, 1, 0);
+                return new(0, "", "");
+            }, prebuiltVariants: outputs);
+        Assert.Equal(outputs.Keys, tested);
+    }
+
+    [Fact]
     public void CompanionSelectionIsAutomaticAndExplicitPathsTakePrecedence()
     {
         using var tree = new StaticTree();

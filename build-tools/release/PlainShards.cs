@@ -28,7 +28,7 @@ internal static class PlainShards
             var suite = catalog[name]!.AsObject();
             var unit = SuiteBuild.Suite(suite);
             var directory = Path.Combine(output, name);
-            var history = Path.Combine(root, "bin-build/check-timings");
+            var history = Path.GetFullPath(options.Get("TimingHistory", Path.Combine(root, "bin-build/check-timings")));
             bool reserve = TimeSensitiveTests.ReserveShard(unit.Project);
             var api = PublicApiRoot(name, suite, options);
             var shards = suite["minimumPassed"]!.GetValue<int>() >= 100 ? FastSuites.Positive(options, "Shards", 8) : 1;
@@ -48,7 +48,7 @@ internal static class PlainShards
                 jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] == 0).ToArray(),
                 jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] != 0).ToArray());
             failures.AddRange(rows.Where(row => row.ExitCode != 0).Select(row => row.Name + ": " + row.StandardError));
-            SuiteCosts.Record(name, directory, history);
+            SuiteCosts.Record(name, directory, history, jobs.Length);
             try
             {
                 var merged = SuiteSharding.Merge(name, suite, Enumerable.Range(0, jobs.Length)

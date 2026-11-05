@@ -46,7 +46,9 @@ internal static class ReleaseSuiteStage
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? additionalJobs = null, object? compilationGate = null,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? exclusiveJobs = null,
         IReadOnlyList<(string Name, Func<PipelineResult> Run)>? postSuiteJobs = null,
-        Func<Dictionary<string, CommandResult>>? foundationRun = null, IReadOnlySet<string>? prebuilt = null)
+        Func<Dictionary<string, CommandResult>>? foundationRun = null, IReadOnlySet<string>? prebuilt = null,
+        IReadOnlyList<(string Name, Func<PipelineResult> Run)>? priorityJobs = null,
+        IReadOnlyDictionary<string, string>? prebuiltVariants = null)
     {
         var results = new ConcurrentDictionary<string, CommandResult>(StringComparer.Ordinal);
         var failures = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
@@ -87,6 +89,14 @@ internal static class ReleaseSuiteStage
                     File.WriteAllText(Path.Combine(config, "approval.settings"), "enabled=true\ntimeoutSeconds=120\n");
                 }
                 var identity = Identity(name);
+                if (prebuiltVariants?.TryGetValue(name, out var variantOutput) == true)
+                {
+                    env["TIA_MCP_TEST_REGISTERED_OUTPUT"] = RegisteredOutput(root, suite);
+                    builtVariants[identity] = variantOutput;
+                    prepared[name] = (env, variantOutput);
+                    File.WriteAllText(Path.Combine(directory, "build.log"), "Variant built by the merge traversal.\n");
+                    continue;
+                }
                 if (builtVariants.TryGetValue(identity, out var sharedOutput))
                 {
                     if (sharedOutput != null) env["TIA_MCP_TEST_REGISTERED_OUTPUT"] = RegisteredOutput(root, suite);
@@ -165,7 +175,8 @@ internal static class ReleaseSuiteStage
                 if (result.ExitCode != 0) failures.TryAdd(result.Name, result.StandardOutput + result.StandardError);
         }
         var ordinary = groups.Select(group => group.Where(name => name is not ("studio-gui" or "updater")).ToArray()).Where(group => group.Length != 0);
-        var parallelJobs = ordinary.Select(group => (group[0], (Func<PipelineResult>)(() => RunGroup(group))))
+        var parallelJobs = (priorityJobs ?? []).Select(job => (job.Name, (Func<PipelineResult>)(() => Record(job.Name, job.Run))))
+            .Concat(ordinary.Select(group => (group[0], (Func<PipelineResult>)(() => RunGroup(group)))))
             .Concat((additionalJobs ?? [])
                 .Select(job => (job.Name, (Func<PipelineResult>)(() => Record(job.Name, job.Run))))).ToArray();
         RunParallel(parallelJobs, Path.Combine(output, "pipeline"));
@@ -183,10 +194,10 @@ internal static class ReleaseSuiteStage
             }));
         foreach (var job in exclusive)
             Record(job.Name, job.Run);
-        foreach (var name in new[] { "updater", "studio-gui" }.Where(name => catalog.ContainsKey(name)))
-            RunGroup([name]);
-        var post = (postSuiteJobs ?? [])
-            .Select(job => (job.Name, (Func<PipelineResult>)(() => Record(job.Name, job.Run)))).ToArray();
+        if (catalog.ContainsKey("updater")) RunGroup(["updater"]);
+        var post = (catalog.ContainsKey("studio-gui")
+                ? new[] { (Name: "studio-gui", Run: (Func<PipelineResult>)(() => RunGroup(["studio-gui"]))) } : [])
+            .Concat((postSuiteJobs ?? []).Select(job => (job.Name, (Func<PipelineResult>)(() => Record(job.Name, job.Run))))).ToArray();
         RunParallel(post, Path.Combine(output, "post-suites"));
         if (!failures.IsEmpty) throw new ReleaseException("Release test stage failed: " + string.Join(", ", failures.Keys.Order(StringComparer.Ordinal)) +
             "\n" + string.Join("\n", failures.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Key + ": " + pair.Value)));

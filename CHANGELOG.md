@@ -48,6 +48,7 @@
 - MovePlcBlockToGroup 采用预览和计划哈希审批；先保留并核验恢复备份，再删除源块、导入目标并核验父组、名称、编号和语言。目标不一致时提示编译；核验失败先清理目标再恢复原组，清理或恢复失败保留恢复文件及明确证据，未开始修改的 apply 拒绝保留类型化错误且不锁定会话；父组核验使用 SDK 对象相等性。VM 原生确认仍为 NOT RUN。
 - `CreateDevice` remains available on V14 SP1–V17 through the existing native CreateWithItem route with preview, plan hash and bound-project validation; V18–V21 forward to CreateHardwareDevice. Generation previews each device creation and block move before filling its execution hash.
 - Transport checks retain the full profile and check up to four releases at a time, respecting `-MaxParallelism` with deterministic report ordering.
+- `merge-check` overlaps GUI and transport checks, prioritizes Foundation with shared timing history, and reuses traversal builds for PLC exchange variants and file programs while preserving every check and result gate.
 
 ## [4.0.0-beta.3] - 2026-11-04
 - 精简第三方目录：移除未交付的上游测试、文档和 Studio 参考归档，保留交付源码、许可、来源记录及本项目生态桥接检查。

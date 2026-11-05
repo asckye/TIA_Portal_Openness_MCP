@@ -6,13 +6,15 @@
 
 ## 合并检查
 
-合并门为 `merge-check`：使用普通 `dotnet build` 和 `dotnet test` 构建、测试受影响的项目，再检查生成内容和仓库规则；宽范围改动在 2026-11-04 实测约 21–28 分钟，不把耗时当作功能正确性的替代。从仓库根目录运行：
+合并门 `merge-check` 使用普通 `dotnet build` 和 `dotnet test` 构建、测试受影响的项目，再检查生成内容和仓库规则。调度优化前的宽范围改动在 2026-11-04 实测约 21–28 分钟，当前调度的主机耗时待复测。从仓库根目录运行以下命令。
 
 ```powershell
 dotnet run --project build-tools/release -- merge-check
 ```
 
-命令按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件；`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取证据或结果缓存；Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。日志和各作业耗时写在 `bin-build/merge-check/`；耗时随改动范围和主机负载变化。 传输检查始终使用 `full` 档，每次最多并行检查 4 个版本，并遵循合并门的 `-MaxParallelism` 设置（设为 1 时串行检查）。
+命令按 merge-base、工作树和未跟踪文件选择普通构建与完整注册套件。`-DryRun` 显示路径选择原因，`-All` 选择全集。合并门不读取证据或结果缓存。Foundation 的共享计时历史来自主 checkout 的 `bin-build/check-timings`，只决定分片分配，未知测试回退到哈希分桶，数量仍由合并后的 TRX 判定并拒绝重复测试。其他分片调用可通过 `-TimingHistory <目录>` 指定历史，默认使用当前 worktree。Foundation 分片保留注册总数门槛和派生子集自己的门槛。只有纯 `src/FoundationHost/`、`src/Logic/` 命中可以按 D1 不选 GUI。
+
+构建完成后，适配器输入、worker 隔离与 updater 并行执行，随后单独执行原生诊断，避免其 Python 进程与 updater 的捆绑进程探测重叠。全部结束后启动套件池，Foundation 优先入池。池结束后执行独占作业，再让 GUI 与传输检查并行。日志、各作业耗时和带开始、结束偏移的 `timeline.tsv` 写在 `bin-build/merge-check/`，耗时随改动范围和主机负载变化。传输检查始终使用 `full` 档，每次最多并行检查 4 个版本，并遵循合并门的 `-MaxParallelism` 设置（设为 1 时串行检查）。
 
 GitHub CI 保留独立检查，但不阻塞合并，也不代替本机检查。不再设置 nightly；每个发布候选前由主机手动运行 `merge-check -All`，覆盖全部 38 个注册套件及源码检查。审查时核对实际运行的项目、失败与阻塞项，而非只看命令退出或旧结果缓存。
 

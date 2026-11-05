@@ -23,9 +23,10 @@ internal static class FileBasedPrograms
         }).Select(path => AnalyzerWarnings.RepositoryPath(root, path)).Order(StringComparer.Ordinal).ToArray();
     }
 
-    internal static string[][] BuildGroups(string root, IEnumerable<string> programs)
+    internal static string[][] BuildGroups(string root, IEnumerable<string> programs, bool prebuiltReferences = false)
     {
         var ordered = programs.Order(StringComparer.Ordinal).ToArray();
+        if (prebuiltReferences) return ordered.Select(program => new[] { program }).ToArray();
         // File apps have independent SDK runfile directories. Their project
         // references still write ordinary obj/bin paths, so keep every such
         // writer on one serial lane (including transitive/conditional references).

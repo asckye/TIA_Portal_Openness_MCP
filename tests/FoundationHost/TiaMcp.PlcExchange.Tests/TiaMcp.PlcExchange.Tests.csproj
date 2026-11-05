@@ -5,10 +5,16 @@
     <DefineConstants>$(DefineConstants);TIA_PLC_EXCHANGE_TESTS</DefineConstants>
     <EngineRelease Condition="'$(EngineRelease)' == ''">21</EngineRelease>
   </PropertyGroup>
+  <!-- The SDK adds transitive ProjectReference items during target execution. -->
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <GlobalPropertiesToRemove>EngineRelease;OutputPath;_CommandLineDefinedOutputPath;IntermediateOutputPath</GlobalPropertiesToRemove>
+    </ProjectReference>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="global,enginehost" />
+    <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="global,enginehost" GlobalPropertiesToRemove="EngineRelease;OutputPath;_CommandLineDefinedOutputPath;IntermediateOutputPath" />
     <!-- The host-registered tools (LegacyHostToolRegistry) are the successor subject of the engine reflection rows. -->
-    <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" />
+    <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" GlobalPropertiesToRemove="EngineRelease;OutputPath;_CommandLineDefinedOutputPath;IntermediateOutputPath" />
     <Compile Include="../../FoundationHost/TiaMcp.Engine.PlcExchange.Tests/PlcExchangeContractsTests.cs" Link="PlcExchangeContractsTests.cs" />
     <Compile Include="../../FoundationHost/TiaMcp.Engine.PlcExchange.Tests/HmiExchangeContractsTests.cs" Link="HmiExchangeContractsTests.cs" />
     <Compile Include="../../FoundationHost/TiaMcp.Engine.PlcExchange.Tests/P707bNativeTests.cs" Link="P707bNativeTests.cs" />

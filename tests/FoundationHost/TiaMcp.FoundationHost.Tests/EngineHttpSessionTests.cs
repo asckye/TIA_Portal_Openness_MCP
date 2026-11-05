@@ -245,7 +245,7 @@ public sealed class EngineHttpSessionTestsPlc
         await Task.Delay(100);
         host.Stop();
         Assert.True(worker.WaitForExit(5000), "Session worker outlived graceful host shutdown.");
-        // Kestrel gives an incomplete request the configured 30-second shutdown grace.
+        // Kestrel drains the incomplete request using the fixture's shutdown grace.
         Assert.True(await host.WaitForExit(TimeSpan.FromSeconds(40)), "HTTP shutdown did not drain within its bound.");
     }
 
@@ -341,6 +341,7 @@ public sealed class EngineHttpSessionTestsPlc
                 start.ArgumentList.Add("--fixture-scaled-worker-budgets"); start.ArgumentList.Add(timeouts);
             }
             start.Environment["TIA_MCP_DATA_DIRECTORY"] = directory; start.Environment["TiaPortalLocation"] = "";
+            if (gracefulShutdown) start.Environment["DOTNET_SHUTDOWNTIMEOUTSECONDS"] = "3";
             start.Environment["TIA_MCP_FIXTURE_LEASE_ROOT"] = Path.Combine(directory, "leases");
             // Release checks set their own diagnostics root; the journal assertions read this host's data directory.
             start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(directory, "diagnostics");

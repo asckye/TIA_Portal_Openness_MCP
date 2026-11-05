@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using System.Text.Json;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace TiaMcp.ReleaseTool;
 
@@ -90,9 +91,9 @@ internal static class SuiteCosts
         Directory.CreateDirectory(historyDirectory); Directory.CreateDirectory(directory);
         var history = Path.Combine(historyDirectory, name + ".json");
         var classesPath = Path.Combine(historyDirectory, name + ".classes.json");
-        var costs = File.Exists(history) ? JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(history))! : new Dictionary<string, double>(StringComparer.Ordinal);
+        var costs = File.Exists(history) ? ReadHistory<Dictionary<string, double>>(history) : new Dictionary<string, double>(StringComparer.Ordinal);
         if (baseline != null && File.Exists(baseline)) ImportTrx([baseline], costs, classesPath);
-        var classes = File.Exists(classesPath) ? JsonSerializer.Deserialize<Dictionary<string, ClassCost>>(File.ReadAllText(classesPath))! : new();
+        var classes = File.Exists(classesPath) ? ReadHistory<Dictionary<string, ClassCost>>(classesPath) : new();
         var planned = new Dictionary<string, double>(StringComparer.Ordinal);
         foreach (var (key, seconds) in costs)
         {
@@ -146,6 +147,29 @@ internal static class SuiteCosts
 
     internal sealed record ClassCost(double Seconds, double TrxSeconds, int Cases, DateTime MeasuredUtc);
 
+    internal static T ReadHistory<T>(string path)
+    {
+        T result = default!;
+        WithHistoryLock(path, () =>
+        {
+            using var stream = File.OpenRead(path);
+            result = JsonSerializer.Deserialize<T>(stream)!;
+        });
+        return result;
+    }
+
+    private static void WithHistoryLock(string path, Action action)
+    {
+        var identity = Path.GetFullPath(path);
+        if (OperatingSystem.IsWindows()) identity = identity.ToUpperInvariant();
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
+        using var mutex = new Mutex(false, "Local\\TiaMcp.SuiteHistory." + hash);
+        try { mutex.WaitOne(); }
+        catch (AbandonedMutexException) { /* swallow(cleanup): ownership is acquired and the previous atomic file remains valid. */ }
+        try { action(); }
+        finally { mutex.ReleaseMutex(); }
+    }
+
     private static string? ClassName(string key)
     {
         if (!(key.StartsWith("T:", StringComparison.Ordinal) || key.StartsWith("M:", StringComparison.Ordinal))) return null;
@@ -177,8 +201,9 @@ internal static class SuiteCosts
         var records = groups.ToDictionary(pair => pair.Key, pair => new ClassCost(
             Math.Max(pair.Value.Seconds, costs.Where(cost => ClassName(cost.Key) == pair.Key).Sum(cost => cost.Value)), pair.Value.Seconds, pair.Value.Cases, DateTime.UtcNow), StringComparer.Ordinal);
         Directory.CreateDirectory(Path.GetDirectoryName(classesPath)!);
-        File.WriteAllText(classesPath, JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true }) + "\n");
-        File.AppendAllText(Path.ChangeExtension(classesPath, ".history.jsonl"), JsonSerializer.Serialize(new { atUtc = DateTime.UtcNow, classes = records }) + "\n");
+        WriteAtomic(classesPath, JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+        WithHistoryLock(classesPath, () => File.AppendAllText(Path.ChangeExtension(classesPath, ".history.jsonl"),
+            JsonSerializer.Serialize(new { atUtc = DateTime.UtcNow, classes = records }) + "\n"));
     }
 
     internal static (Dictionary<string, int>, double[]) Balance(IReadOnlyDictionary<string, double> costs, int count)
@@ -191,18 +216,37 @@ internal static class SuiteCosts
         }
         return (assignments, totals);
     }
-    internal static void Record(string name, string directory, string historyDirectory)
+    private static void WriteAtomic(string path, string content)
+    {
+        var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(temporary, content);
+            WithHistoryLock(path, () => File.Move(temporary, path, overwrite: true));
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+    }
+
+    internal static void Record(string name, string directory, string historyDirectory, int? expectedShards = null)
     {
         Directory.CreateDirectory(historyDirectory);
         var path = Path.Combine(historyDirectory, name + ".json");
-        var costs = File.Exists(path) ? JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(path))! : new Dictionary<string, double>(StringComparer.Ordinal);
-        foreach (var file in Directory.EnumerateFiles(directory, "case-timings.tsv", SearchOption.AllDirectories).Where(p => !p.Contains(Path.DirectorySeparatorChar + "sequential" + Path.DirectorySeparatorChar, StringComparison.Ordinal)))
+        var complete = expectedShards is > 0 && Enumerable.Range(0, expectedShards.Value).All(index =>
+            File.Exists(Path.Combine(directory, "shard-" + index, name + ".trx"))
+            && !SuiteHang.Errors(Path.Combine(directory, "shard-" + index), name).Any());
+        var directories = expectedShards is { } count
+            ? Enumerable.Range(0, count).Select(index => Path.Combine(directory, "shard-" + index)).ToArray() : new[] { directory };
+        IEnumerable<string> Files(string pattern) => directories.Where(Directory.Exists)
+            .SelectMany(path => Directory.EnumerateFiles(path, pattern, SearchOption.AllDirectories))
+            .Where(path => !path.Contains(Path.DirectorySeparatorChar + "sequential" + Path.DirectorySeparatorChar, StringComparison.Ordinal));
+        var costs = !complete && File.Exists(path) ? ReadHistory<Dictionary<string, double>>(path) : new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var file in Files("case-timings.tsv"))
             foreach (var line in File.ReadLines(file))
             {
                 var fields = line.Split('\t'); var key = Encoding.UTF8.GetString(Convert.FromBase64String(fields[0]));
                 costs[key] = double.Parse(fields[1], System.Globalization.CultureInfo.InvariantCulture);
             }
-        ImportTrx(Directory.EnumerateFiles(directory, "*.trx", SearchOption.AllDirectories).Where(p => !p.Contains(Path.DirectorySeparatorChar + "sequential" + Path.DirectorySeparatorChar, StringComparison.Ordinal)), costs, Path.Combine(historyDirectory, name + ".classes.json"));
-        File.WriteAllText(path, JsonSerializer.Serialize(costs) + "\n");
+        ImportTrx(Files("*.trx"), costs, Path.Combine(historyDirectory, name + ".classes.json"));
+        WriteAtomic(path, JsonSerializer.Serialize(costs) + "\n");
     }
 }

@@ -30,6 +30,239 @@ public sealed class MergeCheckTests
             ["scripts/checks/a.cs"], "dotnet", "python", "sdk", "output");
 
     [Theory]
+    [InlineData("Directory.Build.props", false)]
+    [InlineData("manifest/package-manifest.json", false)]
+    [InlineData("src/mapped.cs", true)]
+    public void WideChangeEvaluatesNoClosures(string path, bool all)
+    {
+        var catalog = Catalog();
+        int evaluations = 0;
+        var closures = MergeCheck.SelectionClosures([path], all, catalog, [], "sdk", (_, _) =>
+        {
+            evaluations++; return new([], []);
+        });
+        Assert.Empty(closures); Assert.Equal(0, evaluations);
+        var complete = catalog.ToDictionary(pair => pair.Key, _ => new HashSet<string> { path });
+        Assert.Equal(MergeCheck.Describe(Select([path], catalog, complete, all)), MergeCheck.Describe(Select([path], catalog, closures, all)));
+    }
+
+    [Fact]
+    public void TableRestoreUsesOneProcessInTableOrder()
+    {
+        using var tree = new StaticTree();
+        const string project = "<Project><Target Name=\"Restore\"><Message Importance=\"high\" Text=\"FG_ORDER:$(TiaReleaseKey):$(Sdk):$(MSBuildProjectName)\" /></Target></Project>";
+        tree.Write("adapter.csproj", project); tree.Write("worker.csproj", project);
+        var rows = new[] { new PrepareBuild.Project("Adapter", "adapter.csproj", "TiaReleaseKey=20;Sdk=first"),
+            new PrepareBuild.Project("Worker", "worker.csproj", "TiaReleaseKey=20;Sdk=first"),
+            new PrepareBuild.Project("Adapter", "adapter.csproj", "TiaReleaseKey=21;Sdk=second") };
+        var document = MergeCheck.TableRestore(rows);
+        var task = Assert.Single(document.Descendants("MSBuild"));
+        Assert.Equal("Restore", (string?)task.Attribute("Targets"));
+        Assert.Equal("false", (string?)task.Attribute("BuildInParallel"));
+        Assert.Equal("false", (string?)task.Attribute("StopOnFirstFailure"));
+        Assert.Equal("@(PrepareProject)", (string?)task.Attribute("Projects"));
+        Assert.Equal(rows.Select(row => row.Path), document.Descendants("PrepareProject").Select(row => (string?)row.Attribute("Include")));
+        Assert.Equal(rows.Select(row => row.Properties), document.Descendants("AdditionalProperties").Select(row => row.Value));
+        var path = Path.Combine(tree.Root, "table-restore.proj"); document.Save(path);
+        var result = ProcessRunner.Run("dotnet", ["msbuild", path, "-t:Restore", "-m:1", "-nodeReuse:false", "-nologo"], tree.Root);
+        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
+        Assert.Equal(new[] { "FG_ORDER:20:first:adapter", "FG_ORDER:20:first:worker", "FG_ORDER:21:second:adapter" },
+            result.StandardOutput.Split('\n').Select(line => line.Trim()).Where(line => line.StartsWith("FG_ORDER:", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public void TraversalCarriesVariantProperties()
+    {
+        using var tree = new StaticTree();
+        var projects = new[] { "20", "21" }.Select(key => MergeCheck.VariantProject(tree.Root,
+            Suite("tests/plc.csproj", "-p:EngineRelease=" + key), Path.Combine(tree.Root, "compiled", "v" + key))).ToArray();
+        var document = MergeCheck.Traversal(projects);
+        var items = document.Descendants("MergeProject").ToArray();
+        Assert.Equal(2, items.Length);
+        foreach (var (item, key) in items.Zip(new[] { "20", "21" }))
+        {
+            Assert.Equal(Path.Combine(tree.Root, "tests/plc.csproj"), (string?)item.Attribute("Include"));
+            var properties = item.Element("AdditionalProperties")!.Value.Split(';');
+            Assert.Contains("EngineRelease=" + key, properties);
+            Assert.Contains("OutputPath=" + Path.Combine(tree.Root, "compiled", "v" + key) + Path.DirectorySeparatorChar, properties);
+            Assert.Contains("IntermediateOutputPath=obj/Release/net10.0/v" + key + "/", properties);
+        }
+    }
+
+    [Fact]
+    public void TimelineHasEveryTimedJob()
+    {
+        using var tree = new StaticTree();
+        tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
+        tree.Write("tests/one.csproj", "<Project />");
+        var result = MergeCheck.Run(tree.Root, Options.Parse([], Program.BooleanOptions), (_, _, _, _) => new(0, "", ""),
+            args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" ? "README.md\0" : "", ""));
+        Assert.Equal(0, result);
+        var rows = File.ReadAllLines(Path.Combine(tree.Root, "bin-build/merge-check/timeline.tsv"));
+        Assert.Equal("name\tstart_seconds\tend_seconds\telapsed_seconds\texit_code", rows[0]);
+        var expected = new[] { "selection", "suite-stage", "check-repository", "check-dead-tool-references", "generate-tool-counts" };
+        Assert.Equal(expected.Order(), rows.Skip(1).Select(row => row.Split('\t')[0]).Order());
+        foreach (var row in rows.Skip(1))
+        {
+            var fields = row.Split('\t');
+            double Number(int index) => double.Parse(fields[index], System.Globalization.CultureInfo.InvariantCulture);
+            Assert.True(Number(1) <= Number(2)); Assert.True(Number(3) >= 0);
+            Assert.Equal("0", fields[4]);
+        }
+        Assert.Equal("name\tstart_seconds\tend_seconds\telapsed_seconds\texit_code\nfixture\t1.250\t3.500\t2.250\t7\n",
+            MergeCheck.Timeline([new("fixture", 2.25, new(7, "", ""), 1.25, 3.5)]));
+    }
+
+    [Fact]
+    public void TimingHistoryUsesTheCommonCheckout()
+    {
+        using var tree = new StaticTree();
+        Assert.Equal(Path.Combine(tree.Root, "main", "bin-build/check-timings"), MergeCheck.TimingHistory(tree.Root, args =>
+        {
+            Assert.Equal(new[] { "rev-parse", "--path-format=absolute", "--git-common-dir" }, args);
+            return new(0, Path.Combine(tree.Root, "main", ".git") + "\n", "");
+        }));
+    }
+
+    [Fact]
+    public void PreSuiteProgramsAlwaysBuildBeforeNoBuildRunsOnNarrowPlans()
+    {
+        var plan = Select(["src/Adapters/V20/changed.cs"]);
+        Assert.False(plan.Wide);
+        foreach (var name in new[] { "adapter-inputs", "worker-isolation" })
+        {
+            var job = Assert.Single(plan.Checks, job => job.Name == name);
+            Assert.True(job.Serial); Assert.Contains("--no-build", job.Arguments);
+            Assert.Equal("Release", job.Arguments[Array.IndexOf(job.Arguments, "-c") + 1]);
+            var source = job.Arguments.Single(arg => arg.EndsWith(".cs", StringComparison.Ordinal));
+            Assert.Contains("file:" + source, plan.Builds.Keys);
+        }
+    }
+
+    [Fact]
+    public void WideFileProgramsBuildAsIndependentGroups()
+    {
+        using var tree = new StaticTree();
+        tree.Write("scripts/a.cs", "#:project ../shared.csproj\nConsole.WriteLine(1);");
+        tree.Write("scripts/b.cs", "#:project ../shared.csproj\nConsole.WriteLine(2);");
+        var groups = FileBasedPrograms.BuildGroups(tree.Root, ["scripts/b.cs", "scripts/a.cs"], prebuiltReferences: true);
+        Assert.Equal(2, groups.Length);
+        Assert.All(groups, group => Assert.Single(group));
+        Assert.Equal(new[] { "scripts/a.cs", "scripts/b.cs" }, groups.SelectMany(group => group));
+    }
+
+    [Fact]
+    public void NarrowFileProgramsKeepTheSerialGroup()
+    {
+        using var tree = new StaticTree();
+        tree.Write("scripts/a.cs", "#:project ../shared.csproj\nConsole.WriteLine(1);");
+        tree.Write("scripts/b.cs", "#:project ../shared.csproj\nConsole.WriteLine(2);");
+        var group = Assert.Single(FileBasedPrograms.BuildGroups(tree.Root, ["scripts/b.cs", "scripts/a.cs"]));
+        Assert.Equal(new[] { "scripts/a.cs", "scripts/b.cs" }, group);
+    }
+
+    [Fact]
+    public void PreSuiteChecksOverlapAndFinishBeforeThePool() => RunOverlappingPreSuiteChecks(updater: false);
+
+    [Fact]
+    public void UpdaterRunsBesideThePreSuiteChecksInMergeCheck() => RunOverlappingPreSuiteChecks(updater: true);
+
+    [Fact]
+    public void UpdaterOverlapContainsNoBundleNamedProcesses()
+    {
+        var plan = Select(["Directory.Build.props"]);
+        var rules = DeliveryRules.Load(StaticCheckVectorTests.Root).Data;
+        var bundleNames = DeliveryRules.Strings(rules["requiredFiles"])
+            .Concat(DeliveryRules.Strings(rules["include"]!["files"]))
+            .Concat(DeliveryRules.Strings(rules["legacyCleanup"]!["files"]))
+            .Where(path => path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            .Select(Path.GetFileNameWithoutExtension).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("python", bundleNames);
+        var companions = MergeCheck.UpdaterCompanionChecks(plan).ToArray();
+        Assert.Equal(new[] { "adapter-inputs", "worker-isolation" }, companions.Select(job => job.Name));
+        Assert.All(companions, job => Assert.DoesNotContain(Path.GetFileNameWithoutExtension(job.Executable), bundleNames));
+        var diagnostics = Assert.Single(plan.Checks, job => job.Name == "native-diagnostics");
+        Assert.Contains(Path.GetFileNameWithoutExtension(diagnostics.Executable), bundleNames);
+    }
+
+    private static void RunOverlappingPreSuiteChecks(bool updater)
+    {
+        using var tree = new StaticTree();
+        var sdk = WriteSdk(tree);
+        var python = tree.Write("python.exe", "fixture");
+        tree.Write("scripts/a.cs", "#:project ../shared.csproj\nConsole.WriteLine(1);");
+        tree.Write("scripts/b.cs", "#:project ../shared.csproj\nConsole.WriteLine(2);");
+        tree.Write("src/Adapters/build/Test-AdapterInputs.cs", "Console.WriteLine(1);");
+        tree.Write("src/Adapters/build/Test-WorkerIsolation.cs", "#:project ../../shared.csproj\nConsole.WriteLine(1);");
+        Directory.CreateDirectory(Path.Combine(tree.Root, "build-tools"));
+        const string project = "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>";
+        tree.Write("tests/ordinary.csproj", project); tree.Write("tests/updater.csproj", project); tree.Write("tests/plc.csproj", project);
+        var catalog = new JsonObject { ["ordinary"] = Suite("tests/ordinary.csproj"),
+            ["plc-exchange-worker-v20"] = Suite("tests/plc.csproj", "-p:EngineRelease=20"),
+            ["plc-exchange-worker-v21"] = Suite("tests/plc.csproj", "-p:EngineRelease=21") };
+        if (updater) catalog["updater"] = Suite("tests/updater.csproj");
+        tree.Write("tests/test-suites.json", catalog.ToJsonString());
+        int finished = 0, updaterRuns = 0;
+        int expected = updater ? 4 : 3;
+        using var overlap = new Barrier(expected - 1);
+        var calls = new ConcurrentQueue<string[]>();
+        void PreSuite()
+        {
+            Assert.True(overlap.SignalAndWait(TimeSpan.FromSeconds(120)));
+            Interlocked.Increment(ref finished);
+        }
+        CommandResult Process(string exe, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
+        {
+            var args = arguments.ToArray(); calls.Enqueue(args);
+            Assert.DoesNotContain(args, arg => arg.StartsWith("-getItem:", StringComparison.Ordinal));
+            var check = args.FirstOrDefault(arg => arg.EndsWith("Test-AdapterInputs.cs", StringComparison.Ordinal)
+                || arg.EndsWith("Test-WorkerIsolation.cs", StringComparison.Ordinal) || arg.EndsWith("Test-NativeDiagnostics.py", StringComparison.Ordinal));
+            if (check != null && args[0] != "build")
+            {
+                if (check.EndsWith(".cs", StringComparison.Ordinal))
+                {
+                    PreSuite();
+                    Assert.Contains("--no-build", args);
+                    var directory = args[Array.IndexOf(args, "--evidence-directory") + 1];
+                    Directory.CreateDirectory(directory);
+                    var file = check.EndsWith("Test-AdapterInputs.cs", StringComparison.Ordinal) ? "input-results.json" : "worker-isolation-results.json";
+                    File.WriteAllText(Path.Combine(directory, file), "{}");
+                }
+                else
+                {
+                    Assert.Equal(expected - 1, Volatile.Read(ref finished));
+                    var directory = args[Array.IndexOf(args, "--output") + 1];
+                    Directory.CreateDirectory(directory);
+                    File.WriteAllText(Path.Combine(directory, "result.json"), "{\"behaviorChecks\":36,\"rejectionChecks\":5,\"nativeTiaExecuted\":false}");
+                    Interlocked.Increment(ref finished);
+                }
+            }
+            if (args[0] == "test")
+            {
+                var directory = args[Array.IndexOf(args, "--results-directory") + 1];
+                var name = Path.GetFileName(directory);
+                if (name == "updater") { Interlocked.Increment(ref updaterRuns); PreSuite(); }
+                else Assert.Equal(expected, Volatile.Read(ref finished));
+                if (name.StartsWith("plc-exchange-worker-", StringComparison.Ordinal))
+                    Assert.Equal(Path.GetFullPath(Path.Combine(tree.Root, "bin-build/merge-check/suites/compiled", name)), Path.GetFullPath(args[Array.IndexOf(args, "--output") + 1]));
+                WriteTrx(Path.Combine(directory, name + ".trx"), [name]);
+            }
+            if (args[0] == "build" && args.Contains("-p:TiaMcpCollectFileBasedPrograms=true")) Assert.Contains("-p:BuildProjectReferences=false", args);
+            return new(0, args.SequenceEqual(new[] { "--self-test" })
+                ? "COMPLETE: 1 native harness safety checks passed; live TIA tests NOT RUN" : "Passed: 157\n", "");
+        }
+        var result = MergeCheck.Run(tree.Root, Options.Parse(["-All", "-MaxParallelism=4", "-PublicApiRoot=" + sdk, "-Python=" + python], Program.BooleanOptions),
+            Process, args => new(0, args[0] == "merge-base" ? "abc" : "", ""), (_, _) => 0);
+        Assert.Equal(0, result); Assert.Equal(expected, finished); Assert.Equal(updater ? 1 : 0, updaterRuns);
+        var snapshot = calls.ToArray();
+        Assert.Single(snapshot, args => args.Length > 1 && args[0] == "msbuild"
+            && Path.GetFullPath(args[1]) == Path.GetFullPath(Path.Combine(tree.Root, "bin-build/merge-check/table-restore.proj")));
+        Assert.DoesNotContain(snapshot, args => args[0] == "build" && args[1].EndsWith("plc.csproj", StringComparison.Ordinal));
+        var traversal = XDocument.Load(Path.Combine(tree.Root, "bin-build/merge-check/build.proj"));
+        Assert.Equal(2, traversal.Descendants("AdditionalProperties").Count());
+    }
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void ComposedToolArgumentsParseWithTheRealOptionTable(bool docsOnly)
@@ -544,7 +777,8 @@ public sealed class MergeCheckTests
             }
             return new(failure == "build" && args.Contains("-t:Build") || failure == "check" && args.Contains("check-tools-list") ? 1 : 0, "", "");
         }
-        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" && args[^1] == "HEAD" ? "source.cs\0" : "", "");
+        CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc" : args[0] == "rev-parse" ? Path.Combine(tree.Root, ".git")
+            : args[0] == "diff" && args[^1] == "HEAD" ? "source.cs\0" : "", "");
         int decoderCalls = 0;
         var result = MergeCheck.Run(tree.Root, Options.Parse(["-PublicApiRoot", sdk, "-Python", python], new HashSet<string>()), Process, Git,
             (options, root) =>

@@ -17,6 +17,18 @@ public sealed class ReadOnlySourceContracts
     private static void Count(string source, string value, int expected) => Assert.Equal(expected, Regex.Matches(source, Regex.Escape(value)).Count);
 
     [Fact]
+    public void PlcExchangeReferencesRemoveVariantOutputProperties()
+    {
+        var project = XDocument.Load(Path.Combine(Root, "tests/FoundationHost/TiaMcp.PlcExchange.Tests/TiaMcp.PlcExchange.Tests.csproj"));
+        var references = project.Descendants("ItemGroup").Elements("ProjectReference").ToArray();
+        Assert.Equal(2, references.Length);
+        Assert.All(references, reference => Assert.Equal(new[] { "EngineRelease", "OutputPath", "_CommandLineDefinedOutputPath", "IntermediateOutputPath" },
+            ((string?)reference.Attribute("GlobalPropertiesToRemove"))?.Split(';')));
+        Assert.Equal("EngineRelease;OutputPath;_CommandLineDefinedOutputPath;IntermediateOutputPath",
+            project.Descendants("ItemDefinitionGroup").Elements("ProjectReference").Single().Element("GlobalPropertiesToRemove")!.Value);
+    }
+
+    [Fact]
     public void DiagnosticMembershipPreservesReadinessAndNoFixRouting()
     {
         var doctor = Sources.Member("Doctor", tool: false, owner: "McpServer");
