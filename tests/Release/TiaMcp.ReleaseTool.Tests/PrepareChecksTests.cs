@@ -384,7 +384,7 @@ public sealed class PrepareChecksTests
             calls = []
             def rpc(method, *args, **kwargs):
                 if method == 'tools/list':
-                    return {'result': {'tools': [{'name': gate.ENGINE_WRITE[0]}, {'name': 'CallTool'}]}}
+                    return {'result': {'tools': [{'name': gate.ENGINE_WRITE[0]}, {'name': gate.CREATE_DEVICE[0]}, {'name': 'CallTool'}]}}
                 return {'result': {}}
             @contextlib.contextmanager
             def server(*args, **kwargs):
@@ -394,11 +394,12 @@ public sealed class PrepareChecksTests
                     fresh_data_root=lambda *a, **k: (directory, {}),
                     retained_on_failure=contextlib.nullcontext,
                     assert_refused=lambda *a: None, assert_engine_read=lambda *a: None,
+                    assert_create_device_stopped=lambda *a: None,
                     assert_readiness_refused=lambda *a: None), \
                  patch.object(gate.resources, 'server', server), \
                  patch.object(gate.resources, 'sdk_only_installation', lambda *a: directory):
                 report = gate.run_engine(args)
-            assert report['checksPassed'] == report['checksExpected'] == 7
+            assert report['checksPassed'] == report['checksExpected'] == 8
             expected = worker if packaged else script.parents[2] / 'src/PlcWorker/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe'
             assert calls[-1]['plc_worker'] == expected, (calls[-1]['plc_worker'], expected)
             assert calls[-1]['sdk_ready'] is False

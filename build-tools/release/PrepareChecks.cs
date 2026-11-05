@@ -244,12 +244,14 @@ internal static partial class ReleaseCommands
     {
         using var document = JsonDocument.Parse(File.ReadAllText(path));
         var approval = document.RootElement;
-        if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksPassed") != 30 || GetJsonInt(approval, "checksExpected") != 30 ||
+        if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksPassed") != 36 || GetJsonInt(approval, "checksExpected") != 36 ||
             GetJsonBool(approval, "workbenchConnected") || GetJsonBool(approval, "tiaConnected") || GetJsonString(approval, "approvalSettings") != "explicit enabled=true; timeoutSeconds=120" ||
             !approval.GetProperty("releases").EnumerateObject().Select(row => row.Name).Order(StringComparer.Ordinal).SequenceEqual(new[] { "14sp1", "15.1", "16", "17", "18", "19" }))
             throw new ReleaseException("Foundation approval count, state or roster is invalid");
         foreach (var release in approval.GetProperty("releases").EnumerateObject())
-            if (GetJsonInt(release.Value, "checksPassed") != 5 || GetJsonString(release.Value, "directWrite") != "refused-before-dispatch" ||
+            if (GetJsonInt(release.Value, "checksPassed") != 6 || GetJsonString(release.Value, "directWrite") != "refused-before-dispatch" ||
+                GetJsonString(release.Value, "CreateDevice") is not "readiness" &&
+                    GetJsonString(release.Value, "CreateDevice") != (release.Name is "14sp1" or "15.1" or "16" or "17" ? "approval" : "native-admission") ||
                 GetJsonString(release.Value, "stagingWrite") != "approval-refused-before-filesystem-write" || GetJsonString(release.Value, "read") != "succeeded" ||
                 GetJsonString(release.Value, "CallTool") != "refused-before-dispatch")
                 throw new ReleaseException("Foundation approval incomplete: " + release.Name);

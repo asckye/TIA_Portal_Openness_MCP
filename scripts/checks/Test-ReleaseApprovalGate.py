@@ -23,12 +23,14 @@ import uuid
 ROOT = Path(__file__).resolve().parents[2]
 WINDOWS = os.name == "nt"
 KEYS = ("14sp1", "15.1", "16", "17", "18", "19")
-# Catalog WRITE tools with arguments valid against the released schemas (reference/tool-examples), so admission passes
-# and the default-on approval is what refuses the write. SaveProject is SESSION in the catalog and is not approval-gated;
-# safe-v4 candidate arguments (mode, expectedPlanHash) are not in the released schemas.
+# SetDeviceItemAttribute is WRITE in all eight catalogs. Its RunWritePreview precheck only builds a plan from
+# arguments and binding identity, so no portal is needed before approval. CreateDevice instead forwards to
+# CreateHardwareDevice from V18, whose native admission rejects a missing portal before approval.
 STAGING_WRITE = ("StageImportFiles", {"files": [{"fileName": "ApprovalProbe.scl", "kind": "scl",
     "content": "FUNCTION ApprovalProbe : Void\nBEGIN\nEND_FUNCTION\n"}], "dryRun": False})
-ENGINE_WRITE = ("CreateDevice", {"orderNumber": "6ES7 515-2AM02-0AB0", "version": "V2.9", "deviceName": "PLC_2",
+ENGINE_WRITE = ("SetDeviceItemAttribute", {"deviceItemPath": "PLC_1/CPU_1", "attributeName": "Name", "value": "ApprovalProbe",
+    "dryRun": False, "expectedPlanHash": "a" * 64, "expectedProjectFile": "C:/Projects/ApprovalProbe.ap21"})
+CREATE_DEVICE = ("CreateDevice", {"orderNumber": "6ES7 515-2AM02-0AB0", "version": "V2.9", "deviceName": "PLC_2",
     "dryRun": False, "confirm": True, "expectedPlanHash": "a" * 64, "expectedProjectFile": "C:/Projects/ApprovalProbe.ap21"})
 FOUNDATION_WRITE = ("CreatePlcTagTable", {"plc": "PLC_1", "group": "", "name": "ExampleTags", "dryRun": True, "confirm": False})
 
@@ -83,6 +85,30 @@ def assert_readiness_refused(reply: dict, label: str) -> None:
     require(meta.get("outcome") == "rejected-before-operation" and meta.get("execution") == "not-started",
             f"{label}: readiness was not proven to stop before dispatch: {body}")
     require(meta.get("requiresSessionReset") is False, f"{label}: refusal incorrectly requires a session reset")
+
+
+def assert_create_device_stopped(reply: dict, key: str, label: str, *, production_worker: bool = False) -> str:
+    # The six real bundled workers check installation readiness before any preview or approval.
+    body, is_error = parse_envelope(reply)
+    if production_worker and (body.get("error") or {}).get("code") == "RESOURCE_UNAVAILABLE":
+        assert_readiness_refused(reply, label)
+        return "readiness"
+    if key in ("14sp1", "15.1", "16", "17"):
+        # The native CreateWithItem route builds an offline preview before asking for approval.
+        assert_refused(reply, label)
+        return "approval"
+    error = body.get("error") or {}
+    meta = body.get("meta") or {}
+    require(is_error and body.get("ok") is False, f"{label}: refusal was not an MCP error: {body}")
+    require(error.get("code") == "PRECONDITION_FAILED" and
+            (error.get("details") or {}).get("condition") == "native-admission",
+            f"{label}: missing portal did not stop native admission: {body}")
+    require(meta.get("outcome") == "rejected-before-operation" and meta.get("execution") == "not-started",
+            f"{label}: operation was not proven to stop before dispatch: {body}")
+    require(meta.get("requiresSessionReset") is False, f"{label}: refusal incorrectly requires a session reset")
+    require(any(warning.get("code") == "APPROVAL_PRECHECK_REFUSED" for warning in meta.get("warnings", [])),
+            f"{label}: no evidence that refusal preceded the approval card: {body}")
+    return "native-admission"
 
 
 def assert_foundation_write_stopped(reply: dict, label: str) -> str:
@@ -242,11 +268,15 @@ def run_engine(args) -> dict:
             require(ENGINE_WRITE[0] in names, f"V{args.major}: {ENGINE_WRITE[0]} is missing from the full roster")
             assert_refused(rpc_call(rpc, ENGINE_WRITE[0], ENGINE_WRITE[1], "write"), f"V{args.major} direct {ENGINE_WRITE[0]}")
             count += 1
+            assert_create_device_stopped(rpc_call(rpc, CREATE_DEVICE[0], CREATE_DEVICE[1], "create-device"),
+                                         str(args.major), f"V{args.major} direct CreateDevice")
+            count += 1
             assert_refused(rpc_call(rpc, STAGING_WRITE[0], STAGING_WRITE[1], "stage-write"), f"V{args.major} direct staging")
             count += 1
             assert_engine_read(rpc_call(rpc, "GetSessionState", {}, "read"), f"V{args.major} direct GetSessionState")
             count += 1
         results["direct"] = "refused-before-dispatch; read-succeeded"
+        results["CreateDevice"] = "native-admission; no approval card; not-started"
 
     bridge_root, bridge_env = fresh_data_root(args.temp_root, f"engine-v{args.major}-calltool")
     with retained_on_failure(bridge_root):
@@ -286,7 +316,7 @@ def run_engine(args) -> dict:
             count += 1
         results["realExeReadiness"] = "readiness refused before approval; default approval.settings absent"
 
-    return {"product": "engine", "major": args.major, "checksPassed": count, "checksExpected": 7, "results": results}
+    return {"product": "engine", "major": args.major, "checksPassed": count, "checksExpected": 8, "results": results}
 
 
 def run_foundation(args) -> dict:
@@ -307,6 +337,10 @@ def run_foundation(args) -> dict:
                 require(FOUNDATION_WRITE[0] in names and "GetToolUsage" in names, f"{key}: expected tools missing")
                 require("CallTool" in names, f"{key}: registered-catalog bridge is missing")
                 count += 1
+                require(CREATE_DEVICE[0] in names, f"{key}: CreateDevice is missing from the full roster")
+                device = host.rpc("tools/call", {"name": CREATE_DEVICE[0], "arguments": CREATE_DEVICE[1]})
+                device_stopped_by = assert_create_device_stopped(device, key, f"Foundation {key} CreateDevice", production_worker=True)
+                count += 1
                 refused = host.rpc("tools/call", {"name": FOUNDATION_WRITE[0], "arguments": FOUNDATION_WRITE[1]})
                 require(refused is not None, f"{key}: direct write received no response")
                 stopped_by = assert_foundation_write_stopped(refused, f"Foundation {key} direct {FOUNDATION_WRITE[0]}")
@@ -323,9 +357,10 @@ def run_foundation(args) -> dict:
                 require(read is not None, f"{key}: Foundation read received no response")
                 assert_engine_read(read, f"Foundation {key} GetToolUsage")
                 count += 1
-        per_release[key] = {"checksPassed": 5, "stagingWrite": "approval-refused-before-filesystem-write", "directWrite": "refused-before-dispatch", "stoppedBy": stopped_by,
+        per_release[key] = {"checksPassed": 6, "stagingWrite": "approval-refused-before-filesystem-write", "directWrite": "refused-before-dispatch", "stoppedBy": stopped_by,
+                            "CreateDevice": device_stopped_by,
                             "read": "succeeded", "CallTool": "refused-before-dispatch"}
-    return {"product": "foundation", "checksPassed": count, "checksExpected": len(KEYS) * 5, "releases": per_release}
+    return {"product": "foundation", "checksPassed": count, "checksExpected": len(KEYS) * 6, "releases": per_release}
 
 
 def self_test() -> int:
@@ -362,7 +397,28 @@ def self_test() -> int:
         pass
     else:
         raise AssertionError("A dispatched readiness failure was accepted")
-    return 5
+    for key in KEYS[:4]:
+        assert_create_device_stopped(refused, key, f"synthetic {key} native route")
+    admission = json.loads(json.dumps(refused))
+    admission["result"]["structuredContent"]["error"] = {
+        "code": "PRECONDITION_FAILED", "details": {"condition": "native-admission"}}
+    admission["result"]["structuredContent"]["meta"]["warnings"] = [{"code": "APPROVAL_PRECHECK_REFUSED"}]
+    for key in ("18", "19", "20", "21"):
+        assert_create_device_stopped(admission, key, f"synthetic {key} forwarded route")
+    for key in KEYS:
+        require(assert_create_device_stopped(readiness, key, f"synthetic {key} readiness", production_worker=True) == "readiness",
+                f"{key}: production readiness result was lost")
+    for section, field, value in (("error", "code", "CONFIRMATION_REQUIRED"),
+                                   ("meta", "execution", "completed"), ("meta", "warnings", [])):
+        bad = json.loads(json.dumps(admission))
+        bad["result"]["structuredContent"][section][field] = value
+        try:
+            assert_create_device_stopped(bad, "21", f"synthetic invalid {field}")
+        except CheckFailure:
+            pass
+        else:
+            raise AssertionError(f"Invalid CreateDevice {field} was accepted")
+    return 22
 
 
 def main() -> int:

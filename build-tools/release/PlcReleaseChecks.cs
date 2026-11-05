@@ -93,7 +93,7 @@ internal static partial class ReleaseCommands
     private static readonly IReadOnlyDictionary<string, (int Count, bool Exact)> BuildReleaseCountRules =
         new Dictionary<string, (int, bool)>(StringComparer.Ordinal)
         {
-            ["nativeMcpSafety"] = (8, false), ["nativeSupervisor"] = (1, false), ["approvalSafety"] = (7, true)
+            ["nativeMcpSafety"] = (8, false), ["nativeSupervisor"] = (1, false), ["approvalSafety"] = (8, true)
         };
 
     private static int RequireCount(string name, string text, string pattern, string? rule = null)
@@ -117,7 +117,8 @@ internal static partial class ReleaseCommands
         using var doc = JsonDocument.Parse(File.ReadAllText(path)); var evidence = doc.RootElement;
         CheckReleaseCount("approvalSafety", GetJsonInt(evidence, "checksPassed"), "Default approval checks incomplete");
         var results = evidence.GetProperty("results");
-        if (GetJsonString(evidence, "status") != "passed" || GetJsonInt(evidence, "checksExpected") != 7 || GetJsonBool(evidence, "workbenchConnected") ||
+        if (GetJsonString(evidence, "status") != "passed" || GetJsonInt(evidence, "checksExpected") != 8 || GetJsonBool(evidence, "workbenchConnected") ||
+            GetJsonString(results, "CreateDevice") != "native-admission; no approval card; not-started" ||
             GetJsonBool(evidence, "tiaConnected") || GetJsonString(results, "direct") != "refused-before-dispatch; read-succeeded" ||
             GetJsonString(results, "CallTool") != "refused-before-dispatch") throw new ReleaseException("Default approval evidence mismatch");
     }
