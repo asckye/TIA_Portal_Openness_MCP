@@ -77,14 +77,16 @@ public sealed class B3HostPortsTests
             foreach (string bridge in new[] { "CallTool", "PreviewToolCall" })
             {
                 var refusal = await Invoke(bridge, new { name, arguments = new { } });
-                Assert.Equal("TOOL_NOT_FOUND", (string?)refusal["error"]?["code"]);
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)refusal["error"]?["code"]);
+                Assert.Equal(name, (string?)refusal["error"]?["details"]?["capability"]);
                 Assert.Equal("Tool is not registered in this release.", (string?)refusal["error"]?["message"]);
                 Assert.Equal("not-started", (string?)refusal["meta"]?["execution"]);
             }
             foreach (string batch in new[] { "RunReadOnlyToolBatch", "PreviewToolBatch" })
             {
                 var refusal = await Invoke(batch, new { expectedProject = "Fixture", operations = new[] { new { name, arguments = new { } } } });
-                Assert.Equal("TOOL_NOT_FOUND", (string?)refusal["error"]?["code"]);
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)refusal["error"]?["code"]);
+                Assert.Equal(name, (string?)refusal["error"]?["details"]?["capability"]);
             }
             var missingUsage = await Invoke("GetToolUsage", new { toolName = name });
             Assert.False((bool)missingUsage["ok"]!);

@@ -322,6 +322,16 @@ public sealed class StaticPolicyTests
         Assert.Contains(ScriptToolCalls.Check("scripts/example.py", source, new HashSet<string> { "known" }), call => call.Name.Contains("ool", StringComparison.Ordinal));
 
     [Theory]
+    [InlineData("resources/templates/list")]
+    [InlineData("resources/list")]
+    [InlineData("prompts/list")]
+    public void McpDiscoveryProtocolMethodsAreNotToolCalls(string method)
+    {
+        Assert.Empty(ScriptToolCalls.Check("scripts/example.py", "client.call('" + method + "', {})", new HashSet<string>()));
+        Assert.Empty(ScriptToolCalls.Check("scripts/example.cs", "Call(\"" + method + "\", args);", new HashSet<string>()));
+    }
+
+    [Theory]
     [InlineData("call('known', {'methodName': 'GetCrossReferences'}) # call('RemovedTool')")]
     [InlineData("call('\\x6bno\\167n', {})")]
     [InlineData("call('Siemens::Read()')\ncall('{\"fixture\":true}')")]

@@ -73,6 +73,7 @@ namespace TiaMcp.FoundationHost
                 || TiaMcp.Adapters.Contracts.PortedFamilies.Available(McpServer.ReleaseKey, name)) ? "" : McpServer
                     .VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value) ? value.ToString()
                 : tool.Parameters.FirstOrDefault(p => p.Name == key)?.DefaultText);
+            if (problem.Length == 0 && !catalog.All.ContainsKey(name)) problem = "Tool is not available in this release.";
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
             var error = ValidateArguments(tool, arguments.Json, tool.Tool.InputSchema);
             if (error == null) call = new BoundCall(this, tool, arguments);

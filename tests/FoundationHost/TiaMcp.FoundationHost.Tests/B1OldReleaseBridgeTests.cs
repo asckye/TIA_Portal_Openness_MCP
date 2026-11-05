@@ -33,7 +33,11 @@ public sealed class B1OldReleaseBridgeTests
         foreach (string name in new[] { "NoSuchB1Tool", "ListCommunicationConnections", "DecodePlcSimaticMl" })
         {
             var rejected = await Invoke(tools, "CallTool", new { name, arguments = new { } });
-            Assert.Equal("TOOL_NOT_FOUND", (string?)rejected["error"]?["code"]);
+            bool unknown = name == "NoSuchB1Tool";
+            Assert.Equal(unknown ? "TOOL_NOT_FOUND" : "UNSUPPORTED_CAPABILITY", (string?)rejected["error"]?["code"]);
+            Assert.Equal(name, (string?)rejected["error"]?["details"]?[unknown ? "tool" : "capability"]);
+            Assert.Equal("Tool is not registered in this release.", (string?)rejected["error"]?["message"]);
+            Assert.Equal("not-started", (string?)rejected["meta"]?["execution"]);
         }
         var missing = await Invoke(tools, "CallTool", new { name = "AnalyzePlcReferences", arguments = new { } });
         Assert.Equal("directory", (string?)missing["error"]?["details"]?["parameter"]);
@@ -56,6 +60,39 @@ public sealed class B1OldReleaseBridgeTests
         Assert.Equal(names.Count, (int)categories["data"]!["toolCount"]!);
         Assert.Equal(0, worker.Calls);
     }
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
+    [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+    public async Task RejectionKindsAreConsistentAcrossReleaseCatalogs(string release)
+    {
+        using var worker = new ForbiddenWorker();
+        var shared = release is "20" or "21" ? Array.Empty<McpServerTool>()
+            : LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
+        using var pipeline = new Pipeline(release, new BoundWorker(), shared);
+        var names = TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(release)
+            .Select(row => (string)row!["currentName"]!).ToHashSet(StringComparer.Ordinal);
+        foreach (string name in new[] {
+            "NoSuchB1Tool", "ListCommunicationConnections", "DecodePlcSimaticMl", "ManagePlcBlockProtection",
+            "ListPlcSystemGroups", "CreatePlcInstanceDb", "SetPlcProgram", "GetPlcCrossReferences", "CreateHardwareCatalogDevice",
+            "ManageDeviceServiceObjects", "ExchangeSystemDiagnosticsSettings", "ListNetworkDomains", "ManageNetworkDomain",
+            "ListTransferAreas", "ManageTransferArea", "ManageCommunicationConnection", "CreateGsdDevice", "ExportScadaData" })
+        {
+            if (names.Contains(name)) continue;
+            foreach (string bridge in new[] { "CallTool", "PreviewToolCall" })
+            {
+                var reply = await Invoke(pipeline.AllTools, bridge, new { name, arguments = new { } });
+                bool unknown = name == "NoSuchB1Tool";
+                Assert.Equal((name, unknown ? "TOOL_NOT_FOUND" : "UNSUPPORTED_CAPABILITY"),
+                    (name, (string?)reply["error"]?["code"]));
+                Assert.Equal(name, (string?)reply["error"]?["details"]?[unknown ? "tool" : "capability"]);
+                Assert.False(string.IsNullOrWhiteSpace((string?)reply["error"]?["message"]));
+                Assert.Equal("not-started", (string?)reply["meta"]?["execution"]);
+                Assert.False((bool)reply["ok"]!);
+            }
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public async Task BridgedTargetKeepsItsFoundationApprovalBeforeDispatch(string release)
     {
