@@ -9,7 +9,8 @@ namespace TiaMcp.Adapters.Native.Plc
     public static class EngineeringFileExport
     {
         public static Dictionary<string, object
-            ?> Export(object target, string path, bool overwrite, Action<Exception> recordFailure, string? exportOptions = null)
+            ?> Export(object target, string path, bool overwrite, Action<Exception> recordFailure, string? exportOptions = null,
+                Action? exportStarting = null)
         {
             var result = new Dictionary<string, object?> { ["success"] = false, ["capability"] = "unsupported",
                 ["targetReplaced"] = false, ["recoveryRequired"] = false, ["validation"] = "Not performed" };
@@ -44,6 +45,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary)), Enum
                             .Parse(method.GetParameters()[1].ParameterType, exportOptions ?? "None")
                     };
+                exportStarting?.Invoke();
                 method.Invoke(target, args);
                 var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary));
                 if (!file.Exists || file.Length == 0) throw new IOException("Native export produced no non-empty file.");

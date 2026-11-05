@@ -177,7 +177,7 @@ internal static class CanonicalBatchTools
             {
                 var regex = Text("regexName");
                 foreach (string file in Directory.EnumerateFiles(Path.GetFullPath(Text("dir")), "*.xml").Order(StringComparer.Ordinal))
-                    if (regex.Length == 0 || Regex.IsMatch(Path.GetFileNameWithoutExtension(file), regex))
+                    if (regex.Length == 0 || Regex.IsMatch(Path.GetFileNameWithoutExtension(file), regex, RegexOptions.IgnoreCase))
                         Import("ImportPlcTagTable", file, "folderPath", Text("folderPath"));
             }
             else if (tool.Name == "ExportTechnologyObjectsToDirectory")

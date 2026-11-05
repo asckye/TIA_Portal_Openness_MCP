@@ -24,6 +24,20 @@ public sealed class PlcSoftwareAuditWiring
     }
 
     [Fact]
+    public void Technology_batch_only_marks_file_effects_at_the_native_export_boundary()
+    {
+        var source = Read("src/Adapters/Native/Plc/PlcTechnologyExchange.cs");
+        var body = Member(source, "public PlcSeedHmiReply ExportTechnologyObjectsToDirectory(");
+        Assert.Contains("[\"mayHaveWrittenFiles\"] = false", body, StringComparison.Ordinal);
+        Assert.Contains("() => meta[\"mayHaveWrittenFiles\"] = true", body, StringComparison.Ordinal);
+        string handler = body.Substring(Find(body, "catch (Exception error)"));
+        Assert.DoesNotContain("[\"mayHaveWrittenFiles\"] = true", handler, StringComparison.Ordinal);
+        var export = Read("src/Adapters/Native/Plc/EngineeringFileExport.cs");
+        Assert.True(Find(export, "Directory.CreateDirectory") < Find(export, "exportStarting?.Invoke()"));
+        Assert.True(Find(export, "exportStarting?.Invoke()") < Find(export, "method.Invoke(target, args)"));
+    }
+
+    [Fact]
     public void Native_technology_batch_keeps_directory_bounds_and_no_write_preview_on_the_uniform_route()
     {
         var source = Read("src/Adapters/Native/Plc/PlcTechnologyExchange.cs");

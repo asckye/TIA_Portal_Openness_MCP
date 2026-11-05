@@ -39,6 +39,29 @@ namespace TiaMcp.Adapters.Contracts.Tests
             finally { File.Delete(file); }
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Export_start_is_reported_only_after_directory_preparation(bool failDirectory)
+        {
+            string root = Path.Combine(AppContext.BaseDirectory, "export-start-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            string parent = Path.Combine(root, "target");
+            if (failDirectory) File.WriteAllText(parent, "directory blocker");
+            var target = new ExportTarget(); bool started = false; Exception? failure = null;
+            try
+            {
+                var evidence = EngineeringFileExport.Export(target, Path.Combine(parent, "item.xml"), false, error => failure = error,
+                    exportStarting: () => { Assert.False(target.OneArgumentCalled); started = true; });
+                Assert.Equal(!failDirectory, started);
+                Assert.Equal(!failDirectory, target.OneArgumentCalled);
+                Assert.Equal(!failDirectory, evidence["success"]);
+                if (failDirectory) Assert.IsAssignableFrom<IOException>(failure);
+                else Assert.Null(failure);
+            }
+            finally { Directory.Delete(root, true); }
+        }
+
         public sealed class ExportTarget
         {
             public bool OneArgumentCalled { get; private set; }

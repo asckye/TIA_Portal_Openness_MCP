@@ -104,7 +104,7 @@ namespace TiaMcp.Adapters.Native.Plc
             string hash = PlcSpecialExportPolicy.Hash(_session.ReleaseKey, softwarePath, root,
                 _session.BindingIdentity(), _session.SerializeEvidence(new Dictionary<string, object?> { ["items"] = plan }));
             var meta = new Dictionary<string, object?> { ["planHash"] = hash, ["items"] = plan, ["dryRun"] = dryRun,
-                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["nativeRoute"] = "TechnologyExport" };
+                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false, ["nativeRoute"] = "TechnologyExport" };
             var exported = new List<string>(); var failed = new List<PlcSeedImportFailure>();
             if (dryRun) return new PlcSeedHmiReply { Imported = exported, Failed = failed, Meta = meta };
             if (hash != expectedPlanHash) throw new AdapterPreconditionException("Technology export plan changed; preview again.");
@@ -117,14 +117,14 @@ namespace TiaMcp.Adapters.Native.Plc
                     PlcSpecialExportPolicy.Output(path, true);
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                     PlcSpecialExportPolicy.Output(path, true);
-                    var evidence = TechnologyExport(selected[i].To, path, false);
+                    var evidence = TechnologyExport(selected[i].To, path, false, () => meta["mayHaveWrittenFiles"] = true);
                     row["result"] = evidence;
                     if (!Equals(evidence["success"], true)) throw new IOException(_session.SerializeEvidence(evidence));
                     row["status"] = "completed"; exported.Add((string)row["objectPath"]!);
                 }
                 catch (Exception error)
                 {
-                    row["status"] = "failed"; meta["operationSuccess"] = false; meta["mayHaveWrittenFiles"] = true;
+                    row["status"] = "failed"; meta["operationSuccess"] = false;
                     failed.Add(new PlcSeedImportFailure { Path = path, Error = error.Message });
                     foreach (var pending in plan.Skip(i + 1)) pending["status"] = "not-started";
                     break;
@@ -236,8 +236,8 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 
 
-        private Dictionary<string, object?> TechnologyExport(object target, string path, bool overwrite = true)
-            => EngineeringFileExport.Export(target, path, overwrite, _session.RecordExportFailure);
+        private Dictionary<string, object?> TechnologyExport(object target, string path, bool overwrite = true, Action? exportStarting = null)
+            => EngineeringFileExport.Export(target, path, overwrite, _session.RecordExportFailure, exportStarting: exportStarting);
 
         private static Dictionary<string, object?> BatchRejection(string code) => LegacyResponseMetadata.Basic(null, false, code);
 

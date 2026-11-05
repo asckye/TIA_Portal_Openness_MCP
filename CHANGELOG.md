@@ -10,6 +10,7 @@
 ### Fixed
 - `test-suites` logs the full name, first 400 error-message characters and first four stack lines for up to ten distinct failed tests per suite, including sharded runs.
 - Turning off write approval now requires typing the localized confirmation label; empty or incorrect input and Enter cannot disable approval.
+- 工艺对象批导出在原生导出开始前创建目录失败时返回普通拒绝，不再误报结果未知或锁定会话；标签表批导入的名称正则筛选恢复忽略大小写。
 - Restore shared Workbench style usage after the UI redesign, keep configuration headings untrimmed, remove obsolete translations, and prevent list binding updates from opening client-enable confirmations.
 
 - 写入结果按可验证证据分类：ExclusiveAccess、密码策略和输入校验的明确拒绝不再误报 `OUTCOME_UNKNOWN`；属性、库和文档导入失败后可证明未改变目标时无需重置会话。其余已派发的未知写入统一锁定会话。

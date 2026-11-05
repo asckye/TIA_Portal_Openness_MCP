@@ -365,6 +365,19 @@ public sealed class CanonicalBatchToolsTests
         }
     }
 
+    [Fact]
+    public async Task Tag_table_batch_name_filter_ignores_case_like_the_native_import()
+    {
+        using var files = new Files(); var target = new Target("ImportPlcTagTable");
+        var batch = Batch("ImportPlcTagTablesFromDirectory", target);
+        var args = files.Arguments(); args["regexName"] = "^a$";
+        var preview = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
+        Assert.True((bool?)preview.StructuredContent?["ok"]);
+        Assert.Single(preview.StructuredContent!["data"]!["items"]!.AsArray());
+        Assert.Equal("A.xml", Path.GetFileName((string?)Assert.Single(target.Arguments)["importPath"]));
+        Assert.Empty(target.Writes);
+    }
+
     private static CanonicalBatchTools.BatchTool Batch(string name, Target target) =>
         new(Declaration(name), new Dictionary<string, McpServerTool> { [target.ProtocolTool.Name] = target }, "21", () => Binding.DeepClone().AsObject()) {
         CompleteApproval = (_, _) => Task.CompletedTask };

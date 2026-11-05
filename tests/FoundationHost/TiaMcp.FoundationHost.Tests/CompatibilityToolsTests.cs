@@ -59,6 +59,18 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         Assert.True(forward.ProtocolTool.InputSchema.GetProperty("properties").GetProperty("dryRun").GetProperty("default").GetBoolean());
     }
 
+    [Theory]
+    [InlineData(false, "rejected-before-operation", false)]
+    [InlineData(true, "unknown", true)]
+    public void Technology_batch_failure_resets_only_after_native_export_started(bool started, string outcome, bool reset)
+    {
+        var response = new { imported = Array.Empty<string>(), failed = new[] { new { path = "C:/exports/Axis.xml", error = "I/O failed" } },
+            meta = new JsonObject { ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = started } };
+        var result = enginehost::TiaMcpServer.ModelContextProtocol.EngineeringToolContract.Map("ExportTechnologyObjectsToDirectory", response, true);
+        Assert.Equal(outcome, (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal(reset, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+    }
+
     [Fact]
     public async Task Cancellation_or_failure_restores_the_original_request_without_retry()
     {
