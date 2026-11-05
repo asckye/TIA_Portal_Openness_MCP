@@ -1,6 +1,6 @@
 # 真机验收与历史证据
 
-当前版本的构建、离线功能、协议测试和 Studio mock 结果见 `release-build.json`（历史文件，已退役）、`multi-version-build.json`（历史文件，已退役）。这些检查没有连接 TIA 工程或在线 PLC，不能标记为原生验收。
+当前构建、离线功能与协议检查由 `merge-check` 和 `prepare` 记录在 `bin-build/merge-check/`、`bin-build/prepared/`；这些检查不等于连接真实 TIA 工程或在线 PLC 的验收。历史版本与现场结果在下方单列，不能推广为当前版本通过。
 
 ## 预发布例外
 
@@ -14,7 +14,7 @@ VMFIX-3 Round 2：**NOT RUN**。V14 SP1、V15.1、V16、V17、V18、V19、V20 �
 
 VMFIX-3（2026-11-03）：**NOT RUN**。需在 V21 工程副本上复验 ExclusiveAccess 占用拒绝、通道属性未改变读回、三类密码策略拒绝、无 ExclusiveAccess 的 AML 导入、库类型/版本导入失败详情和数量读回、文件夹中的 Unified 屏幕及无名部件创建、文档导入失败后的声明名称查找、PROFINET 连接、报警文本导出、HMI 输入拒绝、未知写入的会话锁存、worker 执行证据、标签注释、强制表列表及下载预览。库导入仍保留 ExclusiveAccess；其他导入族的 ExclusiveAccess 兼容性留待 VM 回归。主题负载和标签绑定功能修复由 VMFIX-5b 负责。本任务仅使用离线与本机合成夹具，没有连接 TIA Portal、PLC 或 VM。
 
-VMFIX-2（当前任务分支，2026-11-02）：**NOT RUN**。在 V21 工程副本上复验报警、OPC UA、SiVArc、Startdrive/DCC、Safety 的正常、不支持与失败回复，确认后续读取无需重置；复验 8 个 Unified 分页读取工具的目录示例及续页、事件脚本正文、分组 PLC/HMI 的名称与项目树路径探测、缺失目标及 HMI 快捷操作的原生失败原因。本任务仅使用离线夹具，没有连接 TIA Portal、PLC 或 VM。
+VMFIX-2（已合并，2026-11-02 复验清单）：**NOT RUN**。在 V21 工程副本上复验报警、OPC UA、SiVArc、Startdrive/DCC、Safety 的正常、不支持与失败回复，确认后续读取无需重置；复验 8 个 Unified 分页读取工具的目录示例及续页、事件脚本正文、分组 PLC/HMI 的名称与项目树路径探测、缺失目标及 HMI 快捷操作的原生失败原因。本任务仅使用离线夹具，没有连接 TIA Portal、PLC 或 VM。
 
 下列改动已合并到 master，只有离线证据；正式版本发布前必须在真机上完成并记录，否则不得发布（预发布见上方例外）。
 
@@ -22,12 +22,12 @@ VMFIX-2（当前任务分支，2026-11-02）：**NOT RUN**。在 V21 工程副�
 |---|---|
 | SU-1 软件单元与导入选项（V16–V21；SW 选项从 V15.1） | **NOT RUN**。用各版工程副本确认精确单元名、相同名称对象的根/单元隔离、嵌套相对组、单块/类型/标签表与目录往返、空/不存在/大小写不同单元、SW 选项组合及两种文化选项的实际语义、覆盖备份与恢复、未知结果、树/变量/常量/交叉引用导出范围、Published/Unpublished 的预览/审批/Access 回读及 OB 拒绝。核对调用顺序、原 STA/MTA 线程、原 XML 字节与编号、TIA 补丁；显式保存。SDK 编译、合成夹具与快照不证明这些原生语义。 |
 | XREF（2026-10-30）V21 原生交叉引用确认 | **pending / NOT RUN**。V14 SP1–V20 在 API 可用时默认允许是维护者决策，不是真机稳定性证明。V21 保持人工会话开关或环境变量 opt-in；首次查询前保存，编译无安全保证。待测试者在真实 V21 工程上记录补丁、查询/删除预览结果与 TIA 日志后再决定默认值。 |
-| 引擎监控/强制表与工艺对象共享原语（P4-I2，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；V20/V21 使用测试工程副本比较两种变体，核对借用同一个 ProjectBase、原有 MTA 线程、调用顺序与参数、诊断关联 ID。覆盖根组/嵌套组、重名与精确路径、空表、反射回退、读属性失败；监控表覆盖 XML 导出→修改→Override 导入→新代理读回、None 导入、注释行创建/删除、整表删除及计数读回，强制表保持原有查找/创建和属性拒绝语义。工艺对象覆盖递归枚举、导出、目录导入、受支持的技术版本、创建后 Find、参数读取/写入、删除后验证、部分失败与工程切换；Foundation 八版分别核对根组/递归读取范围与不覆盖导出。比较消息、字段、结果顺序及失败后的工程状态，不自动重放写入。在线监视与 S7 读取须另行授权；离线编译、调用图和响应快照不代替真机验收，未验收不得发布。 |
-| 引擎硬件目录与设备创建共享原语（P4-I3，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；发布前在 V20、V21 测试工程副本分别比较默认与共享路径的 CreateDevice、CreateHardwareDevice、SearchHardwareCatalog、SearchInstalledGsdDevices、CreateHardwareCatalogDevice、CreateGsdDevice。核对同一 ProjectBase、原有 MTA 线程、目录反射及类型化字段读取的顺序与参数、同文件同关联 ID 日志；覆盖无工程、空关键字、无目录候选、重复候选、评分排序、GSDML 回退、精确 TypeIdentifier、Unified 面板版本拒绝、MLFB×版本×名称尝试顺序、失败后继续及部分写入后的工程状态。Foundation V19–V21 保持所属 STA、目录 Find 和字段顺序、计划哈希及确认保护、完整设备清点、恰好一次 CreateWithItem、结果未知后禁止重放；核对不同宿主各自的响应和错误语义，回读创建对象并显式保存。记录引擎/适配器哈希与 TIA 补丁；离线调用图和快照不替代真机验收，验收前不得发布或默认开启。 |
-| 引擎 PLC 块与编译共享原语（P4-I4a，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；八版[静态证据](../development/evidence/p4-i4a-native-evidence.json)通过，宿主限于迁移方法，V20/V21 两种引擎调用图与非域 IL 通过。V20、V21 使用同版测试工程副本比较两种变体：导出覆盖及不一致块跳过、空组删除与删后回读、类型组创建、组重命名/删除、块保护、验证导入及可选编译、移动块的文档/XML 回退与恢复文件保留、OB 拒绝。覆盖软件/设备编译器查找、Safety 登录不登出、编译消息读取失败；在线快照/指纹另需明确授权，核对 TLS/密码回调及分页。逐项记录原生调用顺序、参数、引擎 MTA 与 Foundation/Studio STA、既有工程和对象归属、异常文本及部分失败。八版 Foundation/Studio 核对块/类型遍历和批次导入导出的原有覆盖策略；缺少或失效句柄后不重放写入。离线响应相同与织入校验不代替真机回放。 |
-| 引擎 VCI 共享原语（P4-I1，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；V20、V21 各以测试工程副本对比默认与开启开关的同版引擎，完成五个 VCI 工具的往返验收后，方可考虑默认开启；未验收的试验构建不得发布。核对同一个 ProjectBase、原有 MTA 线程、原生调用顺序与参数、同文件同关联 ID 日志。覆盖无工程/无 VCI 服务、空及嵌套工作区、名称大小写与首个工作区选择、缺目录与重名拒绝、列表可选属性失败；状态覆盖 Equal/Unequal/文件缺失/未知或异常及 changedOnly。同步覆盖 dryRun、跳过 Equal、未知状态的两种 changedOnly、逐项失败后继续；WorkspaceToProject 仍在原生调用前拒绝。映射覆盖根与用户设备组、设备过滤、粗粒度对象拥有子树、既有映射、文件命名、maxObjects 截断、walkTrace、dryRun、导出失败与查询失败后重取工作区、部分完成后继续，确认不重试同一次写入。切换、关闭、重开工程后不得沿用旧 VCI 句柄；强制 GC 后中间代理仍可用。比较完整消息、字段、计数和结果顺序，回读工作区文件与映射并显式保存；记录引擎/适配器哈希、TIA 补丁和失败后的工程状态。离线调用图与响应快照不代替这些验收。 |
-| PLC 文档与外部源共享原语（P4-I4b，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；V20、V21 分别用测试工程副本比较默认与共享引擎的十个工具，静态证据见 [P4-I4b](../development/evidence/p4-i4b-native-evidence.json)（八版静态证明通过，不能替代真机验收）；L5 验收前不得默认开启或发布试验构建。核对借用同一个 ProjectBase、原有 MTA、调用参数与顺序及同关联 ID 诊断。文档覆盖单块/批量导入导出、成对文件检查、覆盖选项、Override 后编号恢复的写入顺序、空/失败结果、返回对象不符、部分成功与停止、目录和文件操作失败、导出不一致块及不支持/许可失败；回读完整消息、对象顺序、编号和实际文件。外部源覆盖名称宽松匹配与精确匹配的既有差异、重复导入、缺失源的幂等删除、无参生成与带选项及目标组生成、主副本创建、dryRun、非空组删除拒绝、V20 改名拒绝与 V21 改名回读、单元与系统组遍历；失败后确认实际工程状态，不自动重试写入。八版 Foundation 保留各自版本拒绝、精确寻址、预览/覆盖、生成/编译/回读顺序、未知结果和原 STA 线程；批量导入继续通过同一导入上下文。切换/关闭/重开工程后不得复用失效句柄；记录构建哈希、TIA 补丁、日志、读回与显式保存结果，离线测试不代替真机往返。 |
-| Studio 共享适配器会话（P4-G2，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；L5 完成前不得把开关默认值改为 `true`，试验构建不得作为发布包。八个精确版本（14sp1、15.1、16、17、18、19、20、21）分别用测试工程副本比较旧、新路径：附加已有进程与启动进程、带界面/无界面、打开/复用/保存/关闭/断开，PLC 与 HMI 设备及块/类型/变量表遍历、SimaticML 与源导出、覆盖拒绝与确认后的 XML/源导入、软件/设备编译、检查报告。核对调用顺序、参数、所属 STA、同步进度及回调重入拒绝；比较错误文本、部分成功结果和出错后继续操作。VCI 覆盖 16/17 初版、18/19 旧版、20/21 新版的工作区、映射、状态、双向同步（含 dryRun），14sp1/15.1 及无服务工程保持能力不可用；切换工程后不沿用旧 VCI 句柄。记录 bridge/adapter 哈希、打包副本织入验证、hello 身份、诊断日志及退出清理结果；离线 DTO 比对、mock、八版编译和桥接冒烟不代替真机验收。 |
+| 监控/强制表与工艺对象（P4-I2） | **NOT RUN**；八版按实际目录入口验收当前 FoundationHost → PLC worker → adapter 路径。核对监控表导出、覆盖导入、读回与删除，强制表受支持操作，以及工艺对象的遍历、导入导出、创建、参数修改和删除。覆盖根组、嵌套组、精确路径、失败后工程状态及切换工程；在线监视另需授权。保留线程、原生参数和调用顺序证据，不比较已退役引擎变体。 |
+| 硬件目录与设备创建（P4-I3） | **NOT RUN**；八版按当前工具目录和对应 SDK 能力验收。核对目录查询、精确 TypeIdentifier、重复或不存在的候选、设备创建预览与确认、Unified 面板版本保护；回读完整设备清单、创建次数与失败后状态。V14 SP1–V17 的 CreateDevice 保留入口，不以较新版工具可用性替代其验收。记录宿主/worker/adapter 哈希、TIA 补丁、线程与原生调用顺序。 |
+| PLC 块与编译（P4-I4a） | **NOT RUN**；八版按实际入口验收块/类型组、保护、导入导出、移动及软件/设备编译。覆盖精确目标、空组、重名、不一致块、OB 移动拒绝、失败后的工程状态与恢复文件。核对编译消息、Safety 登录清理、原生调用顺序及所属线程；离线测试不替代真实读回。 |
+| VCI（P4-I1） | **NOT RUN**；仅在对应 SDK 和项目暴露 VCI 服务时验收当前路径。覆盖工作区与映射、状态、同步方向、dryRun、缺失文件、部分失败及工程切换后的句柄失效；回读工作区文件和映射，记录调用顺序、线程、诊断及显式保存结果。不再要求比较已退役引擎的开关变体。 |
+| PLC 文档与外部源（P4-I4b） | **NOT RUN**；八版按目录和 SDK 能力验收单块/批量文档往返、配对文件、覆盖与编号恢复、外部源导入/生成/删除及组操作。覆盖不支持选项、返回身份不符、部分成功、文件失败与工程切换；核对文件、对象、调用顺序、线程和实际状态。失败后不自动重试未知写入。 |
+| Studio 可选共享适配器路径（P4-G2） | **NOT RUN**；TiaSharedAdapterPaths 仍是 Studio 编译开关，默认 false，prepare 明确设为 false；它不再选择引擎路径。八版在可选路径启用前，以同版工程副本验收桥接会话生命周期、PLC/HMI 浏览、导入导出、编译、VCI（按能力）、STA 与回调重入、错误和部分结果、句柄失效及清理。当前工作台项目页的 MCP 操作端路径另按 P6-PRODUCT 验收。 |
 
 ## 3.3.0 发布前最小验收（按虚拟机）
 
@@ -89,7 +89,7 @@ A、C、D 可以在虚拟机上用 AI 客户端执行，也可以由虚拟机启
 
 ## V20/V21 host + worker acceptance (P6-54)
 
-Since P8-04j2, V20/V21 run on FoundationHost with the PLC worker like the other releases; their tool sets are unchanged. These VM steps remain **NOT RUN** until performed on the exact release candidate with the corresponding TIA version and a disposable project copy. They are a release-default gate; offline startup tests do not satisfy it.
+All eight releases use FoundationHost with a PLC worker per MCP session. The V20/V21 migration checks below remain **NOT RUN** until performed on the exact candidate with the corresponding TIA version and a disposable project copy. Offline startup tests do not satisfy them; prereleases follow the exception above.
 
 | releaseKey | State | Required isolated-mode acceptance |
 |---|---|---|
@@ -98,18 +98,18 @@ Since P8-04j2, V20/V21 run on FoundationHost with the PLC worker like the other 
 
 For each row record Windows/TIA build and patch, host/worker/adapter SHA-256, test project copy identity, worker mode and timeout, tool arguments with credentials removed, MCP request IDs, before/after project state, call ordering, thread apartment, restart and rebind evidence, import/export output hashes, compile errors/warnings and nested messages, logs, and whether the project was explicitly saved. A timeout/crash after worker dispatch is not a pre-operation refusal; never repeat an operation until project state is inspected. Do not use a production project or connect to a PLC for this gate.
 
-The current release property remains `workerIsolation.enabledByDefault=false` for both keys. Change it only after both rows pass and the acceptance evidence is reviewed. If either row fails, keep the default off and retain the findings.
+The shipped host already uses the PLC worker on both keys; there is no current `workerIsolation.enabledByDefault` switch. The pending rows describe native acceptance, not an opt-in execution route. Retain any failures and inspect the project before further writes.
 
 ## 4.0 安全策略验收计划（P6-R2）
 
 以下为[4.0 规范](../archive/development/phase6-review.md)的新增验收项目，**全部 NOT RUN**，仅登记计划，不授权连接 TIA、PLC、VM 或网络。
 每行按实际广告能力逐版本记录，八个发布键为 14sp1、15.1、16、17、18、19、20、21；无该能力的版本记录 N/A 并附目录证据，不能跳过而标记通过。
-原生行为只有该版本/族的基线与候选回放均通过才可切换为 safe-v4；未验收族保持 current，且不解除上文阶段 4 的发布限制。
+行为能力表当前仍标为 current / NOT RUN。该版本/族完成真实回放前不能声称 safe-v4 已验收；正式版门槛与预发布例外见上文。
 共用证据要求：精确 SDK/TIA 补丁、工程副本/目标身份、宿主/worker/adapter 哈希、前后调用顺序及参数、MTA/STA 所属线程、关联 ID、预览哈希、故障后实际状态、回读/编译及是否显式保存。
 
 | ID / 行为族 | 状态 / 版本范围 | 验收项目与切换门槛 |
 |---|---|---|
-| P6-DEVICE 设备创建 | **NOT RUN**；19/20/21 的硬件创建入口，其余创建能力按目录逐版 | 精确目录 TypeIdentifier、型号白名单、重名、目录不存在、预览不创建；apply 原生 Create 恰一次；确认/哈希/工程身份变化拒绝；Create 前/中/后故障与残留检查，禁止换候选重试。 |
+| P6-DEVICE 设备创建 | **NOT RUN**；19/20/21 的硬件创建入口，其余创建能力按目录逐版 | 精确目录 TypeIdentifier、型号与版本能力、重名、目录不存在、预览不创建；apply 原生 Create 恰一次；确认/哈希/工程身份变化拒绝；Create 前/中/后故障与残留检查，禁止换候选重试。 |
 | P6-IMPORT 导入 | **NOT RUN**；八版普通 PLC；SD/HMI/软件单元按目录 | 默认拒绝覆盖及升级/版本改写；不改 BOM/源文件；同版块/UDT/tag-table 回读；明确支持的覆盖参数才执行；非法目标、锁定文件、批次第一个/中间失败、文件在 preview 后改变；返回成功/失败/未执行逐项证据，不回滚或重放未知写入。 |
 | P6-EXPORT 导出 | **NOT RUN**；八版普通 PLC；SD/专用对象按目录 | 预览不写目的地；单项/批量暂存发布、原文件/目录保全；拒绝覆盖、显式支持的覆盖、磁盘/权限/发布冲突；内容/路径回读、partial staging 保留；不扩大 SD、普通块/GlobalDB、软件单元与版本范围。 |
 | P6-SESSION connect/open | **NOT RUN**；八版 | PID/start time 重用与工程切换拒绝；附加不等于绑定、连接不启动；已有工程 reuseOpen=false；旧工程 upgrade=reject；明确允许升级时只改测试副本；失败不关闭陌生/借用工程；验证所有权和会话纪元。 |
@@ -149,13 +149,13 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | P6-PRODUCT（14sp1、15.1、16、17、18、19、20、21） | 用仓库外的完整 4.0 候选包启动根 `TiaOpenness.exe`；逐版选择对应 TIA；核对 hello 的 releaseKey 和新 FoundationHost/PlcWorker/adapter 身份；连接该 VM 当前 TIA 进程并显式绑定测试工程副本；读取工程树和一个 PLC 对象；显式断开并确认本次 worker/桥接退出；检查新目录日志可关联、只读安装无包内写入，且不借用历史 PID/机器授权。 |
 | P4-E1 / P4-E2 Foundation worker（14sp1、15.1、16） | 每版用该版本真实 TIA 打开工程副本；启动 net48 worker，核对协议 2 hello 身份；读 PLC 列表和块；核对错误后会话仍可用；显式断开并确认 worker 退出。 |
 | P4-F Studio bridge（14sp1、16、21） | 用 Studio 连接对应真实 TIA、打开工程副本、读取块列表、导出一个块；触发一次已处理错误并确认原错误文本及会话恢复；断开并确认桥接退出。 |
-| G3 / P4-G2 Studio 共享会话路径（八版） | 对 14sp1、15.1、16、17、18、19、20、21 分别用同版工程副本比较默认路径与 `TiaSharedAdapterPaths` 开启路径：附加/启动、打开/复用、保存/关闭/断开、PLC/HMI 导航、块/类型/变量表、SimaticML/源导入导出、软件/设备编译与 VCI（按版本/服务能力）；核对原生调用顺序、参数、STA、进度回调、错误/部分成功、句柄失效和清理。 |
-| P4-I1 VCI 共享原语（V20、V21） | 默认与共享变体逐工具比对五个 VCI 工具；覆盖 workspace 列表/状态、双向同步、映射、dryRun、失败后继续、项目切换后句柄失效；回读文件和映射并显式保存。 |
-| P4-I2 监控/强制表与工艺对象（V20、V21） | 默认与共享变体回读监控表导出/覆盖导入/删除、强制表原有行为和工艺对象遍历/导入/导出/创建/修改/删除；检查目标对象、消息、计数、失败后状态及工程切换。在线监视或 S7 读取需单独授权。 |
-| P4-I3 硬件目录与设备创建（V20、V21；Foundation V19–V21） | 核对硬件候选排序、GSDML 回退、精确 TypeIdentifier、版本拒绝及 Foundation 的确认/计划哈希；回读新设备，确认创建调用恰一次，显式保存。 |
-| P4-I4a 块与编译（八版） | V20/V21 默认与共享变体回放块/类型组、保护、导入/导出与软件/设备编译；八版 Foundation/Studio 按各自入口回放遍历和批次导入导出；核对线程归属、诊断和失败后不重放。 |
-| P4-I4b 文档与外部源（八版） | V20/V21 对十个工具默认/共享变体做文档与外部源往返；八版 Foundation 按各自版本边界核对拒绝、精确寻址、覆盖、生成/编译、编号恢复和部分完成；回读文件/工程并显式保存。 |
-| J 清理阶段（上述 L5 全部通过后） | 才能移除 `TiaSharedAdapterPaths` 开关和旧 Studio/引擎路径；随后重跑八版构建、离线套件、响应/契约对比及严格候选包校验。L5 未全部通过时保持开关默认 false，试验变体不得发布。 |
+| G3 / P4-G2 Studio 可选共享会话路径（八版） | 在 TiaSharedAdapterPaths 启用前，对八版保留的 Studio 桥接路径分别比较默认与可选共享适配器：附加/启动、打开/保存/关闭、PLC/HMI 浏览、导入导出、编译和按能力提供的 VCI；核对 STA、回调、错误、句柄失效及清理。此开关不影响已退役引擎。 |
+| P4-I1 VCI（按各版 SDK 与项目能力） | 当前 FoundationHost/PLC worker 路径逐工具验收工作区、映射、状态和同步；覆盖 dryRun、部分失败、工程切换及文件读回，不比较已退役引擎变体。 |
+| P4-I2 监控/强制表与工艺对象（按各版目录） | 当前路径验收监控表导出/覆盖导入/删除、强制表受支持操作与工艺对象往返；检查目标、消息、计数、失败后状态和工程切换。在线监视另需授权。 |
+| P4-I3 硬件目录与设备创建（八版，按各自入口） | 核对精确 TypeIdentifier、目录候选、版本拒绝与预览/确认；回读新设备、原生创建次数和失败状态，显式保存。 |
+| P4-I4a 块与编译（八版） | 当前路径回放块/类型组、保护、导入导出与软件/设备编译，核对线程归属、诊断和失败后不重放；OB 移动仍拒绝。 |
+| P4-I4b 文档与外部源（八版） | 按版本能力核对往返、拒绝、精确寻址、覆盖、生成/编译、编号恢复和部分完成；回读文件/工程并显式保存，不比较旧引擎变体。 |
+| J 可选 Studio 路径后续清理 | Studio 可选路径尚待上述八版验收；TiaSharedAdapterPaths 默认保持 false。旧引擎已删除，不能再以等待此验收描述引擎退役。后续变更仍须运行适用构建、功能测试、工具定义契约和包检查；逐工具响应捕获已退役。 |
 
 <!-- behavior-capabilities:start -->
 

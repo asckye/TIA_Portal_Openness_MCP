@@ -70,7 +70,7 @@ It also tests text longer than 262144 characters to guard against importing an
 unrelated Foundation restriction. No H string/character cap has been invented.
 
 Equivalence evidence is in
-[V4HmiEquivalenceTests.cs](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/tests/Engine/TiaMcp.Engine.Tests/V4HmiEquivalenceTests.cs)
+[V4HmiEquivalenceTests.cs](../../../../tests/KeptCode/TiaMcp.KeptCode.Tests/V4HmiEquivalenceTests.cs)
 with source-file/line citations per sample group. Deterministic Classic XML and
 theme/layout design output are compared as UTF-8 bytes. Package XML, readiness
 and other fields are compared after removing only its three report timestamps.

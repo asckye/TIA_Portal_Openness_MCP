@@ -170,11 +170,11 @@
 | 项目 | 现状 | 计划 |
 |---|---|---|
 | 引擎残留 | 引擎程序已删除，宿主以退出码 64 拒绝 `--engine-*`；Q2/Q3 已删除 `src/Engine` 残余源码、宿主引擎客户端和死条件分支；worker 协议的 `ChannelProfile.Engine` 和历史目录名 `src/EngineHost` 仍在 | 后续精简（[开发计划](../plan/plan.md)） |
-| Studio 桥接与 Studio 适配器 | V16–V19 版本控制页经桥接只读 VCI，禁用“工作区到项目”同步；WorkerChannel 的 Studio profile 只供桥接 | P8-21f |
-| 八版对外呈现 | 精简目录只在 V20/V21 默认启用；服务器说明、档案名、行为披露尚未统一 | P8-04n |
+| Studio 桥接与 Studio 适配器 | 工作台项目与版本控制页使用 MCP 操作端；保留的桥接仍使用 WorkerChannel 的 Studio profile，旧桥接与适配器代码待清理 | P8-21f |
+| 八版对外呈现 | 八版默认精简目录、共用服务器说明，公开档案名统一为 `plc-foundation`；工具集合按各版能力提供 | P8-04n1 已合并（N1-PORT）；行为路由统一仍见 UNIFY-1 |
 | 一项功能一个实现 | V21 上部分重复的旧工具失败 | DES-2 |
 | 工作台控制端到端 | 真实宿主加真实工作台的验收未完成 | P8-20e |
-| 共享原生原语 | `TiaSharedAdapterPaths` 默认 `false`，真机验收前不启用 | 真机验收 |
+| Studio 可选共享适配器路径 | `TiaSharedAdapterPaths` 仍由 Studio 工程使用，默认 `false`，`prepare` 显式设为 `false`；它不再选择引擎路径 | 真机验收、P8-21f |
 | Foundation 绑定快照 | 观测原语已有，worker 生命周期未接入，附着仍只凭 PID（第 7 节） | 未排期 |
 | 真机验收 | 八版 D1 行为族与已移植族为 `NOT RUN`；预发布由测试者使用，我们按真机核对清单做 VM 回归 | [ADR 0020](decisions/0020-prereleases-tested-by-users.md)、[真机台账](../reference/real-machine-ledger.md) |
 

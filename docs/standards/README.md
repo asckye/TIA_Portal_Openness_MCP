@@ -1,6 +1,6 @@
 # 本项目采用的开发规范
 
-状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
+状态：现行 · 最后核对：2026-11-04，master `871d54da`
 
 本仓库遵循[《工程开发手册》v1.1](engineering-handbook.html)（通用手册，随仓库保存供离线阅读）；本页只记录采用范围、项目偏差、外部参考和本目录的文件，外部参考一节取代了[参考资料与落地对照](../archive/development/references.md)。与手册冲突时以本页和 [ADR](decisions/README.md) 为准。
 
@@ -19,11 +19,11 @@
 | 主题 | 本项目的做法 | 依据 |
 |---|---|---|
 | 支持的版本 | TIA Portal V14 SP1、V15.1、V16–V21 八个版本，功能按各版本官方 API 注册 | [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md) |
-| 合并与发布 | 主机合并门 `merge-check`（NEW-REL-2，目标约 10 分钟）；完整检查和私有草稿提前由 `prepare` 完成，`publish-prepared` 公开的硬预算为 300 秒；取消 nightly，GitHub CI 不阻塞合并 | [ADR 0031](decisions/0031-release-path.md)；实现状态见[进度](../plan/progress.md) |
+| 合并与发布 | 主机合并门 `merge-check`（宽范围改动实测 21–28 分钟），候选前手动运行 `merge-check -All`；`prepare` 构建、打包、检查 ZIP 并上传私有草稿（实测约 6 分钟），`publish-prepared` 公开的硬预算为 300 秒；取消 nightly，GitHub CI 不阻塞合并 | [ADR 0031](decisions/0031-release-path.md)；实现状态见[进度](../plan/progress.md) |
 | 工作台视觉 | EplanMcp 工作台设计系统；表格行高 36；审批按钮等权重、拒绝在左、回车不批准、拒绝后不撤销 | [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md) |
 | 用语 | 界面和文档用“服务”“项目”（TIA 的 project） | [ADR 0026](decisions/0026-documentation-structure-and-language.md) |
 | 根目录布局 | `runtime/`、根启动器 `TiaOpenness.exe` 与项目 `bin`/`obj` 保留为忽略的构建输出；checkout 检查依赖与 `manifest/`、`templates/` 同根的运行布局，项目输出沿用 .NET 标准布局。`TiaMcp_Output/` 保留供生态 Python 环境、发布前置检查和产品使用。将 checkout 检查改为从提取的 ZIP 运行安排在 beta.4 之后；`hooks/` 不搬入 `plugin/`，避免旧安装遗留的钩子重复加载 | [ADR 0030 修订](decisions/0030-documentation-and-repository-structure.md#2026-11-04-修订保留运行输出和根目录钩子) |
-| 文档目录 | 开发文档分为 `docs/standards/`、`docs/plan/`、`docs/manuals/`、`docs/archive/`，不用手册第 2.6 节的目录；ADR 在 `docs/standards/decisions/`（手册 DOC-04 写 `docs/adr/`），交接在 `docs/plan/progress.md`（手册 DOC-11 写 `handoff.md`） | [ADR 0030](decisions/0030-documentation-and-repository-structure.md) |
+| 文档目录 | 开发文档分为 `docs/standards/`、`docs/plan/`、`docs/manuals/`、`docs/archive/`，不用手册第 2.6 节的目录；ADR 在 `docs/standards/decisions/`（手册 DOC-04 写 `docs/adr/`），交接与计划分别在 `docs/plan/progress.md`、`docs/plan/plan.md`（手册 DOC-11） | [ADR 0030](decisions/0030-documentation-and-repository-structure.md) |
 
 ## 本目录的文件
 

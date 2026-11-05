@@ -190,7 +190,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | 路径 | 内容 |
 |---|---|
 | `src/` | 产品源码：八个发布键共用的 FoundationHost 宿主、PlcWorker、按发布键编译的适配器及其契约、WorkerChannel、OnlineChannels、纯逻辑库 `Logic`、共享源码 `Shared`、工作台 `Studio`、Updater 和随包工具。`src/Engine` 残余源码已由 Q2 删除；`src/EngineHost` 是八版共享的宿主包装链代码，保留历史名称 |
-| `tests/` | 测试工程，按 Shared、FoundationHost、Adapters、WorkerChannel、Studio、Generation、Release、Tools、Updater 等分组；原 `tests/Engine/` 工程已移入 `tests/FoundationHost/`，保留工程名、程序集名、命名空间与套件名；`tests/test-suites.json` 是套件注册表 |
+| `tests/` | 测试工程，按 Shared、FoundationHost、Adapters、WorkerChannel、Studio、Generation、Release、Tools、Updater 等分组；`tests/FoundationHost/` 保留迁移工程的工程名、程序集名、命名空间与套件名；`tests/test-suites.json` 是套件注册表 |
 | `build-tools/` | 全部 C# 构建、检查与发布自动化：`release`（唯一入口）、`common`、`native-call-weaver` |
 | `scripts/` | 只放随包交付的 Python 和手动诊断脚本；开发用的 Python 检查和生成器（`scripts/checks`、`scripts/generate`）正由 P8-10 移植到 `build-tools/release` |
 | `reference/` | 生成器输入和随包参考数据：`tool-examples`（调用、语言文件、结果解释、调用顺序）、`tool-catalog`、固定来源的 Siemens 官方示例与授权记录、`version-feature-matrix.json`、`v21-ecosystem.json`、`schemas/standards/` |

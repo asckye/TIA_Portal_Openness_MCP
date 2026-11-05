@@ -67,7 +67,7 @@ python scripts/checks/Test-NativeLifecycle.py --runner tests/FoundationHost/TiaM
 | `threadId`、`apartment`、`mcpProcessId` | 线程、公寓模型和写记录的进程 |
 | `exceptionType`、`hresult`、`exceptionChain` | 有界的异常类型链，不含消息 |
 
-- 包装原样抛出异常，不重试、不换线程、不改参数。不记录密码、脚本正文、变量值、参数数组或返回内容，写日志不额外调用 Openness getter。`BEFORE` 写入后刷盘，日志 I/O 失败不阻止原操作，失败计数见 `journalHealth`。`build-release` 另用假 API 夹具（`Test-NativeDiagnostics.py --fixture`）验证这些行为，以及进程中途退出时最后一条 `BEFORE` 已落盘。
+- 包装原样抛出异常，不重试、不换线程、不改参数。不记录密码、脚本正文、变量值、参数数组或返回内容，写日志不额外调用 Openness getter。`BEFORE` 写入后刷盘，日志 I/O 失败不阻止原操作，失败计数见 `journalHealth`。`merge-check` 另用假 API 夹具（`Test-NativeDiagnostics.py --fixture`）验证这些行为，以及进程中途退出时最后一条 `BEFORE` 已落盘。
 - 按 `nativeCallId` 配对。缺终止记录时结合进程退出时间和 Windows 事件定位；日志轮转（约 10 MiB 加一个 `.previous`）或 I/O 故障也会造成缺失，不能单凭缺失认定某个 API 导致崩溃。依据：[crash-diagnosis 指南](../../reference/siemens-openness/skills/crash-diagnosis/SKILL.md)；worker 恢复见 [worker 指南](../guides/openness-worker-isolation.md)，进程租约见 [ADR 0011](../standards/decisions/0011-tia-process-lease-on-all-releases.md)。
 
 ## 工具示例库

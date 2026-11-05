@@ -4,13 +4,13 @@ Contributions and reports are welcome in English or Chinese. Preserve the origin
 
 ## Branch and version scope
 
-All maintained changes target `master`. There are no maintained version branches. The current release keys are `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, `21`; original V14/V15 are excluded. V14 SP1–V19 use the PLC foundation host and matching worker, while V20/V21 use the full engine. Studio uses eight direct Openness adapters. See [version scope](../docs/reference/version-tools.md).
+All maintained changes target `master`. There are no maintained version branches. The current release keys are `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, `21`; original V14/V15 are excluded. All eight releases use FoundationHost and a matching PLC worker, with public profile `plc-foundation` and a lite catalog by default. The Workbench attaches to the MCP session through its operator channel; the retained Studio bridge has eight version-specific adapters. See [version scope](../docs/reference/version-tools.md).
 
 Shared behavior belongs in API-independent code; native differences stay in their exact-version adapters. Test every affected release, not only V20/V21. A tool present in one catalog must not be advertised for another without a working implementation and matching contract.
 
 ## Reports
 
-Include the exact TIA release, known Update/Hotfix, Windows version, application/engine version, selected runtime, client or Studio, expected behavior, actual result and redacted error text. The full engines provide the `doctor` CLI; foundation hosts use their advertised environment tools. Do not apply full-engine CLI switches to foundation executables.
+Include the exact TIA release, known Update/Hotfix, Windows version, host/worker version, selected runtime, client or Studio, expected behavior, actual result and redacted error text. Use the advertised environment tools and Workbench diagnostics for the selected release.
 
 Do not attach customer projects or credentials. Use the smallest reproducible sample and distinguish a returned error from TIA exiting. [Issue templates](ISSUE_TEMPLATE) collect this information.
 
@@ -22,7 +22,7 @@ Do not attach customer projects or credentials. Use the smallest reproducible sa
 4. For actual import/compile acceptance, report the selected test project/PLC, imported identities, compile error/warning counts and readback. A build or successful method return does not establish engineering success.
 5. Update affected docs and add user-visible changes to `CHANGELOG.md` using the existing format. Keep dates and versions accurate.
 
-Build outputs are not committed. Siemens SDKs come from a licensed local installation and are not distributed. `dotnet run --project build-tools/release -- build-release` builds the full engines/configurator; `dotnet run --project build-tools/release -- build-multi-version` builds and validates the other runtimes and Studio adapters. Formal packaging runs both required stages and verifies their manifests. Follow [validation](../docs/manuals/validation.md) and the [release workflow](../docs/manuals/release.md); source or test changes require refreshed matching evidence.
+Build outputs are not committed. Siemens SDKs come from a licensed local installation and are not distributed. The host merge gate is `dotnet run --project build-tools/release -- merge-check`; run `merge-check -All` before a release candidate. `prepare -Version <version>` builds, packages and checks the ZIP before uploading a private draft; `publish-prepared` publishes the candidate after maintainer confirmation. There is no nightly. A clean-tree `prepare -Version <version> -BuildOnly` builds and packages on any branch without creating a publishable candidate. Follow [validation](../docs/manuals/validation.md) and the [release workflow](../docs/manuals/release.md); source or test changes require refreshed matching evidence.
 
 Repository checks include:
 
@@ -31,7 +31,7 @@ dotnet run --project build-tools/release -- check-repository
 dotnet run --project build-tools/release -- check-dead-tool-references
 ```
 
-The full-engine offline suite is a console test program, invoked with `dotnet run`, not `dotnet test`; other projects use their documented test runner. See the validation guide for the correct commands and prerequisites.
+Registered suites run through `dotnet run --project build-tools/release -- test-suites -Suite <name>`. In the Codex sandbox, build affected Debug projects and run only affected test classes. Unregistered console test programs use `dotnet run`; `dotnet test` does not execute their assertions. See the validation guide for the correct commands and prerequisites.
 
 ## Repository conventions
 
@@ -56,17 +56,7 @@ file therefore needs no new allowance, while copying or changing an unmarked cat
 `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed -UpdateBaseline` after resolving catches to
 remove old entries; routine updates must not use `-AllowGrowth` (reserved for reviewed initialization).
 
-The [P2-03 logging policy](../docs/standards/design.md) specifies the planned
-`SwallowedExceptions.Note(string site, Exception ex)` helper: record only the site, exception type's
-full name and `HResult`, never `Message` or `ToString()`. Log the first occurrence per site per process
-and only count later occurrences; the helper must never throw or recursively log its own failures.
-Output is off by default. `TIA_MCP_LOG_SWALLOWED=1` makes the engine, the Studio bridge and the Foundation
-worker write one stderr line per site; without it the engine only logs at `ILogger` Debug (category
-`TiaMcpServer.Swallowed`), which shows when Debug logging is already enabled.
-Do not write swallowed-exception diagnostics to `calls-*.jsonl`, `InvocationJournal` counters or
-response metadata. Keep privacy-related stderr discards and logging-failure catches; do not change
-native catches to rethrow before L5 acceptance. The helper and runtime wiring belong to P2-03b;
-this check does not introduce runtime logging.
+[SwallowedExceptions.Note](../src/Shared/SwallowedExceptions.cs) records only the site, exception type and `HResult`, never `Message` or `ToString()`. It emits the first occurrence per site per process to an installed sink and counts later occurrences. The PLC worker and retained Studio bridge install a stderr sink when `TIA_MCP_LOG_SWALLOWED=1`; otherwise they install no sink. The helper catches its own bookkeeping and sink failures. See the [logging policy](../docs/standards/design.md#67-吞异常的记录).
 
 Do not commit TIA projects, SDKs, generated binaries, logs, local machine paths, scratch data or customer material. Keep real-machine evidence and unresolved limitations linked from the current [acceptance index](../docs/reference/real-machine-ledger.md).
 

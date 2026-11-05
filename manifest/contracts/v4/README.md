@@ -2,16 +2,15 @@
 
 These files freeze the contracts exposed by the built products. The release key is exactly one of
 `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, or `21`; each snapshot directory contains exactly
-one `<releaseKey>.json` for each key. Foundation snapshots cover 14sp1–19. Full-engine snapshots
-cover 20–21 and include the lite roster.
+one `<releaseKey>.json` for each key. All eight releases use the `plc-foundation` profile and include both the full tool
+roster and the advertised lite roster.
 
 ## Contract baseline format 2
 
 `baseline/<releaseKey>.json` has these fields:
 
-- All releases: `formatVersion` (integer `2`), `release`, `profile` (`plc-foundation` or
-  `full-engine`), `tools`, `behaviorCapabilities`, and `schemas`.
-- V20/V21 only: `liteTools`, a sorted list of names in the advertised lite profile.
+- All releases: `formatVersion` (integer `2`), `release`, `profile` (`plc-foundation`), `tools`, `behaviorCapabilities`, and `schemas`.
+- All releases: `liteTools`, a sorted list of names in the advertised lite profile.
 - Each `tools` item has exactly `name`, `inputSchema`, `outputSchemaSha256`, `annotations`, and
   `descriptionSha256`. `inputSchema` is the built product's complete MCP input schema;
   `outputSchemaSha256` references its complete output schema in `schemas`, or is explicitly `null`

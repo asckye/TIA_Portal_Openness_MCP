@@ -1,210 +1,33 @@
-# Automation Engineering Workbench desktop (formerly TIA Openness Studio)
+# Automation Engineering Workbench desktop
 
-状态：现行 · 最后核对：2026-10-11，master `578a05ee`
+Status: Current · Last checked: 2026-11-04, master `871d54da`
 
+The WPF Workbench runs on .NET 10 and supports English and Chinese. The root `TiaOpenness.exe` launcher starts the desktop from `runtime/studio`; the bundle supplies .NET 10 in `runtime/dotnet`. The launcher also checks for .NET Framework 4.8, which the PLC workers and retained Studio bridge require.
 
-The English/Chinese WPF desktop now hosts both **Engineering** and **MCP & clients** in
-one .NET 10 main window. The root `TiaOpenness.exe` is the Studio launcher (`TiaOpenness.Launcher` assembly)
-for this desktop, not a second configuration application. Configuration code is compiled
-into the GUI and the page remains alive while the engineering view is shown. Version,
-language and appearance are shared; a running service or active engineering bridge locks
-the selected release. Closing the main window still handles its owned MCP service.
+Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT, copyright 2026 asckye. See [LICENSE](../../third_party/tia-openness-studio/LICENSE) and [provenance](../../third_party/tia-openness-studio/UPSTREAM.json). For installation and a desktop walkthrough, see the [beginner guide](../../docs/getting-started/beginners.zh-CN.md).
 
-Engineering operations continue to call Siemens Openness through the .NET Framework 4.8
-bridge. The MCP engines retain their existing process boundaries. The unified desktop
-requires the complete bundle, whose `runtime/dotnet` supplies .NET 10, including on an AI-only host.
-The root launcher checks for .NET Framework 4.8 or later before starting the Workbench; if it is
-missing, install the Microsoft .NET Framework 4.8 Runtime. The environment page reports this
-prerequisite in Chinese and English. The bundled .NET 10 runtime does not replace .NET Framework.
-The latest published package is v3.3.0; the 4.0 source is unreleased.
+## Sessions and interface
 
-Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT,
-copyright 2026 asckye. See [LICENSE](../../third_party/tia-openness-studio/LICENSE) and [file provenance](../../third_party/tia-openness-studio/UPSTREAM.json).
-The [provenance record](../../third_party/tia-openness-studio/UPSTREAM.json) retains the original file and archive hashes; the original tree and history are available in the [upstream repository](https://github.com/asckye/tia-openness-studio/tree/87099c576fbc06e6b6ac523ddbf763fe0aa2ce02).
+[MainViewModel](Gui/ViewModels/MainViewModel.cs) uses [McpProjectClient](Gui/Services/McpProjectClient.cs) and [McpSessionClient](Gui/Services/McpSessionClient.cs) for project operations. The Workbench attaches to a host session through the operator pipe; the host shares tools, approvals and audit with MCP clients. It can also start its own operator host when needed. Multiple running TIA processes are presented for explicit PID selection.
 
-For a first installation and a step-by-step desktop walkthrough, see the [beginner guide (Chinese)](../../docs/getting-started/beginners.zh-CN.md).
+All eight releases use FoundationHost with a PLC worker per MCP session. The public profile is `plc-foundation`; all releases have lite and full rosters. Native calls currently use STA for V14 SP1–V19 and MTA for V20/V21. The retained Framework bridge and `StudioOpenness.V*` assemblies are separate legacy components; the current project UI must not be described as a direct bridge UI. `TiaSharedAdapterPaths` still selects the optional Studio adapter path, and release preparation sets it to `false`.
 
-工程操作和版本控制页经操作端管道附着 MCP 会话，共用工具、审批和审计。旧桥接与适配器代码保留到清理任务；下文涉及直接桥接的内容为历史实现。现行调用路径见[架构规范](../../docs/standards/design.md)。
+[MainWindow.xaml](Gui/MainWindow.xaml) and [Themes](Gui/Themes) implement the EplanMcp-based shell and pages: a 232-pixel sidebar with a 64-pixel collapsed form, project, environment, logs, MCP and clients, version control, AI calls, settings and approvals. [WorkbenchFonts](Gui/Themes/WorkbenchFonts.cs) uses system UI and monospace fallback chains. Light, dark and high-contrast palettes are supported. The approvals page has a list and details, host-computed risk, equal-weight write decisions and a reject default for destructive requests. Turning write approval off currently uses a confirmation panel without text entry. APR-05 is adding a required confirmation word for that setting; it is not implemented yet and does not apply to ordinary approval decisions.
 
-## Build and run
+## Build and check
 
-Build on Windows with .NET 10 SDK, .NET Framework 4.8 and the authorized PublicAPI directories:
+From a clean repository, use the [release manual](../../docs/manuals/release.md) to supply the eight licensed SDKs and pinned decoder Python:
 
 ```powershell
-dotnet run --project build-tools/release -- build-studio -PublicApiRoot 'D:\Project\TIA_Portal_MCP' -Test
-& ./src/Studio/Gui/bin/Release/net10.0-windows/TiaOpenness.exe --lang zh --openness-version 21
+dotnet run --project build-tools/release -- prepare -Version <version> -BuildOnly -PublicApiRoot <eight-version-sdk-root> -Python <absolute-python.exe>
 ```
 
-`-NuGetConfig` may select a local restore configuration. Each version compiles the same native
-source against its exact SDK into a separate adapter DLL. The build places them under the app's
-`bridge/adapters/v<release-key>` directories for all eight releases. No Siemens assembly is copied into
-the output; the native bridge resolves the installed version at runtime.
-
-Choose **Connect** to attach to a running instance or start TIA when none is available. The
-Headless option controls a newly started TIA instance. Open, Save and Close now operate through
-the native session. The bridge runs calls sequentially on its STA thread. An explicit
-`--openness-version 14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20` or `21` selects the release.
-The title-bar release picker selects the same identity before connecting; omission selects the newest
-supported installation. Restart Studio to change the native version after a bridge session starts.
-
-For the synthetic workflow, no PublicAPI or TIA installation is needed:
+Match `<version>` to `Version.props`. This mode is available on any branch and builds the desktop into `runtime/studio`; it does not create a publishable candidate. To build only the GUI for local development:
 
 ```powershell
-dotnet build src/Studio/Gui/TiaOpenness.Gui.csproj -c Release
-& ./src/Studio/Gui/bin/Release/net10.0-windows/TiaOpenness.exe --mock --lang zh
+dotnet build src/Studio/Gui/TiaOpenness.Gui.csproj -c Debug
 ```
 
-The GUI build also builds and deploys the API-independent bridge. Native adapters are built only
-by the explicit SDK build above. Runtime compiler downloads and automatic adapter compilation
-are removed. Doctor remains available without loading a native TIA session.
+The host runs `merge-check` for affected builds, registered suites and source checks, and `merge-check -All` before a release candidate. Full `prepare` builds, packages, checks the ZIP and uploads a private candidate draft. After maintainer confirmation, `publish-prepared` publishes that draft. There is no nightly. The sandbox runs affected Debug projects and test classes only; current suite registration and thresholds are in [validation](../../docs/manuals/validation.md).
 
-## Ant Design interface
-
-Since 2026-10-18 (P8-80) the Workbench follows the Ant Design v5 specification. Ant has no WPF
-library, so the window stays native WPF and only the visual layer is Ant: the light palette maps
-the default algorithm (colorPrimary #1677FF, borderRadius 6/4/8, controlHeight 32/24/40, font sizes
-14/12/16 and headings 38/30/24/20/16), the dark palette the dark algorithm (layout #000000,
-container #141414, elevated #1F1F1F, primary #1668DC), and high contrast keeps the Windows system
-colours. The control templates live in one vocabulary, [Themes/Primer.xaml](Gui/Themes/Primer.xaml),
-whose `Primer.*` key names are kept as implementation names; colours come only from
-`Themes/Palette.*.xaml` by `DynamicResource`, so the theme switch repaints the live window.
-
-WCAG 2.2 AA overrides Ant where they conflict: primary text, links and the light primary button use
-blue-7 #0958D9 (dark text #3C89E8), solid buttons darken on hover and press so white text keeps
-4.5:1, warning and success text use gold-9 and green-8, control outlines use gray-7 (#8C8C8C, dark
-#737373) for 3:1, secondary text also serves for placeholders and faint labels (65 %), and keyboard
-focus is a 2 px colorPrimary ring. Shadows are translucent layers on pop-ups only; in-window drawers
-and dialogs keep a colorBorderSecondary outline. Hover motion is 0.12 s. Glyphs (chevrons, tick,
-ellipsis, Alert and Empty marks) come from `Themes/Icons.xaml`. Segoe UI with bundled Noto Sans SC
-stays the UI font and bundled JetBrains Mono the code font, so screenshots match on every VM.
-
-The minimum window size is 1024 x 640. A 216-pixel side menu groups the pages (it folds to
-56-pixel icons below 992 pixels or with its trigger) and the 56-pixel header shows the
-breadcrumb, the MCP state, TIA version/address/project and the pending-approval badge.
-The Project page holds the project head, program blocks and a 300-pixel column of compile,
-inspection, environment and log cards; other pages use the same page head and side column.
-Engine settings opens the settings drawer with English/中文 and Auto/Light/Dark
-choices. Language and theme changes keep the same ViewModel, session, selection and commands.
-Ctrl+S saves the project; Ctrl+1 selects MCP & clients, Ctrl+2 selects Engineering, and
-Ctrl+3–8 select the remaining pages. The release picker lives in the installation card
-and project options. Save both configurations is in the clients container footer.
-
-Cards, logs, local diffs, summaries, menus and application message dialogs follow the selected
-palette. System file/folder pickers keep the Windows shell appearance.
-
-Project opens the existing connection/project options; Export / Import opens format and output
-options; Inspect opens the existing inspection rules. Program blocks retain filtering, selection,
-export/import and compile actions. VCI keeps mapping and synchronization previews separate from
-execution. The direction selector chooses the existing push/pull commands; this is not Git push.
-Git diff includes staged, unstaged and untracked local changes.
-
-Compile and inspection cards display results already recorded by the existing operation log.
-Clearing that log returns the cards to Not run. Object names, paths, code and native diagnostic
-messages keep their original text when the interface language changes. The MCP page configures clients and service lifecycle; it is not a generic tool invoker.
-
-Set `TIA_PRIMER_SCREENSHOTS` to a local output directory before running the WPF tests below to
-capture the English and Chinese fixtures in both themes. These are actual WPF renderings at
-1200 x 780 with synthetic data, without connecting to TIA. `TIA_WORKBENCH_RENDER_DIR`
-enables the full page, drawer, toast and confirmation matrix in both languages and themes.
-
-## Bridge channel
-
-The desktop and Framework bridge use `TiaMcp.WorkerChannel` protocol 2 with an
-explicit `Studio` profile. Studio selects the exact release before starting the
-bridge, then validates the bridge and deployed-adapter hashes and a fresh 32-byte
-nonce during hello. The bridge loads the adapter before hello but does not create an
-Openness session until a related request arrives. If no release is selected, the
-desktop chooses the newest installed version; a diagnostic or mock session without
-an installation uses release `21`.
-
-Requests, results, and progress use the shared Contracts `BridgeJson` codec and one
-`System.Text.Json` options factory. DTO properties remain PascalCase; wire method
-and progress property names retain their established lowercase spelling, and enums
-remain names. The RPC routes `session.state` and `doctor.run` continue to dispatch to
-the Studio methods `GetState` and `Doctor`; these are Studio RPC/API names, not MCP
-tool names. `RpcResponse` distinguishes a missing `result` from explicit
-`result:null`; errors omit `result`, and success omits `error`. The desktop preserves
-the prior date-token conversion behavior when decoding RPC DTOs.
-
-RPC errors keep `error.data.outcome`, `evidence`, and the original `rpc` code,
-message, and data. A rejection before backend entry is `RejectedBeforeNative`, a
-read failure is `ReadFailed`, and a failure after entering a potentially
-state-changing method is conservatively `Unknown`; this classification does not
-prove that a native call occurred. A handled RPC error is shown to the user while
-the Studio bridge session remains usable, including `Unknown`. Protocol faults,
-timeout, and cancellation after dispatch invalidate the session. The client does
-not retry, replay, or automatically restart a failed bridge. Undispatched
-cancellation does not consume an id. The default call budget is ten minutes, and
-disposal waits up to five seconds before ending an owned bridge process.
-
-Progress retains `{operation,current,total,message}` in `params.payload`, together
-with protocol 2 request id, sequence, and percentage. It is bound to the originating
-request, validated before notifying the UI, and does not extend the call budget.
-Binding epochs track managed `session.connect`, `session.disconnect`, `project.open`,
-and `project.close` commands only. They do not call `GetState`, read Siemens objects,
-or detect an external project rebind. Siemens calls remain sequential on the bridge
-STA thread.
-
-The UI displays handled errors through the existing message paths: Workbench activity
-uses `Exception.Message` in status and logs, version-control diffs use it as the
-caption, bridge stderr retains the original method/code/message, and the unhandled
-exception dialog and crash log keep their existing text. Result-level export,
-compile, inspection, VCI and progress messages remain in their DTOs.
-
-The Core golden tests cover all 29 Contracts DTOs, defaults, nulls, enum names and
-date/time cases; the RPC method tests compare requests, responses, backend arguments,
-call order and progress. Client tests also cover identity rejection, all Studio
-error cases, cancellation before and after dispatch, timeout, concurrent calls,
-child exit, handled errors followed by another call, late progress, and disposal.
-Run the offline bridge smoke after `dotnet run --project build-tools/release -- build-studio` with local SDK files:
-
-```powershell
-dotnet run tests/Studio/Test-BridgeSmoke.cs -- --bridge src/Studio/Gui/bin/Release/net10.0-windows/bridge/TiaOpenness.Bridge.exe --public-api-root <local-sdk-root>
-```
-
-It checks hello identity, `session.state`, `ping`, `doctor.run`, and clean EOF for
-V14 SP1, V16 and V21. These checks do not connect to TIA or replace native
-acceptance.
-
-## Workflows and boundaries
-
-| Workflow | Implementation |
-|---|---|
-| Project / PLC / HMI browser | Native session and shared desktop contracts |
-| XML export | Native block/type export; existing output files are reported instead of silently replaced |
-| Text export | Native external-source generation for supported textual blocks/types; no claim of lossless graphical conversion |
-| XML import | Native import with the operator's overwrite choice |
-| Source import | `.scl`, `.db`, `.udt`; requires overwrite confirmation because native generation may replace blocks; temporary source has a unique name |
-| Compile | Native compiler result with counts and messages |
-| Inspection | Shared metadata rules; unused-block inference is skipped without complete reference evidence |
-| VCI | Unavailable on V14 SP1/V15.1; shared workflow over legacy WorkspaceMapping APIs on V16–V19 and MappedObject APIs on V20/V21 |
-| Git diff | Staged, working-tree and untracked local file changes |
-| Mock | The same typed operations and dispatcher with synthetic PLC/HMI fixtures |
-
-VCI mapping exports once at the workspace root. It does not retry a failed write with another
-directory. Import/mapping/synchronization batches stop after the first failed native operation
-and retain their partial results. An interrupted bridge call is not automatically replayed.
-These operations do not provide rollback. An unsuccessful source generation retains its uniquely
-named source for inspection. The legacy `RequireBlockComment` inspection rule checks HeaderAuthor.
-
-The configuration page is the compiled `src/Studio/Gui/Configuration/ConfigurationView.xaml`
-UserControl. Its code-behind retains the configuration/service logic and loads the Studio palettes
-and its own compiled English/Chinese dictionaries. `src/Studio/Launcher` contains only the
-Framework compatibility launcher; configuration tests run in the .NET 10 desktop host.
-
-## Validation
-
-```powershell
-dotnet run --project tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
-dotnet test tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release
-dotnet test tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release
-```
-
-The client suite runs both in-process mock workflows and the real bridge executable with its
-mock backend, including project lifecycle, browsing, export/import, compile, inspection, VCI,
-progress and error recovery. It also runs Doctor through the ordinary bridge without a TIA
-session. WPF tests render and inspect the actual controls. Native adapters compile against the
-official eight-release SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
-
-Live 4.0 TIA project acceptance remains pending. From a clean repository root, `dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.3 -BuildOnly` builds the desktop in `runtime/studio` and packages all eight adapters; match `Version.props`. This mode is available on any branch and does not run the full checks. On master, `prepare` without `-BuildOnly` runs the complete checks and uploads a candidate draft; after maintainer confirmation, `publish-prepared` publishes it. The host merge gate is `merge-check`; there is no nightly run. Full audit findings are in
-[the shared version framework](../../docs/standards/design.md).
+GUI and Core tests cover synthetic UI, protocol and client behavior. These checks do not demonstrate native TIA behavior; see the [real-machine ledger](../../docs/reference/real-machine-ledger.md) for pending acceptance and the [architecture](../../docs/standards/design.md) for process ownership, failure handling and retained bridge boundaries.

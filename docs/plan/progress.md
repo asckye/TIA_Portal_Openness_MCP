@@ -1,6 +1,6 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-04，master `ef1988bc`
+状态：现行 · 最后核对：2026-11-04，master `871d54da`
 
 本页记录已核对的主线状态、待集成工作和测试者反馈；范围、顺序与放行门槛见[开发计划](plan.md)。
 
@@ -10,7 +10,7 @@
 - beta.3 已发布，CHANGELOG 和[发布说明](../releases/v4.0.0-beta.3.md)已更新。GitHub CI 的修复（CI-FIX、CI-FIX2）在发布之后合并，结果以最新一次 CI 为准。
 - PIPE-INT/SLIM-1 已合并（`eee7b372`），VMFIX-2 已合并（`93371695`、`b769d196`）。旧文档中的“仍等这两项合并”已不适用。
 - `prepare` 只构建、打包并检查 ZIP（PREP-SLIM），2026-11-04 实测约 6 分钟；`publish-prepared` 公开已封存的候选，beta.3 实测 6.9 秒。
-- 合并门为 `merge-check`：普通 `dotnet` 构建和测试，含 38 个注册套件和两组传输检查；涉及共享代码的合并在 2026-11-04 实测约 22 分钟。PLC 模拟检查已删除，发布候选前手动运行 `merge-check -All`；没有 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。
+- 合并门为 `merge-check`：普通 `dotnet` 构建和测试，含 38 个注册套件和两组传输检查；涉及共享代码的合并在 2026-11-04 实测约 21–28 分钟。PLC 模拟检查已删除，发布候选前手动运行 `merge-check -All`；没有 nightly，GitHub CI 不阻塞合并（[ADR 0031](../standards/decisions/0031-release-path.md)）。
 - 架构：八版 FoundationHost，每个 MCP 会话一个 PLC worker；入口 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`，worker 位于同目录 `worker/`。V20/V21 使用 MTA，V14 SP1–V19 使用 STA；MTA-1 的统一仍列在后续计划。引擎运行文件已退役，源目录残留已由 Q2/Q3 删除。各版工具数见[生成的目录](../reference/version-tool-catalog.md)。
 - 品牌为自动化工程工作台；程序名、插件 ID、MCP 服务名 `tia-portal`、包名和仓库地址保持原有标识。GitHub 仓库改名仍在正式版计划内，未执行。
 
@@ -29,9 +29,14 @@
 | REORG-2、REORG-3、TIDY-1–6 | 已合并（`b0b4d9a7`、`edbf4ef8`） | 无 |
 | beta.3 准备与公开 | 已发布（`1d57c277`） | 无 |
 | PREP-SLIM、CI-FIX、CI-FIX2、TRANSPORT-FAST | 已合并（提交见[计划](plan.md)） | 看 GitHub CI 结果 |
-| beta.4 | VMFIX-3/4/5、DES-INT/4、RELAY-1、UI、P8-84、N1-INT、REVIEW-1、SCORE-1、VMAUTO-1、输出根外文件写审批均在计划中；产品分支合并后执行 TIDY-7、`src/EngineHost` 改名和 `wrap-long-lines -Check` 合并门；HANG-GUARD 待任务说明 | 按整理后的路径和新验证入口更新任务说明 |
+| RELAY-1、UI-INT、UI-2c、P8-84 | 已合并（`d635fbb6`、`0f58eabc`、`400ad350`、`21a8a59a`、`32a8aa1c`、`699e989b`，集成修订 `ccf9b263`） | 真机复验仍待执行 |
+| APR-05 | 进行中：关闭写操作审批的确认词输入与核对尚未实现 | 在现有确认面板增加确认词；普通审批不加输入框 |
+| P8-04n1（N1-PORT） | 已合并（`fb3bb356`、`89ef43c4`、`1a4add6d`）：八版公开 profile 均为 `plc-foundation`，默认精简清单 | 不代表八版原生行为已验证 |
+| VMFIX-3-PORT | 已合并（`8fe022bd`、`871d54da`）：确定失败与未知结果分开，未知结果仍要求重置 | 按计划复验真实导入和失败读回 |
+| OUTROOT-1、DES-PORT、REVIEW-PORT、SCORE-PORT、CI-MSG | 进行中；DES-PORT 分 A/B/C，依次独立合并，取代 DES-INT；REVIEW-PORT、SCORE-PORT 取代旧任务 | 按计划中的 2026-11-04 决定实施，不能提前标记完成 |
+| beta.4 其余工作 | VMFIX-4/5、DES-4 待执行；产品分支合并后执行 TIDY-7、`src/EngineHost` 改名和长行合并门；HANG-GUARD 等待任务说明 | 待编写说明的清单见计划 |
 
-REVIEW-1 会把漏洞扫描带入新工具；目前不能宣称新准备命令已覆盖它。APR-05 的确认词用于关闭写操作审批，不用于每次普通批准。
+REVIEW-PORT 会把漏洞扫描带入新工具；目前不能宣称新准备命令已覆盖它。APR-05 正在增加关闭写操作审批时的确认词要求，当前代码尚未实现；该要求不用于每次普通批准。
 
 ## 真机结果
 

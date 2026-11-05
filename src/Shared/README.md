@@ -1,46 +1,13 @@
-# Shared Openness host utilities
+# Shared host utilities
 
-Status: Current · Last checked: 2026-10-11, master `578a05ee`
+Status: Current · Last checked: 2026-11-04, master `871d54da`
 
+This directory contains source shared by host, worker, adapter and Workbench projects. Consumers select the files they compile; native implementations are in [Adapters/Native](../Adapters/Native). [Host](Host) contains shared MCP declarations and host support. API-independent contracts live in [Adapters.Contracts](../Adapters.Contracts).
 
-These files are source-linked by their consumers. Core utilities use BCL-only contracts; native diagnostics observe boundaries without referencing Siemens types. The `Host/` folder contains shared MCP declarations and host support, including `EngineeringFileNames.cs` and `ToolJsonArguments.cs`; its consumers provide the MCP SDK dependencies.
+All eight releases use FoundationHost with a PLC worker per MCP session and public profile `plc-foundation`. The Workbench project UI uses the MCP operator channel; the retained Studio bridge still calls Openness for its legacy path. [PrepareBuild](../../build-tools/release/PrepareBuild.cs) builds the matching hosts, workers, adapters and desktop. Registered suites run under `merge-check`; `prepare` builds, packages and checks the ZIP before candidate publication.
 
-| Source | Consumers | Contract |
-|---|---|---|
-| `ProcessArguments.cs` | Configurator, MCP router/worker, MCP ecosystem tools, Studio Git | Windows CRT argument quoting; C# 5 compatible |
-| `LocalProcess.cs` | MCP ecosystem tools, Studio Git | UTF-8 streams, concurrent output draining, existing command timeouts and output limits; .NET 4.8 and modern .NET |
-| `OpennessEnvironment.cs` | Configurator, engine/Foundation/adapters, Studio Doctor/locator | Read-only Windows facts; C# 5 compatible; caller owns search order and runtime admission |
-| `BundleLayout.cs` | Logic (engine resource, CLI and router lookup), Studio Client, Core and GUI | BCL resource table and bounded root lookup; net48, net10.0 and net10.0-windows; excluded from the woven engine EXE |
-| `NativeCallDiagnostics.cs` | Full engines, version adapters, diagnostic fixtures | Shared weak object lineage, call state, and enumeration adapters |
-| `NativeCallDiagnostics.Journal.cs` | Full engines, version adapters, diagnostic fixtures | Native span rows written through the shared invocation journal |
-| `InvocationJournal.cs` | Full engines, version adapters, diagnostic fixtures | Library-free JSON line writer with the bytes of the engine's former System.Text.Json rows; per-process file sink, or a callback sink and correlation source set by the host |
+[ProcessArguments](ProcessArguments.cs) supplies Windows argument quoting, and [LocalProcess](LocalProcess.cs) supplies process execution with output draining and bounds. [OpennessEnvironment](OpennessEnvironment.cs) reads installed-environment facts. [BundleLayout](BundleLayout.cs) resolves bundle roots and shared resources; its consumers decide how to report an invalid or missing root.
 
-The native diagnostics class keeps its original namespace and type name for generated instrumentation.
-Each host keeps only a thin `InvocationJournal` facade for its own JSON types (the engine keeps
-`JsonObject` for `Health()` and the binding snapshot). Do not add a second copy of the tracking or
-journal implementation when adding an adapter.
+[NativeCallDiagnostics](NativeCallDiagnostics.cs), its [journal support](NativeCallDiagnostics.Journal.cs) and [InvocationJournal](InvocationJournal.cs) provide native-call correlation and diagnostic rows. Their existing namespaces and type names are used by instrumentation. These diagnostics are not evidence of successful real-machine acceptance.
 
-Studio calls Openness through its native bridge. Sharing these utilities does not introduce an MCP
-dependency. V14 SP1–V19 use foundation runtimes; V20/V21 use full engines. The exact-version adapters and both profiles are built and checked by Build-MultiVersion.
-
-The preparation build compiles the shared sources into the appropriate host and desktop projects.
-Build-Configurator records the source-linked desktop inputs separately.
-
-`BundleLayout` accepts an explicit root first, preserving its spelling. A nonempty
-invalid override returns null so the caller can apply its existing error policy.
-Automatic lookup requires `manifest/package-manifest.json` at the root derived
-from a known output directory: `runtime/<TiaVersionCatalog.RuntimeDirectory>`,
-`runtime/studio`, `runtime/studio/bridge`, or the engine `bin`/`bin-v20` and Studio
-Gui/Bridge Release/Debug outputs. The GUI's copied `bridge` output is also supported.
-It uses `DirectoryInfo.Parent.FullName` and segment-wise `Path.Combine`; it does
-not walk arbitrary ancestors, inspect `.git`, normalize explicit roots, or search
-another root for a missing resource. Null leaves the original caller probing
-available through 4.0 (D-G7-3). Environment variables and user-facing exceptions
-remain the caller's responsibility; no new override name is introduced.
-
-The table contains tracked delivery resources, including the template and guide
-directories. Runtime executables are build outputs, not entries in this table.
-`check-bundle-layout` verifies Git membership and the enforced delivery resource list.
-`prepare` validates those resources in the staged package.
-
-This component is part of the shared FoundationHost and per-session worker architecture. Ported native tools live in `src/Adapters/Native`; shared declarations and host mappings live in `src/Shared`. Historical step tables below record the original migration. Current ownership and acceptance follow the architecture specification and generated catalogs.
+`check-bundle-layout` checks tracked resources and delivery rules. `prepare` also checks the staged package. See [architecture and runtime layout](../../docs/standards/design.md), [validation](../../docs/manuals/validation.md) and the [real-machine ledger](../../docs/reference/real-machine-ledger.md).

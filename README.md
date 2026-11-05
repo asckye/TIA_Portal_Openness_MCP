@@ -47,7 +47,7 @@ Before an unfamiliar operation, `GetToolUsage(toolName, operation)` supplies the
 
 ## Installation and validation
 
-Install the matching TIA Portal, Openness and licenses separately. The .NET 10 runtime for the unified desktop and the foundation hosts ships in `runtime/dotnet`. The Openness bridge and the PLC workers require .NET Framework 4.8, which is part of Windows 10 1903 and later. See [runtime paths](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/design-spec/architecture.md#21-程序与目录).
+Install the matching TIA Portal, Openness and licenses separately. The .NET 10 runtime for the unified desktop and the foundation hosts ships in `runtime/dotnet`. The Openness bridge and the PLC workers require .NET Framework 4.8, which is part of Windows 10 1903 and later. See [runtime paths](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#3-运行时布局).
 
 All eight runtimes and Studio are built locally against the supplied SDKs. Functional, protocol, API metadata and XML interface checks are recorded separately from real-project acceptance. New native TIA/project acceptance remains **NOT RUN**; a tool catalog or successful build does not establish every engineering operation. Current limits are in [capabilities](docs/reference/capabilities.md).
 
