@@ -856,6 +856,13 @@ def current_parameters(root):
                 # Existing Foundation candidates/builders keep their Foundation declarations.
                 continue
             params[('plc-foundation', name)] = params[('full-engine', name)]
+    aliases = (root / 'src/Logic/V4/CanonicalToolParameters.cs').read_text(encoding='utf-8-sig')
+    for literals, legacy, canonical in re.findall(
+            r'\bAdd\(\s*((?:"[^"\n]*"\s*\+\s*)*"[^"\n]*")\s*,\s*"([^"\n]+)"\s*,\s*"([^"\n]+)"\s*\)', aliases):
+        tools = set(''.join(re.findall(r'"([^"\n]*)"', literals)).split())
+        for (_, name), fields in params.items():
+            if name in tools and legacy in fields:
+                fields.setdefault(canonical, None)
     return params
 
 
@@ -913,8 +920,26 @@ def self_test(args):
         import xml.etree.ElementTree as ET
         catalog = json.loads(ET.parse(root / 'src/Logic/ModelContextProtocol/ToolProfiles.resx').find(".//data[@name='Catalog']/value").text)
         snapshot['behaviorCapabilities'] = [{'state': 'current', 'entries': [e['entry'] for e in catalog['behaviorEntries'] if e['releaseKey'] == '21']}]
-    check_current_schemas(snapshot, contracts)
     count = 0
+    for name, accepted in (('ExportPlcBlock', True), ('GetDeviceInfo', False)):
+        canonical = {'tools': [{'name': name, 'inputSchema': {'properties': {'exportDirectory': {'type': 'string'}}}}],
+                     'behaviorCapabilities': [{'state': 'current', 'entries': [name]}]}
+        if accepted:
+            check_current_schemas(canonical, contracts, root)
+        else:
+            alias_file = root / 'src/Logic/V4/CanonicalToolParameters.cs'
+            read_text = Path.read_text
+            def missing_legacy(path, *args, **kwargs):
+                text = read_text(path, *args, **kwargs)
+                return text + '\nAdd("GetDeviceInfo", "exportPath", "exportDirectory");' if path == alias_file else text
+            with patch.object(Path, 'read_text', missing_legacy):
+                without_legacy = current_parameters(root)
+            for allowed in (contracts, without_legacy):
+                try: check_current_schemas(canonical, allowed, root)
+                except ValueError as error: assert 'unimplemented parameters: exportDirectory' in str(error)
+                else: raise AssertionError('Canonical parameter accepted outside its table/legacy declaration')
+        count += 1
+    check_current_schemas(snapshot, contracts)
     import shutil, uuid
     scratch = root / 'bin-build' / ('p6-35-contract-selftest-' + uuid.uuid4().hex)
     scratch.mkdir(parents=True)
