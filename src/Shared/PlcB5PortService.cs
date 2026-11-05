@@ -44,6 +44,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     var uncertain = new InvalidOperationException(message);
                     uncertain.Data["workerOutcomeUnknown"] = true;
+                    uncertain.Data["foundationRequestSent"] = true;
                     throw uncertain;
                 }
                 if (Enum.TryParse<PortalErrorCode>(code, out var native) && native != PortalErrorCode.OpennessError) throw new PortalException(native, message);

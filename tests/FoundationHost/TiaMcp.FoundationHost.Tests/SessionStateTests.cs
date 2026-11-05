@@ -151,7 +151,7 @@ public sealed class SessionStateTests
         var planner = new PlanningFixture(release);
         planner.Machine.Target.Project.ProjectIdentity = (string)canonical["projectPath"]!;
         var session = new GenerationSession(() => root, (name, _, _) => Host.V4Result(name, name switch {
-            "GetSessionState" => new JsonObject(),
+            "GetSessionState" => new JsonObject { ["sessionState"] = status["sessionState"]!.DeepClone() },
             "GetOpennessWorkerStatus" => new JsonObject { ["worker"] = services.Snapshot() },
             "GetProjectTree" => new JsonObject { ["devices"] = new JsonArray() },
             "GetSoftwareTree" => new JsonObject { ["paths"] = new JsonArray() },

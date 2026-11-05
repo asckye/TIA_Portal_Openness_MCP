@@ -505,7 +505,8 @@ internal sealed partial class FoundationTool
         {
             workerFailure = error;
             priorMutation |= TiaOpenness.Shared.HostFailurePolicy.PriorMutation(error);
-            error.Data["foundationPriorMutation"] = priorMutation;
+            error.Data["foundationStepKnownNoMutation"] = error is WorkerOperationException { KnownNoMutation: true }
+                || error.Data["foundationRequestSent"] is false;
             error.Data["foundationKnownNoMutation"] = !priorMutation && (error is WorkerOperationException { KnownNoMutation: true }
                 || error.Data["foundationRequestSent"] is false);
         }
@@ -642,14 +643,24 @@ internal sealed partial class FoundationTool
                     ? preview.ValueKind == JsonValueKind.True : portedDescriptor.DryRun.Default));
             bool claimsNotStarted = (string?)result.StructuredContent?["meta"]?["outcome"] == "rejected-before-operation"
                 || (string?)result.StructuredContent?["meta"]?["execution"] is "not-started" or "read-only";
-            if (claimsNotStarted && workerFailure != null && TiaOpenness.Shared.HostFailurePolicy.PriorMutation(workerFailure))
+            if (claimsNotStarted && workerFailure != null && priorMutation)
+            {
+                workerFailure.Data["foundationPriorMutation"] = true;
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                     true, true, lastReply, workerFailure);
+            }
             if (claimsNotStarted && workerFailure?.Data["workerReadTimeout"] is true)
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                     true, false, null, workerFailure);
             result = FoundationV4Result
                 .WorkerFailure(result, portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId), mutation, workerFailure);
+            // Preserve the tool's step report while retaining evidence of the earlier mutation.
+            if (priorMutation && result.StructuredContent is JsonObject body && (string?)body["meta"]?["outcome"] == "unknown")
+            {
+                body["data"] ??= new JsonObject();
+                body["data"]!["earlierMutationMayHaveChanged"] = true;
+                result.Content = new[] { new TextContentBlock { Text = body.ToJsonString() } };
+            }
             return FoundationV4Result
                 .ReconcileWorker(result, operationDispatched && SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
         }
@@ -678,6 +689,7 @@ internal sealed partial class FoundationTool
             if (!operationDispatched && cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams
                 })
                 cause = new WorkerOperationException(cause.Message, -32602, "rejected-before-operation");
+            if (priorMutation) cause.Data["foundationPriorMutation"] = true;
             var result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                 operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
                     : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, lastReply?["Failure"] != null ? lastReply : null, cause);

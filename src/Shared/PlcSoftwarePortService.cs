@@ -358,7 +358,8 @@ namespace TiaMcpServer.Siemens.Services
             {
                 // Completed imports are confirmed writes. A later worker refusal
                 // cannot undo them, and proves only that the refused step did not mutate.
-                bool knownFailure = failed.Count == 0 && ex.Data["foundationKnownNoMutation"] is true;
+                bool knownFailure = failed.Count == 0 && (ex.Data["foundationStepKnownNoMutation"] is true
+                    || ex.Data["foundationKnownNoMutation"] is true);
                 failed.Add(new ImportFailure { Path = referenceDir, Error = ex.ToString() });
                 return new ResponseSeed { Imported = imported, Failed = failed, Placeholders = placeholders,
                     Meta = knownFailure ? new JsonObject { ["outcome"] = "failed", ["mayHaveChanged"] = imported.Count > 0 } : null };
