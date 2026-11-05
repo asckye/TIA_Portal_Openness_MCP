@@ -1,6 +1,6 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "1c5db65cc0386a00ba343509086c8ad7996fdd0c60435d5c869c0cfd2386974c",
+  "catalogSha256": "265eb1a07c96932db68ec1d6d6fd431bc0dc7d18c18796995590b02389585121",
   "uniqueTools": 517,
   "documents": 89,
   "versionToolPairs": 3202,
@@ -40745,8 +40745,8 @@
         }
       ],
       "hostSha256": "0014aeac4c8afac250f8a44cfd97cb994315fa06958f5755f08640c98e6715d6",
-      "sdkWorkerSha256": "8934076ce60c1cc506eb9c8e137a3b9251de7d4513d5746dfa5b0dd29a290980",
-      "runtimeSha256": "8934076ce60c1cc506eb9c8e137a3b9251de7d4513d5746dfa5b0dd29a290980",
+      "sdkWorkerSha256": "d1735e904c64641f9ad4f2bb7e98a3812278d0200039e99198e39020fbf22a74",
+      "runtimeSha256": "d1735e904c64641f9ad4f2bb7e98a3812278d0200039e99198e39020fbf22a74",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -48812,8 +48812,8 @@
         }
       ],
       "hostSha256": "0014aeac4c8afac250f8a44cfd97cb994315fa06958f5755f08640c98e6715d6",
-      "sdkWorkerSha256": "45a5795b54af378afa94663e091ce1d805b5d84e6630194a45174ff5aa2a3079",
-      "runtimeSha256": "45a5795b54af378afa94663e091ce1d805b5d84e6630194a45174ff5aa2a3079",
+      "sdkWorkerSha256": "5586e24c473b00bf30f8f4865594d05a40b04b822ed0f760c4ba71e7d00ed244",
+      "runtimeSha256": "5586e24c473b00bf30f8f4865594d05a40b04b822ed0f760c4ba71e7d00ed244",
       "workerModel": "foundation-host-plc-worker"
     }
   }

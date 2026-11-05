@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.3_20261104",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-05T06:45:08.6013383+00:00",
+  "generatedAt": "2026-11-05T09:58:48.9106375+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "0014aeac4c8afac250f8a44cfd97cb994315fa06958f5755f08640c98e6715d6",
-  "workerSha256": "8c641e43dd2d52291e146062b7379d6e973d836c824e3f437f9ea548876c96a2",
+  "workerSha256": "cfb0ad1df4a51d82039d1c05189cc1c5cf11b4eab8bcede319031336535d09cd",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2766,
-    "parametersUndocumented": 850,
-    "parametersFromVocabulary": 699,
-    "toolsWithUndocumentedParameters": 216,
+    "parameters": 2819,
+    "parametersUndocumented": 846,
+    "parametersFromVocabulary": 695,
+    "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
     "enumHints": 255,
-    "defaultHints": 1600,
+    "defaultHints": 1599,
     "examplesCurated": 517,
     "recipes": 40
   },
@@ -839,9 +839,11 @@
         "outputPath",
         "format",
         "dryRun",
-        "expectedPlanHash"
+        "expectedPlanHash",
+        "exportFile",
+        "exportDirectory"
       ],
-      "description": "[L1][Project][FILE] Offline validate/import/export/exportTemplate for canonical MachineDescription JSON. Pass machine as a structured object. CSV uses a package-generated directory with Machine, Stations, Units, Devices and Lists.csv (UTF-8 BOM, LF, quoted cells); Param cells are JSON values, IO cells addresses/auto. CPU-specific programAlarm selection is validated. import without outputPath and validate only return JSON; file writes preview by default and require expectedPlanHash plus approval. Outputs never overwrite. JSON input <=4 MiB; CSV <=4 MiB/file,16 MiB total,10000 rows. xlsx deferred. No TIA calls. Examples: GetToolUsage(toolName: \"ManageMachineDescription\"), optionally operation or language. Examples: GetToolUsage(toolName: \"ManageMachineDescription\"), optionally operation or language.",
+      "description": "[L1][Project][FILE] Offline validate/import/export/exportTemplate for canonical MachineDescription JSON. Pass machine as a structured object. CSV uses a package-generated directory with Machine, Stations, Units, Devices and Lists.csv (UTF-8 BOM, LF, quoted cells); Param cells are JSON values, IO cells addresses/auto. CPU-specific programAlarm selection is validated. import without outputPath and validate only return JSON; file writes preview by default and require expectedPlanHash plus approval. Outputs never overwrite. JSON input <=4 MiB; CSV <=4 MiB/file,16 MiB total,10000 rows. xlsx deferred. No TIA calls. Examples: GetToolUsage(toolName: \"ManageMachineDescription\"), optionally operation or language. Examples: GetToolUsage(toolName: \"ManageMachineDescription\"), optionally operation or language. outputPath and exportFile and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"action\":\"validate\",\"packageId\":\"tiamcp.basic\",\"version\":\"1.0.0\",\"machine\":{\"schema\":\"tiamcp.machine/1\",\"machine\":{\"id\":\"BasicLine\",\"name\":{\"en-US\":\"Basic machine\",\"zh-CN\":\"\\u57FA\\u7840\\u673A\\u5668\"}},\"standard\":{\"package\":\"tiamcp.basic\",\"version\":\"^1.0\"},\"target\":{\"release\":\"21\",\"project\":{\"mode\":\"existing\",\"projectIdentity\":\"basic-example-project\",\"softwarePath\":\"PLC1\"}},\"stations\":[{\"id\":\"PLC1\",\"role\":\"plc.main\",\"article\":\"6ES7 513-1AL02-0AB0\",\"firmware\":\"V2.0\"},{\"id\":\"HMI1\",\"role\":\"hmi.panel\",\"kind\":\"WinCCUnifiedPC\"}],\"topology\":[{\"id\":\"U01\",\"kind\":\"unit\",\"name\":{\"en-US\":\"Unit 1\",\"zh-CN\":\"\\u5355\\u5143 1\"},\"children\":[{\"id\":\"EM01\",\"kind\":\"equipmentModule\",\"name\":{\"en-US\":\"Equipment\",\"zh-CN\":\"\\u8BBE\\u5907\"}}]}],\"devices\":[{\"id\":\"00U01\",\"type\":\"unit\",\"parent\":\"U01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"Unit control\",\"zh-CN\":\"\\u5355\\u5143\\u63A7\\u5236\"},\"params\":{\"programAlarm\":true},\"io\":{},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"M01\",\"type\":\"motor.dol\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"M1\",\"zh-CN\":\"M1\"},\"params\":{\"CycleMs\":10,\"FeedbackTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"run\":\"auto\",\"feedback\":\"auto\",\"overload\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"M02\",\"type\":\"motor.dol\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"M2\",\"zh-CN\":\"M2\"},\"params\":{\"CycleMs\":10,\"FeedbackTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"run\":\"auto\",\"feedback\":\"auto\",\"overload\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"M03\",\"type\":\"motor.dol\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"M3\",\"zh-CN\":\"M3\"},\"params\":{\"CycleMs\":10,\"FeedbackTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"run\":\"auto\",\"feedback\":\"auto\",\"overload\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"M04\",\"type\":\"motor.dol\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"M4\",\"zh-CN\":\"M4\"},\"params\":{\"CycleMs\":10,\"FeedbackTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"run\":\"auto\",\"feedback\":\"auto\",\"overload\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"M05\",\"type\":\"motor.dol\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"M5\",\"zh-CN\":\"M5\"},\"params\":{\"CycleMs\":10,\"FeedbackTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"run\":\"auto\",\"feedback\":\"auto\",\"overload\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"M06\",\"type\":\"motor.dol\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"M6\",\"zh-CN\":\"M6\"},\"params\":{\"CycleMs\":10,\"FeedbackTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"run\":\"auto\",\"feedback\":\"auto\",\"overload\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"M07\",\"type\":\"motor.dol\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"M7\",\"zh-CN\":\"M7\"},\"params\":{\"CycleMs\":10,\"FeedbackTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"run\":\"auto\",\"feedback\":\"auto\",\"overload\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"M08\",\"type\":\"motor.dol\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"M8\",\"zh-CN\":\"M8\"},\"params\":{\"CycleMs\":10,\"FeedbackTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"run\":\"auto\",\"feedback\":\"auto\",\"overload\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"V01\",\"type\":\"valve.2pos\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"V1\",\"zh-CN\":\"V1\"},\"params\":{\"CycleMs\":10,\"TravelTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"open\":\"auto\",\"close\":\"auto\",\"opened\":\"auto\",\"closed\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"V02\",\"type\":\"valve.2pos\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"V2\",\"zh-CN\":\"V2\"},\"params\":{\"CycleMs\":10,\"TravelTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"open\":\"auto\",\"close\":\"auto\",\"opened\":\"auto\",\"closed\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"V03\",\"type\":\"valve.2pos\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"V3\",\"zh-CN\":\"V3\"},\"params\":{\"CycleMs\":10,\"TravelTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"open\":\"auto\",\"close\":\"auto\",\"opened\":\"auto\",\"closed\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"V04\",\"type\":\"valve.2pos\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"V4\",\"zh-CN\":\"V4\"},\"params\":{\"CycleMs\":10,\"TravelTimeoutMs\":3000,\"programAlarm\":true},\"io\":{\"open\":\"auto\",\"close\":\"auto\",\"opened\":\"auto\",\"closed\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"S01\",\"type\":\"sensor.digital\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"S1\",\"zh-CN\":\"S1\"},\"params\":{\"CycleMs\":10,\"DebounceMs\":30,\"Invert\":false},\"io\":{\"input\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"S02\",\"type\":\"sensor.digital\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"S2\",\"zh-CN\":\"S2\"},\"params\":{\"CycleMs\":10,\"DebounceMs\":30,\"Invert\":false},\"io\":{\"input\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"S03\",\"type\":\"sensor.digital\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"S3\",\"zh-CN\":\"S3\"},\"params\":{\"CycleMs\":10,\"DebounceMs\":30,\"Invert\":false},\"io\":{\"input\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"S04\",\"type\":\"sensor.digital\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"S4\",\"zh-CN\":\"S4\"},\"params\":{\"CycleMs\":10,\"DebounceMs\":30,\"Invert\":false},\"io\":{\"input\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"S05\",\"type\":\"sensor.digital\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"S5\",\"zh-CN\":\"S5\"},\"params\":{\"CycleMs\":10,\"DebounceMs\":30,\"Invert\":false},\"io\":{\"input\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"S06\",\"type\":\"sensor.digital\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"S6\",\"zh-CN\":\"S6\"},\"params\":{\"CycleMs\":10,\"DebounceMs\":30,\"Invert\":false},\"io\":{\"input\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"A01\",\"type\":\"analog.in\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"A1\",\"zh-CN\":\"A1\"},\"params\":{\"RawMin\":0,\"RawMax\":27648,\"EngMin\":0,\"EngMax\":100,\"programAlarm\":true},\"io\":{\"raw\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}},{\"id\":\"A02\",\"type\":\"analog.in\",\"parent\":\"EM01\",\"station\":\"PLC1\",\"name\":{\"en-US\":\"A2\",\"zh-CN\":\"A2\"},\"params\":{\"RawMin\":0,\"RawMax\":27648,\"EngMin\":0,\"EngMax\":100,\"programAlarm\":true},\"io\":{\"raw\":\"auto\"},\"hmi\":{\"screen\":\"U01\"}}],\"options\":{\"languages\":[\"en-US\",\"zh-CN\"]}},\"dryRun\":true}"
     },
     {
@@ -1824,7 +1826,7 @@
         "args"
       ],
       "description": "[L2][Reflection][WRITE]GetService bridge: invoke a uniquely convertible non-generic overload on a Siemens.Engineering service (exact full type name or unique suffix). Ambiguous matches are refused. Guarded Safety, SafetyValidation, protection and UMAC writes must use their dedicated tools. For write actions, default dryRun=true previews; execution requires dryRun=false, expectedPlanHash from that preview, and the exact bound expectedProjectFile. Existing approval/native checks and read actions remain. Examples: GetToolUsage(toolName: \"InvokeService\"), optionally operation or language.",
-      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"serviceTypeSuffix\":\"\\u003Cservice selected from DescribeObject\\u003E\",\"methodName\":\"\\u003Cmethod selected from DescribeObject/DescribeService\\u003E\",\"dryRun\":true}"
+      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"serviceTypeSuffix\":\"\\u003Cservice selected from DescribeObject\\u003E\",\"methodName\":\"GetAttributeInfos\",\"dryRun\":true}"
     },
     {
       "name": "InvokeObject",
@@ -1847,7 +1849,7 @@
         "args"
       ],
       "description": "[L2][Reflection][WRITE]Invoke an Openness method via reflection. Default is read-oriented; set allowWrite=true only after DescribeObject confirms the target method/signature. Only a unique convertible non-generic overload is invoked. Writes to guarded Safety/SafetyValidation, protection and UMAC surfaces must use their dedicated tools. For write actions, default dryRun=true previews; execution requires dryRun=false, expectedPlanHash from that preview, and the exact bound expectedProjectFile. Existing approval/native checks and read actions remain. Examples: GetToolUsage(toolName: \"InvokeObject\"), optionally operation or language.",
-      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"methodName\":\"\\u003Cmethod selected from DescribeObject/DescribeService\\u003E\",\"dryRun\":true}"
+      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"methodName\":\"GetAttributeInfos\",\"dryRun\":true}"
     },
     {
       "name": "ListHmiScreens",
@@ -1877,9 +1879,10 @@
         "templatePath",
         "outputDirectory",
         "dryRun",
-        "rows"
+        "rows",
+        "exportDirectory"
       ],
-      "description": "[L2][PLC-Builders][FILE] Expand an exported XML template into repeated PLC blocks/aliases/alarms without executing customization scripts. Template tokens {{Name}} in XML attributes/text are replaced structurally with XML escaping. rows=[{fileName:\"FC_1.xml\",values:{Name:\"FC_1\"}}], 1..100 rows. Reject missing/unused keys, unsafe/duplicate filenames, DTD and any existing output. Default dryRun validates ALL rows/outputs and returns hashes/sizes; execution writes new files only. No TIA import or compile. Tokens do not edit element names, UIDs, wiring topology or faceplate internals automatically. Partial files reported if writing fails. Examples: GetToolUsage(toolName: \"InstantiatePlcTemplates\"), optionally operation or language.",
+      "description": "[L2][PLC-Builders][FILE] Expand an exported XML template into repeated PLC blocks/aliases/alarms without executing customization scripts. Template tokens {{Name}} in XML attributes/text are replaced structurally with XML escaping. rows=[{fileName:\"FC_1.xml\",values:{Name:\"FC_1\"}}], 1..100 rows. Reject missing/unused keys, unsafe/duplicate filenames, DTD and any existing output. Default dryRun validates ALL rows/outputs and returns hashes/sizes; execution writes new files only. No TIA import or compile. Tokens do not edit element names, UIDs, wiring topology or faceplate internals automatically. Partial files reported if writing fails. Examples: GetToolUsage(toolName: \"InstantiatePlcTemplates\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"templatePath\":\"C:\\\\Examples\\\\templates\\\\Block.xml\",\"outputDirectory\":\"C:\\\\Examples\\\\generated\",\"dryRun\":true,\"rows\":[{\"fileName\":\"Example.xml\",\"values\":{\"Name\":\"Example\"}}]}"
     },
     {
@@ -1956,9 +1959,10 @@
         "overwrite",
         "dryRun",
         "expectedPlanHash",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "sourceDirectory"
       ],
-      "description": "[L2][PLC-Software][WRITE]Batch import PLC technology object .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportTechnologyObjectsFromDirectory\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][WRITE]Batch import PLC technology object .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportTechnologyObjectsFromDirectory\"), optionally operation or language. dir and sourceDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true}"
     },
     {
@@ -2060,9 +2064,10 @@
         "dryRun",
         "confirm",
         "expectedPlanHash",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "sourceDirectory"
       ],
-      "description": "[L2][PLC-Software][WRITE] Preview every regex-selected XML in ordinal filename order through the canonical tag-table importer. One batch plan hash and approval; execute per file, stop at first failure and report completed/not-started items. No best effort. Default dryRun=true. Optional exact unitName V16–V21 selects a unit root; paths are relative to it. importOptions opts into SkipInactiveCultures OR ActivateInactiveCultures on V19–V21, empty by default and shown in preview. swImportOptions is always refused: PlcTagTableComposition has no SWImportOptions overload. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcTagTablesFromDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][WRITE] Preview every regex-selected XML in ordinal filename order through the canonical tag-table importer. One batch plan hash and approval; execute per file, stop at first failure and report completed/not-started items. No best effort. Default dryRun=true. Optional exact unitName V16–V21 selects a unit root; paths are relative to it. importOptions opts into SkipInactiveCultures OR ActivateInactiveCultures on V19–V21, empty by default and shown in preview. swImportOptions is always refused: PlcTagTableComposition has no SWImportOptions overload. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcTagTablesFromDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. Native behaviorPolicy=current; V4 native acceptance is pending. dir and sourceDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -2165,10 +2170,11 @@
         "swImportOptions",
         "importOptions",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "sourceDirectory"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [bounded-batch-import-candidate] Top directory XML only, exact ordinary PLC/group. One object per file; preview identifies create/replace. overwrite=true backs up every replacement before imports and restores known earlier replacements on failure. Unknown outcomes retain recovery files and require reset. No repair or inferred dependencies. Preview defaults true; apply requires complete importOrder, expectedPlanHash, confirmation and exact project. Native None/Override; first failure stops with recovery evidence. Windows SDK/native unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksFromDirectory\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"dir\":\"\\u003Cexisting dedicated import directory containing only intended native XML files\\u003E\",\"dryRun\":true,\"confirm\":false,\"regexName\":\"^Main\\\\.xml$\",\"overwrite\":false}"
+      "description": "[PLC foundation; native unverified][WRITE] [bounded-batch-import-candidate] Top directory XML only, exact ordinary PLC/group. One object per file; preview identifies create/replace. overwrite=true backs up every replacement before imports and restores known earlier replacements on failure. Unknown outcomes retain recovery files and require reset. No repair or inferred dependencies. Preview defaults true; apply requires complete importOrder, expectedPlanHash, confirmation and exact project. Native None/Override; first failure stops with recovery evidence. Windows SDK/native unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksFromDirectory\"), optionally operation or language. dir and sourceDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"sourceDirectory\":\"C:\\\\TIA_MCP\\\\imports\",\"dryRun\":true,\"confirm\":false,\"regexName\":\"^Main\\\\.xml$\",\"overwrite\":false}"
     },
     {
       "name": "InspectSimaticSdCompatibility",
@@ -2965,7 +2971,7 @@
         "dryRun"
       ],
       "description": "[L2][Category:Hardware][PreCondition:ConnectPortal+OpenProject][WRITE] Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads). This is a hardware-configuration change — you must run DownloadPlc afterwards for it to take effect on the live CPU. Defaults to dryRun=true. Only exact approved ReadWrite Boolean attributes may be written; the allow-list is currently empty and writes refuse pending VM confirmation. Returns before/after evidence. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetPlcPutGetAccess\"), optionally operation or language.",
-      "example": "{\"devicePath\":\"PLC_1\",\"dryRun\":true}"
+      "example": "{\"devicePath\":[\"PLC_1\"],\"dryRun\":true}"
     },
     {
       "name": "SetPlcProgram",
@@ -3177,9 +3183,10 @@
         "markers",
         "offset",
         "limit",
-        "csvPath"
+        "csvPath",
+        "sourceDirectory"
       ],
-      "description": "[L2][Validation][FILE] Scan exported PLC documents in a directory (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]) for annotation markers in comments, block/network titles and network comments. markers default [\"TODO\",\"FIXME\",\"HACK\",\"XXX\",\"NOTE\",\"BUG\"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"ScanPlcSourceAnnotations\"), optionally operation or language.",
+      "description": "[L2][Validation][FILE] Scan exported PLC documents in a directory (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]) for annotation markers in comments, block/network titles and network comments. markers default [\"TODO\",\"FIXME\",\"HACK\",\"XXX\",\"NOTE\",\"BUG\"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"ScanPlcSourceAnnotations\"), optionally operation or language. directory and sourceDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"directory\":\"C:\\\\Examples\\\\exports\"}"
     },
     {
@@ -3245,9 +3252,10 @@
         "exportId",
         "outputPath",
         "raw",
-        "overwrite"
+        "overwrite",
+        "exportFile"
       ],
-      "description": "[L1][Exports][FILE] Save a parked response as UTF-8 with BOM. raw=true preserves its full text; otherwise write its payload. Existing files require overwrite=true. A failed write can leave partial file content. V4 envelope; export behavior remains current. Example: {\"exportId\":\"\\u003CexportId from response\\u003E\",\"outputPath\":\"C:\\\\Temp\\\\blocks.json\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"SaveExportContent\"), optionally operation or language.",
+      "description": "[L1][Exports][FILE] Save a parked response as UTF-8 with BOM. raw=true preserves its full text; otherwise write its payload. Existing files require overwrite=true. A failed write can leave partial file content. V4 envelope; export behavior remains current. Example: {\"exportId\":\"\\u003CexportId from response\\u003E\",\"outputPath\":\"C:\\\\Temp\\\\blocks.json\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"SaveExportContent\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"exportId\":\"\\u003CexportId from response\\u003E\",\"outputPath\":\"C:\\\\Temp\\\\blocks.json\"}"
     },
     {
@@ -3562,9 +3570,10 @@
       "returnType": "CallToolResult",
       "parameters": [
         "sclContent",
-        "outputPath"
+        "outputPath",
+        "exportFile"
       ],
-      "description": "[L1][PLC-Software][FILE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: 'Cannot create SW.Blocks.CompileUnit... token not supported'): the user imports the .scl manually in TIA via project tree → 'External source files' → 'Add new external file', then right-clicks the source → 'Generate blocks from source'. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Example: {\"sclContent\":\"FUNCTION \\u0022FC_Add\\u0022 : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a \\u002B #b;\\nEND_FUNCTION\",\"outputPath\":\"C:\\\\Temp\\\\FC_Add.scl\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"WritePlcSclSourceFile\"), optionally operation or language.",
+      "description": "[L1][PLC-Software][FILE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: 'Cannot create SW.Blocks.CompileUnit... token not supported'): the user imports the .scl manually in TIA via project tree → 'External source files' → 'Add new external file', then right-clicks the source → 'Generate blocks from source'. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Example: {\"sclContent\":\"FUNCTION \\u0022FC_Add\\u0022 : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a \\u002B #b;\\nEND_FUNCTION\",\"outputPath\":\"C:\\\\Temp\\\\FC_Add.scl\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"WritePlcSclSourceFile\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"sclContent\":\"FUNCTION \\u0022FC_Add\\u0022 : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a \\u002B #b;\\nEND_FUNCTION\",\"outputPath\":\"C:\\\\Temp\\\\FC_Add.scl\"}"
     },
     {
@@ -3578,10 +3587,11 @@
       "returnType": "CallToolResult",
       "parameters": [
         "outputDirectory",
-        "package"
+        "package",
+        "exportDirectory"
       ],
-      "description": "[L2][HMI-Classic][FILE]Offline-only helper: build a minimal Classic/Basic HMI package and write tag-table XML, screen XML, and manifest JSON to an output directory. It does not connect to TIA Portal, import files, or modify projects. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen). Examples: GetToolUsage(toolName: \"WriteClassicHmiMinimalPackageFiles\"), optionally operation or language.",
-      "example": "{\"outputDirectory\":\"C:\\\\Examples\\\\generated\",\"package\":{\"name\":\"Example\",\"screenDesign\":{\"screen\":{\"name\":\"Overview\",\"width\":800,\"height\":480},\"items\":[{\"type\":\"Text\",\"name\":\"StatusText\",\"left\":20,\"top\":20,\"width\":160,\"height\":40,\"text\":\"Ready\"}]},\"tagTable\":{\"name\":\"ExampleTags\",\"tags\":[{\"name\":\"Ready\",\"dataType\":\"Bool\",\"length\":\"1\"}]}}}"
+      "description": "[L2][HMI-Classic][FILE]Offline-only helper: build a minimal Classic/Basic HMI package and write tag-table XML, screen XML, and manifest JSON to an output directory. It does not connect to TIA Portal, import files, or modify projects. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen). Examples: GetToolUsage(toolName: \"WriteClassicHmiMinimalPackageFiles\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"exportDirectory\":\"C:\\\\Examples\\\\generated\",\"package\":{\"name\":\"Example\",\"screenDesign\":{\"screen\":{\"name\":\"Overview\",\"width\":800,\"height\":480},\"items\":[{\"type\":\"Text\",\"name\":\"StatusText\",\"left\":20,\"top\":20,\"width\":160,\"height\":40,\"text\":\"Ready\"}]},\"tagTable\":{\"name\":\"ExampleTags\",\"tags\":[{\"name\":\"Ready\",\"dataType\":\"Bool\",\"length\":\"1\"}]}}}"
     },
     {
       "name": "ValidateUnifiedObject",
@@ -4295,10 +4305,12 @@
         "action",
         "outputPath",
         "dryRun",
-        "expectedPackageHash"
+        "expectedPackageHash",
+        "exportFile",
+        "sourceDirectory"
       ],
-      "description": "[L2][HMI-Unified][FILE] Inspect or build a custom web control folder using the documented WinCC Unified V17–V21 package conventions: root manifest.json, identity GUID, control start file and local icon. action inspect/build; default dryRun=true. Preview returns packageFingerprint and GUID ZIP filename. build with dryRun=false requires the same fingerprint and a NEW absolute outputPath outside source folder. Takes a bounded content snapshot; no overwrites, script execution, TIA import or faceplate/library rename. Full manifest schema, JS semantics, extensions and runtime support remain unvalidated. Examples: GetToolUsage(toolName: \"ManageUnifiedCwcPackage\"), optionally operation or language.",
-      "example": "{\"directory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"action\":\"inspect\"}"
+      "description": "[L2][HMI-Unified][FILE] Inspect or build a custom web control folder using the documented WinCC Unified V17–V21 package conventions: root manifest.json, identity GUID, control start file and local icon. action inspect/build; default dryRun=true. Preview returns packageFingerprint and GUID ZIP filename. build with dryRun=false requires the same fingerprint and a NEW absolute outputPath outside source folder. Takes a bounded content snapshot; no overwrites, script execution, TIA import or faceplate/library rename. Full manifest schema, JS semantics, extensions and runtime support remain unvalidated. Examples: GetToolUsage(toolName: \"ManageUnifiedCwcPackage\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives. directory and sourceDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"sourceDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"action\":\"inspect\"}"
     },
     {
       "name": "MonitorPlcWatchTableS7",
@@ -4561,9 +4573,10 @@
         "newId",
         "newVersion",
         "dryRun",
-        "expectedPlanHash"
+        "expectedPlanHash",
+        "exportFile"
       ],
-      "description": "[L1][Project][FILE] Offline standard package import (directory or bounded zip), export (new canonical zip), copy/fork (new id and version), or remove (user packages only). Exact identities; no overwrite. Source/licence notices and immutable inventories retained; JSON canonicalized, resource bytes preserved. Preview defaults true; writes require dryRun=false and expectedPlanHash from preview, with existing approval/audit. Zip limits: 1024 files, 2048 entries, 16 MiB/file, 64 MiB total, 32 MiB archive. No TIA calls. Examples: GetToolUsage(toolName: \"ManageStandardPackage\"), optionally operation or language. Examples: GetToolUsage(toolName: \"ManageStandardPackage\"), optionally operation or language.",
+      "description": "[L1][Project][FILE] Offline standard package import (directory or bounded zip), export (new canonical zip), copy/fork (new id and version), or remove (user packages only). Exact identities; no overwrite. Source/licence notices and immutable inventories retained; JSON canonicalized, resource bytes preserved. Preview defaults true; writes require dryRun=false and expectedPlanHash from preview, with existing approval/audit. Zip limits: 1024 files, 2048 entries, 16 MiB/file, 64 MiB total, 32 MiB archive. No TIA calls. Examples: GetToolUsage(toolName: \"ManageStandardPackage\"), optionally operation or language. Examples: GetToolUsage(toolName: \"ManageStandardPackage\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"action\":\"fork\",\"packageId\":\"tiamcp.basic\",\"version\":\"1.0.0\",\"newId\":\"example.basic\",\"newVersion\":\"1.0.0\",\"dryRun\":true}"
     },
     {
@@ -4746,9 +4759,10 @@
         "expectedDocumentHash",
         "outputPath",
         "dryRun",
-        "changes"
+        "changes",
+        "exportFile"
       ],
-      "description": "[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged. Examples: GetToolUsage(toolName: \"PatchPlcBlockDocument\"), optionally operation or language.",
+      "description": "[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged. Examples: GetToolUsage(toolName: \"PatchPlcBlockDocument\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"expectedDocumentHash\":\"\\u003Cfingerprint from GetPlcBlockEditCapabilities\\u003E\",\"dryRun\":true,\"changes\":[{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]}"
     },
     {
@@ -4895,9 +4909,10 @@
       "parameters": [
         "leftFilePath",
         "rightFilePath",
-        "outputPath"
+        "outputPath",
+        "exportFile"
       ],
-      "description": "[L2][Validation][FILE] Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download. Examples: GetToolUsage(toolName: \"RenderPlcVisualDiff\"), optionally operation or language.",
+      "description": "[L2][Validation][FILE] Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download. Examples: GetToolUsage(toolName: \"RenderPlcVisualDiff\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"leftFilePath\":\"C:\\\\Examples\\\\before\\\\Main.xml\",\"rightFilePath\":\"C:\\\\Examples\\\\after\\\\Main.xml\",\"outputPath\":\"C:\\\\Examples\\\\generated\\\\result.xml\"}"
     },
     {
@@ -4911,10 +4926,11 @@
       "returnType": "CallToolResult",
       "parameters": [
         "inputPath",
-        "outputPath"
+        "outputPath",
+        "exportFile"
       ],
-      "description": "[L2][PLC-Software][FILE] Render a block XML file or recursive export directory as a self-contained static HTML atlas with call links. Called-by counts include only atlas blocks. Offline local file output; never overwrites, no Siemens calls. Examples: GetToolUsage(toolName: \"RenderPlcProgramAtlas\"), optionally operation or language.",
-      "example": "{\"inputPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"outputPath\":\"\\u003Cnew absolute Atlas.html in an existing caller-selected directory\\u003E\"}"
+      "description": "[L2][PLC-Software][FILE] Render a block XML file or recursive export directory as a self-contained static HTML atlas with call links. Called-by counts include only atlas blocks. Offline local file output; never overwrites, no Siemens calls. Examples: GetToolUsage(toolName: \"RenderPlcProgramAtlas\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"inputPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"exportFile\":\"C:\\\\TIA_MCP\\\\exports\\\\Atlas.html\"}"
     },
     {
       "name": "RenderPlcBlockDocument",
@@ -4931,9 +4947,10 @@
         "blockPath",
         "mermaidDirection",
         "outputPath",
-        "maxChars"
+        "maxChars",
+        "exportFile"
       ],
-      "description": "[L2][Validation][FILE] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards; this native export branch retains behaviorPolicy=current pending V4 native acceptance). mermaidDirection LR (default) or TD. Returns the Markdown in data.markdown (truncated to maxChars, default 60000, full length in data.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"RenderPlcBlockDocument\"), optionally operation or language.",
+      "description": "[L2][Validation][FILE] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards; this native export branch retains behaviorPolicy=current pending V4 native acceptance). mermaidDirection LR (default) or TD. Returns the Markdown in data.markdown (truncated to maxChars, default 60000, full length in data.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"RenderPlcBlockDocument\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{}"
     },
     {
@@ -4947,10 +4964,11 @@
       "returnType": "CallToolResult",
       "parameters": [
         "inputPath",
-        "outputPath"
+        "outputPath",
+        "exportFile"
       ],
-      "description": "[L2][PLC-Software][FILE] Render one existing SimaticML block export as self-contained static HTML. Offline local files only; writes a new absolute .html path, never overwrites. No Siemens calls. Examples: GetToolUsage(toolName: \"RenderPlcBlock\"), optionally operation or language.",
-      "example": "{\"inputPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"outputPath\":\"\\u003Cnew absolute Block.html in an existing caller-selected directory\\u003E\"}"
+      "description": "[L2][PLC-Software][FILE] Render one existing SimaticML block export as self-contained static HTML. Offline local files only; writes a new absolute .html path, never overwrites. No Siemens calls. Examples: GetToolUsage(toolName: \"RenderPlcBlock\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"inputPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"exportFile\":\"C:\\\\TIA_MCP\\\\exports\\\\Block.html\"}"
     },
     {
       "name": "ReleaseUnifiedReadCursor",
@@ -5966,10 +5984,11 @@
         "exportPath",
         "includeInfoText",
         "includeAdditionalTexts",
-        "includeAlarmClass"
+        "includeAlarmClass",
+        "exportFile"
       ],
-      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export PLC alarm instance texts to an XLSX file. Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText). Options control what additional columns are included in the export. Typical use: export → fill in alarm descriptions → ImportPlcAlarmInstanceTexts (PlcAlarmTextProvider.ImportInstanceTextsFromXlsx). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmInstanceTexts\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmInstanceTexts.xlsx\"}"
+      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export PLC alarm instance texts to an XLSX file. Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText). Options control what additional columns are included in the export. Typical use: export → fill in alarm descriptions → ImportPlcAlarmInstanceTexts (PlcAlarmTextProvider.ImportInstanceTextsFromXlsx). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmInstanceTexts\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmInstanceTexts.xml\"}"
     },
     {
       "name": "ExportAlarmClasses",
@@ -5982,10 +6001,11 @@
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "exportPath"
+        "exportPath",
+        "exportFile"
       ],
-      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export PLC alarm classes to a file. Alarm classes define severity, acknowledgment behavior, and display colors for alarms. The exported file can be edited and re-imported to update alarm class configurations. Use before bulk alarm class updates to create a backup. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmClasses\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmClasses.dat\"}"
+      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export PLC alarm classes to a file. Alarm classes define severity, acknowledgment behavior, and display colors for alarms. The exported file can be edited and re-imported to update alarm class configurations. Use before bulk alarm class updates to create a backup. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmClasses\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmClasses.xml\"}"
     },
     {
       "name": "ExchangeUnifiedTags",
@@ -6004,10 +6024,12 @@
         "fileName",
         "expectedTagNames",
         "dryRun",
-        "overwrite"
+        "overwrite",
+        "exportDirectory",
+        "sourceDirectory"
       ],
-      "description": "[L2][HMI-Unified][FILE] Native WinCC Unified tag exchange in WinCC ML (YAML): export writes <fileName>.hmi.yml (plus TIA side files) via HmiTagComposition.Export(DirectoryInfo[, name]) into a NEW absolute directory on the MCP server and hashes every file; import calls Import(DirectoryInfo[, name]) on an existing directory and checks expectedTagNames (exact names) afterwards. tagTable = unique table name or /Group/Sub/Table (empty = the device root Tags composition). Default preview; imports default overwrite=false and refuse nonempty targets when complete identities cannot be verified. Explicit overwrite=true permits replacement; import needs dryRun=false and may also touch other tags in the file; tag properties are not independently compared. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExchangeUnifiedTags\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"action\":\"export\",\"directory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true}"
+      "description": "[L2][HMI-Unified][FILE] Native WinCC Unified tag exchange in WinCC ML (YAML): export writes <fileName>.hmi.yml (plus TIA side files) via HmiTagComposition.Export(DirectoryInfo[, name]) into a NEW absolute directory on the MCP server and hashes every file; import calls Import(DirectoryInfo[, name]) on an existing directory and checks expectedTagNames (exact names) afterwards. tagTable = unique table name or /Group/Sub/Table (empty = the device root Tags composition). Default preview; imports default overwrite=false and refuse nonempty targets when complete identities cannot be verified. Explicit overwrite=true permits replacement; import needs dryRun=false and may also touch other tags in the file; tag properties are not independently compared. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExchangeUnifiedTags\"), optionally operation or language. directory and exportDirectory and sourceDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"action\":\"export\",\"dryRun\":true}"
     },
     {
       "name": "ExchangeUnifiedScriptModules",
@@ -6025,10 +6047,12 @@
         "moduleName",
         "fileName",
         "dryRun",
-        "overwrite"
+        "overwrite",
+        "exportDirectory",
+        "sourceDirectory"
       ],
-      "description": "[L2][HMI-Unified][FILE] Native WinCC Unified global script module exchange: export all modules (HmiScriptModuleComposition.Export) or one exact moduleName (HmiScriptModule.Export(dir[, fileName]), the IChromDataExchangeExport contract) into a NEW absolute directory on the MCP server with every file hashed; import calls Scripts.Import(DirectoryInfo[, fileName]) on an existing directory and lists module names before/after. Default preview; imports default overwrite=false and refuse nonempty targets when complete identities cannot be verified. Explicit overwrite=true permits replacement; import needs dryRun=false; script bodies are not compared (use ReadUnifiedGlobalScript). No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExchangeUnifiedScriptModules\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"action\":\"export\",\"directory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"moduleName\":\"Status\",\"fileName\":\"Status.js\"}"
+      "description": "[L2][HMI-Unified][FILE] Native WinCC Unified global script module exchange: export all modules (HmiScriptModuleComposition.Export) or one exact moduleName (HmiScriptModule.Export(dir[, fileName]), the IChromDataExchangeExport contract) into a NEW absolute directory on the MCP server with every file hashed; import calls Scripts.Import(DirectoryInfo[, fileName]) on an existing directory and lists module names before/after. Default preview; imports default overwrite=false and refuse nonempty targets when complete identities cannot be verified. Explicit overwrite=true permits replacement; import needs dryRun=false; script bodies are not compared (use ReadUnifiedGlobalScript). No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExchangeUnifiedScriptModules\"), optionally operation or language. directory and exportDirectory and sourceDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"action\":\"export\",\"dryRun\":true,\"moduleName\":\"Status\",\"fileName\":\"Status.js\"}"
     },
     {
       "name": "ExchangeTestSuiteCase",
@@ -6712,9 +6736,10 @@
       "parameters": [
         "outputPath",
         "referenceAmlPath",
-        "spec"
+        "spec",
+        "exportFile"
       ],
-      "description": "[L2][Hardware][OFFLINE] Build an AutomationML (CAEX 2.15, *.aml) hardware description for ImportDeviceAml from a JSON spec — the generation half of a TIA Selection Tool / Aml.Engine workflow without extra dependencies. spec: {\"projectName\":\"P\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[{\"name\":\"Rack_0\",\"role\":\"Rack\",\"typeIdentifier\":\"OrderNumber:6ES7 590-1AE80-0AA0\",\"positionNumber\":0,\"deviceItems\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"OrderNumber:6ES7 516-3AN02-0AB0/V2.9\",\"positionNumber\":1,\"deviceItems\":[{\"name\":\"PROFINET interface_1\",\"role\":\"CommunicationInterface\",\"builtIn\":true,\"nodes\":[{\"name\":\"E1\",\"networkAddress\":\"192.168.0.1\",\"subnetMask\":\"255.255.255.0\",\"subnetName\":\"PN/IE_1\"}]}]},{\"name\":\"DI 32x24VDC HF_1\",\"typeIdentifier\":\"OrderNumber:6ES7 521-1BL00-0AB0/V2.0\",\"positionNumber\":2}]}]}],\"subnets\":[{\"name\":\"PN/IE_1\",\"type\":\"Ethernet\"}]}. Roles: Rack | DeviceItem | CommunicationInterface | CommunicationPort; TypeIdentifier uses the TIA catalog form OrderNumber:<MLFB>[/Vx.y] or System:Device.<family>. outputPath must be a NEW absolute .aml file. STRONGLY RECOMMENDED: referenceAmlPath = a file that ExportDeviceAml wrote on the same TIA version — its header, role/interface class libraries are copied verbatim and only the instance hierarchy is generated; without it a built-in skeleton is used and Meta.importVerified=false is returned. Verify with ImportDeviceAml (dry run first). Nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"BuildDeviceAmlDocument\"), optionally operation or language.",
+      "description": "[L2][Hardware][OFFLINE] Build an AutomationML (CAEX 2.15, *.aml) hardware description for ImportDeviceAml from a JSON spec — the generation half of a TIA Selection Tool / Aml.Engine workflow without extra dependencies. spec: {\"projectName\":\"P\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[{\"name\":\"Rack_0\",\"role\":\"Rack\",\"typeIdentifier\":\"OrderNumber:6ES7 590-1AE80-0AA0\",\"positionNumber\":0,\"deviceItems\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"OrderNumber:6ES7 516-3AN02-0AB0/V2.9\",\"positionNumber\":1,\"deviceItems\":[{\"name\":\"PROFINET interface_1\",\"role\":\"CommunicationInterface\",\"builtIn\":true,\"nodes\":[{\"name\":\"E1\",\"networkAddress\":\"192.168.0.1\",\"subnetMask\":\"255.255.255.0\",\"subnetName\":\"PN/IE_1\"}]}]},{\"name\":\"DI 32x24VDC HF_1\",\"typeIdentifier\":\"OrderNumber:6ES7 521-1BL00-0AB0/V2.0\",\"positionNumber\":2}]}]}],\"subnets\":[{\"name\":\"PN/IE_1\",\"type\":\"Ethernet\"}]}. Roles: Rack | DeviceItem | CommunicationInterface | CommunicationPort; TypeIdentifier uses the TIA catalog form OrderNumber:<MLFB>[/Vx.y] or System:Device.<family>. outputPath must be a NEW absolute .aml file. STRONGLY RECOMMENDED: referenceAmlPath = a file that ExportDeviceAml wrote on the same TIA version — its header, role/interface class libraries are copied verbatim and only the instance hierarchy is generated; without it a built-in skeleton is used and Meta.importVerified=false is returned. Verify with ImportDeviceAml (dry run first). Nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"BuildDeviceAmlDocument\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"spec\":{\"projectName\":\"Example\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[]}]},\"outputPath\":\"C:\\\\Examples\\\\generated\\\\Example.aml\"}"
     },
     {
@@ -7033,9 +7058,10 @@
         "target",
         "maxDepth",
         "offset",
-        "limit"
+        "limit",
+        "sourceDirectory"
       ],
-      "description": "[L2][Validation][OFFLINE] Query supplied exports without native CrossReferenceService. action summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); SCL/S7DCL and invalid files are reported unindexed. target is exact block name or relative file ID; references takes a quoted component path e.g. \"Motor\".\"Run\". Uses explicit CallInfo and global Symbol nodes only. Reports missing/ambiguous callees, cycles, truncation and failures; coverageComplete and safeToDelete are always false. An empty result is not proof of no references. No TIA calls or writes. Example: {\"directory\":\"C:\\\\Temp\\\\exports\",\"action\":\"callers\",\"target\":\"FB_Pump\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"AnalyzePlcReferences\"), optionally operation or language.",
+      "description": "[L2][Validation][OFFLINE] Query supplied exports without native CrossReferenceService. action summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); SCL/S7DCL and invalid files are reported unindexed. target is exact block name or relative file ID; references takes a quoted component path e.g. \"Motor\".\"Run\". Uses explicit CallInfo and global Symbol nodes only. Reports missing/ambiguous callees, cycles, truncation and failures; coverageComplete and safeToDelete are always false. An empty result is not proof of no references. No TIA calls or writes. Example: {\"directory\":\"C:\\\\Temp\\\\exports\",\"action\":\"callers\",\"target\":\"FB_Pump\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"AnalyzePlcReferences\"), optionally operation or language. directory and sourceDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"directory\":\"C:\\\\Temp\\\\exports\",\"action\":\"callers\",\"target\":\"FB_Pump\"}"
     },
     {
@@ -7644,9 +7670,10 @@
       "returnType": "CallToolResult",
       "parameters": [
         "offlineReleaseSuiteJsonPath",
-        "outputDirectory"
+        "outputDirectory",
+        "exportDirectory"
       ],
-      "description": "[L2][Reports][FILE]Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. Examples: GetToolUsage(toolName: \"BuildReleaseHandoffArtifacts\"), optionally operation or language.",
+      "description": "[L2][Reports][FILE]Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. Examples: GetToolUsage(toolName: \"BuildReleaseHandoffArtifacts\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"offlineReleaseSuiteJsonPath\":\"C:\\\\Examples\\\\reports\\\\offline-release-suite.json\",\"outputDirectory\":\"C:\\\\Examples\\\\generated\"}"
     },
     {
@@ -7660,10 +7687,11 @@
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "exportPath"
+        "exportPath",
+        "exportFile"
       ],
-      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export all PLC alarm text lists to an XLSX (Excel) file. Text lists contain the text strings shown for each alarm condition. Supports multi-language projects — all configured languages are exported. Typical use: export → translate in Excel → ImportAlarmTextLists. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmTextLists\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmTextLists.xlsx\"}"
+      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export all PLC alarm text lists to an XLSX (Excel) file. Text lists contain the text strings shown for each alarm condition. Supports multi-language projects — all configured languages are exported. Typical use: export → translate in Excel → ImportAlarmTextLists. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmTextLists\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmTextLists.xml\"}"
     },
     {
       "name": "ExportDeviceAml",
@@ -7676,10 +7704,12 @@
       "returnType": "CallToolResult",
       "parameters": [
         "devicePath",
-        "exportPath"
+        "exportPath",
+        "exportFile",
+        "exportDirectory"
       ],
-      "description": "[L2][Hardware][FILE] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be an existing folder (file named <device>.aml) or a full .aml path in an existing directory; existing target files are refused. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry behavior remains pending V4 acceptance. Examples: GetToolUsage(toolName: \"ExportDeviceAml\"), optionally operation or language.",
-      "example": "{\"devicePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\Device.aml\"}"
+      "description": "[L2][Hardware][FILE] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be an existing folder (file named <device>.aml) or a full .aml path in an existing directory; existing target files are refused. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry behavior remains pending V4 acceptance. Examples: GetToolUsage(toolName: \"ExportDeviceAml\"), optionally operation or language. exportPath and exportFile and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"devicePath\":[\"PLC_1\"],\"exportPath\":\"C:\\\\Examples\\\\exports\\\\Device.aml\"}"
     },
     {
       "name": "ExportHmiConnection",
@@ -7694,10 +7724,11 @@
         "softwarePath",
         "connectionName",
         "exportPath",
-        "exportOptions"
+        "exportOptions",
+        "exportFile"
       ],
-      "description": "[L2][HMI][FILE]Export one HMI connection to a file (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiConnection\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"connectionName\":\"PLC_Connection\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiConnection.xml\",\"exportOptions\":\"WithDefaults\"}"
+      "description": "[L2][HMI][FILE]Export one HMI connection to a file (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiConnection\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"connectionName\":\"PLC_Connection\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportHmiConnection.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportHmiProgram",
@@ -7713,10 +7744,11 @@
         "exportDir",
         "exportScreens",
         "exportTagTables",
-        "exportOptions"
+        "exportOptions",
+        "exportDirectory"
       ],
-      "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDir\":\"C:\\\\Examples\\\\exports\",\"exportOptions\":\"WithDefaults\"}"
+      "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language. exportDir and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "GetToolUsage",
@@ -8115,7 +8147,7 @@
         "devicePath"
       ],
       "description": "[L2][Category:Hardware][PreCondition:ConnectPortal+OpenProject][READ] Read whether a CPU permits remote PUT/GET access — the precondition for GetPlcLiveValuesS7 on DB areas. Only exact documented or VM-verified attributes are read; the allow-list is currently empty, so this tool reports unavailable pending VM confirmation. Examples: GetToolUsage(toolName: \"GetPlcPutGetAccess\"), optionally operation or language.",
-      "example": "{\"devicePath\":\"PLC_1\"}"
+      "example": "{\"devicePath\":[\"PLC_1\"]}"
     },
     {
       "name": "GetPlcOpcUaConfiguration",
@@ -8385,10 +8417,11 @@
         "overwrite",
         "dryRun",
         "expectedPlanHash",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "sourceDirectory"
       ],
-      "description": "[L2][HMI][WRITE]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportHmiTagTablesFromDirectory\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
+      "description": "[L2][HMI][WRITE]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportHmiTagTablesFromDirectory\"), optionally operation or language. dir and sourceDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"sourceDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "ImportHmiTagTable",
@@ -8428,10 +8461,11 @@
         "overwrite",
         "dryRun",
         "expectedPlanHash",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "sourceDirectory"
       ],
-      "description": "[L2][HMI][WRITE]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportHmiScreensFromDirectory\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
+      "description": "[L2][HMI][WRITE]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportHmiScreensFromDirectory\"), optionally operation or language. dir and sourceDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"folderPath\":\"\",\"sourceDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Examples/Project.ap21\",\"expectedPlanHash\":\"\\u003CplanHash from this tool\\u0027s preview for these arguments and bound project\\u003E\"}"
     },
     {
       "name": "ImportHmiScreen",
@@ -8982,9 +9016,11 @@
         "title",
         "recursive",
         "extensions",
-        "mermaidDirection"
+        "mermaidDirection",
+        "exportFile",
+        "sourceDirectory"
       ],
-      "description": "[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportPlcBlocksDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"GeneratePlcDocumentation\"), optionally operation or language.",
+      "description": "[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportPlcBlocksDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"GeneratePlcDocumentation\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives. directory and sourceDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"directory\":\"C:\\\\Examples\\\\exports\",\"outputPath\":\"C:\\\\Examples\\\\generated\\\\documentation.md\"}"
     },
     {
@@ -9005,9 +9041,10 @@
         "keepFolderStructure",
         "keepEmptyDataBlocks",
         "dryRun",
-        "accessLevels"
+        "accessLevels",
+        "exportFile"
       ],
-      "description": "[L2][PLC-OpcUA][FILE] Generate a user-modelled OPC UA NodeSet XML from one PLC or exact software unit using the Siemens MIT generator source: exported data types, accessible tags, global/instance DBs, optional project folders and empty DBs. Default dryRun=true validates targets/options without exporting. accessLevels maps Inputs/Outputs/Memory/Counters/Timers/GlobalDBs/InstanceDBs/SafetyGlobalDBs/SafetyInstanceDBs to 0 exclude, 1 read, 2 write, 3 read/write, 4 project permissions; safety allows only 0/1, default 1, other areas default 4. NEW absolute .xml output. Optimized nodes, string IDs only; nested FB member access remains unsupported upstream. Reports skipped nodes/warnings. Exports native data to isolated scratch files; no UI, project import, save, compile or download. Use existing ImportOpcUaInterface separately; output not live-validated yet. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GenerateOpcUaModelledInterface\"), optionally operation or language.",
+      "description": "[L2][PLC-OpcUA][FILE] Generate a user-modelled OPC UA NodeSet XML from one PLC or exact software unit using the Siemens MIT generator source: exported data types, accessible tags, global/instance DBs, optional project folders and empty DBs. Default dryRun=true validates targets/options without exporting. accessLevels maps Inputs/Outputs/Memory/Counters/Timers/GlobalDBs/InstanceDBs/SafetyGlobalDBs/SafetyInstanceDBs to 0 exclude, 1 read, 2 write, 3 read/write, 4 project permissions; safety allows only 0/1, default 1, other areas default 4. NEW absolute .xml output. Optimized nodes, string IDs only; nested FB member access remains unsupported upstream. Reports skipped nodes/warnings. Exports native data to isolated scratch files; no UI, project import, save, compile or download. Use existing ImportOpcUaInterface separately; output not live-validated yet. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GenerateOpcUaModelledInterface\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"namespaceUri\":\"urn:example:plc\",\"outputPath\":\"C:\\\\Examples\\\\generated\\\\result.xml\",\"dryRun\":true}"
     },
     {
@@ -9025,9 +9062,10 @@
         "detail",
         "recommendedNextActions",
         "severity",
-        "outputDirectory"
+        "outputDirectory",
+        "exportDirectory"
       ],
-      "description": "[L0][Reports][FILE]Generate a standardized Markdown/JSON error report. This is file/report generation only; it does not touch TIA Portal or modify projects. Example: {\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"\\u003Ccompiler output\\u003E\",\"severity\":\"error\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateErrorReport\"), optionally operation or language.",
+      "description": "[L0][Reports][FILE]Generate a standardized Markdown/JSON error report. This is file/report generation only; it does not touch TIA Portal or modify projects. Example: {\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"\\u003Ccompiler output\\u003E\",\"severity\":\"error\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateErrorReport\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"\\u003Ccompiler output\\u003E\",\"severity\":\"error\"}"
     },
     {
@@ -9064,9 +9102,10 @@
         "connectIfNeeded",
         "includeProjectTree",
         "inspectPortalProcesses",
-        "title"
+        "title",
+        "exportDirectory"
       ],
-      "description": "[L0][Reports][FILE]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to TIA or write to the project; it writes Markdown/JSON report files to outputDirectory. Example: {\"outputDirectory\":\"C:\\\\Temp\\\\mcp-report\",\"includeProjectTree\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateAcceptanceReport\"), optionally operation or language.",
+      "description": "[L0][Reports][FILE]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to TIA or write to the project; it writes Markdown/JSON report files to outputDirectory. Example: {\"outputDirectory\":\"C:\\\\Temp\\\\mcp-report\",\"includeProjectTree\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateAcceptanceReport\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"outputDirectory\":\"C:\\\\Temp\\\\mcp-report\",\"includeProjectTree\":true}"
     },
     {
@@ -9142,9 +9181,10 @@
         "dryRun",
         "confirm",
         "expectedPlanHash",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportDirectory"
       ],
-      "description": "[L2][PLC-Software][FILE] Preview the complete exact technology-object inventory and each item export plan. One batch plan hash and approval; execute in inventory order, stop on first failure. All eight releases use the same native batch export route and the groups present in the project. Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportTechnologyObjectsToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][FILE] Preview the complete exact technology-object inventory and each item export plan. One batch plan hash and approval; execute in inventory order, stop on first failure. All eight releases use the same native batch export route and the groups present in the project. Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportTechnologyObjectsToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. Native behaviorPolicy=current; V4 native acceptance is pending. exportDir and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"PLC_1\",\"exportDir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -9163,10 +9203,11 @@
         "expectedPlanHash",
         "dryRun",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportFile"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [special-export-candidate] Exact canonical TO path; root-only before V19, user groups from V19. Preview first; apply requires exact project, confirmation and expectedPlanHash, consistent supported TO and scoped offline target. Native XML unchanged, ExportOptions.None, no snapshots. V16–20 manual-backed source; other releases signature-verified but preview only until export semantics close. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportTechnologyObject\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"toName\":\"SpeedAxis_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\Axis_1.xml\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][FILE] [special-export-candidate] Exact canonical TO path; root-only before V19, user groups from V19. Preview first; apply requires exact project, confirmation and expectedPlanHash, consistent supported TO and scoped offline target. Native XML unchanged, ExportOptions.None, no snapshots. V16–20 manual-backed source; other releases signature-verified but preview only until export semantics close. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportTechnologyObject\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"toName\":\"SpeedAxis_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\Axis_1.xml\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "GetClassicHmiGlobalization",
@@ -9221,9 +9262,10 @@
         "dryRun",
         "confirm",
         "expectedPlanHash",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportDirectory"
       ],
-      "description": "[L2][PLC-Software][FILE] Preview the complete exact watch-table inventory and each canonical per-table XML export. One batch plan hash and approval; execute in inventory order, stop on the first failure and report completed/not-started items. Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcWatchTablesToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][FILE] Preview the complete exact watch-table inventory and each canonical per-table XML export. One batch plan hash and approval; execute in inventory order, stop on the first failure and report completed/not-started items. Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcWatchTablesToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. Native behaviorPolicy=current; V4 native acceptance is pending. dir and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"PLC_1\",\"dir\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -9242,10 +9284,11 @@
         "expectedPlanHash",
         "dryRun",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportFile"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [special-export-candidate] Exact canonical ordinary PLC watch-table path; root/user groups, no force tables. Preview has zero file writes. Confirmed apply requires exact project and expectedPlanHash. ExportOptions.None; no overwrite, snapshots or retry. V15.1–21 official API-backed method source; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcWatchTable\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"watchTableName\":\"Watch_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\Watch_1.xml\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][FILE] [special-export-candidate] Exact canonical ordinary PLC watch-table path; root/user groups, no force tables. Preview has zero file writes. Confirmed apply requires exact project and expectedPlanHash. ExportOptions.None; no overwrite, snapshots or retry. V15.1–21 official API-backed method source; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcWatchTable\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"watchTableName\":\"Watch_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\Watch_1.xml\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportPlcTypes",
@@ -9266,10 +9309,11 @@
         "dryRun",
         "unitName",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcTypes\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportPath\":\"\\u003Cexisting caller-selected batch export directory\\u003E\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcTypes\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportPlcType",
@@ -9288,10 +9332,11 @@
         "dryRun",
         "unitName",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export consistent native type XML into an existing directory. Never overwrites. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcType\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\UDT_Status.xml\",\"typePath\":\"UDT_Status\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export consistent native type XML into an existing directory. Never overwrites. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcType\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\\\\UDT_Status.xml\",\"typePath\":\"UDT_Status\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportPlcTagTable",
@@ -9309,10 +9354,11 @@
         "dryRun",
         "unitName",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportFile"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export one root-group tag table to a new XML file. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcTagTable\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"tagTableName\":\"\\u9ED8\\u8BA4\\u53D8\\u91CF\\u8868\",\"exportPath\":\"\\u003Cnew absolute Tags.xml file in an existing caller-selected directory\\u003E\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export one root-group tag table to a new XML file. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcTagTable\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"tagTableName\":\"\\u9ED8\\u8BA4\\u53D8\\u91CF\\u8868\",\"exportFile\":\"C:\\\\TIA_MCP\\\\exports\\\\Tags.xml\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportPlcProDiagInfo",
@@ -9353,10 +9399,11 @@
         "expectedPlanHash",
         "dryRun",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [batch-document-export-candidate] Exact V20/V21 ordinary LAD/DB groups only. Complete bounded inventory; recursive opt-in; unsupported/protected members refuse entire batch. exportPath MUST be a NEW tree under an existing parent, with path-hashed block directories. V20 resources required, V21 optional. Preview then exact project/hash confirmation. preservePath=true refused. One non-overwrite tree publication, retain partial staging and stop on failure; no replay. SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlocksDocuments\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false,\"groupPath\":\"\\u003Cexact caller-selected block group containing the intended FB blocks\\u003E\"}"
+      "description": "[PLC foundation; native unverified][FILE] [batch-document-export-candidate] Exact V20/V21 ordinary LAD/DB groups only. Complete bounded inventory; recursive opt-in; unsupported/protected members refuse entire batch. exportPath MUST be a NEW tree under an existing parent, with path-hashed block directories. V20 resources required, V21 optional. Preview then exact project/hash confirmation. preservePath=true refused. One non-overwrite tree publication, retain partial staging and stop on failure; no replay. SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlocksDocuments\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false,\"groupPath\":\"\\u003Cexact caller-selected block group containing the intended FB blocks\\u003E\"}"
     },
     {
       "name": "ExportPlcBlocks",
@@ -9377,10 +9424,11 @@
         "dryRun",
         "unitName",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Know-how-protected blocks export only their public interface; they are listed as interface-only and cannot be imported again. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlocks\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportPath\":\"\\u003Cexisting caller-selected batch export directory\\u003E\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Know-how-protected blocks export only their public interface; they are listed as interface-only and cannot be imported again. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlocks\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportPlcBlockDocuments",
@@ -9399,10 +9447,11 @@
         "expectedPlanHash",
         "dryRun",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [document-export-candidate] Exact V20/V21 only; ordinary LAD/DB single block. exportPath MUST be a NEW directory under an existing parent; publishes .s7dcl plus required V20 or optional V21 .s7res together without overwrite. preservePath=true refused. Native default two-argument overload; no language override, cross-version roundtrip or full-format claim. Preview first, exact project/plan hash and confirmation for apply. Exact SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlockDocuments\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][FILE] [document-export-candidate] Exact V20/V21 only; ordinary LAD/DB single block. exportPath MUST be a NEW directory under an existing parent; publishes .s7dcl plus required V20 or optional V21 .s7res together without overwrite. preservePath=true refused. Native default two-argument overload; no language override, cross-version roundtrip or full-format claim. Preview first, exact project/plan hash and confirmation for apply. Exact SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlockDocuments\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportPlcBlock",
@@ -9421,10 +9470,11 @@
         "dryRun",
         "unitName",
         "confirm",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export consistent native block XML into an existing directory; optional existing subdirectories preserve groups. Never overwrites. V14 SP1 SCL XML contains interfaces only, not a full program backup. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlock\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"blockPath\":\"Main\",\"exportPath\":\"\\u003Cexisting caller-selected export directory\\u003E\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export consistent native block XML into an existing directory; optional existing subdirectories preserve groups. Never overwrites. V14 SP1 SCL XML contains interfaces only, not a full program backup. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlock\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"blockPath\":\"Main\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportOpcUaInterface",
@@ -9439,9 +9489,10 @@
         "softwarePath",
         "interfaceName",
         "exportPath",
-        "interfaceType"
+        "interfaceType",
+        "exportFile"
       ],
-      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][FILE] Export an OPC UA server interface or reference namespace to an XML file. The exported XML can be inspected, modified, and re-imported. interfaceType: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportOpcUaInterface\"), optionally operation or language.",
+      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][FILE] Export an OPC UA server interface or reference namespace to an XML file. The exported XML can be inspected, modified, and re-imported. interfaceType: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportOpcUaInterface\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportOpcUaInterface.xml\"}"
     },
     {
@@ -9457,10 +9508,11 @@
         "softwarePath",
         "tagTableName",
         "exportPath",
-        "exportOptions"
+        "exportOptions",
+        "exportFile"
       ],
-      "description": "[L2][HMI][FILE]Export one HMI tag table to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiTagTable\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiTagTable.xml\",\"exportOptions\":\"WithDefaults\"}"
+      "description": "[L2][HMI][FILE]Export one HMI tag table to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiTagTable\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportHmiTagTable.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportHmiScreen",
@@ -9475,10 +9527,11 @@
         "softwarePath",
         "screenName",
         "exportPath",
-        "exportOptions"
+        "exportOptions",
+        "exportFile"
       ],
-      "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"}"
+      "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportProjectTexts",
@@ -10023,7 +10076,7 @@
         "devicePath"
       ],
       "description": "[L1][Category:Hardware][PreCondition:ConnectPortal+OpenProject][READ] Read a device's configured IP address straight from the TIA project (Openness PROFINET node) — NOT by probing the CPU over S7 and NOT by exporting/parsing AML. Returns the primary IE IP plus all network nodes (address, subnet, type). This is the correct, fast way to discover a PLC's IP before ConnectOnlinePlc/GetPlcLiveValuesS7. Examples: GetToolUsage(toolName: \"GetDeviceIpAddress\"), optionally operation or language.",
-      "example": "{\"devicePath\":\"PLC_1\"}"
+      "example": "{\"devicePath\":[\"PLC_1\"]}"
     },
     {
       "name": "GetDeviceInfo",
@@ -10038,7 +10091,7 @@
         "devicePath"
       ],
       "description": "[L2][Hardware][READ]Get info from a device from the current project/session Examples: GetToolUsage(toolName: \"GetDeviceInfo\"), optionally operation or language.",
-      "example": "{\"devicePath\":\"PLC_1\"}"
+      "example": "{\"devicePath\":[\"PLC_1\"]}"
     },
     {
       "name": "GetDeviceAttributes",
@@ -10054,7 +10107,7 @@
         "nameFilter"
       ],
       "description": "[L2][Category:Hardware][PreCondition:ConnectPortal+OpenProject][READ] Read-only inventory of EVERY Openness attribute exposed on a device's items (CPU, modules, interfaces, ports): name, access mode (read-only vs read/write), current value, value type. Run this ONCE per CPU/firmware to learn what is actually exposed, then drive hardware reads/writes from that ground truth instead of guessing attribute names. Optional nameFilter narrows to attributes whose name contains a substring; several alternatives can be given separated by '|' or ',' (e.g. 'protection', 'putget|webserver', 'ip'). NOTE: GetAttributeInfos() does not enumerate every gettable attribute on all CPUs, so absence here means 'not enumerated', not a guaranteed 'no interface'. Examples: GetToolUsage(toolName: \"GetDeviceAttributes\"), optionally operation or language.",
-      "example": "{\"devicePath\":\"PLC_1\"}"
+      "example": "{\"devicePath\":[\"PLC_1\"]}"
     },
     {
       "name": "GetPlcBlockInfo",

@@ -1589,7 +1589,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "0fcd8f324c82a9579211e62c6b5422a137496c28c755258c11881ca25964fe5a",
+      "descriptionSha256": "437b861d0b7339f0d369447dcdd7bb20c598c10e82e55f165bb61508867fcf6e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -1610,7 +1610,7 @@
             "type": "string"
           },
           "directory": {
-            "description": "Absolute directory of exports from one PLC/scope, scanned recursively.",
+            "description": "Absolute directory of exports from one PLC/scope, scanned recursively. Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of directory or sourceDirectory; these parameters are mutually exclusive.",
             "examples": [
               "C:\\Temp\\exports"
             ],
@@ -1633,6 +1633,15 @@
             "minimum": 0,
             "type": "integer"
           },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. Absolute directory of exports from one PLC/scope, scanned recursively. Supply exactly one of directory or sourceDirectory; these parameters are mutually exclusive.",
+            "examples": [
+              "C:\\Temp\\exports"
+            ],
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "target": {
             "default": "",
             "description": "Exact block name or relative file ID; references uses quoted symbol components.",
@@ -1642,9 +1651,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "directory"
-        ],
+        "required": [],
         "type": "object"
       },
       "name": "AnalyzePlcReferences",
@@ -5184,7 +5191,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "60cb476fce2851556462842847e3a33bd70091748db38649b85f8d8c68096437",
+      "descriptionSha256": "ec3ff93469535a7e1899806df625fbc5937164d53d339df6977c413ae0676a26",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -5301,8 +5308,14 @@
         },
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: full file path on the TIA machine to write. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "outputPath": {
-            "description": "outputPath: full file path on the TIA machine to write.",
+            "description": "outputPath: full file path on the TIA machine to write. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "referenceAmlPath": {
@@ -5377,7 +5390,6 @@
           }
         },
         "required": [
-          "outputPath",
           "spec"
         ],
         "type": "object"
@@ -5980,22 +5992,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e25ea2715b72d8385b79033c1e2890fb1f37843b0641d0390b669351b689cb6f",
+      "descriptionSha256": "e69cb20b5324a265eb97028061b2abf6211c7b10fa123c2c13e3841734f04989",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. outputDirectory: directory where rebuilt handoff artifacts will be written. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "offlineReleaseSuiteJsonPath": {
             "description": "offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.",
             "type": "string"
           },
           "outputDirectory": {
-            "description": "outputDirectory: directory where rebuilt handoff artifacts will be written.",
+            "description": "outputDirectory: directory where rebuilt handoff artifacts will be written. Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           }
         },
         "required": [
-          "offlineReleaseSuiteJsonPath",
-          "outputDirectory"
+          "offlineReleaseSuiteJsonPath"
         ],
         "type": "object"
       },
@@ -14641,7 +14658,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "dce984f6e411e798be93f9abe9ea9be2f672a264002eb44c76c55bcc7b0b1705",
+      "descriptionSha256": "6e71602b4903d9654acf655eb6af5d5340ed45f7f24d56193bab00e1cdac5515",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14654,13 +14671,19 @@
             "type": "string"
           },
           "directory": {
-            "description": "directory: folder on the TIA machine.",
+            "description": "directory: folder on the TIA machine. Deprecated alias; use exportDirectory or sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of directory or exportDirectory or sourceDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. directory: folder on the TIA machine. Supply at most one of directory or exportDirectory or sourceDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           },
           "fileName": {
             "default": "",
@@ -14680,12 +14703,17 @@
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
+          },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. directory: folder on the TIA machine. Supply at most one of directory or exportDirectory or sourceDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           }
         },
         "required": [
           "softwarePath",
-          "action",
-          "directory"
+          "action"
         ],
         "type": "object"
       },
@@ -14699,7 +14727,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "edd4fcbedbd19fc9ffc2e59965a1d70b5b6d922e87612a48d3e2c61541b4c205",
+      "descriptionSha256": "2f6872d0eabe028fc219aab60e057e0591653052eb9a2c17acb91b4fa1389d4c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14712,7 +14740,7 @@
             "type": "string"
           },
           "directory": {
-            "description": "directory: folder on the TIA machine.",
+            "description": "directory: folder on the TIA machine. Deprecated alias; use exportDirectory or sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of directory or exportDirectory or sourceDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "dryRun": {
@@ -14726,6 +14754,12 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. directory: folder on the TIA machine. Supply at most one of directory or exportDirectory or sourceDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           },
           "fileName": {
             "default": "",
@@ -14741,6 +14775,12 @@
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
           },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. directory: folder on the TIA machine. Supply at most one of directory or exportDirectory or sourceDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "tagTable": {
             "default": "",
             "description": "tagTable: exact HMI tag table name.",
@@ -14749,8 +14789,7 @@
         },
         "required": [
           "softwarePath",
-          "action",
-          "directory"
+          "action"
         ],
         "type": "object"
       },
@@ -14764,12 +14803,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0f697fce4c60ac814706880a220e5ce37bef78042eb17e5beb568a1fcdfeece4",
+      "descriptionSha256": "ae87c5a32556a932750230af1ec415ea1ffc914da04a2db0d14a7e18c300c18c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: new absolute DAT file in an existing directory, e.g. 'C:\\Temp\\AlarmClasses.dat' Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "exportPath: new absolute DAT file in an existing directory, e.g. 'C:\\Temp\\AlarmClasses.dat'",
+            "description": "exportPath: new absolute DAT file in an existing directory, e.g. 'C:\\Temp\\AlarmClasses.dat' Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -14778,8 +14823,7 @@
           }
         },
         "required": [
-          "softwarePath",
-          "exportPath"
+          "softwarePath"
         ],
         "type": "object"
       },
@@ -14793,12 +14837,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "843953b0daa972746f879b1ba30607dc0c4f0105748c243bb2af4f0448db526b",
+      "descriptionSha256": "4619c6194320b657a6ed9d0313b9848ecac7f6e343e636f6a58e323c3e3764d7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: full file path for the XLSX output Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "exportPath: full file path for the XLSX output",
+            "description": "exportPath: full file path for the XLSX output Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "includeAdditionalTexts": {
@@ -14822,8 +14872,7 @@
           }
         },
         "required": [
-          "softwarePath",
-          "exportPath"
+          "softwarePath"
         ],
         "type": "object"
       },
@@ -14837,12 +14886,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "17ee874921c01a951528570549cc0d8e153434dd436c7fe07bd8ddf1750bdc27",
+      "descriptionSha256": "9c42476508c220b7a196f3f2f0784cc9d1fb4b1fb2c011a85e5aa782788fbea5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: full file path for the XLSX output, e.g. 'C:\\Temp\\AlarmTexts.xlsx' Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "exportPath: full file path for the XLSX output, e.g. 'C:\\Temp\\AlarmTexts.xlsx'",
+            "description": "exportPath: full file path for the XLSX output, e.g. 'C:\\Temp\\AlarmTexts.xlsx' Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -14851,8 +14906,7 @@
           }
         },
         "required": [
-          "softwarePath",
-          "exportPath"
+          "softwarePath"
         ],
         "type": "object"
       },
@@ -14866,22 +14920,46 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "47e93f9b2ce18819303e4d9c2c85abea9b9a2fe9e8ad0c6ecf143cd1b17a2e27",
+      "descriptionSha256": "c077a9d62043b39c834054a9a1d92d7d6d13c3aed6ff7cdec1ee21e50a954c62",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "devicePath": {
-            "description": "devicePath: station/device path from GetProjectTree, e.g. 'S7-1200 station_3'",
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "description": "devicePath: station/device path from GetProjectTree, e.g. 'S7-1200 station_3'",
+                "type": "string"
+              }
+            ],
+            "description": "Exact device path segments: [group, ..., station], or [station] at the project root. The legacy string form is deprecated and will be removed in 5.0."
+          },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. exportPath: target folder or full .aml file path Supply at most one of exportPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: target folder or full .aml file path Supply at most one of exportPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           },
           "exportPath": {
-            "description": "exportPath: target folder or full .aml file path",
+            "description": "exportPath: target folder or full .aml file path Deprecated alias; use exportFile or exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           }
         },
         "required": [
-          "devicePath",
-          "exportPath"
+          "devicePath"
         ],
         "type": "object"
       },
@@ -14895,12 +14973,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "87a87b95586c23860d9ab433bf5ff7be3e640f78d3f28c95187b7239a8532fa7",
+      "descriptionSha256": "0b6c4d04fd88f0c750eb8150b5a6b94c5da763288f72015ffc160152a70592bd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "connectionName": {
             "description": "connectionName: the HMI connection name to export",
+            "type": "string"
+          },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml) Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           },
           "exportOptions": {
@@ -14914,7 +14998,7 @@
             "type": "string"
           },
           "exportPath": {
-            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml)",
+            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml) Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -14924,8 +15008,7 @@
         },
         "required": [
           "softwarePath",
-          "connectionName",
-          "exportPath"
+          "connectionName"
         ],
         "type": "object"
       },
@@ -14939,12 +15022,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "986220f61b406032652ab77dda63509ac6e1d7bc984f3694d0e583c39bdeb8cb",
+      "descriptionSha256": "9e57a1446a162161c9ec6dd59dd10d37d4d4d28d7644d972e354f3c863435b0f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "exportDir": {
-            "description": "exportDir: directory to write exported files into",
+            "description": "exportDir: directory to write exported files into Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportDir or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "type": "string"
+          },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. exportDir: directory to write exported files into Supply at most one of exportDir or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           },
           "exportOptions": {
@@ -14973,8 +15062,7 @@
           }
         },
         "required": [
-          "softwarePath",
-          "exportDir"
+          "softwarePath"
         ],
         "type": "object"
       },
@@ -14988,10 +15076,16 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f4652134565c4bd685e7a0ac91350703b955396bcc493c173507b2b8152e7e0c",
+      "descriptionSha256": "cb4e445b086026b38fce68e16879cfd077385a14fc16378afcd42fd125e51e3e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml) Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportOptions": {
             "default": "WithDefaults",
             "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
@@ -15006,10 +15100,7 @@
             "type": "string"
           },
           "exportPath": {
-            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)",
-            "examples": [
-              "C:\\Examples\\exports\\ExportHmiScreen.xml"
-            ],
+            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml) Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "screenName": {
@@ -15029,8 +15120,7 @@
         },
         "required": [
           "softwarePath",
-          "screenName",
-          "exportPath"
+          "screenName"
         ],
         "type": "object"
       },
@@ -15044,10 +15134,16 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ce6b9a02166b0f5c0f7e42ace9ce72c4a03357cc37c2065a2a577cf734494fd2",
+      "descriptionSha256": "e6ed809c93779bbf9a4e19698cb663154a2e44d3913201e6789bcf235e222bfa",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml) Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportOptions": {
             "default": "WithDefaults",
             "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
@@ -15059,7 +15155,7 @@
             "type": "string"
           },
           "exportPath": {
-            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)",
+            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml) Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -15073,8 +15169,7 @@
         },
         "required": [
           "softwarePath",
-          "tagTableName",
-          "exportPath"
+          "tagTableName"
         ],
         "type": "object"
       },
@@ -15088,12 +15183,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "5a2b65f8c524483a8160a25fd5c6e5b48ea9277cb8e936811587df34437536f3",
+      "descriptionSha256": "908cab4b8a634415feab7f54b3601c1c560626a8b47d8ec5794a212870a7ddee",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: full file path for the XML output, e.g. 'C:\\Temp\\OpcUa_Interface.xml' Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "exportPath: full file path for the XML output, e.g. 'C:\\Temp\\OpcUa_Interface.xml'",
+            "description": "exportPath: full file path for the XML output, e.g. 'C:\\Temp\\OpcUa_Interface.xml' Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "interfaceName": {
@@ -15112,8 +15213,7 @@
         },
         "required": [
           "softwarePath",
-          "interfaceName",
-          "exportPath"
+          "interfaceName"
         ],
         "type": "object"
       },
@@ -15127,7 +15227,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "07bffd5b5c7d624a79fae7c3e2f4f4d2f0c1bebff1c429317b500b0bc5e5783d",
+      "descriptionSha256": "9a76649f1c95c6079e3d0948861e231f1d45e285f4527ca51871843e1cb6965d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15150,8 +15250,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Exact foundation argument: exportPath Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "preservePath": {
@@ -15171,8 +15277,7 @@
         },
         "required": [
           "softwarePath",
-          "blockPath",
-          "exportPath"
+          "blockPath"
         ],
         "type": "object"
       },
@@ -15186,7 +15291,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "727c6efc4172192843fcd8bcfda453929b4cbe632ad17a917c0d814bcd5f7791",
+      "descriptionSha256": "2b84618d979895ec737167f602da2970ff91b63cf05e934e87fb286f63cee194",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15214,8 +15319,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Exact foundation argument: exportPath Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "preservePath": {
@@ -15230,8 +15341,7 @@
         },
         "required": [
           "softwarePath",
-          "blockPath",
-          "exportPath"
+          "blockPath"
         ],
         "type": "object"
       },
@@ -15245,7 +15355,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f754658ad902a8d49b1d6aca9da978b918d62c9b08778df77da4f4c7c20a6d5b",
+      "descriptionSha256": "dac5f9601f07b8c250fe72c2bbf71dfd1f171e3aad1ed329a981dc2098956bf2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15269,8 +15379,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Exact foundation argument: exportPath Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "groupPath": {
@@ -15299,8 +15415,7 @@
         },
         "required": [
           "softwarePath",
-          "groupPath",
-          "exportPath"
+          "groupPath"
         ],
         "type": "object"
       },
@@ -15314,7 +15429,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b7b5dc9158483c1dec7ed1e8cf9251cf594238eb1a625161845e39c518ca4def",
+      "descriptionSha256": "9642bc5f8073f967cdef2ecf88e0924e8acbb6b0044ec967bc9f57caf3466d0d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15338,8 +15453,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Exact foundation argument: exportPath Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "groupPath": {
@@ -15368,8 +15489,7 @@
         },
         "required": [
           "softwarePath",
-          "groupPath",
-          "exportPath"
+          "groupPath"
         ],
         "type": "object"
       },
@@ -15436,7 +15556,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c4ce26db70efaec3f97189e56d1cf288767c38e9def6abff7fa0d228c671afd6",
+      "descriptionSha256": "80e1f5fce74535f826e6513b9e7938eb98148f52579d58a6708f5e182b51ade2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15455,8 +15575,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. Exact foundation argument: exportPath Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -15475,8 +15601,7 @@
         },
         "required": [
           "softwarePath",
-          "tagTableName",
-          "exportPath"
+          "tagTableName"
         ],
         "type": "object"
       },
@@ -15490,7 +15615,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "bdb0e8858f5f23bd219d2df701134a52c128164dfc72776cd2641ac4ddc63d5e",
+      "descriptionSha256": "54357a1aec3b880fdad795b3bcfb876dc73ca14a9f60c13ad9ed9f6e9572d7bd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15509,8 +15634,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Exact foundation argument: exportPath Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "preservePath": {
@@ -15534,7 +15665,6 @@
         },
         "required": [
           "softwarePath",
-          "exportPath",
           "typePath"
         ],
         "type": "object"
@@ -15549,7 +15679,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "57e7efc8fe711c2b0719c504fc74f319855d8706a1a04e2210168f6716e73a32",
+      "descriptionSha256": "49a8f241ea355e1d2c77ffd238ce8422f0e3bd4f0960d061d45ee839a5968955",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15573,8 +15703,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Exact foundation argument: exportPath Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "groupPath": {
@@ -15603,8 +15739,7 @@
         },
         "required": [
           "softwarePath",
-          "groupPath",
-          "exportPath"
+          "groupPath"
         ],
         "type": "object"
       },
@@ -15618,7 +15753,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8a7821464ef5964012908c832877d1fb9539c2610657ca83f8ac6d1a23b2559a",
+      "descriptionSha256": "dbce8a2e505c72a955397f6b8c7313d99ad598854e4b72e5c7827d0bf6fb35b1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15642,8 +15777,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. Exact foundation argument: exportPath Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -15657,8 +15798,7 @@
         },
         "required": [
           "softwarePath",
-          "watchTableName",
-          "exportPath"
+          "watchTableName"
         ],
         "type": "object"
       },
@@ -15672,7 +15812,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "dd26aaa2e27737b4c2db8b13d34a82774316c99c14b2dc06685b57233282c6ce",
+      "descriptionSha256": "fd427fc9671b2c992e5a9a9c0a86e574c008af5f068d51ae75ae3dc2f77194c9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15682,7 +15822,7 @@
             "type": "boolean"
           },
           "dir": {
-            "description": "dir: output directory",
+            "description": "dir: output directory Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of dir or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "dryRun": {
@@ -15700,6 +15840,12 @@
             "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. dir: output directory Supply at most one of dir or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "regexName": {
             "default": "",
             "description": "regexName: optional regex filter applied to table name",
@@ -15711,8 +15857,7 @@
           }
         },
         "required": [
-          "softwarePath",
-          "dir"
+          "softwarePath"
         ],
         "type": "object"
       },
@@ -15848,7 +15993,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9a856be342a65ffb5433aae013de6af7e644e5f4c5c3c4cfdbfa92fafef58931",
+      "descriptionSha256": "4f1a15ee1e99240fd5689249374143f9fc841e7bc4dc5629ced85dbb9cf20aec",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15872,8 +16017,14 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. Exact foundation argument: exportPath Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportPath": {
-            "description": "Exact foundation argument: exportPath",
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -15887,8 +16038,7 @@
         },
         "required": [
           "softwarePath",
-          "toName",
-          "exportPath"
+          "toName"
         ],
         "type": "object"
       },
@@ -15902,7 +16052,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e8fae81d4688e3c35ac3e9713941c4394d2c2b2f89593e36cafc3f30ac600eef",
+      "descriptionSha256": "648b68f1e45c0a273c7156374e8808a113e212cfd4ba22f47c760658b8d2da85",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15927,7 +16077,13 @@
             "type": "string"
           },
           "exportDir": {
-            "description": "exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs'",
+            "description": "exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs' Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportDir or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "type": "string"
+          },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs' Supply at most one of exportDir or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           },
           "regexName": {
@@ -15941,8 +16097,7 @@
           }
         },
         "required": [
-          "softwarePath",
-          "exportDir"
+          "softwarePath"
         ],
         "type": "object"
       },
@@ -16101,7 +16256,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0e262c22c08f544e4368f29bbc730f000a49d32bb13346ef8377bf268968ec0c",
+      "descriptionSha256": "bc55f9f067c194487b8ffb8b4f4790d2d9d70624b87b43b4a581688036bafe00",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16109,6 +16264,15 @@
             "default": false,
             "description": "When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA Portal.",
             "type": "boolean"
+          },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "examples": [
+              "C:\\Temp\\mcp-report"
+            ],
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           },
           "includeProjectTree": {
             "default": false,
@@ -16125,7 +16289,7 @@
           },
           "outputDirectory": {
             "default": "",
-            "description": "Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.",
+            "description": "Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%. Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
               "C:\\Temp\\mcp-report"
             ],
@@ -16198,7 +16362,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "445da7ea137cc0d6057522d1f8b3364c9132115a5f485668e281bfff48c918d5",
+      "descriptionSha256": "a701015e5398e90b6e298fdc9612787814207ba82a3ba9038c5924dcb0da4198",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16217,9 +16381,15 @@
             ],
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "outputDirectory": {
             "default": "",
-            "description": "Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.",
+            "description": "Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%. Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "recommendedNextActions": {
@@ -16259,7 +16429,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1c89c9ee321209c00c7955645b83e3ea6d0a92d02612961057915812f0c83f01",
+      "descriptionSha256": "7a4834bcf465f639bcf34b4409f0292bb523aea16e0bcb4fa8172c3e7c2174f8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16276,6 +16446,12 @@
             "default": true,
             "description": "true previews without executing the requested write/action; false executes.",
             "type": "boolean"
+          },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute output file; existing files are refused. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           },
           "interfaceName": {
             "description": "Name for the generated OPC UA interface, 1..128 characters.",
@@ -16296,7 +16472,7 @@
             "type": "string"
           },
           "outputPath": {
-            "description": "New absolute output file; existing files are refused.",
+            "description": "New absolute output file; existing files are refused. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -16312,8 +16488,7 @@
         "required": [
           "softwarePath",
           "interfaceName",
-          "namespaceUri",
-          "outputPath"
+          "namespaceUri"
         ],
         "type": "object"
       },
@@ -16327,12 +16502,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "014f4e30b0c1ddfd183efbfc21d7c22358393075306b54b018c23c9dd14df31c",
+      "descriptionSha256": "54f49654319182b859f88d9c7dc95cb204aeca3265f416becd0f4e075da3308d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "directory": {
-            "description": "directory: See the operation description and its bounds.",
+            "description": "directory: See the operation description and its bounds. Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of directory or sourceDirectory; these parameters are mutually exclusive.",
+            "type": "string"
+          },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: See the operation description and its bounds. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           },
           "extensions": {
@@ -16348,7 +16529,7 @@
             "type": "string"
           },
           "outputPath": {
-            "description": "outputPath: See the operation description and its bounds.",
+            "description": "outputPath: See the operation description and its bounds. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "recursive": {
@@ -16356,16 +16537,19 @@
             "description": "recursive: true also scans subfolders.",
             "type": "boolean"
           },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. directory: See the operation description and its bounds. Supply exactly one of directory or sourceDirectory; these parameters are mutually exclusive.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "title": {
             "default": "",
             "description": "title: document title.",
             "type": "string"
           }
         },
-        "required": [
-          "directory",
-          "outputPath"
-        ],
+        "required": [],
         "type": "object"
       },
       "name": "GeneratePlcDocumentation",
@@ -16751,8 +16935,21 @@
         "additionalProperties": false,
         "properties": {
           "devicePath": {
-            "description": "devicePath: device name, CPU/program name, or full name (e.g. 'S7-1200 station_3', 'SafetyPLC', 'S7-1500/ET200MP station_1').",
-            "type": "string"
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "description": "devicePath: device name, CPU/program name, or full name (e.g. 'S7-1200 station_3', 'SafetyPLC', 'S7-1500/ET200MP station_1').",
+                "type": "string"
+              }
+            ],
+            "description": "Exact device path segments: [group, ..., station], or [station] at the project root. The legacy string form is deprecated and will be removed in 5.0."
           },
           "nameFilter": {
             "description": "nameFilter: optional case-insensitive substring to narrow attribute names (e.g. 'protection'). Empty = all.",
@@ -16779,8 +16976,21 @@
         "additionalProperties": false,
         "properties": {
           "devicePath": {
-            "description": "devicePath: defines the path in the project structure to the device",
-            "type": "string"
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "description": "devicePath: defines the path in the project structure to the device",
+                "type": "string"
+              }
+            ],
+            "description": "Exact device path segments: [group, ..., station], or [station] at the project root. The legacy string form is deprecated and will be removed in 5.0."
           }
         },
         "required": [
@@ -16803,8 +17013,21 @@
         "additionalProperties": false,
         "properties": {
           "devicePath": {
-            "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
-            "type": "string"
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
+                "type": "string"
+              }
+            ],
+            "description": "Exact device path segments: [group, ..., station], or [station] at the project root. The legacy string form is deprecated and will be removed in 5.0."
           }
         },
         "required": [
@@ -18098,9 +18321,22 @@
         "additionalProperties": false,
         "properties": {
           "devicePath": {
-            "default": "",
-            "description": "devicePath: optional device name (e.g. 'PLC_1') for a PUT/GET precheck. When set, the read is skipped with a clear, actionable message if the CPU has remote PUT/GET access disabled, instead of failing with a TCP timeout.",
-            "type": "string"
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "default": "",
+                "description": "devicePath: optional device name (e.g. 'PLC_1') for a PUT/GET precheck. When set, the read is skipped with a clear, actionable message if the CPU has remote PUT/GET access disabled, instead of failing with a TCP timeout.",
+                "type": "string"
+              }
+            ],
+            "description": "Exact device path segments: [group, ..., station], or [station] at the project root. The legacy string form is deprecated and will be removed in 5.0."
           },
           "expectModuleContains": {
             "default": "",
@@ -18226,8 +18462,21 @@
         "additionalProperties": false,
         "properties": {
           "devicePath": {
-            "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
-            "type": "string"
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
+                "type": "string"
+              }
+            ],
+            "description": "Exact device path segments: [group, ..., station], or [station] at the project root. The legacy string form is deprecated and will be removed in 5.0."
           }
         },
         "required": [
@@ -20451,12 +20700,12 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "aaf95eb7f967449899cad1e0135a252162ae139cef44635a6bafaff196812ed9",
+      "descriptionSha256": "c117cdbada132af5afda86d6e6cbdff68801ecc9499a7bb22ad4792b7913a07f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dir": {
-            "description": "dir: directory containing exported screen XML files",
+            "description": "dir: directory containing exported screen XML files Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
             "type": "string"
           },
           "dryRun": {
@@ -20491,12 +20740,17 @@
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the HMI software",
             "type": "string"
+          },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. dir: directory containing exported screen XML files Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           }
         },
         "required": [
           "softwarePath",
-          "folderPath",
-          "dir"
+          "folderPath"
         ],
         "type": "object"
       },
@@ -20582,12 +20836,12 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "fc40a3617279c6b4492daafb9a87dba3982f55cb7f816d72aaae2273ba7d942c",
+      "descriptionSha256": "6bf34a4d7ec4a9f4fedd98c4bce4cdfa3d095de00e52bcaccfcf4b9028dfc829",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dir": {
-            "description": "dir: directory containing exported tag table XML files",
+            "description": "dir: directory containing exported tag table XML files Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
             "type": "string"
           },
           "dryRun": {
@@ -20622,12 +20876,17 @@
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the HMI software",
             "type": "string"
+          },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. dir: directory containing exported tag table XML files Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           }
         },
         "required": [
           "softwarePath",
-          "folderPath",
-          "dir"
+          "folderPath"
         ],
         "type": "object"
       },
@@ -21157,7 +21416,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1731855d5a30a77ce77e6fb8d958c6a71c30b4d0794ca5ba03a0f7e5052317c2",
+      "descriptionSha256": "3876067ebfe206e5c39619fdacbf01786b4ebec0d0aa7585d33007040ed4d423",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21167,7 +21426,7 @@
             "type": "boolean"
           },
           "dir": {
-            "description": "Exact foundation argument: dir",
+            "description": "Exact foundation argument: dir Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
             "type": "string"
           },
           "dryRun": {
@@ -21224,6 +21483,12 @@
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
           },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. Exact foundation argument: dir Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "swImportOptions": {
             "default": [],
             "description": "Opt-ins, default empty: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Blocks/types only; unsupported releases/combinations refuse.",
@@ -21240,8 +21505,7 @@
         },
         "required": [
           "softwarePath",
-          "groupPath",
-          "dir"
+          "groupPath"
         ],
         "type": "object"
       },
@@ -21499,7 +21763,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0b352e02f42b2376b824e2faa3aeb8afe738f3ae46ca25cd80ba5126e07c959e",
+      "descriptionSha256": "76dd5a93d2990b481d8aff1159ffa9b1bea9420dbd9e247b56ed926d9f79f292",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21509,7 +21773,7 @@
             "type": "boolean"
           },
           "dir": {
-            "description": "dir: directory containing PLC tag table XML files",
+            "description": "dir: directory containing PLC tag table XML files Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
             "type": "string"
           },
           "dryRun": {
@@ -21552,6 +21816,12 @@
             "description": "softwarePath: path in the project structure to the PLC software",
             "type": "string"
           },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. dir: directory containing PLC tag table XML files Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "unitName": {
             "default": "",
             "description": "unitName: exact standard software unit, V16–V21; empty selects the PLC root. Paths are relative to the selected root.",
@@ -21560,8 +21830,7 @@
         },
         "required": [
           "softwarePath",
-          "folderPath",
-          "dir"
+          "folderPath"
         ],
         "type": "object"
       },
@@ -21812,12 +22081,12 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c0699be462588cc9c5c2d31a7ad0defacd7a1f3f0488ad83be172c041ddc0cf3",
+      "descriptionSha256": "7be414abae7643832e5f1964f87e62ad8f753b508ec8e4855076ac2563472634",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dir": {
-            "description": "dir: directory containing technology object XML files",
+            "description": "dir: directory containing technology object XML files Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
             "type": "string"
           },
           "dryRun": {
@@ -21852,12 +22121,17 @@
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the PLC software",
             "type": "string"
+          },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. dir: directory containing technology object XML files Supply exactly one of dir or sourceDirectory; these parameters are mutually exclusive.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           }
         },
         "required": [
           "softwarePath",
-          "folderPath",
-          "dir"
+          "folderPath"
         ],
         "type": "object"
       },
@@ -22068,7 +22342,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2bd088f7744f7b6c28a3349f072f3b31e476d663b52777ff0a886f6bbc96a1cc",
+      "descriptionSha256": "5e9bc40aa366ebafd6ba1a04a4f362534bfa58afc2d752b04e2d8df2db0456ba",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -22077,8 +22351,14 @@
             "description": "true previews without executing the requested write/action; false executes.",
             "type": "boolean"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Existing absolute directory where new expanded XML files will be written. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "outputDirectory": {
-            "description": "Existing absolute directory where new expanded XML files will be written.",
+            "description": "Existing absolute directory where new expanded XML files will be written. Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "rows": {
@@ -22117,7 +22397,6 @@
         },
         "required": [
           "templatePath",
-          "outputDirectory",
           "rows"
         ],
         "type": "object"
@@ -27075,7 +27354,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "682ead8810e1b11e2e55411b4549b1b2d598ff1c68a80a37b1a7daf2944c897b",
+      "descriptionSha256": "adfe84c40863aeed09dce88a265b48a46e3bdbc64e565fd5283ea24f391b6615",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -27099,6 +27378,18 @@
             "description": "Exact planHash from fresh preview; required for file execution.",
             "type": "string"
           },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "format": {
             "default": "json",
             "description": "json or csv; xlsx is deferred. exportTemplate requires csv.",
@@ -27119,7 +27410,7 @@
           },
           "outputPath": {
             "default": "",
-            "description": "Optional new absolute .json file for import, required new .json file or CSV directory for export/template.",
+            "description": "Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Deprecated alias; use exportFile or exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "packageId": {
@@ -30371,7 +30662,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "353e294712e194ddfb1198465a35712c2b170b56a3d869596bbbbb07e0cd727c",
+      "descriptionSha256": "1593fb4774707e10f0b5848437d9c5dcca2c571b35a425fff8e8ffd36b4ce349",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -30396,6 +30687,12 @@
             "description": "Exact planHash returned by a fresh preview; required for execution.",
             "type": "string"
           },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute local .zip path under an existing parent; export only. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "newId": {
             "default": "",
             "description": "New package id; copy/fork only, distinct from the original.",
@@ -30408,7 +30705,7 @@
           },
           "outputPath": {
             "default": "",
-            "description": "New absolute local .zip path under an existing parent; export only.",
+            "description": "New absolute local .zip path under an existing parent; export only. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "packageId": {
@@ -31772,7 +32069,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "6dd53465a992d6e1813660bb48d273735028d6fc5f45fcf982dab1f87ae783d7",
+      "descriptionSha256": "c037e8e384249fdff51c8246eece6d7eee4b3e899913beb5b871c2b1dfa3c7da",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -31786,7 +32083,7 @@
             "type": "string"
           },
           "directory": {
-            "description": "Absolute CWC source folder containing manifest.json and control files; <=1024 files /64 MiB.",
+            "description": "Absolute CWC source folder containing manifest.json and control files; <=1024 files /64 MiB. Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of directory or sourceDirectory; these parameters are mutually exclusive.",
             "type": "string"
           },
           "dryRun": {
@@ -31799,15 +32096,25 @@
             "description": "packageFingerprint from the matching inspect/preview.",
             "type": "string"
           },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute ZIP path using the suggested GUID filename; only used for build execution. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "outputPath": {
             "default": "",
-            "description": "New absolute ZIP path using the suggested GUID filename; only used for build execution.",
+            "description": "New absolute ZIP path using the suggested GUID filename; only used for build execution. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "type": "string"
+          },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. Absolute CWC source folder containing manifest.json and control files; <=1024 files /64 MiB. Supply exactly one of directory or sourceDirectory; these parameters are mutually exclusive.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           }
         },
-        "required": [
-          "directory"
-        ],
+        "required": [],
         "type": "object"
       },
       "name": "ManageUnifiedCwcPackage",
@@ -33165,7 +33472,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "fb2c0097523c9b3533bd93ed926e619fee18fc8d90390aaa97470cda4ab80dd0",
+      "descriptionSha256": "85a08f58d339526c188c65e848af266afd390529ed56a52e7b21681c2e85dc6b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -33313,13 +33620,19 @@
             "description": "documentFingerprint returned by GetPlcBlockEditCapabilities for this input.",
             "type": "string"
           },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute output file; existing parent directory required when dryRun=false. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "filePath": {
             "description": "Absolute existing single-block SimaticML XML file.",
             "type": "string"
           },
           "outputPath": {
             "default": "",
-            "description": "New absolute output file; existing parent directory required when dryRun=false.",
+            "description": "New absolute output file; existing parent directory required when dryRun=false. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           }
         },
@@ -33899,286 +34212,10 @@
       "descriptionSha256": "409342866a4131e3e734868464beadafd8a67316c0e00d59db873da807d96753",
       "inputSchema": {
         "additionalProperties": false,
-        "oneOf": [
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {
-                  "namePattern": {
-                    "description": "Inspection name pattern, awaiting human confirmation.",
-                    "maxLength": 256,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "namePattern"
-                ],
-                "type": "object"
-              },
-              "form": {
-                "const": "inspectionRules"
-              },
-              "mode": {
-                "const": "set"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {},
-                "required": [],
-                "type": "object"
-              },
-              "form": {
-                "const": "inspectionRules"
-              },
-              "mode": {
-                "const": "clear"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {
-                  "filter": {
-                    "description": "Block tree filter text, awaiting human confirmation.",
-                    "maxLength": 256,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "filter"
-                ],
-                "type": "object"
-              },
-              "form": {
-                "const": "blockFilter"
-              },
-              "mode": {
-                "const": "set"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {},
-                "required": [],
-                "type": "object"
-              },
-              "form": {
-                "const": "blockFilter"
-              },
-              "mode": {
-                "const": "clear"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {
-                  "blockPaths": {
-                    "description": "Exact escaped block paths to prefill, awaiting human confirmation.",
-                    "items": {
-                      "maxLength": 4096,
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "maxItems": 256,
-                    "type": "array"
-                  },
-                  "softwarePath": {
-                    "description": "Exact software path owning the selected blocks.",
-                    "maxLength": 4096,
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "softwarePath",
-                  "blockPaths"
-                ],
-                "type": "object"
-              },
-              "form": {
-                "const": "blockSelection"
-              },
-              "mode": {
-                "const": "set"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {},
-                "required": [],
-                "type": "object"
-              },
-              "form": {
-                "const": "blockSelection"
-              },
-              "mode": {
-                "const": "clear"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {
-                  "projectPath": {
-                    "description": "Human-confirmed MCP panel prefill: projectPath. Paths are absolute local paths; no existence probe.",
-                    "maxLength": 4096,
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "projectPath"
-                ],
-                "type": "object"
-              },
-              "form": {
-                "const": "connectProject"
-              },
-              "mode": {
-                "const": "set"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {},
-                "required": [],
-                "type": "object"
-              },
-              "form": {
-                "const": "connectProject"
-              },
-              "mode": {
-                "const": "clear"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {
-                  "format": {
-                    "description": "Human-confirmed MCP panel prefill: format. Paths are absolute local paths; no existence probe.",
-                    "enum": [
-                      "SimaticMl",
-                      "Source"
-                    ],
-                    "type": "string"
-                  },
-                  "outputDirectory": {
-                    "description": "Human-confirmed MCP panel prefill: outputDirectory. Paths are absolute local paths; no existence probe.",
-                    "maxLength": 4096,
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "outputDirectory",
-                  "format"
-                ],
-                "type": "object"
-              },
-              "form": {
-                "const": "exportBlocks"
-              },
-              "mode": {
-                "const": "set"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {},
-                "required": [],
-                "type": "object"
-              },
-              "form": {
-                "const": "exportBlocks"
-              },
-              "mode": {
-                "const": "clear"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {
-                  "overwrite": {
-                    "description": "Human-confirmed MCP panel prefill: overwrite. Paths are absolute local paths; no existence probe.",
-                    "type": "boolean"
-                  },
-                  "paths": {
-                    "description": "Human-confirmed MCP panel prefill: paths. Paths are absolute local paths; no existence probe.",
-                    "items": {
-                      "maxLength": 4096,
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "maxItems": 256,
-                    "minItems": 1,
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "paths",
-                  "overwrite"
-                ],
-                "type": "object"
-              },
-              "form": {
-                "const": "importBlocks"
-              },
-              "mode": {
-                "const": "set"
-              }
-            }
-          },
-          {
-            "properties": {
-              "fields": {
-                "additionalProperties": false,
-                "properties": {},
-                "required": [],
-                "type": "object"
-              },
-              "form": {
-                "const": "importBlocks"
-              },
-              "mode": {
-                "const": "clear"
-              }
-            }
-          }
-        ],
         "properties": {
           "fields": {
             "additionalProperties": false,
-            "description": "Closed fields for the selected form; clear requires an empty object.",
+            "description": "Supply exactly the selected form's fields for set; supply an empty object for clear. inspectionRules: namePattern; blockFilter: filter; blockSelection: softwarePath and blockPaths; connectProject: projectPath; exportBlocks: outputDirectory and format; importBlocks: paths and overwrite.",
             "properties": {
               "blockPaths": {
                 "description": "Exact escaped block paths to prefill, awaiting human confirmation.",
@@ -34582,22 +34619,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b0ba091f1df06b96f130fd8421c854487a2ed7d9cc2b7b80828101fbe7bd4a1b",
+      "descriptionSha256": "b1a39ddcb7dc21d615734adba9e079c98f9e62b798c0432caea2add31fd7558b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. Exact foundation argument: outputPath Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "inputPath": {
             "description": "Exact foundation argument: inputPath",
             "type": "string"
           },
           "outputPath": {
-            "description": "Exact foundation argument: outputPath",
+            "description": "Exact foundation argument: outputPath Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           }
         },
         "required": [
-          "inputPath",
-          "outputPath"
+          "inputPath"
         ],
         "type": "object"
       },
@@ -34611,13 +34653,19 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f78e9d63866102419bf3ec56f6cea7a3a85d783589ff8fb777f4a9b2805aa4ba",
+      "descriptionSha256": "2290a1677a10f3a71294d9c90dd0f953c1daf9697072ddf2aa323508bf79890d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "blockPath": {
             "default": "",
             "description": "blockPath: See the operation description and its bounds.",
+            "type": "string"
+          },
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: See the operation description and its bounds. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           },
           "filePath": {
@@ -34637,7 +34685,7 @@
           },
           "outputPath": {
             "default": "",
-            "description": "outputPath: See the operation description and its bounds.",
+            "description": "outputPath: See the operation description and its bounds. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "softwarePath": {
@@ -34658,22 +34706,27 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0b87dd20c3b1ffb0391ba161872c3bba6c3054dfa946a19cfd88cbfc6a01e2ac",
+      "descriptionSha256": "e28100828c33bbc0161178b5fb0a3815aad2838749c13390967c26f56d37eda0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. Exact foundation argument: outputPath Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "inputPath": {
             "description": "Exact foundation argument: inputPath",
             "type": "string"
           },
           "outputPath": {
-            "description": "Exact foundation argument: outputPath",
+            "description": "Exact foundation argument: outputPath Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           }
         },
         "required": [
-          "inputPath",
-          "outputPath"
+          "inputPath"
         ],
         "type": "object"
       },
@@ -34687,16 +34740,22 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3aa83b56a9eacd9dc03e0884dbe9693409aceec09390c871bc6ecd0955945ede",
+      "descriptionSha256": "60eae74c9162fb0a91990f6b9ce3048d03d394e6d05017d0db4f47f53ec52d8e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute output file; existing files are refused. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "leftFilePath": {
             "description": "Existing absolute before-export SimaticML XML path.",
             "type": "string"
           },
           "outputPath": {
-            "description": "New absolute output file; existing files are refused.",
+            "description": "New absolute output file; existing files are refused. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "rightFilePath": {
@@ -34706,8 +34765,7 @@
         },
         "required": [
           "leftFilePath",
-          "rightFilePath",
-          "outputPath"
+          "rightFilePath"
         ],
         "type": "object"
       },
@@ -35568,10 +35626,19 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "4f583e775f7f1c98fd4790f0e1166a8fcbc818751f406cad0aa14fa618254b2a",
+      "descriptionSha256": "eed0ab3d4f471a48447042636319093cf8363c09b1b0d0489b9a732147c6089f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: full file path on the TIA machine to write. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "examples": [
+              "C:\\Temp\\blocks.json"
+            ],
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "exportId": {
             "examples": [
               "<exportId from response>"
@@ -35579,7 +35646,7 @@
             "type": "string"
           },
           "outputPath": {
-            "description": "outputPath: full file path on the TIA machine to write.",
+            "description": "outputPath: full file path on the TIA machine to write. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
               "C:\\Temp\\blocks.json"
             ],
@@ -35595,8 +35662,7 @@
           }
         },
         "required": [
-          "exportId",
-          "outputPath"
+          "exportId"
         ],
         "type": "object"
       },
@@ -35712,7 +35778,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3d7adde1657df15b70c3e6f592e56eebde2a01831fbac73d2eb96ce3c8dc460f",
+      "descriptionSha256": "6e8b286dd66b14bb394fb84ab3f7242972cd14faa43d0ca78b8ef1fb315d7df3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -35722,7 +35788,7 @@
             "type": "string"
           },
           "directory": {
-            "description": "directory: See the operation description and its bounds.",
+            "description": "directory: See the operation description and its bounds. Deprecated alias; use sourceDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply exactly one of directory or sourceDirectory; these parameters are mutually exclusive.",
             "type": "string"
           },
           "extensions": {
@@ -35755,11 +35821,15 @@
             "default": true,
             "description": "recursive: true also scans subfolders.",
             "type": "boolean"
+          },
+          "sourceDirectory": {
+            "description": "Absolute input directory on the TIA host. directory: See the operation description and its bounds. Supply exactly one of directory or sourceDirectory; these parameters are mutually exclusive.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
           }
         },
-        "required": [
-          "directory"
-        ],
+        "required": [],
         "type": "object"
       },
       "name": "ScanPlcSourceAnnotations",
@@ -36333,8 +36403,21 @@
         "additionalProperties": false,
         "properties": {
           "devicePath": {
-            "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
-            "type": "string"
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
+                "type": "string"
+              }
+            ],
+            "description": "Exact device path segments: [group, ..., station], or [station] at the project root. The legacy string form is deprecated and will be removed in 5.0."
           },
           "dryRun": {
             "default": true,
@@ -38029,12 +38112,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8571c23798194fd32ec213a954d865cea0a4567d9964a371652ab59deec1f841",
+      "descriptionSha256": "a1d44733fb0608aeea25d3d687e46010bf6903a1a8e566923480bcab3bf91253",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. outputDirectory: directory where tag-table XML, screen XML, and manifest JSON will be written. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "outputDirectory": {
-            "description": "outputDirectory: directory where tag-table XML, screen XML, and manifest JSON will be written.",
+            "description": "outputDirectory: directory where tag-table XML, screen XML, and manifest JSON will be written. Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "type": "string"
           },
           "package": {
@@ -38666,7 +38755,6 @@
           }
         },
         "required": [
-          "outputDirectory",
           "package"
         ],
         "type": "object"
@@ -38681,13 +38769,22 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1bf3e204c7ebe6033af42cf681afb4c19333082ddea0ceabc284cd76176b7bfc",
+      "descriptionSha256": "c6cf03ec04c9dd637f9c7de7868223fa2e86c19bd7b2bc2de94dc2b9da1289cc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportFile": {
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "examples": [
+              "C:\\Temp\\FC_Add.scl"
+            ],
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
           "outputPath": {
             "default": "",
-            "description": "outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.",
+            "description": "outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
               "C:\\Temp\\FC_Add.scl"
             ],
