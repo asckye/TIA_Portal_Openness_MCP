@@ -50,8 +50,9 @@
 |---|---|---|
 | v4.0.0-beta.2，V21 VM，2026-10-31 至 11-01 | 原记录称 511 个工具：通过 213、失败 93、未测 192、按设计拒绝 12；TIA 重启 4 次 | 分类合计为 510，与原总数相差 1，待台账核对；相关任务见计划 |
 | beta.3 测试包（`1dfe2067`），V21 VM，2026-11-02 至 11-03 | 512 个工具：通过 293、缺陷 103、按设计拒绝 60、不确定 1、未测 55；去重缺陷 59 个（HIGH 20）；会话中断 18 次，TIA 重启 2 次 | R1 对应 VMFIX-2 已合并，但这不是修复后复测结果；其余修复与复测待执行 |
+| v4.0.0-beta.4（`48abffe8`），V21 VM，2026-11-05 至 11-06 | **不通过**。839 次调用：通过 578、失败 158、按设计拒绝 103；512 个工具调用 511 个（`ConnectOnlinePlc` 只预览）；去重缺陷 87 个（HIGH 10、MEDIUM 25、LOW 52）；beta.3 的 59 个缺陷已修 15、有变化 12、仍在 32，其中 HIGH 20 个已修 8、有变化 9、仍在 3（B02、B11、B20）；会话中断 12 次，TIA 重启 2 次、宿主重启 2 次（均由维护者操作），TIA 未崩溃 | 只代表 V21，不代表另外七个版本；只读工具 `AnalyzePlcCrossReferences` 会锁会话；修复任务见计划 |
 
-原始记录在维护者本机 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记。本次未连接 VM，也未新增真机结果。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
+原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具。beta.4 回归的缺陷原因尚未逐条验证。未测的正常流程：`OpenProject`、`CloseProject`（自有工程）、`CreateProject`、`RetrieveProjectArchive`、`ConnectIsolatedPortal`、`PublishGenerationRecord`；在线、下载、上传、强制和仿真只读取或预览。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
 
 ## 测试者反馈
 
