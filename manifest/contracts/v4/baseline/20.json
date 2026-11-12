@@ -2930,12 +2930,12 @@
         "properties": {
           "address": {
             "default": "",
-            "description": "address: optional absolute address",
+            "description": "address: Optional expected value from the bound tag, compared after binding. The API has no setter.",
             "type": "string"
           },
           "dataType": {
-            "default": "Bool",
-            "description": "dataType: tag data type, e.g. Bool, Int, Real",
+            "default": "",
+            "description": "dataType: Optional expected value from the bound tag, compared after binding. The API has no setter.",
             "type": "string"
           },
           "dryRun": {
@@ -2953,7 +2953,7 @@
           },
           "plcTag": {
             "default": "",
-            "description": "plcTag: optional PLC tag/path",
+            "description": "plcTag: Optional expected value from the bound tag, compared after binding. The API has no setter.",
             "type": "string"
           },
           "propertyName": {
@@ -12919,7 +12919,7 @@
           },
           "onlyIfEmpty": {
             "default": true,
-            "description": "onlyIfEmpty: true deletes the event only when it has no script.",
+            "description": "onlyIfEmpty: true deletes the event only when ScriptCode is empty and the definition area holds no code.",
             "type": "boolean"
           },
           "previewToken": {
@@ -14142,13 +14142,13 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "da4ac2507b59a6d4424e42fc1d36cdf5376c01eac6ee8a052da9add1cd7bf35c",
+      "descriptionSha256": "91f08d700fdf6e41c8017fe861c4b772be92806bc3c16d089dde2308689f88d3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "address": {
             "default": "",
-            "description": "address: optional absolute PLC address, e.g. %DB200.DBX0.0. When supplied it is written as the verified HMI runtime address while plcTag remains available as the symbolic reference.",
+            "description": "address: optional absolute PLC address, e.g. %DB200.DBX0.0. When supplied, Address holds the runtime address and PlcTag is empty.",
             "type": "string"
           },
           "connectionName": {
@@ -14162,8 +14162,8 @@
             "type": "boolean"
           },
           "hmiDataType": {
-            "default": "Bool",
-            "description": "hmiDataType: HMI data type, e.g. Bool, Int, Real, String",
+            "default": "",
+            "description": "hmiDataType: Optional. Symbolic: TIA supplies the type and the reply reports it; a different value is attempted once and refused if TIA refuses. Absolute: the HMI data type, default Bool.",
             "type": "string"
           },
           "hmiSoftwarePath": {

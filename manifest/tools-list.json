@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-12T09:48:47.2198308+00:00",
+  "generatedAt": "2026-11-12T10:11:46.4644437+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
-  "workerSha256": "9d106b66aab5f24631cc03fb077bf76b9f6dc9ae6b3a860c61dcdc2ebeabd55e",
+  "workerSha256": "fbd2b777eaf0641d86cbd37fc02bfa4afb7f57f4f93130188e9ff2e42ec500dc",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -6223,7 +6223,7 @@
         "requireVerifiedBinding",
         "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified] Create or verify a Unified HMI external tag. For PLC-backed tags pass plcTag and address in the same call; the address must read back in Address/LogicalAddress, e.g. %DB200.DBX0.0. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiConnection + EnsureUnifiedHmiTagTable. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTag\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified] Create or verify a Unified HMI external tag. A tag is absolute when address is given or plcTag is an absolute address (for example %M0.0); otherwise it is symbolic. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiConnection + EnsureUnifiedHmiTagTable. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTag\"), optionally operation or language.",
       "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/HmiTags/Diagnostic/DiagInfo\",\"tagName\":\"Ready\",\"plcName\":\"PLC_1\",\"plcTag\":\"\\u003Cexact PLC tag name from project reads\\u003E\",\"dryRun\":true}"
     },
     {
