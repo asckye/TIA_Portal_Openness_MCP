@@ -13,7 +13,7 @@ namespace TiaMcp.Adapters
         internal object HmiLibraryFolder(object library, string path, string root)
         {
             object folder = PlcGroupOperations.Get(library, root);
-            foreach (var part in PlcGroupOperations.Parts(path, true))
+            foreach (var part in EngineeringInputValidation.HmiFolderParts(path))
                 folder = PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Folders"), part)
                     ?? throw new PlcSoftwareException("NotFound", "Library folder not found: " + path);
             return folder;

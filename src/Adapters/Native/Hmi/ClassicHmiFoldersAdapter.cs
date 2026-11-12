@@ -105,37 +105,37 @@ namespace TiaMcp.Adapters.Native.Hmi
             ["slideinType"] = slidein.SlideinType.ToString(), ["screenClass"] = slidein.GetType().Name };
 
         // ---- folder navigation (typed) --------------------------------------------------------------------------------------------------
-        private static ScreenFolder ExactScreenFolder(HmiTarget hmi, string folderPath)
+        private static ScreenFolder ExactScreenFolder(HmiTarget hmi, IEnumerable<string> parts)
         {
             ScreenFolder current = hmi.ScreenFolder;
-            foreach (var part in PlcGroupOperations.Parts(folderPath, true)) {
+            foreach (var part in parts) {
                 ScreenUserFolderComposition folders = current.Folders; current = folders.Find(part)
                     ?? throw new PlcSoftwareException("NotFound", "Screen folder not found: " + part);
             }
             return current;
         }
-        private static ScreenPopupFolder ExactPopupFolder(HmiTarget hmi, string folderPath)
+        private static ScreenPopupFolder ExactPopupFolder(HmiTarget hmi, IEnumerable<string> parts)
         {
             ScreenPopupFolder current = hmi.ScreenPopupFolder;
-            foreach (var part in PlcGroupOperations.Parts(folderPath, true)) {
+            foreach (var part in parts) {
                 ScreenPopupUserFolderComposition folders = current.Folders; current = folders.Find(part)
                     ?? throw new PlcSoftwareException("NotFound", "Pop-up screen folder not found: " + part);
             }
             return current;
         }
-        private static ScreenTemplateFolder ExactTemplateFolder(HmiTarget hmi, string folderPath)
+        private static ScreenTemplateFolder ExactTemplateFolder(HmiTarget hmi, IEnumerable<string> parts)
         {
             ScreenTemplateFolder current = hmi.ScreenTemplateFolder;
-            foreach (var part in PlcGroupOperations.Parts(folderPath, true)) {
+            foreach (var part in parts) {
                 ScreenTemplateUserFolderComposition folders = current.Folders; current = folders.Find(part)
                     ?? throw new PlcSoftwareException("NotFound", "Screen template folder not found: " + part);
             }
             return current;
         }
-        private static TagFolder ExactTagFolder(HmiTarget hmi, string folderPath)
+        private static TagFolder ExactTagFolder(HmiTarget hmi, IEnumerable<string> parts)
         {
             TagFolder current = hmi.TagFolder;
-            foreach (var part in PlcGroupOperations.Parts(folderPath, true)) {
+            foreach (var part in parts) {
                 TagUserFolderComposition folders = current.Folders; current = folders.Find(part)
                     ?? throw new PlcSoftwareException("NotFound", "Tag folder not found: " + part);
             }
@@ -150,9 +150,13 @@ namespace TiaMcp.Adapters.Native.Hmi
                 Logic.ValidateTreeRequest(kind, folderPath, maxDepth);
                 var hmi = _session.ExactClassicHmi(softwarePath);
                 meta["softwarePath"] = softwarePath; meta["kind"] = kind; meta["folderPath"] = folderPath;
-                if (kind == "all" || kind == "screens") Safe(meta, "screens", () => ScreenFolderRow(ExactScreenFolder(hmi, folderPath), 1, maxDepth));
-                if (kind == "all" || kind == "popups") Safe(meta, "popups", () => PopupFolderRow(ExactPopupFolder(hmi, folderPath), 1, maxDepth));
-                if (kind == "all" || kind == "templates") Safe(meta, "templates", () => TemplateFolderRow(ExactTemplateFolder(hmi, folderPath), 1, maxDepth));
+                if (kind == "all" || kind == "screens")
+                    Safe(meta, "screens", () => ScreenFolderRow(ExactScreenFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath)), 1, maxDepth));
+                if (kind == "all" || kind == "popups")
+                    Safe(meta, "popups", () => PopupFolderRow(ExactPopupFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath)), 1, maxDepth));
+                if (kind == "all" || kind == "templates")
+                    Safe(meta, "templates", () =>
+                        TemplateFolderRow(ExactTemplateFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath)), 1, maxDepth));
                 if (kind == "all" || kind == "slideins")
                     Safe(meta, "slideins", () => {
                         ScreenSlideinSystemFolder folder = hmi.ScreenSlideinFolder; ScreenSlideinComposition slideins = folder.ScreenSlideins;
@@ -249,7 +253,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 string name = action == "import" ? "" : parts.Last();
                 if (objectKind == "popup")
                 {
-                    ScreenPopupFolder folder = ExactPopupFolder(hmi, folderPath); ScreenPopupComposition popups = folder.ScreenPopups;
+                    ScreenPopupFolder folder = ExactPopupFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath));
+                    ScreenPopupComposition popups = folder.ScreenPopups;
                     meta["folder"] = folder.Name;
                     if (action == "import") return Import((f, o) => popups.Import(f, o), "Pop-up screen", popups, "Hmi.Screen.ScreenPopup");
                     ScreenPopup popup = popups.Find(name) ?? throw new PlcSoftwareException("NotFound", "Pop-up screen not found: " + objectPath);
@@ -258,13 +263,13 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (action == "export") return Export((f, o) => popup.Export(f, o), "Pop-up screen " + name);
                     if (!writing) return "Pop-up screen deletion preview; no changes.";
                     meta["mayHaveChanged"] = true; popup.Delete(); meta["apiCallSuccess"] = true;
-                    if (ExactPopupFolder(hmi, folderPath).ScreenPopups.Find(name) != null)
+                    if (ExactPopupFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath)).ScreenPopups.Find(name) != null)
                         throw new InvalidOperationException("Pop-up screen remains after Delete.");
                     meta["verifiedAbsent"] = true;
                     return "Pop-up screen deleted and absence verified; project not saved.";
                 }
-                ScreenTemplateFolder templateFolder = ExactTemplateFolder(hmi, folderPath); ScreenTemplateComposition templates = templateFolder
-                    .ScreenTemplates;
+                ScreenTemplateFolder templateFolder = ExactTemplateFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath));
+                ScreenTemplateComposition templates = templateFolder.ScreenTemplates;
                 meta["folder"] = templateFolder.Name;
                 if (action == "import") return Import((f, o) => templates.Import(f, o), "Screen template", templates, "Hmi.Screen.ScreenTemplate");
                 ScreenTemplate template = templates.Find(name) ?? throw new PlcSoftwareException("NotFound", "Screen template not found: " + objectPath);
@@ -273,7 +278,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (action == "export") return Export((f, o) => template.Export(f, o), "Screen template " + name);
                 if (!writing) return "Screen template deletion preview; no changes.";
                 meta["mayHaveChanged"] = true; template.Delete(); meta["apiCallSuccess"] = true;
-                if (ExactTemplateFolder(hmi, folderPath).ScreenTemplates.Find(name) != null)
+                if (ExactTemplateFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath)).ScreenTemplates.Find(name) != null)
                     throw new InvalidOperationException("Screen template remains after Delete.");
                 meta["verifiedAbsent"] = true;
                 return "Screen template deleted and absence verified; project not saved.";
@@ -288,8 +293,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var hmi = _session.ExactClassicHmi(softwarePath);
                 meta["softwarePath"] = softwarePath; meta["folderKind"] = folderKind; meta["folderPath"] = folderPath; meta["action"] = action; meta["dryRun"] =
                     dryRun; meta["mayHaveChanged"] = false;
-                var parts = PlcGroupOperations.Parts(folderPath, true);
-                string parentPath = string.Join("/", parts.Take(Math.Max(0, parts.Length - 1))), leaf = parts.Length == 0 ? "" : parts.Last();
+                var parts = EngineeringInputValidation.HmiFolderParts(folderPath);
+                string leaf = parts.Length == 0 ? "" : parts.Last();
                 // Each family has its own typed folder / composition classes; the rows and the create / delete calls are typed per kind.
                 HmiObject Row(object folder) => folder switch
                 {
@@ -297,17 +302,22 @@ namespace TiaMcp.Adapters.Native.Hmi
                         TemplateFolderRow(t, 1, 2), TagFolder g => TagFolderRow(g, 1, 2), VBScriptFolder v => ScriptFolderRow(v, 1, 2),
                     _ => HmiScalar.Read(folder)
                 };
-                object Resolve(string path) => folderKind switch
+                object Resolve(string[] p) => folderKind switch
                 {
-                    "screens" => ExactScreenFolder(hmi, path), "popups" => ExactPopupFolder(hmi, path), "templates" => ExactTemplateFolder(hmi, path), "tags" =>
-                        ExactTagFolder(hmi, path),
-                    _ => _session.ExactVbScriptFolder(hmi, PlcGroupOperations.Parts(path, true))
+                    "screens" => ExactScreenFolder(hmi, p), "popups" => ExactPopupFolder(hmi, p), "templates" => ExactTemplateFolder(hmi, p), "tags" =>
+                        ExactTagFolder(hmi, p),
+                    _ => _session.ExactVbScriptFolder(hmi, p)
                 };
-                if (action == "read") {
-                    meta["folder"] = Row(Resolve(folderPath)); meta["apiCallSuccess"] = true; return "Classic HMI folder read; no modification."; }
+                if (action == "read")
+                {
+                    meta["folder"] = Row(Resolve(parts));
+                    meta["apiCallSuccess"] = true;
+                    return "Classic HMI folder read; no modification.";
+                }
                 if (action == "create")
                 {
-                    var parent = Resolve(folderPath); meta["parent"] = PlcGroupOperations.Get(parent, "Name").ToString();
+                    var parent = Resolve(parts);
+                    meta["parent"] = PlcGroupOperations.Get(parent, "Name").ToString();
                     bool exists = parent switch
                     {
                         ScreenFolder s => s.Folders.Find(newName) != null, ScreenPopupFolder p => p.Folders.Find(newName) != null, ScreenTemplateFolder t => t
@@ -329,7 +339,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     meta["after"] = Row(created);
                     return "Classic HMI user folder created and read back; project not saved.";
                 }
-                var target = Resolve(folderPath); meta["before"] = Row(target);
+                var target = Resolve(parts);
+                meta["before"] = Row(target);
                 int children = target switch
                 {
                     ScreenFolder s => s.Folders.Count + s.Screens.Count, ScreenPopupFolder p => p.Folders.Count + p.ScreenPopups.Count,
@@ -349,7 +360,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     default: throw new NotSupportedException("The system folder cannot be deleted.");
                 }
                 meta["apiCallSuccess"] = true;
-                var parent2 = Resolve(parentPath);
+                var parent2 = Resolve(parts.Take(parts.Length - 1).ToArray());
                 bool remains = parent2 switch
                 {
                     ScreenFolder s => s.Folders.Find(leaf) != null, ScreenPopupFolder p => p.Folders.Find(leaf) != null, ScreenTemplateFolder t => t.Folders

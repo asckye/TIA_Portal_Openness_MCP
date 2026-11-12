@@ -27,6 +27,16 @@ public sealed class ReadOnlySourceContracts
     private static void Count(string source, string value, int expected) => Assert.Equal(expected, Regex.Matches(source, Regex.Escape(value)).Count);
 
     [Fact]
+    public void Classic_folder_sites_use_the_shared_parser()
+    {
+        string source = Read("src/Adapters/Native/Hmi/ClassicHmiFoldersAdapter.cs");
+        Assert.DoesNotContain("PlcGroupOperations.Parts(folderPath", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Resolve(parentPath)", source, StringComparison.Ordinal);
+        string sivarc = Read("src/Adapters/Native/Optional/SivarcAdapter.cs");
+        Assert.DoesNotContain("EngineeringGroupOperations.Parts(folderPath", sivarc, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void NetworkLeaseAcquisitionIsInsideTheFailureBoundaryForAllThreeTools()
     {
         var legacy = Read("src/Adapters/Native/Hardware/HardwareLegacyWrites.cs");

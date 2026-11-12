@@ -19,11 +19,16 @@ namespace TiaMcp.Engine.Tests
             // ---- screen tree ----
             ClassicHmiFoldersLogic.ValidateTreeRequest("all", "", 4); ClassicHmiFoldersLogic.ValidateTreeRequest("popups", "Folder/Sub", 1); ClassicHmiFoldersLogic.ValidateTreeRequest("slideins", "", 16);
             check(true, "hmi tree: requests accepted");
+            ClassicHmiFoldersLogic.ValidateTreeRequest("screens", "/Folder/Sub", 1);
+            check(true, "hmi tree: absolute folderPath accepted");
             check(Fails<ArgumentException>(() => ClassicHmiFoldersLogic.ValidateTreeRequest("faceplates", "", 4)), "hmi tree: unknown kind refused");
             check(Fails<ArgumentException>(() => ClassicHmiFoldersLogic.ValidateTreeRequest("slideins", "F", 4)), "hmi tree: folderPath on slide-ins refused");
             check(Fails<ArgumentException>(() => ClassicHmiFoldersLogic.ValidateTreeRequest("all", "F", 4)), "hmi tree: folderPath with kind all refused");
             check(Fails<ArgumentException>(() => ClassicHmiFoldersLogic.ValidateTreeRequest("screens", "", 0)), "hmi tree: maxDepth 0 refused");
             check(Fails<ArgumentException>(() => ClassicHmiFoldersLogic.ValidateTreeRequest("screens", "a/../b", 4)), "hmi tree: dotted folderPath refused");
+
+            check(Fails<ArgumentException>(() => ClassicHmiFoldersLogic.ValidateTreeRequest("screens", "/a/../b", 4)),
+                "hmi tree: absolute dotted folderPath refused");
 
             // ---- screen objects ----
             bool O(string kind, string path, string action, string file = "", string options = "None", bool confirm = false, bool dryRun = true) => ClassicHmiFoldersLogic.ValidateObjectRequest(kind, path, action, file, options, confirm, dryRun);
@@ -51,6 +56,10 @@ namespace TiaMcp.Engine.Tests
             // ---- folders ----
             bool F(string kind, string path, string action, string newName = "", bool confirm = false, bool dryRun = true) => ClassicHmiFoldersLogic.ValidateFolderRequest(kind, path, action, newName, confirm, dryRun);
             foreach (var kind in ClassicHmiFoldersLogic.FolderKinds) { check(!F(kind, "", "read") && F(kind, "", "create", "Sub", dryRun: false) && F(kind, "Sub", "delete", confirm: true, dryRun: false), "hmi folders: " + kind + " read / create / delete accepted"); }
+            foreach (var kind in ClassicHmiFoldersLogic.FolderKinds)
+                check(F(kind, "/Sub", "delete", confirm: true, dryRun: false), "hmi folders: " + kind + " absolute delete accepted");
+            check(Fails<ArgumentException>(() => F("tags", "/", "delete", confirm: true, dryRun: false)),
+                "hmi folders: absolute system folder delete refused");
             check(!F("tags", "", "create", "Sub"), "hmi folders: create preview does not write");
             check(Fails<ArgumentException>(() => F("cycles", "", "read")), "hmi folders: unknown folderKind refused");
             check(Fails<ArgumentException>(() => F("tags", "", "create")), "hmi folders: create without newName refused");

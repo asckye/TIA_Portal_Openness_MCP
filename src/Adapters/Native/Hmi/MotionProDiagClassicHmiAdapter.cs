@@ -112,7 +112,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             => RunTool("ListClassicHmiScripts", meta => {
                 Logic.RequirePagination(offset, limit);
                 var hmi = _session.ExactClassicHmi(softwarePath);
-                var root = ClassicScriptFolder(hmi, PlcGroupOperations.Parts(folderPath, true));
+                var parts = EngineeringInputValidation.HmiFolderParts(folderPath);
+                var root = ClassicScriptFolder(hmi, parts);
                 var scripts = new List<(string Path, object Script)>(); var folders = new HmiArray();
                 void Walk(object folder, string path, int depth)
                 {
@@ -128,7 +129,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                         Walk(child, childPath, depth + 1);
                     }
                 }
-                Walk(root, folderPath == "" ? "" : folderPath.TrimEnd('/') + "/", 0);
+                Walk(root, parts.Length == 0 ? "" : string.Join("/", parts) + "/", 0);
                 meta["softwarePath"] = softwarePath; meta["folderPath"] = folderPath; meta["folders"] = folders;
                 meta["codeAccess"] =
                     "VB script source is not a typed Openness property; readable attributes are listed per script and the native XML is available via " +
@@ -367,6 +368,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (kind != "all" && !Logic.LibraryTypeKinds.ContainsKey(kind)) throw new ArgumentException("kind must be faceplate/vbScript/cScript/all.");
                 var wanted = kind == "all" ? Logic.LibraryTypeKinds.Values.ToArray() : new[] { Logic.LibraryTypeKinds[kind] };
                 var library = _session.ExactOpenEngineeringLibrary(libraryName);
+                var parts = EngineeringInputValidation.HmiFolderParts(folderPath);
                 var root = _session.EngineeringLibraryFolder(library, folderPath, "TypeFolder");
                 var found = new List<(string Path, object Type)>();
                 void Walk(object folder, string path, int depth)
@@ -380,7 +382,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     foreach (var child in PlcGroupOperations.Items(PlcGroupOperations.Get(folder, "Folders")))
                         Walk(child, path + (HmiDynamic.Name(child) ?? "") + "/", depth + 1);
                 }
-                Walk(root, folderPath == "" ? "" : folderPath.TrimEnd('/') + "/", 0);
+                Walk(root, parts.Length == 0 ? "" : string.Join("/", parts) + "/", 0);
                 meta["kind"] = kind; meta["libraryName"] = libraryName; meta["folderPath"] = folderPath; meta["nativeTypes"] =
                     new HmiArray(wanted.Select(w => (object)w).ToArray());
                 ClassicPage(meta, found.Select(f => f.Type).ToArray(), offset, limit, t => {

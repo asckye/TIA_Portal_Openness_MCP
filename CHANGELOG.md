@@ -12,6 +12,7 @@
 - Real `DeletePlcTagTable`, `DeletePlcBlock` and `DeletePlcType` calls require `dryRun=false`, `confirm=true` and the exact bound `expectedProjectFile`. Missing confirmation returns `CONFIRMATION_REQUIRED`; invalid or mismatched project identities return `INVALID_ARGUMENT` or `IDENTITY_MISMATCH` before dispatch.
 
 - A failed `MovePlcBlockToGroup` whose block was re-imported and verified in its original group reports `failed` unless it created target groups. `ManageTechnologyObject` create refusals that leave nothing behind report `failed`, and create previews say TIA checks the type and version only at creation. Verified-import results keep a negative verdict. A failed undo on an object the rollback deletes no longer forces `unknown`. Staged PLC exports use a short fixed file name.
+- Classic HMI and SiVArc folder paths accept the absolute `/Group/Sub` form required by the host.
 - Unified HMI template layout QA and apply designs resolve screen size from declarations, then the file name, then caller fallbacks, so shipped templates pass layout checks.
 - HMI template PLC sync prechecks report `no-bindings` when no bindings are declared, and include blocking reasons when the suite cannot pass.
 - Load V21 optional Openness assemblies by exact SDK identity. Distinguish missing components from load failures and preserve load failure reasons in `nativeMessage`.

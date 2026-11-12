@@ -6,6 +6,16 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class HmiAuditNativePathTests
 {
     [Fact]
+    public void Classic_listings_use_decoded_folder_prefixes_for_scripts_and_library_types()
+    {
+        string source = Read("src/Adapters/Native/Hmi/MotionProDiagClassicHmiAdapter.cs");
+        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(source,
+            System.Text.RegularExpressions.Regex.Escape("Walk(root, parts.Length == 0 ? \"\" : string.Join(\"/\", parts) + \"/\", 0);")).Count);
+        Assert.Contains("ClassicScriptFolder(hmi, parts)", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("folderPath.TrimEnd('/')", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Graphics_use_the_project_on_both_sides_of_the_V21_API_move()
     {
         var source = Read("src/Adapters/Native/Hmi/HmiSession.cs");

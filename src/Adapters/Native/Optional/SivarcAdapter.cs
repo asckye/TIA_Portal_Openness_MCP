@@ -70,7 +70,7 @@ namespace TiaMcp.Adapters.Native.Optional
         private object SivarcFolder(SivarcFamily family, Sivarc sivarc, string folderPath)
         {
             object current = family.Anchor(sivarc);
-            foreach (var part in EngineeringGroupOperations.Parts(folderPath, true))
+            foreach (var part in EngineeringInputValidation.HmiFolderParts(folderPath))
                 current = EngineeringGroupOperations.Find(family.Folders(current), part)
                     ?? throw new PlcSoftwareException("NotFound", "SiVArc " + family.Category + " rule folder not found: " + folderPath);
             return current;
@@ -272,7 +272,8 @@ namespace TiaMcp.Adapters.Native.Optional
                 LibraryTypeVersion? version = null;
                 if (action == "createFromType")
                 {
-                    var type = _session.ExactLibraryType(_session.ExactOpenEngineeringLibrary(libraryName), typePath);
+                    var type = _session.ExactLibraryType(_session.ExactOpenEngineeringLibrary(libraryName),
+                        string.Join("/", EngineeringInputValidation.HmiFolderParts(typePath)));
                     version = _session.ExactTypeVersion(type, typeVersion);
                     if (!family.TypeVersionType.IsInstanceOfType(version))
                         throw new ArgumentException("Type version is " + version.GetType().Name + ", not a " + family.TypeVersionType.Name + " (category "

@@ -80,7 +80,7 @@ namespace TiaMcp.Adapters.Native.Optional
             AnchorProperty(category);
             if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
             HardwareServicesLogic.ValidatePagination(offset, limit);
-            if (!string.IsNullOrEmpty(folderPath)) EngineeringPath.Parts(folderPath);
+            if (!string.IsNullOrEmpty(folderPath)) EngineeringInputValidation.HmiFolderParts(folderPath);
             if (!string.IsNullOrEmpty(tablePath)) EngineeringPath.Parts(tablePath);
             if (!string.IsNullOrEmpty(folderPath) && !string.IsNullOrEmpty(tablePath))
                 throw new ArgumentException("Give folderPath (folder subtree) or tablePath (one table's groups and rules), not both.");
@@ -99,7 +99,11 @@ namespace TiaMcp.Adapters.Native.Optional
             {
                 if (kind != "table")
                     throw new ArgumentException("createFromType applies to kind table (rule tables are instantiated from a *RuleTableType version).");
-                RequireName(typePath, "typePath", 1024); EngineeringPath.Parts(typePath); RequireName(typeVersion, "typeVersion", 32);
+                RequireName(typePath, "typePath", 1024);
+                var typeParts = EngineeringInputValidation.HmiFolderParts(typePath);
+                if (typeParts.Any(p => p.IndexOfAny(new[] { '/', '\\' }) >= 0))
+                    throw new ArgumentException("typePath segments cannot contain '/' or '\\'.", nameof(typePath));
+                RequireName(typeVersion, "typeVersion", 32);
             }
             else {
                 Refuse(typePath, "typePath", "applies to action createFromType only.");

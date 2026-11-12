@@ -163,6 +163,16 @@ namespace TiaMcp.Adapters.Contracts
             return parts;
         }
 
+        public static string[] HmiFolderParts(string? path)
+        {
+            if (string.IsNullOrEmpty(path)) return Array.Empty<string>();
+            if (path!.StartsWith("/", StringComparison.Ordinal)) return HmiGroupPath(path, rootAllowed: true);
+            var parts = path.Replace('\\', '/').Split('/');
+            if (parts.Length > 64 || parts.Any(p => string.IsNullOrWhiteSpace(p) || p == "." || p == ".."))
+                throw new ArgumentException("Use a relative exact path with 1-64 nonempty segments, without '.' or '..'.", nameof(path));
+            return parts;
+        }
+
         public static string[] AbsoluteHmiPath(string value, bool rootAllowed = false, int maximumSegments = 65)
         {
             if (rootAllowed && value == "/") return Array.Empty<string>();

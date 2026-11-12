@@ -32,10 +32,19 @@ namespace TiaMcp.Engine.Tests
             check(Fails<ArgumentException>(() => SivarcLogic.ValidateTreeRequest("screens", "", "", 4, 0, 501)), "sivarc tree: limit 501 refused");
             check(Fails<ArgumentException>(() => SivarcLogic.ValidateTreeRequest("screens", "a/../b", "", 4, 0, 200)), "sivarc tree: dotted folderPath refused");
 
+            SivarcLogic.ValidateTreeRequest("screens", "/Folder/Sub", "", 1, 0, 100);
+            check(true, "sivarc tree: absolute folderPath accepted");
+
             // ---- containers ----
             bool C(string kind, string path, string action, string typePath = "", string typeVersion = "", bool confirm = false, bool dryRun = true) => SivarcLogic.ValidateContainerRequest("screens", kind, path, action, typePath, typeVersion, confirm, dryRun);
             check(!C("folder", "F", "read") && !C("table", "F/T", "create") && C("table", "T", "create", dryRun: false), "sivarc containers: read / preview never write, real create writes");
             check(C("table", "T", "createFromType", "SiVArc/Screen rule table", "0.0.2", dryRun: false), "sivarc containers: createFromType with type path and version");
+            check(C("table", "T", "createFromType", "/SiVArc/Screen%20rule%20table", "0.0.2", dryRun: false),
+                "sivarc containers: createFromType with absolute typePath accepted");
+            check(Fails<ArgumentException>(() => C("table", "T", "createFromType", "/SiVArc/A%2FB", "0.0.2")),
+                "sivarc containers: decoded slash in typePath segment refused");
+            check(Fails<ArgumentException>(() => C("table", "T", "createFromType", "/SiVArc/A%5CB", "0.0.2")),
+                "sivarc containers: decoded backslash in typePath segment refused");
             check(C("folder", "F", "delete", confirm: true, dryRun: false) && !C("folder", "F", "delete"), "sivarc containers: delete writes only for real");
             check(Fails<ArgumentException>(() => C("folder", "F", "createFromType", "T", "1.0.0")), "sivarc containers: createFromType on a folder refused");
             check(Fails<ArgumentException>(() => C("table", "T", "createFromType", "T")), "sivarc containers: createFromType without version refused");

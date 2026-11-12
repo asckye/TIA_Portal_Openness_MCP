@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Adapters.Native.Hmi
 {
@@ -32,7 +33,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
             if (!string.IsNullOrEmpty(folderPath) && kind != "screens" && kind != "popups" && kind != "templates")
                 throw new ArgumentException("folderPath applies to kind screens / popups / templates (slide-ins have no folders).");
-            if (!string.IsNullOrEmpty(folderPath)) TiaMcp.Adapters.Hardware.HardwarePath.Parts(folderPath);
+            if (!string.IsNullOrEmpty(folderPath)) EngineeringInputValidation.HmiFolderParts(folderPath);
         }
 
         // ---- screen objects ----
@@ -85,13 +86,13 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             RequireOneOf(folderKind, FolderKinds, "folderKind");
             RequireOneOf(action, FolderActions, "action");
-            if (!string.IsNullOrEmpty(folderPath)) TiaMcp.Adapters.Hardware.HardwarePath.Parts(folderPath);
+            if (!string.IsNullOrEmpty(folderPath)) EngineeringInputValidation.HmiFolderParts(folderPath);
             if (action == "create") {
                 RequireName(newName, "newName"); if (newName.IndexOfAny(new[] { '/', '\\' }) >= 0)
                     throw new ArgumentException("newName is one folder segment.");
             }
             else Refuse(newName, "newName", "applies to create only.");
-            if (action == "delete" && string.IsNullOrEmpty(folderPath))
+            if (action == "delete" && EngineeringInputValidation.HmiFolderParts(folderPath).Length == 0)
                 throw new ArgumentException("The system folder cannot be deleted; folderPath must name a user folder.");
             bool writing = action != "read" && !dryRun;
             if (action == "delete" && writing && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");

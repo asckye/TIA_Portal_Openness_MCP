@@ -68,7 +68,7 @@ internal sealed partial class LegacyOptionalAdapter
 
     private object Folder(object root, string path)
     {
-        foreach (var part in Group.Parts(path, true)) root = Named(Get(root, "Folders"), part);
+        foreach (var part in EngineeringInputValidation.HmiFolderParts(path)) root = Named(Get(root, "Folders"), part);
         return root;
     }
 
@@ -179,7 +179,8 @@ internal sealed partial class LegacyOptionalAdapter
         }
         object? version = null;
         if (_request.Action == "createFromType") version = _engine.OptionalTypeVersion(_engine.OptionalLibraryType(
-            _engine.ExactOpenEngineeringLibrary(_request.LibraryName), _request.TypePath), _request.TypeVersion);
+            _engine.ExactOpenEngineeringLibrary(_request.LibraryName), string.Join("/", EngineeringInputValidation.HmiFolderParts(_request.TypePath))),
+            _request.TypeVersion);
         if (_request.Action == "delete")
         {
             if (target == null) throw new PlcSoftwareException("NotFound", "SiVArc container not found: " + _request.Path);
