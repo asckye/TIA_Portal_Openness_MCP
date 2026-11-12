@@ -49,26 +49,23 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var toolNames = HostToolServices.Observe("tool-names", new JsonObject())!.AsArray().Select(n => n!.GetValue<string>());
                 var toolNameList = toolNames.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
-                // Read-only getters (Get*) may legitimately reference force tables (e.g. GetPlcForceTables
-                // lists names). The safety red line is that no force-EXECUTION/WRITE tool is exposed.
-                // ManageWatchForceTableWebAccess only edits the offline web-server access rules of watch / force
-                // tables (WatchAndForceTableAccessManager); it neither forces nor writes a value, so the name heuristic must not flag it.
-                var offlineConfigurationTools = new[] { "ManageWatchForceTableWebAccess" };
-                var forbiddenToolNames = toolNameList
-                    .Where(x => x.IndexOf("Force", StringComparison.OrdinalIgnoreCase) >= 0
-                             && !x.StartsWith("Get", StringComparison.OrdinalIgnoreCase)
-                             && !offlineConfigurationTools.Contains(x, StringComparer.OrdinalIgnoreCase))
-                    .ToList();
+                // Force-table readers require an explicit read-only classification.
+                // Offline configuration writes require a reviewed tool name and a write classification.
+                var forbiddenToolNames = OnlineMonitoringPolicy.ForbiddenForceTools(toolNameList, ToolMetadata.Find);
 
                 Add(
                     "safety.no-force-tools",
                     "No force-write MCP tools exposed",
                     forbiddenToolNames.Count == 0,
                     forbiddenToolNames.Count == 0
-                        ? $"Checked {toolNameList.Count} MCP tools; no force-write tool exposed (read-only force-table getters allowed)."
+                        ? $"Checked {toolNameList.Count} MCP tools; no force-write tool exposed "
+                            + "(classified read tools and reviewed offline configuration writes allowed)."
                         : "Forbidden force-write tool names: " + string.Join(", ", forbiddenToolNames));
 
-                var requiredTools = new[]
+                // V14 SP1 has no PlcSoftware.WatchAndForceTableGroup API.
+                var requiredTools = McpServer.ReleaseKey == "14sp1"
+                    ? new[] { "PlanOnlineReadOnlyMonitoring", "RunOnlineMonitoringSafetySelfTest" }
+                    : new[]
                 {
                     "ListPlcWatchTables",
                     "ExportPlcWatchTable",
@@ -85,7 +82,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     "Required read-only monitoring tools are present",
                     missingTools.Count == 0,
                     missingTools.Count == 0
-                        ? "Read-only watch-table discovery/export/probe/self-test tools are present."
+                        ? "Required read-only monitoring and self-test tools are present."
                         : "Missing required tools: " + string.Join(", ", missingTools));
 
                 var reflection = HostToolServices.Observe("reflection", new JsonObject())!.AsObject();
@@ -322,12 +319,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 () => (bool)HostToolServices.Observe("group")!,
                 () => HostToolServices.Observe("session.ListPortalProcessProjects")!.AsArray().Select(n => n!.GetValue<string>()),
                 () => JsonSerializer.Deserialize<State>(HostToolServices.Observe("session.GetState")!.ToJsonString())!,
+                CachedCapabilityState,
                 () => (bool)HostToolServices.Observe("session.ConnectPortal")!,
                 (plc, hmi) => JsonSerializer
                     .Deserialize<ResponseMessage>(HostToolServices
                         .Observe("session.ValidateAutomationContext", new JsonObject { ["plc"] = plc, ["hmi"] = hmi })!.ToJsonString())!,
                 () => (string)HostToolServices.Observe("session.GetProjectTree")!,
                 connectIfNeeded, includeProjectTree, inspectPortalProcesses, expectedPlcSoftwarePath, expectedHmiSoftwarePath);
+
+        private static State? CachedCapabilityState()
+        {
+            var session = McpServer.Worker.Snapshot()["session"];
+            return session == null ? null : new State { IsConnected = (bool?)session["isConnected"],
+                Project = (string?)session["project"], Session = (string?)session["session"] };
+        }
 
         private static string? InvokeReflectionDenyGuard(object guardMethod, string resultKind, string resultPath, string methodName)
         {

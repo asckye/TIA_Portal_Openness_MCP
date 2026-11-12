@@ -278,7 +278,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static ToolArguments EmptyArguments() => new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject()));
         internal static Error InvalidInput(string parameter) =>
             new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
-        private static JsonObject WritePreviewPlan(string tool, object arguments)
+        private static JsonObject WritePreviewPlan(string tool, object arguments, bool writing)
         {
             var normalized = JsonSerializer.SerializeToNode(arguments)!.AsObject();
             var inputs = CallerInputFiles.Snapshot(tool, normalized);
@@ -289,7 +289,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ReadSessionState(ref connected, ref project);
             var identity = new JsonObject { ["connected"] = connected, ["project"] = project };
 #endif
-            return new JsonObject { ["plannedChanges"] = TiaOpenness.Shared.CallJournalPayload.RedactArguments(normalized),
+            var plan = new JsonObject { ["plannedChanges"] = TiaOpenness.Shared.CallJournalPayload.RedactArguments(normalized),
                 ["planHash"] = PendingApproval
                     .Hash(PendingApproval
                         .Canonical(JsonSerializer.SerializeToNode(new {
@@ -297,7 +297,23 @@ namespace TiaMcpServer.ModelContextProtocol
                             arguments = TiaOpenness.Shared.CallJournalPayload.ProtectPlanArguments(JsonNode.Parse(PendingApproval.Canonical(normalized))),
                             hostLifetime = TiaOpenness.Shared.CallJournalPayload.PlanHostLifetime, inputFiles = inputs, targetIdentity = identity }))),
                 ["targetIdentity"] = identity, ["scope"] = "Normalized arguments, input file contents and target identity; native validation/readback occurs during execution." };
+            if (writing)
+            {
+                bool targetBound = PlanProjectFile(identity) != null;
+                plan["targetBound"] = targetBound;
+                if (!targetBound) plan["scope"] = "No project is bound, so this preview covers only the arguments and input files and names no target. "
+                    + "Applying it refuses with PROJECT_NOT_BOUND; bind a project and preview again.";
+            }
+            return plan;
         }
+
+        private static string? PlanProjectFile(JsonNode? targetIdentity)
+        {
+            string? project = (string?)(targetIdentity?["identity"]?["projectPath"] ?? targetIdentity?["projectFile"]
+                ?? targetIdentity?["projectPath"] ?? targetIdentity?["project"]);
+            return string.IsNullOrWhiteSpace(project) ? null : project;
+        }
+
         private static Error? WritePlanRefusal(JsonObject plan, string expectedPlanHash, string expectedProjectFile, bool writing)
         {
             string? expected = null;
@@ -315,13 +331,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (expectedPlanHash.Length == 0) return InvalidInput("expectedPlanHash");
             }
             if ((writing || expectedPlanHash.Length > 0) && expectedPlanHash != (string?)plan["planHash"])
-                return new Error("Arguments, target, or input file changed; preview again.", new PlanStaleDetails(expectedPlanHash, "arguments-or-target"));
+                return new Error("This plan no longer matches the preview: arguments, target, input files or the TIA binding differ. "
+                    + "A reconnect or a host restart also changes the binding. Nothing ran; preview again.",
+                    new PlanStaleDetails(expectedPlanHash, "arguments-or-target"));
             if (writing)
             {
-                string? actual =
-                    (string?)(plan["targetIdentity"]?["identity"]?["projectPath"] ?? plan["targetIdentity"]?["projectFile"] ?? plan["targetIdentity"]
-                        ?["projectPath"] ?? plan["targetIdentity"]?["project"]);
-                if (string.IsNullOrWhiteSpace(actual)) return new Error("No project is bound.", new ProjectNotBoundDetails());
+                string? actual = PlanProjectFile(plan["targetIdentity"]);
+                if (actual == null) return new Error("No project is bound.", new ProjectNotBoundDetails());
                 if (TiaMcp.Adapters.Contracts.Candidates.CandidatePrimitives.CanonicalProject(actual!) != expected)
                     return new Error("The project binding differs from expectedProjectFile.", new IdentityMismatchDetails("project-binding", null, null));
             }
@@ -343,7 +359,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string expectedProjectFile = "", bool writing = true)
         {
             JsonObject plan;
-            try { plan = WritePreviewPlan(tool, arguments); }
+            try { plan = WritePreviewPlan(tool, arguments, writing); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {
                 return !dryRun && expectedPlanHash.Length > 0
@@ -358,7 +374,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Func<Task<CallToolResult>> execute, string expectedPlanHash = "", string expectedProjectFile = "", bool writing = true)
         {
             JsonObject plan;
-            try { plan = WritePreviewPlan(tool, arguments); }
+            try { plan = WritePreviewPlan(tool, arguments, writing); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {
                 return !dryRun && expectedPlanHash.Length > 0

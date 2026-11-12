@@ -130,8 +130,12 @@ internal static class FoundationHostPorts
                 && ready["environment"]?["tiaInstallPath"] == null;
             if (!profile.ObservationSet.Contains(operation))
                 throw new NotSupportedException("This observation is unavailable on release " + release + ": " + operation);
-            if (operation == "tool-names") return new JsonArray((profile.ObservationToolNames.Count == 0
-                ? Roster().Select(t => t.ProtocolTool.Name) : profile.ObservationToolNames).Select(name => (JsonNode?)JsonValue.Create(name)).ToArray());
+            if (operation == "tool-names")
+            {
+                var roster = Roster();
+                return new JsonArray((roster.Count > 0 ? roster.Select(t => t.ProtocolTool.Name) : profile.ObservationToolNames)
+                    .Select(name => (JsonNode?)JsonValue.Create(name)).ToArray());
+            }
             async Task<JsonNode?> ReadFacts()
             {
                 if (worker is IHostToolServices facts) return await facts.Observe(operation, arguments, token);

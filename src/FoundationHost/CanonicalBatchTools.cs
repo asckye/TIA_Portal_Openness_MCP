@@ -86,7 +86,8 @@ internal static class CanonicalBatchTools
                 if (dry || !(bool)plan["canApply"]!) return Result(plan, false);
                 string hash = (string)plan["planHash"]!;
                 if ((string?)args["expectedPlanHash"] != hash)
-                    return Reject(new Error("The batch plan changed; preview the whole batch again.",
+                    return Reject(new Error("This batch plan no longer matches the preview: its items, their input files or the TIA binding differ. "
+                                + "A reconnect or a host restart also changes the binding. Nothing ran; preview the whole batch again.",
                                 new PlanStaleDetails(null, "batch-plan", (string?)args["expectedPlanHash"])));
                 var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
                 var approvalArguments = args.DeepClone().AsObject(); approvalArguments["batchPlan"] = plan.DeepClone();

@@ -12,6 +12,84 @@ using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelper output)
 {
+    public static IEnumerable<object[]> Releases() => CanonicalParameterRound2Tests.Releases();
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Stale_write_plan_names_the_reconnect_cause(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        int calls = 0;
+        CallToolResult Execute() { calls++; return Host.V4Result("EnsureSubnet", new JsonObject(), completed: true); }
+        var args = new { subnetName = "PN", anchorDeviceItemPath = "PLC/CPU" };
+        var preview = Host.RunWritePreview("EnsureSubnet", true, args, Execute);
+        Assert.True((bool?)preview.StructuredContent!["ok"]);
+        var stale = Host.RunWritePreview("EnsureSubnet", false, args, Execute, new string('0', 64), "C:/Projects/original.ap21");
+        Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
+        Assert.Equal("arguments-or-target", (string?)stale.StructuredContent["error"]!["details"]!["reason"]);
+        Assert.Equal("This plan no longer matches the preview: arguments, target, input files or the TIA binding differ. "
+            + "A reconnect or a host restart also changes the binding. Nothing ran; preview again.",
+            (string?)stale.StructuredContent["error"]!["message"]);
+        Assert.Equal(0, calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Unbound_preview_says_it_names_no_target(string release)
+    {
+        using var worker = new PlanWorker { Identity = new JsonObject() };
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        CallToolResult Execute() => throw new InvalidOperationException("Unbound preview must not execute.");
+        var args = new { subnetName = "PN", anchorDeviceItemPath = "PLC/CPU" };
+        var preview = Host.RunWritePreview("EnsureSubnet", true, args, Execute);
+        Assert.True((bool?)preview.StructuredContent!["ok"]);
+        var data = preview.StructuredContent["data"]!;
+        Assert.False((bool?)data["targetBound"]);
+        Assert.Equal("No project is bound, so this preview covers only the arguments and input files and names no target. "
+            + "Applying it refuses with PROJECT_NOT_BOUND; bind a project and preview again.", (string?)data["scope"]);
+        var refused = Host.RunWritePreview("EnsureSubnet", false, args, Execute, (string)data["planHash"]!, "C:/Projects/original.ap21");
+        Assert.Equal("PROJECT_NOT_BOUND", (string?)refused.StructuredContent!["error"]!["code"]);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Bound_preview_keeps_its_scope_and_hash(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var args = new { subnetName = "PN", anchorDeviceItemPath = "PLC/CPU" };
+        CallToolResult Execute() => throw new InvalidOperationException("Preview must not execute.");
+        var preview = await Host.RunWritePreviewAsync("EnsureSubnet", true, args, () => Task.FromResult(Execute()));
+        var data = preview.StructuredContent!["data"]!;
+        Assert.True((bool?)data["targetBound"]);
+        Assert.Equal("Normalized arguments, input file contents and target identity; native validation/readback occurs during execution.",
+            (string?)data["scope"]);
+        var hashed = new JsonObject { ["releaseKey"] = release, ["tool"] = "EnsureSubnet",
+            ["arguments"] = JsonSerializer.SerializeToNode(args), ["inputFiles"] = new JsonArray(),
+            ["targetIdentity"] = worker.Identity.DeepClone(), ["hostLifetime"] = (string?)typeof(Host).Assembly
+                .GetType("TiaOpenness.Shared.CallJournalPayload")!
+                .GetProperty("PlanHostLifetime", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null) };
+        Assert.Equal(TiaOpenness.Shared.PendingApproval.Hash(TiaOpenness.Shared.PendingApproval.Canonical(hashed)), (string?)data["planHash"]);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Read_action_preview_has_no_target_flag(string release)
+    {
+        using var worker = new PlanWorker { Identity = new JsonObject() };
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var preview = Host.RunWritePreview("InvokeObject", true, new { methodName = "GetAttributeInfos" },
+            () => throw new InvalidOperationException("Preview must not execute."), writing: false);
+        Assert.True((bool?)preview.StructuredContent!["ok"]);
+        Assert.False(preview.StructuredContent["data"]!.AsObject().ContainsKey("targetBound"));
+        Assert.Equal("Normalized arguments, input file contents and target identity; native validation/readback occurs during execution.",
+            (string?)preview.StructuredContent["data"]!["scope"]);
+        Assert.Equal(0, worker.Calls);
+    }
+
     [Theory]
     [InlineData("14sp1")]
     [InlineData("15.1")]
@@ -43,7 +121,9 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             Assert.NotEqual(hash, Hash());
             var stale = await Host.RunWritePreviewAsync("ImportHmiScreen", false, arguments, () => Task.FromResult(Execute()), hash, "C:/Projects/original.ap21");
             Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
-            Assert.Contains("file changed", (string)stale.StructuredContent["error"]!["message"]!);
+            Assert.Equal("This plan no longer matches the preview: arguments, target, input files or the TIA binding differ. "
+                + "A reconnect or a host restart also changes the binding. Nothing ran; preview again.",
+                (string?)stale.StructuredContent["error"]!["message"]);
             Assert.Equal(0, calls);
             string fresh = Hash();
             Assert.True((bool?)Host.RunWritePreview("ImportHmiScreen", false, arguments, Execute, fresh, "C:/Projects/original.ap21").StructuredContent!["ok"]);

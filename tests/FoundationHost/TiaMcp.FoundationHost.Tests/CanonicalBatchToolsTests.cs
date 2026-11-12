@@ -10,6 +10,29 @@ using Xunit;
 
 public sealed class CanonicalBatchToolsTests
 {
+    [Fact]
+    public async Task Stale_batch_plan_names_the_reconnect_cause()
+    {
+        using var files = new Files();
+        var target = new Target("ImportPlcTagTable");
+        var batch = Batch("ImportPlcTagTablesFromDirectory", target);
+        int approvals = 0;
+        batch.Approve = (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
+        var args = files.Arguments();
+        var preview = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
+        Assert.True((bool?)preview.StructuredContent!["ok"]);
+        Apply(args, preview.StructuredContent["data"]!.AsObject());
+        args["expectedPlanHash"] = new string('0', 64);
+        var stale = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
+        Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
+        Assert.Equal("batch-plan", (string?)stale.StructuredContent["error"]!["details"]!["reason"]);
+        Assert.Equal("This batch plan no longer matches the preview: its items, their input files or the TIA binding differ. "
+            + "A reconnect or a host restart also changes the binding. Nothing ran; preview the whole batch again.",
+            (string?)stale.StructuredContent["error"]!["message"]);
+        Assert.Empty(target.Writes);
+        Assert.Equal(0, approvals);
+    }
+
     private static readonly JsonObject Binding = new() {
         ["projectPath"] = "C:/Project.ap21", ["projectName"] = "Project", ["processId"] = 42, ["generation"] = 1 };
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject args)

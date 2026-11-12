@@ -42,6 +42,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly HashSet<string> SessionReaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             { "InitializeEnvironment", "GetEnvironmentDiagnostics", "PreviewToolCall" };
 
+        public static bool IsSessionReader(string name) => SessionReaders.Contains(name);
+
         public static bool HostOnlyDuringReset(string name) => ToolExecution.Table.TryGetValue(name, out var owner) && owner == "host"
             && !SessionReaders.Contains(name) && name is not ("GenerateAcceptanceReport" or "RunOnlineMonitoringSafetySelfTest");
 

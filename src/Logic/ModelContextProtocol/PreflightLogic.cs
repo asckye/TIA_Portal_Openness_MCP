@@ -47,8 +47,8 @@ namespace TiaMcpServer.ModelContextProtocol
             public List<string> ConfirmFlagsSet { get; } = new List<string>();
             /// <summary>The call would bind (possibly after the bridge's coercions and case fixes).</summary>
             public bool Ok => Missing.Count == 0 && Unknown.Count == 0 && TypeProblems.Count == 0;
-            /// <summary>True when the call, as given, would actually change something (dryRun=false or no dryRun at all on a writing tool).</summary>
-            public bool Effective => !DryRunSupported || DryRunGiven == false || (DryRunGiven == null && !DryRunDefault);
+            /// <summary>The dry-run value in effect for tools that support it.</summary>
+            public bool DryRunEffective => DryRunSupported && (DryRunGiven ?? DryRunDefault);
         }
 
         public static Report Analyze(IReadOnlyList<ParameterSpec> specs, JsonObject args)
@@ -87,7 +87,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (seen.Contains(s.Name) && ReadBool(args[s.Name]) == true) report.ConfirmFlagsSet.Add(s.Name);
                 }
             }
-            if (report.DryRunSupported && report.Effective && report.ConfirmFlags.Count > 0 && report.ConfirmFlagsSet.Count == 0)
+            if (report.DryRunSupported && !report.DryRunEffective && report.ConfirmFlags.Count > 0 && report.ConfirmFlagsSet.Count == 0)
                 report.Warnings
                     .Add("dryRun=false without " + string.Join(" / ", report.ConfirmFlags)
                         + "=true: the tool will refuse to execute (set the confirm flag only after the user agreed).");
@@ -212,10 +212,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         /// <summary>What a caller must keep in mind for one operation class (the third tag of a tool description).</summary>
-        public static IReadOnlyList<string> Precautions(string operation, bool dryRunSupported)
+        public static IReadOnlyList<string> Precautions(string operation, Report report, bool readOnly, IReadOnlyList<ParameterSpec> specs)
         {
             var list = new List<string>();
-            switch ((operation ?? "").ToUpperInvariant())
+            var op = (operation ?? "").ToUpperInvariant();
+            switch (op)
             {
                 case "UI":
                     list
@@ -226,18 +227,18 @@ namespace TiaMcpServer.ModelContextProtocol
                     list
                         .Add("Modifies the open project offline; nothing is saved, compiled or downloaded by itself - CompilePlcSoftware then SaveProject " +
                         "afterwards.");
-                    if (dryRunSupported) list.Add("dryRun=true (default) previews; run the preview first, then repeat with dryRun=false once it is clean.");
                     break;
                 case "ONLINE-WRITE":
                     list
-                        .Add("Changes a real device or runtime (download / upload / operating mode / value write). In the maintainer's environment this is " +
-                        "allowed against PLCSIM Advanced only, never a real CPU.");
-                    if (dryRunSupported) list.Add("dryRun=true (default) previews; execution also needs the confirm flag.");
+                        .Add("Changes a real device or runtime (download / upload / operating mode / value write). Check the target before you run it.");
                     break;
                 case "ONLINE":
                     list
-                        .Add("Contacts a PLC / device / runtime read-only (scan, online state, compare). Needs the route (pgPcInterface / IP) to be right; " +
-                        "ListTransferRoutes shows the choices.");
+                        .Add(readOnly
+                            ? "Contacts a PLC / device / runtime read-only (scan, online state, compare). "
+                                + "Needs the route (pgPcInterface / IP) to be right; ListTransferRoutes shows the choices."
+                            : "Changes the online connection state of a PLC or device; it writes no program or value. "
+                                + "Needs the right route (pgPcInterface / IP); ListTransferRoutes shows the choices.");
                     break;
                 case "EXECUTE":
                     list.Add("Runs a compile / test / self-test and returns its messages; read ErrorCount before continuing.");
@@ -250,7 +251,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     list.Add("Pure offline computation; no TIA session needed.");
                     break;
                 case "SESSION":
-                    list.Add("Session / discovery call; does not change the project.");
+                    list.Add(readOnly
+                        ? "Reads session or discovery state; does not change the project."
+                        : "Changes the TIA session, the project binding or the project files. "
+                            + "Read the description for what it saves, closes or rebinds.");
                     break;
                 case "READ":
                     list.Add("Reads the open project; no change.");
@@ -258,12 +262,33 @@ namespace TiaMcpServer.ModelContextProtocol
                 default:
                     break;
             }
+            if (report.DryRunSupported && (op == "WRITE" || op == "ONLINE-WRITE"))
+            {
+                var requirements = new List<string> { "dryRun=false" };
+                requirements.AddRange(report.ConfirmFlags.Select(flag => flag + "=true"));
+                requirements.AddRange(specs.Where(spec => spec.Name is "expectedPlanHash" or "expectedProjectFile").Select(spec => spec.Name));
+                list.Add("dryRun=true previews" + (report.DryRunDefault ? " (default)" : "")
+                    + "; execution needs " + string.Join(", ", requirements) + ".");
+            }
             return list;
+        }
+
+        public static string? PrefillFieldsProblem(string form, string mode, IReadOnlyCollection<string> fields)
+        {
+            string[] expected = mode == "clear" ? Array.Empty<string>() : form switch {
+                "inspectionRules" => new[] { "namePattern" }, "blockFilter" => new[] { "filter" },
+                "blockSelection" => new[] { "softwarePath", "blockPaths" }, "connectProject" => new[] { "projectPath" },
+                "exportBlocks" => new[] { "outputDirectory", "format" }, _ => new[] { "paths", "overwrite" }
+            };
+            if (fields.Count == expected.Length && expected.All(fields.Contains)) return null;
+            return mode == "clear" ? "Clear requires an empty fields object."
+                : "Set for " + form + " requires exactly these fields: " + string.Join(", ", expected) + ".";
         }
 
         /// <summary>Whether the operation class needs a bound project (session and offline calls do not).</summary>
         public static bool NeedsProject(string operation, string toolName)
         {
+            if (toolName is "SaveProject" or "SaveProjectCopy" or "CloseProject") return true;
             var op = (operation ?? "").ToUpperInvariant();
             if (op == "SESSION" || op == "OFFLINE" || op == "UI" || ToolTaxonomy.For(toolName).Domain == "Workbench") return false;
             // Tools that read the environment rather than a project.

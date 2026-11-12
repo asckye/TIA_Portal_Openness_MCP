@@ -10,6 +10,7 @@ namespace TiaMcpServer.ModelContextProtocol
     internal static class CapabilitySelfTestLogic
     {
         internal static async Task<ResponseCapabilitySelfTest> Run(Func<bool> group, Func<IEnumerable<string>> processes, Func<State> stateReader,
+                Func<State?> cachedState,
                 Func<bool> connect, Func<string, string, ResponseMessage> validate, Func<string> tree, bool connectIfNeeded, bool includeProjectTree,
                 bool inspectPortalProcesses, string expectedPlcSoftwarePath, string expectedHmiSoftwarePath)
         {
@@ -61,7 +62,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             "Process/project inspection skipped. Set inspectPortalProcesses=true to run it.");
                 }
 
-                var state = connectIfNeeded ? stateReader() : null;
+                var state = connectIfNeeded ? stateReader() : cachedState();
                 var isConnected = state?.IsConnected == true;
                 if (!isConnected && connectIfNeeded)
                 {
@@ -81,7 +82,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var hasProject = isConnected && state != null
                     && (!string.IsNullOrWhiteSpace(state.Project) && state.Project != "-" || !string.IsNullOrWhiteSpace(state.Session) && state.Session != "-");
-                if (hasProject)
+                if (hasProject && !connectIfNeeded)
+                {
+                    Add("project.open", "Open project/session", "pass",
+                        $"Project '{state!.Project}' is bound. Project-specific checks run only with connectIfNeeded=true.");
+                }
+                else if (hasProject)
                 {
                     try
                     {

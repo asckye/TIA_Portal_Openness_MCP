@@ -147,6 +147,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var specs = SpecsOf(method);
             var report = PreflightLogic.Analyze(specs, args);
+            if (canonical == "PrefillWorkbenchForm" && args["form"] is JsonValue form && form.TryGetValue<string>(out var formName)
+                && args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var modeName) && args["fields"] is JsonObject fields)
+            {
+                var problem = PreflightLogic.PrefillFieldsProblem(formName, modeName, fields.Select(field => field.Key).ToArray());
+                if (problem != null) report.TypeProblems.Add(problem);
+            }
 #if TIA_ENGINE_HOST
             if (CanonicalToolParameters.ValidateAliases(canonical, args, method.ImplementationRequired) is { } aliasProblem)
             {
@@ -160,7 +166,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string description = ToolDescription(method);
             var tag = ToolTaxonomy.For(canonical);
             var op = ToolTaxonomy.OperationOf(canonical, description);
-            var precautions = PreflightLogic.Precautions(op.Operation, report.DryRunSupported).ToList();
+            bool readOnly = CatalogView.Find(canonical)?.Tool.Annotations?.ReadOnlyHint == true || ToolTaxonomy.IsSessionReader(canonical);
+            bool changesState = !readOnly && !report.DryRunEffective;
+            var precautions = PreflightLogic.Precautions(op.Operation, report, readOnly, specs).ToList();
             var usageNotes = TiaOpenness.Shared.ToolUsageCatalog.Notes(canonical);
             bool nativeParameterRead = (bool?)usageNotes["nativeReadsPossible"] == true;
             if (usageNotes["precaution"] is JsonValue note) precautions.Add(note.GetValue<string>());
@@ -197,6 +205,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             + (report.ConfirmFlags.Count > 0 ? "; confirm flags set: "
                                 + (report.ConfirmFlagsSet.Count > 0 ? string.Join(", ", report.ConfirmFlagsSet) : "none") : "")
                             + ")"));
+            else if (changesState) lines.Add("dryRun: not available; this call runs for real.");
             foreach (var p in precautions) lines.Add("Precaution: " + p);
             foreach (var p in prerequisites) lines.Add("Prerequisite: " + p);
             var example = ToolExamples.FindOrDerive(canonical, specs);
@@ -215,10 +224,11 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["coercions"] = new JsonArray(report.Coercions.Select(x => (JsonNode)x).ToArray());
             meta["warnings"] = new JsonArray(report.Warnings.Select(x => (JsonNode)x).ToArray());
             meta["dryRun"] = new JsonObject {
-                ["supported"] = report.DryRunSupported, ["given"] = report.DryRunGiven, ["effective"] = report.Effective, ["confirmFlags"] =
+                ["supported"] = report.DryRunSupported, ["given"] = report.DryRunGiven, ["effective"] = report.DryRunEffective, ["confirmFlags"] =
                     new JsonArray(report.ConfirmFlags.Select(x => (JsonNode)x).ToArray()), ["confirmFlagsSet"] =
                     new JsonArray(report.ConfirmFlagsSet.Select(x => (JsonNode)x).ToArray())
             };
+            meta["changesState"] = changesState;
             meta["precautions"] = new JsonArray(precautions.Select(x => (JsonNode)x).ToArray());
             meta["prerequisites"] = new JsonObject {
                 ["needsProject"] = needsProject, ["connected"] = connected, ["project"] = project, ["satisfied"] = prerequisitesOk };
@@ -232,7 +242,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     + (report.CaseFixes.Count + report.Coercions.Count > 0 ? " after " + (report.CaseFixes.Count + report.Coercions.Count)
                         + " automatic correction(s) (CallTool only)" : "")
                     + (nativeParameterRead ? "; native parameter reads may execute even with dryRun=true"
-                        : (report.DryRunSupported ? (report.Effective ? "; it EXECUTES (dryRun=false)" : "; it is a preview (dryRun)") : ""))
+                        : report.DryRunSupported ? (report.DryRunEffective ? "; it is a preview (dryRun)" : "; it EXECUTES (dryRun=false)")
+                        : changesState ? "; it EXECUTES on this call (no dry run)" : "")
                     + ".";
             return new ResponseStringList { Message = verdict, Items = lines, Meta = meta };
         }

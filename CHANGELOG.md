@@ -14,6 +14,13 @@
 - Verified PLC import readback and preview tokens ignore TIA-computed dates and memory sizes, so recompiling unchanged block content preserves the reviewed token. A completed readback mismatch reports `failed` and retains the backup and cleanup evidence.
 - Unified event writes refused before a native write retain the sanitized native reason. Worker status reports `Draining` during read timeout recovery and attributes an unwinding fault to the running operation. Compile error counts exclude declared summary nodes.
 
+- `PreviewToolCall` reports the effective dry-run value and a separate `data.changesState`. Session and online precautions follow each tool's read-only annotation, execution prerequisites name its declared confirmation and plan parameters, and `SaveProject`, `SaveProjectCopy` and `CloseProject` require a bound project in the preview.
+- `PreviewToolCall` validates `PrefillWorkbenchForm` fields with the same per-form rules used when calling the tool, so refused field sets report NOT READY.
+- Generic write previews expose `data.targetBound` and explain that applying an unbound preview refuses with `PROJECT_NOT_BOUND`. Plan hashes retain their existing inputs.
+- Generic write and batch `PLAN_STALE` messages explain that reconnects and host restarts can invalidate the preview and instruct callers to preview again.
+- Online monitoring safety checks use force-tool classifications and the reviewed offline-write list, require the monitoring API tools available on each release, and scan the registered roster on V20/V21. The policy covers offline force-table engineering and prohibits changing forcing on a running PLC.
+- Passive capability self-tests read cached connection and project state. A bound project is reported without a worker call, and project validation and tree reads require `connectIfNeeded=true`.
+
 ## [4.0.0-beta.4] - 2026-11-05
 
 ### Changed

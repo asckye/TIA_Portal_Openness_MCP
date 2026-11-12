@@ -111,16 +111,9 @@ internal sealed class WorkbenchControlTool : McpServerTool
     {
         string form = args.GetProperty("form").GetString()!;
         string mode = args.GetProperty("mode").GetString()!;
-        string[] expected = mode == "clear" ? Array.Empty<string>() : form switch {
-            "inspectionRules" => new[] { "namePattern" }, "blockFilter" => new[] { "filter" },
-            "blockSelection" => new[] { "softwarePath", "blockPaths" }, "connectProject" => new[] { "projectPath" },
-            "exportBlocks" => new[] { "outputDirectory", "format" }, _ => new[] { "paths", "overwrite" }
-        };
         var fields = args.GetProperty("fields").EnumerateObject().Select(field => field.Name).ToArray();
-        if (fields.Length == expected.Length && expected.All(fields.Contains)) return null;
-        return new Error(mode == "clear" ? "Clear requires an empty fields object."
-            : "Set for " + form + " requires exactly these fields: " + string.Join(", ", expected) + ".",
-            new InvalidArgumentDetails("/fields", Array.Empty<string>()));
+        var problem = TiaMcpServer.ModelContextProtocol.PreflightLogic.PrefillFieldsProblem(form, mode, fields);
+        return problem == null ? null : new Error(problem, new InvalidArgumentDetails("/fields", Array.Empty<string>()));
     }
 
     internal static CallToolResult Map(WorkbenchControlResponse response, string release, string name, string id, WorkbenchControlOperation operation)
