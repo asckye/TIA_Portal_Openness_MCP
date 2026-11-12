@@ -20,7 +20,7 @@ namespace TiaMcp.Adapters
             var stage=
                 new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy
                     .FullPath(Path.Combine(output.Directory!.FullName,".tia-export-"+Guid.NewGuid().ToString("N"))));
-            var staged=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(stage.FullName,output.Name)));
+            var staged=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(stage.FullName,"export.xml")));
             string phase="create-stage"; string? hash=null;
             try
             {

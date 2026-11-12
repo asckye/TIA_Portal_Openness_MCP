@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
@@ -46,11 +45,6 @@ namespace TiaMcp.PlcWorker
             finally { execution.Meta.Clear(); foreach (var pair in meta) execution.Meta[pair.Key] = Plain(pair.Value); }
         }
         private static object? Plain(JsonNode? node)
-        {
-            if (node is JsonObject obj) return obj.ToDictionary(p => p.Key, p => Plain(p.Value));
-            if (node is JsonArray array) return array.Select(Plain).ToArray();
-            if (node is not JsonValue) return null;
-            return JsonSerializer.Deserialize<object>(node.ToJsonString());
-        }
+            => PlcVerifiedImport.PlainValue(node);
     }
 }

@@ -83,8 +83,9 @@ namespace TiaMcp.Adapters.Hardware
                 var applied = new List<string>(); meta["appliedProperties"] = applied;
                 foreach (var change in prepared)
                 {
-                    meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
+                    meta["lastAttemptedProperty"] = change.Property.Name;
                     EngineeringWriteJournal.Property(target, change.Property);
+                    meta["mayHaveChanged"] = true;
                     change.Property.SetValue(target, change.Value);
                     applied.Add(change.Property.Name);
                     if (!HardwareAddressingPolicy.SameValue(change.Property.GetValue(target), change.Value))

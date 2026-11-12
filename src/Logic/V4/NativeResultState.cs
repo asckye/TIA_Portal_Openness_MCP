@@ -124,6 +124,18 @@ namespace TiaMcp.Logic.V4
                     new NativeOperationFailedDetails(null, null, Evidence(evidence, tool)));
                 return true;
             }
+            if (Flag("restoreAttempted"))
+            {
+                bool groupsUnchanged = !evidence.ContainsKey("targetGroupsCreated")
+                    || evidence["targetGroupsCreated"] is JsonArray groups && groups.Count == 0;
+                if (!Flag("restored") || !groupsUnchanged || cleanup
+                    || evidence.ContainsKey("rollbackCompleted") && !Flag("rollbackCompleted")
+                    || Flag("writeOutcomeUnknown") || Flag("connectionUnavailable") || Flag("unrestoredWrite")) return false;
+                outcome = Outcome.Failed;
+                error = new Error("The move failed; the block was re-imported into its original group and its name, number and language verified. "
+                    + "Compile before use.", new NativeOperationFailedDetails(null, null, Evidence(evidence, tool)));
+                return true;
+            }
             if (!evidence.ContainsKey("rollbackCompleted") && !cleanup) return false;
             string result = WriteRollbackPolicy.Outcome(Flag("rollbackCompleted"), Flag("connectionUnavailable") || Flag("requiresExplicitRebind"),
                 Flag("writeOutcomeUnknown"), Flag("unrestoredWrite"), Flag("rollbackRefused"), Flag("rollbackReachable"));

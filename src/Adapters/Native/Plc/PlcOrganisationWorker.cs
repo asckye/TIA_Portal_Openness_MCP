@@ -233,9 +233,7 @@ namespace TiaMcp.Adapters
                 reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
                 reply.MayHaveChanged = adapter.MutationStarted; reply.RequiresSessionReset = adapter.MutationStarted;
                 if (request.Operation == "MovePlcBlockToGroup") reply.Failure.Evidence["deleteStarted"] = adapter.MutationStarted;
-                for (Exception? current = error; current != null; current = current.InnerException)
-                    if (current.Data["nativeResultEvidence"] is Dictionary<string, object?> evidence)
-                        foreach (var pair in evidence) reply.Failure.Evidence[pair.Key] = pair.Value;
+                PlcMovePolicy.MergeEvidence(error, reply.Failure.Evidence);
             }
             reply.MayHaveChanged |= adapter.MutationStarted;
             return reply;

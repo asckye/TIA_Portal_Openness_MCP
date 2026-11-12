@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
 using TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
@@ -8,6 +10,47 @@ namespace TiaMcp.Engine.Tests
 {
     public sealed class VerifiedReadbackTests
     {
+        private static object? Plain(JsonNode? node)
+        {
+            var method = typeof(PlcVerifiedImport).GetMethod("PlainValue");
+            Assert.NotNull(method);
+            var plain = method.CreateDelegate<Func<JsonNode?, object?>>();
+            return plain(node);
+        }
+
+        [Fact]
+        public void Plain_value_keeps_booleans_and_numbers()
+        {
+            var node = JsonNode.Parse("""
+                {"flag":false,"count":7,"fraction":1.25,"text":"fixture","nothing":null,"nested":{"flag":true},"items":[false,9]}
+                """);
+            var value = Assert.IsType<Dictionary<string, object?>>(Plain(node));
+            Assert.False(Assert.IsType<bool>(value["flag"]));
+            Assert.Equal(7L, Assert.IsType<long>(value["count"]));
+            Assert.Equal(1.25, Assert.IsType<double>(value["fraction"]));
+            Assert.Equal("fixture", Assert.IsType<string>(value["text"]));
+            Assert.Null(value["nothing"]);
+            Assert.True(Assert.IsType<bool>(Assert.IsType<Dictionary<string, object?>>(value["nested"])["flag"]));
+            var items = Assert.IsType<object?[]>(value["items"]);
+            Assert.False(Assert.IsType<bool>(items[0]));
+            Assert.Equal(9L, Assert.IsType<long>(items[1]));
+            Assert.Equal(7L, Assert.IsType<long>(Plain(JsonValue.Create(7))));
+            Assert.False(Assert.IsType<bool>(Plain(JsonValue.Create(false))));
+            Assert.Equal(1.25, Assert.IsType<double>(Plain(JsonValue.Create(1.25))));
+            Assert.Null(Plain(null));
+        }
+
+        [Fact]
+        public void Negative_verdict_survives_complete()
+        {
+            var meta = Assert.IsType<Dictionary<string, object?>>(Plain(JsonNode.Parse(
+                """{"verificationSuccess":false,"operationSuccess":false}""")));
+            LegacyResponseMetadata.Complete(meta);
+            Assert.Equal(false, meta["operationSuccess"]);
+            Assert.Equal(false, meta["verificationSuccess"]);
+            Assert.Equal(false, meta["success"]);
+        }
+
         private static string Xml(bool readOnly) => """
             <Document><Engineering version="V21"/><SW.Blocks.FC ID="0"><AttributeList>
             <Name>FC_Fixture</Name><Number>7</Number><ProgrammingLanguage>LAD</ProgrammingLanguage>

@@ -13,6 +13,7 @@ using Siemens.Engineering.SW.TechnologicalObjects;
 using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Engineering;
 using Logic = TiaMcp.Adapters.Native.Plc.PlcMotionPolicy;
 using WatchNative = TiaMcp.Adapters.WatchTechnologyPrimitives;
 
@@ -48,6 +49,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     {
                         meta["mayHaveChanged"] = true; MutationStarted = true;
                         // Typed TechnologicalInstanceDBComposition.Create(name, typeIdentifier, version) with Find readback.
+                        EngineeringWriteJournal.Creating(() => PlcGroupOperations.Find(collection, parts.Last()),
+                            softwarePath + "/TechnologicalObjects/" + objectPath);
                         if (collection is TechnologicalInstanceDBComposition typedCollection)
                         {
                             TechnologicalInstanceDB created = WatchNative.Create(typedCollection, parts.Last(), typeIdentifier, apiVersion);
@@ -115,6 +118,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     }
                 }
                 return writing ? "Native technology object operation completed; no save/compile/download."
+                    : action == "create"
+                        ? "Create preview; no changes. TIA checks the type and version against this CPU only when the object is created."
                     : "Technology object read/preview completed; no changes.";
             });
 

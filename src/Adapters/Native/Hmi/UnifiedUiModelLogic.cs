@@ -291,10 +291,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                 object owner = target;
                 foreach (var step in edit.Path) owner = FindProperty(owner.GetType(), step)!.GetValue(owner)
                     ?? throw new InvalidOperationException("Nested object is null: " + step);
-                meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = edit.Name;
+                meta["lastAttemptedProperty"] = edit.Name;
 #if TIA_ADAPTER_INTERNAL_VERSIONING
                 EngineeringWriteJournal.Property(owner, edit.Property);
 #endif
+                meta["mayHaveChanged"] = true;
                 edit.Property.SetValue(owner, edit.Value);
                 applied.Add(edit.Name);
                 if (!SameValue(edit.Property.GetValue(owner), edit.Value))

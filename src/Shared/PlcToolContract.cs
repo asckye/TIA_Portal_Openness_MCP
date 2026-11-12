@@ -54,11 +54,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static CallToolResult Failure(string tool, Exception exception, bool writes, bool current)
         {
+            JsonObject? moveEvidence = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
                 if (cause.Data["nativeResultEvidence"] is JsonObject nativeEvidence)
                 {
                     var safeEvidence = (JsonObject)nativeEvidence.DeepClone();
                     HostBehavior.SanitizeEvidence(safeEvidence);
+                    if (tool == "MovePlcBlockToGroup") moveEvidence ??= safeEvidence;
                     if (tool == "MovePlcBlockToGroup" && (bool?)safeEvidence["deleteStarted"] == false)
                     {
                         ErrorDetails details = exception is PortalException { Code: PortalErrorCode.NotSupportedOnVersion }
@@ -72,7 +74,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             new Error(HostBehavior.SafeDiagnostic(exception.Message) ?? "Move refused before source deletion.", details),
                             Outcome.RejectedBeforeOperation, Completeness.None, current);
                     }
-                    if (tool == "MovePlcBlockToGroup" && writes && safeEvidence["recoveryExportPath"] != null)
+                    if (tool == "MovePlcBlockToGroup" && writes && safeEvidence["recoveryExportPath"] != null
+                        && (bool?)safeEvidence["restored"] != true)
                         return Result(tool, new JsonObject { ["evidence"] = safeEvidence },
                             new Error((bool?)safeEvidence["recoveryOnlyCopy"] == true
                                 ? "Move and restoration failed; the only verified recovery copy is '" + (string?)safeEvidence["recoveryExportPath"] + "'."
@@ -80,7 +83,9 @@ namespace TiaMcpServer.ModelContextProtocol
                                 new OutcomeUnknownDetails("move", new Dictionary<string, JsonElement>())),
                             Outcome.Unknown, Completeness.Unknown, current, true);
                     if (NativeResultState.TryUnsuccessful(safeEvidence, writes, out var nativeOutcome, out var nativeError, tool))
-                        return Result(tool, new JsonObject { ["evidence"] = safeEvidence }, nativeError, nativeOutcome, Completeness.Unknown, current, writes);
+                        return Result(tool, new JsonObject { ["evidence"] = safeEvidence }, nativeError, nativeOutcome,
+                            nativeOutcome == Outcome.Unknown ? Completeness.Unknown
+                                : nativeOutcome == Outcome.Partial ? Completeness.Partial : Completeness.Complete, current, writes);
                 }
             if (exception is RejectionException rejection)
                 return Result(tool, null, rejection.Error, Outcome.RejectedBeforeOperation, Completeness.None, current);
@@ -96,7 +101,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, true, !writes, nativeRead: InvocationJournal.NativeCallIssued);
             var evidence = HostBehavior.FailureEvidence(exception.GetType().Name, exception.Message);
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
-            return Result(tool, new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) },
+            return Result(tool, new JsonObject { ["evidence"] = moveEvidence ?? JsonSerializer.SerializeToNode(evidence) },
                 HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception)),
                 HostBehavior.OutcomeOf(kind), HostBehavior.CompletenessOf(kind), current, writes);
         }

@@ -143,7 +143,8 @@ namespace TiaMcpServer.Siemens.Services
                     evidence.Remove("recoveryExportPath");
                 }
                 else evidence["recoveryExportPath"] ??= recovery;
-                evidence["recoveryExportStatus"] ??= dryRun && !dispatched ? "not-attempted" : "unconfirmed";
+                evidence["recoveryExportStatus"] ??= (bool?)evidence["recoveryExportVerified"] == true ? "verified"
+                    : dryRun && !dispatched ? "not-attempted" : "unconfirmed";
                 throw;
             }
         }

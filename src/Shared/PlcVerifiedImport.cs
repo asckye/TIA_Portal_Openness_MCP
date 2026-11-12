@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -9,6 +11,22 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class PlcVerifiedImport
     {
         private static readonly string Session = Guid.NewGuid().ToString("N");
+
+        public static object? PlainValue(JsonNode? node)
+        {
+            if (node is JsonObject obj) return obj.ToDictionary(pair => pair.Key, pair => PlainValue(pair.Value), StringComparer.Ordinal);
+            if (node is JsonArray array) return array.Select(PlainValue).ToArray();
+            if (node is not JsonValue) return null;
+            var value = JsonSerializer.SerializeToElement(node);
+            if (value.ValueKind is JsonValueKind.True or JsonValueKind.False) return value.GetBoolean();
+            if (value.ValueKind == JsonValueKind.Number)
+            {
+                if (value.TryGetInt64(out var integer)) return integer;
+                return value.GetDouble();
+            }
+            return value.GetString();
+        }
+
         public static string Execute(string candidateXml, string binding, string evidenceRoot, bool dryRun, string expectedToken,
             Action<string> export, Action<string> import, Action verifyBinding, JsonObject meta, Action? compile = null)
         {

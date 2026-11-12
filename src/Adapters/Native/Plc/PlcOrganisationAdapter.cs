@@ -220,32 +220,44 @@ namespace TiaMcp.Adapters.Native.Plc
                     || PlcOrganisationPrimitives.Language(candidate).ToString() != language)
                     throw new IOException("The imported block parent/name/number/language could not be verified.");
             }
-            var evidence = PlcMovePolicy.ExportDeleteImportRestore(recovery, name, number, language, () => {
-                TiaMcp.Adapters.PlcBatchImportRecovery.Precheck(); Directory.CreateDirectory(Path.GetDirectoryName(recovery)!);
-                if (File.Exists(recovery)) throw new IOException("The recovery path already exists.");
-                PlcOrganisationPrimitives.Export(block, new FileInfo(recovery), ExportOptions.WithDefaults);
-            }, () => {
-                MutationStarted = true;
-                PlcOrganisationPrimitives.Delete(block);
-                if (PlcOrganisationPrimitives.Blocks((PlcBlockGroup)parent).Any(item => PlcOrganisationPrimitives.Name(item) == name))
-                    throw new IOException("Source block remains after delete.");
-            }, () => {
-                if (target == null) {
-                    PlcGroupOperations.Manage(PlcOrganisationPrimitives.BlockGroup(movePlc), targetGroupPath, "create", "", false, "Blocks"); target = _session
-                        .GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                }
-                var copies = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks(target!), new FileInfo(recovery), ImportOptions.None);
-                if (copies == null || copies.Count != 1) throw new IOException("Import did not return exactly one target block.");
-                imported = copies[0];
-                return imported.IsConsistent;
-            }, () => Verify(imported, target!), () => {
-                PlcOrganisationPrimitives.Delete(imported!);
-            }, () => {
-                var copies = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks((PlcBlockGroup)parent),
-                    new FileInfo(recovery), ImportOptions.None);
-                if (copies == null || copies.Count != 1) throw new IOException("Restore did not return exactly one original-group block.");
-                restored = copies[0];
-            }, () => Verify(restored, parent));
+            object?[] targetGroupsCreated = Array.Empty<object?>();
+            Dictionary<string, object?> evidence;
+            try
+            {
+                evidence = PlcMovePolicy.ExportDeleteImportRestore(recovery, name, number, language, () => {
+                    TiaMcp.Adapters.PlcBatchImportRecovery.Precheck(); Directory.CreateDirectory(Path.GetDirectoryName(recovery)!);
+                    if (File.Exists(recovery)) throw new IOException("The recovery path already exists.");
+                    PlcOrganisationPrimitives.Export(block, new FileInfo(recovery), ExportOptions.WithDefaults);
+                }, () => {
+                    MutationStarted = true;
+                    PlcOrganisationPrimitives.Delete(block);
+                    if (PlcOrganisationPrimitives.Blocks((PlcBlockGroup)parent).Any(item => PlcOrganisationPrimitives.Name(item) == name))
+                        throw new IOException("Source block remains after delete.");
+                }, () => {
+                    if (target == null) {
+                        var groups = PlcGroupOperations.Manage(PlcOrganisationPrimitives.BlockGroup(movePlc), targetGroupPath, "create", "", false, "Blocks");
+                        targetGroupsCreated = ((IEnumerable<object?>)groups["createdPaths"]!).ToArray();
+                        target = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
+                    }
+                    var copies = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks(target!), new FileInfo(recovery), ImportOptions.None);
+                    if (copies == null || copies.Count != 1) throw new IOException("Import did not return exactly one target block.");
+                    imported = copies[0];
+                    return imported.IsConsistent;
+                }, () => Verify(imported, target!), () => {
+                    PlcOrganisationPrimitives.Delete(imported!);
+                }, () => {
+                    var copies = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks((PlcBlockGroup)parent),
+                        new FileInfo(recovery), ImportOptions.None);
+                    if (copies == null || copies.Count != 1) throw new IOException("Restore did not return exactly one original-group block.");
+                    restored = copies[0];
+                }, () => Verify(restored, parent));
+            }
+            catch (Exception error)
+            {
+                var failureEvidence = (IDictionary<string, object?>)error.Data["nativeResultEvidence"]!;
+                failureEvidence["targetGroupsCreated"] = targetGroupsCreated;
+                throw;
+            }
             foreach (var pair in evidence) meta[pair.Key] = pair.Value;
             meta["operationSuccess"] = true; meta["mayHaveChanged"] = true;
             string message = "Source exported and verified, deleted, then imported and verified in the target group. Recovery export retained.";

@@ -15,7 +15,7 @@ namespace TiaMcp.Adapters.Native.Engineering
     {
         [ThreadStatic] private static EngineeringWriteJournal? current;
         private readonly EngineeringWriteJournal? parent;
-        private readonly List<(string Target, Action Undo, object? Previous, Action? Probe)> entries = new();
+        private readonly List<(string Target, Action Undo, object? Previous, Action? Probe, string? Owner)> entries = new();
         private readonly Dictionary<(object Target, string Member), (string Path, string Owner, object? Previous, Action Verify)> checks =
             new(MemberComparer.Instance);
         private readonly HashSet<string> deleted = new(StringComparer.Ordinal);
@@ -77,30 +77,32 @@ namespace TiaMcp.Adapters.Native.Engineering
             internal RestoreMismatchException(string message) : base(message) { }
         }
 
-        internal static void Record(string target, Action undo, object? previous = null, Action? probe = null)
+        internal static void Record(string target, Action undo, object? previous = null, Action? probe = null, string? owner = null)
         {
-            if (current != null && !current.undoing) current.entries.Add((target, undo, previous, probe));
+            if (current != null && !current.undoing) current.entries.Add((target, undo, previous, probe, owner));
         }
 
         internal static void Property(object target, PropertyInfo property)
         {
             if (current == null || current.undoing) return;
-            string name = Identity(target) + "." + property.Name;
+            string owner = Identity(target);
+            string name = owner + "." + property.Name;
             if (property.GetMethod?.IsPublic != true || property.SetMethod?.IsPublic != true)
             {
                 Record(name + ": restore previous value (public getter/setter unavailable)",
-                    () => throw new NotSupportedException("Public getter/setter unavailable."));
+                    () => throw new NotSupportedException("Public getter/setter unavailable."), owner: owner);
                 return;
             }
             var previous = current.snapshots.TryGetValue((target, "." + property.Name), out var captured) ? captured : property.GetValue(target);
-            Check(target, "." + property.Name, name, Identity(target), previous, () => {
+            owner = Identity(target);
+            Check(target, "." + property.Name, name, owner, previous, () => {
                 if (!Equals(property.GetValue(target), previous)) throw new RestoreMismatchException("Final restore readback differs.");
             });
             Record(name + ": restore previous value", () => {
                 if (Equals(property.GetValue(target), previous)) return;
                 property.SetValue(target, previous);
                 if (!Equals(property.GetValue(target), previous)) throw new InvalidOperationException("Restore readback differs.");
-            }, previous, () => { property.GetValue(target); });
+            }, previous, () => { property.GetValue(target); }, owner);
         }
 
         internal static void CaptureProperties(object target, IEnumerable<PropertyInfo> properties)
@@ -166,9 +168,12 @@ namespace TiaMcp.Adapters.Native.Engineering
                 }
             }
             if (method.Name.StartsWith("Import", StringComparison.Ordinal))
-                Record(Identity(target) + "/" + method.Name + "(" + ImportPaths(parameters, arguments)
+            {
+                string owner = Identity(target);
+                Record(owner + "/" + method.Name + "(" + ImportPaths(parameters, arguments)
                         + "): reconcile the imported objects with retained before/after evidence; native import has no verified inverse",
-                    () => throw new NotSupportedException("Native import has no verified inverse."));
+                    () => throw new NotSupportedException("Native import has no verified inverse."), owner: owner);
+            }
         }
 
         internal static void Unrestored(string target)
@@ -278,6 +283,7 @@ namespace TiaMcp.Adapters.Native.Engineering
             bool refused = cleanup.Count == pendingCleanup.Count && pendingRefused, reachable = true;
             bool sawRefusal = pendingCleanup.Count > 0 && pendingRefused;
             var restored = new List<object?>();
+            var failed = new List<(string Target, string? Owner, object? Previous, Exception Cause, bool Typed, bool Reachable, bool Disconnected)>();
             undoing = true;
             for (int index = entries.Count - 1; index >= 0; index--)
             {
@@ -286,15 +292,27 @@ namespace TiaMcp.Adapters.Native.Engineering
                 catch (Exception error)
                 {
                     // Keep attempting independent undo steps; never hide the remainder.
-                    disconnected |= HmiReadPolicy.ConnectionUnavailable(error);
                     var cause = error.GetBaseException();
                     bool typed = cause is AdapterPreconditionException or NotSupportedException or UnauthorizedAccessException or ArgumentException;
-                    refused &= typed;
-                    sawRefusal |= typed;
-                    try { if (entry.Probe == null) reachable = false; else entry.Probe(); }
-                    catch (Exception probeError) { reachable = false; disconnected |= HmiReadPolicy.ConnectionUnavailable(probeError); }
-                    cleanup.Add(Cleanup(entry.Target, entry.Previous, cause.GetType().Name));
+                    bool undoReachable = entry.Probe != null;
+                    bool undoDisconnected = HmiReadPolicy.ConnectionUnavailable(error);
+                    try { entry.Probe?.Invoke(); }
+                    catch (Exception probeError) { undoReachable = false; undoDisconnected |= HmiReadPolicy.ConnectionUnavailable(probeError); }
+                    failed.Add((entry.Target, entry.Owner, entry.Previous, cause, typed, undoReachable, undoDisconnected));
                 }
+            }
+            foreach (var failure in failed)
+            {
+                bool removed = false;
+                foreach (var path in deleted)
+                    if (failure.Owner != null && (failure.Owner == path || failure.Owner.StartsWith(path + "/", StringComparison.Ordinal)))
+                    { removed = true; break; }
+                if (removed) continue;
+                disconnected |= failure.Disconnected;
+                refused &= failure.Typed;
+                sawRefusal |= failure.Typed;
+                reachable &= failure.Reachable;
+                cleanup.Add(Cleanup(failure.Target, failure.Previous, failure.Cause.GetType().Name));
             }
             foreach (var check in checks)
             {

@@ -33,7 +33,8 @@ internal static class ExportPublicationTests
             var recovery=PlcExportPublication.Publish(good,f=>{
                 stagedDirectory=f.DirectoryName;
                 check(f.FullName!=good.FullName && f.Directory!.Parent!.FullName==root,"Native callback uses independent sibling staging directory");
-                check(f.Name==good.Name && !File.Exists(good.FullName),"Native export keeps requested basename and final destination unpublished");
+                check(f.Name == "export.xml" && !File.Exists(good.FullName),
+                    "Native export uses export.xml and leaves the final destination unpublished");
                 File.WriteAllText(f.FullName,xml);
             });
             check(recovery==null && !Directory.Exists(stagedDirectory),"Successful export removes only empty staging directory");

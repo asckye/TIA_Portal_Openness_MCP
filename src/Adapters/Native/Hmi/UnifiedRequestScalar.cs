@@ -52,8 +52,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             EngineeringWriteJournal.CaptureProperties(target, changes.Select(change => change.Property));
             foreach (var change in changes)
             {
-                meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
+                meta["lastAttemptedProperty"] = change.Property.Name;
                 EngineeringWriteJournal.Property(target, change.Property);
+                meta["mayHaveChanged"] = true;
                 change.Property.SetValue(target, change.Value);
                 applied.Add(change.Property.Name);
                 if (!SameValue(change.Property.GetValue(target), change.Value))

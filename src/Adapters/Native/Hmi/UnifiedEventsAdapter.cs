@@ -39,7 +39,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if(!write)return "Event preview. Execute with returned previewToken; no script execution or syntax check.";
                 HmiExactAccess.RequireToken(expectedToken,token);
                 int countBefore=action=="create" ? PlcGroupOperations.Items(handlers).Count() : 0;
-                meta["mayHaveChanged"]=true;
+                if (action != "update") meta["mayHaveChanged"] = true;
                 object FreshHandlers()=>PlcGroupOperations.Get(UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath),objectPathJson),
                     propertyName=="" ? "EventHandlers" : "PropertyEventHandlers");
                 if(action=="create")

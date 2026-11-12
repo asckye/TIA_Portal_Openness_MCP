@@ -9,6 +9,15 @@ namespace TiaMcp.Adapters.Contracts
     // Move admission and recovery: verify the export before deletion, restore after a failed target import.
     public static class PlcMovePolicy
     {
+        public static void MergeEvidence(Exception error, IDictionary<string, object?> target)
+        {
+            var keys = new HashSet<string>(StringComparer.Ordinal);
+            for (Exception? current = error; current != null; current = current.InnerException)
+                if (current.Data["nativeResultEvidence"] is IDictionary<string, object?> evidence)
+                    foreach (var pair in evidence)
+                        if (keys.Add(pair.Key)) target[pair.Key] = pair.Value;
+        }
+
         public static Dictionary<string, object?> ExportDeleteImportRestore(string recoveryPath, string name, int number, string language,
             Action exportSource, Action deleteSource, Func<bool> importTarget, Action verifyTarget, Action deleteTarget, Action restoreSource,
                 Action verifyRestored, bool dryRun = false)
