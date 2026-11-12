@@ -138,10 +138,22 @@ namespace TiaOpenness.Shared
                 ?.DeepClone();
             if (row == null) return null;
             if (entry != null) row["arguments"] = entry["arguments"]!.DeepClone();
+            PreviewForm(row["arguments"]!.AsObject());
             var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
             // Only our explicit format tokens are replaced; braces in JSON/code are preserved.
             return JsonNode.Parse(row.ToJsonString().Replace("{extension}", extension).Replace("{release}", release)
                 .Replace("{major}", release == "14sp1" ? "14" : release == "15.1" ? "15" : release))!.AsObject();
+        }
+
+        private static void PreviewForm(JsonObject arguments)
+        {
+            if ((bool?)arguments["dryRun"] == false)
+            {
+                arguments["dryRun"] = true;
+                arguments.Remove("expectedPlanHash");
+                arguments.Remove("expectedProjectFile");
+            }
+            if ((bool?)arguments["confirm"] == true) arguments["confirm"] = false;
         }
 
         public static JsonArray InlineCalls(string release, bool engineSource = false)

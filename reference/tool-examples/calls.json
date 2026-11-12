@@ -1250,7 +1250,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): apply with an existing export directory passed. Other releases: input schema checked offline; native execution NOT RUN.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -3755,11 +3755,19 @@
             }
           }
         },
-        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
-        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): export preview with a .dat file on the project owner passed; apply NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
+        "note": "P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+. Omit devicePath and itemPath for the project owner; on V21 a CPU device item was refused."
       },
       "ListIoSystems": {
-        "arguments": {},
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact CPU device item from GetProjectTree>",
+            "<exact interface device item from GetProjectTree>"
+          ]
+        },
         "parameters": {
           "subnetName": {
             "exampleValue": "PN_IE_1"
@@ -3772,7 +3780,8 @@
           },
           "itemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "<exact CPU device item from GetProjectTree>",
+              "<exact interface device item from GetProjectTree>"
             ],
             "requiresBinding": true
           },
@@ -3784,8 +3793,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
-        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read with an interface device-item scope passed; an empty scope was refused. Other releases: input schema checked offline; native execution NOT RUN.",
+        "note": "P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+. Give exactly one scope: subnetName, or devicePath with itemPath of an interface device item."
       },
       "ManageIoSystem": {
         "arguments": {
@@ -4295,7 +4304,7 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): PROFINET preview and apply passed with read-back. Other releases: input schema checked offline; native execution NOT RUN.",
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
       },
       "AttachDeviceNodeToSubnet": {
@@ -5260,10 +5269,11 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): template instantiation preview passed; apply NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
         "resultReading": [
           "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-        ]
+        ],
+        "note": "templatePath must hold a {{Name}} token named in rows[].values, otherwise it is refused."
       },
       "PatchPlcBlockDocument": {
         "arguments": {
@@ -5295,7 +5305,9 @@
         ]
       },
       "RenderPlcBlockDocument": {
-        "arguments": {},
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
         "parameters": {
           "filePath": {
             "exampleValue": "C:\\Examples\\exports\\Main.xml"
@@ -5317,7 +5329,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read of an exported PLC block document passed. Other releases: input schema checked offline; native execution NOT RUN.",
         "resultReading": [
           "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
         ]
@@ -5375,7 +5387,7 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): the exportFile apply call shape ran with the old writer; the content rule changed since, NOT RUN since. Other releases: input schema checked offline; native execution NOT RUN.",
         "inline": true,
         "resultReading": [
           "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
@@ -7335,14 +7347,14 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): preview and apply with sourceDirectory passed. Other releases: input schema checked offline; native execution NOT RUN.",
         "resultReading": [
           "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
           "overwrite=false (default) refuses an existing tag table of the same name before its import; the ordered batch stops at that failure; pass overwrite=true to replace it with ImportOptions.Override.",
           "folderPath must name an existing tag table group exactly; an unresolved group is refused, never redirected to the root group.",
           "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21)."
         ],
-        "note": "Preview the complete ordered batch and every canonical item/hash. Apply with dryRun=false, confirm=true, expectedPlanHash and exact expectedProjectFile from this preview. One approval covers the batch; stop on the first failure and report completed/failed/not-started items. Native acceptance NOT RUN.",
+        "note": "Preview the complete ordered batch and every canonical item/hash. Apply with dryRun=false, confirm=true, expectedPlanHash and exact expectedProjectFile from this preview. One approval covers the batch; stop on the first failure and report completed/failed/not-started items. Native acceptance NOT RUN. regexName matches the file name without extension here.",
         "releaseNotes": {
           "14sp1": "Unit scope/publication unavailable; keep unitName empty and includeUnits false. SWImportOptions unavailable. Culture options unavailable.",
           "15.1": "Unit scope/publication unavailable; keep unitName empty and includeUnits false. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes unavailable. Culture options unavailable.",
@@ -7574,7 +7586,7 @@
               "release": "{release}",
               "project": {
                 "mode": "existing",
-                "projectIdentity": "C:/Projects/Machine.ap{extension}",
+                "projectIdentity": "C:\\Projects\\Machine.ap{extension}",
                 "softwarePath": "PLC_1"
               }
             },
@@ -8092,7 +8104,7 @@
         },
         "operations": {},
         "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
-        "validation": "Offline fault injection; native acceptance NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): generation plan preview passed; apply NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
         "resultReading": [
           "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
         ]
@@ -8102,7 +8114,7 @@
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "dryRun": true,
-          "expectedProjectFile": "C:/Projects/Machine.ap{extension}"
+          "expectedProjectFile": "C:\\Projects\\Machine.ap{extension}"
         },
         "operations": {},
         "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
@@ -8898,14 +8910,16 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "CompareLibraries": {
-        "arguments": {},
+        "arguments": {
+          "rightLibraryName": "<open global library name>"
+        },
         "parameters": {
           "leftLibraryName": {
             "exampleValue": "<leftLibraryName from this operation's target or user input>",
             "requiresBinding": true
           },
           "rightLibraryName": {
-            "exampleValue": "<rightLibraryName from this operation's target or user input>",
+            "exampleValue": "<open global library name>",
             "requiresBinding": true
           },
           "includeIdentical": {
@@ -8922,7 +8936,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): library comparison read passed. Other releases: input schema checked offline; native execution NOT RUN."
       },
       "CompareLibraryObjects": {
         "arguments": {
@@ -9069,7 +9083,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "serviceTypeSuffix": "<service selected from DescribeObject>"
+          "serviceTypeSuffix": "<exact service type suffix from the Siemens API reference>"
         },
         "parameters": {
           "serviceTypeSuffix": {
@@ -9083,7 +9097,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read with an exact Siemens API service type suffix passed. Other releases: input schema checked offline; native execution NOT RUN."
       },
       "ExportProjectTexts": {
         "arguments": {
@@ -9119,13 +9133,15 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "GetLibraryType": {
-        "arguments": {},
+        "arguments": {
+          "typePath": "<exact library type path from GetLibraryOverview>"
+        },
         "parameters": {
           "libraryName": {
             "exampleValue": ""
           },
           "typePath": {
-            "exampleValue": "UDT_Status"
+            "exampleValue": "<exact library type path from GetLibraryOverview>"
           },
           "guid": {
             "exampleValue": "<guid from this operation's target or user input>",
@@ -9139,7 +9155,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): library type read passed. Other releases: input schema checked offline; native execution NOT RUN."
       },
       "GetObjectProperty": {
         "arguments": {
@@ -12505,6 +12521,7 @@
       "ManageTeamcenterDataset": {
         "arguments": {
           "action": "search",
+          "itemType": "Project",
           "itemId": "<Teamcenter item id>",
           "dryRun": true
         },
@@ -12520,7 +12537,7 @@
             "exampleValue": "T4TiaProjectDataset"
           },
           "datasetName": {
-            "exampleValue": "<datasetName from this operation's target or user input>",
+            "exampleValue": "<exact dataset name>",
             "requiresBinding": true
           },
           "itemType": {
@@ -12534,29 +12551,38 @@
             "exampleValue": "StatusText"
           },
           "localCacheOption": {
-            "exampleValue": "Overwrite"
+            "exampleValue": "DoNotOverwrite"
           }
         },
         "operations": {
           "checkout": {
             "arguments": {
               "action": "checkout",
+              "itemType": "",
               "itemId": "<Teamcenter item id>",
-              "revisionId": "<Teamcenter revision id>"
+              "revisionId": "<Teamcenter revision id>",
+              "datasetType": "T4TiaProjectDataset",
+              "datasetName": "<exact dataset name>"
             }
           },
           "checkin": {
             "arguments": {
               "action": "checkin",
+              "itemType": "",
               "itemId": "<Teamcenter item id>",
-              "revisionId": "<Teamcenter revision id>"
+              "revisionId": "<Teamcenter revision id>",
+              "datasetType": "T4TiaProjectDataset",
+              "datasetName": "<exact dataset name>"
             }
           },
           "cancelCheckout": {
             "arguments": {
               "action": "cancelCheckout",
+              "itemType": "",
               "itemId": "<Teamcenter item id>",
-              "revisionId": "<Teamcenter revision id>"
+              "revisionId": "<Teamcenter revision id>",
+              "datasetType": "T4TiaProjectDataset",
+              "datasetName": "<exact dataset name>"
             }
           },
           "search": {
@@ -12565,14 +12591,14 @@
           "download": {
             "arguments": {
               "action": "download",
+              "itemType": "Project",
               "itemId": "<Teamcenter item id>",
               "revisionId": "<Teamcenter revision id>",
-              "datasetName": "<exact dataset name>",
-              "datasetType": "T4TiaProjectDataset"
+              "localCacheOption": "DoNotOverwrite"
             }
           }
         },
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Not run on a real machine: the V21 test had no Teamcenter connection, and the old example stopped at the request rule. Checked offline against TeamcenterLogic.ValidateDatasetRequest. Native execution NOT RUN.",
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
       "ManageTeamcenterWorkflow": {
@@ -14107,12 +14133,12 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read with the exact PG/PC interface name passed. Other releases: input schema checked offline; native execution NOT RUN.",
         "inline": true
       },
       "UploadStationFromPlc": {
         "arguments": {
-          "targetIpAddress": "192.168.0.3",
+          "targetIpAddress": "192.0.2.10",
           "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
           "dryRun": true,
           "confirmUpload": false
@@ -14128,7 +14154,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): preview with the exact PG/PC interface name passed; apply NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
         "inline": true,
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
@@ -17284,7 +17310,7 @@
       "ManageUnifiedEngineeringObject": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "category": "textLists",
+          "category": "alarmClasses",
           "name": "Example_1",
           "action": "create",
           "dryRun": true
@@ -17313,8 +17339,8 @@
             }
           }
         },
-        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): alarmClasses create preview and apply passed with read-back; V19/V20 Create reviewed in official XML, native execution NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. A textLists create is refused: HmiTextListComposition has no Create.",
         "notes": [
           "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
         ]
@@ -18841,14 +18867,16 @@
         "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. Borrowed projects or borrowed local sessions are never closed. An AttachOpenProject binding to a UI-opened project is borrowed; expect refusal and keep the project open. Approval denial also leaves it open."
       },
       "CompareLibraries": {
-        "arguments": {},
+        "arguments": {
+          "rightLibraryName": "<open global library name>"
+        },
         "parameters": {
           "leftLibraryName": {
             "exampleValue": "<leftLibraryName from this operation's target or user input>",
             "requiresBinding": true
           },
           "rightLibraryName": {
-            "exampleValue": "<rightLibraryName from this operation's target or user input>",
+            "exampleValue": "<open global library name>",
             "requiresBinding": true
           },
           "includeIdentical": {
@@ -18865,7 +18893,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): library comparison read passed. Other releases: input schema checked offline; native execution NOT RUN."
       },
       "CompareLibraryObjects": {
         "arguments": {
@@ -19907,7 +19935,7 @@
         "arguments": {
           "objectKind": "Project",
           "objectPath": "",
-          "serviceTypeSuffix": "<service selected from DescribeObject>"
+          "serviceTypeSuffix": "<exact service type suffix from the Siemens API reference>"
         },
         "parameters": {
           "serviceTypeSuffix": {
@@ -19921,7 +19949,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read with an exact Siemens API service type suffix passed. Other releases: input schema checked offline; native execution NOT RUN."
       },
       "DescribeUnifiedHmiButtonEventScript": {
         "arguments": {
@@ -20134,7 +20162,7 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): PROFINET preview and apply passed with read-back. Other releases: input schema checked offline; native execution NOT RUN.",
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
       "EnsureUnifiedHmiButtonAction": {
@@ -20583,7 +20611,8 @@
             }
           }
         },
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): export preview with a .dat file on the project owner passed; apply NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
+        "note": "Omit devicePath and itemPath for the project owner; on V21 a CPU device item was refused."
       },
       "ExchangeTestSuiteCase": {
         "arguments": {
@@ -21122,7 +21151,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): apply with an existing export directory passed. Other releases: input schema checked offline; native execution NOT RUN.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -23146,14 +23175,14 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): preview and apply with sourceDirectory passed. Other releases: input schema checked offline; native execution NOT RUN.",
         "resultReading": [
           "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
           "overwrite=false (default) refuses an existing tag table of the same name before its import; the ordered batch stops at that failure; pass overwrite=true to replace it with ImportOptions.Override.",
           "folderPath must name an existing tag table group exactly; an unresolved group is refused, never redirected to the root group.",
           "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21)."
         ],
-        "note": "Preview the complete ordered batch and every canonical item/hash. Apply with dryRun=false, confirm=true, expectedPlanHash and exact expectedProjectFile from this preview. One approval covers the batch; stop on the first failure and report completed/failed/not-started items. Native acceptance NOT RUN.",
+        "note": "Preview the complete ordered batch and every canonical item/hash. Apply with dryRun=false, confirm=true, expectedPlanHash and exact expectedProjectFile from this preview. One approval covers the batch; stop on the first failure and report completed/failed/not-started items. Native acceptance NOT RUN. regexName matches the file name without extension here.",
         "releaseNotes": {
           "14sp1": "Unit scope/publication unavailable; keep unitName empty and includeUnits false. SWImportOptions unavailable. Culture options unavailable.",
           "15.1": "Unit scope/publication unavailable; keep unitName empty and includeUnits false. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes unavailable. Culture options unavailable.",
@@ -24160,11 +24189,25 @@
             "<exact device name from GetProjectTree>"
           ],
           "itemPath": [
-            "<exact device item from GetProjectTree>"
+            "<exact CPU device item from GetProjectTree>"
           ],
           "action": "create",
           "connectionName": "ExampleConnection",
           "connectionType": "S7Connection",
+          "localInterfaceItemPath": [
+            "<exact CPU device item from GetProjectTree>",
+            "<exact interface device item from GetProjectTree>"
+          ],
+          "partnerDevicePath": [
+            "<exact partner device name from GetProjectTree>"
+          ],
+          "partnerItemPath": [
+            "<exact partner CPU device item from GetProjectTree>"
+          ],
+          "partnerInterfaceItemPath": [
+            "<exact partner CPU device item from GetProjectTree>",
+            "<exact partner interface device item from GetProjectTree>"
+          ],
           "confirmDelete": false,
           "dryRun": true
         },
@@ -24177,7 +24220,8 @@
           },
           "localInterfaceItemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "<exact CPU device item from GetProjectTree>",
+              "<exact interface device item from GetProjectTree>"
             ],
             "requiresBinding": true
           },
@@ -24187,19 +24231,20 @@
           },
           "partnerDevicePath": {
             "exampleValue": [
-              "<exact device name from GetProjectTree>"
+              "<exact partner device name from GetProjectTree>"
             ],
             "requiresBinding": true
           },
           "partnerItemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "<exact partner CPU device item from GetProjectTree>"
             ],
             "requiresBinding": true
           },
           "partnerInterfaceItemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "<exact partner CPU device item from GetProjectTree>",
+              "<exact partner interface device item from GetProjectTree>"
             ],
             "requiresBinding": true
           },
@@ -24218,8 +24263,8 @@
             }
           }
         },
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "validation": "Real-machine evidence: V21 (registered on V21 only; 4.0.0-beta.4, 2026-11-05): create preview passed; apply NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Delete ignores the local and partner paths."
       },
       "ManageDcbLibraries": {
         "arguments": {
@@ -28800,6 +28845,7 @@
       "ManageTeamcenterDataset": {
         "arguments": {
           "action": "search",
+          "itemType": "Project",
           "itemId": "<Teamcenter item id>",
           "dryRun": true
         },
@@ -28815,7 +28861,7 @@
             "exampleValue": "T4TiaProjectDataset"
           },
           "datasetName": {
-            "exampleValue": "<datasetName from this operation's target or user input>",
+            "exampleValue": "<exact dataset name>",
             "requiresBinding": true
           },
           "itemType": {
@@ -28829,29 +28875,38 @@
             "exampleValue": "StatusText"
           },
           "localCacheOption": {
-            "exampleValue": "Overwrite"
+            "exampleValue": "DoNotOverwrite"
           }
         },
         "operations": {
           "checkout": {
             "arguments": {
               "action": "checkout",
+              "itemType": "",
               "itemId": "<Teamcenter item id>",
-              "revisionId": "<Teamcenter revision id>"
+              "revisionId": "<Teamcenter revision id>",
+              "datasetType": "T4TiaProjectDataset",
+              "datasetName": "<exact dataset name>"
             }
           },
           "checkin": {
             "arguments": {
               "action": "checkin",
+              "itemType": "",
               "itemId": "<Teamcenter item id>",
-              "revisionId": "<Teamcenter revision id>"
+              "revisionId": "<Teamcenter revision id>",
+              "datasetType": "T4TiaProjectDataset",
+              "datasetName": "<exact dataset name>"
             }
           },
           "cancelCheckout": {
             "arguments": {
               "action": "cancelCheckout",
+              "itemType": "",
               "itemId": "<Teamcenter item id>",
-              "revisionId": "<Teamcenter revision id>"
+              "revisionId": "<Teamcenter revision id>",
+              "datasetType": "T4TiaProjectDataset",
+              "datasetName": "<exact dataset name>"
             }
           },
           "search": {
@@ -28860,14 +28915,14 @@
           "download": {
             "arguments": {
               "action": "download",
+              "itemType": "Project",
               "itemId": "<Teamcenter item id>",
               "revisionId": "<Teamcenter revision id>",
-              "datasetName": "<exact dataset name>",
-              "datasetType": "T4TiaProjectDataset"
+              "localCacheOption": "DoNotOverwrite"
             }
           }
         },
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Not run on a real machine: the V21 test had no Teamcenter connection, and the old example stopped at the request rule. Checked offline against TeamcenterLogic.ValidateDatasetRequest. Native execution NOT RUN.",
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
       "ManageTeamcenterWorkflow": {
@@ -29536,7 +29591,7 @@
       "ManageUnifiedEngineeringObject": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "category": "textLists",
+          "category": "alarmClasses",
           "name": "Example_1",
           "action": "create",
           "dryRun": true
@@ -29565,8 +29620,8 @@
             }
           }
         },
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): alarmClasses create preview and apply passed with read-back; V19/V20 Create reviewed in official XML, native execution NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. A textLists create is refused: HmiTextListComposition has no Create."
       },
       "ManageUnifiedEvent": {
         "arguments": {
@@ -30824,7 +30879,15 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "ListIoSystems": {
-        "arguments": {},
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact CPU device item from GetProjectTree>",
+            "<exact interface device item from GetProjectTree>"
+          ]
+        },
         "parameters": {
           "subnetName": {
             "exampleValue": "PN_IE_1"
@@ -30837,7 +30900,8 @@
           },
           "itemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "<exact CPU device item from GetProjectTree>",
+              "<exact interface device item from GetProjectTree>"
             ],
             "requiresBinding": true
           },
@@ -30849,7 +30913,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read with an interface device-item scope passed; an empty scope was refused. Other releases: input schema checked offline; native execution NOT RUN.",
+        "note": "Give exactly one scope: subnetName, or devicePath with itemPath of an interface device item."
       },
       "GetLibraryOverview": {
         "arguments": {},
@@ -30874,13 +30939,15 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "GetLibraryType": {
-        "arguments": {},
+        "arguments": {
+          "typePath": "<exact library type path from GetLibraryOverview>"
+        },
         "parameters": {
           "libraryName": {
             "exampleValue": ""
           },
           "typePath": {
-            "exampleValue": "UDT_Status"
+            "exampleValue": "<exact library type path from GetLibraryOverview>"
           },
           "guid": {
             "exampleValue": "<guid from this operation's target or user input>",
@@ -30894,7 +30961,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): library type read passed. Other releases: input schema checked offline; native execution NOT RUN."
       },
       "GetMotionAxisConfiguration": {
         "arguments": {
@@ -30949,7 +31016,12 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "GetObjectIdentifier": {
-        "arguments": {},
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "kind": "device"
+        },
         "parameters": {
           "kind": {
             "exampleValue": "device"
@@ -30965,7 +31037,9 @@
             "requiresBinding": true
           },
           "devicePath": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "itemPath": {
@@ -30974,7 +31048,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): device identifier read passed. Other releases: input schema checked offline; native execution NOT RUN."
       },
       "GetOnlineDriveParameters": {
         "arguments": {
@@ -31913,7 +31987,9 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "RenderPlcBlockDocument": {
-        "arguments": {},
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
         "parameters": {
           "filePath": {
             "exampleValue": "C:\\Examples\\exports\\Main.xml"
@@ -31935,7 +32011,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read of an exported PLC block document passed. Other releases: input schema checked offline; native execution NOT RUN."
       },
       "RenderPlcVisualDiff": {
         "arguments": {
@@ -32359,7 +32435,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read with the exact PG/PC interface name passed. Other releases: input schema checked offline; native execution NOT RUN.",
         "inline": true
       },
       "ScanPlcSourceAnnotations": {
@@ -33188,7 +33264,7 @@
       },
       "UploadStationFromPlc": {
         "arguments": {
-          "targetIpAddress": "192.168.0.3",
+          "targetIpAddress": "192.0.2.10",
           "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
           "dryRun": true,
           "confirmUpload": false
@@ -33204,7 +33280,7 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): preview with the exact PG/PC interface name passed; apply NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
         "inline": true,
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
@@ -33305,7 +33381,7 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): the exportFile apply call shape ran with the old writer; the content rule changed since, NOT RUN since. Other releases: input schema checked offline; native execution NOT RUN.",
         "inline": true
       },
       "WritePlcSimAdvancedTags": {
@@ -34116,7 +34192,8 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): template instantiation preview passed; apply NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
+        "note": "templatePath must hold a {{Name}} token named in rows[].values, otherwise it is refused."
       },
       "AnalyzePlcSclSource": {
         "arguments": {
@@ -36403,7 +36480,7 @@
               "release": "{release}",
               "project": {
                 "mode": "existing",
-                "projectIdentity": "C:/Projects/Machine.ap{extension}",
+                "projectIdentity": "C:\\Projects\\Machine.ap{extension}",
                 "softwarePath": "PLC_1"
               }
             },
@@ -36921,7 +36998,7 @@
         },
         "operations": {},
         "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
-        "validation": "Offline fault injection; native acceptance NOT RUN.",
+        "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): generation plan preview passed; apply NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
         "resultReading": [
           "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
         ]
@@ -36931,7 +37008,7 @@
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "dryRun": true,
-          "expectedProjectFile": "C:/Projects/Machine.ap{extension}"
+          "expectedProjectFile": "C:\\Projects\\Machine.ap{extension}"
         },
         "operations": {},
         "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",

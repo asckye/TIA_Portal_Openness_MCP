@@ -8,7 +8,7 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class HmiTagPathCatalogTests
 {
     [Fact]
-    public void Every_release_keeps_the_engine_schema_parameter_set_and_maintained_HMI_values()
+    public void Every_release_serves_the_maintained_HMI_values()
     {
         string root = Repository.FindRoot();
         var resource = CatalogGenerator.Generate(root)[CatalogGenerator.Resource];
@@ -83,9 +83,8 @@ public sealed class HmiTagPathCatalogTests
             var row = catalog["releases"]![release]!.AsArray().Single(r => (string?)r!["currentName"] == "DeleteHmiTag")!;
             Assert.Equal("/Table", (string?)row["arguments"]?["tagTablePath"]);
         }
-        // GetToolUsage serves the engine-source rows on 20/21: they keep the frozen parameter set (the engine
-        // schema) and take every value the maintained call library has (real-machine V21 test 2026-10-31: frozen
-        // engine values were wrong examples), while the frozen fixture stays byte-equal comparison and rejection evidence.
+        // Engine-source comparison rows keep the frozen parameter set and take every maintained value.
+        // Client examples use releases instead; the frozen fixture remains comparison and rejection evidence.
         var fixture = CatalogJson.Read(root, "reference/tool-catalog/EngineSourceExamples.json");
         var frozen = fixture["DeleteHmiTag"]!["arguments"]!.AsObject();
         var calls = CatalogJson.Read(root, "reference/tool-examples/calls.json")["profiles"]!["full-engine"]!.AsObject();

@@ -144,7 +144,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
             var example = ToolExamples.Find(name, release);
             var exampleArgs = example == null ? null : JsonNode.Parse(example.ArgumentsJson)!.AsObject();
-            SchemaHintsLogic.Augment(schema, specs, exampleArgs);
+            SchemaHintsLogic.Augment(schema, specs, exampleArgs, name);
             preserveTypedSchemas(schema, protocol.InputSchema);
             InfrastructureSchema(name, schema);
             schema = InlineSchema(schema);

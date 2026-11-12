@@ -103,7 +103,7 @@ python scripts/checks/Test-NativeLifecycle.py --runner tests/FoundationHost/TiaM
 2. 按工具契约把导入、生成、编译和保存分为独立的序列步骤；导入或编译成功不代表已保存。
 3. 如实区分完整源、片段和导出模块编辑，同步更新结果解释、版本与编码约束和官方出处；不为单个 API 问题或语言另写指南。
 4. 依次运行 `generate-catalogs`、`generate-tool-usage`（生成 `src/Shared/ToolUsageData.json`，`-Check` 检查漂移），再构建并执行八版检索和功能检查。检查逐版取回每个工具和操作，核对 schema、参数来源、源文页面和哈希，并执行可离线运行的调用示例；结果写入[覆盖记录](../../manifest/tool-usage-coverage.json)，其中原生导入和编译为 NOT RUN。
-5. VM 回归后按实测修正参数，核对结果记入真机台账。
+5. VM 回归后按实测修正参数，核对结果记入真机台账，`validation` 按 `Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): <实际执行的 read、preview 或 apply 及结果>. Other releases: input schema checked offline; native execution NOT RUN.` 标明实测版本（仅注册于 V21 的工具写 `V21 (registered on V21 only; ...)`，仅预览写 `apply NOT RUN`，没有实机执行的行保留 `NOT RUN` 并说明原因，不写实机证据前缀），不包含请求 ID。
 
 官方语料只作参考文本，不编译、不执行；不分发 Siemens SDK 二进制和示例项目归档：
 

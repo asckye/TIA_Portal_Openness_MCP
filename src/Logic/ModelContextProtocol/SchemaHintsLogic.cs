@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json.Nodes;
+using TiaMcp.Logic.V4;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -28,7 +29,8 @@ namespace TiaMcpServer.ModelContextProtocol
         /// worked example) to the properties of an input schema. The schema object is modified in place; properties the
         /// SDK did not emit are never invented.
         /// </summary>
-        public static Result Augment(JsonObject schema, IReadOnlyList<PreflightLogic.ParameterSpec> specs, JsonObject? example)
+        public static Result Augment(JsonObject schema, IReadOnlyList<PreflightLogic.ParameterSpec> specs, JsonObject? example,
+            string toolName = "")
         {
             var result = new Result();
             if (!(schema["properties"] is JsonObject properties)) return result;
@@ -61,9 +63,25 @@ namespace TiaMcpServer.ModelContextProtocol
                     var node = DefaultNode(spec);
                     if (node != null) { property["default"] = node; result.Defaults++; }
                 }
-                if (property["examples"] == null && example != null && example[spec.Name] != null)
+            }
+            var aliases = CanonicalToolParameters.Aliases(toolName);
+            var parameters = specs.Select(spec => spec.Name)
+                .Concat(aliases.SelectMany(alias => new[] { alias.Legacy, alias.Canonical })).Distinct(StringComparer.Ordinal);
+            foreach (string parameter in parameters)
+            {
+                if (!(properties[parameter] is JsonObject property) || property["examples"] != null) continue;
+                var value = example?[parameter];
+                if (value == null && example != null)
+                    foreach (var alias in aliases)
+                    {
+                        string alternate = alias.Legacy == parameter ? alias.Canonical : alias.Canonical == parameter ? alias.Legacy : "";
+                        if (alternate.Length == 0 || example[alternate] == null) continue;
+                        value = example[alternate];
+                        break;
+                    }
+                if (value != null)
                 {
-                    property["examples"] = new JsonArray(example[spec.Name]!.DeepClone());
+                    property["examples"] = new JsonArray(value.DeepClone());
                     result.Examples++;
                 }
             }

@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Served tool examples use canonical parameter names and always show the preview form. Corrected scope, connection, Teamcenter, library, service and generation rows; validation names V21 as the only exercised release and distinguishes preview, apply and NOT RUN cases.
 - Failed live S7 watch connections return `NATIVE_OPERATION_FAILED` with the connection reason and an incomplete read verdict. Alarm exports retain native detail messages; a PLC without alarm text lists returns `PRECONDITION_FAILED` with condition `plc-text-lists`.
 - Offline PLC comparisons return `PRECONDITION_FAILED` with condition `plc-online` and guidance to call `ConnectOnlinePlc`.
 - Completed offline library and template analyses report findings through `data.packageComplete` and `data.templatesFound`; missing folders return `NOT_FOUND`. New libraries do not require `XRef/XRef.db`, and successful hashes carry no error field.

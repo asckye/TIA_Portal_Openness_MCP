@@ -1,14 +1,44 @@
 using System;
 using System.Linq;
+using System.IO;
+using System.Text.Json.Nodes;
 using TiaMcpServer.Siemens;
+using Xunit;
 
 namespace TiaMcp.Engine.Tests
 {
     // Phase 6 ⑥-③ (2.7.42) pure logic: Teamcenter Gateway connection / dataset / workflow requests, item and revision details,
     // custom attribute values.
-    internal static class TeamcenterTests
+    public sealed class TeamcenterTests
     {
         private static bool Fails<T>(Action a) where T : Exception { try { a(); return false; } catch (T) { return true; } }
+
+        [Fact]
+        public void Existing_request_rules_pass() => Run((passed, message) => Assert.True(passed, message));
+
+        [Theory]
+        [InlineData("plc-foundation", "checkout")]
+        [InlineData("plc-foundation", "checkin")]
+        [InlineData("plc-foundation", "cancelCheckout")]
+        [InlineData("plc-foundation", "search")]
+        [InlineData("plc-foundation", "download")]
+        [InlineData("full-engine", "checkout")]
+        [InlineData("full-engine", "checkin")]
+        [InlineData("full-engine", "cancelCheckout")]
+        [InlineData("full-engine", "search")]
+        [InlineData("full-engine", "download")]
+        public void Every_dataset_example_operation_passes_the_request_rule(string profile, string operation)
+        {
+            string root = Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+            var row = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference/tool-examples/calls.json")))!
+                ["profiles"]![profile]!["ManageTeamcenterDataset"]!;
+            var args = row["arguments"]!.DeepClone().AsObject();
+            foreach (var pair in row["operations"]![operation]!["arguments"]!.AsObject()) args[pair.Key] = pair.Value?.DeepClone();
+            string Text(string key) => (string?)args[key] ?? "";
+            var request = TeamcenterLogic.ValidateDatasetRequest(Text("action"), Text("itemId"), Text("revisionId"), Text("datasetType"),
+                Text("datasetName"), Text("itemType"), Text("tiaObjectName"), Text("itemName"), Text("localCacheOption"), (bool?)args["dryRun"] ?? true);
+            Assert.Equal(operation, request.Action);
+        }
 
         internal static void Run(Action<bool, string> check)
         {

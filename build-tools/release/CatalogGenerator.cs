@@ -194,13 +194,13 @@ internal static class CatalogGenerator
                 row["profiles"] = lite[key].Contains(name) ? new JsonArray("full", "lite", "plc-foundation") : new JsonArray("full", "plc-foundation");
                 var source = engineSchema && sourceExamples[name]?["arguments"] is JsonObject sourceArguments
                     ? sourceArguments : row["arguments"]!.AsObject();
-                row["arguments"] = CurrentArguments(name, source, calls[exampleProfile]?[name]?["arguments"] as JsonObject, sourceKeys: engineSchema);
+                row["arguments"] = CurrentArguments(name, source, calls[exampleProfile]?[name]?["arguments"] as JsonObject);
             }
             Require(Set(releases[key]!.AsArray().Select(r => Text(r!["currentName"]))).SetEquals(data.Rosters[key]), "Runtime roster differs: " + key);
             Require(releases[key]!.AsArray().Where(r => Strings(r!["profiles"]).Contains("lite")).All(r => r!["arguments"] is JsonObject), "Missing lite call arguments: " + key);
         }
-        // GetToolUsage serves the engine-source rows on 20/21, so their examples also come from the
-        // maintained call library; the typed rejection evidence below keeps the frozen engine arguments.
+        // Engine-source rows are comparison evidence, never client examples. Preserve their frozen key set
+        // and maintained values; live releases above take the complete maintained parameter set.
         var servedEngineReleases = new JsonObject();
         foreach (var (key, rows) in engineReleases)
             servedEngineReleases[key] = new JsonArray(rows!.AsArray().Select(row => { var copy = row!.DeepClone(); var name = Text(copy["currentName"]);

@@ -110,6 +110,8 @@ internal sealed class FoundationV4Tool : McpServerTool
     }
 
     public override Tool ProtocolTool => DeclaredToolMetadata.V4(tool, foundation: true);
+    internal static JsonObject RecoverySchema(string name, JsonElement input)
+        => JsonNode.Parse(CanonicalToolParameters.Schema(name, input).GetRawText())!.AsObject();
     private bool IsApprovalWrite(JsonObject args)
     {
         var properties = inner.ProtocolTool.InputSchema.GetProperty("properties");
@@ -149,7 +151,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (TiaMcp.Logic.ModelContextProtocol.RecoveryHints.Attach(body, (name, key, operation) =>
         {
             if (name != tool.Name || key != release) return null;
-            var schema = JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject();
+            var schema = RecoverySchema(name, tool.InputSchema);
             var usage = TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation", tool.Description ?? "", schema);
             if (operation.Length == 0) return usage["example"] as JsonObject;
             if (!usage["operations"]!.AsArray().Any(row => (string?)row!["operation"] == operation)) return null;

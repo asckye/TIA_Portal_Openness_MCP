@@ -12,6 +12,29 @@ public sealed class GeneratorTests
 {
     private static string Root => Repository.FindRoot();
 
+    [Fact]
+    public void Catalog_rows_take_the_maintained_parameter_set()
+    {
+        string frozenPath = Path.Combine(Root, "reference/tool-catalog/EngineSourceExamples.json");
+        byte[] before = File.ReadAllBytes(frozenPath);
+        var resource = CatalogGenerator.Generate(Root)[CatalogGenerator.Resource];
+        var catalog = JsonNode.Parse(System.Xml.Linq.XDocument.Parse(resource).Descendants("data")
+            .Single(element => (string?)element.Attribute("name") == "Catalog").Element("value")!.Value)!;
+        var calls = Read(Root, "reference/tool-examples/calls.json")["profiles"]!;
+        foreach (string release in Keys)
+        {
+            var row = catalog["releases"]![release]!.AsArray().Single(entry => (string?)entry!["currentName"] == "ListIoSystems")!;
+            var maintained = calls[(string)row["exampleSource"]!]!["ListIoSystems"]!["arguments"]!;
+            Assert.True(JsonNode.DeepEquals(maintained, row["arguments"]), release + "/ListIoSystems");
+            // Directory imports also guard against restoring the frozen alias while retaining the maintained values.
+            var import = catalog["releases"]![release]!.AsArray()
+                .Single(entry => (string?)entry!["currentName"] == "ImportPlcTagTablesFromDirectory")!;
+            Assert.True(import["arguments"]!.AsObject().ContainsKey("sourceDirectory"), release + "/ImportPlcTagTablesFromDirectory");
+            Assert.False(import["arguments"]!.AsObject().ContainsKey("dir"));
+        }
+        Assert.Equal(before, File.ReadAllBytes(frozenPath));
+    }
+
     private static JsonObject CurrentInputSchemas(string key)
     {
         return Read(Root, "manifest/contracts/v4/baseline/" + key + ".json")["tools"]!.AsArray()
