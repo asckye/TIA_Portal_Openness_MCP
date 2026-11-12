@@ -6746,14 +6746,14 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a0feba96fa729918fe37c26f0eaccb57f1a9c6ac664f552e76aa736b7a41453c",
+      "descriptionSha256": "6770f72470dbdeea3d47796265540c015504023a1e8a1fd0230c26937cdab4c5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "exportFile": {
             "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml) Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
-              "C:\\Examples\\exports\\ExportHmiScreen.xml"
+              "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiScreen.xml"
             ],
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
@@ -6775,7 +6775,7 @@
           "exportPath": {
             "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml) Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
-              "C:\\Examples\\exports\\ExportHmiScreen.xml"
+              "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiScreen.xml"
             ],
             "type": "string"
           },
@@ -7368,7 +7368,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "cf299a3d9fe031c433e7ae1281f804b861c3d98291f8730c28b3cb166dee4093",
+      "descriptionSha256": "abd97c25d489eff52156027c44966cad60db4f46e8fb503c7486059755b1df61",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7380,7 +7380,7 @@
           "exportDirectory": {
             "description": "Absolute output directory on the TIA host. Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
-              "C:\\Temp\\mcp-report"
+              "C:\\<directory under GetSessionState data.outputRoot>"
             ],
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
@@ -7403,7 +7403,7 @@
             "default": "",
             "description": "Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%. Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
-              "C:\\Temp\\mcp-report"
+              "C:\\<directory under GetSessionState data.outputRoot>"
             ],
             "type": "string"
           },
@@ -17127,14 +17127,14 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3d2cfe1cc5568df75f95435500238d65d2ee029c26b0b4501eaec7dc5b57595e",
+      "descriptionSha256": "84c22030edb7fbf8c3cba48172317cbc4704d787a67d6c8cd5a9582d40446349",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "exportFile": {
             "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: full file path on the TIA machine to write. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
-              "C:\\Temp\\blocks.json"
+              "C:\\<directory under GetSessionState data.outputRoot>\\blocks.json"
             ],
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
@@ -17149,7 +17149,7 @@
           "outputPath": {
             "description": "outputPath: full file path on the TIA machine to write. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
-              "C:\\Temp\\blocks.json"
+              "C:\\<directory under GetSessionState data.outputRoot>\\blocks.json"
             ],
             "type": "string"
           },
@@ -18365,14 +18365,14 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c56a56a9ec73d7ff1425736840bc012778c598a4e07c7b47a29eeea85012a577",
+      "descriptionSha256": "a5d588914a53e6ad7986c5c10749864c58bd102516ece631fc586d9843b6d3c6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "exportFile": {
             "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
-              "C:\\Temp\\FC_Add.scl"
+              "C:\\<directory under GetSessionState data.outputRoot>\\FC_Add.scl"
             ],
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
@@ -18382,7 +18382,7 @@
             "default": "",
             "description": "outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
             "examples": [
-              "C:\\Temp\\FC_Add.scl"
+              "C:\\<directory under GetSessionState data.outputRoot>\\FC_Add.scl"
             ],
             "type": "string"
           },

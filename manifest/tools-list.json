@@ -1,7 +1,7 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-12T13:07:37.6104935+00:00",
+  "generatedAt": "2026-11-12T14:20:55.5935756+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
@@ -3255,8 +3255,8 @@
         "overwrite",
         "exportFile"
       ],
-      "description": "[L1][Exports][FILE] Save a parked response as UTF-8 with BOM. raw=true preserves its full text; otherwise write its payload. Existing files require overwrite=true. A failed write can leave partial file content. V4 envelope; export behavior remains current. Example: {\"exportId\":\"<exportId from response>\",\"exportFile\":\"C:\\\\Temp\\\\blocks.json\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"SaveExportContent\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"exportId\":\"\\u003CexportId from response\\u003E\",\"exportFile\":\"C:\\\\Temp\\\\blocks.json\"}"
+      "description": "[L1][Exports][FILE] Save a parked response as UTF-8 with BOM. raw=true preserves its full text; otherwise write its payload. Existing files require overwrite=true. A failed write can leave partial file content. V4 envelope; export behavior remains current. Example: {\"exportId\":\"<exportId from response>\",\"exportFile\":\"C:\\\\<directory under GetSessionState data.outputRoot>\\\\blocks.json\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"SaveExportContent\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"exportId\":\"\\u003CexportId from response\\u003E\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\blocks.json\"}"
     },
     {
       "name": "SamplePlcLiveValuesS7",
@@ -3573,8 +3573,8 @@
         "outputPath",
         "exportFile"
       ],
-      "description": "[L1][PLC-Software][FILE] Write complete SCL text to a local .scl file without connecting to TIA Portal. Plain ASCII is written without a BOM for ImportPlcExternalSource then GenerateBlocksFromExternalSource. Other text uses UTF-8 with BOM to avoid Chinese mojibake; the tool importers refuse it. Import it manually in TIA: project tree → 'External source files' → 'Add new external file', then right-click the source → 'Generate blocks from source'. This is also the fallback when XML block import rejects another release's SimaticML tokens. sclContent must contain complete FUNCTION_BLOCK, FUNCTION, DATA_BLOCK or TYPE declarations. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Example: {\"sclContent\":\"FUNCTION \\\"FC_Add\\\" : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a + #b;\\nEND_FUNCTION\",\"exportFile\":\"C:\\\\Temp\\\\FC_Add.scl\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"WritePlcSclSourceFile\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"sclContent\":\"FUNCTION \\u0022FC_Add\\u0022 : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a \\u002B #b;\\nEND_FUNCTION\",\"exportFile\":\"C:\\\\Temp\\\\FC_Add.scl\"}"
+      "description": "[L1][PLC-Software][FILE] Write complete SCL text to a local .scl file without connecting to TIA Portal. Plain ASCII is written without a BOM for ImportPlcExternalSource then GenerateBlocksFromExternalSource. Other text uses UTF-8 with BOM to avoid Chinese mojibake; the tool importers refuse it. Import it manually in TIA: project tree → 'External source files' → 'Add new external file', then right-click the source → 'Generate blocks from source'. This is also the fallback when XML block import rejects another release's SimaticML tokens. sclContent must contain complete FUNCTION_BLOCK, FUNCTION, DATA_BLOCK or TYPE declarations. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Example: {\"sclContent\":\"FUNCTION \\\"FC_Add\\\" : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a + #b;\\nEND_FUNCTION\",\"exportFile\":\"C:\\\\<directory under GetSessionState data.outputRoot>\\\\FC_Add.scl\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"WritePlcSclSourceFile\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"sclContent\":\"FUNCTION \\u0022FC_Add\\u0022 : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a \\u002B #b;\\nEND_FUNCTION\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\FC_Add.scl\"}"
     },
     {
       "name": "WriteClassicHmiMinimalPackageFiles",
@@ -3591,7 +3591,7 @@
         "exportDirectory"
       ],
       "description": "[L2][HMI-Classic][FILE]Offline-only helper: build a minimal Classic/Basic HMI package and write tag-table XML, screen XML, and manifest JSON to an output directory. It does not connect to TIA Portal, import files, or modify projects. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen). Examples: GetToolUsage(toolName: \"WriteClassicHmiMinimalPackageFiles\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"exportDirectory\":\"C:\\\\Examples\\\\generated\",\"package\":{\"name\":\"Example\",\"screenDesign\":{\"screen\":{\"name\":\"Overview\",\"width\":800,\"height\":480},\"items\":[{\"type\":\"Text\",\"name\":\"StatusText\",\"left\":20,\"top\":20,\"width\":160,\"height\":40,\"text\":\"Ready\"}]},\"tagTable\":{\"name\":\"ExampleTags\",\"tags\":[{\"name\":\"Ready\",\"dataType\":\"Bool\",\"length\":\"1\"}]}}}"
+      "example": "{\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"package\":{\"name\":\"Example\",\"screenDesign\":{\"screen\":{\"name\":\"Overview\",\"width\":800,\"height\":480},\"items\":[{\"type\":\"Text\",\"name\":\"StatusText\",\"left\":20,\"top\":20,\"width\":160,\"height\":40,\"text\":\"Ready\"}]},\"tagTable\":{\"name\":\"ExampleTags\",\"tags\":[{\"name\":\"Ready\",\"dataType\":\"Bool\",\"length\":\"1\"}]}}}"
     },
     {
       "name": "ValidateUnifiedObject",
@@ -4016,7 +4016,7 @@
         "reportDirectory"
       ],
       "description": "[L2][Validation][EXECUTE]Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: \"RunOfflineReleaseValidationSuite\"), optionally operation or language.",
-      "example": "{\"workspaceRoot\":\"C:\\\\Examples\\\\work\",\"reportDirectory\":\"C:\\\\Examples\\\\reports\"}"
+      "example": "{\"workspaceRoot\":\"C:\\\\Examples\\\\work\",\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
     },
     {
       "name": "RunHmiActionScriptRecipeSafetySelfTest",
@@ -4779,7 +4779,7 @@
         "reportDirectory"
       ],
       "description": "[L2][HMI-Classic][EXECUTE]Offline-only helper: run the Classic/Basic HMI temporary-import preflight. It checks TIA V21 environment, Openness group, package files, PLC-HMI sync, and emits an import/readback plan without connecting to TIA Portal or creating projects. Examples: GetToolUsage(toolName: \"RunClassicHmiTemporaryImportPreflight\"), optionally operation or language.",
-      "example": "{\"workspaceRoot\":\"C:\\\\Examples\\\\work\",\"reportDirectory\":\"C:\\\\Examples\\\\reports\"}"
+      "example": "{\"workspaceRoot\":\"C:\\\\Examples\\\\work\",\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
     },
     {
       "name": "RunClassicHmiOfflineValidationSuite",
@@ -4794,7 +4794,7 @@
         "reportDirectory"
       ],
       "description": "[L2][HMI-Classic][EXECUTE]Offline-only helper: run the Classic/Basic HMI validation suite covering PLC symbol extraction, HMI package generation, HMI tag references, and PLC-HMI sync positive/negative gates. It writes reports only to the requested report directory. Examples: GetToolUsage(toolName: \"RunClassicHmiOfflineValidationSuite\"), optionally operation or language.",
-      "example": "{\"reportDirectory\":\"C:\\\\Examples\\\\reports\"}"
+      "example": "{\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
     },
     {
       "name": "RunCapabilitySelfTest",
@@ -4913,7 +4913,7 @@
         "exportFile"
       ],
       "description": "[L2][Validation][FILE] Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download. Examples: GetToolUsage(toolName: \"RenderPlcVisualDiff\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"leftFilePath\":\"C:\\\\Examples\\\\before\\\\Main.xml\",\"rightFilePath\":\"C:\\\\Examples\\\\after\\\\Main.xml\",\"exportFile\":\"C:\\\\Examples\\\\generated\\\\result.xml\"}"
+      "example": "{\"leftFilePath\":\"C:\\\\Examples\\\\before\\\\Main.xml\",\"rightFilePath\":\"C:\\\\Examples\\\\after\\\\Main.xml\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\result.xml\"}"
     },
     {
       "name": "RenderPlcProgramAtlas",
@@ -4930,7 +4930,7 @@
         "exportFile"
       ],
       "description": "[L2][PLC-Software][FILE] Render a block XML file or recursive export directory as a self-contained static HTML atlas with call links. Called-by counts include only atlas blocks. Offline local file output; never overwrites, no Siemens calls. Examples: GetToolUsage(toolName: \"RenderPlcProgramAtlas\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"inputPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"exportFile\":\"C:\\\\TIA_MCP\\\\exports\\\\Atlas.html\"}"
+      "example": "{\"inputPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\Atlas.html\"}"
     },
     {
       "name": "RenderPlcBlockDocument",
@@ -4968,7 +4968,7 @@
         "exportFile"
       ],
       "description": "[L2][PLC-Software][FILE] Render one existing SimaticML block export as self-contained static HTML. Offline local files only; writes a new absolute .html path, never overwrites. No Siemens calls. Examples: GetToolUsage(toolName: \"RenderPlcBlock\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"inputPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"exportFile\":\"C:\\\\TIA_MCP\\\\exports\\\\Block.html\"}"
+      "example": "{\"inputPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\Block.html\"}"
     },
     {
       "name": "ReleaseUnifiedReadCursor",
@@ -5293,7 +5293,7 @@
         "mappingFilePath"
       ],
       "description": "[L2][Validation][EXECUTE]Offline-only helper: verify Unified HMI template RequiredTags against real PLC tag/DB-member XML symbols before any HMI binding. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: \"RunHmiTemplatePlcSyncPrecheckSuite\"), optionally operation or language.",
-      "example": "{\"templateDirectory\":\"C:\\\\Examples\\\\templates\",\"plcXmlPath\":\"C:\\\\Examples\\\\snapshot\",\"reportDirectory\":\"C:\\\\Examples\\\\reports\"}"
+      "example": "{\"templateDirectory\":\"C:\\\\Examples\\\\templates\",\"plcXmlPath\":\"C:\\\\Examples\\\\snapshot\",\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
     },
     {
       "name": "ManageSinumerikArchive",
@@ -5994,7 +5994,7 @@
         "exportFile"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export PLC alarm instance texts to an XLSX file. Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText). Options control what additional columns are included in the export. Typical use: export → fill in alarm descriptions → ImportPlcAlarmInstanceTexts (PlcAlarmTextProvider.ImportInstanceTextsFromXlsx). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmInstanceTexts\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmInstanceTexts.xlsx\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportAlarmInstanceTexts.xlsx\"}"
     },
     {
       "name": "ExportAlarmClasses",
@@ -6011,7 +6011,7 @@
         "exportFile"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export PLC alarm classes to a file. Alarm classes define severity, acknowledgment behavior, and display colors for alarms. The exported file can be edited and re-imported to update alarm class configurations. Use before bulk alarm class updates to create a backup. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmClasses\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmClasses.dat\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportAlarmClasses.dat\"}"
     },
     {
       "name": "ExchangeUnifiedTags",
@@ -6746,7 +6746,7 @@
         "exportFile"
       ],
       "description": "[L2][Hardware][OFFLINE] Build an AutomationML (CAEX 2.15, *.aml) hardware description for ImportDeviceAml from a JSON spec — the generation half of a TIA Selection Tool / Aml.Engine workflow without extra dependencies. spec: {\"projectName\":\"P\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[{\"name\":\"Rack_0\",\"role\":\"Rack\",\"typeIdentifier\":\"OrderNumber:6ES7 590-1AE80-0AA0\",\"positionNumber\":0,\"deviceItems\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"OrderNumber:6ES7 516-3AN02-0AB0/V2.9\",\"positionNumber\":1,\"deviceItems\":[{\"name\":\"PROFINET interface_1\",\"role\":\"CommunicationInterface\",\"builtIn\":true,\"nodes\":[{\"name\":\"E1\",\"networkAddress\":\"192.168.0.1\",\"subnetMask\":\"255.255.255.0\",\"subnetName\":\"PN/IE_1\"}]}]},{\"name\":\"DI 32x24VDC HF_1\",\"typeIdentifier\":\"OrderNumber:6ES7 521-1BL00-0AB0/V2.0\",\"positionNumber\":2}]}]}],\"subnets\":[{\"name\":\"PN/IE_1\",\"type\":\"Ethernet\"}]}. Roles: Rack | DeviceItem | CommunicationInterface | CommunicationPort; TypeIdentifier uses the TIA catalog form OrderNumber:<MLFB>[/Vx.y] or System:Device.<family>. outputPath must be a NEW absolute .aml file. STRONGLY RECOMMENDED: referenceAmlPath = a file that ExportDeviceAml wrote on the same TIA version — its header, role/interface class libraries are copied verbatim and only the instance hierarchy is generated; without it a built-in skeleton is used and Meta.importVerified=false is returned. Verify with ImportDeviceAml (dry run first). Nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"BuildDeviceAmlDocument\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"spec\":{\"projectName\":\"Example\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[]}]},\"exportFile\":\"C:\\\\Examples\\\\generated\\\\Example.aml\"}"
+      "example": "{\"spec\":{\"projectName\":\"Example\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[]}]}}"
     },
     {
       "name": "BuildClassicHmiTagTable",
@@ -7680,7 +7680,7 @@
         "exportDirectory"
       ],
       "description": "[L2][Reports][FILE]Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. Examples: GetToolUsage(toolName: \"BuildReleaseHandoffArtifacts\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"offlineReleaseSuiteJsonPath\":\"C:\\\\Examples\\\\reports\\\\offline-release-suite.json\",\"exportDirectory\":\"C:\\\\Examples\\\\generated\"}"
+      "example": "{\"offlineReleaseSuiteJsonPath\":\"C:\\\\Examples\\\\reports\\\\offline-release-suite.json\",\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
     },
     {
       "name": "ExportAlarmTextLists",
@@ -7697,7 +7697,7 @@
         "exportFile"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export all PLC alarm text lists to an XLSX (Excel) file. Text lists contain the text strings shown for each alarm condition. Supports multi-language projects — all configured languages are exported. Typical use: export → translate in Excel → ImportAlarmTextLists. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmTextLists\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmTextLists.xlsx\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportAlarmTextLists.xlsx\"}"
     },
     {
       "name": "ExportDeviceAml",
@@ -7715,7 +7715,7 @@
         "exportDirectory"
       ],
       "description": "[L2][Hardware][FILE] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be an existing folder (file named <device>.aml) or a full .aml path in an existing directory; existing target files are refused. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry behavior remains pending V4 acceptance. Examples: GetToolUsage(toolName: \"ExportDeviceAml\"), optionally operation or language. exportPath and exportFile and exportDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"devicePath\":[\"PLC_1\"],\"exportFile\":\"C:\\\\Examples\\\\exports\\\\Device.aml\"}"
+      "example": "{\"devicePath\":[\"PLC_1\"],\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\Device.aml\"}"
     },
     {
       "name": "ExportHmiConnection",
@@ -7734,7 +7734,7 @@
         "exportFile"
       ],
       "description": "[L2][HMI][FILE]Export one HMI connection to a file (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiConnection\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"connectionName\":\"PLC_Connection\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportHmiConnection.xml\",\"exportOptions\":\"WithDefaults\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"connectionName\":\"PLC_Connection\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiConnection.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportHmiProgram",
@@ -7754,7 +7754,7 @@
         "exportDirectory"
       ],
       "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language. exportDir and exportDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"exportOptions\":\"WithDefaults\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "GetToolUsage",
@@ -9027,7 +9027,7 @@
         "sourceDirectory"
       ],
       "description": "[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportPlcBlocksDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"GeneratePlcDocumentation\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives. directory and sourceDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"sourceDirectory\":\"C:\\\\Examples\\\\exports\",\"exportFile\":\"C:\\\\Examples\\\\generated\\\\documentation.md\"}"
+      "example": "{\"sourceDirectory\":\"C:\\\\Examples\\\\exports\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\documentation.md\"}"
     },
     {
       "name": "GenerateOpcUaModelledInterface",
@@ -9111,8 +9111,8 @@
         "title",
         "exportDirectory"
       ],
-      "description": "[L0][Reports][FILE]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to TIA or write to the project; it writes Markdown/JSON report files to outputDirectory. Example: {\"exportDirectory\":\"C:\\\\Temp\\\\mcp-report\",\"includeProjectTree\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateAcceptanceReport\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"exportDirectory\":\"C:\\\\Temp\\\\mcp-report\",\"includeProjectTree\":true}"
+      "description": "[L0][Reports][FILE]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to TIA or write to the project; it writes Markdown/JSON report files to outputDirectory. Example: {\"exportDirectory\":\"C:\\\\<directory under GetSessionState data.outputRoot>\",\"includeProjectTree\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateAcceptanceReport\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"includeProjectTree\":true}"
     },
     {
       "name": "FindTools",
@@ -9499,7 +9499,7 @@
         "exportFile"
       ],
       "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][FILE] Export an OPC UA server interface or reference namespace to an XML file. The exported XML can be inspected, modified, and re-imported. interfaceType: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportOpcUaInterface\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportOpcUaInterface.xml\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportOpcUaInterface.xml\"}"
     },
     {
       "name": "ExportHmiTagTable",
@@ -9518,7 +9518,7 @@
         "exportFile"
       ],
       "description": "[L2][HMI][FILE]Export one HMI tag table to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiTagTable\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportHmiTagTable.xml\",\"exportOptions\":\"WithDefaults\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiTagTable.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportHmiScreen",
@@ -9536,8 +9536,8 @@
         "exportOptions",
         "exportFile"
       ],
-      "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"}"
+      "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\<directory under GetSessionState data.outputRoot>\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportProjectTexts",
