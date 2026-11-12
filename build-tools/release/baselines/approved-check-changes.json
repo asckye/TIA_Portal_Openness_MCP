@@ -613,6 +613,18 @@
           "identifier": "ExtensionFamilyReplyTests/Plc_B5_failures_after_a_possible_change_keep_the_unknown_outcome( string code , bool writes ):2675eec12b168bf491e8179b0f97b67f7749c830eca28a598978d5450df6013b"
         }
       ]
+    },
+    {
+      "task": "VMFIX-9B",
+      "maintainerDate": "2026-11-12",
+      "reason": "Maintainer approved on 2026-11-11: the stale-plan file changed substring check becomes an exact Assert.Equal of the new approved message",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/InputContentsAreBoundAcrossPreviewAndApply( string release ):945e889efd17de8d64b3fc1e6ab91e70191629d5843b2bed362d4575efe0d02f:1"
+        }
+      ]
     }
   ]
 }
