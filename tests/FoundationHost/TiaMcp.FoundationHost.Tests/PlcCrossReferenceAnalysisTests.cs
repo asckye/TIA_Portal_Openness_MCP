@@ -267,7 +267,7 @@ public sealed class PlcCrossReferenceAnalysisTests
             if (successful > 0) Assert.Equal(successful, (int)result["analysis"]!["indexedBlocks"]!);
             var envelope = PlcCrossReferenceAnalysis.Result("21", "partial-query", result);
             Assert.False(envelope.Ok);
-            Assert.Equal(successful == 0 ? TiaMcp.Logic.V4.Outcome.Failed : TiaMcp.Logic.V4.Outcome.Partial, envelope.Meta.Outcome);
+            Assert.Equal(successful == 0 ? TiaMcp.Logic.V4.Outcome.ReadFailed : TiaMcp.Logic.V4.Outcome.Partial, envelope.Meta.Outcome);
             Assert.Equal(successful == 0 ? TiaMcp.Logic.V4.ErrorCode.IoFailed : TiaMcp.Logic.V4.ErrorCode.PartialFailure, envelope.Error!.Code);
             Assert.True(envelope.Meta.RequiresSessionReset);
         }
@@ -311,7 +311,7 @@ public sealed class PlcCrossReferenceAnalysisTests
             Assert.Contains("Not queried or partial never means zero references", (string)result["scope"]!);
             var envelope = PlcCrossReferenceAnalysis.Result("21", "unindexed-query", result);
             Assert.False(envelope.Ok);
-            Assert.Equal(TiaMcp.Logic.V4.Outcome.Failed, envelope.Meta.Outcome);
+            Assert.Equal(TiaMcp.Logic.V4.Outcome.ReadFailed, envelope.Meta.Outcome);
         }
         finally { Directory.Delete(directory, true); }
     }

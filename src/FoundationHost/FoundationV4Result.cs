@@ -213,9 +213,10 @@ internal static class FoundationV4Result
         bool reset = Flag(data, "requiresSessionReset") == true;
         if (definition.ResponseMember == "BatchImport") return ImportCandidate(PlcBatchImportResultMapping.Result(data, release, name, id, preview));
         string? status = Text(data, "status");
-        if (raw == null || mutation && Flag(data, "executed") == null && definition.ResponseMember is not ("Connection" or "Disconnect"))
+        if (raw == null || mutation && (Flag(data, "executed") ?? Flag(data, "attempted")) == null
+            && definition.ResponseMember is not ("Connection" or "Disconnect"))
             return Failure(release, name, id, true, mutation, raw);
-        Outcome outcome = HostBehavior.OperationOutcome(status != "failed", status == "outcome-unknown", false, mutation);
+        Outcome outcome = HostBehavior.OperationOutcome(status != "failed", status == "outcome-unknown" || mutation && status == "unknown", false, mutation);
         Error? error = null;
         if (definition.ResponseMember == "BatchExport")
         {
@@ -228,7 +229,7 @@ internal static class FoundationV4Result
             {
                 string? state = Text(item, "status");
                 var childOutcome = state is "not-attempted" or "inconsistent" ? Outcome.RejectedBeforeOperation
-                    : state == "failed" && (Text(item, "failure") == "native-outcome-uncertain" || definition.ResponseMember == "BatchExport") ? Outcome.Unknown
+                    : state == "failed" && Text(item, "failure") == "native-outcome-uncertain" ? Outcome.Unknown
                     : state is "failed" or "inconsistent" ? (preview || Flag(item, "attempted") == false ? Outcome.RejectedBeforeOperation : Outcome.Failed)
                         : Outcome.Succeeded;
                 if (childOutcome == Outcome.Succeeded) succeeded++;

@@ -113,8 +113,18 @@ namespace TiaMcp.Logic.V4
             outcome = Outcome.Unknown;
             error = null;
             bool cleanup = evidence["cleanupRequired"] is JsonArray tasks && tasks.Count > 0;
-            if (!writes || !evidence.ContainsKey("rollbackCompleted") && !cleanup) return false;
+            if (!writes) return false;
             bool Flag(string name) => evidence[name] is JsonValue flag && flag.TryGetValue<bool>(out var value) && value;
+            if ((string?)evidence["status"] == "DocumentReadbackMismatch" && Flag("importReturned")
+                && !Flag("writeOutcomeUnknown") && !Flag("connectionUnavailable") && !Flag("unrestoredWrite"))
+            {
+                outcome = Outcome.Failed;
+                error = new Error("The import returned, but the re-exported document differs from the plan. "
+                    + "Compare the planned and after documents; the backup is retained.",
+                    new NativeOperationFailedDetails(null, null, Evidence(evidence, tool)));
+                return true;
+            }
+            if (!evidence.ContainsKey("rollbackCompleted") && !cleanup) return false;
             string result = WriteRollbackPolicy.Outcome(Flag("rollbackCompleted"), Flag("connectionUnavailable") || Flag("requiresExplicitRebind"),
                 Flag("writeOutcomeUnknown"), Flag("unrestoredWrite"), Flag("rollbackRefused"), Flag("rollbackReachable"));
             if (result == "restored")

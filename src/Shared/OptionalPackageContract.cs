@@ -52,7 +52,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var evidence = new JsonObject();
                 RecordFailure(evidence, ex);
-                return MapOutcome(tool, new ResponseMessage { Meta = evidence }, writes, offset, limit, WorkerOutcomeLost(ex));
+                return MapOutcome(tool, new ResponseMessage { Meta = evidence }, writes, offset, limit, writes && WorkerOutcomeLost(ex));
             }
         }
 
@@ -83,7 +83,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (verificationFailed) success = false;
             bool notStarted = Flag(data, "operationNotStarted") == true;
             bool unchangedFailure = HostBehavior.UnchangedNativeFailure(data, success);
-            // A lost worker acknowledgement is unknown for reads too, as in HostFailurePolicy.
+            // A lost worker acknowledgement leaves writes unknown; reads report a read failure.
             bool unknown = outcomeLost || rejection == null && writes && !notStarted && (stateRequired && !stateKnown
                 || reset && issued || success != true && !nativeKnown && !verificationFailed && !unchangedFailure);
             int imported = (data["imported"] as JsonArray)?.Count ?? 0;

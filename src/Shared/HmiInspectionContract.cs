@@ -40,7 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "NativeCrashRiskBlocked" || status == "ACCESS_DENIED" ? new AccessDeniedDetails("reflection", null)
                 : status == "PRECONDITION_FAILED" ? new PreconditionFailedDetails("HMI/reflection admission", null) : null;
             return details == null ? null
-                : new Error(status == "NotSupportedOnVersion" && message != null ? message
+                : new Error((status == "NotSupportedOnVersion" || status == "PRECONDITION_FAILED") && message != null ? message
                     : "The request could not be admitted; inspect the retained evidence.", details);
         }
 
@@ -80,7 +80,10 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (!issued && (error = Rejection(status)) != null) outcome = Outcome.RejectedBeforeOperation;
             else if (success == true) outcome = Outcome.Succeeded;
             else if (writes && Flag(evidence, "mayHaveChanged") == false)
-            { outcome = Outcome.RejectedBeforeOperation; error = Rejection("PRECONDITION_FAILED"); }
+            {
+                outcome = Outcome.RejectedBeforeOperation; error =
+                    Rejection("PRECONDITION_FAILED", HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]));
+            }
             else { outcome = writes ? Outcome.Unknown : Outcome.ReadFailed; error = Failure(writes); }
 
             bool incomplete = Incomplete(evidence);

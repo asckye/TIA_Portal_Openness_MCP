@@ -20,6 +20,8 @@ namespace TiaMcp.Logic.V4
             string state = (data["state"] ?? evidence?["effectiveState"] ?? evidence?["rootState"])?.ToString() ?? "";
             var messages = new List<CompileErrorMessage>();
             var nodes = (data["diagnosticMessages"] ?? evidence?["nodes"] ?? data["nodes"]) as JsonArray;
+            var declaredTotals = new HashSet<string>((evidence?["declaredTotals"] as JsonArray ?? new JsonArray()).OfType<JsonObject>()
+                .Where(n => n["treePath"] != null).Select(n => n["treePath"]!.ToString()), StringComparer.Ordinal);
             IEnumerable<CompileErrorMessage> Flatten(JsonArray tree, string parentPath = "")
             {
                 var objects = tree.OfType<JsonObject>().ToArray();
@@ -38,7 +40,8 @@ namespace TiaMcp.Logic.V4
                     string path = PathOf(node);
                     if ((node["messages"] ?? node["Messages"]) is JsonArray children && children.Count > 0)
                         foreach (var child in Flatten(children, path)) yield return child;
-                    else if (!parents.Contains(node["treePath"]?.ToString() + "/messages"))
+                    else if (!parents.Contains(node["treePath"]?.ToString() + "/messages")
+                        && !declaredTotals.Contains(node["treePath"]?.ToString() ?? ""))
                     {
                         string severity = (node["state"] ?? node["State"])?.ToString() ?? "";
                         string description = (node["description"] ?? node["Description"])?.ToString() ?? "";

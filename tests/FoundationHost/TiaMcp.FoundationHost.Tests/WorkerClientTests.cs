@@ -150,10 +150,10 @@ public sealed class WorkerDispatchTests
         var lost = new IOException("Worker exited; native outcome is unknown.");
         lost.Data["foundationRequestSent"] = true; lost.Data["workerOutcomeUnknown"] = true;
         var body = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw lost).StructuredContent!;
-        Xunit.Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
-        Xunit.Assert.Equal("unknown", (string?)body["meta"]?["execution"]);
-        Xunit.Assert.True((bool?)body["meta"]?["requiresSessionReset"]);
-        Xunit.Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Xunit.Assert.Equal(writes ? "unknown" : "read-failed", (string?)body["meta"]?["outcome"]);
+        Xunit.Assert.Equal(writes ? "unknown" : "read-only", (string?)body["meta"]?["execution"]);
+        Xunit.Assert.Equal(writes, (bool?)body["meta"]?["requiresSessionReset"]);
+        Xunit.Assert.Equal(writes ? "OUTCOME_UNKNOWN" : "NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
         Xunit.Assert.Null(body["data"]?["operationNotStarted"]);
         // The same failure before the request was sent stays a pre-operation rejection.
         var unsent = new IOException("Worker exited before the request was sent.");

@@ -191,7 +191,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 ? channel?.Poisoned == true || process?.HasExited == true || faultEvidence != null
                     || ReleaseCatalogData.Releases[releaseKey].StatusOutcomeIsFault && outcome.Poisoned
                 : outcome.Poisoned;
-            if (faulted && faultEvidence == null) faultEvidence = WorkerSupervisorReplies.Fault(channel?.LastFault ?? new IOException("Worker exited."),
+            if (faulted && faultEvidence == null && activeRequestId == null) faultEvidence = WorkerSupervisorReplies
+                .Fault(channel?.LastFault ?? new IOException("Worker exited."),
                 "idle", false, channel?.BindingEpoch, channel?.LastRequestId, process?.Id);
             JsonNode? identity = SharedSession ? sharedStatus?["binding"] is { } binding
                 ? new JsonObject { ["identity"] = binding.DeepClone() } : null : HostSnapshot()["binding"];
@@ -208,6 +209,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 JsonSerializer.SerializeToNode(timeouts.Budgets.ToDictionary(p => p.Key, p => p.Value.TotalSeconds)), Poisoned,
                 faultEvidence, observedReadiness, SharedSession ? identity : attachedProcessId.HasValue ? identity : null, previousGenerations));
             if (stopping) snapshot["state"] = "Stopping";
+            else if (DrainingRead && !faulted) snapshot["state"] = "Draining";
             return snapshot;
         }
     }

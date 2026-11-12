@@ -29,3 +29,9 @@ Openness 调用无法中途安全停止，也无法从异常推断写入是否�
 - 负面与取舍：worker 通道超时（含只读调用）一律按结果未知处理（API-26，有意偏差）；客户端自己的超时可能早于 30 分钟预算（MCP-06，4.0 前加进度心跳）。
 - 后续工作：维护者于 2026-10-11 决定的 P8-64 已实现：V14 SP1–V19 的 PLC worker 共用按类超时策略，见 [设计规范索引](../design.md)。
 - 验证方式：WorkerChannel 测试与 worker 故障注入夹具（`TiaMcp.EngineWorker.FaultFixture`）。
+
+## 2026-11-11 修订
+
+维护者批准 VMFIX-7 的 D1。八版宿主按调用性质和已知证据分类。只读调用丢失 worker 应答时返回 `read-failed`、`read-only` 和 `NATIVE_OPERATION_FAILED`。只读调用超过 worker 预算时返回 `read-failed`、`read-only` 和 `TIMEOUT`，等待排空后恢复使用。已派发的原生写入缺少确定结果的证据时返回 `unknown` 和 `OUTCOME_UNKNOWN`。
+
+此修订替代上文 API-26 对只读调用的结果分类。worker 代次故障后的显式恢复仍按[设计规范第 4.11 节](../design.md#411-未知结果会话锁与恢复)执行。失败请求从不重放。

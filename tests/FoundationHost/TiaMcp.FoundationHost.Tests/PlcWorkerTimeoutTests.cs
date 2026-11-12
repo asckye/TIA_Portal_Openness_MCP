@@ -627,6 +627,7 @@ public sealed class PlcWorkerRobustnessTests
             Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
             Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
             Assert.True(scope.Worker.DrainingRead);
+            Assert.Equal("Draining", (string?)scope.Worker.SupervisorSnapshot(new JsonObject())["state"]);
             Assert.False(scope.Worker.Poisoned);
             var refused = await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() =>
                 scope.Worker.Call("ReadState", new(), CancellationToken.None));
@@ -635,6 +636,7 @@ public sealed class PlcWorkerRobustnessTests
             var channel = (ChannelClient)typeof(Foundation.WorkerClient).GetField("channel",
                 BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scope.Worker)!;
             Assert.True(await channel.WaitForDrain(TimeSpan.FromSeconds(5)));
+            Assert.NotEqual("Draining", (string?)scope.Worker.SupervisorSnapshot(new JsonObject())["state"]);
             await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         }
         finally

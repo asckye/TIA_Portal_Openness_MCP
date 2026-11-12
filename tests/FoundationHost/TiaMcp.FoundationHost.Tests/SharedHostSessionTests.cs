@@ -207,9 +207,18 @@ public sealed class SharedHostSessionTests
         ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> Request() => new(
             System.Reflection.DispatchProxy.Create<ModelContextProtocol.Server.IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
                 Params = new() { Name = "GetSessionState", Arguments = new Dictionary<string, System.Text.Json.JsonElement>() } };
+        var writeDefinition = TiaMcp.FoundationHost.FoundationTools.Definitions.Single(d => d.Name == "SaveProject")
+            with { Operation = "FixtureUnknown" };
+        var writeTool = new TiaMcp.FoundationHost.FoundationV4Tool(new TiaMcp.FoundationHost.FoundationTool(writeDefinition, worker),
+            release, () => new(false, 1), sharedSession: true);
+        var writeRequest = Request();
+        writeRequest.Params = new() { Name = "SaveProject", Arguments = new Dictionary<string, System.Text.Json.JsonElement> {
+            ["dryRun"] = System.Text.Json.JsonSerializer.SerializeToElement(false),
+            ["confirm"] = System.Text.Json.JsonSerializer.SerializeToElement(true),
+            ["expectedProjectFile"] = System.Text.Json.JsonSerializer.SerializeToElement("C:/fixture.ap" + release) } };
         try
         {
-            var unknown = (await Tool("FixtureUnknown").InvokeAsync(Request())).StructuredContent!;
+            var unknown = (await writeTool.InvokeAsync(writeRequest)).StructuredContent!;
             Assert.Equal("OUTCOME_UNKNOWN", (string?)unknown["error"]?["code"]);
             Assert.True((bool?)unknown["meta"]?["requiresSessionReset"]);
             Assert.True(pipeline.SessionLocked);

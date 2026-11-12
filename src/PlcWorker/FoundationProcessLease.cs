@@ -7,7 +7,7 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcp.PlcWorker
 {
-    // Registered only on V20/V21. The fault retains native handles solely for an
+    // Registered on all eight releases. The fault retains native handles solely for an
     // acknowledged owner-thread Disconnect; exit after uncertainty abandons them.
     internal sealed class WorkerSessionRecovery
     {

@@ -64,7 +64,7 @@ internal static class PlcCrossReferenceAnalysis
         int indexed = report["analysis"]?["rows"]?.AsArray().Count ?? 0;
         bool incomplete = (bool?)report["exportComplete"] != true || report["analysisFailure"] != null || indexingFailures > 0;
         bool partial = incomplete && indexed > 0 && report["analysisFailure"] == null;
-        var outcome = partial ? Outcome.Partial : incomplete ? Outcome.Failed : Outcome.Succeeded;
+        var outcome = partial ? Outcome.Partial : incomplete ? Outcome.ReadFailed : Outcome.Succeeded;
         var items = report["exports"]!.AsArray();
         int failed = items.Count(n => (string?)n?["Status"] == "failed");
         var error = partial ? new Error("Export or indexing did not complete; inspect the retained scope and item evidence.",
@@ -77,7 +77,7 @@ internal static class PlcCrossReferenceAnalysis
             new Warning(WarningCode.UnverifiedBehavior, "Native XML export acceptance is NOT RUN.", details),
             new Warning(WarningCode.IncompleteData, (string)report["scope"]!, details) };
         return Envelope.Create(report, error, new Meta(DateTimeOffset.UtcNow, release, "AnalyzePlcCrossReferences", id,
-            outcome, partial ? Execution.Partial : Execution.Completed,
+            outcome, partial ? Execution.Partial : incomplete ? Execution.ReadOnly : Execution.Completed,
             (bool?)report["requiresSessionReset"] == true, BehaviorPolicy.Current, Completeness.Partial, null, warnings));
     }
 

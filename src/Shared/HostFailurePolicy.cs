@@ -65,7 +65,7 @@ namespace TiaOpenness.Shared
         {
             error = Unwrap(error);
             if (PriorMutation(error)) return HostFailureKind.Unknown;
-            if (dispatched && WorkerOutcomeUnknown(error)) return HostFailureKind.Unknown;
+            if (dispatched && WorkerOutcomeUnknown(error)) return readOnly ? HostFailureKind.ReadFailed : HostFailureKind.Unknown;
             if (Precondition(error) is AdapterPreconditionException precondition)
                 return precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition;
             if (reportedCode == -32602 && (!dispatched || readOnly || reportedOutcome == "rejected-before-operation")) return HostFailureKind.Argument;

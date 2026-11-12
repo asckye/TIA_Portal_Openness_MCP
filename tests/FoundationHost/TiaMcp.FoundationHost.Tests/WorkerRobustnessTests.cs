@@ -185,13 +185,33 @@ public sealed class WorkerRobustnessTests
     }
     public static IEnumerable<object[]> Faults()
     { foreach (string release in new[] { "20", "21" }) foreach (bool shared in new[] { false, true }) foreach (string mode in new[] { "hang", "crash", "broken-pipe", "malformed", "truncated", "epoch", "tia-lost" }) yield return new object[] { release, shared, mode }; }
+    [Fact]
+    public async Task Fault_seen_while_the_call_unwinds_names_the_running_operation()
+    {
+        using var scope = new Scope("crash");
+        var worker = (Foundation.WorkerClient)scope.Worker.Client;
+        var previous = Journal.BindingSnapshot;
+        try
+        {
+            Journal.BindingSnapshot = () => worker.SupervisorSnapshot(new JsonObject());
+            using var request = Foundation.FoundationWorkerRequest.Use("fixture-id", "FixtureTool");
+            await worker.Call("FaultFixtureArm", new() { ["method"] = "adapter.SaveProject" }, CancellationToken.None);
+            await Assert.ThrowsAnyAsync<Exception>(() => worker.Call("SaveProject", new(), CancellationToken.None));
+            Assert.Contains(scope.Rows, row => (string?)row["phase"] == "THREW");
+            var fault = worker.SupervisorSnapshot(new JsonObject())["fault"]!;
+            Assert.Equal("SaveProject", (string?)fault["operation"]);
+            Assert.True((bool?)fault["dispatched"]);
+        }
+        finally { Journal.BindingSnapshot = previous; }
+    }
+
     [Theory, MemberData(nameof(Faults))]
     public async Task Faults_lock_both_pipelines_and_require_explicit_restart(string release, bool shared, string mode)
     {
         using var scope = new Scope(mode, release);
         var result = await scope.Call(shared);
         bool draining = mode == "hang";
-        Assert.Equal(draining ? "read-failed" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.Equal(!draining, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (draining) Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());

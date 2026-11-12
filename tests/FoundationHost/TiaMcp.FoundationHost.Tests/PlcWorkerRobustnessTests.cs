@@ -120,7 +120,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
         var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
         var result = await tool.InvokeAsync(request);
-        Assert.Equal(mode == "hang" ? "read-failed" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.Equal(mode != "hang", (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (mode == "hang") Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
@@ -144,7 +144,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
         var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
         var result = await tool.InvokeAsync(request);
-        Assert.Equal(mode == "hang" ? "read-failed" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.Equal(mode != "hang", (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (mode == "hang") Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());

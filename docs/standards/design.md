@@ -566,11 +566,11 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 
 ### 4.11 未知结果、会话锁与恢复
 
-- 产生 `unknown` 的情形：写入或文件操作发出后抛出异常；原生结果状态为 `PartialSuccess`、`None`、不在预期内，或失败且 `mayHaveChanged`；写后核对失败；worker 退出、挂起、帧格式错误或 TIA 进程丢失（整个代次故障，包括只读调用，API-26）；批次子项已发出但结果读不到。
+- 写入或文件操作发出后抛出异常、原生结果状态为 `PartialSuccess`、`None`、不在预期内或失败且 `mayHaveChanged`、写后核对无法完成、worker 退出、挂起、帧格式错误或 TIA 进程丢失、批次子项已发出但结果读不到时，依据保留的证据判定结果（API-26）。有证据的结果按已知结果分类。回滚或恢复已核实、写后核对已完成但不一致（`DocumentReadbackMismatch`）、原生调用返回了判定（如编译错误）都报 `failed`。尚未发出原生写入报 `rejected-before-operation`。只读调用失败报 `read-failed`。只有原生写入已发出且没有这些证据时才是 `unknown`。
 - 只有同时满足以下条件才锁定会话（`SessionBehavior.LocksSession`）：本次调用发出过原生调用（调用日志有原生边界，或 worker 证据为 `nativeOutcomeUnknown`、`nativeIssued`），属于写入或 `FILE`、`EXECUTE` 类别，并且 outcome 为 `unknown`。
 - 锁定后，使用 Openness 通道的工具（`DisconnectPortal`、`RestartOpennessWorker` 和派发类工具除外）在审批和原生调用之前被 `SESSION_RESET_REQUIRED`（`previous-outcome-unknown`）拒绝。
 - 恢复（MUST）：检查 TIA 的实际状态 → `DisconnectPortal` → 开启新的 MCP 会话并显式 `ConnectPortal`、`AttachOpenProject`。MUST NOT 重放失败的请求；重新预览也不等于获准再次写入（SEC-12）。
-- `TIMEOUT` 只用于宿主能证明没有派发的超时；worker 通道超时是通道故障，按 `OUTCOME_UNKNOWN` 处理（API-26）。派发前取消返回 `CANCELLED`（`tool-queue`），派发后宿主忽略取消、等待真实结果；派发前的 `CANCELLED` 结果仍用于 CLI、批次和审计（MCP-07）。
+- 宿主派发前的超时报 `TIMEOUT`。已派发的只读调用超时报 `read-failed`、`read-only`、`TIMEOUT`，等待 worker 排空后可继续。只读调用丢失 worker 应答报 `read-failed`、`read-only`、`NATIVE_OPERATION_FAILED`。已派发写入超时且缺少确定结果的证据时按 `OUTCOME_UNKNOWN` 处理（API-26）。派发前取消返回 `CANCELLED`（`tool-queue`），派发后宿主忽略取消、等待真实结果。派发前的 `CANCELLED` 结果仍用于 CLI、批次和审计（MCP-07）。
 - 收到 progress token 时，宿主每 15 秒发送一次单调递增的进度心跳，覆盖排队、审批等待和长操作；worker 进度与宿主心跳共用序号。通知不代表成功，失败也不改变原生请求。
 
 ### 4.12 批次与桥接
@@ -878,7 +878,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 | API-16 | `Manage*` 多路复用工具，注解取保守值 | 第 6.2、6.3 节 |
 | API-17 | 警告放在响应体中 | 第 4.7 节 |
 | API-20 | 既有的 `confirm*` 与 `allowWrite` 确认开关，新工具只用 `confirm`，行为族切换到 safe-v4 时统一 | 第 4.10 节 |
-| API-26 | `TIMEOUT` 不用于已派发的调用，worker 超时一律为 `unknown` | 第 4.11 节 |
+| API-26 | 已派发写入超时且缺少确定结果时为 `unknown`。只读超时为 `read-failed` / `TIMEOUT`，丢失应答为 `read-failed` / `NATIVE_OPERATION_FAILED` | 第 4.11 节 |
 | API-29 | `data` 中残留旧的判定字段，以 `meta.outcome` 为准 | 第 4.5 节 |
 | API-32 | `CallTool` 派发前的字段级错误指向目标工具，其余指向 `CallTool` | 第 4.2 节 |
 | API-34 | 状态词 kebab-case、输入选择值 camelCase、原生名称原样，三套并存 | 第 4.3 节 |

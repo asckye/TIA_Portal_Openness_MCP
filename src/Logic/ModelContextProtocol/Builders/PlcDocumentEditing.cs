@@ -13,6 +13,9 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class PlcDocumentEditing
     {
         public const int MaxBytes = 16 * 1024 * 1024;
+        private static readonly string[] ComputedBlockAttributes = {
+            "CodeModifiedDate", "InterfaceModifiedDate", "ParameterModified", "StructureModified", "LoadMemoryLength", "WorkMemoryLength"
+        };
         public static string Hash(byte[] bytes) {
             using var sha = System.Security.Cryptography.SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "")
                 .ToLowerInvariant();
@@ -71,7 +74,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     a.Value = mapped;
                 }
             }
-            Child(block, "AttributeList").Elements().Where(e => new[] { "ModifiedDate", "CompileDate", "CreationDate" }.Contains(e.Name.LocalName)).Remove();
+            Child(block, "AttributeList").Elements().Where(e => new[] { "ModifiedDate", "CompileDate", "CreationDate" }.Contains(e.Name.LocalName)
+                || ComputedBlockAttributes.Contains(e.Name.LocalName)).Remove();
             foreach (var e in block.DescendantsAndSelf())
             {
                 // Formatting whitespace between elements is not program text. Leaf values

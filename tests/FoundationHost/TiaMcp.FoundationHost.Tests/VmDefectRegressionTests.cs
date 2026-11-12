@@ -182,7 +182,7 @@ public sealed class VmDefectRegressionTests
         error.Data["foundationSessionPoisoned"] = true;
         error.Data["workerOutcomeUnknown"] = true;
         var result = FoundationV4Result.Failure("21", "SearchInstalledGsdDevices", "vm-timeout", true, false, null, error);
-        Assert.Equal("OUTCOME_UNKNOWN", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.True((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
         Assert.Contains("TIA must be restarted", (string)result.StructuredContent["data"]!["recovery"]!);
         Assert.Equal(TimeSpan.FromSeconds(120), WorkerTimeoutPolicy.Defaults["default"]);

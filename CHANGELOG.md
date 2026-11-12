@@ -9,6 +9,11 @@
 - HMI template PLC sync prechecks report `no-bindings` when no bindings are declared, and include blocking reasons when the suite cannot pass.
 - Load V21 optional Openness assemblies by exact SDK identity. Distinguish missing components from load failures and preserve load failure reasons in `nativeMessage`.
 
+- Lost worker replies for reads report `read-failed`, `read-only` and `NATIVE_OPERATION_FAILED` across all eight releases. Host mapping classifies failed PLC batch exports as `failed` or `partial`, and cross-reference export failures with no analysis as `read-failed`.
+- Applied batch document imports report `succeeded`. Document imports with an uncertain native result report `unknown`.
+- Verified PLC import readback and preview tokens ignore TIA-computed dates and memory sizes, so recompiling unchanged block content preserves the reviewed token. A completed readback mismatch reports `failed` and retains the backup and cleanup evidence.
+- Unified event writes refused before a native write retain the sanitized native reason. Worker status reports `Draining` during read timeout recovery and attributes an unwinding fault to the running operation. Compile error counts exclude declared summary nodes.
+
 ## [4.0.0-beta.4] - 2026-11-05
 
 ### Changed
