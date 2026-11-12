@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-12T10:11:46.4644437+00:00",
+  "generatedAt": "2026-11-12T10:34:06.4852198+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
-  "workerSha256": "fbd2b777eaf0641d86cbd37fc02bfa4afb7f57f4f93130188e9ff2e42ec500dc",
+  "workerSha256": "8d79b0ed6d241d879345018c9666d0f9bd33226c268ff9470a3ea15a4c251496",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2819,
+    "parameters": 2825,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 695,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
     "enumHints": 256,
-    "defaultHints": 1599,
+    "defaultHints": 1605,
     "examplesCurated": 517,
     "recipes": 40
   },
@@ -5505,10 +5505,12 @@
         "softwarePath",
         "typePath",
         "dryRun",
-        "crossReferences"
+        "crossReferences",
+        "confirm",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (see GetPlcCrossReferences). Queries also require crossReferences=true (the TIA CrossReferenceService query took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type first with ExportPlcType, and CompilePlcSoftware afterwards. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcType\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"typePath\":\"UDT_Status\",\"dryRun\":true}"
+      "description": "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (see GetPlcCrossReferences). Queries also require crossReferences=true (the TIA CrossReferenceService query took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type first with ExportPlcType, and CompilePlcSoftware afterwards. Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcType\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"typePath\":\"UDT_Status\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "DeletePlcTagTable",
@@ -5523,10 +5525,12 @@
         "softwarePath",
         "tagTableName",
         "dryRun",
-        "crossReferences"
+        "crossReferences",
+        "confirm",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE] Preview or delete ONE PLC tag table (variable table / tag list) by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the HMI silently loses its bindings - always review the previewed tag list first. Native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They are queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and wildcards are rejected. Back up first with ExportPlcTagTable. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcTagTable\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"tagTableName\":\"Default tag table\",\"dryRun\":true}"
+      "description": "[L2][PLC-Software][WRITE] Preview or delete ONE PLC tag table (variable table / tag list) by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the HMI silently loses its bindings - always review the previewed tag list first. Native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They are queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and wildcards are rejected. Back up first with ExportPlcTagTable. Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcTagTable\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"tagTableName\":\"Default tag table\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "DeletePlcExternalSource",
@@ -5562,10 +5566,12 @@
         "softwarePath",
         "blockPath",
         "dryRun",
-        "crossReferences"
+        "crossReferences",
+        "confirm",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports the resolved target (pinned block number, warnings). Native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They also require crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took TIA Portal V21 down during a dry run, so this optional check is off by default and the response says 'not queried' - never read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, back the block up with ExportPlcBlockDocuments and review dependencies (an unavailable query does not prove it is unused); compile with CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use DeletePlcType. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcBlock\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"dryRun\":true}"
+      "description": "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports the resolved target (pinned block number, warnings). Native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They also require crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took TIA Portal V21 down during a dry run, so this optional check is off by default and the response says 'not queried' - never read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, back the block up with ExportPlcBlockDocuments and review dependencies (an unavailable query does not prove it is unused); compile with CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use DeletePlcType. Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcBlock\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "DeleteHmiTag",
@@ -7321,7 +7327,7 @@
         "maxDepth",
         "maxEntries"
       ],
-      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc][ONLINE] Compare the offline PLC software in the project against the program currently running on the physical CPU. Use after editing blocks to confirm what differs from the live CPU before downloading, or after a download to verify offline/online consistency. Returns a tree-walked list of differences: only difference states (ObjectsDifferent, LeftMissing, RightMissing, FolderContentsDifferent and the folder own-state differences) are reported; ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant are not. Requires ConnectOnlinePlc to be called first; will return IsOnline=false with guidance otherwise. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"maxDepth\":4} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CompareSoftwareToOnline\"), optionally operation or language.",
+      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc][ONLINE] Compare the offline PLC software in the project against the program currently running on the physical CPU. Use after editing blocks to confirm what differs from the live CPU before downloading, or after a download to verify offline/online consistency. Returns a tree-walked list of differences: only difference states (ObjectsDifferent, LeftMissing, RightMissing, FolderContentsDifferent and the folder own-state differences) are reported; ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant are not. Requires ConnectOnlinePlc first; otherwise refuses with PRECONDITION_FAILED, condition plc-online. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"maxDepth\":4} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CompareSoftwareToOnline\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"maxDepth\":4}"
     },
     {

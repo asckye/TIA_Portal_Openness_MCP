@@ -10024,7 +10024,7 @@
         "openWorldHint": true,
         "readOnlyHint": true
       },
-      "descriptionSha256": "10a9753ebe3e292a135b3dd25305f72ec4be3c3401f51174f7aed1bc213a3589",
+      "descriptionSha256": "3d2fe9cec5015906a0f9cb62afcb4ca61c71d5369b3983f19bd3b5be29d0be80",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15264,13 +15264,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b44d8a4413c2a20e57bf9ca582db89ba919a118d1c9809fc6c31428acdff6246",
+      "descriptionSha256": "0d18a3fda0483a5978e461a1b01ca529de6cab70a120e30fd63a32d0a09a5eac",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "blockPath": {
             "description": "blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.",
             "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.",
+            "type": "boolean"
           },
           "crossReferences": {
             "default": false,
@@ -15281,6 +15286,11 @@
             "default": true,
             "description": "dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent",
             "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact bound project file; required with dryRun=false.",
+            "type": "string"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'",
@@ -15357,10 +15367,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3cb5992d60ef96bb44ca0937fb5f5a77d7f1fb561f96a029e8a513fe0f327512",
+      "descriptionSha256": "a04d6f73e31ff8026f89636bb401ac296193a6ba60f4823e57af308a5fee838f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "confirm": {
+            "default": false,
+            "description": "confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.",
+            "type": "boolean"
+          },
           "crossReferences": {
             "default": false,
             "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
@@ -15370,6 +15385,11 @@
             "default": true,
             "description": "dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent",
             "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact bound project file; required with dryRun=false.",
+            "type": "string"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'",
@@ -15396,10 +15416,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "01e61628519a0b845bf1680297b52ec4a5fd2b110d3dd6b6c3d9c6bc40d9ed98",
+      "descriptionSha256": "36313aefbd65b5b9030c0899907964b3bb671313b99e8dbdb24f8b966f1d885f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "confirm": {
+            "default": false,
+            "description": "confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.",
+            "type": "boolean"
+          },
           "crossReferences": {
             "default": false,
             "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
@@ -15409,6 +15434,11 @@
             "default": true,
             "description": "dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent",
             "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact bound project file; required with dryRun=false.",
+            "type": "string"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'",
@@ -38404,7 +38434,7 @@
             "type": "string"
           },
           "workspaceRoot": {
-            "description": "workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.",
+            "description": "workspaceRoot: folder you prepared with TMP_EXPORT/_verify, docs/hmi_templates and docs/hmi_template_mappings; these are not shipped.",
             "type": "string"
           }
         },
