@@ -58,8 +58,15 @@ public sealed class ServedExamplesTests
                 Assert.Equal(release, arguments.GetProperty("machine").GetProperty("target").GetProperty("release").GetString());
             else
             {
-                Assert.Equal("exportTemplate", arguments.GetProperty("action").GetString());
-                Assert.False(arguments.TryGetProperty("machine", out _));
+                Assert.Equal("validate", arguments.GetProperty("action").GetString());
+                Assert.True(arguments.TryGetProperty("machine", out var machine));
+                Assert.True(arguments.GetProperty("dryRun").GetBoolean());
+                AssertMinimalMachine(JsonNode.Parse(machine.GetRawText())!.AsObject(), release);
+                var validation = await fixture.Call(name, arguments);
+                Assert.True((bool?)validation["ok"], validation.ToJsonString());
+                Assert.True((bool?)validation["data"]?["valid"]);
+                Assert.False((bool?)validation["data"]?["executed"]);
+                Assert.False(string.IsNullOrEmpty((string?)validation["data"]?["machineHash"]));
             }
             var preview = await fixture.Call("PreviewToolCall", new { name, arguments });
             Assert.True(JsonNode.DeepEquals(JsonNode.Parse(arguments.GetRawText()), preview["data"]?["example"]));
@@ -72,6 +79,25 @@ public sealed class ServedExamplesTests
             Assert.Equal(release, (string?)arguments["machine"]?["target"]?["release"]);
             Assert.Equal(21, arguments["machine"]!["devices"]!.AsArray().Count);
         }
+    }
+
+    private static void AssertMinimalMachine(JsonObject machine, string release)
+    {
+        Assert.Equal(8, machine.Count);
+        Assert.Equal("tiamcp.machine/1", (string?)machine["schema"]);
+        Assert.Equal(2, machine["machine"]!.AsObject().Count);
+        Assert.Single(machine["machine"]!["name"]!.AsObject());
+        Assert.Equal(2, machine["standard"]!.AsObject().Count);
+        Assert.Equal(2, machine["target"]!.AsObject().Count);
+        Assert.Equal(release, (string?)machine["target"]!["release"]);
+        Assert.Equal("new", (string?)machine["target"]!["project"]!["mode"]);
+        Assert.Equal(3, machine["target"]!["project"]!.AsObject().Count);
+        var station = Assert.Single(machine["stations"]!.AsArray());
+        Assert.Equal(2, station!.AsObject().Count);
+        Assert.Empty(machine["topology"]!.AsArray());
+        Assert.Empty(machine["devices"]!.AsArray());
+        Assert.Single(machine["options"]!.AsObject());
+        Assert.Single(machine["options"]!["languages"]!.AsArray());
     }
 
     [Theory, MemberData(nameof(Releases))]
@@ -135,7 +161,9 @@ public sealed class ServedExamplesTests
         {
             JsonObject Args(string name) => profile.Value![name]!["arguments"]!.AsObject();
             var machineDescription = profile.Value!["ManageMachineDescription"]!;
-            Assert.True(JsonNode.DeepEquals(machineDescription["operations"]!["exportTemplate"]!["arguments"], Args("ManageMachineDescription")));
+            Assert.Equal("validate", (string?)Args("ManageMachineDescription")["action"]);
+            Assert.True((bool?)Args("ManageMachineDescription")["dryRun"]);
+            AssertMinimalMachine(Args("ManageMachineDescription")["machine"]!.AsObject(), "{release}");
             Assert.Equal("{release}", (string?)Args("PlanProjectGeneration")["machine"]?["target"]?["release"]);
             foreach (string operation in new[] { "validate", "export" })
             {

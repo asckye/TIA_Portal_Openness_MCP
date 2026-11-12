@@ -30474,12 +30474,44 @@
           "plc-foundation"
         ],
         "arguments": {
-          "action": "exportTemplate",
+          "action": "validate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "format": "csv",
-          "dryRun": true,
-          "exportDirectory": "C:/MachineInputs/basic-template"
+          "machine": {
+            "schema": "tiamcp.machine/1",
+            "machine": {
+              "id": "M1",
+              "name": {
+                "en": "Machine"
+              }
+            },
+            "standard": {
+              "package": "tiamcp.basic",
+              "version": "1.0.0"
+            },
+            "target": {
+              "release": "{release}",
+              "project": {
+                "mode": "new",
+                "name": "Machine",
+                "directory": "C:/Projects"
+              }
+            },
+            "stations": [
+              {
+                "id": "PLC1",
+                "role": "plc.main"
+              }
+            ],
+            "topology": [],
+            "devices": [],
+            "options": {
+              "languages": [
+                "en"
+              ]
+            }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -39952,12 +39984,44 @@
           "plc-foundation"
         ],
         "arguments": {
-          "action": "exportTemplate",
+          "action": "validate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "format": "csv",
-          "dryRun": true,
-          "exportDirectory": "C:/MachineInputs/basic-template"
+          "machine": {
+            "schema": "tiamcp.machine/1",
+            "machine": {
+              "id": "M1",
+              "name": {
+                "en": "Machine"
+              }
+            },
+            "standard": {
+              "package": "tiamcp.basic",
+              "version": "1.0.0"
+            },
+            "target": {
+              "release": "{release}",
+              "project": {
+                "mode": "new",
+                "name": "Machine",
+                "directory": "C:/Projects"
+              }
+            },
+            "stations": [
+              {
+                "id": "PLC1",
+                "role": "plc.main"
+              }
+            ],
+            "topology": [],
+            "devices": [],
+            "options": {
+              "languages": [
+                "en"
+              ]
+            }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -46728,12 +46792,44 @@
           "plc-foundation"
         ],
         "arguments": {
-          "action": "exportTemplate",
+          "action": "validate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "format": "csv",
-          "dryRun": true,
-          "exportDirectory": "C:/MachineInputs/basic-template"
+          "machine": {
+            "schema": "tiamcp.machine/1",
+            "machine": {
+              "id": "M1",
+              "name": {
+                "en": "Machine"
+              }
+            },
+            "standard": {
+              "package": "tiamcp.basic",
+              "version": "1.0.0"
+            },
+            "target": {
+              "release": "{release}",
+              "project": {
+                "mode": "new",
+                "name": "Machine",
+                "directory": "C:/Projects"
+              }
+            },
+            "stations": [
+              {
+                "id": "PLC1",
+                "role": "plc.main"
+              }
+            ],
+            "topology": [],
+            "devices": [],
+            "options": {
+              "languages": [
+                "en"
+              ]
+            }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -52304,12 +52400,44 @@
           "plc-foundation"
         ],
         "arguments": {
-          "action": "exportTemplate",
+          "action": "validate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "format": "csv",
-          "dryRun": true,
-          "exportDirectory": "C:/MachineInputs/basic-template"
+          "machine": {
+            "schema": "tiamcp.machine/1",
+            "machine": {
+              "id": "M1",
+              "name": {
+                "en": "Machine"
+              }
+            },
+            "standard": {
+              "package": "tiamcp.basic",
+              "version": "1.0.0"
+            },
+            "target": {
+              "release": "{release}",
+              "project": {
+                "mode": "new",
+                "name": "Machine",
+                "directory": "C:/Projects"
+              }
+            },
+            "stations": [
+              {
+                "id": "PLC1",
+                "role": "plc.main"
+              }
+            ],
+            "topology": [],
+            "devices": [],
+            "options": {
+              "languages": [
+                "en"
+              ]
+            }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -58478,12 +58606,44 @@
           "plc-foundation"
         ],
         "arguments": {
-          "action": "exportTemplate",
+          "action": "validate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "format": "csv",
-          "dryRun": true,
-          "exportDirectory": "C:/MachineInputs/basic-template"
+          "machine": {
+            "schema": "tiamcp.machine/1",
+            "machine": {
+              "id": "M1",
+              "name": {
+                "en": "Machine"
+              }
+            },
+            "standard": {
+              "package": "tiamcp.basic",
+              "version": "1.0.0"
+            },
+            "target": {
+              "release": "{release}",
+              "project": {
+                "mode": "new",
+                "name": "Machine",
+                "directory": "C:/Projects"
+              }
+            },
+            "stations": [
+              {
+                "id": "PLC1",
+                "role": "plc.main"
+              }
+            ],
+            "topology": [],
+            "devices": [],
+            "options": {
+              "languages": [
+                "en"
+              ]
+            }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -65033,12 +65193,44 @@
           "plc-foundation"
         ],
         "arguments": {
-          "action": "exportTemplate",
+          "action": "validate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "format": "csv",
-          "dryRun": true,
-          "exportDirectory": "C:/MachineInputs/basic-template"
+          "machine": {
+            "schema": "tiamcp.machine/1",
+            "machine": {
+              "id": "M1",
+              "name": {
+                "en": "Machine"
+              }
+            },
+            "standard": {
+              "package": "tiamcp.basic",
+              "version": "1.0.0"
+            },
+            "target": {
+              "release": "{release}",
+              "project": {
+                "mode": "new",
+                "name": "Machine",
+                "directory": "C:/Projects"
+              }
+            },
+            "stations": [
+              {
+                "id": "PLC1",
+                "role": "plc.main"
+              }
+            ],
+            "topology": [],
+            "devices": [],
+            "options": {
+              "languages": [
+                "en"
+              ]
+            }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -72080,12 +72272,44 @@
           "plc-foundation"
         ],
         "arguments": {
-          "action": "exportTemplate",
+          "action": "validate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "format": "csv",
-          "dryRun": true,
-          "exportDirectory": "C:/MachineInputs/basic-template"
+          "machine": {
+            "schema": "tiamcp.machine/1",
+            "machine": {
+              "id": "M1",
+              "name": {
+                "en": "Machine"
+              }
+            },
+            "standard": {
+              "package": "tiamcp.basic",
+              "version": "1.0.0"
+            },
+            "target": {
+              "release": "{release}",
+              "project": {
+                "mode": "new",
+                "name": "Machine",
+                "directory": "C:/Projects"
+              }
+            },
+            "stations": [
+              {
+                "id": "PLC1",
+                "role": "plc.main"
+              }
+            ],
+            "topology": [],
+            "devices": [],
+            "options": {
+              "languages": [
+                "en"
+              ]
+            }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -80355,12 +80579,44 @@
           "plc-foundation"
         ],
         "arguments": {
-          "action": "exportTemplate",
+          "action": "validate",
           "packageId": "tiamcp.basic",
           "version": "1.0.0",
-          "format": "csv",
-          "dryRun": true,
-          "exportDirectory": "C:/MachineInputs/basic-template"
+          "machine": {
+            "schema": "tiamcp.machine/1",
+            "machine": {
+              "id": "M1",
+              "name": {
+                "en": "Machine"
+              }
+            },
+            "standard": {
+              "package": "tiamcp.basic",
+              "version": "1.0.0"
+            },
+            "target": {
+              "release": "{release}",
+              "project": {
+                "mode": "new",
+                "name": "Machine",
+                "directory": "C:/Projects"
+              }
+            },
+            "stations": [
+              {
+                "id": "PLC1",
+                "role": "plc.main"
+              }
+            ],
+            "topology": [],
+            "devices": [],
+            "options": {
+              "languages": [
+                "en"
+              ]
+            }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
