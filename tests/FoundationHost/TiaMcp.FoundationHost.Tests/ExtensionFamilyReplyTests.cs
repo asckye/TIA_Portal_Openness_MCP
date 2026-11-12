@@ -10,13 +10,10 @@ using Xunit;
 public sealed class ExtensionFamilyReplyTests
 {
     [Theory]
-    [InlineData(nameof(NotSupportedException), false)]
-    [InlineData(nameof(NotSupportedException), true)]
-    [InlineData(nameof(ArgumentException), false)]
-    [InlineData(nameof(ArgumentException), true)]
-    [InlineData(nameof(InvalidOperationException), false)]
-    [InlineData(nameof(InvalidOperationException), true)]
-    public void Plc_B5_failures_after_a_possible_change_keep_the_unknown_outcome(string code, bool writes)
+    [InlineData(nameof(NotSupportedException))]
+    [InlineData(nameof(ArgumentException))]
+    [InlineData(nameof(InvalidOperationException))]
+    public void Plc_B5_failures_after_a_possible_change_keep_the_unknown_outcome(string code)
     {
         using var release = Host.HardwareContract.UseRelease("21");
         var state = new WorkerOutcomeState();
@@ -27,11 +24,35 @@ public sealed class ExtensionFamilyReplyTests
             state.AcceptResult(operation, args, json);
             return json;
         }, () => "fixture");
-        var body = Host.EngineeringToolContract.Run("GetPlcOpcUaConfiguration", writes,
+        var body = Host.EngineeringToolContract.Run("GetPlcOpcUaConfiguration", true,
             () => service.GetOpcUaConfig("PLC")).StructuredContent!;
         Assert.True(state.Poisoned);
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
         Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
+    }
+
+    [Theory]
+    [InlineData(nameof(NotSupportedException))]
+    [InlineData(nameof(ArgumentException))]
+    [InlineData(nameof(InvalidOperationException))]
+    public void Plc_B5_read_failures_report_read_failed_without_requiring_a_session_reset(string code)
+    {
+        using var release = Host.HardwareContract.UseRelease("21");
+        var state = new WorkerOutcomeState();
+        var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
+            var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
+                Failure = new PlcSoftwareFailure { Code = code, Message = "Native result unavailable after a change." },
+                MayHaveChanged = true, RequiresSessionReset = true }));
+            state.AcceptResult(operation, args, json);
+            return json;
+        }, () => "fixture");
+        var body = Host.EngineeringToolContract.Run("GetPlcOpcUaConfiguration", false,
+            () => service.GetOpcUaConfig("PLC")).StructuredContent!;
+        Assert.True(state.Poisoned);
+        Assert.Equal("read-failed", (string?)body["meta"]!["outcome"]);
+        Assert.Equal("read-only", (string?)body["meta"]!["execution"]);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
+        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 
     [Theory]
