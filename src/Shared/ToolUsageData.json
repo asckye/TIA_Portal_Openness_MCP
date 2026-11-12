@@ -23299,7 +23299,7 @@
     },
     "RunClassicHmiOfflineValidationSuite": {
       "arguments": {
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
       },
       "parameters": {},
       "operations": {},
@@ -23308,7 +23308,7 @@
     "RunClassicHmiTemporaryImportPreflight": {
       "arguments": {
         "workspaceRoot": "C:\\Examples\\work",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
       },
       "parameters": {},
       "operations": {},
@@ -23324,7 +23324,7 @@
       "arguments": {
         "templateDirectory": "C:\\Examples\\templates",
         "plcXmlPath": "C:\\Examples\\snapshot",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
       },
       "parameters": {
         "mappingFilePath": {
@@ -23338,7 +23338,7 @@
     "RunOfflineReleaseValidationSuite": {
       "arguments": {
         "workspaceRoot": "C:\\Examples\\work",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
       },
       "parameters": {},
       "operations": {},
@@ -30652,7 +30652,7 @@
         "RenderPlcBlock": {
           "arguments": {
             "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-            "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html"
           },
           "parameters": {
             "inputPath": {
@@ -30667,14 +30667,17 @@
             },
             "exportFile": {
               "requiresBinding": true,
-              "exampleValue": "C:\\TIA_MCP\\exports\\RenderPlcBlock.xml",
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html",
               "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation.",
-              "meaning": "New absolute .html file in an existing directory; existing outputs are refused."
+              "meaning": "New absolute .html file in an existing directory; existing outputs are refused. For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline rendering exercised successfully on native V14 SP1, V15.1 and V16 block exports; this does not certify import or online semantics. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "note": "Offline static HTML rendering of native exported PLC blocks; no TIA call. Use data.outputFile from the completed block export. RenderPlcProgramAtlas accepts one block XML or a block-only export directory; tag-table XML is refused. Output is a new self-contained .html file in an existing directory. Caller counts cover only blocks inside the atlas.",
+          "note": "Offline static HTML rendering of native exported PLC blocks; no TIA call. Use data.outputFile from the completed block export. RenderPlcProgramAtlas accepts one block XML or a block-only export directory; tag-table XML is refused. Output is a new self-contained .html file in an existing directory. Caller counts cover only blocks inside the atlas. Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling.",
           "resultReading": [
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Inspect data.outputPath, mediaType, byteLength, sha256, blockCount and networkCount. A tag-table XML input is not a PLC block; use its export only for symbol-manifest extraction."
@@ -30683,7 +30686,7 @@
         "RenderPlcProgramAtlas": {
           "arguments": {
             "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-            "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Atlas.html"
           },
           "parameters": {
             "inputPath": {
@@ -30698,14 +30701,17 @@
             },
             "exportFile": {
               "requiresBinding": true,
-              "exampleValue": "C:\\TIA_MCP\\exports\\RenderPlcProgramAtlas.xml",
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\Atlas.html",
               "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation.",
-              "meaning": "New absolute .html file in an existing directory; existing outputs are refused."
+              "meaning": "New absolute .html file in an existing directory; existing outputs are refused. For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline rendering exercised successfully on native V14 SP1, V15.1 and V16 block exports; this does not certify import or online semantics. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "note": "Offline static HTML rendering of native exported PLC blocks; no TIA call. Use data.outputFile from the completed block export. RenderPlcProgramAtlas accepts one block XML or a block-only export directory; tag-table XML is refused. Output is a new self-contained .html file in an existing directory. Caller counts cover only blocks inside the atlas.",
+          "note": "Offline static HTML rendering of native exported PLC blocks; no TIA call. Use data.outputFile from the completed block export. RenderPlcProgramAtlas accepts one block XML or a block-only export directory; tag-table XML is refused. Output is a new self-contained .html file in an existing directory. Caller counts cover only blocks inside the atlas. Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling.",
           "resultReading": [
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Inspect data.outputPath, mediaType, byteLength, sha256, blockCount and networkCount. A tag-table XML input is not a PLC block; use its export only for symbol-manifest extraction."
@@ -32187,8 +32193,7 @@
                   "deviceItems": []
                 }
               ]
-            },
-            "exportFile": "C:\\Examples\\generated\\Example.aml"
+            }
           },
           "parameters": {
             "referenceAmlPath": {
@@ -32202,23 +32207,32 @@
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
           ],
-          "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+          "note": "P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+. Omit exportFile to use the session output directory under GetSessionState data.outputRoot; read the returned output path."
         },
         "ExportDeviceAml": {
           "arguments": {
             "devicePath": [
               "PLC_1"
             ],
-            "exportFile": "C:\\Examples\\exports\\Device.aml"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Device.aml"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\Device.aml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
           "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
           "resultReading": [
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
           ],
-          "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+          "note": "P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+. Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ImportDeviceAml": {
           "arguments": {
@@ -32455,14 +32469,24 @@
         "BuildReleaseHandoffArtifacts": {
           "arguments": {
             "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-            "exportDirectory": "C:\\Examples\\generated"
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
           },
-          "parameters": {},
+          "parameters": {
+            "exportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
           "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-          ]
+          ],
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "BuildReleaseManifest": {
           "arguments": {
@@ -32572,7 +32596,7 @@
         },
         "GenerateAcceptanceReport": {
           "arguments": {
-            "exportDirectory": "C:\\Temp\\mcp-report",
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>",
             "includeProjectTree": true
           },
           "parameters": {
@@ -32584,6 +32608,14 @@
             },
             "title": {
               "exampleValue": "TIA MCP Acceptance Report"
+            },
+            "exportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
@@ -32591,7 +32623,8 @@
           "inline": true,
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-          ]
+          ],
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "GenerateErrorReport": {
           "arguments": {
@@ -32817,14 +32850,24 @@
         "RunOfflineReleaseValidationSuite": {
           "arguments": {
             "workspaceRoot": "C:\\Examples\\work",
-            "reportDirectory": "C:\\Examples\\reports"
+            "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
           },
-          "parameters": {},
+          "parameters": {
+            "reportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
           "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-          ]
+          ],
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "RunOnlineMonitoringSafetySelfTest": {
           "arguments": {},
@@ -32862,7 +32905,7 @@
         "SaveExportContent": {
           "arguments": {
             "exportId": "<exportId from response>",
-            "exportFile": "C:\\Temp\\blocks.json"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\blocks.json"
           },
           "parameters": {
             "exportId": {
@@ -32873,6 +32916,14 @@
             },
             "overwrite": {
               "exampleValue": false
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\blocks.json",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
@@ -32880,7 +32931,8 @@
           "inline": true,
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-          ]
+          ],
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "AnalyzePlcReferences": {
           "arguments": {
@@ -33045,7 +33097,7 @@
         "GeneratePlcDocumentation": {
           "arguments": {
             "sourceDirectory": "C:\\Examples\\exports",
-            "exportFile": "C:\\Examples\\generated\\documentation.md"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\documentation.md"
           },
           "parameters": {
             "title": {
@@ -33061,13 +33113,22 @@
             },
             "mermaidDirection": {
               "exampleValue": "LR"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\documentation.md",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-          ]
+          ],
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "InstantiatePlcTemplates": {
           "arguments": {
@@ -33154,14 +33215,24 @@
           "arguments": {
             "leftFilePath": "C:\\Examples\\before\\Main.xml",
             "rightFilePath": "C:\\Examples\\after\\Main.xml",
-            "exportFile": "C:\\Examples\\generated\\result.xml"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\result.xml"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\result.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
           "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-          ]
+          ],
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ScanPlcSourceAnnotations": {
           "arguments": {
@@ -33199,15 +33270,25 @@
         "WritePlcSclSourceFile": {
           "arguments": {
             "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-            "exportFile": "C:\\Temp\\FC_Add.scl"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\FC_Add.scl"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\FC_Add.scl",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
           "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): the exportFile apply call shape ran with the old writer; the content rule changed since, NOT RUN since. Other releases: input schema checked offline; native execution NOT RUN.",
           "inline": true,
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-          ]
+          ],
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "AnalyzeGlobalLibraryPackage": {
           "arguments": {
@@ -37764,16 +37845,26 @@
         "ExportAlarmClasses": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmClasses.dat"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmClasses.dat",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportAlarmInstanceTexts": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmInstanceTexts.xlsx"
           },
           "parameters": {
             "includeInfoText": {
@@ -37784,33 +37875,61 @@
             },
             "includeAlarmClass": {
               "exampleValue": true
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmInstanceTexts.xlsx",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportAlarmTextLists": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmTextLists.xlsx"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmTextLists.xlsx",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportOpcUaInterface": {
           "arguments": {
             "softwarePath": "PLC_1",
             "interfaceName": "Server interface_1",
-            "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportOpcUaInterface.xml"
           },
           "parameters": {
             "interfaceType": {
               "exampleValue": "ServerInterface"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportOpcUaInterface.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportPlcProDiagInfo": {
           "arguments": {
@@ -38276,52 +38395,79 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "screenName": "/Screen_1",
-            "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiScreen.xml",
             "exportOptions": "WithDefaults"
           },
           "parameters": {
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiScreen.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportHmiTagTable": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table",
-            "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiTagTable.xml",
             "exportOptions": "WithDefaults"
           },
           "parameters": {
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiTagTable.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN."
+          "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportHmiConnection": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "connectionName": "PLC_Connection",
-            "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiConnection.xml",
             "exportOptions": "WithDefaults"
           },
           "parameters": {
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiConnection.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN."
+          "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportHmiProgram": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "exportDirectory": "C:\\Examples\\exports",
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>",
             "exportOptions": "WithDefaults"
           },
           "parameters": {
@@ -38333,10 +38479,19 @@
             },
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "exportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN."
+          "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ImportHmiScreen": {
           "arguments": {
@@ -38907,17 +39062,25 @@
           "arguments": {
             "templateDirectory": "C:\\Examples\\templates",
             "plcXmlPath": "C:\\Examples\\snapshot",
-            "reportDirectory": "C:\\Examples\\reports"
+            "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
           },
           "parameters": {
             "mappingFilePath": {
               "exampleValue": "<mappingFilePath from this operation's target or user input>",
               "requiresBinding": true
+            },
+            "reportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "V19–V21 Unified template/PLC offline precheck; native application remains separate and NOT RUN."
+          "note": "V19–V21 Unified template/PLC offline precheck; native application remains separate and NOT RUN. Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "BuildPlcLadFcBlock": {
           "arguments": {
@@ -46476,8 +46639,7 @@
                   "deviceItems": []
                 }
               ]
-            },
-            "exportFile": "C:\\Examples\\generated\\Example.aml"
+            }
           },
           "parameters": {
             "referenceAmlPath": {
@@ -46490,7 +46652,8 @@
           "resultReading": [
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
-          ]
+          ],
+          "note": "Omit exportFile to use the session output directory under GetSessionState data.outputRoot; read the returned output path."
         },
         "BuildReleaseDiagnosticReport": {
           "arguments": {
@@ -48544,16 +48707,26 @@
         "ExportAlarmClasses": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmClasses.dat"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmClasses.dat",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportAlarmInstanceTexts": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmInstanceTexts.xlsx"
           },
           "parameters": {
             "includeInfoText": {
@@ -48564,54 +48737,92 @@
             },
             "includeAlarmClass": {
               "exampleValue": true
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmInstanceTexts.xlsx",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportAlarmTextLists": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmTextLists.xlsx"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportAlarmTextLists.xlsx",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportDeviceAml": {
           "arguments": {
             "devicePath": [
               "PLC_1"
             ],
-            "exportFile": "C:\\Examples\\exports\\Device.aml"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Device.aml"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\Device.aml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "resultReading": [
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
-          ]
+          ],
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportHmiConnection": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "connectionName": "PLC_Connection",
-            "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiConnection.xml",
             "exportOptions": "WithDefaults"
           },
           "parameters": {
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiConnection.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportHmiProgram": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "exportDirectory": "C:\\Examples\\exports",
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>",
             "exportOptions": "WithDefaults"
           },
           "parameters": {
@@ -48623,55 +48834,91 @@
             },
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "exportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportHmiScreen": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "screenName": "/Screen_1",
-            "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiScreen.xml",
             "exportOptions": "WithDefaults"
           },
           "parameters": {
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiScreen.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportHmiTagTable": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table",
-            "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiTagTable.xml",
             "exportOptions": "WithDefaults"
           },
           "parameters": {
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportHmiTagTable.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportOpcUaInterface": {
           "arguments": {
             "softwarePath": "PLC_1",
             "interfaceName": "Server interface_1",
-            "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\ExportOpcUaInterface.xml"
           },
           "parameters": {
             "interfaceType": {
               "exampleValue": "ServerInterface"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\ExportOpcUaInterface.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ExportPlcBlock": {
           "arguments": {
@@ -49350,7 +49597,7 @@
         },
         "GenerateAcceptanceReport": {
           "arguments": {
-            "exportDirectory": "C:\\Temp\\mcp-report",
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>",
             "includeProjectTree": true
           },
           "parameters": {
@@ -49362,11 +49609,20 @@
             },
             "title": {
               "exampleValue": "TIA MCP Acceptance Report"
+            },
+            "exportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "GenerateBlocksFromExternalSource": {
           "arguments": {
@@ -49485,7 +49741,7 @@
         "GeneratePlcDocumentation": {
           "arguments": {
             "sourceDirectory": "C:\\Examples\\exports",
-            "exportFile": "C:\\Examples\\generated\\documentation.md"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\documentation.md"
           },
           "parameters": {
             "title": {
@@ -49501,10 +49757,19 @@
             },
             "mermaidDirection": {
               "exampleValue": "LR"
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\documentation.md",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "GeneratePlcLoadableFile": {
           "arguments": {
@@ -59833,11 +60098,21 @@
           "arguments": {
             "leftFilePath": "C:\\Examples\\before\\Main.xml",
             "rightFilePath": "C:\\Examples\\after\\Main.xml",
-            "exportFile": "C:\\Examples\\generated\\result.xml"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\result.xml"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\result.xml",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "RepairAndReimportPlcBlock": {
           "arguments": {
@@ -59956,20 +60231,40 @@
         },
         "RunClassicHmiOfflineValidationSuite": {
           "arguments": {
-            "reportDirectory": "C:\\Examples\\reports"
+            "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
           },
-          "parameters": {},
+          "parameters": {
+            "reportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "RunClassicHmiTemporaryImportPreflight": {
           "arguments": {
             "workspaceRoot": "C:\\Examples\\work",
-            "reportDirectory": "C:\\Examples\\reports"
+            "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
           },
-          "parameters": {},
+          "parameters": {
+            "reportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "RunHmiActionScriptRecipeSafetySelfTest": {
           "arguments": {},
@@ -59981,26 +60276,44 @@
           "arguments": {
             "templateDirectory": "C:\\Examples\\templates",
             "plcXmlPath": "C:\\Examples\\snapshot",
-            "reportDirectory": "C:\\Examples\\reports"
+            "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
           },
           "parameters": {
             "mappingFilePath": {
               "exampleValue": "<mappingFilePath from this operation's target or user input>",
               "requiresBinding": true
+            },
+            "reportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "V19–V21 Unified template/PLC offline precheck; native application remains separate and NOT RUN."
+          "note": "V19–V21 Unified template/PLC offline precheck; native application remains separate and NOT RUN. Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "RunOfflineReleaseValidationSuite": {
           "arguments": {
             "workspaceRoot": "C:\\Examples\\work",
-            "reportDirectory": "C:\\Examples\\reports"
+            "reportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
           },
-          "parameters": {},
+          "parameters": {
+            "reportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "RunOnlineMonitoringSafetySelfTest": {
           "arguments": {},
@@ -61153,7 +61466,7 @@
         },
         "WriteClassicHmiMinimalPackageFiles": {
           "arguments": {
-            "exportDirectory": "C:\\Examples\\generated",
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>",
             "package": {
               "name": "Example",
               "screenDesign": {
@@ -61186,19 +61499,39 @@
               }
             }
           },
-          "parameters": {},
+          "parameters": {
+            "exportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "WritePlcSclSourceFile": {
           "arguments": {
             "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-            "exportFile": "C:\\Temp\\FC_Add.scl"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\FC_Add.scl"
           },
-          "parameters": {},
+          "parameters": {
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\FC_Add.scl",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
           "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): the exportFile apply call shape ran with the old writer; the content rule changed since, NOT RUN since. Other releases: input schema checked offline; native execution NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "WritePlcSimAdvancedTags": {
           "arguments": {
@@ -61501,7 +61834,7 @@
         "SaveExportContent": {
           "arguments": {
             "exportId": "<exportId from response>",
-            "exportFile": "C:\\Temp\\blocks.json"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\blocks.json"
           },
           "parameters": {
             "exportId": {
@@ -61512,11 +61845,20 @@
             },
             "overwrite": {
               "exampleValue": false
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\blocks.json",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "BuildClassicHmiScreen": {
           "arguments": {
@@ -62158,11 +62500,21 @@
         "BuildReleaseHandoffArtifacts": {
           "arguments": {
             "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-            "exportDirectory": "C:\\Examples\\generated"
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>"
           },
-          "parameters": {},
+          "parameters": {
+            "exportDirectory": {
+              "requiresBinding": true,
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>",
+              "meaning": "For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
         },
         "ValidatePlcDocumentSchemas": {
           "arguments": {
@@ -62226,7 +62578,7 @@
         "RenderPlcBlock": {
           "arguments": {
             "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-            "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html"
           },
           "parameters": {
             "inputPath": {
@@ -62241,14 +62593,17 @@
             },
             "exportFile": {
               "requiresBinding": true,
-              "exampleValue": "C:\\TIA_MCP\\exports\\RenderPlcBlock.xml",
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html",
               "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation.",
-              "meaning": "New absolute .html file in an existing directory; existing outputs are refused."
+              "meaning": "New absolute .html file in an existing directory; existing outputs are refused. For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline rendering exercised successfully on native V14 SP1, V15.1 and V16 block exports; this does not certify import or online semantics. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "note": "Offline static HTML rendering of native exported PLC blocks; no TIA call. Use data.outputFile from the completed block export. RenderPlcProgramAtlas accepts one block XML or a block-only export directory; tag-table XML is refused. Output is a new self-contained .html file in an existing directory. Caller counts cover only blocks inside the atlas.",
+          "note": "Offline static HTML rendering of native exported PLC blocks; no TIA call. Use data.outputFile from the completed block export. RenderPlcProgramAtlas accepts one block XML or a block-only export directory; tag-table XML is refused. Output is a new self-contained .html file in an existing directory. Caller counts cover only blocks inside the atlas. Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling.",
           "resultReading": [
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Inspect data.outputPath, mediaType, byteLength, sha256, blockCount and networkCount. A tag-table XML input is not a PLC block; use its export only for symbol-manifest extraction."
@@ -62257,7 +62612,7 @@
         "RenderPlcProgramAtlas": {
           "arguments": {
             "inputPath": "<data.outputFile from completed ExportPlcBlock>",
-            "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Atlas.html"
           },
           "parameters": {
             "inputPath": {
@@ -62272,14 +62627,17 @@
             },
             "exportFile": {
               "requiresBinding": true,
-              "exampleValue": "C:\\TIA_MCP\\exports\\RenderPlcProgramAtlas.xml",
+              "exampleValue": "C:\\<directory under GetSessionState data.outputRoot>\\Atlas.html",
               "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation.",
-              "meaning": "New absolute .html file in an existing directory; existing outputs are refused."
+              "meaning": "New absolute .html file in an existing directory; existing outputs are refused. For output operations, replace the entire sample path with a new target under GetSessionState data.outputRoot, including its drive.",
+              "tools": [
+                "GetSessionState"
+              ]
             }
           },
           "operations": {},
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline rendering exercised successfully on native V14 SP1, V15.1 and V16 block exports; this does not certify import or online semantics. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "note": "Offline static HTML rendering of native exported PLC blocks; no TIA call. Use data.outputFile from the completed block export. RenderPlcProgramAtlas accepts one block XML or a block-only export directory; tag-table XML is refused. Output is a new self-contained .html file in an existing directory. Caller counts cover only blocks inside the atlas.",
+          "note": "Offline static HTML rendering of native exported PLC blocks; no TIA call. Use data.outputFile from the completed block export. RenderPlcProgramAtlas accepts one block XML or a block-only export directory; tag-table XML is refused. Output is a new self-contained .html file in an existing directory. Caller counts cover only blocks inside the atlas. Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling.",
           "resultReading": [
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Inspect data.outputPath, mediaType, byteLength, sha256, blockCount and networkCount. A tag-table XML input is not a PLC block; use its export only for symbol-manifest extraction."

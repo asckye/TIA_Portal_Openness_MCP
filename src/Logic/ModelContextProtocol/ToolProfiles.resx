@@ -5859,7 +5859,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "exportDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -5926,7 +5926,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "exportDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "includeProjectTree": true
       }
     },
@@ -6049,7 +6049,7 @@
       "family": "F01",
       "example": {
         "workspaceRoot": "C:\\Examples\\work",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -6079,7 +6079,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "exportFile": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
       }
     },
     {
@@ -6131,7 +6131,7 @@
       "family": "F02",
       "example": {
         "sourceDirectory": "C:\\Examples\\exports",
-        "exportFile": "C:\\Examples\\generated\\documentation.md"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
       }
     },
     {
@@ -6186,7 +6186,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "exportFile": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
       }
     },
     {
@@ -6212,7 +6212,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "exportFile": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
       }
     },
     {
@@ -6506,7 +6506,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -6517,7 +6517,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -6528,7 +6528,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -6538,7 +6538,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDirectory": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "exportOptions": "WithDefaults"
       }
     },
@@ -7529,8 +7529,7 @@
               "deviceItems": []
             }
           ]
-        },
-        "exportFile": "C:\\Examples\\generated\\Example.aml"
+        }
       }
     },
     {
@@ -7541,7 +7540,7 @@
         "devicePath": [
           "PLC_1"
         ],
-        "exportFile": "C:\\Examples\\exports\\Device.aml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
       }
     },
     {
@@ -8267,7 +8266,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "exportDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -8334,7 +8333,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "exportDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "includeProjectTree": true
       }
     },
@@ -8457,7 +8456,7 @@
       "family": "F01",
       "example": {
         "workspaceRoot": "C:\\Examples\\work",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -8487,7 +8486,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "exportFile": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
       }
     },
     {
@@ -8539,7 +8538,7 @@
       "family": "F02",
       "example": {
         "sourceDirectory": "C:\\Examples\\exports",
-        "exportFile": "C:\\Examples\\generated\\documentation.md"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
       }
     },
     {
@@ -8594,7 +8593,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "exportFile": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
       }
     },
     {
@@ -8620,7 +8619,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "exportFile": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
       }
     },
     {
@@ -8914,7 +8913,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -8925,7 +8924,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -8936,7 +8935,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -8946,7 +8945,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDirectory": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "exportOptions": "WithDefaults"
       }
     },
@@ -9700,7 +9699,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -10160,8 +10159,7 @@
               "deviceItems": []
             }
           ]
-        },
-        "exportFile": "C:\\Examples\\generated\\Example.aml"
+        }
       }
     },
     {
@@ -10172,7 +10170,7 @@
         "devicePath": [
           "PLC_1"
         ],
-        "exportFile": "C:\\Examples\\exports\\Device.aml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
       }
     },
     {
@@ -11089,7 +11087,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "exportDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -11156,7 +11154,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "exportDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "includeProjectTree": true
       }
     },
@@ -11279,7 +11277,7 @@
       "family": "F01",
       "example": {
         "workspaceRoot": "C:\\Examples\\work",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -11309,7 +11307,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "exportFile": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
       }
     },
     {
@@ -11361,7 +11359,7 @@
       "family": "F02",
       "example": {
         "sourceDirectory": "C:\\Examples\\exports",
-        "exportFile": "C:\\Examples\\generated\\documentation.md"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
       }
     },
     {
@@ -11416,7 +11414,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "exportFile": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
       }
     },
     {
@@ -11442,7 +11440,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "exportFile": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
       }
     },
     {
@@ -11745,7 +11743,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -11756,7 +11754,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -11767,7 +11765,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -11777,7 +11775,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDirectory": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "exportOptions": "WithDefaults"
       }
     },
@@ -12568,7 +12566,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
       }
     },
     {
@@ -12577,7 +12575,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
       }
     },
     {
@@ -12613,7 +12611,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -13125,8 +13123,7 @@
               "deviceItems": []
             }
           ]
-        },
-        "exportFile": "C:\\Examples\\generated\\Example.aml"
+        }
       }
     },
     {
@@ -13137,7 +13134,7 @@
         "devicePath": [
           "PLC_1"
         ],
-        "exportFile": "C:\\Examples\\exports\\Device.aml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
       }
     },
     {
@@ -14204,7 +14201,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "exportDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -14271,7 +14268,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "exportDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "includeProjectTree": true
       }
     },
@@ -14394,7 +14391,7 @@
       "family": "F01",
       "example": {
         "workspaceRoot": "C:\\Examples\\work",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -14424,7 +14421,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "exportFile": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
       }
     },
     {
@@ -14476,7 +14473,7 @@
       "family": "F02",
       "example": {
         "sourceDirectory": "C:\\Examples\\exports",
-        "exportFile": "C:\\Examples\\generated\\documentation.md"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
       }
     },
     {
@@ -14531,7 +14528,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "exportFile": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
       }
     },
     {
@@ -14557,7 +14554,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "exportFile": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
       }
     },
     {
@@ -14870,7 +14867,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -14881,7 +14878,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -14892,7 +14889,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -14902,7 +14899,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDirectory": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "exportOptions": "WithDefaults"
       }
     },
@@ -15719,7 +15716,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmClasses.dat"
       }
     },
     {
@@ -15728,7 +15725,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
       }
     },
     {
@@ -15737,7 +15734,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
       }
     },
     {
@@ -15807,7 +15804,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -16330,8 +16327,7 @@
               "deviceItems": []
             }
           ]
-        },
-        "exportFile": "C:\\Examples\\generated\\Example.aml"
+        }
       }
     },
     {
@@ -16342,7 +16338,7 @@
         "devicePath": [
           "PLC_1"
         ],
-        "exportFile": "C:\\Examples\\exports\\Device.aml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
       }
     },
     {
@@ -17635,7 +17631,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "exportDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -17702,7 +17698,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "exportDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "includeProjectTree": true
       }
     },
@@ -17825,7 +17821,7 @@
       "family": "F01",
       "example": {
         "workspaceRoot": "C:\\Examples\\work",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -17855,7 +17851,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "exportFile": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
       }
     },
     {
@@ -17907,7 +17903,7 @@
       "family": "F02",
       "example": {
         "sourceDirectory": "C:\\Examples\\exports",
-        "exportFile": "C:\\Examples\\generated\\documentation.md"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
       }
     },
     {
@@ -17962,7 +17958,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "exportFile": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
       }
     },
     {
@@ -17988,7 +17984,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "exportFile": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
       }
     },
     {
@@ -18344,7 +18340,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -18355,7 +18351,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -18366,7 +18362,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -18376,7 +18372,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDirectory": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "exportOptions": "WithDefaults"
       }
     },
@@ -19214,7 +19210,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmClasses.dat"
       }
     },
     {
@@ -19223,7 +19219,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
       }
     },
     {
@@ -19232,7 +19228,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
       }
     },
     {
@@ -19313,7 +19309,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -19875,8 +19871,7 @@
               "deviceItems": []
             }
           ]
-        },
-        "exportFile": "C:\\Examples\\generated\\Example.aml"
+        }
       }
     },
     {
@@ -19887,7 +19882,7 @@
         "devicePath": [
           "PLC_1"
         ],
-        "exportFile": "C:\\Examples\\exports\\Device.aml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
       }
     },
     {
@@ -21240,7 +21235,7 @@
       "family": "F01",
       "example": {
         "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-        "exportDirectory": "C:\\Examples\\generated"
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -21307,7 +21302,7 @@
       "entry": "GenerateAcceptanceReport",
       "family": "F01",
       "example": {
-        "exportDirectory": "C:\\Temp\\mcp-report",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "includeProjectTree": true
       }
     },
@@ -21430,7 +21425,7 @@
       "family": "F01",
       "example": {
         "workspaceRoot": "C:\\Examples\\work",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -21460,7 +21455,7 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;",
-        "exportFile": "C:\\Temp\\blocks.json"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
       }
     },
     {
@@ -21512,7 +21507,7 @@
       "family": "F02",
       "example": {
         "sourceDirectory": "C:\\Examples\\exports",
-        "exportFile": "C:\\Examples\\generated\\documentation.md"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
       }
     },
     {
@@ -21567,7 +21562,7 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml",
-        "exportFile": "C:\\Examples\\generated\\result.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
       }
     },
     {
@@ -21593,7 +21588,7 @@
       "family": "F02",
       "example": {
         "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-        "exportFile": "C:\\Temp\\FC_Add.scl"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
       }
     },
     {
@@ -21741,7 +21736,7 @@
       "example": {
         "templateDirectory": "C:\\Examples\\templates",
         "plcXmlPath": "C:\\Examples\\snapshot",
-        "reportDirectory": "C:\\Examples\\reports"
+        "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
       }
     },
     {
@@ -22060,7 +22055,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -22071,7 +22066,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -22082,7 +22077,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
         "exportOptions": "WithDefaults"
       }
     },
@@ -22092,7 +22087,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDirectory": "C:\\Examples\\exports",
+        "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
         "exportOptions": "WithDefaults"
       }
     },
@@ -23882,7 +23877,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmClasses.dat"
       }
     },
     {
@@ -23891,7 +23886,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
       }
     },
     {
@@ -23900,7 +23895,7 @@
       "family": "F14",
       "example": {
         "softwarePath": "PLC_1",
-        "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
       }
     },
     {
@@ -23981,7 +23976,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "interfaceName": "Server interface_1",
-        "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
       }
     },
     {
@@ -24543,8 +24538,7 @@
               "deviceItems": []
             }
           ]
-        },
-        "exportFile": "C:\\Examples\\generated\\Example.aml"
+        }
       }
     },
     {
@@ -24555,7 +24549,7 @@
         "devicePath": [
           "PLC_1"
         ],
-        "exportFile": "C:\\Examples\\exports\\Device.aml"
+        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
       }
     },
     {
@@ -25055,8 +25049,7 @@
                 "deviceItems": []
               }
             ]
-          },
-          "exportFile": "C:\\Examples\\generated\\Example.aml"
+          }
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -25223,7 +25216,7 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "exportDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -26868,7 +26861,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -26883,7 +26876,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -26898,7 +26891,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -26915,7 +26908,7 @@
           "devicePath": [
             "PLC_1"
           ],
-          "exportFile": "C:\\Examples\\exports\\Device.aml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -26931,7 +26924,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -26947,7 +26940,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDirectory": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -26964,7 +26957,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -26981,7 +26974,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -26998,7 +26991,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -27329,7 +27322,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "includeProjectTree": true
         },
         "envelopeVersion": 4,
@@ -27399,7 +27392,7 @@
         ],
         "arguments": {
           "sourceDirectory": "C:\\Examples\\exports",
-          "exportFile": "C:\\Examples\\generated\\documentation.md"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -32725,7 +32718,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -32755,7 +32748,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -32771,7 +32764,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "exportFile": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -32874,7 +32867,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -32889,7 +32882,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -32917,7 +32910,7 @@
         "arguments": {
           "templateDirectory": "C:\\Examples\\templates",
           "plcXmlPath": "C:\\Examples\\snapshot",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -32932,7 +32925,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -33091,7 +33084,7 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;",
-          "exportFile": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -33926,7 +33919,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Examples\\generated",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "package": {
             "name": "Example",
             "screenDesign": {
@@ -33973,7 +33966,7 @@
         ],
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "exportFile": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -34526,8 +34519,7 @@
                 "deviceItems": []
               }
             ]
-          },
-          "exportFile": "C:\\Examples\\generated\\Example.aml"
+          }
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -34827,7 +34819,7 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "exportDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36472,7 +36464,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36487,7 +36479,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36502,7 +36494,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36519,7 +36511,7 @@
           "devicePath": [
             "PLC_1"
           ],
-          "exportFile": "C:\\Examples\\exports\\Device.aml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36535,7 +36527,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -36551,7 +36543,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDirectory": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -36568,7 +36560,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -36585,7 +36577,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -36602,7 +36594,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -36918,7 +36910,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "includeProjectTree": true
         },
         "envelopeVersion": 4,
@@ -36988,7 +36980,7 @@
         ],
         "arguments": {
           "sourceDirectory": "C:\\Examples\\exports",
-          "exportFile": "C:\\Examples\\generated\\documentation.md"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42461,7 +42453,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -42491,7 +42483,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -42507,7 +42499,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "exportFile": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42610,7 +42602,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42625,7 +42617,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42653,7 +42645,7 @@
         "arguments": {
           "templateDirectory": "C:\\Examples\\templates",
           "plcXmlPath": "C:\\Examples\\snapshot",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42668,7 +42660,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42827,7 +42819,7 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;",
-          "exportFile": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -43684,7 +43676,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Examples\\generated",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "package": {
             "name": "Example",
             "screenDesign": {
@@ -43731,7 +43723,7 @@
         ],
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "exportFile": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -44030,8 +44022,7 @@
                 "deviceItems": []
               }
             ]
-          },
-          "exportFile": "C:\\Examples\\generated\\Example.aml"
+          }
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -44145,7 +44136,7 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "exportDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -44943,7 +44934,7 @@
           "devicePath": [
             "PLC_1"
           ],
-          "exportFile": "C:\\Examples\\exports\\Device.aml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -44959,7 +44950,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -44975,7 +44966,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDirectory": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -44992,7 +44983,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -45009,7 +45000,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -45184,7 +45175,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "includeProjectTree": true
         },
         "envelopeVersion": 4,
@@ -45236,7 +45227,7 @@
         ],
         "arguments": {
           "sourceDirectory": "C:\\Examples\\exports",
-          "exportFile": "C:\\Examples\\generated\\documentation.md"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -48338,7 +48329,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -48368,7 +48359,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -48384,7 +48375,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "exportFile": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -48448,7 +48439,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -48588,7 +48579,7 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;",
-          "exportFile": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -49003,7 +48994,7 @@
         ],
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "exportFile": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -49318,8 +49309,7 @@
                 "deviceItems": []
               }
             ]
-          },
-          "exportFile": "C:\\Examples\\generated\\Example.aml"
+          }
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -49433,7 +49423,7 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "exportDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -50301,7 +50291,7 @@
           "devicePath": [
             "PLC_1"
           ],
-          "exportFile": "C:\\Examples\\exports\\Device.aml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -50317,7 +50307,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -50333,7 +50323,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDirectory": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -50350,7 +50340,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -50367,7 +50357,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -50384,7 +50374,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -50594,7 +50584,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "includeProjectTree": true
         },
         "envelopeVersion": 4,
@@ -50664,7 +50654,7 @@
         ],
         "arguments": {
           "sourceDirectory": "C:\\Examples\\exports",
-          "exportFile": "C:\\Examples\\generated\\documentation.md"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -54221,7 +54211,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -54251,7 +54241,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -54267,7 +54257,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "exportFile": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -54347,7 +54337,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -54487,7 +54477,7 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;",
-          "exportFile": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -54969,7 +54959,7 @@
         ],
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "exportFile": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -55284,8 +55274,7 @@
                 "deviceItems": []
               }
             ]
-          },
-          "exportFile": "C:\\Examples\\generated\\Example.aml"
+          }
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -55399,7 +55388,7 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "exportDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -56315,7 +56304,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -56330,7 +56319,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -56347,7 +56336,7 @@
           "devicePath": [
             "PLC_1"
           ],
-          "exportFile": "C:\\Examples\\exports\\Device.aml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -56363,7 +56352,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -56379,7 +56368,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDirectory": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -56396,7 +56385,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -56413,7 +56402,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -56430,7 +56419,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -56659,7 +56648,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "includeProjectTree": true
         },
         "envelopeVersion": 4,
@@ -56729,7 +56718,7 @@
         ],
         "arguments": {
           "sourceDirectory": "C:\\Examples\\exports",
-          "exportFile": "C:\\Examples\\generated\\documentation.md"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -60669,7 +60658,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -60699,7 +60688,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -60715,7 +60704,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "exportFile": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -60795,7 +60784,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -60935,7 +60924,7 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;",
-          "exportFile": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -61450,7 +61439,7 @@
         ],
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "exportFile": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -61765,8 +61754,7 @@
                 "deviceItems": []
               }
             ]
-          },
-          "exportFile": "C:\\Examples\\generated\\Example.aml"
+          }
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -61880,7 +61868,7 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "exportDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -62848,7 +62836,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -62863,7 +62851,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -62878,7 +62866,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -62895,7 +62883,7 @@
           "devicePath": [
             "PLC_1"
           ],
-          "exportFile": "C:\\Examples\\exports\\Device.aml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -62911,7 +62899,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -62927,7 +62915,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDirectory": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -62944,7 +62932,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -62961,7 +62949,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -62978,7 +62966,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -63255,7 +63243,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "includeProjectTree": true
         },
         "envelopeVersion": 4,
@@ -63325,7 +63313,7 @@
         ],
         "arguments": {
           "sourceDirectory": "C:\\Examples\\exports",
-          "exportFile": "C:\\Examples\\generated\\documentation.md"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -67488,7 +67476,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -67518,7 +67506,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -67534,7 +67522,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "exportFile": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -67614,7 +67602,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -67773,7 +67761,7 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;",
-          "exportFile": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -68309,7 +68297,7 @@
         ],
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "exportFile": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -68655,8 +68643,7 @@
                 "deviceItems": []
               }
             ]
-          },
-          "exportFile": "C:\\Examples\\generated\\Example.aml"
+          }
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -68770,7 +68757,7 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "exportDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -69840,7 +69827,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -69855,7 +69842,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -69870,7 +69857,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -69887,7 +69874,7 @@
           "devicePath": [
             "PLC_1"
           ],
-          "exportFile": "C:\\Examples\\exports\\Device.aml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -69903,7 +69890,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -69919,7 +69906,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDirectory": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -69936,7 +69923,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -69953,7 +69940,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -69970,7 +69957,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -70247,7 +70234,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "includeProjectTree": true
         },
         "envelopeVersion": 4,
@@ -70317,7 +70304,7 @@
         ],
         "arguments": {
           "sourceDirectory": "C:\\Examples\\exports",
-          "exportFile": "C:\\Examples\\generated\\documentation.md"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -74814,7 +74801,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -74844,7 +74831,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -74860,7 +74847,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "exportFile": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -74940,7 +74927,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -75099,7 +75086,7 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;",
-          "exportFile": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -75666,7 +75653,7 @@
         ],
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "exportFile": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -76134,8 +76121,7 @@
                 "deviceItems": []
               }
             ]
-          },
-          "exportFile": "C:\\Examples\\generated\\Example.aml"
+          }
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -76249,7 +76235,7 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "exportDirectory": "C:\\Examples\\generated"
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -77856,7 +77842,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -77871,7 +77857,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -77886,7 +77872,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportFile": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -77903,7 +77889,7 @@
           "devicePath": [
             "PLC_1"
           ],
-          "exportFile": "C:\\Examples\\exports\\Device.aml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -77919,7 +77905,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiConnection.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -77935,7 +77921,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDirectory": "C:\\Examples\\exports",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -77952,7 +77938,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -77969,7 +77955,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportFile": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4,
@@ -77986,7 +77972,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "interfaceName": "Server interface_1",
-          "exportFile": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportOpcUaInterface.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -78263,7 +78249,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportDirectory": "C:\\Temp\\mcp-report",
+          "exportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;",
           "includeProjectTree": true
         },
         "envelopeVersion": 4,
@@ -78333,7 +78319,7 @@
         ],
         "arguments": {
           "sourceDirectory": "C:\\Examples\\exports",
-          "exportFile": "C:\\Examples\\generated\\documentation.md"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\documentation.md"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -83498,7 +83484,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Block.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Block.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -83528,7 +83514,7 @@
         ],
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "exportFile": "C:\\TIA_MCP\\exports\\Atlas.html"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Atlas.html"
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -83544,7 +83530,7 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml",
-          "exportFile": "C:\\Examples\\generated\\result.xml"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\result.xml"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -83637,7 +83623,7 @@
         "arguments": {
           "templateDirectory": "C:\\Examples\\templates",
           "plcXmlPath": "C:\\Examples\\snapshot",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -83652,7 +83638,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -83811,7 +83797,7 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;",
-          "exportFile": "C:\\Temp\\blocks.json"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\blocks.json"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -84602,7 +84588,7 @@
         ],
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
-          "exportFile": "C:\\Temp\\FC_Add.scl"
+          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\FC_Add.scl"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -90923,7 +90909,7 @@
           "full"
         ],
         "arguments": {
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4
       },
@@ -90936,7 +90922,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4
       },
@@ -90960,7 +90946,7 @@
         "arguments": {
           "templateDirectory": "C:\\Examples\\templates",
           "plcXmlPath": "C:\\Examples\\snapshot",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4
       },
@@ -90973,7 +90959,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4
       },
@@ -98408,7 +98394,7 @@
           "full"
         ],
         "arguments": {
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4
       },
@@ -98421,7 +98407,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4
       },
@@ -98445,7 +98431,7 @@
         "arguments": {
           "templateDirectory": "C:\\Examples\\templates",
           "plcXmlPath": "C:\\Examples\\snapshot",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4
       },
@@ -98458,7 +98444,7 @@
         ],
         "arguments": {
           "workspaceRoot": "C:\\Examples\\work",
-          "reportDirectory": "C:\\Examples\\reports"
+          "reportDirectory": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;"
         },
         "envelopeVersion": 4
       },

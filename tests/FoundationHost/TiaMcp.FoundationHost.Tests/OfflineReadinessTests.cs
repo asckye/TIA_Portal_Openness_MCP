@@ -6,6 +6,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.ModelContextProtocol;
+using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
 using Host = enginehost::TiaMcpServer.ModelContextProtocol;
 using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
@@ -66,7 +67,7 @@ public sealed class OfflineReadinessTests
         var loadedBefore = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetName().Name!.StartsWith("Siemens.")).ToArray();
         var result = await target.InvokeAsync(Request(name, arguments));
         AssertRanWithoutReadiness(name, result.StructuredContent);
-        fixture.ResetOutput(arguments);
+        fixture.ResetOutput(name, arguments);
         var bridged = await pipeline.AllTools.Single(t => t.ProtocolTool.Name == "CallTool").InvokeAsync(
             Request("CallTool", new JsonObject { ["name"] = name, ["arguments"] = arguments.DeepClone() }));
         AssertRanWithoutReadiness(name, bridged.StructuredContent);
@@ -177,6 +178,13 @@ public sealed class OfflineReadinessTests
         }
         internal void Bind(string name, JsonObject args)
         {
+            void SetPath(string key, string path, bool required = false)
+            {
+                string parameter = PathKey(name, args, key);
+                if (!required && !args.ContainsKey(parameter) && !args.ContainsKey(key)) return;
+                args[parameter] = path;
+                if (parameter != key) args.Remove(key);
+            }
             if (name is "PlanOnlineReadOnlyMonitoring" or "PlanOnlineReadOnlyDataProvider")
             {
                 args["tagPaths"] = new JsonArray("DB_Status.Ready");
@@ -190,34 +198,45 @@ public sealed class OfflineReadinessTests
                      "items":[{"type":"Text","name":"StatusText","left":20,"top":20,"width":160,"height":40,"text":"Ready"}]},
                      "tagTable":{"name":"FixtureTags","tags":[{"name":"Ready","dataType":"Bool","length":"1"}]}}
                     """, Path.Combine(root, "classic"));
-                args["path"] = (string)package["manifestPath"]!;
+                SetPath("path", (string)package["manifestPath"]!, required: true);
                 if (name == "ValidateClassicHmiMinimalPackagePlcSync") args["plcSymbols"] = new JsonArray("DB_Status.Ready");
             }
             foreach (string key in new[] { "libraryPath", "templateDirectory", "directory", "referenceProjectPath", "referenceGlobalLibraryPath" })
-                if (args.ContainsKey(key)) args[key] = root;
-            if (args.ContainsKey("templateFile")) args["templateFile"] = Path.Combine(root, "unified_screen.json");
-            if (args.ContainsKey("offlineReleaseSuiteJsonPath")) args["offlineReleaseSuiteJsonPath"] = Path.Combine(root, "report.json");
-            if (args.ContainsKey("outputPath")) args["outputPath"] = Path.Combine(root, name == "BuildDeviceAmlDocument" ? "output.aml" : "output.scl");
+                SetPath(key, root);
+            SetPath("templateFile", Path.Combine(root, "unified_screen.json"));
+            SetPath("offlineReleaseSuiteJsonPath", Path.Combine(root, "report.json"));
+            SetPath("outputPath", Path.Combine(root, name == "BuildDeviceAmlDocument" ? "output.aml" : "output.scl"),
+                required: name == "BuildDeviceAmlDocument");
             if (name == "AnalyzePlcReferences")
-            { args["directory"] = Path.Combine(root, "exports"); args["action"] = "summary"; args.Remove("target"); }
+            { SetPath("directory", Path.Combine(root, "exports"), required: true); args["action"] = "summary"; args.Remove("target"); }
             if (name == "BuildPlcSymbolManifestFromPath")
-            { args["inputRoot"] = root; args["files"] = new JsonArray("tags.xml"); }
+            { SetPath("inputRoot", root, required: true); args["files"] = new JsonArray("tags.xml"); }
             if (name == "ValidatePlcDocumentSchemas")
-            { args["filePath"] = Path.Combine(root, "fragment.xml"); args["schemaDirectory"] = Path.Combine(root, "schemas"); }
+            {
+                SetPath("filePath", Path.Combine(root, "fragment.xml"), required: true);
+                SetPath("schemaDirectory", Path.Combine(root, "schemas"), required: true);
+            }
             if (name == "DecodePlcSimaticMl")
             {
                 var built = TiaMcpServer.ModelContextProtocol.PlcBuilderToolJson.ComposeFcBlock("""
                     {"blockName":"FC_Ready","blockNumber":10,"inputs":[],"outputs":[{"name":"Ready","datatype":"Bool"}],
                      "structuredText":{"operations":[{"op":"assign","target":"#Ready","literalValue":"TRUE"}]}}
                     """);
-                string path = Path.Combine(root, "decode.xml"); File.WriteAllText(path, (string)built["xml"]!); args["filePath"] = path;
+                string path = Path.Combine(root, "decode.xml"); File.WriteAllText(path, (string)built["xml"]!);
+                SetPath("filePath", path, required: true);
             }
             if (name == "ValidateStandardPackage")
             { args.Clear(); args["packageId"] = "tiamcp.basic"; args["version"] = "1.0.0"; }
         }
-        internal void ResetOutput(JsonObject args)
+        private static string PathKey(string name, JsonObject args, string key)
         {
-            if (args["outputPath"] is JsonValue value && value.TryGetValue<string>(out var path) && File.Exists(path))
+            var aliases = CanonicalToolParameters.Aliases(name).Where(alias => alias.Legacy == key);
+            return aliases.FirstOrDefault(alias => args.ContainsKey(alias.Canonical))?.Canonical
+                ?? aliases.FirstOrDefault()?.Canonical ?? key;
+        }
+        internal void ResetOutput(string name, JsonObject args)
+        {
+            if (args[PathKey(name, args, "outputPath")] is JsonValue value && value.TryGetValue<string>(out var path) && File.Exists(path))
                 File.Delete(path);
         }
         public void Dispose()

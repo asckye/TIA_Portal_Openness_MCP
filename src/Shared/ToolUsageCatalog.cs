@@ -156,6 +156,32 @@ namespace TiaOpenness.Shared
             if ((bool?)arguments["confirm"] == true) arguments["confirm"] = false;
         }
 
+        public static void BindExampleOutputs(string name, string release, JsonObject arguments, IEnumerable<string> parameters)
+        {
+            var names = new HashSet<string>(parameters, StringComparer.Ordinal);
+            var aliases = TiaMcp.Logic.V4.CanonicalToolParameters.Aliases(name);
+            var maintained = ServedCall(name, release)?["arguments"] as JsonObject;
+            if (maintained != null)
+                foreach (var output in ApprovalOutputTargets.Arguments(name, maintained).ToArray())
+                {
+                    if (output.Key == "repositoryPath" || !maintained.ContainsKey(output.Key) || arguments.ContainsKey(output.Key)) continue;
+                    var alias = aliases.FirstOrDefault(candidate => candidate.Canonical == output.Key);
+                    if (!names.Contains(output.Key) && (alias == null || !names.Contains(alias.Legacy))) continue;
+                    if (alias != null && aliases.Any(candidate => candidate.Legacy == alias.Legacy && arguments.ContainsKey(candidate.Canonical)))
+                        continue;
+                    arguments[output.Key] = maintained[output.Key]!.DeepClone();
+                }
+            foreach (var output in ApprovalOutputTargets.Arguments(name, arguments).ToArray())
+            {
+                if (output.Key == "repositoryPath" || !arguments.ContainsKey(output.Key)
+                    || output.Value.Contains("data.outputRoot")) continue;
+                const string directory = @"C:\<directory under GetSessionState data.outputRoot>";
+                bool directoryTarget = output.Key.EndsWith("Directory", StringComparison.Ordinal)
+                    || output.Key.EndsWith("Dir", StringComparison.Ordinal) || output.Key is "dir" or "directory" or "directoryPath";
+                arguments[output.Key] = directoryTarget ? directory : directory + "\\" + Path.GetFileName(output.Value.Replace('\\', '/'));
+            }
+        }
+
         public static JsonArray InlineCalls(string release, bool engineSource = false)
         {
             var result = new JsonArray();

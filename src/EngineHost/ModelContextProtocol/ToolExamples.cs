@@ -63,6 +63,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!spec.Required) continue;
                 args[spec.Name] = PlaceholderValue(tool, spec);
             }
+            foreach (var group in TiaMcp.Logic.V4.CanonicalToolParameters.Aliases(tool).GroupBy(alias => alias.Legacy))
+            {
+                var alias = group.FirstOrDefault(candidate => args.ContainsKey(candidate.Canonical)) ?? group.First();
+                var value = args[alias.Canonical] ?? args[alias.Legacy];
+                if (value == null && group.All(candidate => !candidate.Canonical.StartsWith("export", StringComparison.Ordinal)))
+                {
+                    var spec = specs.FirstOrDefault(candidate => candidate.Name == alias.Canonical)
+                        ?? specs.FirstOrDefault(candidate => candidate.Name == alias.Legacy);
+                    if (spec != null) value = PlaceholderValue(tool, spec);
+                }
+                if (value != null) args[alias.Canonical] = value.DeepClone();
+                foreach (var candidate in group)
+                    if (candidate.Canonical != alias.Canonical) args.Remove(candidate.Canonical);
+                args.Remove(alias.Legacy);
+            }
+            TiaOpenness.Shared.ToolUsageCatalog.BindExampleOutputs(tool, McpServer.ReleaseKey, args, specs.Select(spec => spec.Name));
             return new Example(tool, args.ToJsonString(PlainJson), DerivedNote);
         }
 
