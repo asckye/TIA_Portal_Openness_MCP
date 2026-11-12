@@ -1686,6 +1686,38 @@
           "identifier": "TiaMcp.WorkerChannel.Tests.ServerTests/Answered_unknown_allows_one_recovery_disconnect_on_the_original_owner_thread( ):dcbf3adb3809abccd560e891dbe43b7a1f634e97967f701668839922f66e52a0"
         }
       ]
+    },
+    {
+      "task": "NO-LOCK-1",
+      "maintainerDate": "2026-11-12",
+      "reason": "Maintainer rule of 2026-11-12 for lock-only assertions: worker-channel tests now let later independent calls run after an unknown outcome; honest outcome and single write kept",
+      "items": [
+        {
+          "path": "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/EngineProfileTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.WorkerChannel.Tests.EngineProfileTests/ChannelUnknownPermitsOnlyARecoveryDisconnect( ):c17576df3658ca12b76b8a15b7c08d8d119c510022400b4d6f95892767dc4b04"
+        },
+        {
+          "path": "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/EngineProfileTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.WorkerChannel.Tests.EngineProfileTests/Latched_engine_project_still_permits_the_independent_simulator( ):ef5cc1a0b68b9b54458b90ef7adf9fe565d921b2cab818df5dd6296a55a3bbd3"
+        },
+        {
+          "path": "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProcessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.WorkerChannel.Tests.ProcessTests/ReadFailureOutcomePreserved( string mode , ChannelOutcome outcome , bool poisoned ):2d70876fc7b1fdd982a581b6e8e81a62d47066ced3163be02f456128b970b2b6:1"
+        },
+        {
+          "path": "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProcessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.WorkerChannel.Tests.ProcessTests/ReadFailureOutcomePreserved( string mode , ChannelOutcome outcome , bool poisoned ):773cf6a069ac89d3d4df0641eecbf16540b64ae872c30e6fc371a784d207d9f2:1"
+        },
+        {
+          "path": "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProcessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.WorkerChannel.Tests.ProcessTests/ReadFailureOutcomePreserved( string mode , ChannelOutcome outcome , bool poisoned ):af5ced3e11af28efe8f17f2041e5be275699d926fde26ac66b42061f14781691:1"
+        }
+      ]
     }
   ]
 }
