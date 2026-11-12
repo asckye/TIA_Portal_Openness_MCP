@@ -19,8 +19,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             HmiObject result;
             try
             {
-                foreach (string key in new[] { "screenPath", "typePath", "folderPath" })
-                    if (scope.TryGetValue(key, out var path)) EngineeringInputValidation.AbsoluteHmiPath((string)path!, rootAllowed: key == "folderPath");
+                MigrationRead.ValidateScopePaths(scope);
                 if (_session.CurrentProject == null) throw new InvalidOperationException("No open project.");
                 var project = _session.CurrentProject;
                 if (string.IsNullOrWhiteSpace(expectedProject)) throw new InvalidOperationException("An exact expectedProject is required.");

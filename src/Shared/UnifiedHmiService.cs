@@ -30,7 +30,7 @@ namespace TiaMcpServer.Siemens.Services
             =>
                 Invoke<ResponseMessage>(new UnifiedHmiRequest {
                     Operation = "EnsureUnifiedHmiTagTable", HmiSoftwarePath = hmiSoftwarePath, TagTableName = tagTableName, DryRun = dryRun });
-        public ResponseMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName =
+        public ResponseMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "", string plcName =
                 "", string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true, bool dryRun = true)
             =>
                 Invoke<ResponseMessage>(new UnifiedHmiRequest {
@@ -108,7 +108,7 @@ namespace TiaMcpServer.Siemens.Services
                         propertyName, DynamizationType = dynamizationType, DryRun = dryRun
                 });
         public ResponseMessage BindUnifiedHmiTagDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string tagName,
-                string dataType = "Bool", string plcTag = "", string address = "", bool dryRun = true)
+                string dataType = "", string plcTag = "", string address = "", bool dryRun = true)
             =>
                 Invoke<ResponseMessage>(new UnifiedHmiRequest {
                     Operation = "BindUnifiedHmiTagDynamization", HmiSoftwarePath = hmiSoftwarePath, ScreenName = screenName, ItemName = itemName, PropertyName =

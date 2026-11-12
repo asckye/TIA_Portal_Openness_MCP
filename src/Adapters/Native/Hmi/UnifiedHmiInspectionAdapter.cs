@@ -39,7 +39,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var token=HmiExactAccess.Token(scope,data);
                 meta["before"]=data;meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
                 var empty=!data["scriptExists"]!.GetValue<bool>()
-                    || (data["ScriptCode"]?.ToString()=="" && data["GlobalDefinitionAreaScriptCode"]?.ToString()=="");
+                    || (data["ScriptCode"]?.ToString()==""
+                        && !HmiExchangePolicy.EventDefinitionHasCode(data["GlobalDefinitionAreaScriptCode"]?.ToString()));
                 meta["empty"]=empty;
                 if(onlyIfEmpty&&!empty) throw new PlcSoftwareException("InvalidState","Event contains script code; deletion refused by onlyIfEmpty.");
                 if(dryRun)return "Preview only; event has not been deleted.";
@@ -77,9 +78,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var data=HmiSnapshot.Capture(dyn,8,2000);
                 var token=HmiExactAccess.Token(softwarePath+":"+screenPath+":"+itemName+":"+propertyName,data);
                 meta["before"]=data;meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
+                var refusal = HmiExchangePolicy.UnifiedDynamizationDeleteRefusal(data);
+                if (refusal != null) throw new PlcSoftwareException("InvalidState", refusal);
+                if (data["incomplete"] is true) meta["unboundTagDynamization"] = true;
                 if(dryRun)return "Preview only; dynamization has not been deleted.";
-                if(data["incomplete"]!.GetValue<bool>())
-                    throw new PlcSoftwareException("InvalidState","Cannot delete while the current dynamization snapshot is incomplete.");
                 HmiExactAccess.RequireToken(expectedToken,token);
                 meta["mayHaveChanged"]=true;HmiExactAccess.Delete(dyn);
                 try {ExactDynamization(item,propertyName);throw new InvalidOperationException("Dynamization still exists after Delete.");}

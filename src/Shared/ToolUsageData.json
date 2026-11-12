@@ -41118,7 +41118,7 @@
             },
             "plcTag": {
               "exampleValue": "<plcTag from this operation's target or user input>",
-              "requiresBinding": true
+              "description": "optional expected value from the bound tag; omit unless you need it compared"
             },
             "address": {
               "exampleValue": "%M0.0"
@@ -41421,7 +41421,8 @@
           },
           "parameters": {
             "hmiDataType": {
-              "exampleValue": "Bool"
+              "exampleValue": "Bool",
+              "description": "Optional HMI type; omit for a symbolic tag. Absolute tags default to Bool."
             },
             "plcName": {
               "exampleValue": "PLC_1",
@@ -46833,7 +46834,7 @@
             },
             "plcTag": {
               "exampleValue": "<plcTag from this operation's target or user input>",
-              "requiresBinding": true
+              "description": "optional expected value from the bound tag; omit unless you need it compared"
             },
             "address": {
               "exampleValue": "%M0.0"
@@ -48572,7 +48573,8 @@
           },
           "parameters": {
             "hmiDataType": {
-              "exampleValue": "Bool"
+              "exampleValue": "Bool",
+              "description": "Optional HMI type; omit for a symbolic tag. Absolute tags default to Bool."
             },
             "plcName": {
               "exampleValue": "PLC_1",
@@ -66559,12 +66561,11 @@
             "hmiSoftwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table",
             "tagName": "<Tag>",
-            "hmiDataType": "Bool",
             "plcName": "PLC_1",
             "plcTag": "<PLC tag>",
             "dryRun": false
           },
-          "expect": "AbsoluteVerified true"
+          "expect": "SymbolicVerified true"
         },
         {
           "tool": "EnsureUnifiedHmiScreen",

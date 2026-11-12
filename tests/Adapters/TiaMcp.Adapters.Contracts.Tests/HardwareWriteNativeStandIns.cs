@@ -258,11 +258,6 @@ namespace TiaMcp.Adapters.Native.Security
     }
 }
 
-namespace TiaMcp.Adapters.Native.Hmi
-{
-    internal static class HmiScalar { internal static HmiObject Read(object value) => new(); }
-}
-
 // Managed native-boundary stand-ins: the production mutation and readback code is linked above.
 namespace Siemens.Engineering
 {

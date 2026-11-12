@@ -49,6 +49,34 @@ public sealed class FoundationV4ContractsTests
         };
     }
 
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Failed_button_action_does_not_claim_it_was_applied(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        int calls = 0;
+        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, _) => {
+            calls++;
+            return new JsonObject { ["Value"] = new JsonObject { ["Meta"] = new JsonObject {
+                ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["status"] = "ReadOrWriteFailed",
+                ["nativeMessage"] = "Event script write did not complete: Property Name field is not supported for event script action" } } };
+        }, () => "C:/Fixture/Project.ap" + release);
+        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
+        var tool = McpServerTool.Create(tools.EnsureUnifiedHmiButtonActionV4);
+        var arguments = new JsonObject {
+            ["hmiSoftwarePath"] = "HMI", ["screenName"] = "Overview", ["buttonName"] = "Start",
+            ["eventType"] = "Down", ["actionKind"] = "set-bit", ["targetTag"] = "Run", ["dryRun"] = false };
+        var body = Body(await tool.InvokeAsync(Request("EnsureUnifiedHmiButtonAction", arguments.ToJsonString())));
+        Assert.Equal(1, calls);
+        Assert.False((bool)body["ok"]!);
+        Assert.DoesNotContain("applied via", (string)body["data"]!["summary"]!);
+        Assert.Contains("was not applied", (string)body["data"]!["summary"]!);
+        Assert.Contains("Property Name field", body.ToJsonString());
+    }
+
     private static JsonObject DesignSuccess() => new() {
         ["Value"] = new JsonObject { ["Meta"] = new JsonObject { ["operationSuccess"] = true, ["mayHaveChanged"] = true } } };
 

@@ -217,7 +217,7 @@ namespace TiaMcp.Adapters.Native.Engineering
             if (absent == null && collection != null)
             {
                 string identity = Identity(target);
-                string? name = (ReadableProperty(target.GetType(), "Name") ?? ReadableProperty(target.GetType(), "PropertyName"))?.GetValue(target) as string;
+                string? name = LabelOrNull(target, "Name") as string ?? LabelOrNull(target, "PropertyName") as string;
                 var find = collection.GetType().GetMethod("Find", new[] { typeof(string) });
                 absent = find != null && name != null ? () => find.Invoke(collection, new object[] { name }) == null
                     : collection is IEnumerable items
@@ -440,18 +440,25 @@ namespace TiaMcp.Adapters.Native.Engineering
             return null;
         }
 
+        private static object? LabelOrNull(object item, string property)
+        {
+            var member = ReadableProperty(item.GetType(), property);
+            try { return member?.GetValue(item); }
+            catch (TargetInvocationException)
+            { /* swallow(probe-optional): an identity label must not stop the write it describes. */ return null; }
+        }
+
         private static string Identity(object target)
         {
             var parts = new List<string>();
             object? item = target;
             for (int count = 0; item != null && count < 32; count++)
             {
-                var name = ReadableProperty(item.GetType(), "Name")?.GetValue(item) as string
-                    ?? ReadableProperty(item.GetType(), "PropertyName")?.GetValue(item) as string;
-                if (name == null && ReadableProperty(item.GetType(), "Language")?.GetValue(item) is object language
-                    && ReadableProperty(language.GetType(), "Culture")?.GetValue(language) is CultureInfo culture) name = "language=" + culture.Name;
+                var name = LabelOrNull(item, "Name") as string ?? LabelOrNull(item, "PropertyName") as string;
+                if (name == null && LabelOrNull(item, "Language") is object language
+                    && LabelOrNull(language, "Culture") is CultureInfo culture) name = "language=" + culture.Name;
                 parts.Add(name == null ? item.GetType().Name : Uri.EscapeDataString(name));
-                var next = ReadableProperty(item.GetType(), "Parent")?.GetValue(item);
+                var next = LabelOrNull(item, "Parent");
                 if (ReferenceEquals(next, item)) break;
                 item = next;
             }

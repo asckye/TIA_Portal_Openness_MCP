@@ -98,7 +98,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var tagName = IS(item, "tagName");
                     if (string.IsNullOrWhiteSpace(tagName)) continue;
                     var tagTable = IS(item, "tagTableName", "Default tag table");
-                    var dt = IS(item, "hmiDataType", "Bool");
+                    var dt = IS(item, "hmiDataType");
                     var plcTag = IS(item, "plcTag");
                     var address = IS(item, "address");
                     try {

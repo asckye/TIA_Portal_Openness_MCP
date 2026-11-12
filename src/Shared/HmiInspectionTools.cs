@@ -54,7 +54,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string eventType,
             bool dryRun=true,
             string previewToken="",
-            [Description("onlyIfEmpty: true deletes the event only when it has no script.")] bool onlyIfEmpty=true)
+            [Description("onlyIfEmpty: true deletes the event only when ScriptCode is empty and the definition area holds no code.")] bool onlyIfEmpty=true)
             => HmiInspectionContract
                 .Run("DeleteUnifiedHmiButtonEvent", !dryRun, true, () =>
                     DeleteUnifiedHmiButtonEvent(softwarePath, screenPath, buttonName, eventType, dryRun, previewToken, onlyIfEmpty));
@@ -66,7 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string eventType,
             bool dryRun=true,
             string expectedToken="",
-            [Description("onlyIfEmpty: true deletes the event only when it has no script.")] bool onlyIfEmpty=true)
+            [Description("onlyIfEmpty: true deletes the event only when ScriptCode is empty and the definition area holds no code.")] bool onlyIfEmpty=true)
         =>_hmiInspection.DeleteUnifiedHmiButtonEvent(softwarePath,screenPath,buttonName,eventType,dryRun,expectedToken,onlyIfEmpty);
 
         [McpServerTool(Name="GetUnifiedHmiDynamization"),

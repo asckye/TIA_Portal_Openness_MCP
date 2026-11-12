@@ -13,6 +13,13 @@ namespace TiaMcp.Adapters.Native.Hmi
     // invoke caller-supplied methods, create a composition item or write a value.
     internal static class MigrationRead
     {
+        internal static void ValidateScopePaths(HmiObject scope)
+        {
+            foreach (string key in new[] { "screenPath", "typePath", "folderPath" })
+                if (scope.TryGetValue(key, out var path) && !(key == "typePath" && path is ""))
+                    EngineeringInputValidation.AbsoluteHmiPath((string)path!, rootAllowed: key == "folderPath");
+        }
+
         internal static string Segment(string value) => Uri.EscapeDataString(value);
         internal static Exception Cause(Exception ex) => ex is TargetInvocationException tie && tie.InnerException != null ? Cause(tie.InnerException) : ex;
         internal static HmiObject Failure(string path, string code, Exception? ex = null, string? reason = null)

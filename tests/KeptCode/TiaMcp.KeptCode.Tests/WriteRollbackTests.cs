@@ -18,6 +18,109 @@ namespace TiaMcp.Engine.Tests;
 
 public sealed class WriteRollbackTests(ITestOutputHelper output)
 {
+    public sealed class EventHandlerFake { public string EventType => "Down"; }
+    public sealed class EventScriptFake
+    {
+        public EventHandlerFake Parent => new();
+        public string PropertyName => throw new InvalidOperationException("Property Name field is not supported for event script action");
+        public string ScriptCode { get; set; } = "";
+        public string GlobalDefinitionAreaScriptCode { get; set; } = "// synthetic comment\r\n\r\n";
+        public bool Async { get; set; }
+    }
+    public sealed class RefusedParentScript
+    {
+        public object Parent => throw new InvalidOperationException("Parent unavailable");
+        public string ScriptCode { get; set; } = "";
+    }
+    public sealed class RefusedScriptGetter
+    {
+        public string ScriptCode { get => throw new InvalidOperationException("ScriptCode unavailable"); set { } }
+    }
+    public sealed class NamedDynamization
+    {
+        public string PropertyName => "Visible";
+        public string Tag { get; set; } = "Before";
+    }
+
+    [Fact]
+    public void Event_script_write_succeeds_when_PropertyName_is_refused()
+    {
+        var script = new EventScriptFake(); var meta = new HmiObject(); int writes = 0;
+        EngineeringWriteJournal.Run(meta, () => {
+            HmiExchangePolicy.UpdateScript(script, "Run();", null, null, () => writes++);
+            return "written";
+        });
+        Assert.Equal("Run();", script.ScriptCode);
+        Assert.Equal("// synthetic comment\r\n\r\n", script.GlobalDefinitionAreaScriptCode);
+        Assert.Equal(1, writes);
+    }
+
+    [Fact]
+    public void Event_script_apply_path_writes_when_PropertyName_is_refused()
+    {
+        var script = new EventScriptFake(); var meta = new HmiObject();
+        EngineeringWriteJournal.Run(meta, () => {
+            var prepared = UnifiedRequestScalar.Prepare(script.GetType(), new HmiObject { ["ScriptCode"] = "Run();" });
+            UnifiedRequestScalar.Apply(script, prepared, meta);
+            return "written";
+        });
+        Assert.Equal("Run();", script.ScriptCode);
+        Assert.Equal(new object?[] { "ScriptCode" }, (HmiArray)meta["appliedProperties"]!);
+    }
+
+    [Fact]
+    public void Refused_PropertyName_still_restores_the_script_after_a_later_failure()
+    {
+        var script = new EventScriptFake(); var meta = new HmiObject();
+        Assert.Throws<InvalidOperationException>(() => EngineeringWriteJournal.Run(meta, () => {
+            HmiExchangePolicy.UpdateScript(script, "Run();", "let synthetic;", true, () => { });
+            throw new InvalidOperationException("later failure");
+        }));
+        Assert.Equal("", script.ScriptCode);
+        Assert.Equal("// synthetic comment\r\n\r\n", script.GlobalDefinitionAreaScriptCode);
+        Assert.False(script.Async);
+        Assert.Equal("restored", meta["rollbackOutcome"]);
+        Assert.Equal(true, meta["rollbackCompleted"]);
+    }
+
+    [Fact]
+    public void Refused_Parent_ends_the_label_and_keeps_the_write()
+    {
+        var script = new RefusedParentScript(); var meta = new HmiObject();
+        EngineeringWriteJournal.Run(meta, () => {
+            HmiExchangePolicy.UpdateScript(script, "Run();", null, null, () => { });
+            return "written";
+        });
+        Assert.Equal("Run();", script.ScriptCode);
+    }
+
+    [Fact]
+    public void Written_property_getter_failure_still_throws()
+    {
+        var script = new RefusedScriptGetter();
+        var property = script.GetType().GetProperty("ScriptCode")!;
+        EngineeringWriteJournal.Run(new HmiObject(), () => {
+            var capture = Assert.Throws<TargetInvocationException>(() => EngineeringWriteJournal.CaptureProperties(script, new[] { property }));
+            Assert.Equal("ScriptCode unavailable", capture.GetBaseException().Message);
+            var hook = Assert.Throws<TargetInvocationException>(() => EngineeringWriteJournal.Property(script, property));
+            Assert.Equal("ScriptCode unavailable", hook.GetBaseException().Message);
+            return "guarded";
+        });
+    }
+
+    [Fact]
+    public void Readable_PropertyName_stays_in_the_label()
+    {
+        var target = new NamedDynamization(); var meta = new HmiObject();
+        Assert.Throws<InvalidOperationException>(() => EngineeringWriteJournal.Run(meta, () => {
+            UnifiedRequestScalar.Apply(target, UnifiedRequestScalar.Prepare(target.GetType(), new HmiObject { ["Tag"] = "After" }), meta);
+            throw new InvalidOperationException("later failure");
+        }));
+        Assert.Equal("Before", target.Tag);
+        Assert.Contains((List<object?>)meta["restoredChanges"]!, row => row?.ToString()?.Contains("Visible.Tag", StringComparison.Ordinal) == true);
+        Assert.Equal("restored", meta["rollbackOutcome"]);
+    }
+
     [Fact]
     public void Informational_skeleton_step_keeps_created_objects_and_reports_success()
     {

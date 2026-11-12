@@ -780,7 +780,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var set = SetUnifiedHmiButtonEventScriptCode(software, screen, button, eventType, scriptCode, null, null, syntaxCheck);
                 meta["setMeta"] = set.Meta;
                 if (!set.Meta.TryGetValue("operationSuccess", out var written) || written is not true)
-                    throw new InvalidOperationException("Event script write did not complete.");
+                    throw new InvalidOperationException("Event script write did not complete"
+                        + (set.Meta["nativeMessage"] is string nativeMessage && nativeMessage.Length != 0 ? ": " + nativeMessage : "."));
                 return "Unified HMI button action applied and read back.";
             });
 
@@ -849,18 +850,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             }));
         }
 
-        /// <summary>
-        /// Unified TagDynamization: PLC address may live on property <c>Address</c>, <c>LogicalAddress</c>,
-        /// or only as an engineering attribute — plain <see cref="TrySetProperty"/> often misses it.
-        /// </summary>
-        private bool TrySetTagDynamizationAddress(object dyn, string address)
-        {
-            HmiExchangePolicy.WriteScalars(dyn, new Dictionary<string, object?> { ["Address"] = address }, () => { });
-            return true;
-        }
-
         public HmiMessage BindUnifiedHmiTagDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string tagName,
-                string dataType = "Bool", string plcTag = "", string address = "")
+                string dataType = "", string plcTag = "", string address = "")
         {
             return _session.RunHmiStepTool("BindUnifiedHmiTagDynamization", meta =>
             {
@@ -898,12 +889,15 @@ namespace TiaMcp.Adapters.Native.Hmi
                     results.Add(result); meta["set" + property] = result["trySetResult"];
                 }
                 Write("Tag", tagName, () => _session.TrySetProperty(dyn, "Tag", tagName));
-                Write("DataType", dataType, () => _session.TrySetProperty(dyn, "DataType", dataType));
-                if (!string.IsNullOrWhiteSpace(plcTag)) Write("PlcTag", plcTag, () => _session.TrySetProperty(dyn, "PlcTag", plcTag));
-                if (!string.IsNullOrWhiteSpace(address)) Write("Address", address, () => TrySetTagDynamizationAddress(dyn, address));
+                void Expected(string property, string value)
+                {
+                    meta["set" + property] = string.IsNullOrWhiteSpace(value) ? "skipped" : "bound-tag";
+                    if (!string.IsNullOrWhiteSpace(value)) results.Add(UnifiedUiModelLogic.VerifiedDerived(dyn, property, value));
+                }
+                Expected("DataType", dataType);
+                Expected("PlcTag", plcTag);
+                Expected("Address", address);
                 meta["action"] = action; meta["dynamizationType"] = dyn.GetType().FullName;
-                if (string.IsNullOrWhiteSpace(plcTag)) meta["setPlcTag"] = "skipped";
-                if (string.IsNullOrWhiteSpace(address)) meta["setAddress"] = "skipped";
                 meta["members"] = string.Join(" | ", _session.DescribeMembers(dyn, 120).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
                 meta["after"] = UnifiedRequestScalar.Read(dyn);
                 if (results.Any(r => r!.Field("verified") is not true))

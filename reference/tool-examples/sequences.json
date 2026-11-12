@@ -794,12 +794,11 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
           "tagName": "<Tag>",
-          "hmiDataType": "Bool",
           "plcName": "PLC_1",
           "plcTag": "<PLC tag>",
           "dryRun": false
         },
-        "expect": "AbsoluteVerified true"
+        "expect": "SymbolicVerified true"
       },
       {
         "tool": "EnsureUnifiedHmiScreen",

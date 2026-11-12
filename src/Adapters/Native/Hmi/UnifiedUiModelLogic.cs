@@ -83,10 +83,12 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static Color ParseColor(UnifiedNode? node)
         {
             var text = UnifiedAccess.TryString(node, out var s) ? s.Trim()
-                : throw new ArgumentException("Color must be a \"#AARRGGBB\" or \"#RRGGBB\" string.");
-            if (!text.StartsWith("#") || (text.Length != 7 && text.Length != 9) || !int
-                    .TryParse(text.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var argb))
-                throw new ArgumentException("Color must be a \"#AARRGGBB\" or \"#RRGGBB\" hex string: " + text);
+                : throw new ArgumentException("Color must be \"#AARRGGBB\", \"#RRGGBB\" or \"0xAARRGGBB\".");
+            int prefix = text.StartsWith("#", StringComparison.Ordinal) && (text.Length == 7 || text.Length == 9) ? 1
+                : text.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && text.Length == 10 ? 2 : 0;
+            var style = prefix == 2 ? NumberStyles.AllowHexSpecifier : NumberStyles.HexNumber;
+            if (prefix == 0 || !int.TryParse(text.Substring(prefix), style, CultureInfo.InvariantCulture, out var argb))
+                throw new ArgumentException("Color must be \"#AARRGGBB\", \"#RRGGBB\" or \"0xAARRGGBB\": " + text);
             if (text.Length == 7) argb = unchecked((int)0xFF000000) | argb;
             return Color.FromArgb(argb);
         }
@@ -94,6 +96,29 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static bool SameValue(object? actual, object? expected) => actual is Color a && expected is Color e ? a.ToArgb() == e.ToArgb() : UnifiedScalar
             .SameValue(actual, expected);
         internal static UnifiedNode? Json(object? value) => value is Color c ? UnifiedValues.Value(ColorText(c)) : UnifiedScalar.Json(value);
+
+        internal static UnifiedObject VerifiedDerived(object target, string property, string expected)
+        {
+            var result = new UnifiedObject {
+                ["property"] = property, ["requested"] = expected, ["verified"] = false, ["source"] = "bound-tag" };
+            try
+            {
+                var member = FindProperty(target.GetType(), property)
+                    ?? throw new NotSupportedException("Property readback unavailable: " + property);
+                var actual = member.GetValue(target);
+                result["readback"] = Json(actual);
+                bool verified = property == "DataType"
+                    ? string.Equals(actual?.ToString(), expected, StringComparison.OrdinalIgnoreCase) : SameValue(actual, expected);
+                result["verified"] = verified;
+                if (!verified) result["error"] = property + " expected '" + expected + "' but the bound tag supplies '" + actual + "'.";
+            }
+            catch (Exception error)
+            {
+                result["error"] = error.GetBaseException().Message;
+                if (HmiReadSafety.ConnectionUnavailable(error)) throw;
+            }
+            return result;
+        }
 
         internal static UnifiedObject VerifiedWrite(object target, string propertyName, UnifiedNode? requested, Func<bool> trySet, Func<bool>? fallback = null)
         {

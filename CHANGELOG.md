@@ -20,6 +20,17 @@
 - Generic write and batch `PLAN_STALE` messages explain that reconnects and host restarts can invalidate the preview and instruct callers to preview again.
 - Online monitoring safety checks use force-tool classifications and the reviewed offline-write list, require the monitoring API tools available on each release, and scan the registered roster on V20/V21. The policy covers offline force-table engineering and prohibits changing forcing on a running PLC.
 - Passive capability self-tests read cached connection and project state. A bound project is reported without a worker call, and project validation and tree reads require `connectIfNeeded=true`.
+### Changed
+- `EnsureUnifiedHmiTag.hmiDataType` and `BindUnifiedHmiTagDynamization.dataType` default to empty on V19–V21. Symbolic tags use the type supplied by TIA; absolute tags still default to Bool. Dynamization dataType, plcTag and address are optional expected values compared after binding, because those API properties are read-only.
+- Unified colour conversion and write verification also accept `0xAARRGGBB`; the theme schema keeps its existing `0x` format.
+
+### Fixed
+- Event script writes tolerate unavailable identity labels, preserve native failure reasons and report failed button actions accurately.
+- Symbolic HMI tag binding avoids unnecessary DataType writes, restores the binding before the type on rollback and lists applied property names in results.
+- Preview and deletion accept the exact unbound Tag dynamization snapshot whose Address, DataType and PlcTag getters fail; other incomplete snapshots refuse with failed paths.
+- Empty event deletion accepts a comment-only definition area while still requiring ScriptCode to be exactly empty.
+- `GetUnifiedFaceplateInstance` accepts an omitted optional typePath while still validating all supplied nonempty type paths, screen paths and folder paths.
+- Symbolic HMI tag rollback also restores the original DataType when no type was requested. Dynamization type expectations compare without case sensitivity; incomplete-delete and event-script errors retain useful text when paths or native messages are absent. Usage metadata marks dynamization plcTag as an optional expectation.
 
 ## [4.0.0-beta.4] - 2026-11-05
 

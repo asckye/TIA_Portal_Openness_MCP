@@ -144,8 +144,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "EnsureUnifiedHmiTag"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
-                "[L2][HMI-Unified] Create or verify a Unified HMI external tag. For PLC-backed tags pass plcTag and address in the same call; the address " +
-                "must read back in Address/LogicalAddress, e.g. %DB200.DBX0.0. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiConnection + " +
+                "[L2][HMI-Unified] Create or verify a Unified HMI external tag. A tag is absolute when address is given or plcTag is an absolute " +
+                "address (for example %M0.0); otherwise it is symbolic. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiConnection + " +
                 "EnsureUnifiedHmiTagTable. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiTagV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
@@ -154,11 +154,13 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("tagName: HMI tag name")] string tagName,
             [Description("plcName: required exact PLC software name for symbolic binding; discover it from project reads.")] string plcName,
             [Description("plcTag: required exact PLC tag name/path; discover it from PLC tag reads.")] string plcTag,
-            [Description("hmiDataType: HMI data type, e.g. Bool, Int, Real, String")] string hmiDataType = "Bool",
+            [Description("hmiDataType: Optional. Symbolic: TIA supplies the type and the reply reports it; a different value is attempted once and refused " +
+                "if TIA refuses. Absolute: the HMI data type, default Bool.")] string hmiDataType =
+                "",
             [Description("connectionName: existing HMI connection for plcName; empty selects the single connection with the matching PLC partner. " +
                 "Pass an explicit name if several match.")] string connectionName = "",
-            [Description("address: optional absolute PLC address, e.g. %DB200.DBX0.0. When supplied it is written as the verified HMI runtime address while " +
-                "plcTag remains available as the symbolic reference.")] string address =
+            [Description("address: optional absolute PLC address, e.g. %DB200.DBX0.0. When supplied, Address holds the runtime address and PlcTag is " +
+                "empty.")] string address =
                 "",
             [Description("requireVerifiedBinding: stable public generation should keep this true. Set false only for intentional internal HMI-only tags used " +
                 "by local validation/probes.")] bool requireVerifiedBinding =
@@ -171,7 +173,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseMessage EnsureUnifiedHmiTag(string hmiSoftwarePath,
             string tagTableName,
             string tagName,
-            string hmiDataType = "Bool",
+            string hmiDataType = "",
             string plcName = "",
             string plcTag = "",
             string connectionName = "",
@@ -655,7 +657,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 recipe["applyStatus"] = applied.Meta?["operationSuccess"]?.GetValue<bool>() == true ? "applied" : "apply-failed";
                 return new ResponseMessage
                 {
-                    Message = "Unified HMI button action applied via generated recipe.",
+                    Message = recipe["applyStatus"]?.ToString() == "applied"
+                        ? "Unified HMI button action applied via generated recipe."
+                        : "Unified HMI button action was not applied; inspect setMeta.",
                     Meta = recipe
                 };
             }
@@ -711,9 +715,10 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("itemName: HMI screen item name")] string itemName,
             [Description("propertyName: target property name, e.g. BackColor or Visible")] string propertyName,
             [Description("tagName: HMI tag name used as the dynamic source")] string tagName,
-            [Description("dataType: tag data type, e.g. Bool, Int, Real")] string dataType = "Bool",
-            [Description("plcTag: optional PLC tag/path")] string plcTag = "",
-            [Description("address: optional absolute address")] string address = "", bool dryRun = true)
+            [Description("dataType: Optional expected value from the bound tag, compared after binding. The API has no setter.")] string dataType = "",
+            [Description("plcTag: Optional expected value from the bound tag, compared after binding. The API has no setter.")] string plcTag = "",
+            [Description("address: Optional expected value from the bound tag, compared after binding. The API has no setter.")] string address = "",
+                bool dryRun = true)
             => UnifiedHmiContract
                 .Run("BindUnifiedHmiTagDynamization", !dryRun, true, () =>
                     BindUnifiedHmiTagDynamization(hmiSoftwarePath, screenName, itemName, propertyName, tagName, dataType, plcTag, address, dryRun));
@@ -723,7 +728,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string itemName,
             string propertyName,
             string tagName,
-            string dataType = "Bool",
+            string dataType = "",
             string plcTag = "",
             string address = "", bool dryRun = true)
         {

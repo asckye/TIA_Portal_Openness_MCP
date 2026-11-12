@@ -78,6 +78,12 @@
     <Compile Include="../../../src/FoundationHost/WorkbenchControlSession.cs" Link="WorkbenchControlSession.cs" />
     <Compile Include="../../../src/FoundationHost/WorkbenchControlTools.cs" Link="WorkbenchControlTools.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiExchangePolicy.cs" Link="Native/Hmi/HmiExchangePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.cs" Link="Native/Hmi/HmiScalar.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.Values.cs" Link="Native/Hmi/HmiScalar.Values.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiValueTypes.cs" Link="Native/Hmi/HmiValueTypes.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestScalar.cs" Link="Native/Hmi/UnifiedRequestScalar.cs" />
+    <Compile Include="../../../src/Adapters/Native/Libraries/LibraryPolicy.cs" Link="Native/Libraries/LibraryPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" Link="Native/Hardware/HardwareAddressingPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiValues.cs" Link="Native/Hmi/HmiValues.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiReadSafety.cs" Link="Native/Hmi/HmiReadSafety.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestValues.cs" Link="Native/Hmi/UnifiedRequestValues.cs" />

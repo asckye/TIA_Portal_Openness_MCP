@@ -42,18 +42,16 @@ namespace TiaMcp.Adapters.Native.Hmi
         private void BindUnifiedHmiTagToPlcSymbol(object tag, string connectionName, string plcName,
             string plcTagSymbol, string hmiDataType, HmiArray writeResults, string address = "")
         {
-            var prepared = UnifiedRequestScalar.Prepare(tag.GetType(),
-                HmiExchangePolicy.UnifiedTagBindingChanges(connectionName, plcTagSymbol, hmiDataType, address));
             var evidence = new HmiObject();
-            try { UnifiedRequestScalar.Apply(tag, prepared, evidence); }
+            try { HmiExchangePolicy.ApplyUnifiedTagBinding(tag, connectionName, plcTagSymbol, hmiDataType, address, evidence); }
             finally
             {
                 if (evidence["mayHaveChanged"] is true) _session.MarkHmiChanged();
-                foreach (var pair in evidence) writeResults.Add(pair.Key + "=" + pair.Value);
+                foreach (var pair in evidence) writeResults.Add(HmiExchangePolicy.WriteResultLine(pair.Key, pair.Value));
             }
         }
 
-        public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "",
+        public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "", string plcName = "",
                 string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
         {
             UnifiedHmiInputValidation.PlcBinding(plcName, plcTag);
@@ -73,6 +71,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var tagType = existingTag?.GetType() ?? deviceTags.GetType().GetMethod("Create", new[] { typeof(string), typeof(string) })?.ReturnType
                     ?? throw new NotSupportedException("Documented Tags.Create(name, tagTableName) unavailable.");
                 UnifiedRequestScalar.Prepare(tagType, HmiExchangePolicy.UnifiedTagBindingChanges(connectionName, plcTag, hmiDataType, address));
+                if (!HmiExchangePolicy.UnifiedTagAbsolute(plcTag, address) && hmiDataType.Length != 0)
+                    UnifiedRequestScalar.Prepare(tagType, new HmiObject { ["DataType"] = hmiDataType });
                 var tagTable = EnsureHmiTagTableObject(sw, tagTableName);
                 var tags = TryGetPropertyValue(tagTable, "Tags");
                 if (tags == null) throw new InvalidOperationException($"Tags collection not found on tag table '{tagTableName}'.");

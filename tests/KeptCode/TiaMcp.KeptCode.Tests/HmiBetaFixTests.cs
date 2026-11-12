@@ -8,12 +8,37 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
+using TiaMcp.Adapters.Native.Engineering;
+using System.Drawing;
 using Xunit;
 
 namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class HmiBetaFixTests
     {
+        [Fact]
+        public void Empty_optional_typePath_is_not_a_relative_path()
+        {
+            var scope = new HmiObject {
+                ["screenPath"] = "/Overview", ["itemName"] = "Faceplate_1", ["typePath"] = "", ["version"] = "" };
+            MigrationRead.ValidateScopePaths(scope);
+            scope["screenPath"] = "Overview";
+            Assert.Throws<ArgumentException>(() => MigrationRead.ValidateScopePaths(scope));
+            scope["screenPath"] = "/Overview";
+            scope["typePath"] = "Types/Motor";
+            Assert.Throws<ArgumentException>(() => MigrationRead.ValidateScopePaths(scope));
+            scope["typePath"] = "/Types/Motor";
+            scope["folderPath"] = "/";
+            MigrationRead.ValidateScopePaths(scope);
+            scope["typePath"] = "";
+            MigrationRead.ValidateScopePaths(scope);
+            scope["screenPath"] = "";
+            Assert.Throws<ArgumentException>(() => MigrationRead.ValidateScopePaths(scope));
+            scope["screenPath"] = "/Overview";
+            scope["folderPath"] = "";
+            Assert.Throws<ArgumentException>(() => MigrationRead.ValidateScopePaths(scope));
+        }
+
         public sealed class ThemeScreen { public string BackColor { get; set; } = "0xFF000000"; }
 
         [Theory]
@@ -72,13 +97,14 @@ namespace TiaMcp.Adapters.Contracts.Tests
         }
 
         [Theory]
-        [InlineData("", "\"Db\".Ready", "SymbolicAccess", "", "Db.Ready")]
-        [InlineData("%M0.0", "Ready", "AbsoluteAccess", "%M0.0", "")]
-        public void Unified_tag_binding_never_writes_PlcName(string address, string symbol, string mode, string expectedAddress, string expectedTag)
+        [InlineData("", "\"Db\".Ready", "SymbolicAccess", "", "Db.Ready", "Connection,AccessMode,Address,PlcTag")]
+        [InlineData("%M0.0", "Ready", "AbsoluteAccess", "%M0.0", "", "Connection,AccessMode,Address,PlcTag,DataType")]
+        public void Unified_tag_binding_never_writes_PlcName(string address, string symbol, string mode, string expectedAddress,
+            string expectedTag, string expectedProperties)
         {
             var changes = HmiExchangePolicy.UnifiedTagBindingChanges("Verified", symbol, "Bool", address);
             var prepared = UnifiedRequestScalar.Prepare(typeof(BoundTag), changes);
-            Assert.Equal(new[] { "Connection", "AccessMode", "Address", "PlcTag", "DataType" }, prepared.Select(p => p.Property.Name));
+            Assert.Equal(expectedProperties.Split(','), prepared.Select(p => p.Property.Name));
             var tag = new BoundTag();
             UnifiedRequestScalar.Apply(tag, prepared, new HmiObject());
             Assert.Equal("DerivedFromConnection", tag.PlcName);
@@ -87,6 +113,273 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Equal(expectedAddress, tag.Address);
             Assert.Equal(expectedTag, tag.PlcTag);
         }
+
+        public sealed class DerivingTag
+        {
+            private string _plcTag = "";
+            private string _dataType = "Int";
+            public int Attempts;
+            public string Connection { get; set; } = "";
+            public string AccessMode { get; set; } = "";
+            public string Address { get; set; } = "";
+            public string PlcTag
+            {
+                get => _plcTag;
+                set { _plcTag = value; _dataType = value.Length == 0 ? "Int" : "Bool"; }
+            }
+            public string DataType
+            {
+                get => _dataType;
+                set
+                {
+                    Attempts++;
+                    if (_plcTag.Length != 0) throw new InvalidOperationException("-已禁用的字段不支持设置");
+                    _dataType = value;
+                }
+            }
+        }
+
+        [Fact]
+        public void Symbolic_binding_never_writes_DataType_when_none_is_requested()
+        {
+            var tag = new DerivingTag(); var meta = new HmiObject();
+            HmiExchangePolicy.ApplyUnifiedTagBinding(tag, "Verified", "Run", "", "", meta);
+            Assert.Equal(0, tag.Attempts);
+            Assert.Equal("Bool", tag.DataType);
+            Assert.Equal("Run", tag.PlcTag);
+            Assert.Contains("appliedProperties=Connection,AccessMode,Address,PlcTag",
+                meta.Select(pair => HmiExchangePolicy.WriteResultLine(pair.Key, pair.Value)));
+        }
+
+        [Fact]
+        public void Symbolic_binding_with_the_type_TIA_gives_writes_nothing_more()
+        {
+            var tag = new DerivingTag(); var meta = new HmiObject();
+            HmiExchangePolicy.ApplyUnifiedTagBinding(tag, "Verified", "Run", "bool", "", meta);
+            Assert.Equal(0, tag.Attempts);
+            Assert.Equal("Bool", meta["dataTypeAfterBinding"]);
+        }
+
+        [Fact]
+        public void Symbolic_binding_with_another_type_names_both_types_and_restores()
+        {
+            var tag = new DerivingTag(); var meta = new HmiObject();
+            var error = Assert.Throws<InvalidOperationException>(() => EngineeringWriteJournal.Run(meta, () => {
+                HmiExchangePolicy.ApplyUnifiedTagBinding(tag, "Verified", "Run", "Real", "", meta);
+                return "unreachable";
+            }));
+            foreach (string value in new[] { "Real", "Bool", "Run", "-已禁用的字段不支持设置" }) Assert.Contains(value, error.Message);
+            Assert.Equal(1, tag.Attempts);
+            Assert.Equal("restored", meta["rollbackOutcome"]);
+            Assert.Equal(true, meta["rollbackCompleted"]);
+            Assert.Equal("", tag.PlcTag);
+            Assert.Equal("Int", tag.DataType);
+            Assert.Equal("", tag.Connection);
+            Assert.Equal("", tag.AccessMode);
+            Assert.Equal("", tag.Address);
+        }
+
+        public sealed class RebindingTag
+        {
+            private string _plcTag = "";
+            private string _dataType = "Real";
+            public int TypeWrites;
+            public string Connection { get; set; } = "Original";
+            public string AccessMode { get; set; } = "AbsoluteAccess";
+            public string Address { get; set; } = "%M1.0";
+            public string PlcTag
+            {
+                get => _plcTag;
+                set { _plcTag = value; _dataType = "Bool"; }
+            }
+            public string DataType
+            {
+                get => _dataType;
+                set
+                {
+                    TypeWrites++;
+                    if (_plcTag.Length != 0) throw new InvalidOperationException("Bound type is disabled.");
+                    _dataType = value;
+                }
+            }
+        }
+
+        [Fact]
+        public void Symbolic_binding_restores_the_original_type_after_a_later_failure()
+        {
+            var tag = new RebindingTag(); var meta = new HmiObject();
+            Assert.Throws<InvalidOperationException>(() => EngineeringWriteJournal.Run(meta, () => {
+                HmiExchangePolicy.ApplyUnifiedTagBinding(tag, "Verified", "Run", "", "", meta);
+                Assert.Equal("Bool", tag.DataType);
+                Assert.Equal(0, tag.TypeWrites);
+                throw new InvalidOperationException("later step failed");
+            }));
+            Assert.Equal("Real", tag.DataType);
+            Assert.Equal("restored", meta["rollbackOutcome"]);
+            Assert.Equal(true, meta["rollbackCompleted"]);
+            Assert.Equal(1, tag.TypeWrites);
+            Assert.Equal("", tag.PlcTag);
+            Assert.Equal("Original", tag.Connection);
+            Assert.Equal("AbsoluteAccess", tag.AccessMode);
+            Assert.Equal("%M1.0", tag.Address);
+        }
+
+        [Fact]
+        public void Absolute_binding_still_writes_DataType_last()
+        {
+            var tag = new DerivingTag(); var meta = new HmiObject();
+            HmiExchangePolicy.ApplyUnifiedTagBinding(tag, "Verified", "Ready", "", "%M900.0", meta);
+            Assert.Equal(new object?[] { "Connection", "AccessMode", "Address", "PlcTag", "DataType" }, (HmiArray)meta["appliedProperties"]!);
+            Assert.Equal("Bool", tag.DataType);
+            Assert.Equal(1, tag.Attempts);
+            Assert.Equal("%M900.0", tag.Address);
+            Assert.Equal("", tag.PlcTag);
+        }
+
+        [Fact]
+        public void Write_results_name_the_applied_properties()
+        {
+            var meta = new HmiObject();
+            HmiExchangePolicy.ApplyUnifiedTagBinding(new DerivingTag(), "Verified", "Run", "", "", meta);
+            var lines = meta.Select(pair => HmiExchangePolicy.WriteResultLine(pair.Key, pair.Value)).ToArray();
+            Assert.All(lines, line => Assert.DoesNotContain("TiaMcp.Adapters", line));
+            Assert.Contains("appliedProperties=Connection,AccessMode,Address,PlcTag", lines);
+        }
+
+        public sealed class DerivedDynamization
+        {
+            public string DataType => "Bool";
+            public string PlcTag => "Synthetic.Run";
+            public string Address => "%M900.0";
+        }
+
+        [Theory]
+        [InlineData("DataType", "Bool", "Int")]
+        [InlineData("PlcTag", "Synthetic.Run", "Other.Run")]
+        [InlineData("Address", "%M900.0", "%M901.0")]
+        public void Derived_dynamization_values_are_compared_not_written(string property, string actual, string other)
+        {
+            var target = new DerivedDynamization();
+            var same = UnifiedUiModelLogic.VerifiedDerived(target, property, actual);
+            Assert.Equal(true, same["verified"]);
+            Assert.Equal(actual, same["readback"]);
+            Assert.Equal("bound-tag", same["source"]);
+            var different = UnifiedUiModelLogic.VerifiedDerived(target, property, other);
+            Assert.Equal(false, different["verified"]);
+            Assert.Contains(actual, (string)different["error"]!);
+            Assert.Contains(other, (string)different["error"]!);
+        }
+
+        [Theory]
+        [InlineData("DataType", "Bool", "bool")]
+        public void Derived_data_type_comparison_is_case_insensitive(string property, string actual, string expected)
+        {
+            var result = UnifiedUiModelLogic.VerifiedDerived(new DerivedDynamization(), property, expected);
+            Assert.Equal(actual, result["readback"]);
+            Assert.Equal(true, result["verified"]);
+            Assert.Equal("bound-tag", result["source"]);
+        }
+
+        [Theory]
+        [InlineData("0xFFF4F6F8")]
+        [InlineData("0xfff4f6f8")]
+        [InlineData("0XFFF4F6F8")]
+        [InlineData("#FFF4F6F8")]
+        [InlineData("#F4F6F8")]
+        public void Color_forms_parse_to_the_same_argb(string value)
+            => Assert.Equal(unchecked((int)0xFFF4F6F8), UnifiedUiModelLogic.ParseColor(value).ToArgb());
+
+        [Theory]
+        [InlineData("0xFFF")]
+        [InlineData("0x F4F6F8")]
+        [InlineData("FFF4F6F8")]
+        [InlineData("#GG0000")]
+        public void Malformed_colors_are_refused(string value)
+            => Assert.Throws<ArgumentException>(() => UnifiedUiModelLogic.ParseColor(value));
+
+        public sealed class ColorScreen { public Color BackColor { get; set; } }
+
+        [Fact]
+        public void Verified_write_accepts_the_documented_0x_form()
+        {
+            var target = new ColorScreen();
+            var result = UnifiedUiModelLogic.VerifiedWrite(target, "BackColor", "0xFFF4F6F8", () => {
+                target.BackColor = Color.FromArgb(unchecked((int)0xFFF4F6F8)); return true;
+            });
+            Assert.Equal(true, result["verified"]);
+            Assert.Equal("#FFF4F6F8", result["readback"]);
+        }
+
+        private static HmiObject UnboundTagSnapshot() => new() {
+            ["kind"] = "InspectionSnapshot", ["incomplete"] = true, ["truncated"] = false,
+            ["connectionUnavailable"] = false, ["quarantinedCount"] = 0,
+            ["nodes"] = new HmiArray(
+                new HmiObject { ["path"] = "$", ["status"] = "Read",
+                    ["type"] = "Siemens.Engineering.HmiUnified.UI.Dynamization.TagDynamization" },
+                new HmiObject { ["path"] = "$/Tag", ["status"] = "Read", ["type"] = "System.String", ["value"] = "" },
+                new HmiObject { ["path"] = "$/Address", ["status"] = "ReadFailed" },
+                new HmiObject { ["path"] = "$/DataType", ["status"] = "ReadFailed" },
+                new HmiObject { ["path"] = "$/PlcTag", ["status"] = "ReadFailed" }) };
+
+        [Theory]
+        [InlineData("unbound", false)]
+        [InlineData("bound", true)]
+        [InlineData("script", true)]
+        [InlineData("extraFailure", true)]
+        [InlineData("truncated", true)]
+        [InlineData("quarantined", true)]
+        [InlineData("disconnected", true)]
+        [InlineData("complete", false)]
+        public void Dynamization_delete_refusal(string shape, bool refused)
+        {
+            var snapshot = UnboundTagSnapshot(); var nodes = (HmiArray)snapshot["nodes"]!;
+            switch (shape)
+            {
+                case "bound": ((HmiObject)nodes[1]!)["value"] = "Run"; break;
+                case "script": ((HmiObject)nodes[0]!)["type"] = "Siemens.Engineering.HmiUnified.UI.Dynamization.Script.ScriptDynamization"; break;
+                case "extraFailure": nodes.Add(new HmiObject { ["path"] = "$/ValueConverter/Formula", ["status"] = "ReadFailed" }); break;
+                case "truncated": snapshot["truncated"] = true; break;
+                case "quarantined": snapshot["quarantinedCount"] = 1; break;
+                case "disconnected": snapshot["connectionUnavailable"] = true; break;
+                case "complete": snapshot["incomplete"] = false; break;
+            }
+            var reason = HmiExchangePolicy.UnifiedDynamizationDeleteRefusal(snapshot);
+            Assert.Equal(refused, reason != null);
+            if (refused)
+            {
+                foreach (string path in new[] { "$/Address", "$/DataType", "$/PlcTag" }) Assert.Contains(path, reason!);
+                if (shape == "extraFailure") Assert.Contains("$/ValueConverter/Formula", reason!);
+                if (shape == "truncated") Assert.Contains("truncated", reason!);
+            }
+        }
+
+        [Theory]
+        [InlineData("truncated", true)]
+        [InlineData("quarantinedCount", 1)]
+        [InlineData("connectionUnavailable", true)]
+        public void Incomplete_snapshot_without_read_failures_names_its_cause(string cause, object value)
+        {
+            var snapshot = UnboundTagSnapshot();
+            var nodes = (HmiArray)snapshot["nodes"]!;
+            foreach (var node in nodes.OfType<HmiObject>().Where(node => node["status"] is "ReadFailed").ToArray()) nodes.Remove(node);
+            snapshot[cause] = value;
+            var reason = HmiExchangePolicy.UnifiedDynamizationDeleteRefusal(snapshot);
+            Assert.NotNull(reason);
+            Assert.Contains(cause, reason);
+            Assert.DoesNotContain(": .", reason);
+        }
+
+        [Theory]
+        [InlineData("//插入事件定义\r\n\r\n", false)]
+        [InlineData("// Insert definitions\r\n", false)]
+        [InlineData("/* c */\r\n", false)]
+        [InlineData("", false)]
+        [InlineData(null, false)]
+        [InlineData("let y;", true)]
+        [InlineData("// c\r\nlet y;", true)]
+        [InlineData("/* open", true)]
+        public void Event_definition_has_code(string? text, bool expected)
+            => Assert.Equal(expected, HmiExchangePolicy.EventDefinitionHasCode(text));
 
         [Fact]
         public void Unified_tag_connection_selected_by_partner()
@@ -267,7 +560,8 @@ namespace TiaMcp.Adapters.Contracts.Tests
                 AssertArgumentRefusal(() => service.Call(new UnifiedHmiRequest {
                     Operation = "ManageUnifiedScreenItem", ScreenPath = "/Overview", Action = "create", ItemType = type, DryRun = dryRun }));
             AssertArgumentRefusal(() => service.Call(new UnifiedHmiRequest {
-                Operation = "ManageUnifiedScreenItem", ScreenPath = "/Overview", Action = "create", ItemType = "HmiButton", ContainedType = "unexpected", DryRun = dryRun }));
+                Operation = "ManageUnifiedScreenItem", ScreenPath = "/Overview", Action = "create", ItemType = "HmiButton", ContainedType = "unexpected",
+                    DryRun = dryRun }));
             Assert.Equal(0, nativeCalls);
         }
 
@@ -313,7 +607,8 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Throws<TargetInvocationException>(() => HmiExchangePolicy.Names(new BrokenGetter(), ["Tags"], "Tags"));
             Assert.Throws<PlcSoftwareException>(() => HmiExchangePolicy.Find(new[] { new Named { Name = "A" }, new Named { Name = "a" } }, "A"));
         }
-        public sealed class BrokenCollection : IEnumerable { public IEnumerator GetEnumerator() => throw new InvalidOperationException("native enumeration failed"); }
+        public sealed class BrokenCollection : IEnumerable {
+            public IEnumerator GetEnumerator() => throw new InvalidOperationException("native enumeration failed"); }
         public sealed class BrokenGetter { public object Tags => throw new InvalidOperationException("native getter failed"); }
 
         [Fact]

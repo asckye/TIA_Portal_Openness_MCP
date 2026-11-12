@@ -2,6 +2,7 @@ using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -311,17 +312,105 @@ namespace TiaMcp.Adapters.Native.Hmi
                 $"itemsProcessed={itemsProcessed}, failed={failed}.";
         }
 
+        internal static bool UnifiedTagAbsolute(string plcTagSymbol, string address)
+            => !string.IsNullOrWhiteSpace(address) || plcTagSymbol.StartsWith("%", StringComparison.Ordinal)
+                || Regex.IsMatch(plcTagSymbol, @"^(DB|IW|QW|ID|QD|IB|QB|MB|MW|MD)\d", RegexOptions.IgnoreCase);
+
         internal static HmiObject UnifiedTagBindingChanges(string connectionName, string plcTagSymbol, string hmiDataType, string address)
         {
-            bool absolute = !string.IsNullOrWhiteSpace(address) || plcTagSymbol.StartsWith("%", StringComparison.Ordinal)
-                || Regex.IsMatch(plcTagSymbol, @"^(DB|IW|QW|ID|QD|IB|QB|MB|MW|MD)\d", RegexOptions.IgnoreCase);
-            return new HmiObject {
+            bool absolute = UnifiedTagAbsolute(plcTagSymbol, address);
+            var changes = new HmiObject {
                 ["Connection"] = connectionName,
                 ["AccessMode"] = absolute ? "AbsoluteAccess" : "SymbolicAccess",
                 ["Address"] = absolute ? (string.IsNullOrWhiteSpace(address) ? plcTagSymbol : address.Trim()) : "",
-                ["PlcTag"] = absolute ? "" : plcTagSymbol.Replace("\"", string.Empty),
-                ["DataType"] = hmiDataType
+                ["PlcTag"] = absolute ? "" : plcTagSymbol.Replace("\"", string.Empty)
             };
+            if (absolute) changes["DataType"] = hmiDataType.Length == 0 ? "Bool" : hmiDataType;
+            return changes;
+        }
+
+        internal static void ApplyUnifiedTagBinding(object tag, string connectionName, string plcTagSymbol, string hmiDataType,
+            string address, HmiObject evidence)
+        {
+            var prepared = UnifiedRequestScalar.Prepare(tag.GetType(),
+                UnifiedTagBindingChanges(connectionName, plcTagSymbol, hmiDataType, address));
+            bool symbolic = !UnifiedTagAbsolute(plcTagSymbol, address);
+            bool symbolicType = symbolic && hmiDataType.Length != 0;
+            var typeChange = symbolicType
+                ? UnifiedRequestScalar.Prepare(tag.GetType(), new HmiObject { ["DataType"] = hmiDataType }).Single()
+                : default;
+            if (symbolic)
+            {
+                // Undo the binding before restoring a type that the binding can disable.
+                var typeProperty = UnifiedRequestScalar.DistinctProperties(tag.GetType()).First(property => property.Name == "DataType");
+                EngineeringWriteJournal.CaptureProperties(tag, new[] { typeProperty });
+                EngineeringWriteJournal.Property(tag, typeProperty);
+            }
+            UnifiedRequestScalar.Apply(tag, prepared, evidence);
+            if (!symbolicType) return;
+            var property = typeChange.Property;
+            var readback = property.GetValue(tag);
+            evidence["dataTypeAfterBinding"] = HmiScalar.Json(readback);
+            if (string.Equals(readback?.ToString(), hmiDataType, StringComparison.OrdinalIgnoreCase)) return;
+            evidence["lastAttemptedProperty"] = "DataType";
+            try { property.SetValue(tag, typeChange.Value); }
+            catch (TargetInvocationException error)
+            {
+                throw new InvalidOperationException("hmiDataType '" + hmiDataType + "' was refused: this tag has '" + readback
+                    + "' after binding to PLC tag '" + plcTagSymbol + "'. Omit hmiDataType or pass '" + readback
+                    + "'. TIA: " + error.GetBaseException().Message);
+            }
+            if (!UnifiedRequestScalar.SameValue(property.GetValue(tag), typeChange.Value))
+                throw new InvalidOperationException("Property readback differs: DataType.");
+            ((HmiArray)evidence["appliedProperties"]!).Add("DataType");
+        }
+
+        internal static string WriteResultLine(string key, object? value)
+            => key + "=" + (value is HmiArray items ? string.Join(",", items) : value);
+
+        internal static string? UnifiedDynamizationDeleteRefusal(HmiObject snapshot)
+        {
+            if (snapshot["incomplete"] is not true) return null;
+            var nodes = ((HmiArray)snapshot["nodes"]!).OfType<HmiObject>().ToArray();
+            var failed = nodes.Where(node => node["status"] is "ReadFailed").Select(node => (string)node["path"]!).ToArray();
+            var allowed = new[] { "$/Address", "$/DataType", "$/PlcTag" };
+            bool unbound = snapshot["truncated"] is false && snapshot["connectionUnavailable"] is false
+                && snapshot["quarantinedCount"] is 0
+                && nodes.Any(node => node["path"] is "$" && node["status"] is "Read"
+                    && node["type"] is "Siemens.Engineering.HmiUnified.UI.Dynamization.TagDynamization")
+                && nodes.Any(node => node["path"] is "$/Tag" && node["status"] is "Read" && node["value"] is "")
+                && failed.Length == allowed.Length && allowed.All(path => failed.Contains(path, StringComparer.Ordinal))
+                && nodes.All(node => node["status"] is "Read" or "ReadFailed");
+            if (unbound) return null;
+            var details = new List<string>(failed);
+            if (snapshot["truncated"] is true) details.Add("truncated=true");
+            if (snapshot["quarantinedCount"] is int count && count != 0)
+                details.Add("quarantinedCount=" + count.ToString(CultureInfo.InvariantCulture));
+            if (snapshot["connectionUnavailable"] is true) details.Add("connectionUnavailable=true");
+            return "Cannot delete while the current dynamization snapshot is incomplete"
+                + (details.Count == 0 ? "." : ": " + string.Join(", ", details) + ".");
+        }
+
+        internal static bool EventDefinitionHasCode(string? text)
+        {
+            if (text == null) return false;
+            for (int index = 0; index < text.Length; index++)
+            {
+                if (char.IsWhiteSpace(text[index])) continue;
+                if (text[index] != '/' || index + 1 == text.Length) return true;
+                if (text[index + 1] == '/')
+                {
+                    while (index < text.Length && text[index] != '\r' && text[index] != '\n') index++;
+                }
+                else if (text[index + 1] == '*')
+                {
+                    int end = text.IndexOf("*/", index + 2, StringComparison.Ordinal);
+                    if (end < 0) return true;
+                    index = end + 1;
+                }
+                else return true;
+            }
+            return false;
         }
 
         internal static void BeforeOpaqueImport(object existing, bool overwrite, IDictionary<string, object?> evidence)

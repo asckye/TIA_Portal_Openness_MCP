@@ -291,7 +291,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["EnsureUnifiedHmiTag.plcName"] = new ParameterHint("\"\\u003CplcName\\u003E\""),
             ["EnsureUnifiedHmiTag.plcTag"] = new ParameterHint("\"\\u003CplcTag\\u003E\""),
             ["EnsureUnifiedHmiTag.connectionName"] = new ParameterHint("\"\\u003CconnectionName\\u003E\""),
-            ["EnsureUnifiedHmiTag.address"] = new ParameterHint("\"%DB200.DBX0.0. When supplied it is written as the verified HMI runtime address while plcTag remains available as the symbolic reference.\""),
+            ["EnsureUnifiedHmiTag.address"] = new ParameterHint("\"%DB200.DBX0.0\""),
             ["EnsureUnifiedHmiTagTable.hmiSoftwarePath"] = new ParameterHint("\"HMI_RT_1\""),
             ["EnsureUnifiedHmiTagTable.tagTableName"] = new ParameterHint("\"\\u003CtagTableName\\u003E\""),
             ["ExchangeCfcCharts.softwarePath"] = new ParameterHint("\"PLC_1\""),
