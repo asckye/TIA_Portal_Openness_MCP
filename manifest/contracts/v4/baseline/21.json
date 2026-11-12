@@ -1592,7 +1592,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "437b861d0b7339f0d369447dcdd7bb20c598c10e82e55f165bb61508867fcf6e",
+      "descriptionSha256": "9e6050274092418923e0217bd3da09844d503795b1435e3b9f5feb62edf76ec3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14225,13 +14225,16 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "822a8970c6c33b64ffc0af251733a8d7abd960319b1111002a7f3ac6770f5745",
+      "descriptionSha256": "7899b357d99a0c81e9961b0cad51c09306173d97b2564e2549c64d3e55612600",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews; false executes.",
+            "examples": [
+              true
+            ],
             "type": "boolean"
           },
           "expectedPlanHash": {
@@ -14438,7 +14441,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f5f33bd340502b8926f92357e228ab1984b514c106273e40e42a0616637a414f",
+      "descriptionSha256": "a8155b00ebf8c167e38799111ccfe826fbb33e6131bc4fd7084ec370bd5a8418",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16100,7 +16103,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "6f3a6c859beeb5035274450141b2ed4d8639959d14a90dc6622faa900191e1d8",
+      "descriptionSha256": "19b7b5040e73ee8cb93cc2ded69e438348e14cc5ba71ca21e708d99fbcb6dcb4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16152,6 +16155,9 @@
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews; false executes.",
+            "examples": [
+              true
+            ],
             "type": "boolean"
           },
           "expectedPlanHash": {
@@ -17647,6 +17653,9 @@
         "properties": {
           "exportFile": {
             "description": "Absolute output file path on the TIA host. Supply a file, not a directory. exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml) Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "examples": [
+              "C:\\Examples\\exports\\ExportHmiScreen.xml"
+            ],
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
@@ -17666,6 +17675,9 @@
           },
           "exportPath": {
             "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml) Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "examples": [
+              "C:\\Examples\\exports\\ExportHmiScreen.xml"
+            ],
             "type": "string"
           },
           "screenName": {
@@ -18787,7 +18799,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "bc55f9f067c194487b8ffb8b4f4790d2d9d70624b87b43b4a581688036bafe00",
+      "descriptionSha256": "d6c79aa1fa3fd87769f133b3b35e62343fa1c1059a9a25e84ecbe02efe657025",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -23208,7 +23220,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "92ef811bc698882b6b4265d7aaab6d937d084284be87ba5e3e209aeb045124d3",
+      "descriptionSha256": "01992681c2e03053ff57c3d8f96f767ce8bd142f25b96980a9902eb706a34b2d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -23216,24 +23228,18 @@
             "default": true,
             "description": "dryRun: true (default) previews; false executes.",
             "examples": [
-              false
+              true
             ],
             "type": "boolean"
           },
           "expectedPlanHash": {
             "default": "",
             "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
-            "examples": [
-              "<planHash from this tool's preview for these arguments and bound project>"
-            ],
             "type": "string"
           },
           "expectedProjectFile": {
             "default": "",
             "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
-            "examples": [
-              "C:/Examples/Project.ap21"
-            ],
             "type": "string"
           },
           "folderPath": {
@@ -23344,7 +23350,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "34ac3aee66aa6a335dc608c60f95c3cada9d8edad6ba63272e667fbf1864cbef",
+      "descriptionSha256": "73e81aaff83ea28030a18a38ef5ee06f4e74753e6faec28164bf6c5c1822e000",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -23352,24 +23358,18 @@
             "default": true,
             "description": "dryRun: true (default) previews; false executes.",
             "examples": [
-              false
+              true
             ],
             "type": "boolean"
           },
           "expectedPlanHash": {
             "default": "",
             "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
-            "examples": [
-              "<planHash from this tool's preview for these arguments and bound project>"
-            ],
             "type": "string"
           },
           "expectedProjectFile": {
             "default": "",
             "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
-            "examples": [
-              "C:/Examples/Project.ap21"
-            ],
             "type": "string"
           },
           "folderPath": {
@@ -38897,7 +38897,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2656ac77ec1ea95e9980793d6d7cd031d574fe096debf2007e82fbd8bfa884cd",
+      "descriptionSha256": "b6131a645c1d915f35cbba0ea8bcc2eb433714667a19eaab23f6d9ff84b9d5dd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -39773,7 +39773,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8f745c7e0ae0eed26a9152e5ed73886e93e8c12a680fa47aa1732c41ac986b5b",
+      "descriptionSha256": "0b02ae4dad21b93a97b85b0486cb8add9d070b064246ce64d2a1879072fc96d0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -39787,6 +39787,9 @@
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews; false executes.",
+            "examples": [
+              true
+            ],
             "type": "boolean"
           },
           "expectedPlanHash": {
@@ -41172,7 +41175,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "cc6de1b313afa2e1eb693f91a22a2432b3b960dfed95573ce67a024129c407fc",
+      "descriptionSha256": "3a53f15a63633bc4175bc2f2c689ff7599e5eabc815d2f4c40e72415ebf7b5f3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -41221,7 +41224,7 @@
           "targetIpAddress": {
             "description": "targetIpAddress: IP address of the PLC exactly as ScanAccessibleDevices lists it on the same interface (IP only, no MAC).",
             "examples": [
-              "192.168.0.3"
+              "192.0.2.10"
             ],
             "type": "string"
           },
@@ -42118,7 +42121,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0683bea180d6ba7030a93107e338dc718ef11f2ce4076c694d1a4ebe64abcd0f",
+      "descriptionSha256": "19fde95a286db6c205fc97f26ba1a09113579d192d4c9f58c1a2f93f76acbca7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
