@@ -247,6 +247,7 @@ namespace TiaMcp.Adapters
                     {
                         ["item"] = it.Name,
                         ["path"] = tup.Item2,
+                        ["deviceItemPath"] = tup.Item2,
                         ["attributeCount"] = attrsArr.Count,
                         ["attributes"] = attrsArr
                     });
@@ -254,7 +255,7 @@ namespace TiaMcp.Adapters
                 }
             }
 
-            return new Dictionary<string, object?>
+            var reply = new Dictionary<string, object?>
             {
                 ["found"] = true,
                 ["device"] = device.Name,
@@ -264,6 +265,11 @@ namespace TiaMcp.Adapters
                 ["writableAttributes"] = writableAttrs,
                 ["items"] = itemsArr
             };
+            var prefix = Native.Hardware.ProjectDeviceWalk.DevicePathPrefix(
+                project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, device);
+            foreach (var row in itemsArr.OfType<Dictionary<string, object?>>())
+                row["deviceItemPath"] = prefix + "/" + row["path"];
+            return reply;
         }
         private static string? TryGetAttributeInfoAccess(object info)
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TiaMcp.Adapters.Contracts
 {
@@ -92,6 +93,32 @@ namespace TiaMcp.Adapters.Contracts
         public string ConnectedSubnet { get; set; } = "";
         public string InterfacePath { get; set; } = "";
         public bool IsIndustrialEthernet { get; set; }
+    }
+
+    public static class HardwareIpNodes
+    {
+        public static IEnumerable<HardwareIpNode> Unique(IEnumerable<HardwareIpNode> nodes)
+        {
+            foreach (var group in nodes.GroupBy(node => (node.NodeName, node.Address, node.NodeType, node.ConnectedSubnet)))
+            {
+                var interfaces = new List<string>();
+                foreach (var node in group.OrderBy(node => node.InterfacePath.Contains("#"))
+                    .ThenBy(node => node.InterfacePath.Count(character => character == '/'))
+                    .ThenBy(node => node.InterfacePath, StringComparer.Ordinal))
+                {
+                    string path = node.InterfacePath.Replace('#', '/');
+                    int separator = path.LastIndexOf('/');
+                    string parent = separator < 0 ? path : path.Substring(0, separator);
+                    // Rack associations prepend another root; port observations append one segment to the same interface.
+                    if (interfaces.Any(owner => SameInterface(path, owner) || SameInterface(parent, owner))) continue;
+                    interfaces.Add(path);
+                    yield return node;
+                }
+            }
+        }
+
+        private static bool SameInterface(string path, string owner)
+            => path.Equals(owner, StringComparison.Ordinal) || path.EndsWith("/" + owner, StringComparison.Ordinal);
     }
 
     public sealed class HardwareIpReply

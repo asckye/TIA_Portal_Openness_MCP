@@ -43,12 +43,17 @@ namespace TiaMcp.Adapters
                         InterfacePath = n.Path, IsIndustrialEthernet = IsIndustrialEthernetNode(n.Node)
                     });
                 }
+            nodes = HardwareIpNodes.Unique(nodes).ToList();
             string FirstAddress(bool ieOnly) => nodes.Where(n => !ieOnly || n.IsIndustrialEthernet)
                 .Select(n => n.Address).FirstOrDefault(a => !string.IsNullOrWhiteSpace(a)) ?? string.Empty;
             var primary = FirstAddress(true);
             if (primary.Length == 0) primary = FirstAddress(false);
-            return new HardwareIpReply { Found = nodes.Count > 0, Device = device.Name ?? devicePath,
+            var reply = new HardwareIpReply { Found = nodes.Count > 0, Device = device.Name ?? devicePath,
                 IpAddress = primary, Nodes = nodes.ToArray() };
+            var prefix = Native.Hardware.ProjectDeviceWalk.DevicePathPrefix(
+                project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, device);
+            foreach (var node in nodes) node.InterfacePath = prefix + "/" + node.InterfacePath;
+            return reply;
         }
 
         private HardwareObject ExactHardware(string[] devicePath, string[] itemPath)

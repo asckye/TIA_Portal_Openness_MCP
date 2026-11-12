@@ -7312,7 +7312,7 @@
       "path": "src/Shared/NativeExchangeTools.cs",
       "owner": "NativeExchangeTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult GeneratePlcLoadableFileV4(\n            string softwarePath,\n            [Description(\"objectPaths: Array of object paths.\")] string[] objectPaths,\n            [Description(\"objectKind: blocks | units.\")] string objectKind,\n            [Description(\"targetOption: Openness loadable-file target option name ('' = default).\")] string targetOption,\n            string filePath,\n            bool dryRun=true)",
+      "signature": "public CallToolResult GeneratePlcLoadableFileV4(\n            string softwarePath,\n            [Description(\"objectPaths: Array of object paths.\")] string[] objectPaths,\n            [Description(\"objectKind: blocks | units.\")] string objectKind,\n            [Description(\"targetOption: download target of the loadable file - Plc | PlcSim.\")] string targetOption,\n            string filePath,\n            bool dryRun=true)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -7331,7 +7331,7 @@
         "targetOption": {
           "type": "string",
           "default": null,
-          "description": "targetOption: Openness loadable-file target option name ('' = default)."
+          "description": "targetOption: download target of the loadable file - Plc | PlcSim."
         },
         "filePath": {
           "type": "string",

@@ -9,6 +9,16 @@ namespace TiaMcp.SourceContracts.Tests;
 
 public sealed class ReadOnlySourceContracts
 {
+    [Fact]
+    public void Device_attribute_rows_print_the_item_path()
+    {
+        Contains(Read("src/Adapters/Native/Hardware/HardwareDevices.cs"),
+            "DevicePathPrefix(", "[\"deviceItemPath\"] = tup.Item2", "row[\"deviceItemPath\"] = prefix + \"/\" + row[\"path\"]");
+        Contains(Read("src/Adapters/Native/Hardware/HardwareAddressing.cs"), "deviceItemPath + \"/\" + child.Name");
+        Contains(Read("src/Adapters/Native/Hardware/HardwareAddressingSteps.cs"), "HardwareIpNodes.Unique(nodes)",
+            "node.InterfacePath = prefix + \"/\" + node.InterfacePath");
+    }
+
     private static readonly string Root = Repository.FindRoot(AppContext.BaseDirectory);
     private static readonly EngineSources Sources = new(Root);
     private static string Read(string path) => SourceFamily.Read(Path.Combine(Root, path));

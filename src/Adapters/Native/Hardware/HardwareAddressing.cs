@@ -55,7 +55,7 @@ namespace TiaMcp.Adapters
                 try { childAddresses = ReadAddresses(child); }
                 catch /* swallow(enumerate-optional): 子项地址不可读时跳过该子项，保留其他子项的地址提示。 */ { continue; }
                 if (childAddresses.Count == 0) continue;
-                hints.Add(child.Name + " → " + string.Join(", ",
+                  hints.Add(deviceItemPath + "/" + child.Name + " → " + string.Join(", ",
                     childAddresses.Select(a => a.IoType + " " + a.StartAddress + "(len " + a.Length + ")")));
             }
             return hints;

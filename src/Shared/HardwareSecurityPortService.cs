@@ -27,7 +27,8 @@ internal sealed class HardwareSecurityPortService
         return call("project-security.ExecuteHardwareSecurity", arguments) ?? throw new InvalidOperationException("Missing hardware security worker reply.");
     }
     public JsonObject GetPutGetAccess(string devicePath)
-        => !hasProject() ? new JsonObject { ["found"] = false, ["message"] = "No project open." }
+        => !hasProject() ? new JsonObject {
+                ["found"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["mayHaveChanged"] = false, ["message"] = "No project open." }
             : Invoke(new HardwareSecurityRequest { Operation = "GetPlcPutGetAccess", DeviceName = devicePath }).AsObject();
     public JsonObject SetPutGetAccess(string devicePath, bool enable, bool dryRun = true)
         => !hasProject() ? new JsonObject { ["ok"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." }

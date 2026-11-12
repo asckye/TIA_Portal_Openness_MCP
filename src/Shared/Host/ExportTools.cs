@@ -285,9 +285,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (Flag(data, "requiresExplicitRebind") == true) return Reject(tool,
                 new Error("The session must be rebound before another operation.", new SessionResetRequiredDetails("native-session")), data, current, write);
             if (!changed && new[] { "InvalidState", "InvalidParams", "NotFound", "NotSupportedOnVersion" }.Contains((string?)data["status"]))
-                return Reject(tool, StatusError(data), data, current, write);
+                return Reject(tool, StatusError(tool, data), data, current, write);
             if (Flag(data, "queried") == false || write && !changed && (observation == null || observation.Issued == 0))
-                return Reject(tool, StatusError(data), data, current, write);
+                return Reject(tool, StatusError(tool, data), data, current, write);
             return Result(tool, data, new Error("The native operation did not complete successfully.",
                 new NativeOperationFailedDetails((string?)data["status"], null, Evidence(data))), write ? Outcome.Failed : Outcome.ReadFailed,
                 write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: current, writes: write);
@@ -300,14 +300,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 || Count(obj, "typeCount") > (obj["types"] as JsonArray)?.Count) return true;
             return obj.Any(p => ContainsTruncation(p.Value));
         }
-        private static Error StatusError(JsonObject data)
+        private static Error StatusError(string tool, JsonObject data)
         {
             switch ((string?)data["status"])
             {
                 case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
                 case "InvalidParams": return InvalidInput("arguments");
                 case "NotFound": return new Error("The exact target was not found.", new NotFoundDetails(null));
-                case "NotSupportedOnVersion": return new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, null, null));
+                case "NotSupportedOnVersion": return new Error(HostBehavior.SafeDiagnostic((string?)data["nativeMessage"])
+                    ?? "This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
                 default
                     : return new Error("The operation did not succeed; inspect the retained evidence.", new PreconditionFailedDetails("native-exchange", null));
             }
@@ -338,7 +339,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Error? error = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
             {
-                if (cause is PortalException portal) error = StatusError(new JsonObject { ["status"] = portal.Code.ToString() });
+                if (cause is PortalException portal) error = StatusError(tool, new JsonObject { ["status"] = portal.Code.ToString() });
                 if (cause is ArgumentException) error = InvalidInput("arguments");
                 if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error =
                     InvalidInput("arguments");

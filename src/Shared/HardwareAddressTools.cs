@@ -55,11 +55,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (addresses == null)
                 {
-                    // 「没连上」和「设备项不存在」都会返回 null，但对调用方是两件事，分开问一句更有用。
-                    throw new McpException(
-                        $"Cannot read addresses for '{deviceItemPath}': connect and bind the project with ConnectPortal / AttachOpenProject, "
-                        + "then verify every device-item path segment with GetDeviceItemTree.",
-                        McpErrorCode.InvalidParams);
+                    throw new PortalException(PortalErrorCode.NotFound,
+                        $"Device item '{deviceItemPath}' was not found. Use deviceItemPath from GetDeviceAttributes, "
+                        + "or <device>/<item>/<child> from GetDeviceItemTree.");
                 }
 
                 var arr = new JsonArray();
@@ -161,10 +159,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     var current = _service.GetDeviceItemAddresses(deviceItemPath);
                     if (current == null)
                     {
-                        throw new McpException(
-                            $"Cannot read addresses for '{deviceItemPath}': connect and bind the project with ConnectPortal / AttachOpenProject, "
-                            + "then verify every device-item path segment with GetDeviceItemTree.",
-                            McpErrorCode.InvalidParams);
+                        throw new PortalException(PortalErrorCode.NotFound,
+                            $"Device item '{deviceItemPath}' was not found. Use deviceItemPath from GetDeviceAttributes, "
+                            + "or <device>/<item>/<child> from GetDeviceItemTree.");
                     }
 
                     var match = current.FirstOrDefault(
@@ -176,8 +173,10 @@ namespace TiaMcpServer.ModelContextProtocol
                         var have = current.Count == 0
                             ? "(none)"
                             : string.Join(" / ", current.Select(x => x.IoType).Distinct());
+                        var hints = current.Count == 0 ? _service.DescribeChildItemsWithAddresses(deviceItemPath) : new List<string>();
+                        var childMessage = hints.Count == 0 ? "" : " Child items with addresses: " + string.Join("; ", hints);
                         throw new McpException(
-                            $"[dryRun] Cannot change: '{deviceItemPath}' has no {ioType} addresses; the available types are {have}.",
+                            $"Cannot change: '{deviceItemPath}' has no {ioType} addresses; the available types are {have}." + childMessage,
                             McpErrorCode.InvalidParams);
                     }
 

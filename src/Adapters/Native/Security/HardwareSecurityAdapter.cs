@@ -102,8 +102,10 @@ namespace TiaMcp.Adapters.Native.Security
             try { (item, attrName) = _session.FindPutGetAttribute(device); }
             catch (Exception error) when (error is NotSupportedException || error is InvalidOperationException)
             {
+                string message = error.Message + (error is NotSupportedException
+                    ? " Check or set it in TIA: CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication'." : "");
                 return new HmiObject { ["ok"] = false, ["failureCode"] = "UNSUPPORTED_CAPABILITY", ["mayHaveChanged"] = false,
-                    ["device"] = device.Name, ["message"] = error.Message };
+                    ["device"] = device.Name, ["message"] = message, ["nativeMessage"] = message };
             }
             if (item == null || attrName == null)
                 return new HmiObject

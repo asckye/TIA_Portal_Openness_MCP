@@ -16636,7 +16636,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "objectKind": "blocks",
-        "targetOption": "&lt;target option from the selected release&gt;",
+        "targetOption": "Plc",
         "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
         "dryRun": true,
         "objectPaths": [
@@ -20171,7 +20171,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "objectKind": "blocks",
-        "targetOption": "&lt;target option from the selected release&gt;",
+        "targetOption": "Plc",
         "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
         "dryRun": true,
         "objectPaths": [
@@ -27252,7 +27252,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "objectKind": "blocks",
-          "targetOption": "&lt;target option from the selected release&gt;",
+          "targetOption": "Plc",
           "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
           "dryRun": true,
           "objectPaths": [
@@ -37207,7 +37207,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "objectKind": "blocks",
-          "targetOption": "&lt;target option from the selected release&gt;",
+          "targetOption": "Plc",
           "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
           "dryRun": true,
           "objectPaths": [
@@ -72552,7 +72552,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "objectKind": "blocks",
-          "targetOption": "&lt;target option from the selected release&gt;",
+          "targetOption": "Plc",
           "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
           "dryRun": true,
           "objectPaths": [
@@ -80948,7 +80948,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "objectKind": "blocks",
-          "targetOption": "&lt;target option from the selected release&gt;",
+          "targetOption": "Plc",
           "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
           "dryRun": true,
           "objectPaths": [
@@ -89945,7 +89945,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "objectKind": "blocks",
-          "targetOption": "&lt;target option from the selected release&gt;",
+          "targetOption": "Plc",
           "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
           "dryRun": true,
           "objectPaths": [
@@ -97313,7 +97313,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "objectKind": "blocks",
-          "targetOption": "&lt;target option from the selected release&gt;",
+          "targetOption": "Plc",
           "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
           "dryRun": true,
           "objectPaths": [

@@ -208,7 +208,11 @@ internal sealed class FoundationV4Tool : McpServerTool
                     ? new InputBudget(characters: 40 * 1024 * 1024, items: 4096) : new InputBudget())
                 .Read(argumentsInput, "arguments");
             if (validation.Error != null)
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            {
+                var error = tool.Name == "GeneratePlcLoadableFile"
+                    ? new InputSchema(tool.InputSchema).Validate(argumentsInput, "arguments") ?? validation.Error : validation.Error;
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, error, inner is FoundationTool { IsNative: true }));
+            }
             try { TiaOpenness.Shared.ApprovalOutputTargets.ValidateWhitespace(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()); }
             catch (ArgumentException error)
             {

@@ -59,10 +59,16 @@ internal static class HardwareFamilyWire
     {
         "GetPlcPutGetAccess" => Exactly(reply, ("found", False), ("message", Text))
             || Exactly(reply, ("found", False), ("device", Text), ("message", Text))
+            || Exactly(reply, ("found", False), ("failureCode", Text), ("mayHaveChanged", False), ("message", Text))
+            || Exactly(reply, ("found", False), ("failureCode", Text), ("mayHaveChanged", False), ("device", Text), ("message", Text))
+            || Exactly(reply, ("found", False), ("failureCode", Text), ("mayHaveChanged", False), ("device", Text),
+                ("message", Text), ("nativeMessage", Text))
             || Exactly(reply, ("found", True), ("device", Text), ("deviceItem", Text), ("attributeName", Text), ("enabled", Flag), ("rawValue", Text)),
         "SetPlcPutGetAccess" => Exactly(reply, ("ok", False), ("failureCode", Text), ("message", Text))
             || Exactly(reply, ("ok", False), ("failureCode", Text), ("device", Text), ("message", Text))
             || Exactly(reply, ("ok", False), ("failureCode", Text), ("mayHaveChanged", False), ("device", Text), ("message", Text))
+            || Exactly(reply, ("ok", False), ("failureCode", Text), ("mayHaveChanged", False), ("device", Text),
+                ("message", Text), ("nativeMessage", Text))
             || Exactly(reply, ("ok", False), ("failureCode", Text), ("mayHaveChanged", False), ("message", Text))
             || Exactly(reply, ("ok", True), ("dryRun", True), ("mayHaveChanged", False), ("writeOutcomeKnown", True),
                 ("device", Text), ("attributeName", Text), ("before", Flag), ("requestedValue", Flag), ("message", Text))

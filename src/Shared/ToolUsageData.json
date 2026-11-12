@@ -13724,7 +13724,7 @@
       "arguments": {
         "softwarePath": "PLC_1",
         "objectKind": "blocks",
-        "targetOption": "<target option from the selected release>",
+        "targetOption": "Plc",
         "filePath": "<new absolute output file for the selected TargetOption>",
         "dryRun": true,
         "objectPaths": [
@@ -42450,18 +42450,14 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "objectKind": "blocks",
-            "targetOption": "<target option from the selected release>",
+            "targetOption": "Plc",
             "filePath": "<new absolute output file for the selected TargetOption>",
             "dryRun": true,
             "objectPaths": [
               "Main"
             ]
           },
-          "parameters": {
-            "targetOption": {
-              "requiresBinding": true
-            }
-          },
+          "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
@@ -49927,18 +49923,14 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "objectKind": "blocks",
-            "targetOption": "<target option from the selected release>",
+            "targetOption": "Plc",
             "filePath": "<new absolute output file for the selected TargetOption>",
             "dryRun": true,
             "objectPaths": [
               "Main"
             ]
           },
-          "parameters": {
-            "targetOption": {
-              "requiresBinding": true
-            }
-          },
+          "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },

@@ -100,10 +100,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 while (cause.InnerException != null) cause = cause.InnerException;
                 Error? error = cause is ArgumentException || cause is JsonException ? McpServer.InvalidInput("arguments")
                     : cause is PortalException portal && portal.Code == PortalErrorCode.NotFound
-                        ? new Error("The requested hardware object was not found.", new NotFoundDetails(null))
+                        ? new Error(HostBehavior.SafeDiagnostic(portal.Message) ?? "The requested hardware object was not found.", new NotFoundDetails(null))
                     : cause is PortalException unavailable && unavailable.Code == PortalErrorCode.InvalidState && tool == "SearchHardwareCatalog"
                         ? new Error("The hardware catalog is unavailable.", new ResourceUnavailableDetails("HardwareCatalog"))
                     : cause is PortalException invalid && invalid.Code == PortalErrorCode.InvalidParams ? McpServer.InvalidInput("arguments")
+                    : cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams } invalidArguments
+                        ? new Error(HostBehavior.SafeDiagnostic(invalidArguments.Message) ?? "The hardware arguments are invalid.",
+                            new InvalidArgumentDetails("arguments", Array.Empty<string>()))
                     : cause is NotSupportedException ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null))
                     : null;
                 if (error != null && !write) return Result(tool, null, error, Outcome.RejectedBeforeOperation, current);

@@ -189,7 +189,16 @@ namespace Siemens.Engineering.Cax
         public bool Export(HW.Device device, System.IO.FileInfo destination, System.IO.FileInfo log) => false;
     }
 }
-namespace TiaMcp.Adapters.Native.Hardware { public static class ProjectDeviceWalk { public const string UngroupedSegment = "$ungrouped"; } }
+namespace TiaMcp.Adapters.Native.Hardware
+{
+    public static class ProjectDeviceWalk
+    {
+        public const string UngroupedSegment = "$ungrouped";
+        public static string? DevicePathPrefix(IEnumerable<Siemens.Engineering.HW.Device>? root,
+            IEnumerable<Siemens.Engineering.HW.DeviceUserGroup>? groups, Siemens.Engineering.HW.DeviceGroup? ungrouped,
+            Siemens.Engineering.HW.Device device) => "devices/" + device.Name;
+    }
+}
 namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine

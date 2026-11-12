@@ -99,6 +99,24 @@ public sealed class FamilyPlainReplyTests
 
     public static TheoryData<string, string, string> AcceptedWithRequest() => new()
     {
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"),
+            "{\"found\":false,\"failureCode\":\"PROJECT_NOT_BOUND\",\"mayHaveChanged\":false,\"message\":\"No project open.\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"),
+            "{\"found\":false,\"failureCode\":\"NOT_FOUND\",\"mayHaveChanged\":false,\"device\":\"PLC_A\",\"message\":\"Missing device.\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"),
+            "{\"found\":false,\"failureCode\":\"UNSUPPORTED_CAPABILITY\",\"mayHaveChanged\":false,\"device\":\"PLC_A\"," +
+                "\"message\":\"VM-verified attribute unavailable.\",\"nativeMessage\":\"VM-verified attribute unavailable.\"}"
+        },
+        {
+            "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"),
+            "{\"ok\":false,\"failureCode\":\"UNSUPPORTED_CAPABILITY\",\"mayHaveChanged\":false,\"device\":\"PLC_A\"," +
+                "\"message\":\"VM-verified attribute unavailable.\",\"nativeMessage\":\"VM-verified attribute unavailable.\"}"
+        },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"), "{\"found\":false,\"message\":\"No project open.\"}"
         },
         {

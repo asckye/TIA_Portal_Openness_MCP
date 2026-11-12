@@ -46,6 +46,31 @@ namespace TiaMcp.Adapters.Native.Hardware
         internal static IEnumerable<Device> Devices(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped)
             => Walk(root, groups, ungrouped).Select(located => located.Device);
 
+        internal static string? DevicePathPrefix(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups,
+            DeviceGroup? ungrouped, Device device)
+        {
+            if (root != null && root.Any(candidate => candidate.Equals(device))) return "devices/" + PathName(device.Name);
+            var grouped = GroupDevicePath(groups, "device-groups/", device);
+            if (grouped != null) return grouped;
+            return ungrouped != null && ungrouped.Devices.Any(candidate => candidate.Equals(device))
+                ? "ungrouped/" + PathName(device.Name) : null;
+        }
+
+        private static string? GroupDevicePath(IEnumerable<DeviceUserGroup>? groups, string prefix, Device device)
+        {
+            if (groups == null) return null;
+            foreach (var group in groups)
+            {
+                string path = prefix + PathName(group.Name);
+                if (group.Devices.Any(candidate => candidate.Equals(device))) return path + "/devices/" + PathName(device.Name);
+                var nested = GroupDevicePath(group.Groups, path + "/groups/", device);
+                if (nested != null) return nested;
+            }
+            return null;
+        }
+
+        private static string PathName(string name) => name.Replace("%", "%25").Replace("/", "%2F");
+
         /// <summary>Names of the devices and of their top-level device items (CPU/head module), for name-collision preflights.</summary>
         internal static HashSet<string> OccupiedNames(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped)
         {
@@ -265,6 +290,10 @@ namespace TiaMcp.Adapters.Native.Hardware
             return null;
         }
 
+        private static DeviceItem? ChildOf(DeviceItem parent, string[] segments, int index, out int consumed)
+            => MatchChild(parent.DeviceItems, segments, index, out consumed)
+                ?? MatchChild(parent.Items.OfType<DeviceItem>(), segments, index, out consumed);
+
         /// <param name="anchorMatched">
         /// True when this level claims <paramref name="index"/> (a device or device item of that name). A claimed anchor
         /// with a null result means a later segment does not exist; the caller must fail rather than slide the window.
@@ -292,9 +321,20 @@ namespace TiaMcp.Adapters.Native.Hardware
                     var nextIndex = index + 1 + used;
                     while (deviceItem != null && nextIndex < segments.Length)
                     {
-                        deviceItem = MatchChild(deviceItem.DeviceItems, segments, nextIndex, out used);
+                        deviceItem = ChildOf(deviceItem, segments, nextIndex, out used);
                         if (used == 0) break;
                         nextIndex += used;
+                    }
+                    if (deviceItem == null)
+                    {
+                        deviceItem = device.DeviceItems.FirstOrDefault(di => di.Name.Equals(segment, StringComparison.OrdinalIgnoreCase));
+                        nextIndex = index + 1;
+                        while (deviceItem != null && nextIndex < segments.Length)
+                        {
+                            deviceItem = ChildOf(deviceItem, segments, nextIndex, out used);
+                            if (used == 0) break;
+                            nextIndex += used;
+                        }
                     }
                 }
                 return deviceItem;
@@ -309,7 +349,7 @@ namespace TiaMcp.Adapters.Native.Hardware
                 var next = index + 1;
                 while (deviceItem != null && next < segments.Length)
                 {
-                    deviceItem = MatchChild(deviceItem.DeviceItems, segments, next, out var used);
+                    deviceItem = ChildOf(deviceItem, segments, next, out var used);
                     if (used == 0) break;
                     next += used;
                 }

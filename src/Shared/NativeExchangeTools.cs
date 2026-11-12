@@ -21,7 +21,7 @@ internal sealed class NativeExchangeTools
             string softwarePath,
             [Description("objectPaths: Array of object paths.")] string[] objectPaths,
             [Description("objectKind: blocks | units.")] string objectKind,
-            [Description("targetOption: Openness loadable-file target option name ('' = default).")] string targetOption,
+            [Description("targetOption: download target of the loadable file - Plc | PlcSim.")] string targetOption,
             string filePath,
             bool dryRun=true)
         {
@@ -37,7 +37,7 @@ internal sealed class NativeExchangeTools
             string softwarePath,
             [Description("objectPathsJson: JSON array of object paths.")] string objectPathsJson,
             [Description("objectKind: blocks | units.")] string objectKind,
-            [Description("targetOption: Openness loadable-file target option name ('' = default).")] string targetOption,
+            [Description("targetOption: download target of the loadable file - Plc | PlcSim.")] string targetOption,
             string filePath,
             bool dryRun=true)
         => _onlineDownload.GeneratePlcLoadableFile(softwarePath,objectPathsJson,objectKind,targetOption,filePath,dryRun);

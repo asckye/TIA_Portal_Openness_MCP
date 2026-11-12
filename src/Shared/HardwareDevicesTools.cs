@@ -66,7 +66,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new McpException($"Device not found at '{devicePath}'", McpErrorCode.InternalError);
+                    throw new PortalException(PortalErrorCode.NotFound,
+                        $"Device '{devicePath}' was not found. Use a device path from GetProjectTree.");
                 }
             }
             catch (Exception ex) when (ex is not McpException)
@@ -107,7 +108,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new McpException($"Device item not found at '{deviceItemPath}'", McpErrorCode.InternalError);
+                    throw new PortalException(PortalErrorCode.NotFound,
+                        $"Device item '{deviceItemPath}' was not found. Use deviceItemPath from GetDeviceAttributes, "
+                        + "or <device>/<item>/<child> from GetDeviceItemTree.");
                 }
             }
             catch (Exception ex) when (ex is not McpException)
@@ -144,7 +147,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     };
                 }
 
-                throw new McpException($"Device item not found at '{deviceItemPath}'", McpErrorCode.InternalError);
+                throw new PortalException(PortalErrorCode.NotFound,
+                    $"Device item '{deviceItemPath}' was not found. Use deviceItemPath from GetDeviceAttributes, "
+                    + "or <device>/<item>/<child> from GetDeviceItemTree.");
             }
             catch (Exception ex) when (ex is not McpException)
             {

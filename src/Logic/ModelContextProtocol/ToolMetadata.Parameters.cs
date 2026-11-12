@@ -452,7 +452,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["GeneratePlcLoadableFile.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["GeneratePlcLoadableFile.objectPaths"] = new ParameterHint("\"\\u003CobjectPaths\\u003E\""),
             ["GeneratePlcLoadableFile.objectKind"] = new ParameterHint("\"blocks\"", "blocks", "units"),
-            ["GeneratePlcLoadableFile.targetOption"] = new ParameterHint("\"\\u003CtargetOption\\u003E\""),
+            ["GeneratePlcLoadableFile.targetOption"] = new ParameterHint("\"Plc\"", "Plc", "PlcSim"),
             ["GeneratePlcLoadableFile.filePath"] = new ParameterHint("\"C:\\\\Temp\\\\file.xml\""),
             ["GeneratePlcSourceFromBlocks.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["GeneratePlcSourceFromBlocks.blockPaths"] = new ParameterHint("\"\\u003CblockPaths\\u003E\""),

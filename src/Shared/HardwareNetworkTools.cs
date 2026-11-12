@@ -168,7 +168,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
                 error = status == "NOT_FOUND" ? new Error("The hardware target was not found.", new NotFoundDetails((string?)evidence["target"]))
                     : status == "UNSUPPORTED_CAPABILITY"
-                        ? new Error("The hardware capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
+                        ? new Error(HostBehavior.SafeDiagnostic(response.Message) ?? "The hardware capability is unavailable.",
+                            new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
                     : McpServer.InvalidInput("arguments");
             }
             else if (success == true)

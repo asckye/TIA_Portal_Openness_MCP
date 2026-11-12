@@ -29,21 +29,29 @@ public sealed class PutGetAccess
         // Read whether a CPU permits remote PUT/GET access (precondition for ReadPlcLiveValuesS7 on DB areas).
         internal HmiObject GetPutGetAccess(string devicePath)
         {
-            if (engine.PlcB5Session.IsProjectNull()) return new HmiObject { ["found"] = false, ["message"] = "No project open." };
+            if (engine.PlcB5Session.IsProjectNull()) return new HmiObject {
+                ["found"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["mayHaveChanged"] = false, ["message"] = "No project open." };
             var device = GetDevice(devicePath);
-            if (device == null) return new HmiObject { ["found"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
+            if (device == null) return new HmiObject {
+                ["found"] = false, ["failureCode"] = "NOT_FOUND", ["mayHaveChanged"] = false,
+                ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
 
             DeviceItem? item;
             string? attrName;
             try { (item, attrName) = FindPutGetAttribute(device); }
             catch (Exception error) when (error is NotSupportedException || error is InvalidOperationException)
             {
-                return new HmiObject { ["found"] = false, ["device"] = device.Name, ["message"] = error.Message };
+                string message = error.Message + (error is NotSupportedException
+                    ? " Check or set it in TIA: CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication'." : "");
+                return new HmiObject { ["found"] = false, ["failureCode"] = "UNSUPPORTED_CAPABILITY", ["mayHaveChanged"] = false,
+                    ["device"] = device.Name, ["message"] = message, ["nativeMessage"] = message };
             }
             if (item == null || attrName == null)
                 return new HmiObject
                 {
                     ["found"] = false,
+                    ["failureCode"] = "UNSUPPORTED_CAPABILITY",
+                    ["mayHaveChanged"] = false,
                     ["device"] = device.Name,
                     ["message"] = "PUT/GET access is not exposed as an Openness attribute on this CPU/firmware " +
                                   "(confirmed e.g. on S7-1200 1211C V4.6). Check/set it manually in TIA: " +

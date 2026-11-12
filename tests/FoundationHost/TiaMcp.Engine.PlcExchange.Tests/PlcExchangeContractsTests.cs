@@ -22,6 +22,28 @@ namespace PlcExchangeTests
     {
         [Theory]
         [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
+        public void Missing_provider_names_the_tool_and_the_reason(string release)
+        {
+            var field = HostType("TiaMcp.FoundationHost.EngineHostConfiguration").GetField("ReleaseKey", BindingFlags.Static | BindingFlags.NonPublic)!;
+            var previous = field.GetValue(null);
+            try
+            {
+                field.SetValue(null, release);
+                var response = new ResponseMessage { Message = "Loadable generation refused.", Meta = new JsonObject {
+                    ["status"] = "NotSupportedOnVersion", ["mayHaveChanged"] = false, ["operationSuccess"] = false,
+                    ["nativeMessage"] = "LoadableProvider is not exposed for this CPU on this release." } };
+                var body = Body((CallToolResult)Type("PlcExchangeContract").GetMethod("Map", BindingFlags.NonPublic | BindingFlags.Static)!
+                    .Invoke(null, new object?[] { "GeneratePlcLoadableFile", response, true, true, null })!);
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+                Assert.Contains("LoadableProvider", (string?)body["error"]?["message"], StringComparison.Ordinal);
+                Assert.Equal("GeneratePlcLoadableFile", (string?)body["error"]?["details"]?["capability"]);
+                Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            }
+            finally { field.SetValue(null, previous); }
+        }
+
+        [Theory]
+        [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
         public void GeneratePlcLoadableFileMissingProviderIsUnsupportedCapability(string release)
         {
             var configuration = HostType("TiaMcp.FoundationHost.EngineHostConfiguration");
