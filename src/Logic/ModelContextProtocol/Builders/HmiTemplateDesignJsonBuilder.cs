@@ -25,7 +25,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var root = JsonNode.Parse(File.ReadAllText(templateFile, Encoding.UTF8)) as JsonObject
                 ?? throw new InvalidOperationException("HMI template JSON root must be an object: " + templateFile);
-            return BuildApplyDesign(root, fallbackWidth, fallbackHeight);
+            var (width, height) = HmiTemplateLayoutAnalyzer.ScreenSize(root, templateFile, fallbackWidth, fallbackHeight);
+            return BuildApplyDesign(root, width, height);
         }
 
         public static JsonObject BuildApplyDesign(JsonObject root, int fallbackWidth, int fallbackHeight)

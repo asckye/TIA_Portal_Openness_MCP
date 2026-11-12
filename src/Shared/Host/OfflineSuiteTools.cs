@@ -482,7 +482,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseJsonReport
                 {
                     Ok = ok,
-                    Message = ok ? "HMI template PLC sync precheck suite completed" : "HMI template PLC sync precheck suite found blocking issues",
+                    Message = ok ? "HMI template PLC sync precheck suite completed"
+                        : "HMI template PLC sync precheck suite found blocking issues: "
+                            + string.Join("; ", (data["blockingReasons"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString() ?? "")),
                     Data = data,
                     Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
                 };

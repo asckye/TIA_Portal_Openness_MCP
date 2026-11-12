@@ -45,7 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var expectedItems = (templateRoot?["Items"] as JsonArray ?? templateRoot?["items"] as JsonArray ?? new JsonArray()).Count;
                     var design = HmiTemplateDesignJsonBuilder.BuildApplyDesign(path, fallbackWidth, fallbackHeight);
                     return design["items"] is JsonArray executionItems && executionItems.Count == expectedItems;
-                });
+                }, fallbackWidth, fallbackHeight);
                 var designJson = HmiTemplateDesignJsonBuilder.BuildApplyDesign(templateFile, fallbackWidth, fallbackHeight);
                 var ok = string.Equals(layout["status"]?.ToString(), "pass", StringComparison.OrdinalIgnoreCase);
                 var itemCount = (designJson["items"] as JsonArray)?.Count ?? 0;
@@ -183,7 +183,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var expectedItems = (templateRoot?["Items"] as JsonArray ?? templateRoot?["items"] as JsonArray ?? new JsonArray()).Count;
                 var design = HmiTemplateDesignJsonBuilder.BuildApplyDesign(path, fallbackWidth, fallbackHeight);
                 return design["items"] is JsonArray executionItems && executionItems.Count == expectedItems;
-            });
+            }, fallbackWidth, fallbackHeight);
             var designJson = HmiTemplateDesignJsonBuilder.BuildApplyDesign(templateFile, fallbackWidth, fallbackHeight);
             var items = designJson["items"] as JsonArray ?? new JsonArray();
             var errors = layout["errors"] as JsonArray ?? new JsonArray();

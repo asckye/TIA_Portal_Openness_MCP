@@ -37,6 +37,16 @@ namespace TiaMcpServer.ModelContextProtocol
 
             var readyCount = precheck.OfType<JsonObject>().Count(x => x["status"]?.ToString() == "ready");
             var blockedCount = precheck.OfType<JsonObject>().Count(x => x["status"]?.ToString() == "blocked");
+            var noBindingCount = precheck.OfType<JsonObject>().Count(x => x["status"]?.ToString() == "no-bindings");
+            var blockingReasons = new JsonArray();
+            if ((manifest["symbolCount"]?.GetValue<int>() ?? 0) == 0)
+            {
+                var diagnostics = (manifest["errors"] as JsonArray ?? new JsonArray())
+                    .Concat(manifest["warnings"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString() ?? "");
+                blockingReasons.Add("no-plc-symbols: " + plcXmlPath + "; " + string.Join("; ", diagnostics));
+            }
+            if (!Directory.Exists(templateDirectory)) blockingReasons.Add("template-directory-missing: " + templateDirectory);
+            if (selfTest["ok"]?.GetValue<bool>() != true) blockingReasons.Add("self-test-failed");
             var root = new JsonObject
             {
                 ["format"] = "tia-hmi-template-plc-sync-precheck-suite-v1",
@@ -57,6 +67,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["templateCount"] = precheck.Count,
                 ["readyTemplateCount"] = readyCount,
                 ["blockedTemplateCount"] = blockedCount,
+                ["noBindingTemplateCount"] = noBindingCount,
+                ["blockingReasons"] = blockingReasons,
                 ["plcSymbolCount"] = manifest["symbolCount"]?.GetValue<int>() ?? 0,
                 ["mappingLoaded"] = mapping["loaded"]?.GetValue<bool>() == true,
                 ["templates"] = precheck,
@@ -137,19 +149,23 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var actionMissing = template["missingRequiredTagsForActions"] as JsonArray ?? new JsonArray();
                 var blocked = missing.Count > 0 || typeMismatches.Count > 0 || actionMissing.Count > 0;
+                var requiredTagCount = (template["requiredTags"] as JsonArray)?.Count ?? 0;
+                var noBindings = requiredTagCount == 0 && actionMissing.Count == 0;
                 result.Add(new JsonObject
                 {
                     ["templateName"] = templateName,
-                    ["requiredTagCount"] = (template["requiredTags"] as JsonArray)?.Count ?? 0,
+                    ["requiredTagCount"] = requiredTagCount,
                     ["bindingChecks"] = bindingChecks,
                     ["missingPlcSymbols"] = missing,
                     ["dataTypeMismatches"] = typeMismatches,
                     ["missingRequiredTagsForActions"] = actionMissing.DeepClone(),
-                    ["status"] = blocked ? "blocked" : "ready",
-                    ["gate"] = blocked ? "do-not-apply" : "ready-for-temporary-project-validation",
+                    ["status"] = blocked ? "blocked" : noBindings ? "no-bindings" : "ready",
+                    ["gate"] = blocked ? "do-not-apply" : noBindings ? "no-bindings-to-check" : "ready-for-temporary-project-validation",
                     ["note"] = blocked
                         ? "模板仍可用于设计分析，但不能执行 HMI 变量创建、动态化绑定或事件写入。"
-                        : "离线符号预检通过，下一步仍需临时 TIA 工程导入/读回/诊断验证。"
+                        : noBindings
+                            ? "No RequiredTags are declared and no action bindings are missing; there are no bindings to check offline."
+                            : "离线符号预检通过，下一步仍需临时 TIA 工程导入/读回/诊断验证。"
                 });
             }
 
@@ -321,8 +337,11 @@ namespace TiaMcpServer.ModelContextProtocol
             md.AppendLine("- Templates: " + root["templateCount"]);
             md.AppendLine("- Ready: " + root["readyTemplateCount"]);
             md.AppendLine("- Blocked: " + root["blockedTemplateCount"]);
+            md.AppendLine("- No bindings: " + root["noBindingTemplateCount"]);
             md.AppendLine("- PLC symbols: " + root["plcSymbolCount"]);
             md.AppendLine("- Embedded self-test: " + root["selfTest"]?["ok"]);
+            foreach (var reason in root["blockingReasons"] as JsonArray ?? new JsonArray())
+                md.AppendLine("- Blocking reason: " + reason);
             md.AppendLine();
             md.AppendLine("## Templates");
             foreach (var node in root["templates"] as JsonArray ?? new JsonArray())

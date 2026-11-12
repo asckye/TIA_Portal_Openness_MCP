@@ -25,6 +25,16 @@ namespace TiaMcpServer.ModelContextProtocol
             return execution["items"] is JsonArray executionItems && executionItems.Count == expectedItems;
         }
 
+        public static (int Width, int Height) ScreenSize(JsonObject root, string templateFile, int fallbackWidth, int fallbackHeight)
+        {
+            var screen = root["Screen"] as JsonObject ?? root["screen"] as JsonObject ?? new JsonObject();
+            var size = Regex.Match(Path.GetFileNameWithoutExtension(templateFile), @"_(\d{3,5})x(\d{3,5})$");
+            var namedWidth = size.Success ? int.Parse(size.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : fallbackWidth;
+            var namedHeight = size.Success ? int.Parse(size.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) : fallbackHeight;
+            return (GetJsonInt(screen["Width"] ?? screen["width"], namedWidth),
+                GetJsonInt(screen["Height"] ?? screen["height"], namedHeight));
+        }
+
         public static JsonObject AnalyzeDirectory(string templateDirectory, Func<string, bool> executionJsonCheck)
         {
             // 必填：不传委托就没有真检查可做，这条路必须在编译期/入口处堵死，不允许悄悄退化成恒真。
@@ -62,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
 
-        public static JsonObject AnalyzeFile(string templateFile, Func<string, bool> executionJsonCheck)
+        public static JsonObject AnalyzeFile(string templateFile, Func<string, bool> executionJsonCheck, int fallbackWidth = 0, int fallbackHeight = 0)
         {
             if (executionJsonCheck == null) throw new ArgumentNullException(nameof(executionJsonCheck));
 
@@ -123,8 +133,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return row;
             }
 
-            var screenWidth = GetJsonInt(screen["Width"] ?? screen["width"], 0);
-            var screenHeight = GetJsonInt(screen["Height"] ?? screen["height"], 0);
+            var (screenWidth, screenHeight) = ScreenSize(root, templateFile, fallbackWidth, fallbackHeight);
             row["width"] = screenWidth;
             row["height"] = screenHeight;
             if (screenWidth < 320 || screenHeight < 240)
