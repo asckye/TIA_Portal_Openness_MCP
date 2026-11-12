@@ -18,7 +18,7 @@ public sealed class OnlinePortAdmissionTests
     [InlineData("20", "ManagePlcDataBlockSnapshot", "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"DB1\",\"action\":\"createSnapshot\"}")]
     [InlineData("16", "ConnectOnlinePlc", "{\"softwarePath\":\"PLC_1\",\"userName\":\"fixture\"}")]
     [InlineData("14sp1", "ConnectOnlinePlc", "{\"softwarePath\":\"PLC_1\",\"ipAddress\":\"127.0.0.1\"}")]
-    [InlineData("18", "GeneratePlcLoadableFile", "{\"softwarePath\":\"PLC_1\",\"objectPaths\":[\"Unit1\"],\"objectKind\":\"units\",\"targetOption\":\"\",\"filePath\":\"C:/fixture/unit.loadable\"}")]
+    [InlineData("18", "GeneratePlcLoadableFile", "{\"softwarePath\":\"PLC_1\",\"objectPaths\":[\"Unit1\"],\"objectKind\":\"units\",\"targetOption\":\"Plc\",\"filePath\":\"C:/fixture/unit.loadable\"}")]
     public async Task Missing_online_actions_are_refused_before_even_managed_worker_state(string release, string name, string json)
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
