@@ -625,6 +625,18 @@
           "identifier": "WritePreviewCoverageTests/InputContentsAreBoundAcrossPreviewAndApply( string release ):945e889efd17de8d64b3fc1e6ab91e70191629d5843b2bed362d4575efe0d02f:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-8",
+      "maintainerDate": "2026-11-12",
+      "reason": "Maintainer approved VMFIX-8 D1-D7 on 2026-11-11 (all recommendations), including the listed HmiBetaFixTests symbolic row change",
+      "items": [
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/HmiBetaFixTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HmiBetaFixTests/Unified_tag_binding_never_writes_PlcName( string address , string symbol , string mode , string expectedAddress , string expectedTag ):56d77713e84393f0b1e12d104d30e01949c4934297e3ae7accd79925f069ccad"
+        }
+      ]
     }
   ]
 }
