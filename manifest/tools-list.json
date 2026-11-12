@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-12T14:20:55.5935756+00:00",
+  "generatedAt": "2026-11-12T22:16:00.6974653+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
-  "workerSha256": "15f2cf1c1874f64340cccb019f3b623b6cb720ca739243fb04ca9882e7a057ba",
+  "workerSha256": "4338a8768569a382d5cd462855874a7bb0f323a0030afeedbfa6a842784dcd38",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -3148,7 +3148,7 @@
         "keyword",
         "limit"
       ],
-      "description": "[L2][Hardware][READ]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD devices such as AFM60A, ATV320, or DL100. Use a precise vendor/order/DAP keyword. limit bounds returned candidates, not the synchronous native Find call or file traversal. The existing 120-second read budget is unchanged; a lost or timed-out worker requires session reset and the returned recovery steps. The catalog API has no cancellation or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows. Examples: GetToolUsage(toolName: \"SearchInstalledGsdDevices\"), optionally operation or language.",
+      "description": "[L2][Hardware][READ]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD devices such as AFM60A, ATV320, or DL100. Use a precise vendor/order/DAP keyword. limit bounds returned candidates, not the synchronous native Find call or file traversal. A failed read reports its own outcome. Inspect the returned diagnostics before another call. The catalog API has no cancellation or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows. Examples: GetToolUsage(toolName: \"SearchInstalledGsdDevices\"), optionally operation or language.",
       "example": "{\"keyword\":\"1513\"}"
     },
     {
@@ -3999,7 +3999,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [batch-document-import-candidate] Exact V20/V21 ordered manifest of 1..16 admitted ordinary GlobalDB document sets. Reuses single document grammar and None-only native calls; all code/resource pairs remain locked. Whole-manifest hashes, complete collision inventory and exact project/group confirmation. Stop on first uncertainty, retain succeeded/failed/not-attempted evidence, poison session; no folder guessing, overwrite, culture activation, compile, save, retry or rollback. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksDocuments\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][WRITE] [batch-document-import-candidate] Exact V20/V21 ordered manifest of 1..16 admitted ordinary GlobalDB document sets. Reuses single document grammar and None-only native calls; all code/resource pairs remain locked. Whole-manifest hashes, complete collision inventory and exact project/group confirmation. Stop on first uncertainty, retain succeeded/failed/not-attempted evidence, inspect an unknown target before repeating that call. GetSessionState lists unsettled request IDs; no folder guessing, overwrite, culture activation, compile, save, retry or rollback. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksDocuments\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"dryRun\":true,\"confirm\":false,\"fileNamesWithoutExtension\":[\"\\u003Cexact document basename from the import directory\\u003E\"]}"
     },
     {
@@ -5550,7 +5550,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [bounded-delete-candidate] Delete one exact uniquely named ordinary offline PLC root external source. Empty groupPath only; no extension or case fallback. Preview complete inventory and session identity/hash; apply requires expectedPlanHash, confirm and expectedProjectFile. One native call, verified removal, unknown outcome poisons session. No generation, compilation, automatic save or rollback; filesystem/recovery effects and native acceptance unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DeletePlcExternalSource\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][WRITE] [bounded-delete-candidate] Delete one exact uniquely named ordinary offline PLC root external source. Empty groupPath only; no extension or case fallback. Preview complete inventory and session identity/hash; apply requires expectedPlanHash, confirm and expectedProjectFile. One native call, verified removal, After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. No generation, compilation, automatic save or rollback; filesystem/recovery effects and native acceptance unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DeletePlcExternalSource\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"externalSourceName\":\"FC_Add.scl\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -5854,7 +5854,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [bounded-device-add-candidate] V18–21 exact catalog selection only: explicit ArticleNumber+Version or full OrderNumber TypeIdentifier with empty version. Any exact OrderNumber catalog row is admitted, including ET 200SP CPUs, other PLCs and HMI panels; family is a descriptive label only. No approximate/default/family fallback, insertion probing or retries. Complete bounded root/grouped/ungrouped inventory; collision fails closed. Default preview, exact project/hash confirmation; one native create. Unknown outcome poisons session. No save, download, configuration or online calls; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareDevice\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][WRITE] [bounded-device-add-candidate] V18–21 exact catalog selection only: explicit ArticleNumber+Version or full OrderNumber TypeIdentifier with empty version. Any exact OrderNumber catalog row is admitted, including ET 200SP CPUs, other PLCs and HMI panels; family is a descriptive label only. No approximate/default/family fallback, insertion probing or retries. Complete bounded root/grouped/ungrouped inventory; collision fails closed. Default preview, exact project/hash confirmation; one native create. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. No save, download, configuration or online calls; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareDevice\"), optionally operation or language.",
       "example": "{\"preferredMlfb\":\"6ES7 513-1AM03-0AB0\",\"preferredVersion\":\"V3.1\",\"deviceName\":\"PLC_2\",\"family\":\"S7-1500\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -7859,7 +7859,7 @@
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[PLC foundation; native unverified][SESSION] [runtime-query-candidate] Cached attachment/project state and authoritative sessionState with binding, worker generation, reset requirement and effective read-only switches. IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetSessionState\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][SESSION] [runtime-query-candidate] Cached attachment/project state and authoritative sessionState with binding, worker generation, unsettled request IDs and effective read-only switches. IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetSessionState\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -8915,7 +8915,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. V20 requires .s7res; V21 optional. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. Every uncertain attempted outcome may have changed project, poisons session and is never replayed. Syntax/content validity and native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. V20 requires .s7res; V21 optional. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Syntax/content validity and native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"DB_Flags\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
     },
     {
