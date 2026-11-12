@@ -601,6 +601,18 @@
           "identifier": "WorkerRobustnessTests/Faults_lock_both_pipelines_and_require_explicit_restart( string release , bool shared , string mode ):6c365054eb9c19742876a5436676e96619658854b0ed2d9118d6f4c4655d9b74:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-7A",
+      "maintainerDate": "2026-11-12",
+      "reason": "Maintainer approved on 2026-11-11 under VMFIX-7 D1: PlcB5 read rows of ExtensionFamilyReplyTests expect read-failed; write rows unchanged",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ExtensionFamilyReplyTests.cs",
+          "kind": "test-removed",
+          "identifier": "ExtensionFamilyReplyTests/Plc_B5_failures_after_a_possible_change_keep_the_unknown_outcome( string code , bool writes ):2675eec12b168bf491e8179b0f97b67f7749c830eca28a598978d5450df6013b"
+        }
+      ]
     }
   ]
 }
