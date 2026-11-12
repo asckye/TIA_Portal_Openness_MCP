@@ -637,6 +637,18 @@
           "identifier": "TiaMcp.Adapters.Contracts.Tests.HmiBetaFixTests/Unified_tag_binding_never_writes_PlcName( string address , string symbol , string mode , string expectedAddress , string expectedTag ):56d77713e84393f0b1e12d104d30e01949c4934297e3ae7accd79925f069ccad"
         }
       ]
+    },
+    {
+      "task": "VMFIX-7B",
+      "maintainerDate": "2026-11-12",
+      "reason": "Maintainer approved on 2026-11-12 under VMFIX-7 D2: ExportPublicationTests checks the fixed staged name export.xml; the unpublished-destination check is kept",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ExportPublicationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ExportPublicationTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):b6054e4e79ed2b10b3abef964ffe7646e0a90a249fb2ce28222d0339f9a1eec9:1"
+        }
+      ]
     }
   ]
 }
