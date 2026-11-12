@@ -1756,7 +1756,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1ccfdf143e28e284b59e88f8926861159c900026db077d961357e4672f712f98",
+      "descriptionSha256": "051b91ff23dcfa165ad843c66699d902e1e55cc66b577860d0c826898947f846",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -5933,7 +5933,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1d8a1bda06c3995ed01fd76ff865048a6697d022df1d63c47b7a81a2a204727c",
+      "descriptionSha256": "5550463a69b919f98449b93b28d915f04b9dc42f4afe329d16b0071bf6ce748b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12658,7 +12658,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7a201da3c7b634accd1f63f321df63e43e251af22ff7987a2d4ff02000a66465",
+      "descriptionSha256": "10522036323dd6fb17e71efe35df573ddb87c792e135ab13dd3891a1b58ceef3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13405,7 +13405,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "26046978f87acaff918c9b39be46165e30b1dd53e07b3841485da1393195da37",
+      "descriptionSha256": "0edd2be110b000aa5d460c4fd84190e89ef32e39c9701d8e0cd06a145d657701",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16392,7 +16392,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a701015e5398e90b6e298fdc9612787814207ba82a3ba9038c5924dcb0da4198",
+      "descriptionSha256": "ca4d3a5235aa954abcf61a5477b817075b720f80be5815b182c351a06808bc26",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17209,7 +17209,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "de80fcdcdb7247e7cc800b61bf68034b9b04a14970cf16fe40b6f4f8cfdc1fc6",
+      "descriptionSha256": "e99f1f75af23923da4ac5502cda38a2a55a50ec0ac6256beed02bcf227b6b13a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17333,7 +17333,7 @@
               "write"
             ],
             "examples": [
-              "write"
+              "read"
             ],
             "type": "string"
           }
@@ -17379,7 +17379,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "19f163a56c102b19359721fac6c418343072bdc48b132cc65894b9b607133fe6",
+      "descriptionSha256": "9cd9d49e6d84233232e321b9f8d9373d85c27095675e5ddca6818c44f90cc2b2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17421,7 +17421,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5a7fb7b0f6dd9302180a9fffff33a537054a2d9d1ceaa3cb222b1069047ebecc",
+      "descriptionSha256": "43f56334086a18fba1ca8da7492a9f4e198b4ccb014b03f526166a0fcc70a5f5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20662,7 +20662,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a03e3c2bca326974a781218d77ffc7d44040debae158c8cf4e6deaa9387dc9d8",
+      "descriptionSha256": "b1b6b9bb3fc0d61f881cea8a9b09b476be840ae6395614b293a9d1a0e1406c21",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20686,7 +20686,7 @@
             "default": "",
             "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "examples": [
-              "C:/Examples/Project.ap21"
+              "C:/Examples/Project.ap20"
             ],
             "type": "string"
           },
@@ -20798,7 +20798,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "48cda18a59b0c6ee7cbe4225ffc1c3a96d81f3b310ea40338f1c65d706e1d055",
+      "descriptionSha256": "3f84b48635d97b7366273b6c2c22c0b1d9bcaaf80fde4bd56ccf401bfe45e732",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20822,7 +20822,7 @@
             "default": "",
             "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
             "examples": [
-              "C:/Examples/Project.ap21"
+              "C:/Examples/Project.ap20"
             ],
             "type": "string"
           },
@@ -23414,7 +23414,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "80ddbcd90d30f903560a3432d434aeabcd7794c8ffa75900cbb5bae7d837ef3d",
+      "descriptionSha256": "ed09f5c2ac453162a00845196f93c4f12ae5196dc6f863bc71077471dfb7c12d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -24373,7 +24373,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "21876ed790306bb7df4c1bd99b2f158d886966ff93f2225a7ce6567b8afdd75e",
+      "descriptionSha256": "96b598e1212677d64f7add1911970a5b9fb7ced7c0444b172fe840faf7b8c147",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -26707,7 +26707,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3b1de1b7fd38d1ab1c913213c3d1f2fc9d9a08305ab583a61eeada820ebf79f3",
+      "descriptionSha256": "4419807d41a6d2e1dfc33c4a53887d1763b6f33c1cb0bef80428711ee23a6315",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -27388,7 +27388,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "adfe84c40863aeed09dce88a265b48a46e3bdbc64e565fd5283ea24f391b6615",
+      "descriptionSha256": "f1b31f5139112bdb64c2ec56c234149836d9568c9e86336cd3b091c5b96b6b14",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -29176,7 +29176,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "89e73cd70750a8470aa100dd15e1b3214730422e87ecdb9d0488655b3ab90a7d",
+      "descriptionSha256": "6a87e4f1fb94a21981740dd09be49f51e9f75b3fa698b139658340022828769f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -30696,7 +30696,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1593fb4774707e10f0b5848437d9c5dcca2c571b35a425fff8e8ffd36b4ce349",
+      "descriptionSha256": "3680736d98eb586e676edd0877e6c9b74db3fa2931285998811dbddee2882d3a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -30773,7 +30773,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "61b9cfa08473e2e15d7581d29ed2548566c9beebae5b6c146f6898d7448a4beb",
+      "descriptionSha256": "c6716d22c9955b8a371aa3554b5b03cf478748591ee3395ca9460942c3cdd87f",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -34011,7 +34011,7 @@
             "type": "string"
           },
           "tagPaths": {
-            "description": "tagPaths: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected.",
+            "description": "tagPaths: JSON array of declared symbolic PLC tags/DB members. Each segment may be an identifier or a quoted TIA name. Guessed M bits are rejected.",
             "items": {
               "type": "string"
             },
@@ -34049,7 +34049,7 @@
             "type": "string"
           },
           "tagPaths": {
-            "description": "tagPaths: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed M bits.",
+            "description": "tagPaths: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed M bits. Each segment may be an identifier or a quoted TIA name.",
             "items": {
               "type": "string"
             },
@@ -34131,7 +34131,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "70c87e665a7096af3885a737aee40d6ebe92a01f6e029ef3e91b50781c07f42a",
+      "descriptionSha256": "3a6a0e007d0e51811c190e90d696bc49a1707f20a5844f7bcbd1df62254765ba",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -34174,7 +34174,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d4d147c12a5148d01e0fb0e18c7606eb10576c94bc586f5b4f12f9f4d42bcd36",
+      "descriptionSha256": "a824fb8fbcebd145e19bf8fcd31f93703e69d9833ab9f67f1fcbed97ec9888c4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -34585,7 +34585,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0f3edd7ad2117401beea4773014eab4d328fe07b85202cb7644dba85f570ab19",
+      "descriptionSha256": "a669be0e97724c7f7798146e0bcdcb36fcc33f59701f4528cc8338fa004c5f22",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -35660,7 +35660,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "eed0ab3d4f471a48447042636319093cf8363c09b1b0d0489b9a732147c6089f",
+      "descriptionSha256": "2656ac77ec1ea95e9980793d6d7cd031d574fe096debf2007e82fbd8bfa884cd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -35767,7 +35767,7 @@
         "openWorldHint": true,
         "readOnlyHint": true
       },
-      "descriptionSha256": "8e99fef5e0f0a097812964e34c059f0ec49f6730d29bcb2e1d4f328ab9d3cb54",
+      "descriptionSha256": "c83b4b5a25b7f457caf5c0f361821e6202d2cdd5149bd31e08248dcc6c830fa3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -35788,9 +35788,9 @@
           },
           "pgPcInterface": {
             "default": "",
-            "description": "pgPcInterface: exact PG/PC interface name or number (required when several exist), e.g. 'PLCSIM'.",
+            "description": "pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes (required when several exist).",
             "examples": [
-              "PLCSIM"
+              "<exact PG/PC interface name from ListTransferRoutes>"
             ],
             "type": "string"
           },
@@ -37857,7 +37857,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "4610b939f3c15c8cfb3f428b5134c932b464b89762565872f6e4db4df40c257b",
+      "descriptionSha256": "cc6de1b313afa2e1eb693f91a22a2432b3b960dfed95573ce67a024129c407fc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -37889,9 +37889,9 @@
           },
           "pgPcInterface": {
             "default": "",
-            "description": "pgPcInterface: exact PG/PC interface name or number, e.g. 'PLCSIM'; required when several interfaces exist ('' only when there is one).",
+            "description": "pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes; required when several interfaces exist ('' only when there is one).",
             "examples": [
-              "PLCSIM"
+              "<exact PG/PC interface name from ListTransferRoutes>"
             ],
             "type": "string"
           },
@@ -38049,7 +38049,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "05eac58480cb4b5fca487396ea7d13ef00b5a1dee2a3188968b4f82d5ce6d5b7",
+      "descriptionSha256": "24a8061352459059191314f3937537c58844f4343fc054d93790a44d036c0784",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -38803,7 +38803,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c6cf03ec04c9dd637f9c7de7868223fa2e86c19bd7b2bc2de94dc2b9da1289cc",
+      "descriptionSha256": "0683bea180d6ba7030a93107e338dc718ef11f2ce4076c694d1a4ebe64abcd0f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -38825,7 +38825,7 @@
             "type": "string"
           },
           "sclContent": {
-            "description": "sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim.",
+            "description": "sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim; plain ASCII omits the BOM for tool import, other text uses UTF-8 BOM and requires manual TIA import.",
             "examples": [
               "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION"
             ],
