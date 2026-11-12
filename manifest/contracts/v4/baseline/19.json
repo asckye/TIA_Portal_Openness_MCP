@@ -16380,7 +16380,11 @@
             "type": "string"
           },
           "targetOption": {
-            "description": "targetOption: Openness loadable-file target option name ('' = default).",
+            "description": "targetOption: download target of the loadable file - Plc | PlcSim.",
+            "enum": [
+              "Plc",
+              "PlcSim"
+            ],
             "type": "string"
           }
         },

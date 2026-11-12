@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-05T10:48:11.8216610+00:00",
+  "generatedAt": "2026-11-12T07:32:58.9521594+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
-  "workerSha256": "1aeb53a0bb6d02f28f7f08bdcb3643f94eccedffa9745ec505c78a24afc393d9",
+  "workerSha256": "cc869eae8086f90c2b9c1c4b60e1b2346cb6fefbec725aa6a2fe24e726944a06",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -14,7 +14,7 @@
     "parametersFromVocabulary": 695,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
-    "enumHints": 255,
+    "enumHints": 256,
     "defaultHints": 1599,
     "examplesCurated": 517,
     "recipes": 40
@@ -8999,7 +8999,7 @@
         "dryRun"
       ],
       "description": "[L2][PLC-Software][FILE] Native GenerateLoadable for exact blocks or units with explicit TargetOption enum name. New absolute output file; default preview. Does not download or assert compiled content completeness. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: \"GeneratePlcLoadableFile\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"objectKind\":\"blocks\",\"targetOption\":\"\\u003Ctarget option from the selected release\\u003E\",\"filePath\":\"\\u003Cnew absolute output file for the selected TargetOption\\u003E\",\"dryRun\":true,\"objectPaths\":[\"Main\"]}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"objectKind\":\"blocks\",\"targetOption\":\"Plc\",\"filePath\":\"\\u003Cnew absolute output file for the selected TargetOption\\u003E\",\"dryRun\":true,\"objectPaths\":[\"Main\"]}"
     },
     {
       "name": "GeneratePlcDocumentation",
