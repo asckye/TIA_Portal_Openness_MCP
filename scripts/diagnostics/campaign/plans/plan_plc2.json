@@ -297,7 +297,7 @@
 "MCP_G/MCP_FC"
 ],
 "objectKind": "blocks",
-"targetOption": "Normal",
+"targetOption": "Plc",
 "filePath": "${EXPORT_ROOT}\\mcp46_FC.loadable",
 "dryRun": true
 },
