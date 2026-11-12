@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls.Primitives;
@@ -123,7 +124,7 @@ public sealed class WpfContext : IDisposable
         button.AddHandler(ButtonBase.ClickEvent, onClick, true);
         try
         {
-            PressSpace(ReadMouse, () =>
+            PressSpace(() => new SpaceMouseState(ReadLeftButton(), Mouse.Captured), () =>
             {
                 clicked = false;
                 RaiseKey(Keyboard.KeyDownEvent);
@@ -147,6 +148,14 @@ public sealed class WpfContext : IDisposable
             if (button.IsMouseCaptured) button.ReleaseMouseCapture();
         }
     }
+
+    // WPF reports Released before its mouse device is active; use the same native read it makes under capture.
+    internal static MouseButtonState ReadLeftButton() =>
+        (GetKeyState(0x01 /* VK_LBUTTON */) & 0x8000) != 0 ? MouseButtonState.Pressed : MouseButtonState.Released;
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern short GetKeyState(int virtualKey);
 
     // The input seam keeps contention tests deterministic; the real path above always raises both Space events.
     internal static void PressSpace(Func<SpaceMouseState> readMouse, Func<SpacePressResult> press,

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -11,6 +12,28 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WpfContextTests(WpfContext wpf)
 {
+    [Fact]
+    public void Left_button_reader_matches_native_state_without_capture()
+    {
+        wpf.Run(() =>
+        {
+            var window = new Window { Width = 160, Height = 100 };
+            try
+            {
+                WpfContext.ShowWindow(window);
+                WpfContext.Drain();
+                Assert.True(window.Left + window.ActualWidth < SystemParameters.VirtualScreenLeft);
+                Assert.True(window.Top + window.ActualHeight < SystemParameters.VirtualScreenTop);
+                Assert.Null(Mouse.Captured);
+                var expected = (GetKeyState(0x01 /* VK_LBUTTON */) & 0x8000) != 0
+                    ? MouseButtonState.Pressed : MouseButtonState.Released;
+                Assert.Equal(expected, WpfContext.ReadLeftButton());
+                Assert.Null(Mouse.Captured);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
     public void Space_wait_pumps_the_queued_mouse_release()
     {
@@ -224,6 +247,10 @@ public sealed class WpfContextTests(WpfContext wpf)
             finally { window.Close(); }
         });
     }
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern short GetKeyState(int virtualKey);
 
     private static WpfContext.SpaceMouseState Released => State(false);
     private static WpfContext.SpaceMouseState State(bool pressed) => new(pressed ? MouseButtonState.Pressed : MouseButtonState.Released, null);
