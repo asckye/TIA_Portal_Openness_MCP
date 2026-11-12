@@ -532,6 +532,18 @@
           "identifier": "data-row:e99f81a0910aef0b8ca446af48071719e474b3144bd54655e8c73d781bc99e45:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-10A",
+      "maintainerDate": "2026-11-12",
+      "reason": "Maintainer approved VMFIX-10A on 2026-11-11 (all recommendations): GeneratePlcLoadableFile targetOption gains the documented enum Plc, PlcSim on releases 18-21; baselines regenerated with the official tools",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OnlinePortAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OnlinePortAdmissionTests/Missing_online_actions_are_refused_before_even_managed_worker_state( string release , string name , string json ):bdca471c791bb8de9ab04d6c55348eb93586a78d6aa417d392c9d66479e391de:1"
+        }
+      ]
     }
   ]
 }
