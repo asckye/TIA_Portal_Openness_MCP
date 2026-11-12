@@ -112,6 +112,23 @@ public sealed class NoLockTests
         Assert.Equal(1, worker.Reads);
     }
 
+    [Theory]
+    [InlineData("\"true\"")] [InlineData("\"false\"")] [InlineData("1")] [InlineData("null")] [InlineData("{}")] [InlineData("[]")]
+    public void Non_boolean_dry_run_keeps_reviewed_writes_and_unknown_evidence(string dryRun)
+    {
+        using var scope = new SharedPipelineTests.Scope();
+        var arguments = new JsonObject { ["dryRun"] = JsonNode.Parse(dryRun), ["expectedInventoryHash"] = new string('a', 64) };
+        Assert.True(UnsettledCalls.IsReviewedApply(arguments));
+        var result = FoundationV4Result.Failure("21", "SaveProject", "invalid-dry-run", true, true, null,
+            new WorkerOperationException("Synthetic write outcome unknown.", -32603, "unknown"));
+        enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome("SaveProject", result, true, arguments.ToJsonString());
+        Assert.Equal("invalid-dry-run", Assert.Single(scope.Worker.Unsettled.Snapshot()).RequestId);
+        var next = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.CallTool(SessionFixtureTool.Name,
+            new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())));
+        Assert.True((bool?)next.StructuredContent?["ok"]);
+        Assert.Equal(1, scope.Worker.EngineCalls);
+    }
+
     [Fact]
     public void Engine_bridge_refuses_the_identical_reviewed_apply_before_dispatch()
     {

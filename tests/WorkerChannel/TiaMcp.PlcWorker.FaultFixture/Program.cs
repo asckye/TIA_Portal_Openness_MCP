@@ -146,7 +146,8 @@ internal static class Program
             if (request.Method == "adapter.FixtureAnsweredUnknown")
                 return ChannelResponse.Error(new ChannelFailureException("Synthetic answered unknown.", -32603, ChannelOutcome.Unknown));
             if (request.Method == "adapter.SaveProject")
-                return ChannelResponse.Success(new JsonObject { ["Executed"] = (bool?)JsonNode.Parse(request.ArgumentsJson)?["dryRun"] != true,
+                    return ChannelResponse.Success(new JsonObject { ["Executed"] = !(JsonNode.Parse(request.ArgumentsJson)?["dryRun"] is JsonValue dryRun
+                        && dryRun.TryGetValue<bool>(out var preview) && preview),
                     ["ProjectFile"] = "C:/fixture.ap" + options.ReleaseKey }.ToJsonString());
             if (request.Method == "adapter.Attach")
             {

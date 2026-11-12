@@ -1,7 +1,7 @@
 # Foundation protocol 2 regression
 
-Run `python scripts/checks/Test-DotnetSuites.py --suite worker-channel` from the
-repository root (minimum 253 passed, zero skipped). The tests exercise the actual
+Run `dotnet run --project build-tools/release -- test-suites -Suite worker-channel` from the
+repository root (minimum 275 passed, zero skipped). The tests exercise the actual
 shared channel, including the synthetic `TiaMcp.WorkerChannel.TransportFixture` child
 process. No Siemens reference, TIA process, PLC or network service is used.
 The separate `Test-FoundationTransport.py` check exercises the real MCP host over
@@ -22,7 +22,7 @@ counts and thread ownership; `ProcessTests` exercises real OS pipes.
 | HostPreview: `request byte cap`, `exact frame cap accepted`; AsyncPreview: `oversized`; HostTransport: `payload rejected before read/allocation` | `OversizedLinePoisonsBeforeParsing`, `ExactFrameCapAccepted`, `RequestByteCapAndFramingBeforeDispatch`; process oversized hello/response |
 | Endpoint: `concurrent endpoint poisoned`, `reentrant terminal` | `ConcurrentEndpointPoisoned` in ProtocolTests and ProcessTests; `SwallowedInvalidProgressAndReentryTerminal` |
 | WorkerProtocol: `cancel before dispatch has no send or poison`; AsyncPreview: `unsent cancellation recoverable`; HostTransport: `unsent cancellation stays usable` | `CancelBeforeDispatchHasNoSendOrPoison`, `UnsentCancellationStaysUsable` |
-| WorkerProtocol: `unknown result poisons host`, `no retry send`; HostTransport: `terminal ambiguity`, `no replay` | `UnknownResultPoisonsHostNoReplay` (timeout, cancellation, write failure, explicit invalidation), `TerminalAmbiguityNoReplay` (actual exit/broken pipe and timeout), `ReadFailureOutcomePreserved("session-fault")` |
+| WorkerProtocol: `unknown result poisons host`, `no retry send`; HostTransport: `terminal ambiguity`, `no replay` | `UnknownResultPoisonsHostNoReplay` (timeout, cancellation, write failure, explicit invalidation), `TerminalAmbiguityNoReplay` (actual exit/broken pipe and timeout). `ReadFailureOutcomePreserved("session-fault")` preserves the answered unknown and dispatches the next request. |
 | WorkerProtocol: `binding transition observed`, `close advances binding epoch`, `wrong-epoch`, `worker-wrong-epoch` | `CloseAdvancesBindingEpoch`, `UnknownReplyIdOrBindingEpochPoisons`, server before-epoch rejection, process before/after epoch faults |
 | Endpoint: `late progress terminal`, `wrong thread terminal`, `swallowed invalid progress terminal`, `progress cap terminal`; JsonV2/JsonLegacy: `progress-id`, `progress-repeat` | `LateProgressTerminal`, `SwallowedInvalidProgressAndReentryTerminal`, `InvalidProgressTerminal`, `LateProgressAndTrailingFramesPoison`, `TrailingFramesPoisonIdlePeer` |
 | JsonV2/JsonLegacy: `wrong-id`, `id-type`, `trailing`; WorkerProtocol: `duplicate poisons worker` | `UnknownReplyIdOrBindingEpochPoisons`, malformed string-id case, `TrailingFramesPoisonIdlePeer("second-reply")`, `DuplicatePoisonsWorker` |
@@ -36,6 +36,11 @@ by the host test around the fixture's `timeout` mode. Tests check no second send
 after poisoning, and no dispatch for rejected startup/framing. The real worker
 smoke additionally verifies the reported file hashes and unbound epoch against
 the exact built executable and adapter, then calls ReadState and idle Disconnect.
+
+An answered unknown retains its own failure and sends no automatic retry. Later
+project and simulator requests use the same channel. Engine profile coverage is
+in `Answered_unknown_permits_independent_project_and_simulator_calls` and
+`ChannelUnknownPermitsLaterCallsAndDisconnect`.
 
 ## Preview details deliberately not carried over
 

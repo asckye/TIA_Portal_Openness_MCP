@@ -67,7 +67,7 @@ public sealed class UnsettledCalls
             ["projectFile"] = string.IsNullOrEmpty(projectFile) ? null : Path.GetFullPath(projectFile).ToUpperInvariant() }));
     }
 
-    public static bool IsReviewedApply(JsonObject arguments) => (bool?)arguments["dryRun"] == false
+    public static bool IsReviewedApply(JsonObject arguments) => !HostBehavior.IsPreview(arguments, true)
         && !string.IsNullOrWhiteSpace((string?)arguments["expectedPlanHash"] ?? (string?)arguments["expectedInventoryHash"]);
 
     public UnsettledCall? FindReviewedApply(string tool, JsonObject arguments, string? projectFile)

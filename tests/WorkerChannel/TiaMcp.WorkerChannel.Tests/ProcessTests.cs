@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using TiaMcp.WorkerChannel;
 using Xunit;
@@ -89,14 +88,15 @@ public sealed class ProcessTests
     [Theory]
     [InlineData("read-failed",ChannelOutcome.ReadFailed,false)]
     [InlineData("rejected",ChannelOutcome.RejectedBeforeNative,false)]
-    [InlineData("session-fault",ChannelOutcome.Unknown,true)]
+    [InlineData("session-fault",ChannelOutcome.Unknown,false)]
     public async Task ReadFailureOutcomePreserved(string mode,ChannelOutcome outcome,bool poisoned)
     {
         using var fixture=new Fixture(mode); await fixture.Client.ConnectAsync(Budget);
         var error=await Assert.ThrowsAsync<ChannelFailureException>(()=>fixture.Call()); Assert.Equal(outcome,error.Outcome); Assert.Equal(poisoned,fixture.Client.Poisoned);
-        if(poisoned) await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Call());
-        else await Assert.ThrowsAsync<ChannelFailureException>(()=>fixture.Call());
-        Assert.Equal(poisoned?1:2,fixture.Calls);
+        Assert.Equal(1,fixture.Calls);
+        var next=await Assert.ThrowsAsync<ChannelFailureException>(()=>fixture.Call());
+        Assert.Equal(outcome,next.Outcome); Assert.Equal(error.Code,next.Code);
+        Assert.Equal(2,fixture.Calls);
     }
 
     [Fact]
@@ -133,9 +133,10 @@ public sealed class ProcessTests
         internal readonly Task<string> diagnostics;
         private readonly string image;
         private readonly bool expectedCrash;
-        internal Fixture(string mode,[CallerFilePath] string source="")
+        internal Fixture(string mode)
         {
-            string exe=Path.GetFullPath(Path.Combine(Path.GetDirectoryName(source)!,"../TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture"+(OperatingSystem.IsWindows()?".exe":"")));
+            string exe=TestPaths
+                .WorkerFixture("TiaMcp.WorkerChannel.TransportFixture", "TiaMcp.WorkerChannel.TransportFixture"+(OperatingSystem.IsWindows()?".exe":""));
             image=exe; expectedCrash=mode=="unhandled";
             string adapter=Path.Combine(Path.GetDirectoryName(exe)!,"TiaMcp.Adapter.19.dll");
             string Hash(string path) { using var stream=File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant(); }

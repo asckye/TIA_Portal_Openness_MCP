@@ -48,9 +48,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (name == "CallTool" && args["arguments"] is JsonObject target) args = target;
             if (name == "CallTool" && (string?)body["meta"]?["tool"] is string targetName) name = targetName;
             bool mutation = write || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
-            bool isPreview = preview || ((bool?)args["dryRun"] ?? (TryDryRunDefault(name, out bool defaultPreview) && defaultPreview));
-            if (unknown && mutation && !isPreview && !IsReadOnlyApprovalPreview
-                && (bool?)args["dryRun"] != true)
+            bool isPreview = preview || HostBehavior.IsPreview(args, TryDryRunDefault(name, out bool defaultPreview) && defaultPreview);
+            if (unknown && mutation && !isPreview && !IsReadOnlyApprovalPreview)
                 RecordUnsettled((string?)body["meta"]?["requestId"] ?? InvocationJournal.CorrelationId, name, args.ToJsonString());
             if (name is "SaveProject" or "SaveProjectCopy")
                 body = Worker.Unsettled.WarnOnSave(name, body, unsettledBeforeSave);

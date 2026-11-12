@@ -204,7 +204,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 var arguments = JsonSerializer.SerializeToNode(args)!.AsObject();
                 sessionTool.Unsettled.ProjectChanged(sessionTool.BoundProjectFile);
                 var properties = tool.InputSchema.GetProperty("properties");
-                bool preview = (bool?)arguments["dryRun"] ?? (properties.TryGetProperty("dryRun", out var dryRun)
+                bool preview = HostBehavior.IsPreview(arguments, properties.TryGetProperty("dryRun", out var dryRun)
                     && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False));
                 if (!preview && UnsettledCalls.HasUnknownOutcome(body)
                     && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE"))

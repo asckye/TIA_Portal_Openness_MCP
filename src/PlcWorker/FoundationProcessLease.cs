@@ -52,7 +52,7 @@ namespace TiaMcp.PlcWorker
             if (_detached()) { _clear(); return response; }
             string operation = request.Method.Substring("adapter.".Length);
             if (response.Failure == null && _outcome.Revision != revisionAtEntry && !WorkerOperations.IsReadOnly(operation)
-                && (bool?)JsonNode.Parse(request.ArgumentsJson)?["dryRun"] != true)
+                && !(JsonNode.Parse(request.ArgumentsJson)?["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && preview))
                 response = ChannelResponse.Error(new ChannelFailureException("The write outcome is unknown.", -32603,
                     ChannelOutcome.Unknown, response.ResultJson));
             if (response.Failure?.Outcome == ChannelOutcome.Unknown) _outcome.MarkUncertain();

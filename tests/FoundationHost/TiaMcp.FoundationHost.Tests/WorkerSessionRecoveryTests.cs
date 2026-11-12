@@ -8,6 +8,24 @@ using Xunit;
 
 public sealed class WorkerSessionRecoveryTests
 {
+    [Theory]
+    [InlineData("\"true\"")] [InlineData("\"false\"")] [InlineData("1")] [InlineData("null")] [InlineData("{}")] [InlineData("[]")]
+    public void Non_boolean_dry_run_preserves_an_uncertain_write(string dryRun)
+    {
+        var outcome = new WorkerSessionOutcomeState();
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { }, () => { });
+        var request = new ChannelRequest(1, "adapter.SaveProject", "{\"dryRun\":" + dryRun + "}", (_, _) => { });
+        int calls = 0;
+        const string evidence = "{\"RequiresSessionReset\":true}";
+        var response = recovery.Dispatch(request, _ => {
+            calls++; outcome.MarkUncertain(); return ChannelResponse.Success(evidence);
+        });
+        response = recovery.Synchronize(request, response);
+        Assert.Equal(ChannelOutcome.Unknown, response.Failure!.Outcome);
+        Assert.Equal(evidence, response.Failure.EvidenceJson);
+        Assert.Equal(1, calls);
+    }
+
     [Fact]
     public void Read_uncertainty_keeps_the_real_reply_and_does_not_rewrite_a_later_write()
     {

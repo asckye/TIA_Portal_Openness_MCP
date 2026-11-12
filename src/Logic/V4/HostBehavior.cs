@@ -16,17 +16,17 @@ namespace TiaMcp.Logic.V4
     // Host wrappers supply transport/native evidence; this code owns admission decisions.
     internal static class HostBehavior
     {
+        internal static bool IsPreview(JsonObject args, bool defaultPreview)
+        {
+            if (!args.TryGetPropertyValue("dryRun", out var value)) return defaultPreview;
+            return value is JsonValue flag && flag.TryGetValue<bool>(out var preview) && preview;
+        }
+
         internal static bool ApprovalWrite(string tool, JsonObject args, bool classifiedWrite,
             bool hasDryRun, bool defaultPreview)
         {
-            if (hasDryRun)
-            {
-                // Only an explicit boolean true previews. A present dryRun that is not a JSON boolean (a string, number or null
-                // that a later binding may convert) fails closed as a write; an absent dryRun follows the schema default.
-                if (args.ContainsKey("dryRun"))
-                { if (args["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && preview) return false; }
-                else if (defaultPreview) return false;
-            }
+            // A present non-boolean value fails closed as a write. Only an absent value follows the schema default.
+            if (hasDryRun && IsPreview(args, defaultPreview)) return false;
             if (tool is "ExchangeSystemDiagnosticsSettings" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules")
                 if (args["action"] is JsonValue action && action.TryGetValue<string>(out var operation) && operation == "import") return true;
             if (tool == "ManagePlcGitRepository" && ActorScope.Actor == ActorScope.Mcp

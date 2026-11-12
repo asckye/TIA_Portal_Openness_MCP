@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Nodes;
 using TiaMcp.WorkerChannel;
 using Xunit;
 using static TiaMcp.WorkerChannel.Tests.ProtocolTests;
@@ -8,20 +9,24 @@ namespace TiaMcp.WorkerChannel.Tests;
 public sealed class EngineProfileTests
 {
     [Fact]
-    public async Task Latched_engine_project_still_permits_the_independent_simulator()
+    public async Task Answered_unknown_permits_independent_project_and_simulator_calls()
     {
         using var input = new FeedStream(); using var output = new CaptureStream();
         using var client = new ChannelClient(input, output, Identity, ChannelProfile.Engine);
         input.Feed(Hello); await client.ConnectAsync(Budget);
         var project = client.CallAsync("adapter.ProjectMutation", "{}", BindingChange.None, false, Budget);
         input.Feed(Reply(payload: "\"error\":{\"code\":-32603,\"message\":\"unknown\",\"data\":{\"outcome\":\"Unknown\",\"evidence\":null}}"));
-        await Assert.ThrowsAsync<ChannelFailureException>(() => project);
-        Assert.True(client.Poisoned); Assert.True(client.CanCallIndependentRuntime);
+        var failure = await Assert.ThrowsAsync<ChannelFailureException>(() => project);
+        Assert.Equal(ChannelOutcome.Unknown, failure.Outcome); Assert.Equal(-32603, failure.Code);
+        Assert.True(client.OutcomeUnknown); Assert.Single(output.Writes);
+        Assert.False(client.Poisoned); Assert.True(client.CanCallIndependentRuntime);
         var simulation = client.CallAsync("adapter.runtime-channels.ExecutePlcSimAdvanced", "{}", BindingChange.None, true, Budget);
         input.Feed(Reply(2, payload: "\"result\":{\"simulator\":true}"));
         Assert.Equal("{\"simulator\":true}", await simulation);
-        await Assert.ThrowsAsync<ChannelFaultException>(() => client.CallAsync("engine.invoke", "{}", BindingChange.None, false, Budget));
-        Assert.True(client.Poisoned); Assert.Equal(2, output.Writes.Count);
+        var next = client.CallAsync("engine.invoke", "{}", BindingChange.None, false, Budget);
+        input.Feed(Reply(3, payload: "\"result\":{}"));
+        Assert.Equal("{}", await next);
+        Assert.True(client.OutcomeUnknown); Assert.False(client.Poisoned); Assert.Equal(3, output.Writes.Count);
     }
     [Fact]
     public void Timeout_defaults_and_override_precedence_are_shared_by_all_worker_operations()
@@ -94,15 +99,21 @@ public sealed class EngineProfileTests
     }
 
     [Fact]
-    public void ChannelUnknownPermitsOnlyARecoveryDisconnect()
+    public void ChannelUnknownPermitsLaterCallsAndDisconnect()
     {
         using var output = new MemoryStream(); int calls = 0;
         var server = new ChannelServer(Stream.Null, output, Identity, () => new(0, false), request => {
-            calls++; return request.Method == "adapter.Disconnect" ? ChannelResponse.Success("{}") : ChannelResponse.Error(new("lost", -32603, ChannelOutcome.Unknown));
+            calls++; return request.Method == "engine.invoke" ? ChannelResponse.Error(new("lost", -32603, ChannelOutcome.Unknown)) : ChannelResponse
+                .Success("{}");
         }, ChannelProfile.Engine);
         server.WriteHello(); server.Handle(Frame("engine.invoke")); Assert.False(server.Poisoned);
+        Assert.Equal(1, calls);
+        var failure = JsonNode.Parse(Encoding.UTF8.GetString(output.ToArray()).Split('\n', StringSplitOptions.RemoveEmptyEntries).Last())!;
+        Assert.Equal("Unknown", (string?)failure["error"]?["data"]?["outcome"]);
+        Assert.Equal(-32603, (int?)failure["error"]?["code"]);
         server.Handle(Frame("adapter.Disconnect", id: 2)); Assert.Equal(2, calls);
-        Assert.Throws<ChannelFaultException>(() => server.Handle(Frame("engine.status", id: 3)));
+        server.Handle(Frame("engine.status", id: 3));
+        Assert.Equal(3, calls); Assert.False(server.Poisoned);
     }
 
     [Fact]

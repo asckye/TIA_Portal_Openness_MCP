@@ -228,8 +228,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "ConcurrentEndpointPoisoned"
             },
             ["TiaMcp.WorkerChannel.Tests.ProtocolTests"] = new[] {
-                "Answered_unknown_keeps_project_requests_refused_and_disconnect_available",
-                "Answered_project_unknown_allows_the_independent_simulator_without_clearing_the_latch",
+                "Channel_serves_the_next_call_after_an_unknown_reply",
+                "Answered_project_unknown_allows_independent_simulator_and_project_calls",
                 "BadHelloPoisonsSession",
                 "DuplicateHelloTerminal",
                 "MissingHelloHasNoSentOperation",
@@ -256,13 +256,13 @@ namespace TiaMcp.Engine.Tests.Shared
                 "ProgressCapAndPerRequestSequence"
             },
             ["TiaMcp.WorkerChannel.Tests.EngineProfileTests"] = new[] {
-                "Latched_engine_project_still_permits_the_independent_simulator",
+                "Answered_unknown_permits_independent_project_and_simulator_calls",
                 "RequestLimitDoesNotConsumeIdOrPoisonClient",
                 "ClientForwardsProgressAndUnknownToolReply",
                 "Foundation_and_engine_share_one_owner_epoch_and_correlation",
                 "EpochRules",
                 "UnknownToolOutcomeKeepsServerUsable",
-                "ChannelUnknownPermitsOnlyARecoveryDisconnect",
+                "ChannelUnknownPermitsLaterCallsAndDisconnect",
                 "OversizedReplyUsesLimitEnvelopeAndAcceptsNextRequest",
                 "ProgressObjectStaysOnOwnerThread"
             },
