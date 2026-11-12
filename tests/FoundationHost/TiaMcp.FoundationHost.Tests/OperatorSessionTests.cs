@@ -107,7 +107,7 @@ public sealed class OperatorSessionTestsPlc
     }
 
     [Theory, InlineData("20"), InlineData("21")]
-    public async Task Lock_and_restart_belong_to_the_attached_session(string release)
+    public async Task Unsettled_calls_and_restart_belong_to_the_attached_session(string release)
     {
         using var fixture = new Fixture(release); using var session = await fixture.Create(); using var other = await fixture.Create();
         using var approval = new DisabledApproval(fixture.Options.BundleRoot);
@@ -115,17 +115,19 @@ public sealed class OperatorSessionTestsPlc
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
         await panel.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, false);
-        Assert.True((bool?)(await ai.Tool("GetSessionState"))["data"]?["sessionState"]?["requiresSessionReset"]);
-        Assert.True((bool?)(await panel.Tool("GetSessionState"))["data"]?["sessionState"]?["requiresSessionReset"]);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await ai.Tool("GetProjectInfo", ok: false))["error"]?["code"]);
-        Assert.Equal("workbench", (string?)session.Snapshot()["endedBy"]); Assert.True((bool?)session.Snapshot()["sessionLocked"]);
-        await separate.Tool("GetSessionState");
+        string? unknownId = (string?)Assert.Single((await ai.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray())!["requestId"];
+        Assert.NotNull(unknownId);
+        Assert.Single((await panel.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray());
+        Assert.True((bool?)(await ai.Tool("GetProjectInfo"))["ok"]);
+        Assert.Null(session.Snapshot()["endedBy"]); Assert.Single(session.Snapshot()["sessionState"]!["unsettled"]!.AsArray());
+        Assert.Empty((await separate.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray());
         long? before = (long?)session.Snapshot()["worker"]?["generation"];
         await ai.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
         Assert.Equal(before + 1, (long?)session.Snapshot()["worker"]?["generation"]);
-        Assert.False((bool?)session.Snapshot()["sessionLocked"]); Assert.Equal("worker-restart", (string?)session.Snapshot()["endReason"]);
+        Assert.Equal(unknownId, (string?)Assert.Single(session.Snapshot()["sessionState"]!["unsettled"]!.AsArray())!["requestId"]);
+        Assert.Equal("worker-restart", (string?)session.Snapshot()["endReason"]);
         Assert.Equal("mcp", (string?)session.Snapshot()["endedBy"]);
-        await panel.Tool("GetSessionState");
+        Assert.Equal(unknownId, (string?)Assert.Single((await panel.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray())!["requestId"]);
     }
 
     [Fact]

@@ -527,8 +527,8 @@ public sealed class FoundationV4ContractsTests
         Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
         error.Data["foundationSessionPoisoned"] = true;
         result = Body(FoundationV4Result.Failure("19", "ImportPlcBlock", "x", true, true, null, error));
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)result["error"]!["code"]);
-        Assert.True((bool)result["meta"]!["requiresSessionReset"]!);
+        Assert.Equal("rejected-before-operation", (string?)result["meta"]!["outcome"]);
+        Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
         result = Body(FoundationV4Result.HostFailure("19", "GetToolUsage", "x"));
         Assert.Equal("INTERNAL_ERROR", (string?)result["error"]!["code"]);
         Assert.Equal("not-applicable", (string?)result["meta"]!["behaviorPolicy"]);

@@ -62,8 +62,6 @@ public sealed class McpProjectClient : IProjectClient
     internal async Task<JsonObject> Write(string tool, Dictionary<string, object?> arguments, CancellationToken token = default, string? expectedProject = null)
     {
         string binding = expectedProject ?? (string?)Session.State?["binding"]?["projectFile"] ?? ExpectedProjectFile;
-        if ((bool?)Session.State?["sessionLocked"] == true)
-            throw new InvalidOperationException("SESSION_RESET_REQUIRED: " + EngineResultText.Error("SESSION_RESET_REQUIRED"));
         bool candidate = Supports(tool, "mode");
         if (Supports(tool, "expectedProjectFile")) arguments["expectedProjectFile"] = binding;
         if (Supports(tool, "confirm")) arguments["confirm"] = false;

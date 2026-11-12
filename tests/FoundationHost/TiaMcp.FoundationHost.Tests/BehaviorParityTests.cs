@@ -129,7 +129,7 @@ public sealed class BehaviorParityTests
             }
             if (scenario == "batch-stale") return Task.FromResult(JsonSerializer.SerializeToNode(new PlcBatchImportResult { Executed = !preview, ProjectFile = "C:/fixture.ap19", SoftwarePath = "CPU/PLC_1", Release = "19", PlanHash = new string('a', 64),
                 Items = new[] { new PlcBatchImportItem { RelativePath = "A.xml", InputSha256 = new string('a',64), Planned = new PlcBatchImportObject { Name = "A", Kind = "FC", Number = 1 } } } }));
-            if (Followup && operation == "ListTags") return Task.FromResult<JsonNode?>(new JsonArray());
+            if ((Followup || scenario == "unknown") && operation == "ListTags") return Task.FromResult<JsonNode?>(new JsonArray());
             if (Followup) return Task.FromResult<JsonNode?>(new JsonObject { ["Executed"] = !preview, ["ProjectFile"] = "C:/fixture.ap19" });
             Exception? error = scenario switch {
                 "argument" => new AdapterPreconditionException("Fixture argument refusal.", "name"),
@@ -248,7 +248,11 @@ public sealed class BehaviorParityTests
             {
                 results.Add(await Call("ListPlcTags", new JsonObject { ["plc"] = "PLC_1", ["table"] = "T" }));
                 results.Add(await Call("CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
-                Assert.All(results.Skip(1), row => { Assert.Equal("SESSION_RESET_REQUIRED", (string?)row?["code"]); Assert.Equal("not-started", (string?)row?["execution"]); });
+                Assert.Equal("", (string?)results[1]?["code"]);
+                Assert.Equal("read-only", (string?)results[1]?["execution"]);
+                Assert.Equal("OUTCOME_UNKNOWN", (string?)results[2]?["code"]);
+                Assert.Equal("unknown", (string?)results[2]?["execution"]);
+                Assert.Equal(2, worker.Writes);
             }
             var foundation = new JsonObject { ["results"] = results, ["waits"] = waits, ["writes"] = worker.Writes, ["previews"] = worker.Previews };
             Assert.True(JsonNode.DeepEquals(engine, foundation), scenario + " " + release + "\nengine=" + engine + "\nfoundation=" + foundation);

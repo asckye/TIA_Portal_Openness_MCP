@@ -72,6 +72,7 @@ public sealed class WorkbenchControlHostTests
         using var worker = new Worker { CachedIdentity = new JsonObject { ["processId"] = 11612,
             ["projectPath"] = "C:/Projects/Fixture.ap21", ["projectName"] = "Fixture", ["generation"] = 7 } };
         SharedSessionState.For(worker).HostSessionKey = () => new string('a', 32);
+        SharedSessionState.For(worker).Unsettled.Record("unknown-workbench-call", "CreatePlcTag", "digest", DateTimeOffset.UtcNow);
         using var server = new FakeServer { Reply = request => new() { RequestId = request.RequestId,
             Status = WorkbenchControlStatus.Done, Workbench = new() { Version = "fixture" },
             Data = new() { Session = new() { Source = WorkbenchSessionSource.SharedMcpSession, Connected = false, SessionKey = "other" } } } };
@@ -81,9 +82,12 @@ public sealed class WorkbenchControlHostTests
         Assert.True((bool?)data["session"]?["connected"]);
         Assert.Equal(new string('a', 32), (string?)data["session"]?["sessionKey"]);
         Assert.Equal(worker.Project, (string?)data["session"]?["project"]?["path"]);
-        Assert.True((bool?)data["session"]?["sessionState"]?["requiresSessionReset"]);
+        Assert.Equal("unknown-workbench-call", (string?)Assert.Single(data["session"]!["sessionState"]!["unsettled"]!.AsArray())!["requestId"]);
         Assert.False((bool?)data["selectedSession"]?["connected"]);
         Assert.Equal("other", (string?)data["selectedSession"]?["sessionKey"]);
+        var next = await Tool(0, worker, client).InvokeAsync(Request("ShowWorkbenchPage", Arguments(0)));
+        Assert.True((bool?)next.StructuredContent?["ok"]);
+        Assert.Equal(2, server.Requests);
     }
 
     // The in-test server consumes the actual framed request and returns framed
@@ -92,6 +96,7 @@ public sealed class WorkbenchControlHostTests
     {
         internal readonly MemoryStream Written = new();
         internal WorkbenchControlRequest? Request;
+        internal int Requests;
         internal Func<WorkbenchControlRequest, WorkbenchControlResponse> Reply = request => new() { RequestId = request.RequestId,
             Status = WorkbenchControlStatus.Done, Workbench = new() { Version = "fixture" }, Data = new() { Page = WorkbenchPage.Overview } };
         internal bool Identity = true, Verified, Hang, Malformed, WrongId, WrongVersion;
@@ -106,6 +111,7 @@ public sealed class WorkbenchControlHostTests
             if (response == null)
             {
                 Written.Position = 0; Request = await WorkbenchControlFrames.Read<WorkbenchControlRequest>(Written, token);
+                Requests++;
                 var reply = Reply(Request); if (WrongId) reply.RequestId = new string('f', 32);
                 response = new();
                 if (Malformed) response.Write(new byte[] { 0, 0, 0, 0 });

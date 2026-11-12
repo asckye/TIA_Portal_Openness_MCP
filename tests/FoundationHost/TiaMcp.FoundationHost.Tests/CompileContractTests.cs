@@ -99,7 +99,8 @@ internal static class CompileContractTests
         preview["ErrorCount"]=0;
         try { V17CompileEnvelope.Validate(preview,true); throw new Exception("Fabricated preview count accepted"); } catch(IOException) { check(true,"Preview fake counts rejected"); }
         payload["WarningCount"]=-1;
-        try { V17CompileEnvelope.Validate(payload,false); throw new Exception("Negative count accepted"); } catch(IOException ex) { check(WorkerProtocol.RequiresSessionReset(true,ex),"Invalid actual compiler outcome stops session"); }
+        try { V17CompileEnvelope.Validate(payload,false); throw new Exception("Negative count accepted"); } catch(IOException error) {
+            UnsettledOutcomeAssertions.Failure(error, true, true, true, check, "Invalid actual compiler outcome"); }
         foreach(var name in new[]{"CompilePlcSoftware","CompilePlcDiagnostics"})
         {
             var def=FoundationTools.Definitions.Single(d=>d.Name==name);

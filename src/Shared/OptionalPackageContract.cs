@@ -63,12 +63,11 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var data = response.Meta?.DeepClone().AsObject() ?? new JsonObject();
             bool issued = Issued(data);
-            bool reset = Flag(data, "requiresExplicitRebind") == true;
+            bool reset = Flag(data, "requiresExplicitRebind") == true || Flag(data, "requiresSessionReset") == true;
             bool? success = Flag(data, "operationSuccess") ?? Flag(data, "success");
             string status = data["status"]?.ToString() ?? "";
             string? rejection = data["rejectionCode"]?.ToString();
             if (!issued && status == "InvalidState" && !data.ContainsKey("apiCallSuccess")) rejection = "PROJECT_NOT_BOUND";
-            if (status == "HmiReadSessionBlocked") rejection = "SESSION_RESET_REQUIRED";
             bool nativeKnown = Flag(data, "nativeResult").HasValue;
             if (Flag(data, "nativeResult") == false) success = false;
             bool stateRequired = (tool == "RunTestSuiteCase" || tool == "ExchangePlcSupervisions") && writes && rejection == null;
@@ -90,7 +89,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool knownPartial = verificationFailed && imported > 0
                 || success == false && nativeKnown && (data["file"] is JsonObject || data["output"] is JsonObject);
             var refusal = HostBehavior.DocumentedRefusal(data);
-            Outcome outcome = refusal != null ? Outcome.RejectedBeforeOperation : unknown ? Outcome.Unknown : rejection !=
+            Outcome outcome = status == "HmiReadSessionBlocked" ? writes ? Outcome.Unknown : Outcome.ReadFailed
+                : refusal != null ? Outcome.RejectedBeforeOperation : unknown ? Outcome.Unknown : rejection !=
                 null ? Outcome.RejectedBeforeOperation
                 : success == true ? Outcome.Succeeded : knownPartial ? Outcome.Partial
                 : writes && (nativeKnown || unchangedFailure) || verificationFailed ? Outcome.Failed : writes &&
@@ -139,7 +139,6 @@ namespace TiaMcpServer.ModelContextProtocol
         private static ErrorDetails Rejection(string code, string tool) => code switch
         {
             "PROJECT_NOT_BOUND" => new ProjectNotBoundDetails(),
-            "SESSION_RESET_REQUIRED" => new SessionResetRequiredDetails("optional-package-session"),
             "INVALID_ARGUMENT" => new InvalidArgumentDetails("arguments", Array.Empty<string>()),
             "UNSUPPORTED_CAPABILITY" => new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null),
             "NOT_FOUND" => new NotFoundDetails(null),

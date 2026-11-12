@@ -27,6 +27,7 @@ namespace TiaMcp.FoundationHost
     public interface IEngineWorker : IDisposable
     {
         public bool Faulted { get; }
+        public UnsettledCalls Unsettled => UnsettledCalls.For(this);
         public JsonNode? Binding { get; }
         public object SessionKey { get; }
         public JsonObject Snapshot();
@@ -114,17 +115,6 @@ namespace TiaMcp.FoundationHost
         public JsonArray BehaviorCapabilities { get; }
         public IList<McpServerTool> Tools { get; }
         public IReadOnlyList<McpServerTool> AllTools { get; }
-        private bool operatorSessionLocked;
-        internal bool OperatorSessionLocked
-        {
-            get
-            {
-                if (context.Ended) return operatorSessionLocked;
-                try { return operatorSessionLocked = SessionLocked; }
-                catch (InvalidOperationException) when (context.Ended) /* swallow(teardown): retain the observed lock after worker shutdown ends the pipeline */
-                { return operatorSessionLocked; }
-            }
-        }
         // Only the authenticated operator transport selects this view. Nested bridge calls
         // retain this exact context without changing the SDK's MCP session id.
         internal IReadOnlyList<McpServerTool> OperatorTools
@@ -234,10 +224,6 @@ namespace TiaMcp.FoundationHost
             context.Exports.Dispose();
             context.Exports = new SessionExports();
         }
-        internal bool SessionLocked
-        {
-            get { using var session = EnterSession(); return McpServer.SessionLatched(); }
-        }
         private sealed class SessionTool(EngineHostPipeline owner, McpServerTool inner) : McpServerTool
         {
             internal McpServerTool Inner => inner;
@@ -267,7 +253,8 @@ namespace TiaMcp.FoundationHost
             public void Dispose() { ImportStagingTools.RemoveHttpSession(session); session.Dispose(); }
         }
         public void Dispose() {
-            TiaOpenness.Shared.GenerationWriteFence.Shutdown(context.Worker.SessionKey); context.Ended = true; context.Exports.Dispose(); stagingLifetime
+            TiaOpenness.Shared.GenerationWriteFence.Shutdown(context.Worker.SessionKey); context.Worker.Unsettled.Clear(); context.Ended = true; context.Exports
+                .Dispose(); stagingLifetime
                 .Dispose();
         }
 
@@ -330,24 +317,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             };
         }
-        internal static void MarkSharedSessionUncertain() => SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
+        internal static void RecordUnsettled(string requestId, string tool, string arguments)
+        {
+            string? project = (string?)Worker.Binding?["identity"]?["projectPath"] ?? (string?)Worker.Binding?["projectPath"];
+            Worker.Unsettled.ProjectChanged(project);
+            Worker.Unsettled.Record(requestId, tool, TiaMcp.FoundationHost.UnsettledCalls.WriteDigest(tool,
+                JsonNode.Parse(arguments)!.AsObject(), project), DateTimeOffset.UtcNow);
+        }
         internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession SharedStagingOwner => TiaMcp.FoundationHost.EngineHostConfiguration
             .StagingOwner();
         static partial void RecordBridgeEvent(string id, string name, string phase);
         static partial void RecordCallRejection(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, CallToolResult result);
-        static partial void ApprovalSessionKey(ref object? key)
-        {
-            key = Worker.SessionKey;
-            if (Worker.Faulted) SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
-        }
-        internal static void ObserveWorkerReply(string name, TiaMcp.FoundationHost.EngineReply reply)
-        {
-            if (reply.NativeFault != null && ToolTaxonomy.UsesOpennessLane(name))
-                SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
-            if (reply.NativeCallIssued && (bool?)reply.Result.StructuredContent?["data"]?["nativeOutcomeUnknown"] == true
-                && ToolTaxonomy.UsesOpennessLane(name))
-                SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
-        }
+        static partial void ApprovalSessionKey(ref object? key) => key = Worker.SessionKey;
         static partial void ApprovalBindingIdentity(ref string? identity)
             => identity = ReadApprovalIdentityAsync().GetAwaiter().GetResult();
         static partial void ApprovalBindingIdentityAsync(ref Task<string?>? pending) => pending = ReadApprovalIdentityAsync();

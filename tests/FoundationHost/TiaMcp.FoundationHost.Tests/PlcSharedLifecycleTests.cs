@@ -35,9 +35,11 @@ public sealed class PlcSharedLifecycleTests
         internal Fixture Initialize()
         {
             Recovery = new(Outcome, () => Detached, () => Refreshes++, () => Project = null,
-                _ => { }, () => { Invalidations++; Attached = false; }, () => Disposals++);
+                () => { Invalidations++; Attached = false; }, () => Disposals++);
             Lease = new(() => Root, request => Recovery.Dispatch(request, current => {
-                if (current.Method != "adapter.Disconnect") Outcome.RequireUsable(false);
+                if (Detached && current.Method != "adapter.Disconnect")
+                    return ChannelResponse.Error(new ChannelFailureException("Disconnect ended this generation.", -32603,
+                        ChannelOutcome.RejectedBeforeNative));
                 Calls++;
                 if (Operation != null) return Operation(current);
                 if (current.Method == "adapter.Attach") Attached = true;
@@ -78,19 +80,16 @@ public sealed class PlcSharedLifecycleTests
         Assert.False(fixture.Lease.Reserved);
     }
     [Theory, MemberData(nameof(RestoredOperations))]
-    public void Unknown_restored_operation_locks_reads_and_writes_without_a_native_retry(string release, string operation)
+    public void Unknown_restored_operation_allows_independent_calls_without_a_native_retry(string release, string operation)
     {
         using var fixture = new Fixture(release).Initialize(); fixture.Attach(); fixture.Project = fixture.ProjectPath();
         fixture.Operation = _ => ChannelResponse.Error(new ChannelFailureException(operation + " lost acknowledgement", -32603, ChannelOutcome.Unknown));
         Assert.Equal(ChannelOutcome.Unknown, fixture.Call("project-lifecycle." + operation).Failure!.Outcome);
-        Assert.True(fixture.Outcome.RequiresReset); Assert.NotNull(fixture.Recovery.Fault);
+        Assert.True(fixture.Outcome.RequiresReset);
         int calls = fixture.Calls;
-        foreach (string next in new[] { "ReadState", "SaveProject" })
-        {
-            var refused = fixture.Call(next).Failure!;
-            Assert.Equal(ChannelOutcome.RejectedBeforeNative, refused.Outcome); Assert.Equal(SessionBehavior.Recovery, refused.Message);
-        }
-        Assert.Equal(calls, fixture.Calls); Assert.Equal(fixture.ProjectPath(), fixture.Project);
+        fixture.Operation = _ => ChannelResponse.Success("{}");
+        foreach (string next in new[] { "ReadState", "SaveProject" }) Assert.Null(fixture.Call(next).Failure);
+        Assert.Equal(calls + 2, fixture.Calls); Assert.Equal(fixture.ProjectPath(), fixture.Project);
         Assert.Equal(0, fixture.Disposals); Assert.Equal(0, fixture.Invalidations);
         fixture.Lease.Dispose(); Assert.Equal("UNCERTAIN\n", File.ReadAllText(fixture.Marker));
         Assert.Equal(1, fixture.Disposals); Assert.Equal(1, fixture.Invalidations);
@@ -112,8 +111,8 @@ public sealed class PlcSharedLifecycleTests
         using var fixture = new Fixture(release).Initialize(); fixture.Attach(); fixture.Project = fixture.ProjectPath();
         fixture.Operation = _ => ChannelResponse.Error(new ChannelFailureException("Borrowed projects cannot be closed by this session.", -32603, ChannelOutcome.RejectedBeforeNative));
         Assert.Equal(ChannelOutcome.RejectedBeforeNative, fixture.Call(readOnly ? "ReadState" : "CloseProject").Failure!.Outcome);
-        Assert.False(fixture.Outcome.RequiresReset); Assert.Null(fixture.Recovery.Fault);
-        fixture.Outcome.RequireUsable(readOnly); Assert.Equal(fixture.ProjectPath(), fixture.Project);
+        Assert.False(fixture.Outcome.RequiresReset);
+        Assert.Equal(fixture.ProjectPath(), fixture.Project);
         Assert.Equal("IDLE\n", fixture.MarkerText(fixture.Marker)); Assert.Equal(0, fixture.Disposals);
     }
     [Theory, InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
@@ -156,14 +155,15 @@ public sealed class PlcSharedLifecycleTests
         Assert.Equal(4, fixture.Refreshes); Assert.Equal(0, fixture.Disposals);
     }
     [Theory, InlineData("20"), InlineData("21")]
-    public void Failed_cached_binding_refresh_latches_the_generation(string release)
+    public void Uncertain_teardown_does_not_refuse_later_calls(string release)
     {
         using var fixture = new Fixture(release).Initialize(); fixture.Attach();
         fixture.Operation = _ => { fixture.Outcome.MarkUncertain(); return ChannelResponse.Success("{}"); };
         Assert.Equal(ChannelOutcome.Unknown, fixture.Call("SaveProject").Failure!.Outcome);
-        Assert.True(fixture.Outcome.RequiresReset); Assert.NotNull(fixture.Recovery.Fault);
-        Assert.Throws<InvalidOperationException>(() => fixture.Outcome.RequireUsable(false));
-        Assert.Throws<InvalidOperationException>(() => fixture.Outcome.RequireUsable(true));
+        Assert.True(fixture.Outcome.RequiresReset);
+        fixture.Operation = null;
+        Assert.Null(fixture.Call("ReadState").Failure);
+        Assert.Null(fixture.Call("SaveProject").Failure);
     }
     [Theory, InlineData("20"), InlineData("21")]
     public void Clean_exit_releases_after_disposal_and_a_new_generation_starts_unbound(string release)
@@ -173,7 +173,7 @@ public sealed class PlcSharedLifecycleTests
         Assert.Equal("RELEASED\n", File.ReadAllText(first.Marker)); Assert.Equal(1, first.Disposals);
         using var next = new Fixture(release).Initialize();
         Assert.False(next.Outcome.RequiresReset); Assert.Null(next.Project); Assert.False(next.Lease.Reserved);
-        next.Attach(); Assert.True(next.Lease.Reserved); Assert.Null(next.Recovery.Fault);
+        next.Attach(); Assert.True(next.Lease.Reserved); Assert.Null(next.Call("ReadState").Failure);
     }
     [Theory, InlineData("20"), InlineData("21")]
     public void Another_owner_is_refused_before_any_lifecycle_operation(string release)

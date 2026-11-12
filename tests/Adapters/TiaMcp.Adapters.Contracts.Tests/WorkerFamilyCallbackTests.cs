@@ -96,7 +96,7 @@ public sealed class WorkerFamilyCallbackTests
 
     [Theory]
     [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
-    public void Hmi_connection_faults_block_every_step_until_explicit_project_binding(string release)
+    public void Hmi_read_after_a_connection_failure_reaches_the_worker(string release)
     {
         var engine = Create(release);
         Bind(engine);
@@ -105,15 +105,16 @@ public sealed class WorkerFamilyCallbackTests
         engine.HmiReadFault!(meta);
         properties.Add("mutated after recording");
         Assert.True((bool)meta["connectionUnavailable"]!);
-        Assert.True((bool)meta["requiresExplicitRebind"]!);
+        Assert.False(meta.ContainsKey("requiresExplicitRebind"));
         var snapshot = engine.ReadEngineeringHmiReadFault!()!;
         Assert.Single((List<object?>)snapshot["appliedProperties"]!);
         snapshot["error"] = "mutated returned fault";
         Assert.Equal("remote connection unavailable", engine.ReadEngineeringHmiReadFault!()!["error"]);
         engine.ClearCalls();
-        var blocked = engine.EngineeringServicesStep!("CompareLibraries", false, _ => throw new Exception("must not run"));
-        Assert.Equal("HmiReadSessionBlocked", blocked.Meta["status"]);
-        Assert.True(blocked.RequiresSessionReset);
+        int calls = 0;
+        var following = engine.EngineeringServicesStep!("CompareLibraries", false, _ => { calls++; return "Read completed"; });
+        Assert.Equal(1, calls);
+        Assert.False(following.RequiresSessionReset);
         Assert.Empty(engine.NativeCalls);
         var project = engine.NewProject("Replacement");
         engine.ProjectReleased!();

@@ -112,7 +112,8 @@ namespace TiaMcp.Logic.V4
                         new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
                 HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails(stage)),
                 HostFailureKind.Unknown =>
-                    new Error("The operation outcome is unknown; inspect the retained evidence before a new session.",
+                    new Error("Only this call has an unknown outcome. Inspect its target before repeating it; never replay it automatically. GetSessionState " +
+                        "lists unsettled requests.",
                         new OutcomeUnknownDetails("tool-call", evidence, reason)),
                 HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(diagnosticId)),
                 _ =>
@@ -230,7 +231,11 @@ namespace TiaMcp.Logic.V4
                     ["objects"] = JsonSerializer.SerializeToElement(data?["recoverySkipped"] ?? new JsonArray()),
                     ["recoveryDirectory"] = JsonSerializer.SerializeToElement(data?["recoveryDirectory"]) });
 
-        internal static Error SessionReset() => new Error(SessionBehavior.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown"));
+        internal static Error UnavailableCall(bool mutation) => mutation
+            ? new Error("Only this call has an unknown outcome. Inspect its target before repeating it; never replay it automatically.",
+                new OutcomeUnknownDetails("native-call", new Dictionary<string, JsonElement>()))
+            : new Error("The native read could not be completed.",
+                new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
         internal static Error Confirmation(string reason, string? hash, string? id, bool outsideOutputRoot = false)
             => reason == "cancelled" ? new Error("Request cancelled before operation.", new CancelledDetails("approval-wait"))
                 : new Error("Workbench confirmation is required before this write."
@@ -269,6 +274,7 @@ namespace TiaMcp.Logic.V4
                 Flag("mayHaveWrittenFiles") != true)
                 && Flag("mayHaveExternalEffects") != true && Flag("operationStarted") != true
                 && Flag("requiresSessionReset") != true && Flag("requiresExplicitRebind") != true
+                && Flag("writeOutcomeUnknown") != true && Flag("connectionUnavailable") != true
                 && evidence["v4Rejection"] == null && evidence["rejectionCode"] == null
                 && (evidence["status"]?.ToString() is null or "" or "ReadOrWriteFailed");
         }

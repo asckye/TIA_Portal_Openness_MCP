@@ -53,6 +53,7 @@ public sealed class SharedWorkerRegressionTests
         var worker = fixture.Worker;
         await worker.Observe("status", new(), CancellationToken.None);
         await Assert.ThrowsAnyAsync<Exception>(() => worker.Call("FixtureUnknown", new(), CancellationToken.None));
+        Field<ChannelClient>(worker, "channel").Invalidate(new IOException("Synthetic transport fault."));
         Assert.True(worker.WorkerFaulted);
         var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, fixture.Root);
         string assembly = typeof(TiaMcp.Adapters.Contracts.NativeFailureText).Assembly.Location;
@@ -96,8 +97,8 @@ public sealed class SharedWorkerRegressionTests
         var next = await new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker), release)
             .InvokeAsync(Request("GetSessionState"));
         Assert.Equal("PRECONDITION_FAILED", (string?)next.StructuredContent?["error"]?["code"]);
-        Assert.False((bool?)worker.OperatorSnapshot()["sessionLocked"]);
-        Assert.Null(Server.SessionPrecheckRefusal("CompileDevice"));
+        Assert.Null(worker.OperatorSnapshot()["sessionLocked"]);
+
         if (release is "20" or "21")
         {
             using var production = fixture.ProductionWorker();
@@ -123,10 +124,12 @@ public sealed class SharedWorkerRegressionTests
         }
         else
         {
-            // Frozen master semantics: its terminal Process remains, without becoming a session fault.
-            Assert.Equal("Running", (string?)worker.HostSnapshot()["state"]);
-            Assert.Equal("The request precondition failed before operation.", (string?)next.StructuredContent?["error"]?["message"]);
-            Assert.False(services.Faulted);
+            // These profiles retain the exited process until disposal, so it reports the transport fact.
+            Assert.Equal("Faulted", (string?)worker.HostSnapshot()["state"]);
+            Assert.Equal("The worker is faulted. Call RestartOpennessWorker before another native call.",
+                (string?)next.StructuredContent?["error"]?["message"]);
+            Assert.Equal("worker-faulted", (string?)next.StructuredContent?["error"]?["details"]?["condition"]);
+            Assert.True(services.Faulted);
         }
     }
 
@@ -292,6 +295,34 @@ public sealed class SharedWorkerRegressionTests
         ThreadPool.GetAvailableThreads(out int available, out _);
         ThreadPool.GetMaxThreads(out int maximum, out _);
         return "threads=" + ThreadPool.ThreadCount + ", pending=" + ThreadPool.PendingWorkItemCount + ", busy=" + (maximum - available);
+    }
+
+    [Fact]
+    public async Task Answered_unknown_then_idle_fault_keeps_the_graceful_shutdown_window()
+    {
+        using var fixture = new Fixture("21");
+        var worker = fixture.Worker;
+        string marker = Path.Combine(fixture.Root, "graceful-shutdown");
+        await worker.Call("FixtureSlowShutdown", new() { ["marker"] = marker }, CancellationToken.None);
+        await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("FixtureUnknown", new(), CancellationToken.None));
+        var channel = Field<ChannelClient>(worker, "channel");
+        var child = Field<Process>(worker, "process");
+        channel.Invalidate(new IOException("Synthetic idle transport fault."));
+        Assert.True(channel.OutcomeUnknown);
+        Assert.False(channel.Unanswered);
+        Assert.False(channel.InFlight);
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+        var restart = Task.Run(() => worker.RestartHostWorker(true, CancellationToken.None));
+        try
+        {
+            while (!File.Exists(marker) && !restart.IsCompleted) await Task.Delay(10, deadline.Token);
+            Assert.True(File.Exists(marker), "The worker must reach its graceful EOF shutdown.");
+            Assert.False(child.HasExited);
+            Assert.False(restart.IsCompleted);
+        }
+        finally { File.WriteAllText(marker + ".release", ""); }
+        var result = await restart.WaitAsync(deadline.Token);
+        Assert.True((bool?)result["success"]);
     }
 
     [Theory, InlineData("20"), InlineData("21")]
@@ -476,7 +507,7 @@ public sealed class SharedWorkerRegressionTests
             Assert.Same(child, Field<Process>(worker, "process"));
             Assert.False(child.HasExited);
             var snapshot = worker.SupervisorSnapshot(new JsonObject { ["ready"] = true });
-            Assert.True((bool?)snapshot["sessionLocked"]);
+            Assert.Null(snapshot["sessionLocked"]);
             Assert.Equal(1, (long?)worker.OperatorSnapshot()["generation"]);
             Assert.Null(Field<object?>(worker, "disconnectAcknowledgement"));
             ((IDisposable)worker).Dispose();

@@ -123,8 +123,6 @@ namespace TiaMcp.PlcWorker
                     throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                 if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
                 readOnly=readOnly || (WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.True);
-                // A validated scope must be disposed even after a child call locks the session.
-                if (name != "Disconnect" && name != "engineering-services.DisposeEngineeringTransaction") sessionOutcome.RequireUsable(readOnly);
                 if (WorkerOperations.RequiresPortal(name) && !State.IsAttached)
                     throw new AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
                 var confirm=WorkerJson.Get(values,"confirm");
@@ -163,7 +161,7 @@ namespace TiaMcp.PlcWorker
                 if(name=="Disconnect") disconnectAttempted=true;
                 var result = method.Invoke(engine, call);
                 if (result is IWorkerOperationReply reply && reply.RequiresSessionReset)
-                    sessionOutcome.MarkUncertain(blockReads: reply.BlockReadsAfterUncertain);
+                    sessionOutcome.MarkUncertain(blockReads: reply.BlockReadsAfterUncertain, mutation: !readOnly);
                 if(name=="Disconnect") disconnected=true;
                 return ChannelResponse.Success(WorkerJson.Serialize(result));
             }

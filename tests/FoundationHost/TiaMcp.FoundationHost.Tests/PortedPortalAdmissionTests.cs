@@ -91,11 +91,11 @@ public sealed class PortedPortalAdmissionTests
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
                 Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
             var result = await tool.InvokeAsync(request);
-            result = Host.McpServer.ObserveSessionOutcome(name, result, true, Host.InvocationJournal.NativeCallIssued);
+            result = Host.McpServer.ObserveSessionOutcome(name, result, true, "{}");
             Assert.Equal(!refusal, Host.InvocationJournal.NativeCallIssued);
             Assert.Equal(refusal ? "rejected-before-operation" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
             Assert.Equal(!refusal, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-            Assert.Equal(!refusal, Host.McpServer.SessionPrecheckRefusal("CreatePlcTypeGroup") != null);
+            Assert.Equal(refusal ? 0 : 1, Host.McpServer.Worker.Unsettled.Snapshot().Count);
         }
         finally { Host.McpServer.ApprovalSessionKeyForTests = previous; }
     }

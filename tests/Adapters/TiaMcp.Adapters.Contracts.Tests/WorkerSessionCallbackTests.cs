@@ -129,7 +129,7 @@ public sealed class WorkerSessionCallbackTests
         engine.RenameProject("Unexpected");
         var failure = Assert.ThrowsAny<Exception>(() => engine.EngineeringProjectMissing());
         Assert.Contains("exact TIA process/project binding changed", failure.Message);
-        Assert.NotNull(System.Text.Json.JsonSerializer.SerializeToNode(engine.ProjectCachedBinding())!["fault"]);
+        Assert.Null(System.Text.Json.JsonSerializer.SerializeToNode(engine.ProjectCachedBinding())!["fault"]);
         Assert.ThrowsAny<Exception>(() => engine.ProjectValidationTree());
         Assert.ThrowsAny<Exception>(() => engine.AcquireEngineeringEditAccess());
         Assert.Equal(1, (int)engine.ExclusiveCalls);
@@ -165,16 +165,17 @@ public sealed class WorkerSessionCallbackTests
 
     [Theory]
     [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
-    public void Lock_clears_cached_binding_and_cannot_be_undone_by_refresh(string release)
+    public void Failed_binding_check_refuses_this_call_only(string release)
     {
         var engine = Bound(release);
-        engine.LockWorkerSessionBinding("Native outcome unknown.");
-        engine.RefreshWorkerSessionBinding();
-        var snapshot = System.Text.Json.JsonSerializer.SerializeToNode(engine.ProjectCachedBinding())!;
-        Assert.Null(snapshot["identity"]);
-        Assert.Equal("Native outcome unknown.", (string?)snapshot["fault"]);
+        engine.RenameProject("Unexpected");
         Assert.ThrowsAny<Exception>(() => engine.EngineeringProjectMissing());
-        engine.ClearWorkerSessionBinding();
+        Assert.ThrowsAny<Exception>(() => engine.AcquireEngineeringEditAccess());
+        var snapshot = System.Text.Json.JsonSerializer.SerializeToNode(engine.ProjectCachedBinding())!;
+        Assert.NotNull(snapshot["identity"]);
+        Assert.Null(snapshot["fault"]);
+        engine.ReplaceProjectHandle(engine.NewProject("ActualName"));
+        Assert.False((bool)engine.EngineeringProjectMissing());
         engine.RefreshWorkerSessionBinding();
         Assert.Null(System.Text.Json.JsonSerializer.SerializeToNode(engine.ProjectCachedBinding())!["fault"]);
     }
@@ -229,7 +230,7 @@ public sealed class WorkerSessionCallbackTests
         engine.RenameProjectOnly("Unexpected");
         var error = Assert.ThrowsAny<Exception>(() => engine.SharedHardwareCandidateIdentity!(() => engine.ProjectFile));
         Assert.Contains("exact TIA process/project binding changed", error.Message);
-        Assert.NotNull(System.Text.Json.JsonSerializer.SerializeToNode(engine.ProjectCachedBinding())!["fault"]);
+        Assert.Null(System.Text.Json.JsonSerializer.SerializeToNode(engine.ProjectCachedBinding())!["fault"]);
     }
 
     [Theory]

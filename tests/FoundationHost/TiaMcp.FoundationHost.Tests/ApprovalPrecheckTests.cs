@@ -13,13 +13,14 @@ public sealed class ApprovalPrecheckTests
     private sealed class Worker : IFoundationWorker
     {
         internal int Previews, Writes, Reads;
+        internal readonly List<string?> WrittenNames = new();
         internal string? Refusal;
         internal bool Unknown, Cancel, StampPreview;
         internal DateTimeOffset PreviewEnded;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
             bool preview = (bool?)arguments["dryRun"] == true;
-            if (preview) Previews++; else if (arguments.ContainsKey("dryRun")) Writes++; else Reads++;
+            if (preview) Previews++; else if (arguments.ContainsKey("dryRun")) { Writes++; WrittenNames.Add((string?)arguments["name"]); } else Reads++;
             if (preview && StampPreview)
             {
                 // Let the clock move past the request's creation, so the precheck visibly takes time, then mark its end.
@@ -178,20 +179,21 @@ public sealed class ApprovalPrecheckTests
         Assert.Equal("CANCELLED", (string?)result.StructuredContent?["error"]?["code"]); Assert.Equal(0, waits); Assert.Equal(0, worker.Writes);
     }
     [Fact]
-    public async Task Only_the_issued_unknown_write_is_unknown_and_later_reads_and_writes_refuse_without_dispatch()
+    public async Task Only_the_issued_unknown_write_is_unknown_and_later_independent_calls_reach_approval()
     {
         var worker = new Worker { Unknown = true }; int waits = 0;
         FoundationV4Tool Tool(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), "19", () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
         var args = Arguments("CreatePlcTag"); args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/Test.ap19";
         var first = await Tool("CreatePlcTag").InvokeAsync(Request("CreatePlcTag", args)); Assert.Equal("OUTCOME_UNKNOWN", (string?)first.StructuredContent?["error"]?["code"]);
+        Assert.Equal(1, worker.Writes);
+        worker.Unknown = false; args["name"] = "Other";
         foreach (var source in new[] { "CreatePlcTag", "GetProjectInfo", "ConnectPortal" })
         {
             var tool = Tool(source); var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, source == "CreatePlcTag" ? args : source == "ConnectPortal" ? new JsonObject { ["processId"] = 1 } : new()));
-            Assert.Equal("SESSION_RESET_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
-            Assert.Equal("previous-outcome-unknown", (string?)result.StructuredContent?["error"]?["details"]?["reason"]);
-            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+            Assert.NotEqual("SESSION_RESET_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
         }
-        Assert.Equal(1, waits); Assert.Equal(1, worker.Previews); Assert.Equal(1, worker.Writes); Assert.Equal(0, worker.Reads);
+        Assert.Equal(2, waits); Assert.Equal(2, worker.Previews); Assert.Equal(2, worker.Writes); Assert.Equal(2, worker.Reads);
+        Assert.Equal(new[] { "Ready", "Other" }, worker.WrittenNames);
     }
     public class ServerProxy : DispatchProxy
     { protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) => targetMethod?.ReturnType == typeof(Task) ? Task.CompletedTask : null; }

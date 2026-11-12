@@ -57,7 +57,8 @@ internal static class SoftwareReadDispatchTests
                 try { await new FoundationTool(definition,new Reader(null,new WorkerOperationException("read failed",code,"read-failed"))).InvokeAsync(request); throw new Exception("Read error ignored"); }
                 catch(McpException ex) { check((int)ex.ErrorCode==code,pair.Item1+" preserves worker error category"); }
             }
-            check(!WorkerProtocol.RequiresSessionReset(true,new WorkerOperationException("read failed",-32603,"read-failed")),pair.Item1+" known read error does not poison session");
+            UnsettledOutcomeAssertions
+                .Failure(new WorkerOperationException("read failed", -32603, "read-failed"), true, false, false, check, pair.Item1 + " read failure");
         }
     }
 }

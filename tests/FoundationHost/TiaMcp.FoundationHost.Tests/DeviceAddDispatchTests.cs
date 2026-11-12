@@ -20,10 +20,17 @@ internal static class DeviceAddDispatchTests
         RequestContext<CallToolRequestParams> Request()=>new(server){Params=new(){Name="CreateHardwareDevice",Arguments=args}};
         var response=await tool.InvokeAsync(Request());check(response.IsError!=true && worker.Calls==1,"Device addition actual MCP preview dispatch");
         var planned=Payload(worker.Arguments!);check(worker.Arguments!["dryRun"]!.GetValue<bool>(),"Device add defaults preview");
-        args["dryRun"]=JsonSerializer.SerializeToElement(false);int calls=worker.Calls;bool rejected=false;try{await tool.InvokeAsync(Request());}catch(McpException){rejected=true;}check(rejected&&worker.Calls==calls,"Device add confirmation required before worker");
-        args["confirm"]=JsonSerializer.SerializeToElement(true);args["expectedProjectFile"]=JsonSerializer.SerializeToElement(@"C:\Test\Test.ap19");rejected=false;try{await tool.InvokeAsync(Request());}catch(McpException){rejected=true;}check(rejected&&worker.Calls==calls,"Device add hash required before worker");
-        args["expectedPlanHash"]=JsonSerializer.SerializeToElement(planned["PlanHash"]!.GetValue<string>());response=await tool.InvokeAsync(Request());check(response.IsError!=true&&worker.Calls==calls+1,"Reviewed device addition actual MCP dispatch");
-        var unknown=Payload(worker.Arguments!);unknown["Executed"]=false;unknown["Status"]="outcome-unknown";unknown["RequiresSessionReset"]=true;unknown["Error"]="native outcome unknown";
-        var state=new WorkerOutcomeState();state.AcceptResult("AddDeviceWithFallback",worker.Arguments!,unknown);check(state.Poisoned,"Unknown device create poisons shared host session");bool blocked=false;try{state.RequireUsable();}catch(InvalidOperationException){blocked=true;}check(blocked,"Shared host refuses subsequent requests");
+        args["dryRun"]=JsonSerializer.SerializeToElement(false);int calls=worker.Calls;bool rejected=false;try{await tool.InvokeAsync(Request());
+        }catch(McpException){rejected=true;}check(rejected&&worker.Calls==calls,"Device add confirmation required before worker");
+        args["confirm"]=JsonSerializer.SerializeToElement(true);args["expectedProjectFile"]=JsonSerializer.SerializeToElement(@"C:\Test\Test.ap19");rejected=
+            false;try{await tool.InvokeAsync(Request());}catch(McpException){rejected=true;
+        }check(rejected&&worker.Calls==calls,"Device add hash required before worker");
+        args["expectedPlanHash"]=JsonSerializer.SerializeToElement(planned["PlanHash"]!.GetValue<string>());response=await tool.InvokeAsync(Request());
+        check(response.IsError!=true&&worker.Calls==calls+1,"Reviewed device addition actual MCP dispatch");
+        var unknown=Payload(worker.Arguments!);unknown["Executed"]=false;unknown["Status"]="outcome-unknown";unknown["RequiresSessionReset"]=true;
+        unknown["Error"]="native outcome unknown";
+        WorkerProtocol.ValidateExchangeResult("AddDeviceWithFallback",worker.Arguments!,unknown);WorkerProtocol
+            .ValidateExchangeResult("AddDeviceWithFallback",worker.Arguments!,Payload(worker.Arguments!));
+        UnsettledOutcomeAssertions.Reply("CreateHardwareDevice", worker.Arguments!, unknown, true, check, "Unknown device creation");
     }
 }

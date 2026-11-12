@@ -1,3 +1,7 @@
+#if TIA_FOUNDATION_TEST_HOST
+extern alias enginehost;
+using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+#endif
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using TiaOpenness.Shared;
@@ -15,10 +19,7 @@ internal sealed class SharedSessionState
     private SharedSessionState(IFoundationWorker worker) => this.worker = worker;
     internal static SharedSessionState For(IFoundationWorker worker) => States.GetValue(worker, key => new(key));
 
-    internal bool RequiresReset(JsonNode? reply = null) => (worker as IFoundationSessionWorker)?.Poisoned == true
-        || (bool?)reply?["requiresSessionReset"] == true || (bool?)reply?["RequiresSessionReset"] == true
-        || (bool?)reply?["meta"]?["requiresSessionReset"] == true
-        || (bool?)(worker as IFoundationWorkerSupervisor)?.OperatorSnapshot()["sessionLocked"] == true;
+    internal UnsettledCalls Unsettled => worker is IFoundationSessionWorker session ? session.Unsettled : UnsettledCalls.For(worker);
 
     internal JsonObject? Identity
     {
@@ -53,13 +54,13 @@ internal sealed class SharedSessionState
     private JsonObject Snapshot(string release, JsonObject transport)
     {
         var identity = Identity;
+        Unsettled.ProjectChanged((string?)identity?["projectPath"]);
         if (identity != null)
         {
             identity["tiaMajorVersion"] ??= TiaMcp.Versioning.TiaVersionCatalog.Get(release).MajorVersion;
             if ((string?)identity["projectPath"] is string file) identity["projectName"] ??= Path.GetFileNameWithoutExtension(file);
         }
         bool ended = (bool?)transport["disconnected"] == true;
-        bool locked = (bool?)transport["sessionLocked"] == true || (worker as IFoundationSessionWorker)?.Poisoned == true;
         bool connected = (bool?)transport["connected"] ?? (transport["binding"]?["processId"] != null
             || worker is WorkerClient { SharedSession: true } plc && (bool?)plc.SharedStatus?["session"]?["isConnected"] == true
             || worker is not IFoundationWorkerSupervisor && identity?["processId"] != null);
@@ -68,9 +69,9 @@ internal sealed class SharedSessionState
         return new JsonObject { ["binding"] = identity == null ? null : new JsonObject { ["identity"] = identity },
             ["connected"] = !ended && connected,
             ["workerGeneration"] = transport["generation"]?.DeepClone(),
-            ["priorUnknownRequestId"] = transport["priorUnknownRequestId"]?.DeepClone(),
+            ["unsettled"] = Unsettled.ToJson(),
             ["workerFault"] = transport["workerFault"]?.DeepClone(),
-            ["disconnected"] = ended, ["requiresSessionReset"] = locked, ["switches"] = switches };
+            ["disconnected"] = ended, ["switches"] = switches };
     }
     internal JsonObject OperatorSnapshot(string release)
     {
@@ -79,7 +80,6 @@ internal sealed class SharedSessionState
         var identity = state["binding"]?["identity"];
         return new JsonObject { ["pid"] = transport["pid"]?.DeepClone(), ["generation"] = state["workerGeneration"]?.DeepClone(),
             ["disconnected"] = state["disconnected"]?.DeepClone(), ["stopping"] = transport["stopping"]?.DeepClone(),
-            ["sessionLocked"] = state["requiresSessionReset"]?.DeepClone(),
             ["binding"] = new JsonObject { ["processId"] = transport["binding"]?["processId"]?.DeepClone(),
                 ["projectFile"] = identity?["projectPath"]?.DeepClone(), ["bindingEpoch"] = transport["binding"]?["bindingEpoch"]?.DeepClone() },
             ["sessionState"] = state };

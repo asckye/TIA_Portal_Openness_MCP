@@ -67,18 +67,28 @@ internal static class ExternalSourceWorkflowTests
         {
             var objects=new[]{Block("Existing")};int nativeCalls=0,readbacks=0;
             bool Recoverable(Exception ex)=>ex is GenerationDiagnosticException;
-            var generationPlan=PlcExternalSourceWorkflowPolicy.Generate(GenerationResult(release),true,"",false,"",()=>objects,()=>{},()=>throw new Exception(),()=>throw new Exception(),Recoverable);
-            PlcExternalSourceGenerationResult Apply(Action native,Func<PlcExternalSourceObject[]> readback)=>PlcExternalSourceWorkflowPolicy.Generate(GenerationResult(release),false,generationPlan.PlanHash,true,Project,()=>objects,()=>{},native,readback,Recoverable);
-            var failedGeneration=Apply(()=>{nativeCalls++;throw new GenerationDiagnosticException("Source line 3: unknown symbol");},()=>{readbacks++;return objects;});
-            check(failedGeneration.Status=="failed" && failedGeneration.Error.Contains("Source line 3") && !failedGeneration.RequiresSessionReset && !failedGeneration.Executed && nativeCalls==1 && readbacks==0,"Recoverable native generation failure preserves diagnostics without poisoning the session "+release);
-            var request=new JsonObject { ["softwarePath"]=generationPlan.SoftwarePath,["externalSourceName"]="Pump.scl",["dryRun"]=false,["confirm"]=true,["expectedProjectFile"]=Project,["expectedPlanHash"]=generationPlan.PlanHash };
-            var outcome=new WorkerOutcomeState();outcome.AcceptResult("GenerateBlocksFromExternalSource",request,JsonSerializer.SerializeToNode(failedGeneration));outcome.RequireUsable();
-            check(!outcome.Poisoned,"Host accepts rolled-back generation failure and keeps the session usable "+release);
+            var generationPlan=PlcExternalSourceWorkflowPolicy
+                .Generate(GenerationResult(release),true,"",false,"",()=>objects,()=>{},()=>throw new Exception(),()=>throw new Exception(),Recoverable);
+            PlcExternalSourceGenerationResult Apply(Action native,Func<PlcExternalSourceObject[]> readback)=>PlcExternalSourceWorkflowPolicy
+                .Generate(GenerationResult(release),false,generationPlan.PlanHash,true,Project,()=>objects,()=>{},native,readback,Recoverable);
+            var failedGeneration=
+                Apply(()=>{nativeCalls++;throw new GenerationDiagnosticException("Source line 3: unknown symbol");},()=>{readbacks++;return objects;});
+            check(failedGeneration.Status=="failed" && failedGeneration.Error.Contains("Source line 3") && !failedGeneration.RequiresSessionReset
+                    && !failedGeneration.Executed && nativeCalls==1 && readbacks==0,
+                    "Recoverable native generation failure preserves diagnostics without poisoning the session "+release);
+            var request=new JsonObject {
+                ["softwarePath"]=generationPlan.SoftwarePath,["externalSourceName"]="Pump.scl",["dryRun"]=false,["confirm"]=true,["expectedProjectFile"]=
+                    Project,["expectedPlanHash"]=generationPlan.PlanHash
+            };
+            WorkerProtocol.ValidateExchangeResult("GenerateBlocksFromExternalSource",request,JsonSerializer.SerializeToNode(failedGeneration));
+            UnsettledOutcomeAssertions
+                .Reply("GenerateBlocksFromExternalSource", request, JsonSerializer.SerializeToNode(failedGeneration)!, false, check,
+                    "Known generation failure " + release);
             var fixedGeneration=Apply(()=>{nativeCalls++;},()=>{readbacks++;return release=="14sp1"?Array.Empty<PlcExternalSourceObject>():objects;});
             check(fixedGeneration.Status=="completed" && fixedGeneration.Executed && nativeCalls==2 && readbacks==1,"User correction can run generation again after a normal source error "+release);
             var readbackFailure=Apply(()=>{nativeCalls++;},()=>throw new GenerationDiagnosticException("Native call succeeded; object readback failed"));
             check(readbackFailure.Status=="outcome-unknown" && readbackFailure.RequiresSessionReset,"Recoverable-class exception during readback is not mistaken for generation rollback "+release);
-            outcome.AcceptResult("GenerateBlocksFromExternalSource",request,JsonSerializer.SerializeToNode(readbackFailure));check(outcome.Poisoned,"Uncertain readback stops further mutation dispatch "+release);
+            WorkerProtocol.ValidateExchangeResult("GenerateBlocksFromExternalSource",request,JsonSerializer.SerializeToNode(readbackFailure));
             var lost=Apply(()=>throw new IOException("Connection lost during generation"),()=>throw new Exception());
             check(lost.Status=="outcome-unknown" && lost.RequiresSessionReset,"Transport or fatal generation failure remains unknown "+release);
         }

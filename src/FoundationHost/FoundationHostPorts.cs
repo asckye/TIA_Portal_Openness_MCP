@@ -8,6 +8,7 @@ using EngineReply = enginehost::TiaMcp.FoundationHost.EngineReply;
 using IWorkerLane = enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane;
 using IHostToolServices = enginehost::TiaMcpServer.ModelContextProtocol.IHostToolServices;
 using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
 using McpServer = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 using TiaMcpServer.ModelContextProtocol;
 #else
@@ -57,7 +58,8 @@ internal static class FoundationHostPorts
         internal Action ResetExports = () => { };
         private readonly object sessionKey = new();
         public bool Faulted => worker is IEngineWorker engine ? engine.Faulted : worker is WorkerClient client ? client.WorkerFaulted
-            : worker is IFoundationSessionWorker { Poisoned: true };
+            : worker is IFoundationSessionWorker { Faulted: true };
+        public UnsettledCalls Unsettled => worker is IEngineWorker engine ? engine.Unsettled : SharedSessionState.For(worker).Unsettled;
         public object SessionKey => worker is IEngineWorker engine ? engine.SessionKey : worker is WorkerClient client ? client.HostSessionKey : sessionKey;
         public JsonNode? Binding => Snapshot()["binding"]?.DeepClone();
         internal JsonObject OperatorSnapshot()
@@ -85,7 +87,6 @@ internal static class FoundationHostPorts
         {
             var state = SharedSessionState.For(worker).Snapshot(release);
             result["binding"] = state["binding"]?.DeepClone();
-            result["sessionLocked"] = state["requiresSessionReset"]?.DeepClone();
             string? file = (string?)state["binding"]?["identity"]?["projectPath"];
             result["session"] = new JsonObject { ["isConnected"] = state["connected"]?.DeepClone(),
                 ["project"] = (string?)state["binding"]?["identity"]?["projectName"] ?? (file == null ? "-" : Path.GetFileNameWithoutExtension(file)),

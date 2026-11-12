@@ -84,7 +84,8 @@ public sealed class FamilyPlainReplyTests
     {
         var error = Assert.Throws<IOException>(() => WorkerProtocol.ValidateExchangeResult(operation, new JsonObject(), JsonNode.Parse(reply)));
         Assert.StartsWith("Malformed hardware worker reply; session stopped: " + operation, error.Message);
-        Assert.True(WorkerProtocol.RequiresSessionReset(true, error));
+        UnsettledOutcomeAssertions.Failure(error, true, !WorkerOperations.IsReadOnly(operation), !WorkerOperations.IsReadOnly(operation),
+            (ok, message) => Assert.True(ok, message), operation);
     }
 
     // Replies whose shape depends on the request (PUT/GET, scaffold primitives) or that are contract objects without step members.
@@ -259,7 +260,8 @@ public sealed class FamilyPlainReplyTests
     {
         var error = Assert.Throws<IOException>(() => WorkerProtocol.ValidateExchangeResult(operation, JsonNode.Parse(arguments)!.AsObject(), JsonNode.Parse(reply)));
         Assert.Equal("Malformed hardware worker reply; session stopped: " + operation, error.Message);
-        Assert.True(WorkerProtocol.RequiresSessionReset(true, error));
+        UnsettledOutcomeAssertions.Failure(error, true, !WorkerOperations.IsReadOnly(operation), !WorkerOperations.IsReadOnly(operation),
+            (ok, message) => Assert.True(ok, message), operation);
     }
 
     // The SaveProjectCopy tool (ProjectLifecycleProjectTools.SaveAsProject) through the production WorkerClient and the
@@ -276,7 +278,7 @@ public sealed class FamilyPlainReplyTests
         var channel = (TiaMcp.WorkerChannel.ChannelClient)typeof(WorkerClient)
             .GetField("channel", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(worker)!;
         Assert.Equal(1, channel.BindingEpoch);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
         Assert.Equal(release, (string?)(await worker.Call("ReadState", new JsonObject(), CancellationToken.None))?["ReleaseKey"]);
     }
 
@@ -288,11 +290,12 @@ public sealed class FamilyPlainReplyTests
             ["expectedProjectFile"] = @"C:\fixture\P.ap" + release };
         var error = await Assert.ThrowsAsync<IOException>(() => worker.Call("project-lifecycle.ArchiveSaveProjectCopy", arguments, CancellationToken.None));
         Assert.Equal("Malformed hardware worker reply; session stopped: project-lifecycle.ArchiveSaveProjectCopy", error.Message);
-        Assert.True(worker.Poisoned);
-        var refused = await Assert.ThrowsAsync<InvalidOperationException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
-        Assert.Equal(TiaOpenness.Shared.SessionBehavior.Recovery, refused.Message);
+        Assert.False(worker.Faulted);
+        var following = await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
+        Assert.Equal(release, (string?)following?["ReleaseKey"]);
         var tools = new ProjectLifecycleProjectTools(new ProjectLifecyclePortService(Call(worker), () => true, () => "p", release));
-        Assert.ThrowsAny<Exception>(() => tools.SaveAsProject(@"C:\fixture\copy\P.ap" + release));
+        var copied = tools.SaveAsProject(@"C:\fixture\copy\P.ap" + release);
+        Assert.Equal(@"C:\fixture\copy\P.ap" + release, copied.NewProjectFile);
     }
 
     // RunToolTransaction's scope (EngineeringServicesPortService) through the production WorkerClient and the fixture.
@@ -310,7 +313,7 @@ public sealed class FamilyPlainReplyTests
         });
         Assert.True(flags.canCommit);
         Assert.True(flags.requested);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     // GetPlcPutGetAccess and SetPlcPutGetAccess (15.1-21) through HardwareSecurityPortService, WorkerClient and the fixture.
@@ -325,7 +328,7 @@ public sealed class FamilyPlainReplyTests
         Assert.Equal("PLC_1", (string?)read["device"]);
         Assert.True((bool)written["ok"]!);
         Assert.Equal("True", (string?)written["after"]);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     // SeedReferenceHmi (the PLC software port refuses it before dispatch on V14 SP1-V19) with the consumer's own read of the reply
@@ -338,7 +341,7 @@ public sealed class FamilyPlainReplyTests
         var batch = System.Text.Json.JsonSerializer.Deserialize<ResponseImportBatch>(reply!.ToJsonString())!;
         Assert.Equal(new[] { "Screen_1" }, batch.Imported);
         Assert.Empty(batch.Failed!);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     // The scaffold primitives (the worker serves them on V20/V21; older releases refuse them with NotSupportedException) through
@@ -364,7 +367,7 @@ public sealed class FamilyPlainReplyTests
         Assert.Equal("PLC_1", device.DeviceName);
         Assert.Equal("Success", compile.State);
         Assert.Equal(0, compile.ErrorCount);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     public static TheoryData<string, string> MalformedFamilyReplies() => new()
@@ -388,9 +391,9 @@ public sealed class FamilyPlainReplyTests
         };
         var error = await Assert.ThrowsAsync<IOException>(() => worker.Call(operation, arguments, CancellationToken.None));
         Assert.Equal("Malformed hardware worker reply; session stopped: " + operation, error.Message);
-        Assert.True(worker.Poisoned);
-        var refused = await Assert.ThrowsAsync<InvalidOperationException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
-        Assert.Equal(TiaOpenness.Shared.SessionBehavior.Recovery, refused.Message);
+        Assert.False(worker.Faulted);
+        var following = await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
+        Assert.Equal(release, (string?)following?["ReleaseKey"]);
     }
 
     private static JsonObject Security(string operation, string device) => new()

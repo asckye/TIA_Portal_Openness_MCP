@@ -54,7 +54,6 @@ public sealed class FoundationChecks
         foreach (var row in CheckSuite.Run(nameof(DisconnectTests), check => DisconnectTests.Run(server,check).GetAwaiter().GetResult())) yield return row;
         foreach (var row in CheckSuite.Run(nameof(DocumentImportTests), check => DocumentImportTests.Run(check))) yield return row;
         foreach (var row in CheckSuite.Run(nameof(BatchDocumentImportTests), check => BatchDocumentImportTests.Run(check))) yield return row;
-        foreach (var row in CheckSuite.Run(nameof(WorkerSessionOutcomeTests), check => WorkerSessionOutcomeTests.Run(check))) yield return row;
         foreach (var row in CheckSuite.Run(nameof(DocumentExportTests), check => DocumentExportTests.Run(check))) yield return row;
         foreach (var row in CheckSuite.Run(nameof(BatchDocumentExportTests), check => BatchDocumentExportTests.Run(check))) yield return row;
         foreach (var row in CheckSuite.Run(nameof(ExternalSourcePlanTests), check => ExternalSourcePlanTests.Run(check))) yield return row;

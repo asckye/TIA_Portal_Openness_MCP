@@ -292,7 +292,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 - 审批：拒绝、超时和工作台不可用都在派发前返回 `CONFIRMATION_REQUIRED`；读取不排队；默认开启审批和关闭审批两种情况都要测（[验证分层](../manuals/validation.md)“其他保留检查”）。
 - worker 与通道：超时、异常退出、错误响应、迟到响应、帧超限、未知或重复回复（`worker-channel`、`worker-robustness` 套件；故障由 `TIA_FIXTURE_FAULT` 注入）。
-- 结果未知：返回 `OUTCOME_UNKNOWN`，会话锁定，不自动重放（E-10、TH-04）。
+- 结果未知：返回 `OUTCOME_UNKNOWN`，记录未确认调用，后续独立请求可执行，不自动重放（E-10、TH-04）。
 - 输入边界：路径越界、保留名、重解析点、数量与大小上限、格式错误（[安全标准](security.md) SEC-08、SEC-09）。
 - 敏感值：带凭据的参数不进入审批摘要、计划哈希、审计、调用日志和响应（SEC-06）。
 - 篡改：被改动的记录、哈希或来源文件被对应的 `-Check` 或校验拒绝。

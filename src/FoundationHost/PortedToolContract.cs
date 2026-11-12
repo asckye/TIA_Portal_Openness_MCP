@@ -662,14 +662,14 @@ internal sealed partial class FoundationTool
                 result.Content = new[] { new TextContentBlock { Text = body.ToJsonString() } };
             }
             return FoundationV4Result
-                .ReconcileWorker(result, operationDispatched && SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
+                .ReconcileWorker(result, nativeDiagnostics);
         }
         catch (TargetInvocationException error) when (error.InnerException != null)
         {
             if (FoundationV4Result.Classified(lastReply))
                 return FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
                     StructuredContent = lastReply.DeepClone(), Content = new[] { new TextContentBlock { Text = lastReply.ToJsonString() } } },
-                    operationDispatched && SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
+                    nativeDiagnostics);
             var cause = workerFailure ?? error.InnerException;
             bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
                 && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var dry)
@@ -684,7 +684,6 @@ internal sealed partial class FoundationTool
                     code == nameof(ArgumentException) ? -32602 : -32603,
                     changed ? "unknown" : mutation ? "rejected-before-operation" : "read-failed",
                     evidence.ToJsonString());
-                cause.Data["foundationSessionPoisoned"] = SharedSessionState.For(worker).RequiresReset(lastReply);
             }
             if (!operationDispatched && cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams
                 })
@@ -694,7 +693,7 @@ internal sealed partial class FoundationTool
                 operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
                     : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, lastReply?["Failure"] != null ? lastReply : null, cause);
             return FoundationV4Result
-                .ReconcileWorker(result, operationDispatched && SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
+                .ReconcileWorker(result, nativeDiagnostics);
         }
     }
 }

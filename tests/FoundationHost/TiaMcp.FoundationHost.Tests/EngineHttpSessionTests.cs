@@ -60,8 +60,8 @@ public sealed class EngineHttpSessionTestsPlc
         Assert.Equal("Fixture native outcome unknown.", (string?)unknown["error"]?["message"]);
         Assert.NotNull(unknown["data"]?["fixturePid"]);
         string prior = (string)unknown["meta"]!["requestId"]!;
-        Assert.True((bool?)(await a.Tool("GetSessionState"))["data"]?["sessionState"]?["requiresSessionReset"]);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetProjectInfo", ok: false))["error"]?["code"]);
+        Assert.Single((await a.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray());
+        Assert.True((bool?)(await a.Tool("GetProjectInfo"))["ok"]);
         var detached = await a.Tool("CallTool", new() { ["name"] = "DisconnectPortal", ["arguments"] = new JsonObject() });
         Assert.True((bool?)detached["data"]?["workerAcknowledged"]);
         Assert.False((bool?)detached["data"]?["requiresTiaRestart"]);
@@ -190,8 +190,8 @@ public sealed class EngineHttpSessionTestsPlc
         using var a = new Session(host.Url); using var b = new Session(host.Url);
         await a.Initialize(); await b.Initialize();
         await a.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
-        Assert.True((bool?)(await a.Tool("GetSessionState"))["data"]?["sessionState"]?["requiresSessionReset"]);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetProjectInfo", ok: false))["error"]?["code"]);
+        Assert.Single((await a.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray());
+        Assert.True((bool?)(await a.Tool("GetProjectInfo"))["ok"]);
         await b.Tool("GetSessionState"); await b.Tool(SessionFixtureTool.Name);
         var stageArgs = new JsonObject { ["files"] = new JsonArray(new JsonObject { ["fileName"] = "fixture.scl", ["kind"] = "scl", ["content"] = "FUNCTION Fixture : Void\nBEGIN\nEND_FUNCTION" }), ["dryRun"] = false };
         await b.Tool("StageImportFiles", stageArgs, metadata: new JsonObject { ["tiaMcpStagingSession"] = "caller-peer-token", ["other"] = "kept" });

@@ -61,7 +61,7 @@ internal static class BatchExportTests
 
             var malformed=Wire(partial); malformed["RequiresSessionReset"]=false;
             try {BatchExportContract.Validate(malformed,false);throw new Exception("Malformed partial accepted");} catch(InvalidDataException){check(true,"Host rejects reset/outcome conflict");}
-            var state=new WorkerOutcomeState();state.Failed(true,new IOException("batch unknown"));check(state.Poisoned,"Unknown batch outcome poisons subsequent transport use");
+
             File.WriteAllText(preview.Items[0].OutputFile,"existing");
             Refused(()=>Run(true),"Existing destination blocks entire plan before execution");
             check(File.ReadAllText(preview.Items[0].OutputFile)=="existing","Existing export is unchanged");File.Delete(preview.Items[0].OutputFile);

@@ -31,16 +31,6 @@ namespace TiaMcp.Adapters
             reply.Meta = meta;
             try
             {
-                if (hmiReadFault != null)
-                {
-                    meta["status"] = "HmiReadSessionBlocked"; meta["operationSuccess"] = false;
-                    meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
-                    meta["requiresExplicitRebind"] = true; meta["remoteInspectionStopped"] = true;
-                    meta["lastFailure"] = HmiValues.DeepClone(hmiReadFault);
-                    reply.Message = "HMI operation blocked after a connection failure. Inspect logs before explicitly rebinding; no TIA call attempted.";
-                    reply.RequiresSessionReset = true;
-                    return reply;
-                }
                 if (requiresProject && EngineeringPlcSession.IsProjectNull())
                 {
                     meta["error"] = "Project is null"; meta["status"] = "InvalidState"; meta["operationSuccess"] = false;
@@ -111,10 +101,9 @@ namespace TiaMcp.Adapters
                 hmiReadFault[key] = meta.TryGetValue(key, out var value) && value != null ? HmiValues.DeepClone(value) : null;
             meta["status"] = "HmiConnectionUnavailable";
             meta["connectionUnavailable"] = true; meta["remoteInspectionStopped"] = true;
-            meta["requiresExplicitRebind"] = true;
             meta["recovery"] =
-                "Stop collection and inspect MCP/TIA logs. No automatic retry, attach, close or dispose was performed. Only an explicit successful project " +
-                "binding clears the snapshot-read block.";
+                "Stop collection and inspect MCP/TIA logs. No automatic retry, attach, close or dispose was performed. This call failed; a later call may " +
+                    "try again.";
         }
     }
 }

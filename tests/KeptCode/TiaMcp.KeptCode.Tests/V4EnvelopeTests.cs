@@ -328,9 +328,11 @@ namespace TiaMcp.Engine.Tests
         public void InvalidCombinationsAreRejectedAtConstruction()
         {
             Assert.Throws<ArgumentException>(() => new Envelope(4, true, null, Reject().Error, Metadata()));
-            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null,
+            var unknown = Envelope.Create<object?>(null,
                 new Error("Lost.", new OutcomeUnknownDetails(null, Empty)), Metadata(Outcome.Unknown, Execution.Unknown),
-                nativeIssued: true, mutation: true));
+                nativeIssued: true, mutation: true);
+            Assert.Equal(Outcome.Unknown, unknown.Meta.Outcome);
+            Assert.False(unknown.Meta.RequiresSessionReset);
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, Reject().Error, Metadata(Outcome.Partial, Execution.Partial)));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Mixed.", new PartialFailureDetails(1, 1, 0)), Metadata()));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Lost.", new OutcomeUnknownDetails(null, Empty)), Metadata()));
@@ -360,7 +362,7 @@ namespace TiaMcp.Engine.Tests
         [InlineData(false, true)]
         [InlineData(true, false)]
         [InlineData(true, true)]
-        public void UnknownResetMustEqualTheNativeSessionLock(bool nativeIssued, bool mutation)
+        public void UnknownOutcomeCarriesTheLegacyFlagWithoutSessionAdmission(bool nativeIssued, bool mutation)
         {
             bool locked = nativeIssued && mutation;
             Meta Observation(bool reset) => new Meta(Stamp, "21", "Sample", "request-1", Outcome.Unknown,
@@ -369,7 +371,9 @@ namespace TiaMcp.Engine.Tests
             var correct = Envelope.Create<object?>(null, error, Observation(locked), nativeIssued, mutation);
             Assert.Equal(locked, correct.Meta.RequiresSessionReset);
             Assert.Equal(ErrorCode.OutcomeUnknown, correct.Error!.Code);
-            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, error, Observation(!locked), nativeIssued, mutation));
+            var carried = Envelope.Create<object?>(null, error, Observation(!locked), nativeIssued, mutation);
+            Assert.Equal(!locked, carried.Meta.RequiresSessionReset);
+            Assert.Equal(ErrorCode.OutcomeUnknown, carried.Error!.Code);
             // Even an unlocked unknown result cannot turn into a replayable native failure.
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null,
                 new Error("Lost.", new NativeOperationFailedDetails(null, null, Empty)), Observation(locked)));
@@ -487,7 +491,8 @@ namespace TiaMcp.Engine.Tests
             var types = assembly.GetExportedTypes().Where(t => t.Namespace == "TiaMcp.Logic.V4").ToArray();
             Assert.Contains(typeof(Plan), types);
             Assert.Equal(26, Enum.GetValues<ErrorCode>().Length);
-            Assert.Equal(13, Enum.GetValues<WarningCode>().Length);
+            Assert.Equal(14, Enum.GetValues<WarningCode>().Length);
+            Assert.Contains(WarningCode.UnsettledCalls, Enum.GetValues<WarningCode>());
             Assert.Equal(26, types.Count(t => t.BaseType == typeof(ErrorDetails)));
         }
 

@@ -47,17 +47,10 @@ internal static class FoundationV4Result
         return null;
     }
 
-    internal static CallToolResult ReconcileWorker(CallToolResult result, bool reset, JsonObject? diagnostics)
+    internal static CallToolResult ReconcileWorker(CallToolResult result, JsonObject? diagnostics)
     {
         if (result.StructuredContent is not JsonObject source) return result;
         var body = (JsonObject)source.DeepClone();
-        if (reset && body["meta"] is JsonObject meta)
-        {
-            meta["requiresSessionReset"] = true;
-            var data = body["data"] as JsonObject ?? new JsonObject();
-            data["recovery"] = TiaOpenness.Shared.SessionBehavior.Recovery;
-            body["data"] = data;
-        }
         if (diagnostics != null && body["error"] is JsonObject error && error["details"] is JsonObject details)
         {
             var evidence = details["evidence"] as JsonObject ?? new JsonObject();
@@ -81,8 +74,7 @@ internal static class FoundationV4Result
         new("Invalid Foundation argument. Nothing was executed.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
     internal static CallToolResult Reject(string release, string name, string id, Error error, bool current = false)
         =>
-            Wire(release, name, id, null, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, current, error.Code == ErrorCode
-                .SessionResetRequired);
+            Wire(release, name, id, null, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, current);
     internal static CallToolResult ReadinessUnavailable(string release, string name, string id, JsonObject readiness)
     {
         var environment = Object(readiness["environment"]);
@@ -159,8 +151,6 @@ internal static class FoundationV4Result
         if (!dispatched && exception?.Data["workerLimitBytes"] is int workerLimit)
             return Reject(release, name, id,
                     new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)), true);
-        if (!dispatched && exception?.Data["foundationSessionPoisoned"] is true)
-            return Reject(release, name, id, HostBehavior.SessionReset(), true);
         if (!dispatched && exception?.GetBaseException() is NotSupportedException unavailable)
             return Reject(release, name, id, new Error(HostBehavior.SafeDiagnostic(unavailable.Message) ?? "The requested capability is unavailable.",
                 new UnsupportedCapabilityDetails(release, name, null)), true);
@@ -172,14 +162,12 @@ internal static class FoundationV4Result
         if ((!dispatched || worker?.KnownNoMutation == true) && condition == TiaMcp.Adapters.Contracts.PlcImportOptionPolicy.UnsupportedCondition)
             return Reject(release, name, id, new Error("The selected release or XML object does not support the requested import options.",
                 new UnsupportedCapabilityDetails(release, "PLC-Software", name)), true);
-        bool lost = dispatched && exception.Data["foundationSessionPoisoned"] is true;
         var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, dispatched, !mutation, worker?.Outcome, worker?.Code, exceptionType);
         string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
         bool nativeDiagnostic = !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception)
             && (worker == null ? exception is IOException : worker.Outcome != "rejected-before-operation"
                 && !string.IsNullOrWhiteSpace(exceptionType) && exceptionType != nameof(WorkerOperationException));
         var details = HostBehavior.FailureEvidence(exceptionType, dispatched && nativeDiagnostic ? exception.Message : null, native: worker != null);
-        if (lost) { data ??= new JsonObject(); data["recovery"] = TiaOpenness.Shared.SessionBehavior.Recovery; }
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         bool readCancelled = dispatched && !mutation && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
         return Wire(release, name, id, data, readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind),
@@ -189,7 +177,7 @@ internal static class FoundationV4Result
                     .AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType)
                     ?? (dispatched && nativeDiagnostic ? HostBehavior.SafeDiagnostic(exception.Message) : null),
                 reason, dispatched ? "tool-call" : "tool-queue", worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition),
-            true, lost || kind == TiaOpenness.Shared.HostFailureKind.Unknown);
+            true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
     }
 
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)
@@ -399,6 +387,7 @@ internal static class FoundationV4Result
     private static Envelope EnvelopeFor(string release, string name, string id, JsonObject? data, Outcome outcome,
         Execution execution, Completeness completeness, Error? error, bool current, bool reset, bool candidate = false, Paging? paging = null)
     {
+        if (outcome == Outcome.Unknown) data?.Remove("recovery");
         var warnings = new List<Warning>();
         if (error?.Code == ErrorCode.UnsupportedCapability)
             warnings.Add(new Warning(WarningCode.NativeCapabilityLimit, "The selected release or native API does not provide this capability.", Empty));

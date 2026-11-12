@@ -20,13 +20,8 @@ internal static class AdditionalMutationResultTests
             try { WorkerProtocol.ValidateExchangeResult(operation, Args(preview), payload); }
             catch (Exception ex) { failure = ex; }
             check(failure is IOException, operation + ": " + label + " must reject with IOException");
-            if (failure == null) return;
-            var state = new WorkerOutcomeState();
-            state.Failed(true, failure);
-            check(state.Poisoned, operation + ": " + label + " poisons a dispatched session");
-            bool blocked = false;
-            try { state.RequireUsable(); } catch (InvalidOperationException) { blocked = true; }
-            check(blocked, operation + ": " + label + " prevents a subsequent request");
+            WorkerProtocol.ValidateExchangeResult(operation, Args(), Result());
+            UnsettledOutcomeAssertions.Failure(failure!, true, true, true, check, operation + ": " + label);
         }
 
         foreach (var operation in new[] { "CreateTagTable", "CreateTag", "CreateUserConstant" })
@@ -50,11 +45,8 @@ internal static class AdditionalMutationResultTests
 
             var unknownFailure = new WorkerOperationException("native result unknown", -32603, "unknown");
             check(!unknownFailure.KnownNoMutation, operation + ": unknown outcome preserved");
-            var state = new WorkerOutcomeState(); state.Failed(true, unknownFailure);
-            check(state.Poisoned, operation + ": unknown native outcome poisons session");
-            bool blocked = false;
-            try { state.RequireUsable(); } catch (InvalidOperationException) { blocked = true; }
-            check(blocked, operation + ": unknown native outcome cannot be replayed");
+            WorkerProtocol.ValidateExchangeResult(operation, Args(), Result());
+            UnsettledOutcomeAssertions.Failure(unknownFailure, true, true, true, check, operation + ": native unknown");
         }
     }
 }

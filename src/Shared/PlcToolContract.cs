@@ -155,7 +155,7 @@ namespace TiaMcpServer.ModelContextProtocol
             int failed = Count(root, "failed");
             bool unknown = writes && (Flag("verified") == false || Flag("verifiedAbsent") == false
                 || Text("effectiveState") == "Unknown" || Text("state") == "Unknown"
-                || Flag("requiresSessionReset") == true || Text("outcome") == "unknown");
+                || Flag("requiresSessionReset") == true || Flag("writeOutcomeUnknown") == true || Text("outcome") == "unknown");
             bool knownFailure = Text("status") == "DocumentReadbackMismatch" || Text("effectiveState") == "Error"
                 || Text("state") == "Error" || Text("outcome") == "failed";
             bool before = Flag("mayHaveChanged") == false && success != true;
@@ -218,7 +218,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static IReadOnlyDictionary<string, JsonElement> Evidence(JsonObject data)
             => data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value), StringComparer.Ordinal);
         private static Error Unknown(JsonObject evidence) =>
-            new Error("The write outcome is unconfirmed. Inspect the retained evidence and reset the session before further writes.",
+            new Error("The write outcome is unconfirmed. Inspect the target before repeating this call. Never replay it automatically. GetSessionState lists " +
+                "unsettled request IDs.",
             new OutcomeUnknownDetails("PLC operation", Evidence(evidence)));
 
         private static void Clean(JsonNode? node)

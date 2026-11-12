@@ -187,11 +187,10 @@ public sealed class HardwareFamilyAdmissionTests
     [Fact]
     public void Array_and_scalar_reads_do_not_poison_the_session()
     {
-        var state = new WorkerOutcomeState();
-        state.AcceptResult("hardware-devices.HardwareLegacySearchInstalledGsdDevices", new(), new JsonArray());
-        state.AcceptResult("hardware-devices.HardwareReadItemTree", new(), JsonValue.Create("fixture"));
-        state.RequireUsable();
-        Assert.False(state.Poisoned);
+
+        WorkerProtocol.ValidateExchangeResult("hardware-devices.HardwareLegacySearchInstalledGsdDevices", new(), new JsonArray());
+        WorkerProtocol.ValidateExchangeResult("hardware-devices.HardwareReadItemTree", new(), JsonValue.Create("fixture"));
+
     }
 
     [Fact]

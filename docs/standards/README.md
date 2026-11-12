@@ -60,8 +60,8 @@
 | `WS-10`、`WS-28` | 不剥除控制字符和双向文字控制符；项目名称和路径会拼进 `data.summary` |
 | `WS-13` | 复核失败多返回 `CONFIRMATION_REQUIRED` 而不是 `PLAN_STALE`；通用哈希不含对象状态指纹，普通工具的计划不是只执行一次 |
 | `WS-17` | `execution` 取值是 `not-started`、`read-only`、`completed`、`partial`、`unknown`：没有 `rolled_back`，确定失败也记 `completed` |
-| `WS-21` | 没有写入编号和结果取回，结果未知后只能锁定并靠人工检查（设计规范偏差 API-09） |
-| `WS-23`、`WS-24` | 结果未知后的锁可以由工具解除（`DisconnectPortal`、`RestartOpennessWorker`），没有人核实；宿主的会话锁只在内存 |
+| `WS-21` | 没有写入编号和结果取回，结果未知后在 GetSessionState 列出未确认请求编号，结果取回将在 NO-LOCK Part 2 实现（设计规范偏差 API-09） |
+| `WS-23`、`WS-24`、`WS-41` | 有意偏离未采纳草案的全会话暂停规则。结果未知只记录本次调用，后续独立请求继续，保存携带 `UNSETTLED_CALLS`。见 [ADR 0034](decisions/0034-no-session-lock.md) |
 | `WS-26` | 审计写失败被吞掉，写入照常执行 |
 | `WS-27` | 恢复备份只覆盖部分路径；备份被跳过时只发 `BACKUP_SKIPPED` 警告，不停止 |
 | `WS-29` | 不拒绝 `..`（只规范化），输出路径不查控制字符和保留设备名 |

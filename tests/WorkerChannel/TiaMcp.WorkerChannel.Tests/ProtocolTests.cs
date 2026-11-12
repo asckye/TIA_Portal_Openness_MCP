@@ -10,33 +10,35 @@ namespace TiaMcp.WorkerChannel.Tests;
 public sealed class ProtocolTests
 {
     [Fact]
-    public async Task Answered_unknown_keeps_project_requests_refused_and_disconnect_available()
+    public async Task Channel_serves_the_next_call_after_an_unknown_reply()
     {
         using var wire = new Wire(); await wire.Connect();
         wire.Output.OnWrite = _ => wire.Input.Feed(Reply(payload: "\"error\":{\"code\":-32603,\"message\":\"unknown\",\"data\":{\"outcome\":\"Unknown\",\"evidence\":null}}"));
         await Assert.ThrowsAsync<ChannelFailureException>(() => wire.Call(readOnly: false));
-        Assert.True(wire.Client.Poisoned); Assert.True(wire.Client.CanDisconnect);
-        await Assert.ThrowsAsync<ChannelFaultException>(() => wire.Call());
+        Assert.False(wire.Client.Poisoned); Assert.True(wire.Client.CanDisconnect);
         Assert.Single(wire.Output.Writes);
-        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(2, payload: "\"result\":{\"detached\":true}"));
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(2));
+        Assert.Equal("null", await wire.Call());
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(3, payload: "\"result\":{\"detached\":true}"));
         Assert.Equal("{\"detached\":true}", await wire.Client.CallAsync("adapter.Disconnect", "{}", BindingChange.MayAdvance, false, Budget));
-        Assert.Equal(2, wire.Output.Writes.Count);
+        Assert.Equal(3, wire.Output.Writes.Count);
     }
     internal static readonly TimeSpan Budget = TestDeadlines.Hang;
 
     [Fact]
-    public async Task Answered_project_unknown_allows_the_independent_simulator_without_clearing_the_latch()
+    public async Task Answered_project_unknown_allows_independent_simulator_and_project_calls()
     {
         using var wire = new Wire(); await wire.Connect();
         wire.Output.OnWrite = _ => wire.Input.Feed(Reply(payload: "\"error\":{\"code\":-32603,\"message\":\"unknown\",\"data\":{\"outcome\":\"Unknown\",\"evidence\":null}}"));
         await Assert.ThrowsAsync<ChannelFailureException>(() => wire.Call(readOnly: false));
-        Assert.True(wire.Client.Poisoned);
+        Assert.False(wire.Client.Poisoned);
         Assert.True(wire.Client.CanCallIndependentRuntime);
         wire.Output.OnWrite = _ => wire.Input.Feed(Reply(2, payload: "\"result\":{\"simulator\":true}"));
         Assert.Equal("{\"simulator\":true}", await wire.Client.CallAsync("adapter.runtime-channels.ExecutePlcSimAdvanced", "{}", BindingChange.None, true, Budget));
-        Assert.True(wire.Client.Poisoned);
-        await Assert.ThrowsAsync<ChannelFaultException>(() => wire.Call());
-        Assert.Equal(2, wire.Output.Writes.Count);
+        Assert.False(wire.Client.Poisoned);
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(3));
+        Assert.Equal("null", await wire.Call());
+        Assert.Equal(3, wire.Output.Writes.Count);
     }
     internal static readonly ChannelIdentity Identity = new("19",new string('a',64),new string('b',64),42,new string('c',64));
     internal static string Hello => "{\"jsonrpc\":\"2.0\",\"method\":\"hello\",\"params\":{\"protocol\":2,\"releaseKey\":\"19\",\"workerSha256\":\""+Identity.WorkerSha256+"\",\"adapterSha256\":\""+Identity.AdapterSha256+"\",\"pid\":42,\"nonce\":\""+Identity.Nonce+"\",\"bindingEpoch\":0,\"bound\":false}}";
@@ -203,7 +205,7 @@ public sealed class ProtocolTests
 
     [Theory]
     [InlineData("ReadFailed",true,false)] [InlineData("RejectedBeforeNative",false,false)]
-    [InlineData("Unknown",false,true)] [InlineData("ReadFailed",false,true)]
+    [InlineData("Unknown",false,false)] [InlineData("ReadFailed",false,true)]
     public async Task ReadFailureOutcomePreserved(string outcome,bool readOnly,bool poisoned)
     {
         using var wire=new Wire(); await wire.Connect();

@@ -62,7 +62,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (report.Meta?["prerequisites"]?["satisfied"]?.GetValue<bool?>() == false)
                 return V4Reject("PreviewToolCall", new Error("No project is bound.", new ProjectNotBoundDetails()));
             report.Meta!["success"] = true;
-            return InfrastructureResult("PreviewToolCall", report);
+            return ObserveSessionOutcome(name, InfrastructureResult("PreviewToolCall", report), false, "{}", preview: true);
         }
 
         public static ResponseStringList PreflightToolCall(string name, string argumentsJson)

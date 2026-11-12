@@ -28,6 +28,27 @@ public sealed class McpPanelTests(WpfContext wpf)
         => Assert.Equal("ListPlcBlocks · result", new McpProjectClient.Receipt("ListPlcBlocks", "result", "{}").Label);
 
     [Fact]
+    public async Task Unsettled_count_shows_and_operations_stay_enabled()
+    {
+        await using var host = new McpOperatorFixture();
+        var client = host.Client(); await Attach(client, host);
+        await host.Notify(state => {
+            state["binding"] = new JsonObject { ["processId"] = 123, ["projectFile"] = @"D:\fixture\Line.ap19", ["bindingEpoch"] = 1 };
+            state["sessionState"]!["unsettled"] = new JsonArray(new JsonObject { ["requestId"] = "unknown", ["tool"] = "SaveProject" });
+        });
+        wpf.Run(() =>
+        {
+            using var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
+            WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+            using var presentation = new TiaOpenness.Gui.Controls.ResultPresentation(model);
+            Assert.Equal(1, model.Panel!.UnsettledCount);
+            Assert.Contains("1", model.Panel.Unsettled);
+            Assert.True(presentation.CanOperate);
+            Assert.True(model.Engineering.Save.CanExecute(null));
+        });
+    }
+
+    [Fact]
     public async Task Registration_reader_allows_concurrent_write_and_keeps_the_previous_record_until_replaced()
     {
         await using var host = new McpOperatorFixture();
@@ -149,11 +170,15 @@ public sealed class McpPanelTests(WpfContext wpf)
     {
         await using var host = new McpOperatorFixture(); await using var client = host.Client(); await Attach(client, host);
         var seen = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        client.StateChanged += (_, s) => { if ((bool?)s["sessionLocked"] == true) seen.TrySetResult(true); };
-        await host.Notify(s => { s["sessionLocked"] = true; s["worker"]!["state"] = "poisoned"; s["lane"] = new JsonObject { ["tool"] = "CompilePlcSoftware", ["actor"] = "mcp" }; });
+        client.StateChanged += (_, s) => { if ((s["sessionState"]?["unsettled"] as JsonArray)?.Count == 1) seen.TrySetResult(true); };
+        await host
+            .Notify(s => {
+                s["sessionState"]!["unsettled"] = new JsonArray(new JsonObject { ["requestId"] = "unknown", ["tool"] = "SaveProject" }); s["worker"]!["state"] =
+                    "idle"; s["lane"] = new JsonObject { ["tool"] = "CompilePlcSoftware", ["actor"] = "mcp" };
+            });
         await seen.Task.WaitAsync(TestDeadlines.Hang);
-        var old = host.Snapshot(); old["revision"] = 1L; old["sessionLocked"] = false; client.Merge(old);
-        Assert.True((bool?)client.State!["sessionLocked"]);
+        var old = host.Snapshot(); old["revision"] = 1L; old["sessionState"]!["unsettled"] = new JsonArray(); client.Merge(old);
+        Assert.Single(client.State!["sessionState"]!["unsettled"]!.AsArray());
         var other = host.Snapshot(); other["sessionKey"] = Guid.NewGuid().ToString("N"); other["revision"] = 100L; client.Merge(other);
         Assert.Equal(host.Key, client.SessionKey);
         var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

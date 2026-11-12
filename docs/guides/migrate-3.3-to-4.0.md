@@ -145,7 +145,7 @@ TIA Portal、Openness 组件和许可证仍需单独安装。工作台和宿主�
 
 每个结果都是 V4 信封。先看 `ok`，再看 `meta.outcome`、`meta.execution`、`meta.completeness` 和 `meta.requestId`；失败时看 `error.code` 和 `error.details`。结果取值和错误码列表见 [4.0 发布说明](../releases/v4.0.0.md#result-envelope-and-errors)（英文），处理方法见[调用失败时如何处理](../troubleshooting/errors.md)。
 
-遇到 `OUTCOME_UNKNOWN` 或 `SESSION_RESET_REQUIRED` 时，先在 TIA 中检查项目实际状态并查看调用日志，再调用 `DisconnectPortal`。若返回 `requiresTiaRestart` 或提示租约不确定，先按需保存并重启该 TIA 实例；随后新建 MCP 会话，重新调用 `ConnectPortal` 和 `AttachOpenProject`，读回会话状态。不要重放失败的写请求。
+遇到 `OUTCOME_UNKNOWN` 时，检查该调用的目标和日志。`GetSessionState.data.sessionState.unsettled` 列出未确认调用，后续独立请求可继续。`SaveProject` 与 `SaveProjectCopy` 的预览和执行通过 `UNSETTLED_CALLS` 提示核对请求编号。禁止自动重放。真正的 worker 故障按 `worker-faulted` 的提示显式恢复。
 
 ## 切换前核对
 

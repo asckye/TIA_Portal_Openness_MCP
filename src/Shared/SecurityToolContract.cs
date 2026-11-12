@@ -69,8 +69,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else if (status == "HmiReadSessionBlocked")
             {
-                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
-                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("security-session"));
+                outcome = readOnly ? Outcome.ReadFailed : Outcome.Unknown;
+                execution = readOnly ? Execution.ReadOnly : Execution.Unknown;
+                error = HostBehavior.UnavailableCall(!readOnly);
             }
             else if (success != true && status == "InvalidState")
             {
@@ -168,7 +169,8 @@ namespace TiaMcpServer.ModelContextProtocol
             new Error(nativeMessage ?? "The security operation did not establish a successful result.",
             new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
         private static Error UnknownFailure() =>
-            new Error("The security operation outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
+            new Error("The security operation outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. " +
+                "GetSessionState lists unsettled request IDs.",
             new OutcomeUnknownDetails("security-operation", new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,

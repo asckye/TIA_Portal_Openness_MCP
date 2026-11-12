@@ -49,8 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "InvalidParams" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
                 : status == "ImportTargetExists" ? new PreconditionFailedDetails("HMI import target already exists; set overwrite=true explicitly.", null)
                 : status == "NotFound" ? new NotFoundDetails(null)
-                : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "HMI exchange", null)
-                : status == "HmiReadSessionBlocked" ? new SessionResetRequiredDetails("HMI read session is blocked.") : null;
+                : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "HMI exchange", null) : null;
             return details == null ? null
                 : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The HMI request could not start.", details);
         }
@@ -80,12 +79,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 || (evidence["directoryListing"] as JsonArray)?.Count == 500 || (evidence["importCandidates"] as JsonArray)?.Count == 200
                 || (evidence["displayNames"] as JsonArray)?.Count == 2000 || (evidence["displayNamesAfter"] as JsonArray)?.Count == 2000;
             bool unknownWrite = writes && (Flag("writeOutcomeUnknown") == true || Flag("requiresSessionReset") == true
+                || Flag("connectionUnavailable") == true
                 || Flag("verifiedAbsent") == false || (success != true && changed && Flag("nativeSuccess") != true)
                 || (success != true && files && Flag("apiCallSuccess") != true && Flag("partialArtifactExists") != true));
             var rejection = Flag("importOverwriteRefused") == true ? Rejection("ImportTargetExists") : Rejection(status);
             Outcome outcome;
             Error? error = null;
-            if (status == "HmiReadSessionBlocked" || rejection != null && !changed && !files)
+            if (status == "HmiReadSessionBlocked")
+            {
+                outcome = writes ? Outcome.Unknown : Outcome.ReadFailed;
+                error = HostBehavior.UnavailableCall(writes);
+            }
+            else if (rejection != null && !changed && !files)
             {
                 outcome = Outcome.RejectedBeforeOperation;
                 error = rejection;
@@ -153,7 +158,8 @@ namespace TiaMcpServer.ModelContextProtocol
             => evidence.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value), StringComparer.Ordinal);
         private static Error Failure(Outcome outcome, JsonObject evidence)
             => outcome == Outcome.Unknown
-                ? new Error("The HMI write outcome is unconfirmed; inspect the evidence and reset the session before further writes.",
+                ? new Error("The HMI write outcome is unconfirmed; inspect the target before repeating this call. Never replay it automatically. " +
+                    "GetSessionState lists unsettled request IDs.",
                     new OutcomeUnknownDetails("HMI exchange", Evidence(evidence)))
                 : outcome == Outcome.Partial ? new Error("The HMI operation left partial results.", new PartialFailureDetails(0, 0, 0))
                 : outcome == Outcome.RejectedBeforeOperation

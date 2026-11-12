@@ -9,14 +9,37 @@ using Xunit;
 public sealed class WorkerSessionRecoveryTests
 {
     [Fact]
+    public void Read_uncertainty_keeps_the_real_reply_and_does_not_rewrite_a_later_write()
+    {
+        var outcome = new WorkerSessionOutcomeState();
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { }, () => { });
+        var request = new ChannelRequest(1, "adapter.plc-online.ExecuteOnline", "{\"dryRun\":false}", (_, _) => { });
+        const string reply = "{\"Ok\":true,\"RequiresSessionReset\":true}";
+        var response = recovery.Dispatch(request, _ => {
+            outcome.MarkUncertain(mutation: false);
+            return ChannelResponse.Success(reply);
+        });
+        response = recovery.Synchronize(request, response);
+        Assert.Null(response.Failure);
+        Assert.Equal(reply, response.ResultJson);
+        Assert.True(outcome.RequiresReset);
+        var write = new ChannelRequest(2, "adapter.SaveProject", "{}", (_, _) => { });
+        Assert.Null(recovery.Synchronize(write, recovery.Dispatch(write, _ => ChannelResponse.Success("{}"))).Failure);
+    }
+
+    [Fact]
     public void Reset_requesting_reply_keeps_its_evidence()
     {
         var outcome = new WorkerSessionOutcomeState(); outcome.MarkUncertain();
-        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { }, () => { }, () => { });
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { }, () => { });
         const string evidence = "{\"Status\":\"unknown\",\"Error\":\"native failure\",\"NativeState\":\"Error\",\"RequiresSessionReset\":true}";
         var response = recovery.Synchronize(new ChannelRequest(1, "adapter.ImportFromDocuments", "{}", (_, _) => { }), ChannelResponse.Success(evidence));
-        Assert.Equal(ChannelOutcome.Unknown, response.Failure!.Outcome);
-        Assert.Equal(evidence, response.Failure.EvidenceJson);
+        Assert.Null(response.Failure);
+        Assert.Equal(evidence, response.ResultJson);
+        var definition = TiaMcp.FoundationHost.FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlockDocuments");
+        var mapped = TiaMcp.FoundationHost.FoundationV4Result.Worker("21", definition, "retained", new() { ["dryRun"] = false },
+            System.Text.Json.Nodes.JsonNode.Parse(response.ResultJson), null);
+        Assert.Equal("unknown", (string?)mapped.StructuredContent?["meta"]?["outcome"]);
     }
 
     [Fact]
@@ -52,7 +75,7 @@ public sealed class WorkerSessionRecoveryTests
         int invalidations = 0, disposals = 0;
         Exception failure = kind == "AdapterPreconditionException" ? new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Open project")
             : kind == "NotSupportedException" ? new NotSupportedException("Unknown portal lifetime") : new InvalidOperationException("RequireActive");
-        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { },
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { },
             () => invalidations++, () => disposals++, detachOnShutdown: () => throw failure);
         Assert.Null(Record.Exception(recovery.DisposeSession));
         Assert.Equal(1, invalidations); Assert.Equal(1, disposals);
@@ -66,7 +89,7 @@ public sealed class WorkerSessionRecoveryTests
     {
         var outcome = new WorkerSessionOutcomeState(); outcome.MarkUncertain();
         int detaches = 0, disposals = 0; bool retainedHandle = true;
-        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { },
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { },
             () => retainedHandle = false, () => { Assert.False(retainedHandle); disposals++; },
             detachOnShutdown: () => detaches++, canDetachOnShutdown: () => owned == false);
         recovery.DisposeSession();
@@ -89,9 +112,8 @@ public sealed class WorkerSessionRecoveryTests
         internal Fixture()
         {
             Recovery = new(Outcome, () => Detached, () => Refreshes++, () => { Clears++; BindingFault = null; },
-                reason => BindingFault = reason, () => { Invalidations++; Attached = false; }, () => Disposals++);
+                () => { Invalidations++; Attached = false; }, () => Disposals++);
             Lease = new(() => Root, request => Recovery.Dispatch(request, native => {
-                if (native.Method != "adapter.Disconnect") Outcome.RequireUsable(false);
                 Calls++;
                 if (Reply != null) return Reply(native);
                 if (native.Method == "adapter.Disconnect") { Detached = true; Attached = false; }
@@ -110,7 +132,7 @@ public sealed class WorkerSessionRecoveryTests
 
     [Theory]
     [InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
-    public void Unknown_native_outcome_locks_reads_and_writes_and_preserves_typed_evidence(string release, bool typed)
+    public void Unknown_native_outcome_preserves_typed_evidence_and_allows_independent_calls(string release, bool typed)
     {
         using var fixture = new Fixture();
         Assert.Null(fixture.Call("Attach").Failure);
@@ -123,15 +145,9 @@ public sealed class WorkerSessionRecoveryTests
         else Assert.Equal(ChannelOutcome.Unknown, response.Failure!.Outcome);
         Assert.True(fixture.Outcome.RequiresReset);
         int calls = fixture.Calls;
-        foreach (string method in new[] { "ReadState", "SaveProject" })
-        {
-            var refusal = fixture.Call(method).Failure!;
-            Assert.Equal(SessionBehavior.Recovery, refusal.Message);
-            Assert.Equal(ChannelOutcome.RejectedBeforeNative, refusal.Outcome);
-        }
-        Assert.Equal(calls, fixture.Calls);
-        Assert.Throws<InvalidOperationException>(() => fixture.Outcome.RequireUsable(true));
-        Assert.Throws<InvalidOperationException>(() => fixture.Outcome.RequireUsable(false));
+        fixture.Reply = _ => ChannelResponse.Success("{}");
+        foreach (string method in new[] { "ReadState", "SaveProject" }) Assert.Null(fixture.Call(method).Failure);
+        Assert.Equal(calls + 2, fixture.Calls);
         fixture.Lease.Dispose();
         Assert.Equal(1, fixture.Invalidations);
         Assert.Equal(1, fixture.Disposals);
@@ -149,15 +165,17 @@ public sealed class WorkerSessionRecoveryTests
             fixture.Recovery.ObserveFailure(new COMException("TIA process lost."));
             return ChannelResponse.Error(new ChannelFailureException("TIA process lost.", -32603, ChannelOutcome.ReadFailed));
         };
-        Assert.Equal(ChannelOutcome.Unknown, fixture.Call("ReadState").Failure!.Outcome);
-        Assert.Equal("TIA process lost.", fixture.BindingFault);
+        var failure = fixture.Call("ReadState").Failure!;
+        Assert.Equal(ChannelOutcome.ReadFailed, failure.Outcome);
+        Assert.NotNull(System.Text.Json.Nodes.JsonNode.Parse(failure.EvidenceJson!)["portalLost"]);
+        Assert.Null(fixture.BindingFault);
         fixture.Reply = null;
         Assert.Null(fixture.Call("Disconnect").Failure);
         Assert.Equal("RELEASED\n", File.ReadAllText(fixture.Marker));
         Assert.Equal(1, fixture.Clears);
         Assert.Null(fixture.BindingFault);
         Assert.True(fixture.Outcome.RequiresReset);
-        Assert.Equal(ChannelOutcome.RejectedBeforeNative, fixture.Call("Attach").Failure!.Outcome);
+        Assert.Null(fixture.Call("ReadState").Failure);
         Assert.Contains(release, new[] { "20", "21" });
     }
 
@@ -175,7 +193,7 @@ public sealed class WorkerSessionRecoveryTests
         Assert.Null(second.Call("Attach").Failure);
         Assert.Null(second.Call("BindProject").Failure);
         Assert.Equal(2, second.Refreshes);
-        Assert.Null(second.Recovery.Fault);
+        Assert.Null(second.BindingFault);
         Assert.Contains(release, new[] { "20", "21" });
     }
 }

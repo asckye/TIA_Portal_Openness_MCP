@@ -27,9 +27,6 @@ namespace TiaMcpServer.ModelContextProtocol
             public void Dispose() => ApprovalPreviewDepth.Value = previous;
         }
         internal static IDisposable BeginReadOnlyApprovalPreview() => new InternalPreviewScope();
-        private sealed class SessionFault { internal bool Unknown; }
-        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, SessionFault> SessionFaults =
-            new System.Runtime.CompilerServices.ConditionalWeakTable<object, SessionFault>();
         private static readonly AsyncLocal<Func<object?>?> ApprovalSessionOverride = new AsyncLocal<Func<object?>?>();
         internal static Func<object?>? ApprovalSessionKeyForTests { get => ApprovalSessionOverride.Value; set => ApprovalSessionOverride.Value = value; }
         static partial void ApprovalSessionKey(ref object? key);
@@ -38,44 +35,30 @@ namespace TiaMcpServer.ModelContextProtocol
             if (ApprovalSessionOverride.Value is { } test) return test();
             object? key = null; ApprovalSessionKey(ref key); return key;
         }
-        internal static bool SessionLatched()
+        internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write, string arguments, bool preview = false, JsonArray
+                ? unsettledBeforeSave = null)
         {
-            var key = CurrentApprovalSession();
-            return key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown;
-        }
-
-        internal static CallToolResult? SessionPrecheckRefusal(string name)
-        {
-            if (name == "GetSessionState" || ToolTaxonomy.HostOnlyDuringReset(name)) return null;
-            if (SessionBehavior.IsRecoveryTool(name) || ToolTaxonomy.DispatchesTargets(name)) return null;
-            if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04") return null;
-            if (!ToolTaxonomy.UsesOpennessLane(name)) return null;
-            var key = CurrentApprovalSession();
-            return SessionBehavior
-                .RequiresReset(key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown, ToolTaxonomy.UsesOpennessLane(name))
-                ? V4Reject(name, HostBehavior.SessionReset()) : null;
-        }
-        // Only a call that reached Openness (a journaled native boundary in this call, or native-issued evidence from a
-        // worker) can leave the session in an unknown state; an unknown refusal before the first native call cannot.
-        internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write, bool nativeCallIssued)
-        {
+#if TIA_ENGINE_HOST
             var body = ResultBody(result);
-            if ((string?)body?["meta"]?["outcome"] != "unknown") return result;
-            var data = body?["data"] as JsonObject;
-            bool True(JsonNode? value) => value is JsonValue flag && flag.TryGetValue<bool>(out var truth) && truth;
-            bool nativeIssued = nativeCallIssued || True((data?["evidence"] as JsonObject)?["nativeOutcomeUnknown"]) || True(data?["nativeIssued"]);
+            if (body == null) return result;
+            bool unknown = TiaMcp.FoundationHost.UnsettledCalls.HasUnknownOutcome(body);
+            if (!unknown && name is not ("SaveProject" or "SaveProjectCopy" or "CallTool")) return result;
+            if ((string?)body["meta"]?["outcome"] == "unknown" && body["data"] is JsonObject data) data.Remove("recovery");
+            var args = JsonNode.Parse(arguments)!.AsObject();
+            if (name == "CallTool" && args["arguments"] is JsonObject target) args = target;
+            if (name == "CallTool" && (string?)body["meta"]?["tool"] is string targetName) name = targetName;
             bool mutation = write || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
-            var sessionKey = CurrentApprovalSession();
-            bool projectLane = ToolTaxonomy.UsesOpennessLane(name) && !(TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04");
-            var key = projectLane && SessionBehavior.LocksSession(nativeIssued, true, mutation) ? sessionKey : null;
-            if (key != null) SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
-            bool locked = projectLane && sessionKey != null
-                && SessionFaults.GetValue(sessionKey, _ => new SessionFault()).Unknown;
-            var mapped = EnvelopeMutation.SessionReset(body!, locked);
-            return new CallToolResult { IsError = result.IsError, StructuredContent = mapped,
-                Content = new[] { new TextContentBlock { Text = mapped.ToJsonString() } } };
+            bool isPreview = preview || ((bool?)args["dryRun"] ?? (TryDryRunDefault(name, out bool defaultPreview) && defaultPreview));
+            if (unknown && mutation && !isPreview && !IsReadOnlyApprovalPreview
+                && (bool?)args["dryRun"] != true)
+                RecordUnsettled((string?)body["meta"]?["requestId"] ?? InvocationJournal.CorrelationId, name, args.ToJsonString());
+            if (name is "SaveProject" or "SaveProjectCopy")
+                body = Worker.Unsettled.WarnOnSave(name, body, unsettledBeforeSave);
+            return new CallToolResult { IsError = result.IsError, StructuredContent = body,
+                Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+#else
+            return result;
+#endif
         }
         internal static CallToolResult? GenerationFenceRefusal(string name, string arguments, bool dispatched = false, bool? write = null)
         {
@@ -85,6 +68,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 && GenerationWriteFence.RefusedRun(key, ReleaseKey, name, arguments, dispatched) is { } runId)
                 return V4Reject(name, new Error("A generation run is active in this session.", new PreconditionFailedDetails("generation-run-active", runId)),
                     new JsonObject { ["runId"] = runId });
+#endif
+            return null;
+        }
+        internal static CallToolResult? ReviewedApplyRefusal(string name, string arguments)
+        {
+#if TIA_ENGINE_HOST
+            var args = JsonNode.Parse(arguments)!.AsObject();
+            if (!TiaMcp.FoundationHost.UnsettledCalls.IsReviewedApply(args)) return null;
+            string? project = (string?)Worker.Binding?["identity"]?["projectPath"] ?? (string?)Worker.Binding?["projectPath"];
+            Worker.Unsettled.ProjectChanged(project);
+            if (Worker.Unsettled.FindReviewedApply(name, args, project) is { } priorApply)
+                return V4Reject(name, new Error("This apply has an unknown outcome. Inspect its target before submitting another apply.",
+                    new PreconditionFailedDetails("same-call-unsettled", priorApply.RequestId)));
 #endif
             return null;
         }
@@ -101,9 +97,18 @@ namespace TiaMcpServer.ModelContextProtocol
             Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
         {
             if (ApprovalPreviewDepth.Value > 0) return null;
+#if TIA_ENGINE_HOST
+            if (Worker.Faulted && name is not ("GetSessionState" or "GetOpennessWorkerStatus" or "RestartOpennessWorker" or "DisconnectPortal")
+                && ToolTaxonomy.UsesOpennessLane(name) && !ToolTaxonomy.DispatchesTargets(name)
+                && !(TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                    && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04"))
+                return V4Reject(name, new Error("The worker is faulted. Call RestartOpennessWorker before another native call.",
+                    new PreconditionFailedDetails("worker-faulted", null)));
+#endif
             var args = JsonNode.Parse(arguments)!.AsObject();
             try
             {
+                if (ReviewedApplyRefusal(name, arguments) is { } replayRefusal) return replayRefusal;
                 ApprovalOutputTargets.ValidateWhitespace(name, args);
                 if (ApprovalWrite(name, arguments)) ApprovalOutputTargets.Normalize(name, args);
             }
@@ -114,8 +119,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var fenced = GenerationFenceRefusal(name, arguments);
             if (fenced != null) return fenced;
-            var reset = SessionPrecheckRefusal(name);
-            if (reset != null) return reset;
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             // A write that will wait for approval refuses a missing or unreadable caller file first, so no approval is
             // requested. Other calls validate inside their journaled lane (isolated host/child journals stay correlated).
@@ -264,7 +267,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // check and audit start belong inside that lane, immediately before dispatch.
             var refusal = McpApprovalContext.Value ? await BridgeWait.On(PrecheckBeforeApproval(name, arguments, previewArgs => CallToolCoreAsync(name,
                 new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.Deserialize<JsonElement>(previewArgs))), McpDispatchCancellation.Value))
-                    .ConfigureAwait(false) : SessionPrecheckRefusal(name);
+                    .ConfigureAwait(false) : null;
             if (refusal != null) return refusal;
             var approval = McpApprovalContext.Value && ApprovalPreviewDepth.Value == 0
                 ? await BridgeWait.On(WaitForApproval(name, arguments, McpDispatchCancellation.Value)).ConfigureAwait(false) : null;
@@ -277,8 +280,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ActivateTargetLane(boundedTargetLane);
             var fenced = GenerationFenceRefusal(name, arguments, dispatched: true);
             if (fenced != null) return await BridgeWait.On(FinishApprovalAsync(fenced, approval)).ConfigureAwait(false);
-            var reset = SessionPrecheckRefusal(name);
-            if (reset != null) return await BridgeWait.On(FinishApprovalAsync(reset, approval)).ConfigureAwait(false);
+            if (ReviewedApplyRefusal(name, arguments) is { } queuedReplay)
+                return await BridgeWait.On(FinishApprovalAsync(queuedReplay, approval)).ConfigureAwait(false);
             if (approval != null && !await BridgeWait.On(ApprovalStillMatchesAsync(approval, arguments)).ConfigureAwait(false))
                 return await BridgeWait.On(ChangedApprovalRefusalAsync(approval)).ConfigureAwait(false);
             var rejection = beforeDispatch == null ? null : await BridgeWait.On(beforeDispatch()).ConfigureAwait(false);
@@ -294,7 +297,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var invoked = await BridgeWait.On(invoke()).ConfigureAwait(false);
                 return await BridgeWait
-                    .On(FinishApprovalAsync(ObserveSessionOutcome(name, invoked, ApprovalWrite(name, arguments), nativeCalls.NativeCallIssued), approval,
+                    .On(FinishApprovalAsync(ObserveSessionOutcome(name, invoked, ApprovalWrite(name, arguments), arguments), approval,
                     McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled))
                         .ConfigureAwait(false);
             }

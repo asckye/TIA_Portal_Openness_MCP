@@ -81,8 +81,8 @@ internal static class Program
                 error => recovery!.ObserveFailure(error)
                 );
             recovery = new WorkerSessionRecovery(dispatcher.SessionOutcome, () => dispatcher.Detached,
-                engine.RefreshWorkerSessionBinding, engine.ClearWorkerSessionBinding, engine.LockWorkerSessionBinding,
-                engine.InvalidateUncertainShutdown, engine.Dispose, () => engine.WorkerSessionBindingFault,
+                engine.RefreshWorkerSessionBinding, engine.ClearWorkerSessionBinding,
+                engine.InvalidateUncertainShutdown, engine.Dispose,
                 () => { engine.Disconnect(); dispatcher.EndSharedSession(); }, () => engine.CanDetachOnUncertainShutdown);
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
                 request => recovery.Dispatch(request, dispatcher.Dispatch),
@@ -151,7 +151,7 @@ internal static class Program
             catch(ChannelFaultException ex)
             {
                 Console.Error.WriteLine(ex.Message);
-                // A poisoned session never dispatches again. Preserve the existing
+                // A transport fault ends the server loop. Preserve the existing
                 // native teardown boundary: dispose the engine only when the host
                 // closes stdin, not immediately after an uncertain native outcome.
                 input.CopyTo(Stream.Null);

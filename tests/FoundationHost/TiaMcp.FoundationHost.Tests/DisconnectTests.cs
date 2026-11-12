@@ -49,12 +49,6 @@ internal static class DisconnectTests
         { var bad=valid.DeepClone().AsObject();bad.Remove(key);Reject(()=>DisconnectContract.Validate(bad,true,123,true),"Missing ack field rejected: "+key); }
         Reject(()=>DisconnectContract.Validate(valid,true,456,true),"Wrong selected PID acknowledgement rejected");
         Reject(()=>DisconnectContract.Validate(DisconnectContract.Idle(),true),"Host idle response cannot masquerade as worker acknowledgement");
-        foreach(var error in new Exception[]{new IOException("EOF"),new OperationCanceledException(),new JsonException("malformed ack"),new WorkerOperationException("detach threw",-32603,"unknown")})
-        {
-            var outcome=new WorkerOutcomeState(); outcome.Failed(true,error);
-            check(outcome.Poisoned,"Failed/lost/cancelled/malformed acknowledgement poisons session");
-            Reject(outcome.RequireUsable,"Disconnect cannot clear prior poisoning");
-        }
         foreach(var enabled in new[]{false,true})
         {
             using var worker=new WorkerClient("17","/missing/never-launch-worker","/missing/no-api",enabled);
@@ -138,7 +132,7 @@ public sealed class FoundationRecoveryTests
             var failure = await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("Attach", new JsonObject { ["processId"] = item.Item1 }, CancellationToken.None));
             Assert.Equal(item.Item2, FoundationV4Result.WorkerRejection(failure).Message);
             Assert.Equal("rejected-before-operation", failure.Outcome);
-            Assert.False(worker.Poisoned);
+            Assert.False(worker.Faulted);
         }
         var hidden = await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("Attach", new JsonObject { ["processId"] = 902 }, CancellationToken.None));
         Assert.DoesNotContain("Internal secret", FoundationV4Result.WorkerRejection(hidden).Message);
@@ -155,8 +149,9 @@ public sealed class FoundationRecoveryTests
         await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
         using (TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation("prior-foundation-unknown"))
             await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("FixtureUnknown", new JsonObject(), CancellationToken.None));
-        Assert.True(worker.Poisoned);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
+        Assert.False(worker.Faulted);
+        var state = await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
+        Assert.Equal(release, (string?)state?["ReleaseKey"]);
         var ack = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
         Assert.True((bool?)ack?["WorkerAcknowledged"]); Assert.True((bool?)ack?["Detached"]);
         Assert.False((bool?)ack?["RequiresTiaRestart"]);

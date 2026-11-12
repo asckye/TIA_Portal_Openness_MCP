@@ -6,20 +6,21 @@
 
 | 错误码 | 原因 | 下一步 |
 |---|---|---|
-| `SESSION_RESET_REQUIRED` | 之前的原生调用结果未知，当前会话已禁止继续原生操作 | 先检查 TIA 项目及调用日志，再按下文恢复会话；不要反复重试原写请求 |
 | `CONFIRMATION_REQUIRED` | 工作台拒绝、超时或不可用，或计划尚未确认；查看 `error.details.reason` | `denied` 表示人已拒绝；`timeout` 表示等待超时；`workbench-unavailable` 时在 TIA/MCP 所在电脑打开同一数据根的工作台。核对目标及参数后重新发起需要的请求，在工作台审批；`plan-confirmation` 按当前工具示例重新预览并确认计划，AI 不能代替人工批准 |
 | `NATIVE_OPERATION_FAILED` | 原生操作报告失败；错误码本身不能证明修改已经回滚 | 查看去敏后的 `error.message`、`error.details`、结果状态及调用日志，检查 TIA 中的实际对象、依赖、安装和选件；结果未知时走恢复流程，原因未查清前不重复写入 |
-| `OUTCOME_UNKNOWN` | 已派发操作的最终结果无法确定 | 检查项目和文件的实际变化，保留诊断并恢复会话；不得自动重放写入 |
+| `OUTCOME_UNKNOWN` | 本次已派发写入的最终结果无法确定 | 检查目标和文件的实际变化，保留诊断。`GetSessionState` 列出未确认请求编号。后续独立调用可执行，保存时核对 `UNSETTLED_CALLS`，禁止自动重放 |
 | `RESOURCE_UNAVAILABLE` | 所需环境或服务尚未就绪 | 对 TIA 环境运行 `InitializeEnvironment` 和 `GetEnvironmentDiagnostics`，按下节修复版本、安装或用户组 |
 | `INVALID_ARGUMENT` | 参数缺失、类型或路径格式不符合当前版本 | 用 `GetToolUsage` 读取该版本的参数与示例，按指出的字段修正 |
 
 工作台审批拒绝、超时或不可用时，`CONFIRMATION_REQUIRED` 对应操作尚未开始；它不等于原生操作失败。修复拒绝原因后重新请求，不要通过关闭审批绕过它。
 
-## 结果未知时恢复会话
+## 结果未知时核对调用
 
-遇到 `OUTCOME_UNKNOWN` 或 `SESSION_RESET_REQUIRED` 时，先在 TIA 中检查项目实际状态并查看调用日志，再调用 `DisconnectPortal`。若返回 `requiresTiaRestart` 或提示租约不确定，先按需保存并重启该 TIA 实例；随后新建 MCP 会话，重新调用 `ConnectPortal` 和 `AttachOpenProject`，读回会话状态。不要重放失败的写请求。
+`OUTCOME_UNKNOWN` 只描述该调用。通过 `meta.requestId` 关联日志，检查 TIA 项目和文件中的实际结果。`GetSessionState.data.sessionState.unsettled` 保留未确认调用，工作台显示其数量。项目切换或会话结束清除清单。
 
-不要删除租约文件绕过拒绝。需要显式重启 worker 时，先阅读[worker 与恢复](../guides/openness-worker-isolation.md)；结束 worker 不会撤销已经送入 TIA 的操作。
+`SaveProject` 和 `SaveProjectCopy` 的预览与执行会携带 `UNSETTLED_CALLS`，列出需要核对的请求。后续独立请求继续使用正常的审批、项目身份及计划校验。
+
+真正的 worker 传输故障目前返回 `PRECONDITION_FAILED`，`condition=worker-faulted`，按提示调用 `RestartOpennessWorker`。预算、超时排空和租约规则见 [worker 与恢复](../guides/openness-worker-isolation.md)。
 
 ## V20/V21：Openness 环境未就绪
 

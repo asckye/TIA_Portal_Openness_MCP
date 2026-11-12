@@ -82,9 +82,13 @@ internal static class DocumentExportTests
                 },move:(from,to)=>{if(kind=="publish-failure") throw new IOException("ambiguous");Directory.Move(from.FullName,to.FullName);});
                 check(failed.Status=="failed" && failed.RequiresSessionReset && Directory.Exists(failed.RecoveryDirectory),"Document "+kind+" retains evidence and poisons session");
                 DocumentExportContract.Validate(Wire(failed),false);
-                var outcome=new WorkerOutcomeState();
-                outcome.AcceptResult("ExportAsDocuments",new JsonObject { ["dryRun"]=false,["softwarePath"]="device/PLC",["blockPath"]="group/Block",["exportPath"]=dest,["expectedPlanHash"]=preview.PlanHash,["expectedProjectFile"]="/project.ap20" },Wire(failed));
-                check(outcome.Poisoned,"Document failed result poisons host outcome: "+kind);
+
+                WorkerProtocol
+                    .ValidateExchangeResult("ExportAsDocuments",new JsonObject {
+                        ["dryRun"]=false,["softwarePath"]="device/PLC",["blockPath"]="group/Block",["exportPath"]=dest,["expectedPlanHash"]=preview.PlanHash,
+                            ["expectedProjectFile"]="/project.ap20"
+                    },Wire(failed));
+
                 check(kind=="race" || !Directory.Exists(dest),"Document invalid pair never published: "+kind);
             }
             var optionalPath=Path.Combine(root,"v21-no-comments"); var optionalPlan=Run(optionalPath,release:"21");

@@ -55,12 +55,18 @@ namespace TiaMcpServer.ModelContextProtocol
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
             var success = data.ContainsKey("operationSuccess") ? Flag(data, "operationSuccess") : Flag(data, "success");
             bool issued = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
-            bool unknown = Flag(data, "mappingVerified") == false || Flag(data, "requiresExplicitRebind") == true
-                || Flag(data, "requiresSessionReset") == true;
+            bool unknown = Flag(data, "mappingVerified") == false || !readOnly && (Flag(data, "requiresExplicitRebind") == true
+                || Flag(data, "requiresSessionReset") == true);
             string status = data["v4FailureCode"]?.ToString() ?? data["status"]?.ToString() ?? "";
             var refusal = Refusal(tool, status);
             Outcome outcome; Execution execution; Error? error;
-            if (issued && (success != true || unknown))
+            if (status == "HmiReadSessionBlocked")
+            {
+                outcome = readOnly ? Outcome.ReadFailed : Outcome.Unknown;
+                execution = readOnly ? Execution.ReadOnly : Execution.Unknown;
+                error = HostBehavior.UnavailableCall(!readOnly);
+            }
+            else if (issued && (success != true || unknown))
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = Unknown(); }
             else if (refusal != null)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
@@ -96,8 +102,6 @@ namespace TiaMcpServer.ModelContextProtocol
             switch (status)
             {
                 case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
-                case "HmiReadSessionBlocked"
-                    : return new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("classic-motion-session"));
                 case "NotFound": case "NOT_FOUND": return new Error("The requested target was not found.", new NotFoundDetails(null));
                 case "NotSupportedOnVersion": case "NativeCrashRiskBlocked": case "UNSUPPORTED_CAPABILITY"
                     : return new Error("The target or version does not support this capability.",
@@ -142,7 +146,8 @@ namespace TiaMcpServer.ModelContextProtocol
             new Error("The operation did not establish a successful result.",
                 new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
         private static Error Unknown() =>
-            new Error("The write outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
+            new Error("The write outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. GetSessionState lists " +
+                "unsettled request IDs.",
                 new OutcomeUnknownDetails("classic-motion-operation", new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,

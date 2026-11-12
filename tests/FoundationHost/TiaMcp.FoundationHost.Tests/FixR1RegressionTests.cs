@@ -126,8 +126,8 @@ public sealed class FixR1RegressionTests
         Assert.Equal("IO failure", HostBehavior.FailureEvidence(nameof(IOException), "IO failure\nstack")["workerMessage"].GetString());
         const string code = "FUNCTION F : Void\nBEGIN\n    // input ---> output\n    #value := 1;\nEND_FUNCTION";
         var exported = new CallToolResult { StructuredContent = new JsonObject { ["data"] = new JsonObject { ["code"] = code, ["stackUsageBytes"] = 512 } } };
-        Assert.Equal(code, (string?)FoundationV4Result.ReconcileWorker(exported, false, null).StructuredContent?["data"]?["code"]);
-        Assert.Equal(512, (int?)FoundationV4Result.ReconcileWorker(exported, false, null).StructuredContent?["data"]?["stackUsageBytes"]);
+        Assert.Equal(code, (string?)FoundationV4Result.ReconcileWorker(exported, null).StructuredContent?["data"]?["code"]);
+        Assert.Equal(512, (int?)FoundationV4Result.ReconcileWorker(exported, null).StructuredContent?["data"]?["stackUsageBytes"]);
     }
 
     [Fact]
@@ -152,30 +152,26 @@ public sealed class FixR1RegressionTests
     }
 
     [Fact]
-    public async Task Family_synchronize_lock_is_reflected_in_the_reply_and_next_call_reset_refusal()
+    public async Task Family_reply_flag_does_not_refuse_the_next_call()
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.21.dll"), "offline session fixture");
         using var worker = new WorkerClient("21", exe, AppContext.BaseDirectory, true) { SharedSession = true };
         await worker.Call("Attach", new JsonObject { ["processId"] = Environment.ProcessId }, CancellationToken.None);
-        await worker.Call("FixtureLockOnNextFamily", new JsonObject(), CancellationToken.None);
+        await worker.Call("FixtureUnknownOnNextFamily", new JsonObject(), CancellationToken.None);
         var reply = await worker
             .Call("plc-software.ExecutePlcOrganisation", new JsonObject {
                 ["request"] = new JsonObject { ["Operation"] = "listGroups", ["SoftwarePath"] = "PLC" } }, CancellationToken.None);
-        Assert.False((bool?)reply?["RequiresSessionReset"] == true);
+        Assert.True((bool?)reply?["RequiresSessionReset"] == true);
         var original = FoundationV4Result.Failure("21", "ListPlcForceTables", "family", true, false, null,
             new WorkerOperationException("Native family read failed", -32603, "read-failed"));
-        var result = FoundationV4Result.ReconcileWorker(original, SharedSessionState.For(worker).RequiresReset(reply), null);
+        var result = FoundationV4Result.ReconcileWorker(original, null);
         Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-        Assert.True((bool?)SharedSessionState.For(worker).Snapshot("21")["requiresSessionReset"]);
-        var next = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks"), worker);
-        var refusal = await next
-            .InvokeV4Async(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
-            Params = new() { Name = "ListPlcBlocks", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>("{\"softwarePath\":\"PLC\"}") } },
-                "21", "next", CancellationToken.None);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)refusal.StructuredContent?["error"]?["code"]);
-        Assert.True((bool?)refusal.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Empty(worker.Unsettled.Snapshot());
+        var next = await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
+        Assert.Equal("21", (string?)next?["ReleaseKey"]);
+        Assert.False(worker.Faulted);
     }
 
     [Theory] [InlineData(false)] [InlineData(true)]

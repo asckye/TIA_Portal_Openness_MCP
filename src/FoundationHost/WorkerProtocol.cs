@@ -43,31 +43,8 @@ internal sealed class WorkerOperationException(string message,int code,string ou
         catch (System.Text.Json.JsonException) /* swallow(parse-fallback): malformed optional worker evidence has no caller parameter */ { return null; }
     }
 }
-internal sealed class WorkerOutcomeState
-{
-    internal bool Poisoned { get; private set; }
-    internal void RequireUsable()
-    { if(TiaOpenness.Shared.SessionBehavior.RequiresReset(Poisoned, true)) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery); }
-    internal void Failed(bool sent,Exception error) { if(WorkerProtocol.RequiresSessionReset(sent,error)) Poisoned=true; }
-    internal void AcceptResult(string operation,JsonObject arguments,JsonNode? result)
-    {
-        WorkerProtocol.ValidateExchangeResult(operation,arguments,result);
-        if (!TiaMcp.PlcWorker.WorkerOperations.IsIndependentRuntime(operation)
-            && TiaMcp.PlcWorker.WorkerOperations.IsFamilyOperation(operation) && result is JsonObject reply
-            && reply["RequiresSessionReset"]?.GetValue<bool>() == true)
-            Failed(true, new IOException("Hardware addressing outcome is unknown; inspect before a new explicit session."));
-        if(operation is "ImportPlcExternalSource" or "GenerateBlocksFromExternalSource" && result?["RequiresSessionReset"]?.GetValue<bool>()==true)
-            Failed(true,new IOException("External-source outcome is unknown; inspect before a new explicit session."));
-        if(operation is "AddDeviceWithFallback" or "ImportFromDocuments" or "ImportBlocksFromDocuments" or "DeletePlcExternalSource" or "ExportAsDocuments" or "ExportBlocksAsDocuments" or "ExportPlcWatchTable" or "ExportTechnologyObject" or "ExportBlocks" or "ExportTypes" or "ImportBlocksFromDirectory" or "ImportPlcProgramFromDirectory"
-                && result?["RequiresSessionReset"]?.GetValue<bool>()==true)
-            Failed(true,new IOException("Batch stopped with retained partial outcomes; explicit inspection required."));
-    }
-
-}
 internal static class WorkerProtocol
 {
-    internal static bool RequiresSessionReset(bool sent,Exception error) => TiaOpenness.Shared.SessionBehavior
-        .LocksSession(sent, !(error is WorkerOperationException known && known.KnownNoMutation), true);
     internal static void ValidateExchangeResult(string operation,JsonObject arguments,JsonNode? result)
     {
         if (operation.StartsWith("hardware-addressing.", StringComparison.Ordinal)) { HardwareAddressingWire.Validate(operation, result); return; }

@@ -16,7 +16,9 @@ namespace TiaOpenness.Shared
 {
     internal static class ApprovalPrecheck
     {
-        internal const string Recovery = SessionBehavior.Recovery;
+        internal const string Recovery =
+            "After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. " +
+            "GetSessionState lists unsettled request IDs.";
         internal static System.Text.Json.Nodes.JsonNode Mark(System.Text.Json.Nodes.JsonNode body, string? requestId)
         {
             return EnvelopeMutation.Precheck(body, requestId);

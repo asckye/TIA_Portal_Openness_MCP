@@ -17,10 +17,10 @@ namespace TiaMcp.WorkerChannel
         private readonly Task receiver;
         private Pending? pending;
         private long sequence, epoch;
-        private bool verified, poisoned, recoveryOnly, unknown, unanswered, disposed;
+        private bool verified, poisoned, unknown, unanswered, disposed;
         private Exception? lastFault;
         public Exception? LastFault { get { lock (gate) return lastFault; } }
-        public bool Poisoned { get { lock (gate) return poisoned || recoveryOnly; } }
+        public bool Poisoned { get { lock (gate) return poisoned; } }
         public bool CanDisconnect { get { lock (gate) return verified && !poisoned && !disposed && pending == null; } }
         public bool CanCallIndependentRuntime {
             get { lock (gate) return profile != ChannelProfile.Studio && verified && !poisoned && !disposed && pending == null; } }
@@ -115,7 +115,7 @@ namespace TiaMcp.WorkerChannel
             catch (TimeoutException) when (drainOnTimeout && readOnly && profile == ChannelProfile.Foundation && BeginDrain(call))
             { throw new ChannelReadTimeoutException(); }
             catch (ChannelFailureException ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
-            catch (ChannelFailureException) { throw; } // Project requests remain refused; detach and the independent simulator are available.
+            catch (ChannelFailureException) { throw; } // An answered unknown result does not fault the transport.
             catch (Exception ex) { throw Poison(ex); }
             finally { lock (gate) if (ReferenceEquals(pending, call) && !call.Draining) pending = null; }
         }
@@ -203,7 +203,6 @@ namespace TiaMcp.WorkerChannel
                                 pending.Completion.TrySetResult(response);
                                 if (profile != ChannelProfile.Studio && response.Failure?.Outcome == ChannelOutcome.Unknown)
                                 {
-                                    recoveryOnly = true;
                                     unknown = true;
                                     lastFault ??= new IOException("Worker reported an unknown native outcome.");
                                 }
@@ -220,10 +219,8 @@ namespace TiaMcp.WorkerChannel
 
         private void RequireUsable(string? method = null)
         {
-            bool independentRuntime = profile != ChannelProfile.Studio && method == "adapter.runtime-channels.ExecutePlcSimAdvanced";
-            if (poisoned || disposed || recoveryOnly && method != "adapter.Disconnect" && !independentRuntime)
-                throw new ChannelFaultException("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are " +
-                "never replayed.",
+            if (poisoned || disposed)
+                throw new ChannelFaultException("The worker channel faulted. Call RestartOpennessWorker; requests are never replayed.",
                     unknown);
         }
 

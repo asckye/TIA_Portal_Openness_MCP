@@ -51,7 +51,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
                 var blocks = await Worker.Call("ReadBlocks", new(), CancellationToken.None);
                 Assert.Equal("fixture", (string?)blocks?[0]?["Name"]);
             }
-            Assert.False(Worker.Poisoned);
+            Assert.False(Worker.Faulted);
         }
         internal void VerifyChild()
         {
@@ -79,9 +79,9 @@ public sealed class PlcFixtureWorkerRobustnessTests
         using var request = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
         await scope.Arm("ReadState");
         var error = await Assert.ThrowsAnyAsync<Exception>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
-        Assert.Equal(mode != "hang", scope.Worker.Poisoned);
+        Assert.Equal(mode is not ("hang" or "tia-lost"), scope.Worker.Faulted);
         Assert.True((bool?)error.Data["foundationRequestSent"]);
-        Assert.Equal(mode != "hang", (bool?)error.Data["foundationSessionPoisoned"]);
+        Assert.Null(error.Data["foundationSessionPoisoned"]);
         if (mode == "hang")
         {
             Assert.Equal("read-failed", Assert.IsType<WorkerOperationException>(error).Outcome);
@@ -92,7 +92,17 @@ public sealed class PlcFixtureWorkerRobustnessTests
         {
             if (mode == "tia-lost") Assert.Equal("unknown", Assert.IsType<WorkerOperationException>(error).Outcome);
             else Assert.IsType<ChannelFaultException>(error);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+            if (mode == "tia-lost")
+            {
+                using var independent = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
+                Assert.Equal(release, (string?)(await scope.Worker.Call("ReadState", new(), CancellationToken.None))?["ReleaseKey"]);
+            }
+            else
+            {
+                var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(
+                    () => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+                Assert.Equal("worker-faulted", refusal.Condition);
+            }
         }
         Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", null);
         scope.VerifyChild();
@@ -101,7 +111,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
         var restarted = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restarted["restarted"]); Assert.True((bool?)restarted["requiresExplicitRebind"]);
         if (mode == "hang") Assert.True((bool?)restarted["requiresTiaRestart"]);
-        Assert.False(scope.Worker.Poisoned);
+        Assert.False(scope.Worker.Faulted);
         var state = await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         Assert.Equal(release, (string?)state?["ReleaseKey"]);
         Assert.False((bool?)state?["IsAttached"]);
@@ -121,13 +131,21 @@ public sealed class PlcFixtureWorkerRobustnessTests
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
         var result = await tool.InvokeAsync(request);
         Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.Equal(mode != "hang", (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (mode == "hang") Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
-        Assert.Equal(mode != "hang", scope.Worker.Poisoned);
-        var refused = await tool.InvokeAsync(request);
-        Assert.Equal(mode == "hang" ? "PRECONDITION_FAILED" : "SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
-        if (mode == "hang") Assert.Equal("worker-read-running", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+        Assert.Equal(mode is not ("hang" or "tia-lost"), scope.Worker.Faulted);
+        if (mode == "tia-lost")
+        {
+            using var independent = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
+            Assert.Equal(release, (string?)(await scope.Worker.Call("ReadState", new(), CancellationToken.None))?["ReleaseKey"]);
+        }
+        else
+        {
+            var refused = await tool.InvokeAsync(request);
+            Assert.Equal("PRECONDITION_FAILED", (string?)refused.StructuredContent?["error"]?["code"]);
+            Assert.Equal(mode == "hang" ? "worker-read-running" : "worker-faulted", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+        }
     }
 
     [Theory, MemberData(nameof(Faults))]
@@ -145,13 +163,21 @@ public sealed class PlcFixtureWorkerRobustnessTests
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
         var result = await tool.InvokeAsync(request);
         Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.Equal(mode != "hang", (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (mode == "hang") Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
-        Assert.Equal(mode != "hang", scope.Worker.Poisoned);
-        var refused = await tool.InvokeAsync(request);
-        Assert.Equal(mode == "hang" ? "PRECONDITION_FAILED" : "SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
-        if (mode == "hang") Assert.Equal("worker-read-running", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+        Assert.Equal(mode is not ("hang" or "tia-lost"), scope.Worker.Faulted);
+        if (mode == "tia-lost")
+        {
+            using var independent = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
+            Assert.Equal(release, (string?)(await scope.Worker.Call("ReadState", new(), CancellationToken.None))?["ReleaseKey"]);
+        }
+        else
+        {
+            var refused = await tool.InvokeAsync(request);
+            Assert.Equal("PRECONDITION_FAILED", (string?)refused.StructuredContent?["error"]?["code"]);
+            Assert.Equal(mode == "hang" ? "worker-read-running" : "worker-faulted", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+        }
     }
 
     [Theory, InlineData("15.1"), InlineData("19"), InlineData("21")]
@@ -162,8 +188,10 @@ public sealed class PlcFixtureWorkerRobustnessTests
         await scope.Arm("project-lifecycle.ArchiveSaveProjectCopy");
         await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("project-lifecycle.ArchiveSaveProjectCopy",
             new() { ["path"] = "fixture", ["dryRun"] = false }, CancellationToken.None));
-        Assert.True(scope.Worker.Poisoned);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+        Assert.True(scope.Worker.Faulted);
+        var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(
+            () => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+        Assert.Equal("worker-faulted", refusal.Condition);
     }
 
     public static IEnumerable<object[]> Keys() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(key => new object[] { key });
@@ -177,14 +205,15 @@ public sealed class PlcFixtureWorkerRobustnessTests
         {
             var precheck = await scope.Worker.Call("ReadState", new(), CancellationToken.None);
             Assert.Equal(release, (string?)precheck?["ReleaseKey"]);
-            Assert.False(scope.Worker.Poisoned);
+            Assert.False(scope.Worker.Faulted);
         }
         var error = await Assert.ThrowsAsync<WorkerOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
-        Assert.Equal("unknown", error.Outcome); Assert.True(scope.Worker.Poisoned);
+        Assert.Equal("unknown", error.Outcome); Assert.False(scope.Worker.Faulted);
         Assert.False(scope.Process!.HasExited);
         var stderr = (Queue<string>)typeof(WorkerClient).GetField("diagnostics", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scope.Worker)!;
         lock (stderr) Assert.Contains(stderr, line => line.Contains("terminating=False", StringComparison.Ordinal));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+        using var independent = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
+        Assert.Equal(release, (string?)(await scope.Worker.Call("ReadState", new(), CancellationToken.None))?["ReleaseKey"]);
     }
 
     [Theory, MemberData(nameof(Keys))]

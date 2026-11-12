@@ -88,8 +88,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (status == "HmiReadSessionBlocked")
                 return Result(tool, data,
-                        new Error("The HMI session requires an explicit rebind.", new SessionResetRequiredDetails("HMI read session blocked")),
-                    Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+                        HostBehavior.UnavailableCall(writes),
+                    writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes, current);
             if (status == "InvalidState" && !evidence.ContainsKey("apiCallSuccess")) rejection = "PROJECT_NOT_BOUND";
             var failureCode = evidence["v4FailureCode"]?.ToString();
             if (rejection != null || failureCode != null && Flag(evidence, "mayHaveChanged") != true)
@@ -133,7 +133,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 evidence["requiresSessionReset"] = true;
                 data["partialWrite"] =
-                    "The tag was created, but the requested binding is unsupported. Inspect the tag and its binding before a new session; no rollback was " +
+                    "The tag was created, but the requested binding is unsupported. Inspect the tag and its binding before another call; no rollback was " +
                     "attempted.";
                 return Result(tool, data, new Error("The tag was created but its requested binding did not complete.",
                     new PartialFailureDetails(1, 1, 0)), Outcome.Partial, Completeness.Partial, writes, current);
@@ -184,7 +184,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static IReadOnlyDictionary<string, JsonElement> Evidence(JsonObject value)
             => value.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value), StringComparer.Ordinal);
         private static Error Unknown(JsonObject evidence) =>
-            new Error("The HMI write outcome is unconfirmed. Inspect the evidence and reset the session before further writes.",
+            new Error("The HMI write outcome is unconfirmed. Inspect the target before repeating this call. Never replay it automatically. GetSessionState " +
+                "lists unsettled request IDs.",
             new OutcomeUnknownDetails("HMI operation", Evidence(evidence)));
         private static Error NativeFailure(JsonObject evidence) =>
             new Error("The HMI operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));

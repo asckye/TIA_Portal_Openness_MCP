@@ -118,8 +118,13 @@ internal static class V17ContractTests
         sourceTool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="ListPlcExternalSources"),new ErrorWorker(-32603));
         try { await sourceTool.InvokeAsync(sourceRequest); throw new Exception("Read failure swallowed"); }
         catch(McpException ex) { check(ex.ErrorCode==McpErrorCode.InternalError,"External source failure is explicit MCP error"); }
-        check(!WorkerProtocol.RequiresSessionReset(true,new WorkerOperationException("read failed",-32603,"read-failed")),"Known external-source read failure need not poison session");
-        var hierarchy=V17ReadEnvelope.Wrap("GetPlcBlockHierarchy","Root",new JsonObject { ["Name"]="Root",["Blocks"]=new JsonArray(),["Groups"]=new JsonArray(new JsonObject { ["Name"]="Empty",["Blocks"]=new JsonArray(),["Groups"]=new JsonArray() }) });
+        UnsettledOutcomeAssertions
+            .Failure(new WorkerOperationException("read failed", -32603, "read-failed"), true, false, false, check, "External-source read failure");
+        var hierarchy=V17ReadEnvelope
+            .Wrap("GetPlcBlockHierarchy","Root",new JsonObject {
+                ["Name"]="Root",["Blocks"]=new JsonArray(),["Groups"]=
+                    new JsonArray(new JsonObject { ["Name"]="Empty",["Blocks"]=new JsonArray(),["Groups"]=new JsonArray() })
+            });
         check(hierarchy[Wire("Root")]![Wire("Groups")]![0]![Wire("Name")]!.GetValue<string>()=="Empty","Empty hierarchy groups retained");
         tool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="ListPlcBlocks"),new PayloadWorker(new JsonObject()));
         try { await tool.InvokeAsync(request); throw new Exception("Bad DTO accepted"); }

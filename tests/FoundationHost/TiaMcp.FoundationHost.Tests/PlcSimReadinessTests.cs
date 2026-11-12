@@ -24,8 +24,8 @@ public sealed class PlcSimReadinessTests
         using var engine = new HardwareAddressingAdmissionTests.UnboundWorker();
         using var session = new HardwareAddressingAdmissionTests.SessionFixture(engine, release);
         using var simulator = new Simulator { Poisoned = latched };
-        if (latched) Host.MarkSharedSessionUncertain();
-        Assert.Null(Host.SessionPrecheckRefusal(name));
+        if (latched) Host.RecordUnsettled("unknown-fixture", "SaveProject", "{}");
+
         int approvals = 0;
         var tool = Tool(simulator, release, name, (pending, _, _) => {
             approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
@@ -37,14 +37,15 @@ public sealed class PlcSimReadinessTests
         Assert.Equal(0, simulator.UncertainMarks);
         if (latched)
         {
-            Assert.True(Host.SessionLatched());
+            Assert.True((Host.Worker.Unsettled.Snapshot().Count > 0));
             var project =
                 new FoundationV4Tool(new FoundationTool(new Definition("GetProjectInfo", "Project", "Fixture project read.", Array.Empty<Argument>()),
                         simulator),
-                    release);
+                    release, readinessForTest: () => new JsonObject { ["ready"] = true });
             var refused = (await project.InvokeAsync(Request("GetProjectInfo", new JsonObject()))).StructuredContent!;
-            Assert.Equal("SESSION_RESET_REQUIRED", (string?)refused["error"]?["code"]);
-            Assert.Equal(0, simulator.ProjectCalls);
+            Assert.Equal("read-failed", (string?)refused["meta"]?["outcome"]);
+            Assert.Equal("NATIVE_OPERATION_FAILED", (string?)refused["error"]?["code"]);
+            Assert.Equal(1, simulator.ProjectCalls);
         }
     }
 
@@ -78,11 +79,11 @@ public sealed class PlcSimReadinessTests
         var tool = Tool(simulator, release, name, (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)));
         var result = await tool.InvokeAsync(Request(name, Arguments(name)));
         Assert.Equal("unknown", (string?)result.StructuredContent!["meta"]?["outcome"]);
-        Assert.False((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
+        Assert.True((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
         Assert.Equal(1, simulator.Executions);
         Assert.Equal(0, simulator.UncertainMarks);
-        Host.ObserveSessionOutcome(name, result, write: true, nativeCallIssued: true);
-        Assert.False(Host.SessionLatched());
+        Host.ObserveSessionOutcome(name, result, write: true, Arguments(name).ToJsonString());
+        Assert.Single(Host.Worker.Unsettled.Snapshot());
         Assert.False(simulator.Poisoned);
     }
 
@@ -106,13 +107,13 @@ public sealed class PlcSimReadinessTests
         const string operation = "runtime-channels.ExecutePlcSimAdvanced";
         var reply = new JsonObject { ["Ok"] = false, ["Message"] = "Unknown synthetic write.", ["Data"] = new JsonObject(),
             ["Meta"] = new JsonObject { ["success"] = false, ["outcomeUnknown"] = true } };
-        var state = new WorkerOutcomeState();
-        state.AcceptResult(operation, new JsonObject(), reply);
-        Assert.False(state.Poisoned);
+
+        WorkerProtocol.ValidateExchangeResult(operation, new JsonObject(), reply);
+
         reply["RequiresSessionReset"] = true;
-        Assert.Throws<IOException>(() => state.AcceptResult(operation, new JsonObject(), reply));
+        Assert.Throws<IOException>(() => WorkerProtocol.ValidateExchangeResult(operation, new JsonObject(), reply));
         reply.Remove("RequiresSessionReset"); reply["Ok"] = "malformed";
-        Assert.Throws<IOException>(() => state.AcceptResult(operation, new JsonObject(), reply));
+        Assert.Throws<IOException>(() => WorkerProtocol.ValidateExchangeResult(operation, new JsonObject(), reply));
     }
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments) =>
         new(System.Reflection.DispatchProxy.Create<IMcpServer, VersionControlAdmissionTests.ServerProxy>()) {

@@ -130,3 +130,7 @@ V21 上的原生交叉引用查询曾导致 TIA Portal 退出，有时发生在�
 | 工具返回错误结果、TIA 或 worker 退出、文档与行为不符 | [问题报告](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=bug_report.yml) |
 
 每个 Issue 写一个检查项和一个 TIA 版本。维护者把收到的报告记入[测试者反馈台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/progress.md)，复核通过的真机结果再记入[真机验收台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)。已知限制见[Openness 限制和已知问题](../troubleshooting/openness-limitations.md)。
+
+## NO-LOCK Part 1 真机核对
+
+尚未运行。使用已授权的工程副本记录原请求编号和实际对象状态。让一次写入得到 `OUTCOME_UNKNOWN` 后，读取 `GetSessionState` 核对 `unsettled`，再执行独立读取及另一项经审批的写入。核对它们使用同一 worker PID，原写入只执行一次。预览和执行 `SaveProject`、`SaveProjectCopy` 时检查 `UNSETTLED_CALLS`。复现 HMI 连接失败后，修复连接再读取，核对后续请求实际到达 worker。核对生成运行遇未知步骤即停，之后可以检查目标并重新规划。

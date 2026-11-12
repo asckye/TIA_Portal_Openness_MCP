@@ -14,10 +14,12 @@ internal static class BatchExportDispatchTests
         internal int Calls,Publications;
         internal bool FailSecond;
         internal Action<JsonObject>? AlterResponse;
-        internal readonly WorkerOutcomeState State=new();
+        internal JsonObject? LastReply;
+        private readonly WorkerReplyFixture replies = new();
+
         public Task<JsonNode?> Call(string operation,JsonObject arguments,CancellationToken token)
         {
-            State.RequireUsable(); Calls++;
+            Calls++;
             try
             {
                 var dry=arguments["dryRun"]!.GetValue<bool>();
@@ -26,10 +28,11 @@ internal static class BatchExportDispatchTests
                     new[]{"A","B","C"}.Select(path=>new PlcBatchExportSource {Path=path,Consistent=true,Export=_=>throw new Exception("Native callback forbidden in dispatch tests")}),()=>{},
                     (_,_)=>{if(++Publications==2 && FailSecond)throw new IOException("unknown fake publication");return null;});
                 var payload=JsonSerializer.SerializeToNode(result)!.AsObject(); AlterResponse?.Invoke(payload);
-                State.AcceptResult(operation,arguments,payload);
-                return Task.FromResult<JsonNode?>(payload);
+                WorkerProtocol.ValidateExchangeResult(operation,arguments,payload);
+                LastReply = payload;
+                return Task.FromResult<JsonNode?>(replies.Accept(operation, arguments, payload));
             }
-            catch(Exception error) {State.Failed(true,error);throw;}
+            catch { throw; }
         }
         public void Dispose(){}
     }
@@ -71,13 +74,23 @@ internal static class BatchExportDispatchTests
                 check(wrongProject.Publications==0,name+": project mismatch cannot publish");
                 var wrongScope=new BatchWorker(root){AlterResponse=data=>data["SoftwarePath"]="devices/Other"};
                 await Refused(Tool(wrongScope),Args(),McpErrorCode.InternalError,"different returned software scope rejected");
-                check(wrongScope.State.Poisoned,name+": conflicting response poisons transport state");
-                var partialWorker=new BatchWorker(root){FailSecond=true};var partialTool=Tool(partialWorker);var partialArgs=Args();Execute(partialArgs,hash);
-                var partial=Payload(await partialTool.InvokeAsync(Request(partialArgs)));
+                wrongScope.AlterResponse = null;
+                await Tool(wrongScope).InvokeAsync(Request(Args()));
+                check(wrongScope.Calls == 2 && wrongScope.Publications == 0, name + ": independent preview runs after invalid response");
+                var partialWorker=new BatchWorker(root){FailSecond=true};
+                var partialTool = new FoundationV4Tool((FoundationTool)Tool(partialWorker), "17", () => new(false, 1));
+                var partialArgs=Args();Execute(partialArgs,hash);
+                var unknown = await partialTool.InvokeAsync(Request(partialArgs));
+                var partial=partialWorker.LastReply!;
+                check((string?)unknown.StructuredContent?["meta"]?["outcome"] == "unknown", name + ": partial apply reports its unknown outcome");
                 check(partial["RequiresSessionReset"]!.GetValue<bool>() && partial["Items"]!.AsArray().Select(x=>x!["Status"]!.GetValue<string>()).SequenceEqual(new[]{"exported","failed","not-attempted"}),name+": MCP retains explicit partial progress");
-                check(partialWorker.State.Poisoned && partialWorker.Publications==2,name+": production outcome helper poisons after partial result without third attempt");
-                await Refused(partialTool,partialArgs,McpErrorCode.InternalError,"replay rejected after unknown partial outcome");
+                check(partialWorker.Publications==2,name+": partial result stops before a third publication");
+                var replay = await partialTool.InvokeAsync(Request(partialArgs));
+                check((string?)replay.StructuredContent?["error"]?["details"]?["condition"] == "same-call-unsettled", name + ": identical apply is refused");
                 check(partialWorker.Calls==1 && partialWorker.Publications==2,name+": replay cannot dispatch or republish");
+                var next = await partialTool.InvokeAsync(Request(Args()));
+                check((bool?)next.StructuredContent?["ok"] == true && partialWorker.Calls == 2 && partialWorker.Publications == 2,
+                    name + ": independent preview reaches the worker without replaying the apply");
             }
         }
         finally{Directory.Delete(root,true);}

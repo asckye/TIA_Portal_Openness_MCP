@@ -160,8 +160,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else if (status == "HmiReadSessionBlocked")
             {
-                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
-                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("hardware-session"));
+                outcome = readOnly ? Outcome.ReadFailed : Outcome.Unknown;
+                execution = readOnly ? Execution.ReadOnly : Execution.Unknown;
+                error = HostBehavior.UnavailableCall(!readOnly);
             }
             else if (status == "NOT_FOUND" || status == "UNSUPPORTED_CAPABILITY" || status == "INVALID_ARGUMENT")
             {
@@ -244,7 +245,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error NativeFailure() => new Error("The hardware operation did not establish a successful result.",
             new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
         private static Error UnknownFailure() =>
-            new Error("The hardware write outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
+            new Error("The hardware write outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. GetSessionState lists unsettled request IDs.",
             new OutcomeUnknownDetails("hardware-operation", new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,

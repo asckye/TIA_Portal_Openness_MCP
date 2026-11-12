@@ -30,13 +30,33 @@ internal static class BatchDocumentImportTests
   inventory.Clear();calls=0;closed=0;Reject(()=>Preview(new[]{"A","a"}),"case duplicate");Reject(()=>PlcBatchDocumentImportPolicy.Run(Contexts(names),false,new string('0',64),true,projectFile),"hash change");Check(calls==0,"invalid hash no native");
   foreach(var mode in new[]{"throw","partial","failure","null","extra"}) {inventory.Clear();calls=0;closed=0;modes["B"]=mode;var result=PlcBatchDocumentImportPolicy.Run(Contexts(names),false,p.PlanHash,true,projectFile);Check(calls==2&&closed==3&&result.RequiresSessionReset&&result.MayHaveChanged&&result.Items[0].Status=="succeeded"&&result.Items[1].Status=="failed"&&result.Items[2].Status=="not-attempted","stop "+mode);BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(result),Request(false,p.PlanHash));Check(true,"host failure "+mode);}
   inventory.Clear();closed=0;var reversed=Preview(names.Reverse().ToArray());Check(p.PlanHash!=reversed.PlanHash,"manifest order bound");
-  modes.Clear();inventory.Clear();calls=0;closed=0;closeFailure=true;var cleanup=PlcBatchDocumentImportPolicy.Run(Contexts(names),false,p.PlanHash,true,projectFile);Check(cleanup.Status=="unknown"&&cleanup.RequiresSessionReset&&cleanup.Items.All(x=>x.Status=="succeeded")&&calls==3,"cleanup after native preserves outcomes and poisons");BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(cleanup),Request(false,p.PlanHash));
-  inventory.Clear();calls=0;try{Preview(names);Check(false,"cleanup preview refused");}catch(IOException){Check(calls==0,"cleanup preview zero native");}closeFailure=false;
-  inventory.Clear();calls=0;closed=0;var boundary=Contexts(names);int checks=0;boundary[0].Recheck=()=>{if(++checks==2)throw new ArgumentException("pre-native change");};Reject(()=>PlcBatchDocumentImportPolicy.Run(boundary,false,p.PlanHash,true,projectFile),"final preflight rejection");Check(calls==0&&closed==3,"final preflight zero native");
-  inventory.Clear();calls=0;closed=0;boundary=Contexts(names);checks=0;boundary[0].Recheck=()=>{if(++checks==4)throw new ArgumentException("later change");};var stopped=PlcBatchDocumentImportPolicy.Run(boundary,false,p.PlanHash,true,projectFile);Check(calls==1&&stopped.RequiresSessionReset&&stopped.Items[0].Status=="succeeded"&&stopped.Items[1].Status=="not-attempted","later preflight preserves not attempted");BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(stopped),Request(false,p.PlanHash));
-  var host=new WorkerOutcomeState();host.AcceptResult("ImportBlocksFromDocuments",Request(false,p.PlanHash),JsonSerializer.SerializeToNode(stopped));Check(host.Poisoned,"unknown batch poisons whole host");bool unusable=false;try{host.RequireUsable();}catch(InvalidOperationException){unusable=true;}Check(unusable,"all later host operations blocked");
-  var altered=JsonSerializer.SerializeToNode(ok)!.AsObject();var changed=altered["Items"]![0]!["Outcome"]!.AsObject();changed["Inventory"]=new JsonArray("fabricated-before-first-call");changed["PlanHash"]=DocumentImportContract.PlanHash(changed);bool rejectedInventory=false;try{BatchDocumentImportContract.Validate(altered,Request(false,p.PlanHash));}catch(InvalidDataException){rejectedInventory=true;}Check(rejectedInventory,"host rejects forged inventory with recomputed item hash");
-  var forged=JsonSerializer.SerializeToNode(ok)!.AsObject();forged["Items"]![1]!["Status"]="not-attempted";bool refused=false;try{BatchDocumentImportContract.Validate(forged,Request(false,p.PlanHash));}catch(InvalidDataException){refused=true;}Check(refused,"host rejects forged continuation");
+  modes.Clear();inventory.Clear();calls=0;closed=0;closeFailure=true;var cleanup=PlcBatchDocumentImportPolicy
+      .Run(Contexts(names),false,p.PlanHash,true,projectFile);
+  Check(cleanup.Status=="unknown"&&cleanup.RequiresSessionReset&&cleanup.Items.All(x=>x.Status=="succeeded")&&calls==3,
+          "cleanup after native preserves outcomes and poisons");
+  BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(cleanup),Request(false,p.PlanHash));
+  inventory.Clear();calls=0;try{Preview(names);Check(false,"cleanup preview refused");}catch(IOException){Check(calls==0,"cleanup preview zero native");
+  }closeFailure=false;
+  inventory.Clear();calls=0;closed=0;var boundary=Contexts(names);int checks=0;boundary[0].Recheck=()=>{
+      if(++checks==2)throw new ArgumentException("pre-native change");};
+  Reject(()=>PlcBatchDocumentImportPolicy.Run(boundary,false,p.PlanHash,true,projectFile),"final preflight rejection");
+  Check(calls==0&&closed==3,"final preflight zero native");
+  inventory.Clear();calls=0;closed=0;boundary=Contexts(names);checks=0;boundary[0].Recheck=()=>{if(++checks==4)throw new ArgumentException("later change");};
+  var stopped=PlcBatchDocumentImportPolicy.Run(boundary,false,p.PlanHash,true,projectFile);
+  Check(calls==1&&stopped.RequiresSessionReset&&stopped.Items[0].Status=="succeeded"&&stopped.Items[1].Status=="not-attempted",
+          "later preflight preserves not attempted");
+  BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(stopped),Request(false,p.PlanHash));
+  WorkerProtocol.ValidateExchangeResult("ImportBlocksFromDocuments",Request(false,p.PlanHash),JsonSerializer.SerializeToNode(stopped));WorkerProtocol
+      .ValidateExchangeResult("ImportBlocksFromDocuments",Request(false,p.PlanHash),JsonSerializer.SerializeToNode(ok));
+  UnsettledOutcomeAssertions
+      .Reply("ImportPlcBlocksDocuments", Request(false,p.PlanHash), JsonSerializer.SerializeToNode(cleanup)!, true, Check, "Unknown batch document import");
+  var altered=JsonSerializer.SerializeToNode(ok)!.AsObject();var changed=altered["Items"]![0]!["Outcome"]!.AsObject();changed["Inventory"]=
+      new JsonArray("fabricated-before-first-call");changed["PlanHash"]=DocumentImportContract.PlanHash(changed);bool rejectedInventory=false;try{
+      BatchDocumentImportContract.Validate(altered,Request(false,p.PlanHash));}catch(InvalidDataException){rejectedInventory=true;
+  }Check(rejectedInventory,"host rejects forged inventory with recomputed item hash");
+  var forged=JsonSerializer.SerializeToNode(ok)!.AsObject();forged["Items"]![1]!["Status"]="not-attempted";bool refused=false;try{
+      BatchDocumentImportContract.Validate(forged,Request(false,p.PlanHash));}catch(InvalidDataException){refused=true;
+  }Check(refused,"host rejects forged continuation");
  }
  private sealed class Tracking(byte[] bytes,Action closed):MemoryStream(bytes,false){protected override void Dispose(bool disposing){if(disposing)closed();base.Dispose(disposing);}}
 }

@@ -44,20 +44,9 @@ internal static class SessionFixtureTool
             var reply = await worker.Call("FixtureInvoke", new JsonObject { ["name"] = Name,
                 ["requestId"] = id, ["arguments"] = args }, token);
             var result = JsonSerializer.Deserialize<CallToolResult>(reply!["result"]!.ToJsonString(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!;
-            // Project the synthetic unknown reply into the current worker outcome state.
-            // Production tools reach this state through WorkerProtocol/channel evidence.
-            if ((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"] == true)
-            {
-                if (worker is foundationhost::TiaMcp.FoundationHost.WorkerClient native)
-                {
-                    const System.Reflection.BindingFlags fields = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
-                    var state = typeof(foundationhost::TiaMcp.FoundationHost.WorkerClient).GetField("outcome", fields)!.GetValue(native)!;
-                    state.GetType().GetMethod("Failed", fields)!.Invoke(state, new object[] { true, new IOException("Fixture native outcome is unknown.") });
-                    var prior = typeof(foundationhost::TiaMcp.FoundationHost.WorkerClient).GetField("priorUnknownRequestId", fields)!;
-                    if (prior.GetValue(native) == null) prior.SetValue(native, id);
-                }
-                else worker.MarkUncertain();
-            }
+            if ((string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
+                worker.Unsettled.Record(id, Name,
+                    enginehost::TiaMcp.FoundationHost.UnsettledCalls.WriteDigest(Name, args, null), DateTimeOffset.UtcNow);
             return result;
         }
     }

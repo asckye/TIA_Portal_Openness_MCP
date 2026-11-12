@@ -3,6 +3,7 @@ extern alias enginehost;
 using DeclaredToolMetadata = enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
 using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
 using UnifiedInputAdmission = enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService;
 #else
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
@@ -160,15 +161,6 @@ internal sealed class FoundationV4Tool : McpServerTool
         }))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
-        if ((string?)body?["meta"]?["outcome"] == "unknown" && inner is FoundationTool { RequiresProjectSession: true } uncertain
-            && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE"))
-            uncertain.MarkSessionUncertain();
-        if ((string?)body?["meta"]?["outcome"] == "unknown")
-        {
-            body = EnvelopeMutation.SessionReset(body!, inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true });
-            result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
-                Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
-        }
         if (body != null && (approval != null || write && !settings.Enabled))
         {
             body = TiaOpenness.Shared.ApprovalResult.Decorate(body, write && !settings.Enabled, approval?.Request.RequestId);
@@ -191,11 +183,37 @@ internal sealed class FoundationV4Tool : McpServerTool
             .Observe(id, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
         using var workerRequest = FoundationWorkerRequest.Use(id, tool.Name);
+        JsonArray? unsettledBeforeSave = null;
+        CallToolResult? ReplayRefusal()
+        {
+            var arguments = JsonSerializer.SerializeToNode(args)!.AsObject();
+            if (inner is FoundationTool reviewedTool && UnsettledCalls.IsReviewedApply(arguments)
+                && reviewedTool.Unsettled.FindReviewedApply(tool.Name, arguments, reviewedTool.BoundProjectFile) is { } priorApply)
+                return FoundationV4Result.Reject(release, tool.Name, id,
+                    new Error("This apply has an unknown outcome. Inspect its target before submitting another apply.",
+                        new PreconditionFailedDetails("same-call-unsettled", priorApply.RequestId)), true);
+            return null;
+        }
         CallToolResult Recorded(CallToolResult result)
         {
             if (inner is FoundationTool artifactProducer)
                 artifactProducer.ControlSession
                     .Observe(tool.Name, request.Params?.Arguments ?? new Dictionary<string, JsonElement>(), result.StructuredContent);
+            if (result.StructuredContent is { } body && inner is FoundationTool sessionTool)
+            {
+                var arguments = JsonSerializer.SerializeToNode(args)!.AsObject();
+                sessionTool.Unsettled.ProjectChanged(sessionTool.BoundProjectFile);
+                var properties = tool.InputSchema.GetProperty("properties");
+                bool preview = (bool?)arguments["dryRun"] ?? (properties.TryGetProperty("dryRun", out var dryRun)
+                    && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False));
+                if (!preview && UnsettledCalls.HasUnknownOutcome(body)
+                    && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE"))
+                    sessionTool.Unsettled.Record((string?)body["meta"]?["requestId"] ?? id, tool.Name,
+                        UnsettledCalls.WriteDigest(tool.Name, arguments, sessionTool.BoundProjectFile), DateTimeOffset.UtcNow);
+                body = sessionTool.Unsettled.WarnOnSave(tool.Name, body, unsettledBeforeSave);
+                result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
+                    Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+            }
             journal?.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
             return result;
         }
@@ -224,6 +242,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             }
             if (SoftwareUnitCapabilityError(release, tool.Name, args) is { } unitCapability)
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id, unitCapability, true));
+            if (ReplayRefusal() is { } replayRefusal) return Recorded(replayRefusal);
             try { CallerInputFiles.RefuseHumanSettingsTargets(JsonSerializer.SerializeToNode(args)!.AsObject()); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(error.Message,
@@ -232,11 +251,6 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return Recorded(fenced);
             if (inner is FoundationTool { Ported: true } ported && ported.RefusePortedCapability(args) is { } unavailable)
                 return Recorded(unavailable);
-            if (tool.Name is not ("DisconnectPortal" or "GetSessionState")
-                && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true } resetTool
-                && (!resetTool.Ported || PortedToolContract.WiredOperations(tool.Name).Length != 0))
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                    HostBehavior.SessionReset(), true));
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool
                     && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
@@ -256,6 +270,12 @@ internal sealed class FoundationV4Tool : McpServerTool
                     return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                         HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()), true));
             }
+            if (inner is FoundationTool { RequiresProjectSession: true, WorkerFaulted: true }
+                && !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.DispatchesTargets(tool.Name)
+                && tool.Name is not ("GetSessionState" or "GetOpennessWorkerStatus" or "RestartOpennessWorker" or "DisconnectPortal"))
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                    new Error("The worker is faulted. Call RestartOpennessWorker before another native call.",
+                        new PreconditionFailedDetails("worker-faulted", null)), true));
             TiaOpenness.Shared.PendingApproval? pending = null;
             TiaOpenness.Shared.ApprovalOutcome? approval = null;
             if (write && inner is not GenerationTool { OwnsApproval: true })
@@ -327,13 +347,11 @@ internal sealed class FoundationV4Tool : McpServerTool
                 lane = await targetLaneTool.AcquireLane(cancellationToken);
                 targetLaneTool.ActivateLane(lane);
             }
-            if (tool.Name is not ("DisconnectPortal" or "GetSessionState")
-                && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true } resetAfterLane
-                && (!resetAfterLane.Ported || PortedToolContract.WiredOperations(tool.Name).Length != 0))
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                    HostBehavior.SessionReset(), true));
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args), dispatched: true) is { } dispatchFenced)
                 return Recorded(dispatchFenced);
+            if (ReplayRefusal() is { } queuedReplay) return Recorded(queuedReplay);
+            if (tool.Name is "SaveProject" or "SaveProjectCopy" && inner is FoundationTool saveTool)
+                unsettledBeforeSave = saveTool.Unsettled.ToJson();
             if (await FoundationHostPorts.BeforeDispatchAsync().ConfigureAwait(false) is { } batchRefusal) return Recorded(batchRefusal);
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval
                     .Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,

@@ -21,11 +21,10 @@ namespace TiaMcp.Logic.ModelContextProtocol
                     : return Tip("the affected target must be offline; verify its state and obtain explicit authorization before changing the online " +
                     "connection.");
                 case "OUTCOME_UNKNOWN"
-                    : return Tip("verify the actual target state and reset the session before continuing; do not replay the write automatically.");
+                    : return Tip("only this call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists " +
+                        "unsettled request IDs.");
                 case "PRECONDITION_FAILED"
                     : return Tip("read GetToolUsage, verify the target and the stated preconditions, then review a new preview before another call.");
-                case "SESSION_RESET_REQUIRED"
-                    : return Tip("reset the session and verify the actual target state before continuing; do not replay the write automatically.");
                 case "CONFIRMATION_REQUIRED": return Tip("read GetToolUsage, review the preview and obtain Workbench confirmation before a new apply request.");
                 default: return "";
             }
@@ -36,7 +35,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
             if (body is not JsonObject || body["ok"]?.GetValue<bool>() != false
                 || body["meta"] is not JsonObject meta || meta["warnings"] is not JsonArray warnings) return false;
             string code = (string?)body["error"]?["code"] ?? "";
-            if (code is not ("INVALID_ARGUMENT" or "PRECONDITION_FAILED" or "SESSION_RESET_REQUIRED" or "CONFIRMATION_REQUIRED")) return false;
+            if (code is not ("INVALID_ARGUMENT" or "PRECONDITION_FAILED" or "CONFIRMATION_REQUIRED")) return false;
             foreach (var warning in warnings) if ((string?)warning?["code"] == "RECOVERY_GUIDANCE") return false;
             string tool = (string?)meta["tool"] ?? "";
             string release = (string?)meta["releaseKey"] ?? "";

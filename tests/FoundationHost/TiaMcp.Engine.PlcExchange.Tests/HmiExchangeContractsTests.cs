@@ -313,8 +313,8 @@ namespace PlcExchangeTests
             Assert.True((bool)result["data"]!["evidence"]!["verifiedAbsent"]!);
             meta = new JsonObject { ["status"] = "HmiReadSessionBlocked", ["success"] = false, ["lastFailure"] = new JsonObject { ["error"] = "failure\n   secret stack" } };
             result = Body(Map("DeleteHmiTag", new ResponseMessage { Meta = meta }, true, false));
-            Assert.Equal("SESSION_RESET_REQUIRED", (string?)result["error"]!["code"]);
-            Assert.True((bool)result["meta"]!["requiresSessionReset"]!);
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)result["error"]!["code"]);
+            Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
             Assert.DoesNotContain("secret stack", result.ToJsonString());
         }
     }

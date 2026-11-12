@@ -145,7 +145,7 @@ internal sealed class PreviewHostFixture : IDisposable
 
     internal sealed class CachedWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker, IFoundationWorker
     {
-        internal int Calls;
+        internal int Calls, NativeCalls;
         internal bool Bound = true;
         public bool Faulted => false;
         public object SessionKey { get; } = new();
@@ -162,13 +162,13 @@ internal sealed class PreviewHostFixture : IDisposable
         public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
-            Calls++;
+            Calls++; NativeCalls++;
             throw new InvalidOperationException("Diagnostics must use cached session state.");
         }
         public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(
             string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         {
-            Calls++;
+            Calls++; NativeCalls++;
             throw new InvalidOperationException("Diagnostics must not dispatch a tool.");
         }
         public void Dispose() { }

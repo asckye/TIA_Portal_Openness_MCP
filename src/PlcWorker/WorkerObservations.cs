@@ -74,7 +74,7 @@ internal static class WorkerObservations
                 { /* swallow(env-probe): unavailable process identity is reported as disconnected. */ }
             }
             string project = (string?)identity?["projectName"] ?? "-";
-            return new JsonObject { ["binding"] = identity?.DeepClone(), ["sessionLocked"] = cached?["fault"] != null,
+            return new JsonObject { ["binding"] = identity?.DeepClone(),
                 ["session"] = new JsonObject { ["isConnected"] = alive,
                     ["project"] = project, ["session"] = state.IsLocalSession ? project : "-" },
                 ["readiness"] = new JsonObject { ["ready"] = OpennessReadiness.Ready, ["cause"] = OpennessReadiness.Cause,

@@ -15,7 +15,13 @@ internal static class PlcExchangeTarget
     internal static string Release => typeof(PlcExchangeTarget).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
         .Single(attribute => attribute.Key == "ExchangeRelease").Value!;
     internal static string Worker => Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
-        "src", "PlcWorker", "bin", Release, "Release", "net48", "TiaMcp.PlcWorker." + Release + ".exe");
+        "src", "PlcWorker", "bin", Release,
+#if DEBUG
+        "Debug",
+#else
+        "Release",
+#endif
+        "net48", "TiaMcp.PlcWorker." + Release + ".exe");
     internal static Assembly Adapter => Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Worker)!, "TiaMcp.Adapter." + Release + ".dll"));
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
     private static readonly ImportStagingHostLifetime Lifetime = new();

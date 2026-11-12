@@ -163,17 +163,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
                 string? targetName = request?.Params?.Arguments != null && request.Params.Arguments.TryGetValue("name", out var target)
                     && target.ValueKind == System.Text.Json.JsonValueKind.String ? target.GetString() : null;
-                var bridgeReset = targetName == null ? null : McpServer.SessionPrecheckRefusal(targetName);
-                if (bridgeReset != null)
-                {
-                    bool bridgeWrite = McpServer.ApprovalResultWrite(ProtocolTool.Name,
-                        System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
-                    using var rejectedAudit = TiaOpenness.Shared.AuditInvocation
-                        .Begin(bridgeWrite, McpServer.InvocationHostTag, McpServer.ReleaseKey, targetName!);
-                    bridgeReset = McpServer.SessionPrecheckRefusal(targetName!)!;
-                    rejectedAudit?.Complete(bridgeReset.StructuredContent?.ToJsonString());
-                    return McpHints.WithRecovery(bridgeReset);
-                }
                 using var bridgeNativeCalls = InvocationJournal.BeginNativeCallScope();
                 var bridgeResult = await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
                 return McpServer
@@ -181,7 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         .ObserveSessionOutcome(targetName ?? ProtocolTool.Name, bridgeResult, McpServer
                             .ApprovalResultWrite(ProtocolTool.Name, System.Text.Json.JsonSerializer
                                 .Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())),
-                            bridgeNativeCalls.NativeCallIssued),
+                            System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())),
                         null, callToolDisabled);
             }
             bool write = McpServer.ApprovalResultWrite(ProtocolTool.Name,
@@ -190,10 +179,12 @@ namespace TiaMcpServer.ModelContextProtocol
             string? correlation = null;
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write,
                 McpServer.InvocationHostTag, McpServer.ReleaseKey, ProtocolTool.Name, correlation);
-            var reset = McpServer.SessionPrecheckRefusal(ProtocolTool.Name);
             using var nativeCalls = InvocationJournal.BeginNativeCallScope();
-            var result = reset ?? await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
-            result = McpServer.FinishApproval(McpServer.ObserveSessionOutcome(ProtocolTool.Name, result, write, nativeCalls.NativeCallIssued), null, disabled);
+            var result = await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            result = McpServer
+                .FinishApproval(McpServer
+                    .ObserveSessionOutcome(ProtocolTool.Name, result, write, System.Text.Json.JsonSerializer.Serialize(request.Params?.Arguments)), null,
+                    disabled);
             if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ??
                 (result.Content.Count == 1 && result.Content[0] is TextContentBlock text ? text.Text : null));
             return result;
@@ -279,8 +270,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var fenced = McpServer.GenerationFenceRefusal(ProtocolTool.Name, arguments, dispatched: true);
                 if (fenced != null) return Recorded(await McpServer.FinishApprovalAsync(fenced, approval).ConfigureAwait(false));
-                var reset = McpServer.SessionPrecheckRefusal(ProtocolTool.Name);
-                if (reset != null) return Recorded(await McpServer.FinishApprovalAsync(reset, approval).ConfigureAwait(false));
+                if (McpServer.ReviewedApplyRefusal(ProtocolTool.Name, arguments) is { } queuedReplay)
+                    return Recorded(await McpServer.FinishApprovalAsync(queuedReplay, approval).ConfigureAwait(false));
                 if (approval != null && !await McpServer.ApprovalStillMatchesAsync(approval,
                     System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()))
                         .ConfigureAwait(false))
@@ -311,7 +302,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");
                 return await McpServer
                     .FinishApprovalAsync(McpServer
-                        .ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments), nativeCalls.NativeCallIssued),
+                        .ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments), arguments),
                         approval)
                     .ConfigureAwait(false);
             }
@@ -325,7 +316,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 return await McpServer
                     .FinishApprovalAsync(McpServer
-                        .ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments), nativeCalls.NativeCallIssued),
+                        .ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments), arguments),
                         approval, completion: "unknown")
                     .ConfigureAwait(false);
             }

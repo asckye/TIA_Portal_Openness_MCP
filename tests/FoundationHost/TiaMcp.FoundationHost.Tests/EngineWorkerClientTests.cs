@@ -44,18 +44,18 @@ public sealed class EngineWorkerClientTests
     }
 
     [Fact]
-    public async Task FailedExplicitRestartRetainsPriorLockAndNeverRestartsImplicitly()
+    public async Task FailedExplicitRestartRetainsGenerationHistoryAndNeverRestartsImplicitly()
     {
         using var worker = Create();
         object prior = worker.SessionKey;
-        worker.SessionLocked = () => ReferenceEquals(prior, worker.SessionKey);
+
         await Assert.ThrowsAsync<FileNotFoundException>(() => worker.Restart(true, CancellationToken.None));
         Assert.NotSame(prior, worker.SessionKey);
         var snapshot = worker.Snapshot();
         Assert.Equal(2, (long?)snapshot["generation"]);
-        Assert.True((bool?)snapshot["previousGenerations"]![0]!["sessionLocked"]);
+        Assert.Null(snapshot["previousGenerations"]![0]!["sessionLocked"]);
         Assert.Null(snapshot["previousGenerations"]![0]!["previousGenerations"]);
-        Assert.True(worker.Faulted);
+        Assert.False(worker.Faulted);
         await worker.Status(CancellationToken.None);
         Assert.Equal(2, (long?)worker.Snapshot()["generation"]);
     }
@@ -78,7 +78,7 @@ public sealed class EngineWorkerClientTests
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
             Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
             Assert.False((bool)error.Data["foundationRequestSent"]!);
-            Assert.False(worker.Poisoned);
+            Assert.False(worker.Faulted);
         }
         await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
         await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
@@ -164,7 +164,7 @@ public sealed class EngineWorkerClientTests
     private sealed class ClientBridge : IFoundationWorker
     {
         private readonly WorkerClient foundation;
-        internal bool Poisoned => foundation.Poisoned;
+        internal bool Faulted => foundation.Faulted;
         internal ClientBridge(string release, string exe)
         {
             foundation = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { SharedSession = release is "20" or "21" };

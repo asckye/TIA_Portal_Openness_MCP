@@ -142,7 +142,6 @@ internal static class SharedReleaseHost
             services.Roster = () => roster!;
             services.ResetExports = pipeline.ResetExports;
             roster = pipeline.AllTools;
-            worker.SessionLocked = () => pipeline.SessionLocked;
             worker.StagingProvider = () => { using var scope = pipeline.EnterSession(); return McpServer.SharedStagingOwner; };
             return new Session(worker, services, pipeline);
         }
@@ -186,7 +185,6 @@ internal static class SharedReleaseHost
         public void Dispose()
         {
             if (Interlocked.Exchange(ref disposed, 1) != 0) return;
-            worker.SessionLocked = null;
             worker.Dispose(); pipeline.Dispose();
         }
     }

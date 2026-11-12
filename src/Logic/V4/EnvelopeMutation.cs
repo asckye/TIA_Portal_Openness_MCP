@@ -8,17 +8,6 @@ namespace TiaMcp.Logic.V4
 {
     public static class EnvelopeMutation
     {
-        public static JsonNode SessionReset(JsonNode body, bool reset)
-        {
-            var value = V4Json.Deserialize<Envelope>(body.ToJsonString());
-            var m = value.Meta;
-            var meta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution,
-                reset || value.Error?.Code == ErrorCode.SessionResetRequired, m.BehaviorPolicy, m.Completeness, m.Paging, m.Warnings);
-            var observed = new Envelope(4, value.Ok, value.Data, value.Error, meta);
-            V4Validation.Envelope(observed, 4, reset);
-            return JsonNode.Parse(V4Json.Serialize(observed))!;
-        }
-
         public static JsonNode Decorate(JsonNode body, bool disabled, string? requestId)
         {
             var value = V4Json.Deserialize<Envelope>(body.ToJsonString());

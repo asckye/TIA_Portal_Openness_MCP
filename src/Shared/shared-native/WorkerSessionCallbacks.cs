@@ -33,14 +33,13 @@ namespace TiaMcp.Adapters
         private Func<int, int, long, string, string, WorkerSessionIdentity>? _workerCreateIdentity;
         private Func<object?, PlcSeedHmiReply>? _workerSeedReply;
         private object? _workerProject;
-        private string? _workerBindingFault, _workerDeviceGeneration;
+        private string? _workerDeviceGeneration;
         private long _workerDeviceEpoch;
         public Func<Func<string>, CandidateIdentity>? SharedHardwareCandidateIdentity { get; set; }
         private CandidateIdentity DeviceCreationBindingIdentity(Func<string> path)
             => (SharedHardwareCandidateIdentity ?? throw new InvalidOperationException("Exact device-creation binding is unavailable."))(path);
         private Func<long>? _workerProcessStart;
         private Func<bool>? _workerProcessReserved;
-        public string? WorkerSessionBindingFault => _workerBindingFault;
         internal bool WorkerSessionBindingConfigured => _workerProcessStart != null;
 
         public void ConfigureWorkerSessionCallbacks(Func<long> processStart, Func<bool> processReserved,
@@ -88,13 +87,12 @@ namespace TiaMcp.Adapters
         private Dictionary<string, object?> WorkerBindingSnapshot()
         {
             Check(true);
-            return SessionCallbackPrimitives.Snapshot(_workerBinding?.Identity, _workerBindingFault, _workerProcessReserved!());
+            return SessionCallbackPrimitives.Snapshot(_workerBinding?.Identity, null, _workerProcessReserved!());
         }
 
         public void RefreshWorkerSessionBinding()
         {
             Check(true);
-            if (_workerBindingFault != null) return;
             if (project == null || !lifecycle.ProcessId.HasValue)
             {
                 if (_workerBinding != null || _workerProject != null) _resetWorkerFamilyState?.Invoke();
@@ -125,19 +123,11 @@ namespace TiaMcp.Adapters
         {
             _resetWorkerFamilyState?.Invoke();
             _workerBinding = null;
-            _workerBindingFault = null;
             if (project == null) return;
             _workerBinding = SessionCallbackPrimitives.Capture(lifecycle.ProcessId, _workerProcessStart!(),
                 _workerProcessReserved!(), () => _workerCreateIdentity!(TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).MajorVersion,
                     lifecycle.ProcessId!.Value, _workerProcessStart!(), project.Path.FullName, project.Name));
             _workerProject = project;
-        }
-
-        public void LockWorkerSessionBinding(string reason)
-        {
-            Check(true);
-            _workerBindingFault ??= reason;
-            _workerBinding = null;
         }
 
         public void ClearWorkerSessionBinding()
@@ -146,14 +136,11 @@ namespace TiaMcp.Adapters
             _resetWorkerFamilyState?.Invoke();
             _workerBinding = null;
             _workerProject = null;
-            _workerBindingFault = null;
         }
 
         private void VerifyWorkerBinding(string operation)
         {
             Check();
-            if (_workerBindingFault != null)
-                throw new PortalException(PortalErrorCode.InvalidState, _workerBindingFault);
             if (project == null) return;
             try
             {
@@ -163,9 +150,8 @@ namespace TiaMcp.Adapters
             }
             catch (Exception error)
             {
-                _workerBindingFault = operation + " refused: " + error.GetBaseException().Message
-                    + " Explicitly reconnect; automatic recovery is disabled.";
-                throw new PortalException(PortalErrorCode.InvalidState, _workerBindingFault, inner: error);
+                throw new PortalException(PortalErrorCode.InvalidState,
+                    operation + " refused: " + error.GetBaseException().Message, inner: error);
             }
         }
     }

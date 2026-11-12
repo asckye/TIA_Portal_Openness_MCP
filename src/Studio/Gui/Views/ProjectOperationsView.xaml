@@ -27,7 +27,7 @@
           <TextBlock Text="{Binding Panel.Status}" TextWrapping="Wrap"/>
           <TextBlock Text="{Binding Panel.Lane}" TextWrapping="Wrap"/>
           <TextBlock Text="{Binding Panel.Ended}" TextWrapping="Wrap"/>
-          <CheckBox AutomationProperties.Name="{l:Tr Session.Locked}" Style="{StaticResource Primer.Checkbox}" Content="{l:Tr Session.Locked}" IsChecked="{Binding Panel.Locked,Mode=OneWay}" IsHitTestVisible="False" Focusable="False"/>
+          <TextBlock AutomationProperties.Name="{Binding Panel.Unsettled}" Text="{Binding Panel.Unsettled}" TextWrapping="Wrap"/>
         </StackPanel>
       </Border>
       <Expander AutomationProperties.Name="{l:Tr Session.Result}" Header="{l:Tr Session.Result}">

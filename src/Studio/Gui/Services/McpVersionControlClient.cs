@@ -17,7 +17,7 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
     private bool McpReads => new[] { "ListVersionControlWorkspaces", "GetVersionControlStatus" }
         .All(tool => project.Session.ToolSchema(tool) != null);
     public bool CanRead => project.Session.SessionKey != null && (McpReads || bridge.CanRead)
-        && (int?)project.Session.State?["binding"]?["processId"] > 0 && (bool?)project.Session.State?["sessionLocked"] != true;
+        && (int?)project.Session.State?["binding"]?["processId"] > 0;
     public bool CanWrite => CanRead && McpReads && new[] { "CreateVersionControlWorkspace", "ConnectProjectToWorkspace", "SynchronizeVersionControlWorkspace" }
         .All(tool => project.Session.ToolSchema(tool) != null);
     private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true,

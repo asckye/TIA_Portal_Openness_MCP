@@ -75,7 +75,7 @@ public sealed class VmDefectRegressionTests
     {
         var state = new WorkerSessionOutcomeState(); state.MarkUncertain();
         bool detached = false; int invalidations = 0, disposals = 0;
-        var recovery = new WorkerSessionRecovery(state, () => detached, () => { }, () => { }, _ => { },
+        var recovery = new WorkerSessionRecovery(state, () => detached, () => { }, () => { },
             () => invalidations++, () => disposals++, detachOnShutdown: () => detached = true);
         recovery.DisposeSession();
         Assert.True(detached); Assert.Equal(0, invalidations); Assert.Equal(1, disposals);
@@ -133,9 +133,9 @@ public sealed class VmDefectRegressionTests
         var json = JsonNode.Parse(WorkerJson.Serialize(reply));
         var operation = PortedFamilies.ForTool(tool).OperationPrefix + ".ExecutePlcOrganisation";
         HardwareFamilyWire.Validate(operation, json);
-        var state = new WorkerOutcomeState();
-        state.AcceptResult(operation, new JsonObject(), json);
-        Assert.False(state.Poisoned);
+
+        WorkerProtocol.ValidateExchangeResult(operation, new JsonObject(), json);
+
         json!["Unexpected"] = true;
         Assert.Throws<IOException>(() => HardwareFamilyWire.Validate(operation, json));
         json.AsObject().Remove("Unexpected"); json["Created"] = new JsonArray(42);
@@ -159,16 +159,16 @@ public sealed class VmDefectRegressionTests
         error.Data["foundationSessionPoisoned"] = true;
         var result = FoundationV4Result.Failure("21", tool, "vm-read", true, false, null, error);
         Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
-        Assert.Contains("DisconnectPortal", (string)result.StructuredContent["data"]!["recovery"]!);
+        Assert.False((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
+        Assert.Null(result.StructuredContent["data"]?["recovery"]);
         Assert.Equal("Native option unavailable", (string?)result.StructuredContent["error"]?["details"]?["nativeMessage"]);
         error.Data["foundationSessionPoisoned"] = false;
         var ordinary = FoundationV4Result.Failure("21", tool, "vm-read", true, false, null, error);
         Assert.False((bool)ordinary.StructuredContent!["meta"]!["requiresSessionReset"]!);
-        var state = new WorkerOutcomeState(); state.Failed(true, error); Assert.False(state.Poisoned);
-        var reconciled = FoundationV4Result.ReconcileWorker(ordinary, true,
+
+        var reconciled = FoundationV4Result.ReconcileWorker(ordinary,
             new JsonObject { ["exceptionType"] = "EngineeringTargetInvocationException", ["nativeMessage"] = "Native option unavailable" });
-        Assert.True((bool)reconciled.StructuredContent!["meta"]!["requiresSessionReset"]!);
+        Assert.False((bool)reconciled.StructuredContent!["meta"]!["requiresSessionReset"]!);
         Assert.Equal("read-failed", (string?)reconciled.StructuredContent["meta"]?["outcome"]);
         Assert.True(JsonNode.DeepEquals(reconciled.StructuredContent, JsonNode.Parse(
             ((global::ModelContextProtocol.Protocol.TextContentBlock)Assert.Single(reconciled.Content)).Text)));
@@ -183,10 +183,10 @@ public sealed class VmDefectRegressionTests
         error.Data["workerOutcomeUnknown"] = true;
         var result = FoundationV4Result.Failure("21", "SearchInstalledGsdDevices", "vm-timeout", true, false, null, error);
         Assert.Equal("NATIVE_OPERATION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.True((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
-        Assert.Contains("TIA must be restarted", (string)result.StructuredContent["data"]!["recovery"]!);
+        Assert.False((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
+        Assert.Null(result.StructuredContent["data"]?["recovery"]);
         Assert.Equal(TimeSpan.FromSeconds(120), WorkerTimeoutPolicy.Defaults["default"]);
-        var state = new WorkerOutcomeState(); state.Failed(true, error); Assert.True(state.Poisoned);
+
     }
 
     [Fact]

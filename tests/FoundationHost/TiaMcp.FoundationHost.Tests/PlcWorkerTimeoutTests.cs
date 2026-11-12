@@ -628,7 +628,7 @@ public sealed class PlcWorkerRobustnessTests
             Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
             Assert.True(scope.Worker.DrainingRead);
             Assert.Equal("Draining", (string?)scope.Worker.SupervisorSnapshot(new JsonObject())["state"]);
-            Assert.False(scope.Worker.Poisoned);
+            Assert.False(scope.Worker.Faulted);
             var refused = await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() =>
                 scope.Worker.Call("ReadState", new(), CancellationToken.None));
             Assert.Equal("worker-read-running", refused.Condition);
@@ -682,7 +682,7 @@ public sealed class PlcWorkerRobustnessTests
                 "ReadBlocks", new() { ["fixtureGate"] = gate }, CancellationToken.None));
             await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Observe("status", new(), CancellationToken.None));
             Assert.False(scope.Worker.WorkerFaulted);
-            Assert.False(scope.Worker.Poisoned);
+            Assert.False(scope.Worker.Faulted);
         }
         finally { File.WriteAllText(gate + ".release", ""); }
     }
@@ -805,7 +805,7 @@ public sealed class PlcWorkerRobustnessTests
         {
             var result = await scope.Worker.Call(operation, PlcCompletedArguments(operation, 1300), CancellationToken.None);
             Assert.Equal(1300, (int?)result!["fixtureDelayMilliseconds"]);
-            Assert.False(scope.Worker.Poisoned);
+            Assert.False(scope.Worker.Faulted);
         }
     }
 
@@ -817,7 +817,7 @@ public sealed class PlcWorkerRobustnessTests
         var error = await Assert.ThrowsAsync<ChannelFaultException>(() =>
             scope.Worker.Call(operation, PlcCompletedArguments(operation, 1300), CancellationToken.None));
         Assert.Equal(true, error.Data["foundationRequestSent"]);
-        Assert.True(scope.Worker.Poisoned);
+        Assert.True(scope.Worker.Faulted);
     }
 
     [Fact]
@@ -829,7 +829,7 @@ public sealed class PlcWorkerRobustnessTests
         var reply = await scope.Worker.Call("CompileSoftware", new() { ["dryRun"] = true, ["softwarePath"] = "PLC_1",
             ["fixtureDelayMilliseconds"] = 400, ["fixtureReply"] = JsonSerializer.SerializeToNode(preview) }, CancellationToken.None);
         Assert.Equal(preview.ProjectFile, (string?)reply!["ProjectFile"]);
-        Assert.False(scope.Worker.Poisoned);
+        Assert.False(scope.Worker.Faulted);
     }
 
     [Theory, InlineData(false), InlineData(true)]
@@ -840,12 +840,14 @@ public sealed class PlcWorkerRobustnessTests
         await scope.WarmGenerationUnderProductionBudgets();
         var error = await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("CompileSoftware", new() { ["dryRun"] = false, ["fixtureDelayMilliseconds"] = 1300 }, CancellationToken.None));
         Assert.Equal(true, error.Data["foundationRequestSent"]);
-        Assert.Equal(true, error.Data["foundationSessionPoisoned"]);
-        Assert.True(scope.Worker.Poisoned);
+        Assert.Null(error.Data["foundationSessionPoisoned"]);
+        Assert.True(scope.Worker.Faulted);
         var result = Foundation.FoundationV4Result.Failure("19", "CompilePlc", "timeout", true, true, null, error);
         Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+        var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(
+            () => scope.Worker.Call("ReadState", new(), CancellationToken.None));
+        Assert.Equal("worker-faulted", refusal.Condition);
     }
 
     [Fact]
@@ -859,13 +861,13 @@ public sealed class PlcWorkerRobustnessTests
             await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         var args = new JsonObject { ["processId"] = Environment.ProcessId, ["fixtureDelayMilliseconds"] = 1300 };
         await scope.Worker.Call("Attach", args, CancellationToken.None);
-        Assert.False(scope.Worker.Poisoned);
+        Assert.False(scope.Worker.Faulted);
         await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("Attach", args, CancellationToken.None));
         var restart = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restart["restarted"]);
         await scope.WarmGenerationUnderProductionBudgets();
         await scope.Worker.Call("Attach", args, CancellationToken.None);
-        Assert.False(scope.Worker.Poisoned);
+        Assert.False(scope.Worker.Faulted);
     }
 
     [Fact]
@@ -882,7 +884,7 @@ public sealed class PlcWorkerRobustnessTests
         var call = scope.Worker.Call("CompileSoftware", PlcCompletedArguments("CompileSoftware", 400), after.Token);
         await scope.WaitForDispatch("CompileSoftware"); after.Cancel();
         Assert.Equal(400, (int?)(await call)!["fixtureDelayMilliseconds"]);
-        Assert.False(scope.Worker.Poisoned);
+        Assert.False(scope.Worker.Faulted);
         await scope.Worker.Call("ReadState", new(), CancellationToken.None);
     }
 }

@@ -11,7 +11,7 @@ using SessionTests = OperatorSessionTestsPlc;
 public sealed class SharedHostSessionTests
 {
     [Theory] [InlineData("20")] [InlineData("21")]
-    public async Task Operator_cold_worker_fault_is_dispatched_and_locks_the_same_session(string release)
+    public async Task Operator_cold_worker_unknown_is_recorded_and_the_same_session_stays_usable(string release)
     {
         using var fixture = new SessionTests.Fixture(release);
         using var session = await fixture.Create();
@@ -21,10 +21,10 @@ public sealed class SharedHostSessionTests
         await using var panel = await SessionTests.Peer.Operator(registration, session.SessionKey);
         var fault = await panel.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, false);
         Assert.True((string?)fault["meta"]?["outcome"] == "unknown", fault.ToJsonString());
-        Assert.True((bool?)session.Snapshot()["sessionLocked"], session.Snapshot().ToJsonString());
+        Assert.Single(session.Snapshot()["sessionState"]!["unsettled"]!.AsArray());
         var state = await ai.Tool("GetSessionState");
-        Assert.True((bool?)state["data"]?["sessionState"]?["requiresSessionReset"]);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await ai.Tool("GetProjectInfo", ok: false))["error"]?["code"]);
+        Assert.Single(state["data"]!["sessionState"]!["unsettled"]!.AsArray());
+        Assert.True((bool?)(await ai.Tool("GetProjectInfo"))["ok"]);
     }
 
     [Theory]
@@ -43,7 +43,7 @@ public sealed class SharedHostSessionTests
         Assert.NotEmpty(session.Tools);
         Assert.Equal(session.Tools.Select(t => t.ProtocolTool.Name), session.OperatorTools.Select(t => t.ProtocolTool.Name));
         Assert.Null(session.Snapshot()["worker"]?["pid"]);
-        Assert.False((bool?)session.Snapshot()["sessionLocked"]);
+        Assert.Empty(session.Snapshot()["sessionState"]!["unsettled"]!.AsArray());
         using var panel = session.AttachOperator();
         Assert.Equal(1, (int?)session.Snapshot()["participants"]?["workbench"]);
         Assert.Null(session.Snapshot()["worker"]?["pid"]);
@@ -72,14 +72,15 @@ public sealed class SharedHostSessionTests
 
     [Theory] [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")] [InlineData("17")]
     [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
-    public async Task A_host_lock_refuses_adapter_work_before_worker_start(string release)
+    public async Task Unsettled_call_does_not_refuse_worker_start(string release)
     {
         using var worker = new TiaMcp.FoundationHost.WorkerClient(release, "missing-worker", "missing-api", true)
-            { SessionLocked = () => true, SharedSession = Profile.Releases[release].SharedSession };
-        Assert.True(worker.Poisoned);
+            { SharedSession = Profile.Releases[release].SharedSession };
+        worker.Unsettled.Record("unknown", "SaveProject", "digest", DateTimeOffset.UtcNow);
+        Assert.False(worker.Faulted);
         Assert.False(worker.WorkerFaulted);
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
-        Assert.Equal(TiaOpenness.Shared.SessionBehavior.Recovery, error.Message);
+        var error = await Assert.ThrowsAsync<FileNotFoundException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
+        Assert.Contains("Select the compiled worker", error.Message);
         Assert.Null(worker.OperatorSnapshot()["pid"]);
     }
     [Theory] [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")] [InlineData("17")]
@@ -139,21 +140,20 @@ public sealed class SharedHostSessionTests
     }
 
     [Theory] [InlineData("20")] [InlineData("21")]
-    public async Task A_failed_full_supervisor_start_retains_its_fault_until_explicit_reset(string release)
+    public async Task A_failed_cold_supervisor_start_keeps_the_failure_retryable(string release)
     {
         using var worker = new TiaMcp.FoundationHost.WorkerClient(release, "missing-worker", AppContext.BaseDirectory, false)
             { Bundled = false, SharedSession = true };
         await Assert.ThrowsAsync<FileNotFoundException>(() => worker.Observe("status", new JsonObject(), CancellationToken.None));
         var snapshot = worker.SupervisorSnapshot(new JsonObject { ["ready"] = false });
-        Assert.Equal("Faulted", (string?)snapshot["state"]);
-        Assert.Equal("FileNotFoundException", (string?)snapshot["fault"]?["cause"]);
-        Assert.Equal("status", (string?)snapshot["fault"]?["operation"]);
-        Assert.False((bool?)snapshot["fault"]?["dispatched"]);
-        Assert.True(worker.WorkerFaulted);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => worker.Observe("status", new JsonObject(), CancellationToken.None));
+        Assert.Equal("NotStarted", (string?)snapshot["state"]);
+        Assert.Null(snapshot["fault"]);
+        Assert.Null(worker.OperatorSnapshot()["pid"]);
+        Assert.False(worker.WorkerFaulted);
+        await Assert.ThrowsAsync<FileNotFoundException>(() => worker.Observe("status", new JsonObject(), CancellationToken.None));
         var detached = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
-        Assert.False((bool?)detached?["RequiresTiaRestart"]);
-        Assert.Equal(TiaOpenness.Shared.SessionBehavior.DetachedAfterUnknown, (string?)detached?["RecoveryMessage"]);
+        Assert.Null(detached?["RequiresTiaRestart"]);
+        Assert.Null(detached?["RecoveryMessage"]);
         Assert.Null(detached?["PriorUnknownRequestId"]);
     }
 
@@ -171,7 +171,7 @@ public sealed class SharedHostSessionTests
         var status = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ReadOpennessWorkerStatus();
         Assert.Equal("Ready", (string?)status.Meta?["worker"]?["state"]);
         Assert.NotNull(worker.OperatorSnapshot()["pid"]);
-        Assert.False((bool?)status.Meta?["worker"]?["sessionLocked"]);
+        Assert.Null(status.Meta?["worker"]?["sessionLocked"]);
     }
 
     [Theory] [InlineData("20")] [InlineData("21")]
@@ -199,7 +199,7 @@ public sealed class SharedHostSessionTests
         var services = TiaMcp.FoundationHost.FoundationHostPorts.CreateServices(worker, release, Ready, AppContext.BaseDirectory);
         using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, shared);
         services.ResetExports = pipeline.ResetExports;
-        worker.SessionLocked = () => pipeline.SessionLocked;
+
         worker.StagingProvider = () => { using var context = pipeline.EnterSession(); return enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner; };
         using var context = pipeline.EnterSession();
         var definition = TiaMcp.FoundationHost.FoundationTools.Definitions.Single(d => d.Name == "GetSessionState");
@@ -221,22 +221,21 @@ public sealed class SharedHostSessionTests
             var unknown = (await writeTool.InvokeAsync(writeRequest)).StructuredContent!;
             Assert.Equal("OUTCOME_UNKNOWN", (string?)unknown["error"]?["code"]);
             Assert.True((bool?)unknown["meta"]?["requiresSessionReset"]);
-            Assert.True(pipeline.SessionLocked);
-            Assert.Equal("ChannelFailureException", (string?)services.Snapshot()["fault"]?["cause"]);
-            Assert.Equal("FixtureUnknown", (string?)services.Snapshot()["fault"]?["operation"]);
+            Assert.Single(worker.Unsettled.Snapshot());
+            Assert.Null(services.Snapshot()["fault"]);
             var state = (await Tool("ReadState").InvokeAsync(Request())).StructuredContent!;
             Assert.True((bool?)state["ok"]);
-            Assert.True((bool?)state["data"]?["sessionState"]?["requiresSessionReset"]);
-            Assert.NotNull(enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SessionPrecheckRefusal("GetProjectInfo"));
+            Assert.Single(state["data"]!["sessionState"]!["unsettled"]!.AsArray());
+            Assert.Single(enginehost::TiaMcpServer.ModelContextProtocol.McpServer.Worker.Unsettled.Snapshot());
             var restarted = await services.Restart(true, CancellationToken.None);
             Assert.True((bool?)restarted["success"]);
             Assert.True((bool?)restarted["requiresExplicitRebind"]);
-            Assert.False(pipeline.SessionLocked);
+            Assert.Single(worker.Unsettled.Snapshot());
             var recovered = (await Tool("ReadState").InvokeAsync(Request())).StructuredContent!;
             Assert.True((bool?)recovered["ok"]);
-            Assert.False((bool?)recovered["data"]?["isAttached"]);
+            Assert.False((bool?)recovered["data"]?["sessionState"]?["connected"]);
         }
-        finally { worker.SessionLocked = null; worker.StagingProvider = null; }
+        finally { worker.StagingProvider = null; }
     }
 
     private sealed class SessionWorkerFixture : IDisposable

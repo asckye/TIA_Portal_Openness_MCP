@@ -221,6 +221,6 @@ V20/V21 MCP 服务即使没有检测到 TIA、安装版本与宿主不匹配，�
 
 worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消；派发后等待真实结果，超时或通道故障不会重放原生操作。
 
-用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。遇到 `OUTCOME_UNKNOWN` 或 `SESSION_RESET_REQUIRED` 时，先在 TIA 中检查项目实际状态并查看调用日志，再调用 `DisconnectPortal`。若返回 `requiresTiaRestart` 或提示租约不确定，先按需保存并重启该 TIA 实例；随后新建 MCP 会话，重新调用 `ConnectPortal` 和 `AttachOpenProject`，读回会话状态。不要重放失败的写请求。也可按[worker 与恢复](../guides/openness-worker-isolation.md)显式重启 worker；这不会重放原操作。
+用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。遇到 `OUTCOME_UNKNOWN` 时，先在 TIA 中检查受影响目标并记录请求编号，避免自动重复该调用。`GetSessionState` 列出未确认调用，后续独立请求仍按正常身份、审批和预览检查执行；保存时会提示 `UNSETTLED_CALLS`。同一审阅哈希和参数的 apply 在派发前被拒绝。真正的 worker 故障返回 `worker-faulted`，此阶段须按[worker 与恢复](../guides/openness-worker-isolation.md)显式重启 worker 并重新绑定。重启、断开或失去绑定保留未确认清单。
 
 八版 MCP 均由 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` 启动。宿主自动使用 `worker/` 子目录中的 PLC worker，保持完整解压包即可。

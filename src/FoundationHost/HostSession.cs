@@ -127,7 +127,6 @@ internal sealed class HostSession : IHostSession
         {
             var worker = finalWorkerState ?? workerState();
             bool disconnected = disposed || (bool?)worker["disconnected"] == true;
-            bool locked = (bool?)worker["sessionLocked"] == true;
             var sessionState = worker["sessionState"]?.DeepClone();
             if (disconnected && sessionState is JsonObject ended)
             {
@@ -139,10 +138,10 @@ internal sealed class HostSession : IHostSession
                 ["owner"] = OperatorOwned ? "workbench" : "mcp", ["endedBy"] = endedBy, ["endReason"] = endReason,
                 ["participants"] = new JsonObject { ["mcpClient"] = clientName, ["mcpClientVerified"] = false, ["workbench"] = operators },
                 ["worker"] = new JsonObject { ["pid"] = worker["pid"]?.DeepClone(), ["generation"] = worker["generation"]?.DeepClone(),
-                    ["state"] = hostStopping || (bool?)worker["stopping"] == true ? "stopping" : disconnected ? "disconnected" : locked ? "poisoned"
+                    ["state"] = hostStopping || (bool?)worker["stopping"] == true ? "stopping" : disconnected ? "disconnected"
                         : activeCalls > 0 || lane != null ? "busy" : "idle" },
                 ["callInProgress"] = activeCalls > 0 || lane != null,
-                ["lane"] = lane?.DeepClone(), ["binding"] = worker["binding"]?.DeepClone(), ["sessionLocked"] = locked,
+                ["lane"] = lane?.DeepClone(), ["binding"] = worker["binding"]?.DeepClone(),
                 ["sessionState"] = sessionState,
                 ["nativeCrossReferencesAllowed"] = !disposed && ((bool?)sessionState?["switches"]?["nativeCrossReferences"]?["humanSessionAllowed"]
                     ?? TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret)),
@@ -163,8 +162,7 @@ internal sealed class HostSession : IHostSession
     {
         var after = finalWorkerState ?? workerState();
         string? reason = (bool?)after["disconnected"] == true && (bool?)observedWorkerState["disconnected"] != true ? "disconnect"
-            : !JsonNode.DeepEquals(observedWorkerState["generation"], after["generation"]) ? "worker-restart"
-            : (bool?)after["sessionLocked"] == true && (bool?)observedWorkerState["sessionLocked"] != true ? "session-locked" : null;
+            : !JsonNode.DeepEquals(observedWorkerState["generation"], after["generation"]) ? "worker-restart" : null;
         if (reason != null && (endReason != "disconnect" || reason == "worker-restart")) { endedBy = actor; endReason = reason; }
         observedWorkerState = (JsonObject)after.DeepClone();
     }

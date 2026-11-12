@@ -15,7 +15,7 @@ namespace TiaMcp.Engine.Tests
 
         [Theory]
         [InlineData("INVALID_ARGUMENT")][InlineData("PRECONDITION_FAILED")]
-        [InlineData("SESSION_RESET_REQUIRED")][InlineData("CONFIRMATION_REQUIRED")]
+        [InlineData("CONFIRMATION_REQUIRED")]
         public void Recovery_is_typed_idempotent_bounded_and_selects_the_embedded_operation(string code)
         {
             var body = JsonNode.Parse("{\"ok\":false,\"error\":{\"code\":\"" + code + "\"},\"meta\":{\"tool\":\"fixture\",\"releaseKey\":\"21\",\"warnings\":[]}}")!;

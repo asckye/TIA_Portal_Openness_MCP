@@ -27,17 +27,13 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     internal object Client => plc;
     internal static string Hash(string path) => TiaMcpServer.Siemens.ArgumentRules.HashFile(path, FileShare.Read);
     public bool Faulted => services.Faulted;
-    public bool Poisoned => Inner.Poisoned;
+    public Engine.UnsettledCalls Unsettled => plc.Unsettled;
     public JsonNode? Binding => services.Binding;
     public object SessionKey => services.SessionKey;
     public string ApprovalIdentity => Inner.ApprovalIdentity;
     public bool Bundled => Inner.Bundled;
     public bool SharedSession => Inner.SharedSession;
     public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => Inner.StagingOwner;
-    internal Func<bool>? SessionLocked
-    {
-        set { plc.SessionLocked = value; }
-    }
     // The served host wires the PlcWorker's staging owner to its pipeline.
     internal Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession>? StagingProvider
     {
@@ -46,7 +42,6 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     public IDisposable? EnterRequest(RequestContext<CallToolRequestParams> request) => Inner.EnterRequest(request);
     public Task<IDisposable?> AcquireLane(CancellationToken token) => Inner.AcquireLane(token);
     public void ActivateLane(IDisposable? lane) => Inner.ActivateLane(lane);
-    public void MarkUncertain() => Inner.MarkUncertain();
     public async Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
     {
         if (faultFixture && operation is "ReadBlocks" or "plc-paging.ReadBlockPage" or "optional-products.ExecuteOptionalProduct" or "Attach")

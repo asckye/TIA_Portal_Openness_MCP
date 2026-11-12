@@ -32,7 +32,7 @@ public sealed class SharedPipelineTests
                 Array.Empty<enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(false, false), null, "worker") };
         }
     }
-    private sealed class Worker : IFoundationSessionWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    internal sealed class Worker : IFoundationSessionWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
     {
         internal bool EngineUnknown, FoundationUnknown;
         internal int FoundationCalls, EngineCalls, FoundationPreviews, FoundationWrites;
@@ -41,13 +41,12 @@ public sealed class SharedPipelineTests
         public JsonNode? Binding => new JsonObject { ["projectPath"] = "C:/fixture.ap21" };
         public object SessionKey { get; } = new();
         public string ApprovalIdentity => Binding!.ToJsonString();
-        public bool Poisoned => Host.SessionLatched();
+        public enginehost::TiaMcp.FoundationHost.UnsettledCalls Unsettled { get; } = new();
         public bool Bundled => false;
         public bool SharedSession => true;
         public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => null;
         public IDisposable? EnterRequest(RequestContext<CallToolRequestParams> request) => null;
-        public void MarkUncertain() => Host.MarkSharedSessionUncertain();
-        public Task<IDisposable?> AcquireLane(CancellationToken token) => Task.FromResult<IDisposable?>(null);
+            public Task<IDisposable?> AcquireLane(CancellationToken token) => Task.FromResult<IDisposable?>(null);
         public void ActivateLane(IDisposable? lane) { }
         public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new Lane());
         private sealed class Lane : IDisposable { public void Dispose() { } }
@@ -73,7 +72,7 @@ public sealed class SharedPipelineTests
         }
         public void Dispose() { }
     }
-    private sealed class Scope : IDisposable
+    internal sealed class Scope : IDisposable
     {
         internal readonly Worker Worker = new();
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
@@ -99,19 +98,23 @@ public sealed class SharedPipelineTests
     }
 
     [Fact]
-    public async Task Engine_unknown_is_the_shared_Foundation_lock()
+    public async Task Engine_unknown_is_in_the_shared_Foundation_unsettled_list()
     {
         using var scope = new Scope(); scope.Worker.EngineUnknown = true;
         Host.ToolInvoker.Invoke(SessionFixtureTool.Name, new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
         var result = await scope.Foundation("GetSessionState").InvokeAsync(Scope.Request("GetSessionState", new()));
-        Assert.True((bool?)result.StructuredContent?["ok"]);
-        Assert.True((bool?)result.StructuredContent?["data"]?["sessionState"]?["requiresSessionReset"]);
-        Assert.NotNull(Host.SessionPrecheckRefusal("GetProjectInfo"));
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
+        Assert.Single(result.StructuredContent!["data"]!["sessionState"]!["unsettled"]!.AsArray());
+        Assert.Single(Host.Worker.Unsettled.Snapshot());
         Assert.Equal(0, scope.Worker.FoundationCalls); Assert.Equal(1, scope.Worker.EngineCalls);
+        scope.Worker.EngineUnknown = false;
+        var next = Host.CallTool(SessionFixtureTool.Name, new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())));
+        Assert.True((bool?)next.StructuredContent?["ok"]);
+        Assert.Equal(2, scope.Worker.EngineCalls);
     }
 
     [Fact]
-    public async Task Foundation_unknown_is_the_engine_lock()
+    public async Task Foundation_unknown_is_in_the_engine_unsettled_list()
     {
         using var scope = new Scope(); scope.Worker.FoundationUnknown = true;
         var arguments = new JsonObject { ["plc"] = "PLC", ["table"] = "T", ["name"] = "Ready", ["dataType"] = "Bool", ["address"] = "%M0.0",
@@ -119,8 +122,8 @@ public sealed class SharedPipelineTests
         var shared = await scope.Foundation("CreatePlcTag").InvokeAsync(Scope.Request("CreatePlcTag", arguments));
         Assert.Equal("unknown", (string?)shared.StructuredContent?["meta"]?["outcome"]);
         var engine = Host.CallTool(SessionFixtureTool.Name, new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())));
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)engine.StructuredContent?["error"]?["code"]);
-        Assert.Equal(0, scope.Worker.EngineCalls);
+        Assert.True((bool?)engine.StructuredContent?["ok"]);
+        Assert.Equal(1, scope.Worker.EngineCalls);
     }
 
     [Fact]

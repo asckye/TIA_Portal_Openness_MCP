@@ -60,15 +60,16 @@ public sealed class HardwareAddressingParityTests
     }
 
     [Fact]
-    public void Blocked_read_mapping_preserves_the_released_reset_invariant()
+    public void Connection_failure_mapping_preserves_the_read_failed_outcome()
     {
         const string evidence = "{\"success\":false,\"status\":\"HmiReadSessionBlocked\"}";
         using var release = HostContract.UseRelease("21");
-        var expected = Assert.Throws<ArgumentException>(() => enginefixture::TiaMcp.Engine.Tests.HardwareAddressingParityEngine.Map("GetDeviceAddressing", evidence, false));
-        var actual = Assert.Throws<ArgumentException>(() => HostContract.Map("GetDeviceAddressing",
+        var expected = Normalize(enginefixture::TiaMcp.Engine.Tests.HardwareAddressingParityEngine.Map("GetDeviceAddressing", evidence, false));
+        var actual = Normalize(HostContract.Map("GetDeviceAddressing",
             new HostResponse { Message = "fixture", Meta = JsonNode.Parse(evidence)!.AsObject() }, false, false));
-        Assert.Equal(expected.Message, actual.Message);
-        Assert.Contains("SESSION_RESET_REQUIRED", actual.Message);
+        Assert.True(JsonNode.DeepEquals(expected, actual));
+        Assert.Equal("read-failed", (string?)actual["meta"]?["outcome"]);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)actual["error"]?["code"]);
     }
 
     [Theory]

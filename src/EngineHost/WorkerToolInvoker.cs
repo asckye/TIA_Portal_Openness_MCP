@@ -170,7 +170,9 @@ namespace TiaMcp.FoundationHost
             }
             if (tool.Execution == "worker")
             {
-                if (worker.Faulted) return new ToolInvocationResult(McpServer.V4Reject(tool.Name, HostBehavior.SessionReset()), false);
+                if (worker.Faulted) return new ToolInvocationResult(McpServer.V4Reject(tool.Name,
+                    new Error("The worker is faulted. Call RestartOpennessWorker before another native call.",
+                        new PreconditionFailedDetails("worker-faulted", null))), false);
                 var token = McpServer.WorkerDispatchCancellation;
                 using var progress = (worker as IEngineWorkerProgress)?.UseProgress(preview ? null : McpServer.WorkerProgressRelay());
                 using var lane = await TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire(tool.Name, token).ConfigureAwait(false);
@@ -180,12 +182,15 @@ namespace TiaMcp.FoundationHost
                 InvocationJournal.Write(id, "worker:" + tool.Name, "BEFORE");
                 try
                 {
+                    var unsettledBeforeSave = tool.Name is "SaveProject" or "SaveProjectCopy" ? worker.Unsettled.ToJson() : null;
                     var reply = await worker.Invoke(id, tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token)
                         .ConfigureAwait(false);
                     if (reply.NativeCallIssued) InvocationJournal.NativeCallStarted();
-                    McpServer.ObserveWorkerReply(tool.Name, reply);
                     phase = "RETURNED";
-                    return new ToolInvocationResult(reply.Result, reply.NativeCallIssued);
+                    return new ToolInvocationResult(McpServer.ObserveSessionOutcome(tool.Name, reply.Result,
+                        HostBehavior.ApprovalWrite(tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(),
+                            tool.Classification?.Operation is "WRITE" or "ONLINE-WRITE", tool.DryRun.Present, tool.DryRun.Default),
+                        arguments.Json.GetRawText(), preview, unsettledBeforeSave), reply.NativeCallIssued);
                 }
                 finally { InvocationJournal.Write(id, "worker:" + tool.Name, phase); }
             }

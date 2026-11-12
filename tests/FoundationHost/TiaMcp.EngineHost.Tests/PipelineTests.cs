@@ -124,16 +124,20 @@ public sealed partial class PipelineTests
 
     [Theory]
     [InlineData(true, true)]
-    [InlineData(false, false)]
-    public async Task NativeEvidenceControlsUnknownSessionLock(bool native, bool locked)
+    [InlineData(false, true)]
+    public async Task Unknown_write_is_unsettled_and_the_next_call_runs(bool native, bool recorded)
     {
         using var fixture = new Fixture();
         fixture.Worker.Unknown = true; fixture.Worker.Native = native;
-        await fixture.Call("SaveProject", "{}");
+        var first = await fixture.Call("SaveProject", "{}");
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)first.StructuredContent?["error"]?["code"]);
+        fixture.Worker.Unknown = false;
         int calls = fixture.Worker.Calls.Count;
         var result = await fixture.Call("SaveProject", "{}");
-        Assert.Equal(locked ? "SESSION_RESET_REQUIRED" : "OUTCOME_UNKNOWN", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.Equal(locked ? calls : calls + 1, fixture.Worker.Calls.Count);
+        Assert.True((bool?)result.StructuredContent?["ok"]);
+        Assert.Equal(recorded ? 1 : 0, ((IEngineWorker)fixture.Worker).Unsettled.Snapshot().Count);
+        Assert.Contains(result.StructuredContent!["meta"]!["warnings"]!.AsArray(), w => (string?)w?["code"] == "UNSETTLED_CALLS");
+        Assert.Equal(calls + 1, fixture.Worker.Calls.Count);
         Assert.True((bool?)(await fixture.Call("ListExportHandles", "{}")).StructuredContent?["ok"]);
     }
 
@@ -143,7 +147,8 @@ public sealed partial class PipelineTests
         using var fixture = new Fixture(); fixture.Worker.Faulted = true;
         fixture.Wait = (_, _, _) => throw new Exception("A faulted generation cannot request approval.");
         var result = await fixture.Call("SaveProject", "{}");
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("PRECONDITION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("worker-faulted", (string?)result.StructuredContent?["error"]?["details"]?["condition"]);
         Assert.Empty(fixture.Worker.Calls);
     }
 
@@ -152,7 +157,10 @@ public sealed partial class PipelineTests
     {
         using var fixture = new Fixture(); fixture.Worker.Limited = true; fixture.Worker.Native = true;
         Assert.Equal("LIMIT_EXCEEDED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
+        Assert.Single(((IEngineWorker)fixture.Worker).Unsettled.Snapshot());
+        Assert.Equal("LIMIT_EXCEEDED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
+        Assert.Equal(2, ((IEngineWorker)fixture.Worker).Unsettled.Snapshot().Count);
+        Assert.Equal(2, fixture.Worker.Calls.Count);
     }
 
     [Fact]
@@ -184,7 +192,10 @@ public sealed partial class PipelineTests
         Assert.Empty(fixture.Worker.Calls);
         fixture.Worker.Unknown = true; fixture.Worker.Native = true;
         await fixture.Call("CallTool", "{\"name\":\"SaveProject\",\"arguments\":{}}");
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
+        fixture.Worker.Unknown = false;
+        var next = await fixture.Call("SaveProject", "{}");
+        Assert.True((bool?)next.StructuredContent?["ok"]);
+        Assert.Contains(next.StructuredContent!["meta"]!["warnings"]!.AsArray(), w => (string?)w?["code"] == "UNSETTLED_CALLS");
     }
 
     [Theory]

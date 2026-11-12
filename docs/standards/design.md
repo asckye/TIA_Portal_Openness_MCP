@@ -54,7 +54,7 @@
 | MUST：一个 TIA 进程同时只租给一个 MCP 会话（第 2.4 节） | [ADR 0011](decisions/0011-tia-process-lease-on-all-releases.md) |
 | MUST：MCP 写调用默认在工作台审批，先预检再审批，批准后复核再执行（第 4.10 节） | [ADR 0003](decisions/0003-workbench-approval-for-mcp-writes.md)、[ADR 0004](decisions/0004-precheck-before-approval.md)、SEC-01 |
 | MUST：worker 调用按类超时；超时、卡死、退出或坏帧使 worker 代次失效，从不重放（第 5 节） | [ADR 0008](decisions/0008-worker-timeouts-and-faults.md) |
-| MUST：会话状态只有一份：宿主经 `SharedSessionState` 投影 worker 缓存的绑定身份，宿主工具、生成规划、工作台控制和操作端快照共用，不另存项目绑定；worker 代次和重置要求仍由 worker 与管线持有 | [ADR 0029](decisions/0029-authoritative-session-state.md) |
+| MUST：会话状态只有一份：宿主经 `SharedSessionState` 投影 worker 缓存的绑定身份，宿主工具、生成规划、工作台控制和操作端快照共用，不另存项目绑定；worker 代次和传输故障由 worker 持有，未确认调用清单由两个宿主入口共用 | [ADR 0029](decisions/0029-authoritative-session-state.md) |
 | MUST：工具只在官方 API 至少支持它的一个动作时注册（第 7 节） | [ADR 0012](decisions/0012-old-release-tool-registration.md)、[ADR 0014](decisions/0014-tool-counts-follow-official-api.md) |
 
 ### 2.2 进程与会话
@@ -73,11 +73,11 @@
 
 1. 进入会话上下文；`ActorScope` 由传输决定（MCP 客户端为 `mcp`，操作端为 `workbench`），不读取任何参数；写调用日志。
 2. 按工具 `inputSchema` 绑定并校验参数；直接调用、`CallTool` 和批次共用同一准入（`BindV4Call`），在 SDK 绑定之前执行。
-3. 检查版本可用性、生成写栅栏（写调用）、会话锁、TIA 就绪和连接前提。
+3. 检查版本可用性、生成写栅栏（写调用）、TIA 就绪和连接前提。
 4. 写调用：审计 `request`，用同一参数在只读作用域运行一次预览（预检），再等待工作台审批（第 4.10 节）。审批时限在预检结束、开始等待时才计算。
-5. 获取本会话的 Openness 通道。写调用在通道内复核写栅栏、会话锁、批次身份、参数摘要和调用方输入文件，然后写审计 `start`。
+5. 获取本会话的 Openness 通道。写调用在通道内复核写栅栏、批次身份、参数摘要和调用方输入文件，然后写审计 `start`。
 6. 经 worker 协议派发 `adapter.<操作>`（请求 id、绑定纪元）。worker 在派发前把租约写为 `BUSY` 并落盘，织入的原生调用诊断先落盘 BEFORE 行，再调用 Openness；结果已知后租约回到 `IDLE`。
-7. 把回复映射为 V4 信封；结果未知且满足锁定条件时锁定会话（第 4.11 节）；按错误码附 `RECOVERY_GUIDANCE`；写调用发送审批结果通知并写审计 `end`。
+7. 把回复映射为 V4 信封；最终结果未知的非预览 WRITE、ONLINE-WRITE、FILE 或 EXECUTE 调用记入未确认清单（第 4.11 节）；按错误码附 `RECOVERY_GUIDANCE`；写调用发送审批结果通知并写审计 `end`。
 
 ### 2.4 生命周期
 
@@ -86,11 +86,11 @@
 | 已建立、未连接 | MCP 初始化；worker 在第一次需要原生调用时启动 | `ConnectPortal` 选定进程并取得租约 |
 | 已连接 TIA 进程 | `ConnectPortal` | `AttachOpenProject`、`OpenProject` 或 `CreateProject` 绑定项目；`DisconnectPortal` 回到未连接 |
 | 已绑定项目 | 绑定成功 | `CloseProject` 回到已连接；会话结束时非拥有式分离，不保存不关闭 |
-| 会话锁定 | 越过原生调用的写入结果未知（第 4.11 节） | 检查 TIA 后 `DisconnectPortal`，再开新的 MCP 会话 |
+| 未确认调用 | 最终写入结果未知（第 4.11 节） | 检查该调用的目标，按 requestId 核对证据，后续独立调用继续执行 |
 | worker 代次故障 | 超时、worker 退出或卡死、坏帧、TIA 进程丢失 | `RestartOpennessWorker` 或 `DisconnectPortal`，之后重新绑定 |
 
 - 没有连接 TIA 时，需要 TIA 的工具在派发前返回带 `ConnectPortal` 提示的 `PRECONDITION_FAILED`（`connect-portal`），会话保持可用，不锁会话。
-- 锁定或故障后的恢复对八个版本相同：先检查 TIA，再调用 `DisconnectPortal`。空闲 worker 干净分离并释放租约；忙碌、超时或丢失的 worker 被结束，回复说明需要重启 TIA。然后新建 MCP 会话并重新绑定，不重放失败的请求。
+- 八版的 answered-unknown 回复只影响本次调用。真正的 worker 退出、坏帧或探测故障在自动恢复实现前仍返回 `PRECONDITION_FAILED`，条件为 `worker-faulted`，提示调用 `RestartOpennessWorker`。
 - `RestartOpennessWorker` 先让空闲 worker 干净分离，再启动新代次；故障 worker 保留租约并报告 `requiresTiaRestart`。
 - 绑定要求显式选定、当前枚举到的进程 ID，以及准确的项目名称和绝对路径。`CloseProject` 要求本会话拥有且未修改的项目，不静默保存。`DisconnectPortal` 是终结操作：不保存、不关闭、不结束 TIA、不自动重连。
 
@@ -136,7 +136,7 @@
 
 - 项目页默认附着 AI 正在使用的 MCP 会话：同一工具对象、同一 worker、同一 Openness 通道、审批和审计。没有 AI 会话时，只有工作台启动的宿主（`--transport operator --operator-owner <工作台 PID>`）允许 `create` 工作台自有会话，AI 不能加入；AI 客户端拉起的宿主拒绝 `create`。
 - 握手首帧的 `action` 为 `list`、`attach`、`create`、`native-cross-references` 或 `shutdown`。`native-cross-references` 只修改所选会话的人工原生交叉引用许可，宿主只把该会话的随机 HMAC 密钥传给它的 worker；它不是 MCP 工具，也不经审批。`shutdown` 在有调用进行或占用通道时返回 `HOST_BUSY`，否则封闭新的准入后走宿主停止路径；工作台按 20 秒宿主退出预算等待（含 worker 的 10 秒宽限），超时后须再经人确认才强制结束。
-- 会话规则对所有参与方相同：Openness 通道串行，结果未知锁定会话，`DisconnectPortal` 与 `RestartOpennessWorker` 影响整个会话；`DisconnectPortal` 的回执带 `endedBy`。面板发起的写同样经预检和审批卡，没有第二条批准路径。
+- 会话规则对所有参与方相同：Openness 通道串行，结果未知记入未确认调用清单，`DisconnectPortal` 与 `RestartOpennessWorker` 影响整个会话；`DisconnectPortal` 的回执带 `endedBy`。面板发起的写同样经预检和审批卡，没有第二条批准路径。
 - 审计行、调用日志和审批请求都带 `actor`（`mcp` 或 `workbench`）。附着后宿主从缓存推送 `notifications/tiamcp/sessionState`，不调用 TIA。
 - `GetWorkbenchState.data.session` 是请求方的 MCP 会话，`selectedSession` 是工作台当前的选择，两者可以不同；读取不改变人的选择。
 
@@ -343,7 +343,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | Openness 通道 | 每个 V4 会话一条，原生调用串行 |
 | TIA 进程租约 | 连接期间独占选定进程；`DisconnectPortal` 或会话结束时非拥有式释放 |
 | 项目绑定与绑定纪元 | 由 `ConnectPortal`、`AttachOpenProject` 等建立，随会话结束 |
-| 会话锁 | 越过原生调用的写入结果未知后生效，直到 `DisconnectPortal` 后开启新会话 |
+| 未确认调用 | 记录结果未知的非预览写入，`SaveProject` 和 `SaveProjectCopy` 预览及执行携带 `UNSETTLED_CALLS` |
 | 生成计划与写栅栏 | 计划只属于当前会话和绑定；运行期间写栅栏拒绝本会话中不属于该运行的写调用 |
 | 批次令牌 | 10 分钟，只能使用一次 |
 | 导出句柄 | 只能在签发它的会话中读取和清理，24 小时 |
@@ -392,7 +392,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 不变量（生产者 MUST 满足，消费者 MAY 依赖）：
 
 1. `outcome == partial` 当且仅当 `error.code == PARTIAL_FAILURE`；`outcome == unknown` 当且仅当 `error.code == OUTCOME_UNKNOWN`。
-2. `NOT_EXECUTED` 只伴随 `rejected-before-operation`；`SESSION_RESET_REQUIRED` 只伴随 `rejected-before-operation` 且 `requiresSessionReset == true`；`TIMEOUT` 只伴随 `read-failed` 或 `rejected-before-operation`。
+2. `NOT_EXECUTED` 只伴随 `rejected-before-operation`；`SESSION_RESET_REQUIRED` 仅为旧信封保留读取类型，当前生产者不再产生该码；`TIMEOUT` 只伴随 `read-failed` 或 `rejected-before-operation`。
 3. `succeeded` 且 `completeness == partial` 时 `warnings` 不为空；`behaviorPolicy == current` 时含 `UNVERIFIED_BEHAVIOR`。
 4. `releaseKey` 只取八个发布键之一或 null；`tool`、`requestId` 和警告的 `message` 不得为空串。
 
@@ -405,7 +405,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `tool` | 实际执行的工具名（`CallTool` 规则见第 4.2 节） |
 | `requestId` | 服务器生成的关联 ID：审计调用 ID → 调用日志关联 ID → 新的 32 位小写 GUID；审批过的调用使用审批请求的 ID；批次为每个子项生成新 ID；不采用客户端提供的 ID |
 | `outcome`、`execution`、`completeness` | 第 4.5 节 |
-| `requiresSessionReset` | 表示实际的 Openness 准入锁：为 true 时，直到恢复前后续原生调用被拒绝；`unknown` 但未锁定时为 false，仍禁止重放（第 4.11 节） |
+| `requiresSessionReset` | Part 8 清理前透传旧字段，写入结果映射保留其未知证据含义，准入和清单以最终 `meta.outcome` 为准（第 4.11 节） |
 | `behaviorPolicy` | `not-applicable`（纯宿主工具或不属于 D1 行为族）、`current`（沿用既有原生行为，未经真机验收）、`safe-v4`（已验收的新行为；发布配置中没有选用） |
 | `paging` | 第 4.8 节；不分页时为 null |
 | `warnings` | 第 4.7 节；按发出顺序，装饰类警告追加在末尾 |
@@ -453,7 +453,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `OFFLINE_REQUIRED` | 目标或受影响的设备需要离线 | `targets` | rejected |
 | `AUTHENTICATION_REQUIRED` | 缺少必要认证 | `capability`（不回显凭据） | rejected |
 | `ACCESS_DENIED` | 权限拒绝 | `operation`、`target` | rejected |
-| `SESSION_RESET_REQUIRED` | 先前写入结果未知，会话已锁 | `reason` | rejected，`requiresSessionReset` 为 true |
+| `SESSION_RESET_REQUIRED` | 旧宿主信封的兼容读取类型，当前生产者不再产生 | `reason` | 保留到 Part 8 |
 | `RESOURCE_UNAVAILABLE` | SDK、Openness 环境、可选服务、工作台或包内资源缺失 | `resource` | rejected |
 | `IO_FAILED` | 动作开始前的本地文件读写失败 | `operation`、`path`（脱敏） | rejected |
 | `NATIVE_OPERATION_FAILED` | 已知的原生失败 | `nativeCode`、`nativeMessage`、`evidence` | read-failed、failed 或 rejected |
@@ -465,7 +465,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `OUTCOME_UNKNOWN` | 写入、传输或通道中断，结果未知；禁止自动重放 | `stage`、`evidence`、`reason`（只能是 `awaiting-openness-confirmation` 或 null） | unknown |
 | `INTERNAL_ERROR` | 非原生、未分类的故障；堆栈只写日志 | `diagnosticId` | read-failed |
 
-`condition`、`stage`、`reason`、`resource`、`operation` 是开放词表，生产者 MUST 用 kebab-case 短语，消费者只作诊断、不据此分支，并容忍未知值（API-23）。已知取值例如 `PRECONDITION_FAILED.condition` 的 `batch-identity`、`generation-run-active`、`connect-portal`、`save-explicitly-before-close`，`OUTCOME_UNKNOWN.stage` 的 `worker`、`tool-call`、`native-result-state`，`SESSION_RESET_REQUIRED.reason` 的 `previous-outcome-unknown`。
+`condition`、`stage`、`reason`、`resource`、`operation` 是开放词表，生产者 MUST 用 kebab-case 短语，消费者只作诊断、不据此分支，并容忍未知值（API-23）。已知取值例如 `PRECONDITION_FAILED.condition` 的 `batch-identity`、`generation-run-active`、`connect-portal`、`save-explicitly-before-close`，`OUTCOME_UNKNOWN.stage` 的 `worker`、`tool-call`、`native-result-state`。
 
 ### 4.7 警告
 
@@ -482,7 +482,8 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `DIAGNOSTIC_WRITE_FAILED` | CLI 报告文件写不出 | 报告定义 |
 | `APPROVAL_DISABLED` | 审批关闭时执行的 MCP 写调用，每个信封至多 1 条 | `enabled: false` |
 | `APPROVAL_PRECHECK_REFUSED` | 写入被自身预览拒绝，没有发起审批 | `stage: approval-precheck` |
-| `RECOVERY_GUIDANCE` | 错误码为 `INVALID_ARGUMENT`、`PRECONDITION_FAILED`、`SESSION_RESET_REQUIRED` 或 `CONFIRMATION_REQUIRED` 时，每个信封至多 1 条 | `getToolUsage{toolName, operation?}`、`releaseKey`、`exampleArguments`（≤ 4096 字节）、`exampleOmitted`、`validation`、`bindingMeaning` |
+| `UNSETTLED_CALLS` | `SaveProject` 和 `SaveProjectCopy` 预览或执行时存在未确认调用 | `unsettled[{requestId, tool, utc, fromPreviousOwner}]` |
+| `RECOVERY_GUIDANCE` | 错误码为 `INVALID_ARGUMENT`、`PRECONDITION_FAILED` 或 `CONFIRMATION_REQUIRED` 时，每个信封至多 1 条 | `getToolUsage{toolName, operation?}`、`releaseKey`、`exampleArguments`（≤ 4096 字节）、`exampleOmitted`、`validation`、`bindingMeaning` |
 | `BACKUP_SKIPPED` | 覆盖导入前的备份被跳过 | `objects`、`recoveryDirectory` |
 | `STAGING_FOLDER_RETAINED` | 暂存目录被保留 | 暂存定义 |
 
@@ -553,10 +554,10 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 
 审批默认开启，只适用于 MCP 调用；命令行由本机用户直接执行，不经审批。
 
-1. **预检**：检查生成写栅栏（`PRECONDITION_FAILED`，`generation-run-active`，带 `data.runId`）、会话锁（`SESSION_RESET_REQUIRED`）、调用方输入文件和批量 apply 参数，再用同一参数在只读作用域运行一次预览。预览拒绝时标为 `rejected-before-operation` 并加 `APPROVAL_PRECHECK_REFUSED` 返回；预览报告没有变化时直接返回预览结果，不请求审批。
+1. **预检**：检查生成写栅栏（`PRECONDITION_FAILED`，`generation-run-active`，带 `data.runId`）、调用方输入文件和批量 apply 参数，再用同一参数在只读作用域运行一次预览。预览拒绝时标为 `rejected-before-operation` 并加 `APPROVAL_PRECHECK_REFUSED` 返回；预览报告没有变化时直接返回预览结果，不请求审批。
 2. **等待审批**：`PendingApproval` 带随机请求 ID、工具与发布键、缓存及请求指定的项目身份、对象与动作清单、计划哈希（没有计划时用参数摘要）、完整参数与身份摘要和截止时间，经审批管道交给工作台。审批卡显示脱敏后的参数；结果为批准、拒绝、超时或工作台不可用之一，后三者返回 `CONFIRMATION_REQUIRED`（`denied`、`timeout`、`workbench-unavailable`）。批准 MUST 匹配请求 ID、计划哈希与参数摘要，只能用一次；重复、迟到、格式异常或断连一律拒绝。
-3. **派发前复核**：在 Openness 通道内再次检查写栅栏和会话锁，`ApprovalStillMatches` 核对参数摘要与绑定身份，不一致返回 `CONFIRMATION_REQUIRED`（`denied`）；再次检查输入文件。
-4. **执行一次**：审计 `start`，执行，判断是否锁会话，向工作台发送结果通知（只更新该行状态，不能授予批准），把 `meta.requestId` 设为审批请求 ID，审计 `end`。
+3. **派发前复核**：在 Openness 通道内再次检查写栅栏，`ApprovalStillMatches` 核对参数摘要与绑定身份，不一致返回 `CONFIRMATION_REQUIRED`（`denied`）；再次检查输入文件。
+4. **执行一次**：审计 `start`，执行，按最终信封记录未确认调用，向工作台发送结果通知（只更新该行状态，不能授予批准），把 `meta.requestId` 设为审批请求 ID，审计 `end`。
 
 - 设置在 `data/config/approval.settings`，两行 `enabled=true|false` 与 `timeoutSeconds=1..3600`；缺失、损坏或不可读时视为开启。工作台可选 60、120、300 秒，默认 120 秒。离线快照或测试可在专用 `TIA_MCP_DATA_DIRECTORY` 下关闭审批，此设置不得进入交付缺省值。
 - 审批关闭时照常执行，信封加 `APPROVAL_DISABLED`；工具自身的确认、计划哈希和项目身份检查仍然生效。
@@ -564,14 +565,18 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 - 等待发生在 Openness 通道之外、动作调用之前，不改变 Siemens 调用序列、参数、线程归属或会话。客户端在等待期间取消返回 `CANCELLED`（`approval-wait`）。
 - 生成计划只审批一次（第 8 节）；`ApplyToolBatch` 本身不审批，其中每个写项各自审批。
 
-### 4.11 未知结果、会话锁与恢复
+<a id="411-未知结果会话锁与恢复"></a>
 
-- 写入或文件操作发出后抛出异常、原生结果状态为 `PartialSuccess`、`None`、不在预期内或失败且 `mayHaveChanged`、写后核对无法完成、worker 退出、挂起、帧格式错误或 TIA 进程丢失、批次子项已发出但结果读不到时，依据保留的证据判定结果（API-26）。有证据的结果按已知结果分类。回滚或恢复已核实、写后核对已完成但不一致（`DocumentReadbackMismatch`）、原生调用返回了判定（如编译错误）都报 `failed`。尚未发出原生写入报 `rejected-before-operation`。只读调用失败报 `read-failed`。只有原生写入已发出且没有这些证据时才是 `unknown`。
-- 只有同时满足以下条件才锁定会话（`SessionBehavior.LocksSession`）：本次调用发出过原生调用（调用日志有原生边界，或 worker 证据为 `nativeOutcomeUnknown`、`nativeIssued`），属于写入或 `FILE`、`EXECUTE` 类别，并且 outcome 为 `unknown`。
-- 锁定后，使用 Openness 通道的工具（`DisconnectPortal`、`RestartOpennessWorker` 和派发类工具除外）在审批和原生调用之前被 `SESSION_RESET_REQUIRED`（`previous-outcome-unknown`）拒绝。
-- 恢复（MUST）：检查 TIA 的实际状态 → `DisconnectPortal` → 开启新的 MCP 会话并显式 `ConnectPortal`、`AttachOpenProject`。MUST NOT 重放失败的请求；重新预览也不等于获准再次写入（SEC-12）。
-- 宿主派发前的超时报 `TIMEOUT`。已派发的只读调用超时报 `read-failed`、`read-only`、`TIMEOUT`，等待 worker 排空后可继续。只读调用丢失 worker 应答报 `read-failed`、`read-only`、`NATIVE_OPERATION_FAILED`。已派发写入超时且缺少确定结果的证据时按 `OUTCOME_UNKNOWN` 处理（API-26）。派发前取消返回 `CANCELLED`（`tool-queue`），派发后宿主忽略取消、等待真实结果。派发前的 `CANCELLED` 结果仍用于 CLI、批次和审计（MCP-07）。
-- 收到 progress token 时，宿主每 15 秒发送一次单调递增的进度心跳，覆盖排队、审批等待和长操作；worker 进度与宿主心跳共用序号。通知不代表成功，失败也不改变原生请求。
+### 4.11 未知结果与未确认调用
+
+- 最终信封保留本次调用的真实结果。读失败为 `read-failed`，编译错误、已核实的回滚和读回不一致为确定失败，已知混合批次为 `partial`。已派发写入缺少确定结果证据时返回 `unknown` 和 `OUTCOME_UNKNOWN`。
+- 非预览调用的最终 `meta.outcome` 为 `unknown`，且分类为 WRITE、ONLINE-WRITE、FILE 或 EXECUTE 时，将 `{requestId, tool, utc, fromPreviousOwner}` 加入 `data.sessionState.unsettled`。同一存储同时服务 Foundation、Engine 和工作台入口。绑定到不同项目或会话结束清除清单。重启 worker、断开和失去绑定保留清单。
+- 后续独立调用继续执行。未知回复不使 channel 或 worker 失效，绑定检查失败只拒绝当前调用。旧 `requiresSessionReset` 标志在 Part 8 前透传，结果映射继续将它作为写入结果未知的证据。准入和清单以最终信封为准。`SESSION_RESET_REQUIRED` 不再由当前生产者产生。
+- `SaveProject` 和 `SaveProjectCopy` 在清单非空时携带 `UNSETTLED_CALLS`，预览和执行均如此。警告列出请求编号，保存由正常审批和项目身份校验决定。
+- 检查未知调用的目标及保留证据后，再决定是否发起新的操作。禁止自动重放。生成运行和批次仍在未知步骤停止，重新规划须经过原有预览、审批和 stale-plan 检查。
+- 真正的传输故障在 Part 4 前返回 `PRECONDITION_FAILED`，条件为 `worker-faulted`。按 `RestartOpennessWorker` 的明确提示恢复。Part 2 前保留现有调用预算和只读超时排空机制，Part 3 前保留租约及终止式断开语义。
+- 当前超时分类沿用 VMFIX-7。只读超时返回 `read-failed`、`read-only`、`TIMEOUT`，排空后可继续。只读回复丢失返回 `NATIVE_OPERATION_FAILED`。写入结果不确定返回 `OUTCOME_UNKNOWN`。派发前取消返回 `CANCELLED`，派发后等待实际结果。
+- 最终设计、各部分的实施边界和标准偏差见 [ADR 0034](decisions/0034-no-session-lock.md)。进度通知只描述执行进展。
 
 ### 4.12 批次与桥接
 
@@ -640,7 +645,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 | 超大回复 | 先完整编码；超过 16 MiB 时，在发送任何字节前调用 spill 回调，返回 `result.workerReplySpill`（32 位 GUID `id`、`byteLength`、`sha256`），文件在 `<数据根>/worker-spills`，worker 用扩展长度路径写入；宿主核对身份、普通文件、UTF-8、长度、哈希与 JSON 后删除文件。没有回调但有有界的 `OversizedResultJson` 时发送该拒绝结果（如 `LIMIT_EXCEEDED`）；两者都没有或转存失败时为结果未知并使通道失效，不重试派发。序列化后超过 8 MiB 的结果寄存为导出句柄 |
 | 进度 | 无 id 通知，含 `requestId`、从 1 递增的 `sequence` 和 0–100 的 `percent`；每个请求最多 1,024 条，只能针对当前调用。跨线程、回调结束后、空闲期间、旧或未知 id 的进度，以及重复回复、再次 hello 都使通道失效；进度不延长调用预算 |
 | 绑定纪元 | 来自 worker 每次派发前后的托管状态缓存，不为核对身份额外调用 Openness；PID、项目路径、所有权或本地会话状态改变时递增。回复的 before 必须等于宿主保存的纪元；附着、打开、创建、关闭和断开按状态机验证变化，异常变化使会话失效 |
-| 取消与故障 | 派发前取消不发送、不消耗 id、不使后续调用失效。派发后的写入或读取错误、超时和无可信回复都是结果未知并使代次失效，禁止重试或自动重启。通道级终止不能证明 TIA 已取消；释放通道只关闭自己的管道，不结束 TIA |
+| 取消与故障 | 派发前取消不发送、不消耗 id、不使后续调用失效。已返回的未知回复保留该调用的 `unknown`，后续独立调用继续。真实传输故障仍使当前通道失效，写入缺少可信结果为 `unknown`，读取为 `read-failed`。Part 1 保留现有预算和只读排空，失效 worker 在 `RestartOpennessWorker` 后恢复。通道级终止不能证明 TIA 已取消；释放通道只关闭自己的管道，不结束 TIA |
 | 超时 | 默认 120 秒，worker 代次首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖（`WorkerTimeoutPolicy`，[ADR 0008](decisions/0008-worker-timeouts-and-faults.md)） |
 
 [worker-channel 套件](../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)覆盖双端状态机与独立进程故障，`TiaMcp.WorkerChannel.TransportFixture` 提供协议替身；这些证据不替代原生行为验收。
@@ -796,7 +801,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 |---|---|
 | S1 | 每个写入都由该工具自己的前置检查在写入前一刻对照真实状态检查；预览哈希相等仍由工具判断，执行器只能多拒，不能少拒 |
 | S2 | 人审批的是实际会发生的事：目标、内容、要新建或可能被覆盖的对象、调用的原生操作、写入的文件 |
-| S3 | 结果未知即停，锁定会话，不自动重试，不重放；运行记录给出核对建议 |
+| S3 | 本次生成运行遇结果未知即停，记录未确认调用，不自动重试，不重放，后续独立调用可执行；运行记录给出核对建议 |
 | S4 | 每一步都进审计（`request`、`start`、`end`，带 planId、stepId、runId、parentRequestId），运行记录能逐步重建 |
 | S5 | 没有旁门：每步都经 `CallToolCore` 和宿主准入、版本门禁、Openness 通道与调用日志；授权不能从 MCP 参数、管道元数据或批次中伪造 |
 | S6 | 每次 Apply 只审批一次；需要阶段之间检查时按阶段分几次 Apply |
@@ -817,7 +822,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 | 工具 apply 时重算哈希不等 | 否 | `rejected-before-operation` |
 | 效果超出或少于声明 | 是 | `effect-diverged`，Apply 为 partial |
 | 新建项目后核对不符 | 是 | `diverged`，Apply 为 partial |
-| 结果未知或派发异常 | 可能 | `unknown`，会话锁定 |
+| 结果未知或派发异常 | 可能 | 以当前调用的真实结果分类。未知写入记录 `unsettled`，后续独立调用继续 |
 | 步骤之间取消 | 不适用 | `cancelled` |
 
 发散后只停止：结果给出 `nextAction: "replan"` 与差异证据，重新规划得到只含剩余步骤的新计划，再审批一次；不就地续批。
@@ -872,7 +877,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 | API-02 | 错误码用 UPPER_SNAKE | 第 4.3 节 |
 | API-05 | 始终输出 null，不省略字段 | 第 4.3 节 |
 | API-06 | 集合与分页形状：`nextOffset`/`nextCursor` 对应 nextLink，`items` 对应 value | 第 4.8 节 |
-| API-09 | 没有可重复请求标识，采用“至多一次 + 锁定 + 人工核实” | 第 4.11 节 |
+| API-09 | 结果未知只记录该调用，后续独立调用继续。保留禁止重放、审批、身份与计划校验。[ADR 0034](decisions/0034-no-session-lock.md) 记录对未采纳 MCP 草案 WS-23、WS-24、WS-41 的有意偏差 |
 | API-10 | 条件写用 `expected*` 参数，读取不返回 ETag | 第 4.10 节 |
 | API-11 | 进程级版本与 4.0 硬切换，4.x 只做增量 | 第 4.13 节 |
 | API-16 | `Manage*` 多路复用工具，注解取保守值 | 第 6.2、6.3 节 |

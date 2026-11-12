@@ -133,7 +133,7 @@ public sealed class OfflineReadinessTests
         public Task<IDisposable?> AcquireLane(CancellationToken token) => Task.FromResult<IDisposable?>(new Lane());
         public void ActivateLane(IDisposable? lane) { }
         public IDisposable? EnterRequest(RequestContext<CallToolRequestParams> request) => null;
-        public void MarkUncertain() => throw new InvalidOperationException();
+
         public void Dispose() { }
         private sealed class Lane : IDisposable { public void Dispose() { } }
     }

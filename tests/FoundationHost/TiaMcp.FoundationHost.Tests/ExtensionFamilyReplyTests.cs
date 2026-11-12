@@ -16,17 +16,17 @@ public sealed class ExtensionFamilyReplyTests
     public void Plc_B5_failures_after_a_possible_change_keep_the_unknown_outcome(string code)
     {
         using var release = Host.HardwareContract.UseRelease("21");
-        var state = new WorkerOutcomeState();
+
         var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
                 Failure = new PlcSoftwareFailure { Code = code, Message = "Native result unavailable after a change." },
                 MayHaveChanged = true, RequiresSessionReset = true }));
-            state.AcceptResult(operation, args, json);
+            WorkerProtocol.ValidateExchangeResult(operation, args, json);
             return json;
         }, () => "fixture");
         var body = Host.EngineeringToolContract.Run("GetPlcOpcUaConfiguration", true,
             () => service.GetOpcUaConfig("PLC")).StructuredContent!;
-        Assert.True(state.Poisoned);
+
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
         Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
     }
@@ -38,17 +38,17 @@ public sealed class ExtensionFamilyReplyTests
     public void Plc_B5_read_failures_report_read_failed_without_requiring_a_session_reset(string code)
     {
         using var release = Host.HardwareContract.UseRelease("21");
-        var state = new WorkerOutcomeState();
+
         var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
                 Failure = new PlcSoftwareFailure { Code = code, Message = "Native result unavailable after a change." },
                 MayHaveChanged = true, RequiresSessionReset = true }));
-            state.AcceptResult(operation, args, json);
+            WorkerProtocol.ValidateExchangeResult(operation, args, json);
             return json;
         }, () => "fixture");
         var body = Host.EngineeringToolContract.Run("GetPlcOpcUaConfiguration", false,
             () => service.GetOpcUaConfig("PLC")).StructuredContent!;
-        Assert.True(state.Poisoned);
+
         Assert.Equal("read-failed", (string?)body["meta"]!["outcome"]);
         Assert.Equal("read-only", (string?)body["meta"]!["execution"]);
         Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
@@ -64,7 +64,7 @@ public sealed class ExtensionFamilyReplyTests
         var reply = new OptionalProductReply { Message = "Native result unavailable.", Meta = new() {
             ["operationSuccess"] = false, ["apiCallSuccess"] = false, ["mayHaveChanged"] = false, [flag] = true } };
         var json = JsonNode.Parse(WorkerJson.Serialize(reply))!;
-        new WorkerOutcomeState().AcceptResult("optional-products.ExecuteOptionalProduct", new(), json);
+        WorkerProtocol.ValidateExchangeResult("optional-products.ExecuteOptionalProduct", new(), json);
         var response = JsonSerializer.Deserialize<Host.ResponseMessage>(json.ToJsonString())!;
         var body = Host.OptionalPackageContract.Map("ManageSinumerikArchive", response, true).StructuredContent!;
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
@@ -78,9 +78,9 @@ public sealed class ExtensionFamilyReplyTests
             RequiresSessionReset = true, Meta = new() { ["operationSuccess"] = false, ["mayHaveChanged"] = true,
                 ["requiresSessionReset"] = true } };
         var json = JsonNode.Parse(WorkerJson.Serialize(reply))!;
-        var state = new WorkerOutcomeState();
-        state.AcceptResult("startdrive.ExecuteStartdrive", new(), json);
-        Assert.True(state.Poisoned);
+
+        WorkerProtocol.ValidateExchangeResult("startdrive.ExecuteStartdrive", new(), json);
+
         var response = JsonSerializer.Deserialize<Host.ResponseMessage>(json.ToJsonString())!;
         var body = Host.DriveToolContract.Map("ManageDriveFunctions", response, true, true).StructuredContent!;
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
@@ -97,7 +97,7 @@ public sealed class ExtensionFamilyReplyTests
         var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply { Message = message,
                 Meta = legacyMeta ? new() { ["success"] = false } : null }));
-            new WorkerOutcomeState().AcceptResult(operation, args, json);
+            WorkerProtocol.ValidateExchangeResult(operation, args, json);
             return json;
         }, () => "fixture");
         var result = Host.EngineeringToolContract.Run("ExportAlarmClasses", true, () => service.ExportAlarmClasses("PLC", "fixture.dat"));
@@ -114,18 +114,18 @@ public sealed class ExtensionFamilyReplyTests
     {
         using var release = Host.HardwareContract.UseRelease("21");
         const string message = "Synthetic OPC UA native refusal.";
-        var state = new WorkerOutcomeState();
+
         var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
                 Failure = new PlcSoftwareFailure { Code = code, Message = message } }));
-            state.AcceptResult(operation, args, json);
+            WorkerProtocol.ValidateExchangeResult(operation, args, json);
             return json;
         }, () => "fixture");
         var result = Host.EngineeringToolContract.Run("GetPlcOpcUaConfiguration", false, () => service.GetOpcUaConfig("PLC"));
         Assert.Equal(expected, (string?)result.StructuredContent!["error"]!["code"]);
         Assert.Contains(message, result.StructuredContent["error"]!.ToJsonString(), StringComparison.Ordinal);
         Assert.False((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
-        Assert.False(state.Poisoned);
+
     }
 
     [Theory]
@@ -245,10 +245,9 @@ public sealed class ExtensionFamilyReplyTests
     public void Contract_replies_validate_without_invented_step_metadata(string operation, string verdict)
     {
         var json = JsonNode.Parse(WorkerJson.Serialize(Reply(operation, verdict)))!;
-        var state = new WorkerOutcomeState();
-        state.AcceptResult(operation, new(), json);
-        state.RequireUsable();
-        Assert.False(state.Poisoned);
+
+        WorkerProtocol.ValidateExchangeResult(operation, new(), json);
+
         Assert.Null(json["Meta"]!["success"]);
         if (operation.EndsWith("ExecutePlcB5", StringComparison.Ordinal))
         {
@@ -257,9 +256,8 @@ public sealed class ExtensionFamilyReplyTests
             json["Blocks"]![0]!["Name"] = "Main";
         }
         json["RequiresSessionReset"] = "false";
-        var malformed = Assert.Throws<IOException>(() => state.AcceptResult(operation, new(), json));
-        state.Failed(true, malformed);
-        Assert.True(state.Poisoned);
+        var malformed = Assert.Throws<IOException>(() => WorkerProtocol.ValidateExchangeResult(operation, new(), json));
+
     }
 
     [Theory]
@@ -284,7 +282,7 @@ public sealed class ExtensionFamilyReplyTests
         foreach (bool writes in new[] { false, true })
         {
             var json = JsonNode.Parse(WorkerJson.Serialize(Reply(operation, verdict)))!;
-            new WorkerOutcomeState().AcceptResult(operation, new(), json);
+            WorkerProtocol.ValidateExchangeResult(operation, new(), json);
             var response = JsonSerializer.Deserialize<Host.ResponseMessage>(json.ToJsonString())!;
             var result = contract switch {
                 "library" => Host.LibraryToolContract.Map(tool, response, writes),

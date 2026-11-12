@@ -67,12 +67,23 @@ internal static class PathAndIdentityTests
         Reject(()=>Gate(false,true,@"C:\Projects\New\New.ap17","CreateProject",directory:@"C:\Projects",name:"../New"),"Create traversal refused");
         Reject(()=>Gate(false,true,@"C:\Projects\New\New.ap16","CreateProject",directory:@"C:\Projects",name:"New"),"Wrong project version refused");
         foreach(var invalidKey in new[]{"14","15","V17","22"}) Reject(()=>Gate(false,true,@"C:\Projects\New\New.ap17","CreateProject",invalidKey,directory:@"C:\Projects",name:"New"),"Original/unknown release refused");
+        var rejected = WorkerFailurePolicy.Classify(
+            new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Export directory must already exist.", "exportPath"), true, false);
+        check(rejected.Code == -32602 && rejected.Outcome == TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,
+            "Typed argument precondition is rejected after method entry");
+        var stateRefusal = WorkerFailurePolicy.Classify(
+            new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Borrowed projects are never closed.", isArgument: false), true, false);
+        check(stateRefusal.Code == -32603 && stateRefusal.Outcome == TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,
+            "Typed state precondition is rejected without an argument code");
+        var ordinaryArgument = WorkerFailurePolicy.Classify(new ArgumentException("untyped failure"), true, false);
+        check(ordinaryArgument.Outcome == TiaMcp.WorkerChannel.ChannelOutcome.Unknown,
+            "An untyped ArgumentException after write dispatch remains uncertain");
         foreach(var outcome in new[]{"rejected-before-operation","read-failed","unknown"})
         {
             var error=new WorkerOperationException("test",-32602,outcome);
-            check(WorkerProtocol.RequiresSessionReset(true,error)==(outcome=="unknown"),"Only unknown outcome poisons session");
+            UnsettledOutcomeAssertions.Failure(error, true, true, outcome == "unknown", check, "Worker outcome " + outcome);
         }
-        check(WorkerProtocol.RequiresSessionReset(true,new OperationCanceledException()),"Sent cancellation remains unknown");
-        check(!WorkerProtocol.RequiresSessionReset(false,new OperationCanceledException()),"Unsent cancellation is safe");
+        UnsettledOutcomeAssertions.Failure(new OperationCanceledException(), true, true, true, check, "Sent cancellation");
+        UnsettledOutcomeAssertions.Failure(new OperationCanceledException(), false, true, false, check, "Unsent cancellation");
     }
 }

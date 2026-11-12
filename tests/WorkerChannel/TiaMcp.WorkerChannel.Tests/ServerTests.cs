@@ -8,7 +8,7 @@ namespace TiaMcp.WorkerChannel.Tests;
 public sealed class ServerTests
 {
     [Fact]
-    public void Answered_unknown_allows_one_recovery_disconnect_on_the_original_owner_thread()
+    public void Server_dispatches_after_an_unknown_reply()
     {
         using var output = new MemoryStream(); int calls = 0, owner = Environment.CurrentManagedThreadId;
         var server = Server(output, request => {
@@ -20,8 +20,9 @@ public sealed class ServerTests
         Assert.False(server.Poisoned);
         server.Handle(Encoding.UTF8.GetBytes(Request(2).Replace("adapter.ReadState", "adapter.Disconnect")));
         Assert.Equal(2, calls);
-        Assert.Throws<ChannelFaultException>(() => server.Handle(Encoding.UTF8.GetBytes(Request(3))));
-        Assert.Equal(2, calls);
+        server.Handle(Encoding.UTF8.GetBytes(Request(3)));
+        Assert.Equal(3, calls);
+        Assert.False(server.Poisoned);
     }
     [Theory]
     [InlineData(false)] [InlineData(true)]

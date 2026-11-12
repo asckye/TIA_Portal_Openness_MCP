@@ -40,7 +40,7 @@ public sealed class SessionRebindTests
         var result = await worker.Call("project-lifecycle.RetrieveProjectArchive", Retrieve("fixture"), CancellationToken.None);
         Assert.True((bool?)result?["Meta"]?["operationSuccess"]);
         Assert.Equal(1, (long?)worker.OperatorSnapshot()["binding"]?["bindingEpoch"]);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     [Theory, MemberData(nameof(ReleasesAndSessions))]
@@ -49,7 +49,7 @@ public sealed class SessionRebindTests
         using var worker = Worker(release, shared: shared);
         var result = await worker.Call("project-lifecycle.RetrieveProjectArchive", Retrieve("refused"), CancellationToken.None);
         Assert.Equal("PreconditionFailed", (string?)result?["Meta"]?["status"]);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
         await worker.Call("ReadState", new(), CancellationToken.None);
     }
 
@@ -60,7 +60,7 @@ public sealed class SessionRebindTests
         await worker.Call("project-lifecycle.ConnectIsolatedPortal", new(), CancellationToken.None);
         Assert.Equal(123, (int?)worker.OperatorSnapshot()["binding"]?["processId"]);
         await worker.Call("ReadBlocks", new(), CancellationToken.None);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     [Theory, MemberData(nameof(ReleasesAndSessions))]
@@ -71,7 +71,7 @@ public sealed class SessionRebindTests
         var error = await Assert.ThrowsAsync<WorkerOperationException>(() =>
             worker.Call("project-lifecycle.ConnectIsolatedPortal", new(), CancellationToken.None));
         Assert.Equal("rejected-before-operation", error.Outcome);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     [Theory, MemberData(nameof(ReleasesAndSessions))]
@@ -83,7 +83,7 @@ public sealed class SessionRebindTests
         Assert.True((bool?)restart["restarted"]);
         await worker.Call("project-lifecycle.ConnectIsolatedPortal", new(), CancellationToken.None);
         Assert.Equal(123, (int?)worker.OperatorSnapshot()["binding"]?["processId"]);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     [Theory, MemberData(nameof(ReleasesAndSessions))]
@@ -102,7 +102,7 @@ public sealed class SessionRebindTests
                 true, true).StructuredContent!;
             Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
             Assert.Equal("unknown", (string?)body["meta"]?["execution"]);
-            Assert.True(worker.Poisoned);
+            Assert.True(worker.Faulted);
         }
         finally { Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", previous); }
     }
@@ -142,7 +142,7 @@ public sealed class SessionRebindTests
         string afterCommit = worker.ApprovalIdentity;
         await worker.Call("project-lifecycle.ReadProjectLifecycleBinding", new(), CancellationToken.None);
         Assert.Equal(afterCommit, worker.ApprovalIdentity);
-        Assert.False(worker.Poisoned);
+        Assert.False(worker.Faulted);
     }
 
     [Fact]

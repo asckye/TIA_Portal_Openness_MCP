@@ -12,17 +12,29 @@ internal static class BatchImportDispatchTests
     {
         internal int Calls,Writes;
         internal bool FailSecond;
-        internal readonly WorkerOutcomeState State=new();
+        internal JsonNode? LastReply;
+
         public Task<JsonNode?> Call(string operation,JsonObject args,CancellationToken token)
         {
-            State.RequireUsable();Calls++;
+            Calls++;
             try
             {
-                var request=new PlcBatchImportRequest {Release="17",ProcessId=123,Project="C:/Projects/project.ap17",Software=args["softwarePath"]!.GetValue<string>(),Directory=root,Program=operation=="ImportPlcProgramFromDirectory",DryRun=args["dryRun"]!.GetValue<bool>(),Confirm=args["confirm"]!.GetValue<bool>(),ExpectedProject=args["expectedProjectFile"]!.GetValue<string>(),ExpectedHash=args["expectedPlanHash"]!.GetValue<string>(),Order=args["importOrder"]!.AsArray().Select(x=>x!.GetValue<string>()).ToArray()};
-                var result=PlcBatchImportPolicy.Run(request,Array.Empty<PlcBatchImportObject>(),()=>{},(_,item)=>{Writes++;if(FailSecond && Writes==2)throw new IOException("fake native uncertainty");return new[]{new PlcBatchImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number ?? 900+Writes}};});
-                var payload=JsonSerializer.SerializeToNode(result)!;State.AcceptResult(operation,args,payload);return Task.FromResult<JsonNode?>(payload);
+                var request=new PlcBatchImportRequest {
+                    Release="17",ProcessId=123,Project="C:/Projects/project.ap17",Software=args["softwarePath"]!.GetValue<string>(),Directory=root,Program=
+                        operation=="ImportPlcProgramFromDirectory",DryRun=args["dryRun"]!.GetValue<bool>(),Confirm=args["confirm"]!.GetValue<bool>(),
+                        ExpectedProject=args["expectedProjectFile"]!.GetValue<string>(),ExpectedHash=args["expectedPlanHash"]!.GetValue<string>(),Order=
+                        args["importOrder"]!.AsArray().Select(x=>x!.GetValue<string>()).ToArray()
+                };
+                var result=PlcBatchImportPolicy
+                    .Run(request,Array.Empty<PlcBatchImportObject>(),()=>{},(_,item)=>{
+                        Writes++;if(FailSecond && Writes==2)throw new IOException("fake native uncertainty");return new[]{
+                            new PlcBatchImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number ?? 900+Writes}};
+                    });
+                var payload=JsonSerializer.SerializeToNode(result)!;WorkerProtocol.ValidateExchangeResult(operation,args,payload);LastReply = payload;
+                return Task
+                    .FromResult<JsonNode?>(payload);
             }
-            catch(Exception error){State.Failed(true,error);throw;}
+            catch { throw; }
         }
         public void Dispose(){}
     }
@@ -55,9 +67,20 @@ internal static class BatchImportDispatchTests
                 args["dryRun"]=JsonSerializer.SerializeToElement(false);args["confirm"]=JsonSerializer.SerializeToElement(true);args["expectedProjectFile"]=JsonSerializer.SerializeToElement("C:/Projects/project.ap17");await Reject("missing manifest/hash refused");
                 check(worker.Calls==2 && worker.Writes==0,name+": every wrapper rejection avoided dispatch");
                 args["importOrder"]=JsonSerializer.SerializeToElement(new[]{"A.xml","B.xml","C.xml"});args["expectedPlanHash"]=JsonSerializer.SerializeToElement(preview["PlanHash"]!.GetValue<string>());
-                worker.FailSecond=true;var partial=Payload(await tool.InvokeAsync(Request()));
-                check(partial["ImportedCount"]!.GetValue<int>()==1 && partial["FailedCount"]!.GetValue<int>()==1 && worker.Writes==2 && worker.State.Poisoned,name+": partial result retained and host poisoned");
-                await Reject("replay denied while worker remains available");check(worker.Calls==3 && worker.Writes==2,name+": no replay or third write after uncertainty");
+                worker.FailSecond=true;
+                var applyTool = new FoundationV4Tool((FoundationTool)tool, "17", () => new(false, 1));
+                var unknown = await applyTool.InvokeAsync(Request());
+                var partial=worker.LastReply!;
+                check((string?)unknown.StructuredContent?["meta"]?["outcome"] == "unknown", name + ": partial apply reports its unknown outcome");
+                check(partial["ImportedCount"]!.GetValue<int>()==1 && partial["FailedCount"]!.GetValue<int>()==1 && worker.Writes==2,name
+                        +": partial result retained");
+                var replay = await applyTool.InvokeAsync(Request());
+                check((string?)replay.StructuredContent?["error"]?["details"]?["condition"] == "same-call-unsettled", name + ": identical apply is refused");
+                check(worker.Calls==3 && worker.Writes==2,name+": no replay or third write after uncertainty");
+                args["dryRun"] = JsonSerializer.SerializeToElement(true);
+                var next = await applyTool.InvokeAsync(Request());
+                check((bool?)next.StructuredContent?["ok"] == true && worker.Calls == 4 && worker.Writes == 2,
+                    name + ": independent preview reaches the worker without replaying the apply");
             }
         }
         finally{Directory.Delete(root,true);}

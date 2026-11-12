@@ -532,7 +532,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             });
                         if (outcome != "succeeded")
                         {
-                            if (outcome == "unknown") McpServer.MarkSharedSessionUncertain();
+                            if (outcome == "unknown") McpServer.RecordUnsettled(requestId, step.Tool, JsonSerializer.Serialize(step.Arguments));
                             status = outcome; stopping = step.Id; break;
                         }
                         succeeded++;
@@ -545,7 +545,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         status = step.Phase == "record" ? "partial" : "unknown"; stopping = step.Id;
                         claim.Consume();
-                        if (step.Phase != "record") McpServer.MarkSharedSessionUncertain();
+                        if (step.Phase != "record") McpServer.RecordUnsettled(requestId, step.Tool, JsonSerializer.Serialize(step.Arguments));
                         records.Append(runId, new JsonObject { ["event"] = "step-end", ["stepId"] = step.Id, ["requestId"] = requestId, ["status"] = status,
                             ["error"] = ex.GetType().Name + ": " + ex.Message });
                         break;
@@ -576,19 +576,25 @@ namespace TiaMcpServer.ModelContextProtocol
                             ["event"] = "end", ["status"] = status, ["stoppingReason"] = stopping, ["error"] = last?["error"]?.DeepClone() });
                 }
                 catch (Exception ex) when (dispatched && (ex is IOException || ex is UnauthorizedAccessException))
-                { McpServer.MarkSharedSessionUncertain(); throw new GenerationPersistenceUnknownException(runId, ex); }
+                {
+                    McpServer.RecordUnsettled(InvocationJournal.CorrelationId, "ApplyGenerationPlan", "{}");
+                    throw new GenerationPersistenceUnknownException(runId, ex);
+                }
                 finally { if (approval != null) ApprovalClient.Complete(approval, status).GetAwaiter().GetResult(); }
             }
             JsonObject data;
             try { data = records.Read(runId); }
             catch (Exception ex) when (dispatched && (ex is IOException || ex is UnauthorizedAccessException))
-            { McpServer.MarkSharedSessionUncertain(); throw new GenerationPersistenceUnknownException(runId, ex); }
+            {
+                McpServer.RecordUnsettled(InvocationJournal.CorrelationId, "ApplyGenerationPlan", "{}");
+                throw new GenerationPersistenceUnknownException(runId, ex);
+            }
             data["rollbackPerformed"] = false;
             data["nextAction"] = status == "succeeded" ? "inspect" : "replan";
             if (status == "succeeded") return McpServer.V4Result("ApplyGenerationPlan", data, completed: true, current: true);
             if (status == "unknown") return McpServer
                 .V4Result("ApplyGenerationPlan", data,
-                    new Error("Generation outcome unknown; inspect the project, reset the session and replan. Never replay this run.",
+                    new Error("Generation outcome unknown; inspect the project and replan. Never replay this run.",
                         new OutcomeUnknownDetails("generation", new Dictionary<string, JsonElement>())),
                     Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: true);
             if (succeeded > 0) return McpServer

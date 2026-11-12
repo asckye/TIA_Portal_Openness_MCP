@@ -30,7 +30,8 @@ internal static class Program
         var identity = new ChannelIdentity(options.ReleaseKey, Hash(exe),
             Hash(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + options.ReleaseKey + ".dll")),
             System.Diagnostics.Process.GetCurrentProcess().Id, options.Nonce);
-        bool lost = false, bound = false, projectClosed = false;
+        bool bound = false, projectClosed = false;
+        bool failNextStatus = false;
         int attachedPid = 123;
         long epoch = 0;
         string? faultMethod = null, faultTool = null, faultCorrelation = null, savedAs = null;
@@ -50,13 +51,21 @@ internal static class Program
             while (!File.Exists(Path.Combine(gate, "release")) && DateTime.UtcNow < deadline) Thread.Sleep(5);
         }
         new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new ChannelBinding(epoch, bound), request => {
+            if (request.Method == "adapter.FixtureFailNextStatus")
+            { failNextStatus = true; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.HostObserve")
+            {
+                if (failNextStatus)
+                {
+                    failNextStatus = false;
+                    return ChannelResponse.Error(new ChannelFailureException("Synthetic answered status error.", -32603, ChannelOutcome.ReadFailed));
+                }
                 return ChannelResponse.Success(JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey,
                     diagnosticsDirectory = Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY"),
                     readiness = new { ready = true }, binding = bound ? new {
                         projectPath = projectClosed ? null : savedAs ?? "C:/fixture.ap" + options.ReleaseKey } : null,
                     session = new { isConnected = bound } }));
-            if (lost) return ChannelResponse.Error(new ChannelFailureException("Explicit restart required.", -32603, ChannelOutcome.RejectedBeforeNative));
+            }
             if (request.Method == "adapter.project-lifecycle.EnsureOpennessUserGroup"
                 && Environment.GetEnvironmentVariable("TIA_MCP_PLC_WORKER_GROUP_FIX") is { Length: > 0 } groupFix)
                 return GroupFix(groupFix);
@@ -90,7 +99,7 @@ internal static class Program
             bool target = request.Method == faultMethod && request.ToolName == faultTool && request.CorrelationId == faultCorrelation;
             string? fixtureMode = WorkerFaultInjection.PlcMode(typeof(Program).Assembly);
             string? mode = target ? fixtureMode : null;
-            var injected = mode == null ? null : WorkerFaultInjection.PlcBeforeDispatch(typeof(Program).Assembly, request, _ => lost = true);
+            var injected = mode == null ? null : WorkerFaultInjection.PlcBeforeDispatch(typeof(Program).Assembly, request, _ => { });
             if (injected != null) return injected;
             if (request.Method == "adapter.project-lifecycle.ArchiveSaveProjectCopy")
             {
@@ -127,6 +136,18 @@ internal static class Program
                     ? "{\"operationSuccess\":false,\"status\":\"PreconditionFailed\",\"mayHaveChanged\":false}"
                     : "{\"operationSuccess\":true}", !refused && (bool?)args["DryRun"] == false);
             }
+            if (request.Method == "adapter.FixtureDocumentImportUnknown")
+            {
+                var document = JsonSerializer.SerializeToNode(new TiaMcp.Adapters.PlcDocumentImportResult())!.AsObject();
+                document["Status"] = "unknown"; document["Attempted"] = true; document["MayHaveChanged"] = true;
+                document["RequiresSessionReset"] = true; document["Error"] = "Synthetic document import result unknown.";
+                return ChannelResponse.Success(document.ToJsonString());
+            }
+            if (request.Method == "adapter.FixtureAnsweredUnknown")
+                return ChannelResponse.Error(new ChannelFailureException("Synthetic answered unknown.", -32603, ChannelOutcome.Unknown));
+            if (request.Method == "adapter.SaveProject")
+                return ChannelResponse.Success(new JsonObject { ["Executed"] = (bool?)JsonNode.Parse(request.ArgumentsJson)?["dryRun"] != true,
+                    ["ProjectFile"] = "C:/fixture.ap" + options.ReleaseKey }.ToJsonString());
             if (request.Method == "adapter.Attach")
             {
                 attachedPid = (int)JsonNode.Parse(request.ArgumentsJson)!["processId"]!;

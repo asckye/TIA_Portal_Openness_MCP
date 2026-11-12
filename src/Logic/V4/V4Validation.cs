@@ -138,19 +138,12 @@ namespace TiaMcp.Logic.V4
                 || value.Warnings.Any(w => w.Code == WarningCode.UnverifiedBehavior), "Current policy requires UNVERIFIED_BEHAVIOR.");
         }
 
-        // Session evidence is supplied by the host; the wire alone cannot say whether
-        // a native boundary was reached or whether this operation can mutate state.
+        // The legacy flag is carried until the wire-field migration; it does not describe session admission.
         internal static void Envelope(Envelope value, int schemaVersion, bool nativeIssued, bool mutation)
-            => Envelope(value, schemaVersion, TiaOpenness.Shared.SessionBehavior.LocksSession(
-                nativeIssued, value.Meta.Outcome == Outcome.Unknown, mutation));
+            => Envelope(value, schemaVersion);
 
         internal static void Envelope(Envelope value, int schemaVersion, bool sessionLocked)
-        {
-            Envelope(value, schemaVersion);
-            if (value.Meta.Outcome == Outcome.Unknown)
-                Require(value.Meta.RequiresSessionReset == sessionLocked,
-                    "Unknown outcomes must report the observed session lock exactly.");
-        }
+            => Envelope(value, schemaVersion);
 
         internal static void Details(ErrorDetails value)
         {

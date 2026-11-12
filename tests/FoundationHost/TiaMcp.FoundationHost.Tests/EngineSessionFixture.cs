@@ -21,12 +21,11 @@ internal static class EngineSessionFixture
             Environment.ProcessId, args[Array.IndexOf(args, "--native-session") + 3]);
         int? attached = null;
         PortalProcessLease? lease = null;
-        long epoch = 0; bool uncertain = false, hasProject = true, lockOnNextFamily = false, locked = false;
+        long epoch = 0; bool uncertain = false, hasProject = true, unknownOnNextFamily = false;
         string? slowShutdownMarker = null;
         string? leaseRoot = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
         JsonObject Status() => new() { ["releaseKey"] = release, ["readiness"] = new JsonObject { ["ready"] = true },
             ["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(BehaviorCapabilities).Assembly, release),
-            ["sessionLocked"] = locked,
             ["binding"] = attached == null || !hasProject ? null : new JsonObject {
                 ["tiaMajorVersion"] = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release),
                 ["processId"] = attached, ["processStartUtc"] = "2026-10-05T00:00:00Z",
@@ -64,17 +63,12 @@ internal static class EngineSessionFixture
             if (request.Method == "adapter.FixtureMarkUncertain") { uncertain = true; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.FixtureNoProject") { hasProject = false; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.FixtureSlowShutdown") { slowShutdownMarker = (string)input["marker"]!; return ChannelResponse.Success("{}"); }
-            if (request.Method == "adapter.FixtureLockOnNextFamily") { lockOnNextFamily = true; return ChannelResponse.Success("{}"); }
-            if (locked && request.Method != "adapter.Disconnect")
-                return ChannelResponse.Error(new ChannelFailureException(SessionBehavior.Recovery, -32603, ChannelOutcome.RejectedBeforeNative));
-            if (lockOnNextFamily && request.Method == "adapter.plc-software.ExecutePlcOrganisation")
+            if (request.Method == "adapter.FixtureUnknownOnNextFamily") { unknownOnNextFamily = true; return ChannelResponse.Success("{}"); }
+            if (unknownOnNextFamily && request.Method == "adapter.plc-software.ExecutePlcOrganisation")
             {
-                var outcome = new TiaMcp.PlcWorker.WorkerSessionOutcomeState();
-                var recovery = new TiaMcp.PlcWorker.WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { }, () => { }, () => { },
-                    bindingFault: () => "Fixture binding refresh failed");
-                var response = recovery.Synchronize(request, ChannelResponse.Success(TiaMcp.PlcWorker.WorkerJson.Serialize(new TiaMcp.Adapters.Contracts.PlcSoftwareReply { Found = true })));
-                locked = outcome.RequiresReset;
-                return response;
+                unknownOnNextFamily = false;
+                return ChannelResponse.Success(TiaMcp.PlcWorker.WorkerJson.Serialize(
+                    new TiaMcp.Adapters.Contracts.PlcSoftwareReply { Found = true, RequiresSessionReset = true }));
             }
             if (request.Method == "adapter.Attach")
             {
@@ -99,6 +93,9 @@ internal static class EngineSessionFixture
             }
             if (request.Method == "adapter.FixtureUnknown") return ChannelResponse.Error(new ChannelFailureException("Fixture answered native unknown.", -32603, ChannelOutcome.Unknown));
             if (request.Method == "adapter.FixtureHang") { if (leaseRoot != null) File.WriteAllText(Path.Combine(leaseRoot, "busy"), ""); Thread.Sleep(10000); return ChannelResponse.Success("{}"); }
+            if (request.Method == "adapter.ListProjects")
+                return ChannelResponse.Success(new JsonArray(new JsonObject { ["Name"] = "fixture",
+                    ["Attributes"] = new JsonArray(new JsonObject { ["Name"] = "Path", ["Value"] = "C:/fixture.ap" + release }) }).ToJsonString());
             if (request.Method == "adapter.ReadPortalProcessProjects")
                 return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["Processes"] = new JsonArray(),
                     ["IdentityStrategy"] = "os-pid-and-start-time-observation-only" }.ToJsonString());

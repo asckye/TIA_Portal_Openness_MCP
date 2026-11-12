@@ -278,7 +278,7 @@ public sealed class StagedGenerationTests
         public bool SharedSession => true;
         public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => null;
         public IDisposable? EnterRequest(ModelContextProtocol.Server.RequestContext<CallToolRequestParams> request) => null;
-        public void MarkUncertain() { Uncertain = true; Host.MarkSharedSessionUncertain(); }
+
         public Task<IDisposable?> AcquireLane(CancellationToken token) => Task.FromResult<IDisposable?>(null);
         public void ActivateLane(IDisposable? lane) { }
         public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new Lane());
@@ -742,12 +742,12 @@ public sealed class StagedGenerationTests
         Assert.NotEmpty((string)preview["planHash"]!);
     }
     [Theory, MemberData(nameof(Releases))]
-    public void UnknownExistingObjectNeedsExplicitAdoptionAndGetsAnAdoptedWitness(string release)
+    public void Generation_run_still_stops_at_an_unknown_step_and_the_session_stays_usable(string release)
     {
         using var f = new Fixture(release); f.Failure = "unknown"; var result = f.Apply(); Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
-        Assert.Equal("SESSION_RESET_REQUIRED", (string?)Host.SessionPrecheckRefusal("ImportPlcExternalSource")?.StructuredContent?["error"]?["code"]);
-        f.Failure = null; f.Reconnect(); f.Worker.Sources.Clear();
-        Assert.Null(Host.SessionPrecheckRefusal("ImportPlcExternalSource"));
+        Assert.Single(Host.Worker.Unsettled.Snapshot());
+        f.Failure = null; f.Worker.Sources.Clear();
+
         f.Worker.Objects.Add(new PlcExternalSourceObject { Kind = "block", Name = "FB_Motor", Path = "FB_Motor", ModifiedDate = new DateTime(2026, 10, 10) });
         var plan = f.Plan(); Assert.Contains(plan["conflicts"]!.AsArray(), c => (string?)c!["key"] == "PLC1/block/FB_Motor" && (string?)c["reason"] == "unknown-outcome");
         var adopted = f.Plan(new[] { "PLC1/block/FB_Motor" }); Assert.Contains(adopted["skipped"]!.AsArray(), s => (string?)s!["key"] == "PLC1/block/FB_Motor" && (string?)s["reason"] == "adopted");

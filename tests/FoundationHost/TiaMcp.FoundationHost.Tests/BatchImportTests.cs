@@ -53,7 +53,7 @@ internal static class BatchImportTests
             check(partial.ImportedCount==1 && partial.FailedCount==1 && partial.RequiresSessionReset && partial.Items.Select(x=>x.Status).SequenceEqual(new[]{"imported","failed","not-attempted"}) && imports==2,"Second failure preserves first result, stops before third, never retries");
             BatchImportContract.Validate(Wire(partial),false);check(true,"Host retains valid partial outcome");
             var args=new JsonObject {["dryRun"]=false,["expectedProjectFile"]=preview.ProjectFile,["softwarePath"]=preview.SoftwarePath,["groupPath"]="",["expectedPlanHash"]=preview.PlanHash,["importOrder"]=JsonSerializer.SerializeToNode(Apply(preview).Order)};
-            var state=new WorkerOutcomeState();state.AcceptResult("ImportBlocksFromDirectory",args,Wire(partial));check(state.Poisoned,"Host becomes poisoned after retained partial import");
+            WorkerProtocol.ValidateExchangeResult("ImportBlocksFromDirectory",args,Wire(partial));
             Reject(()=>{var wire=Wire(partial);wire["RequiresSessionReset"]=false;BatchImportContract.Validate(wire,false);},"Reset/count conflicts rejected");
             foreach(var returned in new PlcBatchImportObject[]?[] {null,Array.Empty<PlcBatchImportObject>(),new[]{new PlcBatchImportObject {Name="Wrong",Kind="FC"}},new[]{preview.Items[0].Planned,preview.Items[1].Planned},new[]{new PlcBatchImportObject {Name="LogicalZ",Kind="unknown-native-kind",GroupPath="",Number=1}},new PlcBatchImportObject[]{null!}})
             {

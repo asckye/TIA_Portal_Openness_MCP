@@ -417,8 +417,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "SearchInstalledGsdDevices"),
                 Description("[L2][Hardware]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD devices such as AFM60A, " +
                 "ATV320, or DL100. Use a precise vendor/order/DAP keyword. limit bounds returned candidates, not the synchronous native Find call or file " +
-                "traversal. The existing 120-second read budget is unchanged; a lost or timed-out worker requires session reset and the returned recovery " +
-                "steps. The catalog API has no cancellation or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows.")]
+                "traversal. A failed read reports its own outcome. Inspect the returned diagnostics before another call. The catalog API has no cancellation " +
+                    "or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows.")]
         public CallToolResult SearchInstalledGsdDevicesV4(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100', 'SICK AFM60A'")] string keyword,
             [Description("limit: maximum candidates to return")] int limit = 50)

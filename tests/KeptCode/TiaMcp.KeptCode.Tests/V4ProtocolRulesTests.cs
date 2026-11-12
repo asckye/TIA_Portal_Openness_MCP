@@ -304,15 +304,15 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
-        public void Unknown_precheck_preserves_evidence_and_reset_matches_actual_lock()
+        public void Unknown_precheck_preserves_evidence_without_locking_the_session()
         {
             var value = Body(Outcome.Unknown, new Error("Unknown.", new OutcomeUnknownDetails("PLC operation", Empty)));
             var marked = EnvelopeMutation.Precheck(value, "new-id");
             Assert.Equal("unknown", (string?)marked["meta"]!["outcome"]);
             Assert.Equal("plc-operation", (string?)marked["error"]!["details"]!["stage"]);
             Assert.False(V4Json.Deserialize<Envelope>(marked.ToJsonString()).Meta.RequiresSessionReset);
-            var locked = EnvelopeMutation.SessionReset(marked, true);
-            Assert.True(V4Json.Deserialize<Envelope>(locked.ToJsonString()).Meta.RequiresSessionReset);
+            var locked = marked;
+            Assert.False(V4Json.Deserialize<Envelope>(locked.ToJsonString()).Meta.RequiresSessionReset);
             Assert.Equal("Unknown.", (string?)locked["error"]!["message"]);
         }
 

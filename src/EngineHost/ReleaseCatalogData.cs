@@ -104,7 +104,7 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
 
 internal sealed record WorkerSupervisorState(System.Text.Json.Nodes.JsonObject Legacy, bool Faulted, bool Started,
     long Generation, int Active, int Queued, double TimeoutSeconds, System.Text.Json.Nodes.JsonNode? TimeoutPolicy,
-    bool SessionLocked, System.Text.Json.Nodes.JsonNode? Fault, System.Text.Json.Nodes.JsonNode? Readiness,
+    System.Text.Json.Nodes.JsonNode? Fault, System.Text.Json.Nodes.JsonNode? Readiness,
     System.Text.Json.Nodes.JsonNode? Binding, System.Text.Json.Nodes.JsonArray PreviousGenerations);
 
 internal static class WorkerSupervisorReplies
@@ -128,7 +128,7 @@ internal static class WorkerSupervisorReplies
             ["state"] = state.Faulted ? "Faulted" : state.Active > 0 ? "Busy" : state.Started ? "Ready" : "NotStarted",
             ["generation"] = state.Generation, ["active"] = state.Active, ["queued"] = state.Queued,
             ["timeoutSeconds"] = state.TimeoutSeconds, ["timeoutPolicy"] = state.TimeoutPolicy?.DeepClone(),
-            ["sessionLocked"] = state.SessionLocked, ["fault"] = state.Fault?.DeepClone(), ["readiness"] = state.Readiness?.DeepClone(),
+            ["fault"] = state.Fault?.DeepClone(), ["readiness"] = state.Readiness?.DeepClone(),
             ["binding"] = state.Binding?.DeepClone(), ["previousGenerations"] = state.PreviousGenerations.DeepClone() };
     }
     internal static System.Text.Json.Nodes.JsonObject Restart(string release, bool confirmed, bool success, bool requiresTiaRestart,

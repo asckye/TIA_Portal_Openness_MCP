@@ -2,10 +2,6 @@ namespace TiaOpenness.Shared
 {
     internal static class SessionBehavior
     {
-        internal const string Recovery =
-            "A previous native operation has an unknown outcome. Inspect TIA, then call DisconnectPortal. An idle responsive worker detaches cleanly; a " +
-            "timed-out, busy or lost worker is terminated and TIA must be restarted before reconnecting. Start a new MCP session, then explicitly call " +
-            "ConnectPortal and AttachOpenProject. Never replay the failed request.";
         internal const string TiaRestartRequired =
             "The worker could not acknowledge a clean detach and was terminated. Native outcome remains unknown. Inspect TIA and restart that TIA instance " +
             "before reconnecting; never replay the failed request.";
@@ -19,9 +15,5 @@ namespace TiaOpenness.Shared
             "before reconnecting; do not erase the lease to bypass this guard.";
         internal const string LeaseReserved =
             "TIA instance is already reserved by another MCP, or its lease is inaccessible. Use a separate TIA instance; no attachment attempted.";
-        internal static bool IsRecoveryTool(string name) => name == "DisconnectPortal" || name == "RestartOpennessWorker";
-        internal static bool LocksSession(bool nativeIssued, bool unknown, bool mutation)
-            => nativeIssued && unknown && mutation;
-        internal static bool RequiresReset(bool poisoned, bool usesNativeLane) => poisoned && usesNativeLane;
     }
 }

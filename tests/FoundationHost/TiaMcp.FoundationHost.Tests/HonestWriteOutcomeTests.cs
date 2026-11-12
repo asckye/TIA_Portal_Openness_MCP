@@ -201,14 +201,14 @@ public sealed class HonestWriteOutcomeTests
             ["detailMessageData"] = new[] { new Dictionary<string, object?> { ["text"] = "Type unchanged", ["detailText"] = "No version created." } } } };
         var json = JsonNode.Parse(WorkerJson.Serialize(new { Step = reply, Probe = (object?)null, Import = (object?)null,
             MayHaveChanged = false, RequiresSessionReset = false, BlockReadsAfterUncertain = true }))!;
-        var state = new WorkerOutcomeState(); state.AcceptResult("libraries.ExecuteLibrary", new(), json);
+         WorkerProtocol.ValidateExchangeResult("libraries.ExecuteLibrary", new(), json);
         var response = JsonSerializer.Deserialize<Host.ResponseMessage>(json["Step"]!.ToJsonString())!;
         var body = Host.LibraryToolContract.Map("ImportLibraryTypeDocuments", response, true).StructuredContent!;
         Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
         Assert.Contains("Action is not supported within ExclusiveAccess.", body.ToJsonString(), StringComparison.Ordinal);
         Assert.Contains("No version created.", body.ToJsonString(), StringComparison.Ordinal);
         Assert.DoesNotContain("private stack", body.ToJsonString(), StringComparison.Ordinal);
-        Assert.False(state.Poisoned);
+
         Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 
@@ -216,12 +216,12 @@ public sealed class HonestWriteOutcomeTests
     public void Exclusive_access_refusal_in_plc_organisation_is_rejected_before_operation()
     {
         using var release = Host.HardwareContract.UseRelease("21");
-        var state = new WorkerOutcomeState();
+
         var service = new enginehost::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcSoftwareReply {
                 Failure = new PlcSoftwareFailure { Code = nameof(AdapterPreconditionException), Message = "TIA Portal did not grant exclusive access." },
                 MayHaveChanged = false, RequiresSessionReset = false }));
-            state.AcceptResult(operation, arguments, json);
+            WorkerProtocol.ValidateExchangeResult(operation, arguments, json);
             return json;
         }, () => true, () => "fixture");
         var body = Host.PlcToolContract.Run("CreatePlcTypeGroup", true, true,
@@ -229,7 +229,7 @@ public sealed class HonestWriteOutcomeTests
         Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
-        Assert.False(state.Poisoned);
+
     }
 
     [Theory]
@@ -243,8 +243,8 @@ public sealed class HonestWriteOutcomeTests
             ["precondition"] = "password-policy", ["refusal"] = EngineeringCredentialRules.PasswordPolicyRefusal,
             ["nativeMessage"] = "Native setter refused the value." } };
         var json = JsonNode.Parse(WorkerJson.Serialize(reply))!;
-        var state = new WorkerOutcomeState();
-        state.AcceptResult("hardware-addressing.UpdateHardwareAddress", new(), json);
+
+        WorkerProtocol.ValidateExchangeResult("hardware-addressing.UpdateHardwareAddress", new(), json);
         var response = JsonSerializer.Deserialize<Host.ResponseMessage>(json.ToJsonString())!;
         var body = (contract switch {
             "network" => Host.HardwareToolContract.MapResult("SetDeviceItemChannel", response, false, true),
@@ -254,7 +254,7 @@ public sealed class HonestWriteOutcomeTests
         }).StructuredContent!;
         Assert.Equal(refusal ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
         Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
-        Assert.False(state.Poisoned);
+
     }
     [Fact]
     public void Plc_group_validation_is_rejected_before_dispatch()

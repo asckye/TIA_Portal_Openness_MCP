@@ -83,7 +83,7 @@ public sealed class WorkerDispatchTests
         var result = await worker.Call("FixtureSpill", new(), CancellationToken.None);
         Xunit.Assert.Equal(TiaMcp.WorkerChannel.ChannelLimits.ResponseBytes, ((string)result!["text"]!).Length);
         Xunit.Assert.Equal(before, Directory.GetFiles(directory).OrderBy(path => path, StringComparer.Ordinal).ToArray());
-        Xunit.Assert.False(worker.Poisoned);
+        Xunit.Assert.False(worker.Faulted);
         Xunit.Assert.NotNull(await worker.Call("ReadState", new(), CancellationToken.None));
     }
 
@@ -138,7 +138,7 @@ public sealed class WorkerDispatchTests
         });
         next.Start(); Xunit.Assert.True(next.Join(TestDeadlines.Hang));
         Xunit.Assert.IsType<FileNotFoundException>(second);
-        Xunit.Assert.False(worker.Poisoned);
+        Xunit.Assert.False(worker.Faulted);
     }
 
     // A request the worker client sent and then lost (unknown native outcome) is never reported as
@@ -175,7 +175,7 @@ public sealed class WorkerDispatchTests
         var error = await Xunit.Assert.ThrowsAsync<TiaMcp.WorkerChannel.ChannelLimitException>(() => worker.Call("ReadBlocks", args, CancellationToken.None));
         Xunit.Assert.Equal(false, error.Data["foundationRequestSent"]);
         Xunit.Assert.Equal(TiaMcp.WorkerChannel.ChannelLimits.RequestBytes, error.Data["workerLimitBytes"]);
-        Xunit.Assert.False(worker.Poisoned);
+        Xunit.Assert.False(worker.Faulted);
         var shared = foundationhost::TiaMcp.FoundationHost.FoundationV4Result.Failure("21", "ListPlcBlocks", "fixture", true, false, null, error).StructuredContent!;
         var ported = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run("ListTestSuiteCases", false, () => throw error).StructuredContent!;
         foreach (var body in new[] { shared, ported })

@@ -2,7 +2,7 @@
 
 FoundationHost adds one `RECOVERY_GUIDANCE` entry on all eight releases to
 `meta.warnings` for `INVALID_ARGUMENT`, `PRECONDITION_FAILED`,
-`SESSION_RESET_REQUIRED`, and `CONFIRMATION_REQUIRED` refusals. Successful
+`CONFIRMATION_REQUIRED` refusals. Successful
 responses do not receive this warning. The original error code, message,
 parameter, outcome, and execution evidence remain intact.
 
@@ -20,4 +20,6 @@ exceeds that bound or is unavailable, `exampleArguments` is null and
 `exampleOmitted` is true; retrieve the complete example with `getToolUsage`.
 The warning's `bindingMeaning` requires resolving and reviewing placeholders
 against the current session. Guidance does not approve, retry, or execute a
-write. Session reset and Workbench confirmation remain explicit caller actions.
+write. Workbench confirmation remains an explicit human decision.
+
+An `OUTCOME_UNKNOWN` result applies to that call. Inspect its target before repeating it and never replay it automatically. `GetSessionState.data.sessionState.unsettled` lists unknown request IDs. `SaveProject` and `SaveProjectCopy` carry `UNSETTLED_CALLS` during preview and apply while that list is nonempty.

@@ -15,8 +15,8 @@ internal static class ExternalSourceDeleteTests
         foreach(var key in payload.Select(x=>x.Key).ToArray()) {var bad=(JsonObject)payload.DeepClone();bad.Remove(key);Reject(()=>ExternalSourceDeleteContract.Validate(bad,Args()),"Delete requires "+key);}
         var apply=Args();apply["dryRun"]=false;apply["confirm"]=true;apply["expectedProjectFile"]=payload["ProjectFile"]!.DeepClone();apply["expectedPlanHash"]=payload["PlanHash"]!.DeepClone();
         var unknown=(JsonObject)payload.DeepClone();unknown["Status"]="outcome-unknown";unknown["Attempted"]=true;unknown["RequiresSessionReset"]=true;unknown["Error"]="transport lost";
-        var state=new WorkerOutcomeState();state.AcceptResult("DeletePlcExternalSource",apply,unknown);check(state.Poisoned,"Delete unknown outcome poisons host session");
-        var lost=new WorkerOutcomeState();lost.Failed(true,new IOException("transport loss"));check(lost.Poisoned,"Delete lost transport poisons without retry");
+        WorkerProtocol.ValidateExchangeResult("DeletePlcExternalSource",apply,unknown);
+
         Reject(()=>ExternalSourceDeleteContract.Validate(null,apply),"Missing delete outcome rejected");
         var success=(JsonObject)payload.DeepClone();success["Status"]="deleted-verified";success["Attempted"]=true;success["Executed"]=true;success["Deleted"]=true;ExternalSourceDeleteContract.Validate(success,apply);check(true,"Verified delete result accepted");
         foreach(var key in new[]{"expectedProjectFile","expectedPlanHash","externalSourceName","groupPath","softwarePath"}) {var bad=(JsonObject)apply.DeepClone();bad[key]="changed";Reject(()=>ExternalSourceDeleteContract.Validate(success,bad),"Delete request binds "+key);}

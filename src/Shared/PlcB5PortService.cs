@@ -40,7 +40,9 @@ namespace TiaMcpServer.Siemens.Services
             if (reply["Failure"] is JsonObject error)
             {
                 string code = (string?)error["Code"] ?? "", message = (string?)error["Message"] ?? "";
-                if ((bool?)reply["MayHaveChanged"] == true || (bool?)reply["RequiresSessionReset"] == true)
+                bool writes = !request.DryRun && ToolTaxonomy.OperationOf(request.Operation, null)
+                    .Operation is "WRITE" or "ONLINE-WRITE" or "FILE" or "EXECUTE";
+                if ((bool?)reply["MayHaveChanged"] == true || writes && (bool?)reply["RequiresSessionReset"] == true)
                 {
                     var uncertain = new InvalidOperationException(message);
                     uncertain.Data["workerOutcomeUnknown"] = true;
@@ -51,7 +53,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
                 var nativeFailure = new PortalException(PortalErrorCode.OpennessError, message);
                 nativeFailure.Data["foundationKnownNoMutation"] = (bool?)reply["MayHaveChanged"] == false
-                    && (bool?)reply["RequiresSessionReset"] == false;
+                    && (!writes || (bool?)reply["RequiresSessionReset"] == false);
                 throw nativeFailure;
             }
             return reply;

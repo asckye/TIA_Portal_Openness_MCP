@@ -53,7 +53,7 @@ public sealed class PackagedNoTiaReadinessTests
         Assert.True(status["ok"]?.GetValue<bool>() == true, status.ToJsonString());
         var worker = status["data"]?["evidence"]?["worker"];
         Assert.NotEqual("Faulted", (string?)worker?["state"]);
-        Assert.False(worker?["sessionLocked"]?.GetValue<bool>());
+        Assert.Null(worker?["sessionLocked"]);
         Assert.False(worker?["readiness"]?["ready"]?.GetValue<bool>());
         Assert.False(host.Worker.WorkerFaulted);
         // A later read keeps the admission answer instead of a session reset.
@@ -138,7 +138,7 @@ public sealed class PackagedNoTiaReadinessTests
             pipeline = new Pipeline("", Path.Combine(scratch, "worker.exe"), release, services, "full", shared, null);
             services.Roster = () => roster!;
             roster = pipeline.AllTools;
-            Worker.SessionLocked = () => pipeline.SessionLocked;
+
         }
         internal async Task<JsonObject> Call(string name, JsonObject arguments)
         {

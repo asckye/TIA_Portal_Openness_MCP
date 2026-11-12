@@ -83,7 +83,7 @@ internal static class WorkerShutdown
     internal static WorkerTerminationException? Stop(Process? process, TiaMcp.WorkerChannel.ChannelClient? channel,
         Func<Process, string?>? image = null, bool disposeProcess = true)
     {
-        bool busy = channel?.InFlight == true || channel?.OutcomeUnknown == true && channel.CanDisconnect != true;
+        bool busy = channel?.InFlight == true || channel?.Unanswered == true;
         try
         {
             try { if (channel != null) channel.Dispose(); else process?.StandardInput.Close(); }

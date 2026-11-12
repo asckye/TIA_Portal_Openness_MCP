@@ -45,12 +45,11 @@ internal static class LifecycleContractTests
         state.Unbound(); check(state.ProcessId==123 && state.ProjectFile==null,"Close retains borrowed TIA connection");
         state.Bound(@"C:\Projects\P.als17",false,true); Reject(()=>state.RequireClose(false),"Borrowed local session cannot be closed");
         state.Detached(); check(state.ProjectFile==null && !state.ProcessId.HasValue,"Detach clears ownership without project save/close semantics");
-        var outcome=new WorkerOutcomeState();
-        outcome.Failed(false,new OperationCanceledException()); outcome.RequireUsable(); check(!outcome.Poisoned,"Cancelled before dispatch permits a later explicit call");
-        outcome.Failed(true,new WorkerOperationException("rejected",-32602,"rejected-before-operation")); outcome.RequireUsable(); check(!outcome.Poisoned,"Known validation rejection does not poison");
-        outcome.Failed(true,new TimeoutException()); Reject(outcome.RequireUsable,"Sent timeout prevents later calls");
-        outcome.Failed(false,new OperationCanceledException()); Reject(outcome.RequireUsable,"Unsent cancellation cannot reset an unknown native result");
-        var cancelled=new WorkerOutcomeState(); cancelled.Failed(true,new OperationCanceledException()); Reject(cancelled.RequireUsable,"Cancellation after send remains unknown");
+
+        UnsettledOutcomeAssertions.Failure(new OperationCanceledException(), false, true, false, check, "Unsent cancellation");
+        UnsettledOutcomeAssertions
+            .Failure(new WorkerOperationException("validation", -32602, "rejected-before-operation"), true, true, false, check, "Known validation rejection");
+        UnsettledOutcomeAssertions.Failure(new OperationCanceledException(), true, true, true, check, "Dispatched uncertainty");
         using(var client=new WorkerClient("17","must-not-start.exe","must-not-read-api",true))
         using(var cts=new CancellationTokenSource())
         {
@@ -64,7 +63,8 @@ internal static class LifecycleContractTests
         {
             WorkerProtocol.ValidateExchangeResult(operation,args,result); check(true,"Lifecycle result identity validated "+operation);
             args["expectedProjectFile"]=@"C:\Projects\Other.ap17";
-            try { WorkerProtocol.ValidateExchangeResult(operation,args,result); throw new Exception("Wrong project accepted"); } catch(IOException ex) { check(WorkerProtocol.RequiresSessionReset(true,ex),"Wrong lifecycle result stops session "+operation); }
+            try { WorkerProtocol.ValidateExchangeResult(operation,args,result); throw new Exception("Wrong project accepted"); } catch(IOException error) {
+                UnsettledOutcomeAssertions.Failure(error, true, true, true, check, "Wrong lifecycle result " + operation); }
             args["expectedProjectFile"]=@"C:\Projects\P.ap17";
         }
         string Wire(string name)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name)??name;

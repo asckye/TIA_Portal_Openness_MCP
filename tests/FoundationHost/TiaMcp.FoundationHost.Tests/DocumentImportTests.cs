@@ -53,17 +53,16 @@ foreach(var kind in new[]{"null","exception","partial","failure","zero","extra",
  var attemptedRequest=new JsonObject {["softwarePath"]=r.Software,["groupPath"]=r.Group,["importPath"]=r.Directory,["fileNameWithoutExtension"]=r.Name,
      ["dryRun"]=false,["confirm"]=true,["expectedProjectFile"]=r.Project,["expectedPlanHash"]=r.ExpectedHash};
  var wire=JsonSerializer.SerializeToNode(result)!;DocumentImportContract.Validate(wire,attemptedRequest);
- var attemptedState=new WorkerOutcomeState();attemptedState.AcceptResult("ImportFromDocuments",attemptedRequest,wire);
- Check(attemptedState.Poisoned==outcomeUnknown,"readback session state "+presence+" "+kind);
+ WorkerProtocol.ValidateExchangeResult("ImportFromDocuments",attemptedRequest,wire);
  if(presence=="absent")
  {
   var importDefinition=FoundationTools.Definitions.Single(x=>x.Name=="ImportPlcBlockDocuments");
   var workerOutcome=new WorkerSessionOutcomeState();
   if(result.RequiresSessionReset)workerOutcome.MarkUncertain();
-  var recovery=new WorkerSessionRecovery(workerOutcome,()=>false,()=>{},()=>{},_=>{},()=>{},()=>{});
+  var recovery=new WorkerSessionRecovery(workerOutcome,()=>false,()=>{},()=>{},()=>{},()=>{});
   var channel=recovery.Synchronize(new ChannelRequest(1,"adapter.ImportFromDocuments","{}",(_,_)=>{}),
       ChannelResponse.Success(wire.ToJsonString()));
-  Check((channel.Failure?.Outcome==ChannelOutcome.Unknown)==outcomeUnknown,"Document channel outcome "+kind);
+  Check(channel.Failure==null && channel.ResultJson==wire.ToJsonString(),"Document channel retains the real outcome evidence "+kind);
   var mapped=channel.Failure is { } failure
       ? FoundationV4Result.Failure("21",importDefinition.Name,"absent-import",true,true,wire,
           WorkerOperationException.FromChannelFailure(failure))
@@ -122,7 +121,7 @@ foreach(var field in new[]{"ProjectFile","TargetIdentity","SoftwarePath","Declar
 var valid=Run();request["dryRun"]=false;request["confirm"]=true;request["expectedProjectFile"]=r.Project;request["expectedPlanHash"]=preview.PlanHash;DocumentImportContract.Validate(Wire(valid),request);
 foreach(var field in new[]{"Attempted","MayHaveChanged","ExistsVerified"}) {var bad=Wire(valid);bad[field]=false;Reject(()=>DocumentImportContract.Validate(bad,request),"Forged successful outcome "+field);}
 var unknown=Run(()=>throw new IOException());DocumentImportContract.Validate(Wire(unknown),request);
-var state=new WorkerOutcomeState();state.AcceptResult("ImportFromDocuments",request,Wire(unknown));Check(state.Poisoned,"Document unknown outcome poisons host session");
+WorkerProtocol.ValidateExchangeResult("ImportFromDocuments",request,Wire(unknown));
 var forged=Wire(unknown);forged["MayHaveChanged"]=false;Reject(()=>DocumentImportContract.Validate(forged,request),"Unknown cannot claim no mutation");
 foreach(var field in new[]{"softwarePath","groupPath","importPath","fileNameWithoutExtension","expectedProjectFile","expectedPlanHash"}) {var bad=request.DeepClone().AsObject();bad[field]="other";Reject(()=>DocumentImportContract.Validate(Wire(valid),bad),"Request identity mismatch "+field);}
 foreach(var path in new[]{@"C:\dir.",@"C:\dir ",@"C:\dir:ads",@"C:\CON",@"C:\dir\..\other",@"C:\dir\\sub",@"C:\dir\",@"\\server\share",@"relative"})Reject(()=>PlcDocumentImportPolicy.ValidateDirectory(path),"Document directory rejects Win32 ambiguity "+path);

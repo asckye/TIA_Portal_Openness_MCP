@@ -215,7 +215,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
         private static Error Failure(bool unknown) => unknown
-            ? new Error("The write outcome is unknown. Reset the session and inspect the target before any further write; do not retry.",
+            ? new Error("The write outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. GetSessionState lists " +
+                "unsettled request IDs.",
                     new OutcomeUnknownDetails("runtime-operation", new Dictionary<string, System.Text.Json.JsonElement>()))
             : new Error("The operation did not establish a successful result.",
                     new NativeOperationFailedDetails(null, null, new Dictionary<string, System.Text.Json.JsonElement>()));

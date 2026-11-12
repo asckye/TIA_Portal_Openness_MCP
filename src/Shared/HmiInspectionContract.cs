@@ -32,7 +32,6 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error? Rejection(string status, string? message = null)
         {
             ErrorDetails? details = status == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
-                : status == "HmiReadSessionBlocked" ? new SessionResetRequiredDetails("HMI read connection failure")
                 : status == "InvalidParams" || status == "INVALID_ARGUMENT" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
                 : status == "NotFound" || status == "NOT_FOUND" ? new NotFoundDetails(null)
                 : status == "NotSupportedOnVersion" || status == "UNSUPPORTED_CAPABILITY"
@@ -45,7 +44,8 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static Error Failure(bool writes) => writes
-            ? new Error("The write outcome is unconfirmed. Inspect the evidence and reset the session before further writes.",
+            ? new Error("The write outcome is unconfirmed. Inspect the target before repeating this call. Never replay it automatically. GetSessionState " +
+                "lists unsettled request IDs.",
                 new OutcomeUnknownDetails("HMI/reflection operation", new Dictionary<string, JsonElement>()))
             : new Error("The read did not establish success.", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
 

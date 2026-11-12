@@ -96,7 +96,7 @@ internal static class BatchDocumentExportTests
                 check(failed.Status=="failed" && failed.RequiresSessionReset && Directory.Exists(failed.RecoveryDirectory) && failed.Items.All(x=>x.Status!="exported"),"Batch document "+kind+" retains evidence without false published successes");
                 var midFailure=kind is "native" or "missing-resource" or "extra" or "empty" or "duplicate" or "escaped";
                 check(midFailure?attempts==2 && failed.Items[0].Status=="staged" && failed.Items[1].Status=="failed" && failed.Items[2].Status=="not-attempted":attempts==3,"Batch document "+kind+" stops without native replay");
-                var outcome=new WorkerOutcomeState();outcome.AcceptResult("ExportBlocksAsDocuments",Request(failed,false),Wire(failed));check(outcome.Poisoned,"Batch document "+kind+" poisons host");
+                WorkerProtocol.ValidateExchangeResult("ExportBlocksAsDocuments",Request(failed,false),Wire(failed));
                 check(kind=="race" || !Directory.Exists(destination),"Batch document "+kind+" never publishes invalid tree");
             }
             var duplicateNames=Run(Path.Combine(root,"same-name"),new[]{Source("group/one/A"),Source("group/two/A")},recursive:true);

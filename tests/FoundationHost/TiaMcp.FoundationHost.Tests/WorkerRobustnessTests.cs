@@ -126,7 +126,7 @@ public sealed class WorkerRobustnessTests
             // V14-V16 use the existing unpaged block-read fixture for the export response.
             engine = ports.SingleOrDefault(tool => tool.ProtocolTool.Name == SessionFixtureTool.Name)
                 ?? shared;
-            Worker.SessionLocked = () => Host.SessionLatched();
+
             // The first generation starts and reports its status under the production budgets; the scaled budgets above apply
             // from the first operation a test measures (P8-stab-1).
             using (Worker.ProductionBudgets()) Worker.Status(CancellationToken.None).GetAwaiter().GetResult();
@@ -206,22 +206,25 @@ public sealed class WorkerRobustnessTests
     }
 
     [Theory, MemberData(nameof(Faults))]
-    public async Task Faults_lock_both_pipelines_and_require_explicit_restart(string release, bool shared, string mode)
+    public async Task Read_failures_keep_their_outcome_and_real_transport_faults_require_explicit_restart(string release, bool shared, string mode)
     {
         using var scope = new Scope(mode, release);
         var result = await scope.Call(shared);
         bool draining = mode == "hang";
+        bool faulted = !draining && mode != "tia-lost";
         Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.Equal(!draining, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (draining) Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
         var refused = await scope.Call(!shared);
-        Assert.Equal(draining ? "PRECONDITION_FAILED" : "SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
+        Assert.Equal(mode == "tia-lost" ? "NATIVE_OPERATION_FAILED" : "PRECONDITION_FAILED", (string?)refused.StructuredContent?["error"]?["code"]);
+        if (mode == "tia-lost") Assert.Equal("read-failed", (string?)refused.StructuredContent?["meta"]?["outcome"]);
+        if (faulted) Assert.Equal("worker-faulted", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
         if (draining) Assert.Equal("worker-read-running", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
         var previous = scope.Worker.Snapshot();
-        Assert.Equal(!draining, (string?)previous["state"] == "Faulted");
-        Assert.Equal(!draining, (bool?)previous["sessionLocked"]);
-        Assert.Equal(!draining, previous["fault"] != null);
+        Assert.Equal(faulted, (string?)previous["state"] == "Faulted");
+        Assert.Null(previous["sessionLocked"]);
+        Assert.Equal(faulted, previous["fault"] != null);
         Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED");
         object key = scope.Worker.SessionKey;
         scope.ClearFault();
@@ -231,9 +234,9 @@ public sealed class WorkerRobustnessTests
         var restart = await scope.Worker.Restart(true, CancellationToken.None);
         Assert.True((bool?)restart["success"]); Assert.True((bool?)restart["requiresExplicitRebind"]);
         Assert.NotSame(key, scope.Worker.SessionKey); Assert.Null(scope.Worker.Binding);
-        Assert.Equal(!draining, restart["worker"]?["previousGenerations"]?[0]?["fault"] != null);
+        Assert.Equal(faulted, restart["worker"]?["previousGenerations"]?[0]?["fault"] != null);
         if (draining) Assert.True((bool?)restart["requiresTiaRestart"]);
-        Assert.False(scope.Worker.Poisoned);
+        Assert.False(scope.Worker.Faulted);
         await scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None);
         Assert.NotNull(scope.Worker.Binding);
         Assert.True((bool?)(await scope.Call(shared)).StructuredContent?["ok"]);

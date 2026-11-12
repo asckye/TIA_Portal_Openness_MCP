@@ -39,11 +39,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                 foreach (var entry in page.Meta!) meta[entry.Key] = entry.Value?.DeepClone();
                 // A resumed iterator holds its original trace; its callback records
                 // the session fault, which is also reflected on the current response.
-                if (_session.HmiReadFault != null)
+                if (fault != null)
                 {
-                    if (fault != null) foreach (var entry in fault) meta[entry.Key] = entry.Value?.DeepClone();
-                    meta["lastFailure"] = _session.HmiReadFault.DeepClone(); meta["connectionUnavailable"] = true;
-                    meta["remoteInspectionStopped"] = true; meta["requiresExplicitRebind"] = true;
+                    foreach (var entry in fault) meta[entry.Key] = entry.Value?.DeepClone();
+                    meta["lastFailure"] = fault.DeepClone(); meta["connectionUnavailable"] = true;
+                    meta["remoteInspectionStopped"] = true;
                 }
                 meta["expectedObjectCount"] = names.Length;
                 meta["selectionKind"] = "caller-defined exact-name selection";

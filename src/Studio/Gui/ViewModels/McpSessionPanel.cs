@@ -32,7 +32,8 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
     public string Status => state == null || !Attached ? Loc.Current["Session.SelectHint"] :
         $"{state["worker"]?["state"]} · PID {state["worker"]?["pid"]} · generation {state["worker"]?["generation"]} · {state["binding"]?["projectFile"]}";
     public string Lane => state?["lane"] is JsonObject lane ? $"{lane["actor"]}: {lane["tool"]} · {lane["sinceUtc"]}" : "";
-    public bool Locked => (bool?)state?["sessionLocked"] == true;
+    public int UnsettledCount => (state?["sessionState"]?["unsettled"] as JsonArray)?.Count ?? 0;
+    public string Unsettled => string.Format(Loc.Current["Session.Unsettled"], UnsettledCount);
     public string Ended => state?["endedBy"] == null ? "" : $"endedBy: {state["endedBy"]} · {state["endReason"]}. "
         + ((string?)state?["worker"]?["state"] == "disconnected" ? Loc.Current["Session.ReconnectHint"] : "");
     public bool CanSetNativeCrossReferences => Attached && client is IHumanCrossReferenceSettings;

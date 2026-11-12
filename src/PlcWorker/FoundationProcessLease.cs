@@ -14,61 +14,55 @@ namespace TiaMcp.PlcWorker
         private readonly WorkerSessionOutcomeState _outcome;
         private readonly Func<bool> _detached;
         private readonly Action _refresh, _clear, _invalidate, _dispose;
-        private readonly Action<string> _lock;
-        private readonly Func<string?>? _bindingFault;
         private readonly Action? _detachOnShutdown;
         private readonly Func<bool> _canDetachOnShutdown;
-        internal string? Fault { get; private set; }
+        private string? portalLost;
+        private long revisionAtEntry;
         internal JsonArray ShutdownEvidence { get; } = new JsonArray();
 
         internal WorkerSessionRecovery(WorkerSessionOutcomeState outcome, Func<bool> detached,
-            Action refresh, Action clear, Action<string> lockBinding, Action invalidate, Action dispose,
-            Func<string?>? bindingFault = null, Action? detachOnShutdown = null, Func<bool>? canDetachOnShutdown = null)
+            Action refresh, Action clear, Action invalidate, Action dispose,
+            Action? detachOnShutdown = null, Func<bool>? canDetachOnShutdown = null)
         {
             _outcome = outcome; _detached = detached; _refresh = refresh; _clear = clear;
-            _lock = lockBinding; _invalidate = invalidate; _dispose = dispose;
-            _bindingFault = bindingFault;
+            revisionAtEntry = outcome.Revision;
+            _invalidate = invalidate; _dispose = dispose;
             _detachOnShutdown = detachOnShutdown;
             _canDetachOnShutdown = canDetachOnShutdown ?? (() => true);
         }
 
         internal void ObserveFailure(Exception error)
         {
-            if (TiaOpenness.Shared.ProcessLossPolicy.Reason(error) != null) Fault ??= error.Message;
+            if (TiaOpenness.Shared.ProcessLossPolicy.Reason(error) is string reason)
+            {
+                portalLost = reason;
+                _outcome.MarkUncertain();
+            }
         }
 
         internal ChannelResponse Dispatch(ChannelRequest request, Func<ChannelRequest, ChannelResponse> dispatch)
         {
-            if (Fault != null && request.Method != "adapter.Disconnect")
-                return ChannelResponse.Error(new ChannelFailureException(TiaOpenness.Shared.SessionBehavior.Recovery,
-                    -32603, ChannelOutcome.RejectedBeforeNative));
+            portalLost = null;
+            revisionAtEntry = _outcome.Revision;
             return dispatch(request);
-        }
-
-        private void Lock(string reason)
-        {
-            Fault ??= reason;
-            _outcome.MarkUncertain();
-            _lock(Fault);
         }
 
         internal ChannelResponse Synchronize(ChannelRequest request, ChannelResponse response)
         {
             if (_detached()) { _clear(); return response; }
-            Fault ??= _bindingFault?.Invoke();
-            // A later, refused request must keep its rejected-before-native outcome.
-            if (Fault != null && response.Failure?.Outcome == ChannelOutcome.RejectedBeforeNative
-                && response.Failure.Message == TiaOpenness.Shared.SessionBehavior.Recovery) return response;
-            if (Fault != null || _outcome.RequiresReset || response.Failure?.Outcome == ChannelOutcome.Unknown)
+            string operation = request.Method.Substring("adapter.".Length);
+            if (response.Failure == null && _outcome.Revision != revisionAtEntry && !WorkerOperations.IsReadOnly(operation)
+                && (bool?)JsonNode.Parse(request.ArgumentsJson)?["dryRun"] != true)
+                response = ChannelResponse.Error(new ChannelFailureException("The write outcome is unknown.", -32603,
+                    ChannelOutcome.Unknown, response.ResultJson));
+            if (response.Failure?.Outcome == ChannelOutcome.Unknown) _outcome.MarkUncertain();
+            if (portalLost != null && response.Failure is { } failure)
             {
-                Lock(response.Failure?.Message ?? TiaOpenness.Shared.SessionBehavior.Recovery);
-                if (response.Failure != null || !WorkerOperations.IsFamilyOperation(request.Method.Substring("adapter.".Length)))
-                    return ChannelResponse.Error(new ChannelFailureException(Fault!, -32603, ChannelOutcome.Unknown,
-                        response.Failure?.EvidenceJson ?? response.ResultJson));
-                return response;
+                var evidence = JsonNode.Parse(failure.EvidenceJson ?? "{}") as JsonObject ?? new JsonObject();
+                evidence["portalLost"] = portalLost;
+                response = ChannelResponse.Error(new ChannelFailureException(failure.Message, failure.Code, failure.Outcome, evidence.ToJsonString()));
             }
-            try { _refresh(); }
-            catch (Exception error) { Lock(error.Message); throw; }
+            _refresh();
             return response;
         }
 

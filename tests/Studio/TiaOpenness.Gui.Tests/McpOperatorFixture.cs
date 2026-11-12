@@ -49,7 +49,8 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
         state = new() { ["sessionKey"] = Key, ["releaseKey"] = release, ["revision"] = 1L, ["owner"] = "mcp",
             ["participants"] = new JsonObject { ["mcpClient"] = "fixture AI", ["mcpClientVerified"] = false, ["workbench"] = 0 },
             ["worker"] = new JsonObject { ["pid"] = 123, ["generation"] = 1, ["state"] = "idle" },
-            ["binding"] = null, ["lane"] = null, ["sessionLocked"] = false, ["approvalEnabled"] = true, ["recentCalls"] = new JsonArray() };
+            ["binding"] = null, ["lane"] = null, ["sessionState"] = new JsonObject { ["unsettled"] = new JsonArray() }, ["approvalEnabled"] = true,
+                ["recentCalls"] = new JsonArray() };
         Publish();
     }
     // Publish like HostRegistration (temporary file, then replace). The client polls this file, so a replace can meet its

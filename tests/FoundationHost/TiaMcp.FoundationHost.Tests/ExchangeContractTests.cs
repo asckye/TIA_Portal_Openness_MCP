@@ -73,7 +73,9 @@ internal static class ExchangeContractTests
             check(true,"Result identity and requested execution agree");
             arguments["expectedProjectFile"]=@"C:\Projects\Other.ap17";
             try { WorkerProtocol.ValidateExchangeResult("ImportBlocks",arguments,payload); throw new Exception("Mismatched output identity accepted"); }
-            catch(IOException ex) { check(WorkerProtocol.RequiresSessionReset(true,ex),"Mismatched result poisons session before releasing worker lock"); }
+            catch(IOException error) {
+                UnsettledOutcomeAssertions.Failure(error, true, true, true, check, "Mismatched result is refused for this call");
+            }
             payload.Remove("ProjectFile");
             try { V17MutationEnvelope.Wrap("ImportPlcBlock","Mutation",payload,false); throw new Exception("Missing identity accepted"); } catch(InvalidDataException) { check(true,"Missing result project identity rejected"); }
         }

@@ -12,10 +12,12 @@ internal static class SpecialExportDispatchTests
     {
         internal int Calls,Publications;
         internal bool Fail,WrongTarget;
-        internal readonly WorkerOutcomeState State=new();
+        internal JsonObject? LastReply;
+        private readonly WorkerReplyFixture replies = new();
+
         public Task<JsonNode?> Call(string operation,JsonObject args,CancellationToken token)
         {
-            State.RequireUsable(); Calls++;
+            Calls++;
             try
             {
                 bool dry=args["dryRun"]!.GetValue<bool>();
@@ -24,10 +26,11 @@ internal static class SpecialExportDispatchTests
                 var result=PlcSpecialExportPolicy.Run(kind,"17","C:/Projects/project.ap17",args["softwarePath"]!.GetValue<string>(),args[kind=="watch-table"?"watchTableName":"toName"]!.GetValue<string>(),args["exportPath"]!.GetValue<string>(),true,dry,args["expectedPlanHash"]!.GetValue<string>(),()=>{},_=>throw new Exception("Native export forbidden in dispatch fixture"),(_,_)=>{Publications++; if(Fail)throw new IOException("private failure");return null;});
                 var payload=JsonSerializer.SerializeToNode(result)!.AsObject();
                 if(WrongTarget)payload["ObjectPath"]="different";
-                State.AcceptResult(operation,args,payload);
-                return Task.FromResult<JsonNode?>(payload);
+                WorkerProtocol.ValidateExchangeResult(operation,args,payload);
+                LastReply = payload;
+                return Task.FromResult<JsonNode?>(replies.Accept(operation, args, payload));
             }
-            catch(Exception error) {State.Failed(true,error); throw;}
+            catch { throw; }
         }
         public void Dispose(){}
     }
@@ -55,14 +58,22 @@ internal static class SpecialExportDispatchTests
                 check(worker.Calls==1,operation+": incomplete apply never dispatches");
                 args["expectedPlanHash"]=JsonSerializer.SerializeToElement(plan["PlanHash"]!.GetValue<string>());
                 worker.Fail=true;
-                var failed=await tool.InvokeAsync(Request());
-                check(JsonNode.Parse(failed.Content.OfType<TextContentBlock>().Single().Text)!["RequiresSessionReset"]!.GetValue<bool>() && worker.State.Poisoned && worker.Publications==1,operation+": uncertain outcome returned once and session poisoned");
-                await Refuse("poisoned session blocks subsequent apply without retry");
-                check(worker.Calls==2 && worker.Publications==1,operation+": poison is enforced before another call");
+                var applyTool = new FoundationV4Tool((FoundationTool)tool, "17", () => new(false, 1));
+                var failed=await applyTool.InvokeAsync(Request());
+                check(worker.LastReply!["RequiresSessionReset"]!.GetValue<bool>() && worker.Publications==1
+                    && (string?)failed.StructuredContent?["meta"]?["outcome"] == "unknown",operation+": uncertain outcome returned once");
+                var replay = await applyTool.InvokeAsync(Request());
+                check((string?)replay.StructuredContent?["error"]?["details"]?["condition"] == "same-call-unsettled", operation
+                        + ": identical apply is refused");
+                check(worker.Calls==2 && worker.Publications==1,operation+": replay cannot dispatch or republish");
+                args["dryRun"] = JsonSerializer.SerializeToElement(true);
+                var next = await applyTool.InvokeAsync(Request());
+                check((bool?)next.StructuredContent?["ok"] == true && worker.Calls == 3 && worker.Publications == 1,
+                    operation + ": independent preview reaches the worker without replaying the apply");
                 worker=new SpecialWorker{WrongTarget=true};tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name==operation);
                 args["dryRun"]=JsonSerializer.SerializeToElement(true);
                 await Refuse("conflicting response target is never accepted");
-                check(worker.State.Poisoned && worker.Publications==0,operation+": response identity mismatch poisons transport");
+                check(worker.Publications==0,operation+": response identity mismatch poisons transport");
             }
         }
         finally {Directory.Delete(root,true);}

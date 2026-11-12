@@ -173,10 +173,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "InvalidState")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "HmiReadSessionBlocked")
-            {
-                outcome = Outcome.RejectedBeforeOperation; error =
-                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("hardware-read-blocked"));
-            }
+            { outcome = write ? Outcome.Unknown : Outcome.ReadFailed; error = HostBehavior.UnavailableCall(write); }
             else if (status == "NotFound")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("The requested object was not found.", new NotFoundDetails(null)); }
             else if (status == "InvalidParams" && started == false)

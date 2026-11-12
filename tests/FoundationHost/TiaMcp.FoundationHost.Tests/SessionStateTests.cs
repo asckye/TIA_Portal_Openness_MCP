@@ -102,10 +102,11 @@ public sealed class SessionStateTests
         finally { session.StateChanged -= Count; }
     }
 
-    private sealed class HostOnlyTool(Func<CancellationToken, ValueTask<CallToolResult>> invoke) : McpServerTool
+    internal sealed class HostOnlyTool(Func<CancellationToken, ValueTask<CallToolResult>> invoke, string name = "FixtureHostOnly", JsonElement? schema = null)
+        : McpServerTool
     {
-        public override Tool ProtocolTool { get; } = new() { Name = "FixtureHostOnly",
-            InputSchema = JsonSerializer.SerializeToElement(new { type = "object" }) };
+        public override Tool ProtocolTool { get; } = new() { Name = name, Description = "[L1][Project][READ] Offline fixture operation.",
+            InputSchema = schema ?? JsonSerializer.SerializeToElement(new { type = "object", properties = new { }, additionalProperties = false }) };
         public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken token = default)
             => invoke(token);
     }
@@ -157,10 +158,21 @@ public sealed class SessionStateTests
             "GetProjectTree" => new JsonObject { ["devices"] = new JsonArray() },
             "GetSoftwareTree" => new JsonObject { ["paths"] = new JsonArray() },
             _ => new JsonObject { ["items"] = new JsonArray() } }), descriptor: _ => null);
+        worker.Unsettled.Record("unknown-fixture", "SaveProject", "digest", DateTimeOffset.UtcNow);
         try
         {
-            var plan = session.Plan(planner.Package(), GenerationDocuments.Canonical(planner.Machine));
+            int calls = 0;
+            var tool = Host.WrapTools(new McpServerTool[] { new HostOnlyTool(_ => {
+                calls++;
+                return ValueTask.FromResult(session.Plan(planner.Package(), GenerationDocuments.Canonical(planner.Machine)));
+            }, "PlanProjectGeneration", enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog!.All["PlanProjectGeneration"].Tool
+                .InputSchema) }).Single();
+            var plan = await tool.InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
+                { Params = new() { Name = "PlanProjectGeneration", Arguments = new Dictionary<string, JsonElement> {
+                    ["packageId"] = JsonSerializer.SerializeToElement("fixture.planning"), ["version"] = JsonSerializer.SerializeToElement("1.0.0"),
+                    ["machine"] = JsonSerializer.SerializeToElement(JsonNode.Parse(GenerationDocuments.Canonical(planner.Machine))) } } });
             Assert.True((bool?)plan.StructuredContent?["ok"], plan.StructuredContent?.ToJsonString());
+            Assert.Equal(1, calls);
             Assert.Equal((string?)canonical["projectPath"], (string?)plan.StructuredContent?["data"]?["expectedProject"]);
         }
         finally
@@ -169,15 +181,9 @@ public sealed class SessionStateTests
                 Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase);
             if (Directory.Exists(root)) Directory.Delete(root, true);
         }
-        worker.SessionLocked = () => pipeline.SessionLocked;
-        try
-        {
-            Host.MarkSharedSessionUncertain();
-            Assert.True((bool?)services.Snapshot()["sessionState"]?["requiresSessionReset"]);
-            Assert.True((bool?)services.OperatorSnapshot()["sessionLocked"]);
-            Assert.NotNull(Host.SessionPrecheckRefusal("PlanProjectGeneration"));
-        }
-        finally { worker.SessionLocked = null; }
+
+        Assert.Single(services.Snapshot()["sessionState"]!["unsettled"]!.AsArray());
+        Assert.Single(services.OperatorSnapshot()["sessionState"]!["unsettled"]!.AsArray());
     }
 
     [Theory] [InlineData(false)] [InlineData(true)]
@@ -237,7 +243,7 @@ public sealed class SessionStateTests
         public IDisposable? EnterRequest(RequestContext<CallToolRequestParams> request) => null;
         public Task<IDisposable?> AcquireLane(CancellationToken token) => Task.FromResult<IDisposable?>(null);
         public void ActivateLane(IDisposable? lane) { }
-        public void MarkUncertain() => throw new InvalidOperationException();
+
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token) => Task.FromResult<JsonNode?>(new JsonObject {
             ["ReleaseKey"] = "21", ["IsAttached"] = true, ["ProcessId"] = 123, ["ProjectFile"] = "C:/fixture.ap21",
             ["OwnsProject"] = false, ["IsLocalSession"] = false, ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" });

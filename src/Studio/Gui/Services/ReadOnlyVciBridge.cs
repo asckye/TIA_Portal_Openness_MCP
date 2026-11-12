@@ -32,8 +32,8 @@ internal sealed class ReadOnlyVciBridge(IMcpSessionClient session) : IVersionCon
     private async Task<T> ReadBound<T>(Func<TiaClient, Task<T>> operation)
     {
         var state = session.State;
-        if (!CanRead || (bool?)state?["sessionLocked"] == true || state?["lane"] != null)
-            throw new InvalidOperationException("The shared session must be attached, idle and unlocked for VCI reads.");
+        if (!CanRead || state?["lane"] != null)
+            throw new InvalidOperationException("The shared session must be attached and idle for VCI reads.");
         int pid = (int?)state?["binding"]?["processId"] ?? 0;
         string file = (string?)state?["binding"]?["projectFile"] ?? "";
         if (pid <= 0 || file.Length == 0) throw new InvalidOperationException("No shared project/process lease binding.");

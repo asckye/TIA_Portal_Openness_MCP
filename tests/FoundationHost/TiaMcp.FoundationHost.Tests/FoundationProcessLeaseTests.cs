@@ -118,7 +118,7 @@ public sealed class FoundationProcessLeaseTests
         string root = Path.Combine(repository, "bin-build", "fix-r1-round2-lease-" + Guid.NewGuid().ToString("N"));
         var outcome = new WorkerSessionOutcomeState();
         int detaches = 0;
-        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { }, () => { },
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { },
             () => { detaches++; throw new IOException("Fixture detach failed."); });
         using var boundary = new FoundationProcessLease(() => root, _ => ChannelResponse.Success("{}"),
             () => true, () => false, () => outcome.RequiresReset, recovery.DisposeSession);

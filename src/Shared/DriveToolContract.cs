@@ -102,10 +102,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (projectMissing)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (!issued && status == "HmiReadSessionBlocked")
-            {
-                outcome = Outcome.RejectedBeforeOperation; error =
-                    new Error("The session requires an explicit reset.", new SessionResetRequiredDetails("option-package-session"));
-            }
+            { outcome = writes ? Outcome.Unknown : Outcome.ReadFailed; error = HostBehavior.UnavailableCall(writes); }
             else if (!issued && (status == "NotFound" || status == "NotSupportedOnVersion" || status == "InvalidParams" || status == "InvalidState"))
             {
                 outcome = Outcome.RejectedBeforeOperation;
@@ -183,7 +180,9 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error NativeFailure(string? nativeMessage = null) =>
             new Error(nativeMessage ?? "The option-package operation did not establish success.",
             new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
-        private static Error Unknown() => new Error("The write outcome is unknown. Inspect the retained evidence and reset the session before further writes.",
+        private static Error Unknown() =>
+            new Error("The write outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. GetSessionState lists " +
+            "unsettled request IDs.",
             new OutcomeUnknownDetails("option-package-operation", new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,

@@ -282,8 +282,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     completeness: incomplete ? Completeness.Partial : unverified ? Completeness.Unknown : Completeness.Complete, current: current,
                         writes: write);
             }
-            if (Flag(data, "requiresExplicitRebind") == true) return Reject(tool,
-                new Error("The session must be rebound before another operation.", new SessionResetRequiredDetails("native-session")), data, current, write);
+            if (Flag(data, "connectionUnavailable") == true) return Result(tool, data, HostBehavior.UnavailableCall(write),
+                write ? Outcome.Unknown : Outcome.ReadFailed, write ? Execution.Unknown : Execution.ReadOnly,
+                Completeness.Unknown, current: current, writes: write);
             if (!changed && new[] { "InvalidState", "InvalidParams", "NotFound", "NotSupportedOnVersion" }.Contains((string?)data["status"]))
                 return Reject(tool, StatusError(tool, data), data, current, write);
             if (Flag(data, "queried") == false || write && !changed && (observation == null || observation.Issued == 0))
