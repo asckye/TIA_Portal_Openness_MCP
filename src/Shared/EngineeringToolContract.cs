@@ -84,7 +84,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (result.StructuredContent?["data"] is JsonObject data
                 && data["evidence"] is JsonObject evidence && HostBehavior.UnchangedNativeFailure(evidence, false, allowWrittenFiles: true)
                 && result.StructuredContent["meta"]?["outcome"]?.ToString() is "unknown" or "failed")
-                return Result(tool, (JsonObject)data.DeepClone(), NativeFailure(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString())),
+                return Result(tool, (JsonObject)data.DeepClone(), NativeFailure(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString())
+                    ?? (string?)result.StructuredContent["error"]?["details"]?["nativeMessage"]),
                     Outcome.Failed, Completeness.Complete, true);
             return McpServer.ExportFailureResult(tool, result, export);
         }

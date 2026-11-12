@@ -6,6 +6,8 @@ using System.Text.Json.Nodes;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts.Candidates;
+using TiaMcp.Logic.V4;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.Siemens.Services;
 
@@ -16,6 +18,27 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly PlcOrganisationPortService _blocks;
         public PlcOrganisationTools(PlcOrganisationPortService blocks) => _blocks = blocks;
+
+        private Error? DeleteAdmission(bool dryRun, bool confirm, string expectedProjectFile)
+        {
+            if (dryRun) return null;
+            if (!confirm) return new Error("Deletion requires confirm=true after the preview.", new ConfirmationRequiredDetails(null));
+            if (string.IsNullOrWhiteSpace(expectedProjectFile) || !System.IO.Path.IsPathRooted(expectedProjectFile)
+                || expectedProjectFile.Length >= 2 && expectedProjectFile[1] == ':'
+                    && (expectedProjectFile.Length < 3 || expectedProjectFile[2] is not ('/' or '\\')))
+                return McpServer.InvalidInput("expectedProjectFile");
+            string expected;
+            try { expected = CandidatePrimitives.CanonicalProject(expectedProjectFile); }
+            catch (ArgumentException) /* swallow(parse-fallback): malformed paths are returned as typed input refusals. */
+            { return McpServer.InvalidInput("expectedProjectFile"); }
+            catch (NotSupportedException) /* swallow(parse-fallback): unsupported path syntax is returned as a typed input refusal. */
+            { return McpServer.InvalidInput("expectedProjectFile"); }
+            if (!_blocks.HasProject || string.IsNullOrWhiteSpace(_blocks.BoundProject))
+                return new Error("No project is bound.", new ProjectNotBoundDetails());
+            if (CandidatePrimitives.CanonicalProject(_blocks.BoundProject) != expected)
+                return new Error("The project binding differs from expectedProjectFile.", new IdentityMismatchDetails("project-binding", null, null));
+            return null;
+        }
 
         [McpServerTool(Name = "ManagePlcBlockProtection"),
                 Description("[L2][PLC-Software][WRITE] Read/protect/unprotect know-how protection of one exact block path via native " +
@@ -55,15 +78,22 @@ namespace TiaMcpServer.ModelContextProtocol
             + "read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, "
             + "back the block up with ExportPlcBlockDocuments and review dependencies (an unavailable query does not prove it is unused); compile with "
             + "CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag "
-            + "table use DeletePlcTagTable, a UDT use DeletePlcType. Current native policy; V4 safety behavior is not yet accepted.")]
+            + "table use DeletePlcTagTable, a UDT use DeletePlcType. "
+            + "Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. "
+            + "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult DeletePlcBlockV4(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.")] string blockPath,
             [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun =
                 true,
             [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences =
-                false)
-            => PlcToolContract.Run("DeletePlcBlock", !dryRun, true, () => DeletePlcBlock(softwarePath, blockPath, dryRun, crossReferences));
+                false,
+            [Description("confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.")] bool confirm = false,
+            [Description("expectedProjectFile: exact bound project file; required with dryRun=false.")] string expectedProjectFile = "")
+        {
+            if (DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcBlock", error);
+            return PlcToolContract.Run("DeletePlcBlock", !dryRun, true, () => DeletePlcBlock(softwarePath, blockPath, dryRun, crossReferences));
+        }
 
         public ResponseJsonReport DeletePlcBlock(
             string softwarePath,
@@ -93,14 +123,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 return BuildDeletionReport(
                     data, dryRun, crossRefOk,
                     objectLabel: $"Program block '{data["resolvedBlockPath"]}'",
-                    dryRunTail: "After verifying the preview, use dryRun=false to perform the deletion.",
+                    dryRunTail: "After verifying the preview, use dryRun=false, confirm=true and the exact bound expectedProjectFile to delete.",
                     extraWarning: pinnedWarning,
                     nextActions: dryRun
                         ? new JsonArray
                         {
                             "ExportPlcBlockDocuments - back up this block before deletion.",
                             "GetPlcCrossReferences - inspect each remaining caller.",
-                            "After confirmation, call DeletePlcBlock(dryRun=false)"
+                            "After confirmation, call DeletePlcBlock with dryRun=false, confirm=true and the exact bound expectedProjectFile."
                         }
                         : new JsonArray
                         {
@@ -132,7 +162,9 @@ namespace TiaMcpServer.ModelContextProtocol
             + "queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down "
             + "during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at "
             + "tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and "
-            + "wildcards are rejected. Back up first with ExportPlcTagTable. Current native policy; V4 safety behavior is not yet accepted.")]
+            + "wildcards are rejected. Back up first with ExportPlcTagTable. "
+            + "Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. "
+            + "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult DeletePlcTagTableV4(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("tagTableName: bare table name, or the group-qualified path from ListPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are " +
@@ -141,8 +173,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 "absent")] bool dryRun =
                 true,
             [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences =
-                false)
-            => PlcToolContract.Run("DeletePlcTagTable", !dryRun, true, () => DeletePlcTagTable(softwarePath, tagTableName, dryRun, crossReferences));
+                false,
+            [Description("confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.")] bool confirm = false,
+            [Description("expectedProjectFile: exact bound project file; required with dryRun=false.")] string expectedProjectFile = "")
+        {
+            if (DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcTagTable", error);
+            return PlcToolContract.Run("DeletePlcTagTable", !dryRun, true, () => DeletePlcTagTable(softwarePath, tagTableName, dryRun, crossReferences));
+        }
 
         public ResponseJsonReport DeletePlcTagTable(
             string softwarePath,
@@ -159,14 +196,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 var report = BuildDeletionReport(
                     data, dryRun, crossRefOk,
                     objectLabel: $"Tag table '{data["resolvedTagTablePath"]}'({tagCount} tag(s))",
-                    dryRunTail: "After verifying the preview, use dryRun=false to perform the deletion.",
+                    dryRunTail: "After verifying the preview, use dryRun=false, confirm=true and the exact bound expectedProjectFile to delete.",
                     extraWarning: null,
                     nextActions: dryRun
                         ? new JsonArray
                         {
                             "ExportPlcTagTable: export a backup of this table before deleting it",
                             "Use GetPlcCrossReferences on the related blocks; table-level references may be unavailable.",
-                            "After confirmation, call DeletePlcTagTable(dryRun=false)"
+                            "After confirmation, call DeletePlcTagTable with dryRun=false, confirm=true and the exact bound expectedProjectFile."
                         }
                         : new JsonArray
                         {
@@ -199,14 +236,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 "GetPlcCrossReferences). Queries also require crossReferences=true (the TIA CrossReferenceService query "
             + "took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so "
             + "review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type "
-            + "first with ExportPlcType, and CompilePlcSoftware afterwards. Current native policy; V4 safety behavior is not yet accepted.")]
+            + "first with ExportPlcType, and CompilePlcSoftware afterwards. "
+            + "Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. "
+            + "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult DeletePlcTypeV4(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.")] string typePath,
             [Description("dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent")] bool dryRun = true,
             [Description("crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences =
-                false)
-            => PlcToolContract.Run("DeletePlcType", !dryRun, true, () => DeletePlcType(softwarePath, typePath, dryRun, crossReferences));
+                false,
+            [Description("confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.")] bool confirm = false,
+            [Description("expectedProjectFile: exact bound project file; required with dryRun=false.")] string expectedProjectFile = "")
+        {
+            if (DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcType", error);
+            return PlcToolContract.Run("DeletePlcType", !dryRun, true, () => DeletePlcType(softwarePath, typePath, dryRun, crossReferences));
+        }
 
         public ResponseJsonReport DeletePlcType(
             string softwarePath,
@@ -222,14 +266,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 return BuildDeletionReport(
                     data, dryRun, crossRefOk,
                     objectLabel: $"UDT '{typePath}'",
-                    dryRunTail: "After verifying the preview, use dryRun=false to perform the deletion.",
+                    dryRunTail: "After verifying the preview, use dryRun=false, confirm=true and the exact bound expectedProjectFile to delete.",
                     extraWarning: null,
                     nextActions: dryRun
                         ? new JsonArray
                         {
                             "ExportPlcType: back up this UDT before deletion",
                             "GetPlcCrossReferences - inspect DBs and blocks using this data type.",
-                            "After confirmation, call DeletePlcType(dryRun=false)"
+                            "After confirmation, call DeletePlcType with dryRun=false, confirm=true and the exact bound expectedProjectFile."
                         }
                         : new JsonArray
                         {

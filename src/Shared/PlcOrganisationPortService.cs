@@ -18,6 +18,9 @@ namespace TiaMcpServer.Siemens.Services
         public PlcOrganisationPortService()
             : this(HardwareAddressWorkerBridge.Call, HardwareAddressWorkerBridge.HasProject, HardwareAddressWorkerBridge.ProjectIdentity) { }
 
+        internal string BoundProject => projectIdentity();
+        internal bool HasProject => hasProject();
+
         private JsonObject Invoke(PlcSoftwareRequest request, Action? beforeDispatch = null)
         {
             string? unsupported = PlcSoftwareCapabilities

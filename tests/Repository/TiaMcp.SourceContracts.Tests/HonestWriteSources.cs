@@ -6,6 +6,50 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class HonestWriteSources
 {
     [Fact]
+    public void Alarm_exports_read_engineering_detail_messages()
+    {
+        string source = Read("src/Adapters/Native/Plc/PlcB5Alarms.cs");
+        int start = source.IndexOf("private static string NativeReason(Exception error)", StringComparison.Ordinal);
+        int end = source.IndexOf("// Typed AlarmClassExportImportResultMessage", start, StringComparison.Ordinal);
+        Assert.True(start >= 0 && end > start);
+        string reason = source[start..end];
+        Assert.Contains("is EngineeringException engineering", reason, StringComparison.Ordinal);
+        Assert.Contains("engineering.MessageData", reason, StringComparison.Ordinal);
+        Assert.Contains("engineering.DetailMessageData", reason, StringComparison.Ordinal);
+        Assert.Contains("details.Add(detail.Text)", reason, StringComparison.Ordinal);
+        Assert.Contains("details.Add(detail.DetailText)", reason, StringComparison.Ordinal);
+        Assert.Contains("NativeFailureText.Compose(data.Text, data.DetailText, details)", reason, StringComparison.Ordinal);
+        Assert.Contains("return cause.Message;", reason, StringComparison.Ordinal);
+        start = source.IndexOf("public PlcB5Reply ExportAlarmTextLists(", StringComparison.Ordinal);
+        end = source.IndexOf("public PlcB5Reply ImportAlarmTextLists(", start, StringComparison.Ordinal);
+        string textLists = source[start..end];
+        Assert.Contains("NativeReason(ex)", textLists, StringComparison.Ordinal);
+        Assert.Contains("ex.GetBaseException().GetType().Name == \"TextListNotFoundException\"", textLists, StringComparison.Ordinal);
+        Assert.Contains("meta[\"precondition\"] = \"plc-text-lists\"", textLists, StringComparison.Ordinal);
+        start = source.IndexOf("public PlcB5Reply ExportAlarmInstanceTexts(", end, StringComparison.Ordinal);
+        end = source.IndexOf("private static PlcB5Object NativeXlsxEvidence", start, StringComparison.Ordinal);
+        Assert.Contains("(\"nativeMessage\", NativeReason(ex))", source[start..end], StringComparison.Ordinal);
+        Assert.Contains("Message = $\"Export failed: {NativeReason(ex)}\"", source[start..end], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Offline_compare_answers_after_the_native_call()
+    {
+        string source = Read("src/Adapters/Native/Online/OnlineDownloadAdapter.Compare.cs");
+        int start = source.IndexOf("public OnlineCompareResult CompareSoftwareToOnline(", StringComparison.Ordinal);
+        int end = source.IndexOf("private static bool WalkCompareTree", start, StringComparison.Ordinal);
+        source = source[start..end];
+        int probe = source.IndexOf("probeState = provider?.State.ToString()", StringComparison.Ordinal);
+        int native = source.IndexOf("plcSoftware.CompareToOnline()", StringComparison.Ordinal);
+        int offline = source.IndexOf("IsOnline = false", StringComparison.Ordinal);
+        Assert.True(probe >= 0 && native > probe && offline > native);
+        Assert.Contains("if (probeState == \"Offline\")", source[native..offline], StringComparison.Ordinal);
+        Assert.Contains("catch (Exception ex)", source[native..offline], StringComparison.Ordinal);
+        Assert.Contains("Call ConnectOnlinePlc first.", source[offline..], StringComparison.Ordinal);
+        Assert.Contains("throw new PortalException", source[offline..], StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Document_import_records_identity_read_only_after_complete_projection()
     {
         string source = Read("src/Adapters/Native/Plc/PlcDocumentImport.cs");

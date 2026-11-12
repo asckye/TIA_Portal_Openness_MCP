@@ -219,7 +219,7 @@ namespace TiaMcpServer.ModelContextProtocol
             " Returns a tree-walked list of differences: only difference states (ObjectsDifferent, LeftMissing, RightMissing, FolderContentsDifferent and " +
                 "the folder own-state differences) are reported; ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant are not."
                 +
-            " Requires ConnectOnlinePlc to be called first; will return IsOnline=false with guidance otherwise. Native behaviorPolicy=current; V4 native " +
+            " Requires ConnectOnlinePlc first; otherwise refuses with PRECONDITION_FAILED, condition plc-online. Native behaviorPolicy=current; V4 native " +
                 "acceptance is pending.")]
         public CallToolResult CompareSoftwareToOnlineV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,

@@ -6841,7 +6841,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockPath": "Main",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -6851,7 +6853,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "tagTableName": "Default tag table",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -6861,7 +6865,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "typePath": "UDT_Status",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -9231,7 +9237,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockPath": "Main",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -9241,7 +9249,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "tagTableName": "Default tag table",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -9251,7 +9261,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "typePath": "UDT_Status",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -12044,7 +12056,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockPath": "Main",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -12054,7 +12068,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "tagTableName": "Default tag table",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -12064,7 +12080,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "typePath": "UDT_Status",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -15151,7 +15169,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockPath": "Main",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -15161,7 +15181,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "tagTableName": "Default tag table",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -15171,7 +15193,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "typePath": "UDT_Status",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -18604,7 +18628,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockPath": "Main",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -18614,7 +18640,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "tagTableName": "Default tag table",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -18624,7 +18652,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "typePath": "UDT_Status",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -23251,7 +23281,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "blockPath": "Main",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -23261,7 +23293,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "tagTableName": "Default tag table",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {
@@ -23271,7 +23305,9 @@
       "example": {
         "softwarePath": "PLC_1",
         "typePath": "UDT_Status",
-        "dryRun": true
+        "dryRun": true,
+        "confirm": false,
+        "expectedProjectFile": ""
       }
     },
     {

@@ -9145,7 +9145,7 @@
       "path": "src/Shared/PlcOrganisationTools.cs",
       "owner": "PlcOrganisationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult DeletePlcBlockV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.\")] string blockPath,\n            [Description(\"dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent\")] bool dryRun = true,\n            [Description(\"crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.\")] bool crossReferences = false)",
+      "signature": "public CallToolResult DeletePlcBlockV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.\")] string blockPath,\n            [Description(\"dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent\")] bool dryRun = true,\n            [Description(\"crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.\")] bool crossReferences = false,\n            [Description(\"confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.\")] bool confirm = false,\n            [Description(\"expectedProjectFile: exact bound project file; required with dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -9168,6 +9168,18 @@
           "default": "false",
           "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
           "value": false
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "description": "confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact bound project file; required with dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -9176,7 +9188,7 @@
       "path": "src/Shared/PlcOrganisationTools.cs",
       "owner": "PlcOrganisationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult DeletePlcTagTableV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"tagTableName: bare table name, or the group-qualified path from ListPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.\")] string tagTableName,\n            [Description(\"dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent\")] bool dryRun = true,\n            [Description(\"crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.\")] bool crossReferences = false)",
+      "signature": "public CallToolResult DeletePlcTagTableV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"tagTableName: bare table name, or the group-qualified path from ListPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.\")] string tagTableName,\n            [Description(\"dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent\")] bool dryRun = true,\n            [Description(\"crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.\")] bool crossReferences = false,\n            [Description(\"confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.\")] bool confirm = false,\n            [Description(\"expectedProjectFile: exact bound project file; required with dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -9199,6 +9211,18 @@
           "default": "false",
           "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
           "value": false
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "description": "confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact bound project file; required with dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -9207,7 +9231,7 @@
       "path": "src/Shared/PlcOrganisationTools.cs",
       "owner": "PlcOrganisationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult DeletePlcTypeV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.\")] string typePath,\n            [Description(\"dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent\")] bool dryRun = true,\n            [Description(\"crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.\")] bool crossReferences = false)",
+      "signature": "public CallToolResult DeletePlcTypeV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.\")] string typePath,\n            [Description(\"dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent\")] bool dryRun = true,\n            [Description(\"crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.\")] bool crossReferences = false,\n            [Description(\"confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.\")] bool confirm = false,\n            [Description(\"expectedProjectFile: exact bound project file; required with dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -9230,6 +9254,18 @@
           "default": "false",
           "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
           "value": false
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "description": "confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact bound project file; required with dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -17283,12 +17319,12 @@
       "path": "src/Shared/Host/OfflineSuiteTools.cs",
       "owner": "OfflineSuiteTools",
       "domain": "Validation",
-      "signature": "public CallToolResult RunOfflineReleaseValidationSuiteV4(\n            [Description(\"workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.\")] string workspaceRoot,\n            [Description(\"reportDirectory: directory where suite files and reports will be written.\")] string reportDirectory)",
+      "signature": "public CallToolResult RunOfflineReleaseValidationSuiteV4(\n            [Description(\"workspaceRoot: folder you prepared with TMP_EXPORT/_verify, docs/hmi_templates and docs/hmi_template_mappings; these are not shipped.\")] string workspaceRoot,\n            [Description(\"reportDirectory: directory where suite files and reports will be written.\")] string reportDirectory)",
       "parameters": {
         "workspaceRoot": {
           "type": "string",
           "default": null,
-          "description": "workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools."
+          "description": "workspaceRoot: folder you prepared with TMP_EXPORT/_verify, docs/hmi_templates and docs/hmi_template_mappings; these are not shipped."
         },
         "reportDirectory": {
           "type": "string",

@@ -11,9 +11,9 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         public static JsonObject Analyze(string libraryPath)
         {
-            var rootDir = Directory.Exists(libraryPath)
-                ? libraryPath
-                : Path.GetDirectoryName(libraryPath) ?? libraryPath;
+            var rootDir = File.Exists(libraryPath)
+                ? Path.GetDirectoryName(libraryPath) ?? libraryPath
+                : libraryPath;
             var info = new JsonObject
             {
                 ["inputPath"] = libraryPath,
@@ -63,7 +63,8 @@ namespace TiaMcpServer.ModelContextProtocol
             info["xref"] = AnalyzeSqliteDatabaseHeader(xrefDb);
             info["stringHints"] = AnalyzeLibraryStringHints(rootDir, 150);
 
-            var hasCoreFiles = File.Exists(peDataPlf) && File.Exists(peDataIdx) && File.Exists(xrefDb);
+            var hasCoreFiles = File.Exists(peDataPlf) && File.Exists(peDataIdx);
+            info["xrefDatabasePresent"] = File.Exists(xrefDb);
             info["ok"] = hasCoreFiles;
             info["recommendations"] = BuildRecommendations(info);
             return info;
@@ -160,7 +161,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var hash = TryComputeSha256(file.FullName);
                 obj["sha256Status"] = hash.Ok ? "ok" : "unavailable";
                 obj["sha256"] = hash.Sha256 ?? "";
-                obj["sha256Error"] = hash.Error ?? "";
+                if (hash.Error != null) obj["sha256Error"] = hash.Error;
             }
             return obj;
         }
@@ -349,7 +350,7 @@ namespace TiaMcpServer.ModelContextProtocol
             };
             if (info["ok"]?.GetValue<bool>() != true)
             {
-                list.Add("当前库包缺少 PEData.plf、PEData.idx 或 XRef.db，优先检查参考库路径是否完整。");
+                list.Add("The library package is missing System/PEData.plf or System/PEData.idx; check that the reference library path is complete.");
             }
             return list;
         }

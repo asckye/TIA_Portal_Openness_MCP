@@ -55,6 +55,7 @@ namespace TiaMcp.Adapters.Native.Online
                     + _session.AvailablePlcPathsSuffix());
             }
 
+            string probeState = "Unknown";
             try
             {
                 // Note: don't gate on OnlineProvider here. The provider service is sometimes
@@ -63,7 +64,7 @@ namespace TiaMcp.Adapters.Native.Online
                 // throw if the connection isn't actually live — the exception path below
                 // captures that with the original TIA error message.
                 var provider = _session.ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware);
-                var probeState = provider?.State.ToString() ?? "Unknown";
+                probeState = provider?.State.ToString() ?? "Unknown";
 
                 // Typed PlcSoftware.CompareToOnline (all eight releases); CompareResultState is read by name because
                 // CompareIrrelevant and the folder own-state values exist from V15.1 only.
@@ -91,6 +92,8 @@ namespace TiaMcp.Adapters.Native.Online
             }
             catch (Exception ex)
             {
+                if (probeState == "Offline")
+                    return new OnlineCompareResult { IsOnline = false, Message = $"'{softwarePath}' is offline. Call ConnectOnlinePlc first." };
                 _session.Log.Error(ex, "CompareSoftwareToOnline failed for {SoftwarePath}", softwarePath);
                 throw new PortalException(PortalErrorCode.OpennessError,
                     $"CompareSoftwareToOnline failed for '{softwarePath}': {ex.Message} "

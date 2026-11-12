@@ -160,6 +160,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.RejectedBeforeOperation; error =
                     new Error("The runtime API is unavailable.", new ResourceUnavailableDetails("PLCSIM Advanced API"));
             }
+            else if (tool == "CompareSoftwareToOnline" && Flag(data, "isOnline") == false)
+            {
+                outcome = Outcome.RejectedBeforeOperation;
+                error = new Error(HostBehavior.SafeDiagnostic((string?)raw["message"]) ?? "The PLC is offline.",
+                    new PreconditionFailedDetails("plc-online", null));
+            }
             else if (success == true) outcome = Outcome.Succeeded;
             else if (readOnly) { outcome = Outcome.ReadFailed; error = Failure(false); }
             else if (knownFailure || failed > 0) { outcome = Outcome.Failed; error = Failure(false); }

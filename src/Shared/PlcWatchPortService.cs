@@ -10,6 +10,8 @@ namespace TiaMcpServer.Siemens.Services
 {
     internal sealed partial class PlcOrganisationPortService
     {
+        internal Func<string, int, int, IEnumerable<string>, string?, S7ReadResult> LiveRead { get; set; } = S7LiveReader.ReadItems;
+
         private static ResponseJsonReport WatchReport(JsonObject reply)
         {
             var report = reply["Report"]!.AsObject();
@@ -85,7 +87,7 @@ namespace TiaMcpServer.Siemens.Services
             long elapsed = 0;
             if (specs.Count > 0)
             {
-                var read = S7LiveReader.ReadItems(ip, rack, slot, specs,
+                var read = LiveRead(ip, rack, slot, specs,
                     string.IsNullOrWhiteSpace(expectModuleContains) ? null : expectModuleContains);
                 elapsed = read.ElapsedMs;
                 data["identity"] = new JsonObject
@@ -109,7 +111,8 @@ namespace TiaMcpServer.Siemens.Services
             data["unresolved"] = unresolved;
             data["elapsedMs"] = elapsed;
 
-            bool ok = specs.Count > 0 && outRows.OfType<JsonObject>().All(o => o["error"] == null);
+            bool ok = specs.Count > 0 && data["readError"] == null && outRows.Count > 0
+                && outRows.OfType<JsonObject>().All(o => o["error"] == null);
             return new ResponseJsonReport
             {
                 Ok = ok,
@@ -171,7 +174,7 @@ namespace TiaMcpServer.Siemens.Services
             long elapsed = 0;
             if (specs.Count > 0)
             {
-                var read = S7LiveReader.ReadItems(ip, rack, slot, specs,
+                var read = LiveRead(ip, rack, slot, specs,
                     string.IsNullOrWhiteSpace(expectModuleContains) ? null : expectModuleContains);
                 elapsed = read.ElapsedMs;
                 if (read.Error != null) trace.Data["liveReadError"] = read.Error;

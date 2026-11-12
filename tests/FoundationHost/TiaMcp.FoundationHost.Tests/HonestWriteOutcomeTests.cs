@@ -359,6 +359,38 @@ public sealed class HonestWriteOutcomeTests
         Assert.False((bool)result["meta"]!["requiresSessionReset"]!);
         Assert.Equal(fileExists, (bool?)result["data"]?["evidence"]?["mayHaveWrittenFiles"]);
     }
+    [Theory]
+    [InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Export_failure_keeps_a_message_only_reason(string release)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        string path = Path.Combine(Path.GetTempPath(), "alarm-" + Guid.NewGuid().ToString("N") + ".xlsx");
+        var body = Body(Host.EngineeringToolContract.Export("ExportAlarmTextLists", path, () => new Host.ResponseMessage {
+            Message = "Export failed: Error when calling method 'ExportToXlsx' of type 'Siemens.Engineering.SW.Alarm.PlcAlarmTextListProvider'.",
+            Meta = new JsonObject { ["success"] = false, ["apiCallSuccess"] = false, ["mayHaveChanged"] = false }
+        }));
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("failed", (string?)body["meta"]?["outcome"]);
+        Assert.Contains("ExportToXlsx", (string?)body["error"]?["details"]?["nativeMessage"], StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Missing_text_list_is_a_documented_refusal(string release)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        string path = Path.Combine(Path.GetTempPath(), "alarm-" + Guid.NewGuid().ToString("N") + ".xlsx");
+        var body = Body(Host.EngineeringToolContract.Export("ExportAlarmTextLists", path, () => new Host.ResponseMessage {
+            Message = "Export failed: There is no text list on this controller.",
+            Meta = new JsonObject { ["success"] = false, ["operationSuccess"] = false, ["apiCallSuccess"] = false, ["mayHaveChanged"] = false,
+                ["status"] = "PreconditionFailed", ["precondition"] = "plc-text-lists",
+                ["refusal"] = "This PLC has no alarm text list; create one in TIA or with ManagePlcAlarmTextList createFromMasterCopy." }
+        }));
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("plc-text-lists", (string?)body["error"]?["details"]?["condition"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+    }
+
     [Theory, InlineData(true), InlineData(false)]
     public void Download_to_folder_preview_without_native_state_succeeds(bool preview)
     {
@@ -407,6 +439,33 @@ public sealed class HonestWriteOutcomeTests
                 () => new Host.ResponseJsonReport { Data = Host.OfflineReleaseValidationSuite.Run(workspace, reports) }, true);
             Assert.Equal("PRECONDITION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
             Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
+            Assert.False(Directory.Exists(reports));
+        }
+        finally { Directory.Delete(workspace, true); }
+    }
+
+    public static IEnumerable<object[]> MissingReleaseFixtures =>
+        from release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
+        from missing in new[] { "TMP_EXPORT/_verify", "docs/hmi_templates", "docs/hmi_template_mappings/tia-hmi-template-plc-mapping.release.json" }
+        select new object[] { release, missing };
+
+    [Theory, MemberData(nameof(MissingReleaseFixtures))]
+    public void Missing_release_fixtures_name_the_relative_folder(string release, string missing)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        string workspace = Path.Combine(Path.GetTempPath(), "vmfix10b-release-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(workspace);
+        try
+        {
+            if (missing != "TMP_EXPORT/_verify") Directory.CreateDirectory(Path.Combine(workspace, "TMP_EXPORT", "_verify"));
+            if (missing.EndsWith(".json", StringComparison.Ordinal)) Directory.CreateDirectory(Path.Combine(workspace, "docs", "hmi_templates"));
+            string reports = Path.Combine(workspace, "reports");
+            var body = Body(Host.OfflineContracts.Run("RunOfflineReleaseValidationSuite",
+                () => new Host.ResponseJsonReport { Data = Host.OfflineReleaseValidationSuite.Run(workspace, reports) }, true));
+            Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Contains(missing, (string?)body["error"]?["message"], StringComparison.Ordinal);
+            Assert.DoesNotContain("<path>", (string?)body["error"]?["message"], StringComparison.Ordinal);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
             Assert.False(Directory.Exists(reports));
         }
         finally { Directory.Delete(workspace, true); }

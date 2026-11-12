@@ -263,14 +263,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify " +
                 "projects.")]
         public CallToolResult RunOfflineReleaseValidationSuiteV4(
-            [Description("workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.")] string workspaceRoot,
+            [Description("workspaceRoot: folder you prepared with TMP_EXPORT/_verify, docs/hmi_templates and docs/hmi_template_mappings; these are not " +
+                "shipped.")]
+                string workspaceRoot,
             [Description("reportDirectory: directory where suite files and reports will be written.")] string reportDirectory)
             => OfflineContracts
                 .Run("RunOfflineReleaseValidationSuite", () => RunOfflineReleaseValidationSuite(OfflineContracts.Workspace(workspaceRoot), reportDirectory),
                     writes: true, current: false);
 
         public ResponseJsonReport RunOfflineReleaseValidationSuite(
-            [Description("workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.")] string workspaceRoot,
+            [Description("workspaceRoot: folder you prepared with TMP_EXPORT/_verify, docs/hmi_templates and docs/hmi_template_mappings; these are not " +
+                "shipped.")]
+                string workspaceRoot,
             [Description("reportDirectory: directory where suite files and reports will be written.")] string reportDirectory)
         {
             try

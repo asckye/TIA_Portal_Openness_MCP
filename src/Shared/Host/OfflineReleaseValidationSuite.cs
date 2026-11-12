@@ -26,12 +26,16 @@ namespace TiaMcpServer.ModelContextProtocol
             var hmiTemplateDir = Path.Combine(workspaceRoot, "docs", "hmi_templates");
             var hmiTemplateMappingPath = Path.Combine(workspaceRoot, "docs", "hmi_template_mappings", "tia-hmi-template-plc-mapping.release.json");
 
-            foreach (string directory in new[] { plcFixtureDir, hmiTemplateDir })
-                if (!Directory.Exists(directory))
-                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Release fixture directory is missing: " + directory,
+            foreach (string relative in new[] { "TMP_EXPORT/_verify", "docs/hmi_templates" })
+                if (!Directory.Exists(Path.Combine(workspaceRoot, relative)))
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                        "Release fixture directory is missing under workspaceRoot: " + relative
+                        + ". The delivered package and the repository do not contain these fixtures; supply your own.",
                         "release-fixtures", null);
             if (!File.Exists(hmiTemplateMappingPath))
-                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Release fixture mapping is missing: " + hmiTemplateMappingPath,
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                    "Release fixture mapping is missing under workspaceRoot: docs/hmi_template_mappings/tia-hmi-template-plc-mapping.release.json. "
+                    + "The delivered package and the repository do not contain these fixtures; supply your own.",
                     "release-fixtures", null);
 
             Directory.CreateDirectory(reportDirectory);

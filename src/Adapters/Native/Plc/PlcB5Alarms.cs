@@ -39,6 +39,28 @@ namespace TiaMcp.Adapters.Native.Plc
 #if PLC_ALARM_TEXTS
         #region alarms
 
+        private static string NativeReason(Exception error)
+        {
+            var cause = error.GetBaseException();
+            if (cause is EngineeringException engineering)
+            {
+                try
+                {
+                    var data = engineering.MessageData;
+                    var details = new List<string?>();
+                    foreach (var detail in engineering.DetailMessageData)
+                    {
+                        details.Add(detail.Text);
+                        details.Add(detail.DetailText);
+                    }
+                    string reason = NativeFailureText.Compose(data.Text, data.DetailText, details);
+                    if (reason.Length != 0) return reason;
+                }
+                catch { /* swallow(probe-optional): unavailable engineering details must not replace the original exception */ }
+            }
+            return cause.Message;
+        }
+
         // Typed AlarmClassExportImportResultMessage rows (Message + per-message State).
 #if PLC_ALARM_CLASSES
         private static PlcB5Array AlarmClassMessages(AlarmClassExportImportResult? result)
@@ -191,10 +213,18 @@ namespace TiaMcp.Adapters.Native.Plc
             catch (Exception ex)
             {
                 _session.RecordExportFailure(ex);
+                string reason = NativeReason(ex);
+                var meta = ResponseMeta.Unstamped(false,
+                    ("operationSuccess", false), ("apiCallSuccess", false), ("mayHaveChanged", false),
+                    ("mayHaveWrittenFiles", File.Exists(exportPath)), ("nativeMessage", reason));
+                if (ex.GetBaseException().GetType().Name == "TextListNotFoundException")
+                {
+                    meta["status"] = "PreconditionFailed";
+                    meta["precondition"] = "plc-text-lists";
+                    meta["refusal"] = "This PLC has no alarm text list; create one in TIA or with ManagePlcAlarmTextList createFromMasterCopy.";
+                }
                 return new PlcB5Reply {
-                    Message =
-                        $"Export failed: {ex.GetBaseException().Message} (a PLC without any alarm text list answers TextListNotFoundException - create one in TIA or via ManagePlcAlarmTextList createFromMasterCopy first).",
-                        Meta = ResponseMeta.Unstamped(false)
+                    Message = $"Export failed: {reason}", Meta = meta
                 };
             }
         }
@@ -281,9 +311,9 @@ namespace TiaMcp.Adapters.Native.Plc
             catch (Exception ex)
             {
                 _session.RecordExportFailure(ex);
-                return new PlcB5Reply { Message = $"Export failed: {ex.GetBaseException().Message}", Meta = ResponseMeta.Unstamped(false,
+                return new PlcB5Reply { Message = $"Export failed: {NativeReason(ex)}", Meta = ResponseMeta.Unstamped(false,
                     ("operationSuccess", false), ("apiCallSuccess", false), ("mayHaveChanged", false),
-                    ("mayHaveWrittenFiles", File.Exists(exportPath)), ("nativeMessage", ex.GetBaseException().Message)) };
+                    ("mayHaveWrittenFiles", File.Exists(exportPath)), ("nativeMessage", NativeReason(ex))) };
             }
         }
 

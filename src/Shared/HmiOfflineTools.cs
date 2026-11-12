@@ -50,12 +50,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
 
                 var ok = data["ok"]?.GetValue<bool>() == true;
+                var exists = data["exists"]?.GetValue<bool>() == true;
+                data["packageComplete"] = ok;
+                data.Remove("ok");
                 return new ResponseJsonReport
                 {
-                    Ok = ok,
+                    Ok = exists,
                     Message = ok ? "Global library package offline analysis completed" : "Global library package offline analysis completed with findings",
                     Data = data,
-                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
+                    Meta = exists ? ResponseMeta.Basic(DateTime.Now, true)
+                        : ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -181,12 +185,16 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var data = HmiTemplateReferenceAnalyzer.Analyze(templateDirectory, referenceProjectPath, referenceGlobalLibraryPath);
                 var ok = data["ok"]?.GetValue<bool>() == true;
+                var exists = Directory.Exists(templateDirectory);
+                data["templatesFound"] = ok;
+                data.Remove("ok");
                 return new ResponseJsonReport
                 {
-                    Ok = ok,
+                    Ok = exists,
                     Message = ok ? "HMI template/reference offline analysis completed" : "HMI template/reference offline analysis completed with findings",
                     Data = data,
-                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
+                    Meta = exists ? ResponseMeta.Basic(DateTime.Now, true)
+                        : ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
                 };
             }
             catch (Exception ex) when (ex is not McpException)

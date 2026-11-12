@@ -5,6 +5,11 @@
 ## [Unreleased]
 
 ### Fixed
+- Failed live S7 watch connections return `NATIVE_OPERATION_FAILED` with the connection reason and an incomplete read verdict. Alarm exports retain native detail messages; a PLC without alarm text lists returns `PRECONDITION_FAILED` with condition `plc-text-lists`.
+- Offline PLC comparisons return `PRECONDITION_FAILED` with condition `plc-online` and guidance to call `ConnectOnlinePlc`.
+- Completed offline library and template analyses report findings through `data.packageComplete` and `data.templatesFound`; missing folders return `NOT_FOUND`. New libraries do not require `XRef/XRef.db`, and successful hashes carry no error field.
+- Offline release validation refusals identify the relative fixture path and explain that callers must supply fixtures absent from the repository and package.
+- Real `DeletePlcTagTable`, `DeletePlcBlock` and `DeletePlcType` calls require `dryRun=false`, `confirm=true` and the exact bound `expectedProjectFile`. Missing confirmation returns `CONFIRMATION_REQUIRED`; invalid or mismatched project identities return `INVALID_ARGUMENT` or `IDENTITY_MISMATCH` before dispatch.
 - Unified HMI template layout QA and apply designs resolve screen size from declarations, then the file name, then caller fallbacks, so shipped templates pass layout checks.
 - HMI template PLC sync prechecks report `no-bindings` when no bindings are declared, and include blocking reasons when the suite cannot pass.
 - Load V21 optional Openness assemblies by exact SDK identity. Distinguish missing components from load failures and preserve load failure reasons in `nativeMessage`.
