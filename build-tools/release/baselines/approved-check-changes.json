@@ -544,6 +544,63 @@
           "identifier": "OnlinePortAdmissionTests/Missing_online_actions_are_refused_before_even_managed_worker_state( string release , string name , string json ):bdca471c791bb8de9ab04d6c55348eb93586a78d6aa417d392c9d66479e391de:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-7A",
+      "maintainerDate": "2026-11-12",
+      "reason": "Maintainer approved VMFIX-7 D1 on 2026-11-11 (all recommendations): a read whose worker reply was lost reports read-failed, not unknown",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcCrossReferenceAnalysisTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcCrossReferenceAnalysisTests/No_supported_export_is_reported_as_not_queried_with_a_failure( ):b90af54a2c01760bbf7326f9a4d6eee9c7e046e0979d21e6be55011f4f7da6a4:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcCrossReferenceAnalysisTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcCrossReferenceAnalysisTests/Scope_counts_only_published_exports_and_retains_partial_failures( int successful ):fb20560380a546773c120a58de8e20a4ee6282554f5368d034e114bcab420d65:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Plc_faults_keep_the_V4_unknown_outcome_and_session_reset( string release , string mode ):f7250398a0bdc6174112fc2e2b76b9e013eaa1cda1030cc9cf6b09c29ca4e19b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Prechecks_and_other_invocations_do_not_consume_the_V4_fault( string release , string mode ):f7250398a0bdc6174112fc2e2b76b9e013eaa1cda1030cc9cf6b09c29ca4e19b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VmDefectRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VmDefectRegressionTests/Timed_out_read_requires_reset_and_exact_restart_guidance( ):06b55d2e124b9e3e3104ebdb16498ab4f9fcdfb2d9159ac8793587e35486625e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerClientTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerDispatchTests/Lost_worker_acknowledgement_maps_to_unknown_for_reads_and_writes( string tool , bool writes ):13d14dc455a7d842dc88cd580117937f8f1b1d5c7349bd9887d21115c3493c82:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerClientTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerDispatchTests/Lost_worker_acknowledgement_maps_to_unknown_for_reads_and_writes( string tool , bool writes ):2793aff539562eecbd930563fbabf442daa2018fcb52ea1f25cb63d57a509754:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerClientTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerDispatchTests/Lost_worker_acknowledgement_maps_to_unknown_for_reads_and_writes( string tool , bool writes ):ae86e22de71155b734d1088d8e499e3f83425c643143b06d12edee5890b8c868:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerClientTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerDispatchTests/Lost_worker_acknowledgement_maps_to_unknown_for_reads_and_writes( string tool , bool writes ):d287cdaa8ba4effef54b76a3ef75695656a7a4ffba06a4ef6a969a8c7f174eed:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerRobustnessTests/Faults_lock_both_pipelines_and_require_explicit_restart( string release , bool shared , string mode ):6c365054eb9c19742876a5436676e96619658854b0ed2d9118d6f4c4655d9b74:1"
+        }
+      ]
     }
   ]
 }
