@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using Siemens.Engineering;
+using TiaMcp.Adapters.Contracts;
 namespace TiaMcp.Adapters.Hardware
 {
     internal static class HardwareOfficialService
@@ -15,8 +16,11 @@ namespace TiaMcp.Adapters.Hardware
             var type=typeof(IEngineeringObject).Assembly.GetType(typeName) ?? AppDomain.CurrentDomain.GetAssemblies().Select(a=>a.GetType(typeName))
                 .FirstOrDefault(t=>t!=null);
             if(type==null) {
-                try { type=Assembly.Load(assemblyName).GetType(typeName); }
+                try { type=Assembly.Load(OpennessAssemblyNames.Sibling(typeof(IEngineeringObject).Assembly.GetName(), assemblyName)).GetType(typeName); }
                 catch(FileNotFoundException ex) { throw new NotSupportedException("Official optional component is not installed/resolvable: "+assemblyName,ex);
+                }
+                catch(FileLoadException ex) {
+                    throw new NotSupportedException("Official optional component could not be loaded: " + assemblyName + ". " + ex.Message, ex);
                 }
             }
             if(type==null || !typeof(IEngineeringService).IsAssignableFrom(type))

@@ -11,6 +11,7 @@
     <Compile Include="../../Shared/DecoderRuntimeFixture.cs" Link="Shared/DecoderRuntimeFixture.cs" />
     <Compile Include="../../../src/Shared/HttpAccessKeyStore.cs" Link="Shared/HttpAccessKeyStore.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerAssemblyResolver.cs" Link="WorkerAssemblyResolver.cs" />
     <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" />
     <Compile Include="../../Generation/TiaMcp.Generation.Planning.Tests/PlanningFixture.cs" Link="Generation/PlanningFixture.cs" />
     <Compile Include="../../../src/FoundationHost/GenerationTool.cs" Link="GenerationTool.cs" />

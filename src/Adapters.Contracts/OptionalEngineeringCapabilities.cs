@@ -22,6 +22,14 @@ public static class OptionalEngineeringCapabilities
             ["requiresSessionReset"] = false }
     };
 
+    public static HardwareAddressingReply LoadFailure(string assembly, Exception error)
+    {
+        var reply = Refusal("Official optional component " + assembly
+            + " is in the selected PublicAPI folder but could not be loaded: " + error.Message);
+        reply.Meta["nativeMessage"] = error.Message;
+        return reply;
+    }
+
     public static string? Unsupported(string release, OptionalEngineeringRequest request)
     {
         int major = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);

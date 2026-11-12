@@ -30,16 +30,8 @@ internal static class Program
         if (!Directory.Exists(api)) throw new DirectoryNotFoundException(api);
         AppDomain.CurrentDomain.AssemblyResolve += (sender, request) =>
         {
-            var wanted = new AssemblyName(request.Name);
-            if (wanted.Name == null || !wanted.Name.StartsWith("Siemens.Engineering", StringComparison.Ordinal)) return null;
-            var file = Path.Combine(api, wanted.Name + ".dll");
-            // Siemens.Engineering.Contract and Siemens.Engineering.ClientAdapter.Interfaces are not in the
-            // PublicAPI folder; TIA's own resolution loads them. Throwing here blocked it on every release.
-            if (!File.Exists(file)) return null;
-            var actual = AssemblyName.GetAssemblyName(file);
-            if (!string.Equals(wanted.FullName, actual.FullName, StringComparison.OrdinalIgnoreCase))
-                throw new FileLoadException("Selected SDK identity mismatch: " + wanted.FullName + " / " + actual.FullName, file);
-            return Assembly.LoadFrom(file);
+            var file = WorkerAssemblyResolver.SelectFile(api, request.Name);
+            return file == null ? null : Assembly.LoadFrom(file);
         };
         if (options.ReleaseKey != "20" && options.ReleaseKey != "21") return Run(options);
         int result = 0;

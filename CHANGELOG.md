@@ -7,6 +7,7 @@
 ### Fixed
 - Unified HMI template layout QA and apply designs resolve screen size from declarations, then the file name, then caller fallbacks, so shipped templates pass layout checks.
 - HMI template PLC sync prechecks report `no-bindings` when no bindings are declared, and include blocking reasons when the suite cannot pass.
+- Load V21 optional Openness assemblies by exact SDK identity. Distinguish missing components from load failures and preserve load failure reasons in `nativeMessage`.
 
 ## [4.0.0-beta.4] - 2026-11-05
 

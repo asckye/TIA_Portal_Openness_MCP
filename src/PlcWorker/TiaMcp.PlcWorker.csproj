@@ -71,6 +71,7 @@
 
     <Compile Include="$(WorkerSourceRoot)/Program.cs" Link="Program.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
+    <Compile Include="$(WorkerSourceRoot)/WorkerAssemblyResolver.cs" Link="WorkerAssemblyResolver.cs" />
     <Compile Include="../Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" />
     <Compile Include="$(WorkerSourceRoot)/PlcSimAdvancedWorkerModule.cs" Link="PlcSimAdvancedWorkerModule.cs" />
     <Compile Include="$(WorkerSourceRoot)/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />

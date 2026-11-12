@@ -72,7 +72,7 @@ namespace TiaMcp.Adapters.Reflection
             foreach (var name in new[] { "Base", "Step7", "Safety", "SafetyValidation", "CFC", "DCC", "Sivarc",
                 "Startdrive", "TestSuite", "WinCC", "WinCCUnified", "WinCC.Extension", "TeamcenterGateway" })
             {
-                try { Assembly.Load("Siemens.Engineering." + name); }
+                try { Assembly.Load(OpennessAssemblyNames.Sibling(OpennessAssemblyNames.V21Core, "Siemens.Engineering." + name)); }
                 catch (Exception error) when (error is System.IO.FileNotFoundException || error is System.IO.FileLoadException
                         || error is BadImageFormatException)
                 { /* swallow(probe-optional): an uninstalled split product supplies no service types. */ }
