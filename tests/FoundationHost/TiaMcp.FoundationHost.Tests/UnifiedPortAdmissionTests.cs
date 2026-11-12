@@ -14,6 +14,23 @@ using Xunit;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class UnifiedPortAdmissionTests
 {
+    [Theory, InlineData(5, true), InlineData(6, false), InlineData(int.MaxValue, false)]
+    public void Api_type_list_reports_truncation(int limit, bool truncated)
+    {
+        int requested = 0;
+        using var release = Host.HardwareContract.UseRelease("21");
+        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, args) => {
+            requested = (int)args["request"]!["Limit"]!;
+            return new JsonObject { ["Value"] = new JsonArray(Enumerable.Range(0, Math.Min(requested, 6))
+                .Select(n => (JsonNode)JsonValue.Create("class: Siemens.Engineering.HmiUnified.Type" + n)!).ToArray()) };
+        }, () => "fixture");
+        var result = new Host.UnifiedHmiTools(service).ListUnifiedHmiApiTypesV4("", limit).StructuredContent!;
+        Assert.Equal(limit == int.MaxValue ? limit : limit + 1, requested);
+        Assert.Equal(truncated, (bool?)result["data"]?["evidence"]?["truncated"]);
+        Assert.Equal(truncated ? "partial" : "complete", (string?)result["meta"]?["completeness"]);
+        Assert.Equal(Math.Min(limit, 6), result["data"]!["items"]!.AsArray().Count);
+    }
+
     private static void AssertArgumentRefusal(Action action)
     {
         var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(action);

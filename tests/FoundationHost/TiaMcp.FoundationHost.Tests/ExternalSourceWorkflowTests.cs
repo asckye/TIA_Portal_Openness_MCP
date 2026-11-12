@@ -1,3 +1,4 @@
+extern alias enginehost;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -93,5 +94,26 @@ internal static class ExternalSourceWorkflowTests
             try {await tool.InvokeAsync(Request());throw new Exception("Apply without preview hash was dispatched");} catch(McpException ex) {check(ex.ErrorCode==McpErrorCode.InvalidParams && fake.Calls==calls,"Apply requires preview before worker dispatch "+name);}
             check(TiaMcp.PlcWorker.WorkerOperations.Names.Contains(name),"Typed worker exposes native external-source route "+name);
         }
+    }
+}
+
+public sealed class ExternalSourceWriterTests
+{
+    [Xunit.Fact]
+    public void Writer_output_for_ascii_scl_passes_the_import_byte_rule()
+    {
+        const string source = "FUNCTION \"Pump\" : Void\r\nBEGIN\r\nEND_FUNCTION\r\n";
+        string path = Path.Combine(Path.GetTempPath(), "vmfix6a-source-" + Guid.NewGuid().ToString("N") + ".scl");
+        try
+        {
+            var writer = typeof(enginehost::TiaMcp.FoundationHost.EngineHostPipeline).Assembly
+                .GetType("TiaMcpServer.ModelContextProtocol.PlcOfflineTools", true)!;
+            writer.GetMethod("WritePlcSclSourceFile")!.Invoke(Activator.CreateInstance(writer), new object[] { source, path });
+            using var input = File.OpenRead(path);
+            var actual = PlcExternalSourceWorkflowPolicy.InputHash(input);
+            using var expected = new MemoryStream(Encoding.ASCII.GetBytes(source));
+            Xunit.Assert.Equal(PlcExternalSourceWorkflowPolicy.InputHash(expected), actual);
+        }
+        finally { File.Delete(path); }
     }
 }

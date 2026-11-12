@@ -353,8 +353,8 @@ namespace TiaMcp.Adapters
                     meta["masterCopyFolder"] = masterCopyFolder == null ? null : MasterCopyFolderTree(masterCopyFolder, "", 0, maxDepth, ref copies, maxItems);
                     if (masterCopyFolder == null) meta["masterCopyFolderNote"] = library.GetType().Name + " exposes no MasterCopyFolder.";
                 }
-                meta["typeItems"] = items; meta["masterCopyItems"] = copies; meta["apiCallSuccess"] = true; meta["dataComplete"] = items <= maxItems
-                    && copies <= maxItems;
+                foreach (var pair in LibraryCapabilities.OverviewCounts(items, copies, maxItems)) meta[pair.Key] = pair.Value;
+                meta["apiCallSuccess"] = true;
                 meta["scope"] =
                     "Library header (GlobalLibrary scalars, comment per culture, history entries, used products), type folder tree with consistency Status / " +
                     "Guid / DoNotUse / SetForUpdate / version summary, master copy tree with ContentDescriptions. Bounded by maxDepth/maxItems.";

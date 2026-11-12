@@ -233,12 +233,12 @@ namespace TiaMcpServer.ModelContextProtocol
             release ??= HardwareContract.ReleaseKey;
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
-            var decorated = ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
+            var decorated = TiaOpenness.Shared.ToolUsageCatalog.WithHint(name, ToolExamples.Decorate(name, description, release));
             var tool = ReferenceEquals(decorated, description) || decorated == description
                 ? CreateToolCore(method, null, target)
                 : CreateToolCore(method, new McpServerToolCreateOptions { Name = name, Description = decorated }, target);
             // Enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
-            var hinted = McpServer.WithSchemaHints(tool, name, SpecsOf(method), (schema, original) => PreserveTypedSchemas(schema, original, method));
+            var hinted = McpServer.WithSchemaHints(tool, name, SpecsOf(method), release, (schema, original) => PreserveTypedSchemas(schema, original, method));
             var schema = JsonNode.Parse(hinted.ProtocolTool.InputSchema.GetRawText())!.AsObject();
             PlcSoftwareUnitSchema.Apply(schema, name, release);
             hinted.ProtocolTool.InputSchema = JsonSerializer.SerializeToElement(schema);

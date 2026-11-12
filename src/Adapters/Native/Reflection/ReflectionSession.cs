@@ -42,6 +42,9 @@ namespace TiaMcp.Adapters.Reflection
             try { return value.GetType().GetProperty("Name")?.GetValue(value)?.ToString(); }
             catch /* swallow(probe-optional): a missing optional name retains the original ToString fallback */ { return null; }
         }
+        internal int CountMembers(object value)
+            => value.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Count(p => p.GetIndexParameters().Length == 0)
+                + value.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Count(m => !m.IsSpecialName);
         internal IEnumerable<OpennessMember> DescribeMembers(object value, int maxMembers)
         {
             var type = value.GetType(); var members = new List<OpennessMember>();

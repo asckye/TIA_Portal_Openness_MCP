@@ -15,7 +15,7 @@ internal sealed class UsageHintTool : McpServerTool
         this.inner = inner;
         var source = inner.ProtocolTool;
         protocol = new Tool { Name = source.Name, Title = source.Title,
-            Description = source.Description + ToolUsageCatalog.Hint(source.Name),
+            Description = ToolUsageCatalog.WithHint(source.Name, source.Description),
             InputSchema = source.InputSchema, OutputSchema = source.OutputSchema,
             Annotations = source.Annotations, Meta = source.Meta };
     }

@@ -25,6 +25,40 @@ public sealed class B3HostPortsTests
 
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });
     [Theory, MemberData(nameof(Releases))]
+    public async Task FindTools_summary_names_the_page(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var tools = fixture.Tools;
+        var find = tools.Single(t => t.ProtocolTool.Name == "FindTools");
+        var result = await ToolHintOnceTests.Invoke(find, new { offset = 6, limit = 6 });
+        Assert.StartsWith("Showing 7-12 of " + tools.Count + " matching tools (roster: " + tools.Count + " total).",
+            (string?)result["data"]?["summary"]);
+        Assert.Equal(18, result["data"]!["items"]!.AsArray().Count);
+        Assert.Equal(tools.Count, (int?)result["data"]?["matchingCount"]);
+        var end = await ToolHintOnceTests.Invoke(find, new { offset = tools.Count, limit = 6 });
+        Assert.StartsWith("0 of " + tools.Count, (string?)end["data"]?["summary"]);
+        Assert.Empty(end["data"]!["items"]!.AsArray());
+        var refused = await ToolHintOnceTests.Invoke(find, new { offset = tools.Count + 1, limit = 6 });
+        Assert.Equal("INVALID_ARGUMENT", (string?)refused["error"]?["code"]);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task No_tool_matches_keeps_query_recovery_guidance(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        const string query = "vmfix6a_missing_capability";
+        var result = await ToolHintOnceTests.Invoke(fixture.Tools.Single(t => t.ProtocolTool.Name == "FindTools"), new { query, limit = 6 });
+        Assert.True((bool?)result["ok"], result.ToJsonString());
+        Assert.Equal(0, (int?)result["data"]?["matchingCount"]);
+        Assert.Empty(result["data"]!["items"]!.AsArray());
+        string summary = (string)result["data"]!["summary"]!;
+        Assert.StartsWith("0 of 0 matching tools", summary);
+        Assert.Contains("No tool matches '" + query + "'", summary);
+        Assert.Contains("Try fewer or more general words", summary);
+        Assert.Contains("call FindTools with an empty query", summary);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
     public void Whole_tool_availability_matches_the_implemented_API_routes(string release)
     {
         int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release);

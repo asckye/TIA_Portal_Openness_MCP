@@ -101,7 +101,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ObjectKind = "Software",
                 ObjectPath = softwarePath,
                 TypeName = sw.GetType().FullName ?? sw.GetType().Name,
-                Members = _session.DescribeMembers(sw, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Meta = MemberListCap.Meta(_session.CountMembers(sw), Math.Min(_session.CountMembers(sw), MemberListCap.Effective(maxMembers))),
+                Members = _session.DescribeMembers(sw, MemberListCap.Effective(maxMembers)).ToList()
             };
         }
 
@@ -145,7 +146,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ObjectKind = "HmiScreen",
                 ObjectPath = $"{softwarePath}:{screenName}",
                 TypeName = screen.GetType().FullName ?? screen.GetType().Name,
-                Members = _session.DescribeMembers(screen, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Meta = MemberListCap.Meta(_session.CountMembers(screen), Math.Min(_session.CountMembers(screen), MemberListCap.Effective(maxMembers))),
+                Members = _session.DescribeMembers(screen, MemberListCap.Effective(maxMembers)).ToList()
             };
         }
 
@@ -188,7 +190,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ObjectKind = "HmiTagTable",
                 ObjectPath = $"{softwarePath}:{tagTableName}",
                 TypeName = table.GetType().FullName ?? table.GetType().Name,
-                Members = _session.DescribeMembers(table, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Meta = MemberListCap.Meta(_session.CountMembers(table), Math.Min(_session.CountMembers(table), MemberListCap.Effective(maxMembers))),
+                Members = _session.DescribeMembers(table, MemberListCap.Effective(maxMembers)).ToList()
             };
         }
 
@@ -266,7 +269,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ObjectKind = "HmiTag",
                 ObjectPath = $"{softwarePath}:{tagTableName}:{tagName}",
                 TypeName = tagObj.GetType().FullName ?? tagObj.GetType().Name,
-                Members = _session.DescribeMembers(tagObj, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Meta = MemberListCap.Meta(_session.CountMembers(tagObj), Math.Min(_session.CountMembers(tagObj), MemberListCap.Effective(maxMembers))),
+                Members = _session.DescribeMembers(tagObj, MemberListCap.Effective(maxMembers)).ToList()
             };
         }
 
@@ -347,7 +351,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ObjectKind = "HmiScreenItem",
                 ObjectPath = $"{softwarePath}:{screenName}:{itemName}",
                 TypeName = itemObj.GetType().FullName ?? itemObj.GetType().Name,
-                Members = _session.DescribeMembers(itemObj, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Meta = MemberListCap.Meta(_session.CountMembers(itemObj), Math.Min(_session.CountMembers(itemObj), MemberListCap.Effective(maxMembers))),
+                Members = _session.DescribeMembers(itemObj, MemberListCap.Effective(maxMembers)).ToList()
             };
         }
 

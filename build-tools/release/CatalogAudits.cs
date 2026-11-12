@@ -199,9 +199,9 @@ internal static class CatalogAudits
             var entry = pair.Value!; var args = Bound(entry["arguments"]!);
             ToolUsageGenerator.ValidateHints(entry, schemas[pair.Key]!["properties"]!.AsObject().Select(p => p.Key), release + "/" + pair.Key);
             Check(pair.Key, args, sourceProfile.Key + "/" + pair.Key);
-            void Variant(JsonNode patch, string location)
+            void Variant(JsonNode patch, string location, bool complete = false)
             {
-                var variant = args.DeepClone().AsObject();
+                var variant = complete ? new JsonObject() : args.DeepClone().AsObject();
                 foreach (var field in Bound(patch)) variant[field.Key] = field.Value?.DeepClone();
                 Check(pair.Key, variant, sourceProfile.Key + "/" + pair.Key + "/" + location);
             }
@@ -209,7 +209,9 @@ internal static class CatalogAudits
             foreach (var operation in entry["operations"]?.AsObject() ?? [])
             {
                 ToolUsageGenerator.ValidateHints(operation.Value!, schemas[pair.Key]!["properties"]!.AsObject().Select(p => p.Key), release + "/" + pair.Key + "/" + operation.Key);
-                Variant(operation.Value!["arguments"]!, "operations/" + operation.Key);
+                var mode = (string?)operation.Value!["argumentsMode"];
+                Require(mode is null or "complete", "Unknown operation arguments mode: " + release + "/" + pair.Key + "/" + operation.Key);
+                Variant(operation.Value!["arguments"]!, "operations/" + operation.Key, mode == "complete");
             }
         }
         foreach (var example in catalog["examples"]!.AsArray().Concat(catalog["sequences"]!.AsArray()))

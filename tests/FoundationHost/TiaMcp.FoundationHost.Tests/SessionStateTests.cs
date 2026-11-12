@@ -197,9 +197,39 @@ public sealed class SessionStateTests
         Assert.True((bool?)body["data"]?["sessionState"]?["switches"]?["approval"]?["readOnly"]);
         Assert.Equal(body.ToJsonString(), ((TextContentBlock)result.Content[0]).Text);
     }
+    [Fact]
+    public async Task Approval_switch_follows_only_the_settings_file()
+    {
+        string path = TiaOpenness.Shared.ApprovalSettings.SettingsPath;
+        byte[]? previous = File.Exists(path) ? File.ReadAllBytes(path) : null;
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, "enabled=false\ntimeoutSeconds=120\n");
+            byte[] expected = File.ReadAllBytes(path);
+            using var worker = new CachedWorker { IdentityText = "{}" };
+            var query = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker);
+            foreach (string identity in new[] { "{}", "{\"processId\":123,\"projectPath\":\"C:/fixture.ap21\",\"generation\":3}" })
+            {
+                worker.IdentityText = identity;
+                var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
+                    Params = new() { Name = "GetSessionState", Arguments = new Dictionary<string, JsonElement>() } };
+                var result = (await query.InvokeV4Async(request, "21", "state", CancellationToken.None)).StructuredContent!;
+                Assert.False((bool?)result["data"]?["sessionState"]?["switches"]?["approval"]?["enabled"], result.ToJsonString());
+                Assert.Equal(expected, File.ReadAllBytes(path));
+            }
+        }
+        finally
+        {
+            if (previous == null) File.Delete(path);
+            else File.WriteAllBytes(path, previous);
+        }
+    }
+
     private sealed class CachedWorker : IFoundationSessionWorker
     {
-        public string ApprovalIdentity => "{\"processId\":123,\"projectPath\":\"C:/fixture.ap21\",\"generation\":3}";
+        internal string IdentityText { get; set; } = "{\"processId\":123,\"projectPath\":\"C:/fixture.ap21\",\"generation\":3}";
+        public string ApprovalIdentity => IdentityText;
         public bool Poisoned => false;
         public bool Bundled => false;
         public bool SharedSession => true;

@@ -194,6 +194,14 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 Outcome outcome = HostBehavior.OperationOutcome(false, false, before || tool.StartsWith("PlanOnline", StringComparison.Ordinal),
                     !preview, succeeded > 0 && failed > 0);
+                if (tool.StartsWith("PlanOnline", StringComparison.Ordinal))
+                {
+                    var reason = (root["rejectedTags"] as JsonArray)?.FirstOrDefault()?["reason"]?.ToString()
+                        ?? root["summary"]?.ToString() ?? "Online plan rejected.";
+                    return Result(tool, root, new Error(reason,
+                        new InvalidArgumentDetails(root["rejectedParameter"]?.ToString() ?? "tagPaths", Array.Empty<string>())),
+                        Outcome.RejectedBeforeOperation, Completeness.None, current);
+                }
                 Error error = outcome == Outcome.RejectedBeforeOperation ? new Error("Input does not satisfy the declared contract.",
                     new PreconditionFailedDetails("plc-operation", null))
                     : outcome == Outcome.Partial ? new Error("Some PLC operations did not complete.", new PartialFailureDetails(succeeded, failed, 0))

@@ -447,12 +447,12 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var items = _service.ListUnifiedHmiApiTypes(nameContains, limit);
+                var items = _service.ListUnifiedHmiApiTypes(nameContains, limit == int.MaxValue ? limit : limit + 1).ToArray();
                 return new ResponseStringList
                 {
                     Message = $"Unified HMI API types listed (filter='{nameContains}')",
-                    Items = items,
-                    Meta = ResponseMeta.Basic(DateTime.Now, true)
+                    Items = items.Take(limit),
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("truncated", items.Length > limit))
                 };
             }
             catch (Exception ex) when (ex is not McpException)

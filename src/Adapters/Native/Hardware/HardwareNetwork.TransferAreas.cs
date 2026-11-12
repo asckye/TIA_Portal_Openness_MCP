@@ -81,7 +81,8 @@ namespace TiaMcp.Adapters
 #endif
                 }
                 HardwarePage(rows.ToArray(), offset, limit, meta);
-                meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
+                meta["apiCallSuccess"] = true;
+                meta["dataComplete"] = HardwarePageComplete(rows.ToArray(), offset, (object[])meta["records"]!);
                 meta["scope"] =
                     "TransferArea and MulticastableTransferArea scalars, address rows, mapping rules and official dynamic attributes (per-attribute failures " +
                     "listed).";

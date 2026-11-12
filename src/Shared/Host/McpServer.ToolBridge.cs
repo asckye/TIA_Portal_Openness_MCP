@@ -130,14 +130,11 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Zero-based match offset.")] int offset = 0)
         {
             if (offset < 0 || limit < 1) return V4Reject("FindTools", InvalidInput("offset/limit"));
-            var response = FindTools(query, int.MaxValue, category, domain);
+            var response = FindTools(query, limit, category, domain, offset);
             if (response.Meta?["success"]?.GetValue<bool?>() != true)
                 return V4Reject("FindTools", InvalidInput("category/domain"));
-            var lines = (response.Items ?? Enumerable.Empty<string>()).ToArray();
-            int count = lines.Length / 3;
+            int count = (int)response.Meta!["matchingCount"]!;
             if (offset > count) return V4Reject("FindTools", InvalidInput("offset"));
-            response.Items = lines.Skip(offset * 3L > int.MaxValue ? int.MaxValue : offset * 3).Take(limit > int.MaxValue / 3 ? int.MaxValue : limit * 3)
-                .ToArray();
             return InfrastructureResult("FindTools", response, OffsetPage(offset, limit, count));
         }
 
@@ -363,7 +360,8 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {
                 return !dryRun && expectedPlanHash.Length > 0
-                    ? V4Reject(tool, new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
+                    ? V4Reject(tool,
+                            new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
                     : TargetFailure(tool, error, false);
             }
             if (dryRun) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
@@ -378,7 +376,8 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {
                 return !dryRun && expectedPlanHash.Length > 0
-                    ? V4Reject(tool, new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
+                    ? V4Reject(tool,
+                            new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
                     : TargetFailure(tool, error, false);
             }
             if (dryRun) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }

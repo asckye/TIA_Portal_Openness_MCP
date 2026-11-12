@@ -106,6 +106,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             // Canonical spelling (the dictionary is case-insensitive).
             string canonical = all.Keys.First(k => string.Equals(k, target, StringComparison.OrdinalIgnoreCase));
+            var specs = SpecsOf(method);
+            var example = ToolExamples.FindOrDerive(canonical, specs, ReleaseKey);
+            meta["example"] = JsonNode.Parse(example.ArgumentsJson);
+            meta["exampleDerived"] = example.Note == ToolExamples.DerivedNote;
 
             JsonObject args;
             if (string.IsNullOrWhiteSpace(argumentsJson) || argumentsJson.Trim() == "{}") args = new JsonObject();
@@ -145,7 +149,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["versionAvailable"] = false;
                 return new ResponseStringList { Message = versionProblem, Meta = meta };
             }
-            var specs = SpecsOf(method);
             var report = PreflightLogic.Analyze(specs, args);
             if (canonical == "PrefillWorkbenchForm" && args["form"] is JsonValue form && form.TryGetValue<string>(out var formName)
                 && args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var modeName) && args["fields"] is JsonObject fields)
@@ -208,7 +211,6 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (changesState) lines.Add("dryRun: not available; this call runs for real.");
             foreach (var p in precautions) lines.Add("Precaution: " + p);
             foreach (var p in prerequisites) lines.Add("Prerequisite: " + p);
-            var example = ToolExamples.FindOrDerive(canonical, specs);
             lines.Add(ToolExamples.Render(example));
             lines.Add("Description: " + description);
 
@@ -232,8 +234,6 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["precautions"] = new JsonArray(precautions.Select(x => (JsonNode)x).ToArray());
             meta["prerequisites"] = new JsonObject {
                 ["needsProject"] = needsProject, ["connected"] = connected, ["project"] = project, ["satisfied"] = prerequisitesOk };
-            meta["example"] = JsonNode.Parse(example.ArgumentsJson);
-            meta["exampleDerived"] = example.Note == ToolExamples.DerivedNote;
             string verdict = !report.Ok
                 ? "NOT READY: fix " + (report.Missing.Count + report.Unknown.Count + report.TypeProblems.Count)
                     + " problem(s) listed in Items, then preflight again."

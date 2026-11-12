@@ -39,6 +39,18 @@
 - Empty event deletion accepts a comment-only definition area while still requiring ScriptCode to be exactly empty.
 - `GetUnifiedFaceplateInstance` accepts an omitted optional typePath while still validating all supplied nonempty type paths, screen paths and folder paths.
 - Symbolic HMI tag rollback also restores the original DataType when no type was requested. Dynamization type expectations compare without case sensitivity; incomplete-delete and event-script errors retain useful text when paths or native messages are absent. Usage metadata marks dynamization plcTag as an optional expectation.
+### Changed
+
+- `PlanOnlineReadOnlyMonitoring` / `PlanOnlineReadOnlyDataProvider` refusals change from `PRECONDITION_FAILED` with condition `plc-operation` to `INVALID_ARGUMENT` with parameter `tagPaths`, `mode`, `provider` or `options`. Online planning accepts ordinary and quoted PLC member names and applies intent filtering to provider options.
+- ASCII SCL files omit the BOM for tool import. Other text retains UTF-8 BOM and includes manual TIA import instructions. Replies add the metadata fields `encoding` and `importableByTool`.
+- Capped member lists report `totalMembers` and `truncated`. FindTools reports `matchingCount` and page ranges. Type and library lists report truncation, PLC scope paging uses the expected count, and plant objects and transfer areas compute completeness from the returned page and read failures.
+
+### Fixed
+
+- Tool descriptions show the GetToolUsage hint once. Discovery, preview and schema examples use the maintained call library for the selected release, including file targets, exact PG/PC interfaces, channel settings and Classic HMI bindings. Generation machine documents use the selected release, and ManageMachineDescription discovery starts with exportTemplate.
+- A rate-limited pre-release update check reports the latest release as unknown. Delivery ZIPs with unknown sizes omit the MB figure.
+- New installations start with approval enabled instead of inheriting a disabled switch from the old profile.
+- FindTools restores query recovery guidance when no tools match. The ImportPlcBlockDocuments example selects a scalar-only global DB and requests overwrite false.
 
 ## [4.0.0-beta.4] - 2026-11-05
 

@@ -36,11 +36,12 @@ namespace TiaMcp.Adapters.Reflection
             return new OpennessObservation
             {
                 Message = "OK",
-                Meta = ReflectionSession.Meta(true),
+                Meta = ReflectionSession.Meta(true, ("totalMembers", _session.CountMembers(o)),
+                    ("truncated", _session.CountMembers(o) > MemberListCap.Effective(maxMembers))),
                 ObjectKind = objectKind,
                 ObjectPath = objectPath,
                 TypeName = o.GetType().FullName ?? o.GetType().Name,
-                Members = _session.DescribeMembers(o, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Members = _session.DescribeMembers(o, MemberListCap.Effective(maxMembers)).ToList()
             };
         }
 
@@ -74,11 +75,12 @@ namespace TiaMcp.Adapters.Reflection
             return new OpennessObservation
             {
                 Message = "OK",
-                Meta = ReflectionSession.Meta(true),
+                Meta = ReflectionSession.Meta(true, ("totalMembers", _session.CountMembers(v)),
+                    ("truncated", _session.CountMembers(v) > MemberListCap.Effective(maxMembers))),
                 ObjectKind = objectKind,
                 ObjectPath = $"{objectPath}.{propertyPath}",
                 TypeName = v.GetType().FullName ?? v.GetType().Name,
-                Members = _session.DescribeMembers(v, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Members = _session.DescribeMembers(v, MemberListCap.Effective(maxMembers)).ToList()
             };
         }
 
@@ -406,11 +408,12 @@ namespace TiaMcp.Adapters.Reflection
             return new OpennessObservation
             {
                 Message = "OK",
-                Meta = ReflectionSession.Meta(true),
+                Meta = ReflectionSession.Meta(true, ("totalMembers", _session.CountMembers(svc)),
+                    ("truncated", _session.CountMembers(svc) > MemberListCap.Effective(maxMembers))),
                 ObjectKind = "Service",
                 ObjectPath = $"{objectKind}:{objectPath}::{serviceTypeSuffix}",
                 TypeName = svc.GetType().FullName ?? svc.GetType().Name,
-                Members = _session.DescribeMembers(svc, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Members = _session.DescribeMembers(svc, MemberListCap.Effective(maxMembers)).ToList()
             };
         }
 

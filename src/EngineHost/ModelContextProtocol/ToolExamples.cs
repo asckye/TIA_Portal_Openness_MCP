@@ -22,20 +22,15 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         // Inline discovery and GetToolUsage read the same version-aware data.
-#if TIA_V20
-        private const string ExampleRelease = "20";
-#else
-        private const string ExampleRelease = "21";
-#endif
-        private static readonly Example[] Rows = TiaOpenness.Shared.ToolUsageCatalog.InlineCalls(ExampleRelease, engineSource: true)
-            .Select(r => new Example((string)r!["tool"]!, r["arguments"]!.ToJsonString(), (string)r["note"]!)).ToArray();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Example[]> ReleaseRows = new();
+        private static Example[] Rows(string release) => ReleaseRows.GetOrAdd(release, key =>
+            TiaOpenness.Shared.ToolUsageCatalog.InlineCalls(key, engineSource: true)
+                .Select(r => new Example((string)r!["tool"]!, r["arguments"]!.ToJsonString(PlainJson), (string)r["note"]!)).ToArray());
 
-        private static readonly Dictionary<string, Example> Index = Rows.ToDictionary(r => r.Tool, r => r, StringComparer.OrdinalIgnoreCase);
+        public static IReadOnlyList<Example> All => Rows(McpServer.ReleaseKey);
 
-        public static IReadOnlyList<Example> All => Rows;
-
-        public static Example? Find(string? tool)
-            => tool != null && Index.TryGetValue(tool.Trim(), out var e) ? e : null;
+        public static Example? Find(string? tool, string release)
+            => tool == null ? null : Rows(release).FirstOrDefault(e => string.Equals(e.Tool, tool.Trim(), StringComparison.OrdinalIgnoreCase));
 
         /// <summary>The sentence appended to a tool description: "Example: {...} (note)."</summary>
         public static string Render(Example e)
@@ -48,8 +43,12 @@ namespace TiaMcpServer.ModelContextProtocol
         public const string DerivedNote = "derived from the signature - placeholder values, read the parameter descriptions";
 
         /// <summary>The curated example, or one derived from the signature so that every tool has a worked call.</summary>
-        public static Example FindOrDerive(string tool, IReadOnlyList<PreflightLogic.ParameterSpec> specs)
-            => Find(tool) ?? Derive(tool, specs);
+        public static Example FindOrDerive(string tool, IReadOnlyList<PreflightLogic.ParameterSpec> specs, string release)
+        {
+            var call = TiaOpenness.Shared.ToolUsageCatalog.ServedCall(tool, release);
+            return call == null ? Find(tool, release) ?? Derive(tool, specs)
+                : new Example(tool, call["arguments"]!.ToJsonString(PlainJson), "Read GetToolUsage for target bindings and validation evidence");
+        }
 
         /// <summary>
         /// A placeholder example for the tools without a curated one - the required parameters with values taken
@@ -80,6 +79,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         .TryParse(spec.DefaultText ?? "", System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d)
                         ? d : 1.0);
             }
+            if (spec.Kind == "array") return new JsonArray("<" + name + ">");
+            if (spec.Kind == "object") return new JsonObject { ["<" + name + ">"] = "<value>" };
             if (spec.Kind != "string") return JsonValue.Create("<" + name + ">");
             if (spec.ExampleJson != null) return JsonNode.Parse(spec.ExampleJson)!;
             var hint = ToolMetadata.Parameter(tool, name);
@@ -89,9 +90,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         /// <summary>Description plus the example sentence when one exists; unchanged otherwise.</summary>
-        public static string Decorate(string tool, string description)
+        public static string Decorate(string tool, string description, string release)
         {
-            var e = Find(tool);
+            var e = Find(tool, release);
             if (e == null) return description;
             var d = description ?? "";
             return (d.Length == 0 || d.EndsWith(" ") ? d : d + " ") + Render(e);
@@ -105,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static IReadOnlyList<string> ValidateAgainst(Func<string, IReadOnlyList<KeyValuePair<string, bool>>?> parametersOf)
         {
             var problems = new List<string>();
-            foreach (var e in Rows)
+            foreach (var e in Rows(McpServer.ReleaseKey))
             {
                 JsonObject? args;
                 try { args = JsonNode.Parse(e.ArgumentsJson) as JsonObject; }

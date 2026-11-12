@@ -4,6 +4,11 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class LibraryCapabilities
     {
+        public static System.Collections.Generic.Dictionary<string, object?> OverviewCounts(int types, int copies, int maxItems)
+            => new System.Collections.Generic.Dictionary<string, object?> {
+                ["typeItems"] = Math.Min(types, maxItems), ["masterCopyItems"] = Math.Min(copies, maxItems),
+                ["truncated"] = types > maxItems || copies > maxItems, ["dataComplete"] = types <= maxItems && copies <= maxItems };
+
         public const string ScreenItemMasterCopyRefusal =
             "no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a document " +
             "exported for the target release.";

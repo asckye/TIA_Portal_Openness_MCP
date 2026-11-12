@@ -52,6 +52,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal object EngineeringLibraryFolder(object library, string path, string root) => engine.HmiLibraryFolder(library, path, root);
         internal IEnumerable<OpennessMember> DescribeMembers(object value, int limit)
             => new ReflectionSession((_, __, ___, ____) => null, () => null).DescribeMembers(value, limit);
+        internal int CountMembers(object value)
+            => new ReflectionSession((_, __, ___, ____) => null, () => null).CountMembers(value);
         internal string? TryGetName(object? value) => HmiAccessHelpers.TryGetName(value);
         internal object TryGetHmiTagRoot(object value) => HmiAccessHelpers.TryGetHmiTagRoot(value);
         internal object? TryGetHmiTagTablesCollection(object value) => HmiAccessHelpers.TryGetHmiTagTablesCollection(value);

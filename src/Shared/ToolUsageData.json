@@ -9915,7 +9915,6 @@
         "scl-s7dcl"
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -9927,7 +9926,6 @@
         "kop"
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "ExportPlcBlock",
         "ImportPlcBlock"
@@ -9940,7 +9938,6 @@
         "fup"
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "ExportPlcBlock",
         "ImportPlcBlock"
@@ -9953,7 +9950,6 @@
         "lad-scl"
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -9964,7 +9960,6 @@
         "globaldb"
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "BuildPlcGlobalDb",
         "ImportPlcBlock"
@@ -9990,7 +9985,6 @@
         "resources"
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -10231,7 +10225,6 @@
         }
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10276,7 +10269,6 @@
         }
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10327,7 +10319,6 @@
         }
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10360,7 +10351,6 @@
         }
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10400,7 +10390,6 @@
         }
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10438,7 +10427,6 @@
         }
       ],
       "tools": [
-        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -12749,7 +12737,7 @@
     "EnsureSubnet": {
       "arguments": {
         "anchorDeviceItemPath": "PLC_1/CPU_1",
-        "subnetType": "System:Subnet.Ethernet",
+        "subnetType": "PROFINET",
         "subnetName": "PN_IE_1"
       },
       "parameters": {},
@@ -13099,7 +13087,7 @@
     "ExchangeSystemDiagnosticsSettings": {
       "arguments": {
         "action": "export",
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\SystemDiagnostics.dat",
         "confirmImport": false,
         "dryRun": true
       },
@@ -15169,7 +15157,7 @@
     },
     "ManageClassicHmiCycle": {
       "arguments": {
-        "softwarePath": "HMI_RT_1",
+        "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
         "action": "read",
         "confirmDelete": false,
         "dryRun": true
@@ -15237,7 +15225,7 @@
     },
     "ManageClassicHmiFolder": {
       "arguments": {
-        "softwarePath": "HMI_RT_1",
+        "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
         "folderKind": "screens",
         "confirmDelete": false,
         "dryRun": true,
@@ -15271,7 +15259,7 @@
     },
     "ManageClassicHmiGraphic": {
       "arguments": {
-        "softwarePath": "HMI_RT_1",
+        "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
         "confirmDelete": false,
         "dryRun": true,
         "action": "list"
@@ -15323,7 +15311,7 @@
     },
     "ManageClassicHmiScreenObject": {
       "arguments": {
-        "softwarePath": "HMI_RT_1",
+        "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
         "objectKind": "popup",
         "confirmDelete": false,
         "dryRun": true,
@@ -15366,7 +15354,7 @@
     },
     "ManageClassicHmiScript": {
       "arguments": {
-        "softwarePath": "HMI_RT_1",
+        "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
         "scriptPath": "ReadStatus",
         "action": "read",
         "confirmDelete": false,
@@ -15432,7 +15420,7 @@
     },
     "ManageClassicHmiTextGraphicList": {
       "arguments": {
-        "softwarePath": "HMI_RT_1",
+        "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
         "listKind": "text",
         "action": "read",
         "confirmDelete": false,
@@ -21804,7 +21792,7 @@
     },
     "GetClassicHmiScreenTree": {
       "arguments": {
-        "softwarePath": "HMI_RT_1"
+        "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
       },
       "parameters": {
         "kind": {
@@ -21822,7 +21810,7 @@
     },
     "ListClassicHmiScripts": {
       "arguments": {
-        "softwarePath": "HMI_RT_1"
+        "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
       },
       "parameters": {
         "folderPath": {
@@ -22051,7 +22039,7 @@
         ],
         "driveObjectNumber": 0,
         "driveObjectIndex": 0,
-        "source": "write",
+        "source": "read",
         "names": [
           "p1070[0]"
         ],
@@ -23541,7 +23529,7 @@
     },
     "ScanAccessibleDevices": {
       "arguments": {
-        "pgPcInterface": "PLCSIM",
+        "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
         "limit": 20
       },
       "parameters": {
@@ -24087,8 +24075,8 @@
         "itemPath": [
           "<exact device item from GetProjectTree>"
         ],
-        "channelType": "None",
-        "channelIoType": "None",
+        "channelType": "Digital",
+        "channelIoType": "Input",
         "channelNumber": 1,
         "attributes": {
           "<exact supported field from this operation/read result>": "<value of that field's documented type>"
@@ -24298,7 +24286,7 @@
     "UploadStationFromPlc": {
       "arguments": {
         "targetIpAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM",
+        "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
         "dryRun": true,
         "confirmUpload": false
       },
@@ -24628,7 +24616,7 @@
         "softwarePath": "PLC_1",
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
-        "fileNameWithoutExtension": "FC_Add",
+        "fileNameWithoutExtension": "DB_Flags",
         "importOption": "Override"
       },
       "parameters": {},
@@ -29034,7 +29022,7 @@
         "ExportPlcType": {
           "arguments": {
             "softwarePath": "<exact softwarePath from GetProjectTree>",
-            "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
+            "exportDirectory": "C:\\Examples\\exports",
             "typePath": "UDT_Status",
             "dryRun": true,
             "confirm": false
@@ -29049,7 +29037,7 @@
               "exampleValue": "<exact softwarePath from GetProjectTree>"
             },
             "exportDirectory": {
-              "meaning": "Absolute path for a new .xml file inside an existing directory; existing files are never overwritten."
+              "meaning": "Absolute path to an existing export directory; existing files are never overwritten."
             },
             "typePath": {
               "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=typePath."
@@ -30805,7 +30793,7 @@
             "exportDirectory": "C:\\Examples\\exports",
             "dryRun": true,
             "confirm": false,
-            "groupPath": "<exact caller-selected block group containing the intended FB blocks>"
+            "groupPath": "<exact caller-selected block group containing the intended LAD or DB blocks>"
           },
           "parameters": {
             "preservePath": {
@@ -30828,12 +30816,16 @@
             "softwarePath": "PLC_1",
             "groupPath": "",
             "importPath": "C:\\Examples\\documents",
-            "fileNameWithoutExtension": "FC_Add",
+            "fileNameWithoutExtension": "DB_Flags",
             "dryRun": true,
             "confirm": false,
-            "overwrite": true
+            "overwrite": false
           },
-          "parameters": {},
+          "parameters": {
+            "fileNameWithoutExtension": {
+              "meaning": "Use a single scalar-only global DB named DB_Flags.s7dcl in importPath. Arrays are refused. Existing blocks are not overwritten."
+            }
+          },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true,
@@ -31542,7 +31534,7 @@
         "ExchangeSystemDiagnosticsSettings": {
           "arguments": {
             "action": "export",
-            "filePath": "C:\\Examples\\exports\\Main.xml",
+            "filePath": "C:\\Examples\\exports\\SystemDiagnostics.dat",
             "confirmImport": false,
             "dryRun": true
           },
@@ -31973,8 +31965,8 @@
             "itemPath": [
               "<exact device item from GetProjectTree>"
             ],
-            "channelType": "None",
-            "channelIoType": "None",
+            "channelType": "Digital",
+            "channelIoType": "Input",
             "channelNumber": 1,
             "attributes": {
               "<exact supported field from this operation/read result>": "<value of that field's documented type>"
@@ -32102,7 +32094,7 @@
         "EnsureSubnet": {
           "arguments": {
             "anchorDeviceItemPath": "PLC_1/CPU_1",
-            "subnetType": "System:Subnet.Ethernet",
+            "subnetType": "PROFINET",
             "subnetName": "PN_IE_1",
             "dryRun": false,
             "expectedProjectFile": "C:/Examples/Project.ap{extension}",
@@ -32381,7 +32373,7 @@
                 "form": "connectProject",
                 "mode": "set",
                 "fields": {
-                  "projectPath": "C:\\Projects\\Line.ap21"
+                  "projectPath": "C:\\Projects\\Line.ap{extension}"
                 }
               },
               "note": "Prefill only. A person must execute the MCP panel command and approve its separate write request."
@@ -33500,542 +33492,12 @@
         },
         "ManageMachineDescription": {
           "arguments": {
-            "action": "validate",
+            "action": "exportTemplate",
             "packageId": "tiamcp.basic",
             "version": "1.0.0",
-            "machine": {
-              "schema": "tiamcp.machine/1",
-              "machine": {
-                "id": "BasicLine",
-                "name": {
-                  "en-US": "Basic machine",
-                  "zh-CN": "基础机器"
-                }
-              },
-              "standard": {
-                "package": "tiamcp.basic",
-                "version": "^1.0"
-              },
-              "target": {
-                "release": "21",
-                "project": {
-                  "mode": "existing",
-                  "projectIdentity": "basic-example-project",
-                  "softwarePath": "PLC1"
-                }
-              },
-              "stations": [
-                {
-                  "id": "PLC1",
-                  "role": "plc.main",
-                  "article": "6ES7 513-1AL02-0AB0",
-                  "firmware": "V2.0"
-                },
-                {
-                  "id": "HMI1",
-                  "role": "hmi.panel",
-                  "kind": "WinCCUnifiedPC"
-                }
-              ],
-              "topology": [
-                {
-                  "id": "U01",
-                  "kind": "unit",
-                  "name": {
-                    "en-US": "Unit 1",
-                    "zh-CN": "单元 1"
-                  },
-                  "children": [
-                    {
-                      "id": "EM01",
-                      "kind": "equipmentModule",
-                      "name": {
-                        "en-US": "Equipment",
-                        "zh-CN": "设备"
-                      }
-                    }
-                  ]
-                }
-              ],
-              "devices": [
-                {
-                  "id": "00U01",
-                  "type": "unit",
-                  "parent": "U01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "Unit control",
-                    "zh-CN": "单元控制"
-                  },
-                  "params": {
-                    "programAlarm": true
-                  },
-                  "io": {},
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M01",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M1",
-                    "zh-CN": "M1"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M02",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M2",
-                    "zh-CN": "M2"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M03",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M3",
-                    "zh-CN": "M3"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M04",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M4",
-                    "zh-CN": "M4"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M05",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M5",
-                    "zh-CN": "M5"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M06",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M6",
-                    "zh-CN": "M6"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M07",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M7",
-                    "zh-CN": "M7"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M08",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M8",
-                    "zh-CN": "M8"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "V01",
-                  "type": "valve.2pos",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "V1",
-                    "zh-CN": "V1"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "TravelTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "open": "auto",
-                    "close": "auto",
-                    "opened": "auto",
-                    "closed": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "V02",
-                  "type": "valve.2pos",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "V2",
-                    "zh-CN": "V2"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "TravelTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "open": "auto",
-                    "close": "auto",
-                    "opened": "auto",
-                    "closed": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "V03",
-                  "type": "valve.2pos",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "V3",
-                    "zh-CN": "V3"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "TravelTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "open": "auto",
-                    "close": "auto",
-                    "opened": "auto",
-                    "closed": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "V04",
-                  "type": "valve.2pos",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "V4",
-                    "zh-CN": "V4"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "TravelTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "open": "auto",
-                    "close": "auto",
-                    "opened": "auto",
-                    "closed": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S01",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S1",
-                    "zh-CN": "S1"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S02",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S2",
-                    "zh-CN": "S2"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S03",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S3",
-                    "zh-CN": "S3"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S04",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S4",
-                    "zh-CN": "S4"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S05",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S5",
-                    "zh-CN": "S5"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S06",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S6",
-                    "zh-CN": "S6"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "A01",
-                  "type": "analog.in",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "A1",
-                    "zh-CN": "A1"
-                  },
-                  "params": {
-                    "RawMin": 0,
-                    "RawMax": 27648,
-                    "EngMin": 0,
-                    "EngMax": 100,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "raw": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "A02",
-                  "type": "analog.in",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "A2",
-                    "zh-CN": "A2"
-                  },
-                  "params": {
-                    "RawMin": 0,
-                    "RawMax": 27648,
-                    "EngMin": 0,
-                    "EngMax": 100,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "raw": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                }
-              ],
-              "options": {
-                "languages": [
-                  "en-US",
-                  "zh-CN"
-                ]
-              }
-            },
-            "dryRun": true
+            "format": "csv",
+            "dryRun": true,
+            "exportDirectory": "C:/MachineInputs/basic-template"
           },
           "operations": {
             "validate": {
@@ -34057,7 +33519,7 @@
                     "version": "^1.0"
                   },
                   "target": {
-                    "release": "21",
+                    "release": "{release}",
                     "project": {
                       "mode": "existing",
                       "projectIdentity": "basic-example-project",
@@ -34577,7 +34039,8 @@
                 },
                 "dryRun": true
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             },
             "import": {
               "arguments": {
@@ -34588,7 +34051,8 @@
                 "format": "csv",
                 "dryRun": true
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             },
             "importJson": {
               "arguments": {
@@ -34599,7 +34063,8 @@
                 "format": "json",
                 "dryRun": true
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             },
             "export": {
               "arguments": {
@@ -34620,7 +34085,7 @@
                     "version": "^1.0"
                   },
                   "target": {
-                    "release": "21",
+                    "release": "{release}",
                     "project": {
                       "mode": "existing",
                       "projectIdentity": "basic-example-project",
@@ -35142,7 +34607,8 @@
                 "dryRun": true,
                 "exportDirectory": "C:/MachineInputs/exported-basic"
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             },
             "exportTemplate": {
               "arguments": {
@@ -35153,7 +34619,8 @@
                 "dryRun": true,
                 "exportDirectory": "C:/MachineInputs/basic-template"
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             }
           },
           "note": "CSV directory has Machine, Stations, Units, Devices and Lists.csv. UTF-8 BOM and LF. Param columns contain JSON values; IO columns addresses or auto. Fill machine/stations/topology/device rows from Lists parameter schemas and signal roles, then import. JSON is the only generation input; xlsx deferred.",
@@ -35879,10 +35346,10 @@
                 "version": "^1.0"
               },
               "target": {
-                "release": "21",
+                "release": "{release}",
                 "project": {
                   "mode": "existing",
-                  "projectIdentity": "C:/Projects/Machine.ap21",
+                  "projectIdentity": "C:/Projects/Machine.ap{extension}",
                   "softwarePath": "PLC_1"
                 }
               },
@@ -36410,7 +35877,7 @@
             "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
             "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
             "dryRun": true,
-            "expectedProjectFile": "C:/Projects/Machine.ap21"
+            "expectedProjectFile": "C:/Projects/Machine.ap{extension}"
           },
           "operations": {},
           "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
@@ -38959,7 +38426,7 @@
         },
         "GetClassicHmiScreenTree": {
           "arguments": {
-            "softwarePath": "HMI_RT_1"
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
           },
           "parameters": {
             "kind": {
@@ -38977,7 +38444,7 @@
         },
         "ManageClassicHmiScreenObject": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "objectKind": "popup",
             "confirmDelete": false,
             "dryRun": true,
@@ -39023,7 +38490,7 @@
         },
         "ManageClassicHmiFolder": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "folderKind": "screens",
             "confirmDelete": false,
             "dryRun": true,
@@ -39057,7 +38524,7 @@
         },
         "ListClassicHmiScripts": {
           "arguments": {
-            "softwarePath": "HMI_RT_1"
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
           },
           "parameters": {
             "folderPath": {
@@ -39075,7 +38542,7 @@
         },
         "ManageClassicHmiScript": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "scriptPath": "ReadStatus",
             "action": "read",
             "confirmDelete": false,
@@ -39144,7 +38611,7 @@
         },
         "ManageClassicHmiCycle": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "action": "read",
             "confirmDelete": false,
             "dryRun": true
@@ -39215,7 +38682,7 @@
         },
         "ManageClassicHmiTextGraphicList": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "listKind": "text",
             "action": "read",
             "confirmDelete": false,
@@ -42403,7 +41870,7 @@
         },
         "ScanAccessibleDevices": {
           "arguments": {
-            "pgPcInterface": "PLCSIM",
+            "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
             "limit": 20
           },
           "parameters": {
@@ -42421,7 +41888,7 @@
         "UploadStationFromPlc": {
           "arguments": {
             "targetIpAddress": "192.168.0.3",
-            "pgPcInterface": "PLCSIM",
+            "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
             "dryRun": true,
             "confirmUpload": false
           },
@@ -42955,7 +42422,7 @@
             ],
             "driveObjectNumber": 0,
             "driveObjectIndex": 0,
-            "source": "write",
+            "source": "read",
             "names": [
               "p1070[0]"
             ],
@@ -46311,7 +45778,7 @@
         },
         "ManageClassicHmiGraphic": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "confirmDelete": false,
             "dryRun": true,
             "action": "list"
@@ -48434,7 +47901,7 @@
         "EnsureSubnet": {
           "arguments": {
             "anchorDeviceItemPath": "PLC_1/CPU_1",
-            "subnetType": "System:Subnet.Ethernet",
+            "subnetType": "PROFINET",
             "subnetName": "PN_IE_1",
             "dryRun": false,
             "expectedProjectFile": "C:/Examples/Project.ap{extension}",
@@ -48863,7 +48330,7 @@
         "ExchangeSystemDiagnosticsSettings": {
           "arguments": {
             "action": "export",
-            "filePath": "C:\\Examples\\exports\\Main.xml",
+            "filePath": "C:\\Examples\\exports\\SystemDiagnostics.dat",
             "confirmImport": false,
             "dryRun": true
           },
@@ -49395,7 +48862,7 @@
         "ExportPlcType": {
           "arguments": {
             "softwarePath": "<exact softwarePath from GetProjectTree>",
-            "exportDirectory": "C:\\Examples\\exports\\UDT_Status.xml",
+            "exportDirectory": "C:\\Examples\\exports",
             "typePath": "UDT_Status",
             "dryRun": true,
             "confirm": false
@@ -49410,7 +48877,7 @@
               "exampleValue": "<exact softwarePath from GetProjectTree>"
             },
             "exportDirectory": {
-              "meaning": "Absolute path for a new .xml file inside an existing directory; existing files are never overwritten."
+              "meaning": "Absolute path to an existing export directory; existing files are never overwritten."
             },
             "typePath": {
               "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=typePath."
@@ -52086,7 +51553,7 @@
         },
         "ManageClassicHmiCycle": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "action": "read",
             "confirmDelete": false,
             "dryRun": true
@@ -52157,7 +51624,7 @@
         },
         "ManageClassicHmiFolder": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "folderKind": "screens",
             "confirmDelete": false,
             "dryRun": true,
@@ -52191,7 +51658,7 @@
         },
         "ManageClassicHmiGraphic": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "confirmDelete": false,
             "dryRun": true,
             "action": "list"
@@ -52246,7 +51713,7 @@
         },
         "ManageClassicHmiScreenObject": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "objectKind": "popup",
             "confirmDelete": false,
             "dryRun": true,
@@ -52292,7 +51759,7 @@
         },
         "ManageClassicHmiScript": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "scriptPath": "ReadStatus",
             "action": "read",
             "confirmDelete": false,
@@ -52361,7 +51828,7 @@
         },
         "ManageClassicHmiTextGraphicList": {
           "arguments": {
-            "softwarePath": "HMI_RT_1",
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
             "listKind": "text",
             "action": "read",
             "confirmDelete": false,
@@ -58810,7 +58277,7 @@
         },
         "GetClassicHmiScreenTree": {
           "arguments": {
-            "softwarePath": "HMI_RT_1"
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
           },
           "parameters": {
             "kind": {
@@ -58828,7 +58295,7 @@
         },
         "ListClassicHmiScripts": {
           "arguments": {
-            "softwarePath": "HMI_RT_1"
+            "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
           },
           "parameters": {
             "folderPath": {
@@ -59058,7 +58525,7 @@
             ],
             "driveObjectNumber": 0,
             "driveObjectIndex": 0,
-            "source": "write",
+            "source": "read",
             "names": [
               "p1070[0]"
             ],
@@ -60655,7 +60122,7 @@
         },
         "ScanAccessibleDevices": {
           "arguments": {
-            "pgPcInterface": "PLCSIM",
+            "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
             "limit": 20
           },
           "parameters": {
@@ -61274,8 +60741,8 @@
             "itemPath": [
               "<exact device item from GetProjectTree>"
             ],
-            "channelType": "None",
-            "channelIoType": "None",
+            "channelType": "Digital",
+            "channelIoType": "Input",
             "channelNumber": 1,
             "attributes": {
               "<exact supported field from this operation/read result>": "<value of that field's documented type>"
@@ -61497,7 +60964,7 @@
         "UploadStationFromPlc": {
           "arguments": {
             "targetIpAddress": "192.168.0.3",
-            "pgPcInterface": "PLCSIM",
+            "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
             "dryRun": true,
             "confirmUpload": false
           },
@@ -61744,7 +61211,7 @@
             "exportDirectory": "C:\\Examples\\exports",
             "dryRun": true,
             "confirm": false,
-            "groupPath": "<exact caller-selected block group containing the intended FB blocks>"
+            "groupPath": "<exact caller-selected block group containing the intended LAD or DB blocks>"
           },
           "parameters": {
             "preservePath": {
@@ -61864,12 +61331,16 @@
             "softwarePath": "PLC_1",
             "groupPath": "",
             "importPath": "C:\\Examples\\documents",
-            "fileNameWithoutExtension": "FC_Add",
+            "fileNameWithoutExtension": "DB_Flags",
             "dryRun": true,
             "confirm": false,
-            "overwrite": true
+            "overwrite": false
           },
-          "parameters": {},
+          "parameters": {
+            "fileNameWithoutExtension": {
+              "meaning": "Use a single scalar-only global DB named DB_Flags.s7dcl in importPath. Arrays are refused. Existing blocks are not overwritten."
+            }
+          },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true,
@@ -63375,7 +62846,7 @@
                 "form": "connectProject",
                 "mode": "set",
                 "fields": {
-                  "projectPath": "C:\\Projects\\Line.ap21"
+                  "projectPath": "C:\\Projects\\Line.ap{extension}"
                 }
               },
               "note": "Prefill only. A person must execute the MCP panel command and approve its separate write request."
@@ -63517,542 +62988,12 @@
         },
         "ManageMachineDescription": {
           "arguments": {
-            "action": "validate",
+            "action": "exportTemplate",
             "packageId": "tiamcp.basic",
             "version": "1.0.0",
-            "machine": {
-              "schema": "tiamcp.machine/1",
-              "machine": {
-                "id": "BasicLine",
-                "name": {
-                  "en-US": "Basic machine",
-                  "zh-CN": "基础机器"
-                }
-              },
-              "standard": {
-                "package": "tiamcp.basic",
-                "version": "^1.0"
-              },
-              "target": {
-                "release": "21",
-                "project": {
-                  "mode": "existing",
-                  "projectIdentity": "basic-example-project",
-                  "softwarePath": "PLC1"
-                }
-              },
-              "stations": [
-                {
-                  "id": "PLC1",
-                  "role": "plc.main",
-                  "article": "6ES7 513-1AL02-0AB0",
-                  "firmware": "V2.0"
-                },
-                {
-                  "id": "HMI1",
-                  "role": "hmi.panel",
-                  "kind": "WinCCUnifiedPC"
-                }
-              ],
-              "topology": [
-                {
-                  "id": "U01",
-                  "kind": "unit",
-                  "name": {
-                    "en-US": "Unit 1",
-                    "zh-CN": "单元 1"
-                  },
-                  "children": [
-                    {
-                      "id": "EM01",
-                      "kind": "equipmentModule",
-                      "name": {
-                        "en-US": "Equipment",
-                        "zh-CN": "设备"
-                      }
-                    }
-                  ]
-                }
-              ],
-              "devices": [
-                {
-                  "id": "00U01",
-                  "type": "unit",
-                  "parent": "U01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "Unit control",
-                    "zh-CN": "单元控制"
-                  },
-                  "params": {
-                    "programAlarm": true
-                  },
-                  "io": {},
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M01",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M1",
-                    "zh-CN": "M1"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M02",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M2",
-                    "zh-CN": "M2"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M03",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M3",
-                    "zh-CN": "M3"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M04",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M4",
-                    "zh-CN": "M4"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M05",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M5",
-                    "zh-CN": "M5"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M06",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M6",
-                    "zh-CN": "M6"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M07",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M7",
-                    "zh-CN": "M7"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "M08",
-                  "type": "motor.dol",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "M8",
-                    "zh-CN": "M8"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "FeedbackTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "run": "auto",
-                    "feedback": "auto",
-                    "overload": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "V01",
-                  "type": "valve.2pos",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "V1",
-                    "zh-CN": "V1"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "TravelTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "open": "auto",
-                    "close": "auto",
-                    "opened": "auto",
-                    "closed": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "V02",
-                  "type": "valve.2pos",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "V2",
-                    "zh-CN": "V2"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "TravelTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "open": "auto",
-                    "close": "auto",
-                    "opened": "auto",
-                    "closed": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "V03",
-                  "type": "valve.2pos",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "V3",
-                    "zh-CN": "V3"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "TravelTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "open": "auto",
-                    "close": "auto",
-                    "opened": "auto",
-                    "closed": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "V04",
-                  "type": "valve.2pos",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "V4",
-                    "zh-CN": "V4"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "TravelTimeoutMs": 3000,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "open": "auto",
-                    "close": "auto",
-                    "opened": "auto",
-                    "closed": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S01",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S1",
-                    "zh-CN": "S1"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S02",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S2",
-                    "zh-CN": "S2"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S03",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S3",
-                    "zh-CN": "S3"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S04",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S4",
-                    "zh-CN": "S4"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S05",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S5",
-                    "zh-CN": "S5"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "S06",
-                  "type": "sensor.digital",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "S6",
-                    "zh-CN": "S6"
-                  },
-                  "params": {
-                    "CycleMs": 10,
-                    "DebounceMs": 30,
-                    "Invert": false
-                  },
-                  "io": {
-                    "input": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "A01",
-                  "type": "analog.in",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "A1",
-                    "zh-CN": "A1"
-                  },
-                  "params": {
-                    "RawMin": 0,
-                    "RawMax": 27648,
-                    "EngMin": 0,
-                    "EngMax": 100,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "raw": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                },
-                {
-                  "id": "A02",
-                  "type": "analog.in",
-                  "parent": "EM01",
-                  "station": "PLC1",
-                  "name": {
-                    "en-US": "A2",
-                    "zh-CN": "A2"
-                  },
-                  "params": {
-                    "RawMin": 0,
-                    "RawMax": 27648,
-                    "EngMin": 0,
-                    "EngMax": 100,
-                    "programAlarm": true
-                  },
-                  "io": {
-                    "raw": "auto"
-                  },
-                  "hmi": {
-                    "screen": "U01"
-                  }
-                }
-              ],
-              "options": {
-                "languages": [
-                  "en-US",
-                  "zh-CN"
-                ]
-              }
-            },
-            "dryRun": true
+            "format": "csv",
+            "dryRun": true,
+            "exportDirectory": "C:/MachineInputs/basic-template"
           },
           "operations": {
             "validate": {
@@ -64074,7 +63015,7 @@
                     "version": "^1.0"
                   },
                   "target": {
-                    "release": "21",
+                    "release": "{release}",
                     "project": {
                       "mode": "existing",
                       "projectIdentity": "basic-example-project",
@@ -64594,7 +63535,8 @@
                 },
                 "dryRun": true
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             },
             "import": {
               "arguments": {
@@ -64605,7 +63547,8 @@
                 "format": "csv",
                 "dryRun": true
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             },
             "importJson": {
               "arguments": {
@@ -64616,7 +63559,8 @@
                 "format": "json",
                 "dryRun": true
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             },
             "export": {
               "arguments": {
@@ -64637,7 +63581,7 @@
                     "version": "^1.0"
                   },
                   "target": {
-                    "release": "21",
+                    "release": "{release}",
                     "project": {
                       "mode": "existing",
                       "projectIdentity": "basic-example-project",
@@ -65159,7 +64103,8 @@
                 "dryRun": true,
                 "exportDirectory": "C:/MachineInputs/exported-basic"
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             },
             "exportTemplate": {
               "arguments": {
@@ -65170,7 +64115,8 @@
                 "dryRun": true,
                 "exportDirectory": "C:/MachineInputs/basic-template"
               },
-              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash.",
+              "argumentsMode": "complete"
             }
           },
           "note": "CSV directory has Machine, Stations, Units, Devices and Lists.csv. UTF-8 BOM and LF. Param columns contain JSON values; IO columns addresses or auto. Fill machine/stations/topology/device rows from Lists parameter schemas and signal roles, then import. JSON is the only generation input; xlsx deferred.",
@@ -65197,10 +64143,10 @@
                 "version": "^1.0"
               },
               "target": {
-                "release": "21",
+                "release": "{release}",
                 "project": {
                   "mode": "existing",
-                  "projectIdentity": "C:/Projects/Machine.ap21",
+                  "projectIdentity": "C:/Projects/Machine.ap{extension}",
                   "softwarePath": "PLC_1"
                 }
               },
@@ -65728,7 +64674,7 @@
             "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
             "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
             "dryRun": true,
-            "expectedProjectFile": "C:/Projects/Machine.ap21"
+            "expectedProjectFile": "C:/Projects/Machine.ap{extension}"
           },
           "operations": {},
           "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",

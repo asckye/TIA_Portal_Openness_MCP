@@ -522,6 +522,41 @@ namespace PlcExchangeTests
         }
 
         [Fact]
+        public void Ascii_scl_has_no_bom()
+        {
+            string path = Path.Combine(Path.GetTempPath(), "vmfix6a-" + Guid.NewGuid().ToString("N") + ".scl");
+            const string source = "FUNCTION \"Pump\" : Void\r\nBEGIN\r\nEND_FUNCTION\r\n";
+            try
+            {
+                var result = (ResponseMessage)Type("PlcOfflineTools").GetMethod("WritePlcSclSourceFile")!
+                    .Invoke(Instance(Type("PlcOfflineTools")), new object[] { source, path })!;
+                Assert.Equal(System.Text.Encoding.ASCII.GetBytes(source), File.ReadAllBytes(path));
+                Assert.Equal("ascii", (string?)result.Meta!["encoding"]);
+                Assert.True((bool?)result.Meta["importableByTool"]);
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Fact]
+        public void Non_ascii_scl_keeps_the_bom_and_says_the_importer_refuses_it()
+        {
+            string path = Path.Combine(Path.GetTempPath(), "vmfix6a-" + Guid.NewGuid().ToString("N") + ".scl");
+            const string source = "// 中文注释\r\nFUNCTION \"Pump\" : Void\r\nBEGIN\r\nEND_FUNCTION\r\n";
+            try
+            {
+                var result = (ResponseMessage)Type("PlcOfflineTools").GetMethod("WritePlcSclSourceFile")!
+                    .Invoke(Instance(Type("PlcOfflineTools")), new object[] { source, path })!;
+                Assert.Equal(new byte[] { 239, 187, 191 }, File.ReadAllBytes(path).Take(3));
+                Assert.Equal(source, File.ReadAllText(path));
+                Assert.Equal("utf-8-bom", (string?)result.Meta!["encoding"]);
+                Assert.False((bool?)result.Meta["importableByTool"]);
+                Assert.Contains("tool importers refuse", result.Message);
+                Assert.Contains("Add new external file", result.Message);
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Fact]
         public void EmptySclIsRejectedWithTheInputErrorBeforeCreatingAFile()
         {
             var body = Invoke("WritePlcSclSourceFile", "");

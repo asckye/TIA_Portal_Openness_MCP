@@ -92,11 +92,15 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "WritePlcSclSourceFile"),
-                Description("[L1][PLC-Software][OFFLINE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: 'Cannot create SW.Blocks.CompileUnit... token not supported'): the user imports the .scl manually in TIA via project tree → 'External source files' → 'Add new external file', then right-clicks the source → 'Generate blocks from source'. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK."
-                    + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+                Description("[L1][PLC-Software][OFFLINE] Write complete SCL text to a local .scl file without connecting to TIA Portal. " +
+                "Plain ASCII is written without a BOM for ImportPlcExternalSource then GenerateBlocksFromExternalSource. Other text uses UTF-8 " +
+                "with BOM to avoid Chinese mojibake; the tool importers refuse it. Import it manually in TIA: project tree → 'External source files' → " +
+                "'Add new external file', then right-click the source → 'Generate blocks from source'. This is also the fallback when XML block " +
+                "import rejects another release's SimaticML tokens. sclContent must contain complete FUNCTION_BLOCK, FUNCTION, DATA_BLOCK or TYPE " +
+                "declarations. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult WritePlcSclSourceFileV4(
             [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written " +
-                "verbatim.")] string sclContent,
+                "verbatim; plain ASCII omits the BOM for tool import, other text uses UTF-8 BOM and requires manual TIA import.")] string sclContent,
             [Description("outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first " +
                 "block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath =
                 "")
@@ -106,7 +110,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage WritePlcSclSourceFile(
             [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written " +
-                "verbatim.")] string sclContent,
+                "verbatim; plain ASCII omits the BOM for tool import, other text uses UTF-8 BOM and requires manual TIA import.")] string sclContent,
             [Description("outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first " +
                 "block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath =
                 "")
@@ -159,9 +163,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!string.IsNullOrEmpty(parent))
                     Directory.CreateDirectory(parent);
 
-                // UTF-8 WITH BOM: TIA reads BOM-less UTF-8 SCL with Chinese comments as mojibake.
+                // Preserve BOM for non-ASCII text; automated import currently accepts only plain ASCII.
+                bool importable = sclContent.All(c => c == '\t' || c == '\r' || c == '\n' || c >= 32 && c <= 126);
                 PlcExchangeContract.StartWrite("scl-file-write");
-                File.WriteAllText(finalPath, sclContent, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+                File.WriteAllText(finalPath, sclContent, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: !importable));
                 PlcExchangeContract.ConfirmWrite();
 
                 return new ResponseMessage
@@ -170,12 +175,15 @@ namespace TiaMcpServer.ModelContextProtocol
                         $"SCL source written to '{finalPath}'. To import in TIA Portal: project tree → " +
                         "'External source files' → 'Add new external file' → select this .scl → " +
                         "right-click the source → 'Generate blocks from source'. " +
-                        "(Or call ImportPlcExternalSource then GenerateBlocksFromExternalSource if connected.)",
+                        (importable ? "(Or call ImportPlcExternalSource then GenerateBlocksFromExternalSource if connected.)"
+                            : "The tool importers refuse this non-ASCII source. Use the manual TIA steps above."),
                     Meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,
                         ["success"] = true,
                         ["path"] = finalPath,
+                        ["encoding"] = importable ? "ascii" : "utf-8-bom",
+                        ["importableByTool"] = importable,
                         ["blockName"] = nameMatch.Success ? nameMatch.Groups[1].Value : null,
                         ["bytes"] = new System.IO.FileInfo(finalPath).Length
                     }

@@ -66,7 +66,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                 if (script != null)
                 {
-                    members.AddRange(_session.DescribeMembers(script, Math.Max(10, Math.Min(2000, maxMembers))));
+                    members.AddRange(_session.DescribeMembers(script, MemberListCap.Effective(maxMembers)));
                     try
                     {
                         var infos = script.GetType().GetMethod("GetAttributeInfos", Type.EmptyTypes)?.Invoke(script, Array.Empty<object>());
@@ -88,7 +88,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
                 else
                 {
-                    members.AddRange(_session.DescribeMembers(handler, Math.Max(10, Math.Min(2000, maxMembers))));
+                    members.AddRange(_session.DescribeMembers(handler, MemberListCap.Effective(maxMembers)));
                     try
                     {
                         var infos = handler.GetType().GetMethod("GetAttributeInfos", Type.EmptyTypes)?.Invoke(handler, Array.Empty<object>());
@@ -112,11 +112,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 return new HmiDescribe
                 {
                     Message = "OK",
-                    Meta = UnifiedHmiAccess.Unstamped(true, ("operationSuccess", true), ("exists", true)),
+                    Meta = UnifiedHmiAccess.Unstamped(true, ("operationSuccess", true), ("exists", true),
+                        ("totalMembers", members.Count), ("truncated", members.Count > MemberListCap.Effective(maxMembers))),
                     ObjectKind = "HmiButtonEventScript",
                     ObjectPath = $"{hmiSoftwarePath}:{screenName}:{buttonName}:{eventType}.Script",
                     TypeName = script == null ? scriptProp?.PropertyType.FullName : script.GetType().FullName,
-                    Members = members
+                    Members = members.Take(MemberListCap.Effective(maxMembers)).ToList()
                 };
             }
             catch (Exception ex)

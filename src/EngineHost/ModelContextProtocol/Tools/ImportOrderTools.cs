@@ -166,7 +166,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (evidence["offset"] is JsonValue pageOffset && pageOffset.TryGetValue<int>(out var offset)
                 && evidence["limit"] is JsonValue pageLimit && pageLimit.TryGetValue<int>(out var limit) && offset >= 0 && limit > 0)
             {
-                string? totalField = new[] { "total", "rowCount", "hunkCount", "blockCount" }.FirstOrDefault(k => evidence[k] is JsonValue);
+                string? totalField = new[] { "total", "rowCount", "hunkCount", "blockCount", "expectedCount" }.FirstOrDefault(k => evidence[k] is JsonValue);
                 if (totalField != null)
                 {
                     paging = McpServer.OffsetPage(offset, limit, Count(evidence, totalField));

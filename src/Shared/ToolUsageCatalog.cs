@@ -71,6 +71,9 @@ namespace TiaOpenness.Shared
             }
         }
         public static string Hint(string name) => " Examples: GetToolUsage(toolName: \"" + name + "\"), optionally operation or language.";
+        public static string WithHint(string name, string? description)
+            => (description ?? "").Contains(Hint(name).Trim()) ? description! : (description ?? "") + Hint(name);
+        public static JsonObject? ServedCall(string name, string release) => CallExample(name, release, ExampleSource(name, release));
         public static JsonObject Mapping(string name) => (JsonObject)(Data.Value["tools"]![name]?.DeepClone()
             ?? throw new ArgumentException("No usage mapping for " + name + ". Regenerate the official example catalog."));
 
@@ -147,7 +150,7 @@ namespace TiaOpenness.Shared
             foreach (var pair in (engineSource ? Data.Value["engineSourceCalls"]! : Data.Value["calls"]!["profiles"]!["full-engine"]!).AsObject())
                 if ((bool?)pair.Value?["inline"] == true)
                 {
-                    var row = CallExample(pair.Key, release, engineSource ? "engine-source" : "full-engine")!;
+                    var row = ServedCall(pair.Key, release) ?? CallExample(pair.Key, release, engineSource ? "engine-source" : "full-engine")!;
                     result.Add(new JsonObject { ["tool"] = RegisteredName(pair.Key, release), ["arguments"] = row["arguments"]!.DeepClone(),
                         ["note"] = "Sample targets require binding; GetToolUsage explains this release's parameters and results." });
                 }
@@ -254,7 +257,11 @@ namespace TiaOpenness.Shared
             if (operation.Length > 0)
             {
                 if (call?["operations"]?[operation]?["arguments"] is JsonObject overrides)
+                {
+                    if ((string?)call["operations"]?[operation]?["argumentsMode"] == "complete")
+                        callArguments = new JsonObject();
                     foreach (var pair in overrides) callArguments![pair.Key] = pair.Value?.DeepClone();
+                }
                 else callArguments = null;
             }
             var args = callArguments is JsonObject concrete ? (JsonObject)concrete.DeepClone()

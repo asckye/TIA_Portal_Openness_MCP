@@ -461,7 +461,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "optionally scans through an existing PLC's connection configuration. Read-only for the project; probes the network. Feeds " +
                 "UploadStationFromPlc. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ScanAccessibleDevicesV4(
-            [Description("pgPcInterface: exact PG/PC interface name or number (required when several exist), e.g. 'PLCSIM'.")] string pgPcInterface = "",
+            [Description("pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes (required when several exist).")] string pgPcInterface =
+                "",
             [Description("softwarePath: optional PLC software path - scans through that PLC's connection configuration instead of the project-level " +
                 "provider.")] string softwarePath =
                 "",
@@ -487,7 +488,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult UploadStationFromPlcV4(
             [Description("targetIpAddress: IP address of the PLC exactly as ScanAccessibleDevices lists it on the same interface (IP only, no " +
                 "MAC).")] string targetIpAddress,
-            [Description("pgPcInterface: exact PG/PC interface name or number, e.g. 'PLCSIM'; required when several interfaces exist ('' only when there is " +
+            [Description("pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes; required when several interfaces exist ('' only when " +
+                "there is "
+                        +
                 "one).")] string pgPcInterface =
                 "",
             [Description("password: CPU access password when the CPU is protected; never logged.")] string password = "",

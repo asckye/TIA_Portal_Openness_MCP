@@ -23,6 +23,11 @@ namespace TiaMcpServer.ModelContextProtocol
             public string Digest { get; set; } = "";
         }
 
+        public static string DeliveryLine(Asset zip, Asset? sha)
+            => "Latest delivery: " + zip.Name + (zip.Size > 0
+                ? " (" + (zip.Size / 1048576.0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + " MB)" : "")
+                + " " + zip.Url + (sha != null ? " + " + sha.Name : " (no .sha256 asset)");
+
         public sealed class Release
         {
             public string Tag { get; set; } = "";

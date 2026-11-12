@@ -277,7 +277,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["plantPath"]=plantPath; meta["objectPath"]=UnifiedObjectAddress.Parse(objectPathJson);
                 meta["records"]=rows; meta["expectedCount"]=items.Length; meta["actualCount"]=rows.Count;
                 meta["nextOffset"]=offset+rows.Count<items.Length ? offset+rows.Count : (int?)null;
-                meta["truncated"]=offset+rows.Count<items.Length; meta["apiCallSuccess"]=true; meta["dataComplete"]=false;
+                meta["truncated"]=offset+rows.Count<items.Length; meta["apiCallSuccess"]=true;
+                meta["dataComplete"] = offset == 0 && rows.Count == items.Length && rows.All(r => r!.Field("dataComplete")!.GetValue<bool>());
                 meta["scope"]=
                     "Live page, scalar values and schema only. PlantObject/PlantObjectInterfaces and members require exact subsequent property paths; no " +
                     "implicit recursion.";

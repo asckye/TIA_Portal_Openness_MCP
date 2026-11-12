@@ -7758,12 +7758,12 @@
       "path": "src/Shared/OnlineDownloadTools.cs",
       "owner": "OnlineDownloadTools",
       "domain": "PLC-Online",
-      "signature": "public CallToolResult ScanAccessibleDevicesV4(\n            [Description(\"pgPcInterface: exact PG/PC interface name or number (required when several exist), e.g. 'PLCSIM'.\")] string pgPcInterface = \"\",\n            [Description(\"softwarePath: optional PLC software path - scans through that PLC's connection configuration instead of the project-level provider.\")] string softwarePath = \"\",\n            [Description(\"offset: first device to return (paging).\")] int offset = 0,\n            [Description(\"limit: maximum devices to return.\")] int limit = 100)",
+      "signature": "public CallToolResult ScanAccessibleDevicesV4(\n            [Description(\"pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes (required when several exist).\")] string pgPcInterface = \"\",\n            [Description(\"softwarePath: optional PLC software path - scans through that PLC's connection configuration instead of the project-level provider.\")] string softwarePath = \"\",\n            [Description(\"offset: first device to return (paging).\")] int offset = 0,\n            [Description(\"limit: maximum devices to return.\")] int limit = 100)",
       "parameters": {
         "pgPcInterface": {
           "type": "string",
           "default": "\"\"",
-          "description": "pgPcInterface: exact PG/PC interface name or number (required when several exist), e.g. 'PLCSIM'.",
+          "description": "pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes (required when several exist).",
           "value": ""
         },
         "softwarePath": {
@@ -7791,7 +7791,7 @@
       "path": "src/Shared/OnlineDownloadTools.cs",
       "owner": "OnlineDownloadTools",
       "domain": "PLC-Online",
-      "signature": "public CallToolResult UploadStationFromPlcV4(\n            [Description(\"targetIpAddress: IP address of the PLC exactly as ScanAccessibleDevices lists it on the same interface (IP only, no MAC).\")] string targetIpAddress,\n            [Description(\"pgPcInterface: exact PG/PC interface name or number, e.g. 'PLCSIM'; required when several interfaces exist ('' only when there is one).\")] string pgPcInterface = \"\",\n            [Description(\"password: CPU access password when the CPU is protected; never logged.\")] string password = \"\",\n            [Description(\"promptAnswers: structured AttributeMap<string> input.\")] AttributeMap<string> promptAnswers = null!,\n            [Description(\"confirmUpload: must be true together with dryRun=false to upload (takes exclusive access, creates a new device).\")] bool confirmUpload = false,\n            [Description(\"dryRun: true (default) previews the route and the target from the route tree only; false uploads.\")] bool dryRun = true,\n            [Description(\"trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the certificates the device presented.\")] bool trustDeviceCertificate = false,\n            [Description(\"allowNonTlsLogin: false (default) sends a password only where the prompt reports IsSecureCommunication=true or the release cannot report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on V21); true also sends it over a connection that is not TLS-secured.\")] bool allowNonTlsLogin = false)",
+      "signature": "public CallToolResult UploadStationFromPlcV4(\n            [Description(\"targetIpAddress: IP address of the PLC exactly as ScanAccessibleDevices lists it on the same interface (IP only, no MAC).\")] string targetIpAddress,\n            [Description(\"pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes; required when several interfaces exist ('' only when there is one).\")] string pgPcInterface = \"\",\n            [Description(\"password: CPU access password when the CPU is protected; never logged.\")] string password = \"\",\n            [Description(\"promptAnswers: structured AttributeMap<string> input.\")] AttributeMap<string> promptAnswers = null!,\n            [Description(\"confirmUpload: must be true together with dryRun=false to upload (takes exclusive access, creates a new device).\")] bool confirmUpload = false,\n            [Description(\"dryRun: true (default) previews the route and the target from the route tree only; false uploads.\")] bool dryRun = true,\n            [Description(\"trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the certificates the device presented.\")] bool trustDeviceCertificate = false,\n            [Description(\"allowNonTlsLogin: false (default) sends a password only where the prompt reports IsSecureCommunication=true or the release cannot report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on V21); true also sends it over a connection that is not TLS-secured.\")] bool allowNonTlsLogin = false)",
       "parameters": {
         "targetIpAddress": {
           "type": "string",
@@ -7801,7 +7801,7 @@
         "pgPcInterface": {
           "type": "string",
           "default": "\"\"",
-          "description": "pgPcInterface: exact PG/PC interface name or number, e.g. 'PLCSIM'; required when several interfaces exist ('' only when there is one).",
+          "description": "pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes; required when several interfaces exist ('' only when there is one).",
           "value": ""
         },
         "password": {
@@ -9083,12 +9083,12 @@
       "path": "src/Shared/PlcOfflineTools.cs",
       "owner": "PlcOfflineTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult WritePlcSclSourceFileV4(\n            [Description(\"sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim.\")] string sclContent,\n            [Description(\"outputPath: target .scl file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\\\tia_mcp_scl.\")] string outputPath = \"\")",
+      "signature": "public CallToolResult WritePlcSclSourceFileV4(\n            [Description(\"sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim; plain ASCII omits the BOM for tool import, other text uses UTF-8 BOM and requires manual TIA import.\")] string sclContent,\n            [Description(\"outputPath: target .scl file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\\\tia_mcp_scl.\")] string outputPath = \"\")",
       "parameters": {
         "sclContent": {
           "type": "string",
           "default": null,
-          "description": "sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim."
+          "description": "sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim; plain ASCII omits the BOM for tool import, other text uses UTF-8 BOM and requires manual TIA import."
         },
         "outputPath": {
           "type": "string",
@@ -10824,7 +10824,7 @@
       "path": "src/Shared/PlcWatchTools.cs",
       "owner": "PlcWatchTools",
       "domain": "Online-Monitoring",
-      "signature": "public CallToolResult PlanOnlineReadOnlyMonitoringV4(\n            [Description(\"softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.\")] string softwarePath,\n            [Description(\"tagPaths: JSON array of symbolic PLC tag/member paths, for example [\\\"DB_HMI.MotorRun\\\",\\\"DB_HMI.SpeedSet\\\"]. Do not pass guessed M bits.\")] string[] tagPaths,\n            [Description(\"mode: current-values or watch-table-export-plan. Both are read-only planning modes.\")] string mode = \"current-values\")",
+      "signature": "public CallToolResult PlanOnlineReadOnlyMonitoringV4(\n            [Description(\"softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.\")] string softwarePath,\n            [Description(\"tagPaths: JSON array of symbolic PLC tag/member paths, for example [\\\"DB_HMI.MotorRun\\\",\\\"DB_HMI.SpeedSet\\\"]. Do not pass guessed M bits. Each segment may be an identifier or a quoted TIA name.\")] string[] tagPaths,\n            [Description(\"mode: current-values or watch-table-export-plan. Both are read-only planning modes.\")] string mode = \"current-values\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10834,7 +10834,7 @@
         "tagPaths": {
           "type": "string[]",
           "default": null,
-          "description": "tagPaths: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed M bits."
+          "description": "tagPaths: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed M bits. Each segment may be an identifier or a quoted TIA name."
         },
         "mode": {
           "type": "string",
@@ -10849,7 +10849,7 @@
       "path": "src/Shared/PlcWatchTools.cs",
       "owner": "PlcWatchTools",
       "domain": "Online-Monitoring",
-      "signature": "public CallToolResult PlanOnlineReadOnlyDataProviderV4(\n            [Description(\"provider: opcua or s7-readonly. opcua is preferred for commercial symbolic readback.\")] string provider,\n            [Description(\"endpoint: OPC UA endpoint URL or PLC endpoint/IP. It is validated only for shape and is not opened.\")] string endpoint,\n            [Description(\"tagPaths: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected.\")] string[] tagPaths,\n            [Description(\"options: optional JSON object such as {\\\"pollMs\\\":1000,\\\"source\\\":\\\"watch-table-export\\\"}.\")] MonitoringOptions? options = null)",
+      "signature": "public CallToolResult PlanOnlineReadOnlyDataProviderV4(\n            [Description(\"provider: opcua or s7-readonly. opcua is preferred for commercial symbolic readback.\")] string provider,\n            [Description(\"endpoint: OPC UA endpoint URL or PLC endpoint/IP. It is validated only for shape and is not opened.\")] string endpoint,\n            [Description(\"tagPaths: JSON array of declared symbolic PLC tags/DB members. Each segment may be an identifier or a quoted TIA name. Guessed M bits are rejected.\")] string[] tagPaths,\n            [Description(\"options: optional JSON object such as {\\\"pollMs\\\":1000,\\\"source\\\":\\\"watch-table-export\\\"}.\")] MonitoringOptions? options = null)",
       "parameters": {
         "provider": {
           "type": "string",
@@ -10864,7 +10864,7 @@
         "tagPaths": {
           "type": "string[]",
           "default": null,
-          "description": "tagPaths: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected."
+          "description": "tagPaths: JSON array of declared symbolic PLC tags/DB members. Each segment may be an identifier or a quoted TIA name. Guessed M bits are rejected."
         },
         "options": {
           "type": "MonitoringOptions?",

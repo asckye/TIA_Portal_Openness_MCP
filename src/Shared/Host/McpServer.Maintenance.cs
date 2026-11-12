@@ -73,15 +73,18 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("timeoutSeconds: HTTP timeout for the GitHub API call (default 15).")] int timeoutSeconds = 15)
             => SessionToolContract.RunAsync("CheckProductUpdate", false, false, () => CheckForUpdate(repository, timeoutSeconds));
 
-        public static async Task<ResponseStringList> CheckForUpdate(
+        public static Task<ResponseStringList> CheckForUpdate(
             [Description("repository: GitHub owner/name to query (default the project's repository).")] string repository = UpdateLogic.DefaultRepository,
             [Description("timeoutSeconds: HTTP timeout for the GitHub API call (default 15).")] int timeoutSeconds = 15)
+            => CheckForUpdate(repository, timeoutSeconds,
+                UpdateLogic.InstalledVersion(typeof(McpServer).Assembly.GetName().Version?.ToString(3) ?? "0.0.0",
+                    System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(
+                        typeof(McpServer).Assembly)?.InformationalVersion), UpdateHttp);
+
+        internal static async Task<ResponseStringList> CheckForUpdate(string repository, int timeoutSeconds, string current, HttpClient http)
         {
             // envelope: legacy-stamp-then-verdict
             var meta = new JsonObject { ["timestamp"] = DateTime.Now };
-            string current = UpdateLogic.InstalledVersion(typeof(McpServer).Assembly.GetName().Version?.ToString(3) ?? "0.0.0",
-                System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection
-                    .AssemblyInformationalVersionAttribute>(typeof(McpServer).Assembly)?.InformationalVersion);
             bool prereleaseChannel = UpdateLogic.UsesPrereleaseChannel(current);
             meta["currentVersion"] = current;
             meta["currentFileVersion"] = typeof(McpServer).Assembly.GetName().Version?.ToString();
@@ -110,7 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
-                using var response = await UpdateHttp.GetAsync(url, cts.Token).ConfigureAwait(false);
+                using var response = await http.GetAsync(url, cts.Token).ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
@@ -146,18 +149,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
             }
 
-            if (release == null)
+            if (release == null && !prereleaseChannel)
             {
                 // The release page is not subject to the API quota: the /releases/latest redirect names the tag and the
                 // expanded-assets fragment lists the download links (sizes approximate).
                 try
                 {
                     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
-                    using var page = await UpdateHttp.GetAsync(UpdateLogic.LatestPageUrl(repository), cts.Token).ConfigureAwait(false);
+                    using var page = await http.GetAsync(UpdateLogic.LatestPageUrl(repository), cts.Token).ConfigureAwait(false);
                     var tag = UpdateLogic.TagFromReleaseUrl(page.RequestMessage?.RequestUri?.ToString());
                     if (tag != null)
                     {
-                        using var fragment = await UpdateHttp.GetAsync(UpdateLogic.ExpandedAssetsUrl(repository, tag), cts.Token).ConfigureAwait(false);
+                        using var fragment = await http.GetAsync(UpdateLogic.ExpandedAssetsUrl(repository, tag), cts.Token).ConfigureAwait(false);
                         var html = fragment.IsSuccessStatusCode ? await fragment.Content.ReadAsStringAsync().ConfigureAwait(false) : "";
                         release = UpdateLogic.OfferedToPlainInstall(UpdateLogic.ParseReleasePage(repository, tag, html));
                         meta["source"] = "releasePage"; meta["apiProblem"] = apiProblem;
@@ -168,9 +171,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (release == null)
             {
                 meta["success"] = false;
+                meta["apiProblem"] = apiProblem;
                 return new ResponseStringList {
-                    Message = "Engine " + current + "; the latest release could not be read: " + apiProblem + ". Release page: " + UpdateLogic
-                        .ReleasePageUrl(repository), Items = lines, Meta = meta
+                    Message = "Engine " + current + "; the latest release is unknown: " + apiProblem + ". "
+                        + (prereleaseChannel ? "A pre-release install needs the GitHub releases list. " : "")
+                        + "Release page: " + UpdateLogic.ReleasePageUrl(repository), Items = lines, Meta = meta
                 };
             }
             var comparison = UpdateLogic.Compare(current, release.Version);
@@ -182,9 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["name"] = zip.Name, ["url"] = zip.Url, ["size"] = zip.Size, ["digest"] = zip.Digest.Length > 0 ? zip.Digest : null };
             meta["sha256"] = sha == null ? null : new JsonObject { ["name"] = sha.Name, ["url"] = sha.Url };
             if (zip == null) lines.Insert(0, "The latest release carries no TIA_MCP_Delivery ZIP asset - check the release page before updating.");
-            else lines
-                .Insert(0, "Latest delivery: " + zip.Name + " (" + (zip.Size / 1048576.0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)
-                    + " MB) " + zip.Url + (sha != null ? " + " + sha.Name : " (no .sha256 asset)"));
+            else lines.Insert(0, UpdateLogic.DeliveryLine(zip, sha));
             meta["success"] = true;
             return new ResponseStringList { Message = UpdateLogic.Summary(current, release, comparison), Items = lines, Meta = meta };
         }

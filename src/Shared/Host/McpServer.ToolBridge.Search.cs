@@ -93,7 +93,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "runtime).")] string category =
                 "",
             [Description("domain: optional exact domain tag from ListToolCategories, e.g. 'HMI-Unified' or 'PLC-Software'. Case-insensitive.")] string domain =
-                "")
+                "", int offset = 0)
         {
             try
             {
@@ -153,20 +153,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         scored.Add(new KeyValuePair<int, string>(score, kv.Key));
                 }
 
-                if (scored.Count == 0)
-                {
-                    return new ResponseStringList
-                    {
-                        Message = "No tool matches '" + query + "'. Try fewer or more general words " +
-                                  "(e.g. 'watch table' instead of 'ExportPlcWatchTableToCsv'), " +
-                                  "or call FindTools with an empty query to list everything.",
-                        Meta = BridgeMeta(true),
-                    };
-                }
-
                 var hits = scored
                     .OrderByDescending(x => x.Key).ThenBy(x => x.Value, StringComparer.Ordinal)
-                    .Take(limit).ToList();
+                    .Skip(offset).Take(limit).ToList();
 
                 bool lite = BridgeIsLiteProfile();
                 var lines = new List<string>();
@@ -178,16 +167,22 @@ namespace TiaMcpServer.ModelContextProtocol
                               + (listed ? "  [already listed - call it directly]" : "  [call via CallTool]"));
                     lines.Add("    " + ToolDescription(m));
                     // A worked call next to the signature is what stops the guess-and-retry loop.
-                    lines.Add("    " + ToolExamples.Render(ToolExamples.FindOrDerive(h.Value, SpecsOf(m))));
+                    lines.Add("    " + ToolExamples.Render(ToolExamples.FindOrDerive(h.Value, SpecsOf(m), ReleaseKey)));
                 }
 
+                var message = (hits.Count == 0 ? "0" : "Showing " + (offset + 1) + "-" + (offset + hits.Count))
+                              + " of " + scored.Count + " matching tools (roster: " + AllToolDescriptors().Count + " total). " +
+                              "Tools marked [call via CallTool] are not in this session's tool list - " +
+                              "invoke them with CallTool(name, arguments); PreviewToolCall(name, arguments) checks a planned call without executing it.";
+                if (scored.Count == 0 && !string.IsNullOrEmpty(query))
+                    message += " No tool matches '" + query + "'. Try fewer or more general words "
+                        + "(e.g. 'watch table' instead of 'ExportPlcWatchTableToCsv'), "
+                        + "or call FindTools with an empty query to list everything.";
                 return new ResponseStringList
                 {
-                    Message = hits.Count + " of " + scored.Count + " matching tools (roster: " + all.Count + " total). " +
-                              "Tools marked [call via CallTool] are not in this session's tool list - " +
-                              "invoke them with CallTool(name, arguments); PreviewToolCall(name, arguments) checks a planned call without executing it.",
+                    Message = message,
                     Items = lines,
-                    Meta = BridgeMeta(true),
+                    Meta = new JsonObject { ["success"] = true, ["matchingCount"] = scored.Count },
                 };
             }
             catch (Exception ex)

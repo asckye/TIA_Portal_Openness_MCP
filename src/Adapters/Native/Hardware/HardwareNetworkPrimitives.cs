@@ -31,6 +31,15 @@ namespace TiaMcp.Adapters
             var page = rows.Skip(offset).Take(limit).ToArray(); meta["records"] = page;
             foreach (var pair in HardwareServicesPolicy.PageMeta(rows.Length, offset, limit, page.Length)) meta[pair.Key] = pair.Value;
         }
+        internal static bool HardwarePageComplete(object[] rows, int offset, object[] page)
+            => offset == 0 && page.Length == rows.Length && !HardwareHasFailures(page);
+        private static bool HardwareHasFailures(object? value)
+        {
+            if (value is IDictionary<string, object?> fields)
+                return fields.Any(pair => pair.Key == "failures" && pair.Value is System.Collections.IEnumerable failures
+                    && failures.Cast<object>().Any() || HardwareHasFailures(pair.Value));
+            return value is System.Collections.IEnumerable items && value is not string && items.Cast<object>().Any(HardwareHasFailures);
+        }
         private static DeviceItem HardwareRequireDeviceItem(HardwareObject owner, string parameter)
             => owner as DeviceItem ?? throw new ArgumentException(parameter + " must address a DeviceItem (non-empty itemPathJson).");
 

@@ -297,6 +297,20 @@ namespace TiaOpenness.Shared.Tests
         }
 
         [Fact]
+        public void Old_profile_approval_switch_is_not_copied()
+        {
+            string oldConfig = Path.Combine(Local, "TiaPortalMcp");
+            Put(Path.Combine(oldConfig, "approval.settings"), "enabled=false");
+            Put(Path.Combine(oldConfig, "approval.settings.lock"), "old lock");
+            Put(Path.Combine(oldConfig, "http-v21.json"), "old http");
+            var locations = Resolve();
+            Assert.False(File.Exists(Path.Combine(locations.ConfigDirectory, "approval.settings")));
+            Assert.False(File.Exists(Path.Combine(locations.ConfigDirectory, "approval.settings.lock")));
+            Assert.Equal("old http", File.ReadAllText(Path.Combine(locations.ConfigDirectory, "http-v21.json")));
+            Assert.Equal("enabled=false", File.ReadAllText(Path.Combine(oldConfig, "approval.settings")));
+        }
+
+        [Fact]
         public void Migration_waits_for_first_use_and_does_not_copy_logs_or_scratch()
         {
             Put(Path.Combine(Local, "TiaPortalMcp", "client.json"), "config");

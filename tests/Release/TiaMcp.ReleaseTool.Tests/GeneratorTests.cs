@@ -572,6 +572,62 @@ public sealed class GeneratorTests
         }
         Assert.Throws<ReleaseException>(() => CatalogAudits.ValidateUsageExamples(catalog, schemas, "19"));
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void OperationArgumentModesRetainEverySchemaAndHintCheck(bool complete)
+    {
+        var schema = JsonNode.Parse("""
+            {"type":"object","additionalProperties":false,"required":["fix","target"],"properties":{
+              "fix":{"type":"boolean"},"target":{"type":"object","additionalProperties":false,"required":["name"],
+              "properties":{"name":{"type":"string","minLength":1}}}}}
+            """)!;
+        var entry = JsonNode.Parse("""
+            {"arguments":{"fix":false,"target":{"name":"fixture"}},"operations":{"repair":{"arguments":{"fix":true}}}}
+            """)!;
+        var operation = entry["operations"]!["repair"]!;
+        if (complete)
+        {
+            operation["argumentsMode"] = "complete";
+            operation["arguments"]!["target"] = entry["arguments"]!["target"]!.DeepClone();
+        }
+        var catalog = new JsonObject { ["calls"] = new JsonObject {
+            ["releaseExtensions"] = new JsonObject { ["19"] = "19" },
+            ["profiles"] = new JsonObject { ["plc-foundation"] = new JsonObject { ["GetEnvironmentDiagnostics"] = entry } } },
+            ["examples"] = new JsonArray(), ["sequences"] = new JsonArray() };
+        var schemas = new JsonObject { ["GetEnvironmentDiagnostics"] = schema };
+        CatalogAudits.ValidateUsageExamples(catalog, schemas, "19");
+        foreach (string mutation in new[] { "argument", "type", "nested", "hint", "mode", "execution" })
+        {
+            var changed = catalog.DeepClone();
+            var row = changed["calls"]!["profiles"]!["plc-foundation"]!["GetEnvironmentDiagnostics"]!;
+            var variant = row["operations"]!["repair"]!;
+            switch (mutation)
+            {
+                case "argument": variant["arguments"]!["unknown"] = 1; break;
+                case "type": variant["arguments"]!["fix"] = "true"; break;
+                case "nested": variant["arguments"]!["target"] = new JsonObject { ["name"] = "" }; break;
+                case "hint": variant["parameters"] = new JsonObject { ["unknown"] = new JsonObject { ["requiresBinding"] = true } }; break;
+                case "mode": variant["argumentsMode"] = "unknown"; break;
+                case "execution": row["execution"] = new JsonObject { ["arguments"] = new JsonObject { ["fix"] = "true" } }; break;
+            }
+            Assert.Throws<ReleaseException>(() => CatalogAudits.ValidateUsageExamples(changed, schemas, "19"));
+        }
+        if (complete)
+        {
+            operation["arguments"]!.AsObject().Remove("target");
+            Assert.Throws<ReleaseException>(() => CatalogAudits.ValidateUsageExamples(catalog, schemas, "19"));
+        }
+        else
+        {
+            // Execution remains a patch too: it must inherit the required target from the top-level call.
+            entry["execution"] = new JsonObject { ["arguments"] = new JsonObject { ["fix"] = true } };
+            CatalogAudits.ValidateUsageExamples(catalog, schemas, "19");
+            entry["arguments"]!["target"]!["name"] = "";
+            Assert.Throws<ReleaseException>(() => CatalogAudits.ValidateUsageExamples(catalog, schemas, "19"));
+        }
+    }
+
     [Fact]
     public void StdioAuditReceiptsMustBeDistinctAndHashChecked()
     {

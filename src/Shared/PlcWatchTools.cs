@@ -236,7 +236,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult PlanOnlineReadOnlyMonitoringV4(
             [Description("softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.")] string softwarePath,
             [Description("tagPaths: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed " +
-                "M bits.")] string[] tagPaths,
+                "M bits. Each segment may be an identifier or a quoted TIA name.")] string[] tagPaths,
             [Description("mode: current-values or watch-table-export-plan. Both are read-only planning modes.")] string mode = "current-values")
             => PlcToolContract.Run("PlanOnlineReadOnlyMonitoring", false, false, () =>
             {
@@ -269,7 +269,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!allowedModes.Contains(normalizedMode))
                 {
                     return BuildOnlineMonitoringPlanResponse(false, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy,
-                            $"Unsupported mode '{mode}'. Supported values: current-values, watch-table-export-plan.");
+                            $"Unsupported mode '{mode}'. Supported values: current-values, watch-table-export-plan.", "mode");
                 }
 
                 if (string.IsNullOrWhiteSpace(softwarePath))
@@ -332,7 +332,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static ResponseJsonReport BuildOnlineMonitoringPlanResponse(bool ok, string softwarePath, string mode, JsonArray acceptedTags,
-                JsonArray rejectedTags, JsonArray warnings, JsonArray policy, string message)
+                JsonArray rejectedTags, JsonArray warnings, JsonArray policy, string message, string? rejectedParameter = null)
         {
             return new ResponseJsonReport
             {
@@ -348,6 +348,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["modifiesWatchTables"] = false,
                     ["writesPlcValues"] = false,
                     ["usesForce"] = false,
+                    ["rejectedParameter"] = ok ? null : rejectedParameter ?? "tagPaths",
                     ["acceptedTags"] = acceptedTags,
                     ["rejectedTags"] = rejectedTags,
                     ["warnings"] = warnings,
@@ -364,28 +365,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "Tag path is empty.";
             }
 
-            var forbiddenIntent = new[]
-            {
-                "force", "write", "modify", "update", "create",
-                "delete", "remove", "import", "insert", "download", "activate", "start", "stop",
-                "goonline", "gooffline", "watchtable", "forcetable"
-            };
-            var compact = Regex.Replace(tagPath, @"[\s_\-\.]+", string.Empty);
-            var segments = Regex.Split(tagPath, @"[\.\s_\-]+").Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-            var forbidden = forbiddenIntent.FirstOrDefault(x =>
-                compact.Equals(x, StringComparison.OrdinalIgnoreCase) ||
-                segments.Any(segment => segment.StartsWith(x, StringComparison.OrdinalIgnoreCase)));
-            if (forbidden != null)
-            {
-                return $"Tag path contains unsafe online/write/force/watch-table intent keyword '{forbidden}'.";
-            }
-
             if (Regex.IsMatch(tagPath, @"^%?[MIQ][BWD]?\d+(\.\d+)?$", RegexOptions.IgnoreCase))
             {
                 return "Absolute I/Q/M address is not accepted for HMI/online planning. Use a declared PLC symbol or DB member read back from the project.";
             }
 
-            if (!Regex.IsMatch(tagPath, @"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+$"))
+            if (!Regex.IsMatch(tagPath, @"^(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+"")(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+""))+$"))
             {
                 return "Use a symbolic PLC path with at least one member separator, for example DB_HMI.MotorRun.";
             }
@@ -400,8 +385,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult PlanOnlineReadOnlyDataProviderV4(
             [Description("provider: opcua or s7-readonly. opcua is preferred for commercial symbolic readback.")] string provider,
             [Description("endpoint: OPC UA endpoint URL or PLC endpoint/IP. It is validated only for shape and is not opened.")] string endpoint,
-            [Description("tagPaths: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are " +
-                "rejected.")] string[] tagPaths,
+            [Description("tagPaths: JSON array of declared symbolic PLC tags/DB members. Each segment may be an identifier or a quoted TIA name. " +
+                "Guessed M bits are rejected.")] string[] tagPaths,
             [Description("options: optional JSON object such as {\"pollMs\":1000,\"source\":\"watch-table-export\"}.")] MonitoringOptions? options = null)
             => PlcToolContract.Run("PlanOnlineReadOnlyDataProvider", false, false, () =>
             {
@@ -433,8 +418,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!allowedProviders.Contains(normalizedProvider))
                 {
                     return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options,
-                            $"Unsupported provider '{provider}'. Supported providers: opcua, s7-readonly.");
+                            $"Unsupported provider '{provider}'. Supported providers: opcua, s7-readonly.", "provider");
                 }
+
+                var forbiddenOption = OptionsIntent(options);
+                if (forbiddenOption != null)
+                    return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options,
+                        "Options contain unsafe online/write/force/watch-table intent keyword '" + forbiddenOption + "'.", "options");
 
                 if (string.IsNullOrWhiteSpace(endpoint))
                 {
@@ -502,8 +492,29 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        private static string? OptionsIntent(JsonNode? node)
+        {
+            var keywords = new[] { "force", "write", "modify", "update", "create", "delete", "remove", "import", "insert", "download",
+                "activate", "start", "stop", "goonline", "gooffline", "watchtable", "forcetable" };
+            string? Match(string value) => keywords.FirstOrDefault(word =>
+                Regex.Replace(value, @"[\s_\-\.]+", "").Equals(word, StringComparison.OrdinalIgnoreCase));
+            if (node is JsonObject obj)
+                foreach (var pair in obj)
+                {
+                    var match = Match(pair.Key) ?? OptionsIntent(pair.Value);
+                    if (match != null) return match;
+                }
+            if (node is JsonArray array)
+                foreach (var value in array)
+                {
+                    var match = OptionsIntent(value);
+                    if (match != null) return match;
+                }
+            return node is JsonValue scalar && scalar.TryGetValue<string>(out var text) ? Match(text) : null;
+        }
+
         private static ResponseJsonReport BuildReadOnlyProviderPlan(bool ok, string provider, string endpoint, JsonArray acceptedTags, JsonArray rejectedTags,
-                JsonArray warnings, JsonArray policy, JsonObject options, string message)
+                JsonArray warnings, JsonArray policy, JsonObject options, string message, string? rejectedParameter = null)
         {
             return new ResponseJsonReport
             {
@@ -524,6 +535,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["writesPlcValues"] = false,
                     ["modifiesWatchTables"] = false,
                     ["usesForce"] = false,
+                    ["rejectedParameter"] = ok ? null : rejectedParameter ?? "tagPaths",
                     ["acceptedTags"] = acceptedTags,
                     ["rejectedTags"] = rejectedTags,
                     ["warnings"] = warnings,

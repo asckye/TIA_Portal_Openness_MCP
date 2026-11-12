@@ -326,7 +326,9 @@ namespace TiaOpenness.Shared
             var target = At("config", previous);
             if (Root != null && Directory.Exists(previous))
                 foreach (var file in Directory.GetFiles(previous))
-                    CopyIfMissing(file, Path.Combine(target, Path.GetFileName(file)));
+                    if (!Path.GetFileName(file).Equals("approval.settings", StringComparison.OrdinalIgnoreCase)
+                        && !Path.GetFileName(file).Equals("approval.settings.lock", StringComparison.OrdinalIgnoreCase))
+                        CopyIfMissing(file, Path.Combine(target, Path.GetFileName(file)));
             return target;
         }
 

@@ -310,7 +310,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // time), so the model sees a correct call next to every listed tool without duplicating examples in attributes.
         internal static McpServerTool WithSchemaHints(McpServerTool tool, string name, MethodInfo method)
         {
-            var hinted = WithSchemaHints(tool, name, SpecsOf(method), (schema, original) => PreserveTypedSchemas(schema, original, method));
+            var hinted = WithSchemaHints(tool, name, SpecsOf(method), ReleaseKey, (schema, original) => PreserveTypedSchemas(schema, original, method));
             CreateInProcessTool(name, method, out var descriptor);
             return new InfrastructureInputTool(hinted, descriptor, (arguments, schema) => ValidateReflectedArguments(method, arguments, schema));
         }

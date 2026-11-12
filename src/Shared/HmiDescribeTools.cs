@@ -31,6 +31,14 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region plc software - HmiDescribe
 
+        private static JsonObject DescribeMeta(ResponseObjectDescribe result)
+        {
+            var meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", result.Members?.Count() ?? 0));
+            foreach (var key in new[] { "truncated", "totalMembers" })
+                if (result.Meta?[key] is JsonNode value) meta[key] = value.DeepClone();
+            return meta;
+        }
+
         [McpServerTool(Name = "GetHmiProgramInfo"),
                 Description("[L2][HMI] Get HMI software type (Classic/Basic/Unified), version, and list of all screen names. Requires: ConnectPortal + " +
                 "OpenProject. softwarePath from GetProjectTree (e.g. 'HMI_RT_1'). Use to confirm HMI type before choosing Classic vs Unified tool variants.")]
@@ -80,7 +88,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiSoftware(softwarePath, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
+                res.Meta = DescribeMeta(res);
                 return res;
             }
             catch (PortalException pex)
@@ -115,7 +123,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiScreen(softwarePath, screenName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
+                res.Meta = DescribeMeta(res);
                 return res;
             }
             catch (PortalException pex)
@@ -148,7 +156,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiTagTable(softwarePath, tagTableName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
+                res.Meta = DescribeMeta(res);
                 return res;
             }
             catch (PortalException pex)
@@ -182,7 +190,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiTag(softwarePath, tagTableName, tagName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
+                res.Meta = DescribeMeta(res);
                 return res;
             }
             catch (PortalException pex)
@@ -221,7 +229,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiScreenItem(softwarePath, screenName, itemName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
+                res.Meta = DescribeMeta(res);
                 return res;
             }
             catch (PortalException pex)

@@ -136,12 +136,13 @@ namespace TiaMcpServer.ModelContextProtocol
         };
 
         /// <summary>Apply documented hints and the shared V4 admission boundary; schema failures stop registration.</summary>
-        internal static McpServerTool WithSchemaHints(McpServerTool tool, string name, IReadOnlyList<PreflightLogic.ParameterSpec> specs, Action<JsonObject,
+        internal static McpServerTool WithSchemaHints(McpServerTool tool, string name, IReadOnlyList<PreflightLogic.ParameterSpec> specs, string release,
+                Action<JsonObject,
                 JsonElement> preserveTypedSchemas)
         {
             var protocol = tool.ProtocolTool;
             var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
-            var example = ToolExamples.Find(name);
+            var example = ToolExamples.Find(name, release);
             var exampleArgs = example == null ? null : JsonNode.Parse(example.ArgumentsJson)!.AsObject();
             SchemaHintsLogic.Augment(schema, specs, exampleArgs);
             preserveTypedSchemas(schema, protocol.InputSchema);
