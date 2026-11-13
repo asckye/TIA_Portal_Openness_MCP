@@ -106,7 +106,7 @@ namespace TiaMcp.Logic.V4
             {
                 HostFailureKind.Argument =>
                     new Error(nativeMessage ?? "The request argument was refused before operation.",
-                        new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
+                        new InvalidArgumentDetails(parameter ?? "", Array.Empty<string>())),
                 HostFailureKind.Precondition =>
                     new Error(nativeMessage ?? "The request precondition failed before operation.",
                         new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
@@ -215,7 +215,7 @@ namespace TiaMcp.Logic.V4
             if (expectedProject == null || expectedProject.IndexOfAny(new[] { '/', '\\', ':' }) < 0) return null;
             return new Error("expectedProject must be the exact project NAME, for example 'AutomaticDipCoatingMachine'. Use expectedProjectFile only when " +
                 "the tool requests an absolute project file path.",
-                new InvalidArgumentDetails("expectedProject", Array.Empty<string>()));
+                new InvalidArgumentDetails("expectedProject", Array.Empty<string>(), expected: "exact project name"));
         }
         internal static JsonObject RetainedRecoveryEvidence(Exception error)
         {

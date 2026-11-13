@@ -7,11 +7,21 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcp.FoundationHost;
 
 internal static class FoundationV4Result
 {
+    internal static CallToolResult RestrictArguments(CallToolResult result, JsonElement schema, JsonElement arguments)
+    {
+        if (result.StructuredContent is not JsonObject body || (string?)body["error"]?["code"] != "INVALID_ARGUMENT") return result;
+        var error = V4Json.Deserialize<Error>(body["error"]!.ToJsonString());
+        body["error"] = JsonNode.Parse(V4Json.Serialize(new InputSchema(schema).Restrict(error, arguments, body["data"] as JsonObject)));
+        return new CallToolResult { IsError = result.IsError, StructuredContent = body,
+            Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+    }
+
     internal static bool Classified(JsonNode? body) => body is JsonObject source && source["meta"] is JsonObject meta && meta["outcome"] is JsonValue outcome
         && outcome.TryGetValue<string>(out var value)
             && value is "succeeded" or "rejected-before-operation" or "read-failed" or "failed" or "partial" or "unknown" or "in-progress";

@@ -27,7 +27,9 @@ namespace TiaMcp.Engine.Tests
             Assert.False(actual.IsValid);
             Assert.Equal(V4Json.Serialize(shared.Error), V4Json.Serialize(actual.Error));
             Assert.Equal(ErrorCode.InvalidArgument, actual.Error!.Code);
-            Assert.Equal("artifacts", Assert.IsType<InvalidArgumentDetails>(actual.Error.Details).Parameter);
+            string pointer = json.Contains("\"priority\":1.0", StringComparison.Ordinal) ? "/artifacts/priority"
+                : json.Contains("\"dependencies\":null", StringComparison.Ordinal) ? "/artifacts/dependencies" : "/artifacts";
+            Assert.Equal(pointer, Assert.IsType<InvalidArgumentDetails>(actual.Error.Details).Parameter);
             Assert.DoesNotContain("secret", V4Json.Serialize(actual.Error));
         }
 

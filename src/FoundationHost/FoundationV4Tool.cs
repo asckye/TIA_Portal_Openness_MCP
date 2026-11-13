@@ -12,6 +12,7 @@ using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetad
 using ProgressHeartbeat = TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
 using UnifiedInputAdmission = TiaMcpServer.Siemens.Services.UnifiedPortService;
 #endif
+using SchemaHintsLogic = TiaMcpServer.ModelContextProtocol.SchemaHintsLogic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol;
@@ -56,6 +57,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         var source = inner.ProtocolTool;
         if (inner is WorkbenchControlTool) { tool = source; return; }
         var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
+        SchemaHintsLogic.DeclareArgumentEnums(source.Name, schema);
         PlcSoftwareUnitSchema.Apply(schema, source.Name, release);
         if (inner is FoundationTool { Ported: true })
         {
@@ -221,6 +223,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         CallToolResult Recorded(CallToolResult result)
         {
+            result = FoundationV4Result.RestrictArguments(result, tool.InputSchema, JsonSerializer.SerializeToElement(args));
             if (inner is FoundationTool artifactProducer)
                 artifactProducer.ControlSession
                     .Observe(tool.Name, request.Params?.Arguments ?? new Dictionary<string, JsonElement>(), result.StructuredContent);
@@ -260,7 +263,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 if (ReplayRefusal() is { } whitespaceReplay) return Recorded(whitespaceReplay);
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     new Error("Filesystem targets must not have leading or trailing whitespace.",
-                        new InvalidArgumentDetails(error.ParamName ?? "arguments", Array.Empty<string>()))));
+                        new InvalidArgumentDetails(error.ParamName ?? "", Array.Empty<string>()))));
             }
             if (write) TiaOpenness.Shared.ApprovalOutputTargets.Normalize(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject());
             if (SoftwareUnitCapabilityError(release, tool.Name, args) is { } unitCapability)
@@ -331,7 +334,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                         {
                             refusal = FoundationV4Result
                                 .Reject(release, tool.Name, id,
-                                    new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "arguments", Array.Empty<string>())),
+                                    new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "", Array.Empty<string>())),
                                     inner is FoundationTool { IsNative: true });
                         }
                         if (refusal == null)
@@ -435,9 +438,10 @@ internal sealed class FoundationV4Tool : McpServerTool
         catch (WorkerOperationException ex) when (ex.Condition == "worker-call-running")
         { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)
-        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments"))); }
+        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid(""))); }
         catch (Exception ex) when (ex is ArgumentException or JsonException or InvalidOperationException)
-        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments"))); }
+        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+            FoundationV4Result.Invalid((ex as ArgumentException)?.ParamName ?? ""))); }
         catch (Exception) /* swallow(privacy): return a value-free V4 failure; implementation details are not protocol data */
         { return Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
         finally { lane?.Dispose(); }

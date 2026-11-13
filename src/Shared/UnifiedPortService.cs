@@ -38,14 +38,16 @@ namespace TiaMcpServer.Siemens.Services
                     if (args.TryGetProperty(field, out var name) && name.ValueKind == JsonValueKind.String)
                         try { TiaMcp.Adapters.Contracts.EngineeringInputValidation.NameOrAbsolutePath(name.GetString()!); }
                         catch (ArgumentException error)
-                        { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())); }
+                        { return new Error(error.Message,
+                            new InvalidArgumentDetails(field, Array.Empty<string>(), expected: "exact name or absolute HMI path")); }
             if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)
                 && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool).Tools.Contains(tool)
                 && TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(tool)?.Domain.StartsWith("HMI", StringComparison.Ordinal) == true)
                 foreach (var field in new[] { "screenPath", "groupPath", "plantPath", "typePath", "folderPath" })
                     if (args.TryGetProperty(field, out var path) && path.ValueKind == JsonValueKind.String && path.GetString()!.Length != 0)
                         try { EngineeringInputValidation.AbsoluteHmiPath(path.GetString()!, rootAllowed: field == "folderPath"); }
-                        catch (ArgumentException error) { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())); }
+                        catch (ArgumentException error)
+                        { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>(), expected: "absolute HMI path")); }
             foreach (var field in new[] { "objectPath", "branch", "collectionPath", "tagPath", "durationPath" })
             {
                 if (!schema.GetProperty("properties").TryGetProperty(field, out var fieldSchema)
@@ -59,7 +61,7 @@ namespace TiaMcpServer.Siemens.Services
                             && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool).Name is "F29" or "F31");
                 }
                 catch (ArgumentException error)
-                { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())); }
+                { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>(), expected: "array of property steps")); }
             }
             return null;
         }
@@ -187,7 +189,7 @@ namespace TiaMcpServer.Siemens.Services
                     foreach (var property in value.EnumerateObject())
                     {
                         if (result.Properties.ContainsKey(property.Name))
-                            throw new ArgumentException("Duplicate JSON key: " + property.Name);
+                            throw new ArgumentException("Duplicate JSON key.");
                         result.Properties.Add(property.Name, Decode(property.Value));
                     }
                     break;

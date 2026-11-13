@@ -398,7 +398,7 @@ public sealed class PortedPortalAdmissionTests
             var alternatives = group.Where(alias => properties.TryGetProperty(alias.Canonical, out _)).ToArray();
             if (args.ContainsKey(group.Key) || alternatives.Length == 0 || alternatives.Any(alias => args.ContainsKey(alias.Canonical))) continue;
             if (TiaMcp.Logic.V4.CanonicalToolParameters.ValidateAliases(name, args)?.Details
-                is not TiaMcp.Logic.V4.InvalidArgumentDetails missing || missing.Parameter != group.Key) continue;
+                is not TiaMcp.Logic.V4.InvalidArgumentDetails missing || missing.Parameter != "/" + group.Key) continue;
             var target = alternatives.FirstOrDefault(alias => alias.Canonical == "sourceDirectory" && (string?)args["action"] == "import")
                 ?? alternatives[0];
             args[target.Canonical] = Path.Combine(Path.GetTempPath(), "portal-admission", name,

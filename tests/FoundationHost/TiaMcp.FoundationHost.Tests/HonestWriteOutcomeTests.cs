@@ -307,7 +307,7 @@ public sealed class HonestWriteOutcomeTests
             var body = Host.PlcToolContract.Run("ManagePlcUserGroup", true, true,
                 () => service.ManagePlcUserGroup("PLC", family, path, action, "Next", false)).StructuredContent!;
             Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
-            Assert.Equal("groupPath", (string?)body["error"]?["details"]?["parameter"]);
+            Assert.Equal("/groupPath", (string?)body["error"]?["details"]?["parameter"]);
         }
     }
 

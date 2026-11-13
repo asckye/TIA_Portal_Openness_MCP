@@ -58,7 +58,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool unknown = Flag(data, "mappingVerified") == false || !readOnly && (Flag(data, "requiresExplicitRebind") == true
                 || Flag(data, "requiresSessionReset") == true);
             string status = data["v4FailureCode"]?.ToString() ?? data["status"]?.ToString() ?? "";
-            var refusal = Refusal(tool, status);
+            var refusal = Refusal(tool, status, data);
             Outcome outcome; Execution execution; Error? error;
             if (status == "HmiReadSessionBlocked")
             {
@@ -97,7 +97,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return Result(tool, data, error, outcome, execution, completeness, current, paging);
         }
 
-        private static Error? Refusal(string tool, string status)
+        private static Error? Refusal(string tool, string status, JsonObject evidence)
         {
             switch (status)
             {
@@ -106,7 +106,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "NotSupportedOnVersion": case "NativeCrashRiskBlocked": case "UNSUPPORTED_CAPABILITY"
                     : return new Error("The target or version does not support this capability.",
                         new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null));
-                case "InvalidParams": case "INVALID_ARGUMENT": return McpServer.InvalidInput("arguments");
+                case "InvalidParams": case "INVALID_ARGUMENT":
+                    return new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, evidence));
                 case "PRECONDITION_FAILED"
                     : return new Error("The operation's preconditions were not satisfied.", new PreconditionFailedDetails("classic-motion", null));
                 default: return null;

@@ -433,13 +433,18 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 
 - `error` MUST 恰好包含 `code`、`message`、`details` 三个字段（DES-4 增加 `innererror` 时同步修改本条，第 6.5 节）。生产者拒绝未知错误码；跨版本消费者 MUST 容忍未知字段和错误码，按 `meta.outcome` 处理。
 - `message` 是非空、稳定的英文文本，不承担机器语义，消费者 SHOULD NOT 解析它；填写 `details` 字段不得改变 `message`。
-- `details` 是按错误码定型的对象（`ErrorDetails` 封闭联合）：文本字段为 `string|null`，列表为 `string[]`（无值为 `[]`）。参数错误 MUST 在 `parameter` 中给出第一个出错字段或 JSON 路径，`parameters` 列出全部出错字段且始终输出；整体或重复字段错误可以指向 `arguments`。
+- `details` 是按错误码定型的对象（`ErrorDetails` 封闭联合），文本字段为 `string|null`，列表为 `string[]`（无值为 `[]`）。
+  参数错误 MUST 在 `parameter` 中给出第一个出错字段的 RFC 6901 JSON 指针，`parameters` 列出全部出错指针且始终输出。整体或重复字段错误用根指针 `""`。
+  指针只包含工具 inputSchema 声明的名称和实际数组的索引，声明名称逐段转义 `~0`、`~1`。未声明的调用方键和以键承载数据的映射指向最近的已声明父节点。
+  批量子工具错误的全部指针带 `/operations/<index>/arguments` 前缀。
+- 每个 `INVALID_ARGUMENT.details` MUST 输出 `expected`（`string|null`），描述期望的类型或形式。
+  固定枚举在 inputSchema 中声明，枚举错误的 `allowedValues` 给出允许值，填写这些详情保持现有 `message`。
 - `details` 和 `data` MUST NOT 包含堆栈或凭据：键名含 `stack` 或等于 `password` 的字段被删除，多行异常文本替换为 `Diagnostic details retained in the server log.`，盘符或 UNC 路径替换为 `<path>`（SEC-06）。
 - 兜底分支 MUST NOT 选用 `INVALID_ARGUMENT`，除非能证明是输入错误；无法分类时用 `NATIVE_OPERATION_FAILED` 或 `INTERNAL_ERROR` 并保留证据（API-14）。
 
 | code | 何时使用 | details | outcome |
 |---|---|---|---|
-| `INVALID_ARGUMENT` | 类型、枚举、未知或重复字段、大小写重复、二次 JSON 编码、缺少 apply 参数 | `parameter`、`parameters`、`allowedValues` | rejected |
+| `INVALID_ARGUMENT` | 类型、枚举、未知或重复字段、大小写重复、二次 JSON 编码、缺少 apply 参数 | `parameter`、`parameters`、`allowedValues`、`expected` | rejected |
 | `LIMIT_EXCEEDED` | 数量、长度、深度或字节预算超限（如批次超过 50 项、worker 请求帧超限） | `parameter`、`limit`、`actual` | rejected |
 | `UNSUPPORTED_CAPABILITY` | 本发布键、动作或对象不支持；UI 工具出现在批次中 | `releaseKey`、`capability`、`action` | rejected |
 | `TOOL_NOT_FOUND` | `CallTool`、`GetToolUsage` 或 worker 的目标不在任何版本的目录中 | `tool` | rejected |
@@ -715,8 +720,8 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 ### 6.5 错误与诊断编号
 
-- MUST：错误对象符合第 4.6 节；参数错误在 `details.parameter` 中指出出错的参数，`parameters` 列出全部出错字段，枚举错误给出 `allowedValues`。
-- 现状偏差：schema 校验失败时 `parameter` 有时只写 `arguments`，部分枚举错误没有列出允许值，个别消息指错了领域（API-04、API-14）。
+- 错误对象 MUST 符合第 4.6 节，参数错误的 `details.parameter` 和 `parameters` 使用 JSON 指针，`expected` 始终输出期望的类型或形式，枚举错误给出 `allowedValues`。
+- DES-4R2 实现输入 schema、派发前宿主校验和批量行的参数详情，整体和重复字段错误使用根指针。原生证据缺少字段身份时保留根指针，宿主只采纳工具 schema 已声明的 adapter `ParamName`。个别领域消息的修订由后续任务处理（API-04、API-14）。
 - 已决定、由 DES-4 实施（维护者 2026-11-01，依据 [Azure REST API Guidelines 的 Handling Errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors)）：每个 `INVALID_ARGUMENT` 用 JSON 指针写出准确的参数路径和期望的类型或形式；错误对象增加 `innererror`，承载原生异常类型、HResult 等下层信息，字段名和位置由 DES-4 定稿并同步修改第 4.6 节“恰好三个字段”的规则；`details` 中的 `target` 与 `parameter` 继续表示出错的对象或参数。
 - 已决定、由 DES-4 实施：每个原生失败信封返回去敏后的原生消息首行、原生异常类型、HResult 和关联服务器日志的 `diagnosticId`，堆栈与多行详情只进日志；`GetNativeInvocationLog` 支持按请求号和诊断编号筛选并分页，超出上限的 `take` 返回 `INVALID_ARGUMENT` 并给出上限。现状：只有 `INTERNAL_ERROR` 带 `diagnosticId`，`nativeMessage` 多数为空。去敏沿用 SEC-06。
 

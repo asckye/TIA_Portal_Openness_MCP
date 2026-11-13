@@ -26,10 +26,10 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static void Check(Action validation)
         {
             try { validation(); }
-            catch (ArgumentException) /* swallow(privacy): legacy validators can contain caller values */
-            { throw new InputFailureException(McpServer.InvalidInput("arguments")); }
+            catch (ArgumentException error) /* swallow(privacy): legacy validators can contain caller values */
+            { throw new InputFailureException(McpServer.InvalidInput(error.ParamName ?? "")); }
             catch (JsonException) /* swallow(privacy): malformed typed values are rejected before native work */
-            { throw new InputFailureException(McpServer.InvalidInput("arguments")); }
+            { throw new InputFailureException(McpServer.InvalidInput("")); }
             catch (NotSupportedException) /* swallow(privacy): preserve capability rejection without native details */
             {
                 throw new InputFailureException(new Error("This operation is unavailable.",
@@ -53,7 +53,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     || portal.Code == PortalErrorCode.InvalidState || portal.Code == PortalErrorCode.NotSupportedOnVersion))
                 {
                     ErrorDetails details = portal.Code == PortalErrorCode.NotFound ? new NotFoundDetails(null)
-                        : portal.Code == PortalErrorCode.InvalidParams ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                        : portal.Code == PortalErrorCode.InvalidParams
+                            ? McpServer.ArgumentDetails(tool, TiaOpenness.Shared.HostFailurePolicy.Parameter(portal))
                         : portal.Code == PortalErrorCode.NotSupportedOnVersion ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
                         : new PreconditionFailedDetails("engineering-session", null);
                     return Result(tool, null, new Error("The engineering prerequisites were not satisfied.", details), Outcome.RejectedBeforeOperation,
@@ -139,7 +140,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ErrorDetails details = status == "NOT_FOUND" || status == "NotFound" ? new NotFoundDetails(null)
                     : status == "UNSUPPORTED_CAPABILITY" || status == "NotSupported" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
                     : status == "ALREADY_EXISTS" ? new AlreadyExistsDetails(null)
-                    : status == "INVALID_ARGUMENT" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                    : status == "INVALID_ARGUMENT" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : new PreconditionFailedDetails("engineering-before-operation", null);
                 error =
                     new Error(refusedScreenItemImport ? screenItemRefusal : nativeMessage ?? "The engineering request was rejected before execution.", details);

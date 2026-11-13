@@ -22,7 +22,8 @@ public sealed class B1BatchGoldenTests
     {
         using var scope = EngineHostParity.EnterScope();
         const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
-        object? Invoke(string method, params object?[] values) => typeof(Host).GetMethod(method, flags)!.Invoke(null, values);
+        object? Invoke(string method, params object?[] values) => typeof(Host).GetMethods(flags)
+            .Single(m => m.Name == method && m.GetParameters().Length == values.Length).Invoke(null, values);
         var data = new JsonObject { ["Message"] = name, ["Meta"] = new JsonObject {
             ["rows"] = new JsonArray(1, "中文", null), ["timestamp"] = "2001-02-03T04:05:06.1234567+08:00"
         } };

@@ -62,8 +62,8 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(accepted, element.IsValid);
             if (!accepted)
             {
-                Invalid(text.Error);
-                Invalid(element.Error);
+                Invalid(text.Error, ExpectedPointer<T>(json));
+                Invalid(element.Error, ExpectedPointer<T>(json));
                 return;
             }
             var old = V4Json.Deserialize<T>(json);
@@ -163,7 +163,7 @@ namespace TiaMcp.Engine.Tests
             foreach (string invalid in new[] { "{\"secret-canary\":true}", "{\"palette\":{\"Text\":\"secret-canary\"}}", "{secret-canary" })
             {
                 var error = contract.Read(invalid, "design").Error;
-                Invalid(error);
+                Invalid(error, invalid.Contains("\"Text\"", StringComparison.Ordinal) ? "/design/palette/Text" : "/design");
                 Assert.DoesNotContain("secret-canary", V4Json.Serialize(error));
             }
         }
@@ -173,12 +173,12 @@ namespace TiaMcp.Engine.Tests
         {
             var outer = new InputSchema(Json(HmiSchemas.InputSchema<UnifiedScreenSpec>("design").ToJsonString()));
             Assert.Null(outer.Validate(Json("""{"design":{"items":[{"type":"Text","name":"A"}]}}"""), "design"));
-            Invalid(outer.Validate(Json("""{"design":{"items":[{"type":"Lamp","name":"A"}]}}"""), "design"));
+            Invalid(outer.Validate(Json("""{"design":{"items":[{"type":"Lamp","name":"A"}]}}"""), "design"), "/design/design/items/0");
             var theme = HmiInputs.Contract<UnifiedThemeSpec>();
             Assert.True(theme.Read("""{"palette":{"Text":"0xFF000000","text":"shadowed"}}""", "design").IsValid);
-            Invalid(theme.Read("""{"palette":{"text":"shadowed"}}""", "design").Error);
+            Invalid(theme.Read("""{"palette":{"text":"shadowed"}}""", "design").Error, "/design/palette/text");
             var layout = HmiInputs.Contract<UnifiedLayoutSpec>();
-            Invalid(layout.Read("""{"items":[{"name":"A","text":"unused"}]}""", "design").Error);
+            Invalid(layout.Read("""{"items":[{"name":"A","text":"unused"}]}""", "design").Error, "/design/items/0/text");
             Assert.True(layout.Read("""{"items":[{"name":"A","type":"Text","text":""}]}""", "design").IsValid);
             var conditional = new InputSchema(Json("""{"if":{"const":true},"then":{"type":"boolean"},"else":{"type":"string"}}"""));
             Assert.Null(conditional.Validate(Json("true"), "design"));
@@ -210,12 +210,136 @@ namespace TiaMcp.Engine.Tests
             Assert.Throws<ArgumentException>(() => new InputSchema(Json(new JsonObject { ["$defs"] = definitions }.ToJsonString())));
         }
 
+        private static string ExpectedPointer<T>(string json) =>
+            ExactPointers.TryGetValue((typeof(T), json), out var pointer) ? pointer : "/design";
+
+        // DES-4R2 pins only the approved field-identity changes for the existing cases.
+        private static readonly IReadOnlyDictionary<(Type Type, string Json), string> ExactPointers =
+            new Dictionary<(Type Type, string Json), string> {
+                [(typeof(ClassicPackageSpec),
+                    "{\"name\":\"P\",\"screenDesign\":{\"items\":[]},\"tagTable\":{\"name\":\"T\",\"t"
+                    + "ags\":[]}}")] = "/design/tagTable/tags",
+                [(typeof(ClassicPackageSpec), "{\"name\":\"P\",\"screenDesign\":{\"items\":[]}}")] = "/design/tagTable",
+                [(typeof(ClassicPackageSpec),
+                    "{\"name\":\"P\",\"tagTable\":{\"name\":\"T\",\"tags\":[{\"name\":\"A\",\"dataType\""
+                    + ":\"Bool\"}]}}")] = "/design/screenDesign",
+                [(typeof(ClassicPackageSpec),
+                    "{\"name\":null,\"screenDesign\":{\"items\":[]},\"tagTable\":{\"name\":\"T\",\""
+                    + "tags\":[{\"name\":\"A\",\"dataType\":\"Bool\"}]}}")] = "/design/name",
+                [(typeof(ClassicPackageSpec), "{}")] = "/design/name",
+                [(typeof(ClassicScreenSpec), "{\"items\":[1]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[],\"screen\":null}")] = "/design/screen",
+                [(typeof(ClassicScreenSpec), "{\"items\":[null]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"name\":\" \",\"type\":\"Text\"}]}")] = "/design/items/0/name",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"name\":\"A\",\"type\":\"Text\",\"height\":-1}]}")] = "/design/items/0/height",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"name\":\"A\",\"type\":\"Text\",\"left\":-1}]}")] = "/design/items/0/left",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"name\":\"A\",\"type\":\"Text\",\"width\":0}]}")] = "/design/items/0/width",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"name\":\"A\"}]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"Button\",\"name\":\"A\",\"actions\":[null]}]}")] = "/design/items/0/actions/0",
+                [(typeof(ClassicScreenSpec),
+                    "{\"items\":[{\"type\":\"Button\",\"name\":\"A\",\"actions\":[{\"event\":\"Press\""
+                    + ",\"actionKind\":\"SetBit\",\"targetTag\":\"T\",\"other\":1}]}]}")] = "/design/items/0/actions/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"Gauge\",\"name\":\"A\"}]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"HmiText\",\"name\":\"A\"}]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"IOField\",\"name\":\"A\",\"text\":\"unused\"}]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec),
+                    "{\"items\":[{\"type\":\"Rectangle\",\"name\":\"A\",\"properties\":{\"foreColor"
+                    + "\":\"0xFF000000\"}}]}")] = "/design/items/0/properties",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"Rectangle\",\"name\":\"A\",\"text\":\"unused\"}]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"font\":{}}]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"left\":null}]}")] = "/design/items/0/left",
+                [(typeof(ClassicScreenSpec),
+                    "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"properties\":{\"foreColor\":nul"
+                    + "l}}]}")] = "/design/items/0/properties/foreColor",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"text\":{\"en-US\":null}}]}")] = "/design/items/0/text",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"width\":1.5}]}")] = "/design/items/0/width",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"width\":2147483648}]}")] = "/design/items/0/width",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"TextField\",\"name\":\"A\"}]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":[{\"type\":\"text\",\"name\":\"A\"}]}")] = "/design/items/0",
+                [(typeof(ClassicScreenSpec), "{\"items\":null}")] = "/design/items",
+                [(typeof(ClassicScreenSpec), "{\"screen\":{\"name\":\"S\",\"height\":239},\"items\":[]}")] = "/design/screen/height",
+                [(typeof(ClassicScreenSpec), "{\"screen\":{\"name\":\"S\",\"width\":319},\"items\":[]}")] = "/design/screen/width",
+                [(typeof(ClassicScreenSpec), "{}")] = "/design/items",
+                [(typeof(ClassicTagTableSpec), "{\"name\":\"\",\"tags\":[{\"name\":\"A\",\"dataType\":\"Bool\"}]}")] = "/design/name",
+                [(typeof(ClassicTagTableSpec), "{\"name\":\"T\",\"tags\":[]}")] = "/design/tags",
+                [(typeof(ClassicTagTableSpec), "{\"name\":\"T\",\"tags\":[{\"name\":\"\",\"dataType\":\"Bool\"}]}")] = "/design/tags/0/name",
+                [(typeof(ClassicTagTableSpec), "{\"name\":null,\"tags\":[{\"name\":\"A\",\"dataType\":\"Bool\"}]}")] = "/design/name",
+                [(typeof(ClassicTagTableSpec), "{}")] = "/design/name",
+                [(typeof(DeviceAmlSpec), "{\"devices\":[],\"projectName\":\"Project\"}")] = "/design/devices",
+                [(typeof(DeviceAmlSpec),
+                    "{\"devices\":[{\"name\":\" \",\"typeIdentifier\":\"x\",\"deviceItems\":[]}],\""
+                    + "projectName\":\"Project\"}")] = "/design/devices/0/name",
+                [(typeof(DeviceAmlSpec),
+                    "{\"devices\":[{\"name\":\"D\",\"typeIdentifier\":\" \",\"deviceItems\":[]}],\""
+                    + "projectName\":\"Project\"}")] = "/design/devices/0/typeIdentifier",
+                [(typeof(DeviceAmlSpec),
+                    "{\"devices\":[{\"name\":\"D\",\"typeIdentifier\":\"x\",\"deviceItems\":[]}],\""
+                    + "subnets\":[{\"name\":\" \"}],\"projectName\":\"Project\"}")] = "/design/subnets/0/name",
+                [(typeof(DeviceAmlSpec),
+                    "{\"devices\":[{\"name\":\"D\",\"typeIdentifier\":\"x\",\"deviceItems\":[{\"nam"
+                    + "e\":\"M\",\"role\":\"Module\",\"typeIdentifier\":\"y\"}]}],\"projectName\":\"Pr"
+                    + "oject\"}")] = "/design/devices/0/deviceItems/0/role",
+                [(typeof(DeviceAmlSpec),
+                    "{\"devices\":[{\"name\":\"D\",\"typeIdentifier\":\"x\",\"deviceItems\":[{\"nam"
+                    + "e\":\"M\"}]}],\"projectName\":\"Project\"}")] = "/design/devices/0/deviceItems/0",
+                [(typeof(DeviceAmlSpec),
+                    "{\"projectName\":\"P\",\"devices\":[{\"name\":\"D\",\"typeIdentifier\":\"x\",\"d"
+                    + "eviceItems\":[{\"name\":\"I\",\"builtIn\":true,\"attributes\":{\"A\":null}}]"
+                    + "}]}")] = "/design/devices/0/deviceItems/0/attributes",
+                [(typeof(DeviceAmlSpec),
+                    "{\"projectName\":\"P\",\"devices\":[{\"name\":\"D\",\"typeIdentifier\":\"x\",\"d"
+                    + "eviceItems\":[{\"name\":\"I\",\"builtIn\":true,\"nodes\":null}]}]}")] = "/design/devices/0/deviceItems/0/nodes",
+                [(typeof(DeviceAmlSpec),
+                    "{\"projectName\":null,\"devices\":[{\"name\":\"D\",\"typeIdentifier\":\"x\",\""
+                    + "deviceItems\":[]}]}")] = "/design/projectName",
+                [(typeof(DeviceAmlSpec), "{}")] = "/design/projectName",
+                [(typeof(UnifiedLayoutSpec), "{\"items\":[1]}")] = "/design/items/0",
+                [(typeof(UnifiedLayoutSpec), "{\"items\":[{\"name\":\" \"}]}")] = "/design/items/0/name",
+                [(typeof(UnifiedLayoutSpec), "{\"items\":[{\"name\":\"A\",\"type\":\"Lamp\"}]}")] = "/design/items/0/type",
+                [(typeof(UnifiedLayoutSpec), "{\"items\":null}")] = "/design/items",
+                [(typeof(UnifiedLayoutSpec), "{}")] = "/design/items",
+                [(typeof(UnifiedScreenSpec),
+                    "{\"items\":[{\"type\":\"IOField\",\"name\":\"A\",\"properties\":{\"ProcessValue\":1}}]}")] = "/design/items/0/properties",
+                [(typeof(UnifiedScreenSpec),
+                    "{\"items\":[{\"type\":\"IOField\",\"name\":\"A\",\"properties\":{\"backColor\":\"0xFF000000\"}}]}")] = "/design/items/0/properties",
+                [(typeof(UnifiedScreenSpec),
+                    "{\"items\":[{\"type\":\"Rectangle\",\"name\":\"A\",\"properties\":{\"ForeColor\":\"0xFF000000\"}}]}")] = "/design/items/0/properties",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"properties\":{\" \":1}}]}")] = "/design/items/0/properties",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Lamp\",\"name\":\"A\"}]}")] = "/design/items/0",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Rectangle\",\"name\":\"A\",\"text\":\"A\"}]}")] = "/design/items/0",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"Properties\":{}}]}")] = "/design/items/0",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"actions\":[]}]}")] = "/design/items/0",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"processValueTag\":\"T\"}]}")] = "/design/items/0",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"properties\":{\"Name\":{}}}]}")] = "/design/items/0/properties",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"text\":null}]}")] = "/design/items/0/text",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"text\":{\"en-US\":\"A\"}}]}")] = "/design/items/0/text",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"textProperty\":\"text\"}]}")] = "/design/items/0",
+                [(typeof(UnifiedScreenSpec), "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"width\":\"120\"}]}")] = "/design/items/0/width",
+                [(typeof(UnifiedScreenSpec), "{\"items\":null}")] = "/design/items",
+                [(typeof(UnifiedScreenSpec), "{}")] = "/design/items",
+                [(typeof(UnifiedThemeSpec), "{\"palette\":null}")] = "/design/palette",
+                [(typeof(UnifiedThemeSpec), "{\"palette\":{\"Background\":\"#FFAabb00\"}}")] = "/design/palette/Background",
+                [(typeof(UnifiedThemeSpec), "{\"palette\":{\"Border\":\"#FFAabb00\"}}")] = "/design/palette/Border",
+                [(typeof(UnifiedThemeSpec), "{\"palette\":{\"Page\":\"#FFAabb00\"}}")] = "/design/palette/Page",
+                [(typeof(UnifiedThemeSpec), "{\"palette\":{\"Surface\":\"#FFAabb00\"}}")] = "/design/palette/Surface",
+                [(typeof(UnifiedThemeSpec), "{\"palette\":{\"Text\":\"#FFAabb00\"}}")] = "/design/palette/Text",
+                [(typeof(UnifiedThemeSpec), "{\"palette\":{\"Text\":\"0xFFFFFFFFF\"}}")] = "/design/palette/Text",
+                [(typeof(UnifiedThemeSpec), "{\"palette\":{\"Text\":null}}")] = "/design/palette/Text",
+                [(typeof(UnifiedThemeSpec), "{}")] = "/design/palette",
+            };
+
         private static JsonElement Json(string json) => V4Json.Deserialize<JsonElement>(json);
         private static void Invalid(Error? error)
         {
             Assert.NotNull(error);
             Assert.Equal(ErrorCode.InvalidArgument, error.Code);
-            Assert.Equal("design", Assert.IsType<InvalidArgumentDetails>(error.Details).Parameter);
+            Assert.Equal("/design", Assert.IsType<InvalidArgumentDetails>(error.Details).Parameter);
+        }
+        private static void Invalid(Error? error, string pointer)
+        {
+            Assert.NotNull(error);
+            Assert.Equal(ErrorCode.InvalidArgument, error.Code);
+            Assert.Equal(pointer, Assert.IsType<InvalidArgumentDetails>(error.Details).Parameter);
         }
         private static void Limit(Error? error, int limit, int actual)
         {

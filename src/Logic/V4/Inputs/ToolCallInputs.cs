@@ -49,8 +49,9 @@ namespace TiaMcp.Logic.V4.Inputs
             {
                 InputGuard.Require(nesting == 0);
                 var normalized = new List<ToolCall>();
-                foreach (var call in calls)
+                for (int index = 0; index < calls.Length; index++)
                 {
+                    var call = calls[index];
                     InputGuard.Require(catalog.TryGetValue(call.Name, out _) && Admitted(catalog[call.Name]));
                     var target = catalog[call.Name];
                     var arguments = call.Arguments;
@@ -62,8 +63,8 @@ namespace TiaMcp.Logic.V4.Inputs
                         fields["dryRun"] = V4Json.Deserialize<JsonElement>("true");
                         arguments = new ToolArguments(V4Json.Data(fields)!.Value);
                     }
-                    var result = Arguments(target).Validate(arguments, "arguments");
-                    InputGuard.Result(result.Error);
+                    var result = Arguments(target).Validate(arguments, "");
+                    InputGuard.Result(result.Error, "/" + index.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/arguments");
                     normalized.Add(new ToolCall(call.Name, result.Value));
                 }
                 return normalized.ToArray();

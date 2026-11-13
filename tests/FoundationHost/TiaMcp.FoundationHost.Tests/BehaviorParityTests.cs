@@ -63,7 +63,7 @@ public sealed class BehaviorParityTests
                 var shared = JsonNode.Parse(EngineHostParity.RunPrecondition(tool, message, parameter, argument, wrapped, true, args.ToJsonString()))!;
                 Assert.True(JsonNode.DeepEquals(BehaviorParityCases.Project(engine), BehaviorParityCases.Project(shared)));
                 Assert.Contains(message, (string?)engine["error"]?["message"]);
-                Assert.Equal(parameter, (string?)engine["error"]?["details"]?["parameter"]);
+                Assert.Equal(argument ? "/" + parameter : parameter, (string?)engine["error"]?["details"]?["parameter"]);
                 foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
                 {
                     Exception cause = new AdapterPreconditionException(message, parameter, argument);

@@ -242,8 +242,8 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Theory]
-        [InlineData("offset/limit", "offset", "limit")]
-        [InlineData("a, b", "a", "b")]
+        [InlineData("offset/limit", "/offset", "/limit")]
+        [InlineData("a, b", "/a", "/b")]
         public void Multiple_parameters_roundtrip_without_changing_message(string parameters, string first, string second)
         {
             const string message = "Input does not satisfy the declared contract.";
@@ -262,7 +262,7 @@ namespace TiaMcp.Engine.Tests
         [InlineData("properties.Name")]
         public void Parameter_validation_always_identifies_a_field(string? parameter)
         {
-            Assert.Equal(parameter ?? "arguments", new InvalidArgumentDetails(parameter, Array.Empty<string>()).Parameter);
+            Assert.Equal(parameter == null ? "" : "/" + parameter, new InvalidArgumentDetails(parameter, Array.Empty<string>()).Parameter);
             Assert.Equal(parameter ?? "arguments", new LimitExceededDetails(parameter, 1, 2).Parameter);
         }
 
@@ -272,7 +272,7 @@ namespace TiaMcp.Engine.Tests
             var details = new InvalidArgumentDetails("/steps/0/arguments", Array.Empty<string>());
             Assert.Equal("/steps/0/arguments", details.Parameter);
             Assert.Equal(new[] { "/steps/0/arguments" }, details.Parameters);
-            Assert.Equal("arguments", new InvalidArgumentDetails("", Array.Empty<string>()).Parameter);
+            Assert.Equal("", new InvalidArgumentDetails("", Array.Empty<string>()).Parameter);
         }
 
         [Fact]

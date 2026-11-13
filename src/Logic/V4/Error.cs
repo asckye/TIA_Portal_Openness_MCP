@@ -41,17 +41,32 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(0)] public string? Parameter { get; }
         [JsonPropertyOrder(1)] public IReadOnlyList<string> AllowedValues { get; }
         [JsonPropertyOrder(2)] public IReadOnlyList<string> Parameters { get; }
+        [JsonPropertyOrder(3)] public string? Expected { get; }
         internal bool WholeArgumentValidation { get; set; }
-        public InvalidArgumentDetails(string? parameter, IReadOnlyList<string> allowedValues, IReadOnlyList<string>? parameters = null)
+        public InvalidArgumentDetails(string? parameter, IReadOnlyList<string> allowedValues,
+            IReadOnlyList<string>? parameters = null, string? expected = null)
         {
-            string target = string.IsNullOrWhiteSpace(parameter) ? "arguments" : parameter!;
+            string target = parameter ?? "";
             var fields = parameters ?? (target.StartsWith("/", System.StringComparison.Ordinal) ? new[] { target }
                 : target.Split(new[] { ',', '/' }, System.StringSplitOptions.RemoveEmptyEntries)
                     .Select(p => p.Trim()).Where(p => p.Length > 0).Distinct(System.StringComparer.Ordinal).ToArray());
-            Parameters = V4Validation.List(fields.Count > 0 ? fields : new[] { "arguments" });
-            Parameter = Parameters.FirstOrDefault() ?? "arguments";
+            Parameters = V4Validation.List((fields.Count > 0 ? fields : new[] { "" })
+                .Select(Pointer).Distinct(System.StringComparer.Ordinal).ToArray());
+            Parameter = Parameters[0];
             AllowedValues = V4Validation.List(allowedValues);
+            Expected = expected ?? (allowedValues.Count > 0 ? "one of the allowed values" : null);
             V4Validation.Details(this);
+        }
+
+        internal static string Segment(string name) => name.Replace("~", "~0").Replace("/", "~1");
+        internal static string Pointer(string name) => name.Length == 0 || name.StartsWith("/", System.StringComparison.Ordinal)
+            ? name : "/" + Segment(name);
+
+        internal static Error Prefix(Error error, string prefix)
+        {
+            if (error.Details is not InvalidArgumentDetails details) return error;
+            var pointers = details.Parameters.Select(p => prefix + p).ToArray();
+            return new Error(error.Message, new InvalidArgumentDetails(pointers[0], details.AllowedValues, pointers, details.Expected));
         }
     }
 

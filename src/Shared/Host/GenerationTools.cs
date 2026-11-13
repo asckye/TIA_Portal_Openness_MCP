@@ -101,7 +101,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (ArgumentException ex)
             {
-                error = new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "arguments", Array.Empty<string>()));
+                error = new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "", Array.Empty<string>()));
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)

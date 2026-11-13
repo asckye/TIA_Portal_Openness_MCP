@@ -149,7 +149,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["versionAvailable"] = false;
                 return new ResponseStringList { Message = versionProblem, Meta = meta };
             }
-            var report = PreflightLogic.Analyze(specs, args);
+            var report = PreflightLogic.Analyze(specs, args, discloseUnknownNames: false);
             if (canonical == "PrefillWorkbenchForm" && args["form"] is JsonValue form && form.TryGetValue<string>(out var formName)
                 && args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var modeName) && args["fields"] is JsonObject fields)
             {
@@ -160,8 +160,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (CanonicalToolParameters.ValidateAliases(canonical, args, method.ImplementationRequired) is { } aliasProblem)
             {
                 var details = (InvalidArgumentDetails)aliasProblem.Details;
-                if (details.Parameter is { } parameter && CanonicalToolParameters.Aliases(canonical).Any(alias => alias.Legacy == parameter)
-                    && !args.ContainsKey(parameter)) report.Missing.Add(parameter);
+                var missing = CanonicalToolParameters.Aliases(canonical)
+                    .FirstOrDefault(alias => details.Parameter == "/" + InvalidArgumentDetails.Segment(alias.Legacy));
+                if (missing != null && !args.ContainsKey(missing.Legacy)) report.Missing.Add(missing.Legacy);
                 else report.TypeProblems.Add(aliasProblem.Message);
             }
 #endif

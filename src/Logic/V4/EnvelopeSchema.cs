@@ -58,8 +58,14 @@ namespace TiaMcp.Logic.V4
                 return new JsonObject { ["type"] = "object" };
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyList<>))
                 return new JsonObject { ["type"] = "array", ["items"] = Describe(type.GetGenericArguments()[0]) };
-            return Object(type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            var result = Object(type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(p => (JsonNamingPolicy.CamelCase.ConvertName(p.Name), (JsonNode)Describe(p.PropertyType))).ToArray());
+            if (type == typeof(InvalidArgumentDetails))
+            {
+                result["properties"]!["parameter"] = new JsonObject { ["type"] = "string" };
+                result["properties"]!["parameters"]!["items"] = new JsonObject { ["type"] = "string" };
+            }
+            return result;
         }
 
         private static JsonObject Object(params (string Name, JsonNode Schema)[] fields)

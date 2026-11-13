@@ -59,7 +59,19 @@ internal static class PortedToolContract
         // The readiness guard of a bridged call asks whether this target refuses its arguments by capability (P8-04j2).
         // The answer depends only on the release, the tool and the arguments, so any registered instance answers it.
         McpServer.PortedCapabilityRefusals[(tool.Release, tool.ProtocolTool.Name)] = tool.RefusesByCapability;
-        return tool.CapabilityAdmission(McpServer.WrapToolsForRelease(new[] { tool.ValidatedTool() }, tool.Release).Single());
+        return new ArgumentResultTool(tool.CapabilityAdmission(McpServer.WrapToolsForRelease(new[] { tool.ValidatedTool() }, tool.Release).Single()));
+    }
+
+    private sealed class ArgumentResultTool(McpServerTool inner) : McpServerTool
+    {
+        public override Tool ProtocolTool => inner.ProtocolTool;
+        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            return FoundationV4Result.RestrictArguments(result, ProtocolTool.InputSchema,
+                JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>()));
+        }
     }
 
     // The primary module operation comes first; previews and fallback reads are
@@ -238,6 +250,9 @@ internal sealed partial class FoundationTool
         this.worker = worker; portedMethod = method; portedRelease = release;
         var declaration = DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor, release);
         DeclaredToolMetadata.V4(declaration.ProtocolTool, foundation: true);
+        var schema = JsonNode.Parse(declaration.ProtocolTool.InputSchema.GetRawText())!.AsObject();
+        TiaMcpServer.ModelContextProtocol.SchemaHintsLogic.DeclareArgumentEnums(name, schema);
+        declaration.ProtocolTool.InputSchema = JsonSerializer.SerializeToElement(schema);
         portedDescriptor = descriptor; tool = declaration.ProtocolTool;
         definition = new Definition(name, PortedFamilies.ForTool(name).OperationPrefix, descriptor.RawDescription,
             descriptor.Parameters.Select(p => new Argument(p.Name, p.FriendlyType, p.Required)).ToArray(), PortedFamilies.ForTool(name).Name);

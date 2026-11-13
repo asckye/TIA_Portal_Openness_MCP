@@ -137,7 +137,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (ArgumentException error)
             {
                 return V4Reject(name, new Error("Filesystem target is invalid or too long to display.",
-                    new InvalidArgumentDetails(error.ParamName ?? "arguments", Array.Empty<string>())));
+                    new InvalidArgumentDetails(error.ParamName ?? "", Array.Empty<string>())));
             }
             var fenced = GenerationFenceRefusal(name, arguments);
             if (fenced != null) return fenced;

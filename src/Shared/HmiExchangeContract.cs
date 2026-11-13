@@ -32,21 +32,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 Exception cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;
                 var evidence = new JsonObject { ["exceptionType"] = cause.GetType().Name };
-                var rejection = cause is PortalException portal ? Rejection(portal.Code.ToString(), portal.Message)
-                    : cause is NotSupportedException ? Rejection("NotSupportedOnVersion", cause.Message)
-                    : cause is ArgumentException ? Rejection("InvalidParams") : null;
+                var rejection = cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
+                        parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(portal))
+                    : cause is NotSupportedException ? Rejection(tool, "NotSupportedOnVersion", cause.Message)
+                    : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", parameter: argument.ParamName) : null;
                 var outcome = rejection != null ? Outcome.RejectedBeforeOperation : writes ? Outcome.Unknown : Outcome.ReadFailed;
                 return Result(tool, new JsonObject { ["evidence"] = evidence }, rejection ?? Failure(outcome, evidence),
                     outcome, outcome == Outcome.RejectedBeforeOperation ? Completeness.None : Completeness.Unknown, writes, current);
             }
         }
 
-        private static Error? Rejection(string? status, string? message = null)
+        private static Error? Rejection(string tool, string? status, string? message = null, JsonObject? evidence = null, string? parameter = null)
         {
             ErrorDetails? details = status == "InvalidState" && message?.StartsWith("HMI import target already exists:", StringComparison.Ordinal) == true
                 ? new PreconditionFailedDetails(message, null)
                 : status == "InvalidState" ? new ProjectNotBoundDetails()
-                : status == "InvalidParams" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                : status == "InvalidParams" ? McpServer.ArgumentDetails(tool, parameter, evidence)
                 : status == "ImportTargetExists" ? new PreconditionFailedDetails("HMI import target already exists; set overwrite=true explicitly.", null)
                 : status == "NotFound" ? new NotFoundDetails(null)
                 : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "HMI exchange", null) : null;
@@ -82,7 +83,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 || Flag("connectionUnavailable") == true
                 || Flag("verifiedAbsent") == false || (success != true && changed && Flag("nativeSuccess") != true)
                 || (success != true && files && Flag("apiCallSuccess") != true && Flag("partialArtifactExists") != true));
-            var rejection = Flag("importOverwriteRefused") == true ? Rejection("ImportTargetExists") : Rejection(status);
+            var rejection = Flag("importOverwriteRefused") == true
+                ? Rejection(tool, "ImportTargetExists") : Rejection(tool, status, evidence: evidence);
             Outcome outcome;
             Error? error = null;
             if (status == "HmiReadSessionBlocked")
@@ -110,7 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if ((string?)evidence["capability"] == "unsupported")
                 {
                     outcome = Outcome.RejectedBeforeOperation;
-                    error = Rejection("NotSupportedOnVersion");
+                error = Rejection(tool, "NotSupportedOnVersion");
                 }
                 if (outcome == Outcome.RejectedBeforeOperation && error == null)
                     error = new Error("The HMI request was rejected before the operation.", new PreconditionFailedDetails("HMI operation prerequisites", null));

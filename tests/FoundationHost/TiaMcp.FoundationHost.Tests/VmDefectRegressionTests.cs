@@ -23,7 +23,7 @@ public sealed class VmDefectRegressionTests
         var result = Host.McpServer.CallTool("GetUnifiedRuntimeSettings", new ToolArguments(JsonSerializer.SerializeToElement(
             new { softwarePath = "HMI_RT_1", expectedProject = project })));
         Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.Equal("expectedProject", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+        Assert.Equal("/expectedProject", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
         Assert.Contains("NAME", (string)result.StructuredContent!["error"]!["message"]!);
         Assert.False((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
     }

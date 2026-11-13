@@ -56,7 +56,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     || portal.Code == PortalErrorCode.InvalidState || portal.Code == PortalErrorCode.NotSupportedOnVersion))
                 {
                     ErrorDetails details = portal.Code == PortalErrorCode.NotFound ? new NotFoundDetails(null)
-                        : portal.Code == PortalErrorCode.InvalidParams ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                        : portal.Code == PortalErrorCode.InvalidParams
+                            ? McpServer.ArgumentDetails(tool, TiaOpenness.Shared.HostFailurePolicy.Parameter(portal))
                         : portal.Code == PortalErrorCode.NotSupportedOnVersion ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                         : new PreconditionFailedDetails("engineering-session", null);
                     return Result(tool, null,
@@ -141,7 +142,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.RejectedBeforeOperation;
                 ErrorDetails details = status == "NOT_FOUND" || status == "NotFound" ? new NotFoundDetails(null)
                     : status == "UNSUPPORTED_CAPABILITY" || status == "NotSupported" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
-                    : status == "INVALID_ARGUMENT" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                    : status == "INVALID_ARGUMENT" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : new PreconditionFailedDetails("engineering-before-operation", null);
                 error = new Error(nativeMessage ?? "The engineering request was rejected before execution.", details);
             }

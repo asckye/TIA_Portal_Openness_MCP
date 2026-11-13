@@ -51,7 +51,9 @@ namespace TiaMcpServer.ModelContextProtocol
             public bool DryRunEffective => DryRunSupported && (DryRunGiven ?? DryRunDefault);
         }
 
-        public static Report Analyze(IReadOnlyList<ParameterSpec> specs, JsonObject args)
+        public static Report Analyze(IReadOnlyList<ParameterSpec> specs, JsonObject args) => Analyze(specs, args, discloseUnknownNames: true);
+
+        public static Report Analyze(IReadOnlyList<ParameterSpec> specs, JsonObject args, bool discloseUnknownNames)
         {
             var report = new Report();
             var seen = new HashSet<string>(StringComparer.Ordinal);
@@ -66,7 +68,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (spec == null)
                 {
                     var near = Nearest(kv.Key, specs.Select(s => s.Name).ToList());
-                    report.Unknown.Add(kv.Key + (near != null ? " (did you mean '" + near + "'?)" : ""));
+                    string suggestion = near != null ? " (did you mean '" + near + "'?)" : "";
+                    report.Unknown.Add(discloseUnknownNames ? kv.Key + suggestion
+                        : "Undeclared input field" + (near == null ? "." : suggestion));
                     continue;
                 }
                 seen.Add(spec.Name);

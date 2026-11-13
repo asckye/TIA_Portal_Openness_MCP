@@ -201,22 +201,24 @@ namespace TiaMcpServer.ModelContextProtocol
             if (operations == null || operations.Length == 0) return InvalidInput("operations");
             if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));
             var targets = new Dictionary<string, ToolTarget>(StringComparer.Ordinal);
-            foreach (var call in operations)
+            for (int index = 0; index < operations.Length; index++)
             {
-                if (call == null) return InvalidInput("operations");
+                var call = operations[index];
+                string row = "/operations/" + index.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                if (call == null) return InvalidInput(row, "object");
                 if (CatalogView.Find(call.Name, includeUnavailable: true)?.Classification.Operation == "UI")
                     return new Error("UI operations cannot run in a batch.", new UnsupportedCapabilityDetails(ReleaseKey, "workbench-ui-batch", call.Name));
                 var args = JsonNode.Parse(call.Arguments.Json.GetRawText())!.AsObject();
                 if (write) args["dryRun"] = true;
                 var error = ToolInvoker.Bind(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out _);
-                if (error != null) return error;
+                if (error != null) return InvalidArgumentDetails.Prefix(error, row + "/arguments");
                 var targetMethod = CatalogView.Find(call.Name, includeUnavailable: true)!;
                 string name = targetMethod.Name;
                 var classification = ClassificationOf(targetMethod);
                 bool orchestration = IsBatchOrchestration(targetMethod);
                 bool read = classification?.BatchRead == true;
                 bool preview = classification?.BatchWrite == true && targetMethod.DryRun.Present;
-                if (orchestration || (write ? !preview : !read)) return InvalidInput("operations");
+                if (orchestration || (write ? !preview : !read)) return InvalidInput(row + "/arguments", "admitted batch tool arguments");
                 targets[call.Name] =
                     new ToolTarget(call.Name, new InputSchema(targetMethod.Tool.InputSchema), new InputBudget(), read, preview, orchestration: orchestration);
             }
@@ -240,10 +242,16 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return BatchPlanStore.Stable(copy);
         }
-        private static JsonObject BatchRow(int index, string target, CallToolResult result) => new JsonObject
-        { ["index"] = index, ["target"] = target, ["result"] = ResultBody(FinishApproval(result, null,
+        private static JsonObject BatchRow(int index, string target, CallToolResult result)
+        {
+            var body = ResultBody(FinishApproval(result, null,
             McpApprovalContext.Value && IsWriteTool(target) && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath)
-                .Enabled)) };
+                .Enabled));
+            if (body?["error"] is JsonObject error && (string?)error["code"] == "INVALID_ARGUMENT")
+                body["error"] = JsonNode.Parse(V4Json.Serialize(InvalidArgumentDetails.Prefix(V4Json.Deserialize<Error>(error.ToJsonString()),
+                    "/operations/" + index.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/arguments")));
+            return new JsonObject { ["index"] = index, ["target"] = target, ["result"] = body };
+        }
 
         private static CallToolResult BatchResult(string tool, JsonArray rows, bool write)
         {

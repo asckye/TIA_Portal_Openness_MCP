@@ -39,7 +39,7 @@ public sealed class DeleteConfirmationTests
         Assert.False((bool)body["ok"]!);
         Assert.Equal(code, (string?)body["error"]?["code"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-        if (code == "INVALID_ARGUMENT") Assert.Equal("expectedProjectFile", (string?)body["error"]?["details"]?["parameter"]);
+        if (code == "INVALID_ARGUMENT") Assert.Equal("/expectedProjectFile", (string?)body["error"]?["details"]?["parameter"]);
         Assert.Equal(0, calls);
     }
 

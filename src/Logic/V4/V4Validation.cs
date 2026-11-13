@@ -76,7 +76,7 @@ namespace TiaMcp.Logic.V4
                     var names = new HashSet<string>(StringComparer.Ordinal);
                     foreach (var property in value.EnumerateObject())
                     {
-                        Require(names.Add(property.Name), "Duplicate JSON property: " + property.Name);
+                        Require(names.Add(property.Name), "Duplicate JSON property.");
                         Json(property.Value);
                     }
                     break;
@@ -155,9 +155,10 @@ namespace TiaMcp.Logic.V4
             switch (value)
             {
                 case InvalidArgumentDetails argument:
-                    Text(argument.Parameter, "parameter");
                     Require(argument.Parameters.Count > 0, "Invalid arguments require parameter names.");
-                    foreach (var parameter in argument.Parameters) Text(parameter, "parameter");
+                    foreach (var parameter in argument.Parameters)
+                        Require(parameter.Length == 0 || parameter.StartsWith("/", StringComparison.Ordinal),
+                            "Invalid arguments require JSON pointers.");
                     break;
                 case CompileErrorsDetails compile:
                     Require(compile.ErrorCount >= 0 && compile.WarningCount >= 0 && compile.Errors.Count <= 10,

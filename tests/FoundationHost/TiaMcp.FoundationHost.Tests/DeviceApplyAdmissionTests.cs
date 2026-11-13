@@ -60,8 +60,10 @@ public sealed class DeviceApplyAdmissionTests
         if (scenario=="stale") worker.Items.Add(new PlcDeviceAddItem { Name="Other",Identity="other",ParentIdentity="root",ParentVerified=true });
         if (scenario=="catalog") args["preferredVersion"]="V1.7";
         var body=await Call("CreateHardwareDevice",args);
-        Assert.Equal(code,(string?)body["error"]?["code"]);Assert.Equal(parameter,(string?)body["error"]?["details"]?["parameter"]);
-        if (scenario == "catalog") Assert.Equal(new[] { "preferredMlfb", "preferredVersion" }, body["error"]!["details"]!["parameters"]!.AsArray().Select(value => (string)value!));
+        Assert.Equal(code,(string?)body["error"]?["code"]);
+        Assert.Equal(code == "INVALID_ARGUMENT" ? "/" + parameter : parameter,(string?)body["error"]?["details"]?["parameter"]);
+        if (scenario == "catalog") Assert.Equal(new[] { "/preferredMlfb", "/preferredVersion" },
+            body["error"]!["details"]!["parameters"]!.AsArray().Select(value => (string)value!));
         Assert.Equal("rejected-before-operation",(string?)body["meta"]?["outcome"]);Assert.Equal("not-started",(string?)body["meta"]?["execution"]);
         Assert.False((bool?)body["meta"]?["requiresSessionReset"]);Assert.Equal(scenario=="duplicate" ? 1 : 0,worker.Creates);
         Assert.Contains(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_DISABLED");

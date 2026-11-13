@@ -89,6 +89,8 @@ public sealed class WorkerPropertyAdmissionTests
     public void Both_workers_match_the_original_contract_including_complete_refusal_details(string input)
     {
         var expected = OriginalContract().Read(input, "properties").Error;
+        if (expected?.Details is InvalidArgumentDetails argument)
+            expected = new Error(expected.Message, new InvalidArgumentDetails("/properties", argument.AllowedValues, expected: "object"));
         var actual = TiaMcp.Shared.UnifiedHmiPropertyAdmission.Validate(typeof(Screen), input);
         Assert.True(JsonNode.DeepEquals(JsonNode.Parse(V4Json.Serialize(expected)), JsonSerializer.SerializeToNode(actual)), input);
         var typed = V4Json.Deserialize<CompositeAttributeMap>(input);
@@ -96,8 +98,8 @@ public sealed class WorkerPropertyAdmissionTests
         if (actual != null && (string?)actual["code"] == "INVALID_ARGUMENT")
         {
             var details = JsonSerializer.SerializeToNode(actual)!["details"]!;
-            Assert.Equal("properties", (string?)details["parameter"]);
-            Assert.Equal(new[] { "properties" }, details["parameters"]!.AsArray().Select(value => (string)value!).ToArray());
+            Assert.Equal("/properties", (string?)details["parameter"]);
+            Assert.Equal(new[] { "/properties" }, details["parameters"]!.AsArray().Select(value => (string)value!).ToArray());
             Assert.Empty(details["allowedValues"]!.AsArray());
         }
     }

@@ -77,7 +77,7 @@ public sealed class FoundationCoverageRegressionTests
                 new WorkerOperationException(message, -32602, "read-failed", JsonSerializer.Serialize(new { parameter, exceptionType = nameof(AdapterPreconditionException) })));
             var body = result.StructuredContent!;
             Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
-            Assert.Equal(parameter, (string?)body["error"]?["details"]?["parameter"]);
+            Assert.Equal("/" + parameter, (string?)body["error"]?["details"]?["parameter"]);
             Assert.Equal(message, (string?)body["error"]?["message"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);

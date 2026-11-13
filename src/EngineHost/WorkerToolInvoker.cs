@@ -67,7 +67,7 @@ namespace TiaMcp.FoundationHost
             if (tool == null || name != tool.Name) return new Error("Tool is not registered in this release.", new ToolNotFoundDetails(name));
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var property in arguments.Json.EnumerateObject())
-                if (!seen.Add(property.Name)) return McpServer.InvalidInput("arguments");
+                if (!seen.Add(property.Name)) return McpServer.InvalidInput("", "object with unique fields");
             string problem = ReleaseCatalogData.Releases[McpServer.ReleaseKey].WrapPortedTools && tool.Execution == "foundation"
                 && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.Available(McpServer.ReleaseKey, name)) ? "" : McpServer
@@ -92,7 +92,7 @@ namespace TiaMcp.FoundationHost
                     var type = ParameterType(parameter.ClrType);
                     if (type == null || type == typeof(ToolArguments) || !input.TryGetProperty(parameter.Name, out var value)) continue;
                     var error = TypedToolInput.For(type)?.Validate(value, parameter.Name);
-                    if (error != null) return error;
+                    if (error != null) return new InputSchema(target.Tool.InputSchema).Restrict(error, input);
                 }
                 return null;
             }
@@ -106,7 +106,20 @@ namespace TiaMcp.FoundationHost
             Error? family = null;
             if (tool.Name is "RunReadOnlyToolBatch" or "PreviewToolBatch" && arguments.TryGetProperty("operations", out var calls)
                 && calls.ValueKind == JsonValueKind.Array)
-                foreach (var input in calls.EnumerateArray()) { family = Target(input); if (family != null) break; }
+            {
+                int index = 0;
+                foreach (var input in calls.EnumerateArray())
+                {
+                    family = Target(input);
+                    if (family != null)
+                    {
+                        family = InvalidArgumentDetails.Prefix(family,
+                            "/operations/" + index.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/arguments");
+                        break;
+                    }
+                    index++;
+                }
+            }
             family ??= Families(tool, arguments);
             if (family != null || typedFamiliesOnly) return family;
             bool canonical = CanonicalToolParameters.Aliases(tool.Name).Count != 0 || CanonicalToolParameters.HasStringDevice(tool.Name);
@@ -145,16 +158,29 @@ namespace TiaMcp.FoundationHost
 
         private async Task<ToolInvocationResult> DispatchAsync(ToolDescriptor tool, ToolArguments arguments, bool preview)
         {
-            if (tool.Execution == "foundation") return await DispatchCoreAsync(tool, arguments, preview).ConfigureAwait(false);
-            if (CanonicalToolParameters.Aliases(tool.Name).Count == 0 && !CanonicalToolParameters.HasStringDevice(tool.Name))
-                return await DispatchCoreAsync(tool, arguments, preview).ConfigureAwait(false);
+            if (tool.Execution == "foundation"
+                || CanonicalToolParameters.Aliases(tool.Name).Count == 0 && !CanonicalToolParameters.HasStringDevice(tool.Name))
+                return RestrictArguments(tool, arguments, await DispatchCoreAsync(tool, arguments, preview).ConfigureAwait(false));
             var input = JsonNode.Parse(arguments.Json.GetRawText())!.AsObject();
             var prepared = CanonicalParameterTool.ApplyDefaults(tool.Name, arguments, out var error);
             if (error != null) return new ToolInvocationResult(CanonicalParameterTool.Reject(McpServer.ReleaseKey, tool.Name, error), false);
             var effective = JsonNode.Parse(prepared.Json.GetRawText())!.AsObject();
             var adapted = new ToolArguments(JsonSerializer.SerializeToElement(CanonicalToolParameters.LegacyArguments(tool.Name, effective)));
             var result = await DispatchCoreAsync(tool, adapted, preview).ConfigureAwait(false);
-            return new ToolInvocationResult(CanonicalParameterTool.Decorate(tool.Name, input, result.Result), result.NativeCallIssued);
+            return RestrictArguments(tool, arguments,
+                new ToolInvocationResult(CanonicalParameterTool.Decorate(tool.Name, input, result.Result), result.NativeCallIssued));
+        }
+
+        private static ToolInvocationResult RestrictArguments(ToolDescriptor tool, ToolArguments arguments, ToolInvocationResult result)
+        {
+            // Orchestration has already validated each child against its own catalog schema.
+            if (tool.Name is "CallTool" or "PreviewToolCall" or "RunReadOnlyToolBatch" or "PreviewToolBatch") return result;
+            if (result.Result.StructuredContent is not JsonObject body || (string?)body["error"]?["code"] != "INVALID_ARGUMENT") return result;
+            var error = V4Json.Deserialize<Error>(body["error"]!.ToJsonString());
+            body["error"] = JsonNode.Parse(V4Json.Serialize(new InputSchema(tool.Tool.InputSchema)
+                .Restrict(error, arguments.Json, body["data"] as JsonObject)));
+            return new ToolInvocationResult(new CallToolResult { IsError = result.Result.IsError, StructuredContent = body,
+                Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } }, result.NativeCallIssued);
         }
 
         private async Task<ToolInvocationResult> DispatchCoreAsync(ToolDescriptor tool, ToolArguments arguments, bool preview)

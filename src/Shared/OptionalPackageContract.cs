@@ -102,7 +102,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Error? error = refusal ?? (outcome == Outcome.Succeeded ? null : new Error(failureMessage,
                 outcome == Outcome.Unknown ? new OutcomeUnknownDetails("optional-package-operation", new Dictionary<string, JsonElement>())
                 : outcome == Outcome.Partial ? new PartialFailureDetails(imported, imported > 0 ? 1 : 0, 0)
-                : outcome == Outcome.RejectedBeforeOperation ? Rejection(rejection!, tool)
+                : outcome == Outcome.RejectedBeforeOperation ? Rejection(rejection!, tool, data)
                 : new NativeOperationFailedDetails(null, HostBehavior.SafeDiagnostic(data["nativeMessage"]?.ToString() ?? response.Message),
                     new Dictionary<string, JsonElement>())));
             bool incomplete = Incomplete(data) || tool == "ExchangeCfcCharts"
@@ -136,10 +136,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
         }
 
-        private static ErrorDetails Rejection(string code, string tool) => code switch
+        private static ErrorDetails Rejection(string code, string tool, JsonObject evidence) => code switch
         {
             "PROJECT_NOT_BOUND" => new ProjectNotBoundDetails(),
-            "INVALID_ARGUMENT" => new InvalidArgumentDetails("arguments", Array.Empty<string>()),
+            "INVALID_ARGUMENT" => McpServer.ArgumentDetails(tool, null, evidence),
             "UNSUPPORTED_CAPABILITY" => new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null),
             "NOT_FOUND" => new NotFoundDetails(null),
             "IO_FAILED" => new IoFailedDetails("optional-package-file", null),

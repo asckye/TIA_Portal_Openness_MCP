@@ -436,7 +436,7 @@ public sealed class UnifiedPortAdmissionTests
         var result = await tool.InvokeAsync(Request(name, arguments));
         var body = result.StructuredContent!;
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
-        Assert.Equal(parameter, (string?)body["error"]?["details"]?["parameter"]);
+        Assert.Equal("/" + parameter, (string?)body["error"]?["details"]?["parameter"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
@@ -497,7 +497,7 @@ public sealed class UnifiedPortAdmissionTests
         var error = invoker.Bind(name, new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)), out var call);
         Assert.NotNull(error);
         Assert.Equal(TiaMcp.Logic.V4.ErrorCode.InvalidArgument, error!.Code);
-        Assert.Equal(parameter, Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(error.Details).Parameter);
+        Assert.Equal("/" + parameter, Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(error.Details).Parameter);
         Assert.Contains("Expected an array", error.Message);
         Assert.Null(call);
         Assert.Equal(0, worker.Calls);

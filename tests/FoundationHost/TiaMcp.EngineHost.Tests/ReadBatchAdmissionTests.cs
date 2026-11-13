@@ -13,7 +13,7 @@ using Foundation = foundationhost::TiaMcp.FoundationHost;
 // (bin-build/refactor/batch-flag-review.md section 3.1), the two admitted reads it closed (GetUnifiedCrossReferences,
 // GetExportContent) and the four slow reads it keeps closed. Each call uses the tool's published GetToolUsage example,
 // and a different expectedProject, so an admitted row stops at the batch identity check and nothing is dispatched.
-public sealed class ReadBatchAdmissionTests
+public sealed partial class ReadBatchAdmissionTests
 {
     private static readonly string[] Order = { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" };
 
@@ -97,7 +97,7 @@ public sealed class ReadBatchAdmissionTests
             var operation = await fixture.Operation(name);
             fixture.AssertRefused(await fixture.ReadBatch(new JsonArray(operation.DeepClone())), name);
             // A refused read cannot ride along with an admitted one.
-            fixture.AssertRefused(await fixture.ReadBatch(new JsonArray(admitted.DeepClone(), operation.DeepClone())), name);
+            fixture.AssertRefused(await fixture.ReadBatch(new JsonArray(admitted.DeepClone(), operation.DeepClone())), name, 1);
         }
         fixture.AssertNothingDispatched();
     }
@@ -124,15 +124,19 @@ public sealed class ReadBatchAdmissionTests
         }
 
         internal bool Serves(string name) => tools.ContainsKey(name);
+        internal IDisposable EnterSession() => pipeline.EnterSession();
 
         internal async Task<JsonObject> Call(string name, JsonObject arguments)
+            => (await CallResult(name, arguments)).StructuredContent!.AsObject();
+
+        internal async Task<CallToolResult> CallResult(string name, JsonObject arguments)
         {
             var result = await tools[name].InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, PipelineTests.ServerProxy>())
                 {
                     Params = new CallToolRequestParams {
                         Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) }
                 });
-            return result.StructuredContent!.AsObject();
+            return result;
         }
 
         // The tool's published example call, as an agent reads it from GetToolUsage before building a batch.
@@ -169,7 +173,18 @@ public sealed class ReadBatchAdmissionTests
         // The batch's existing refusal: the whole batch is rejected at operations before any row.
         internal void AssertRefused(JsonObject batch, string name)
         {
-            Assert.True((string?)batch["error"]?["code"] == "INVALID_ARGUMENT" && (string?)batch["error"]?["details"]?["parameter"] == "operations"
+            Assert.True((string?)batch["error"]?["code"] == "INVALID_ARGUMENT"
+                && (string?)batch["error"]?["details"]?["parameter"] == "/operations/0/arguments"
+                && batch["data"] == null, name + " was not refused: " + batch.ToJsonString());
+            Assert.Equal("RunReadOnlyToolBatch", (string?)batch["meta"]?["tool"]);
+            Assert.Equal("rejected-before-operation", (string?)batch["meta"]?["outcome"]);
+            Assert.Equal("not-started", (string?)batch["meta"]?["execution"]);
+        }
+
+        internal void AssertRefused(JsonObject batch, string name, int index)
+        {
+            Assert.True((string?)batch["error"]?["code"] == "INVALID_ARGUMENT"
+                && (string?)batch["error"]?["details"]?["parameter"] == "/operations/" + index + "/arguments"
                 && batch["data"] == null, name + " was not refused: " + batch.ToJsonString());
             Assert.Equal("RunReadOnlyToolBatch", (string?)batch["meta"]?["tool"]);
             Assert.Equal("rejected-before-operation", (string?)batch["meta"]?["outcome"]);

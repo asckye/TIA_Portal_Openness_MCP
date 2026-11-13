@@ -425,7 +425,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
         var rejected = Host.RunWritePreview("EnsureSubnet", false, args, Execute, "", "C:/Projects/original.ap21");
         Assert.Equal("INVALID_ARGUMENT", (string?)rejected.StructuredContent!["error"]!["code"]);
-        Assert.Equal("expectedPlanHash", (string?)rejected.StructuredContent["error"]!["details"]!["parameter"]);
+        Assert.Equal("/expectedPlanHash", (string?)rejected.StructuredContent["error"]!["details"]!["parameter"]);
         Assert.Equal(0, calls);
         Assert.True((bool?)Host.RunWritePreview("EnsureSubnet", false, args, Execute, hash, "c:/PROJECTS/original.ap21").StructuredContent!["ok"]);
         Assert.Equal(1, calls);

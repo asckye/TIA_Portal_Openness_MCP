@@ -111,7 +111,13 @@ namespace TiaMcp.Engine.Tests
         [InlineData("{\"members\":[{\"name\":\"x\",\"datatype\":\"Bool\",\"comment\":\"\",\"commentZhCn\":\"\"}]}")]
         [InlineData("{\"members\":[],\"name\":\"secret-credential\\u0000\"}")]
         [InlineData("{\"members\":[],\"name\":\"secret-credential")]
-        public void InvalidInputUsesValueFreeSharedErrors(string json) => Invalid(new ConstructionInput<UdtSpec>().Read(json, Parameter).Error!);
+        public void InvalidInputUsesValueFreeSharedErrors(string json)
+        {
+            string pointer = json.Contains("\"members\":null", StringComparison.Ordinal)
+                || json.Contains("\"members\":\"[]\"", StringComparison.Ordinal) ? "/spec/members"
+                : json.Contains("\"members\":[{", StringComparison.Ordinal) ? "/spec/members/0" : "/spec";
+            Invalid(new ConstructionInput<UdtSpec>().Read(json, Parameter).Error!, pointer);
+        }
 
         [Fact]
         public void SchemaIsTheSameClosedContractForNestedFields()
@@ -182,7 +188,14 @@ namespace TiaMcp.Engine.Tests
         private static void Invalid(Error error)
         {
             Assert.Equal(ErrorCode.InvalidArgument, error.Code);
-            Assert.Equal(Parameter, Assert.IsType<InvalidArgumentDetails>(error.Details).Parameter);
+            Assert.Equal("/spec", Assert.IsType<InvalidArgumentDetails>(error.Details).Parameter);
+            Assert.DoesNotContain("secret-credential", V4Json.Serialize(error));
+        }
+
+        private static void Invalid(Error error, string pointer)
+        {
+            Assert.Equal(ErrorCode.InvalidArgument, error.Code);
+            Assert.Equal(pointer, Assert.IsType<InvalidArgumentDetails>(error.Details).Parameter);
             Assert.DoesNotContain("secret-credential", V4Json.Serialize(error));
         }
 

@@ -63,7 +63,7 @@ internal sealed class WorkbenchControlTool : McpServerTool
         try { arguments = (WorkbenchControlArguments)JsonSerializer.Deserialize(args.GetRawText(),
             WorkbenchControlProtocol.ArgumentType(operation), WorkbenchControlProtocol.Json)!; }
         catch (JsonException) /* swallow(privacy): expose only the validated public argument boundary */
-        { return FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments")); }
+        { return FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("")); }
         string? renderId = arguments is WorkbenchDisplayLadderArguments ladder ? ladder.RenderRequestId
             : (arguments as WorkbenchDisplayAtlasArguments)?.RenderRequestId;
         if (renderId != null)

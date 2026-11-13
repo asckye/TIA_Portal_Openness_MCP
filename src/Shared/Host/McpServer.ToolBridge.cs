@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var pair in arguments)
-                if (!seen.Add(pair.Key)) return "Duplicate argument names differing only by case are ambiguous: " + pair.Key + ". Nothing was executed.";
+                if (!seen.Add(pair.Key)) return "Duplicate argument names differing only by case are ambiguous. Nothing was executed.";
             return "";
         }
 
@@ -206,7 +206,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (error != null)
             {
                 error = TargetInputError(name, arguments ?? EmptyArguments(), error);
-                string target = error.Details is InvalidArgumentDetails { Parameter: not "arguments" } && CatalogView.Find(name) != null ? name : "CallTool";
+                string target = error.Details is InvalidArgumentDetails { Parameter: not "" } && CatalogView.Find(name) != null ? name : "CallTool";
                 var rejected = V4TargetReject(target, error, current: CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name })));
                 RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
                 return AuditBridgeResult(audit, rejected, disabled);
@@ -280,6 +280,21 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static ToolArguments EmptyArguments() => new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject()));
         internal static Error InvalidInput(string parameter) =>
             new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
+        internal static Error InvalidInput(string parameter, string expected, params string[] allowedValues) =>
+            new Error("Input does not satisfy the declared contract.",
+                new InvalidArgumentDetails(parameter, allowedValues, expected: expected));
+        internal static InvalidArgumentDetails ArgumentDetails(string tool, string? parameter, JsonObject? evidence = null)
+        {
+            parameter ??= (string?)(evidence?["parameter"] ?? evidence?["rejectedParameter"]);
+            var target = parameter == null ? null : SessionCatalog()?.Find(tool, includeUnavailable: true);
+            if (parameter == null || target == null || !target.Tool.InputSchema.GetProperty("properties").TryGetProperty(parameter, out var member))
+                return new InvalidArgumentDetails("", Array.Empty<string>());
+            var allowed = member.TryGetProperty("enum", out var values)
+                ? values.EnumerateArray().Where(v => v.ValueKind == JsonValueKind.String).Select(v => v.GetString()!).ToArray()
+                : Array.Empty<string>();
+            return new InvalidArgumentDetails("/" + InvalidArgumentDetails.Segment(parameter), allowed,
+                expected: new InputSchema(target.Tool.InputSchema).ExpectedParameter(parameter));
+        }
         private static JsonObject WritePreviewPlan(string tool, object arguments, bool writing)
         {
             var normalized = JsonSerializer.SerializeToNode(arguments)!.AsObject();
@@ -324,12 +339,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (string.IsNullOrWhiteSpace(expectedProjectFile) || !System.IO.Path.IsPathRooted(expectedProjectFile)
                     || expectedProjectFile.Length >= 2 && expectedProjectFile[1] == ':'
                         && (expectedProjectFile.Length < 3 || expectedProjectFile[2] is not ('/' or '\\')))
-                    return InvalidInput("expectedProjectFile");
+                    return InvalidInput("expectedProjectFile", "absolute file path");
                 try { expected = TiaMcp.Adapters.Contracts.Candidates.CandidatePrimitives.CanonicalProject(expectedProjectFile); }
                 catch (ArgumentException) /* swallow(parse-fallback): malformed paths are returned as typed input refusals. */
-                { return InvalidInput("expectedProjectFile"); }
+                { return InvalidInput("expectedProjectFile", "absolute file path"); }
                 catch (NotSupportedException) /* swallow(parse-fallback): unsupported path syntax is returned as a typed input refusal. */
-                { return InvalidInput("expectedProjectFile"); }
+                { return InvalidInput("expectedProjectFile", "absolute file path"); }
                 if (expectedPlanHash.Length == 0) return InvalidInput("expectedPlanHash");
             }
             if ((writing || expectedPlanHash.Length > 0) && expectedPlanHash != (string?)plan["planHash"])
@@ -399,13 +414,16 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var target = CatalogView.Find(name);
             if (target == null || error.Details is not InvalidArgumentDetails argument
-                || argument.Parameter != "arguments" && !argument.WholeArgumentValidation) return error;
+                || argument.Parameter != "" && !argument.WholeArgumentValidation) return error;
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (arguments.Json.EnumerateObject().Any(p => !names.Add(p.Name))) return error;
             var fields = new InputSchema(target.Tool.InputSchema).ValidateFields(arguments.Json);
             if (fields.Count == 0 || fields.Any(e => e.Details is not InvalidArgumentDetails)) return error;
-            string parameters = string.Join(", ", fields.Select(e => ((InvalidArgumentDetails)e.Details).Parameter));
-            return new Error("Missing or invalid target field(s): " + parameters + ".", new InvalidArgumentDetails(parameters, Array.Empty<string>()));
+            if (fields.Any(e => ((InvalidArgumentDetails)e.Details).Parameter == "")) return error;
+            var parameters = fields.Select(e => ((InvalidArgumentDetails)e.Details).Parameter!.Split('/')[1]
+                .Replace("~1", "/").Replace("~0", "~")).Distinct(StringComparer.Ordinal);
+            return new Error("Missing or invalid target field(s): " + string.Join(", ", parameters) + ".",
+                new InvalidArgumentDetails(argument.Parameter, argument.AllowedValues, argument.Parameters, argument.Expected));
         }
         internal static bool CurrentBehaviorTargets(string tool, JsonElement arguments)
         {

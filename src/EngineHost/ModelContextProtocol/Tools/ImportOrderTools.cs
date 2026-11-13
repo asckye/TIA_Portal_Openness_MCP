@@ -135,7 +135,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     Outcome.RejectedBeforeOperation, Completeness.None, current);
             }
             if (!writes && (cause is ArgumentException || cause is JsonException))
-                return Result(tool, null, McpServer.InvalidInput("arguments"), Outcome.RejectedBeforeOperation, Completeness.None, current);
+                return Result(tool, null, new Error(McpServer.InvalidInput("").Message,
+                    McpServer.ArgumentDetails(tool, (cause as ArgumentException)?.ParamName)),
+                    Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (!writes && (cause is FileNotFoundException || cause is DirectoryNotFoundException))
                 return Result(tool, null, new Error("Input resource was not found.", new NotFoundDetails(null)), Outcome.RejectedBeforeOperation, Completeness
                         .None, current);

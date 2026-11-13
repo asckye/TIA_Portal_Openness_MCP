@@ -116,7 +116,7 @@ public sealed class V4ProtocolRulesTests
         var args = new Dictionary<string, JsonElement> { ["repository"] = JsonSerializer.SerializeToElement("x") };
         var result = FoundationV4Result.Host("19", "CheckProductUpdate", "id", raw, false, args: args);
         Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent!["error"]!["code"]);
-        Assert.Equal("repository", (string?)result.StructuredContent!["error"]!["details"]!["parameter"]);
+        Assert.Equal("/repository", (string?)result.StructuredContent!["error"]!["details"]!["parameter"]);
         Assert.Equal("The operation did not establish success; inspect the returned result.", (string?)result.StructuredContent!["error"]!["message"]);
         Assert.Equal("rejected-before-operation", (string?)result.StructuredContent!["meta"]!["outcome"]);
     }

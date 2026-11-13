@@ -342,7 +342,7 @@ public sealed class FoundationV4ContractsTests
                 .Serialize(new { name, arguments = new Dictionary<string, bool> { ["SnapshotReject"] = true, ["snapshotReject"] = true } });
             var result = Body(await bridge.InvokeAsync(Request("CallTool", json)));
             Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]!["code"]);
-            Assert.Equal("arguments", (string?)result["error"]!["details"]!["parameter"]);
+            Assert.Equal("", (string?)result["error"]!["details"]!["parameter"]);
             Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
             Assert.Equal("CallTool", (string?)result["meta"]!["tool"]);
         }
@@ -513,7 +513,7 @@ public sealed class FoundationV4ContractsTests
                     "{\"parameter\":\"exportPath\",\"isArgument\":true,\"exceptionType\":\"AdapterPreconditionException\"}")));
         Assert.Equal("rejected-before-operation", (string?)rejected["meta"]!["outcome"]);
         Assert.Equal("Export directory must already exist.", (string?)rejected["error"]!["message"]);
-        Assert.Equal("exportPath", (string?)rejected["error"]!["details"]!["parameter"]);
+        Assert.Equal("/exportPath", (string?)rejected["error"]!["details"]!["parameter"]);
         Assert.Equal("not-started", (string?)rejected["meta"]!["execution"]);
         string privatePath = @"C:\Users\Private\project.ap19";
         string longMessage = "Failed at " + privatePath + "; token=private-secret " + new string('x', 6000);

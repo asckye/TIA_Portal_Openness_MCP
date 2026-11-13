@@ -60,8 +60,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static void Check(Action validation)
         {
             try { validation(); }
-            catch (ArgumentException) /* swallow(privacy): legacy validators can include input values in their messages */
-            { throw new InputFailureException(McpServer.InvalidInput("arguments")); }
+            catch (ArgumentException error) /* swallow(privacy): legacy validators can include input values in their messages */
+            { throw new InputFailureException(McpServer.InvalidInput(error.ParamName ?? "")); }
             catch (NotSupportedException) /* swallow(privacy): keep capability refusals separate from parser diagnostics */
             {
                 throw new InputFailureException(new Error("The requested hardware operation is unavailable.",
@@ -171,7 +171,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : status == "UNSUPPORTED_CAPABILITY"
                         ? new Error(HostBehavior.SafeDiagnostic(response.Message) ?? "The hardware capability is unavailable.",
                             new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
-                    : McpServer.InvalidInput("arguments");
+                    : new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, evidence));
             }
             else if (success == true)
             { outcome = Outcome.Succeeded; execution = readOnly ? Execution.ReadOnly : Execution.Completed; }

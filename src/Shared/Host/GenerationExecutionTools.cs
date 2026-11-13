@@ -65,7 +65,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (GenerationValidationException ex) {
                 return McpServer.V4Reject(name, new Error(ex.Message, new InvalidArgumentDetails(ex.Errors.First().Path, Array.Empty<string>()))); }
             catch (ArgumentException ex) {
-                return McpServer.V4Reject(name, new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "arguments", Array.Empty<string>()))); }
+                return McpServer.V4Reject(name, new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "", Array.Empty<string>()))); }
             catch (GenerationPersistenceUnknownException ex)
             { return McpServer.V4Result(name, new JsonObject { ["runId"] = ex.RunId, ["rollbackPerformed"] = false },
                 new Error(ex.Message, new OutcomeUnknownDetails("generation-record", new Dictionary<string, JsonElement>())),

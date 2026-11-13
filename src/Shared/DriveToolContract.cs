@@ -45,15 +45,15 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (value.Kind == JsonValueKind.Undefined) value = V4Json.Deserialize<NativeValue>("{}");
             NativeValuePolicy? policy = null;
-            Check(() => policy = DriveFunctionPolicy.Create(action));
+            Check(() => policy = DriveFunctionPolicy.Create(action), "action");
             return V4Json.Serialize(Input(NativeValueValidator.Create(policy!), value, "value"));
         }
 
-        internal static void Check(Action validation)
+        internal static void Check(Action validation, string parameter = "")
         {
             try { validation(); }
-            catch (ArgumentException) /* swallow(privacy): parser messages may contain client values or credentials */
-            { throw new InputFailure(McpServer.InvalidInput("arguments")); }
+            catch (ArgumentException error) /* swallow(privacy): parser messages may contain client values or credentials */
+            { throw new InputFailure(McpServer.InvalidInput(parameter.Length == 0 ? error.ParamName ?? "" : parameter)); }
         }
 
         internal static CallToolResult Run(string tool, bool writes, bool current, Func<ResponseMessage> operation,
@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.RejectedBeforeOperation;
                 ErrorDetails details = status == "NotFound" ? new NotFoundDetails(null)
                     : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
-                    : status == "InvalidParams" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                    : status == "InvalidParams" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : new PreconditionFailedDetails("option-package-prerequisites", null);
                 error = new Error(nativeMessage ?? "The option-package request was rejected before execution.", details);
             }

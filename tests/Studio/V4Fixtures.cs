@@ -38,7 +38,7 @@ internal static class V4Fixtures
             {
                 switch ((string?)envelope["error"]!["code"])
                 {
-                    case "INVALID_ARGUMENT": details["parameters"] = new JsonArray((string)details["parameter"]!); break;
+                    case "INVALID_ARGUMENT": RegenerateArguments(envelope["error"]!.AsObject()); break;
                     case "PLAN_STALE": details["previewToken"] = null; break;
                     case "PRECONDITION_FAILED": details["parameter"] = null; break;
                     case "OUTCOME_UNKNOWN": details["reason"] = null; break;
@@ -50,5 +50,38 @@ internal static class V4Fixtures
             JsonSerializer.Serialize(envelopes, new JsonSerializerOptions { WriteIndented = true,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }).Replace("\r\n", "\n") + "\n",
             new System.Text.UTF8Encoding(false));
+        string realPath = Path.Combine(Path.GetDirectoryName(sourceFile)!, "V4RealEnvelopes.json");
+        var real = JsonNode.Parse(File.ReadAllText(realPath))!;
+        RegenerateArguments(real);
+        var releases = real.AsObject().ToArray();
+        var rows = new List<string> { "{" };
+        for (int index = 0; index < releases.Length; index++)
+        {
+            rows.Add(JsonSerializer.Serialize(releases[index].Key) + ": [");
+            rows.Add(string.Join(",\n", releases[index].Value!.AsArray().Select(row => row!.ToJsonString(new JsonSerializerOptions {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))));
+            rows.Add(index + 1 == releases.Length ? "]" : "],");
+        }
+        rows.Add("}");
+        File.WriteAllText(realPath, string.Join("\n", rows) + "\n", new System.Text.UTF8Encoding(false));
+    }
+
+    private static void RegenerateArguments(JsonNode node)
+    {
+        if (node is JsonObject obj)
+        {
+            if ((string?)obj["code"] == "INVALID_ARGUMENT" && obj["details"] is JsonObject details)
+            {
+                string Pointer(string? field) => field == "arguments" ? "" : field ?? "";
+                var allowed = details["allowedValues"]!.AsArray().Select(v => (string)v!).ToArray();
+                var parameters = details["parameters"]?.AsArray().Select(v => Pointer((string?)v)).ToArray();
+                var error = new Error((string)obj["message"]!, new InvalidArgumentDetails(Pointer((string?)details["parameter"]),
+                    allowed, parameters, (string?)details["expected"] ?? (allowed.Length > 0 ? "one of the allowed values" : null)));
+                obj["details"] = JsonNode.Parse(V4Json.Serialize(error))!["details"]!.DeepClone();
+            }
+            foreach (var value in obj.ToArray()) if (value.Value != null) RegenerateArguments(value.Value);
+        }
+        else if (node is JsonArray array)
+            foreach (var value in array) if (value != null) RegenerateArguments(value);
     }
 }

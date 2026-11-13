@@ -40,7 +40,7 @@ public sealed class B1OldReleaseBridgeTests
             Assert.Equal("not-started", (string?)rejected["meta"]?["execution"]);
         }
         var missing = await Invoke(tools, "CallTool", new { name = "AnalyzePlcReferences", arguments = new { } });
-        Assert.Equal("directory", (string?)missing["error"]?["details"]?["parameter"]);
+        Assert.Equal("/directory", (string?)missing["error"]?["details"]?["parameter"]);
         var guidance = missing["meta"]!["warnings"]!.AsArray().Single(w => (string?)w!["code"] == "RECOVERY_GUIDANCE")!;
         Assert.True((string?)guidance["details"]?["getToolUsage"]?["toolName"] == "AnalyzePlcReferences", missing.ToJsonString());
         var preview = await Invoke(tools, "PreviewToolCall", new { name = "AnalyzePlcReferences", arguments = new { maxDepth = "bad" } });
@@ -126,7 +126,7 @@ public sealed class B1OldReleaseBridgeTests
     {
         using var pipeline = new Pipeline(release, new BoundWorker(), Array.Empty<McpServerTool>());
         var missing = await Invoke(pipeline.AllTools, "CallTool", new { name = "AnalyzePlcReferences", arguments = new { } });
-        Assert.Equal("directory", (string?)missing["error"]?["details"]?["parameter"]);
+        Assert.Equal("/directory", (string?)missing["error"]?["details"]?["parameter"]);
         Assert.Equal("AnalyzePlcReferences", (string?)missing["meta"]?["tool"]);
         var preview = await Invoke(pipeline.AllTools, "PreviewToolCall", new { name = "AnalyzePlcReferences", arguments = new { maxDepth = "bad" } });
         Assert.True((bool)preview["ok"]!);

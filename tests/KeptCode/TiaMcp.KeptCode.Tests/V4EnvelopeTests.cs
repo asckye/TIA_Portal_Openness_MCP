@@ -91,7 +91,9 @@ namespace TiaMcp.Engine.Tests
             {
                 (new OperationInProgressDetails("request-1"),
                     """{"code":"OPERATION_IN_PROGRESS","message":"Failure.","details":{"requestId":"request-1"}}"""),
-                (new InvalidArgumentDetails("mode", new[] { "preview", "apply" }), """{"code":"INVALID_ARGUMENT","message":"Failure.","details":{"parameter":"mode","allowedValues":["preview","apply"],"parameters":["mode"]}}"""),
+                (new InvalidArgumentDetails("mode", new[] { "preview", "apply" }),
+                    """{"code":"INVALID_ARGUMENT","message":"Failure.","details":{"parameter":"/mode","allowedValues":["preview","apply"],"""
+                    + "\"parameters\":[\"/mode\"],\"expected\":\"one of the allowed values\"}}"),
                 (new LimitExceededDetails("items", 1000, 1001), """{"code":"LIMIT_EXCEEDED","message":"Failure.","details":{"parameter":"items","limit":1000,"actual":1001}}"""),
                 (new UnsupportedCapabilityDetails("14sp1", "compile", null), """{"code":"UNSUPPORTED_CAPABILITY","message":"Failure.","details":{"releaseKey":"14sp1","capability":"compile","action":null}}"""),
                 (new ToolNotFoundDetails("MissingTool"), """{"code":"TOOL_NOT_FOUND","message":"Failure.","details":{"tool":"MissingTool"}}"""),

@@ -81,7 +81,7 @@ namespace TiaMcpServer.Dispatch
                             admission);
                 if (admission != null)
                     return McpServer.V4TargetReject(
-                        ProtocolTool.Name == "CallTool" && admission.Details is InvalidArgumentDetails { Parameter: not "arguments" }
+                        ProtocolTool.Name == "CallTool" && admission.Details is InvalidArgumentDetails { Parameter: not "" }
                             ? target : ProtocolTool.Name, admission,
                         McpServer.CurrentBehaviorTargets(ProtocolTool.Name, arguments));
 #if TIA_ENGINE_HOST

@@ -23,7 +23,7 @@ public sealed class OnlinePlanTagRulesTests
         foreach (var tag in new[] { "%M0.0", "MotorRun", "" })
         {
             var result = await Plan("PlanOnlineReadOnlyMonitoring", new() { ["softwarePath"] = "PLC_1", ["tagPaths"] = new JsonArray(tag) });
-            Refused(result, "tagPaths");
+            Refused(result, tag.Length == 0 ? "tagPaths/0" : "tagPaths");
         }
         Refused(await Plan("PlanOnlineReadOnlyMonitoring", new() {
             ["softwarePath"] = "PLC_1", ["tagPaths"] = new JsonArray("DB_HMI.Start"), ["mode"] = "x" }), "mode");
@@ -41,7 +41,7 @@ public sealed class OnlinePlanTagRulesTests
     {
         Assert.False((bool?)result["ok"], result.ToJsonString());
         Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
-        Assert.Equal(parameter, (string?)result["error"]?["details"]?["parameter"]);
+        Assert.Equal("/" + parameter, (string?)result["error"]?["details"]?["parameter"]);
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
     }
 }

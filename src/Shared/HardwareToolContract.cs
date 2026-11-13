@@ -94,19 +94,22 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (TiaOpenness.Shared.HostFailurePolicy.Precondition(ex) is { } refusal)
                     return Result(tool, null, new Error(refusal.Message, refusal.IsArgument
-                        ? new InvalidArgumentDetails(refusal.ParamName ?? "arguments", Array.Empty<string>())
+                        ? McpServer.ArgumentDetails(tool, refusal.ParamName)
                         : new PreconditionFailedDetails("native-admission", null, refusal.ParamName)), Outcome.RejectedBeforeOperation, current);
                 var cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;
-                Error? error = cause is ArgumentException || cause is JsonException ? McpServer.InvalidInput("arguments")
+                Error? error = cause is ArgumentException || cause is JsonException
+                    ? new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, (cause as ArgumentException)?.ParamName))
                     : cause is PortalException portal && portal.Code == PortalErrorCode.NotFound
                         ? new Error(HostBehavior.SafeDiagnostic(portal.Message) ?? "The requested hardware object was not found.", new NotFoundDetails(null))
                     : cause is PortalException unavailable && unavailable.Code == PortalErrorCode.InvalidState && tool == "SearchHardwareCatalog"
                         ? new Error("The hardware catalog is unavailable.", new ResourceUnavailableDetails("HardwareCatalog"))
-                    : cause is PortalException invalid && invalid.Code == PortalErrorCode.InvalidParams ? McpServer.InvalidInput("arguments")
+                    : cause is PortalException invalid && invalid.Code == PortalErrorCode.InvalidParams
+                        ? new Error(McpServer.InvalidInput("").Message,
+                            McpServer.ArgumentDetails(tool, TiaOpenness.Shared.HostFailurePolicy.Parameter(invalid)))
                     : cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams } invalidArguments
                         ? new Error(HostBehavior.SafeDiagnostic(invalidArguments.Message) ?? "The hardware arguments are invalid.",
-                            new InvalidArgumentDetails("arguments", Array.Empty<string>()))
+                            new InvalidArgumentDetails("", Array.Empty<string>()))
                     : cause is NotSupportedException ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null))
                     : null;
                 if (error != null && !write) return Result(tool, null, error, Outcome.RejectedBeforeOperation, current);
@@ -177,7 +180,8 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "NotFound")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("The requested object was not found.", new NotFoundDetails(null)); }
             else if (status == "InvalidParams" && started == false)
-            { outcome = Outcome.RejectedBeforeOperation; error = McpServer.InvalidInput("arguments"); }
+            { outcome = Outcome.RejectedBeforeOperation;
+                error = new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, evidence)); }
             else if (write && started == false)
             {
                 outcome = Outcome.RejectedBeforeOperation; error =

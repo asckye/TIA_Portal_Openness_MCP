@@ -94,7 +94,7 @@ public sealed class RoundTwoRegressionTests
         using var session = EngineHostParity.EnterScope();
         var result = new Host.EngineeringDiagnosticsTools().GetNativeInvocationLogV4(sinceUtc: value);
         Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.Equal("sinceUtc", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+        Assert.Equal("/sinceUtc", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
     }
 
     [Theory, InlineData("2026-11-04T12:00:00Z"), InlineData("2026-11-04T13:00:00+01:00")]

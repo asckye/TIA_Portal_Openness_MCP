@@ -306,7 +306,7 @@ namespace TiaMcpServer.ModelContextProtocol
             switch ((string?)data["status"])
             {
                 case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
-                case "InvalidParams": return InvalidInput("arguments");
+                case "InvalidParams": return new Error(InvalidInput("").Message, ArgumentDetails(tool, null, data));
                 case "NotFound": return new Error("The exact target was not found.", new NotFoundDetails(null));
                 case "NotSupportedOnVersion": return new Error(HostBehavior.SafeDiagnostic((string?)data["nativeMessage"])
                     ?? "This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
@@ -341,9 +341,10 @@ namespace TiaMcpServer.ModelContextProtocol
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
             {
                 if (cause is PortalException portal) error = StatusError(tool, new JsonObject { ["status"] = portal.Code.ToString() });
-                if (cause is ArgumentException) error = InvalidInput("arguments");
+                if (cause is ArgumentException argument)
+                    error = new Error(InvalidInput("").Message, ArgumentDetails(tool, argument.ParamName));
                 if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error =
-                    InvalidInput("arguments");
+                    InvalidInput("");
                 if (cause is NotSupportedException) error =
                     new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
                 if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error =

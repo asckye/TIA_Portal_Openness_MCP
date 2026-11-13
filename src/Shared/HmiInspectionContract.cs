@@ -18,7 +18,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var cause = exception;
                 while (cause.InnerException != null) cause = cause.InnerException;
-                Error? rejection = cause is PortalException portal ? Rejection(portal.Code.ToString(), portal.Message) : null;
+                Error? rejection = cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
+                    parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(portal)) : null;
                 return Result(tool, null, rejection ?? Failure(writes), rejection != null ? Outcome.RejectedBeforeOperation
                     : writes ? Outcome.Unknown : Outcome.ReadFailed, rejection != null ? Completeness.None : Completeness.Unknown, writes, current);
             }
@@ -29,10 +30,10 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int? Number(JsonObject obj, string key)
             => obj[key] is JsonValue value && value.TryGetValue<int>(out var number) ? number : (int?)null;
 
-        private static Error? Rejection(string status, string? message = null)
+        private static Error? Rejection(string tool, string status, string? message = null, JsonObject? evidence = null, string? parameter = null)
         {
             ErrorDetails? details = status == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
-                : status == "InvalidParams" || status == "INVALID_ARGUMENT" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                : status == "InvalidParams" || status == "INVALID_ARGUMENT" ? McpServer.ArgumentDetails(tool, parameter, evidence)
                 : status == "NotFound" || status == "NOT_FOUND" ? new NotFoundDetails(null)
                 : status == "NotSupportedOnVersion" || status == "UNSUPPORTED_CAPABILITY"
                     ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI/reflection", null)
@@ -77,12 +78,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.Failed; error = CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) ?? Failure(false); }
             else if (knownMismatch) {
                 outcome = Outcome.Partial; error = new Error("The script was imported but its readback differs.", new PartialFailureDetails(0, 0, 0)); }
-            else if (!issued && (error = Rejection(status)) != null) outcome = Outcome.RejectedBeforeOperation;
+            else if (!issued && (error = Rejection(tool, status, evidence: evidence)) != null) outcome = Outcome.RejectedBeforeOperation;
             else if (success == true) outcome = Outcome.Succeeded;
             else if (writes && Flag(evidence, "mayHaveChanged") == false)
             {
                 outcome = Outcome.RejectedBeforeOperation; error =
-                    Rejection("PRECONDITION_FAILED", HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]));
+                    Rejection(tool, "PRECONDITION_FAILED", HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]));
             }
             else { outcome = writes ? Outcome.Unknown : Outcome.ReadFailed; error = Failure(writes); }
 

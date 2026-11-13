@@ -34,6 +34,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var result = new Result();
             if (!(schema["properties"] is JsonObject properties)) return result;
+            DeclareArgumentEnums(toolName, schema);
             foreach (var spec in specs)
             {
                 if (!(properties[spec.Name] is JsonObject property)) continue;
@@ -86,6 +87,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             }
             return result;
+        }
+
+        internal static void DeclareArgumentEnums(string tool, JsonObject schema)
+        {
+            if (schema["properties"] is not JsonObject properties) return;
+            if (tool == "CompareProjects" && properties["kind"] is JsonObject kind)
+                kind["enum"] = new JsonArray("software", "softwareToLibrary", "hardware");
+            if (tool == "ExportUnifiedEngineeringList" && properties["category"] is JsonObject category)
+                category["enum"] = new JsonArray("textLists", "graphicLists", "systemTextLists");
         }
 
         /// <summary>The string default without its quotes ("\"read\"" -> read); null for non-strings / null.</summary>

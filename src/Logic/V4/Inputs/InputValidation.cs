@@ -104,19 +104,22 @@ namespace TiaMcp.Logic.V4.Inputs
                 Budget.CheckText(json);
                 return Read(V4Json.ParseInput(json), parameter, optional);
             }
-            catch (InputRejectionException rejection) { return Failure(InputPresence.Value, rejection.ToError(parameter)); }
+            catch (InputRejectionException rejection)
+            { return Failure(InputPresence.Value, rejection.ToError(rejection.IsLimit ? parameter : ArgumentParameter(parameter), schema.Expected)); }
             catch (V4Json.InputDepthException) /* swallow(privacy): map the bounded reader failure to value-free limit details */
             { return Failure(InputPresence.Value, new InputRejectionException(limit: Budget.Depth, actual: V4Json.MaximumInputDepth + 1).ToError(parameter)); }
             catch (JsonException) /* swallow(privacy): parser diagnostics may contain credentials; return a value-free V4 error */
-            { return Failure(InputPresence.Value, InputGuard.Invalid(parameter)); }
+            { return Failure(InputPresence.Value, InputGuard.Invalid(ArgumentParameter(parameter), expected: schema.Expected)); }
         }
 
         public InputResult<T> Read(JsonElement input, string parameter, bool optional = false)
         {
+            string argument = ArgumentParameter(parameter);
             var presence = input.ValueKind == JsonValueKind.Undefined ? InputPresence.Missing
                 : input.ValueKind == JsonValueKind.Null ? InputPresence.Null : InputPresence.Value;
             if (presence == InputPresence.Missing)
-                return optional ? new InputResult<T>(presence, default, null) : Failure(presence, InputGuard.Invalid(parameter));
+                return optional ? new InputResult<T>(presence, default, null)
+                    : Failure(presence, InputGuard.Invalid(argument, expected: schema.Expected));
             try
             {
                 Budget.Check(input);
@@ -127,10 +130,11 @@ namespace TiaMcp.Logic.V4.Inputs
                 var value = normalize(V4Json.Deserialize<T>(V4Json.Serialize(input)));
                 return new InputResult<T>(presence, value, null);
             }
-            catch (InputRejectionException rejection) { return Failure(presence, rejection.ToError(parameter)); }
+            catch (InputRejectionException rejection)
+            { return Failure(presence, rejection.ToError(rejection.IsLimit ? parameter : argument, schema.Expected)); }
             catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is OverflowException
                     || ex is FormatException || ex is System.Text.RegularExpressions.RegexMatchTimeoutException)
-            { return Failure(presence, InputGuard.Invalid(parameter)); }
+            { return Failure(presence, InputGuard.Invalid(argument, expected: schema.Expected)); }
         }
 
         public InputResult<T> Validate(T value, string parameter)
@@ -140,9 +144,11 @@ namespace TiaMcp.Logic.V4.Inputs
             if (value is ToolArguments arguments) return Read(arguments.Json, parameter);
             try { return Read(V4Json.Serialize(value), parameter); }
             catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException)
-            { return Failure(InputPresence.Value, InputGuard.Invalid(parameter)); }
+            { return Failure(InputPresence.Value, InputGuard.Invalid(ArgumentParameter(parameter), expected: schema.Expected)); }
         }
 
+        private static string ArgumentParameter(string parameter) =>
+            typeof(T) == typeof(ToolArguments) && parameter == "arguments" ? "" : parameter;
         private static InputResult<T> Failure(InputPresence presence, Error error) => new InputResult<T>(presence, default, error);
     }
 
@@ -151,29 +157,53 @@ namespace TiaMcp.Logic.V4.Inputs
         private readonly int? limit;
         private readonly int? actual;
         private readonly string[] allowed;
+        private string[]? pointers;
+        private string? expected;
         internal bool IsLimit => limit.HasValue;
+        internal bool HasLocation => pointers != null;
         internal InputRejectionException(string[]? allowed = null, int? limit = null, int? actual = null)
         { this.allowed = allowed ?? Array.Empty<string>(); this.limit = limit; this.actual = actual; }
-        internal Error ToError(string parameter) => limit.HasValue
+        internal InputRejectionException(InvalidArgumentDetails details, string prefix)
+        {
+            allowed = details.AllowedValues.ToArray();
+            pointers = details.Parameters.Select(p => prefix + p).ToArray();
+            expected = details.Expected;
+        }
+        internal InputRejectionException At(string pointer, string? form)
+        {
+            pointers ??= new[] { pointer };
+            expected ??= form;
+            return this;
+        }
+        internal static InputRejectionException Combine(IReadOnlyList<InputRejectionException> errors)
+        {
+            var first = errors[0];
+            first.pointers = errors.SelectMany(e => e.pointers ?? new[] { "" }).Distinct(StringComparer.Ordinal).ToArray();
+            return first;
+        }
+        internal Error ToError(string parameter, string? form = null) => limit.HasValue
             ? new Error("Input exceeds its declared budget.", new LimitExceededDetails(parameter, limit, actual))
-            : InputGuard.Invalid(parameter, allowed);
+            : new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, allowed,
+                pointers?.Select(p => InvalidArgumentDetails.Pointer(parameter) + p).ToArray(), expected ?? form));
     }
 
     internal static class InputGuard
     {
-        internal static Error Invalid(string parameter, string[]? allowed = null) =>
-            new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, allowed ?? Array.Empty<string>()));
+        internal static Error Invalid(string parameter, string[]? allowed = null, string? expected = null) =>
+            new Error("Input does not satisfy the declared contract.",
+                new InvalidArgumentDetails(parameter, allowed ?? Array.Empty<string>(), expected: expected));
         internal static void Require(bool condition, string[]? allowed = null)
         { if (!condition) throw new InputRejectionException(allowed); }
         internal static void Limit(int actual, int? limit)
         { if (limit.HasValue && actual > limit.Value) throw new InputRejectionException(limit: limit, actual: actual); }
         internal static bool Identifier(string value) => !string.IsNullOrWhiteSpace(value) && value.All(c => char.IsLetterOrDigit(c) || c == '_');
-        internal static void Result(Error? error)
+        internal static void Result(Error? error, string prefix = "")
         {
             if (error == null) return;
             if (error.Details is LimitExceededDetails limit)
                 throw new InputRejectionException(limit: (int?)limit.Limit, actual: (int?)limit.Actual);
-            throw new InputRejectionException(error.Details is InvalidArgumentDetails invalid ? invalid.AllowedValues.ToArray() : null);
+            throw error.Details is InvalidArgumentDetails invalid
+                ? new InputRejectionException(invalid, prefix) : new InputRejectionException();
         }
         internal static void Closed(JsonElement value, string[] required, params string[] optional)
         {

@@ -47,7 +47,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 // A wrapped native exception can occur after a write was issued. Its
                 // CLR type alone cannot prove that the operation never started.
-                Error? rejection = ex is ArgumentException ? McpServer.InvalidInput("arguments")
+                Error? rejection = ex is ArgumentException argument
+                    ? new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, argument.ParamName))
                     : ex is NotSupportedException
                         ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)) : null;
                 while (ex.InnerException != null && !(ex is TiaMcpServer.Siemens.PortalException)) ex = ex.InnerException;
@@ -145,7 +146,8 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "PROJECT_NOT_BOUND" || status == "InvalidState")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "INVALID_ARGUMENT" || status == "InvalidParams")
-            { outcome = Outcome.RejectedBeforeOperation; error = McpServer.InvalidInput("arguments"); }
+            { outcome = Outcome.RejectedBeforeOperation;
+                error = new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, data)); }
             else if (status == "NOT_FOUND")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("The target was not found.", new NotFoundDetails(null)); }
             else if (status == "CONFIRMATION_REQUIRED")

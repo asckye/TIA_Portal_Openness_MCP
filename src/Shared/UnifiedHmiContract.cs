@@ -97,7 +97,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var code = rejection ?? failureCode;
                 ErrorDetails details = code == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
                     : code == "UNSUPPORTED_CAPABILITY" || code == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
-                    : code == "INVALID_ARGUMENT" || code == "InvalidParams" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                    : code == "INVALID_ARGUMENT" || code == "InvalidParams" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : code == "NOT_FOUND" || code == "NotFound" ? new NotFoundDetails(null)
                     : new PreconditionFailedDetails(evidence["error"]?.ToString(), null);
                 return Result(tool, data, new Error(nativeMessage ?? "The HMI request was rejected before the operation.", details),
