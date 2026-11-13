@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-13T05:50:28.6314153+00:00",
+  "generatedAt": "2026-11-13T11:34:56.4041876+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
-  "workerSha256": "fc3932048e6de77aadd6c3c180d7081d40367260d510ae0c0f85c2a1a01abf88",
+  "workerSha256": "d5065005d12208d141cf15e64a9d873bcd01c5c829b3fb7be0168457b11cd57c",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -4848,7 +4848,7 @@
       "parameters": [
         "confirmRestart"
       ],
-      "description": "[L0][Diagnostics][WRITE] Preview or explicitly reset an idle/faulted isolated Openness worker. confirmRestart defaults false. Refuses while calls remain active/queued. Resets all worker-held project bindings, exports and preview plans; never saves, attaches or replays a write. After confirmation, explicitly connect to the intended project again. An idle responsive attachment is detached and its process lease released before reset. A running native call refuses reset with worker-call-running until it finishes. An idle faulted worker can be reset under the current lease rules. requiresTiaRestart carries the current lease fact. Requests are never replayed. Examples: GetToolUsage(toolName: \"RestartOpennessWorker\"), optionally operation or language.",
+      "description": "[L0][Diagnostics][WRITE] Preview or explicitly reset an idle/faulted isolated Openness worker. confirmRestart defaults false. Refuses while calls remain active/queued. Resets all worker-held project bindings, exports and preview plans; never saves, attaches or replays a write. After confirmation, explicitly connect to the intended project again. An idle responsive attachment is detached and its process lease released before reset. A running native call refuses reset with worker-call-running until it finishes. A stopped lease holder leaves a record of unfinished calls for the next explicit connection. Requests are never replayed. Examples: GetToolUsage(toolName: \"RestartOpennessWorker\"), optionally operation or language.",
       "example": "{\"confirmRestart\":false}"
     },
     {
@@ -6470,7 +6470,7 @@
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[PLC foundation; native unverified][SESSION] [acknowledged-disconnect-candidate] End this worker session. An attached existing process is detached. A TIA Portal this session started is disposed, which closes a headless instance. Disconnect refuses while a project is open in that instance. SaveProject and CloseProject first. Idle disconnect never starts a worker. A running native call refuses disconnect with worker-call-running until it finishes. No project required. No save, project close, launch or automatic reconnect. An idle responsive worker can detach after an unknown outcome. An idle faulted worker follows the current lease recovery rules. Subsequent Attach requires a new MCP session. Requests are never replayed. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DisconnectPortal\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][SESSION] [acknowledged-disconnect-candidate] Disconnect this worker attachment. An attached existing process is detached. A TIA Portal this session started is disposed, which closes a headless instance. Disconnect refuses while a project is open in that instance. SaveProject and CloseProject first. Idle disconnect never starts a worker. A running native call refuses disconnect with worker-call-running until it finishes. No project required. No save, project close, launch or automatic reconnect. An idle responsive worker can detach after an unknown outcome. An idle faulted worker can be stopped after its call has ended. Call ConnectPortal and AttachOpenProject in this MCP session to reconnect with a new worker generation. Requests are never replayed. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DisconnectPortal\"), optionally operation or language.",
       "example": "{}"
     },
     {
