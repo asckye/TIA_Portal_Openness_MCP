@@ -237,7 +237,7 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(8, DomainSchemas.Get<MotionTarget>()["oneOf"]!.AsArray().Count);
             Assert.False(DomainSchemas.Get<Artifact>()["additionalProperties"]!.GetValue<bool>());
             Assert.Equal(256, DomainSchemas.Get<Artifact[]>()["maxItems"]!.GetValue<int>());
-            Assert.Equal(3, DomainSchemas.Get<BlockEdit>()["oneOf"]!.AsArray().Count);
+            Assert.Equal(4, DomainSchemas.Get<BlockEdit>()["oneOf"]!.AsArray().Count);
             Assert.Equal(3, DomainSchemas.Get<PlcSimStep>()["oneOf"]!.AsArray().Count);
             Assert.Equal(5, DomainSchemas.Get<OpenPipeRequest>()["oneOf"]!.AsArray().Count);
             Assert.NotNull(DomainSchemas.Get<GraphicGeometry>()["properties"]!["Left"]);
