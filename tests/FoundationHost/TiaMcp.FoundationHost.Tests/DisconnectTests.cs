@@ -213,6 +213,7 @@ public sealed class FoundationRecoveryTests
             File.WriteAllText(Path.Combine(gate, "release"), "");
             Assert.NotNull(await running.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
             var ack = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
+            Assert.NotEqual(true, (bool?)ack?["RequiresTiaRestart"]);
             Assert.True((bool?)ack?["Detached"]);
             Assert.True((bool?)ack?["WorkerAcknowledged"]);
         }

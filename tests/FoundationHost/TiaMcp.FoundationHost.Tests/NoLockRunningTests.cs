@@ -437,9 +437,12 @@ public sealed class NoLockRunningTests
     public async Task Late_result_completes_the_audit_and_approval_once_with_the_final_outcome()
     {
         using var scope = new Scope("19");
-        string dataRoot = Path.GetFullPath(TiaOpenness.Shared.DataLocations.Current.WorkbenchDataDirectory);
-        Assert.True(Path.GetFullPath(TiaOpenness.Shared.ApprovalSettings.SettingsPath).StartsWith(
-            dataRoot.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
+        string root = TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        string settingsPath = Path.GetFullPath(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
+        Assert.True(settingsPath.StartsWith(root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase)
+            || settingsPath.StartsWith(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase),
+            "Tests require an isolated TIA_MCP_DATA_DIRECTORY: " + settingsPath);
         var log = new TiaOpenness.Shared.AuditLog(Path.Combine(scope.DirectoryPath, "audit"));
         using var audit = TiaOpenness.Shared.AuditInvocation.UseLog(log);
         using var pipe = TiaOpenness.Shared.ApprovalPipe.CreateServer(TiaOpenness.Shared.ApprovalPipe.CurrentName,

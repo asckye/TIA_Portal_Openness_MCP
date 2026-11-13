@@ -19,6 +19,7 @@ public sealed class NoLockTests
     private sealed class Worker(string release) : IFoundationSessionWorker
     {
         internal bool UnknownNextWrite;
+        internal string? UnknownNextOperation;
         internal SemaphoreSlim? Serial;
         internal Func<string, JsonObject, Task<JsonNode?>>? Dispatch;
         public bool Faulted { get; set; }
@@ -41,6 +42,13 @@ public sealed class NoLockTests
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
         {
             if (Dispatch != null) return Dispatch(operation, args);
+            if (operation == UnknownNextOperation)
+            {
+                UnknownNextOperation = null;
+                var failure = new WorkerOperationException("Synthetic unknown result.", -32603, "unknown");
+                failure.Data["foundationPriorMutation"] = true;
+                throw failure;
+            }
             if (operation is "plc-paging.ReadBlockPage" or "ReadBlocks")
             {
                 Reads++;
@@ -115,6 +123,38 @@ public sealed class NoLockTests
         Assert.Equal(2, worker.Writes);
         Assert.Equal(1, worker.Reads);
         Assert.Single(worker.Unsettled.Snapshot());
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Unknown_preview_does_not_guard_the_following_real_write(string release)
+    {
+        using var worker = new Worker(release) { UnknownNextOperation = "SaveProject" };
+        var save = Tool(worker, release, "SaveProject");
+        var preview = Body(await save.InvokeAsync(Request("SaveProject", WriteArgs(worker, preview: true))));
+        Assert.Equal("unknown", (string?)preview["meta"]?["outcome"]);
+        var following = Body(await save.InvokeAsync(Request("SaveProject", WriteArgs(worker))));
+        Assert.True((bool?)following["ok"], following.ToJsonString());
+        Assert.Equal(1, worker.Writes);
+        Assert.Empty(worker.Unsettled.Snapshot());
+        Assert.Empty(((IFoundationSessionWorker)worker).LateResults.Snapshot());
+        Assert.Null(((IFoundationSessionWorker)worker).LateResults.FindUnread(
+            UnsettledCalls.WriteDigest("SaveProject", WriteArgs(worker), worker.Project)));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Unknown_read_does_not_enter_the_unread_write_store(string release)
+    {
+        using var worker = new Worker(release) { UnknownNextOperation = "plc-paging.ReadBlockPage" };
+        var arguments = new JsonObject { ["softwarePath"] = "PLC" };
+        var read = Body(await Tool(worker, release, "ListPlcBlocks").InvokeAsync(Request("ListPlcBlocks", arguments)));
+        Assert.Equal("unknown", (string?)read["meta"]?["outcome"]);
+        Assert.Null(((IFoundationSessionWorker)worker).LateResults.FindUnread(
+            UnsettledCalls.WriteDigest("ListPlcBlocks", arguments, worker.Project)));
+        Assert.Empty(((IFoundationSessionWorker)worker).LateResults.Snapshot());
+        Assert.Empty(worker.Unsettled.Snapshot());
+        var following = Body(await Tool(worker, release, "SaveProject").InvokeAsync(Request("SaveProject", WriteArgs(worker))));
+        Assert.True((bool?)following["ok"], following.ToJsonString());
+        Assert.Equal(1, worker.Writes);
     }
 
     [Theory, MemberData(nameof(Releases))]

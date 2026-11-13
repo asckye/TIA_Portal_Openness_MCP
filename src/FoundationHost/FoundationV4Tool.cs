@@ -124,6 +124,14 @@ internal sealed class FoundationV4Tool : McpServerTool
         return HostBehavior.ApprovalWrite(tool.Name, args,
             inner is FoundationTool { IsWrite: true } || inner is GenerationTool generation && generation.ApprovalWrite(args), hasDryRun, defaultPreview);
     }
+    private bool IsNonPreviewMutation(JsonObject arguments, bool write)
+    {
+        var properties = tool.InputSchema.GetProperty("properties");
+        bool preview = HostBehavior.IsPreview(arguments, properties.TryGetProperty("dryRun", out var dryRun)
+            && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False));
+        return !preview
+            && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE");
+    }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
         using var digestScope = WriteDigest.Enter();
@@ -174,7 +182,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ?? (result.Content.FirstOrDefault() as TextContentBlock)?.Text);
         if (inner is FoundationTool producingTool) result = producingTool.ParkWorkerResult(result, tool.Name);
-        if (result.StructuredContent is { } final && UnsettledCalls.HasUnknownOutcome(final) && inner is FoundationTool completedTool)
+        if (result.StructuredContent is { } final && UnsettledCalls.HasUnknownOutcome(final) && inner is FoundationTool completedTool
+            && IsNonPreviewMutation(arguments, write))
             completedTool.LateResults.RecordUnknown((string?)final["meta"]?["requestId"] ?? id, tool.Name,
                 WriteDigest.ForOutcome(tool.Name, arguments, completedTool.BoundProjectFile), result);
         return result;
@@ -219,11 +228,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             {
                 var arguments = JsonSerializer.SerializeToNode(args)!.AsObject();
                 sessionTool.Unsettled.ObserveProjectAfterCall(sessionTool.BoundProjectFile);
-                var properties = tool.InputSchema.GetProperty("properties");
-                bool preview = HostBehavior.IsPreview(arguments, properties.TryGetProperty("dryRun", out var dryRun)
-                    && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False));
-                if (!preview && UnsettledCalls.HasUnknownOutcome(body)
-                    && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE"))
+                if (UnsettledCalls.HasUnknownOutcome(body) && IsNonPreviewMutation(arguments, write))
                     sessionTool.Unsettled.Record((string?)body["meta"]?["requestId"] ?? id, tool.Name,
                         WriteDigest.ForOutcome(tool.Name, arguments, sessionTool.BoundProjectFile), DateTimeOffset.UtcNow);
                 body = sessionTool.Unsettled.WarnOnSave(tool.Name, body, unsettledBeforeSave);
