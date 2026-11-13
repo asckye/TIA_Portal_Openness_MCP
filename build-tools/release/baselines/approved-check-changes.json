@@ -2213,6 +2213,158 @@
           "identifier": "TiaMcp.WorkerChannel.Tests.EngineProfileTests/Timeout_defaults_and_override_precedence_are_shared_by_all_worker_operations( ):4487e95dc52f22f25925c326f150006961fe58b7c7f9182548153ad3812938d9:1"
         }
       ]
+    },
+    {
+      "task": "DES-4R2",
+      "maintainerDate": "2026-11-13",
+      "reason": "Maintainer approved 2026-11-13: errors identify the offending input field by JSON pointer instead of a bare name. Approved classes: bare name x becomes /x; the fixed string arguments becomes the exact pointer; arguments becomes the root pointer for the three sites that genuinely cannot name a field; pointers deeper than one level for the five sites that can name an array element or nested member; an empty allowed-values array becomes the declared enum list; every message is unchanged.",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.Engine.PlcExchange.Tests/HmiExchangeContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcExchangeTests.HmiExchangeContractsTests/DirectAndNestedDispatchRejectErasedOrInvalidArraysBeforeService( string value ):73be060bd66c6ccb07c6e4ebdd110e835cee10cf7b83ebc87020b94cdb40c4d1:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/ReadBatchAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ReadBatchAdmissionTests.Fixture/AssertRefused( JsonObject batch , string name ):9ef38b5e0c3ef224e401058051d637a16145d59d58f7a900dd1a61048203686a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ApprovalPrecheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ApprovalPrecheckTests/Every_current_preview_write_refuses_missing_confirmation_with_approval_disabled( string source ):269cf1880bf3654f4f896947c8860156d0312c5387c9905bf6f9fb033e7c6f6f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B1OldReleaseBridgeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B1OldReleaseBridgeTests/BridgeUsesExactlyTheRegisteredCatalogAndReportsTargetFields( string release ):7ca1ab0eedd09f2adfaf1063a48cc58beb254c9100969ba1d6d28c30990ae041:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B1OldReleaseBridgeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B1OldReleaseBridgeTests/FullReleaseBridgeReportsTargetFieldsAndReturnsValidationPreview( string release ):7ca1ab0eedd09f2adfaf1063a48cc58beb254c9100969ba1d6d28c30990ae041:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BehaviorParityTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BehaviorParityTests/Authored_precondition_messages_and_parameters_reach_both_hosts( string tool , string message , string parameter , bool argument ):7a6855b41db828a93d322ada6beadb370006943da4064c468780e1327237d736:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DeleteConfirmationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "DeleteConfirmationTests/Delete_requires_confirmation_and_project_identity( string release , string tool , string scenario ):4bddbfafe4f1b31064ece16311b83f7343901b599f42f1aafbbf7cbbc0b9a151:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DeviceApplyAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "DeviceApplyAdmissionTests/Approval_disabled_apply_checks_the_real_policy_and_keeps_the_session_usable( string scenario , string code , string parameter ):4dd54f1f2a5202494a561e022e56c2dea568ced65949b8b4575a57e33cf80463:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DeviceApplyAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "DeviceApplyAdmissionTests/Approval_disabled_apply_checks_the_real_policy_and_keeps_the_session_usable( string scenario , string code , string parameter ):b539bf585adae7a12d63ec76e92e72ad434e72bf07e006092bcf407527ebcf3a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationCoverageRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationCoverageRegressionTests/Known_read_argument_failure_uses_worker_code_and_parameter_without_message_matching( string parameter , string message ):4dd54f1f2a5202494a561e022e56c2dea568ced65949b8b4575a57e33cf80463:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/RuntimeWorkerMoveRetainsNestedCallAdmissionEnvelope( string release ):4ae282f582d3d0bff84ce517196a4005eb4b7f0d81f87990a941a0e7b5a96d1a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/WorkerFailuresRetainEvidenceAndDistinguishUnsentFromUnknown( ):b65e03407028843e7dfcaa9148cc5f25f1e5f7dc31c66ae9745e1701237694dd:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Every_PLC_group_action_validates_its_family_path_before_project_lookup( string family , string path ):8a448ea51e0af7a7beb89e99e51f57ba0bf74ebc0746b7094ce36f792fdf7ca9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OnlinePlanTagRulesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OnlinePlanTagRulesTests/Refused( JsonNode result , string parameter ):e527003b4cac1d5fb6b8da2b952b2bd35449501577a71ea2526500cfb60855f9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/RoundTwoRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.RoundTwoRegressionTests/Malformed_or_offset_free_since_is_an_argument_error( string value ):c9320484a00b5f1d224f17f67f3d47587dc5d2a6136713c1264ea0e4f873faa1:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "UnifiedPortAdmissionTests/Bridge_binding_refuses_malformed_addresses_before_approval_or_dispatch( string release , string name , string parameter ):9064b7b1fb747716b257fa6b39d380a500c702cf0ae7acb98d413aaabb1d1e3e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "UnifiedPortAdmissionTests/Every_registered_address_tool_refuses_malformed_paths_before_any_worker_call( string release , string name , string parameter , string path , bool encoded ):4dd54f1f2a5202494a561e022e56c2dea568ced65949b8b4575a57e33cf80463:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/V4ProtocolRulesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "V4ProtocolRulesTests/Invalid_update_repository_is_an_argument_refusal_with_stable_message( ):f5da6e2429589e20a114941146a29323fb4fc947b050beccdf9a42c0304d3030:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VmDefectRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VmDefectRegressionTests/Expected_project_paths_are_rejected_before_any_worker_call( string project ):9ff3b081803ea7af81505edd427dd10ce07ec85cfb0e4463e28995d1467a6a6e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Execution_requires_a_reviewed_hash_and_accepts_the_canonical_bound_project( ):e4a6b57c1abe899e6d2eebc23692c9847d28d5a1c215a0e2f0ffcd46f1d2a6d8:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4ConstructionInputTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4ConstructionInputTests/Invalid( Error error ):c4640abb7f2faad67dac767a5aefd596caeef90b9a57129172604f8bf336d599:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4DomainInputContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4DomainInputContractTests/Domain_errors_use_shared_invalid_argument_details_without_input_values( string json ):feb08f17586801114cea75432d87ca554166643cc468248e3e97d9e949e09ab5:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4HmiInputUnificationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4HmiInputUnificationTests/Invalid( Error ? error ):56b4cba7190541ccc6d1c39fb78dfdf617b26ee54d2e5fe768394fb1659eb033:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4ProtocolRulesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4ProtocolRulesTests/Json_pointer_parameter_is_not_split_into_unrelated_fields( ):f608ca1867043ca0587f52f841b7251bfc28dc6a0e5916d97a16bfb9db8910f8:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4ProtocolRulesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4ProtocolRulesTests/Multiple_parameters_roundtrip_without_changing_message( string parameters , string first , string second ):a3b4c731a51c36dc9c32d78448d38f910032c7969f380bd01361dfacdbc1dd99:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4ProtocolRulesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4ProtocolRulesTests/Multiple_parameters_roundtrip_without_changing_message( string parameters , string first , string second ):e49b9428116647c256e3cd32109706a204898b89a5fb193bb6577cecd5bb06b9:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4ProtocolRulesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4ProtocolRulesTests/Parameter_validation_always_identifies_a_field( string ? parameter ):bd94244aef87ad244f2f43c5d5e400f8683a72c6d55c0ebd2a193bd353fef79d:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/WorkerPropertyAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.WorkerPropertyAdmissionTests/Both_workers_match_the_original_contract_including_complete_refusal_details( string input ):83215d71fc6641394000d1e76ef9c8957d50594e36a18517882dea313f7b0d5d:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/WorkerPropertyAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.WorkerPropertyAdmissionTests/Both_workers_match_the_original_contract_including_complete_refusal_details( string input ):9e1c35c3b4a0a9cdae305db4577afaa606a31508df5f229909dbd1ad2146a263:1"
+        }
+      ]
     }
   ]
 }
