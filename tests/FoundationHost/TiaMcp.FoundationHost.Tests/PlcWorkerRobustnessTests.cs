@@ -146,8 +146,8 @@ public sealed class PlcFixtureWorkerRobustnessTests
         // The explicit restart and the next generation's first read run under the production budgets (P8-stab-1).
         using var production = new ProductionWorkerBudgets(scope.Worker);
         var restarted = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
-        Assert.True((bool?)restarted["restarted"]); Assert.True((bool?)restarted["requiresExplicitRebind"]);
-        if (mode == "hang") Assert.True((bool?)restarted["requiresTiaRestart"]);
+        Assert.True((bool?)restarted["restarted"]); Assert.Null(restarted["requiresExplicitRebind"]);
+        Assert.Null(restarted["requiresTiaRestart"]);
         Assert.False(scope.Worker.Faulted);
         var state = await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         Assert.Equal(release, (string?)state?["ReleaseKey"]);

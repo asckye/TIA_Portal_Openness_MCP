@@ -6,6 +6,7 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Shared/WorkerRequestIdentity.cs" Link="Shared/WorkerRequestIdentity.cs" />
     <PackageReference Include="System.Text.Json" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48'" />
   </ItemGroup>

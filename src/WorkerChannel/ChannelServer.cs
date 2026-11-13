@@ -61,7 +61,7 @@ namespace TiaMcp.WorkerChannel
                 {
                     var root = document.RootElement;
                     ChannelCodec.Fields(root, profile != ChannelProfile.Studio
-                        ? new[] { "jsonrpc", "id", "method", "params", "bindingEpoch", "requestId", "toolName" }
+                        ? new[] { "jsonrpc", "id", "method", "params", "bindingEpoch", "requestId", "toolName", "unsettledRequests" }
                         : new[] { "jsonrpc", "id", "method", "params", "bindingEpoch" }); ChannelCodec.Version(root);
                     long id = ChannelCodec.Number(root, "id");
                     if (id <= lastId) throw new IOException("Duplicate or stale worker request id.");
@@ -80,6 +80,20 @@ namespace TiaMcp.WorkerChannel
                     string? toolName = root.TryGetProperty("toolName", out _) ? ChannelCodec.Text(root, "toolName") : null;
                     if (toolName != null && (correlationId == null || !ChannelCodec.ValidIdentity(toolName)))
                         throw new IOException("Invalid request tool name.");
+                    System.Collections.Generic.List<string>? unsettledRequests = null;
+                    if (root.TryGetProperty("unsettledRequests", out var unsettled))
+                    {
+                        if (unsettled.ValueKind != System.Text.Json.JsonValueKind.Array) throw new IOException("Invalid unsettled requests.");
+                        if (unsettled.GetArrayLength() > ChannelLimits.UnsettledRequestCount)
+                            throw new IOException("Too many unsettled requests.");
+                        unsettledRequests = new System.Collections.Generic.List<string>();
+                        foreach (var entry in unsettled.EnumerateArray())
+                        {
+                            if (entry.ValueKind != System.Text.Json.JsonValueKind.String || !ChannelCodec.ValidIdentity(entry.GetString()!))
+                                throw new IOException("Invalid unsettled request identity.");
+                            unsettledRequests.Add(entry.GetString()!);
+                        }
+                    }
                     var request = new ChannelRequest(id, method, args.GetRawText(), (percent, payload) =>
                     {
                         try
@@ -92,7 +106,7 @@ namespace TiaMcp.WorkerChannel
                             Emit(ChannelCodec.Progress(id, progress, percent, payload));
                         }
                         catch (Exception ex) { throw Fault(ex); }
-                    }, correlationId, toolName);
+                    }, correlationId, toolName, unsettledRequests);
                     RequireUsable();
                     dispatched = true;
                     var response = dispatch(request);

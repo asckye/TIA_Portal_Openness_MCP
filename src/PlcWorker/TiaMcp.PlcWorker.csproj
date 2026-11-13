@@ -48,6 +48,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../Shared/WorkerRequestIdentity.cs" Link="Shared/WorkerRequestIdentity.cs" />
     <Compile Include="../Shared/WindowsOpennessGroup.cs" Link="Shared/WindowsOpennessGroup.cs" />
     <Compile Include="../Shared/WindowsOpennessGroupPlatform.cs" Link="Shared/WindowsOpennessGroupPlatform.cs" />
     <Reference Include="Siemens.Engineering" Condition="'$(TiaReleaseKey)' == '14sp1'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.dll</HintPath><Private>false</Private></Reference>

@@ -132,19 +132,12 @@ internal static class WorkerSupervisorReplies
             ["fault"] = state.Fault?.DeepClone(), ["readiness"] = state.Readiness?.DeepClone(),
             ["binding"] = state.Binding?.DeepClone(), ["previousGenerations"] = state.PreviousGenerations.DeepClone() };
     }
-    internal static System.Text.Json.Nodes.JsonObject Restart(string release, bool confirmed, bool success, bool requiresTiaRestart,
+    internal static System.Text.Json.Nodes.JsonObject Restart(bool confirmed, bool success,
         System.Text.Json.Nodes.JsonObject worker)
     {
         var result = ResponseMeta.Unstamped(success);
         if (!confirmed) result["dryRun"] = true;
-        else if (success)
-        {
-            result["restarted"] = true; result["requiresExplicitRebind"] = true;
-            result["requiresTiaRestart"] = requiresTiaRestart;
-            if (ReleaseCatalogData.Releases[release].ExtendedWorkerStatus)
-                result["recoveryMessage"] = requiresTiaRestart ? SessionBehavior.TiaRestartRequired : null;
-        }
-        else if (ReleaseCatalogData.Releases[release].ExtendedWorkerStatus) result["requiresTiaRestart"] = false;
+        else if (success) result["restarted"] = true;
         result["worker"] = worker;
         return result;
     }

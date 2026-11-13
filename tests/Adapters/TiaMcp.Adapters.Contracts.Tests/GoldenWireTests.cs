@@ -31,9 +31,7 @@ public sealed class GoldenWireTests
     public void ExactJsonIsUnchanged(string name, string codec)
     {
         var sample = GoldenSamples.All().Single(s => s.Name == name).Value;
-        using var golden = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "GoldenWire.json")));
-        // Frozen pre-P2-04b baseline: the worker used Newtonsoft defaults;
-        // LegacyHost uses the MCP SDK's STJ options. Do not regenerate these bytes.
+        // The worker baseline uses Newtonsoft defaults and the host baseline uses the MCP SDK options.
         var actual = codec == "worker" ? JsonConvert.SerializeObject(sample)
             : System.Text.Json.JsonSerializer.Serialize(sample, McpJsonUtilities.DefaultOptions);
         // P7-07c adds optional failure evidence to these two worker replies.
@@ -54,6 +52,19 @@ public sealed class GoldenWireTests
                 actual = extended.ToJsonString(McpJsonUtilities.DefaultOptions);
             }
         }
+        if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1") UpdateGolden(name, codec, actual);
+        using var golden = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "GoldenWire.json")));
         Assert.Equal(golden.RootElement.GetProperty(name).GetProperty(codec).GetString(), actual);
+    }
+
+    private static void UpdateGolden(string name, string codec, string actual)
+    {
+        string path = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "tests", "Adapters", "TiaMcp.Adapters.Contracts.Tests", "GoldenWire.json");
+        var golden = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path))!;
+        golden[name]![codec] = actual;
+        string json = golden.ToJsonString(new JsonSerializerOptions { WriteIndented = true }).Replace("\r\n", "\n") + "\n";
+        File.WriteAllText(path, json, new System.Text.UTF8Encoding(false));
+        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "GoldenWire.json"), json, new System.Text.UTF8Encoding(false));
     }
 }

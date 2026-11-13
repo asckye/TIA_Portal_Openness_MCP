@@ -9,9 +9,7 @@ using TiaOpenness.Shared;
 
 internal static class EngineSessionFixture
 {
-    internal const string LeaseMessage =
-        "The prior MCP owner did not release this TIA instance cleanly. Native outcome is unknown. Inspect diagnostics and restart that TIA instance before " +
-        "reconnecting; do not erase the lease to bypass this guard.";
+    internal const string LeaseMessage = SessionBehavior.LeaseReserved;
     internal static int Run(string[] args)
     {
         string release = args[Array.IndexOf(args, "--native-session") + 1];
@@ -61,7 +59,7 @@ internal static class EngineSessionFixture
                 return ChannelResponse.Success((operation == "assemblies" ? new JsonArray() : (JsonNode)Status()).ToJsonString());
             }
             if (request.Method == "adapter.FixtureCorrelation") return ChannelResponse.Success(new JsonObject {
-                ["id"] = request.CorrelationId, ["tool"] = request.ToolName }.ToJsonString());
+                ["id"] = request.CorrelationId, ["tool"] = request.ToolName, ["unsettledCount"] = request.UnsettledRequests?.Count }.ToJsonString());
             if (request.Method == "adapter.FixtureSpill")
             {
                 string full = new JsonObject { ["text"] = new string('x', ChannelLimits.ResponseBytes) }.ToJsonString();
@@ -88,16 +86,37 @@ internal static class EngineSessionFixture
                         ChannelOutcome.RejectedBeforeNative, new JsonObject { ["exceptionType"] = pid == 903 ? "AdapterPreconditionException" : "InvalidOperationException" }.ToJsonString()));
                 if (leaseRoot != null) lease = PortalProcessLease.Acquire(leaseRoot ?? DataLocations.Current.LeasesDirectory, pid, 1);
                 attached = pid; epoch++;
-                return ChannelResponse.Success(new JsonObject { ["Stage"] = "attached", ["OwnsPortal"] = false,
-                    ["AttemptedPids"] = new JsonArray(pid), ["Strategy"] = "explicit", ["LaunchMode"] = "attach" }.ToJsonString());
+                if (pid == 905) epoch++;
+                var result = new JsonObject { ["Stage"] = "attached", ["OwnsPortal"] = false,
+                    ["AttemptedPids"] = new JsonArray(pid), ["Strategy"] = "explicit", ["LaunchMode"] = "attach" };
+                if (lease?.PreviousOwnerState is string previous)
+                {
+                    result["PreviousOwnerState"] = previous;
+                    result["PreviousOwnerRequests"] = JsonSerializer.SerializeToNode(lease.PreviousOwnerRequests);
+                }
+                return ChannelResponse.Success(result.ToJsonString());
+            }
+            if (request.Method == "adapter.project-lifecycle.ConnectIsolatedPortal")
+            {
+                attached = 123; epoch++;
+                return ChannelResponse.Success(TiaMcp.PlcWorker.WorkerJson.Serialize(
+                    new TiaMcp.Adapters.Contracts.SecurityResult { Message = "isolated fixture connected" }));
+            }
+            if (request.Method is "adapter.CreateProject" or "adapter.OpenProject")
+            {
+                bool executed = (bool?)input["dryRun"] == false;
+                if (executed) epoch++;
+                return ChannelResponse.Success(new JsonObject { ["ProjectFile"] = "C:/fixture.ap" + release,
+                    ["Executed"] = executed, ["ProcessId"] = attached }.ToJsonString());
             }
             if (request.Method == "adapter.Disconnect")
             {
-                var result = new JsonObject { ["Stage"] = "disconnected", ["SessionState"] = "terminal", ["Strategy"] = "non-owning-attachment-only",
+                var result = new JsonObject { ["Stage"] = "disconnected", ["SessionState"] = "disconnected", ["Strategy"] = "non-owning-attachment-only",
                     ["WorkerAcknowledged"] = true, ["Detached"] = attached != null, ["ProcessId"] = attached,
                     ["SavedProject"] = false, ["ClosedProject"] = false, ["LaunchMode"] = "never" };
                 if (attached != null) epoch++;
                 attached = null;
+                lease?.SetUnsettledRequests(request.UnsettledRequests);
                 lease?.ReleaseCleanly(); lease = null;
                 return ChannelResponse.Success(result.ToJsonString());
             }
@@ -106,6 +125,15 @@ internal static class EngineSessionFixture
             if (request.Method == "adapter.ListProjects")
                 return ChannelResponse.Success(new JsonArray(new JsonObject { ["Name"] = "fixture",
                     ["Attributes"] = new JsonArray(new JsonObject { ["Name"] = "Path", ["Value"] = "C:/fixture.ap" + release }) }).ToJsonString());
+            if (request.Method == "adapter.SaveProject")
+                return ChannelResponse.Success(new JsonObject { ["ProjectFile"] = "C:/fixture.ap" + release,
+                    ["Executed"] = (bool?)input["dryRun"] == false }.ToJsonString());
+            if (request.Method == "adapter.BindProject")
+            {
+                epoch++;
+                return ChannelResponse.Success(new JsonObject { ["ProjectFile"] = "C:/fixture.ap" + release,
+                    ["Executed"] = true, ["ProcessId"] = attached }.ToJsonString());
+            }
             if (request.Method == "adapter.ReadPortalProcessProjects")
                 return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["Processes"] = new JsonArray(),
                     ["IdentityStrategy"] = "os-pid-and-start-time-observation-only" }.ToJsonString());

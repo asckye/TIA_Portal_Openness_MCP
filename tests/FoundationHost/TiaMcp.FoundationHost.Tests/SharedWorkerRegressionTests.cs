@@ -88,14 +88,17 @@ public sealed class SharedWorkerRegressionTests
         }
         else { WorkerShutdown.KillOwned(child); Assert.True(child.WaitForExit(TestDeadlines.HangMilliseconds)); }
         var ack = await worker.Call("Disconnect", new(), CancellationToken.None);
-        Assert.Equal(busy, (bool?)ack?["RequiresTiaRestart"]);
+        Assert.Null(ack?["RequiresTiaRestart"]);
         Assert.False((bool?)ack?["WorkerAcknowledged"]);
         if (pending != null) await Assert.ThrowsAnyAsync<Exception>(() => pending);
         var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
         using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
         using var context = pipeline.EnterSession();
-        var next = await new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker), release)
+        var cached = await new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker), release)
             .InvokeAsync(Request("GetSessionState"));
+        Assert.True((bool?)cached.StructuredContent?["ok"]);
+        var next = await new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetProjectInfo"), worker), release)
+            .InvokeAsync(Request("GetProjectInfo"));
         Assert.Equal("PRECONDITION_FAILED", (string?)next.StructuredContent?["error"]?["code"]);
         Assert.Null(worker.OperatorSnapshot()["sessionLocked"]);
 
@@ -470,7 +473,10 @@ public sealed class SharedWorkerRegressionTests
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
     public void Suppressed_session_ended_errors_use_the_untyped_mapper_policy(string release)
     {
-        var typed = WorkerClient.SessionEnded(release, "Disconnect ended this session.");
+        var typed = new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect ended this session.", isArgument: false);
+        typed.Data["foundationSuppressAdmissionDiagnostic"] = true;
+        typed.Data["foundationSessionEnded"] = true;
+        typed.Data["foundationRequestSent"] = false;
         var original = new InvalidOperationException(typed.Message);
         var policy = typeof(TiaMcp.Logic.V4.HostBehavior).Assembly.GetType("TiaOpenness.Shared.HostFailurePolicy")!;
         var precondition = policy.GetMethod("Precondition", BindingFlags.NonPublic | BindingFlags.Static)!;

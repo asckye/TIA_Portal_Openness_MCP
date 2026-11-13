@@ -15,7 +15,7 @@ using Xunit;
 
 public sealed class BehaviorParityTests
 {
-    [Theory, InlineData(SessionBehavior.LeaseReserved), InlineData(SessionBehavior.LeaseNotReleased)]
+    [Theory, InlineData(SessionBehavior.LeaseReserved)]
     public void Both_worker_clients_use_the_same_authored_lease_refusal_mapping(string message)
     {
         var failure = new TiaMcp.WorkerChannel.ChannelFailureException(message, -32603, TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,

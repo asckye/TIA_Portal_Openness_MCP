@@ -55,8 +55,9 @@ internal static partial class Strings
         ("Session.ProcessId", "TIA process ID", "TIA 进程 ID"),
         ("Session.Result", "V4 tool result", "V4 工具结果"),
         ("Session.DisconnectWarning",
-                "This ends the shared session of {0}. The AI must create a new MCP session and reconnect. Detach panel leaves the AI connected.",
-                "这将结束 {0} 的共享会话。AI 必须创建新的 MCP 会话并重连。分离面板会保持 AI 的连接。"),
+                "This disconnects the TIA attachment of {0}. Reconnect with ConnectPortal and AttachOpenProject in the same MCP session. " +
+                    "Detach panel leaves the AI connected.",
+                "这将断开 {0} 的 TIA 连接。可在同一 MCP 会话内调用 ConnectPortal 和 AttachOpenProject 重连。分离面板会保持 AI 的连接。"),
     ];
 
     private static readonly (string Key, string En, string Zh)[] CommonCatalogue =

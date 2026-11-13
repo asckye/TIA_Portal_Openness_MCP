@@ -224,3 +224,5 @@ worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，
 用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。遇到 `OUTCOME_UNKNOWN` 时，先在 TIA 中检查受影响目标并记录请求编号，避免自动重复该调用。`GetSessionState` 列出未确认调用，后续独立请求仍按正常身份、审批和预览检查执行；保存时会提示 `UNSETTLED_CALLS`。相同写入在运行或完成结果未读取时返回 `same-call-unsettled`。先读 `GetCallResult`，再检查目标并决定下一步。真正的 worker 故障返回 `worker-faulted`，此阶段须按[worker 与恢复](../guides/openness-worker-isolation.md)显式重启 worker 并重新绑定。重启、断开或失去绑定保留未确认清单。
 
 八版 MCP 均由 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` 启动。宿主自动使用 `worker/` 子目录中的 PLC worker，保持完整解压包即可。
+
+`DisconnectPortal` 断开后，可在同一 MCP 会话显式调用 `ConnectPortal` 和 `AttachOpenProject`。连接时若提示 `PREVIOUS_OWNER_UNCLEAN`，检查 `data.previousOwner.requests` 对应的目标。这些编号会进入当前会话未确认清单，保存继续提示 `UNSETTLED_CALLS`。

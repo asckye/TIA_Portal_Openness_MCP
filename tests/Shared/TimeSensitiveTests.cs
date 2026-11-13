@@ -122,7 +122,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["FoundationProcessLeaseTests"] = new[] {
                 "Process_gone_is_refused_without_native_dispatch",
                 "Job_object_killed_idle_worker_allows_takeover_with_client_evidence",
-                "Job_kill_during_native_fixture_keeps_busy_and_refuses_takeover",
+                "Job_kill_during_native_fixture_keeps_busy_and_admits_the_next_owner",
                 "Host_process_exit_runs_graceful_stop_before_its_job_closes",
                 "Durable_request_state_overhead_is_measured",
                 "Two_workers_racing_to_attach_have_one_winner_and_clean_release_allows_retry",

@@ -34,6 +34,13 @@ public sealed class UnsettledCalls
         lock (gate) return calls.ToArray();
     }
 
+    public void ImportPreviousOwner(IEnumerable<string> requestIds)
+    {
+        lock (gate)
+            foreach (string requestId in requestIds)
+                if (ids.Add(requestId)) calls.Add(new UnsettledCall(requestId, "previous-owner", null, DateTimeOffset.UtcNow, true));
+    }
+
     public void Clear()
     {
         lock (gate)

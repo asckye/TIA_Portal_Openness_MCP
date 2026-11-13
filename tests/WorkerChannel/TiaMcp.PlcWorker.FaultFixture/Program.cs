@@ -189,7 +189,7 @@ internal static class Program
             {
                 bool wasBound = bound;
                 bound = false; epoch++;
-                return ChannelResponse.Success(new JsonObject { ["Stage"] = "disconnected", ["SessionState"] = "terminal",
+                return ChannelResponse.Success(new JsonObject { ["Stage"] = "disconnected", ["SessionState"] = "disconnected",
                     ["Strategy"] = "non-owning-attachment-only", ["WorkerAcknowledged"] = true, ["Detached"] = wasBound,
                     ["ProcessId"] = wasBound ? attachedPid : (int?)null, ["SavedProject"] = false, ["ClosedProject"] = false,
                     ["LaunchMode"] = "never" }.ToJsonString());

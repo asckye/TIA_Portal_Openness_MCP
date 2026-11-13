@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace TiaMcp.WorkerChannel
@@ -38,9 +39,13 @@ namespace TiaMcp.WorkerChannel
     public static class ChannelLimits
     {
         public const int RequestBytes = 1024 * 1024;
+        public const int UnsettledRequestCount = TiaOpenness.Shared.WorkerRequestIdentity.MaximumUnsettledRequests;
         public const int ResponseBytes = 16 * 1024 * 1024;
         public static void CheckRequest(string method, string argumentsJson, string? correlationId = null)
             => ChannelCodec.Request(long.MaxValue, method, argumentsJson, long.MaxValue, correlationId);
+        public static void CheckRequest(string method, string argumentsJson, string? correlationId, string? toolName,
+            IReadOnlyList<string> unsettledRequests)
+            => ChannelCodec.Request(long.MaxValue, method, argumentsJson, long.MaxValue, correlationId, toolName, unsettledRequests);
     }
 
     public sealed class ChannelBinding
@@ -81,13 +86,17 @@ namespace TiaMcp.WorkerChannel
         public string ArgumentsJson { get; }
         public string? CorrelationId { get; }
         public string? ToolName { get; }
+        public IReadOnlyList<string>? UnsettledRequests { get; }
         public Action<int> Progress { get; }
         public Action<int, string?> ReportProgress { get; }
-        public ChannelRequest(long id, string method, string argumentsJson, Action<int, string?> progress, string? correlationId = null, string? toolName =
-                null)
+        public ChannelRequest(long id, string method, string argumentsJson, Action<int, string?> progress, string? correlationId = null,
+            string? toolName = null) : this(id, method, argumentsJson, progress, correlationId, toolName, null) { }
+        public ChannelRequest(long id, string method, string argumentsJson, Action<int, string?> progress, string? correlationId,
+            string? toolName, IReadOnlyList<string>? unsettledRequests)
         {
             Id = id; Method = method; ArgumentsJson = argumentsJson; CorrelationId = correlationId; ToolName = toolName; ReportProgress = progress; Progress =
                 percent => progress(percent, null);
+            UnsettledRequests = unsettledRequests;
         }
     }
 

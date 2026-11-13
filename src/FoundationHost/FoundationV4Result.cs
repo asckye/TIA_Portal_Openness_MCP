@@ -189,6 +189,13 @@ internal static class FoundationV4Result
     {
         string name = definition.Name;
         var data = definition.ResponseMember == "BlockPage" ? ValidateBlockPage(raw, args) : Object(raw);
+        if (definition.ResponseMember == "Connection" && data["previousOwnerState"] is JsonValue previous)
+        {
+            data["previousOwner"] = new JsonObject { ["state"] = previous.DeepClone(),
+                ["requests"] = data["previousOwnerRequests"]?.DeepClone() ?? new JsonArray() };
+            data.Remove("previousOwnerState");
+            data.Remove("previousOwnerRequests");
+        }
         HostBehavior.ExportPreview(data);
         if (definition.ResponseMember == "BlockPage")
         {
@@ -395,6 +402,10 @@ internal static class FoundationV4Result
     {
         if (outcome == Outcome.Unknown) data?.Remove("recovery");
         var warnings = new List<Warning>();
+        if (name == "ConnectPortal" && (string?)data?["previousOwner"]?["state"] is "BUSY" or "UNCERTAIN" or "ACTIVE")
+            warnings.Add(new Warning(WarningCode.PreviousOwnerUnclean,
+                "The previous owner's record is unclean. Inspect its state, these request IDs and their targets before repeating calls.",
+                new Dictionary<string, JsonElement> { ["previousOwner"] = JsonSerializer.SerializeToElement(data!["previousOwner"]) }));
         if (error?.Code == ErrorCode.UnsupportedCapability)
             warnings.Add(new Warning(WarningCode.NativeCapabilityLimit, "The selected release or native API does not provide this capability.", Empty));
         if (data != null && name is "CompilePlcSoftware" or "CompilePlcDiagnostics" && data["state"]?.ToString() == "Warning")

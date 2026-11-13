@@ -7,7 +7,7 @@ namespace TiaMcp.Adapters
     public sealed class PlcDisconnectResult
     {
         public string Stage { get; internal set; } = "disconnected";
-        public string SessionState { get; internal set; } = "terminal";
+        public string SessionState { get; internal set; } = "disconnected";
         public string Strategy { get; internal set; } = "non-owning-attachment-only";
         public bool WorkerAcknowledged { get; internal set; } = true;
         public bool Detached { get; internal set; }

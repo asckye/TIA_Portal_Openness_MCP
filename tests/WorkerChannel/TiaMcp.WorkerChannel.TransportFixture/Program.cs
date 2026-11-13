@@ -49,7 +49,9 @@ return TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() =>
             case "ReadState": result = new JsonObject { ["IsAttached"]=attached.HasValue, ["ProcessId"]=attached, ["diagnosticsDirectory"]=Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY") }; break;
             case "ReadProjectTree": result = JsonValue.Create("生产线 / PLC_测试 / 程序块"); break;
             case "Disconnect":
-                result = new JsonObject { ["Stage"]="disconnected", ["SessionState"]="terminal", ["Strategy"]="non-owning-attachment-only", ["WorkerAcknowledged"]=true, ["Detached"]=attached.HasValue, ["ProcessId"]=attached, ["SavedProject"]=false, ["ClosedProject"]=false, ["LaunchMode"]="never" };
+                result = new JsonObject { ["Stage"]="disconnected", ["SessionState"]="disconnected",
+                    ["Strategy"]="non-owning-attachment-only", ["WorkerAcknowledged"]=true, ["Detached"]=attached.HasValue,
+                    ["ProcessId"]=attached, ["SavedProject"]=false, ["ClosedProject"]=false, ["LaunchMode"]="never" };
                 if (attached.HasValue) epoch++;
                 attached = null;
                 break;

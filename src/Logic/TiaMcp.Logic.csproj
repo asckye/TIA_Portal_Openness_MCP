@@ -13,6 +13,7 @@
     <DefineConstants>$(DefineConstants);TIA_BUNDLE_LAYOUT_PUBLIC</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Shared/WorkerRequestIdentity.cs" Link="Shared/WorkerRequestIdentity.cs" />
     <Compile Include="../Shared/SafetyPolicy.cs" />
     <Compile Remove="ModelContextProtocol/Builders/PlcDeclarationXmlFormat.cs" />
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

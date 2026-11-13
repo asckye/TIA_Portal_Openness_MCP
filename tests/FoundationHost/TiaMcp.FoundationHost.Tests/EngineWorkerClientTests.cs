@@ -167,7 +167,8 @@ public sealed class EngineWorkerClientTests
                 try { File.ReadAllText(path); break; } catch (IOException) { await Task.Delay(10); }
             }
             Assert.Equal("UNCERTAIN\n", File.ReadAllText(path));
-            Assert.Equal(SessionBehavior.LeaseNotReleased, Assert.Throws<InvalidOperationException>(() => TiaMcpServer.Siemens.PortalProcessLease.Acquire(root, 123, 1)).Message);
+            using var acquired = TiaMcpServer.Siemens.PortalProcessLease.Acquire(root, 123, 1);
+            Assert.Equal("UNCERTAIN", acquired.PreviousOwnerState);
         }
         finally
         {

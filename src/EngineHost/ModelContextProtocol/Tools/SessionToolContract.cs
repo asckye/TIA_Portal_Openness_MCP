@@ -95,6 +95,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (data.ContainsKey("summary")) data["operationSummary"] = data["message"]?.DeepClone();
             else data["summary"] = data["message"]?.DeepClone();
             data.Remove("message");
+            if (tool == "RestartOpennessWorker")
+                data["summary"] = (bool?)evidence["dryRun"] == true ? "Worker restart preview evaluated."
+                    : (bool?)evidence["restarted"] == true ? "Worker restarted. Call ConnectPortal and AttachOpenProject to bind the project."
+                    : "Worker restart preconditions are not satisfied.";
             data["evidence"] = evidence;
             HostBehavior.SanitizeEvidence(data, evidence: false);
             Clean(data);

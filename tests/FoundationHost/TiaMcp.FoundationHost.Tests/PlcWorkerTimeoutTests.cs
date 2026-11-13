@@ -656,7 +656,7 @@ public sealed class PlcWorkerRobustnessTests
             await running.Completion.WaitAsync(TestDeadlines.Hang);
             var reply = await scope.Worker.Call("Disconnect", new(), CancellationToken.None);
             Assert.True((bool?)reply?["WorkerAcknowledged"]);
-            Assert.False((bool?)reply?["RequiresTiaRestart"] == true);
+            Assert.Null(reply?["RequiresTiaRestart"]);
         }
         finally { File.WriteAllText(gate + ".release", ""); File.Delete(gate + ".dispatched"); }
     }

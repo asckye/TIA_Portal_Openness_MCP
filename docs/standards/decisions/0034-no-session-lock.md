@@ -43,7 +43,7 @@ Part 2 将读取和写入统一为同一机制。达到客户端等待预算时�
 
 恢复增加绑定 generation，使旧预览和审批身份失效。`WORKER_RESTARTED` 说明代次、原因、是否重绑以及丢失的 worker 状态。已附着 TIA 中的未保存项目更改仍由 TIA 持有。由 worker 自己启动的 TIA 不自动关闭或重新打开。
 
-租约随持有进程结束。死持有者留下的 BUSY、UNCERTAIN 或 ACTIVE 记录在新连接时转为 `PREVIOUS_OWNER_UNCLEAN` 警告，保留前持有者状态与请求编号。活持有者仍阻止另一写入者。断开后允许在同一 MCP 会话重新连接。
+租约随持有进程结束。死持有者留下的 BUSY、UNCERTAIN 或遗留 ACTIVE 记录在新连接时转为 `PREVIOUS_OWNER_UNCLEAN` 警告。IDLE 和 RELEASED 记录允许连接，保持无此警告。`data.previousOwner` 保留前持有者状态与请求编号。活持有者仍阻止另一写入者。断开后允许在同一 MCP 会话重新连接。
 
 同一宿主中的被遗弃会话，在没有调用、审批、工作台参与、操作端所有权或自启 TIA 的情况下，闲置至少 10 分钟或新连接显式给出 `takeOver=true` 时可以让出。移交执行所属线程上的非拥有式 Disconnect。若它仍在执行，移交保持等待中的事实。
 
@@ -69,7 +69,7 @@ Part 8 逐个重分类标志设置点后，才将 worker 字段改为 `OutcomeUn
 
 NO-LOCK 分八部分实施。Part 1 移除会话锁并增加未确认清单。Part 1 同时保留经审阅的相同 apply 请求保护，已有未知结果且参数与审阅哈希相同的执行请求在派发前返回 `same-call-unsettled`。Part 2 实现运行中与迟到结果，并完成相同写入识别及结果读取后的解除机制。Part 3 调整租约和断开后重连。Part 4 实现 worker 自动恢复。Part 5 实现对话框和预算。Part 6 实现被遗弃会话让出。Part 7 实现有证据的只读核对。Part 8 清理旧字段。
 
-Part 2 已实现调用等待预算到期后的响应分离、迟到结果取回、相同写入保护和会话释放延迟。host-only 的状态探测仍受预算约束，故障按真实传输失败处理。真正的通道故障在 Part 4 前通过 `PRECONDITION_FAILED` 的 `worker-faulted` 条件提示显式重启 worker。Part 3 前保留租约及断开后重连语义。
+Part 2 已实现调用等待预算到期后的响应分离、迟到结果取回、相同写入保护和会话释放延迟。host-only 的状态探测仍受预算约束，故障按真实传输失败处理。真正的通道故障在 Part 4 前通过 `PRECONDITION_FAILED` 的 `worker-faulted` 条件提示显式重启 worker。Part 3 已将租约内容改为记录，保留未决编号并在新会话标记 `fromPreviousOwner`。确认断开写入 `RELEASED <ids>`。同一 MCP 会话的显式 `ConnectPortal` 启动新代次，旧 worker 的原生调用序列保持原样。断开与显式重启移除 `requiresTiaRestart`、`recoveryMessage` 及对应旧字段，断开状态为 `disconnected`。
 
 2026-11-12，维护者批准本任务所有纯会话锁断言改为本次错误保留、后续独立调用可用。每项断言变更须在任务结果表中列出文件位置、原值和新值。真实结果、禁止重放、错误调用拒绝、项目身份、审批及 stale-plan 断言必须保持。
 

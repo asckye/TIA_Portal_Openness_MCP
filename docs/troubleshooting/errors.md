@@ -62,3 +62,5 @@ V20/V21 可用 `GetOpennessCompatibility` 查看加载程序集版本，用 `Get
 需要本机退出证据时，在工作台环境页导出“诊断包”。它会收集最近 24 小时的匹配 Windows 事件、TIA/MCP 服务进程和转储文件清单，以及存在的原生导出日志；转储文件内容不会复制。包内日志和事件经过脱敏，但分享前仍应复核，因为系统消息可能包含私有路径或工程信息。
 
 开发者应沿用现有错误类型和结果封装，不在本页维护第二套编码、异常装饰或日志规范。仓库行尾与编码以 `.gitattributes` 和现有构建检查为准。
+
+断开后可在同一 MCP 会话调用 `ConnectPortal` 和 `AttachOpenProject`。新连接的 `PREVIOUS_OWNER_UNCLEAN` 表示前持有者留下 `BUSY`、`UNCERTAIN` 或遗留 `ACTIVE` 记录，详情在 `data.previousOwner`。未决编号进入当前会话并标记 `fromPreviousOwner=true`。检查这些调用的目标，保存时核对 `UNSETTLED_CALLS`。

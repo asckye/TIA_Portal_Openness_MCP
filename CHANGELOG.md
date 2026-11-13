@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Released TIA lease handles admit a new explicit connection for every recorded state. BUSY, UNCERTAIN and legacy ACTIVE records produce `PREVIOUS_OWNER_UNCLEAN`, and previous request IDs seed the new session's unsettled list. Disconnect permits reconnecting in the same MCP session with a new worker generation. Disconnect and restart remove TIA-restart fields, and disconnect reports `disconnected`. These changes retain schema version 4 in the unreleased contract.
 - Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 - Served tool examples use canonical parameter names and always show the preview form. Corrected scope, connection, Teamcenter, library, service and generation rows; validation names V21 as the only exercised release and distinguishes preview, apply and NOT RUN cases.
 - Unknown write outcomes affect only their own calls. Later independent requests run, `GetSessionState` lists unsettled request IDs, and `SaveProject` / `SaveProjectCopy` preview and apply results warn with `UNSETTLED_CALLS`. Answered unknown replies keep the worker available. Workbench shows the unsettled count.

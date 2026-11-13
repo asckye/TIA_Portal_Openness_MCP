@@ -19,12 +19,13 @@ internal static class FoundationTools
     private const string BlockHierarchyDescription = "[v17-read-safe-v1] Actual nested block groups, including empty groups; structure only; " +
         "use ListPlcBlocks or GetPlcBlockInfo for details. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error.";
     private const string DisconnectDescription =
-        "[acknowledged-disconnect-candidate] End this worker session. An attached existing process is detached. " +
+        "[acknowledged-disconnect-candidate] Disconnect this worker attachment. An attached existing process is detached. " +
         "A TIA Portal this session started is disposed, which closes a headless instance. Disconnect refuses while a project is open " +
         "in that instance. SaveProject and CloseProject first. Idle disconnect never starts a worker. A running native call refuses " +
         "disconnect with worker-call-running until it finishes. No project required. No save, project close, launch or automatic reconnect. " +
-        "An idle responsive worker can detach after an unknown outcome. An idle faulted worker follows the current lease recovery rules. " +
-        "Subsequent Attach requires a new MCP session. Requests are never replayed. Native acceptance NOT RUN.";
+        "An idle responsive worker can detach after an unknown outcome. An idle faulted worker can be stopped after its call has ended. " +
+        "Call ConnectPortal and AttachOpenProject in this MCP session to reconnect with a new worker generation. " +
+        "Requests are never replayed. Native acceptance NOT RUN.";
     private static Argument S(string name) => new(name);
     private static Argument Dry() => new("dryRun", "boolean", false, true);
     private const string UmacUser = "umacUserName: UMAC user of a protected project; give it together with umacPassword. Empty for an unprotected project.";
@@ -153,8 +154,9 @@ internal sealed partial class FoundationTool : McpServerTool
         => worker is IFoundationWorkerReadiness readiness ? readiness.PrepareReadiness(token) : Task.CompletedTask;
     internal string? ApprovalIdentity => (worker as IFoundationSessionWorker)?.ApprovalIdentity;
     internal string? BoundProjectFile => (string?)SharedSessionState.For(worker).Identity?["projectPath"];
-    private bool CachedSessionState => definition.Name == "GetSessionState" && worker is not WorkerClient { Disconnected: true }
-        && (Unsettled.Snapshot().Count > 0 || worker is WorkerClient { CallRunning: true } or WorkerClient { Faulted: true });
+    private bool CachedSessionState => definition.Name == "GetSessionState"
+        && (Unsettled.Snapshot().Count > 0 || worker is WorkerClient { Disconnected: true }
+            or WorkerClient { CallRunning: true } or WorkerClient { Faulted: true });
     internal Task<IDisposable?> AcquireLane(CancellationToken token)
         => IsNative && definition.ResponseMember != "Disconnect" && !CachedSessionState
             && worker is IFoundationSessionWorker client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);

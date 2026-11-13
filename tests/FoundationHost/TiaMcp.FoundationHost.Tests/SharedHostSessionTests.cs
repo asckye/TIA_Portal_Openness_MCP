@@ -88,7 +88,10 @@ public sealed class SharedHostSessionTests
     public void Disconnect_uses_one_exception_type_and_preserves_the_release_diagnostic(string release)
     {
         const string message = "Disconnect is ending this session; a new host session is required.";
-        var error = TiaMcp.FoundationHost.WorkerClient.SessionEnded(release, message);
+        var error = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(message, isArgument: false);
+        error.Data["foundationSuppressAdmissionDiagnostic"] = !Profile.Releases[release].RevealSessionEndedDiagnostic;
+        error.Data["foundationSessionEnded"] = true;
+        error.Data["foundationRequestSent"] = false;
         Assert.IsType<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(error);
         var result = TiaMcp.FoundationHost.FoundationV4Result.Failure(release, "GetSessionState", "disconnect-test", false, false, null, error).StructuredContent!;
         Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
@@ -185,7 +188,7 @@ public sealed class SharedHostSessionTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
         var restarted = await worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restarted["success"]);
-        Assert.True((bool?)restarted["requiresExplicitRebind"]);
+        Assert.Null(restarted["requiresExplicitRebind"]);
         Assert.Equal("Ready", (string?)restarted["worker"]?["state"]);
     }
 
@@ -229,7 +232,7 @@ public sealed class SharedHostSessionTests
             Assert.Single(enginehost::TiaMcpServer.ModelContextProtocol.McpServer.Worker.Unsettled.Snapshot());
             var restarted = await services.Restart(true, CancellationToken.None);
             Assert.True((bool?)restarted["success"]);
-            Assert.True((bool?)restarted["requiresExplicitRebind"]);
+            Assert.Null(restarted["requiresExplicitRebind"]);
             Assert.Single(worker.Unsettled.Snapshot());
             var recovered = (await Tool("ReadState").InvokeAsync(Request())).StructuredContent!;
             Assert.True((bool?)recovered["ok"]);

@@ -25,7 +25,9 @@ internal static class V17ProjectEnvelope
                 throw new IOException("Explicit attachment outcome is missing or invalid.");
             response=new JsonObject {
                 [Wire("Message")]="Attached to the selected existing TIA process",[Wire("Meta")]=new JsonObject { ["success"]=true,["ownsPortal"]=false } };
-            if ((bool?)state["PreviousOwnerEndedIdle"] == true) response["previousOwnerEndedIdle"] = true;
+            if (state["PreviousOwnerState"] is JsonValue previous)
+                response["previousOwner"] = new JsonObject { ["state"] = previous.DeepClone(),
+                    ["requests"] = state["PreviousOwnerRequests"]?.DeepClone() ?? new JsonArray() };
             foreach(var name in new[]{"Stage","Strategy","AttemptedPids","LaunchMode"}) response[Wire(name)]=state[name]?.DeepClone();
         }
         var meta=(JsonObject)response[Wire("Meta")]!;

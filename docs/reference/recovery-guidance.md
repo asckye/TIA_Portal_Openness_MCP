@@ -23,3 +23,5 @@ against the current session. Guidance does not approve, retry, or execute a
 write. Workbench confirmation remains an explicit human decision.
 
 An `OUTCOME_UNKNOWN` result applies to that call. Read `GetCallResult(requestId)` and inspect its target before repeating it. A running call returns `in-progress` with `OPERATION_IN_PROGRESS`. An identical write returns `same-call-unsettled` until its completed result has been read. `GetSessionState.data.sessionState.unsettled` lists unknown request IDs. `SaveProject` and `SaveProjectCopy` carry `UNSETTLED_CALLS` during preview and apply while that list is nonempty.
+
+An explicit `DisconnectPortal` returns `sessionState=disconnected`. Reconnect with `ConnectPortal` and `AttachOpenProject` in the same MCP session. A released lease handle admits the next owner, with `PREVIOUS_OWNER_UNCLEAN` for BUSY, UNCERTAIN or legacy ACTIVE records and `data.previousOwner` carrying request IDs. Those IDs enter the new session as `fromPreviousOwner=true` and continue to warn on save. Inspect their targets before repeating a call.

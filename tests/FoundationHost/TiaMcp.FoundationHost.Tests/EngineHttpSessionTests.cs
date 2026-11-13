@@ -64,12 +64,19 @@ public sealed class EngineHttpSessionTestsPlc
         Assert.True((bool?)(await a.Tool("GetProjectInfo"))["ok"]);
         var detached = await a.Tool("CallTool", new() { ["name"] = "DisconnectPortal", ["arguments"] = new JsonObject() });
         Assert.True((bool?)detached["data"]?["workerAcknowledged"]);
-        Assert.False((bool?)detached["data"]?["requiresTiaRestart"]);
-        Assert.Equal(prior, (string?)detached["data"]?["priorUnknownRequestId"]);
+        Assert.Null(detached["data"]?["requiresTiaRestart"]);
+        Assert.Null(detached["data"]?["priorUnknownRequestId"]);
         Assert.False((bool?)detached["data"]?["savedProject"]); Assert.False((bool?)detached["data"]?["closedProject"]);
-        Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "321-1.lease")));
-        using var b = new Session(host.Url); await b.Initialize(); await b.Tool("ConnectPortal", new() { ["processId"] = 321 });
-        Assert.Contains(Directory.EnumerateFiles(host.DataDirectory, "*.jsonl", SearchOption.AllDirectories), path => File.ReadAllText(path).Contains("RECOVERY_DISCONNECT") && File.ReadAllText(path).Contains(prior));
+        Assert.Equal("RELEASED " + prior + "\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "321-1.lease")));
+        using var b = new Session(host.Url); await b.Initialize();
+        var connected = await b.Tool("ConnectPortal", new() { ["processId"] = 321 });
+        Assert.Equal("RELEASED", (string?)connected["data"]?["previousOwner"]?["state"]);
+        Assert.Equal(prior, (string?)connected["data"]?["previousOwner"]?["requests"]?[0]);
+        var inherited = Assert.Single((await b.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray())!;
+        Assert.Equal(prior, (string?)inherited["requestId"]);
+        Assert.True((bool?)inherited["fromPreviousOwner"]);
+        Assert.Contains(Directory.EnumerateFiles(host.DataDirectory, "*.jsonl", SearchOption.AllDirectories),
+            path => File.ReadAllText(path).Contains("RECOVERY_DISCONNECT") && File.ReadAllText(path).Contains(prior));
         await b.Tool("DisconnectPortal"); await a.End(); await b.End();
     }
 
@@ -94,8 +101,12 @@ public sealed class EngineHttpSessionTestsPlc
     {
         using var host = await Fixture.Start(release); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 322 });
+        var preview = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = false });
+        Assert.Equal("Worker restart preview evaluated.", (string?)preview["data"]?["summary"]);
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
-        Assert.Contains("\"requiresTiaRestart\":false", restarted["data"]!.ToJsonString());
+        Assert.Null(restarted["data"]?["requiresTiaRestart"]);
+        Assert.Equal("Worker restarted. Call ConnectPortal and AttachOpenProject to bind the project.",
+            (string?)restarted["data"]?["summary"]);
         Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "322-1.lease")));
         await a.Tool("ConnectPortal", new() { ["processId"] = 322 });
         await a.Tool("DisconnectPortal"); await a.End();
@@ -161,7 +172,7 @@ public sealed class EngineHttpSessionTestsPlc
         var completed = await a.Tool("GetCallResult", new() { ["requestId"] = (string)running["data"]!["activeRequestId"]! });
         Assert.Equal("succeeded", (string?)completed["meta"]?["outcome"]);
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
-        Assert.Contains("\"requiresTiaRestart\":false", restarted["data"]!.ToJsonString());
+        Assert.Null(restarted["data"]?["requiresTiaRestart"]);
         Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "324-1.lease")));
         await a.End();
     }
@@ -205,8 +216,8 @@ public sealed class EngineHttpSessionTestsPlc
         Assert.False(processA.HasExited);
         Assert.True(processB.WaitForExit(TestDeadlines.HangMilliseconds));
         await a.Tool("DisconnectPortal");
-        var refused = await a.Tool("GetSessionState", ok: false);
-        Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
+        var disconnected = await a.Tool("GetSessionState");
+        Assert.True((bool?)disconnected["ok"]);
         await b.Tool("GetSessionState"); await b.Tool("ListPortalProcessProjects");
         int currentB = (int)(await b.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var workerB = Process.GetProcessById(currentB);

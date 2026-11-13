@@ -13,14 +13,7 @@ namespace TiaMcp.WorkerChannel
         internal const int ResponseLimit = 16 * 1024 * 1024;
         internal const int ProgressLimit = 1024;
 
-        internal static bool ValidIdentity(string text)
-        {
-            if (text.Length == 0 || text.Length > 128) return false;
-            foreach (char c in text)
-                if (!(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9'
-                    || c == '-' || c == '_' || c == '.' || c == ':')) return false;
-            return true;
-        }
+        internal static bool ValidIdentity(string text) => TiaOpenness.Shared.WorkerRequestIdentity.IsValid(text);
 
         internal static bool ValidMethod(string method, ChannelProfile profile) =>
             profile == ChannelProfile.Studio ? !string.IsNullOrWhiteSpace(method) :
@@ -97,11 +90,19 @@ namespace TiaMcp.WorkerChannel
                 throw new IOException("Worker hello identity mismatch or nonfresh binding.");
         }
 
-        internal static byte[] Request(long id, string method, string args, long epoch, string? correlationId = null, string? toolName = null) => Encode(w =>
+        internal static byte[] Request(long id, string method, string args, long epoch, string? correlationId = null, string? toolName = null,
+            System.Collections.Generic.IReadOnlyList<string>? unsettledRequests = null) => Encode(w =>
         {
             w.WriteNumber("id", id); w.WriteString("method", method); w.WriteNumber("bindingEpoch", epoch);
             if (correlationId != null) w.WriteString("requestId", correlationId);
             if (toolName != null) w.WriteString("toolName", toolName);
+            if (unsettledRequests != null)
+            {
+                if (unsettledRequests.Count > ChannelLimits.UnsettledRequestCount) throw new ChannelLimitException();
+                w.WriteStartArray("unsettledRequests");
+                foreach (string request in unsettledRequests) w.WriteStringValue(request);
+                w.WriteEndArray();
+            }
             Raw(w, "params", args, RequestLimit);
         }, RequestLimit);
 

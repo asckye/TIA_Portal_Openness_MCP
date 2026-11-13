@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace TiaMcpServer.Siemens
@@ -12,9 +14,12 @@ namespace TiaMcpServer.Siemens
     {
         private FileStream? stream;
         internal string Key { get; }
-        internal bool PreviousOwnerEndedIdle { get; private set; }
-        internal bool Uncertain => state == "UNCERTAIN\n";
+        internal string? PreviousOwnerState { get; private set; }
+        internal IReadOnlyList<string> PreviousOwnerRequests { get; private set; } = Array.Empty<string>();
+        internal bool Uncertain => state.StartsWith("UNCERTAIN", StringComparison.Ordinal);
         private string state = "";
+        private string? requestId;
+        private readonly HashSet<string> requests = new HashSet<string>(StringComparer.Ordinal);
         private PortalProcessLease(FileStream handle, string key) { stream = handle; Key = key; }
         internal static PortalProcessLease Acquire(string root, int pid, long startUtcTicks)
         {
@@ -28,43 +33,69 @@ namespace TiaMcpServer.Siemens
             try
             {
                 string previous;
-                using (var reader = new StreamReader(handle, Encoding.UTF8, false, 1024, true)) previous = reader.ReadToEnd();
-                if (RefusesContent(previous))
-                    throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.LeaseNotReleased);
-                lease.PreviousOwnerEndedIdle = previous == "IDLE\n";
-                lease.Write("BUSY\n");
+                bool discarded;
+                using (var reader = new StreamReader(handle, Encoding.UTF8, false, 1024, true))
+                {
+                    previous = reader.ReadLine() ?? "";
+                    discarded = reader.Peek() != -1;
+                }
+                var parts = previous.TrimStart().Split(new[] { ' ' }, 2);
+                lease.PreviousOwnerState = parts[0].Length == 0 ? null : parts[0];
+                var previousRequests = new List<string>();
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string id in parts.Length == 2 ? parts[1].Split(',') : Array.Empty<string>())
+                {
+                    if (!TiaOpenness.Shared.WorkerRequestIdentity.IsValid(id)
+                        || previousRequests.Count == TiaOpenness.Shared.WorkerRequestIdentity.MaximumUnsettledRequests)
+                    { discarded = true; continue; }
+                    if (seen.Add(id)) previousRequests.Add(id);
+                }
+                lease.PreviousOwnerRequests = previousRequests;
+                if (discarded) Console.Error.WriteLine("Portal lease record discarded invalid or excess request IDs or trailing data.");
+                lease.requests.UnionWith(lease.PreviousOwnerRequests);
+                lease.Write(Record("BUSY", lease.requests));
                 return lease;
             }
             catch { lease.Dispose(); throw; }
         }
-        private static bool RefusesContent(string previous) => previous.Length != 0 && previous != "RELEASED\n" && previous != "IDLE\n";
-
-        internal static bool RefusesAdmission(string root, int pid, long startUtcTicks)
+        internal void SetUnsettledRequests(IReadOnlyList<string>? ids)
         {
-            string key = pid.ToString(CultureInfo.InvariantCulture) + "-" + startUtcTicks.ToString(CultureInfo.InvariantCulture);
-            try
-            {
-                using (var handle = new FileStream(Path.Combine(root, key + ".lease"), FileMode.Open, FileAccess.Read, FileShare.None))
-                using (var reader = new StreamReader(handle, Encoding.UTF8)) return RefusesContent(reader.ReadToEnd());
-            }
-            catch (FileNotFoundException) /* swallow(env-probe): no persistent lease means admission is available */ { return false; }
-            catch (DirectoryNotFoundException) /* swallow(env-probe): no lease directory means admission is available */ { return false; }
-            catch (IOException) /* swallow(env-probe): a locked or unreadable lease must retain the restart guard */ { return true; }
-            catch (UnauthorizedAccessException) /* swallow(env-probe): inaccessible lease state cannot prove admission is available */ { return true; }
+            if (ids == null) return;
+            requests.Clear();
+            requests.UnionWith(ids);
         }
 
-        internal void BeginRequest() { if (state != "UNCERTAIN\n") Write("BUSY\n"); }
-        internal void CompleteRequest(bool uncertain) => Write(uncertain || state == "UNCERTAIN\n" ? "UNCERTAIN\n" : "IDLE\n");
+        internal void BeginRequest(string? id = null)
+        {
+            requestId = id;
+            var busy = requests.OrderBy(value => value, StringComparer.Ordinal).ToList();
+            if (id != null && !requests.Contains(id)) busy.Add(id);
+            Write(Record("BUSY", busy));
+        }
+        internal void CompleteRequest(bool uncertain)
+        {
+            if (uncertain && requestId != null) requests.Add(requestId);
+            requestId = null;
+            Write(Record(uncertain || requests.Count > 0 ? "UNCERTAIN" : "IDLE", requests));
+        }
+        private static string Record(string status, IEnumerable<string> ids)
+        {
+            string values = string.Join(",", ids.OrderBy(value => value, StringComparer.Ordinal));
+            return status + (values.Length == 0 ? "" : " " + values) + "\n";
+        }
         private void Write(string value)
         {
             if (stream == null || state == value) return;
             var bytes = Encoding.UTF8.GetBytes(value);
-            stream!.Position = 0; stream.Write(bytes, 0, bytes.Length); stream.SetLength(bytes.Length); stream.Flush(true); state = value;
+            stream!.Position = 0;
+            stream.Write(bytes, 0, bytes.Length);
+            stream.SetLength(bytes.Length);
+            stream.Flush(true); state = value;
         }
         internal void ReleaseCleanly()
         {
             if (stream == null) return;
-            try { Write("RELEASED\n"); } finally { Dispose(); }
+            try { Write(Record("RELEASED", requests)); } finally { Dispose(); }
         }
         // Dispose alone intentionally leaves the persistent uncertainty marker.
         public void Dispose() { var handle = stream; stream = null; handle?.Dispose(); }

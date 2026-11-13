@@ -121,6 +121,7 @@ namespace TiaMcp.PlcWorker
         private readonly Action disposeEngine;
         private readonly Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch;
         private PortalProcessLease? lease;
+        private string? currentRequestId;
         private bool uncertain, disposed;
         internal long ProcessStartTicks { get; private set; }
         internal bool Reserved => lease != null;
@@ -142,7 +143,7 @@ namespace TiaMcp.PlcWorker
             long ticks = process.StartTime.ToUniversalTime().Ticks;
             lease = PortalProcessLease.Acquire(root(), processId, ticks);
             ProcessStartTicks = ticks;
-            lease.BeginRequest();
+            lease.BeginRequest(currentRequestId);
             return ticks;
         }
 
@@ -157,6 +158,7 @@ namespace TiaMcp.PlcWorker
 
         internal ChannelResponse Dispatch(ChannelRequest request)
         {
+            currentRequestId = request.CorrelationId;
             bool reserved = false, entered = false;
             try
             {
@@ -169,21 +171,27 @@ namespace TiaMcp.PlcWorker
                     lease = PortalProcessLease.Acquire(root(), pid.Value, ProcessStartTicks);
                     reserved = true;
                 }
-                if (request.Method != "adapter.ReadState") lease?.BeginRequest();
+                // Post-call probes precede the host's outcome recording. Retain new unknown IDs
+                // until the next operation supplies its updated unsettled snapshot.
+                if (!reserved && request.Method is not ("adapter.ReadState" or "adapter.HostObserve"))
+                    lease?.SetUnsettledRequests(request.UnsettledRequests);
+                if (request.Method != "adapter.ReadState") lease?.BeginRequest(request.CorrelationId);
                 entered = true;
                 var response = dispatch(request);
                 if (afterDispatch != null) response = afterDispatch(request, response);
                 if (detached()) { ReleaseCleanly(); uncertain = false; }
                 else
                 {
-                    uncertain |= response.Failure?.Outcome == ChannelOutcome.Unknown || requiresReset();
+                    bool callUnknown = response.Failure?.Outcome == ChannelOutcome.Unknown || requiresReset() && !uncertain;
+                    uncertain |= callUnknown;
                     // A rejected attach leaves no native connection and can return its reservation.
                     if (reserved && !attached() && !uncertain) ReleaseCleanly();
-                    else lease?.CompleteRequest(uncertain);
-                    if (reserved && lease?.PreviousOwnerEndedIdle == true && attached() && response.Failure == null)
+                    else lease?.CompleteRequest(callUnknown);
+                    if (reserved && lease?.PreviousOwnerState is string previous && attached() && response.Failure == null)
                     {
                         var result = JsonNode.Parse(response.ResultJson)!.AsObject();
-                        result["PreviousOwnerEndedIdle"] = true;
+                        result["PreviousOwnerState"] = previous;
+                        result["PreviousOwnerRequests"] = JsonSerializer.SerializeToNode(lease.PreviousOwnerRequests);
                         response = ChannelResponse.Success(result.ToJsonString());
                     }
                 }
@@ -198,6 +206,7 @@ namespace TiaMcp.PlcWorker
                 return ChannelResponse.Error(new ChannelFailureException(WorkerFailurePolicy.DiagnosticCause(error).Message,
                     failure.Code, failure.Outcome, WorkerJson.Evidence(error)));
             }
+            finally { currentRequestId = null; }
         }
 
         private void ReleaseCleanly() { lease?.ReleaseCleanly(); lease = null; ProcessStartTicks = 0; }

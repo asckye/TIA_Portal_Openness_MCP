@@ -509,7 +509,8 @@ namespace TiaMcp.Engine.Tests
             var types = assembly.GetExportedTypes().Where(t => t.Namespace == "TiaMcp.Logic.V4").ToArray();
             Assert.Contains(typeof(Plan), types);
             Assert.Equal(27, Enum.GetValues<ErrorCode>().Length);
-            Assert.Equal(14, Enum.GetValues<WarningCode>().Length);
+            Assert.Equal(15, Enum.GetValues<WarningCode>().Length);
+            Assert.Contains(WarningCode.PreviousOwnerUnclean, Enum.GetValues<WarningCode>());
             Assert.Contains(WarningCode.UnsettledCalls, Enum.GetValues<WarningCode>());
             Assert.Equal(27, types.Count(t => t.BaseType == typeof(ErrorDetails)));
         }

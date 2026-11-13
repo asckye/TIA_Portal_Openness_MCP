@@ -6542,7 +6542,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "74210a8e4d0ece0148576a6ee9fcfc8e037e52cc893676e94fd4a5f754494c46",
+      "descriptionSha256": "e6d2f9297f587bcbd015c70e02322f4ff6dd3deca3ad701c27761e86ebe2bd84",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -16739,7 +16739,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c6f56f71b317ff61f21dd69d0b9bb934017255395ae34f072cb28ad929bdb244",
+      "descriptionSha256": "b6deb94db9fd625a692e765f8beb64d5b1a6486f248e768c14e09745b2fa0b7b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

@@ -11,7 +11,7 @@ using TiaMcp.Engine.Tests.Shared;
 
 public sealed class FoundationProcessLeaseTests
 {
-    private static ChannelRequest Request(string method, string args = "{}") => new(1, "adapter." + method, args, (_, _) => { });
+    private static ChannelRequest Request(string method, string args = "{}") => new(1, "adapter." + method, args, (_, _) => { }, "1");
     private static ChannelRequest Attach(int pid) => Request("Attach", JsonSerializer.Serialize(new { processId = pid }));
     private static ChannelRequest FormattedAttach(int pid) => Request("Attach",
         JsonSerializer.Serialize(new { processId = pid }, new JsonSerializerOptions { WriteIndented = true }));
@@ -47,6 +47,166 @@ public sealed class FoundationProcessLeaseTests
             try { Boundary.Dispose(); }
             finally { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
         }
+    }
+
+    private sealed class InterruptedLeaseStream : FileStream
+    {
+        private readonly Microsoft.Win32.SafeHandles.SafeFileHandle rawHandle;
+        private bool interrupted;
+        internal bool Observe { get; set; }
+        internal string? InterruptAfter { get; set; }
+        internal List<long> ObservedLengths { get; } = new();
+
+        internal InterruptedLeaseStream(string path) : base(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None)
+            => rawHandle = SafeFileHandle;
+
+        private void Checkpoint(string operation)
+        {
+            if (!Observe) return;
+            ObservedLengths.Add(RandomAccess.GetLength(rawHandle));
+            if (InterruptAfter != operation) return;
+            interrupted = true;
+            // Closing the captured OS handle discards the managed write buffer, as a killed worker does.
+            rawHandle.Dispose();
+            throw new IOException("Simulated worker termination after " + operation);
+        }
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            base.Write(buffer, offset, count);
+            Checkpoint("write");
+        }
+        public override void SetLength(long value)
+        {
+            base.SetLength(value);
+            Checkpoint("length");
+        }
+        internal string PersistedRecord()
+        {
+            var bytes = new byte[RandomAccess.GetLength(rawHandle)];
+            int count = RandomAccess.Read(rawHandle, bytes, 0);
+            return System.Text.Encoding.UTF8.GetString(bytes, 0, count);
+        }
+        protected override void Dispose(bool disposing)
+        {
+            if (!interrupted) base.Dispose(disposing);
+        }
+    }
+
+    private static PortalProcessLease LeaseForStream(FileStream stream)
+        => (PortalProcessLease)Activator.CreateInstance(typeof(PortalProcessLease),
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic, null,
+            new object[] { stream, "interrupted-write-fixture" }, null)!;
+
+    [Theory, InlineData("write", "BUSY"), InlineData("length", "UNCERTAIN")]
+    public void Interrupted_uncertain_update_keeps_the_request_evidence_for_the_next_owner(string checkpoint, string expectedState)
+    {
+        using var session = new Session();
+        Directory.CreateDirectory(session.Root);
+        File.WriteAllText(session.FilePath, "BUSY x\n");
+        using (var stream = new InterruptedLeaseStream(session.FilePath))
+        using (var lease = LeaseForStream(stream))
+        {
+            lease.BeginRequest("x");
+            stream.Observe = true;
+            stream.InterruptAfter = checkpoint;
+            Assert.Throws<IOException>(() => lease.CompleteRequest(uncertain: true));
+            Assert.NotEmpty(stream.ObservedLengths);
+            Assert.All(stream.ObservedLengths, length => Assert.True(length > 0));
+        }
+        Assert.NotEmpty(File.ReadAllText(session.FilePath));
+        using var next = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
+        Assert.Equal(expectedState, next.PreviousOwnerState);
+        Assert.Equal(new[] { "x" }, next.PreviousOwnerRequests);
+    }
+
+    [Fact]
+    public void Completed_uncertain_records_are_nonempty_at_every_observed_write_step()
+    {
+        using var session = new Session();
+        Directory.CreateDirectory(session.Root);
+        File.WriteAllText(session.FilePath, "BUSY seed\n");
+        using var stream = new InterruptedLeaseStream(session.FilePath);
+        using var lease = LeaseForStream(stream);
+        lease.BeginRequest("seed");
+        stream.Observe = true;
+        for (int index = 0; index < 32; index++)
+        {
+            string id = "write-" + index;
+            lease.BeginRequest(id);
+            lease.CompleteRequest(uncertain: true);
+            string record = stream.PersistedRecord();
+            Assert.StartsWith("UNCERTAIN ", record);
+            Assert.EndsWith("\n", record);
+            Assert.Contains(id, record.TrimEnd('\n').Split(' ', 2)[1].Split(','));
+        }
+        Assert.NotEmpty(stream.ObservedLengths);
+        Assert.All(stream.ObservedLengths, length => Assert.True(length > 0));
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void Empty_or_between_write_truncated_files_admit_and_publish_the_owners_evidence(bool truncateBetweenWrites)
+    {
+        using var session = new Session();
+        Directory.CreateDirectory(session.Root);
+        File.WriteAllText(session.FilePath, truncateBetweenWrites ? "UNCERTAIN prior\n" : "");
+        using (var lease = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks))
+        {
+            if (truncateBetweenWrites)
+            {
+                var stream = (FileStream)typeof(PortalProcessLease).GetField("stream",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(lease)!;
+                stream.SetLength(0);
+            }
+            lease.BeginRequest("next");
+            lease.CompleteRequest(uncertain: true);
+        }
+        Assert.StartsWith("UNCERTAIN ", File.ReadAllText(session.FilePath));
+        var response = session.Boundary.Dispatch(Attach(session.Pid));
+        Assert.Null(response.Failure);
+        Assert.Equal(1, session.NativeCalls);
+        var raw = System.Text.Json.Nodes.JsonNode.Parse(response.ResultJson)!;
+        Assert.Equal("UNCERTAIN", (string?)raw["PreviousOwnerState"]);
+        string[] expected = truncateBetweenWrites ? new[] { "next", "prior" } : new[] { "next" };
+        Assert.Equal(expected, raw["PreviousOwnerRequests"]!.AsArray().Select(value => (string)value!));
+        var body = FoundationV4Result.Worker("19", FoundationTools.Definitions.Single(row => row.Name == "ConnectPortal"),
+            "recovered-record", new(), raw, null).StructuredContent!;
+        Assert.Contains(body["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "PREVIOUS_OWNER_UNCLEAN");
+    }
+
+    [Theory]
+    [InlineData("BUSY a,b,c\nb\n", new[] { "a", "b", "c" })]
+    [InlineData("BUSY a,bad/id,c\n", new[] { "a", "c" })]
+    [InlineData("BUSY good,bad ,tail\t\n", new[] { "good" })]
+    public void Damaged_lease_records_keep_valid_ids_and_log_once(string record, string[] expected)
+    {
+        using var session = new Session();
+        Directory.CreateDirectory(session.Root);
+        File.WriteAllText(session.FilePath, record);
+        var previousError = Console.Error;
+        using var errors = new StringWriter();
+        try
+        {
+            Console.SetError(errors);
+            using var lease = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
+            Assert.Equal("BUSY", lease.PreviousOwnerState);
+            Assert.Equal(expected, lease.PreviousOwnerRequests);
+            lease.ReleaseCleanly();
+            Assert.Equal("RELEASED " + string.Join(",", expected) + "\n", File.ReadAllText(session.FilePath));
+            Assert.Single(errors.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries));
+        }
+        finally { Console.SetError(previousError); }
+    }
+
+    [Fact]
+    public void Oversized_lease_ids_and_excess_count_are_discarded_before_the_next_request()
+    {
+        using var session = new Session();
+        Directory.CreateDirectory(session.Root);
+        string[] valid = Enumerable.Range(0, 4097).Select(value => "id-" + value).ToArray();
+        File.WriteAllText(session.FilePath, "UNCERTAIN " + new string('x', 129) + "," + string.Join(",", valid) + "\n");
+        using var lease = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
+        Assert.Equal(valid.Take(4096), lease.PreviousOwnerRequests);
+        Assert.DoesNotContain(new string('x', 129), lease.PreviousOwnerRequests);
     }
 
     [Theory, InlineData(false), InlineData(true)]
@@ -92,18 +252,19 @@ public sealed class FoundationProcessLeaseTests
         session.Reply = _ => { session.Reset = typed; return typed ? ChannelResponse.Success("{}")
             : ChannelResponse.Error(new ChannelFailureException("Unknown fixture outcome.", -32603, ChannelOutcome.Unknown)); };
         session.Boundary.Dispatch(Request("FixtureUnknown")); session.Boundary.Dispose();
-        Assert.Equal("UNCERTAIN\n", File.ReadAllText(session.FilePath));
-        Assert.Equal(SessionBehavior.LeaseNotReleased,
-            Assert.Throws<InvalidOperationException>(() => PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks)).Message);
+        Assert.Equal("UNCERTAIN 1\n", File.ReadAllText(session.FilePath));
+        using var next = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
+        Assert.Equal("UNCERTAIN", next.PreviousOwnerState);
+        Assert.Equal(new[] { "1" }, next.PreviousOwnerRequests);
     }
 
     [Fact]
     public void Acknowledged_disconnect_after_unknown_releases_the_reservation()
     {
         using var session = new Session(); session.Boundary.Dispatch(Attach(session.Pid));
-        session.Reset = true; session.Boundary.Dispatch(Request("ReadState"));
+        session.Reset = true; session.Boundary.Dispatch(Request("FixtureUnknown"));
         session.Boundary.Dispatch(Request("Disconnect")); session.Boundary.Dispose();
-        Assert.Equal("RELEASED\n", File.ReadAllText(session.FilePath));
+        Assert.Equal("RELEASED 1\n", File.ReadAllText(session.FilePath));
     }
 
     [Fact]
@@ -162,7 +323,7 @@ public sealed class FoundationProcessLeaseTests
         using var session = new Session();
         session.Reply = _ => ChannelResponse.Error(new ChannelFailureException("Attach outcome unknown.", -32603, ChannelOutcome.Unknown));
         session.Boundary.Dispatch(Attach(session.Pid)); session.Boundary.Dispose();
-        Assert.Equal("UNCERTAIN\n", File.ReadAllText(session.FilePath));
+        Assert.Equal("UNCERTAIN 1\n", File.ReadAllText(session.FilePath));
     }
 
     [Fact]
@@ -231,11 +392,11 @@ public sealed class FoundationProcessLeaseTests
         Assert.Equal("IDLE\n", File.ReadAllText(session.FilePath));
         var response = session.Boundary.Dispatch(Attach(session.Pid));
         Assert.Null(response.Failure);
-        Assert.True(JsonDocument.Parse(response.ResultJson).RootElement.GetProperty("PreviousOwnerEndedIdle").GetBoolean());
+        Assert.Equal("IDLE", JsonDocument.Parse(response.ResultJson).RootElement.GetProperty("PreviousOwnerState").GetString());
         Assert.Equal(1, session.NativeCalls);
     }
 
-    [Theory, InlineData(SessionBehavior.LeaseReserved), InlineData(SessionBehavior.LeaseNotReleased)]
+    [Theory, InlineData(SessionBehavior.LeaseReserved)]
     public void Both_host_kinds_preserve_only_the_exact_lease_refusal_text(string message)
     {
         var error = WorkerOperationException.FromChannelFailure(Rejection(message));
@@ -250,15 +411,17 @@ public sealed class FoundationProcessLeaseTests
     }
 
     [Fact]
-    public async Task Job_kill_during_native_fixture_keeps_busy_and_refuses_takeover()
+    public async Task Job_kill_during_native_fixture_keeps_busy_and_admits_the_next_owner()
     {
         using var session = new Session(); using var host = Start("job", session.Root, session.Pid.ToString());
         int pid = int.Parse((await Line(host))!); using var worker = Process.GetProcessById(pid);
         Assert.Equal("BUSY", await Command(host, "busy"));
         host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
-        Assert.Equal("BUSY\n", File.ReadAllText(session.FilePath));
-        Assert.Equal(SessionBehavior.LeaseNotReleased, session.Boundary.Dispatch(Attach(session.Pid)).Failure!.Message);
-        Assert.Equal(0, session.NativeCalls);
+        Assert.Equal("BUSY 1\n", File.ReadAllText(session.FilePath));
+        var response = session.Boundary.Dispatch(Attach(session.Pid));
+        Assert.Null(response.Failure);
+        Assert.Equal("BUSY", JsonDocument.Parse(response.ResultJson).RootElement.GetProperty("PreviousOwnerState").GetString());
+        Assert.Equal(1, session.NativeCalls);
     }
 
     [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
@@ -272,23 +435,36 @@ public sealed class FoundationProcessLeaseTests
     }
 
     [Theory, InlineData("ACTIVE"), InlineData("BUSY"), InlineData("UNCERTAIN")]
-    public void Unsafe_and_legacy_markers_refuse_before_dispatch(string state)
+    public void Busy_or_uncertain_lease_of_a_dead_owner_admits_with_a_warning(string state)
     {
         using var session = new Session(); Directory.CreateDirectory(session.Root);
         File.WriteAllText(session.FilePath, state + "\n");
-        Assert.Equal(SessionBehavior.LeaseNotReleased, session.Boundary.Dispatch(Attach(session.Pid)).Failure!.Message);
-        Assert.Equal(0, session.NativeCalls);
+        var response = session.Boundary.Dispatch(Attach(session.Pid));
+        Assert.Null(response.Failure);
+        Assert.Equal(1, session.NativeCalls);
+        var raw = System.Text.Json.Nodes.JsonNode.Parse(response.ResultJson)!;
+        Assert.Equal(state, (string?)raw["PreviousOwnerState"]);
+        var definition = FoundationTools.Definitions.Single(row => row.Name == "ConnectPortal");
+        var body = FoundationV4Result.Worker("19", definition, "connect", new(), raw, null).StructuredContent!;
+        Assert.Equal(state is "BUSY" or "UNCERTAIN" or "ACTIVE", body["meta"]!["warnings"]!.AsArray()
+            .Any(w => (string?)w?["code"] == "PREVIOUS_OWNER_UNCLEAN"));
     }
 
-    [Theory, InlineData("IDLE", true), InlineData("RELEASED", false)]
-    public void Takeover_data_reaches_the_connect_result_without_a_new_warning(string state, bool idle)
+    [Theory, InlineData("IDLE"), InlineData("RELEASED")]
+    public void Takeover_data_reaches_the_connect_result_without_a_new_warning(string state)
     {
         using var session = new Session(); Directory.CreateDirectory(session.Root); File.WriteAllText(session.FilePath, state + "\n");
         using var lease = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
         var raw = System.Text.Json.Nodes.JsonNode.Parse("{\"Stage\":\"attached\",\"OwnsPortal\":false,\"AttemptedPids\":[123],\"Strategy\":\"explicit\",\"LaunchMode\":\"attach\"}")!.AsObject();
-        if (lease.PreviousOwnerEndedIdle) raw["PreviousOwnerEndedIdle"] = true;
+        raw["PreviousOwnerState"] = lease.PreviousOwnerState;
+        raw["PreviousOwnerRequests"] = JsonSerializer.SerializeToNode(lease.PreviousOwnerRequests);
         var result = V17ProjectEnvelope.Wrap("Connect", "Connection", raw, false);
-        Assert.Equal(idle, (bool?)result["previousOwnerEndedIdle"] == true);
+        Assert.Equal(state, (string?)result["previousOwner"]?["state"]);
+        Assert.Empty(result["previousOwner"]!["requests"]!.AsArray());
+        Assert.Null(result["previousOwnerEndedIdle"]);
+        var definition = FoundationTools.Definitions.Single(row => row.Name == "ConnectPortal");
+        var body = FoundationV4Result.Worker("19", definition, "connect", new(), raw, result).StructuredContent!;
+        Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(), w => (string?)w?["code"] == "PREVIOUS_OWNER_UNCLEAN");
         lease.ReleaseCleanly();
     }
 
@@ -302,6 +478,43 @@ public sealed class FoundationProcessLeaseTests
         double milliseconds = watch.Elapsed.TotalMilliseconds / count;
         TestDeadlines.Report("lease.durable-request", milliseconds, "ms/request");
         lease.ReleaseCleanly();
+    }
+
+    [Fact]
+    public void Lease_content_names_the_request_and_preserves_other_unsettled_ids()
+    {
+        using var session = new Session();
+        session.Boundary.Dispatch(Attach(session.Pid));
+        session.Reply = request => {
+            var reservation = typeof(FoundationProcessLease).GetField("lease",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(session.Boundary)!;
+            var stream = (FileStream)reservation.GetType().GetField("stream",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(reservation)!;
+            var bytes = new byte[RandomAccess.GetLength(stream.SafeFileHandle)];
+            int count = RandomAccess.Read(stream.SafeFileHandle, bytes, 0);
+            Assert.Equal("BUSY prior-1,write-7\n", System.Text.Encoding.UTF8.GetString(bytes, 0, count));
+            return ChannelResponse.Error(new ChannelFailureException("Unknown fixture write.", -32603, ChannelOutcome.Unknown));
+        };
+        var request = new ChannelRequest(7, "adapter.FixtureWrite", "{}", (_, _) => { }, "write-7", "FixtureWrite", new[] { "prior-1" });
+        Assert.Equal(ChannelOutcome.Unknown, session.Boundary.Dispatch(request).Failure!.Outcome);
+        session.Boundary.Dispose();
+        Assert.Equal("UNCERTAIN prior-1,write-7\n", File.ReadAllText(session.FilePath));
+        using var next = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
+        Assert.Equal(new[] { "prior-1", "write-7" }, next.PreviousOwnerRequests);
+    }
+
+    [Fact]
+    public void Acknowledged_disconnect_keeps_unsettled_ids_in_the_record()
+    {
+        using var session = new Session();
+        session.Boundary.Dispatch(Attach(session.Pid));
+        var request = new ChannelRequest(2, "adapter.Disconnect", "{}", (_, _) => { }, "disconnect", "DisconnectPortal",
+            new[] { "unknown-1", "unknown-2" });
+        Assert.Null(session.Boundary.Dispatch(request).Failure);
+        Assert.Equal("RELEASED unknown-1,unknown-2\n", File.ReadAllText(session.FilePath));
+        using var next = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
+        Assert.Equal("RELEASED", next.PreviousOwnerState);
+        Assert.Equal(new[] { "unknown-1", "unknown-2" }, next.PreviousOwnerRequests);
     }
 
     private static Process Start(params string[] args)

@@ -53,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Refuses while calls remain active/queued. Resets all worker-held project bindings, exports and preview plans; never saves, attaches or " +
                 "replays a write. After confirmation, explicitly connect to the intended project again. An idle responsive attachment is detached and its " +
                 "process lease released before reset. A running native call refuses reset with worker-call-running until it finishes. " +
-                "An idle faulted worker can be reset under the current lease rules. requiresTiaRestart carries the current lease fact. " +
+                "A stopped lease holder leaves a record of unfinished calls for the next explicit connection. " +
                 "Requests are never replayed.")]
         [AsyncDispatch(nameof(RestartOpennessWorkerV4Async))]
         public static CallToolResult RestartOpennessWorkerV4(

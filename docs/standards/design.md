@@ -91,8 +91,8 @@
 
 - 没有连接 TIA 时，需要 TIA 的工具在派发前返回带 `ConnectPortal` 提示的 `PRECONDITION_FAILED`（`connect-portal`），会话保持可用，不锁会话。
 - 八版的 answered-unknown 回复只影响本次调用。真正的 worker 退出、坏帧或探测故障在自动恢复实现前仍返回 `PRECONDITION_FAILED`，条件为 `worker-faulted`，提示调用 `RestartOpennessWorker`。
-- `RestartOpennessWorker` 先让空闲 worker 干净分离，再启动新代次；故障 worker 保留租约并报告 `requiresTiaRestart`。
-- 绑定要求显式选定、当前枚举到的进程 ID，以及准确的项目名称和绝对路径。`CloseProject` 要求本会话拥有且未修改的项目，不静默保存。`DisconnectPortal` 是终结操作：不保存、不关闭、不结束 TIA、不自动重连。
+- `RestartOpennessWorker` 先让空闲 worker 分离，再启动新代次。持有进程结束时释放租约，保留前持有者状态和未决编号。
+- 绑定要求显式选定、当前枚举到的进程 ID，以及准确的项目名称和绝对路径。`CloseProject` 要求本会话拥有且未修改的项目，不静默保存。`DisconnectPortal` 返回 `sessionState=disconnected`。同一 MCP 会话可以显式调用 `ConnectPortal` 和 `AttachOpenProject`，新连接停止旧的空闲 worker 并启动新代次。
 
 #### TIA 进程租约
 
@@ -100,13 +100,13 @@
 
 | 状态 | 含义 | 另一会话附着时 |
 |---|---|---|
-| `IDLE` | 已附着且空闲 | 持有者存活时 `LeaseReserved`；持有者已结束时可接管，`ConnectPortal` 返回 `data.previousOwnerEndedIdle=true` |
-| `BUSY` | 可能调用原生 API 的请求已派发，派发前写入并持久刷新 | `LeaseNotReleased` |
-| `UNCERTAIN` | 结果未知 | `LeaseNotReleased` |
-| `RELEASED` | 非拥有式分离后释放 | 可接管 |
-| `ACTIVE` | 3.x 遗留状态 | `LeaseNotReleased` |
+| `IDLE` | 已附着且空闲 | 文件句柄释放后可连接，返回 `data.previousOwner` |
+| `BUSY <requestId>` | 请求派发前写入并持久刷新，同时保留其他未决编号 | 文件句柄释放后可连接，提示 `PREVIOUS_OWNER_UNCLEAN` |
+| `UNCERTAIN <ids>` | 保留结果未知的请求编号 | 文件句柄释放后可连接，提示 `PREVIOUS_OWNER_UNCLEAN` |
+| `RELEASED <ids>` | 确认分离后释放，保留未决编号 | 可连接，继承编号 |
+| `ACTIVE` | 3.x 遗留状态 | 文件句柄释放后可连接，提示 `PREVIOUS_OWNER_UNCLEAN` |
 
-- MUST NOT 删除租约文件来绕过保护；`LeaseNotReleased` 时先检查原生调用的结果，再重启该 TIA 实例。
+- 活持有者的独占文件句柄继续返回 `LeaseReserved`。文件内容记录前持有者证据，未决编号进入新会话清单并标记 `fromPreviousOwner=true`。
 - 强制结束空闲 worker 保留 `IDLE`，下次可以接管；中断原生请求保留 `BUSY`，结果未知退出保留 `UNCERTAIN`。正常替换安装包不需要重启 TIA。
 - 租约只在附着前后加文件锁，不增加 Siemens 调用。
 
@@ -339,7 +339,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 
 | 状态 | 作用域与有效期 |
 |---|---|
-| worker 进程与代次 | 每个 V4 会话一个 worker；代次故障后由 `RestartOpennessWorker` 或 `DisconnectPortal` 开始新代次 |
+| worker 进程与代次 | 每个 V4 会话一个 worker；显式重启或断开后的显式连接开始新代次，历史记录为 `{generation, endedUtc, reason}` |
 | Openness 通道 | 每个 V4 会话一条，原生调用串行 |
 | TIA 进程租约 | 连接期间独占选定进程；`DisconnectPortal` 或会话结束时非拥有式释放 |
 | 项目绑定与绑定纪元 | 由 `ConnectPortal`、`AttachOpenProject` 等建立，随会话结束 |

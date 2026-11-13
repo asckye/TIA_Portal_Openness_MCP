@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace TiaMcp.WorkerChannel
         private bool verified, poisoned, unknown, unanswered, disposed;
         private Exception? lastFault;
         public Exception? LastFault { get { lock (gate) return lastFault; } }
+        public Func<IReadOnlyList<string>>? UnsettledRequests { get; set; }
         public bool Poisoned { get { lock (gate) return poisoned; } }
         public bool CanDisconnect { get { lock (gate) return verified && !poisoned && !disposed && pending == null; } }
         public bool CanCallIndependentRuntime {
@@ -80,8 +82,9 @@ namespace TiaMcp.WorkerChannel
                     throw new ArgumentException("Correlation is a bounded worker request identity.");
                 if (toolName != null && (correlationId == null || profile == ChannelProfile.Studio || !ChannelCodec.ValidIdentity(toolName)))
                     throw new ArgumentException("Tool name requires a bounded worker request identity.");
-                try { bytes = ChannelCodec.Request(checked(sequence + 1), method, argumentsJson, epoch, correlationId, toolName); }
-                catch (ChannelLimitException) when (profile == ChannelProfile.Engine) { throw; }
+                try { bytes = ChannelCodec.Request(checked(sequence + 1), method, argumentsJson, epoch, correlationId, toolName,
+                    UnsettledRequests?.Invoke()); }
+                catch (ChannelLimitException) when (profile == ChannelProfile.Engine || UnsettledRequests != null) { throw; }
                 catch (Exception ex) { throw Poison(ex); }
                 // Cancellation here is still an unsent call. No id or epoch is consumed.
                 token.ThrowIfCancellationRequested();

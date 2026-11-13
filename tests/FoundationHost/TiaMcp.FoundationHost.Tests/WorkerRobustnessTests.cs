@@ -275,10 +275,14 @@ public sealed class WorkerRobustnessTests
         // rebound and used, under the production budgets (P8-stab-1).
         using var production = scope.Worker.ProductionBudgets();
         var restart = await scope.Worker.Restart(true, CancellationToken.None);
-        Assert.True((bool?)restart["success"]); Assert.True((bool?)restart["requiresExplicitRebind"]);
+        Assert.True((bool?)restart["success"]); Assert.Null(restart["requiresExplicitRebind"]);
         Assert.NotSame(key, scope.Worker.SessionKey); Assert.Null(scope.Worker.Binding);
-        Assert.Equal(faulted, restart["worker"]?["previousGenerations"]?[0]?["fault"] != null);
-        if (draining) Assert.False((bool?)restart["requiresTiaRestart"]);
+        var ended = restart["worker"]!["previousGenerations"]![0]!.AsObject();
+        Assert.Equal(new[] { "generation", "endedUtc", "reason" }, ended.Select(pair => pair.Key));
+        Assert.Equal(1, (long?)ended["generation"]);
+        Assert.Equal("restart", (string?)ended["reason"]);
+        Assert.Equal(TimeSpan.Zero, DateTimeOffset.Parse((string)ended["endedUtc"]!, System.Globalization.CultureInfo.InvariantCulture).Offset);
+        Assert.Null(restart["requiresTiaRestart"]);
         Assert.False(scope.Worker.Faulted);
         await scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None);
         Assert.NotNull(scope.Worker.Binding);
@@ -458,7 +462,11 @@ public sealed class WorkerRobustnessTests
         using var production = scope.Worker.ProductionBudgets();
         var restarted = await scope.Worker.Restart(true, CancellationToken.None);
         Assert.True((bool?)restarted["success"]); Assert.Null(scope.Worker.Binding); Assert.NotSame(key, scope.Worker.SessionKey);
-        Assert.NotNull(restarted["worker"]?["previousGenerations"]?[0]?["binding"]);
+        var ended = restarted["worker"]!["previousGenerations"]![0]!.AsObject();
+        Assert.Equal(new[] { "generation", "endedUtc", "reason" }, ended.Select(pair => pair.Key));
+        Assert.Equal(1, (long?)ended["generation"]);
+        Assert.Equal("restart", (string?)ended["reason"]);
+        Assert.Equal(TimeSpan.Zero, DateTimeOffset.Parse((string)ended["endedUtc"]!, System.Globalization.CultureInfo.InvariantCulture).Offset);
     }
     [Fact]
     public void Timeout_data_and_override_precedence_cover_long_native_families()
