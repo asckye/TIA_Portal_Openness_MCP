@@ -21544,6 +21544,14 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberComment",
+            "section": "Static",
+            "memberPath": "Motor/Speed",
+            "culture": "zh-CN",
+            "expectedValue": "",
+            "value": "Motor speed"
           }
         ]
       },
@@ -33164,6 +33172,14 @@
                 "culture": "en-US",
                 "expectedValue": "Old title",
                 "value": "Example"
+              },
+              {
+                "action": "setMemberComment",
+                "section": "Static",
+                "memberPath": "Motor/Speed",
+                "culture": "zh-CN",
+                "expectedValue": "",
+                "value": "Motor speed"
               }
             ]
           },
@@ -33178,7 +33194,10 @@
           "operations": {},
           "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
           "resultReading": [
-            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility.",
+            "Block round trip: export the exact block (ExportPlcBlock, or GetPlcBlockEditCapabilities with blockPath and softwarePath), inspect documentFingerprint and members/comments with GetPlcBlockEditCapabilities, preview PatchPlcBlockDocument, then write a new exportFile with dryRun=false. Review the file, preview ImportPlcBlockVerified and apply with its token; inspect the backup and re-export verification result.",
+            "UDT round trip: ExportPlcType, inspect its filePath with GetPlcBlockEditCapabilities, then preview and write PatchPlcBlockDocument using section=None. Review and import with ImportPlcType overwrite=true through its preview and approval, then re-export with ExportPlcType and inspect comments to confirm. Overwrite makes dependent DBs and blocks inconsistent until compiled. Verified UDT import with backup and automatic readback is not available.",
+            "For setMemberComment, expectedValue must exactly match that culture in members/comments (empty when absent); empty value removes it. Use an explicit culture present in the export; only an export with no cultures accepts a new culture. GlobalDB members use section=Static and nested paths such as Motor/Speed."
           ]
         },
         "RenderPlcBlockDocument": {
@@ -58361,6 +58380,14 @@
                 "culture": "en-US",
                 "expectedValue": "Old title",
                 "value": "Example"
+              },
+              {
+                "action": "setMemberComment",
+                "section": "Static",
+                "memberPath": "Motor/Speed",
+                "culture": "zh-CN",
+                "expectedValue": "",
+                "value": "Motor speed"
               }
             ]
           },
@@ -58373,7 +58400,12 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "Block round trip: export the exact block (ExportPlcBlock, or GetPlcBlockEditCapabilities with blockPath and softwarePath), inspect documentFingerprint and members/comments with GetPlcBlockEditCapabilities, preview PatchPlcBlockDocument, then write a new exportFile with dryRun=false. Review the file, preview ImportPlcBlockVerified and apply with its token; inspect the backup and re-export verification result.",
+            "UDT round trip: ExportPlcType, inspect its filePath with GetPlcBlockEditCapabilities, then preview and write PatchPlcBlockDocument using section=None. Review and import with ImportPlcType overwrite=true through its preview and approval, then re-export with ExportPlcType and inspect comments to confirm. Overwrite makes dependent DBs and blocks inconsistent until compiled. Verified UDT import with backup and automatic readback is not available.",
+            "For setMemberComment, expectedValue must exactly match that culture in members/comments (empty when absent); empty value removes it. Use an explicit culture present in the export; only an export with no cultures accepts a new culture. GlobalDB members use section=Static and nested paths such as Motor/Speed."
+          ]
         },
         "PlanArtifactImportOrder": {
           "arguments": {

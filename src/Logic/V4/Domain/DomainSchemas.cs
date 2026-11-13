@@ -32,7 +32,8 @@ namespace TiaMcp.Logic.V4.Domain
                     typeof(CpuSettingsOperation)
             };
             if (type == typeof(BlockEdit)) return value.GetProperty("action").GetString() switch
-            { "setBlockText" => typeof(BlockTextEdit), "setNetworkText" => typeof(NetworkTextEdit), _ => typeof(MemberStartValueEdit) };
+            { "setBlockText" => typeof(BlockTextEdit), "setNetworkText" => typeof(NetworkTextEdit),
+                "setMemberComment" => typeof(MemberCommentEdit), _ => typeof(MemberStartValueEdit) };
             if (type == typeof(DccPartnerSpec)) return value.TryGetProperty("chartInterface", out _) ? typeof(DccInterfacePartner) : typeof(DccPinPartner);
             if (type == typeof(PlcSimStep)) return value.TryGetProperty("write", out _) ? typeof(PlcSimWriteStep)
                 : value.TryGetProperty("waitMs", out _) ? typeof(PlcSimWaitStep) : typeof(PlcSimAssertStep);
@@ -72,7 +73,9 @@ namespace TiaMcp.Logic.V4.Domain
                     ("value", text));
             d[typeof(MemberStartValueEdit)] =
                 Object(("action", String(0, null, "setMemberStartValue")), ("section", text), ("memberPath", text), ("expectedValue", text), ("value", text));
-            d[typeof(BlockEdit)] = Union(d[typeof(BlockTextEdit)], d[typeof(NetworkTextEdit)], d[typeof(MemberStartValueEdit)]);
+            d[typeof(MemberCommentEdit)] = Object(("action", String(0, null, "setMemberComment")), ("section", text),
+                ("memberPath", text), ("culture", text), ("expectedValue", text), ("value", text));
+            d[typeof(BlockEdit)] = Union(d[typeof(BlockTextEdit)], d[typeof(NetworkTextEdit)], d[typeof(MemberStartValueEdit)], d[typeof(MemberCommentEdit)]);
             d[typeof(BlockEdit[])] = Array(d[typeof(BlockEdit)], 1, 100);
             d[typeof(TemplateRow)] = Object(("fileName", name), ("values", Map(text)));
             d[typeof(TemplateRow[])] = Array(d[typeof(TemplateRow)], 1, 100);

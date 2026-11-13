@@ -106,6 +106,15 @@ namespace TiaMcp.Logic.V4.Domain
     }
 
     [JsonConverter(typeof(DomainDtoConverter))]
+    internal sealed class MemberCommentEdit : BlockEdit
+    {
+        internal MemberCommentEdit(JsonElement json) : base(json) { }
+        public string Section => Required<string>("section");
+        public string MemberPath => Required<string>("memberPath");
+        public string Culture => Required<string>("culture");
+    }
+
+    [JsonConverter(typeof(DomainDtoConverter))]
     internal sealed class TemplateRow : DomainDto
     {
         internal TemplateRow(JsonElement json) : base(json) { }

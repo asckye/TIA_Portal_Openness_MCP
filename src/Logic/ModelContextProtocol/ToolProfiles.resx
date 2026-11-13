@@ -6167,6 +6167,14 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberComment",
+            "section": "Static",
+            "memberPath": "Motor/Speed",
+            "culture": "zh-CN",
+            "expectedValue": "",
+            "value": "Motor speed"
           }
         ]
       }
@@ -8574,6 +8582,14 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberComment",
+            "section": "Static",
+            "memberPath": "Motor/Speed",
+            "culture": "zh-CN",
+            "expectedValue": "",
+            "value": "Motor speed"
           }
         ]
       }
@@ -11395,6 +11411,14 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberComment",
+            "section": "Static",
+            "memberPath": "Motor/Speed",
+            "culture": "zh-CN",
+            "expectedValue": "",
+            "value": "Motor speed"
           }
         ]
       }
@@ -14509,6 +14533,14 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberComment",
+            "section": "Static",
+            "memberPath": "Motor/Speed",
+            "culture": "zh-CN",
+            "expectedValue": "",
+            "value": "Motor speed"
           }
         ]
       }
@@ -17939,6 +17971,14 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberComment",
+            "section": "Static",
+            "memberPath": "Motor/Speed",
+            "culture": "zh-CN",
+            "expectedValue": "",
+            "value": "Motor speed"
           }
         ]
       }
@@ -21543,6 +21583,14 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberComment",
+            "section": "Static",
+            "memberPath": "Motor/Speed",
+            "culture": "zh-CN",
+            "expectedValue": "",
+            "value": "Motor speed"
           }
         ]
       }
@@ -31855,6 +31903,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -41590,6 +41646,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -47494,6 +47558,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -53362,6 +53434,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -59809,6 +59889,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -66627,6 +66715,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -73952,6 +74048,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -82621,6 +82725,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -90555,6 +90667,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },
@@ -98040,6 +98160,14 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberComment",
+              "section": "Static",
+              "memberPath": "Motor/Speed",
+              "culture": "zh-CN",
+              "expectedValue": "",
+              "value": "Motor speed"
             }
           ]
         },

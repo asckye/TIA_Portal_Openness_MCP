@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.Engine.Tests
@@ -59,6 +60,7 @@ namespace TiaMcp.Engine.Tests
             check(Fails(() => PlcDocumentEditing.PrepareImport(library, Xml, new JsonArray())), "PLC import refuses a library-connected original");
             var safety = Xml.Replace("<ProgrammingLanguage>LAD", "<ProgrammingLanguage>F_LAD");
             check(Fails(() => PlcDocumentEditing.PrepareImport(safety, safety, new JsonArray())), "PLC import refuses Safety and unknown code languages");
+            MemberComments(check);
 
             var parent = Path.GetFullPath(Path.GetTempPath());
             var folder = Path.Combine(parent, "tia-plc-edit-" + Guid.NewGuid().ToString("N"));
@@ -117,6 +119,136 @@ namespace TiaMcp.Engine.Tests
                     && calls.Last() == "compile-failed", "Compilation failure stops before export or rollback");
             }
             finally { if (!Path.GetFullPath(folder).StartsWith(parent, StringComparison.OrdinalIgnoreCase)) throw new Exception("Unsafe fixture path"); Directory.Delete(folder, true); }
+        }
+
+        private const string MemberXml = @"<Document><Engineering version='V21'/><SW.Blocks.GlobalDB ID='0'><AttributeList>
+<Name>Motors</Name><Number>1</Number><MemoryLayout>Optimized</MemoryLayout><ProgrammingLanguage>DB</ProgrammingLanguage>
+<Interface><Sections xmlns='http://www.siemens.com/automation/Openness/SW/Interface/v5'><Section Name='Static'>
+<Member Name='Motor' Datatype='Struct'><AttributeList><BooleanAttribute Name='ExternalAccessible'>true</BooleanAttribute></AttributeList>
+<Member Name='Speed' Datatype='Int'><AttributeList><BooleanAttribute Name='ExternalWritable'>true</BooleanAttribute></AttributeList><StartValue>1</StartValue></Member></Member>
+<Member Name='Enabled' Datatype='Bool'><Comment><MultiLanguageText Lang='en-US'>Enabled</MultiLanguageText></Comment><StartValue>true</StartValue></Member>
+</Section></Sections></Interface></AttributeList><ObjectList><MultilingualText ID='1' CompositionName='Title'><ObjectList>
+<MultilingualTextItem ID='2' CompositionName='Items'><AttributeList><Culture>zh-CN</Culture><Text>Motors</Text></AttributeList></MultilingualTextItem>
+</ObjectList></MultilingualText></ObjectList></SW.Blocks.GlobalDB></Document>";
+
+        private static void MemberComments(Action<bool, string> check)
+        {
+            string Change(string path = "Motor/Speed", string culture = "zh-CN", string expected = "", string value = "Speed & <rpm>", string section = "Static") =>
+                new JsonObject { ["action"] = "setMemberComment", ["section"] = section, ["memberPath"] = path,
+                    ["culture"] = culture, ["expectedValue"] = expected, ["value"] = value }.ToJsonString();
+            string Patch(string xml, params string[] changes) => PlcDocumentEditing.Patch(xml, "[" + string.Join(",", changes) + "]",
+                PlcDocumentEditing.Inspect(xml)["documentFingerprint"]!.GetValue<string>());
+            XElement Member(string xml, string name) => XDocument.Parse(xml).Descendants()
+                .Single(e => e.Name.LocalName == "Member" && (string?)e.Attribute("Name") == name);
+            XElement Comment(string xml, string name) => PlcDocumentEditing.Child(Member(xml, name), "Comment");
+            void Refuses(string xml, string change, string message, string label)
+            {
+                try { Patch(xml, change); check(false, label); }
+                catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
+                { check(ex.Message.Contains(message, StringComparison.Ordinal), label); }
+            }
+
+            var edited = Patch(MemberXml, Change());
+            var speed = Member(edited, "Speed"); var comment = Comment(edited, "Speed");
+            check(comment.Name.Namespace == speed.Name.Namespace && comment.Elements().Single().Name == speed.Name.Namespace + "MultiLanguageText"
+                && (string?)comment.Elements().Single().Attribute("Lang") == "zh-CN" && comment.Value == "Speed & <rpm>",
+                "Member comment uses the interface namespace and exact escaped text");
+            check(speed.Elements().Select(e => e.Name.LocalName).SequenceEqual(new[] { "AttributeList", "Comment", "StartValue" }),
+                "New member comment follows AttributeList");
+            check(XNode.DeepEquals(Member(MemberXml, "Enabled"), Member(edited, "Enabled")), "Member comment preserves untouched siblings");
+            var bilingual = Patch(MemberXml, Change("Enabled", value: "启用"));
+            check(Comment(bilingual, "Enabled").Elements().Count() == 2
+                && Comment(bilingual, "Enabled").Elements().Single(e => (string?)e.Attribute("Lang") == "en-US").Value == "Enabled",
+                "Member comment keeps the existing culture when adding another");
+            var replaced = Patch(edited, Change(expected: "Speed & <rpm>", value: "New"));
+            check(Comment(replaced, "Speed").Value == "New", "Member comment replaces an exact old value");
+            Refuses(edited, Change(expected: "stale"), "old value changed", "Member comment refuses stale expectedValue");
+            check(Comment(Patch(MemberXml, Change("Motor")), "Motor").Value == "Speed & <rpm>", "Struct member itself accepts comments");
+            check(Member(Patch(edited, Change(expected: "Speed & <rpm>", value: "")), "Speed").Elements().All(e => e.Name.LocalName != "Comment"),
+                "Empty member comment removes the culture and empty Comment");
+            check(Comment(Patch(bilingual, Change("Enabled", expected: "启用", value: "")), "Enabled").Value == "Enabled",
+                "Removing one culture preserves the other comment");
+            check(XNode.DeepEquals(Member(MemberXml, "Speed"), Member(Patch(MemberXml, Change(value: "")), "Speed")),
+                "Removing an absent comment leaves no empty element");
+            var noAttributes = MemberXml.Replace("<AttributeList><BooleanAttribute Name='ExternalWritable'>true</BooleanAttribute></AttributeList>", "");
+            check(Member(Patch(noAttributes, Change()), "Speed").Elements().First().Name.LocalName == "Comment", "New comment without attributes is first");
+            foreach (var flag in new[] { "ReadOnly", "Informative" })
+            foreach (var name in new[] { "Speed", "Motor" })
+                Refuses(MemberXml.Replace("Name='" + name + "'", "Name='" + name + "' " + flag + "='true'"), Change(),
+                    "Read-only/informative", "Member comment refuses " + flag + " on " + name);
+            Refuses(MemberXml.Replace("<Comment>", "<Comment Informative='true'>"), Change("Enabled"), "Read-only/informative", "Informative comment is refused");
+            Refuses(MemberXml, Change(section: "Missing"), "Section is absent or ambiguous", "Member comment refuses unknown section");
+            Refuses(MemberXml, Change("Missing"), "Sequence contains no matching element", "Member comment refuses unknown member");
+            foreach (var culture in new[] { "zho-CN", "zh-419", "zh-CN\n" })
+                Refuses(MemberXml, Change(culture: culture), "culture must be a culture name such as zh-CN.", "Member comment refuses malformed culture " + culture);
+            Refuses(MemberXml, Change(culture: "de-DE"), "culture de-DE does not occur in this document; use a project language that the export contains.",
+                "Member comment refuses a culture absent from the export");
+            Refuses(MemberXml, Change() + "," + Change(), "repeated", "Member comment refuses duplicate member and culture");
+            Refuses(MemberXml, Change(value: "") + "," + Change(value: ""), "repeated", "Duplicate absent comment edits use member and culture identity");
+            Refuses(MemberXml, Change().Replace("\"value\":", "\"typo\":0,\"value\":"), "Unknown patch property", "Member comment refuses unknown properties");
+            Refuses(MemberXml.Replace("<Name>Motors", "<LibraryTypeGuid>type</LibraryTypeGuid><Name>Motors"), Change(), "Library-connected",
+                "Member comment refuses library-bound blocks");
+            check(Comment(Patch(MemberXml, Change(culture: "en-US"), Change()), "Speed").Elements().Count() == 2,
+                "One call may edit different cultures on the same member");
+            var inspect = PlcDocumentEditing.Inspect(edited);
+            check((string?)inspect["members"]![1]!["comments"]!["zh-CN"] == "Speed & <rpm>"
+                && PlcDocumentEditing.Inspect(MemberXml)["members"]![1]!["comments"]!.AsObject().Count == 0
+                && inspect["supportedPatchActions"]!.AsArray().Any(n => (string?)n == "setMemberComment"), "Inspection reports member comments and action");
+            check(Comment(PlcDocumentEditing.PrepareImport(edited, replaced, new JsonArray()), "Speed").Value == "New",
+                "Verified block import preserves candidate member comments");
+            var fb = MemberXml.Replace("SW.Blocks.GlobalDB", "SW.Blocks.FB").Replace("<ProgrammingLanguage>DB", "<ProgrammingLanguage>SCL")
+                .Replace("<Section Name='Static'>", "<Section Name='Input'><Member Name='Run' Datatype='Bool'/></Section><Section Name='Static'>");
+            check(Comment(Patch(fb, Change("Run", section: "Input"), Change()), "Run").Value == "Speed & <rpm>"
+                && Comment(Patch(fb, Change()), "Speed").Value == "Speed & <rpm>", "FB Input and Static comments work");
+            UdtComments(check, MemberXml, Change, Patch, Member, Comment);
+        }
+
+        private static void UdtComments(Action<bool, string> check, string blockXml,
+            Func<string, string, string, string, string, string> change, Func<string, string[], string> patch,
+            Func<string, string, XElement> member, Func<string, string, XElement> comment)
+        {
+            var udt = XDocument.Parse(blockXml.Replace("SW.Blocks.GlobalDB", "SW.Types.PlcStruct").Replace("Name='Static'", "Name='None'"));
+            udt.Root!.Elements().Single(e => e.Name.LocalName == "SW.Types.PlcStruct").Elements().Single(e => e.Name.LocalName == "ObjectList").Remove();
+            udt.Descendants().Where(e => new[] { "Number", "MemoryLayout", "ProgrammingLanguage", "Comment" }.Contains(e.Name.LocalName)).Remove();
+            var xml = udt.ToString();
+            var edited = patch(xml, new[] { change("Motor", "zh-CN", "", "电机", "None"), change("Motor/Speed", "zh-CN", "", "转速", "None") });
+            var inspect = PlcDocumentEditing.Inspect(edited);
+            check((string?)inspect["kind"] == "SW.Types.PlcStruct" && inspect["networks"]!.AsArray().Count == 0
+                && (string?)inspect["members"]![0]!["comments"]!["zh-CN"] == "电机" && comment(edited, "Speed").Value == "转速",
+                "UDT top-level and nested member comments inspect correctly");
+            var noCultures = XDocument.Parse(xml); noCultures.Descendants().Where(e => e.Name.LocalName == "Comment").Remove();
+            check(comment(patch(noCultures.ToString(), new[] { change("Motor/Speed", "zh-Hans-CN", "", "转速", "None") }), "Speed").Value == "转速",
+                "UDT without cultures accepts an explicit script culture");
+            var start = "{\"action\":\"setMemberStartValue\",\"section\":\"None\",\"memberPath\":\"Motor/Speed\",\"expectedValue\":\"1\",\"value\":\"2\"}";
+            check(PlcDocumentEditing.Value(member(patch(xml, new[] { start }), "Speed"), "StartValue") == "2", "UDT start value uses shared member lookup");
+            var withTitle = blockXml.Replace("SW.Blocks.GlobalDB", "SW.Types.PlcStruct").Replace("Name='Static'", "Name='None'");
+            var title = "{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"zh-CN\",\"expectedValue\":\"Motors\",\"value\":\"New\"}";
+            check((string?)PlcDocumentEditing.Inspect(patch(withTitle, new[] { title }))["blockTextTargets"]![0]!["text"] == "New", "UDT existing title can be patched");
+            var network = "{\"action\":\"setNetworkText\",\"networkIndex\":0,\"field\":\"Title\",\"culture\":\"zh-CN\",\"expectedValue\":\"\",\"value\":\"New\"}";
+            try { patch(xml, new[] { network }); check(false, "UDT network edit is refused"); }
+            catch (ArgumentException ex) { check(ex.Message == "UDT documents have no networks.", "UDT network edit has explicit refusal"); }
+            foreach (var pair in new[] { (xml, blockXml), (blockXml, xml), (xml.Replace("SW.Types.PlcStruct", "SW.Types.Other"), blockXml),
+                    (blockXml, xml.Replace("SW.Types.PlcStruct", "SW.Types.Other")) })
+            {
+                try { PlcDocumentEditing.PrepareImport(pair.Item1, pair.Item2, new JsonArray()); check(false, "UDT block import is refused"); }
+                catch (ArgumentException ex) { check(ex.Message == "ImportPlcBlockVerified imports blocks only; import a UDT with ImportPlcType overwrite.", "UDT import has explicit route"); }
+            }
+            try { PlcDocumentEditing.Parse(xml); check(false, "Ordinary parser remains blocks only"); }
+            catch (ArgumentException ex) { check(ex.Message == "Exactly one supported PLC block per XML file is required.", "Ordinary parser retains UDT refusal"); }
+            try { PlcDocumentEditing.Inspect(xml.Replace("SW.Types.PlcStruct", "SW.Types.Other")); check(false, "Other type roots are refused"); }
+            catch (ArgumentException ex) { check(ex.Message == "Exactly one supported PLC block per XML file is required.", "Other type roots retain refusal"); }
+            var folder = Path.Combine(Path.GetTempPath(), "tia-udt-references-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                File.WriteAllText(Path.Combine(folder, "Motor.xml"), xml);
+                File.WriteAllText(Path.Combine(folder, "Main.xml"), Xml);
+                var references = PlcOfflineReferences.Analyze(folder, "summary", "", 10, 0, 100);
+                check(references["rowCount"]!.GetValue<int>() == 1 && references["failures"]!.AsArray().Count == 1
+                    && references["failures"]![0]!.ToJsonString().Contains("Exactly one supported PLC block per XML file is required.", StringComparison.Ordinal),
+                    "Offline references still report UDT as unindexed");
+            }
+            finally { Directory.Delete(folder, true); }
         }
     }
 }

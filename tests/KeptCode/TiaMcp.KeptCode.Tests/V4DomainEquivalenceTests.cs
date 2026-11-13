@@ -39,9 +39,10 @@ namespace TiaMcp.Engine.Tests
                 ("Network", "src/Logic/ModelContextProtocol/Builders/HardwareNetworkPlanValidator.cs:78", """{"operations":[{"type":"EnsureSubnet","anchorDeviceItemPath":"PLC_1/CPU_1","subnetName":"PN_1","subnetType":"PN/IE","ip":"192.168.1.2","mask":"255.255.255.0"}]}""", """{"operations":[{"type":"EnsureSubnet","anchorDeviceItemPath":"CPU","subnetName":"PN_1","subnetType":"PN"}]}"""),
                 ("Network", "src/Logic/ModelContextProtocol/Builders/HardwareNetworkPlanValidator.cs:91", """{"operations":[{"type":"AttachDeviceNodeToSubnet","deviceItemPath":"PLC_1/CPU_1","subnetName":"PN_1","interfaceIndex":0}]}""", """{"operations":[{"type":"AttachDeviceNodeToSubnet","deviceItemPath":"PLC_1/CPU_1","subnetName":"PN_1","interfaceIndex":-1}]}"""),
                 ("Network", "src/Logic/ModelContextProtocol/Builders/HardwareNetworkPlanValidator.cs:107", """{"operations":[{"type":"SetPlcCpuSettings","cpuPath":"PLC_1/CPU_1","settings":{"exactAttributes":{"Name":"PLC_1"}}}]}""", """{"operations":[{"type":"SetPlcCpuSettings","cpuPath":"PLC_1/CPU_1","settings":{"exactAttributes":{"ip":"a"}}}]}"""),
-                ("BlockEdit", "src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs:120", """[{"action":"setBlockText","field":"Title","culture":"en-US","expectedValue":"Old","value":"New & safe"}]""", """[{"action":"setBlockText","field":"Title","culture":"en-US","expectedValue":"stale","value":"New"}]"""),
-                ("BlockEdit", "src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs:152", """[{"action":"setNetworkText","networkIndex":0,"field":"Comment","culture":"en-US","expectedValue":"Old","value":"New"}]""", """[{"action":"setNetworkText","networkIndex":1,"field":"Comment","culture":"en-US","expectedValue":"Old","value":"New"}]"""),
-                ("BlockEdit", "src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs:137", """[{"action":"setMemberStartValue","section":"Input","memberPath":"Speed","expectedValue":"1","value":"2"}]""", """[{"action":"setMemberStartValue","section":"Input","memberPath":"Missing","expectedValue":"1","value":"2"}]"""),
+                ("BlockEdit", "src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs:166", """[{"action":"setBlockText","field":"Title","culture":"en-US","expectedValue":"Old","value":"New & safe"}]""", """[{"action":"setBlockText","field":"Title","culture":"en-US","expectedValue":"stale","value":"New"}]"""),
+                ("BlockEdit", "src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs:198", """[{"action":"setNetworkText","networkIndex":0,"field":"Comment","culture":"en-US","expectedValue":"Old","value":"New"}]""", """[{"action":"setNetworkText","networkIndex":1,"field":"Comment","culture":"en-US","expectedValue":"Old","value":"New"}]"""),
+                ("BlockEdit", "src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs:188", """[{"action":"setMemberStartValue","section":"Input","memberPath":"Speed","expectedValue":"1","value":"2"}]""", """[{"action":"setMemberStartValue","section":"Input","memberPath":"Missing","expectedValue":"1","value":"2"}]"""),
+                ("BlockEdit", "src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs:171", """[{"action":"setMemberComment","section":"Input","memberPath":"Speed","culture":"en-US","expectedValue":"","value":""}]""", """[{"action":"setMemberComment","section":"Input","memberPath":"Missing","culture":"en-US","expectedValue":"","value":"New"}]"""),
                 ("TemplateRow", "src/Logic/ModelContextProtocol/Builders/PlcTemplateExpansion.cs:21", """[{"fileName":"FC_1.xml","values":{"Name":"FC_1 & A"}}]""", """[{"fileName":"../FC_1.xml","values":{"Name":"FC_1"}}]"""),
                 ("PlcAliasRow", "src/Logic/ModelContextProtocol/Builders/PlcAliasAlarmBuilder.cs:14", """[{"source":["Input"],"destination":["DB","Alarm"],"acknowledge":["Ack"],"invert":true}]""", """[{"source":["Input[0]"],"destination":["DB","Alarm"]}]"""),
                 ("PlcSimScenario", "src/Logic/Runtime/PlcSimAdvancedLogic.cs:276", """{"instance":" PLC_1 ","mode":"default","steps":[{"write":{"Start":true}},{"waitMs":20},{"assert":{"Running":true},"tolerance":0.01,"note":"ready"}]}""", """{"instance":"PLC_1","steps":[{"waitMs":0}]}"""),
@@ -83,7 +84,7 @@ namespace TiaMcp.Engine.Tests
         [InlineData("duplicateSelector")]
         public void Block_edit_document_preconditions_remain_in_validation(string condition)
         {
-            // PlcDocumentEditing.cs:124,144-147,165.
+            // PlcDocumentEditing.cs:154,214,227-231.
             const string edit = "{\"action\":\"setMemberStartValue\",\"section\":\"Input\",\"memberPath\":\"Speed\",\"expectedValue\":\"1\",\"value\":\"2\"}";
             string xml = condition == "readOnly" ? Xml.Replace("Name='Speed'", "Name='Speed' ReadOnly='true'")
                 : condition == "libraryBound" ? Xml.Replace("<Name>Main</Name>", "<Name>Main</Name><LibraryTypeGuid>A</LibraryTypeGuid>") : Xml;
@@ -91,6 +92,33 @@ namespace TiaMcp.Engine.Tests
             string hash = PlcDocumentEditing.HashText(PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(xml)));
             Assert.NotNull(Record.Exception(() => PlcDocumentEditing.Patch(xml, changes, hash)));
             Assert.NotNull(Record.Exception(() => DomainValidation.BlockEdits(DomainValidation.Read<BlockEdit[]>(changes), xml, hash)));
+        }
+
+        [Fact]
+        public void Member_comment_selector_deserializes_to_its_own_type_and_routes_through_validation()
+        {
+            const string json = """[{"action":"setMemberComment","section":"Input","memberPath":"Speed","culture":"en-US","expectedValue":"","value":"Speed"}]""";
+            var edits = DomainValidation.Read<BlockEdit[]>(json);
+            var edit = Assert.IsType<MemberCommentEdit>(edits[0]);
+            Assert.Equal(("Input", "Speed", "en-US"), (edit.Section, edit.MemberPath, edit.Culture));
+            string hash = PlcDocumentEditing.HashText(PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(Xml)));
+            Assert.Equal(PlcDocumentEditing.Patch(Xml, json, hash), DomainValidation.BlockEdits(edits, Xml, hash));
+        }
+
+        public static IEnumerable<object[]> BlockEditSamples() => Samples().Where(row => (string)row[0] == "BlockEdit");
+
+        [Theory]
+        [MemberData(nameof(BlockEditSamples))]
+        public void Block_edit_samples_keep_parser_and_domain_validation_equivalent(string family, string source, string json, bool accepted)
+        {
+            Assert.Equal("BlockEdit", family);
+            string hash = PlcDocumentEditing.HashText(PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(Xml)));
+            var legacyError = Record.Exception(() => PlcDocumentEditing.Patch(Xml, json, hash));
+            var domainError = Record.Exception(() => DomainValidation.BlockEdits(DomainValidation.Read<BlockEdit[]>(json), Xml, hash));
+            Assert.True(accepted == (legacyError == null), source);
+            Assert.True(accepted == (domainError == null), source);
+            if (accepted) Assert.Equal(PlcDocumentEditing.Patch(Xml, json, hash),
+                DomainValidation.BlockEdits(DomainValidation.Read<BlockEdit[]>(json), Xml, hash));
         }
 
 

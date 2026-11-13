@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -30,8 +31,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         public static XElement Child(XElement e, string name) => e.Elements().Single(x => x.Name.LocalName == name);
         public static string Value(XElement e, string name) => e.Elements().SingleOrDefault(x => x.Name.LocalName == name)?.Value ?? "";
-        public static XElement Block(XDocument d) => d.Root!.Elements().Single(x => x.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal));
-        public static XDocument Parse(string xml)
+        public static XElement Block(XDocument d) => d.Root!.Elements().Single(x => x.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal)
+            || x.Name.LocalName == "SW.Types.PlcStruct");
+        public static XDocument Parse(string xml) => ParseDocument(xml, false);
+        private static XDocument ParseDocument(string xml, bool editable, bool blockImport = false)
         {
             if (Encoding.UTF8.GetByteCount(xml) > MaxBytes) throw new ArgumentException("XML exceeds 16 MiB.");
             using var reader = XmlReader
@@ -40,8 +43,10 @@ namespace TiaMcpServer.ModelContextProtocol
             var d = XDocument.Load(reader, LoadOptions.None);
             if (d.Root?.Name.LocalName != "Document") throw new ArgumentException("One SimaticML Document is required.");
             var objects = d.Root.Elements().Where(x => x.Name.LocalName != "Engineering" && x.Name.LocalName != "DocumentInfo").ToArray();
+            if (blockImport && objects.Any(x => x.Name.LocalName.StartsWith("SW.Types.", StringComparison.Ordinal)))
+                throw new ArgumentException("ImportPlcBlockVerified imports blocks only; import a UDT with ImportPlcType overwrite.");
             if (objects.Length != 1 || !new[] { "SW.Blocks.FC", "SW.Blocks.FB", "SW.Blocks.OB", "SW.Blocks.GlobalDB", "SW.Blocks.InstanceDB" }
-                    .Contains(objects[0].Name.LocalName))
+                    .Contains(objects[0].Name.LocalName) && !(editable && objects[0].Name.LocalName == "SW.Types.PlcStruct"))
                 throw new ArgumentException("Exactly one supported PLC block per XML file is required.");
             if (string.IsNullOrWhiteSpace(Value(Child(objects[0], "AttributeList"), "Name"))) throw new ArgumentException("Block Name is missing.");
             return d;
@@ -90,7 +95,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         public static JsonObject Inspect(string xml)
         {
-            var d = Parse(xml); var rows = new JsonArray(); var index = 0;
+            var d = ParseDocument(xml, true); var rows = new JsonArray(); var index = 0;
             foreach (var net in Networks(d))
             {
                 var attributes = Child(net, "AttributeList");
@@ -113,15 +118,20 @@ namespace TiaMcpServer.ModelContextProtocol
                     var path = string
                         .Join("/", member.AncestorsAndSelf().Reverse().Where(e => e.Name.LocalName == "Member")
                             .Select(e => (string?)e.Attribute("Name") ?? ""));
+                    var comments = new JsonObject();
+                    foreach (var text in member.Elements().Where(e => e.Name.LocalName == "Comment")
+                            .Elements().Where(e => e.Name.LocalName == "MultiLanguageText"))
+                        comments[(string)text.Attribute("Lang")!] = text.Value;
                     members.Add(new JsonObject { ["section"] = (string?)section?.Attribute("Name"), ["memberPath"] = path,
                         ["datatype"] = (string?)member.Attribute("Datatype"), ["startValue"] = member.Elements()
                             .SingleOrDefault(e => e.Name.LocalName == "StartValue")?.Value,
-                        ["attributeXml"] = member.Elements().SingleOrDefault(e => e.Name.LocalName == "AttributeList")?.ToString(SaveOptions.DisableFormatting)
+                        ["attributeXml"] = member.Elements().SingleOrDefault(e => e.Name.LocalName == "AttributeList")?.ToString(SaveOptions.DisableFormatting),
+                        ["comments"] = comments
                         });
                 }
             return new JsonObject { ["name"] = Name(d), ["kind"] = Block(d).Name.LocalName, ["libraryBound"] = LibraryBound(d),
                 ["documentFingerprint"] = HashText(Canonical(d)), ["networks"] = rows, ["members"] = members, ["blockTextTargets"] = TextTargets(Block(d)),
-                ["supportedPatchActions"] = new JsonArray("setBlockText", "setNetworkText", "setMemberStartValue"),
+                ["supportedPatchActions"] = new JsonArray("setBlockText", "setNetworkText", "setMemberStartValue", "setMemberComment"),
                 ["nativeImportValidated"] = false, ["scope"] =
                     "Exported structure only; does not establish target CPU compatibility, consistency or native import safety." };
         }
@@ -140,12 +150,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         public static string Patch(string xml, string changesJson, string expectedFingerprint)
         {
-            var d = Parse(xml);
+            var d = ParseDocument(xml, true);
             if (HashText(Canonical(d)) != expectedFingerprint) throw new InvalidOperationException("Document changed; inspect again before editing.");
             if (LibraryBound(d)) throw new InvalidOperationException("Library-connected blocks require the library update workflow.");
             var changes = JsonNode.Parse(changesJson) as JsonArray ?? throw new ArgumentException("changesJson must be an array.");
             if (changes.Count < 1 || changes.Count > 100) throw new ArgumentException("Supply 1..100 changes.");
-            var used = new HashSet<XElement>();
+            var used = new HashSet<(XElement Target, string Culture)>();
+            HashSet<string>? cultures = null;
             foreach (var node in changes)
             {
                 var c = node as JsonObject ?? throw new ArgumentException("Each change must be an object.");
@@ -154,21 +165,29 @@ namespace TiaMcpServer.ModelContextProtocol
                 var allowed = action == "setNetworkText" ? new[] { "action", "networkIndex", "field", "culture", "expectedValue", "value" }
                     : action == "setBlockText" ? new[] { "action", "field", "culture", "expectedValue", "value" }
                     : action == "setMemberStartValue" ? new[] { "action", "section", "memberPath", "expectedValue", "value" }
+                    : action == "setMemberComment" ? new[] { "action", "section", "memberPath", "culture", "expectedValue", "value" }
                         : throw new ArgumentException("Unknown patch action.");
                 if (c.Any(p => !allowed.Contains(p.Key))) throw new ArgumentException("Unknown patch property.");
+                if (action == "setMemberComment")
+                {
+                    var member = FindMember(d, Get("section"), Get("memberPath"));
+                    var culture = Get("culture");
+                    if (!Regex.IsMatch(culture, @"\A[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}\z"))
+                        throw new ArgumentException("culture must be a culture name such as zh-CN.");
+                    cultures ??= new HashSet<string>(d.Descendants().Where(e => e.Name.LocalName == "MultilingualTextItem")
+                        .Select(e => Value(Child(e, "AttributeList"), "Culture"))
+                        .Concat(d.Descendants().Where(e => e.Name.LocalName == "MultiLanguageText")
+                            .Select(e => (string?)e.Attribute("Lang") ?? "")).Where(c => c.Length > 0), StringComparer.Ordinal);
+                    if (cultures.Count > 0 && !cultures.Contains(culture))
+                        throw new ArgumentException("culture " + culture + " does not occur in this document; use a project language that the export contains.");
+                    if (!used.Add((member, culture)))
+                        throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
+                    SetMemberComment(member, culture, Get("expectedValue"), Get("value"));
+                    continue;
+                }
                 if (action == "setMemberStartValue")
                 {
-                    var members = Child(Child(Block(d), "AttributeList"), "Interface").Descendants()
-                        .Where(e => e.Name.LocalName == "Section" && (string?)e.Attribute("Name") == Get("section")).ToArray();
-                    if (members.Length != 1) throw new ArgumentException("Section is absent or ambiguous.");
-                    XElement current = members[0];
-                    foreach (var segment in Get("memberPath").Split('/'))
-                        current = current.Elements().Single(e => e.Name.LocalName == "Member" && (string?)e.Attribute("Name") == segment);
-                    if (current.AncestorsAndSelf()
-                            .Any(e => e.Attributes()
-                                .Any(a => (a.Name.LocalName == "ReadOnly" || a.Name.LocalName == "Informative") && a.Value
-                                    .Equals("true", StringComparison.OrdinalIgnoreCase))))
-                        throw new ArgumentException("Read-only/informative member cannot be edited.");
+                    var current = FindMember(d, Get("section"), Get("memberPath"));
                     if (current.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections"))
                         throw new ArgumentException("Select a scalar member.");
                     target = Child(current, "StartValue"); // Do not invent missing/default/array value shapes.
@@ -178,6 +197,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var owner = Block(d);
                     if (action == "setNetworkText")
                     {
+                        if (owner.Name.LocalName == "SW.Types.PlcStruct") throw new ArgumentException("UDT documents have no networks.");
                         var index = c["networkIndex"]?.GetValue<int>() ?? throw new ArgumentException("networkIndex is required.");
                         var networks = Networks(d);
                         if (index < 0 || index >= networks.Length) throw new ArgumentException("networkIndex outside document.");
@@ -191,15 +211,57 @@ namespace TiaMcpServer.ModelContextProtocol
                         .Single(e => e.Name.LocalName == "MultilingualTextItem" && Value(Child(e, "AttributeList"), "Culture") == Get("culture"));
                     target = Child(Child(item, "AttributeList"), "Text");
                 }
-                if (target.HasElements || !used.Add(target) || target.Value != Get("expectedValue"))
+                if (target.HasElements || !used.Add((target, "")) || target.Value != Get("expectedValue"))
                     throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
                 target.Value = Get("value");
             }
             return d.ToString();
         }
+        private static XElement FindMember(XDocument d, string section, string memberPath)
+        {
+            var sections = Child(Child(Block(d), "AttributeList"), "Interface").Descendants()
+                .Where(e => e.Name.LocalName == "Section" && (string?)e.Attribute("Name") == section).ToArray();
+            if (sections.Length != 1) throw new ArgumentException("Section is absent or ambiguous.");
+            var current = sections[0];
+            foreach (var segment in memberPath.Split('/'))
+                current = current.Elements().Single(e => e.Name.LocalName == "Member" && (string?)e.Attribute("Name") == segment);
+            if (current.AncestorsAndSelf().Any(e => e.Attributes()
+                    .Any(a => (a.Name.LocalName == "ReadOnly" || a.Name.LocalName == "Informative")
+                        && a.Value.Equals("true", StringComparison.OrdinalIgnoreCase))))
+                throw new ArgumentException("Read-only/informative member cannot be edited.");
+            return current;
+        }
+        private static void SetMemberComment(XElement member, string culture, string expectedValue, string value)
+        {
+            var comment = member.Elements().SingleOrDefault(e => e.Name.LocalName == "Comment");
+            if (((string?)comment?.Attribute("Informative"))?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
+                throw new ArgumentException("Read-only/informative member cannot be edited.");
+            var entry = comment?.Elements().SingleOrDefault(e => e.Name.LocalName == "MultiLanguageText" && (string?)e.Attribute("Lang") == culture);
+            if (entry?.HasElements == true || (entry?.Value ?? "") != expectedValue)
+                throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
+            if (value.Length == 0)
+            {
+                entry?.Remove();
+                if (comment != null && !comment.HasElements) comment.Remove();
+                return;
+            }
+            if (comment == null)
+            {
+                comment = new XElement(member.Name.Namespace + "Comment");
+                var attributes = member.Elements().SingleOrDefault(e => e.Name.LocalName == "AttributeList");
+                if (attributes != null) attributes.AddAfterSelf(comment); else member.AddFirst(comment);
+            }
+            if (entry == null)
+            {
+                entry = new XElement(member.Name.Namespace + "MultiLanguageText", new XAttribute("Lang", culture));
+                comment.Add(entry);
+            }
+            entry.Value = value;
+        }
         public static string PrepareImport(string beforeXml, string candidateXml, JsonArray preserved)
         {
-            var before = Parse(beforeXml); var candidate = Parse(candidateXml);
+            var before = ParseDocument(beforeXml, editable: false, blockImport: true);
+            var candidate = ParseDocument(candidateXml, editable: false, blockImport: true);
             if (Name(before) != Name(candidate) || Block(before).Name != Block(candidate).Name)
                 throw new ArgumentException("Import must address the same exact block name and kind.");
             if (LibraryBound(before) || LibraryBound(candidate))

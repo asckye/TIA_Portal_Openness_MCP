@@ -9043,17 +9043,17 @@
       "path": "src/Shared/PlcOfflineTools.cs",
       "owner": "PlcOfflineTools",
       "domain": "PLC-Builders",
-      "signature": "public CallToolResult PatchPlcBlockDocumentV4(\n            [Description(\"Absolute existing single-block SimaticML XML file.\")] string filePath,\n            [Description(\"JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\\\"action\\\":\\\"setBlockText\\\",\\\"field\\\":\\\"Title\\\",\\\"culture\\\":\\\"en-US\\\",\\\"expectedValue\\\":\\\"Old title\\\",\\\"value\\\":\\\"Example\\\"}].\")] BlockEdit[] changes,\n            [Description(\"documentFingerprint returned by GetPlcBlockEditCapabilities for this input.\")] string expectedDocumentHash,\n            [Description(\"New absolute output file; existing parent directory required when dryRun=false.\")] string outputPath = \"\",\n            [Description(\"Preview only by default; false writes a new file, never imports into TIA.\")] bool dryRun = true)",
+      "signature": "public CallToolResult PatchPlcBlockDocumentV4(\n            [Description(\"Absolute existing single-block or single-UDT SimaticML XML file.\")] string filePath,\n            [Description(\"JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue/setMemberComment, exact target fields, expectedValue and value. The selector key is action. Example: [{\\\"action\\\":\\\"setMemberComment\\\",\\\"section\\\":\\\"Static\\\",\\\"memberPath\\\":\\\"Motor/Speed\\\",\\\"culture\\\":\\\"zh-CN\\\",\\\"expectedValue\\\":\\\"\\\",\\\"value\\\":\\\"Motor speed\\\"}]. UDT members use section=None; empty value removes that culture's comment.\")] BlockEdit[] changes,\n            [Description(\"documentFingerprint returned by GetPlcBlockEditCapabilities for this input.\")] string expectedDocumentHash,\n            [Description(\"New absolute output file; existing parent directory required when dryRun=false.\")] string outputPath = \"\",\n            [Description(\"Preview only by default; false writes a new file, never imports into TIA.\")] bool dryRun = true)",
       "parameters": {
         "filePath": {
           "type": "string",
           "default": null,
-          "description": "Absolute existing single-block SimaticML XML file."
+          "description": "Absolute existing single-block or single-UDT SimaticML XML file."
         },
         "changes": {
           "type": "BlockEdit[]",
           "default": null,
-          "description": "JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]."
+          "description": "JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue/setMemberComment, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setMemberComment\",\"section\":\"Static\",\"memberPath\":\"Motor/Speed\",\"culture\":\"zh-CN\",\"expectedValue\":\"\",\"value\":\"Motor speed\"}]. UDT members use section=None; empty value removes that culture's comment."
         },
         "expectedDocumentHash": {
           "type": "string",
@@ -9748,12 +9748,12 @@
       "path": "src/Shared/PlcReadModifyTools.cs",
       "owner": "PlcReadModifyTools",
       "domain": "Validation",
-      "signature": "public CallToolResult ReadPlcBlockEditCapabilitiesV4(\n            [Description(\"Absolute exported SimaticML XML; mutually exclusive with blockPath.\")] string filePath = \"\",\n            [Description(\"Exact PLC software path when exporting a live block.\")] string softwarePath = \"\",\n            [Description(\"Exact group-qualified live block path; empty for file-only mode.\")] string blockPath = \"\")",
+      "signature": "public CallToolResult ReadPlcBlockEditCapabilitiesV4(\n            [Description(\"Absolute exported single-block or single-UDT SimaticML XML; mutually exclusive with blockPath.\")] string filePath = \"\",\n            [Description(\"Exact PLC software path when exporting a live block.\")] string softwarePath = \"\",\n            [Description(\"Exact group-qualified live block path; empty for file-only mode.\")] string blockPath = \"\")",
       "parameters": {
         "filePath": {
           "type": "string",
           "default": "\"\"",
-          "description": "Absolute exported SimaticML XML; mutually exclusive with blockPath.",
+          "description": "Absolute exported single-block or single-UDT SimaticML XML; mutually exclusive with blockPath.",
           "value": ""
         },
         "softwarePath": {

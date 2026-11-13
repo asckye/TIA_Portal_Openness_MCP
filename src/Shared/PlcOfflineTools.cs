@@ -54,16 +54,19 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "PatchPlcBlockDocument"),
-                Description("[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires " +
+                Description("[L2][PLC-Builders][FILE] Patch an exported single-block or single-UDT SimaticML file into a NEW file, preserving all unrelated XML. Requires " +
                 "expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), " +
-                "setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only " +
-                "existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. " +
+                "setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value), " +
+                "setMemberComment(section,memberPath,culture,expectedValue,value), e.g. Static/Motor/Speed in zh-CN with expectedValue=\"\". " +
+                "StartValue and block/network text must exist; member comments may be added or removed. Use a culture contained in the export, or an explicit " +
+                "culture when it contains none; no guessed defaults, library-connected blocks or read-only members. UDTs return with ImportPlcType overwrite=true; " +
+                "overwrite makes dependent DBs and blocks inconsistent until compiled. " +
                 "Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged.")]
         public CallToolResult PatchPlcBlockDocumentV4(
-            [Description("Absolute existing single-block SimaticML XML file.")] string filePath,
-            [Description("JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. " +
-                "The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old " +
-                "title\",\"value\":\"Example\"}].")] BlockEdit[] changes,
+            [Description("Absolute existing single-block or single-UDT SimaticML XML file.")] string filePath,
+            [Description("JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue/setMemberComment, exact target fields, expectedValue and value. " +
+                "The selector key is action. Example: [{\"action\":\"setMemberComment\",\"section\":\"Static\",\"memberPath\":\"Motor/Speed\",\"culture\":\"zh-CN\"," +
+                "\"expectedValue\":\"\",\"value\":\"Motor speed\"}]. UDT members use section=None; empty value removes that culture's comment.")] BlockEdit[] changes,
             [Description("documentFingerprint returned by GetPlcBlockEditCapabilities for this input.")] string expectedDocumentHash,
             [Description("New absolute output file; existing parent directory required when dryRun=false.")] string outputPath = "",
             [Description("Preview only by default; false writes a new file, never imports into TIA.")] bool dryRun = true)
