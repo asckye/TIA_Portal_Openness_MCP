@@ -6,6 +6,8 @@
 
 ## 当前状态
 
+- **2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归修复、NO-LOCK、DES-4R2/R3 和合并后的整理；API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF 共十项移到 beta.6，4.0 正式版仍以它们完成为条件，见[开发计划](plan.md)。
+
 - **2026-11-11 恢复开发。** beta.4 V21 回归的修复决定已全部批准，任务说明正在独立审查，审查后交 Codex 实现；归属表在维护者本机 `bin-build/refactor/tasks/VM-B4-MAP.md`。
 - 当前版本 [`4.0.0-beta.4`](../releases/v4.0.0-beta.4.md) 已于 2026-11-05 发布为预发布（`48abffe8`），GitHub latest 仍为正式版 [v3.3.0](../releases/v3.3.0.md)。预发布不设为 latest，3.3 安装不提示升级。
 - beta.4 已集成默认写入预览、批次与安全移块、回滚日志、参数模型、会话恢复、原生原因、输出根审批、确认词、relay 与工作台页面重绘。所有这些变化仍待真实 TIA Portal 复验。

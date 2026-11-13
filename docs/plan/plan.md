@@ -129,6 +129,8 @@ beta.3 之后已合并：CI-FIX（`67ca6816`）、PREP-SLIM（`ccc8f7aa`、`d1a7
 
 ## 4.0.0-beta.5
 
+**2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归的修复、取消会话锁（NO-LOCK）、错误信息（DES-4R2/R3）和合并后的整理；下表中原属 beta.5 的十项新功能（API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF）移到 4.0.0-beta.6。4.0 正式版的条件不变，仍需这些任务在 beta.6 完成。
+
 DES-4 Parts 2、3 不阻塞 beta.4，继续在各自分支实现。TIDY-7、HOST-RENAME 和 LONG-LINE-GATE 必须等两部分合并，拆分与改名后的文件无法靠重命名检测跟随仍开的分支。V21 API 的 6 个 P1 缺口按 API 先行注册，带预览与读回，API-P1a 的第 0 部分先合并。T-IA 批次和生态小项先核对官方 API 再写说明。许可沿用 2026-10-30 决定。
 
 | 编号 | 内容 | 状态 | 决定日期 |
@@ -148,6 +150,15 @@ DES-4 Parts 2、3 不阻塞 beta.4，继续在各自分支实现。TIDY-7、HOST
 | TIDY-7 | 剩余大文件拆分与新增长行整理，保持行为和 IL | 排队（DES-4 Parts 2、3 合并后） | 2026-11-05 |
 | HOST-RENAME | `src/EngineHost` 改名，同步链接源、工程与文档路径 | 排队（DES-4 Parts 2、3 合并后） | 2026-11-05 |
 | LONG-LINE-GATE | 将 `wrap-long-lines -Check` 接入合并门 | 排队（上述拆分与改名后） | 2026-11-05 |
+| P8-97b | 单块、块组编译 | 并入 API-P1b | 2026-10-27 |
+| MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 排队（任务说明已写） | 2026-11-01 |
+
+## 4.0.0-beta.6（新功能，2026-11-13 从 beta.5 移入）
+
+beta.5 发布后开工，均为按官方 API 补能力的新功能，不含回归修复。顺序与依赖沿用各行原说明。
+
+| 编号 | 内容 | 状态 | 决定日期 |
+|---|---|---|---|
 | API-P1a | 库对象实例化到项目（`CreateFrom`）：块、变量与变量表、设备、Classic 画面，来源为库类型版本和母版，八个版本按 API 注册；第 0 部分为共用的计划绑定辅助方法 | 排队（任务说明已批准） | 2026-11-02 |
 | API-P1b | 新建监控表，导入（并核实导出）强制表，强制表进入 AI 工具面并受 WRITE/ONLINE-WRITE 审批；按块、块组、软件单元编译，先在 VM 上确认 `ICompilable` 暴露，未暴露则只做前半（吸收 P8-97b） | 排队（API-P1a 第 0 部分之后） | 2026-11-02 |
 | API-P1c | `DeviceItem.ChangeType` 更换 CPU 或模块型号，项目级子网创建与删除 | 排队（API-P1a 第 0 部分之后） | 2026-11-02 |
@@ -155,15 +166,13 @@ DES-4 Parts 2、3 不阻塞 beta.4，继续在各自分支实现。TIDY-7、HOST
 | TIA-TEST | 持久 PLC 测试用例库（PLCSIM Advanced、批量运行、结果历史、官方 TIA Test Suite 用例）、FAT/SAT 报告、支持复现报告；JUnit 报告与稳定退出码 | 未开始 | 2026-10-30 |
 | TIA-SAFE | 机密保管库；下载安全（实物与 PLCSIM 确认、先保存并编译、兼容指南）；高风险确认；审批状态读取工具 | 未开始 | 2026-10-30 |
 | TIA-BATCH | 批量与递归的块、变量、UDT、HMI 变量操作；变量 CSV/Excel 交换，扩到 HMI 变量与报警、文本列表、DB 起始值 | 未开始 | 2026-10-30 |
-| TIA-GAPS | API-P1 未覆盖的其余缺口：建脚本模块、嵌套运行设置（维护者 2026-11-03：排 beta.5）、工程概览与新建/打开选项、专题使用指南 | 未开始 | 2026-10-30 |
+| TIA-GAPS | API-P1 未覆盖的其余缺口：建脚本模块、嵌套运行设置（维护者 2026-11-03 排 beta.5，2026-11-13 随新功能移至 beta.6）、工程概览与新建/打开选项、专题使用指南 | 未开始 | 2026-10-30 |
 | ECO-S | Siemens 官方 tia-portal-ai-extensions 技能进入 `GetToolUsage`（MIT，署名）；参数预设与强制预设；导出时剥离易变节点（可选编译成功后自动提交） | 未开始 | 2026-10-30 |
 | SELF | `ManagePlcDataBlockSnapshot` 的注册范围与官方 API 核对（ValueService 只在 V21 文档化）；`ManageProjectCompilationSettings` 从 V16 起注册并修正描述 | 未开始 | 2026-11-01 |
-| P8-97b | 单块、块组编译 | 并入 API-P1b | 2026-10-27 |
-| MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 排队（任务说明已写） | 2026-11-01 |
 
 ## 4.0 正式版（rc → 4.0.0）
 
-门槛见上文。除 beta.3–beta.5 的全部任务外，还需完成：
+门槛见上文。除 beta.3–beta.6 的全部任务外，还需完成：
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
