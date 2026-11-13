@@ -2196,6 +2196,23 @@
           "identifier": "OperatorSessionTestsPlc/Operator_stream_shares_one_existing_worker_and_disconnect_state( string release ):8d5ec8fa7c1fe798cfab2610ce74f7460e704156b9433128226f0b293d1e455d:1"
         }
       ]
+    },
+    {
+      "task": "NO-LOCK-5",
+      "maintainerDate": "2026-11-13",
+      "reason": "Maintainer approved on 2026-11-13: D7 long-class worker budget 1800 s to 300 s in WorkerRobustnessTests:471 and EngineProfileTests:38",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerRobustnessTests/Timeout_data_and_override_precedence_cover_long_native_families( ):368d350fe7dc4a924bda16057c339924536a2178eb275c0f75727d168b21d61a:1"
+        },
+        {
+          "path": "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/EngineProfileTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.WorkerChannel.Tests.EngineProfileTests/Timeout_defaults_and_override_precedence_are_shared_by_all_worker_operations( ):4487e95dc52f22f25925c326f150006961fe58b7c7f9182548153ad3812938d9:1"
+        }
+      ]
     }
   ]
 }
