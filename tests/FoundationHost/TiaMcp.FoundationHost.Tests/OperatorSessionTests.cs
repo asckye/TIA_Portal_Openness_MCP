@@ -73,11 +73,16 @@ public sealed class OperatorSessionTestsPlc
         await panel.Tool("GetSessionState");
         Assert.Equal(pidA, (int?)a.Snapshot()["worker"]?["pid"]);
         await panel.Tool("CallTool", new() { ["name"] = "DisconnectPortal", ["arguments"] = new Dictionary<string, object?>() });
-        var refused = await ai.Tool("GetSessionState", ok: false);
-        Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
-        Assert.Equal((string?)refused["error"]?["message"], (string?)(await panel.Tool("GetSessionState", ok: false))["error"]?["message"]);
+        var disconnected = (await ai.Tool("GetSessionState"))["data"]!["sessionState"]!;
+        Assert.True((bool?)disconnected["disconnected"]);
+        Assert.False((bool?)disconnected["connected"]);
+        Assert.True(JsonNode.DeepEquals(disconnected, (await panel.Tool("GetSessionState"))["data"]!["sessionState"]));
         Assert.Equal("workbench", (string?)a.Snapshot()["endedBy"]); Assert.Equal("disconnect", (string?)a.Snapshot()["endReason"]);
         await panel.State(s => (string?)s["endedBy"] == "workbench"); await ai.State(s => (string?)s["endedBy"] == "workbench");
+        var refused = await panel.Tool("SaveProject", new() { ["dryRun"] = true }, ok: false);
+        Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
+        Assert.Equal("Attach to an explicitly selected TIA process first.", (string?)refused["error"]?["message"]);
+        Assert.Equal("not-started", (string?)refused["meta"]?["execution"]);
         await other.Tool("GetSessionState");
         await other.Tool("DisconnectPortal");
     }
@@ -95,9 +100,13 @@ public sealed class OperatorSessionTestsPlc
         await using var attached = await Peer.Operator(registration, session.SessionKey);
         await ai.Tool("DisconnectPortal");
         Assert.Equal("mcp", (string?)session.Snapshot()["endedBy"]);
-        var refusal = await attached.Tool("GetSessionState", ok: false);
-        Assert.Equal("PRECONDITION_FAILED", (string?)refusal["error"]?["code"]);
+        Assert.Equal("disconnect", (string?)session.Snapshot()["endReason"]);
+        var disconnected = (await attached.Tool("GetSessionState"))["data"]!["sessionState"]!;
+        Assert.True((bool?)disconnected["disconnected"]);
+        Assert.False((bool?)disconnected["connected"]);
+        Assert.True(JsonNode.DeepEquals(disconnected, (await ai.Tool("GetSessionState"))["data"]!["sessionState"]));
         await attached.State(s => (string?)s["endedBy"] == "mcp");
+        await ai.State(s => (string?)s["endedBy"] == "mcp");
         if (fixture.Options.ReleaseKey is not ("20" or "21"))
         {
             await Task.Run(foundationhost::TiaMcp.FoundationHost.WorkerShutdown.StopAll).WaitAsync(Peer.RequestBudget);

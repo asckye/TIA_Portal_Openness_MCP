@@ -126,8 +126,14 @@ internal static class EngineSessionFixture
                 return ChannelResponse.Success(new JsonArray(new JsonObject { ["Name"] = "fixture",
                     ["Attributes"] = new JsonArray(new JsonObject { ["Name"] = "Path", ["Value"] = "C:/fixture.ap" + release }) }).ToJsonString());
             if (request.Method == "adapter.SaveProject")
+            {
+                if (attached == null)
+                    return ChannelResponse.Error(new ChannelFailureException("Attach to an explicitly selected TIA process first.",
+                        -32603, ChannelOutcome.RejectedBeforeNative,
+                        new JsonObject { ["exceptionType"] = "AdapterPreconditionException" }.ToJsonString()));
                 return ChannelResponse.Success(new JsonObject { ["ProjectFile"] = "C:/fixture.ap" + release,
                     ["Executed"] = (bool?)input["dryRun"] == false }.ToJsonString());
+            }
             if (request.Method == "adapter.BindProject")
             {
                 epoch++;
