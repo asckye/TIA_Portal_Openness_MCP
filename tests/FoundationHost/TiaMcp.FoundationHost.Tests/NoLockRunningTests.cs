@@ -98,6 +98,7 @@ public sealed class NoLockRunningTests
     public async Task Unknown_write_is_guarded_until_its_result_is_read(string release)
     {
         using var scope = new Scope(release);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
         var tool = scope.Tool("SaveProject", "FixtureAnsweredUnknown", gated: false);
         using var session = scope.Session(tool);
         var first = await scope.Call(session, "SaveProject", scope.WriteArguments);

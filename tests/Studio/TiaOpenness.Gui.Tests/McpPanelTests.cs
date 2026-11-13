@@ -41,6 +41,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         {
             using var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
             WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+            WpfContext.Drain();
             Assert.Contains("SaveProject", model.Panel!.Lane);
             Assert.Contains("running-request", model.Panel.Lane);
             Assert.Contains("2026-11-12T00:00:00Z", model.Panel.Lane);
@@ -62,6 +63,7 @@ public sealed class McpPanelTests(WpfContext wpf)
         {
             using var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
             WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+            WpfContext.Drain();
             using var presentation = new TiaOpenness.Gui.Controls.ResultPresentation(model);
             Assert.Equal(1, model.Panel!.UnsettledCount);
             Assert.Contains("1", model.Panel.Unsettled);
@@ -413,6 +415,7 @@ public sealed class McpPanelTests(WpfContext wpf)
             model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
             window = new MainWindow(model, loadExistingConfiguration: false, approvals: new ApprovalServiceStub()); WpfContext.ShowWindow(window);
             WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+            WpfContext.Drain();
             Assert.Contains("fixture AI", model.Panel!.Participants); Assert.Contains("idle", model.Panel.Status);
             Assert.NotEmpty(model.Engineering.Blocks);
         });

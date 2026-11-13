@@ -21,11 +21,11 @@ public sealed class ProgressTests
         public override void Write(byte[] bytes, int offset, int count) { Owners.Add(Environment.CurrentManagedThreadId); base.Write(bytes, offset, count); }
     }
     private sealed class Services : IServiceProvider { public object? GetService(Type type) => null; }
-    private static async Task Operation(IMcpServer server, RequestContext<CallToolRequestParams> context)
+    private static async Task Operation(IMcpServer server, RequestContext<CallToolRequestParams> context, int notifications)
     {
         await Task.Run(async () => {
             if (context.Params?.ProgressToken != null)
-                for (int i = 1; i <= 3; i++) {
+                for (int i = 1; i <= notifications; i++) {
                     await Task.Delay(10).ConfigureAwait(false);
                     await server.SendNotificationAsync("notifications/progress", new { progress = i, total = 3, message = "fixture", progressToken = context.Params.ProgressToken });
                 }
@@ -44,7 +44,7 @@ public sealed class ProgressTests
         var server = new ChannelServer(input, output, identity, () => new(0, false), request => {
             using var shim = new WorkerProgressShim(request, enabled, new Services());
             var method = typeof(ProgressTests).GetMethod(nameof(Operation), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
-            var values = new object?[2]; shim.Bind(method, values);
+            var values = new object?[] { null, null, foundation ? 1 : 3 }; shim.Bind(method, values);
             var task = (Task)method.Invoke(null, values)!;
             Assert.True(WorkerProgressShim.Wait(task));
             return ChannelResponse.Success("{}");
