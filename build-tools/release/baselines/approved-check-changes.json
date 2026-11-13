@@ -1987,6 +1987,198 @@
           "identifier": "file:e959cdeeeceed46c73bd8049c7462c28ef44b8f85a169035be48fe56f9b6b943"
         }
       ]
+    },
+    {
+      "task": "NO-LOCK-3",
+      "maintainerDate": "2026-11-13",
+      "reason": "Maintainer approved on 2026-11-13: lease record and reconnect assertions (Part C Table 3 rows), WarningCode count 14 to 15 for PREVIOUS_OWNER_UNCLEAN, removal of requiresTiaRestart, requiresExplicitRebind, priorUnknownRequestId, previousGenerations three-key record, and the DisconnectTests.cs:100 pre-send cancellation finding recorded as a tool false positive: the assertion is unchanged word for word and only moved down",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BehaviorParityTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BehaviorParityTests/Both_worker_clients_use_the_same_authored_lease_refusal_mapping( string message ):6157f79f6f577bb6845da7944d15915cb997b604e18e3280094a0a5141336a8e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "DisconnectTests/Run( IMcpServer server , Action \u003C bool , string \u003E check , [ System . Runtime . CompilerServices . CallerFilePath ] string sourceFile = \u0022\u0022 ):18296d0472f55f29a8fd60ad46ca20ee6b1ab3eaf3d9397702ef34405c2e8472:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "DisconnectTests/Run( IMcpServer server , Action \u003C bool , string \u003E check , [ System . Runtime . CompilerServices . CallerFilePath ] string sourceFile = \u0022\u0022 ):4007b0a9e63946f6fb311ed3f01bb552626237cd2229409f0b04ff272fe7c7fd:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationRecoveryTests/Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach( string release ):11dad6082ff93eb1f2439d1865af30058f4f6763f653a41bcdf998dc0fd0b9ec:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationRecoveryTests/Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach( string release ):e6422ea0e5f7b5ade1c4c68e49edf76639ad3be0acba31b6c7c5523ec6fbf019:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationRecoveryTests/Foundation_in_flight_disconnect_does_not_wait_for_a_hung_native_call( string release ):90b0643ed41ff07d7fe18e92996a3e3a9fde4d2541e25db772b847def20e5b6e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationRecoveryTests/LeaseRestart( string release , bool uncertain ):67d3443437db0094007bb7614d8c1677f12078826106cbff2bb0d6cc8dcbc12c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "test-removed",
+          "identifier": "FoundationRecoveryTests/Foundation_channel_preserves_both_lease_refusals_without_poisoning( string release ):73f80bcf701251c2a56361e6e27508d66905bfddc972bf01c34b01b346a94b14"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Http_sessions_own_workers_disconnect_restart_and_teardown( string release ):7657f28f17b6bf4235130c53ac786951f476e4e6f009a4fe049334028410b8a0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Idle_attached_restart_detaches_before_starting_the_next_generation( string release ):0c6318823b6799de88322919450cc5952cea62828b7b949e4f6e944d965631e2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Restart_after_a_timeout_refuses_until_the_call_finishes( string release ):0c6318823b6799de88322919450cc5952cea62828b7b949e4f6e944d965631e2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease( string release ):37963ec44ddba05538cf0901353454aa3a359472eb35c05e790be7ea1f7454b7:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease( string release ):ac5dc1949213ffd30bcad9b2b39f79b8927d92ee3316bebb777759e20b976985:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease( string release ):bb0cad88d6633a8700900bf90fc8949656053abd2c5fe33f18ba2e0c478c0aac:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineWorkerClientTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineWorkerClientTests/Disposal_defers_running_calls_and_preserves_answered_unknown_evidence( string release , bool answeredUnknown ):9be1f7aed6a3a036a70da3a898b8a7a27b36b9d1e6b44a13fde105c37bc3c1d2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineWorkerClientTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineWorkerClientTests/Disposal_defers_running_calls_and_preserves_answered_unknown_evidence( string release , bool answeredUnknown ):afb32593275464c32b2ee055569718190255e3b22bb52754327fdc118dda16dd:2"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Acknowledged_disconnect_after_unknown_releases_the_reservation( ):ba104d8c6d2e61a5936c0ebb6811c0ab1bcf3912e82c7059213a33895c76d227:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Both_host_kinds_preserve_only_the_exact_lease_refusal_text( string message ):6157f79f6f577bb6845da7944d15915cb997b604e18e3280094a0a5141336a8e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Job_object_killed_idle_worker_allows_takeover_with_client_evidence( ):04b05c510882052373ada552401bc0005df73d07d2bcb99905d1cdf99e80afe5:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Unknown_attach_without_cached_adoption_keeps_uncertain( ):ff2bb4e3d0199dc6c6d8e02722cc279b35ffd1bc641bbc9a9bd42b2072fa6dc5:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Unknown_channel_or_typed_reply_leaves_uncertain_on_exit( bool typed ):515a46b9534db13033138452d96767cd86fb730174a6d6417657cfda0afa32f6:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Unknown_channel_or_typed_reply_leaves_uncertain_on_exit( bool typed ):6f219be571fb453fcc8ffccc959610389284b31b65b708104d02ea13725d9b31:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Unknown_channel_or_typed_reply_leaves_uncertain_on_exit( bool typed ):ff2bb4e3d0199dc6c6d8e02722cc279b35ffd1bc641bbc9a9bd42b2072fa6dc5:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "test-removed",
+          "identifier": "FoundationProcessLeaseTests/Job_kill_during_native_fixture_keeps_busy_and_refuses_takeover( ):352ad4bd21aa35a9504b0e2e3d517f222e8ef3d25b585f1505dd6f6e57aecc84"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "test-removed",
+          "identifier": "FoundationProcessLeaseTests/Takeover_data_reaches_the_connect_result_without_a_new_warning( string state , bool idle ):078f410574c68f6b63c37caee29b5741ad8c221cde8efe61d744e14d4b598528"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "test-removed",
+          "identifier": "FoundationProcessLeaseTests/Unsafe_and_legacy_markers_refuse_before_dispatch( string state ):9068a493d8ff1245bddc48dff9f64c003cc80cae7fae506209c793bb73bf4f5e"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Plc_faults_lock_the_host_and_require_explicit_restart( string release , string mode ):751af35e5041e92fef432cea1e54685e5d14fbcccadaa2d8ef5428fb720ab02b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Plc_faults_lock_the_host_and_require_explicit_restart( string release , string mode ):e5873a21e1152f7ac6261ef194451f5a714f8895d30c85587ee4f973a5b245bf:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerTimeoutTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcWorkerRobustnessTests/Disconnect_refuses_a_running_read_then_detaches_cleanly( ):cd271594d1dea7261d656dc6f5f00d0d45e77e61a83d39d9bf8296cbed4b6540:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedHostSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedHostSessionTests/Plc_shared_cached_status_and_restart_remain_available_offline( string release ):751af35e5041e92fef432cea1e54685e5d14fbcccadaa2d8ef5428fb720ab02b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedHostSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedHostSessionTests/Plc_shared_unknown_locks_the_pipeline_until_an_explicit_restart( string release ):751af35e5041e92fef432cea1e54685e5d14fbcccadaa2d8ef5428fb720ab02b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):7d178708c906249ea515bc0a209ff368c8712096716f598149e77f34fe08a58c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerRobustnessTests/Read_failures_keep_their_outcome_and_real_transport_faults_require_explicit_restart( string release , bool shared , string mode ):343f107c5bdb9f09646d52e706d5df0820d20373f5a8d2d833b3e7a06c2ff3d9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerRobustnessTests/Read_failures_keep_their_outcome_and_real_transport_faults_require_explicit_restart( string release , bool shared , string mode ):41b638b3e930a0fd253215bad79329b7a5bb74017cc4ebb9d267bbc91d2745ef:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerRobustnessTests/Read_failures_keep_their_outcome_and_real_transport_faults_require_explicit_restart( string release , bool shared , string mode ):578e963c0205eb2c033f90469dbb3c4b87b7cd774e22827fbedbbbc59efeabcd:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerRobustnessTests/Restart_clears_an_adopted_binding_and_refuses_a_busy_lane( ):d8aa36e18bd2242685187a4ac743c302dd0bed929c37957466ce3932e86b4fb3:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4EnvelopeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4EnvelopeTests/NewTypesHaveNoSiemensOrMcpSdkReferences( ):d3c1824574e7581dc205b30a049fb0a3e5e2e1fb835b8755e95abe72d4ef1e5b:1"
+        }
+      ]
     }
   ]
 }
