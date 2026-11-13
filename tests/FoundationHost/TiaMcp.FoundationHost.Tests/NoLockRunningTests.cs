@@ -1,6 +1,7 @@
 extern alias foundationhost;
 extern alias enginehost;
 using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -37,25 +38,39 @@ public sealed class NoLockRunningTests
     public async Task Disconnect_channel_fault_preserves_the_prior_unknown_request(string release, string? prior)
     {
         using var scope = new Scope(release);
-        const BindingFlags fields = BindingFlags.Instance | BindingFlags.NonPublic;
-        var priorField = typeof(Foundation.WorkerClient).GetField("priorUnknownRequestId", fields)!;
-        priorField.SetValue(scope.Worker, prior);
+        if (prior != null) scope.Worker.Unsettled.Record(prior, "SaveProject", "prior-digest", DateTimeOffset.UtcNow);
+        string[] expected = prior == null ? Array.Empty<string>() : new[] { prior };
+        var stateTool = scope.Tool("GetSessionState", gated: false);
+        using var session = scope.Session(stateTool);
+        var initial = scope.Worker.Unsettled.ToJson();
+        Assert.Equal(expected, initial.Select(call => (string?)call!["requestId"]));
         using var correlation = Foundation.FoundationWorkerRequest.Use("disconnect-fault", "DisconnectPortal");
         using (new ProductionWorkerBudgets(scope.Worker))
             await scope.Worker.Call("FaultFixtureArm", new() { ["method"] = "adapter.Disconnect" }, CancellationToken.None);
         var call = scope.Worker.Call("Disconnect", new(), CancellationToken.None);
         await scope.WaitDispatched();
-        var active = typeof(Foundation.WorkerClient).GetField("activeRequestId", fields)!.GetValue(scope.Worker);
         Assert.StartsWith(Path.GetFullPath(TestPaths.RepositoryRoot(AppContext.BaseDirectory)) + Path.DirectorySeparatorChar,
             Path.GetFullPath(scope.Child.MainModule!.FileName), StringComparison.OrdinalIgnoreCase);
         File.WriteAllText(Path.Combine(scope.DirectoryPath, "after-gate-fault"), "malformed");
         scope.Release();
         var acknowledgement = await call.WaitAsync(TestDeadlines.Hang);
-        Assert.Null(active);
-        Assert.Equal(prior, priorField.GetValue(scope.Worker));
-        Assert.Equal(prior, (string?)acknowledgement?["PriorUnknownRequestId"]);
+        Assert.Equal(9, acknowledgement!.AsObject().Count);
+        Assert.False((bool?)acknowledgement["WorkerAcknowledged"]);
+        Assert.Equal("disconnected", (string?)acknowledgement["SessionState"]);
+        Assert.Null(acknowledgement["previousOwner"]);
+        Assert.Null(acknowledgement["requests"]);
+        Assert.Equal(expected, scope.Worker.Unsettled.Snapshot().Select(call => call.RequestId));
+        var state = await scope.Call(session, "GetSessionState", new());
+        Assert.True((bool?)state.StructuredContent?["ok"]);
+        var remaining = state.StructuredContent!["data"]!["sessionState"]!["unsettled"]!.AsArray();
+        Assert.Equal(expected, remaining.Select(call => (string?)call!["requestId"]));
+        Assert.Equal(initial.Select(call => ((string?)call!["tool"],
+                DateTimeOffset.Parse((string)call["utc"]!, CultureInfo.InvariantCulture), (bool?)call["fromPreviousOwner"])),
+            remaining.Select(call => ((string?)call!["tool"],
+                DateTimeOffset.Parse((string)call["utc"]!, CultureInfo.InvariantCulture), (bool?)call["fromPreviousOwner"])));
         var repeated = await scope.Worker.Call("Disconnect", new(), CancellationToken.None);
-        Assert.Equal(prior, (string?)repeated?["PriorUnknownRequestId"]);
+        Assert.True(JsonNode.DeepEquals(acknowledgement, repeated));
+        Assert.Equal(expected, scope.Worker.Unsettled.Snapshot().Select(call => call.RequestId));
     }
 
     private static void Dialog(Scope scope, string answer)
