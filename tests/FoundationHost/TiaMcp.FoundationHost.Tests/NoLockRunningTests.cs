@@ -437,9 +437,9 @@ public sealed class NoLockRunningTests
     public async Task Late_result_completes_the_audit_and_approval_once_with_the_final_outcome()
     {
         using var scope = new Scope("19");
-        string repository = TestPaths.RepositoryRoot(AppContext.BaseDirectory);
-        Assert.True(Path.GetFullPath(TiaOpenness.Shared.ApprovalSettings.SettingsPath).StartsWith(repository,
-            StringComparison.OrdinalIgnoreCase));
+        string dataRoot = Path.GetFullPath(TiaOpenness.Shared.DataLocations.Current.WorkbenchDataDirectory);
+        Assert.True(Path.GetFullPath(TiaOpenness.Shared.ApprovalSettings.SettingsPath).StartsWith(
+            dataRoot.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
         var log = new TiaOpenness.Shared.AuditLog(Path.Combine(scope.DirectoryPath, "audit"));
         using var audit = TiaOpenness.Shared.AuditInvocation.UseLog(log);
         using var pipe = TiaOpenness.Shared.ApprovalPipe.CreateServer(TiaOpenness.Shared.ApprovalPipe.CurrentName,

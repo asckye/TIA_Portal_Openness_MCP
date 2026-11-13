@@ -33,6 +33,7 @@ internal static class Program
         bool bound = false, projectClosed = false;
         bool failNextStatus = false;
         int attachedPid = 123;
+        int writes = 0;
         long epoch = 0;
         string? faultMethod = null, faultTool = null, faultCorrelation = null, savedAs = null;
         string Spill(string raw, string? mode)
@@ -51,6 +52,7 @@ internal static class Program
             while (!File.Exists(Path.Combine(gate, "release")) && DateTime.UtcNow < deadline) Thread.Sleep(5);
         }
         new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new ChannelBinding(epoch, bound), request => {
+            if (request.Method == "adapter.FixtureWriteCount") return ChannelResponse.Success(writes.ToString());
             if (request.Method == "adapter.FixtureFailNextStatus")
             { failNextStatus = true; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.HostObserve")
@@ -164,11 +166,18 @@ internal static class Program
                 return ChannelResponse.Success(document.ToJsonString());
             }
             if (request.Method == "adapter.FixtureAnsweredUnknown")
+            {
+                writes++;
                 return ChannelResponse.Error(new ChannelFailureException("Synthetic answered unknown.", -32603, ChannelOutcome.Unknown));
+            }
             if (request.Method == "adapter.SaveProject")
-                    return ChannelResponse.Success(new JsonObject { ["Executed"] = !(JsonNode.Parse(request.ArgumentsJson)?["dryRun"] is JsonValue dryRun
-                        && dryRun.TryGetValue<bool>(out var preview) && preview),
+            {
+                bool preview = JsonNode.Parse(request.ArgumentsJson)?["dryRun"] is JsonValue dryRun
+                    && dryRun.TryGetValue<bool>(out var requestedPreview) && requestedPreview;
+                if (!preview) writes++;
+                return ChannelResponse.Success(new JsonObject { ["Executed"] = !preview,
                     ["ProjectFile"] = "C:/fixture.ap" + options.ReleaseKey }.ToJsonString());
+            }
             if (request.Method == "adapter.Attach")
             {
                 attachedPid = (int)JsonNode.Parse(request.ArgumentsJson)!["processId"]!;

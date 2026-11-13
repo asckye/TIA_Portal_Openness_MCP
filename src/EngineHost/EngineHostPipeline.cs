@@ -326,7 +326,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Worker.Unsettled.ProjectChanged(project);
             return TiaMcp.FoundationHost.WriteDigest.Capture(tool, arguments, project);
         }
-        internal static void RecordUnsettled(string requestId, string tool, string digest)
+        internal static void RecordUnsettled(string requestId, string tool, string? digest)
         {
             Worker.Unsettled.Record(requestId, tool, digest, DateTimeOffset.UtcNow);
         }

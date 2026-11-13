@@ -49,9 +49,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (name == "CallTool" && (string?)body["meta"]?["tool"] is string targetName) name = targetName;
             bool mutation = write || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
             bool isPreview = preview || HostBehavior.IsPreview(args, TryDryRunDefault(name, out bool defaultPreview) && defaultPreview);
-            if (unknown && mutation && !isPreview && !IsReadOnlyApprovalPreview
-                && TiaMcp.FoundationHost.WriteDigest.Prepared(name, args) is { } digest)
+            if (unknown && mutation && !isPreview && !IsReadOnlyApprovalPreview)
             {
+                string? project = (string?)Worker.Binding?["identity"]?["projectPath"] ?? (string?)Worker.Binding?["projectPath"];
+                string? digest = TiaMcp.FoundationHost.WriteDigest.ForOutcome(name, args, project);
                 RecordUnsettled((string?)body["meta"]?["requestId"] ?? InvocationJournal.CorrelationId, name, digest);
                 Worker.LateResults.RecordUnknown((string?)body["meta"]?["requestId"] ?? InvocationJournal.CorrelationId,
                     name, digest, result);

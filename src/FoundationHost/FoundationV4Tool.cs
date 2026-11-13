@@ -174,10 +174,9 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ?? (result.Content.FirstOrDefault() as TextContentBlock)?.Text);
         if (inner is FoundationTool producingTool) result = producingTool.ParkWorkerResult(result, tool.Name);
-        if (result.StructuredContent is { } final && UnsettledCalls.HasUnknownOutcome(final) && inner is FoundationTool completedTool
-            && WriteDigest.Prepared(tool.Name, arguments) is { } completedDigest)
+        if (result.StructuredContent is { } final && UnsettledCalls.HasUnknownOutcome(final) && inner is FoundationTool completedTool)
             completedTool.LateResults.RecordUnknown((string?)final["meta"]?["requestId"] ?? id, tool.Name,
-                completedDigest, result);
+                WriteDigest.ForOutcome(tool.Name, arguments, completedTool.BoundProjectFile), result);
         return result;
     }
 
@@ -219,14 +218,14 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (result.StructuredContent is { } body && inner is FoundationTool sessionTool)
             {
                 var arguments = JsonSerializer.SerializeToNode(args)!.AsObject();
+                sessionTool.Unsettled.ObserveProjectAfterCall(sessionTool.BoundProjectFile);
                 var properties = tool.InputSchema.GetProperty("properties");
                 bool preview = HostBehavior.IsPreview(arguments, properties.TryGetProperty("dryRun", out var dryRun)
                     && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False));
                 if (!preview && UnsettledCalls.HasUnknownOutcome(body)
-                    && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE")
-                    && WriteDigest.Prepared(tool.Name, arguments) is { } recordedDigest)
+                    && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE"))
                     sessionTool.Unsettled.Record((string?)body["meta"]?["requestId"] ?? id, tool.Name,
-                        recordedDigest, DateTimeOffset.UtcNow);
+                        WriteDigest.ForOutcome(tool.Name, arguments, sessionTool.BoundProjectFile), DateTimeOffset.UtcNow);
                 body = sessionTool.Unsettled.WarnOnSave(tool.Name, body, unsettledBeforeSave);
                 result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                     Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };

@@ -28,6 +28,15 @@ public static class WriteDigest
     }
     public static string? Prepared(string tool, JsonObject arguments)
         => Current.Value?.Digests.TryGetValue(Key(tool, arguments), out var digest) == true ? digest : null;
+    public static string? ForOutcome(string tool, JsonObject arguments, string? projectFile)
+    {
+        try { return Prepared(tool, arguments) ?? Create(tool, arguments, projectFile); }
+        catch (Exception error) when (error is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            // An invalid identity removes the replay guard, while the unknown outcome is still retained.
+            return null;
+        }
+    }
     public static string? Latest(string tool)
         => Current.Value?.Latest.TryGetValue(tool, out var digest) == true ? digest : null;
     private static string Key(string tool, JsonObject arguments)

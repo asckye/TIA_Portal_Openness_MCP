@@ -58,16 +58,40 @@ internal static class DisconnectTests
             try { await worker.Call("Attach",new JsonObject{["processId"]=123},CancellationToken.None);throw new Exception("Attach accepted"); }
             catch(InvalidOperationException){check(true,"Idle terminal session cannot subsequently launch");}
         }
-        using(var worker=new WorkerClient("17","/missing/never-launch-worker","/missing/no-api",false))
+        string gate = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "bin-build", "disconnect-row-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(gate);
+        string? previousGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+        Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", gate);
+        try
         {
-            var serial=(SemaphoreSlim)typeof(WorkerClient).GetField("serial",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(worker)!;
-            await serial.WaitAsync();
-            var pending=worker.Call("Disconnect",new JsonObject(),CancellationToken.None);
-            check(pending.IsCompleted,"Disconnect does not wait behind an in-flight serialization gate");
-            serial.Release();
-            var terminal = await pending;
-            DisconnectContract.Validate(terminal,false,null,true);
-            check(terminal?["RequiresTiaRestart"]?.GetValue<bool>() != true,"A held host gate without a native call does not require TIA restart");
+            string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.17.dll"),
+                "offline session fixture");
+            using var worker = new WorkerClient("17", exe, AppContext.BaseDirectory, true) { Bundled = false };
+            await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
+            var running = worker.Call("FixtureHang", new JsonObject(), CancellationToken.None);
+            check(SpinWait.SpinUntil(() => File.Exists(Path.Combine(gate, "dispatched")),
+                TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang), "Native call reached the disconnect gate");
+            int pid = (int)worker.OperatorSnapshot()["pid"]!;
+            var pending = worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
+            check(pending.IsCompleted,"Disconnect promptly refuses an occupied serialization gate");
+            var refused = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => pending);
+            check(refused.Condition == "worker-call-running", "Disconnect refuses while the native call is running");
+            check((int?)worker.OperatorSnapshot()["pid"] == pid && !System.Diagnostics.Process.GetProcessById(pid).HasExited,
+                "Disconnect refusal preserves the running worker PID");
+            File.WriteAllText(Path.Combine(gate, "release"), "");
+            await running.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
+            var terminal = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
+            DisconnectContract.Validate(terminal, true, 123, true);
+            check(terminal?["WorkerAcknowledged"]?.GetValue<bool>() == true && terminal?["Detached"]?.GetValue<bool>() == true,
+                "Worker acknowledges and detaches after the native call ends");
+            check(terminal?["RequiresTiaRestart"]?.GetValue<bool>() != true,"A completed native call does not require TIA restart");
+        }
+        finally
+        {
+            File.WriteAllText(Path.Combine(gate, "release"), "");
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", previousGate);
         }
         using(var worker=new WorkerClient("17","/missing/never-launch-worker","/missing/no-api",false))
         {
@@ -185,10 +209,11 @@ public sealed class FoundationRecoveryTests
                 worker.Call("Disconnect", new JsonObject(), CancellationToken.None));
             Assert.Equal("worker-call-running", refused.Condition);
             Assert.Equal(pid, (int?)worker.OperatorSnapshot()["pid"]);
+            Assert.False(System.Diagnostics.Process.GetProcessById(pid!.Value).HasExited);
             File.WriteAllText(Path.Combine(gate, "release"), "");
             Assert.NotNull(await running.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
             var ack = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
-            Assert.False((bool?)ack?["RequiresTiaRestart"]);
+            Assert.True((bool?)ack?["Detached"]);
             Assert.True((bool?)ack?["WorkerAcknowledged"]);
         }
         finally

@@ -83,6 +83,17 @@ public sealed class NoLockTests
         ["dryRun"] = preview, ["confirm"] = !preview, ["expectedProjectFile"] = worker.Project };
     private static JsonNode Body(CallToolResult result) => result.StructuredContent!;
 
+    private static async Task<IDisposable> ReadUnknown(IFoundationWorker worker, string release, string id)
+    {
+        var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, null);
+        var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
+        var lookup = pipeline.AllTools.Single(tool => tool.ProtocolTool.Name == "GetCallResult");
+        var result = Body(await lookup.InvokeAsync(Request("GetCallResult", new() { ["requestId"] = id })));
+        Assert.Equal("unknown", (string?)result["meta"]?["outcome"]);
+        Assert.Equal(id, (string?)result["meta"]?["requestId"]);
+        return pipeline;
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public async Task Unknown_write_leaves_the_next_read_and_write_running(string release)
     {
@@ -93,8 +104,14 @@ public sealed class NoLockTests
         Assert.Equal("OUTCOME_UNKNOWN", (string?)unknown["error"]?["code"]);
         var read = Body(await Tool(worker, release, "ListPlcBlocks").InvokeAsync(Request("ListPlcBlocks", new() { ["softwarePath"] = "PLC" })));
         Assert.True((bool?)read["ok"], read.ToJsonString());
+        var refused = Body(await save.InvokeAsync(Request("SaveProject", WriteArgs(worker))));
+        Assert.Equal("same-call-unsettled", (string?)refused["error"]?["details"]?["condition"]);
+        Assert.Equal(1, worker.Writes);
+        using var lookup = await ReadUnknown(worker, release, (string)unknown["meta"]!["requestId"]!);
         var following = Body(await save.InvokeAsync(Request("SaveProject", WriteArgs(worker))));
         Assert.True((bool?)following["ok"], following.ToJsonString());
+        var warning = Assert.Single(following["meta"]!["warnings"]!.AsArray(), item => (string?)item?["code"] == "UNSETTLED_CALLS")!;
+        Assert.Single(warning["details"]!["unsettled"]!.AsArray());
         Assert.Equal(2, worker.Writes);
         Assert.Equal(1, worker.Reads);
         Assert.Single(worker.Unsettled.Snapshot());
@@ -127,6 +144,25 @@ public sealed class NoLockTests
             new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())));
         Assert.True((bool?)next.StructuredContent?["ok"]);
         Assert.Equal(1, scope.Worker.EngineCalls);
+    }
+
+    [Theory]
+    [InlineData("C:/fixture.ap21", true)]
+    [InlineData("invalid\0path", false)]
+    public void Unknown_without_a_prepare_scope_is_recorded_even_when_its_path_is_invalid(string outputPath, bool hasDigest)
+    {
+        using var scope = new SharedPipelineTests.Scope();
+        var result = FoundationV4Result.Failure("21", "SaveExportContent", "unprepared-unknown", true, true, null,
+            new WorkerOperationException("Synthetic unknown write.", -32603, "unknown"));
+        var arguments = new JsonObject { ["outputPath"] = outputPath, ["content"] = "payload", ["dryRun"] = false };
+        enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome(
+            "SaveExportContent", result, true, arguments.ToJsonString());
+        var call = Assert.Single(scope.Worker.Unsettled.Snapshot());
+        Assert.Equal("unprepared-unknown", call.RequestId);
+        Assert.Equal(hasDigest, call.Digest != null);
+        var read = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.GetCallResult(call.RequestId);
+        Assert.Equal("unknown", (string?)read.StructuredContent?["meta"]?["outcome"]);
+        Assert.Single(scope.Worker.Unsettled.Snapshot());
     }
 
     [Fact]
@@ -196,7 +232,12 @@ public sealed class NoLockTests
     {
         using var worker = new Worker(release) { UnknownNextWrite = true };
         var save = Tool(worker, release, "SaveProject");
-        await save.InvokeAsync(Request("SaveProject", WriteArgs(worker)));
+        var unknown = Body(await save.InvokeAsync(Request("SaveProject", WriteArgs(worker))));
+        var refused = Body(await save.InvokeAsync(Request("SaveProject", WriteArgs(worker))));
+        Assert.Equal("same-call-unsettled", (string?)refused["error"]?["details"]?["condition"]);
+        Assert.Equal(1, worker.Writes);
+        using var lookup = await ReadUnknown(worker, release, (string)unknown["meta"]!["requestId"]!);
+        Assert.Single(worker.Unsettled.Snapshot());
         foreach (bool preview in new[] { true, false })
         {
             var result = Body(await save.InvokeAsync(Request("SaveProject", WriteArgs(worker, preview))));
@@ -387,6 +428,12 @@ public sealed class NoLockTests
         var unknown = Body(await unknownTool.InvokeAsync(Request("SaveProject", arguments)));
         Assert.Equal("unknown", (string?)unknown["meta"]?["outcome"]);
         string id = Assert.Single(worker.Unsettled.Snapshot()).RequestId;
+        int writes = (int)(await worker.Call("FixtureWriteCount", new(), CancellationToken.None))!;
+        Assert.Equal(1, writes);
+        var refused = Body(await unknownTool.InvokeAsync(Request("SaveProject", arguments)));
+        Assert.Equal("same-call-unsettled", (string?)refused["error"]?["details"]?["condition"]);
+        Assert.Equal(writes, (int)(await worker.Call("FixtureWriteCount", new(), CancellationToken.None))!);
+        using var lookup = await ReadUnknown(worker, release, id);
         Assert.True((bool?)((await worker.RestartHostWorker(true, CancellationToken.None))["success"]));
         var state = Body(await new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(item => item.Name == "GetSessionState"), worker),
             release, () => new(false, 1)).InvokeAsync(Request("GetSessionState", new())));

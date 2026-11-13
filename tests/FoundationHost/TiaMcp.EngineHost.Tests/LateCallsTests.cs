@@ -49,6 +49,38 @@ public sealed class LateCallsTests
     }
 
     [Fact]
+    public void Unknown_completion_without_a_digest_retains_evidence_and_can_be_read()
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        using var call = store.CreateInvocation("SaveProject", "outer", CancellationToken.None);
+        using (call.Enter())
+        {
+            unsettled.Record("unknown", "SaveProject", null, DateTimeOffset.UtcNow);
+            call.Complete(Completed("unknown", "unknown"), unsettled);
+        }
+        var entry = Assert.Single(unsettled.Snapshot());
+        Assert.Equal("unknown", entry.RequestId);
+        Assert.Null(entry.Digest);
+        Assert.Equal("unknown", (string?)store.Read("21", entry.RequestId, unsettled)!.StructuredContent?["meta"]?["outcome"]);
+        Assert.Single(unsettled.Snapshot());
+        Assert.False(unsettled.IsUnread(entry.RequestId));
+    }
+
+    [Fact]
+    public void Unknown_record_without_a_digest_retains_the_full_result()
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        unsettled.Record("unknown", "SaveProject", null, DateTimeOffset.UtcNow);
+        store.RecordUnknown("unknown", "SaveProject", null, Completed("unknown", "unknown"));
+        Assert.Single(store.Snapshot());
+        Assert.Equal("unknown", (string?)store.Read("21", "unknown", unsettled)!.StructuredContent?["meta"]?["outcome"]);
+        Assert.Single(unsettled.Snapshot());
+        Assert.False(unsettled.IsUnread("unknown"));
+    }
+
+    [Fact]
     public void Two_hundred_completed_reads_keep_at_most_sixteen_entries()
     {
         var store = new LateCalls();

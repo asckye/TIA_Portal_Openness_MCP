@@ -9,7 +9,7 @@ using TiaMcp.Logic.V4;
 
 namespace TiaMcp.FoundationHost;
 
-public sealed record UnsettledCall(string RequestId, string Tool, string Digest, DateTimeOffset Utc, bool FromPreviousOwner = false);
+public sealed record UnsettledCall(string RequestId, string Tool, string? Digest, DateTimeOffset Utc, bool FromPreviousOwner = false);
 
 // Both host routes share this store. Unknown results record evidence without refusing another call.
 public sealed class UnsettledCalls
@@ -22,7 +22,7 @@ public sealed class UnsettledCalls
     private string? projectFile;
     public static UnsettledCalls For(object worker) => Stores.GetValue(worker, _ => new UnsettledCalls());
 
-    public void Record(string requestId, string tool, string digest, DateTimeOffset utc)
+    public void Record(string requestId, string tool, string? digest, DateTimeOffset utc)
     {
         lock (gate)
             if (ids.Add(requestId)) calls.Add(new UnsettledCall(requestId, tool, digest, utc.ToUniversalTime()));
@@ -54,6 +54,15 @@ public sealed class UnsettledCalls
             if (projectFile != null && !string.Equals(projectFile, file, StringComparison.OrdinalIgnoreCase))
             { calls.Clear(); ids.Clear(); read.Clear(); }
             projectFile = file;
+        }
+    }
+    public void ObserveProjectAfterCall(string? file)
+    {
+        try { ProjectChanged(file); }
+        catch (Exception error) when (error is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            // Keep the prior project's evidence when the returned binding cannot identify a project.
+            return;
         }
     }
     public JsonArray ToJson() => new(Snapshot().Select(call => (JsonNode)new JsonObject {

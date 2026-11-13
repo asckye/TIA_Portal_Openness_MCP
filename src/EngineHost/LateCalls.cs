@@ -43,7 +43,7 @@ public sealed class LateCalls
     {
         lock (gate) return unreadWrites.TryGetValue(digest, out var id) ? id : null;
     }
-    public void RecordUnknown(string id, string tool, string digest, CallToolResult result)
+    public void RecordUnknown(string id, string tool, string? digest, CallToolResult result)
     {
         if (Current.Value is { } call && ReferenceEquals(call.owner, this)) return;
         lock (gate)
@@ -55,7 +55,7 @@ public sealed class LateCalls
             entry.Summary = OutcomeSummary(result, entry.Running);
             Index(entry);
             entry.Completed = completed.AddLast(entry);
-            unreadWrites[digest] = id;
+            if (digest != null) unreadWrites[digest] = id;
             Trim();
         }
     }
