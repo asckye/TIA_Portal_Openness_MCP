@@ -1718,6 +1718,18 @@
           "identifier": "TiaMcp.WorkerChannel.Tests.ProcessTests/ReadFailureOutcomePreserved( string mode , ChannelOutcome outcome , bool poisoned ):af5ced3e11af28efe8f17f2041e5be275699d926fde26ac66b42061f14781691:1"
         }
       ]
+    },
+    {
+      "task": "MEMBER-COMMENT",
+      "maintainerDate": "2026-11-13",
+      "reason": "Maintainer approved 2026-11-12: BlockEdit union grows from 3 to 4 branches with setMemberComment",
+      "items": [
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4DomainBoundaryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4DomainBoundaryTests/Schema_contains_closed_unions_limits_and_exact_dictionary_keys( ):e9e68cdb9a80ba46953731df0648652410a3a26e250e8cb7d4cc50518e12b9af:1"
+        }
+      ]
     }
   ]
 }
