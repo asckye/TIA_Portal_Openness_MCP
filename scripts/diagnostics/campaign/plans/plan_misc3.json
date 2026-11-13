@@ -338,7 +338,7 @@
 {
 "tool": "CompareProjects",
 "args": {
-"kind": "device",
+"kind": "hardware",
 "softwarePath": "",
 "devicePath": [
 "MCP_PLC"
