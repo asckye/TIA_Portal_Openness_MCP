@@ -65,12 +65,12 @@ public sealed class McpPanelTests(WpfContext wpf)
     public async Task Running_call_shows_its_tool_request_time_and_actor()
     {
         await using var host = new McpOperatorFixture();
-        var client = host.Client(); await Attach(client, host);
         await host.Notify(state => {
             state["running"] = new JsonObject { ["tool"] = "SaveProject", ["requestId"] = "running-request",
                 ["sinceUtc"] = "2026-11-12T00:00:00Z" };
             state["lane"] = new JsonObject { ["actor"] = "mcp", ["tool"] = "older-tool" };
         });
+        var client = host.Client(); await Attach(client, host);
         wpf.Run(() =>
         {
             using var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
@@ -88,11 +88,11 @@ public sealed class McpPanelTests(WpfContext wpf)
     public async Task Unsettled_count_shows_and_operations_stay_enabled()
     {
         await using var host = new McpOperatorFixture();
-        var client = host.Client(); await Attach(client, host);
         await host.Notify(state => {
             state["binding"] = new JsonObject { ["processId"] = 123, ["projectFile"] = @"D:\fixture\Line.ap19", ["bindingEpoch"] = 1 };
             state["sessionState"]!["unsettled"] = new JsonArray(new JsonObject { ["requestId"] = "unknown", ["tool"] = "SaveProject" });
         });
+        var client = host.Client(); await Attach(client, host);
         wpf.Run(() =>
         {
             using var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
@@ -441,8 +441,9 @@ public sealed class McpPanelTests(WpfContext wpf)
     [Fact]
     public async Task Background_session_end_updates_the_window_and_clears_its_project()
     {
-        await using var host = new McpOperatorFixture(); var client = host.Client(); await Attach(client, host);
+        await using var host = new McpOperatorFixture();
         await host.Notify(s => s["binding"] = new JsonObject { ["processId"] = 123, ["projectFile"] = @"D:\fixture\Line.ap19", ["bindingEpoch"] = 1 });
+        var client = host.Client(); await Attach(client, host);
         MainWindow? window = null; MainViewModel? model = null;
         wpf.Run(() =>
         {
@@ -502,9 +503,9 @@ public sealed class McpPanelTests(WpfContext wpf)
     [Fact]
     public async Task Real_window_page_commands_render_envelopes_and_attach_cached_binding()
     {
-        await using var host = new McpOperatorFixture(); var client = host.Client();
-        await Attach(client, host);
+        await using var host = new McpOperatorFixture();
         await host.Notify(s => s["binding"] = new JsonObject { ["processId"] = 123, ["projectFile"] = @"D:\fixture\Line.ap19", ["bindingEpoch"] = 1 });
+        var client = host.Client(); await Attach(client, host);
         MainWindow? window = null; MainViewModel? model = null;
         wpf.Run(() =>
         {
