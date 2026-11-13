@@ -650,7 +650,8 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 | 进度 | 无 id 通知，含 `requestId`、从 1 递增的 `sequence` 和 0–100 的 `percent`；每个请求最多 1,024 条，只能针对当前调用。跨线程、回调结束后、空闲期间、旧或未知 id 的进度，以及重复回复、再次 hello 都使通道失效；进度不延长调用预算 |
 | 绑定纪元 | 来自 worker 每次派发前后的托管状态缓存，不为核对身份额外调用 Openness；PID、项目路径、所有权或本地会话状态改变时递增。回复的 before 必须等于宿主保存的纪元；附着、打开、创建、关闭和断开按状态机验证变化，异常变化使会话失效 |
 | 取消与故障 | 派发前取消不发送、不消耗 id、不使后续调用失效。已返回的未知回复保留该调用的 `unknown`，后续独立调用继续。真实传输故障仍使当前通道失效，写入缺少可信结果为 `unknown`，读取为 `read-failed`。Part 1 保留现有预算和只读排空，失效 worker 在 `RestartOpennessWorker` 后恢复。通道级终止不能证明 TIA 已取消；释放通道只关闭自己的管道，不结束 TIA |
-| 超时 | 默认 120 秒，worker 代次首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖（`WorkerTimeoutPolicy`，[ADR 0008](decisions/0008-worker-timeouts-and-faults.md)） |
+| 对话框 | 八版确认默认依次选 Cancel、Abort、No、NoToAll；仅含 Ok 的确认在记录后确认，Notification 在记录后设为已处理。未回答的确认即时返回 `in-progress`，`running.dialog` 保留去敏文字与报告时间；`running.window` 只读观察主窗口是否禁用及可见顶层窗口标题，忙碌答复和工作台显示这些信息 |
+| 超时 | 默认 120 秒，worker 代次首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 300 秒；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖（`WorkerTimeoutPolicy`，[ADR 0008](decisions/0008-worker-timeouts-and-faults.md)） |
 
 [worker-channel 套件](../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)覆盖双端状态机与独立进程故障，`TiaMcp.WorkerChannel.TransportFixture` 提供协议替身；这些证据不替代原生行为验收。
 

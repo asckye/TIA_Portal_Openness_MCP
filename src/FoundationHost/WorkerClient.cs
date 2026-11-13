@@ -67,7 +67,7 @@ internal static class FoundationWorkerRequest
     }
     private sealed class Scope(Action restore) : IDisposable { public void Dispose() => restore(); }
     internal static async Task<string> Dispatch(ChannelClient channel, string method, string args, BindingChange change,
-        bool readOnly, TimeSpan timeout, bool firstAttach, Action<JsonObject> onRunning, CancellationToken token)
+        bool readOnly, TimeSpan timeout, bool firstAttach, Action<JsonObject> onRunning, Task<JsonObject>? dialogReported, CancellationToken token)
     {
         string id = CorrelationId;
         string? name = Current.Value?.Name ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CurrentTool;
@@ -77,7 +77,16 @@ internal static class FoundationWorkerRequest
         try
         {
             string reply;
-            try { reply = await channel.CallToolAsync(method, args, change, readOnly, timeout, firstAttach, id, name, true, token); }
+            try
+            {
+                var response = channel.CallToolAsync(method, args, change, readOnly, timeout, firstAttach, id, name, true, token);
+                if (dialogReported != null && await Task.WhenAny(response, dialogReported) == dialogReported && !response.IsCompleted)
+                {
+                    onRunning(new JsonObject { ["requestId"] = id, ["tool"] = name ?? method, ["sinceUtc"] = since.ToString("O"),
+                        ["dialog"] = (await dialogReported).DeepClone(), ["message"] = "TIA reported an unanswered dialog." });
+                }
+                reply = await response;
+            }
             catch (ChannelCallRunningException running)
             {
                 onRunning(new JsonObject { ["requestId"] = id, ["tool"] = name ?? method,
@@ -133,8 +142,14 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     // parallel test processes could share it. Production always uses the data location.
     internal string? SpillsDirectoryForTest { get; init; }
     internal bool Disconnected => disconnecting;
-    internal bool CallRunning => channel?.Poisoned != true && process is { HasExited: false }
-        && (Running != null || channel?.CallRunning == true);
+    internal bool CallRunning
+    {
+        get
+        {
+            lock (stateSync) return channel?.Poisoned != true && process is { HasExited: false }
+                && (runningCall != null || channel?.CallRunning == true);
+        }
+    }
     private bool UnansweredRequest => process is { HasExited: false }
         && channel?.Poisoned != true && !unansweredHostProbe
         && (channel?.CallRunning == true || channel?.InFlight == true || channel?.Unanswered == true);
@@ -169,20 +184,31 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     }
     private readonly object stateSync = new();
     private JsonObject? runningCall, lastRunningCall, activeCall;
+    private TaskCompletionSource<JsonObject>? dialogReported;
+    private int? dialogProcessId;
+    internal Func<int, PortalWindows> WindowProbe { get; set; } = PortalWindowProbe.Read;
     private CancellationTokenSource busyWaiters = new();
     private bool disposeRequested;
     private volatile bool unansweredHostProbe;
     public LateCalls LateResults { get; } = new();
     internal JsonObject? Running
     {
-        get { lock (stateSync) return channel?.Poisoned == true || process?.HasExited == true ? null : runningCall?.DeepClone().AsObject(); }
+        get
+        {
+            lock (stateSync)
+            {
+                if (channel?.Poisoned == true || process?.HasExited == true || runningCall == null) return null;
+                return DescribeRunning((JsonObject)runningCall.DeepClone());
+            }
+        }
     }
     private TiaMcp.Adapters.Contracts.AdapterPreconditionException Busy()
     {
         var running = Running ?? activeCall ?? lastRunningCall;
         var error = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
             $"Worker call {running?["tool"]} (request {running?["requestId"]}, started {running?["sinceUtc"]}) is still running. "
-                + "Read GetCallResult(requestId) before repeating it.", "worker-call-running", null);
+                + "Read GetCallResult(requestId) before repeating it." + (running == null ? "" : LateCalls.RunningDiagnostic(running)),
+            "worker-call-running", null);
         error.Data["foundationRequestSent"] = false;
         return error;
     }
@@ -204,10 +230,57 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         lock (stateSync)
         {
             runningCall ??= (JsonObject)running.DeepClone();
+            runningCall["dialog"] = activeCall?["dialog"]?.DeepClone() ?? runningCall["dialog"]?.DeepClone();
+            running = DescribeRunning((JsonObject)runningCall.DeepClone());
             lastRunningCall = runningCall;
             busyWaiters.Cancel();
         }
         HostSessionCall.Detach(running);
+        LateResults.UpdateRunning(running);
+    }
+    private JsonObject DescribeRunning(JsonObject running)
+    {
+        if (dialogProcessId is int pid)
+        {
+            var windows = WindowProbe(pid);
+            running["window"] = new JsonObject { ["mainWindowDisabled"] = windows.MainWindowDisabled,
+                ["titles"] = new JsonArray(windows.Titles.Select(title => (JsonNode?)JsonValue.Create(
+                    TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(title))).ToArray()) };
+        }
+        return running;
+    }
+    private Task<JsonObject> BeginDialogCall(string requestId, string operation, int? portalProcessId)
+    {
+        lock (stateSync)
+        {
+            activeCall = new JsonObject { ["requestId"] = requestId, ["tool"] = FoundationWorkerRequest.ToolName ?? operation,
+                ["sinceUtc"] = DateTimeOffset.UtcNow.ToString("O") };
+            dialogReported = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            dialogProcessId = portalProcessId;
+            return dialogReported.Task;
+        }
+    }
+    private void ReceiveDiagnostic(string line)
+    {
+        var dialog = WorkerDialog.Parse(line);
+        lock (stateSync)
+        {
+            if (dialog != null && activeCall != null && !unansweredHostProbe && channel?.InFlight == true)
+            {
+                activeCall["dialog"] = dialog.DeepClone();
+                if (runningCall != null)
+                {
+                    runningCall["dialog"] = dialog.DeepClone();
+                    LateResults.UpdateRunning(runningCall);
+                }
+                if ((string?)dialog["answer"] == "unanswered") dialogReported?.TrySetResult(dialog);
+            }
+        }
+        lock (diagnostics)
+        {
+            diagnostics.Enqueue(dialog?.ToJsonString() ?? TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(line) ?? "");
+            while (diagnostics.Count > 8) diagnostics.Dequeue();
+        }
     }
     private void ClearRunning()
     {
@@ -465,9 +538,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
                 TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
             activeRequestId = FoundationWorkerRequest.CorrelationId;
-            activeCall = new JsonObject { ["requestId"] = activeRequestId, ["tool"] = FoundationWorkerRequest.ToolName ?? operation,
-                ["sinceUtc"] = DateTimeOffset.UtcNow.ToString("O") };
-            HostSessionCall.RequestIdChanged(activeRequestId);
+            var dialog = BeginDialogCall(activeRequestId, operation, hostAttachPid ?? attachedProcessId);
+            HostSessionCall.RequestIdChanged(activeRequestId!);
             var change = BindingChangeFor(operation, arguments);
             long epochBefore = channel!.BindingEpoch;
             string response;
@@ -484,7 +556,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 else
                 response=await FoundationWorkerRequest.Dispatch(channel, "adapter."+operation,arguments.ToJsonString(),change,
                     WorkerOperations.IsReadOnly(operation) || arguments["dryRun"] is JsonValue preview && preview.TryGetValue<bool>(out var dryRun)
-                        && dryRun, timeouts.ForPlc(operation, arguments, firstAttach), firstAttach, SetRunning, CancellationToken.None);
+                        && dryRun, timeouts.ForPlc(operation, arguments, firstAttach), firstAttach, SetRunning, dialog, CancellationToken.None);
                 sent=true;
             }
             catch(ChannelFailureException failure)
@@ -573,7 +645,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         {
             if (UnansweredRequest && activeCall != null) lastRunningCall = activeCall;
             activeRequestId = null;
-            activeCall = null;
+            lock (stateSync) { activeCall = null; dialogReported = null; }
             if (acquired)
             {
                 ClearRunning();
@@ -617,8 +689,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                 attachAttempted = false;
-                process.ErrorDataReceived += (_, e) => {
-                    if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
+                LateResults.DescribeRunning = DescribeRunning;
+                process.ErrorDataReceived += (_, e) => { if (e.Data != null) ReceiveDiagnostic(e.Data); };
                 process.BeginErrorReadLine();
                 channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
                     new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce)) {
@@ -646,8 +718,9 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 try
                 {
                     unansweredHostProbe = false;
+                    var dialog = BeginDialogCall(FoundationWorkerRequest.CorrelationId, "Disconnect", attachedProcessId);
                     var wire = await FoundationWorkerRequest
-                        .Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), false, SetRunning,
+                        .Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), false, SetRunning, dialog,
                                 CancellationToken
                             .None);
                     wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
@@ -670,7 +743,11 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             approvalIdentity = new JsonObject(); attachedProcessId = null; ClearHostBinding();
             return disconnectAcknowledgement.DeepClone();
         }
-        finally { if (idle && acquired) { ClearRunning(); serial.Release(); FinishDeferredDisposal(); } }
+        finally
+        {
+            lock (stateSync) { activeCall = null; dialogReported = null; }
+            if (idle && acquired) { ClearRunning(); serial.Release(); FinishDeferredDisposal(); }
+        }
     }
 
     private JsonNode TerminateForDisconnect()

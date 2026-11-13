@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace TiaMcp.Adapters.Contracts
 {
@@ -92,6 +93,41 @@ namespace TiaMcp.Adapters.Contracts
         {
             var set = new HashSet<string>(offered, StringComparer.Ordinal);
             return RefusalOrder.FirstOrDefault(set.Contains);
+        }
+
+        public static string? Answer(IEnumerable<string> offered)
+        {
+            var choices = offered.ToArray();
+            return RefusingChoice(choices) ?? (choices.Length == 1 && choices[0] == "Ok" ? "Ok" : null);
+        }
+
+        // Each diagnostic field has a wire-byte budget, including the ASCII JSON escaping used here.
+        public static string Report(Dictionary<string, object?> record)
+        {
+            string Field(string name, int budget) => Quote(record.TryGetValue(name, out var value) ? value as string : null, budget);
+            var choices = record.TryGetValue("choices", out var offered) ? offered as string[] : null;
+            return "TIA_MCP_DIALOG {\"event\":" + Field("event", 32) + ",\"utc\":" + Field("utc", 64)
+                + ",\"caption\":" + Field("caption", 192) + ",\"text\":" + Field("text", 512)
+                + ",\"detailText\":" + Field("detailText", 512) + ",\"choices\":["
+                + string.Join(",", (choices ?? Array.Empty<string>()).Take(9).Select(choice => Quote(choice, 32)))
+                + "],\"answer\":" + Field("answer", 32) + ",\"rule\":" + Field("rule", 96) + "}";
+        }
+
+        private static string Quote(string? value, int budget)
+        {
+            var output = new StringBuilder("\"");
+            value ??= "";
+            for (int index = 0; index < value.Length; index++)
+            {
+                char character = value[index];
+                string escaped = character == '"' || character == '\\' ? "\\" + character
+                    : character < ' ' || character > '~' ? "\\u" + ((int)character).ToString("x4") : character.ToString();
+                if (char.IsHighSurrogate(character) && index + 1 < value.Length && char.IsLowSurrogate(value[index + 1]))
+                    escaped += "\\u" + ((int)value[++index]).ToString("x4");
+                if (output.Length + escaped.Length + 1 > budget) break;
+                output.Append(escaped);
+            }
+            return output.Append('"').ToString();
         }
 
         public static void Record(List<Dictionary<string, object?>> records, Dictionary<string, object?> record)

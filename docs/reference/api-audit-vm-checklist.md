@@ -115,9 +115,12 @@ Workbench fix items come from `bin-build/refactor/P8-73b.result.md` and item O1 
 9. P8-81c VM item 9 · session.md F13: SaveProjectCopy on a multiuser local session is refused (the host already refuses first).
 10. P8-81c VM item 10 · session.md F14: ShowObjectInEditor with UI opens the editor; headless is refused.
 11. P8-81c VM item 11 · session.md F15: the exclusive-access dialog text shown in the TIA UI.
-12. P8-81c VM item 12 · session.md F17: which TIA dialogs reach the Confirmation handler (texts, choices), whether setting
-    `Result`/`IsHandled` from the handler answers them, the Disposed event when TIA is closed by the user, and `GetPortalInfo`
-    `data.portalDialogs`.
+12. P8-81c VM item 12 · session.md F17. Record which dialogs raise Confirmation or Notification, including caption, text,
+    details and choices. Verify Cancel/Abort/No/NoToAll refusal, Ok-only acknowledgement and Notification.IsHandled after
+    recording. Verify that an unanswered Yes-only confirmation promptly returns `in-progress` with `running.dialog`,
+    report time and the reminder that it may still be open. Answer in TIA and retrieve the final result with GetCallResult.
+    Open a modal window outside the API and check the read-only `running.window` titles and disabled main-window flag.
+    Check the Disposed event when the user closes TIA and `GetPortalInfo` `data.portalDialogs` on each available release.
 13. P8-81c VM item 13 · session.md F18: `TiaPortal.GetProcess(pid, timeout)` for an unknown PID and a busy TIA Portal (returns null
     or throws; time to answer).
 

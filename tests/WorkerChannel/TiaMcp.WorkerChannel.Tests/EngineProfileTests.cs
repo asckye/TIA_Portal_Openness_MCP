@@ -9,6 +9,14 @@ namespace TiaMcp.WorkerChannel.Tests;
 public sealed class EngineProfileTests
 {
     [Fact]
+    public void Long_class_budget_is_300_seconds()
+    {
+        var policy = new WorkerTimeoutPolicy();
+        foreach (string family in new[] { "compile", "transfer", "importExport", "archive", "libraryUpdate" })
+            Assert.Equal(TimeSpan.FromSeconds(300), policy.Budgets[family]);
+    }
+
+    [Fact]
     public async Task Answered_unknown_permits_independent_project_and_simulator_calls()
     {
         using var input = new FeedStream(); using var output = new CaptureStream();
@@ -35,7 +43,7 @@ public sealed class EngineProfileTests
         Assert.Equal(TimeSpan.FromSeconds(120), WorkerTimeoutPolicy.Defaults["default"]);
         Assert.Equal(TimeSpan.FromSeconds(300), WorkerTimeoutPolicy.Defaults["firstAttach"]);
         foreach (string family in new[] { "compile", "transfer", "importExport", "archive", "libraryUpdate" })
-            Assert.Equal(TimeSpan.FromMinutes(30), WorkerTimeoutPolicy.Defaults[family]);
+            Assert.Equal(TimeSpan.FromSeconds(300), WorkerTimeoutPolicy.Defaults[family]);
         Assert.Equal(TimeSpan.FromSeconds(8), policy.ForPlc("ReadState", new()));
         Assert.Equal(TimeSpan.FromSeconds(11), policy.ForPlc("CompileSoftware", new() { ["dryRun"] = false }));
         Assert.Equal(policy.For("CompilePlc"), policy.ForPlc("CompileSoftware", new() { ["dryRun"] = false }));

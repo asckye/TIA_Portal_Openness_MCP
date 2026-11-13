@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,8 +32,19 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
         + " · Workbench: " + ((int?)state?["participants"]?["workbench"] ?? 0);
     public string Status => state == null || !Attached ? Loc.Current["Session.SelectHint"] :
         $"{state["worker"]?["state"]} · PID {state["worker"]?["pid"]} · generation {state["worker"]?["generation"]} · {state["binding"]?["projectFile"]}";
-    public string Lane => (state?["running"] ?? state?["sessionState"]?["running"] ?? state?["lane"]) is JsonObject lane
-        ? $"{lane["actor"] ?? state?["lane"]?["actor"]} · {lane["tool"]} · {lane["requestId"]} · {lane["sinceUtc"]}" : "";
+    public string Lane
+    {
+        get
+        {
+            if ((state?["running"] ?? state?["sessionState"]?["running"] ?? state?["lane"]) is not JsonObject lane) return "";
+            string line = $"{lane["actor"] ?? state?["lane"]?["actor"]} · {lane["tool"]} · {lane["requestId"]} · {lane["sinceUtc"]}";
+            if (lane["dialog"] is JsonObject dialog)
+                line += " · " + string.Format(Loc.Current["Session.DialogReported"], dialog["utc"], dialog["caption"], dialog["text"]);
+            if ((bool?)lane["window"]?["mainWindowDisabled"] == true && lane["window"]?["titles"] is JsonArray { Count: > 0 } titles)
+                line += " · " + string.Join(" · ", titles.Select(title => (string?)title));
+            return line;
+        }
+    }
     public int UnsettledCount => (state?["sessionState"]?["unsettled"] as JsonArray)?.Count ?? 0;
     public string Unsettled => string.Format(Loc.Current["Session.Unsettled"], UnsettledCount);
     public string Ended => state?["endedBy"] == null ? "" : $"endedBy: {state["endedBy"]} · {state["endReason"]}. "

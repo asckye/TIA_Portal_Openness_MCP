@@ -49,7 +49,18 @@ internal static class Program
             if (string.IsNullOrEmpty(gate)) { Thread.Sleep(150); return; }
             File.WriteAllText(Path.Combine(gate, "dispatched"), "");
             var deadline = DateTime.UtcNow.AddSeconds(30);
-            while (!File.Exists(Path.Combine(gate, "release")) && DateTime.UtcNow < deadline) Thread.Sleep(5);
+            bool reported = false;
+            while (!File.Exists(Path.Combine(gate, "release")) && DateTime.UtcNow < deadline)
+            {
+                string dialog = Path.Combine(gate, "dialog");
+                if (!reported && File.Exists(dialog))
+                {
+                    Console.Error.WriteLine(File.ReadAllText(dialog));
+                    Console.Error.Flush();
+                    reported = true;
+                }
+                Thread.Sleep(5);
+            }
         }
         new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new ChannelBinding(epoch, bound), request => {
             if (request.Method == "adapter.FixtureWriteCount") return ChannelResponse.Success(writes.ToString());

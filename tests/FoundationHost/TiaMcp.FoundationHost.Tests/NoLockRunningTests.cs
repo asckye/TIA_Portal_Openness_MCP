@@ -19,6 +19,187 @@ public sealed class NoLockRunningTests
     public static IEnumerable<object[]> Releases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(release => new object[] { release });
 
+    public static IEnumerable<object[]> AnsweredDialogs()
+    {
+        foreach (var release in Releases())
+            foreach (string answer in new[] { "handled", "Ok", "No" })
+                yield return new object[] { release[0], answer };
+    }
+
+    public static IEnumerable<object[]> DisconnectFaults()
+    {
+        foreach (var release in Releases())
+            foreach (string? prior in new[] { null, "earlier-unknown" })
+                yield return new object[] { release[0], prior! };
+    }
+
+    [Theory, MemberData(nameof(DisconnectFaults))]
+    public async Task Disconnect_channel_fault_preserves_the_prior_unknown_request(string release, string? prior)
+    {
+        using var scope = new Scope(release);
+        const BindingFlags fields = BindingFlags.Instance | BindingFlags.NonPublic;
+        var priorField = typeof(Foundation.WorkerClient).GetField("priorUnknownRequestId", fields)!;
+        priorField.SetValue(scope.Worker, prior);
+        using var correlation = Foundation.FoundationWorkerRequest.Use("disconnect-fault", "DisconnectPortal");
+        using (new ProductionWorkerBudgets(scope.Worker))
+            await scope.Worker.Call("FaultFixtureArm", new() { ["method"] = "adapter.Disconnect" }, CancellationToken.None);
+        var call = scope.Worker.Call("Disconnect", new(), CancellationToken.None);
+        await scope.WaitDispatched();
+        var active = typeof(Foundation.WorkerClient).GetField("activeRequestId", fields)!.GetValue(scope.Worker);
+        Assert.StartsWith(Path.GetFullPath(TestPaths.RepositoryRoot(AppContext.BaseDirectory)) + Path.DirectorySeparatorChar,
+            Path.GetFullPath(scope.Child.MainModule!.FileName), StringComparison.OrdinalIgnoreCase);
+        File.WriteAllText(Path.Combine(scope.DirectoryPath, "after-gate-fault"), "malformed");
+        scope.Release();
+        var acknowledgement = await call.WaitAsync(TestDeadlines.Hang);
+        Assert.Null(active);
+        Assert.Equal(prior, priorField.GetValue(scope.Worker));
+        Assert.Equal(prior, (string?)acknowledgement?["PriorUnknownRequestId"]);
+        var repeated = await scope.Worker.Call("Disconnect", new(), CancellationToken.None);
+        Assert.Equal(prior, (string?)repeated?["PriorUnknownRequestId"]);
+    }
+
+    private static void Dialog(Scope scope, string answer)
+    {
+        string line = TiaMcp.Adapters.Contracts.PortalDialogPolicy.Report(new() {
+            ["event"] = answer == "handled" ? "Notification" : "Confirmation", ["utc"] = "2026-11-13T00:00:00Z", ["caption"] = "Export dialog",
+            ["text"] = "Choose an export option", ["detailText"] = "password=dialog-secret-7f3",
+            ["choices"] = answer switch { "handled" => Array.Empty<string>(), "Ok" => new[] { "Ok" },
+                "No" => new[] { "Yes", "No" }, _ => new[] { "Yes" } }, ["answer"] = answer });
+        File.WriteAllText(Path.Combine(scope.DirectoryPath, "dialog"), line);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Unanswered_dialog_detaches_before_the_budget(string release)
+    {
+        using var scope = new Scope(release);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        var tool = scope.Tool("SaveProject");
+        using var session = scope.Session(tool);
+        Dialog(scope, "unanswered");
+        int pid = scope.Pid;
+        var result = await scope.Call(session, "SaveProject", scope.WriteArguments);
+        Assert.Equal("in-progress", Outcome(result));
+        var running = result.StructuredContent!["data"]!["running"]!;
+        Assert.Equal("TIA reported an unanswered dialog.", (string?)running["message"]);
+        Assert.Equal("Export dialog", (string?)running["dialog"]?["caption"]);
+        Assert.Contains("reported at 2026-11-13T00:00:00Z, and it may still be open", (string?)result.StructuredContent["error"]?["message"]);
+        Assert.DoesNotContain("dialog-secret-7f3", result.StructuredContent.ToJsonString());
+        Assert.False(scope.Worker.Faulted);
+        Assert.False(scope.Child.HasExited);
+        Assert.Equal(pid, scope.Pid);
+        string id = (string)result.StructuredContent["data"]!["activeRequestId"]!;
+        Assert.Equal("Export dialog", (string?)scope.Read(id).StructuredContent?["data"]?["running"]?["dialog"]?["caption"]);
+        scope.Release();
+        await scope.WaitCompleted(session);
+        Assert.Equal("succeeded", Outcome(scope.Read(id)));
+        Assert.Null(scope.Worker.Running);
+        Assert.Equal(pid, scope.Pid);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Worker_stderr_dialog_line_reaches_the_busy_answer(string release)
+    {
+        using var scope = new Scope(release);
+        var tool = scope.Tool("SaveProject");
+        using var session = scope.Session(tool);
+        var first = await scope.Call(session, "SaveProject", scope.WriteArguments);
+        Dialog(scope, "unanswered");
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+        while (scope.Worker.Running?["dialog"] == null) await Task.Delay(5, deadline.Token);
+        var busy = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+            scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
+        Assert.Equal("worker-call-running", busy.Condition);
+        Assert.Contains("Export dialog", busy.Message);
+        Assert.Contains("may still be open", busy.Message);
+        Assert.DoesNotContain("dialog-secret-7f3", busy.Message);
+        Assert.Equal("Export dialog", (string?)session.Snapshot()["running"]?["dialog"]?["caption"]);
+        string id = (string)first.StructuredContent!["data"]!["activeRequestId"]!;
+        Assert.Equal("Export dialog", (string?)scope.Read(id).StructuredContent?["data"]?["running"]?["dialog"]?["caption"]);
+        scope.Release();
+        await scope.WaitCompleted(session);
+        Assert.Equal("succeeded", Outcome(scope.Read(id)));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Window_probe_title_reaches_the_busy_answer(string release)
+    {
+        using var scope = new Scope(release);
+        int probes = 0;
+        scope.Worker.WindowProbe = pid => {
+            Assert.Equal(Environment.ProcessId, pid);
+            probes++;
+            return new(true, ["Export project texts"]);
+        };
+        Assert.Null(scope.Worker.Running);
+        Assert.Equal(0, probes);
+        var tool = scope.Tool("SaveProject");
+        using var session = scope.Session(tool);
+        var first = await scope.Call(session, "SaveProject", scope.WriteArguments);
+        Assert.True((bool?)first.StructuredContent?["data"]?["running"]?["window"]?["mainWindowDisabled"]);
+        probes = 0;
+        Assert.True(scope.Worker.CallRunning);
+        Assert.Equal(0, probes);
+        var busy = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+            scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
+        Assert.Contains("TIA has a window open titled Export project texts", busy.Message);
+        Assert.Contains("Export project texts", (string?)Engine.LateCalls.BusyError(scope.Worker.LateResults.Running!).Message);
+        Assert.True(probes > 0);
+        scope.Release();
+        await scope.WaitCompleted(session);
+        probes = 0;
+        Assert.Null(scope.Worker.Running);
+        Assert.Null(scope.Worker.LateResults.Running);
+        Assert.Equal(0, probes);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Unanswered_disconnect_dialog_keeps_the_worker_until_the_late_reply(string release)
+    {
+        using var scope = new Scope(release);
+        var tool = new DialogDisconnect(scope, release);
+        using var session = scope.Session(tool);
+        Dialog(scope, "unanswered");
+        var first = await scope.Call(session, "DisconnectPortal", new());
+        Assert.Equal("in-progress", Outcome(first));
+        Assert.Equal("TIA reported an unanswered dialog.", (string?)first.StructuredContent?["data"]?["running"]?["message"]);
+        Assert.False(scope.Child.HasExited);
+        Assert.False(scope.Worker.Faulted);
+        string id = (string)first.StructuredContent!["data"]!["activeRequestId"]!;
+        scope.Release();
+        await scope.WaitCompleted(session);
+        Assert.Equal("succeeded", Outcome(scope.Read(id)));
+        Assert.Null(scope.Worker.Running);
+    }
+
+    [Theory, MemberData(nameof(AnsweredDialogs))]
+    public async Task Answered_dialog_keeps_waiting_for_the_normal_reply(string release, string answer)
+    {
+        using var scope = new Scope(release);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        var tool = scope.Tool("SaveProject");
+        using var session = scope.Session(tool);
+        Dialog(scope, answer);
+        var result = scope.Call(session, "SaveProject", scope.WriteArguments);
+        await scope.WaitDispatched();
+        using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+        var sync = typeof(Foundation.WorkerClient).GetField("stateSync", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(scope.Worker)!;
+        JsonObject? active;
+        do
+        {
+            lock (sync)
+                active = (typeof(Foundation.WorkerClient).GetField("activeCall", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .GetValue(scope.Worker) as JsonObject)?.DeepClone().AsObject();
+            if (active?["dialog"] == null) await Task.Delay(5, deadline.Token);
+        } while (active?["dialog"] == null);
+        Assert.Equal(answer, (string?)active["dialog"]?["answer"]);
+        Assert.False(result.IsCompleted);
+        Assert.Null(scope.Worker.Running);
+        Assert.Null(scope.Worker.LateResults.Running);
+        scope.Release();
+        Assert.Equal("succeeded", Outcome(await result));
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public async Task Write_over_budget_returns_in_progress_and_the_worker_stays(string release)
     {
@@ -491,6 +672,22 @@ public sealed class NoLockRunningTests
     }
 
     internal static string? Outcome(CallToolResult result) => (string?)result.StructuredContent?["meta"]?["outcome"];
+
+    private sealed class DialogDisconnect(Scope scope, string release) : McpServerTool
+    {
+        private readonly Foundation.Definition definition = Foundation.FoundationTools.Definitions.Single(tool => tool.Name == "DisconnectPortal");
+        public override Tool ProtocolTool => scope.Tool("DisconnectPortal").ProtocolTool;
+        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
+            CancellationToken cancellationToken = default)
+        {
+            const string id = "disconnect-dialog";
+            using var correlation = Foundation.FoundationWorkerRequest.Use(id, "DisconnectPortal");
+            using (new ProductionWorkerBudgets(scope.Worker))
+                await scope.Worker.Call("FaultFixtureArm", new() { ["method"] = "adapter.Disconnect" }, cancellationToken);
+            var reply = await scope.Worker.Call("Disconnect", new(), cancellationToken);
+            return Foundation.FoundationV4Result.Worker(release, definition, id, new(), reply, reply);
+        }
+    }
 
     private sealed class DisconnectAfterBudget(Scope scope) : McpServerTool
     {

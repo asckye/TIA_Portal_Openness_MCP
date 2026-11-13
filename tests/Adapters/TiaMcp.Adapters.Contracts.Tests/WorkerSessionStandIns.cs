@@ -5,14 +5,35 @@ using System.Diagnostics;
 using System.IO;
 using TiaMcp.Adapters.Contracts;
 namespace Siemens.Engineering {
+    [Flags] public enum ConfirmationChoices {
+        None = 0, Ok = 1, Yes = 2, YesToAll = 4, Abort = 8, Retry = 16, Ignore = 32, No = 64, NoToAll = 128, Cancel = 256
+    }
+    public enum ConfirmationResult { None, Ok, Yes, YesToAll, Abort, Retry, Ignore, No, NoToAll, Cancel }
+    public sealed class ConfirmationEventArgs : EventArgs {
+        public string Caption { get; set; } = "";
+        public string Text { get; set; } = "";
+        public string DetailText { get; set; } = "";
+        public ConfirmationChoices Choices { get; set; }
+        public ConfirmationResult Result { get; set; }
+        public bool IsHandled { get; set; }
+    }
+    public sealed class NotificationEventArgs : EventArgs {
+        public string Caption { get; set; } = "";
+        public string Text { get; set; } = "";
+        public string DetailText { get; set; } = "";
+        public bool IsHandled { get; set; }
+    }
     public enum TiaPortalMode { WithoutUserInterface, WithUserInterface }
     public sealed class TiaPortal {
-        public TiaPortalMode Mode { get; }
-        public TiaPortal(TiaPortalMode mode = TiaPortalMode.WithoutUserInterface) { Mode = mode; }
-        public FakeProjects Projects { get; } = new();
+        private readonly TiaPortalMode mode;
+        private readonly FakeProjects projects = new();
+        public Action? EngineeringCall { get; set; }
+        public TiaPortalMode Mode { get { EngineeringCall?.Invoke(); return mode; } }
+        public TiaPortal(TiaPortalMode mode = TiaPortalMode.WithoutUserInterface) { this.mode = mode; }
+        public FakeProjects Projects { get { EngineeringCall?.Invoke(); return projects; } }
         public int ExclusiveCalls;
         public Exception? ExclusiveFailure { get; set; }
-        public IDisposable ExclusiveAccess(string text) { ExclusiveCalls++; if (ExclusiveFailure != null) throw ExclusiveFailure;
+        public IDisposable ExclusiveAccess(string text) { EngineeringCall?.Invoke(); ExclusiveCalls++; if (ExclusiveFailure != null) throw ExclusiveFailure;
             return Process.GetCurrentProcess(); }
     }
     public sealed partial class Project {
@@ -34,6 +55,7 @@ namespace TiaMcp.Adapters {
         internal static T Run<T>(string operation, bool credentialsGiven, Func<T> call) => call();
     }
     public sealed partial class PlcFoundationEngine {
+        private readonly List<Dictionary<string, object?>> portalDialogs = new();
         private Siemens.Engineering.TiaPortal? portal;
         private Siemens.Engineering.Project? project;
         private readonly PlcLifecycleState lifecycle = new();

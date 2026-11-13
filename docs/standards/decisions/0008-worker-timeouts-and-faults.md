@@ -21,12 +21,12 @@ Openness 调用无法中途安全停止，也无法从异常推断写入是否�
 
 ## 决定
 
-采用选项 2，故障后显式恢复。八版（V14 SP1–V21）的 worker 调用默认 120 秒，worker 代次首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 30 分钟，可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖（`WorkerTimeoutPolicy`）。派发前取消返回 `CANCELLED`；派发后宿主等待真实结果。worker 退出、卡死、坏帧或 TIA 进程丢失使 worker 代次故障，须显式调用 `RestartOpennessWorker` 或 `DisconnectPortal` 后重新绑定；失败的请求从不重放。
+采用选项 2，故障后显式恢复。八版（V14 SP1–V21）的 worker 调用默认 120 秒，worker 代次首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 300 秒（2026-11-13 按 NO-LOCK D7 修订，原值 1800 秒），可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖（`WorkerTimeoutPolicy`）。派发前取消返回 `CANCELLED`；派发后宿主等待真实结果。worker 退出、卡死、坏帧或 TIA 进程丢失使 worker 代次故障，须显式调用 `RestartOpennessWorker` 或 `DisconnectPortal` 后重新绑定；失败的请求从不重放。
 
 ## 后果
 
 - 正面：长操作不再因超时被误判；故障后的状态由人确认，不会重复写入。
-- 负面与取舍：worker 通道超时（含只读调用）一律按结果未知处理（API-26，有意偏差）；客户端自己的超时可能早于 30 分钟预算（MCP-06，4.0 前加进度心跳）。
+- 负面与取舍：worker 通道超时（含只读调用）一律按结果未知处理（API-26，有意偏差）；客户端自己的超时可能早于 300 秒长类等待预算（MCP-06，4.0 前加进度心跳）。
 - 后续工作：维护者于 2026-10-11 决定的 P8-64 已实现：V14 SP1–V19 的 PLC worker 共用按类超时策略，见 [设计规范索引](../design.md)。
 - 验证方式：WorkerChannel 测试与 worker 故障注入夹具（`TiaMcp.PlcWorker.FaultFixture`）。
 
@@ -38,4 +38,4 @@ Openness 调用无法中途安全停止，也无法从异常推断写入是否�
 
 ## 2026-11-12 会话锁移除
 
-[ADR 0034](0034-no-session-lock.md) 取代故障结果导致会话锁定、answered-unknown 后显式恢复的规则。只读丢失回复的分类沿用 VMFIX-7 D1。Part 2 将客户端等待预算到期后的读取和写入统一返回 `in-progress`，通过 `GetCallResult` 取回真实结果。调用期间拒绝断开和重启，会话关闭延迟释放。host-only 状态探测继续按预算报告故障。当前调用预算保留，长类预算在 NO-LOCK Part 5 调整。真正的 worker 传输故障在 Part 4 前仍要求显式重启 worker。
+[ADR 0034](0034-no-session-lock.md) 取代故障结果导致会话锁定、answered-unknown 后显式恢复的规则。只读丢失回复的分类沿用 VMFIX-7 D1。Part 2 将客户端等待预算到期后的读取和写入统一返回 `in-progress`，通过 `GetCallResult` 取回真实结果。调用期间拒绝断开和重启，会话关闭延迟释放。host-only 状态探测继续按预算报告故障。NO-LOCK Part 5 按维护者批准的 D7 将五个长类预算从 1800 秒改为 300 秒，默认 120 秒、首次附着 300 秒和配置覆盖入口保持现行值。未回答的 TIA 确认即时返回同一路径的 `in-progress`，并携带去敏后的对话框记录。真正的 worker 传输故障在 Part 4 前仍要求显式重启 worker。

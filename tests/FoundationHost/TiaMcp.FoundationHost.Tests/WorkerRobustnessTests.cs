@@ -476,7 +476,7 @@ public sealed class WorkerRobustnessTests
         Assert.Equal(TimeSpan.FromSeconds(600), policy.For("CompileHardware"));
         Assert.Equal(TimeSpan.FromSeconds(360), policy.For("Attach", true));
         foreach (string operation in new[] { "DownloadPlc", "UploadPlc", "ImportProgram", "ImportDirectory", "ExportBlocks", "ArchiveProject", "RetrieveProject", "UpdateLibrary" })
-            Assert.Equal(TimeSpan.FromMinutes(30), policy.For(operation));
+            Assert.Equal(TimeSpan.FromSeconds(300), policy.For(operation));
         Assert.Throws<ArgumentException>(() => new WorkerTimeoutPolicy(environmentJson: "{\"compile\":0}"));
     }
 }

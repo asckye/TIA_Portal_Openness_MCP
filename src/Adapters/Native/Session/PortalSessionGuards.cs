@@ -147,27 +147,8 @@ namespace TiaMcp.Adapters
             connection.Disposed -= OnPortalDisposed;
         }
 
-        private void OnPortalConfirmation(object? sender, ConfirmationEventArgs e)
-        {
-            var offered = Enum.GetValues(typeof(ConfirmationChoices)).Cast<ConfirmationChoices>()
-                .Where(choice => choice != ConfirmationChoices.None && (e.Choices & choice) == choice).Select(choice => choice.ToString()).ToArray();
-            string? refusal = PortalDialogPolicy.RefusingChoice(offered);
-            if (refusal != null) { e.Result = (ConfirmationResult)Enum.Parse(typeof(ConfirmationResult), refusal); e.IsHandled = true; }
-            PortalDialogPolicy.Record(portalDialogs, new Dictionary<string, object?> {
-                ["event"] = "Confirmation", ["utc"] = DateTimeOffset.UtcNow.ToString("O"), ["caption"] = e.Caption, ["text"] = e.Text,
-                ["detailText"] = e.DetailText, ["choices"] = offered, ["answer"] = refusal ?? "unanswered",
-                ["rule"] = refusal != null ? "refused by default; no approved plan answers TIA confirmations" : "no refusing choice offered; TIA decides" });
-            Console.Error
-                .WriteLine("TIA confirmation " + (refusal != null ? "refused (" + refusal + ")" : "left unanswered") + ": " + e.Caption + " - " + e.Text);
-        }
-
         private void OnPortalNotification(object? sender, NotificationEventArgs e)
-        {
-            PortalDialogPolicy.Record(portalDialogs, new Dictionary<string, object?> {
-                ["event"] = "Notification", ["utc"] = DateTimeOffset.UtcNow.ToString("O"), ["caption"] = e.Caption, ["text"] = e.Text, ["detailText"] = e
-                    .DetailText });
-            Console.Error.WriteLine("TIA notification: " + e.Caption + " - " + e.Text);
-        }
+            => PortalDialogHandlers.Notification(e, portalDialogs);
 
         private void OnPortalDisposed(object? sender, EventArgs e)
         {

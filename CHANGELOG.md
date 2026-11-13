@@ -6,6 +6,7 @@
 
 ### Fixed
 - Released TIA lease handles admit a new explicit connection for every recorded state. BUSY, UNCERTAIN and legacy ACTIVE records produce `PREVIOUS_OWNER_UNCLEAN`, and previous request IDs seed the new session's unsettled list. Disconnect permits reconnecting in the same MCP session with a new worker generation. Disconnect and restart remove TIA-restart fields, and disconnect reports `disconnected`. These changes retain schema version 4 in the unreleased contract.
+- TIA dialog reports reach running-call, busy and Workbench views on all eight releases. Unanswered confirmations promptly return `in-progress`; Ok-only confirmations and notifications are acknowledged after recording. Read-only window observations report unhandled modal windows. Compile, transfer, import/export, archive and library-update wait budgets are 300 seconds.
 - Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 - Served tool examples use canonical parameter names and always show the preview form. Corrected scope, connection, Teamcenter, library, service and generation rows; validation names V21 as the only exercised release and distinguishes preview, apply and NOT RUN cases.
 - Unknown write outcomes affect only their own calls. Later independent requests run, `GetSessionState` lists unsettled request IDs, and `SaveProject` / `SaveProjectCopy` preview and apply results warn with `UNSETTLED_CALLS`. Answered unknown replies keep the worker available. Workbench shows the unsettled count.
@@ -37,6 +38,7 @@
 - Unified colour conversion and write verification also accept `0xAARRGGBB`; the theme schema keeps its existing `0x` format.
 
 ### Fixed
+- TIA dialog reports reach running-call, busy and Workbench views on all eight releases. Unanswered confirmations promptly return `in-progress`; Ok-only confirmations and notifications are acknowledged after recording. Read-only window observations report unhandled modal windows. Compile, transfer, import/export, archive and library-update wait budgets are 300 seconds.
 - Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 - Event script writes tolerate unavailable identity labels, preserve native failure reasons and report failed button actions accurately.
 - Symbolic HMI tag binding avoids unnecessary DataType writes, restores the binding before the type on rollback and lists applied property names in results.
@@ -51,6 +53,7 @@
 - Capped member lists report `totalMembers` and `truncated`. FindTools reports `matchingCount` and page ranges. Type and library lists report truncation, PLC scope paging uses the expected count, and plant objects and transfer areas compute completeness from the returned page and read failures.
 
 ### Fixed
+- TIA dialog reports reach running-call, busy and Workbench views on all eight releases. Unanswered confirmations promptly return `in-progress`; Ok-only confirmations and notifications are acknowledged after recording. Read-only window observations report unhandled modal windows. Compile, transfer, import/export, archive and library-update wait budgets are 300 seconds.
 - Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 
 - Tool descriptions show the GetToolUsage hint once. Discovery, preview and schema examples use the maintained call library for the selected release, including file targets, exact PG/PC interfaces, channel settings and Classic HMI bindings. Generation machine documents use the selected release, and ManageMachineDescription discovery starts with exportTemplate.
@@ -75,6 +78,7 @@
 - `merge-check` reuses traversal builds and shared Foundation timing history, overlaps GUI and full-profile transport checks, and runs four isolated GUI shards with a serial input lane. Transport groups run up to eight releases each, with a persistent four-release fallback after WinError 10055. Approved short test waits use 120-second hang guards. Slowdowns over twice the recent median are informational and included in prepare summaries.
 
 ### Fixed
+- TIA dialog reports reach running-call, busy and Workbench views on all eight releases. Unanswered confirmations promptly return `in-progress`; Ok-only confirmations and notifications are acknowledged after recording. Read-only window observations report unhandled modal windows. Compile, transfer, import/export, archive and library-update wait budgets are 300 seconds.
 - Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 - Hardware attribute rows include a device-qualified `deviceItemPath`, and IP reads return one row per network node with a reusable interface path.
 - Device-item paths resolve through same-name CPUs and rack-associated modules; missing paths return `NOT_FOUND` and I/O previews identify addressed children.

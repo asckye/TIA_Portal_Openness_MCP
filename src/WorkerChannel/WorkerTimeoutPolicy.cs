@@ -11,9 +11,9 @@ namespace TiaMcp.WorkerChannel
         public static readonly IReadOnlyDictionary<string, TimeSpan> Defaults = new Dictionary<string, TimeSpan>(StringComparer.Ordinal)
         {
             ["default"] = TimeSpan.FromSeconds(120), ["firstAttach"] = TimeSpan.FromMinutes(5),
-            ["compile"] = TimeSpan.FromMinutes(30), ["transfer"] = TimeSpan.FromMinutes(30),
-            ["importExport"] = TimeSpan.FromMinutes(30), ["archive"] = TimeSpan.FromMinutes(30),
-            ["libraryUpdate"] = TimeSpan.FromMinutes(30)
+            ["compile"] = TimeSpan.FromSeconds(300), ["transfer"] = TimeSpan.FromSeconds(300),
+            ["importExport"] = TimeSpan.FromSeconds(300), ["archive"] = TimeSpan.FromSeconds(300),
+            ["libraryUpdate"] = TimeSpan.FromSeconds(300)
         };
         // Exact PLC dispatcher operations. Coverage tests require a category for every registration.
         public static readonly IReadOnlyDictionary<string, string> PlcFamilies = new Dictionary<string, string>(StringComparer.Ordinal)

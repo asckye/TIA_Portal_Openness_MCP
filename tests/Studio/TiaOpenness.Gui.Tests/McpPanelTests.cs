@@ -28,6 +28,39 @@ public sealed class McpPanelTests(WpfContext wpf)
         => Assert.Equal("ListPlcBlocks · result", new McpProjectClient.Receipt("ListPlcBlocks", "result", "{}").Label);
 
     [Fact]
+    public async Task Running_call_shows_reported_dialog_and_window_in_both_languages()
+    {
+        await using var host = new McpOperatorFixture();
+        var client = host.Client(); await Attach(client, host);
+        await host.Notify(state => {
+            state["running"] = new JsonObject { ["tool"] = "SaveProject", ["requestId"] = "dialog-request",
+                ["sinceUtc"] = "2026-11-13T00:00:00Z", ["dialog"] = new JsonObject {
+                    ["utc"] = "2026-11-13T00:00:01Z", ["caption"] = "Export confirmation", ["text"] = "Choose an option" },
+                ["window"] = new JsonObject { ["mainWindowDisabled"] = true, ["titles"] = new JsonArray("Project text export") } };
+        });
+        wpf.Run(() =>
+        {
+            var previous = TiaOpenness.Gui.Localization.Loc.Current.Language;
+            try
+            {
+                using var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
+                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+                foreach (var language in Enum.GetValues<TiaOpenness.Gui.Localization.AppLanguage>())
+                {
+                    TiaOpenness.Gui.Localization.Loc.Current.Language = language;
+                    Assert.Contains("Export confirmation", model.Panel!.Lane);
+                    Assert.Contains("Choose an option", model.Panel.Lane);
+                    Assert.Contains("2026-11-13T00:00:01Z", model.Panel.Lane);
+                    Assert.Contains("Project text export", model.Panel.Lane);
+                    Assert.Contains(language == TiaOpenness.Gui.Localization.AppLanguage.English
+                        ? "may still be open" : "可能仍打开", model.Panel.Lane);
+                }
+            }
+            finally { TiaOpenness.Gui.Localization.Loc.Current.Language = previous; }
+        });
+    }
+
+    [Fact]
     public async Task Running_call_shows_its_tool_request_time_and_actor()
     {
         await using var host = new McpOperatorFixture();

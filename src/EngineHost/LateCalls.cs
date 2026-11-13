@@ -28,10 +28,25 @@ public sealed class LateCalls
     public static void ObserveUnsettled(string id)
     { if (Current.Value is { } call) { lock (call.owner.gate) call.UnsettledIds.Add(id); } }
     public Invocation CreateInvocation(string tool, string requestId, CancellationToken token) => new(this, tool, requestId, token);
+    public Func<JsonObject, JsonObject>? DescribeRunning { get; set; }
+
+    public void UpdateRunning(JsonObject details)
+    {
+        lock (gate)
+        {
+            if (running == null || (string?)running.Running["requestId"] != (string?)details["requestId"]) return;
+            foreach (var field in details) running.Running[field.Key] = field.Value?.DeepClone();
+        }
+    }
 
     public JsonObject? Running
     {
-        get { lock (gate) return running?.Running.DeepClone().AsObject(); }
+        get
+        {
+            JsonObject? snapshot;
+            lock (gate) snapshot = running?.Running.DeepClone().AsObject();
+            return snapshot == null ? null : DescribeRunning?.Invoke(snapshot) ?? snapshot;
+        }
     }
     public JsonArray Snapshot()
     {
@@ -78,7 +93,11 @@ public sealed class LateCalls
                 unsettled.MarkRead(id);
                 return SummaryResult(OutcomeSummary(result, new JsonObject { ["sinceUtc"] = unknown.Utc.ToString("O") }));
             }
-            if (entry.Summary == null) return InProgress(release, (string)entry.Running["tool"]!, entry.Running);
+            if (entry.Summary == null)
+            {
+                var snapshot = (JsonObject)entry.Running.DeepClone();
+                return InProgress(release, (string)snapshot["tool"]!, DescribeRunning?.Invoke(snapshot) ?? snapshot);
+            }
             entry.Read = true;
             if (entry.Digest != null && unreadWrites.TryGetValue(entry.Digest, out var guardedId) && entry.Ids.Contains(guardedId))
                 unreadWrites.Remove(entry.Digest);
@@ -149,15 +168,25 @@ public sealed class LateCalls
                 "Native behavior has not been verified on a real machine.", new Dictionary<string, System.Text.Json.JsonElement>()) });
         var envelope = Envelope.Create(new JsonObject { ["activeRequestId"] = id, ["running"] = running.DeepClone() },
             new Error("The call is still running. Do not repeat this call. Read GetCallResult(requestId). "
-                + (string?)running["message"], new OperationInProgressDetails(id)), meta);
+                + (string?)running["message"] + RunningDiagnostic(running), new OperationInProgressDetails(id)), meta);
         var body = JsonNode.Parse(V4Json.Serialize(envelope));
         return new CallToolResult { IsError = true, StructuredContent = body,
             Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
     }
     public static Error BusyError(JsonObject running) => new(
         $"Worker call {running["tool"]} (request {running["requestId"]}, started {running["sinceUtc"]}) is still running. "
-            + "Read GetCallResult(requestId) before repeating it.",
+            + "Read GetCallResult(requestId) before repeating it." + RunningDiagnostic(running),
         new PreconditionFailedDetails("worker-call-running", (string?)running["requestId"]));
+
+    public static string RunningDiagnostic(JsonObject running)
+    {
+        string text = "";
+        if (running["dialog"] is JsonObject dialog)
+            text += $" TIA reported at {dialog["utc"]}, and it may still be open. {dialog["caption"]} {dialog["text"]} {dialog["detailText"]}";
+        if ((bool?)running["window"]?["mainWindowDisabled"] == true && running["window"]?["titles"] is JsonArray { Count: > 0 } titles)
+            text += " TIA has a window open titled " + string.Join(" · ", titles.Select(title => (string?)title));
+        return text;
+    }
     private sealed class Entry(JsonObject running, string? digest)
     {
         internal readonly JsonObject Running = (JsonObject)running.DeepClone();

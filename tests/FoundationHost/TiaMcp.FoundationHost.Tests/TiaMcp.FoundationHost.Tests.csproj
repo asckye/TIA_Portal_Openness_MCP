@@ -99,6 +99,8 @@
     <Compile Include="../../../src/FoundationHost/HardwareFamilyWire.cs" Link="HardwareFamilyWire.cs" />
     <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerClient.cs" Link="WorkerClient.cs" />
+    <Compile Include="../../../src/FoundationHost/PortalWindowProbe.cs" Link="PortalWindowProbe.cs" />
+    <Compile Include="../../../src/FoundationHost/WorkerDialog.cs" Link="WorkerDialog.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerSdkFixture.cs" Link="WorkerSdkFixture.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
     <Compile Include="../../../src/FoundationHost/HostSessionCall.cs" Link="HostSessionCall.cs" />

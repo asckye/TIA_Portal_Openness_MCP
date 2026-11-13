@@ -51,6 +51,7 @@ internal static partial class Strings
         ("Session.SelectHint", "Select an AI session of this release, or create a Workbench session. Start TIA manually.", "选择此版本的 AI 会话，或创建工作台会话。请手动启动 TIA。"),
         ("Session.ReconnectHint", "Select the new session key after the AI reconnects.", "AI 重连后，请选择新的会话键。"),
         ("Session.Working", "Updating MCP session", "更新 MCP 会话"),
+        ("Session.DialogReported", "TIA reported at {0}, may still be open · {1} · {2}", "TIA 于 {0} 报告，可能仍打开 · {1} · {2}"),
         ("Session.Unsettled", "Calls with an unknown outcome: {0}", "结果未确认的调用：{0}"),
         ("Session.ProcessId", "TIA process ID", "TIA 进程 ID"),
         ("Session.Result", "V4 tool result", "V4 工具结果"),

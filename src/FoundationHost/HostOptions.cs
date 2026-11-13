@@ -1,13 +1,17 @@
 using System;
+using System.Globalization;
 using TiaMcp.Versioning;
+using TiaMcp.WorkerChannel;
 
 namespace TiaMcp.FoundationHost;
 
 internal sealed class HostOptions
 {
-    internal const string WorkerTimeoutHelp =
-        "All eight releases (V14 SP1-V21) share worker timeout budgets: default 120 s, firstAttach per generation 300 s, " +
-        "compile/transfer/importExport/archive/libraryUpdate 1800 s. "
+    internal static readonly string WorkerTimeoutHelp =
+        "All eight releases (V14 SP1-V21) share worker timeout budgets: "
+        + string.Join(", ", WorkerTimeoutPolicy.Defaults.Select(budget =>
+            (budget.Key == "firstAttach" ? "firstAttach per generation" : budget.Key) + " "
+            + budget.Value.TotalSeconds.ToString(CultureInfo.InvariantCulture) + " s")) + ". "
         + "--worker-timeout-seconds <seconds> sets the default. --worker-timeout-config <file> reads a JSON object of category names to seconds (0, 86400]. "
         + "TIA_MCP_WORKER_TIMEOUTS uses the same JSON and takes precedence over the file. Previews and reads use default; Disconnect keeps its bounded " +
             "shutdown wait. "

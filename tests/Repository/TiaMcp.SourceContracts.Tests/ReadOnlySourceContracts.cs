@@ -196,7 +196,9 @@ public sealed class ReadOnlySourceContracts
         Contains(lifecycle, "connection.Projects.Retrieve(file, directory, login.Delegate)", "connection.Projects.RetrieveWithUpgrade(file, directory, login.Delegate)");
         Excludes(guards + engine + lifecycle, "WriteLine(password", "umacPassword +", "+ umacPassword", "password +", "UmacPassword +");
         // F17: confirmations are refused by default, notifications logged, Disposed marks the session lost.
-        var confirmation = EngineSources.BlockAfter(guards, "private void OnPortalConfirmation(object? sender, ConfirmationEventArgs e)");
+        Contains(guards, "connection.Confirmation += OnPortalConfirmation;");
+        var confirmation = EngineSources.BlockAfter(Read("src/Adapters/Native/Session/PortalDialogHandlers.cs"),
+            "private void OnPortalConfirmation(object? sender, ConfirmationEventArgs e)");
         Contains(confirmation, "PortalDialogPolicy.RefusingChoice(offered)", "e.IsHandled = true;", "[\"answer\"] = refusal ?? \"unanswered\"");
         Excludes(confirmation, "ConfirmationResult.Yes", "ConfirmationResult.Ok", "ConfirmationResult.YesToAll");
         Contains(EngineSources.BlockAfter(guards, "private void OnPortalDisposed(object? sender, EventArgs e)"), "portalLost = true;");

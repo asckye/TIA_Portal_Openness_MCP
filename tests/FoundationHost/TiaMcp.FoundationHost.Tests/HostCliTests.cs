@@ -21,6 +21,23 @@ public sealed class HostCliTests : IDisposable
     private static string HostDirectory => Path.Combine(Root(), "src/FoundationHost/bin/Release/net10.0");
     public static IEnumerable<object[]> Releases() => TiaVersionCatalog.All.Select(release => new object[] { release.Key });
 
+    [Fact]
+    public void Printed_help_names_300_seconds_for_each_long_category()
+    {
+        using var output = new StringWriter();
+        var previous = Console.Out;
+        try
+        {
+            Console.SetOut(output);
+            Assert.Equal(0, HostCliCommands.Run(HostCliOptions.Parse(new[] { "help" }, Root())));
+        }
+        finally { Console.SetOut(previous); }
+        foreach (string category in new[] { "compile", "transfer", "importExport", "archive", "libraryUpdate" })
+            Assert.Contains(category + " 300 s", output.ToString());
+        Assert.Contains("default 120 s", output.ToString());
+        Assert.Contains("firstAttach per generation 300 s", output.ToString());
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void Kept_verbs_run_without_a_worker_on_every_release(string release)
     {

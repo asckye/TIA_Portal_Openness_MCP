@@ -239,7 +239,7 @@ namespace TiaMcp.FoundationHost
         private static string AssemblyVersion() =>
             Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "?";
 
-        internal const string UsageText =
+        internal static readonly string UsageText =
 @"tia — TIA Portal host diagnostics and local setup (all eight releases).
 
 USAGE
