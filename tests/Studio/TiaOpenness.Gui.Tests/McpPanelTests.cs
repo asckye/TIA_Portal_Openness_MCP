@@ -31,13 +31,13 @@ public sealed class McpPanelTests(WpfContext wpf)
     public async Task Running_call_shows_reported_dialog_and_window_in_both_languages()
     {
         await using var host = new McpOperatorFixture();
-        var client = host.Client(); await Attach(client, host);
         await host.Notify(state => {
             state["running"] = new JsonObject { ["tool"] = "SaveProject", ["requestId"] = "dialog-request",
                 ["sinceUtc"] = "2026-11-13T00:00:00Z", ["dialog"] = new JsonObject {
                     ["utc"] = "2026-11-13T00:00:01Z", ["caption"] = "Export confirmation", ["text"] = "Choose an option" },
                 ["window"] = new JsonObject { ["mainWindowDisabled"] = true, ["titles"] = new JsonArray("Project text export") } };
         });
+        var client = host.Client(); await Attach(client, host);
         wpf.Run(() =>
         {
             var previous = TiaOpenness.Gui.Localization.Loc.Current.Language;
@@ -48,6 +48,7 @@ public sealed class McpPanelTests(WpfContext wpf)
                 foreach (var language in Enum.GetValues<TiaOpenness.Gui.Localization.AppLanguage>())
                 {
                     TiaOpenness.Gui.Localization.Loc.Current.Language = language;
+                    WpfContext.Drain();
                     Assert.Contains("Export confirmation", model.Panel!.Lane);
                     Assert.Contains("Choose an option", model.Panel.Lane);
                     Assert.Contains("2026-11-13T00:00:01Z", model.Panel.Lane);
