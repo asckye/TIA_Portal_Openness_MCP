@@ -2179,6 +2179,23 @@
           "identifier": "TiaMcp.Engine.Tests.V4EnvelopeTests/NewTypesHaveNoSiemensOrMcpSdkReferences( ):d3c1824574e7581dc205b30a049fb0a3e5e2e1fb835b8755e95abe72d4ef1e5b:1"
         }
       ]
+    },
+    {
+      "task": "NO-LOCK-3",
+      "maintainerDate": "2026-11-13",
+      "reason": "Maintainer approved on 2026-11-13: OperatorSessionTests disconnect rows follow the 2026-11-12 lock-only rule, a disconnected session answers cached state to both peers (compared in full) and the refusal moves to a bound write",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OperatorSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OperatorSessionTestsPlc/Ai_disconnect_and_operator_detach_have_distinct_lifetimes( string release ):d98bb6b7d8371baacc4140a9d9a784af4488a88dd5c538ae11c9f5ce5ceb894c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OperatorSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OperatorSessionTestsPlc/Operator_stream_shares_one_existing_worker_and_disconnect_state( string release ):8d5ec8fa7c1fe798cfab2610ce74f7460e704156b9433128226f0b293d1e455d:1"
+        }
+      ]
     }
   ]
 }
