@@ -18040,7 +18040,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "2f50c5801e721f545bbeb82a7f692e949a828fe333f3a570c17c331058465bbe",
+      "descriptionSha256": "6daf0984242040ae21f58c8985ad99ce25f9f70b4401430218b7e9436df747d0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -18051,7 +18051,7 @@
           },
           "filePath": {
             "default": "",
-            "description": "Absolute exported SimaticML XML; mutually exclusive with blockPath.",
+            "description": "Absolute exported single-block or single-UDT SimaticML XML; mutually exclusive with blockPath.",
             "examples": [
               "C:\\Examples\\exports\\Main.xml"
             ],
@@ -33506,12 +33506,12 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "85a08f58d339526c188c65e848af266afd390529ed56a52e7b21681c2e85dc6b",
+      "descriptionSha256": "6c4cb63b09586666a0b5f3f78d3e53eb843c85ce70cb9e43a741f3d11eecb82f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "changes": {
-            "description": "JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}].",
+            "description": "JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue/setMemberComment, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setMemberComment\",\"section\":\"Static\",\"memberPath\":\"Motor/Speed\",\"culture\":\"zh-CN\",\"expectedValue\":\"\",\"value\":\"Motor speed\"}]. UDT members use section=None; empty value removes that culture's comment.",
             "items": {
               "oneOf": [
                 {
@@ -33638,6 +33638,48 @@
                     "value"
                   ],
                   "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "action": {
+                      "enum": [
+                        "setMemberComment"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "culture": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "expectedValue": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "memberPath": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "section": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "value": {
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "action",
+                    "section",
+                    "memberPath",
+                    "culture",
+                    "expectedValue",
+                    "value"
+                  ],
+                  "type": "object"
                 }
               ]
             },
@@ -33661,7 +33703,7 @@
             "type": "string"
           },
           "filePath": {
-            "description": "Absolute existing single-block SimaticML XML file.",
+            "description": "Absolute existing single-block or single-UDT SimaticML XML file.",
             "type": "string"
           },
           "outputPath": {

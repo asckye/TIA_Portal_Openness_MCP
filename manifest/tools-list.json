@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-12T22:16:00.6974653+00:00",
+  "generatedAt": "2026-11-13T02:56:16.3361470+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
-  "workerSha256": "4338a8768569a382d5cd462855874a7bb0f323a0030afeedbfa6a842784dcd38",
+  "workerSha256": "9ba78724cfbe68e8fdcfebf5777c50a7605844b5431efe723f8ee6382f0a3e53",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -4762,8 +4762,8 @@
         "changes",
         "exportFile"
       ],
-      "description": "[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged. Examples: GetToolUsage(toolName: \"PatchPlcBlockDocument\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"expectedDocumentHash\":\"\\u003Cfingerprint from GetPlcBlockEditCapabilities\\u003E\",\"dryRun\":true,\"changes\":[{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]}"
+      "description": "[L2][PLC-Builders][FILE] Patch an exported single-block or single-UDT SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value), setMemberComment(section,memberPath,culture,expectedValue,value), e.g. Static/Motor/Speed in zh-CN with expectedValue=\"\". StartValue and block/network text must exist; member comments may be added or removed. Use a culture contained in the export, or an explicit culture when it contains none; no guessed defaults, library-connected blocks or read-only members. UDTs return with ImportPlcType overwrite=true; overwrite makes dependent DBs and blocks inconsistent until compiled. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged. Examples: GetToolUsage(toolName: \"PatchPlcBlockDocument\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"expectedDocumentHash\":\"\\u003Cfingerprint from GetPlcBlockEditCapabilities\\u003E\",\"dryRun\":true,\"changes\":[{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"},{\"action\":\"setMemberComment\",\"section\":\"Static\",\"memberPath\":\"Motor/Speed\",\"culture\":\"zh-CN\",\"expectedValue\":\"\",\"value\":\"Motor speed\"}]}"
     },
     {
       "name": "RunClassicHmiTemporaryImportPreflight",
@@ -9651,7 +9651,7 @@
         "softwarePath",
         "blockPath"
       ],
-      "description": "[L2][Validation][READ] Inspect one SimaticML PLC block file, or export an exact live block, to report each network's own language/source shape, existing multilingual title/comment targets, library binding and document fingerprint. Exactly one filePath or blockPath (+softwarePath). Describes the supported offline patch operations; never claims a generic rung editor or target CPU/native import validation. No compile/save/write to project. Current native policy; V4 safety behavior is not yet accepted. Example: {\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetPlcBlockEditCapabilities\"), optionally operation or language.",
+      "description": "[L2][Validation][READ] Inspect one SimaticML PLC block file, or export an exact live block, to report each network's own language/source shape, existing multilingual title/comment targets, member comments, library binding and document fingerprint. Exactly one filePath or blockPath (+softwarePath). filePath also accepts a single-UDT export from ExportPlcType; blockPath exports blocks only. Describes the supported offline patch operations; never claims a generic rung editor or target CPU/native import validation. No compile/save/write to project. Current native policy; V4 safety behavior is not yet accepted. Example: {\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetPlcBlockEditCapabilities\"), optionally operation or language.",
       "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
     },
     {
