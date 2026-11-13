@@ -64,6 +64,7 @@ internal static class WorkerShutdown
 {
     internal const int GracefulTimeoutMilliseconds = 10000;
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<IDisposable, byte> Owners = new();
+    internal static bool StoppingAll { get; private set; }
     private static readonly ConsoleHandler ConsoleClosing = signal => {
         if (signal is 2 or 5 or 6) StopAll();
         return false;
@@ -78,7 +79,9 @@ internal static class WorkerShutdown
     internal static void StopAll()
     {
         // Parallel waits keep the host deadline bounded even with many HTTP sessions.
-        Task.WhenAll(Owners.Keys.Select(owner => Task.Run(owner.Dispose))).GetAwaiter().GetResult();
+        StoppingAll = true;
+        try { Task.WhenAll(Owners.Keys.Select(owner => Task.Run(owner.Dispose))).GetAwaiter().GetResult(); }
+        finally { StoppingAll = false; }
     }
     internal static WorkerTerminationException? Stop(Process? process, TiaMcp.WorkerChannel.ChannelClient? channel,
         Func<Process, string?>? image = null, bool disposeProcess = true)

@@ -12,6 +12,7 @@ public static class EngineResultText
         "failed" => LocalizedText.Key("Engine.Outcome.Failed"),
         "partial" => LocalizedText.Key("Engine.Outcome.Partial"),
         "unknown" => LocalizedText.Key("Engine.Outcome.Unknown"),
+        "in-progress" => LocalizedText.Key("Engine.Outcome.InProgress"),
         _ => LocalizedText.Key("Engine.Outcome.Unknown")
     };
 
@@ -42,6 +43,7 @@ public static class EngineResultText
         "NOT_EXECUTED" => Loc.Current["Engine.Error.NotExecuted"],
         "PARTIAL_FAILURE" => Loc.Current["Engine.Error.PartialFailure"],
         "OUTCOME_UNKNOWN" => Loc.Current["Engine.Error.OutcomeUnknown"],
+        "OPERATION_IN_PROGRESS" => Loc.Current["Engine.Error.OperationInProgress"],
         "INTERNAL_ERROR" => Loc.Current["Engine.Error.InternalError"],
         _ => string.Empty
     };

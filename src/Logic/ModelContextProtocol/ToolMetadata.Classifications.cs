@@ -212,6 +212,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["GetOpennessCompatibility"] = new Classification("L2", "Diagnostics", "READ", false, true, false),
             ["GetOpennessGuidance"] = new Classification("L2", "Guide", "READ", false, true, false),
             ["GetOpennessWorkerStatus"] = new Classification("L0", "Diagnostics", "READ", false, true, false),
+            ["GetCallResult"] = new Classification("L0", "Diagnostics", "READ", false, true, false),
             ["GetPlcBlockEditCapabilities"] = new Classification("L2", "Validation", "READ", false, true, false),
             ["GetPlcBlockFingerprints"] = new Classification("L2", "PLC-Online", "ONLINE", false, false, false),
             ["GetPlcBlockHierarchy"] = new Classification("L2", "PLC-Software", "READ", false, true, false, true, false, true, false),

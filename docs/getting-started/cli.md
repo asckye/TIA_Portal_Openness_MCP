@@ -85,7 +85,7 @@ Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python
 
 八版都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 worker。使用工作台生成的宿主命令；隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。
 
-worker 超时预算为：默认 120 秒，每个代次首次附着 300 秒，编译、传输、导入导出、归档和库更新 30 分钟。`--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可取消；派发后等待真实结果，超时或通道故障不重放原生操作。
+worker 超时预算为：默认 120 秒，每个代次首次附着 300 秒，编译、传输、导入导出、归档和库更新 30 分钟。`--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可取消。调用超过等待预算时返回 `in-progress` 和 `OPERATION_IN_PROGRESS`，原调用继续执行。用 `activeRequestId` 调用 `GetCallResult(requestId)` 读取最终结果。
 
 MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认须经工作台审批。`dryRun=true` 和候选工具 `mode=preview` 不等待审批。`SaveProject`、`SaveProjectCopy` 和 `CloseProject` 实际执行同样须审批；连接、附着、打开和分离不审批。拒绝、120 秒默认超时或工作台不可用会在派发前返回 `CONFIRMATION_REQUIRED`。审批、执行与响应共享 requestId。MCP 向调用方指定的输出根之外写文件也须审批；用 `GetSessionState` 的 `data.outputRoot` 查询可免审批的输出目录（根内重解析点除外），预览和工作台选择的文件目标沿用原行为。
 

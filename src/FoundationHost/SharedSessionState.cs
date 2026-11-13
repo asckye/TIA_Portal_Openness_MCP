@@ -1,6 +1,7 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias enginehost;
 using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
 #endif
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
@@ -20,6 +21,7 @@ internal sealed class SharedSessionState
     internal static SharedSessionState For(IFoundationWorker worker) => States.GetValue(worker, key => new(key));
 
     internal UnsettledCalls Unsettled => worker is IFoundationSessionWorker session ? session.Unsettled : UnsettledCalls.For(worker);
+    internal LateCalls LateResults => worker is IFoundationSessionWorker session ? session.LateResults : LateCalls.For(worker);
 
     internal JsonObject? Identity
     {
@@ -70,6 +72,8 @@ internal sealed class SharedSessionState
             ["connected"] = !ended && connected,
             ["workerGeneration"] = transport["generation"]?.DeepClone(),
             ["unsettled"] = Unsettled.ToJson(),
+            ["running"] = transport["running"]?.DeepClone() ?? LateResults.Running,
+            ["lateResults"] = LateResults.Snapshot(),
             ["workerFault"] = transport["workerFault"]?.DeepClone(),
             ["disconnected"] = ended, ["switches"] = switches };
     }

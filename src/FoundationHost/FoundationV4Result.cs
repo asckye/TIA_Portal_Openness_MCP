@@ -1,3 +1,7 @@
+#if TIA_FOUNDATION_TEST_HOST
+extern alias enginehost;
+using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
+#endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -10,7 +14,11 @@ internal static class FoundationV4Result
 {
     internal static bool Classified(JsonNode? body) => body is JsonObject source && source["meta"] is JsonObject meta && meta["outcome"] is JsonValue outcome
         && outcome.TryGetValue<string>(out var value)
-            && value is "succeeded" or "rejected-before-operation" or "read-failed" or "failed" or "partial" or "unknown";
+            && value is "succeeded" or "rejected-before-operation" or "read-failed" or "failed" or "partial" or "unknown" or "in-progress";
+    internal static CallToolResult InProgress(string release, string name, JsonObject running)
+        => LateCalls.InProgress(release, name, running);
+    internal static CallToolResult LateFailure(string release, string name, string id)
+        => Wire(release, name, id, null, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, Unknown(), true, true);
     internal static CallToolResult WorkerFailure(CallToolResult result, string release, string name, string id, bool mutation, Exception? failure)
     {
         if (failure == null || result.IsError != true || Classified(result.StructuredContent)
@@ -122,12 +130,9 @@ internal static class FoundationV4Result
             data ??= new JsonObject();
             data["earlierMutationMayHaveChanged"] = true;
             return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
-                new Error("An earlier operation may have changed state; inspect the whole tool outcome before further writes.",
+                new Error("An earlier operation may have changed state. Do not repeat this call. Read GetCallResult(requestId) and inspect the target.",
                     new OutcomeUnknownDetails("tool-call", Empty)), true, true);
         }
-        if (exception?.Data["workerReadTimeout"] is true)
-            return Wire(release, name, id, data, Outcome.ReadFailed, Execution.ReadOnly, Completeness.Unknown,
-                new Error("The worker read timed out; retry when it has finished.", new TimeoutDetails("worker-read")), true, false);
         var worker = exception as WorkerOperationException;
         string? exceptionType = exception?.GetType().Name;
         if (worker?.EvidenceJson != null && worker.EvidenceJson != "null")
@@ -358,7 +363,8 @@ internal static class FoundationV4Result
             success ? null : NativeFailure(data), false, false, candidate, paging);
     }
 
-    private static Error Unknown() => new("The operation outcome is unknown; do not replay the request.", new OutcomeUnknownDetails("worker", Empty));
+    private static Error Unknown() => new("The operation outcome is unknown. Do not repeat this call. Read GetCallResult(requestId).",
+        new OutcomeUnknownDetails("worker", Empty));
     private static Error NativeFailure(JsonObject data) => new("The operation did not establish success; inspect the returned result.",
         new NativeOperationFailedDetails(null, Text(data, "summary"), data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
     private static Execution Execute(Outcome outcome, bool mutation) => HostBehavior.ExecutionOf(outcome, mutation);

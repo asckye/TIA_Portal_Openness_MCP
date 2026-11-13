@@ -230,6 +230,7 @@ namespace TiaMcp.Logic.V4
                 [ErrorCode.NotExecuted] = typeof(NotExecutedDetails),
                 [ErrorCode.PartialFailure] = typeof(PartialFailureDetails),
                 [ErrorCode.OutcomeUnknown] = typeof(OutcomeUnknownDetails),
+                [ErrorCode.OperationInProgress] = typeof(OperationInProgressDetails),
                 [ErrorCode.InternalError] = typeof(InternalErrorDetails),
             };
 

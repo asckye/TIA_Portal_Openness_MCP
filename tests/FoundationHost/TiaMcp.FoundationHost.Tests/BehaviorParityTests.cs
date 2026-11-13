@@ -1,4 +1,5 @@
 extern alias enginefixture;
+extern alias enginehost;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -247,6 +248,10 @@ public sealed class BehaviorParityTests
             if (scenario == "unknown")
             {
                 results.Add(await Call("ListPlcTags", new JsonObject { ["plc"] = "PLC_1", ["table"] = "T" }));
+                var unsettled = enginehost::TiaMcp.FoundationHost.UnsettledCalls.For(worker);
+                string requestId = Assert.Single(unsettled.Snapshot()).RequestId;
+                var read = enginehost::TiaMcp.FoundationHost.LateCalls.For(worker).Read(release, requestId, unsettled);
+                Assert.Equal("OUTCOME_UNKNOWN", (string?)read!.StructuredContent?["error"]?["code"]);
                 results.Add(await Call("CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
                 Assert.Equal("", (string?)results[1]?["code"]);
                 Assert.Equal("read-only", (string?)results[1]?["execution"]);

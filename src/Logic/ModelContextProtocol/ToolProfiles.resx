@@ -27505,6 +27505,21 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "GetCallResult",
+        "currentName": "GetCallResult",
+        "sourceName": "GetCallResult",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "request-id-from-original-call"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
         "name": "GetClassicHmiGlobalization",
         "currentName": "GetClassicHmiGlobalization",
         "sourceName": "ReadClassicHmiGlobalization",
@@ -37101,6 +37116,21 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "GetCallResult",
+        "currentName": "GetCallResult",
+        "sourceName": "GetCallResult",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "request-id-from-original-call"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
         "name": "GetClassicHmiGlobalization",
         "currentName": "GetClassicHmiGlobalization",
         "sourceName": "ReadClassicHmiGlobalization",
@@ -45316,6 +45346,21 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "GetCallResult",
+        "currentName": "GetCallResult",
+        "sourceName": "GetCallResult",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "request-id-from-original-call"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
         "name": "GetClassicHmiGlobalization",
         "currentName": "GetClassicHmiGlobalization",
         "sourceName": "ReadClassicHmiGlobalization",
@@ -50768,6 +50813,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetCallResult",
+        "currentName": "GetCallResult",
+        "sourceName": "GetCallResult",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "request-id-from-original-call"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
       },
       {
         "name": "GetClassicHmiGlobalization",
@@ -56840,6 +56900,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetCallResult",
+        "currentName": "GetCallResult",
+        "sourceName": "GetCallResult",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "request-id-from-original-call"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
       },
       {
         "name": "GetClassicHmiGlobalization",
@@ -63443,6 +63518,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetCallResult",
+        "currentName": "GetCallResult",
+        "sourceName": "GetCallResult",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "request-id-from-original-call"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
       },
       {
         "name": "GetClassicHmiGlobalization",
@@ -70463,6 +70553,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetCallResult",
+        "currentName": "GetCallResult",
+        "sourceName": "GetCallResult",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "request-id-from-original-call"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
       },
       {
         "name": "GetClassicHmiGlobalization",
@@ -78486,6 +78591,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetCallResult",
+        "currentName": "GetCallResult",
+        "sourceName": "GetCallResult",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "request-id-from-original-call"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
       },
       {
         "name": "GetClassicHmiGlobalization",

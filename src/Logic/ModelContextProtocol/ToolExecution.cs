@@ -201,6 +201,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["GetOpennessCompatibility"] = "host",
                 ["GetOpennessGuidance"] = "host",
                 ["GetOpennessWorkerStatus"] = "host",
+                ["GetCallResult"] = "host",
                 ["GetPlcBlockEditCapabilities"] = "worker",
                 ["GetPlcBlockFingerprints"] = "foundation",
                 ["GetPlcBlockHierarchy"] = "worker",

@@ -1,6 +1,7 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias enginehost;
 using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -17,6 +18,13 @@ internal static class FoundationTools
 {
     private const string BlockHierarchyDescription = "[v17-read-safe-v1] Actual nested block groups, including empty groups; structure only; " +
         "use ListPlcBlocks or GetPlcBlockInfo for details. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error.";
+    private const string DisconnectDescription =
+        "[acknowledged-disconnect-candidate] End this worker session. An attached existing process is detached. " +
+        "A TIA Portal this session started is disposed, which closes a headless instance. Disconnect refuses while a project is open " +
+        "in that instance. SaveProject and CloseProject first. Idle disconnect never starts a worker. A running native call refuses " +
+        "disconnect with worker-call-running until it finishes. No project required. No save, project close, launch or automatic reconnect. " +
+        "An idle responsive worker can detach after an unknown outcome. An idle faulted worker follows the current lease recovery rules. " +
+        "Subsequent Attach requires a new MCP session. Requests are never replayed. Native acceptance NOT RUN.";
     private static Argument S(string name) => new(name);
     private static Argument Dry() => new("dryRun", "boolean", false, true);
     private const string UmacUser = "umacUserName: UMAC user of a protected project; give it together with umacPassword. Empty for an unprotected project.";
@@ -51,7 +59,7 @@ internal static class FoundationTools
         new("GetProjectTree","ReadProjectTree","[v17-project-safe-v1] Actual device groups, devices, nested items and software, including ungrouped devices and exact software paths.",Array.Empty<Argument>(),"ProjectTree"),
         new("ListPlcBlocks","ReadBlocks","[v17-read-safe-v1] V17 block fields and case-insensitive regex. Accepts unique PLC/device/group aliases or exact address; rejects ambiguity and unused path segments.",new[]{S("softwarePath"),new Argument("regexName","string",false,"")},"Items"),
         new("GetPlcBlockHierarchy","ReadBlockHierarchy",BlockHierarchyDescription,new[]{S("softwarePath")},"Root"),
-        new("DisconnectPortal","Disconnect","[acknowledged-disconnect-candidate] End this worker session. An attached existing process is only detached; a TIA Portal this session started (ConnectIsolatedPortal) is disposed, which closes a headless instance, and is refused while a project is open in it (SaveProject and CloseProject first). No project required; no save, project close, launch or automatic reconnect. Idle disconnect never starts a worker. An idle responsive worker can detach after an unknown outcome; an in-flight, unresponsive or lost worker is terminated with requiresTiaRestart=true. Subsequent Attach requires a new MCP session. Native acceptance NOT RUN.",Array.Empty<Argument>(),"Disconnect"),
+        new("DisconnectPortal", "Disconnect", DisconnectDescription, Array.Empty<Argument>(), "Disconnect"),
         new("ListPlcTypes","ReadTypes","[v17-read-safe-v1] V17 type fields and case-insensitive regex. Accepts unique PLC/device/group aliases or exact address; rejects ambiguity and unused path segments.",new[]{S("softwarePath"),new Argument("regexName","string",false,"")},"Items"),
         new("ListPlcTagTables","ReadTagTableNames","[v17-read-safe-v1] V17 root-group tag-table name list. Accepts unique PLC/device/group aliases or exact address; native failures are errors, not empty success.",new[]{S("softwarePath")},"Items"),
         new("DeletePlcExternalSource","DeletePlcExternalSource","[bounded-delete-candidate] Delete one exact uniquely named ordinary offline PLC root external source. Empty groupPath only; no extension or case fallback. Preview complete inventory and session identity/hash; apply requires expectedPlanHash, confirm and expectedProjectFile. One native call, verified removal, After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. No generation, compilation, automatic save or rollback; filesystem/recovery effects and native acceptance unverified.",new[]{S("softwarePath"),S("groupPath"),S("externalSourceName"),Dry(),new Argument("expectedPlanHash","string",false,"")},"ExternalSourceDelete"),
@@ -145,8 +153,11 @@ internal sealed partial class FoundationTool : McpServerTool
         => worker is IFoundationWorkerReadiness readiness ? readiness.PrepareReadiness(token) : Task.CompletedTask;
     internal string? ApprovalIdentity => (worker as IFoundationSessionWorker)?.ApprovalIdentity;
     internal string? BoundProjectFile => (string?)SharedSessionState.For(worker).Identity?["projectPath"];
+    private bool CachedSessionState => definition.Name == "GetSessionState" && worker is not WorkerClient { Disconnected: true }
+        && (Unsettled.Snapshot().Count > 0 || worker is WorkerClient { CallRunning: true } or WorkerClient { Faulted: true });
     internal Task<IDisposable?> AcquireLane(CancellationToken token)
-        => IsNative && definition.ResponseMember != "Disconnect" && worker is IFoundationSessionWorker client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);
+        => IsNative && definition.ResponseMember != "Disconnect" && !CachedSessionState
+            && worker is IFoundationSessionWorker client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);
     internal void ActivateLane(IDisposable? lane) => (worker as IFoundationSessionWorker)?.ActivateLane(lane);
     internal bool JournalIsWrite => definition.Arguments.Any(a => a.Name == "dryRun")
         || definition.ResponseMember is "Connection" or "Bind" or "Disconnect" or "PlcRender";
@@ -177,6 +188,8 @@ internal sealed partial class FoundationTool : McpServerTool
         => portedMethod != null ? InvokePortedAsync(request, cancellationToken) : InvokeCoreAsync(request, cancellationToken, release, id);
     internal bool WorkerFaulted => worker is IFoundationSessionWorker { Faulted: true };
     internal UnsettledCalls Unsettled => worker is IFoundationSessionWorker session ? session.Unsettled : UnsettledCalls.For(worker);
+    internal LateCalls LateResults => worker is IFoundationSessionWorker session ? session.LateResults : LateCalls.For(worker);
+    internal JsonObject? Running => LateResults.Running ?? (worker as IFoundationSessionWorker)?.Running;
     internal void ValidateApplyArguments(IReadOnlyDictionary<string, JsonElement> arguments)
     { if (portedMethod == null) ReadArguments(arguments, new JsonObject()); }
     private void ReadArguments(IReadOnlyDictionary<string, JsonElement>? arguments, JsonObject values)
@@ -265,9 +278,7 @@ internal sealed partial class FoundationTool : McpServerTool
             }
             if (definition.ResponseMember == "SpecialExport" && CanonicalBatchTools.CurrentExportRoot.Value is string exportRoot)
                 values["plannedExportRoot"] = exportRoot;
-            if (definition.Name == "GetSessionState" && worker is not WorkerClient { Disconnected: true }
-                && (Unsettled.Snapshot().Count > 0
-                || worker is WorkerClient { DrainingRead: true } or WorkerClient { Faulted: true }))
+            if (CachedSessionState)
             {
                 var state = SharedSessionState.For(worker).Snapshot(release!);
                 return FoundationV4Result.HostSessionState(release!, id!, state);

@@ -102,16 +102,17 @@ public sealed class EngineHttpSessionTestsPlc
     }
 
     [Theory, InlineData("20", true), InlineData("21", true), InlineData("20", false), InlineData("21", false)]
-    public async Task Busy_or_timed_out_disconnect_terminates_the_worker_and_keeps_the_lease_busy(string release, bool waitForTimeout)
+    public async Task Busy_or_timed_out_disconnect_refuses_and_keeps_the_worker_running(string release, bool waitForTimeout)
     {
-        using var host = await Fixture.Start(release, shortTimeout: waitForTimeout); using var a = new Session(host.Url); await a.Initialize();
+        using var host = await Fixture.Start(release, shortTimeout: waitForTimeout);
+        using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 323 });
         int pid = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
-        // The warm worker gets the scaled 0.5-s budget for the timed-out call only (P8-stab-1).
         if (waitForTimeout) await host.UseScaledBudgets(true);
-        var running = a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
-        if (waitForTimeout) { await running; await host.UseScaledBudgets(false); }
+        var running = a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: !waitForTimeout);
+        JsonNode? inProgress = null;
+        if (waitForTimeout) { inProgress = await running; await host.UseScaledBudgets(false); }
         else
         {
             for (int i = 0; i < 100; i++)
@@ -122,30 +123,65 @@ public sealed class EngineHttpSessionTestsPlc
             }
             Assert.True(File.Exists(Path.Combine(host.DataDirectory, "leases", "busy")), "Native fixture dispatch did not start within the existing polling bound.");
         }
-        var detached = await a.Tool("DisconnectPortal");
-        Assert.True((bool?)detached["data"]?["requiresTiaRestart"]);
-        Assert.False((bool?)detached["data"]?["workerAcknowledged"]);
-        Assert.Contains("restart that TIA instance", (string?)detached["data"]?["recoveryMessage"]);
+        var refused = await a.Tool("DisconnectPortal", ok: false);
+        Assert.Equal("worker-call-running", (string?)refused["error"]?["details"]?["condition"]);
+        Assert.False(worker.HasExited);
+        Assert.Throws<IOException>(() => File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "323-1.lease")));
+        host.ReleaseRunning();
         await running;
-        Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
-        Assert.Equal("BUSY\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "323-1.lease")));
+        await a.WaitForIdle();
+        if (inProgress != null)
+        {
+            string id = (string)inProgress["data"]!["activeRequestId"]!;
+            var completed = await a.Tool("GetCallResult", new() { ["requestId"] = id });
+            Assert.Equal("succeeded", (string?)completed["meta"]?["outcome"]);
+            Assert.Equal(id, (string?)completed["meta"]?["requestId"]);
+        }
+        var detached = await a.Tool("DisconnectPortal");
+        Assert.True((bool?)detached["data"]?["workerAcknowledged"]);
+        Assert.Null(detached["data"]?["requiresTiaRestart"]);
+        Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "323-1.lease")));
         await a.End();
     }
     [Theory, InlineData("20"), InlineData("21")]
-    public async Task Restart_after_a_timeout_reports_a_dirty_lease(string release)
+    public async Task Restart_after_a_timeout_refuses_until_the_call_finishes(string release)
     {
-        using var host = await Fixture.Start(release, shortTimeout: true); using var a = new Session(host.Url); await a.Initialize();
+        using var host = await Fixture.Start(release, shortTimeout: true);
+        using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 324 });
-        // Start and attach under production budgets, time out the call under test on the scaled 0.5 s, and start the next
-        // generation under production budgets again (P8-stab-1).
         await host.UseScaledBudgets(true);
-        await a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
+        var running = await a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
+        Assert.Equal("in-progress", (string?)running["meta"]?["outcome"]);
         await host.UseScaledBudgets(false);
+        var refused = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true }, ok: false);
+        Assert.Equal("worker-call-running", (string?)refused["error"]?["details"]?["condition"]);
+        Assert.Throws<IOException>(() => File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "324-1.lease")));
+        host.ReleaseRunning();
+        await a.WaitForIdle();
+        var completed = await a.Tool("GetCallResult", new() { ["requestId"] = (string)running["data"]!["activeRequestId"]! });
+        Assert.Equal("succeeded", (string?)completed["meta"]?["outcome"]);
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
-        Assert.Contains("\"requiresTiaRestart\":true", restarted["data"]!.ToJsonString());
-        Assert.Contains("restart that TIA instance", restarted["data"]!.ToJsonString());
-        Assert.Equal("BUSY\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "324-1.lease")));
+        Assert.Contains("\"requiresTiaRestart\":false", restarted["data"]!.ToJsonString());
+        Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "324-1.lease")));
         await a.End();
+    }
+
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Http_session_end_defers_worker_disposal_until_its_call_finishes(string release)
+    {
+        using var host = await Fixture.Start(release, shortTimeout: true);
+        using var a = new Session(host.Url); await a.Initialize();
+        await a.Tool("ConnectPortal", new() { ["processId"] = 326 });
+        int pid = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
+        using var worker = Process.GetProcessById(pid);
+        await host.UseScaledBudgets(true);
+        Assert.Equal("in-progress", (string?)(await a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false))["meta"]?["outcome"]);
+        await host.UseScaledBudgets(false);
+        await a.End();
+        Assert.False(worker.HasExited);
+        host.ReleaseRunning();
+        Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
+        Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "326-1.lease")));
     }
 
     [Theory, InlineData("20"), InlineData("21")]
@@ -277,6 +313,14 @@ public sealed class EngineHttpSessionTestsPlc
             Assert.True((bool?)body["ok"] == ok, body.ToJsonString()); Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse((string)result["content"]![0]!["text"]!)));
             return body;
         }
+        internal async Task WaitForIdle()
+        {
+            using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+            JsonNode state;
+            do { state = await Tool("GetSessionState"); if (state["data"]?["sessionState"]?["running"] != null) await Task.Delay(5, deadline.Token); }
+            while (state["data"]?["sessionState"]?["running"] != null);
+            Assert.Null(state["data"]?["sessionState"]?["running"]);
+        }
         internal async Task End() { using var response = await client.DeleteAsync("/mcp"); response.EnsureSuccessStatusCode(); }
         public void Dispose() => client.Dispose();
     }
@@ -315,6 +359,11 @@ public sealed class EngineHttpSessionTestsPlc
         }
         internal string Url { get; private set; } = url;
         internal string DataDirectory => directory;
+        internal void ReleaseRunning()
+        {
+            string gate = Path.Combine(directory, "running-gate");
+            Directory.CreateDirectory(gate); File.WriteAllText(Path.Combine(gate, "release"), "");
+        }
         internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false, bool startupPressure = false, string? fault = null)
         {
             string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
@@ -345,6 +394,7 @@ public sealed class EngineHttpSessionTestsPlc
             start.Environment["TIA_MCP_DATA_DIRECTORY"] = directory; start.Environment["TiaPortalLocation"] = "";
             if (gracefulShutdown) start.Environment["DOTNET_SHUTDOWNTIMEOUTSECONDS"] = "15";
             start.Environment["TIA_MCP_FIXTURE_LEASE_ROOT"] = Path.Combine(directory, "leases");
+            start.Environment["TIA_MCP_FIXTURE_SLOW_GATE"] = Path.Combine(directory, "running-gate");
             // Release checks set their own diagnostics root; the journal assertions read this host's data directory.
             start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(directory, "diagnostics");
             start.Environment["Logging__LogLevel__Microsoft.Hosting.Lifetime"] = "Information";
@@ -419,6 +469,7 @@ public sealed class EngineHttpSessionTestsPlc
         }
         public void Dispose()
         {
+            ReleaseRunning();
             if (!process.HasExited)
             {
                 Assert.Equal(Path.GetFullPath(image), Path.GetFullPath(process.MainModule!.FileName), ignoreCase: true);

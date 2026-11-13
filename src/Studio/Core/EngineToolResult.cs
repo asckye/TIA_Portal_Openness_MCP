@@ -21,7 +21,8 @@ namespace TiaOpenness.Core
         public string DisplayOutcome => Classify(Envelope.Ok, Meta.Outcome, Meta.Execution, Meta.Completeness);
 
         public static string Classify(bool ok, Outcome outcome, Execution execution, Completeness completeness)
-            => outcome == Outcome.Unknown || completeness == Completeness.Unknown ? "unknown"
+            => outcome == Outcome.InProgress ? "in-progress"
+            : outcome == Outcome.Unknown || completeness == Completeness.Unknown ? "unknown"
             : outcome == Outcome.Partial || completeness == Completeness.Partial ? "partial"
             : outcome == Outcome.Succeeded && !(ok && (execution == Execution.ReadOnly || execution == Execution.Completed)
                 && completeness == Completeness.Complete) ? "read-failed" : WireName(outcome);

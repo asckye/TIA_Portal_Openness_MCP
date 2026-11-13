@@ -10,6 +10,20 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
+        [McpServerTool(Name = "GetCallResult"),
+            Description("[L0][Diagnostics][READ] Read a running or completed call by requestId from this session. " +
+                "A running call returns in-progress. Keeps the latest 16 full completed results. After eviction, summaries without the original payload " +
+                "survive only for unread writes and unread unsettled IDs. Reading a summary removes it; later lookups return NOT_FOUND. " +
+                "Inner unknown write IDs resolve to their enclosing batch result when retained. Reading a completed result " +
+                "or summary acknowledges its related unknown writes and releases their identical-write guards. Inspect targets before repeating writes.")]
+        public static CallToolResult GetCallResult([Description("Request ID returned by the original call.")] string requestId)
+        {
+            if (string.IsNullOrWhiteSpace(requestId)) return V4Reject("GetCallResult", InvalidInput("requestId"));
+            return Worker.LateResults.Read(ReleaseKey, requestId, Worker.Unsettled)
+                ?? V4Reject("GetCallResult", new TiaMcp.Logic.V4.Error("Call result was not found in this session.",
+                    new TiaMcp.Logic.V4.NotFoundDetails(requestId)));
+        }
+
         [McpServerTool(Name = "GetOpennessWorkerStatus"),
                 Description("[L0][Diagnostics][READ] Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, " +
                 "deadline, queue and fault. Available while the worker is hung or faulted. FoundationHost owns one PLC worker per MCP session; a healthy " +
@@ -38,8 +52,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L0][Diagnostics][WRITE] Preview or explicitly reset an idle/faulted isolated Openness worker. confirmRestart defaults false. " +
                 "Refuses while calls remain active/queued. Resets all worker-held project bindings, exports and preview plans; never saves, attaches or " +
                 "replays a write. After confirmation, explicitly connect to the intended project again. An idle responsive attachment is detached and its " +
-                "process lease released before reset. A hung or lost worker is terminated with the lease ACTIVE; requiresTiaRestart reports whether TIA must " +
-                "restart before reconnecting. Does not kill TIA; an interrupted native operation can have an unknown outcome.")]
+                "process lease released before reset. A running native call refuses reset with worker-call-running until it finishes. " +
+                "An idle faulted worker can be reset under the current lease rules. requiresTiaRestart carries the current lease fact. " +
+                "Requests are never replayed.")]
         [AsyncDispatch(nameof(RestartOpennessWorkerV4Async))]
         public static CallToolResult RestartOpennessWorkerV4(
             [Description("confirmRestart: false previews only; true discards the idle/faulted worker and its bindings without replaying any " +

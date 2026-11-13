@@ -487,7 +487,7 @@ internal sealed partial class FoundationTool
             state = PortedToolContract.WiredOperations(tool.Name, portedRelease!).Contains("ReadState", StringComparer.Ordinal)
                 ? await worker.Call("ReadState", new JsonObject(), token) : null;
         }
-        catch (WorkerOperationException error) when (error.Condition == "worker-read-running")
+        catch (WorkerOperationException error) when (error.Condition == "worker-call-running")
         {
             return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                 false, false, null, error);

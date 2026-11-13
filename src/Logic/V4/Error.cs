@@ -9,7 +9,8 @@ namespace TiaMcp.Logic.V4
     {
         InvalidArgument, LimitExceeded, UnsupportedCapability, ToolNotFound, ProjectNotBound, NotFound, TargetAmbiguous, IdentityMismatch, AlreadyExists,
             ConfirmationRequired, PlanStale, PreconditionFailed, OfflineRequired, AuthenticationRequired, AccessDenied, SessionResetRequired,
-            ResourceUnavailable, IoFailed, NativeOperationFailed, CompileErrors, Cancelled, Timeout, NotExecuted, PartialFailure, OutcomeUnknown, InternalError
+            ResourceUnavailable, IoFailed, NativeOperationFailed, CompileErrors, Cancelled, Timeout, NotExecuted, PartialFailure, OutcomeUnknown,
+            OperationInProgress, InternalError
     }
 
     public sealed class Error
@@ -375,6 +376,17 @@ namespace TiaMcp.Logic.V4
             if (reason != null && reason != "awaiting-openness-confirmation") throw new System.ArgumentException("Unknown session timeout reason.");
             Reason = DiagnosticVocabulary.Key(reason);
             V4Validation.Details(this);
+        }
+    }
+
+    public sealed class OperationInProgressDetails : ErrorDetails
+    {
+        internal override ErrorCode Code => ErrorCode.OperationInProgress;
+        [JsonPropertyOrder(0)] public string RequestId { get; }
+        public OperationInProgressDetails(string requestId)
+        {
+            V4Validation.Text(requestId, nameof(requestId));
+            RequestId = requestId;
         }
     }
 

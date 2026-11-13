@@ -88,6 +88,9 @@ internal sealed class CatalogData
         CatalogJson.Require(xref.Keys.SequenceEqual(new[] { "AnalyzePlcCrossReferences" }) &&
             CatalogJson.Source(root, "src/FoundationHost/PlcCrossReferenceAnalysis.cs").Contains("new(\"AnalyzePlcCrossReferences\"", StringComparison.Ordinal), "Closed XREF roster differs");
         foreach (var p in xref) HostOnly.Add(p.Key, p.Value);
+        HostOnly.Add("GetCallResult", "READ");
+        CatalogJson.Require(metadata.Contains("[\"GetCallResult\"] = new Classification(\"L0\", \"Diagnostics\", \"READ\",",
+            StringComparison.Ordinal), "GetCallResult classification differs");
         foreach (var (name, row) in EngineSource["registrations"]!.AsObject())
             Registrations.Add(name, (CatalogJson.Text(row!["path"]), CatalogJson.Text(row["method"]), CatalogJson.Text(row["domain"])));
         var full = CatalogJson.Set(Registrations.Keys.Except(HostOnly.Keys));
@@ -136,6 +139,7 @@ internal sealed class CatalogData
             CatalogJson.Require(group.Key == "GetToolUsage" && CatalogJson.Set(group.Select(p => p.Key)).SetEquals(new[] { "GetToolUsage", "GetAuthoringGuide", "GetRecipe" }), "Unproven duplicate rename: " + group.Key);
         var reviewed = new Dictionary<string, (string Owner, string Operation)>
         {
+            ["GetCallResult"] = ("NO-LOCK-2", "READ"),
             ["RenderPlcBlock"] = ("P6-48", "FILE"), ["RenderPlcProgramAtlas"] = ("P6-48", "FILE"),
             ["StageImportFiles"] = ("P6-67", "FILE"), ["ListStagedImportFiles"] = ("P6-67", "READ"), ["CleanupStagedImportFiles"] = ("P6-67", "FILE"),
             ["ListStandardPackages"] = ("P8-31d", "READ"), ["ManageStandardPackage"] = ("P8-31d", "FILE"), ["ValidateStandardPackage"] = ("P8-31d", "OFFLINE"), ["DescribeStandardPackage"] = ("P8-31d", "READ"), ["ManageMachineDescription"] = ("P8-31d", "FILE"),

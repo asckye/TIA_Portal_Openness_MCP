@@ -1,3 +1,7 @@
+#if TIA_FOUNDATION_TEST_HOST
+extern alias enginehost;
+using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
+#endif
 namespace TiaMcp.FoundationHost;
 
 internal sealed class HostSessionCall : IDisposable
@@ -18,6 +22,7 @@ internal sealed class HostSessionCall : IDisposable
     }
     internal static void RequestIdChanged(string id)
     { var call = Current.Value; call?.changed(true, call.tool, call.actor, id); }
+    internal static void Detach(System.Text.Json.Nodes.JsonObject running) => LateCalls.Detach(running);
     internal static void Ended(string reason)
     { var call = Current.Value; call?.ended(call.actor, reason); }
     public void Dispose() => Current.Value = previous;

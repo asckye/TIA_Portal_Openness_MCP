@@ -32,7 +32,7 @@ namespace TiaMcp.Logic.V4
             paging["type"] = new JsonArray("object", "null");
             var meta = Object(("timestamp", new JsonObject { ["type"] = "string", ["format"] = "date-time" }),
                 ("releaseKey", NullableText()), ("tool", Text()), ("requestId", Text()),
-                ("outcome", Choices("succeeded", "rejected-before-operation", "read-failed", "failed", "partial", "unknown")),
+                ("outcome", Choices("succeeded", "rejected-before-operation", "read-failed", "failed", "partial", "unknown", "in-progress")),
                 ("execution", Choices("not-started", "read-only", "completed", "partial", "unknown")),
                 ("requiresSessionReset", new JsonObject { ["type"] = "boolean" }),
                 ("behaviorPolicy", Choices("not-applicable", "current", "safe-v4")),

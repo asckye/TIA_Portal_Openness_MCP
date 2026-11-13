@@ -16,14 +16,20 @@ internal static class CrashJournalTests
         start.EnvironmentVariables["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = root;
         using (var child = Process.Start(start) ?? throw new Exception("Could not start journal fixture"))
         {
+            void StopChild()
+            {
+                if (!string.Equals(Path.GetFullPath(start.FileName), Path.GetFullPath(child.MainModule!.FileName),
+                    StringComparison.OrdinalIgnoreCase)) throw new Exception("Unexpected journal fixture image.");
+                child.Kill();
+            }
             try
             {
                 var ready = child.StandardOutput.ReadLineAsync();
                 if (!ready.Wait(TimeSpan.FromSeconds(30)) || ready.Result != "BEFORE_READY") throw new Exception("Fixture did not flush BEFORE");
-                child.Kill();
+                StopChild();
                 if (!child.WaitForExit(10000)) throw new Exception("Fixture did not exit");
             }
-            finally { if (!child.HasExited) { child.Kill(); child.WaitForExit(10000); } }
+            finally { if (!child.HasExited) { StopChild(); child.WaitForExit(10000); } }
         }
         // Later sessions/process journals must not hide the native worker's last call.
         for (int i = 0; i < 8; i++)

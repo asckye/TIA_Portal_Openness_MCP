@@ -102,6 +102,10 @@ namespace TiaMcp.Logic.V4
                 "partial requires PARTIAL_FAILURE, and PARTIAL_FAILURE requires partial.");
             Require((outcome == Outcome.Unknown) == (value.Error?.Code == ErrorCode.OutcomeUnknown),
                 "unknown requires OUTCOME_UNKNOWN, and OUTCOME_UNKNOWN requires unknown.");
+            Require((outcome == Outcome.InProgress) == (value.Error?.Code == ErrorCode.OperationInProgress),
+                "in-progress requires OPERATION_IN_PROGRESS, and OPERATION_IN_PROGRESS requires in-progress.");
+            if (outcome == Outcome.InProgress)
+                Require(value.Meta.Completeness == Completeness.Unknown, "An in-progress call has unknown completeness.");
             if (value.Error?.Code == ErrorCode.NotExecuted)
                 Require(outcome == Outcome.RejectedBeforeOperation, "NOT_EXECUTED must be rejected before operation.");
             if (value.Error?.Code == ErrorCode.SessionResetRequired)
@@ -128,6 +132,7 @@ namespace TiaMcp.Logic.V4
                 Outcome.Failed => Execution.Completed,
                 Outcome.Partial => Execution.Partial,
                 Outcome.Unknown => Execution.Unknown,
+                Outcome.InProgress => Execution.Unknown,
                 _ => value.Execution
             };
             Require(value.Execution == expected && (value.Outcome != Outcome.Succeeded

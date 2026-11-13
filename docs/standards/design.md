@@ -214,14 +214,14 @@ runtime/v<发布键>/        （八个发布键相同）
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 280 | 89 |
-| V15.1 | 320 | 92 |
-| V16 | 349 | 93 |
-| V17 | 372 | 93 |
-| V18 | 398 | 95 |
-| V19 | 474 | 95 |
-| V20 | 497 | 98 |
-| V21 | 512 | 101 |
+| V14 SP1 | 281 | 90 |
+| V15.1 | 321 | 93 |
+| V16 | 350 | 94 |
+| V17 | 373 | 94 |
+| V18 | 399 | 96 |
+| V19 | 475 | 96 |
+| V20 | 498 | 99 |
+| V21 | 513 | 102 |
 <!-- generated:tool-counts:end -->
 
 交付包由 `prepare` 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，排除 `runtime/verification/`；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。文件清单 `manifest/multi-version-build.json` 只在暂存目录生成，不入 Git；工具范围见[版本工具矩阵](../reference/version-tools.md)。已发布的归档保留各自记录的范围。
@@ -422,6 +422,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `failed` | 已执行的动作确定失败，没有成功项，后置状态已确认 | `completed` | `none`、`partial` 或 `complete` | 3 |
 | `partial` | 有确定的成功项，也有失败或未执行项，没有未知写入 | `partial` | `partial` | 4 |
 | `unknown` | 已发出的写入、传输或通道操作无法确认结果 | `unknown` | `unknown` | 5 |
+| `in-progress` | 调用仍在执行，通过 `GetCallResult(requestId)` 取回最终结果 | `unknown` | `unknown` | MCP 响应 |
 
 - 聚合优先级 `unknown` > `partial` > `failed`。副作用以证据判断，MUST NOT 根据异常文本推测；原生结果状态 `PartialSuccess`、`None` 或不在预期内时一律为 `unknown`。
 - `completeness` 描述本页数据是否完整交付，与 `paging.complete`（是否已到末页）是两回事；有后续页本身不意味着本页 partial。字段受版本限制、截断或有不可读属性时为 `partial`，宿主自动加 `INCOMPLETE_DATA`。
@@ -460,6 +461,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `COMPILE_ERRORS` | 编译完成但有错误 | `errorCount`、`warningCount`、`errors[{path, description}]`（至多 10 条叶子错误） | failed |
 | `CANCELLED` | 派发前取消（`tool-queue`）、预检中取消（`approval-precheck`）、审批等待中取消（`approval-wait`）；已派发只读调用的取消 | `stage` | rejected 或 read-failed |
 | `TIMEOUT` | 宿主能证明没有派发的超时 | `stage` | rejected 或 read-failed |
+| `OPERATION_IN_PROGRESS` | 原调用仍在执行，结果可按编号读取 | `requestId` | in-progress |
 | `NOT_EXECUTED` | 批次中前面的项停止后本项未执行 | `causeIndex` | rejected |
 | `PARTIAL_FAILURE` | 有已知成功项，也有失败或未执行项 | `succeeded`、`failed`、`notExecuted` | partial |
 | `OUTCOME_UNKNOWN` | 写入、传输或通道中断，结果未知；禁止自动重放 | `stage`、`evidence`、`reason`（只能是 `awaiting-openness-confirmation` 或 null） | unknown |
@@ -574,8 +576,10 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 - 后续独立调用继续执行。未知回复不使 channel 或 worker 失效，绑定检查失败只拒绝当前调用。旧 `requiresSessionReset` 标志在 Part 8 前透传，结果映射继续将它作为写入结果未知的证据。准入和清单以最终信封为准。`SESSION_RESET_REQUIRED` 不再由当前生产者产生。
 - `SaveProject` 和 `SaveProjectCopy` 在清单非空时携带 `UNSETTLED_CALLS`，预览和执行均如此。警告列出请求编号，保存由正常审批和项目身份校验决定。
 - 检查未知调用的目标及保留证据后，再决定是否发起新的操作。禁止自动重放。生成运行和批次仍在未知步骤停止，重新规划须经过原有预览、审批和 stale-plan 检查。
-- 真正的传输故障在 Part 4 前返回 `PRECONDITION_FAILED`，条件为 `worker-faulted`。按 `RestartOpennessWorker` 的明确提示恢复。Part 2 前保留现有调用预算和只读超时排空机制，Part 3 前保留租约及终止式断开语义。
-- 当前超时分类沿用 VMFIX-7。只读超时返回 `read-failed`、`read-only`、`TIMEOUT`，排空后可继续。只读回复丢失返回 `NATIVE_OPERATION_FAILED`。写入结果不确定返回 `OUTCOME_UNKNOWN`。派发前取消返回 `CANCELLED`，派发后等待实际结果。
+- 调用超过等待预算时返回 `in-progress` 和 `OPERATION_IN_PROGRESS`，`ok=false`，`execution` 和 `completeness` 都为 `unknown`。原调用继续完成绑定更新、日志、审计、审批和后续步骤。`GetSessionState` 返回 `running` 和 `lateResults`，`GetOpennessWorkerStatus.worker.state` 为 `Busy`。其他原生请求得到暂时的 `worker-call-running`，其中包括工具、请求编号和开始时间。已排队的请求在响应分离时也得到该拒绝。
+- `GetCallResult(requestId)` 是八版 lite 目录中的 host-only 读取工具，支持 `activeRequestId` 及最终信封自己的请求编号。会话内存保留最近 16 个已完成结果和运行中的结果。未知编号返回 `NOT_FOUND`。相同写入在运行或结果未读取时返回 `same-call-unsettled`，读取完成结果后解除保护。预览不触发相同写入保护。
+- `DisconnectPortal` 和 `RestartOpennessWorker` 在原生调用仍未答复时拒绝。会话关闭延迟到原调用完成后释放资源。响应分离时停止进度通知并断开客户端取消令牌与原调用的关联。真正的传输故障在 Part 4 前返回 `worker-faulted`。Part 3 前保留租约及终止式断开语义。
+- host-only 的 `ReadState`、`HostObserve` 和握手探测仍按预算报告故障。只读回复丢失返回 `read-failed` 和 `NATIVE_OPERATION_FAILED`。写入结果不确定返回 `OUTCOME_UNKNOWN`。派发前取消返回 `CANCELLED`，派发后的真实结果通过原响应或 `GetCallResult` 交付。
 - 最终设计、各部分的实施边界和标准偏差见 [ADR 0034](decisions/0034-no-session-lock.md)。进度通知只描述执行进展。
 
 ### 4.12 批次与桥接
@@ -883,7 +887,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 | API-16 | `Manage*` 多路复用工具，注解取保守值 | 第 6.2、6.3 节 |
 | API-17 | 警告放在响应体中 | 第 4.7 节 |
 | API-20 | 既有的 `confirm*` 与 `allowWrite` 确认开关，新工具只用 `confirm`，行为族切换到 safe-v4 时统一 | 第 4.10 节 |
-| API-26 | 已派发写入超时且缺少确定结果时为 `unknown`。只读超时为 `read-failed` / `TIMEOUT`，丢失应答为 `read-failed` / `NATIVE_OPERATION_FAILED` | 第 4.11 节 |
+| API-26 | 已派发调用超过等待预算时返回 `in-progress` 并保留最终结果。只读丢失应答为 `read-failed` / `NATIVE_OPERATION_FAILED`，写入缺少确定结果为 `unknown` | 第 4.11 节 |
 | API-29 | `data` 中残留旧的判定字段，以 `meta.outcome` 为准 | 第 4.5 节 |
 | API-32 | `CallTool` 派发前的字段级错误指向目标工具，其余指向 `CallTool` | 第 4.2 节 |
 | API-34 | 状态词 kebab-case、输入选择值 camelCase、原生名称原样，三套并存 | 第 4.3 节 |

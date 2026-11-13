@@ -58,10 +58,14 @@ public sealed class TestDeadlineContracts
     {
         "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs|while (duration.Elapsed < TimeSpan.FromSeconds(5))",
         "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProtocolTests.cs|await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(TimeSpan.FromMilliseconds(40)));",
-        "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerTimeoutTests.cs|Assert.True(await channel.WaitForDrain(TimeSpan.FromSeconds(5)));",
         "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs|entered.Set(); release.Wait(TimeSpan.FromSeconds(2));",
         "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs|entered.Set(); release.Wait(TimeSpan.FromSeconds(4));",
         "tests/Tools/TiaMcp.ShippedTools.Tests/PluginLauncherTests.cs|process.Kill(); process.WaitForExit(15000);",
+        // Review M4 approves these two native-delay measurement bounds.
+        "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerTimeoutTests.cs|Assert.True(elapsed.Elapsed < TimeSpan.FromMilliseconds(1300), \"The " +
+            "default budget must detach before the former 1300 ms native reply.\");",
+        "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerTimeoutTests.cs|Assert.True(elapsed.Elapsed < TimeSpan.FromMilliseconds(1300), \"The " +
+            "compile or environment budget must detach before 1300 ms.\");",
     };
 
     [Fact]
@@ -76,7 +80,7 @@ public sealed class TestDeadlineContracts
             {
                 number++;
                 bool wait = Regex.IsMatch(line,
-                    @"\b(?:WaitAsync|WaitForExit|WaitForDrain|Wait|Join|SpinUntil|SignalAndWait|ConnectAsync|TryEnter|CancellationTokenSource)\(");
+                    @"\b(?:WaitAsync|WaitForExit|Wait|Join|SpinUntil|SignalAndWait|ConnectAsync|TryEnter|CancellationTokenSource)\(");
                 bool elapsed = line.Contains(".Elapsed", StringComparison.Ordinal) && line.Contains('<');
                 if (!wait && !elapsed) continue;
                 var limits = Regex.Matches(line,

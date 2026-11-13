@@ -25,18 +25,7 @@ namespace TiaMcp.WorkerChannel
         public bool CanCallIndependentRuntime {
             get { lock (gate) return profile != ChannelProfile.Studio && verified && !poisoned && !disposed && pending == null; } }
         public bool InFlight { get { lock (gate) return pending?.Dispatched == true && !pending.Replied; } }
-        public bool Draining { get { lock (gate) return pending?.Draining == true; } }
-        public async Task<bool> WaitForDrain(TimeSpan timeout)
-        {
-            Task completion;
-            lock (gate)
-            {
-                if (pending?.Draining != true) return true;
-                completion = pending.Completion.Task;
-            }
-            await Task.WhenAny(completion, Task.Delay(timeout)).ConfigureAwait(false);
-            lock (gate) return pending?.Draining != true && !poisoned;
-        }
+        public bool CallRunning { get { lock (gate) return pending?.Running == true; } }
 
         public bool Unanswered { get { lock (gate) return unanswered; } }
         public bool OutcomeUnknown { get { lock (gate) return unknown; } }
@@ -79,9 +68,9 @@ namespace TiaMcp.WorkerChannel
             lock (gate)
             {
                 RequireUsable(method);
-                if (pending?.Draining == true) throw new ChannelFailureException(
-                    "A timed-out read is still running in the worker; retry when it has finished.", -32603, ChannelOutcome.RejectedBeforeNative,
-                    "{\"exceptionType\":\"AdapterPreconditionException\",\"condition\":\"worker-read-running\"}");
+                if (pending?.Running == true) throw new ChannelFailureException(
+                    "A call is still running in the worker; read GetCallResult before repeating it.", -32603, ChannelOutcome.RejectedBeforeNative,
+                    "{\"exceptionType\":\"AdapterPreconditionException\",\"condition\":\"worker-call-running\"}");
                 if (!verified) throw Poison(new IOException("Worker hello has not been verified."));
                 if (pending != null) throw Poison(new IOException("Concurrent worker call; session stopped."));
                 if (!ChannelCodec.ValidMethod(method, profile)) throw new ArgumentException(profile == ChannelProfile.Foundation
@@ -112,22 +101,32 @@ namespace TiaMcp.WorkerChannel
                 if (response.Failure != null) throw response.Failure;
                 return response.ResultJson;
             }
-            catch (TimeoutException) when (drainOnTimeout && readOnly && profile == ChannelProfile.Foundation && BeginDrain(call))
-            { throw new ChannelReadTimeoutException(); }
+            catch (TimeoutException error) when (drainOnTimeout && profile == ChannelProfile.Foundation && BeginDrain(call))
+            { throw new ChannelCallRunningException(Reply(exchange), error.Message.Replace("Worker timed out; native outcome is unknown.",
+                "The client wait budget ended while the worker call is still running.")); }
             catch (ChannelFailureException ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
             catch (ChannelFailureException) { throw; } // An answered unknown result does not fault the transport.
             catch (Exception ex) { throw Poison(ex); }
-            finally { lock (gate) if (ReferenceEquals(pending, call) && !call.Draining) pending = null; }
+            finally { lock (gate) if (ReferenceEquals(pending, call) && !call.Running) pending = null; }
         }
 
         private bool BeginDrain(Pending call)
         {
             lock (gate)
             {
-                if (!call.Written || poisoned) return false;
-                if (!call.Replied) call.Draining = true;
+                if (!call.Dispatched || poisoned) return false;
+                if (!call.Replied) call.Running = true;
                 return true;
             }
+        }
+
+        private async Task<string> Reply(Task<ChannelResponse> exchange)
+        {
+            ChannelResponse response;
+            try { response = await exchange.ConfigureAwait(false); }
+            catch (Exception error) { throw Poison(error); }
+            if (response.Failure != null) throw response.Failure;
+            return response.ResultJson;
         }
 
         private async Task<ChannelResponse> Exchange(byte[] bytes, Pending call)
@@ -150,7 +149,7 @@ namespace TiaMcp.WorkerChannel
                     using (var document = ChannelCodec.Parse(bytes, ChannelCodec.ResponseLimit))
                     {
                         var root = document.RootElement;
-                        string? progressPayload = null;
+                        string? progressPayload = null, progressFault = null;
                         lock (gate)
                         {
                             RequireUsable("adapter.Disconnect");
@@ -161,27 +160,39 @@ namespace TiaMcp.WorkerChannel
                                 if (!reader.HasBufferedData) hello.TrySetResult(true);
                                 continue;
                             }
-                            ChannelCodec.Version(root);
                             if (root.TryGetProperty("method", out _))
                             {
-                                ChannelCodec.Fields(root, "jsonrpc", "method", "params");
                                 if (ChannelCodec.Text(root, "method") != "progress") throw new IOException("Duplicate or late worker hello/notification.");
-                                var progress = root.GetProperty("params");
-                                ChannelCodec
-                                    .Fields(progress, profile != ChannelProfile.Foundation ? new[] { "requestId", "sequence", "percent", "payload" } : new[] {
-                                        "requestId", "sequence", "percent" });
-                                if (pending == null || pending.Replied || ChannelCodec.Number(progress, "requestId") != pending.Id ||
-                                    ChannelCodec.Number(progress, "sequence") != pending.Progress + 1 ||
-                                    ChannelCodec.Number(progress, "percent") > 100 || ++pending.Progress > ChannelCodec.ProgressLimit)
-                                    throw new IOException("Late, duplicate or unrelated worker progress.");
-                                if (progress.TryGetProperty("payload", out var payload))
+                                if (pending == null || pending.Replied) throw new IOException("Late worker progress.");
+                                if (pending.ProgressDropped) continue;
+                                try
                                 {
-                                    if (payload.ValueKind != System.Text.Json.JsonValueKind.Object) throw new IOException("Invalid worker progress payload.");
-                                    progressPayload = payload.GetRawText();
+                                    ChannelCodec.Version(root);
+                                    ChannelCodec.Fields(root, "jsonrpc", "method", "params");
+                                    var notification = root.GetProperty("params");
+                                    ChannelCodec.Fields(notification, profile != ChannelProfile.Foundation
+                                        ? new[] { "requestId", "sequence", "percent", "payload" } : new[] { "requestId", "sequence", "percent" });
+                                    if (ChannelCodec.Number(notification, "requestId") != pending.Id
+                                        || ChannelCodec.Number(notification, "sequence") != pending.Progress + 1
+                                        || ChannelCodec.Number(notification, "percent") > 100 || ++pending.Progress > ChannelCodec.ProgressLimit)
+                                        throw new IOException("Late, duplicate or unrelated worker progress.");
+                                    if (notification.TryGetProperty("payload", out var payload))
+                                    {
+                                        if (payload.ValueKind != System.Text.Json.JsonValueKind.Object)
+                                            throw new IOException("Invalid worker progress payload.");
+                                        progressPayload = payload.GetRawText();
+                                    }
+                                }
+                                catch (Exception error) when (error is IOException || error is InvalidOperationException || error is System.Collections.Generic
+                                        .KeyNotFoundException)
+                                {
+                                    pending.ProgressDropped = true;
+                                    progressFault = "Worker progress dropped for request " + pending.Id + ": " + error.GetType().Name;
                                 }
                             }
                             else
                             {
+                                ChannelCodec.Version(root);
                                 ChannelCodec.Fields(root, "jsonrpc", "id", "bindingEpochBefore", "bindingEpochAfter", "result", "error");
                                 if (pending == null || pending.Replied || ChannelCodec.Number(root, "id") != pending.Id)
                                     throw new IOException("Unknown, old or duplicate worker reply id.");
@@ -206,10 +217,15 @@ namespace TiaMcp.WorkerChannel
                                     unknown = true;
                                     lastFault ??= new IOException("Worker reported an unknown native outcome.");
                                 }
-                                if (pending.Draining) pending = null;
+                                if (pending.Running) pending = null;
                             }
                         }
                         // Consumer callbacks must not hold the state lock or block timeout/cancel.
+                        if (progressFault != null)
+                        {
+                            try { System.Diagnostics.Trace.TraceWarning(progressFault); }
+                            catch (Exception) /* swallow(logging-failure): a diagnostic listener cannot fault a pending native call */ { }
+                        }
                         if (progressPayload != null) progress?.Invoke(progressPayload);
                     }
                 }
@@ -235,6 +251,7 @@ namespace TiaMcp.WorkerChannel
                 var fault = new ChannelFaultException(cause.Message, unknown, cause);
                 hello.TrySetException(fault);
                 pending?.Completion.TrySetException(fault);
+                pending = null;
                 return fault;
             }
         }
@@ -280,7 +297,7 @@ namespace TiaMcp.WorkerChannel
             internal readonly long Id, Before;
             internal readonly BindingChange Change;
             internal readonly bool ReadOnly;
-            internal bool Dispatched, Replied, Answered, Written, Draining;
+            internal bool Dispatched, Replied, Answered, Written, Running, ProgressDropped;
             internal int Progress;
             internal readonly TaskCompletionSource<ChannelResponse> Completion =
                 new TaskCompletionSource<ChannelResponse>(TaskCreationOptions.RunContinuationsAsynchronously);

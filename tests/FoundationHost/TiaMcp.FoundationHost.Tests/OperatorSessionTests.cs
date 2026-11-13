@@ -151,6 +151,7 @@ public sealed class OperatorSessionTestsPlc
         Assert.Equal("CANCELLED", (string?)cancelled.StructuredContent?["error"]?["code"]);
         var ordered = panel.Tool(SessionFixtureTool.Name);
         await Task.Delay(50); Assert.False(ordered.IsCompleted);
+        fixture.ReleaseRunning();
         var completed = await running; await ordered;
         Assert.Equal((string?)completed["meta"]?["requestId"], requestId);
         var calls = session.Snapshot()["recentCalls"]!.AsArray().Where(c => (string?)c?["outcome"] == "succeeded").ToArray();
@@ -185,12 +186,19 @@ public sealed class OperatorSessionTestsPlc
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
         await ai.Tool("GetSessionState");
+        fixture.UseScaledBudget();
         var running = ai.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
         await WaitUntilBusy(fixture);
         var refused = ai.Tool(SessionFixtureTool.Name, ok: false);
-        await Task.Delay(100); Assert.False(refused.IsCompleted);
+        var busy = await panel.Tool("DisconnectPortal", ok: false);
+        Assert.Equal("worker-call-running", (string?)busy["error"]?["details"]?["condition"]);
+        Assert.Equal("in-progress", (string?)(await running)["meta"]?["outcome"]);
+        Assert.Equal("worker-call-running", (string?)(await refused)["error"]?["details"]?["condition"]);
+        Assert.Null(session.Snapshot()["endedBy"]);
+        fixture.ReleaseRunning();
+        using var completion = new CancellationTokenSource(TestDeadlines.Hang);
+        while ((bool?)session.Snapshot()["callInProgress"] == true) await Task.Delay(5, completion.Token);
         await panel.Tool("DisconnectPortal");
-        await running; await refused;
         Assert.Equal("workbench", (string?)session.Snapshot()["endedBy"]);
         Assert.Equal("disconnect", (string?)session.Snapshot()["endReason"]);
     }
@@ -237,9 +245,12 @@ public sealed class OperatorSessionTestsPlc
         internal readonly Options Options;
         private readonly string previousEngineRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         private readonly string? priorLease = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
+        private readonly string? priorGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+        private object? sessionWorker;
         internal Fixture(string release, string profile = "full")
         {
             Directory.CreateDirectory(DirectoryPath); Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", DirectoryPath);
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", Path.Combine(DirectoryPath, "running-gate"));
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
             // Parallel shards share this output directory and hash the identity while their workers start: install it atomically and
             // leave it in place. Truncating, restoring or deleting it here refused or killed another shard's worker (P8-stab-1).
@@ -254,10 +265,18 @@ public sealed class OperatorSessionTestsPlc
         private readonly string? previousRootVariable = Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT");
         internal async Task<Session> Create(bool owned = false, CancellationToken token = default) => Options.ReleaseKey is not ("20" or "21")
             ? Session.Legacy(Options, "fixture", owned) : await EngineHost.CreateHostSessionForTest(Options, owned, source => source, token,
-                SessionFixtureTool.PlcTools).WaitAsync(Peer.RequestBudget, token);
+                (worker, tools) => { sessionWorker = worker; return SessionFixtureTool.PlcTools(worker, tools); }).WaitAsync(Peer.RequestBudget, token);
+        internal void UseScaledBudget() => ProductionWorkerBudgets.Live(sessionWorker!)["default"] = TimeSpan.FromSeconds(0.2);
+        internal void ReleaseRunning()
+        {
+            string gate = Path.Combine(DirectoryPath, "running-gate");
+            Directory.CreateDirectory(gate); File.WriteAllText(Path.Combine(gate, "release"), "");
+        }
         internal Registration Register() => new(Options, "S-1-5-21-1-2-3-1001", DirectoryPath, error => throw error);
         public void Dispose()
         {
+            ReleaseRunning();
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", priorGate);
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", priorLease);
             enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousEngineRelease;
             AppDomain.CurrentDomain.SetData("TiaOpenness.Shared.BundleLayout.v4", previousBundle);

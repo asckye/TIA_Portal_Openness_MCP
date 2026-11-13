@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.WorkerChannel;
+using TiaMcp.Logic.V4;
 using Xunit;
 using Foundation = foundationhost::TiaMcp.FoundationHost;
 using Operations = foundationhost::TiaMcp.PlcWorker.WorkerOperations;
@@ -612,77 +613,70 @@ public sealed class PlcWorkerRobustnessTests
     }
 
     [Theory, InlineData("14sp1"), InlineData("19"), InlineData("21")]
-    public async Task Plc_over_budget_read_is_TIMEOUT_and_the_session_recovers(string release)
+    public async Task Plc_over_budget_read_is_in_progress_and_the_session_recovers(string release)
     {
         using var scope = new PlcTimeoutScope(release, "{\"default\":0.1}");
         await scope.WarmGenerationUnderProductionBudgets();
         string gate = scope.Log + ".gate";
         try
         {
-            var error = await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Call(
-                "ReadBlocks", new() { ["fixtureGate"] = gate }, CancellationToken.None));
+            var running = await scope.StartRunning("ReadBlocks", new() { ["fixtureGate"] = gate });
             Assert.True(File.Exists(gate + ".dispatched"));
-            var result = Foundation.FoundationV4Result.Failure(release, "ListPlcBlocks", "read-timeout", true, false, null, error);
-            Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
-            Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
+            var result = Foundation.FoundationV4Result.InProgress(release, "ListPlcBlocks", running.Running);
+            Assert.Equal("OPERATION_IN_PROGRESS", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("in-progress", (string?)result.StructuredContent?["meta"]?["outcome"]);
             Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-            Assert.True(scope.Worker.DrainingRead);
-            Assert.Equal("Draining", (string?)scope.Worker.SupervisorSnapshot(new JsonObject())["state"]);
+            Assert.True(scope.Worker.CallRunning);
+            Assert.Equal("Busy", (string?)scope.Worker.SupervisorSnapshot(new JsonObject())["state"]);
             Assert.False(scope.Worker.Faulted);
-            var refused = await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() =>
+            var refused = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
                 scope.Worker.Call("ReadState", new(), CancellationToken.None));
-            Assert.Equal("worker-read-running", refused.Condition);
+            Assert.Equal("worker-call-running", refused.Condition);
             File.WriteAllText(gate + ".release", "");
-            var channel = (ChannelClient)typeof(Foundation.WorkerClient).GetField("channel",
-                BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scope.Worker)!;
-            Assert.True(await channel.WaitForDrain(TimeSpan.FromSeconds(5)));
-            Assert.NotEqual("Draining", (string?)scope.Worker.SupervisorSnapshot(new JsonObject())["state"]);
+            await running.Completion.WaitAsync(TestDeadlines.Hang);
+            Assert.NotEqual("Busy", (string?)scope.Worker.SupervisorSnapshot(new JsonObject())["state"]);
             await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         }
-        finally
-        {
-            File.WriteAllText(gate + ".release", "");
-            File.Delete(gate + ".dispatched");
-        }
+        finally { File.WriteAllText(gate + ".release", ""); File.Delete(gate + ".dispatched"); }
     }
 
     [Fact]
-    public async Task Disconnect_waits_for_a_draining_read_and_detaches_cleanly()
+    public async Task Disconnect_refuses_a_running_read_then_detaches_cleanly()
     {
         using var scope = new PlcTimeoutScope("19", "{\"default\":0.1}");
         await scope.WarmGenerationUnderProductionBudgets();
         string gate = scope.Log + ".gate";
         try
         {
-            await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Call(
-                "ReadBlocks", new() { ["fixtureGate"] = gate }, CancellationToken.None));
-            var disconnect = scope.Worker.Call("Disconnect", new(), CancellationToken.None);
-            Assert.False(disconnect.IsCompleted);
+            var running = await scope.StartRunning("ReadBlocks", new() { ["fixtureGate"] = gate });
+            var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                scope.Worker.Call("Disconnect", new(), CancellationToken.None));
+            Assert.Equal("worker-call-running", refusal.Condition);
             File.WriteAllText(gate + ".release", "");
-            var reply = await disconnect;
+            await running.Completion.WaitAsync(TestDeadlines.Hang);
+            var reply = await scope.Worker.Call("Disconnect", new(), CancellationToken.None);
             Assert.True((bool?)reply?["WorkerAcknowledged"]);
             Assert.False((bool?)reply?["RequiresTiaRestart"] == true);
         }
-        finally
-        {
-            File.WriteAllText(gate + ".release", "");
-            File.Delete(gate + ".dispatched");
-        }
+        finally { File.WriteAllText(gate + ".release", ""); File.Delete(gate + ".dispatched"); }
     }
 
     [Fact]
-    public async Task Status_refused_by_a_draining_read_does_not_latch_a_worker_fault()
+    public async Task Status_refused_by_a_running_call_does_not_latch_a_worker_fault()
     {
         using var scope = new PlcTimeoutScope("21", "{\"default\":0.1}");
         await scope.WarmGenerationUnderProductionBudgets();
         string gate = scope.Log + ".status-gate";
         try
         {
-            await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Call(
-                "ReadBlocks", new() { ["fixtureGate"] = gate }, CancellationToken.None));
-            await Assert.ThrowsAsync<Foundation.WorkerOperationException>(() => scope.Worker.Observe("status", new(), CancellationToken.None));
+            var running = await scope.StartRunning("ReadBlocks", new() { ["fixtureGate"] = gate });
+            var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                scope.Worker.Observe("status", new(), CancellationToken.None));
+            Assert.Equal("worker-call-running", refusal.Condition);
             Assert.False(scope.Worker.WorkerFaulted);
             Assert.False(scope.Worker.Faulted);
+            File.WriteAllText(gate + ".release", "");
+            await running.Completion.WaitAsync(TestDeadlines.Hang);
         }
         finally { File.WriteAllText(gate + ".release", ""); }
     }
@@ -690,6 +684,7 @@ public sealed class PlcWorkerRobustnessTests
     private sealed class PlcTimeoutScope : IDisposable
     {
         internal readonly Foundation.WorkerClient Worker;
+        private readonly string release;
         private readonly string fixtureDirectory = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "bin-build", "plc-timeout-" + Guid.NewGuid().ToString("N")[..8]);
         internal readonly string Log = Path.Combine(AppContext.BaseDirectory, "plc-timeout-" + Guid.NewGuid().ToString("N") + ".jsonl");
@@ -698,6 +693,7 @@ public sealed class PlcWorkerRobustnessTests
         private readonly string? previousOverrides = Environment.GetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS");
         internal PlcTimeoutScope(string release, string config, string? environment = null, int defaultSeconds = 120)
         {
+            this.release = release;
             Environment.SetEnvironmentVariable("TIA_FIXTURE_LOG", Log);
             Environment.SetEnvironmentVariable("TIA_FIXTURE_FAULT", "delay");
             Environment.SetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS", environment);
@@ -713,6 +709,28 @@ public sealed class PlcWorkerRobustnessTests
             exe = Path.Combine(fixtureDirectory, Path.GetFileName(exe));
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Worker = new Foundation.WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true, defaultSeconds, config) { Bundled = false };
+        }
+        internal async Task<(Task<JsonNode?> Completion, JsonObject Running)> StartRunning(string operation, JsonObject arguments)
+        {
+            string id = Guid.NewGuid().ToString("N");
+            var invocation = Worker.LateResults.CreateInvocation(operation, id, CancellationToken.None);
+            async Task<JsonNode?> Execute()
+            {
+                using (invocation)
+                using (invocation.Enter())
+                {
+                    var reply = await Worker.Call(operation, arguments, invocation.Token);
+                    var envelope = Envelope.Create(reply, null, new Meta(DateTimeOffset.UtcNow, release, operation, id, Outcome.Succeeded,
+                        Operations.IsReadOnly(operation) ? Execution.ReadOnly : Execution.Completed, false,
+                        BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>()));
+                    var body = JsonNode.Parse(V4Json.Serialize(envelope));
+                    invocation.Complete(new ModelContextProtocol.Protocol.CallToolResult { IsError = false, StructuredContent = body,
+                        Content = new[] { new ModelContextProtocol.Protocol.TextContentBlock { Text = body!.ToJsonString() } } });
+                    return reply;
+                }
+            }
+            var completion = Execute();
+            return (completion, await invocation.Detachment.WaitAsync(TestDeadlines.Hang));
         }
         internal async Task WarmBeforeScaledBudgets()
         {
@@ -810,14 +828,25 @@ public sealed class PlcWorkerRobustnessTests
     }
 
     [Theory, InlineData("CompileSoftware"), InlineData("ImportBlocks")]
-    public async Task Plc_scaled_long_call_still_fails_with_only_the_default_budget(string operation)
+    public async Task Plc_scaled_long_call_is_in_progress_with_only_the_default_budget(string operation)
     {
         using var scope = new PlcTimeoutScope("19", "{\"default\":1,\"compile\":1,\"importExport\":1}");
         await scope.WarmBeforeScaledBudgets();
-        var error = await Assert.ThrowsAsync<ChannelFaultException>(() =>
-            scope.Worker.Call(operation, PlcCompletedArguments(operation, 1300), CancellationToken.None));
-        Assert.Equal(true, error.Data["foundationRequestSent"]);
-        Assert.True(scope.Worker.Faulted);
+        string gate = scope.Log + ".scaled-gate";
+        var args = PlcCompletedArguments(operation, 0);
+        args["fixtureGate"] = gate;
+        try
+        {
+            var elapsed = Stopwatch.StartNew();
+            var running = await scope.StartRunning(operation, args);
+            Assert.True(elapsed.Elapsed < TimeSpan.FromMilliseconds(1300), "The default budget must detach before the former 1300 ms native reply.");
+            Assert.True(File.Exists(gate + ".dispatched"));
+            Assert.False(scope.Worker.Faulted);
+            Assert.True(scope.Worker.CallRunning);
+            File.WriteAllText(gate + ".release", "");
+            Assert.NotNull(await running.Completion.WaitAsync(TestDeadlines.Hang));
+        }
+        finally { File.WriteAllText(gate + ".release", ""); }
     }
 
     [Fact]
@@ -833,21 +862,32 @@ public sealed class PlcWorkerRobustnessTests
     }
 
     [Theory, InlineData(false), InlineData(true)]
-    public async Task Plc_over_budget_call_is_unknown_and_locks_the_session(bool environmentOverride)
+    public async Task Plc_over_budget_call_is_in_progress_and_keeps_the_session(bool environmentOverride)
     {
         string shortBudget = "{\"default\":2,\"compile\":0.2}";
-        using var scope = new PlcTimeoutScope("19", environmentOverride ? "{\"compile\":15}" : shortBudget, environmentOverride ? shortBudget : null);
+        using var scope = new PlcTimeoutScope("19", environmentOverride ? "{\"compile\":15}" : shortBudget,
+            environmentOverride ? shortBudget : null);
         await scope.WarmGenerationUnderProductionBudgets();
-        var error = await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("CompileSoftware", new() { ["dryRun"] = false, ["fixtureDelayMilliseconds"] = 1300 }, CancellationToken.None));
-        Assert.Equal(true, error.Data["foundationRequestSent"]);
-        Assert.Null(error.Data["foundationSessionPoisoned"]);
-        Assert.True(scope.Worker.Faulted);
-        var result = Foundation.FoundationV4Result.Failure("19", "CompilePlc", "timeout", true, true, null, error);
-        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-        var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(
-            () => scope.Worker.Call("ReadState", new(), CancellationToken.None));
-        Assert.Equal("worker-faulted", refusal.Condition);
+        string gate = scope.Log + ".write-gate";
+        var args = PlcCompletedArguments("CompileSoftware", 0);
+        args["fixtureGate"] = gate;
+        try
+        {
+            var elapsed = Stopwatch.StartNew();
+            var running = await scope.StartRunning("CompileSoftware", args);
+            Assert.True(elapsed.Elapsed < TimeSpan.FromMilliseconds(1300), "The compile or environment budget must detach before 1300 ms.");
+            Assert.True(File.Exists(gate + ".dispatched"));
+            Assert.False(scope.Worker.Faulted);
+            var result = Foundation.FoundationV4Result.InProgress("19", "CompilePlc", running.Running);
+            Assert.Equal("in-progress", (string?)result.StructuredContent?["meta"]?["outcome"]);
+            Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+            var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                scope.Worker.Call("ReadState", new(), CancellationToken.None));
+            Assert.Equal("worker-call-running", refusal.Condition);
+            File.WriteAllText(gate + ".release", "");
+            Assert.NotNull(await running.Completion.WaitAsync(TestDeadlines.Hang));
+        }
+        finally { File.WriteAllText(gate + ".release", ""); }
     }
 
     [Fact]
@@ -862,7 +902,9 @@ public sealed class PlcWorkerRobustnessTests
         var args = new JsonObject { ["processId"] = Environment.ProcessId, ["fixtureDelayMilliseconds"] = 1300 };
         await scope.Worker.Call("Attach", args, CancellationToken.None);
         Assert.False(scope.Worker.Faulted);
-        await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("Attach", args, CancellationToken.None));
+        var running = await scope.StartRunning("Attach", args);
+        Assert.False(scope.Worker.Faulted);
+        await running.Completion.WaitAsync(TestDeadlines.Hang);
         var restart = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restart["restarted"]);
         await scope.WarmGenerationUnderProductionBudgets();

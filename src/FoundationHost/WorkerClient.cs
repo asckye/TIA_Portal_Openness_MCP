@@ -6,6 +6,7 @@ using WorkerSupervisorReplies = enginehost::TiaMcp.FoundationHost.WorkerSupervis
 using WorkerSupervisorState = enginehost::TiaMcp.FoundationHost.WorkerSupervisorState;
 using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
 using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
 using ResponseGuardTool = enginehost::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
 #else
 using McpServer = TiaMcpServer.ModelContextProtocol.McpServer;
@@ -43,6 +44,8 @@ internal interface IFoundationSessionWorker : IFoundationWorker
     public string ApprovalIdentity { get; }
     public bool Faulted => false;
     public UnsettledCalls Unsettled => UnsettledCalls.For(this);
+    public LateCalls LateResults => LateCalls.For(this);
+    public JsonObject? Running => null;
     public bool Bundled { get; }
     public bool SharedSession { get; }
     public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner { get; }
@@ -56,6 +59,7 @@ internal static class FoundationWorkerRequest
     private static readonly AsyncLocal<(string Id, string Name)?> Current = new();
     internal static string CorrelationId => Current.Value?.Id ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId
         ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CurrentCallId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
+    internal static string? ToolName => Current.Value?.Name ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CurrentTool;
     internal static IDisposable Use(string id, string name)
     {
         var previous = Current.Value; Current.Value = (id, name);
@@ -63,15 +67,23 @@ internal static class FoundationWorkerRequest
     }
     private sealed class Scope(Action restore) : IDisposable { public void Dispose() => restore(); }
     internal static async Task<string> Dispatch(ChannelClient channel, string method, string args, BindingChange change,
-        bool readOnly, TimeSpan timeout, bool firstAttach, CancellationToken token)
+        bool readOnly, TimeSpan timeout, bool firstAttach, Action<JsonObject> onRunning, CancellationToken token)
     {
         string id = CorrelationId;
         string? name = Current.Value?.Name ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CurrentTool;
         string phase = "THREW";
+        var since = DateTimeOffset.UtcNow;
         if (name != null) TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(id, "worker:" + name, "BEFORE");
         try
         {
-            string reply = await channel.CallToolAsync(method, args, change, readOnly, timeout, firstAttach, id, name, readOnly, token);
+            string reply;
+            try { reply = await channel.CallToolAsync(method, args, change, readOnly, timeout, firstAttach, id, name, true, token); }
+            catch (ChannelCallRunningException running)
+            {
+                onRunning(new JsonObject { ["requestId"] = id, ["tool"] = name ?? method,
+                    ["sinceUtc"] = since.ToString("O"), ["message"] = running.Message });
+                reply = await running.Reply;
+            }
             phase = "RETURNED";
             return reply;
         }
@@ -128,8 +140,11 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     // parallel test processes could share it. Production always uses the data location.
     internal string? SpillsDirectoryForTest { get; init; }
     internal bool Disconnected => disconnecting;
-    internal bool DrainingRead => channel?.Draining == true;
-    internal TimeSpan DrainBudget { get; init; } = TimeSpan.FromMinutes(2);
+    internal bool CallRunning => channel?.Poisoned != true && process is { HasExited: false }
+        && (Running != null || channel?.CallRunning == true);
+    private bool UnansweredRequest => process is { HasExited: false }
+        && channel?.Poisoned != true && !unansweredHostProbe
+        && (channel?.CallRunning == true || channel?.InFlight == true || channel?.Unanswered == true);
     internal string? LeasesDirectoryForTest { get; init; }
     internal Func<int, long?>? ProcessStartTicksForTest { get; init; }
     private string SpillsDirectory => SpillsDirectoryForTest ?? TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
@@ -139,7 +154,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     {
         if (ReferenceEquals(Held.Value, this)) return null;
         Interlocked.Increment(ref queued);
-        try { await serial.WaitAsync(token); }
+        try { await WaitForLane(token); }
         finally { Interlocked.Decrement(ref queued); }
         Interlocked.Increment(ref active);
         HostSessionCall.LaneChanged(true);
@@ -153,12 +168,70 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         internal void Activate() { previous = Held.Value; Held.Value = owner; }
         public void Dispose() {
             if (!disposed) {
-                disposed = true; Held.Value = previous; if (counted) Interlocked.Decrement(ref owner.active); HostSessionCall.LaneChanged(false); owner.serial
-                    .Release();
+                disposed = true; Held.Value = previous; if (counted) Interlocked.Decrement(ref owner.active);
+                owner.ClearRunning();
+                HostSessionCall.LaneChanged(false);
+                owner.serial.Release();
+                owner.FinishDeferredDisposal();
             }
         }
     }
     private readonly object stateSync = new();
+    private JsonObject? runningCall, lastRunningCall, activeCall;
+    private CancellationTokenSource busyWaiters = new();
+    private bool disposeRequested;
+    private volatile bool unansweredHostProbe;
+    public LateCalls LateResults { get; } = new();
+    internal JsonObject? Running
+    {
+        get { lock (stateSync) return channel?.Poisoned == true || process?.HasExited == true ? null : runningCall?.DeepClone().AsObject(); }
+    }
+    private TiaMcp.Adapters.Contracts.AdapterPreconditionException Busy()
+    {
+        var running = Running ?? activeCall ?? lastRunningCall;
+        var error = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+            $"Worker call {running?["tool"]} (request {running?["requestId"]}, started {running?["sinceUtc"]}) is still running. "
+                + "Read GetCallResult(requestId) before repeating it.", "worker-call-running", null);
+        error.Data["foundationRequestSent"] = false;
+        return error;
+    }
+    private async Task WaitForLane(CancellationToken token)
+    {
+        CancellationToken busy;
+        lock (stateSync)
+        {
+            if (CallRunning) throw Busy();
+            busy = busyWaiters.Token;
+        }
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, busy);
+        try { await serial.WaitAsync(linked.Token); }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested && busy.IsCancellationRequested) { throw Busy(); }
+        if (busy.IsCancellationRequested) { serial.Release(); throw Busy(); }
+    }
+    private void SetRunning(JsonObject running)
+    {
+        lock (stateSync)
+        {
+            runningCall ??= (JsonObject)running.DeepClone();
+            lastRunningCall = runningCall;
+            busyWaiters.Cancel();
+        }
+        HostSessionCall.Detach(running);
+    }
+    private void ClearRunning()
+    {
+        lock (stateSync)
+        {
+            if (runningCall == null) return;
+            runningCall = null;
+            busyWaiters.Dispose();
+            busyWaiters = new CancellationTokenSource();
+        }
+    }
+    private void FinishDeferredDisposal()
+    {
+        if (disposeRequested) Dispose();
+    }
     private Process? process;
     private ChannelClient? channel;
     private bool attachAttempted;
@@ -205,7 +278,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 JsonSerializer.SerializeToNode(timeouts.Budgets.ToDictionary(p => p.Key, p => p.Value.TotalSeconds)),
                 faultEvidence, observedReadiness, SharedSession ? identity : attachedProcessId.HasValue ? identity : null, previousGenerations));
             if (stopping) snapshot["state"] = "Stopping";
-            else if (DrainingRead && !faulted) snapshot["state"] = "Draining";
+            else if ((CallRunning || LateResults.Running != null) && !faulted) snapshot["state"] = "Busy";
+            snapshot["running"] = LateResults.Running ?? Running;
             return snapshot;
         }
     }
@@ -217,6 +291,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             ["connected"] = SharedSession ? sharedStatus?["session"]?["isConnected"]?.DeepClone()
                 : JsonValue.Create((bool?)hostState?["IsAttached"] ?? attachedProcessId.HasValue),
             ["workerFault"] = faultEvidence?.DeepClone(),
+            ["running"] = LateResults.Running ?? Running,
             ["binding"] = new JsonObject { ["processId"] = SharedSession ? JsonValue.Create(attachedProcessId) : approvalIdentity["ProcessId"]?.DeepClone(),
                 ["projectFile"] = SharedSession ? (sharedStatus?["binding"]?["identity"]?["projectPath"] ?? sharedStatus?["binding"]?["projectPath"])?
                     .DeepClone()
@@ -271,14 +346,14 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     internal async Task RefreshHostState(bool startForStatus, CancellationToken token)
     {
         // ReadState is the worker's cached lifecycle state, not a native lookup.
-        if (DrainingRead) return;
+        if (CallRunning) return;
         // Only an explicit supervisor read may start a cold shared worker.
         if (SharedSession)
         {
             if ((process == null && (!startForStatus || !CanStartForStatus())) || Faulted || disconnecting || !serial.Wait(0)) return;
             HostSessionCall.LaneChanged(true);
             using var lane = new Lane(this, false); lane.Activate();
-            if (DrainingRead) return;
+            if (CallRunning) return;
             var observed = await Observe("status", new JsonObject(), token);
             if (observed is JsonObject status) sharedStatus = (JsonObject)status.DeepClone();
         }
@@ -288,7 +363,9 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     {
         bool extended = ReleaseCatalogData.Releases[releaseKey].ExtendedWorkerStatus;
         JsonObject Snapshot() => extended ? SupervisorSnapshot(SupervisorEnvironment()) : HostSnapshot();
+        if (CallRunning) throw Busy();
         if (!confirmed) return WorkerSupervisorReplies.Restart(releaseKey, false, true, false, Snapshot());
+        if (UnansweredRequest) return WorkerSupervisorReplies.Restart(releaseKey, true, false, false, Snapshot());
         if (Volatile.Read(ref queued) > 0 || !serial.Wait(0)) return WorkerSupervisorReplies.Restart(releaseKey, true, false, false, Snapshot());
         HostSessionCall.LaneChanged(true);
         using var lane = new Lane(this, false); lane.Activate();
@@ -315,6 +392,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     internal bool Bundled { get; init; } = true;
     string IFoundationSessionWorker.ApprovalIdentity => ApprovalIdentity;
     bool IFoundationSessionWorker.Faulted => Faulted;
+    JsonObject? IFoundationSessionWorker.Running => Running;
     bool IFoundationSessionWorker.Bundled => Bundled;
     Task<IDisposable?> IFoundationSessionWorker.AcquireLane(CancellationToken token) => AcquireLane(token);
     void IFoundationSessionWorker.ActivateLane(IDisposable? lane) => ActivateLane(lane);
@@ -338,7 +416,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         if (acquired)
         {
             Interlocked.Increment(ref queued);
-            try { await serial.WaitAsync(token); }
+            try { await WaitForLane(token); }
             finally { Interlocked.Decrement(ref queued); }
             Interlocked.Increment(ref active);
         }
@@ -351,6 +429,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         try
         {
             ChannelLimits.CheckRequest("adapter." + operation, arguments.ToJsonString(), FoundationWorkerRequest.CorrelationId);
+            if (CallRunning && acquired) throw Busy();
             if (Faulted && !(WorkerOperations.IsIndependentRuntime(operation) && process is { HasExited: false }
                 && channel?.CanCallIndependentRuntime == true))
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
@@ -386,6 +465,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             token.ThrowIfCancellationRequested();
             if (disconnecting) throw SessionEnded(releaseKey, "Disconnect ended this session; a new host session is required.");
             activeRequestId = FoundationWorkerRequest.CorrelationId;
+            activeCall = new JsonObject { ["requestId"] = activeRequestId, ["tool"] = FoundationWorkerRequest.ToolName ?? operation,
+                ["sinceUtc"] = DateTimeOffset.UtcNow.ToString("O") };
             HostSessionCall.RequestIdChanged(activeRequestId);
             var change = BindingChangeFor(operation, arguments);
             long epochBefore = channel!.BindingEpoch;
@@ -396,20 +477,15 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 bool firstAttach = attach && !attachAttempted;
                 token.ThrowIfCancellationRequested();
                 if (attach) attachAttempted = true;
-                if (operation == "HostObserve") response = await channel
-                    .CallAsync("adapter.HostObserve", arguments.ToJsonString(), BindingChange.None, true, timeouts.For("status"), CancellationToken.None);
+                unansweredHostProbe = operation is "HostObserve" or "ReadState";
+                if (unansweredHostProbe) response = await channel
+                    .CallToolAsync("adapter." + operation, arguments.ToJsonString(), BindingChange.None, true, timeouts.For("status"), false,
+                        activeRequestId, FoundationWorkerRequest.ToolName, false, CancellationToken.None);
                 else
                 response=await FoundationWorkerRequest.Dispatch(channel, "adapter."+operation,arguments.ToJsonString(),change,
-                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true,timeouts.ForPlc(operation, arguments, firstAttach),
-                        firstAttach, CancellationToken.None);
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"] is JsonValue preview && preview.TryGetValue<bool>(out var dryRun)
+                        && dryRun, timeouts.ForPlc(operation, arguments, firstAttach), firstAttach, SetRunning, CancellationToken.None);
                 sent=true;
-            }
-            catch (ChannelReadTimeoutException)
-            {
-                sent = true;
-                var timeout = new WorkerOperationException("The worker read timed out; retry when it has finished.", -32603, "read-failed");
-                timeout.Data["workerReadTimeout"] = true;
-                throw timeout;
             }
             catch(ChannelFailureException failure)
             {
@@ -435,6 +511,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             }
             if (change == BindingChange.MayAdvance && operation != "Disconnect" && channel.BindingEpoch > epochBefore)
             {
+                unansweredHostProbe = true;
                 string stateWire = await channel.CallAsync("adapter.ReadState", "{}", BindingChange.None, true,
                     timeouts.For("status"), CancellationToken.None);
                 var state = JsonNode.Parse(stateWire)!.AsObject();
@@ -449,6 +526,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
             if (SharedSession && !WorkerOperations.IsIndependentRuntime(operation))
             {
+                unansweredHostProbe = true;
                 var statusWire = await channel
                     .CallAsync("adapter.HostObserve", "{\"operation\":\"status\",\"arguments\":{}}", BindingChange.None, true, timeouts.For("status"),
                         CancellationToken.None);
@@ -491,7 +569,20 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             }
             throw;
         }
-        finally { activeRequestId = null; if (acquired) { Interlocked.Decrement(ref active); serial.Release(); } }
+        finally
+        {
+            if (UnansweredRequest && activeCall != null) lastRunningCall = activeCall;
+            activeRequestId = null;
+            activeCall = null;
+            if (acquired)
+            {
+                ClearRunning();
+                Interlocked.Decrement(ref active);
+                HostSessionCall.LaneChanged(false);
+                serial.Release();
+                FinishDeferredDisposal();
+            }
+        }
     }
 
     // Synchronous on purpose: with CallCore's exception filter in the same async frame, a refusal
@@ -537,6 +628,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private async Task<JsonNode?> Disconnect(CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
+        if (CallRunning || UnansweredRequest) throw Busy();
         if (disconnectAcknowledgement != null) return disconnectAcknowledgement.DeepClone();
         var unsettled = Unsettled.Snapshot();
         bool unknown = Faulted || priorUnknownRequestId != null || unsettled.Count > 0;
@@ -544,9 +636,9 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         disconnecting = true;
         bool acquired = !ReferenceEquals(Held.Value, this);
         bool idle = !acquired || serial.Wait(0);
+        if (!idle) { disconnecting = false; throw Busy(); }
         try
         {
-            if (channel?.Draining == true) await channel.WaitForDrain(DrainBudget);
             if (process != null && (process.HasExited || channel?.CanDisconnect != true))
             { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
             if (process == null) disconnectAcknowledgement = DisconnectContract.Idle();
@@ -554,8 +646,10 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             {
                 try
                 {
+                    unansweredHostProbe = false;
                     var wire = await FoundationWorkerRequest
-                        .Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), false, CancellationToken
+                        .Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), false, SetRunning,
+                                CancellationToken
                             .None);
                     wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
                     disconnectAcknowledgement = (JsonObject)DisconnectContract
@@ -563,6 +657,11 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 }
                 catch (ChannelFailureException refused) when (DisconnectContract.Refused(refused))
                 { disconnecting = false; throw DisconnectContract.Refusal(refused); }
+                catch (Exception error) when (CallRunning)
+                {
+                    if (error is ChannelFailureException failure) throw WorkerOperationException.FromChannelFailure(failure);
+                    throw;
+                }
                 catch (Exception) /* swallow(teardown): an unacknowledged detach retains the unknown outcome and requires TIA restart */ { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
             }
             HostSessionCall.Ended("disconnect");
@@ -570,7 +669,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (unknown) DisconnectContract.Recovery(disconnectAcknowledgement, false, unknownRequestId);
             return disconnectAcknowledgement.DeepClone();
         }
-        finally { if (idle && acquired) serial.Release(); }
+        finally { if (idle && acquired) { ClearRunning(); serial.Release(); FinishDeferredDisposal(); } }
     }
 
     private JsonNode TerminateForDisconnect()
@@ -579,6 +678,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     }
     private JsonNode TerminateForDisconnectCore()
     {
+        if (CallRunning || UnansweredRequest) throw Busy();
         Process? stoppingProcess;
         ChannelClient? stoppingChannel;
         lock (stateSync)
@@ -630,23 +730,37 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     public void Dispose()
     {
-        Unsettled.Clear();
-        HostPipeline?.Dispose(); HostPipeline = null;
-        disconnecting = true;
-        lock (shutdownSync)
+        bool acquired = false;
+        lock (stateSync)
         {
-            Process? stoppingProcess;
-            ChannelClient? stoppingChannel;
-            lock (stateSync) { stopping = true; stoppingProcess = process; stoppingChannel = channel; }
-            var refusal = WorkerShutdown.Stop(stoppingProcess, stoppingChannel, disposeProcess: false);
-            lock (stateSync)
+            if (!WorkerShutdown.StoppingAll && (CallRunning || UnansweredRequest || !(acquired = serial.Wait(0))))
+            { disposeRequested = true; return; }
+        }
+        try
+        {
+            disposeRequested = false;
+            Unsettled.Clear();
+            LateResults.Clear();
+            var pipeline = HostPipeline;
+            HostPipeline = null;
+            pipeline?.Dispose();
+            disconnecting = true;
+            lock (shutdownSync)
             {
-                stopping = false;
-                if (refusal != null) { RetainStopRefusal(refusal); return; }
-                WorkerShutdown.Unregister(this); channel = null; process = null;
-                stoppingProcess?.Dispose();
+                Process? stoppingProcess;
+                ChannelClient? stoppingChannel;
+                lock (stateSync) { stopping = true; stoppingProcess = process; stoppingChannel = channel; }
+                var refusal = WorkerShutdown.Stop(stoppingProcess, stoppingChannel, disposeProcess: false);
+                lock (stateSync)
+                {
+                    stopping = false;
+                    if (refusal != null) { RetainStopRefusal(refusal); return; }
+                    WorkerShutdown.Unregister(this); channel = null; process = null;
+                    stoppingProcess?.Dispose();
+                }
             }
         }
+        finally { if (acquired) serial.Release(); }
         // An interrupted async caller still releases its lane in finally.
     }
 

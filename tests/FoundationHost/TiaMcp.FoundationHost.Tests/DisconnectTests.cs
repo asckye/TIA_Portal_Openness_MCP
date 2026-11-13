@@ -165,14 +165,36 @@ public sealed class FoundationRecoveryTests
     [Theory, InlineData("14sp1"), InlineData("19")]
     public async Task Foundation_in_flight_disconnect_does_not_wait_for_a_hung_native_call(string release)
     {
-        string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
-        using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
-        await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
-        var running = worker.Call("FixtureHang", new JsonObject(), CancellationToken.None);
-        var ack = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
-        Assert.True((bool?)ack?["RequiresTiaRestart"]); Assert.False((bool?)ack?["WorkerAcknowledged"]);
-        Assert.Contains("restart that TIA instance", (string?)ack?["RecoveryMessage"]);
-        await Assert.ThrowsAnyAsync<Exception>(() => running);
+        string gate = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "bin-build", "disconnect-gate-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(gate);
+        string? previousGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+        Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", gate);
+        try
+        {
+            string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"),
+                "offline session fixture");
+            using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
+            await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
+            var running = worker.Call("FixtureHang", new JsonObject(), CancellationToken.None);
+            Assert.True(SpinWait.SpinUntil(() => File.Exists(Path.Combine(gate, "dispatched")),
+                TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+            int? pid = (int?)worker.OperatorSnapshot()["pid"];
+            var refused = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                worker.Call("Disconnect", new JsonObject(), CancellationToken.None));
+            Assert.Equal("worker-call-running", refused.Condition);
+            Assert.Equal(pid, (int?)worker.OperatorSnapshot()["pid"]);
+            File.WriteAllText(Path.Combine(gate, "release"), "");
+            Assert.NotNull(await running.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+            var ack = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
+            Assert.False((bool?)ack?["RequiresTiaRestart"]);
+            Assert.True((bool?)ack?["WorkerAcknowledged"]);
+        }
+        finally
+        {
+            File.WriteAllText(Path.Combine(gate, "release"), "");
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", previousGate);
+        }
     }
 }

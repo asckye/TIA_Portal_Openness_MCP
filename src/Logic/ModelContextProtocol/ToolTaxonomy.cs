@@ -21,6 +21,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "GetWorkbenchState", "GetWorkbenchSelection", "PrefillWorkbenchForm",
             "ListStandardPackages", "ManageStandardPackage", "ValidateStandardPackage", "DescribeStandardPackage", "ManageMachineDescription", "ManageGenerationArtifacts",
             "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetOpennessWorkerStatus",
+            "GetCallResult",
             "GetNativeInvocationLog", "GetOpennessCompatibility", "InspectSimaticSdCompatibility", "FindTools",
             "ListToolCategories", "GetToolUsage", "PreviewToolCall",
             "StageImportFiles", "ListStagedImportFiles", "CleanupStagedImportFiles",

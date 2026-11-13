@@ -159,4 +159,49 @@ public sealed class EngineProfileTests
         input.Feed(Reply(payload: "\"result\":{\"meta\":{\"outcome\":\"unknown\"}}"));
         Assert.Contains("unknown", await call); Assert.Equal("{\"progress\":1}", payload); Assert.False(client.Poisoned);
     }
+    [Fact]
+    public async Task Dropped_progress_logs_once_and_stops_forwarding_until_the_reply()
+    {
+        Guid previous = System.Diagnostics.Trace.CorrelationManager.ActivityId;
+        Guid activity = Guid.NewGuid();
+        System.Diagnostics.Trace.CorrelationManager.ActivityId = activity;
+        using var listener = new ProgressListener(activity);
+        System.Diagnostics.Trace.Listeners.Add(listener);
+        try
+        {
+            using var input = new FeedStream();
+            using var output = new CaptureStream();
+            var forwarded = new List<string>();
+            using var client = new ChannelClient(input, output, Identity, ChannelProfile.Engine, forwarded.Add);
+            input.Feed(Hello);
+            await client.ConnectAsync(Budget);
+            var call = client.CallAsync("engine.invoke", "{}", BindingChange.None, false, Budget);
+            string ProgressFrame(int sequence) => "{\"jsonrpc\":\"2.0\",\"method\":\"progress\",\"params\":{\"requestId\":1,\"sequence\":"
+                + sequence + ",\"percent\":50,\"payload\":{\"progress\":" + sequence + "}}}";
+            input.Feed(ProgressFrame(1) + "\n" + ProgressFrame(3) + "\n" + ProgressFrame(2) + "\n" + ProgressFrame(4) + "\n" + Reply());
+            Assert.Equal("null", await call);
+            Assert.Single(forwarded);
+            Assert.Equal("{\"progress\":1}", forwarded[0]);
+            Assert.Single(listener.Warnings);
+            Assert.Contains("Worker progress dropped for request 1", listener.Warnings[0]);
+            Assert.False(client.Poisoned);
+        }
+        finally
+        {
+            System.Diagnostics.Trace.Listeners.Remove(listener);
+            System.Diagnostics.Trace.CorrelationManager.ActivityId = previous;
+        }
+    }
+
+    private sealed class ProgressListener(Guid activity) : System.Diagnostics.TraceListener
+    {
+        internal readonly List<string> Warnings = new();
+        public override void Write(string? message) { }
+        public override void WriteLine(string? message)
+        {
+            if (System.Diagnostics.Trace.CorrelationManager.ActivityId == activity && message?.Contains("Worker progress dropped") == true)
+                Warnings.Add(message);
+        }
+    }
+
 }

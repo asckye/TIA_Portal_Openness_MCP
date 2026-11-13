@@ -112,8 +112,8 @@ namespace TiaMcp.Logic.V4
                         new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
                 HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails(stage)),
                 HostFailureKind.Unknown =>
-                    new Error("Only this call has an unknown outcome. Inspect its target before repeating it; never replay it automatically. GetSessionState " +
-                        "lists unsettled requests.",
+                    new Error("Only this call has an unknown outcome. Do not repeat this call. Read GetCallResult(requestId) and inspect its target. " +
+                        "GetSessionState lists unsettled requests.",
                         new OutcomeUnknownDetails("tool-call", evidence, reason)),
                 HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(diagnosticId)),
                 _ =>
@@ -232,7 +232,7 @@ namespace TiaMcp.Logic.V4
                     ["recoveryDirectory"] = JsonSerializer.SerializeToElement(data?["recoveryDirectory"]) });
 
         internal static Error UnavailableCall(bool mutation) => mutation
-            ? new Error("Only this call has an unknown outcome. Inspect its target before repeating it; never replay it automatically.",
+            ? new Error("Only this call has an unknown outcome. Do not repeat this call. Read GetCallResult(requestId) and inspect its target.",
                 new OutcomeUnknownDetails("native-call", new Dictionary<string, JsonElement>()))
             : new Error("The native read could not be completed.",
                 new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));

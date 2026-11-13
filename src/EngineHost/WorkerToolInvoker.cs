@@ -170,6 +170,8 @@ namespace TiaMcp.FoundationHost
             }
             if (tool.Execution == "worker")
             {
+                using var digestScope = WriteDigest.Enter();
+                McpServer.PrepareWriteDigest(tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject());
                 if (worker.Faulted) return new ToolInvocationResult(McpServer.V4Reject(tool.Name,
                     new Error("The worker is faulted. Call RestartOpennessWorker before another native call.",
                         new PreconditionFailedDetails("worker-faulted", null))), false);

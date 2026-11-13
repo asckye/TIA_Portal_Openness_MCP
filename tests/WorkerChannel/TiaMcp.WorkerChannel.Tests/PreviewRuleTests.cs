@@ -85,6 +85,22 @@ public sealed class PreviewRuleTests
         }
         else
         {
+            using var frameDocument = System.Text.Json.JsonDocument.Parse(frame);
+            if (kind == "progress" && frameDocument.RootElement.TryGetProperty("method", out var method)
+                && method.ValueKind == System.Text.Json.JsonValueKind.String && method.GetString() == "progress")
+            {
+                using var progressWire = new Wire();
+                await progressWire.Connect();
+                progressWire.Output.OnWrite = _ => progressWire.Input.Feed(frame + "\n" + Reply());
+                Assert.Equal("null", await progressWire.Call());
+                Assert.False(progressWire.Client.Poisoned);
+                Assert.False(progressWire.Client.OutcomeUnknown);
+                Assert.Single(progressWire.Output.Writes);
+                progressWire.Output.OnWrite = _ => progressWire.Input.Feed(Reply(2));
+                Assert.Equal("null", await progressWire.Call());
+                Assert.Equal(2, progressWire.Output.Writes.Count);
+                return;
+            }
             using var wire=new Wire();
             if(kind=="hello")
             {
@@ -130,9 +146,13 @@ public sealed class PreviewRuleTests
         wire.Output.OnWrite=_=>wire.Input.Feed(string.Join("\n",Enumerable.Range(1,1024).Select(i=>Progress(sequence:i)))+"\n"+Reply());
         await wire.Call();
         wire.Output.OnWrite=_=>wire.Input.Feed(Progress(2)+"\n"+Reply(2)); await wire.Call();
-        wire.Output.OnWrite=_=>wire.Input.Feed(string.Join("\n",Enumerable.Range(1,1025).Select(i=>Progress(3,i))));
-        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call());
-        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call()); Assert.Equal(3,wire.Output.Writes.Count);
+        wire.Output.OnWrite=_=>wire.Input.Feed(string.Join("\n",Enumerable.Range(1,1025).Select(i=>Progress(3,i)))+"\n"+Reply(3));
+        Assert.Equal("null", await wire.Call());
+        Assert.False(wire.Client.Poisoned);
+        Assert.Equal(3,wire.Output.Writes.Count);
+        wire.Output.OnWrite = _ => wire.Input.Feed(Progress(4) + "\n" + Reply(4));
+        Assert.Equal("null", await wire.Call());
+        Assert.Equal(4,wire.Output.Writes.Count);
     }
 
     [Theory]

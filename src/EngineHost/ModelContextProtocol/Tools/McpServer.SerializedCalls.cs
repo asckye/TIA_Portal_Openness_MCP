@@ -154,6 +154,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
                 default)
         {
+#if TIA_ENGINE_HOST
+            using var digestScope = TiaMcp.FoundationHost.WriteDigest.Enter();
+#endif
             using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request?.Server?.SessionId, request?.Server);
             using var stagingSession = ImportStagingTools.UseSession(request);
             if (string.Equals(ProtocolTool.Name, "CallTool", StringComparison.OrdinalIgnoreCase))
@@ -198,6 +201,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
                 default)
         {
+#if TIA_ENGINE_HOST
+            using var digestScope = TiaMcp.FoundationHost.WriteDigest.Enter();
+#endif
             using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request?.Server?.SessionId, request?.Server);
             using var progressRequest = McpServer.UseProgressRequest(request, cancellationToken);
             using var heartbeat = ProgressHeartbeat.Begin(request);
@@ -260,6 +266,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     .CurrentBehaviorTargets(ProtocolTool.Name, System.Text.Json.JsonSerializer
                         .SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()))),
                     approval, completion: "unknown").ConfigureAwait(false); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            {
+                return Recorded(await McpServer.FinishApprovalAsync(McpServer.TargetFailure(ProtocolTool.Name, error, false),
+                    approval, completion: "rejected-before-operation").ConfigureAwait(false));
+            }
             using var dispatchLane = lane;
             Dispatch.ToolDispatchLanes.Activate(lane);
             InvocationJournal.Begin(ProtocolTool.Name, id);

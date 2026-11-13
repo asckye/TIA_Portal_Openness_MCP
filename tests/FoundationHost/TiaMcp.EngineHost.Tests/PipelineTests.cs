@@ -14,6 +14,51 @@ using Xunit;
 
 public sealed partial class PipelineTests
 {
+    [Fact]
+    public async Task Invalid_bound_project_path_is_refused_before_dispatch()
+    {
+        using var fixture = new Fixture();
+        new ApprovalSettings(false, 1).Save(ApprovalSettings.SettingsPath);
+        fixture.Worker.Binding = new JsonObject { ["projectPath"] = "invalid\0path" };
+        var result = await fixture.Call("SaveProject", "{}");
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Empty(fixture.Worker.Calls);
+    }
+
+    [Fact]
+    public async Task A_changed_project_path_after_dispatch_keeps_the_final_unknown_envelope()
+    {
+        using var fixture = new Fixture();
+        new ApprovalSettings(false, 1).Save(ApprovalSettings.SettingsPath);
+        fixture.Worker.Binding = new JsonObject { ["projectPath"] = "C:/fixture.ap21" };
+        fixture.Worker.Unknown = true;
+        fixture.Worker.Native = true;
+        fixture.Worker.Event = stage => {
+            if (stage == "invoke") fixture.Worker.Binding = new JsonObject { ["projectPath"] = "invalid\0path" };
+        };
+        var result = await fixture.Call("SaveProject", "{}");
+        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Contains("SaveProject", fixture.Worker.Calls);
+        string digest = WriteDigest.Create("SaveProject", new JsonObject(), "C:/fixture.ap21");
+        Assert.NotNull(McpServer.Worker.Unsettled.FindWrite(digest));
+    }
+
+    [Theory, InlineData("c:/x/out.xml"), InlineData("C:\\x\\out.xml ")]
+    public async Task Normalized_target_retries_do_not_reach_approval_or_the_worker(string target)
+    {
+        using var fixture = new Fixture(all: true);
+        var args = new JsonObject { ["outputPath"] = "C:\\x\\out.xml", ["dryRun"] = false };
+        McpServer.Worker.Unsettled.Record("first-export", "SaveExportContent",
+            WriteDigest.Create("SaveExportContent", args, null), DateTimeOffset.UtcNow);
+        args["outputPath"] = target;
+        var refused = await McpServer.PrecheckBeforeApproval("SaveExportContent", args.ToJsonString(),
+            _ => throw new InvalidOperationException("A refused retry must not preview."), CancellationToken.None);
+        Assert.NotNull(refused);
+        Assert.Equal("same-call-unsettled", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+        Assert.Empty(fixture.Worker.Calls);
+    }
+
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public async Task Engine_host_carries_transport_actor_through_approval_journal_and_audit(bool human)
@@ -97,13 +142,13 @@ public sealed partial class PipelineTests
     }
 
     [Theory]
-    [InlineData("20", 480)]
-    [InlineData("21", 491)]
+    [InlineData("20", 481)]
+    [InlineData("21", 492)]
     public void EveryCatalogEntryHasReviewedOwnershipAndALocalImplementation(string release, int count)
     {
         using var fixture = new Fixture(release, all: true);
         Assert.Equal(count, fixture.Catalog.All.Count);
-        Assert.Equal(95, fixture.Catalog.All.Values.Count(t => t.Execution == "host"));
+        Assert.Equal(96, fixture.Catalog.All.Values.Count(t => t.Execution == "host"));
         Assert.Equal("host", fixture.Catalog.All["ManagePlcGitRepository"].Execution);
         Assert.All(fixture.Catalog.All.Values, tool => Assert.Equal(ToolExecution.Table[tool.Name], tool.Execution));
         Assert.Equal(count, McpServer.GetAllTools().Count);
@@ -133,6 +178,10 @@ public sealed partial class PipelineTests
         Assert.Equal("OUTCOME_UNKNOWN", (string?)first.StructuredContent?["error"]?["code"]);
         fixture.Worker.Unknown = false;
         int calls = fixture.Worker.Calls.Count;
+        var guarded = await fixture.Call("SaveProject", "{}");
+        Assert.Equal("same-call-unsettled", (string?)guarded.StructuredContent?["error"]?["details"]?["condition"]);
+        Assert.Equal("unknown", (string?)(await fixture.Call("GetCallResult", System.Text.Json.JsonSerializer.Serialize(new {
+            requestId = (string)first.StructuredContent!["meta"]!["requestId"]! }))).StructuredContent?["meta"]?["outcome"]);
         var result = await fixture.Call("SaveProject", "{}");
         Assert.True((bool?)result.StructuredContent?["ok"]);
         Assert.Equal(recorded ? 1 : 0, ((IEngineWorker)fixture.Worker).Unsettled.Snapshot().Count);
@@ -158,6 +207,9 @@ public sealed partial class PipelineTests
         using var fixture = new Fixture(); fixture.Worker.Limited = true; fixture.Worker.Native = true;
         Assert.Equal("LIMIT_EXCEEDED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
         Assert.Single(((IEngineWorker)fixture.Worker).Unsettled.Snapshot());
+        Assert.Equal("LIMIT_EXCEEDED", (string?)(await fixture.Call("GetCallResult", System.Text.Json.JsonSerializer.Serialize(new {
+            requestId = Assert.Single(((IEngineWorker)fixture.Worker).Unsettled.Snapshot()).RequestId })))
+            .StructuredContent?["error"]?["code"]);
         Assert.Equal("LIMIT_EXCEEDED", (string?)(await fixture.Call("SaveProject", "{}")).StructuredContent?["error"]?["code"]);
         Assert.Equal(2, ((IEngineWorker)fixture.Worker).Unsettled.Snapshot().Count);
         Assert.Equal(2, fixture.Worker.Calls.Count);
@@ -191,8 +243,10 @@ public sealed partial class PipelineTests
         Assert.Equal("INVALID_ARGUMENT", (string?)rejected.StructuredContent?["error"]?["code"]);
         Assert.Empty(fixture.Worker.Calls);
         fixture.Worker.Unknown = true; fixture.Worker.Native = true;
-        await fixture.Call("CallTool", "{\"name\":\"SaveProject\",\"arguments\":{}}");
+        var first = await fixture.Call("CallTool", "{\"name\":\"SaveProject\",\"arguments\":{}}");
         fixture.Worker.Unknown = false;
+        Assert.Equal("unknown", (string?)(await fixture.Call("GetCallResult", System.Text.Json.JsonSerializer.Serialize(new {
+            requestId = (string)first.StructuredContent!["meta"]!["requestId"]! }))).StructuredContent?["meta"]?["outcome"]);
         var next = await fixture.Call("SaveProject", "{}");
         Assert.True((bool?)next.StructuredContent?["ok"]);
         Assert.Contains(next.StructuredContent!["meta"]!["warnings"]!.AsArray(), w => (string?)w?["code"] == "UNSETTLED_CALLS");
@@ -358,8 +412,9 @@ public sealed partial class PipelineTests
         internal Catalog(string release, bool all)
         {
             var root = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", release + ".json")))!;
-            var names = new[] { "SaveProject", "GetSessionState", "ListExportHandles", "CallTool", "GetOpennessWorkerStatus", "GetNativeInvocationLog", "RestartOpennessWorker" };
-            All = root["tools"]!.AsArray().Where(t => all || names.Contains((string)t!["name"]!)).Select(t => {
+            var names = new[] { "SaveProject", "GetSessionState", "GetCallResult", "ListExportHandles", "CallTool", "GetOpennessWorkerStatus",
+                "GetNativeInvocationLog", "RestartOpennessWorker" };
+            var declared = root["tools"]!.AsArray().Where(t => all || names.Contains((string)t!["name"]!)).Select(t => {
                 string name = (string)t!["name"]!;
                 var schema = JsonSerializer.SerializeToElement(t["inputSchema"]);
                 var parameters = schema.GetProperty("properties").EnumerateObject().Select(p => new ToolParameterDescriptor(p.Name, "integer",
@@ -370,6 +425,10 @@ public sealed partial class PipelineTests
                     new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead, classification.BatchWrite),
                     name + "()", parameters, new ToolDryRunDescriptor(false, true), null, ToolExecution.Table[name]);
             }).ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+            DeclaredToolMetadata.Create("GetCallResult", typeof(McpServer).GetMethod(nameof(McpServer.GetCallResult))!,
+                _ => throw new InvalidOperationException("Metadata only."), out var callResult);
+            declared.Add("GetCallResult", callResult!);
+            All = declared;
             BehaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(Catalog).Assembly, release);
         }
     }

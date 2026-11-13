@@ -5,7 +5,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using TiaMcp.Logic.Generation;
 using TiaMcp.Logic.V4;
 
 namespace TiaMcp.FoundationHost;
@@ -18,13 +17,16 @@ public sealed class UnsettledCalls
     private static readonly ConditionalWeakTable<object, UnsettledCalls> Stores = new();
     private readonly object gate = new();
     private readonly List<UnsettledCall> calls = new();
+    private readonly HashSet<string> ids = new(StringComparer.Ordinal);
+    private readonly HashSet<string> read = new(StringComparer.Ordinal);
     private string? projectFile;
     public static UnsettledCalls For(object worker) => Stores.GetValue(worker, _ => new UnsettledCalls());
 
     public void Record(string requestId, string tool, string digest, DateTimeOffset utc)
     {
         lock (gate)
-            if (!calls.Any(call => call.RequestId == requestId)) calls.Add(new UnsettledCall(requestId, tool, digest, utc.ToUniversalTime()));
+            if (ids.Add(requestId)) calls.Add(new UnsettledCall(requestId, tool, digest, utc.ToUniversalTime()));
+        LateCalls.ObserveUnsettled(requestId);
     }
 
     public IReadOnlyList<UnsettledCall> Snapshot()
@@ -37,6 +39,8 @@ public sealed class UnsettledCalls
         lock (gate)
         {
             calls.Clear();
+            ids.Clear();
+            read.Clear();
             projectFile = null;
         }
     }
@@ -47,7 +51,8 @@ public sealed class UnsettledCalls
         file = Path.GetFullPath(file);
         lock (gate)
         {
-            if (projectFile != null && !string.Equals(projectFile, file, StringComparison.OrdinalIgnoreCase)) calls.Clear();
+            if (projectFile != null && !string.Equals(projectFile, file, StringComparison.OrdinalIgnoreCase))
+            { calls.Clear(); ids.Clear(); read.Clear(); }
             projectFile = file;
         }
     }
@@ -59,13 +64,23 @@ public sealed class UnsettledCalls
         || (string?)body["error"]?["code"] == "LIMIT_EXCEEDED" && (bool?)body["data"]?["nativeOutcomeUnknown"] == true;
 
     public static string WriteDigest(string tool, JsonObject arguments, string? projectFile)
+        => global::TiaMcp.FoundationHost.WriteDigest.Create(tool, arguments, projectFile);
+
+    public bool IsUnread(string requestId) { lock (gate) return ids.Contains(requestId) && !read.Contains(requestId); }
+    public bool HasUnread(IEnumerable<string> ids)
+    { lock (gate) return ids.Any(id => this.ids.Contains(id) && !read.Contains(id)); }
+    public void MarkRead(string requestId) { lock (gate) read.Add(requestId); }
+    public void Settle(string requestId)
     {
-        var canonical = (JsonObject)arguments.DeepClone();
-        canonical.Remove("dryRun"); canonical.Remove("confirm");
-        return CanonicalJson.Hash(JsonSerializer.SerializeToElement(new JsonObject {
-            ["tool"] = tool, ["arguments"] = canonical,
-            ["projectFile"] = string.IsNullOrEmpty(projectFile) ? null : Path.GetFullPath(projectFile).ToUpperInvariant() }));
+        lock (gate)
+        {
+            calls.RemoveAll(call => call.RequestId == requestId);
+            ids.Remove(requestId);
+            read.Remove(requestId);
+        }
     }
+    public UnsettledCall? FindWrite(string digest)
+    { lock (gate) return calls.FirstOrDefault(call => call.Digest == digest && !read.Contains(call.RequestId)); }
 
     public static bool IsReviewedApply(JsonObject arguments) => !HostBehavior.IsPreview(arguments, true)
         && !string.IsNullOrWhiteSpace((string?)arguments["expectedPlanHash"] ?? (string?)arguments["expectedInventoryHash"]);
@@ -74,7 +89,7 @@ public sealed class UnsettledCalls
     {
         if (!IsReviewedApply(arguments)) return null;
         string digest = WriteDigest(tool, arguments, projectFile);
-        lock (gate) return calls.FirstOrDefault(call => call.Digest == digest);
+        return FindWrite(digest);
     }
 
     public JsonNode WarnOnSave(string tool, JsonNode body, JsonArray? beforeSave = null)

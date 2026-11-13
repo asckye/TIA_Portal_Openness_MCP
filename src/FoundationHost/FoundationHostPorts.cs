@@ -9,6 +9,7 @@ using IWorkerLane = enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerL
 using IHostToolServices = enginehost::TiaMcpServer.ModelContextProtocol.IHostToolServices;
 using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
 using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
 using McpServer = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 using TiaMcpServer.ModelContextProtocol;
 #else
@@ -60,6 +61,7 @@ internal static class FoundationHostPorts
         public bool Faulted => worker is IEngineWorker engine ? engine.Faulted : worker is WorkerClient client ? client.WorkerFaulted
             : worker is IFoundationSessionWorker { Faulted: true };
         public UnsettledCalls Unsettled => worker is IEngineWorker engine ? engine.Unsettled : SharedSessionState.For(worker).Unsettled;
+        public LateCalls LateResults => worker is IEngineWorker engine ? engine.LateResults : SharedSessionState.For(worker).LateResults;
         public object SessionKey => worker is IEngineWorker engine ? engine.SessionKey : worker is WorkerClient client ? client.HostSessionKey : sessionKey;
         public JsonNode? Binding => Snapshot()["binding"]?.DeepClone();
         internal JsonObject OperatorSnapshot()

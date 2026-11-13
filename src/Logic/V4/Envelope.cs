@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace TiaMcp.Logic.V4
 {
-    public enum Outcome { Succeeded, RejectedBeforeOperation, ReadFailed, Failed, Partial, Unknown }
+    public enum Outcome { Succeeded, RejectedBeforeOperation, ReadFailed, Failed, Partial, Unknown, InProgress }
     public enum Execution { NotStarted, ReadOnly, Completed, Partial, Unknown }
     public enum Completeness { Complete, Partial, None, Unknown }
     public enum BehaviorPolicy { NotApplicable, Current, SafeV4 }

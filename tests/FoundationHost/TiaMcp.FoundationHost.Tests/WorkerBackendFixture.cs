@@ -14,11 +14,11 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     private readonly Foundation.WorkerClient plc;
     private readonly Foundation.FoundationHostPorts.Services services;
     private readonly bool faultFixture;
-    internal WorkerBackendFixture(Foundation.HostOptions options, string? spills = null, TimeSpan? drainBudget = null)
+    internal WorkerBackendFixture(Foundation.HostOptions options, string? spills = null)
     {
         plc = new Foundation.WorkerClient(options.ReleaseKey, options.WorkerExe,
             options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
-            { Bundled = options.BundledWorker, SharedSession = true, SpillsDirectoryForTest = spills, DrainBudget = drainBudget ?? TimeSpan.FromMinutes(2) };
+            { Bundled = options.BundledWorker, SharedSession = true, SpillsDirectoryForTest = spills };
         faultFixture = Path.GetFileName(options.WorkerExe) == "TiaMcp.PlcWorker.FaultFixture.exe";
         services = Foundation.FoundationHostPorts.CreateServices(Inner, options.ReleaseKey,
             () => new JsonObject { ["ready"] = true }, options.ApiDirectory);
@@ -28,6 +28,8 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     internal static string Hash(string path) => TiaMcpServer.Siemens.ArgumentRules.HashFile(path, FileShare.Read);
     public bool Faulted => services.Faulted;
     public Engine.UnsettledCalls Unsettled => plc.Unsettled;
+    public Engine.LateCalls LateResults => plc.LateResults;
+    public JsonObject? Running => plc.Running;
     public JsonNode? Binding => services.Binding;
     public object SessionKey => services.SessionKey;
     public string ApprovalIdentity => Inner.ApprovalIdentity;
@@ -46,7 +48,10 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     {
         if (faultFixture && operation is "ReadBlocks" or "plc-paging.ReadBlockPage" or "optional-products.ExecuteOptionalProduct" or "Attach")
         {
-            string tool = operation is "ReadBlocks" or "plc-paging.ReadBlockPage" ? "ListPlcBlocks" : operation == "Attach" ? "AttachOpenProject" : "ListTestSuiteCases";
+            string tool = global::TiaMcp.FoundationHost.FoundationWorkerRequest.ToolName
+                ?? Foundation.FoundationWorkerRequest.ToolName
+                ?? (operation is "ReadBlocks" or "plc-paging.ReadBlockPage" ? "ListPlcBlocks"
+                    : operation == "Attach" ? "AttachOpenProject" : "ListTestSuiteCases");
             using var request = Foundation.FoundationWorkerRequest.Use(Foundation.FoundationWorkerRequest.CorrelationId, tool);
             await plc.Call("FaultFixtureArm", new() { ["method"] = "adapter." + operation }, token);
             return await Inner.Call(operation, args, token);

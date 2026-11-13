@@ -325,6 +325,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal CallToolResult ReadRun(string runId) => McpServer.V4Result("GetGenerationRun", Records.Read(runId));
         internal CallToolResult Apply(string planId, string hash, string expectedProject, string[]? phases, bool preview)
         {
+            using var digestScope = TiaMcp.FoundationHost.WriteDigest.Enter();
             Stored stored;
             lock (sync) if (!plans.TryGetValue(planId, out stored!))
                 throw new GenerationCallRejectionException(new Error("Plan is not in this MCP session; replan.",
@@ -346,6 +347,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (preview || steps.Length == 0) return McpServer
                 .V4Result("ApplyGenerationPlan", new JsonObject { ["dryRun"] = true, ["plan"] = JsonNode.Parse(stored.Result.CanonicalPlan),
                 ["selectedSteps"] = JsonSerializer.SerializeToNode(steps.Select(s => s.Id)), ["wouldChange"] = steps.Length > 0 });
+            string applyDigest = TiaMcp.FoundationHost.WriteDigest.Latest("ApplyGenerationPlan")
+                ?? McpServer.PrepareWriteDigest("ApplyGenerationPlan", new JsonObject { ["planId"] = planId, ["expectedPlanHash"] = hash,
+                    ["expectedProjectFile"] = expectedProject, ["phases"] = JsonSerializer.SerializeToNode(phases), ["dryRun"] = false });
             string parentId = AuditInvocation.CurrentRequestId ?? Guid.NewGuid().ToString("N");
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             var pending = Pending(plan, steps, stored.Binding, parentId, settings);
@@ -461,6 +465,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     using var association = AuditInvocation.GenerationStep(planId, step.Id, runId, parentId, previewHash, requestId);
                     using var granted = GenerationStepApproval.Enter(approval, step, finalArguments, previewId, previewHash, sessionKey, runId);
                     records.Append(runId, new JsonObject { ["event"] = "step-start", ["stepId"] = step.Id, ["requestId"] = requestId });
+                    string stepDigest = McpServer.PrepareWriteDigest(step.Tool, finalArguments);
                     try
                     {
                         dispatched = true;
@@ -532,7 +537,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             });
                         if (outcome != "succeeded")
                         {
-                            if (outcome == "unknown") McpServer.RecordUnsettled(requestId, step.Tool, JsonSerializer.Serialize(step.Arguments));
+                            if (outcome == "unknown") McpServer.RecordUnsettled(requestId, step.Tool, stepDigest);
                             status = outcome; stopping = step.Id; break;
                         }
                         succeeded++;
@@ -545,7 +550,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         status = step.Phase == "record" ? "partial" : "unknown"; stopping = step.Id;
                         claim.Consume();
-                        if (step.Phase != "record") McpServer.RecordUnsettled(requestId, step.Tool, JsonSerializer.Serialize(step.Arguments));
+                        if (step.Phase != "record") McpServer.RecordUnsettled(requestId, step.Tool, stepDigest);
                         records.Append(runId, new JsonObject { ["event"] = "step-end", ["stepId"] = step.Id, ["requestId"] = requestId, ["status"] = status,
                             ["error"] = ex.GetType().Name + ": " + ex.Message });
                         break;
@@ -577,7 +582,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 catch (Exception ex) when (dispatched && (ex is IOException || ex is UnauthorizedAccessException))
                 {
-                    McpServer.RecordUnsettled(InvocationJournal.CorrelationId, "ApplyGenerationPlan", "{}");
+                    McpServer.RecordUnsettled(InvocationJournal.CorrelationId, "ApplyGenerationPlan", applyDigest);
                     throw new GenerationPersistenceUnknownException(runId, ex);
                 }
                 finally { if (approval != null) ApprovalClient.Complete(approval, status).GetAwaiter().GetResult(); }
@@ -586,7 +591,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try { data = records.Read(runId); }
             catch (Exception ex) when (dispatched && (ex is IOException || ex is UnauthorizedAccessException))
             {
-                McpServer.RecordUnsettled(InvocationJournal.CorrelationId, "ApplyGenerationPlan", "{}");
+                McpServer.RecordUnsettled(InvocationJournal.CorrelationId, "ApplyGenerationPlan", applyDigest);
                 throw new GenerationPersistenceUnknownException(runId, ex);
             }
             data["rollbackPerformed"] = false;

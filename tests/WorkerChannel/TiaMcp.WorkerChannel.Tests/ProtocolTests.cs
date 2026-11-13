@@ -189,10 +189,13 @@ public sealed class ProtocolTests
 
     [Theory]
     [InlineData(2,1,50)] [InlineData(1,2,50)] [InlineData(1,1,101)]
-    public async Task InvalidProgressTerminal(long id,int sequence,int percent)
+    public async Task Invalid_progress_is_dropped_until_the_real_reply(long id,int sequence,int percent)
     {
-        using var wire=new Wire(); await wire.Connect(); wire.Output.OnWrite=_=>wire.Input.Feed(Progress(id,sequence,percent));
-        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call());
+        using var wire=new Wire(); await wire.Connect();
+        wire.Output.OnWrite=_=>wire.Input.Feed(Progress(id,sequence,percent)+"\n"+Reply());
+        Assert.Equal("null", await wire.Call());
+        Assert.False(wire.Client.Poisoned);
+        Assert.True(wire.Client.CanDisconnect);
     }
 
     [Fact]
@@ -243,8 +246,20 @@ public sealed class ProtocolTests
         internal readonly FeedStream Input=new();
         internal readonly CaptureStream Output=new();
         internal readonly ChannelClient Client;
-        internal Wire() { Client=new ChannelClient(Input,Output,Identity); }
-        internal async Task Connect() { Input.Feed(Hello); await Client.ConnectAsync(Budget); }
+        private readonly string release;
+        internal Wire(string release = "19")
+        {
+            this.release = release;
+            Client = new ChannelClient(Input, Output,
+                new ChannelIdentity(release, Identity.WorkerSha256, Identity.AdapterSha256, Identity.ProcessId, Identity.Nonce));
+        }
+        internal async Task Connect()
+        {
+            var hello = JsonNode.Parse(Hello)!;
+            hello["params"]!["releaseKey"] = release;
+            Input.Feed(hello.ToJsonString());
+            await Client.ConnectAsync(Budget);
+        }
         internal Task<string> Call(string args="{}",CancellationToken token=default,TimeSpan? timeout=null,bool readOnly=true,BindingChange change=BindingChange.None)
             => Client.CallAsync("adapter.ReadState",args,change,readOnly,timeout??Budget,token);
         public void Dispose() => Client.Dispose();
@@ -255,6 +270,7 @@ public sealed class ProtocolTests
         private readonly Channel<byte[]> chunks=Channel.CreateUnbounded<byte[]>();
         private byte[] current=Array.Empty<byte>(); private int offset;
         internal void Feed(string line) => chunks.Writer.TryWrite(Encoding.UTF8.GetBytes(line+"\n"));
+        internal void End() => chunks.Writer.TryComplete();
         public override async Task<int> ReadAsync(byte[] buffer,int index,int count,CancellationToken token)
         {
             if(offset==current.Length) { current=await chunks.Reader.ReadAsync(token); offset=0; }

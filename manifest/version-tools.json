@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 280,
+      "toolCount": 281,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -93,6 +93,7 @@
         "GenerateErrorReport",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
+        "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDeviceAddressing",
@@ -291,7 +292,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 320,
+      "toolCount": 321,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -389,6 +390,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDeviceAddressing",
@@ -617,7 +619,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 349,
+      "toolCount": 350,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -721,6 +723,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
@@ -972,7 +975,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 372,
+      "toolCount": 373,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1083,6 +1086,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
@@ -1350,7 +1354,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 398,
+      "toolCount": 399,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1469,6 +1473,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
@@ -1754,7 +1759,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 474,
+      "toolCount": 475,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1901,6 +1906,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
@@ -2234,7 +2240,7 @@
     },
     "20": {
       "profile": "plc-foundation",
-      "toolCount": 497,
+      "toolCount": 498,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2388,6 +2394,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
@@ -2737,7 +2744,7 @@
     },
     "21": {
       "profile": "plc-foundation",
-      "toolCount": 512,
+      "toolCount": 513,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2897,6 +2904,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
@@ -3255,7 +3263,7 @@
     }
   },
   "groupCounts": {
-    "all-releases": 279,
+    "all-releases": 280,
     "shared-subset": 218,
     "release-only": 20
   },
@@ -5336,6 +5344,21 @@
         "21"
       ],
       "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetCallResult",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

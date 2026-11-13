@@ -41,6 +41,12 @@ namespace TiaMcpServer.ModelContextProtocol
             private readonly TimeSpan interval;
             private readonly string tool;
             private readonly Task loop;
+            private readonly Func<bool> progressAllowed =
+#if TIA_ENGINE_HOST
+                TiaMcp.FoundationHost.LateCalls.CaptureProgress();
+#else
+                () => true;
+#endif
             private readonly SemaphoreSlim delivery = new SemaphoreSlim(1, 1);
             private long progress;
             internal Scope(JsonNode token, Func<JsonObject, CancellationToken, Task> send, TimeSpan interval, string tool)
@@ -51,6 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 await delivery.WaitAsync(cancellation).ConfigureAwait(false);
                 try
                 {
+                    if (!progressAllowed()) return;
                     payload["progress"] = Next();
                     payload.Remove("total");
                     await send(payload, cancellation).ConfigureAwait(false);

@@ -4,6 +4,8 @@ using DeclaredToolMetadata = enginehost::TiaMcpServer.ModelContextProtocol.Decla
 using ProgressHeartbeat = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
 using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
 using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
+using WriteDigest = enginehost::TiaMcp.FoundationHost.WriteDigest;
 using UnifiedInputAdmission = enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService;
 #else
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
@@ -124,6 +126,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
+        using var digestScope = WriteDigest.Enter();
         using var heartbeat = ProgressHeartbeat.Begin(request);
         using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request.Server?.SessionId, request.Server);
         if (inner is WorkbenchControlTool control)
@@ -171,6 +174,10 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ?? (result.Content.FirstOrDefault() as TextContentBlock)?.Text);
         if (inner is FoundationTool producingTool) result = producingTool.ParkWorkerResult(result, tool.Name);
+        if (result.StructuredContent is { } final && UnsettledCalls.HasUnknownOutcome(final) && inner is FoundationTool completedTool
+            && WriteDigest.Prepared(tool.Name, arguments) is { } completedDigest)
+            completedTool.LateResults.RecordUnknown((string?)final["meta"]?["requestId"] ?? id, tool.Name,
+                completedDigest, result);
         return result;
     }
 
@@ -187,11 +194,21 @@ internal sealed class FoundationV4Tool : McpServerTool
         CallToolResult? ReplayRefusal()
         {
             var arguments = JsonSerializer.SerializeToNode(args)!.AsObject();
-            if (inner is FoundationTool reviewedTool && UnsettledCalls.IsReviewedApply(arguments)
-                && reviewedTool.Unsettled.FindReviewedApply(tool.Name, arguments, reviewedTool.BoundProjectFile) is { } priorApply)
-                return FoundationV4Result.Reject(release, tool.Name, id,
-                    new Error("This apply has an unknown outcome. Inspect its target before submitting another apply.",
-                        new PreconditionFailedDetails("same-call-unsettled", priorApply.RequestId)), true);
+            var properties = tool.InputSchema.GetProperty("properties");
+            bool preview = HostBehavior.IsPreview(arguments, properties.TryGetProperty("dryRun", out var dryRun)
+                && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False));
+            bool mutation = write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE";
+            if (!internalPrecheck && !preview && mutation && inner is FoundationTool reviewedTool)
+            {
+                string digest = WriteDigest.Capture(tool.Name, arguments, reviewedTool.BoundProjectFile);
+                string? priorId = reviewedTool.LateResults.FindUnread(digest) ?? reviewedTool.Unsettled.FindWrite(digest)?.RequestId;
+                if (priorId != null)
+                    return FoundationV4Result.Reject(release, tool.Name, id,
+                        new Error("The same write is running or has an unread result. Do not repeat this call. Read GetCallResult(requestId) "
+                            + "for its result or outcome summary, then inspect its target before submitting another write.",
+                            new PreconditionFailedDetails("same-call-unsettled", priorId)), true);
+                LateCalls.IdentifyWrite(digest);
+            }
             return null;
         }
         CallToolResult Recorded(CallToolResult result)
@@ -202,14 +219,14 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (result.StructuredContent is { } body && inner is FoundationTool sessionTool)
             {
                 var arguments = JsonSerializer.SerializeToNode(args)!.AsObject();
-                sessionTool.Unsettled.ProjectChanged(sessionTool.BoundProjectFile);
                 var properties = tool.InputSchema.GetProperty("properties");
                 bool preview = HostBehavior.IsPreview(arguments, properties.TryGetProperty("dryRun", out var dryRun)
                     && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False));
                 if (!preview && UnsettledCalls.HasUnknownOutcome(body)
-                    && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE"))
+                    && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE")
+                    && WriteDigest.Prepared(tool.Name, arguments) is { } recordedDigest)
                     sessionTool.Unsettled.Record((string?)body["meta"]?["requestId"] ?? id, tool.Name,
-                        UnsettledCalls.WriteDigest(tool.Name, arguments, sessionTool.BoundProjectFile), DateTimeOffset.UtcNow);
+                        recordedDigest, DateTimeOffset.UtcNow);
                 body = sessionTool.Unsettled.WarnOnSave(tool.Name, body, unsettledBeforeSave);
                 result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                     Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
@@ -236,13 +253,24 @@ internal sealed class FoundationV4Tool : McpServerTool
             try { TiaOpenness.Shared.ApprovalOutputTargets.ValidateWhitespace(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()); }
             catch (ArgumentException error)
             {
+                if (ReplayRefusal() is { } whitespaceReplay) return Recorded(whitespaceReplay);
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     new Error("Filesystem targets must not have leading or trailing whitespace.",
                         new InvalidArgumentDetails(error.ParamName ?? "arguments", Array.Empty<string>()))));
             }
+            if (write) TiaOpenness.Shared.ApprovalOutputTargets.Normalize(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject());
             if (SoftwareUnitCapabilityError(release, tool.Name, args) is { } unitCapability)
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id, unitCapability, true));
+            if (inner is FoundationTool digestTool)
+            {
+                digestTool.Unsettled.ProjectChanged(digestTool.BoundProjectFile);
+                WriteDigest.Capture(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject(), digestTool.BoundProjectFile);
+            }
             if (ReplayRefusal() is { } replayRefusal) return Recorded(replayRefusal);
+            if (inner is FoundationTool { Running: { } running } runningTool && runningTool.RequiresTia
+                && !runningTool.LateResults.ContinuesCurrentCall
+                && tool.Name is not ("GetSessionState" or "GetOpennessWorkerStatus"))
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, LateCalls.BusyError(running), true));
             try { CallerInputFiles.RefuseHumanSettingsTargets(JsonSerializer.SerializeToNode(args)!.AsObject()); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(error.Message,
@@ -400,7 +428,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
         { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
-        catch (WorkerOperationException ex) when (ex.Condition == "worker-read-running")
+        catch (WorkerOperationException ex) when (ex.Condition == "worker-call-running")
         { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)
         { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments"))); }

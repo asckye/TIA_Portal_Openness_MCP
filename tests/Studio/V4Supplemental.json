@@ -774,5 +774,32 @@
       "paging": null,
       "warnings": []
     }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "activeRequestId": "running-call"
+    },
+    "error": {
+      "code": "OPERATION_IN_PROGRESS",
+      "message": "The call is still running. Read GetCallResult(requestId).",
+      "details": {
+        "requestId": "running-call"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-11-12T00:00:00.0000000Z",
+      "releaseKey": "21",
+      "tool": "SaveProject",
+      "requestId": "running-call",
+      "outcome": "in-progress",
+      "execution": "unknown",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "unknown",
+      "paging": null,
+      "warnings": []
+    }
   }
 ]

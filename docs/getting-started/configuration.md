@@ -93,9 +93,9 @@ HTTP 服务在鉴权之前检查所有请求的 Host 和 Origin（包括健康�
 
 八个版本都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 PLC worker（`runtime/v<发布键>/worker/TiaMcp.PlcWorker.<发布键>.exe`）；交付包不再包含 V20/V21 引擎。隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。使用工作台生成的宿主命令，无需选择隔离模式。
 
-worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消；派发后等待真实结果，超时或通道故障不会重放原生操作。
+worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消。调用超过等待预算时返回 `in-progress` 和 `OPERATION_IN_PROGRESS`，原调用继续执行。用返回的 `activeRequestId` 调用 `GetCallResult(requestId)` 读取最终结果。
 
-用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。发生结果未知时先检查 TIA 工程及调用日志，再用 `DisconnectPortal` 恢复：空闲 worker 干净分离，忙碌或丢失的 worker 结束后须重启 TIA。也可显式使用 `RestartOpennessWorker` 重启当前会话的 worker；重新连接后必须再次绑定工程。详见[worker 与恢复](../guides/openness-worker-isolation.md)。
+用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。运行中的调用列在 `GetSessionState.data.sessionState.running`，其他原生请求得到 `worker-call-running`。`DisconnectPortal` 和 `RestartOpennessWorker` 等待该调用完成后才可执行。结果未知时先读 `GetCallResult` 并检查 TIA 工程及调用日志。也可显式使用 `RestartOpennessWorker` 重启当前会话的 worker；重新连接后必须再次绑定工程。详见[worker 与恢复](../guides/openness-worker-isolation.md)。
 
 ## 工具显示与示例
 
@@ -104,14 +104,14 @@ worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 280 | 89 |
-| V15.1 | 320 | 92 |
-| V16 | 349 | 93 |
-| V17 | 372 | 93 |
-| V18 | 398 | 95 |
-| V19 | 474 | 95 |
-| V20 | 497 | 98 |
-| V21 | 512 | 101 |
+| V14 SP1 | 281 | 90 |
+| V15.1 | 321 | 93 |
+| V16 | 350 | 94 |
+| V17 | 373 | 94 |
+| V18 | 399 | 96 |
+| V19 | 475 | 96 |
+| V20 | 498 | 99 |
+| V21 | 513 | 102 |
 <!-- generated:tool-counts:end -->
 
 八个版本默认使用 lite 档，可用 `FindTools` / `CallTool` 访问其余工具，或向宿主传入 `--profile full`。八版共用 `plc-foundation` 展示名称，提供发现、桥接和批处理入口。所有版本都用 `GetToolUsage` 读取自己的参数、语言示例和调用序列。修改配置后重启服务与客户端，刷新目录缓存。

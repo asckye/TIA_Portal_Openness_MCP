@@ -28,6 +28,7 @@ namespace TiaMcp.FoundationHost
     {
         public bool Faulted { get; }
         public UnsettledCalls Unsettled => UnsettledCalls.For(this);
+        public LateCalls LateResults => LateCalls.For(this);
         public JsonNode? Binding { get; }
         public object SessionKey { get; }
         public JsonObject Snapshot();
@@ -296,8 +297,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (token == null) return null;
             var progressToken = JsonSerializer.SerializeToNode(token, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
             var capturedSender = ProgressHeartbeat.CaptureSender();
+            var progressAllowed = TiaMcp.FoundationHost.LateCalls.CaptureProgress();
             long fallbackProgress = 0;
             return json => {
+                if (!progressAllowed()) return;
                 try
                 {
                     var payload = JsonNode.Parse(json)!.AsObject();
@@ -317,12 +320,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             };
         }
-        internal static void RecordUnsettled(string requestId, string tool, string arguments)
+        internal static string PrepareWriteDigest(string tool, JsonObject arguments)
         {
             string? project = (string?)Worker.Binding?["identity"]?["projectPath"] ?? (string?)Worker.Binding?["projectPath"];
             Worker.Unsettled.ProjectChanged(project);
-            Worker.Unsettled.Record(requestId, tool, TiaMcp.FoundationHost.UnsettledCalls.WriteDigest(tool,
-                JsonNode.Parse(arguments)!.AsObject(), project), DateTimeOffset.UtcNow);
+            return TiaMcp.FoundationHost.WriteDigest.Capture(tool, arguments, project);
+        }
+        internal static void RecordUnsettled(string requestId, string tool, string digest)
+        {
+            Worker.Unsettled.Record(requestId, tool, digest, DateTimeOffset.UtcNow);
         }
         internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession SharedStagingOwner => TiaMcp.FoundationHost.EngineHostConfiguration
             .StagingOwner();

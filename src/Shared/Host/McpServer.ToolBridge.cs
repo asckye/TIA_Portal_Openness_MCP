@@ -234,6 +234,11 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult TargetFailure(string tool, Exception error, bool issued)
         {
             error = TiaOpenness.Shared.HostFailurePolicy.Unwrap(error);
+#if TIA_ENGINE_HOST
+            if (TiaOpenness.Shared.HostFailurePolicy.Precondition(error) is { Condition: "worker-call-running" } running)
+                return V4Reject(tool, new Error(running.Message,
+                    new PreconditionFailedDetails(running.Condition, null, running.ParamName)));
+#endif
             if (error.Data["workerRequestSent"] is false) issued = false;
             if (!issued && error.Data["workerLimitBytes"] is int workerLimit)
                 return V4Reject(tool,

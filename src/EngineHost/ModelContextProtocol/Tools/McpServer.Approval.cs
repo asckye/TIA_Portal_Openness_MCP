@@ -49,8 +49,13 @@ namespace TiaMcpServer.ModelContextProtocol
             if (name == "CallTool" && (string?)body["meta"]?["tool"] is string targetName) name = targetName;
             bool mutation = write || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
             bool isPreview = preview || HostBehavior.IsPreview(args, TryDryRunDefault(name, out bool defaultPreview) && defaultPreview);
-            if (unknown && mutation && !isPreview && !IsReadOnlyApprovalPreview)
-                RecordUnsettled((string?)body["meta"]?["requestId"] ?? InvocationJournal.CorrelationId, name, args.ToJsonString());
+            if (unknown && mutation && !isPreview && !IsReadOnlyApprovalPreview
+                && TiaMcp.FoundationHost.WriteDigest.Prepared(name, args) is { } digest)
+            {
+                RecordUnsettled((string?)body["meta"]?["requestId"] ?? InvocationJournal.CorrelationId, name, digest);
+                Worker.LateResults.RecordUnknown((string?)body["meta"]?["requestId"] ?? InvocationJournal.CorrelationId,
+                    name, digest, result);
+            }
             if (name is "SaveProject" or "SaveProjectCopy")
                 body = Worker.Unsettled.WarnOnSave(name, body, unsettledBeforeSave);
             return new CallToolResult { IsError = result.IsError, StructuredContent = body,
@@ -74,12 +79,18 @@ namespace TiaMcpServer.ModelContextProtocol
         {
 #if TIA_ENGINE_HOST
             var args = JsonNode.Parse(arguments)!.AsObject();
-            if (!TiaMcp.FoundationHost.UnsettledCalls.IsReviewedApply(args)) return null;
+            bool hasPreview = TryDryRunDefault(name, out bool defaultPreview);
+            if (HostBehavior.IsPreview(args, hasPreview && defaultPreview)
+                || !(ApprovalWrite(name, arguments) || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE")) return null;
             string? project = (string?)Worker.Binding?["identity"]?["projectPath"] ?? (string?)Worker.Binding?["projectPath"];
             Worker.Unsettled.ProjectChanged(project);
-            if (Worker.Unsettled.FindReviewedApply(name, args, project) is { } priorApply)
-                return V4Reject(name, new Error("This apply has an unknown outcome. Inspect its target before submitting another apply.",
-                    new PreconditionFailedDetails("same-call-unsettled", priorApply.RequestId)));
+            string digest = TiaMcp.FoundationHost.WriteDigest.Capture(name, args, project);
+            string? priorId = Worker.LateResults.FindUnread(digest) ?? Worker.Unsettled.FindWrite(digest)?.RequestId;
+            if (priorId != null)
+                return V4Reject(name, new Error("The same write is running or has an unread result. Do not repeat this call. "
+                    + "Read GetCallResult(requestId) for its result or outcome summary, then inspect its target before submitting another write.",
+                    new PreconditionFailedDetails("same-call-unsettled", priorId)));
+            TiaMcp.FoundationHost.LateCalls.IdentifyWrite(digest);
 #endif
             return null;
         }
@@ -107,9 +118,20 @@ namespace TiaMcpServer.ModelContextProtocol
             var args = JsonNode.Parse(arguments)!.AsObject();
             try
             {
-                if (ReviewedApplyRefusal(name, arguments) is { } replayRefusal) return replayRefusal;
-                ApprovalOutputTargets.ValidateWhitespace(name, args);
+                try { ApprovalOutputTargets.ValidateWhitespace(name, args); }
+                catch (ArgumentException)
+                {
+                    if (ReviewedApplyRefusal(name, arguments) is { } whitespaceReplay) return whitespaceReplay;
+                    throw;
+                }
                 if (ApprovalWrite(name, arguments)) ApprovalOutputTargets.Normalize(name, args);
+                if (ReviewedApplyRefusal(name, arguments) is { } replayRefusal) return replayRefusal;
+#if TIA_ENGINE_HOST
+                if (Worker.LateResults.Running is { } running && !Worker.LateResults.ContinuesCurrentCall
+                    && ToolTaxonomy.UsesOpennessLane(name)
+                    && name is not ("GetSessionState" or "GetOpennessWorkerStatus") && !ToolTaxonomy.DispatchesTargets(name))
+                    return V4Reject(name, TiaMcp.FoundationHost.LateCalls.BusyError(running));
+#endif
             }
             catch (ArgumentException error)
             {
@@ -262,6 +284,9 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static async Task<CallToolResult> ApprovedBridgeCallAsync(string name, string arguments, Func<Task<CallToolResult>> invoke,
             Func<Task<CallToolResult?>>? beforeDispatch = null)
         {
+#if TIA_ENGINE_HOST
+            using var digestScope = TiaMcp.FoundationHost.WriteDigest.Enter();
+#endif
             // Target approval must finish before acquiring its lane. The identity
             // check and audit start belong inside that lane, immediately before dispatch.
             var refusal = McpApprovalContext.Value ? await BridgeWait.On(PrecheckBeforeApproval(name, arguments, previewArgs => CallToolCoreAsync(name,

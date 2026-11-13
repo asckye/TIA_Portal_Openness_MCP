@@ -21,8 +21,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
                     : return Tip("the affected target must be offline; verify its state and obtain explicit authorization before changing the online " +
                     "connection.");
                 case "OUTCOME_UNKNOWN"
-                    : return Tip("only this call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists " +
-                        "unsettled request IDs.");
+                    : return Tip("only this call is unknown. Do not repeat this call. Read GetCallResult(requestId) and inspect the target. " +
+                        "GetSessionState lists unsettled request IDs.");
                 case "PRECONDITION_FAILED"
                     : return Tip("read GetToolUsage, verify the target and the stated preconditions, then review a new preview before another call.");
                 case "CONFIRMATION_REQUIRED": return Tip("read GetToolUsage, review the preview and obtain Workbench confirmation before a new apply request.");

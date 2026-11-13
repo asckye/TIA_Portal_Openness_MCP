@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 - Served tool examples use canonical parameter names and always show the preview form. Corrected scope, connection, Teamcenter, library, service and generation rows; validation names V21 as the only exercised release and distinguishes preview, apply and NOT RUN cases.
 - Unknown write outcomes affect only their own calls. Later independent requests run, `GetSessionState` lists unsettled request IDs, and `SaveProject` / `SaveProjectCopy` preview and apply results warn with `UNSETTLED_CALLS`. Answered unknown replies keep the worker available. Workbench shows the unsettled count.
 - Failed live S7 watch connections return `NATIVE_OPERATION_FAILED` with the connection reason and an incomplete read verdict. Alarm exports retain native detail messages; a PLC without alarm text lists returns `PRECONDITION_FAILED` with condition `plc-text-lists`.
@@ -22,7 +23,7 @@
 - Lost worker replies for reads report `read-failed`, `read-only` and `NATIVE_OPERATION_FAILED` across all eight releases. Host mapping classifies failed PLC batch exports as `failed` or `partial`, and cross-reference export failures with no analysis as `read-failed`.
 - Applied batch document imports report `succeeded`. Document imports with an uncertain native result report `unknown`.
 - Verified PLC import readback and preview tokens ignore TIA-computed dates and memory sizes, so recompiling unchanged block content preserves the reviewed token. A completed readback mismatch reports `failed` and retains the backup and cleanup evidence.
-- Unified event writes refused before a native write retain the sanitized native reason. Worker status reports `Draining` during read timeout recovery and attributes an unwinding fault to the running operation. Compile error counts exclude declared summary nodes.
+- Unified event writes refused before a native write retain the sanitized native reason. Worker status reports `Busy` with the running request during a detached call and attributes an unwinding fault to the running operation. Compile error counts exclude declared summary nodes.
 
 - `PreviewToolCall` reports the effective dry-run value and a separate `data.changesState`. Session and online precautions follow each tool's read-only annotation, execution prerequisites name its declared confirmation and plan parameters, and `SaveProject`, `SaveProjectCopy` and `CloseProject` require a bound project in the preview.
 - `PreviewToolCall` validates `PrefillWorkbenchForm` fields with the same per-form rules used when calling the tool, so refused field sets report NOT READY.
@@ -35,6 +36,7 @@
 - Unified colour conversion and write verification also accept `0xAARRGGBB`; the theme schema keeps its existing `0x` format.
 
 ### Fixed
+- Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 - Event script writes tolerate unavailable identity labels, preserve native failure reasons and report failed button actions accurately.
 - Symbolic HMI tag binding avoids unnecessary DataType writes, restores the binding before the type on rollback and lists applied property names in results.
 - Preview and deletion accept the exact unbound Tag dynamization snapshot whose Address, DataType and PlcTag getters fail; other incomplete snapshots refuse with failed paths.
@@ -48,6 +50,7 @@
 - Capped member lists report `totalMembers` and `truncated`. FindTools reports `matchingCount` and page ranges. Type and library lists report truncation, PLC scope paging uses the expected count, and plant objects and transfer areas compute completeness from the returned page and read failures.
 
 ### Fixed
+- Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 
 - Tool descriptions show the GetToolUsage hint once. Discovery, preview and schema examples use the maintained call library for the selected release, including file targets, exact PG/PC interfaces, channel settings and Classic HMI bindings. Generation machine documents use the selected release, and ManageMachineDescription discovery starts with exportTemplate.
 - A rate-limited pre-release update check reports the latest release as unknown. Delivery ZIPs with unknown sizes omit the MB figure.
@@ -71,6 +74,7 @@
 - `merge-check` reuses traversal builds and shared Foundation timing history, overlaps GUI and full-profile transport checks, and runs four isolated GUI shards with a serial input lane. Transport groups run up to eight releases each, with a persistent four-release fallback after WinError 10055. Approved short test waits use 120-second hang guards. Slowdowns over twice the recent median are informational and included in prepare summaries.
 
 ### Fixed
+- Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 - Hardware attribute rows include a device-qualified `deviceItemPath`, and IP reads return one row per network node with a reusable interface path.
 - Device-item paths resolve through same-name CPUs and rack-associated modules; missing paths return `NOT_FOUND` and I/O previews identify addressed children.
 - PUT/GET and PLC loadable refusals retain their reasons. `GeneratePlcLoadableFile.targetOption` accepts the documented `Plc` and `PlcSim` values.

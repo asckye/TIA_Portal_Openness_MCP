@@ -1,3 +1,8 @@
+#if TIA_FOUNDATION_TEST_HOST
+extern alias enginehost;
+using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
+using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+#endif
 using System.Diagnostics;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -38,6 +43,7 @@ internal sealed class HostSession : IHostSession
     private long revision;
     private int operators;
     private bool disposed;
+    private bool resourcesDisposed;
     private bool hostStopping;
     private int activeCalls;
     private JsonObject? finalWorkerState;
@@ -57,12 +63,17 @@ internal sealed class HostSession : IHostSession
     public IReadOnlyList<McpServerTool> Tools { get; }
     public IReadOnlyList<McpServerTool> OperatorTools { get; }
     public event Action? StateChanged;
+    internal LateCalls LateResults { get; }
+    private readonly UnsettledCalls? unsettled;
 
     internal HostSession(string release, string instructions, bool operatorOwned, IReadOnlyList<McpServerTool> tools,
-        IReadOnlyList<McpServerTool> operatorTools, Func<JsonObject> workerState, Action dispose, string? nativeConsentDirectory = null)
+        IReadOnlyList<McpServerTool> operatorTools, Func<JsonObject> workerState, Action dispose, string? nativeConsentDirectory = null,
+        LateCalls? lateResults = null, UnsettledCalls? unsettled = null)
     {
         this.nativeConsentDirectory = nativeConsentDirectory;
         this.release = release; Instructions = instructions; OperatorOwned = operatorOwned;
+        LateResults = lateResults ?? new LateCalls();
+        this.unsettled = unsettled;
         closedToken = closed.Token;
         this.workerState = workerState; this.dispose = dispose;
         observedWorkerState = workerState();
@@ -141,7 +152,8 @@ internal sealed class HostSession : IHostSession
                     ["state"] = hostStopping || (bool?)worker["stopping"] == true ? "stopping" : disconnected ? "disconnected"
                         : activeCalls > 0 || lane != null ? "busy" : "idle" },
                 ["callInProgress"] = activeCalls > 0 || lane != null,
-                ["lane"] = lane?.DeepClone(), ["binding"] = worker["binding"]?.DeepClone(),
+                ["lane"] = lane?.DeepClone(), ["running"] = LateResults.Running,
+                ["binding"] = worker["binding"]?.DeepClone(),
                 ["sessionState"] = sessionState,
                 ["nativeCrossReferencesAllowed"] = !disposed && ((bool?)sessionState?["switches"]?["nativeCrossReferences"]?["humanSessionAllowed"]
                     ?? TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret)),
@@ -202,16 +214,44 @@ internal sealed class HostSession : IHostSession
             if (disposed || hostStopping) throw new InvalidOperationException("The host session has ended; initialize a new session.");
             activeCalls++;
         }
-        bool recorded = false;
-        try { return await InvokeCore(inner, request, workbench, () => recorded = true, token).ConfigureAwait(false); }
-        finally
+        var call = LateResults.CreateInvocation(inner.ProtocolTool.Name, Guid.NewGuid().ToString("N"), token);
+        var core = InvokeOwned(inner, request, workbench, call);
+        _ = core.ContinueWith(completed => { _ = completed.Exception; }, CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        if (await Task.WhenAny(core, call.Detachment).ConfigureAwait(false) == core && !call.Detached)
+            return await core.ConfigureAwait(false);
+        var running = await call.Detachment.ConfigureAwait(false);
+        return FoundationV4Result.InProgress(release, inner.ProtocolTool.Name, running);
+    }
+    private async Task<CallToolResult> InvokeOwned(McpServerTool inner, RequestContext<CallToolRequestParams> request,
+        bool workbench, LateCalls.Invocation call)
+    {
+        using (call)
+        using (call.Enter())
         {
-            // Setup can fail before InvokeCore enters its call-record finally.
-            if (!recorded) { lock (sync) activeCalls--; Changed(); }
+            CallToolResult? result = null;
+            try
+            {
+                result = await InvokeCore(inner, request, workbench, call.Token).ConfigureAwait(false);
+                call.Complete(result, unsettled);
+                return result;
+            }
+            catch
+            {
+                if (call.Detached) call.Complete(FoundationV4Result.LateFailure(release, inner.ProtocolTool.Name,
+                    (string?)LateResults.Running?["requestId"] ?? Guid.NewGuid().ToString("N")), unsettled);
+                throw;
+            }
+            finally
+            {
+                lock (sync) activeCalls--;
+                Changed();
+                FinishDisposal();
+            }
         }
     }
     private async ValueTask<CallToolResult> InvokeCore(McpServerTool inner, RequestContext<CallToolRequestParams> request,
-        bool workbench, Action markRecorded, CancellationToken token)
+        bool workbench, CancellationToken token)
     {
         if (!workbench) BindAi(request.Server);
         string id = Guid.NewGuid().ToString("N"), actor = workbench ? ActorScope.Workbench : ActorScope.Mcp;
@@ -231,9 +271,7 @@ internal sealed class HostSession : IHostSession
                     ["tool"] = inner.ProtocolTool.Name, ["actor"] = actor, ["outcome"] = (string?)result?.StructuredContent?["meta"]?["outcome"] ?? "unknown",
                         ["ms"] = elapsed.ElapsedMilliseconds });
                 while (calls.Count > 20) calls.Dequeue();
-                activeCalls--; markRecorded();
             }
-            Changed();
         }
     }
     public void Dispose()
@@ -241,12 +279,23 @@ internal sealed class HostSession : IHostSession
         lock (sync)
         {
             if (disposed) return;
-            finalWorkerState = workerState(); disposed = true;
+            disposed = true;
             if (endReason != "disconnect") { endedBy = OperatorOwned ? ActorScope.Workbench : ActorScope.Mcp; endReason = "session-ended"; }
         }
         Changed(); closed.Cancel();
+        FinishDisposal();
+    }
+    private void FinishDisposal()
+    {
+        lock (sync)
+        {
+            if (!disposed || resourcesDisposed || activeCalls > 0 || lane != null) return;
+            resourcesDisposed = true;
+            finalWorkerState = workerState();
+        }
         if (aiNotifications != null) aiNotifications.DisposeAsync().AsTask().GetAwaiter().GetResult();
         stagingRegistration?.Dispose(); dispose();
+        LateResults.Clear();
         nativeConsent?.Dispose(); nativeConsent = null;
         try { File.Delete(NativeCrossReferenceSessionFile); }
         catch (IOException error) { OperatorEndpoint.Report(error); }

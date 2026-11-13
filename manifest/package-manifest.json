@@ -105,11 +105,11 @@
     }
   },
   "capabilities": {
-    "mcpToolCount": 517,
+    "mcpToolCount": 518,
     "mcpToolLayers": {
       "L2": 427,
       "L1": 73,
-      "L0": 17
+      "L0": 18
     },
     "hmiTemplateJsonCount": 8,
     "plcTemplateJsonCount": 9,
@@ -129,7 +129,7 @@
       "reflection-based API discovery for uncovered Openness shapes"
     ],
     "liteProfile": {
-      "toolCount": 101,
+      "toolCount": 102,
       "isDefault": true,
       "scope": "L0+L1 essentials + FindTools/CallTool; covers the full golden path",
       "optOut": "--profile full (or TIA_MCP_PROFILE=full)",

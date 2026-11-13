@@ -88,6 +88,9 @@ public sealed class WorkerRobustnessTests
         private readonly string? previousFault;
         private readonly string? previousData = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
         private readonly string dataDirectory;
+        private readonly string? previousGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+        private readonly string gate;
+        private readonly Foundation.HostSession session;
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly McpServerTool engine;
         private readonly McpServerTool shared;
@@ -100,6 +103,12 @@ public sealed class WorkerRobustnessTests
             // Parallel shard processes share this output directory; each scope owns its data location.
             dataDirectory = Path.Combine(AppContext.BaseDirectory, "worker-fixture-data", "plc-" + Guid.NewGuid().ToString("N"));
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", dataDirectory);
+            gate = Path.Combine(dataDirectory, "gate");
+            if (mode == "hang")
+            {
+                Directory.CreateDirectory(gate);
+                Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", gate);
+            }
             string exe = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
             Assert.True(File.Exists(exe), exe);
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
@@ -111,7 +120,7 @@ public sealed class WorkerRobustnessTests
                 new Client(new Options {
                     ReleaseKey = release, WorkerExe = exe, ApiDirectory = Path.GetDirectoryName(exe)!, BundleRoot = AppContext.BaseDirectory,
                 NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":" + budget + ",\"compile\":0.8,\"firstAttach\":1.2}" },
-                    SpillsDirectory, TimeSpan.FromMilliseconds(20));
+                    SpillsDirectory);
             Engine.EngineHostConfiguration.ReleaseKey = release; Engine.EngineHostConfiguration.Worker = Worker;
             var ports = Foundation.LegacyHostToolRegistry.Create(Worker, release, true, hostPorts: false);
             var catalog = new Engine.FoundationCatalog(release, ports);
@@ -130,6 +139,10 @@ public sealed class WorkerRobustnessTests
             // The first generation starts and reports its status under the production budgets; the scaled budgets above apply
             // from the first operation a test measures (P8-stab-1).
             using (Worker.ProductionBudgets()) Worker.Status(CancellationToken.None).GetAwaiter().GetResult();
+            var tools = new[] { engine, shared }.Distinct().ToArray();
+            session = new Foundation.HostSession(release, "fixture", true, tools, tools,
+                ((Foundation.WorkerClient)Worker.Client).OperatorSnapshot, () => { }, nativeConsentDirectory: dataDirectory,
+                lateResults: Worker.LateResults, unsettled: Worker.Unsettled);
         }
         internal Task<CallToolResult> Call(bool foundation, string? payload = null, CancellationToken token = default)
         {
@@ -140,9 +153,27 @@ public sealed class WorkerRobustnessTests
             var server = DispatchProxy.Create<IMcpServer, ServerProxy>();
             var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(new JsonObject {
                 ["name"] = tool.ProtocolTool.Name, ["arguments"] = args }.ToJsonString()) };
-            return tool.InvokeAsync(request, token).AsTask();
+            return session.OperatorTools.Single(entry => entry.ProtocolTool.Name == tool.ProtocolTool.Name).InvokeAsync(request, token).AsTask();
         }
         internal void ClearFault() => Environment.SetEnvironmentVariable(faultVariable, null);
+        internal void Release() { if (Directory.Exists(gate)) File.WriteAllText(Path.Combine(gate, "release"), ""); }
+        internal async Task WaitCompleted()
+        {
+            using var deadline = new CancellationTokenSource(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
+            while ((bool?)session.Snapshot()["callInProgress"] == true) await Task.Delay(5, deadline.Token);
+        }
+        internal void EndFaultedFixture()
+        {
+            var child = (System.Diagnostics.Process?)Worker.Client.GetType().GetField("process", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(Worker.Client);
+            if (child is { HasExited: false })
+            {
+                string expected = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture",
+                    "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
+                Assert.Equal(Path.GetFullPath(expected), Path.GetFullPath(child.MainModule!.FileName), ignoreCase: true);
+                Foundation.WorkerShutdown.KillOwned(child);
+            }
+        }
         internal string FailureDetails(CallToolResult? result = null)
         {
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -165,11 +196,18 @@ public sealed class WorkerRobustnessTests
         }
         public void Dispose()
         {
+            Release();
+            Assert.True(SpinWait.SpinUntil(() => (bool?)session.Snapshot()["callInProgress"] != true,
+                TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+            session.Dispose();
+            Worker.Dispose();
+            EndFaultedFixture();
             Worker.Dispose(); lifetime.Dispose(); Journal.ConfigureOutput(null);
             if (Directory.Exists(SpillsDirectory)) Directory.Delete(SpillsDirectory, true);
             if (Directory.Exists(dataDirectory)) Directory.Delete(dataDirectory, true);
             Environment.SetEnvironmentVariable(faultVariable, previousFault);
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", previousData);
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", previousGate);
         }
     }
     public class ServerProxy : DispatchProxy
@@ -212,22 +250,27 @@ public sealed class WorkerRobustnessTests
         var result = await scope.Call(shared);
         bool draining = mode == "hang";
         bool faulted = !draining && mode != "tia-lost";
-        Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal(draining ? "in-progress" : "read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-        if (draining) Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
+        if (draining) Assert.Equal("OPERATION_IN_PROGRESS", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
         var refused = await scope.Call(!shared);
         Assert.Equal(mode == "tia-lost" ? "NATIVE_OPERATION_FAILED" : "PRECONDITION_FAILED", (string?)refused.StructuredContent?["error"]?["code"]);
         if (mode == "tia-lost") Assert.Equal("read-failed", (string?)refused.StructuredContent?["meta"]?["outcome"]);
         if (faulted) Assert.Equal("worker-faulted", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
-        if (draining) Assert.Equal("worker-read-running", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+        if (draining) Assert.Equal("worker-call-running", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
         var previous = scope.Worker.Snapshot();
         Assert.Equal(faulted, (string?)previous["state"] == "Faulted");
         Assert.Null(previous["sessionLocked"]);
         Assert.Equal(faulted, previous["fault"] != null);
-        Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED");
         object key = scope.Worker.SessionKey;
         scope.ClearFault();
+        if (draining)
+        {
+            scope.Release();
+            await scope.WaitCompleted();
+        }
+        Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED");
         // The faulting call above ran on the scaled budgets. The explicit restart starts the next generation, which is then
         // rebound and used, under the production budgets (P8-stab-1).
         using var production = scope.Worker.ProductionBudgets();
@@ -235,7 +278,7 @@ public sealed class WorkerRobustnessTests
         Assert.True((bool?)restart["success"]); Assert.True((bool?)restart["requiresExplicitRebind"]);
         Assert.NotSame(key, scope.Worker.SessionKey); Assert.Null(scope.Worker.Binding);
         Assert.Equal(faulted, restart["worker"]?["previousGenerations"]?[0]?["fault"] != null);
-        if (draining) Assert.True((bool?)restart["requiresTiaRestart"]);
+        if (draining) Assert.False((bool?)restart["requiresTiaRestart"]);
         Assert.False(scope.Worker.Faulted);
         await scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None);
         Assert.NotNull(scope.Worker.Binding);
@@ -365,7 +408,12 @@ public sealed class WorkerRobustnessTests
         finally
         {
             // Only this synthetic child is terminated; production clients never kill a worker.
-            if (!process.HasExited) { process.Kill(); process.WaitForExit(); }
+            if (!process.HasExited)
+            {
+                Assert.Equal(Path.GetFullPath(exe), Path.GetFullPath(process.MainModule!.FileName), ignoreCase: true);
+                process.Kill();
+                process.WaitForExit();
+            }
             if (Directory.Exists(root)) Directory.Delete(root, true);
         }
         Assert.True(failure == null, failure + Environment.NewLine + "worker stderr:" + Environment.NewLine + await stderr);
@@ -385,10 +433,15 @@ public sealed class WorkerRobustnessTests
     public async Task First_attach_has_a_longer_deadline_and_the_access_confirmation_hint()
     {
         using var scope = new Scope("hang"); var clock = System.Diagnostics.Stopwatch.StartNew();
-        var error = await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None));
+        using var invocation = scope.Worker.LateResults.CreateInvocation("ConnectPortal", "first-attach", CancellationToken.None);
+        using var flow = invocation.Enter();
+        var call = scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None);
+        var running = await invocation.Detachment.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
         Assert.True(clock.Elapsed.TotalSeconds >= 1);
-        Assert.Contains("Openness access confirmation", error.Message);
-        Assert.True(scope.Worker.Faulted);
+        Assert.Contains("Openness access confirmation", (string?)running["message"]);
+        Assert.False(scope.Worker.Faulted);
+        scope.Release();
+        await call.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
     }
     [Fact]
     public async Task Restart_clears_an_adopted_binding_and_refuses_a_busy_lane()

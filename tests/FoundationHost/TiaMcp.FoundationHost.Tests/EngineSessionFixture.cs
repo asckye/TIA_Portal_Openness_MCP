@@ -24,6 +24,16 @@ internal static class EngineSessionFixture
         long epoch = 0; bool uncertain = false, hasProject = true, unknownOnNextFamily = false;
         string? slowShutdownMarker = null;
         string? leaseRoot = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
+        void Hang()
+        {
+            if (leaseRoot != null) File.WriteAllText(Path.Combine(leaseRoot, "busy"), "");
+            string? gate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+            if (string.IsNullOrEmpty(gate)) { Thread.Sleep(10000); return; }
+            Directory.CreateDirectory(gate);
+            File.WriteAllText(Path.Combine(gate, "dispatched"), "");
+            Xunit.Assert.True(SpinWait.SpinUntil(() => File.Exists(Path.Combine(gate, "release")), TestDeadlines.Hang),
+                "The running native fixture was not released.");
+        }
         JsonObject Status() => new() { ["releaseKey"] = release, ["readiness"] = new JsonObject { ["ready"] = true },
             ["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(BehaviorCapabilities).Assembly, release),
             ["binding"] = attached == null || !hasProject ? null : new JsonObject {
@@ -92,7 +102,7 @@ internal static class EngineSessionFixture
                 return ChannelResponse.Success(result.ToJsonString());
             }
             if (request.Method == "adapter.FixtureUnknown") return ChannelResponse.Error(new ChannelFailureException("Fixture answered native unknown.", -32603, ChannelOutcome.Unknown));
-            if (request.Method == "adapter.FixtureHang") { if (leaseRoot != null) File.WriteAllText(Path.Combine(leaseRoot, "busy"), ""); Thread.Sleep(10000); return ChannelResponse.Success("{}"); }
+            if (request.Method == "adapter.FixtureHang") { Hang(); return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.ListProjects")
                 return ChannelResponse.Success(new JsonArray(new JsonObject { ["Name"] = "fixture",
                     ["Attributes"] = new JsonArray(new JsonObject { ["Name"] = "Path", ["Value"] = "C:/fixture.ap" + release }) }).ToJsonString());
@@ -104,7 +114,7 @@ internal static class EngineSessionFixture
                     ["ProjectFile"] = null, ["OwnsProject"] = false, ["IsLocalSession"] = false,
                     ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" }.ToJsonString());
             string name = (string)input["name"]!, id = (string)input["requestId"]!;
-            if ((bool?)input["arguments"]?["hang"] == true) { if (leaseRoot != null) File.WriteAllText(Path.Combine(leaseRoot, "busy"), ""); Thread.Sleep(10000); }
+            if ((bool?)input["arguments"]?["hang"] == true) Hang();
             bool unknown = (bool?)input["arguments"]?["fault"] == true;
             var data = new JsonObject { ["fixturePid"] = Environment.ProcessId };
             if (unknown) data["nativeOutcomeUnknown"] = true;

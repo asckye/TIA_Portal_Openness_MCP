@@ -22,4 +22,4 @@ The warning's `bindingMeaning` requires resolving and reviewing placeholders
 against the current session. Guidance does not approve, retry, or execute a
 write. Workbench confirmation remains an explicit human decision.
 
-An `OUTCOME_UNKNOWN` result applies to that call. Inspect its target before repeating it and never replay it automatically. `GetSessionState.data.sessionState.unsettled` lists unknown request IDs. `SaveProject` and `SaveProjectCopy` carry `UNSETTLED_CALLS` during preview and apply while that list is nonempty.
+An `OUTCOME_UNKNOWN` result applies to that call. Read `GetCallResult(requestId)` and inspect its target before repeating it. A running call returns `in-progress` with `OPERATION_IN_PROGRESS`. An identical write returns `same-call-unsettled` until its completed result has been read. `GetSessionState.data.sessionState.unsettled` lists unknown request IDs. `SaveProject` and `SaveProjectCopy` carry `UNSETTLED_CALLS` during preview and apply while that list is nonempty.

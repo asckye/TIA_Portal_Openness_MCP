@@ -99,8 +99,28 @@ internal static class Program
             bool target = request.Method == faultMethod && request.ToolName == faultTool && request.CorrelationId == faultCorrelation;
             string? fixtureMode = WorkerFaultInjection.PlcMode(typeof(Program).Assembly);
             string? mode = target ? fixtureMode : null;
+            if (mode == "hang" && request.Method == "adapter.SaveProject"
+                && (bool?)JsonNode.Parse(request.ArgumentsJson)?["dryRun"] == true) mode = null;
+            if (mode == "hang" && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE")))
+            {
+                string progressFault = Path.Combine(Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE")!, "progress-fault");
+                if (File.Exists(progressFault))
+                {
+                    bool overLimit = File.ReadAllText(progressFault) == "over-limit";
+                    int count = overLimit ? 1025 : 1;
+                    for (int sequence = 1; sequence <= count; sequence++)
+                        Console.Out.WriteLine(JsonSerializer.Serialize(new { jsonrpc = "2.0", method = "progress",
+                            @params = new { requestId = request.Id, sequence = overLimit ? sequence : 2, percent = 50 } }));
+                    Console.Out.Flush();
+                }
+                Slow();
+                string faultAfterGate = Path.Combine(Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE")!, "after-gate-fault");
+                if (File.Exists(faultAfterGate)) WorkerFaultInjection.BeforeDispatch(File.ReadAllText(faultAfterGate), request);
+                mode = null;
+            }
             var injected = mode == null ? null : WorkerFaultInjection.PlcBeforeDispatch(typeof(Program).Assembly, request, _ => { });
             if (injected != null) return injected;
+            if (mode == "slow" && request.Method != "adapter.ReadState") Slow();
             if (request.Method == "adapter.project-lifecycle.ArchiveSaveProjectCopy")
             {
                 string path = JsonNode.Parse(request.ArgumentsJson)!["path"]!.GetValue<string>();
@@ -158,13 +178,13 @@ internal static class Program
             }
             if (request.Method == "adapter.Disconnect")
             {
+                bool wasBound = bound;
                 bound = false; epoch++;
-                return ChannelResponse
-                    .Success("{\"Stage\":\"disconnected\",\"SessionState\":\"terminal\"," +
-                        "\"Strategy\":\"non-owning-attachment-only\",\"WorkerAcknowledged\":true,\"Detached\":true," +
-                        "\"SavedProject\":false,\"ClosedProject\":false,\"LaunchMode\":\"never\"}");
+                return ChannelResponse.Success(new JsonObject { ["Stage"] = "disconnected", ["SessionState"] = "terminal",
+                    ["Strategy"] = "non-owning-attachment-only", ["WorkerAcknowledged"] = true, ["Detached"] = wasBound,
+                    ["ProcessId"] = wasBound ? attachedPid : (int?)null, ["SavedProject"] = false, ["ClosedProject"] = false,
+                    ["LaunchMode"] = "never" }.ToJsonString());
             }
-            if (mode == "slow" && request.Method != "adapter.ReadState") Slow();
             string padding = mode is "oversized" or "oversized-delayed" ? new string('x', ChannelLimits.ResponseBytes) : "fixture";
             if (request.Method == "adapter.optional-products.ExecuteOptionalProduct")
             {

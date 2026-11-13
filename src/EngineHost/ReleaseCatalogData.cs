@@ -58,9 +58,10 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
 
     private static ReleaseCatalogData Presentation(string release) => new(DiscoveryInstructions, true, true, true, "",
         ToolUsageCatalog.ProfileEntries(release).Select(row => (string)row!["currentName"]!)
-            .OrderBy(name => name, StringComparer.Ordinal).ToArray(),
+            .Append("GetCallResult").Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray(),
         ToolUsageCatalog.ProfileEntries(release).Where(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"))
-            .Select(row => (string)row!["currentName"]!).ToArray(), new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, StringComparer.Ordinal,
+            .Select(row => (string)row!["currentName"]!).Append("GetCallResult").Distinct(StringComparer.Ordinal).ToArray(),
+        new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, StringComparer.Ordinal,
         "plc-foundation", new Dictionary<string, string>(StringComparer.Ordinal),
         new Dictionary<string, string>(StringComparer.Ordinal)
         {

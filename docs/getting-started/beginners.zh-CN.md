@@ -103,14 +103,14 @@ Get-Content .\<下载的交付包文件名>.sha256
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 280 | 89 |
-| V15.1 | 320 | 92 |
-| V16 | 349 | 93 |
-| V17 | 372 | 93 |
-| V18 | 398 | 95 |
-| V19 | 474 | 95 |
-| V20 | 497 | 98 |
-| V21 | 512 | 101 |
+| V14 SP1 | 281 | 90 |
+| V15.1 | 321 | 93 |
+| V16 | 350 | 94 |
+| V17 | 373 | 94 |
+| V18 | 399 | 96 |
+| V19 | 475 | 96 |
+| V20 | 498 | 99 |
+| V21 | 513 | 102 |
 <!-- generated:tool-counts:end -->
 
 V4 工具返回 `ok`、`data`、`error` 和 `meta`；先检查 `meta.outcome`。结果为 `OUTCOME_UNKNOWN` 时，先核对工程现状，不要自动重复写入。
@@ -219,8 +219,8 @@ V20/V21 MCP 服务即使没有检测到 TIA、安装版本与宿主不匹配，�
 
 八个版本都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 PLC worker；隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。使用工作台生成的宿主命令，无需选择隔离模式。
 
-worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消；派发后等待真实结果，超时或通道故障不会重放原生操作。
+worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消。调用超过等待预算时返回 `in-progress` 和 `OPERATION_IN_PROGRESS`，原调用继续执行。用返回的 `activeRequestId` 调用 `GetCallResult(requestId)` 读取最终结果。
 
-用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。遇到 `OUTCOME_UNKNOWN` 时，先在 TIA 中检查受影响目标并记录请求编号，避免自动重复该调用。`GetSessionState` 列出未确认调用，后续独立请求仍按正常身份、审批和预览检查执行；保存时会提示 `UNSETTLED_CALLS`。同一审阅哈希和参数的 apply 在派发前被拒绝。真正的 worker 故障返回 `worker-faulted`，此阶段须按[worker 与恢复](../guides/openness-worker-isolation.md)显式重启 worker 并重新绑定。重启、断开或失去绑定保留未确认清单。
+用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。遇到 `OUTCOME_UNKNOWN` 时，先在 TIA 中检查受影响目标并记录请求编号，避免自动重复该调用。`GetSessionState` 列出未确认调用，后续独立请求仍按正常身份、审批和预览检查执行；保存时会提示 `UNSETTLED_CALLS`。相同写入在运行或完成结果未读取时返回 `same-call-unsettled`。先读 `GetCallResult`，再检查目标并决定下一步。真正的 worker 故障返回 `worker-faulted`，此阶段须按[worker 与恢复](../guides/openness-worker-isolation.md)显式重启 worker 并重新绑定。重启、断开或失去绑定保留未确认清单。
 
 八版 MCP 均由 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` 启动。宿主自动使用 `worker/` 子目录中的 PLC worker，保持完整解压包即可。

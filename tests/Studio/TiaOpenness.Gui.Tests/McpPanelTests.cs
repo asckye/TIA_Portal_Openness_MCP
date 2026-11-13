@@ -28,6 +28,28 @@ public sealed class McpPanelTests(WpfContext wpf)
         => Assert.Equal("ListPlcBlocks · result", new McpProjectClient.Receipt("ListPlcBlocks", "result", "{}").Label);
 
     [Fact]
+    public async Task Running_call_shows_its_tool_request_time_and_actor()
+    {
+        await using var host = new McpOperatorFixture();
+        var client = host.Client(); await Attach(client, host);
+        await host.Notify(state => {
+            state["running"] = new JsonObject { ["tool"] = "SaveProject", ["requestId"] = "running-request",
+                ["sinceUtc"] = "2026-11-12T00:00:00Z" };
+            state["lane"] = new JsonObject { ["actor"] = "mcp", ["tool"] = "older-tool" };
+        });
+        wpf.Run(() =>
+        {
+            using var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
+            WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+            Assert.Contains("SaveProject", model.Panel!.Lane);
+            Assert.Contains("running-request", model.Panel.Lane);
+            Assert.Contains("2026-11-12T00:00:00Z", model.Panel.Lane);
+            Assert.Contains("mcp", model.Panel.Lane);
+            Assert.DoesNotContain("older-tool", model.Panel.Lane);
+        });
+    }
+
+    [Fact]
     public async Task Unsettled_count_shows_and_operations_stay_enabled()
     {
         await using var host = new McpOperatorFixture();

@@ -4923,6 +4923,21 @@
           "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
         ]
       },
+      "GetCallResult": {
+        "arguments": { "requestId": "request-id-from-original-call" },
+        "parameters": {
+          "requestId": {
+            "exampleValue": "request-id-from-original-call",
+            "sourceTools": ["GetSessionState"],
+            "meaning": "Use the activeRequestId returned by the original call, a session lateResults or unsettled requestId, or an inner unknown batch-write ID."
+          }
+        },
+        "operations": {},
+        "validation": "Host-only managed fixtures verify running and final results, guarded outcome summaries, summary removal after reading, bounded read-result retention, and NOT_FOUND across all eight releases.",
+        "resultReading": [
+          "in-progress keeps the original call running. A retained completed result is its original final envelope. After full-result eviction, only unread writes and unread unsettled IDs retain outcome summaries without the original payload. Reading a summary removes it, and later lookups return NOT_FOUND. Completed full results remain queryable within the latest 16 results. Inner unknown batch-write IDs resolve to their enclosing result when retained. Reading a completed result or summary acknowledges its related unknown writes and releases their identical-write guards. Inspect targets before repeating writes."
+        ]
+      },
       "GetOpennessWorkerStatus": {
         "arguments": {},
         "parameters": {},
@@ -31415,6 +31430,21 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "GetCallResult": {
+        "arguments": { "requestId": "request-id-from-original-call" },
+        "parameters": {
+          "requestId": {
+            "exampleValue": "request-id-from-original-call",
+            "sourceTools": ["GetSessionState"],
+            "meaning": "Use the activeRequestId returned by the original call, a session lateResults or unsettled requestId, or an inner unknown batch-write ID."
+          }
+        },
+        "operations": {},
+        "validation": "Host-only managed fixtures verify running and final results, guarded outcome summaries, summary removal after reading, bounded read-result retention, and NOT_FOUND across all eight releases.",
+        "resultReading": [
+          "in-progress keeps the original call running. A retained completed result is its original final envelope. After full-result eviction, only unread writes and unread unsettled IDs retain outcome summaries without the original payload. Reading a summary removes it, and later lookups return NOT_FOUND. Completed full results remain queryable within the latest 16 results. Inner unknown batch-write IDs resolve to their enclosing result when retained. Reading a completed result or summary acknowledges its related unknown writes and releases their identical-write guards. Inspect targets before repeating writes."
+        ]
       },
       "GetOpennessWorkerStatus": {
         "arguments": {},

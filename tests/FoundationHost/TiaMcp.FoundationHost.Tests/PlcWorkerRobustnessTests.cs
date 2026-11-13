@@ -1,3 +1,5 @@
+extern alias foundationhost;
+using HostSession = foundationhost::TiaMcp.FoundationHost.HostSession;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -14,16 +16,27 @@ public sealed class PlcFixtureWorkerRobustnessTests
     private static string Fixture => TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
     private sealed class Scope : IDisposable
     {
+        private readonly string release;
         private readonly string? previous = Environment.GetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT");
+        private readonly string? previousGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+        private readonly string gate = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "bin-build", "robustness-gate-" + Guid.NewGuid().ToString("N"));
+        private HostSession? session;
         internal WorkerClient Worker { get; }
         internal Scope(string release, string mode, string timeoutConfig = "{\"default\":2}")
         {
+            this.release = release;
             Assert.True(File.Exists(Fixture), Fixture);
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(Fixture)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", mode);
+            if (mode == "hang")
+            {
+                Directory.CreateDirectory(gate);
+                Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", gate);
+            }
             Worker = new WorkerClient(release, Fixture, Path.GetDirectoryName(Fixture)!, true,
                 timeoutConfig: timeoutConfig) {
-                    Bundled = false, DrainBudget = TimeSpan.FromMilliseconds(20), WithUi = true, TiaPortalLocation = "C:/fixture Portal V" + release };
+                    Bundled = false, WithUi = true, TiaPortalLocation = "C:/fixture Portal V" + release };
             // Start the worker under the production budgets; the scaled 2-s default applies from the first operation a test
             // measures (P8-stab-1). The fixture faults only the armed request, so this status read never consumes a fault.
             using (new ProductionWorkerBudgets(Worker)) Worker.Observe("status", new(), CancellationToken.None).GetAwaiter().GetResult();
@@ -58,11 +71,34 @@ public sealed class PlcFixtureWorkerRobustnessTests
             if (Process is { HasExited: false } child)
                 Assert.Equal(Path.GetFullPath(Fixture), Path.GetFullPath(child.MainModule!.FileName), ignoreCase: true);
         }
-        public void Dispose()
+        internal Task<CallToolResult> Call(McpServerTool tool, RequestContext<CallToolRequestParams> request)
+        {
+            session ??= new HostSession(release, "fixture", true, new[] { tool }, new[] { tool }, Worker.OperatorSnapshot,
+                () => { }, nativeConsentDirectory: gate, lateResults: Worker.LateResults, unsettled: Worker.Unsettled);
+            return session.OperatorTools.Single().InvokeAsync(request).AsTask();
+        }
+        internal void Release() { if (Directory.Exists(gate)) File.WriteAllText(Path.Combine(gate, "release"), ""); }
+        internal void EndFaultedFixture()
         {
             VerifyChild();
+            if (Process is { HasExited: false } child)
+            { child.Kill(); Assert.True(child.WaitForExit(TiaMcp.Engine.Tests.Shared.TestDeadlines.HangMilliseconds)); }
+        }
+        public void Dispose()
+        {
+            Release();
+            if (session != null)
+            {
+                Assert.True(SpinWait.SpinUntil(() => (bool?)session.Snapshot()["callInProgress"] != true,
+                    TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+                session.Dispose();
+            }
+            VerifyChild();
+            Worker.Dispose();
+            EndFaultedFixture();
             Worker.Dispose();
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", previous);
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", previousGate);
         }
     }
 
@@ -79,14 +115,15 @@ public sealed class PlcFixtureWorkerRobustnessTests
         using var request = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
         await scope.Arm("ReadState");
         var error = await Assert.ThrowsAnyAsync<Exception>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
-        Assert.Equal(mode is not ("hang" or "tia-lost"), scope.Worker.Faulted);
+        Assert.Equal(mode != "tia-lost", scope.Worker.Faulted);
         Assert.True((bool?)error.Data["foundationRequestSent"]);
         Assert.Null(error.Data["foundationSessionPoisoned"]);
         if (mode == "hang")
         {
-            Assert.Equal("read-failed", Assert.IsType<WorkerOperationException>(error).Outcome);
-            var refused = await Assert.ThrowsAsync<WorkerOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
-            Assert.Equal("worker-read-running", refused.Condition);
+            Assert.IsType<ChannelFaultException>(error);
+            var refused = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                scope.Worker.Call("ReadState", new(), CancellationToken.None));
+            Assert.Equal("worker-faulted", refused.Condition);
         }
         else
         {
@@ -129,10 +166,10 @@ public sealed class PlcFixtureWorkerRobustnessTests
         var server = DispatchProxy.Create<IMcpServer, WorkerRobustnessTests.ServerProxy>();
         var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
-        var result = await tool.InvokeAsync(request);
-        Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        var result = await scope.Call(tool, request);
+        Assert.Equal(mode == "hang" ? "in-progress" : "read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-        if (mode == "hang") Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
+        if (mode == "hang") Assert.Equal("OPERATION_IN_PROGRESS", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
         Assert.Equal(mode is not ("hang" or "tia-lost"), scope.Worker.Faulted);
         if (mode == "tia-lost")
@@ -142,9 +179,9 @@ public sealed class PlcFixtureWorkerRobustnessTests
         }
         else
         {
-            var refused = await tool.InvokeAsync(request);
+            var refused = await scope.Call(tool, request);
             Assert.Equal("PRECONDITION_FAILED", (string?)refused.StructuredContent?["error"]?["code"]);
-            Assert.Equal(mode == "hang" ? "worker-read-running" : "worker-faulted", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+            Assert.Equal(mode == "hang" ? "worker-call-running" : "worker-faulted", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
         }
     }
 
@@ -161,10 +198,10 @@ public sealed class PlcFixtureWorkerRobustnessTests
         var server = DispatchProxy.Create<IMcpServer, WorkerRobustnessTests.ServerProxy>();
         var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
-        var result = await tool.InvokeAsync(request);
-        Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        var result = await scope.Call(tool, request);
+        Assert.Equal(mode == "hang" ? "in-progress" : "read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
-        if (mode == "hang") Assert.Equal("TIMEOUT", (string?)result.StructuredContent?["error"]?["code"]);
+        if (mode == "hang") Assert.Equal("OPERATION_IN_PROGRESS", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
         Assert.Equal(mode is not ("hang" or "tia-lost"), scope.Worker.Faulted);
         if (mode == "tia-lost")
@@ -174,9 +211,9 @@ public sealed class PlcFixtureWorkerRobustnessTests
         }
         else
         {
-            var refused = await tool.InvokeAsync(request);
+            var refused = await scope.Call(tool, request);
             Assert.Equal("PRECONDITION_FAILED", (string?)refused.StructuredContent?["error"]?["code"]);
-            Assert.Equal(mode == "hang" ? "worker-read-running" : "worker-faulted", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
+            Assert.Equal(mode == "hang" ? "worker-call-running" : "worker-faulted", (string?)refused.StructuredContent?["error"]?["details"]?["condition"]);
         }
     }
 
@@ -186,12 +223,18 @@ public sealed class PlcFixtureWorkerRobustnessTests
         using var scope = new Scope(release, "hang", "{\"default\":2,\"archive\":0.2}");
         using var request = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "SaveProjectCopy");
         await scope.Arm("project-lifecycle.ArchiveSaveProjectCopy");
-        await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("project-lifecycle.ArchiveSaveProjectCopy",
-            new() { ["path"] = "fixture", ["dryRun"] = false }, CancellationToken.None));
-        Assert.True(scope.Worker.Faulted);
+        using var invocation = scope.Worker.LateResults.CreateInvocation("SaveProjectCopy", FoundationWorkerRequest.CorrelationId,
+            CancellationToken.None);
+        using var flow = invocation.Enter();
+        var call = scope.Worker.Call("project-lifecycle.ArchiveSaveProjectCopy",
+            new() { ["path"] = "fixture", ["dryRun"] = false }, CancellationToken.None);
+        await invocation.Detachment.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
+        Assert.False(scope.Worker.Faulted);
         var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(
             () => scope.Worker.Call("ReadState", new(), CancellationToken.None));
-        Assert.Equal("worker-faulted", refusal.Condition);
+        Assert.Equal("worker-call-running", refusal.Condition);
+        scope.Release();
+        Assert.True((bool?)await call.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
     }
 
     public static IEnumerable<object[]> Keys() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(key => new object[] { key });

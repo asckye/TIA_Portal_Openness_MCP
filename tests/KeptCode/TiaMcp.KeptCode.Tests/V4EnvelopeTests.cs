@@ -11,6 +11,21 @@ namespace TiaMcp.Engine.Tests
 {
     public sealed class V4EnvelopeTests
     {
+        [Fact]
+        public void In_progress_requires_its_error_code_and_ok_false()
+        {
+            var meta = Metadata(Outcome.InProgress, Execution.Unknown, completeness: Completeness.Unknown);
+            var error = new Error("Read GetCallResult(requestId).", new OperationInProgressDetails("request-1"));
+            var envelope = Envelope.Create(new { activeRequestId = "request-1" }, error, meta);
+            Assert.False(envelope.Ok);
+            Assert.Equal("in-progress", Json(V4Json.Serialize(envelope)).GetProperty("meta").GetProperty("outcome").GetString());
+            Assert.Equal(ErrorCode.OperationInProgress, V4Json.Deserialize<Envelope>(V4Json.Serialize(envelope)).Error!.Code);
+            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("failure", new InternalErrorDetails("r")), meta));
+            Assert.Throws<ArgumentException>(() => new Envelope(4, true, null, error, meta));
+            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, error, Metadata(Outcome.Unknown, Execution.Unknown)));
+            Assert.Throws<ArgumentException>(() => Metadata(Outcome.InProgress, Execution.Completed));
+            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, error, Metadata(Outcome.InProgress, Execution.Unknown)));
+        }
 
         [Theory]
         [InlineData(false)]
@@ -74,6 +89,8 @@ namespace TiaMcp.Engine.Tests
         {
             var samples = new (ErrorDetails Details, string Json)[]
             {
+                (new OperationInProgressDetails("request-1"),
+                    """{"code":"OPERATION_IN_PROGRESS","message":"Failure.","details":{"requestId":"request-1"}}"""),
                 (new InvalidArgumentDetails("mode", new[] { "preview", "apply" }), """{"code":"INVALID_ARGUMENT","message":"Failure.","details":{"parameter":"mode","allowedValues":["preview","apply"],"parameters":["mode"]}}"""),
                 (new LimitExceededDetails("items", 1000, 1001), """{"code":"LIMIT_EXCEEDED","message":"Failure.","details":{"parameter":"items","limit":1000,"actual":1001}}"""),
                 (new UnsupportedCapabilityDetails("14sp1", "compile", null), """{"code":"UNSUPPORTED_CAPABILITY","message":"Failure.","details":{"releaseKey":"14sp1","capability":"compile","action":null}}"""),
@@ -409,6 +426,7 @@ namespace TiaMcp.Engine.Tests
                 (Outcome.Failed, Execution.Completed) => true,
                 (Outcome.Partial, Execution.Partial) => true,
                 (Outcome.Unknown, Execution.Unknown) => true,
+                (Outcome.InProgress, Execution.Unknown) => true,
                 _ => false
             };
             var exception = Record.Exception(() => Metadata(outcome, execution, outcome == Outcome.Unknown));
@@ -490,10 +508,10 @@ namespace TiaMcp.Engine.Tests
                 || reference.Name.StartsWith("ModelContextProtocol", StringComparison.OrdinalIgnoreCase));
             var types = assembly.GetExportedTypes().Where(t => t.Namespace == "TiaMcp.Logic.V4").ToArray();
             Assert.Contains(typeof(Plan), types);
-            Assert.Equal(26, Enum.GetValues<ErrorCode>().Length);
+            Assert.Equal(27, Enum.GetValues<ErrorCode>().Length);
             Assert.Equal(14, Enum.GetValues<WarningCode>().Length);
             Assert.Contains(WarningCode.UnsettledCalls, Enum.GetValues<WarningCode>());
-            Assert.Equal(26, types.Count(t => t.BaseType == typeof(ErrorDetails)));
+            Assert.Equal(27, types.Count(t => t.BaseType == typeof(ErrorDetails)));
         }
 
         private static void InCulture(string culture, Action action)

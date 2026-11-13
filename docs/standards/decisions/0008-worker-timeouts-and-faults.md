@@ -38,4 +38,4 @@ Openness 调用无法中途安全停止，也无法从异常推断写入是否�
 
 ## 2026-11-12 会话锁移除
 
-[ADR 0034](0034-no-session-lock.md) 取代故障结果导致会话锁定、answered-unknown 后显式恢复的规则。只读丢失回复的分类沿用 VMFIX-7 D1。当前调用预算保留，长类预算在 NO-LOCK Part 5 调整。真正的 worker 传输故障在 Part 4 前仍要求显式重启 worker。
+[ADR 0034](0034-no-session-lock.md) 取代故障结果导致会话锁定、answered-unknown 后显式恢复的规则。只读丢失回复的分类沿用 VMFIX-7 D1。Part 2 将客户端等待预算到期后的读取和写入统一返回 `in-progress`，通过 `GetCallResult` 取回真实结果。调用期间拒绝断开和重启，会话关闭延迟释放。host-only 状态探测继续按预算报告故障。当前调用预算保留，长类预算在 NO-LOCK Part 5 调整。真正的 worker 传输故障在 Part 4 前仍要求显式重启 worker。

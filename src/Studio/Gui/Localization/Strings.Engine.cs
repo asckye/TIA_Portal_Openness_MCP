@@ -29,7 +29,10 @@ internal static partial class Strings
         ("Engine.Error.Timeout", "The operation timed out.", "操作超时。"),
         ("Engine.Error.NotExecuted", "The operation was not executed.", "操作未执行。"),
         ("Engine.Error.PartialFailure", "The operation completed only partially.", "操作仅部分完成。"),
-        ("Engine.Error.OutcomeUnknown", "The outcome is unknown. Verify the state before retrying.", "结果未知。重试前请核实状态。"),
+        ("Engine.Error.OutcomeUnknown", "The outcome is unknown. Read GetCallResult and inspect the target before repeating it.",
+            "结果未知。重复调用前请读取 GetCallResult 并核实目标。"),
+        ("Engine.Error.OperationInProgress", "The call is still running. Read GetCallResult before repeating it.",
+            "调用仍在运行。重复调用前请读取 GetCallResult。"),
         ("Engine.Error.InternalError", "An internal error occurred.", "发生内部错误。"),
         ("Engine.Outcome.Succeeded", "Succeeded", "成功"),
         ("Engine.Outcome.RejectedBeforeOperation", "Rejected before operation", "执行前被拒绝"),
@@ -37,5 +40,6 @@ internal static partial class Strings
         ("Engine.Outcome.Failed", "Failed", "失败"),
         ("Engine.Outcome.Partial", "Partial result", "部分结果"),
         ("Engine.Outcome.Unknown", "Unknown outcome", "结果未知"),
+        ("Engine.Outcome.InProgress", "In progress", "正在运行"),
     ];
 }

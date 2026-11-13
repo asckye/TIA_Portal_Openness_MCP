@@ -17,10 +17,11 @@ using EngineFixture = enginefixture::TiaMcp.Engine.Tests.BehaviorParityEngine;
 internal static class EngineHostParity
 {
     internal static IDisposable EnterScope() => new Scope(false, true);
-    internal static string Run(string scenario, bool plcWorker = false) => Execute(() => EngineFixture.Run(scenario), true, plcWorker);
+    internal static string Run(string scenario, bool plcWorker = false)
+        => Execute(() => EngineFixture.Run(scenario), true, plcWorker, readUnknownResult: scenario == "unknown");
     internal static string RunPrecondition(string tool, string message, string? parameter, bool argument, bool wrapped, bool typed, string arguments)
         => Execute(() => EngineFixture.RunPrecondition(tool, message, parameter, argument, wrapped, typed, arguments), false);
-    private static string Execute(Func<string> run, bool approvalContext, bool plcWorker = false)
+    private static string Execute(Func<string> run, bool approvalContext, bool plcWorker = false, bool readUnknownResult = false)
     {
         EngineFixture.ExternalHost = () => new Scope(approvalContext, plcWorker: plcWorker);
         EngineFixture.ExternalCall = (name, args) =>
@@ -30,7 +31,14 @@ internal static class EngineHostParity
             using var request = plcWorker ? HostMcp.UseProgressRequest(new global::ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(
                 DispatchProxy.Create<global::ModelContextProtocol.Server.IMcpServer, WorkerRobustnessTests.ServerProxy>())
                 { Params = new CallToolRequestParams { Name = name } }, CancellationToken.None) : null;
-            return HostMcp.ResultBody(HostMcp.CallTool(name, new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(args))))!;
+            var body = HostMcp.ResultBody(HostMcp.CallTool(name,
+                new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(args))))!;
+            if (readUnknownResult && (string?)body["meta"]?["outcome"] == "unknown")
+            {
+                var read = HostMcp.GetCallResult((string)body["meta"]!["requestId"]!);
+                Xunit.Assert.Equal("OUTCOME_UNKNOWN", (string?)read.StructuredContent?["error"]?["code"]);
+            }
+            return body;
         };
         try { return run(); }
         finally { EngineFixture.ExternalHost = null; EngineFixture.ExternalCall = null; }

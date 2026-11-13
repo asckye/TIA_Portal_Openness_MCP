@@ -821,6 +821,14 @@ def current_parameters(root):
     renames = json.loads((root / 'reference/tool-catalog/v3-v4-renames.json').read_text(encoding='utf-8'))
     params = {('full-engine', renames.get(name, name)): {key: row.get('value') for key, row in tool['parameters'].items()}
               for name, tool in frozen['registrations'].items()}
+    host_tools = (root / 'src/Shared/Host/McpServer.Worker.cs').read_text(encoding='utf-8-sig')
+    call_result = re.search(
+        r'McpServerTool\(Name\s*=\s*"GetCallResult"\)[\s\S]*?public\s+static\s+CallToolResult\s+GetCallResult\('
+        r'\s*\[Description\("[^"\n]*"\)\]\s+string\s+requestId\s*\)', host_tools)
+    if call_result is None:
+        raise ValueError('GetCallResult must retain its declared host tool and required string requestId parameter')
+    for profile in ('full-engine', 'plc-foundation'):
+        params[(profile, 'GetCallResult')] = {'requestId': None}
     text = (root / 'src/FoundationHost/FoundationTools.cs').read_text(encoding='utf-8-sig')
     wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
     construction_parameters = dict(re.findall(r'case "([^"\n]+)": Construction<\w+>\("([^"\n]+)"\)', wrapper))

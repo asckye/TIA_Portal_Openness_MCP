@@ -111,17 +111,23 @@ public sealed class EngineWorkerClientTests
     }
     [Theory, InlineData("19", false), InlineData("19", true)]
     [InlineData("20", false)] [InlineData("20", true)] [InlineData("21", false)] [InlineData("21", true)]
-    public async Task Stop_during_native_dispatch_or_after_unknown_retains_refusal(string release, bool answeredUnknown)
+    public async Task Disposal_defers_running_calls_and_preserves_answered_unknown_evidence(string release, bool answeredUnknown)
     {
-        string root = Path.Combine(Path.GetTempPath(), "tia-client-busy-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        string root = Path.Combine(TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build",
+            "tia-client-busy-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        string gate = Path.Combine(root, "running-gate"); Directory.CreateDirectory(gate);
         string? previous = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
+        string? previousGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
         Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", root);
+        Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", gate);
         try
         {
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             using var worker = new ClientBridge(release, exe);
             await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
+            using var child = Process.GetProcessById((int)worker.Snapshot["pid"]!);
+            Assert.Equal(Path.GetFullPath(exe), Path.GetFullPath(child.MainModule!.FileName), ignoreCase: true);
             Task<JsonNode?> running = worker.Call(answeredUnknown ? "FixtureUnknown" : "FixtureHang", new JsonObject(), CancellationToken.None);
             if (answeredUnknown) await Assert.ThrowsAnyAsync<Exception>(() => running);
             else
@@ -133,16 +139,42 @@ public sealed class EngineWorkerClientTests
             var watch = Stopwatch.StartNew(); worker.Dispose();
             Assert.True(watch.Elapsed < TestDeadlines.Hang);
             TestDeadlines.Report("worker.dispose-busy", watch.Elapsed.TotalMilliseconds, "ms");
-            if (!answeredUnknown) await Assert.ThrowsAnyAsync<Exception>(() => running);
             string path = Path.Combine(root, "123-1.lease");
+            if (!answeredUnknown)
+            {
+                try
+                {
+                    Assert.False(child.HasExited);
+                    Assert.False(running.IsCompleted);
+                    Assert.Throws<IOException>(() => File.ReadAllText(path));
+                    Assert.Equal(SessionBehavior.LeaseReserved, Assert.Throws<InvalidOperationException>(() =>
+                        TiaMcpServer.Siemens.PortalProcessLease.Acquire(root, 123, 1)).Message);
+                }
+                finally
+                {
+                    File.WriteAllText(Path.Combine(gate, "release"), "");
+                    Assert.Empty((await running.WaitAsync(TestDeadlines.Hang))!.AsObject());
+                    Assert.True(child.WaitForExit(TestDeadlines.HangMilliseconds));
+                }
+                Assert.Equal("RELEASED\n", File.ReadAllText(path));
+                using var next = TiaMcpServer.Siemens.PortalProcessLease.Acquire(root, 123, 1);
+                Assert.NotNull(next);
+                next.ReleaseCleanly();
+                return;
+            }
             for (int i = 0; i < 100; i++)
             {
                 try { File.ReadAllText(path); break; } catch (IOException) { await Task.Delay(10); }
             }
-            Assert.Equal(answeredUnknown ? "UNCERTAIN\n" : "BUSY\n", File.ReadAllText(path));
+            Assert.Equal("UNCERTAIN\n", File.ReadAllText(path));
             Assert.Equal(SessionBehavior.LeaseNotReleased, Assert.Throws<InvalidOperationException>(() => TiaMcpServer.Siemens.PortalProcessLease.Acquire(root, 123, 1)).Message);
         }
-        finally { Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", previous); Directory.Delete(root, true); }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", previous);
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", previousGate);
+            Directory.Delete(root, true);
+        }
     }
 
     [Fact]
@@ -164,6 +196,7 @@ public sealed class EngineWorkerClientTests
     private sealed class ClientBridge : IFoundationWorker
     {
         private readonly WorkerClient foundation;
+        internal JsonObject Snapshot => foundation.OperatorSnapshot();
         internal bool Faulted => foundation.Faulted;
         internal ClientBridge(string release, string exe)
         {

@@ -31,7 +31,8 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
         + " · Workbench: " + ((int?)state?["participants"]?["workbench"] ?? 0);
     public string Status => state == null || !Attached ? Loc.Current["Session.SelectHint"] :
         $"{state["worker"]?["state"]} · PID {state["worker"]?["pid"]} · generation {state["worker"]?["generation"]} · {state["binding"]?["projectFile"]}";
-    public string Lane => state?["lane"] is JsonObject lane ? $"{lane["actor"]}: {lane["tool"]} · {lane["sinceUtc"]}" : "";
+    public string Lane => (state?["running"] ?? state?["sessionState"]?["running"] ?? state?["lane"]) is JsonObject lane
+        ? $"{lane["actor"] ?? state?["lane"]?["actor"]} · {lane["tool"]} · {lane["requestId"]} · {lane["sinceUtc"]}" : "";
     public int UnsettledCount => (state?["sessionState"]?["unsettled"] as JsonArray)?.Count ?? 0;
     public string Unsettled => string.Format(Loc.Current["Session.Unsettled"], UnsettledCount);
     public string Ended => state?["endedBy"] == null ? "" : $"endedBy: {state["endedBy"]} · {state["endReason"]}. "

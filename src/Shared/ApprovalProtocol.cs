@@ -334,6 +334,14 @@ namespace TiaOpenness.Shared
             return normalized;
         }
 
+        internal static JsonObject IdentityArguments(string tool, JsonObject arguments)
+        {
+            var normalized = (JsonObject)arguments.DeepClone();
+            foreach (var target in ReviewTargets(tool, normalized).ToArray()) normalized[target.Key] = target.Value.Trim();
+            foreach (var target in Normalize(tool, normalized)) normalized[target.Key] = target.Value.ToUpperInvariant();
+            return normalized;
+        }
+
         private static string TextArgument(JsonObject arguments, string name)
             => arguments[name] is JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
     }

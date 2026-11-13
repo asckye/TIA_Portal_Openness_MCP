@@ -19,7 +19,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["PlcWorkerRobustnessTests"] = "One-second startup/default budgets and 1.3-second synthetic native calls.",
             ["PlcFixtureWorkerRobustnessTests"] = "Two-second worker startup/default budget and injected fault deadlines.",
             ["SharedWorkerRegressionTests"] = "Cold worker readiness and compile wrapper protected by hang guards.",
-            ["TiaMcp.WorkerChannel.Tests.ReadDrainTests"] = "Worker read deadlines and draining replies.",
+            ["TiaMcp.WorkerChannel.Tests.CallRunningTests"] = "Worker call deadlines and retained replies.",
             ["FoundationRecoveryTests"] = "Worker answered-unknown detach and reattach within the scaled worker budgets.",
             ["EngineWorkerClientTests"] = "Worker startup, lease release and disposal with hang guards and trend measurements.",
             ["FoundationProcessLeaseTests"] = "Child readiness/exit hang guards and durable-request overhead measurement.",
@@ -97,27 +97,27 @@ namespace TiaMcp.Engine.Tests.Shared
             ["SharedWorkerRegressionTests"] = new[] {
                 "CallTool_compile_wrapper_observes_cold_readiness_inside_the_target_lane"
             },
-            ["TiaMcp.WorkerChannel.Tests.ReadDrainTests"] = new[] {
-                "Timed_out_read_drains_and_the_channel_stays_usable", "Timed_out_write_still_poisons", "Status_read_after_a_call_still_poisons"
+            ["TiaMcp.WorkerChannel.Tests.CallRunningTests"] = new[] {
+                "Timed_out_read_keeps_the_channel_and_its_reply", "Timed_out_write_keeps_the_channel", "Status_read_after_a_call_still_poisons"
             },
             ["FoundationRecoveryTests"] = new[] {
                 "Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach"
             },
             ["PlcWorkerRobustnessTests"] = new[] {
-                "Plc_over_budget_read_is_TIMEOUT_and_the_session_recovers",
-                "Disconnect_waits_for_a_draining_read_and_detaches_cleanly",
-                "Status_refused_by_a_draining_read_does_not_latch_a_worker_fault",
+                "Plc_over_budget_read_is_in_progress_and_the_session_recovers",
+                "Disconnect_refuses_a_running_read_then_detaches_cleanly",
+                "Status_refused_by_a_running_call_does_not_latch_a_worker_fault",
                 "Plc_long_compile_and_import_complete_with_scaled_production_budgets",
-                "Plc_scaled_long_call_still_fails_with_only_the_default_budget",
+                "Plc_scaled_long_call_is_in_progress_with_only_the_default_budget",
                 "Plc_compile_preview_uses_default_instead_of_the_compile_override",
-                "Plc_over_budget_call_is_unknown_and_locks_the_session",
+                "Plc_over_budget_call_is_in_progress_and_keeps_the_session",
                 "Plc_default_seconds_and_first_attach_budget_apply_once_per_generation",
                 "Plc_cancellation_before_dispatch_is_CANCELLED_and_after_dispatch_keeps_the_result"
             },
             ["EngineWorkerClientTests"] = new[] {
-                "FailedExplicitRestartRetainsPriorLockAndNeverRestartsImplicitly",
+                "FailedExplicitRestartRetainsGenerationHistoryAndNeverRestartsImplicitly",
                 "Session_end_and_host_stopping_release_without_explicit_disconnect",
-                "Stop_during_native_dispatch_or_after_unknown_retains_refusal"
+                "Disposal_defers_running_calls_and_preserves_answered_unknown_evidence"
             },
             ["FoundationProcessLeaseTests"] = new[] {
                 "Process_gone_is_refused_without_native_dispatch",
