@@ -4883,6 +4883,14 @@
           "sinceUtc": {
             "exampleValue": "2026-11-04T00:00:00Z",
             "description": "Inclusive ISO 8601 timestamp with Z or a numeric offset; filtering precedes take."
+          },
+          "diagnosticId": {
+            "exampleValue": "request-123",
+            "description": "Exact diagnostic id from error.innererror.diagnosticId in a failed call's answer, matching the journal row id. Filtering precedes paging."
+          },
+          "offset": {
+            "exampleValue": 100,
+            "description": "Number of newest matching rows to skip, 0..10000. Start at 0 or use nextOffset from the previous page."
           }
         },
         "operations": {},
@@ -31303,6 +31311,14 @@
           "sinceUtc": {
             "exampleValue": "2026-11-04T00:00:00Z",
             "description": "Inclusive ISO 8601 timestamp with Z or a numeric offset; filtering precedes take."
+          },
+          "diagnosticId": {
+            "exampleValue": "request-123",
+            "description": "Exact diagnostic id from error.innererror.diagnosticId in a failed call's answer, matching the journal row id. Filtering precedes paging."
+          },
+          "offset": {
+            "exampleValue": 100,
+            "description": "Number of newest matching rows to skip, 0..10000. Start at 0 or use nextOffset from the previous page."
           }
         },
         "operations": {},

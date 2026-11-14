@@ -16334,7 +16334,7 @@
       "path": "src/Shared/Host/EngineeringDiagnosticsTools.cs",
       "owner": "EngineeringDiagnosticsTools",
       "domain": "Diagnostics",
-      "signature": "public CallToolResult GetNativeInvocationLogV4([Description(\"Number of recent entries, 1..500.\")] int take = 100,\n            [Description(\"Exact request id to match.\")] string? requestId = null,\n            [Description(\"Inclusive ISO 8601 timestamp. Requires Z or a numeric offset; timestamps without an offset are rejected.\")] string? sinceUtc = null)",
+      "signature": "public CallToolResult GetNativeInvocationLogV4([Description(\"Number of recent entries, 1..500.\")] int take = 100,\n            [Description(\"Exact request id to match.\")] string? requestId = null,\n            [Description(\"Inclusive ISO 8601 timestamp. Requires Z or a numeric offset; timestamps without an offset are rejected.\")] string? sinceUtc = null,\n            [Description(\"Exact diagnosticId from error.innererror, matching the journal row id.\")] string? diagnosticId = null,\n            [Description(\"Number of newest matching records to skip, 0..10000.\")] int offset = 0)",
       "parameters": {
         "take": {
           "type": "int",
@@ -16353,6 +16353,18 @@
           "default": "null",
           "description": "Inclusive ISO 8601 timestamp. Requires Z or a numeric offset; timestamps without an offset are rejected.",
           "value": null
+        },
+        "diagnosticId": {
+          "type": "string?",
+          "default": "null",
+          "description": "Exact diagnosticId from error.innererror, matching the journal row id.",
+          "value": null
+        },
+        "offset": {
+          "type": "int",
+          "default": "0",
+          "description": "Number of newest matching records to skip, 0..10000.",
+          "value": 0
         }
       }
     },
