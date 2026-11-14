@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Fixed
+- STDIO writes each JSON-RPC message with its newline as one serialized frame. Cancellation during a session notification can no longer join it to the following reply.
 - Native failures retain the redacted first-line reason and `error.innererror` with the worker's short exception type,
   HResult and request correlation ID. `GetNativeInvocationLog` accepts `diagnosticId` and bounded offset paging,
   excludes the current call's rows and returns empty pages after journal rotation.

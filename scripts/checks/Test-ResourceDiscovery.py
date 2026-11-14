@@ -29,6 +29,38 @@ _HTTP_PORT_LOCK = threading.Lock()
 _HTTP_PORTS = set()
 
 
+def parse_stdio_line(raw, evidence_directory):
+    try:
+        return json.loads(raw)
+    except ValueError as error:
+        directory = Path(evidence_directory)
+        evidence = directory / ('invalid-stdio-' + secrets.token_hex(8) + '.jsonl')
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+            evidence.write_bytes(raw)
+        except OSError as evidence_error:
+            raise AssertionError(f'STDIO line is not exactly one JSON document; evidence write failed at '
+                                 f'{evidence.resolve()}: {evidence_error}') from evidence_error
+        raise AssertionError(f'STDIO line is not exactly one JSON document; raw line saved to {evidence.resolve()}') from error
+
+
+def drain_stdio_lines(source, evidence_directory, output, protocol_errors, *, skip_blank_lines=False):
+    try:
+        for line in source:
+            if skip_blank_lines and not line.strip():
+                continue
+            try:
+                output.put(parse_stdio_line(line, evidence_directory))
+            except (AssertionError, OSError) as error:
+                protocol_errors.append(error)
+                output.put(error)
+    except OSError as error:
+        protocol_errors.append(error)
+        output.put(error)
+    finally:
+        output.put(None)
+
+
 class PersistentHttp:
     def __init__(self, url, timeout=HANG_GUARD_SECONDS):
         self.url = url.rstrip('/')
@@ -123,6 +155,8 @@ def sdk_only_installation(public_api: Path, major, temp_root: Path) -> Path:
 
 
 def self_test():
+    stdio_evidence_self_test()
+    stdio_reader_failure_self_test()
     with fixture_directory("sdk-only-installation-test-") as scratch:
         root = Path(scratch)
         public_api = root / "public-api"
@@ -138,6 +172,47 @@ def self_test():
             require(not list(installation.rglob("*.exe")),
                     f"V{major} SDK-only fixture unexpectedly contains an executable")
     print("PASS SDK-only fixture layouts for all eight releases contain copied API assemblies and no TIA executable")
+
+
+def stdio_evidence_self_test():
+    with fixture_directory('stdio-evidence-test-') as scratch:
+        directory = Path(scratch)
+        valid = b'{"jsonrpc":"2.0","id":1,"result":{}}\n'
+        require(parse_stdio_line(valid, directory)['id'] == 1, 'Valid STDIO response was rejected')
+        for raw in (valid.rstrip() + valid, b'{"jsonrpc":', b'\xff\n'):
+            before = set(directory.iterdir())
+            try:
+                parse_stdio_line(raw, directory)
+                raise RuntimeError('Invalid STDIO line was accepted')
+            except AssertionError as error:
+                added = set(directory.iterdir()) - before
+                require(len(added) == 1, 'Invalid STDIO line must produce one evidence file')
+                evidence = added.pop()
+                require(evidence.read_bytes() == raw, 'STDIO evidence must preserve every original byte')
+                require(str(evidence.resolve()) in str(error), 'STDIO failure must name its evidence file')
+        require(len(list(directory.iterdir())) == 3, 'Valid STDIO must not create invalid-line evidence')
+    print('PASS STDIO evidence preserves concatenated, truncated and invalid UTF-8 lines and rejects each')
+
+
+def stdio_reader_failure_self_test():
+    with fixture_directory('stdio-reader-failure-') as scratch:
+        blocked = Path(scratch) / 'evidence'
+        blocked.write_bytes(b'file blocks the evidence directory')
+        valid = b'{"jsonrpc":"2.0","id":1,"result":{}}\n'
+        output, errors = queue.Queue(), []
+        reader = threading.Thread(target=drain_stdio_lines,
+                                  args=(io.BytesIO(valid.rstrip() + valid + valid), blocked, output, errors))
+        reader.start()
+        reader.join(timeout=HANG_GUARD_SECONDS)
+        require(not reader.is_alive(), 'Failed evidence writes must not strand the STDIO reader')
+        failure = output.get_nowait()
+        require(isinstance(failure, AssertionError), 'Failed evidence writes must retain the protocol failure')
+        require('evidence write failed at ' + str(blocked.resolve()) in str(failure),
+                'Evidence write failures must name the attempted evidence location')
+        require(errors == [failure], 'The failed evidence write must remain a failing check')
+        require(output.get_nowait()['id'] == 1, 'The STDIO reader must drain the next line after an evidence failure')
+        require(output.get_nowait() is None and output.empty(), 'The STDIO reader must always deliver its EOF sentinel')
+    print('PASS STDIO reader reports evidence I/O failures, drains subsequent messages and delivers EOF')
 
 
 def prompt_requirements(root):
@@ -263,12 +338,11 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
                                stderr=subprocess.PIPE, text=True, encoding='utf-8',
                                env=env, cwd=content_root, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     output, errors = queue.Queue(), []
+    protocol_errors = []
+    stdio_evidence = evidence_directory or Path(__file__).resolve().parents[2] / 'bin-build/stdio-evidence'
 
     def drain_stdout():
-        for line in process.stdout:
-            if line.strip():
-                output.put(line)
-        output.put(None)
+        drain_stdio_lines(process.stdout.buffer, stdio_evidence, output, protocol_errors, skip_blank_lines=True)
 
     def drain_stderr():
         for line in process.stderr:
@@ -312,7 +386,9 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
             while True:
                 raw = output.get(timeout=max(0.1, deadline - time.monotonic()))
                 require(raw is not None, 'Host exited before returning a response: ' + ''.join(errors))
-                reply = json.loads(raw)
+                if isinstance(raw, Exception):
+                    raise raw
+                reply = raw
                 if 'id' in reply:
                     break
                 require(time.monotonic() < deadline, 'Only notifications received')
@@ -320,6 +396,30 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
             require(reply is not None and reply.get('id') == request_id,
                     f'{method}: original request ID was not preserved')
         return reply
+
+    def batch(requests):
+        require(transport == 'stdio', 'Concurrent framing checks require STDIO')
+        pending = {request['id'] for request in requests}
+        require(len(pending) == len(requests), 'Concurrent requests must have distinct IDs')
+        process.stdin.write(''.join(json.dumps(request, ensure_ascii=False) + '\n' for request in requests))
+        process.stdin.flush()
+        replies, notifications = {}, []
+        deadline = time.monotonic() + rpc_timeout
+        while pending:
+            reply = output.get(timeout=max(0.1, deadline - time.monotonic()))
+            require(reply is not None, 'Host exited during concurrent calls: ' + ''.join(errors))
+            if isinstance(reply, Exception):
+                raise reply
+            if 'id' in reply:
+                require(reply['id'] in pending, 'Unexpected or duplicate concurrent response ID: ' + str(reply))
+                pending.remove(reply['id'])
+                replies[reply['id']] = reply
+            else:
+                notifications.append(reply)
+            require(time.monotonic() < deadline, 'Concurrent STDIO calls did not finish')
+        return replies, notifications
+
+    rpc.batch = batch
 
     try:
         if process_observer:
@@ -355,6 +455,8 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
             Path(evidence_directory, 'host-stderr.log').write_text(''.join(errors), encoding='utf-8')
         process.stdout.close()
         process.stderr.close()
+        if protocol_errors:
+            raise protocol_errors[0]
 
 
 def main():

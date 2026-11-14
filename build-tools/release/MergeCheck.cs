@@ -272,7 +272,8 @@ internal static class MergeCheck
         bool transport = plan.Wide || changes.Any(path =>
             new[] { "src/FoundationHost", "src/EngineHost", "src/WorkerChannel", "src/PlcWorker", "src/Shared",
                 "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture" }.Any(dir => Under(path, dir))
-            || path is "scripts/checks/Test-FoundationTransport.py" or "scripts/checks/Test-ResourceDiscovery.py");
+            || path is "scripts/checks/Test-FoundationTransport.py" or "scripts/checks/Test-ResourceDiscovery.py"
+                or "scripts/checks/Test-StdioFraming.py");
         bool worker = plan.Wide || changes.Any(path =>
             new[] { "src/PlcWorker", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/EngineHost", "src/FoundationHost",
                 "src/Shared", "reference/tool-catalog", "reference/tool-examples", "build-tools/native-call-weaver", "tests/FoundationHost/TiaMcp.Engine.Native.Tests",
@@ -302,6 +303,8 @@ internal static class MergeCheck
                 "--plc-sdk-worker", "20=" + ReleaseCommands.ReleasePlcFixture(output, "20"),
                 "--plc-sdk-worker", "21=" + ReleaseCommands.ReleasePlcFixture(output, "21"),
                 "--public-api-root", api, "--temp-root", Path.Combine(output, "transport-plc-temp"), "--output", Path.Combine(output, "transport-plc"));
+            Py("stdio-framing", "Test-StdioFraming.py", true, "--exe", host, "--release", "19", "--iterations", "2000",
+                "--output", Path.Combine(output, "stdio-framing"));
         }
         if (!worker) return;
         Reason(plan.Builds, ApiCompileProject, reason);

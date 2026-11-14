@@ -636,6 +636,35 @@ public sealed class MergeCheckTests
         Assert.Equal(new[] { "scripts/checks/Test-FoundationTransport.py", "--self-test" }, check.Arguments);
         Assert.Contains(plan.Checks, job => job.Name == "foundation-transport");
         Assert.Contains(plan.Checks, job => job.Name == "foundation-transport-plc");
+        Assert.Contains(plan.Checks, job => job.Name == "stdio-framing");
+    }
+
+    [Theory]
+    [InlineData("src/FoundationHost/StdioFrameTransport.cs")]
+    [InlineData("src/EngineHost/EngineHostPipeline.cs")]
+    [InlineData("src/WorkerChannel/Channel.cs")]
+    [InlineData("src/PlcWorker/Program.cs")]
+    [InlineData("src/Shared/ProgressHeartbeat.cs")]
+    [InlineData("tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/Program.cs")]
+    [InlineData("scripts/checks/Test-FoundationTransport.py")]
+    [InlineData("scripts/checks/Test-ResourceDiscovery.py")]
+    [InlineData("scripts/checks/Test-StdioFraming.py")]
+    public void TransportInputsSelectTheRealStdioFramingJob(string path)
+    {
+        var plan = Select([path], closures: new() { ["foundation-api"] = new(StringComparer.OrdinalIgnoreCase) { path } });
+        Assert.False(plan.Wide);
+        var job = Assert.Single(plan.Checks, job => job.Name == "stdio-framing");
+        Assert.Equal("python", job.Executable);
+        Assert.True(job.PostSuite);
+        Assert.True(job.Isolated);
+        Assert.DoesNotContain("--self-test", job.Arguments);
+        Assert.Equal(new[] { "scripts/checks/Test-StdioFraming.py", "--exe",
+            "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe", "--release", "19", "--iterations", "2000",
+            "--output", Path.Combine("output", "stdio-framing") }, job.Arguments);
+        Assert.Contains(MergeCheck.SourceHostProject, plan.Builds.Keys);
+        Assert.Contains(MergeCheck.TransportFixtureProject, plan.Builds.Keys);
+        Assert.Contains(plan.Checks, candidate => candidate.Name == "foundation-transport");
+        Assert.Contains(plan.Checks, candidate => candidate.Name == "foundation-transport-plc");
     }
 
     [Theory]

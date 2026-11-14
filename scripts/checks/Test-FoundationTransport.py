@@ -54,10 +54,11 @@ class Stdio:
     def __init__(self, command, env, log):
         self.p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, text=True, encoding='utf-8', env=env)
         self.lines = queue.Queue()
+        self.protocol_errors = []
         def read():
-            for line in self.p.stdout:
-                self.lines.put(line)
-        threading.Thread(target=read, daemon=True).start()
+            resources.drain_stdio_lines(self.p.stdout.buffer, Path(log.name).with_suffix(''), self.lines, self.protocol_errors)
+        self.reader = threading.Thread(target=read, daemon=True)
+        self.reader.start()
         self.seq = 0
         self.log = log
 
@@ -66,7 +67,10 @@ class Stdio:
         self.p.stdin.write(json.dumps({'jsonrpc': '2.0', 'id': self.seq, 'method': method, 'params': params}) + '\n')
         self.p.stdin.flush()
         while True:
-            reply = json.loads(self.lines.get(timeout=HANG_GUARD_SECONDS))
+            reply = self.lines.get(timeout=HANG_GUARD_SECONDS)
+            if isinstance(reply, Exception):
+                raise reply
+            assert reply is not None, 'Host exited before returning a response: ' + log_tail(self.log)
             if reply.get('id') == self.seq:
                 assert 'error' not in reply, reply
                 return reply['result']
@@ -75,6 +79,10 @@ class Stdio:
         self.p.stdin.close()
         self.p.wait(timeout=HANG_GUARD_SECONDS)
         assert self.p.returncode == 0, fixture_exit_description(self.p.returncode, log_tail(self.log))
+        self.reader.join(timeout=HANG_GUARD_SECONDS)
+        assert not self.reader.is_alive(), 'STDIO reader did not finish'
+        if self.protocol_errors:
+            raise self.protocol_errors[0]
 
 
 class Http:

@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
@@ -84,6 +85,10 @@ internal static class SharedReleaseHost
             builder.Logging.AddProvider(logger);
             builder.Logging.SetMinimumLevel(LogLevel.Warning);
             var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = pipeline.Instructions).WithStdioServerTransport().WithTools(hostSession.Tools);
+            // Preserve the SDK's cancellable stdin and EOF lifetime while owning complete stdout frames here.
+            builder.Services.Replace(ServiceDescriptor.Singleton<ITransport>(services => new StdioFrameTransport(
+                new StdioServerTransport(services.GetRequiredService<Microsoft.Extensions.Options.IOptions<McpServerOptions>>().Value,
+                    services.GetRequiredService<ILoggerFactory>()), Console.OpenStandardOutput())));
             pipeline.RegisterHandlers(mcp);
             using var host = builder.Build();
             using var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.Register(WorkerShutdown.StopAll);
