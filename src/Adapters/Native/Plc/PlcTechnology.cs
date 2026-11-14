@@ -69,7 +69,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 else
                 {
-                    if (target == null) throw new InvalidOperationException("Exact technology object not found.");
+                    if (target == null) throw new PlcSoftwareException("NotFound", "Exact technology object not found.");
                     if (action == "delete")
                     {
                         meta["before"] = HardwareScalarEvidence.Read(target);
@@ -99,7 +99,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         {
                             // Typed TechnologicalParameterComposition.Find(name) with the reflective lookup as fallback.
                             var p = (typedParameters != null ? WatchNative.Find(typedParameters, parameter) : null) ?? PlcGroupOperations
-                                .Find(parameters, parameter) ?? throw new InvalidOperationException("Parameter not found: " + parameter);
+                                .Find(parameters, parameter) ?? throw new PlcSoftwareException("NotFound", "Parameter not found: " + parameter);
                             meta["before"] = p is TechnologicalParameter typedBefore ? ParameterRow(typedBefore) : HardwareScalarEvidence.Read(p);
                             if (action == "setParameter")
                             {

@@ -10,8 +10,8 @@ namespace TiaMcp.Adapters
         internal static T Exact<T>(System.Collections.Generic.IEnumerable<T> items,Func<T,string> path,string selected,string parameter="path")
         {
             var matches=items.Where(item=>string.Equals(path(item),selected,StringComparison.Ordinal)).Take(2).ToArray();
-            if(matches.Length!=1)
-                throw new AdapterPreconditionException((matches.Length==0 ? "Object not found at exact path: " : "Ambiguous object path: ")+selected,parameter);
+            if(matches.Length==0) throw AdapterPreconditionException.NotFound("Object not found at exact path: "+selected,parameter);
+            if(matches.Length>1) throw new AdapterPreconditionException("Ambiguous object path: "+selected,parameter);
             return matches[0];
         }
         internal static T SelectTable<T>(System.Collections.Generic.IEnumerable<T> tables,string selected,Func<T,string> path,Func<T,string> name)
@@ -25,7 +25,7 @@ namespace TiaMcp.Adapters
                 if(names.Length==1) return names[0];
                 if(names.Length>1) throw new AdapterPreconditionException("Ambiguous tag table name: "+selected,"table");
             }
-            throw new AdapterPreconditionException("Tag table not found at exact encoded path or unique raw name: "+selected,"table");
+            throw AdapterPreconditionException.NotFound("Tag table not found at exact encoded path or unique raw name: "+selected,"table");
         }
         internal static string ObjectPath(string path,bool allowRoot=false,string parameter="groupPath")
         {

@@ -126,7 +126,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 || state != null && !nativeKnown || evidence.ContainsKey("nativeState") && state == null || reset && issued);
             if (failed > 0) { success = false; unknown |= writes && !before && !nativeKnown; }
             Outcome outcome; Error? error = null;
-            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            if ((HostBehavior.DocumentedRefusal(evidence)
+                ?? HostBehavior.KnownRefusalWithMessage(evidence, success, HardwareContract.ReleaseKey, tool, nativeMessage)) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }

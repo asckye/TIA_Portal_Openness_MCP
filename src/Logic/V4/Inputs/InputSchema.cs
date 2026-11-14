@@ -104,6 +104,34 @@ namespace TiaMcp.Logic.V4.Inputs
             return errors;
         }
 
+        public string FieldReport(JsonElement value)
+        {
+            if (value.ValueKind != JsonValueKind.Object || Json.ValueKind != JsonValueKind.Object
+                || !Json.TryGetProperty("properties", out var declared))
+                return "Input does not satisfy the declared contract.";
+            var missing = new SortedSet<string>(StringComparer.Ordinal);
+            var invalid = new SortedSet<string>(StringComparer.Ordinal);
+            bool unknown = Json.TryGetProperty("additionalProperties", out var additional) && additional.ValueKind == JsonValueKind.False
+                && value.EnumerateObject().Any(p => !declared.TryGetProperty(p.Name, out _));
+            foreach (var error in ValidateFields(value))
+            {
+                if (error.Details is not InvalidArgumentDetails details) continue;
+                foreach (string pointer in details.Parameters)
+                {
+                    if (pointer.Length == 0) continue;
+                    string name = pointer.Split('/')[1].Replace("~1", "/").Replace("~0", "~");
+                    if (!declared.TryGetProperty(name, out _)) continue;
+                    (value.TryGetProperty(name, out _) ? invalid : missing).Add(name);
+                }
+            }
+            var groups = new List<string>();
+            // Undeclared keys and free-map keys remain private, just as in Restrict.
+            if (unknown) groups.Add("Unknown parameter(s): [undeclared].");
+            if (missing.Count > 0) groups.Add("Missing required: " + string.Join(", ", missing) + ".");
+            if (invalid.Count > 0) groups.Add("Invalid: " + string.Join(", ", invalid) + ".");
+            return groups.Count == 0 ? "Input does not satisfy the declared contract." : string.Join(" ", groups);
+        }
+
         public Error? Validate(JsonElement value, string parameter)
         {
             string pointer = parameter == "arguments" ? "" : parameter;
@@ -111,8 +139,12 @@ namespace TiaMcp.Logic.V4.Inputs
             catch (InputRejectionException ex)
             {
                 var error = ex.ToError(ex.IsLimit ? parameter : pointer, Expected);
-                if (parameter == "arguments" && value.ValueKind == JsonValueKind.Object && ex.HasLocation
-                    && error.Details is InvalidArgumentDetails details) details.WholeArgumentValidation = true;
+                if (parameter == "arguments" && value.ValueKind == JsonValueKind.Object
+                    && error.Details is InvalidArgumentDetails details)
+                {
+                    if (ex.HasLocation) details.WholeArgumentValidation = true;
+                    return new Error(FieldReport(value), details);
+                }
                 return error;
             }
             catch (Exception ex) when (ex is ArgumentException || ex is JsonException || ex is InvalidOperationException || ex is RegexMatchTimeoutException)

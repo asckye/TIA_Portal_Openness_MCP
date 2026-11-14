@@ -634,7 +634,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (items == null) throw new InvalidOperationException($"ScreenItems collection not found on screen '{screenName}'.");
 
                 var button = _session.FindExistingByName(items, buttonName);
-                if (button == null) throw new InvalidOperationException($"Screen item '{buttonName}' not found.");
+                if (button == null) throw new PlcSoftwareException("NotFound", $"Screen item '{buttonName}' not found.");
 
                 var pressedStateTags = TryGetPropertyValue(button, "PressedStateTags");
                 if (pressedStateTags == null) throw new InvalidOperationException($"PressedStateTags not found on '{buttonName}'.");

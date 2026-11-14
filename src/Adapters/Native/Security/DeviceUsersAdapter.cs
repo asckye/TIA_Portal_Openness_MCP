@@ -66,7 +66,8 @@ namespace TiaMcp.Adapters.Native.Security
                 object? user = users
                     .FirstOrDefault(u => string.Equals(u.GetType().GetProperty("UserName")?.GetValue(u)?.ToString(), userName, StringComparison.Ordinal));
                 if ((action == "create") == (user != null))
-                    throw new InvalidOperationException(action == "create" ? "User exists: " + userName : "User not found: " + userName);
+                    throw new HardwareAddressingException(action == "create" ? "AlreadyExists" : "NotFound", action == "create" ? "User exists: " + userName
+                            : "User not found: " + userName);
                 if (user != null) meta["before"] = UserRow(user);
                 string joined = permissionNames.Length == 0 ? "None" : string.Join(", ", permissionNames);
                 meta["requestedPermissions"] = new HmiArray(permissionNames.Select(x => (object?)x).ToArray());

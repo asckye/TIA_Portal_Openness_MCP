@@ -59,7 +59,7 @@ namespace TiaMcp.Adapters
         public object ExactOpenEngineeringLibrary(string libraryName)
             => string.IsNullOrEmpty(libraryName) ? project!.ProjectLibrary
                 : PlcGroupOperations.Find(portal!.GlobalLibraries, libraryName)
-                    ?? throw new InvalidOperationException("Exact open global library not found. Open it in TIA first; no implicit open or close.");
+                    ?? throw new PlcSoftwareException("NotFound", "Exact open global library not found. Open it in TIA first; no implicit open or close.");
         private Dictionary<string, object?> EngineeringLibraryRef(object library)
         {
             var row = new Dictionary<string, object?> {

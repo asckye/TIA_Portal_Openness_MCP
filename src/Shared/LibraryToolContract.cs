@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (NotSupportedException) /* swallow(privacy): preserve capability rejection without native details */
             {
                 throw new InputFailureException(new Error("This operation is unavailable.",
-                            new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "library-sivarc", null)));
+                            new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "library-sivarc", null)));
             }
         }
         private sealed class InputFailureException : Exception
@@ -55,7 +55,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ErrorDetails details = portal.Code == PortalErrorCode.NotFound ? new NotFoundDetails(null)
                         : portal.Code == PortalErrorCode.InvalidParams
                             ? McpServer.ArgumentDetails(tool, TiaOpenness.Shared.HostFailurePolicy.Parameter(portal))
-                        : portal.Code == PortalErrorCode.NotSupportedOnVersion ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
+                        : portal.Code == PortalErrorCode.NotSupportedOnVersion ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                         : new PreconditionFailedDetails("engineering-session", null);
                     return Result(tool, null, new Error("The engineering prerequisites were not satisfied.", details), Outcome.RejectedBeforeOperation,
                             Completeness.None, current: current);
@@ -124,7 +124,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 || Flag(data, "imported") == true;
             if (writes && success != true && knownPartial && nativeKnown) succeeded = Math.Max(1, succeeded);
             Outcome outcome; Error? error = null;
-            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            if ((HostBehavior.DocumentedRefusal(evidence)
+                ?? HostBehavior.KnownRefusalWithMessage(evidence, success, HardwareContract.ReleaseKey, tool, nativeMessage)) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
@@ -139,7 +140,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 outcome = Outcome.RejectedBeforeOperation;
                 ErrorDetails details = status == "NOT_FOUND" || status == "NotFound" ? new NotFoundDetails(null)
-                    : status == "UNSUPPORTED_CAPABILITY" || status == "NotSupported" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
+                    : status == "UNSUPPORTED_CAPABILITY" || status == "NotSupported" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : status == "ALREADY_EXISTS" ? new AlreadyExistsDetails(null)
                     : status == "INVALID_ARGUMENT" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : new PreconditionFailedDetails("engineering-before-operation", null);
@@ -227,7 +228,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
-            var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
+            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
                 execution, reset || outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging,
                     warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));

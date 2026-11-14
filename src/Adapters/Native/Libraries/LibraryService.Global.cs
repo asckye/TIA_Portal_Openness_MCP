@@ -53,7 +53,7 @@ namespace TiaMcp.Adapters
                         ?? throw new PlcSoftwareException("NotFound", "No global library info named " + libraryName + " (see action=infos).");
                     meta["info"] = new Dictionary<string, object?> {
                         ["name"] = info.Name, ["path"] = info.Path?.FullName, ["libraryType"] = info.LibraryType.ToString(), ["isOpen"] = info.IsOpen };
-                    if (info.IsOpen) throw new InvalidOperationException("Library is already open.");
+                    if (info.IsOpen) throw new PlcSoftwareException("AlreadyExists", "Library is already open.");
                     if (dryRun) return "Open-by-info preview; nothing opened (system/corporate libraries open read-only).";
                     meta["mayHaveChanged"] = true;
                     var opened = libraries.Open(info);
@@ -99,7 +99,8 @@ namespace TiaMcp.Adapters
                 UserGlobalLibrary? library = null; FileInfo? file = null; DirectoryInfo? directory = null;
                 if (action == "create" || action == "open" || action == "retrieve") {
                     if (string.IsNullOrWhiteSpace(libraryName)) throw new ArgumentException("Expected library name required.");
-                    if (PlcGroupOperations.Find(libraries, libraryName) != null) throw new InvalidOperationException("Library with this name already open.");
+                    if (PlcGroupOperations.Find(libraries, libraryName) != null)
+                        throw new PlcSoftwareException("AlreadyExists", "Library with this name already open.");
                 } else library = ExactOpenUserGlobalLibrary(libraries, libraryName, action);
                 if (action == "open" || action == "retrieve") {
                     file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!file.Exists)
@@ -142,7 +143,7 @@ namespace TiaMcp.Adapters
         private static UserGlobalLibrary ExactOpenUserGlobalLibrary(GlobalLibraryComposition libraries, string libraryName, string action)
         {
             var found = PlcGroupOperations.Find(libraries, libraryName)
-                ?? throw new InvalidOperationException("Exact open global library not found (action=list shows the open ones).");
+                ?? throw new PlcSoftwareException("NotFound", "Exact open global library not found (action=list shows the open ones).");
             return found as UserGlobalLibrary
                 ?? throw new NotSupportedException(LibraryPolicy.UserGlobalLibraryOnlyMessage(action, libraryName, found.GetType().Name));
         }
@@ -158,7 +159,9 @@ namespace TiaMcp.Adapters
                     EngineeringLibraryFolder(library,string.Join("/",parts.Take(parts.Length-1)),folderKind=="types" ? "TypeFolder" : "MasterCopyFolder");
                 var collection = PlcGroupOperations.Get(parent,"Folders");
                 var target = PlcGroupOperations.Find(collection,parts.Last());
-                if ((action=="create") == (target!=null)) throw new InvalidOperationException(action=="create" ? "Folder exists." : "Exact folder not found.");
+                if ((action=="create") == (target!=null))
+                    throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action=="create" ? "Folder exists."
+                        : "Exact folder not found.");
                 if (action=="delete"
                         && (PlcGroupOperations.Items(PlcGroupOperations.Get(target!,"Folders")).Any() || PlcGroupOperations
                             .Items(PlcGroupOperations.Get(target!,folderKind=="types" ? "Types" : "MasterCopies")).Any()))

@@ -414,7 +414,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 var group = PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)));
                 var target = PlcGroupOperations.Find(PlcGroupOperations.Get(group, objectKind == "block" ? "Blocks" : "Types"), parts.Last()) as global::Siemens
                     .Engineering.IEngineeringObject
-                    ?? throw new InvalidOperationException("Exact object under unit not found.");
+                    ?? throw new PlcSoftwareException("NotFound", "Exact object under unit not found.");
                 var before = target.GetAttribute("Access");
                 meta["before"] = before.ToString(); meta["requestedAccess"] = desired.ToString(); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (!dryRun) {

@@ -69,7 +69,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     return "Unified parts read.";
                 }
                 var part = action == "create" ? null : UnifiedUiModelLogic.FindPart(composition, partName, partIndex)
-                    ?? throw new InvalidOperationException("Exact part not found in " + collectionProperty + ".");
+                    ?? throw new PlcSoftwareException("NotFound", "Exact part not found in " + collectionProperty + ".");
                 var creation = action == "create" ? UnifiedUiModelLogic.PartCreation(composition, partName, partKind) : default;
                 if (action == "create" && !string.IsNullOrEmpty(partName) && UnifiedUiModelLogic.FindPart(composition, partName, -1) != null)
                     throw new InvalidOperationException("Part already exists: " + partName);
@@ -130,7 +130,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                         : "Dynamization read including value converter, mapping table entries and trigger where present.";
                 }
                 if ((action == "create") == (existing != null))
-                    throw new InvalidOperationException(action == "create" ? "Dynamization exists; use update or delete." : "Exact dynamization not found.");
+                    throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action == "create"
+                            ? "Dynamization exists; use update or delete." : "Exact dynamization not found.");
                 if (action == "update" && dynamizationKind != "" && dynamizationKind != UnifiedUiModelLogic.KindOf(existing!))
                     throw new ArgumentException("dynamizationKind differs from the existing " + UnifiedUiModelLogic.KindOf(existing!) + " dynamization.");
                 var type = action == "create" ? UnifiedUiModelLogic.DynamizationType(dynamizations, dynamizationKind) : existing!.GetType();
@@ -296,7 +297,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var property = root.GetType().GetProperty(collectionName)
                     ?? throw new NotSupportedException(category + " collection is not exposed by this API version (V20 has no HmiGraphicLists).");
                 var collection = property.GetValue(root) ?? throw new InvalidOperationException("List collection is null.");
-                var list = PlcGroupOperations.Find(collection, listName) ?? throw new InvalidOperationException("Exact list not found: " + listName);
+                var list = PlcGroupOperations.Find(collection, listName) ?? throw new PlcSoftwareException("NotFound", "Exact list not found: " + listName);
                 meta["category"] = category; meta["listName"] = listName; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["list"] = UnifiedUiModelLogic.Scalars(list); meta["selfDescription"] = UnifiedUiModelLogic.SelfDescription(list);
                 var typed = list.GetType().GetProperties()
@@ -320,7 +321,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var collectionName = UnifiedUiModelLogic.AlarmCommonCollection(category);
                 var collection = PlcGroupOperations.Get(_session.ExactUnifiedRoot(softwarePath), collectionName);
                 var items = string.IsNullOrEmpty(name) ? PlcGroupOperations.Items(collection).ToArray()
-                    : new[] { PlcGroupOperations.Find(collection, name) ?? throw new InvalidOperationException("Exact object not found: " + name) };
+                    : new[] { PlcGroupOperations.Find(collection, name) ?? throw new PlcSoftwareException("NotFound", "Exact object not found: " + name) };
                 var rows = new HmiArray();
                 foreach (var item in items.Skip(offset).Take(limit))
                 {
@@ -360,7 +361,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     ?? throw new NotSupportedException("HmiSoftware." + propertyName + " is not exposed by this API version.");
                 var collection = property.GetValue(root) ?? throw new InvalidOperationException("Audit collection is null.");
                 var items = string.IsNullOrEmpty(name) ? PlcGroupOperations.Items(collection).ToArray()
-                    : new[] { PlcGroupOperations.Find(collection, name) ?? throw new InvalidOperationException("Exact object not found: " + name) };
+                    : new[] { PlcGroupOperations.Find(collection, name) ?? throw new PlcSoftwareException("NotFound", "Exact object not found: " + name) };
                 var rows =
                     new HmiArray(items.Skip(offset).Take(limit).Select(x => (object)UnifiedUiModelLogic.Tree(x, category == "auditTrails" ? 3 : 0)).ToArray());
                 meta["category"] = category; meta["records"] = rows; meta["expectedCount"] = items.Length; meta["actualCount"] = rows.Count;

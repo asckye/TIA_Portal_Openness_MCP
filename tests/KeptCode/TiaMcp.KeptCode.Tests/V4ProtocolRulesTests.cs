@@ -18,6 +18,32 @@ namespace TiaMcp.Engine.Tests
         private readonly Xunit.Abstractions.ITestOutputHelper output;
         public V4ProtocolRulesTests(Xunit.Abstractions.ITestOutputHelper output) { this.output = output; }
 
+        [Fact]
+        public void Target_refusal_separates_unknown_and_missing()
+        {
+            var schema = TiaMcp.Logic.V4.Inputs.InputSchema.Object(new Dictionary<string, TiaMcp.Logic.V4.Inputs.InputSchema> {
+                ["a"] = TiaMcp.Logic.V4.Inputs.InputSchema.Boolean(), ["b"] = TiaMcp.Logic.V4.Inputs.InputSchema.String(),
+                ["c"] = TiaMcp.Logic.V4.Inputs.InputSchema.Integer() }, new[] { "b" });
+            var arguments = JsonSerializer.Deserialize<JsonElement>("{\"private-key\":true,\"c\":\"bad\",\"a\":\"bad\"}");
+            var error = schema.Validate(arguments, "arguments")!;
+            Assert.Equal("Unknown parameter(s): [undeclared]. Missing required: b. Invalid: a, c.", error.Message);
+            Assert.DoesNotContain("private-key", V4Json.Serialize(schema.Restrict(error, arguments)), StringComparison.Ordinal);
+            Assert.Equal(new[] { "", "/c", "/a", "/b" }, Assert.IsType<InvalidArgumentDetails>(error.Details).Parameters);
+            var missing = schema.Validate(JsonSerializer.Deserialize<JsonElement>("{}"), "arguments")!;
+            Assert.Equal("Missing required: b.", missing.Message);
+        }
+
+        [Fact]
+        public void Field_report_never_names_a_free_map_key()
+        {
+            var schema = TiaMcp.Logic.V4.Inputs.InputSchema.Object(new Dictionary<string, TiaMcp.Logic.V4.Inputs.InputSchema> {
+                ["properties"] = TiaMcp.Logic.V4.Inputs.InputSchema.Map(TiaMcp.Logic.V4.Inputs.InputSchema.String()) });
+            var arguments = JsonSerializer.Deserialize<JsonElement>("{\"properties\":{\"private-key\":42}}");
+            var error = schema.Validate(arguments, "arguments")!;
+            Assert.Equal("Invalid: properties.", error.Message);
+            Assert.DoesNotContain("private-key", V4Json.Serialize(schema.Restrict(error, arguments)), StringComparison.Ordinal);
+        }
+
         [Theory]
         [InlineData("KeyNotFoundException: The given key 'connectionUnavailable' was not present in the dictionary.")]
         [InlineData("System.Reflection.TargetParameterCountException: Parameter count mismatch.")]
@@ -205,7 +231,8 @@ namespace TiaMcp.Engine.Tests
         {
             internal static int Calls;
             internal static readonly List<bool> PreviewCalls = new List<bool>();
-            private static CallToolResult Result(string name, bool? dryRun = null) { Calls++; if (dryRun.HasValue) PreviewCalls.Add(dryRun.Value); return McpServer.V4Result(name, new JsonObject()); }
+            private static CallToolResult Result(string name, bool? dryRun = null) {
+                Calls++; if (dryRun.HasValue) PreviewCalls.Add(dryRun.Value); return McpServer.V4Result(name, new JsonObject()); }
             [ModelContextProtocol.Server.McpServerTool(Name = "ImportDeviceAml")]
             public static CallToolResult Aml(bool dryRun = true) => Result("ImportDeviceAml", dryRun);
             [ModelContextProtocol.Server.McpServerTool(Name = "ExchangeSystemDiagnosticsSettings")]
@@ -404,7 +431,8 @@ namespace TiaMcp.Engine.Tests
         {
             var value = Body(Outcome.RejectedBeforeOperation, new Error("Refused.", new ProjectNotBoundDetails()));
             value["future"] = 1; value["meta"]!["newField"] = "evidence"; value["error"]!["code"] = "FUTURE_ERROR";
-            value["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "FUTURE_WARNING", ["message"] = "Diagnostic.", ["details"] = new JsonObject() });
+            value["meta"]!["warnings"]!.AsArray()
+                .Add(new JsonObject { ["code"] = "FUTURE_WARNING", ["message"] = "Diagnostic.", ["details"] = new JsonObject() });
             var consumer = V4Json.DeserializeConsumer(value.ToJsonString());
             Assert.False(consumer.Ok); Assert.Equal("FUTURE_ERROR", consumer.ErrorCode);
             Assert.Equal(1, consumer.Value.GetProperty("future").GetInt32());
@@ -427,7 +455,9 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void Recovery_decoration_validates_a_claimed_v4_envelope()
         {
-            var malformed = JsonNode.Parse("{\"schemaVersion\":4,\"ok\":false,\"error\":{\"code\":\"INVALID_ARGUMENT\"},\"meta\":{\"tool\":\"fixture\",\"releaseKey\":\"21\",\"warnings\":[]}}")!;
+            var malformed = JsonNode
+                .Parse("{\"schemaVersion\":4,\"ok\":false,\"error\":{\"code\":\"INVALID_ARGUMENT\"},"
+                    + "\"meta\":{\"tool\":\"fixture\",\"releaseKey\":\"21\",\"warnings\":[]}}")!;
             Assert.ThrowsAny<Exception>(() => TiaMcp.Logic.ModelContextProtocol.RecoveryHints.Attach(malformed, (_, _, _) => null));
         }
 

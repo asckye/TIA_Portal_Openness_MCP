@@ -51,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "InvalidParams" ? McpServer.ArgumentDetails(tool, parameter, evidence)
                 : status == "ImportTargetExists" ? new PreconditionFailedDetails("HMI import target already exists; set overwrite=true explicitly.", null)
                 : status == "NotFound" ? new NotFoundDetails(null)
-                : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "HMI exchange", null) : null;
+                : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI exchange", null) : null;
             return details == null ? null
                 : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The HMI request could not start.", details);
         }
@@ -88,7 +88,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 ? Rejection(tool, "ImportTargetExists") : Rejection(tool, status, evidence: evidence);
             Outcome outcome;
             Error? error = null;
-            if (status == "HmiReadSessionBlocked")
+            if ((HostBehavior.DocumentedRefusal(evidence)
+                ?? HostBehavior.KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool)) is Error refusal)
+            { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
+            else if (status == "HmiReadSessionBlocked")
             {
                 outcome = writes ? Outcome.Unknown : Outcome.ReadFailed;
                 error = HostBehavior.UnavailableCall(writes);
@@ -163,7 +166,8 @@ namespace TiaMcpServer.ModelContextProtocol
             => outcome == Outcome.Unknown
                 ? new Error("The HMI write outcome is unconfirmed; inspect the target before repeating this call. Never replay it automatically. " +
                     "GetSessionState lists unsettled request IDs.",
-                    new OutcomeUnknownDetails("HMI exchange", Evidence(evidence)))
+                    new OutcomeUnknownDetails("HMI exchange", Evidence(evidence)
+                        .Where(p => p.Key is not ("nativeMessage" or "workerMessage" or "readError")).ToDictionary(p => p.Key, p => p.Value)))
                 : outcome == Outcome.Partial ? new Error("The HMI operation left partial results.", new PartialFailureDetails(0, 0, 0))
                 : outcome == Outcome.RejectedBeforeOperation
                     ? new Error("The HMI operation did not start.", new PreconditionFailedDetails("HMI operation prerequisites", null))
@@ -193,7 +197,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
-            var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
+            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                     completeness, null, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));

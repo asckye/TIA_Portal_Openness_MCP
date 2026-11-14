@@ -36,7 +36,7 @@ namespace TiaMcp.Adapters.Native.Optional
                     throw new NotSupportedException("Public property not available: " + step["property"]);
                 target = property.GetValue(target) ?? throw new InvalidOperationException("Null object at " + step);
                 if (step.ContainsKey("name")) target = EngineeringGroupOperations.Find(target, step["name"]!.OptionalValue<string>())
-                    ?? throw new InvalidOperationException("Exact named object not found at " + step);
+                    ?? throw new PlcSoftwareException("NotFound", "Exact named object not found at " + step);
             }
             return target;
         }

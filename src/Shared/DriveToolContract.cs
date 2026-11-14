@@ -88,7 +88,8 @@ namespace TiaMcpServer.ModelContextProtocol
             string status = evidence["status"]?.ToString() ?? "";
             bool projectMissing = status == "InvalidState" && !evidence.ContainsKey("apiCallSuccess") && !issued;
             Outcome outcome; Error? error = null;
-            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            if ((HostBehavior.DocumentedRefusal(evidence)
+                ?? HostBehavior.KnownRefusalWithMessage(evidence, success, HardwareContract.ReleaseKey, tool, nativeMessage)) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
@@ -108,7 +109,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 outcome = Outcome.RejectedBeforeOperation;
                 ErrorDetails details = status == "NotFound" ? new NotFoundDetails(null)
-                    : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
+                    : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : status == "InvalidParams" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : new PreconditionFailedDetails("option-package-prerequisites", null);
                 error = new Error(nativeMessage ?? "The option-package request was rejected before execution.", details);
@@ -199,7 +200,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
-            var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
+            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
                 execution, reset || outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging,
                     warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));

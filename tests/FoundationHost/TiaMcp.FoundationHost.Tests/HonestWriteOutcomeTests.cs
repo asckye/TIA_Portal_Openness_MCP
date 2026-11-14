@@ -12,6 +12,193 @@ using Services = enginehost::TiaMcpServer.Siemens.Services;
 
 public sealed class HonestWriteOutcomeTests
 {
+    public static IEnumerable<object[]> KnownRefusals()
+    {
+        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (string family in new[] { "hardware", "network", "plc", "hmi", "engineering", "drive", "library", "security", "optional",
+            "hmi-exchange", "hmi-inspection", "classic-motion" })
+        foreach (string status in new[] { "NotFound", "InvalidParams", "AlreadyExists", "NotSupportedOnVersion" })
+        foreach (bool writes in new[] { false, true })
+            yield return new object[] { release, family, status, writes };
+    }
+
+    private static JsonNode KnownRefusalResult(string family, JsonObject evidence, bool writes, string message = "Generic step failure.")
+    {
+        var response = new Host.ResponseMessage { Message = message, Meta = evidence };
+        return (family switch {
+            "hardware" => Host.HardwareContract.Map("SetCpuAttributes", response, writes, true),
+            "network" => Host.HardwareToolContract.MapResult("SetDeviceItemChannel", response, !writes, true),
+            "plc" => Host.PlcToolContract.Map("CreatePlcTypeGroup", response, writes, true),
+            "hmi" => Host.UnifiedHmiContract.Map("ManageUnifiedScreenLayout", response, writes, true),
+            "engineering" => Host.EngineeringToolContract.Map("ManagePlcBlockProtection", response, writes),
+            "drive" => Host.DriveToolContract.Map("SetDriveParameters", response, writes, true),
+            "library" => Host.LibraryToolContract.Map("ImportLibraryTypeDocuments", response, writes),
+            "security" => Host.SecurityToolContract.MapResult("ManagePlcProtection", response, !writes, true),
+            "optional" => Host.OptionalPackageContract.Map("ManageCfcChartProtection", response, writes),
+            "classic-motion" => Host.ClassicMotionToolContract.Map("ManagePlcSupervision", response, !writes, true),
+            "hmi-exchange" => Host.HmiExchangeContract.Map("ListHmiTags", response, writes, true),
+            _ => Host.HmiInspectionContract.Map("GetHmiProgramInfo", response, writes, true)
+        }).StructuredContent!;
+    }
+
+    [Theory, MemberData(nameof(KnownRefusals))]
+    public void Known_refusal_maps_for_each_family(string release, string family, string status, bool writes)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        var body = KnownRefusalResult(family, new JsonObject {
+            ["tool"] = "X", ["mayHaveChanged"] = false, ["operationSuccess"] = false, ["apiCallSuccess"] = false,
+            ["dataComplete"] = false, ["status"] = status, ["parameter"] = "target",
+            ["nativeMessage"] = "Exact library type not found.\n   password=hunter2"
+        }, writes);
+        string code = status switch {
+            "NotFound" => "NOT_FOUND", "InvalidParams" => "INVALID_ARGUMENT", "AlreadyExists" => "ALREADY_EXISTS",
+            _ => "UNSUPPORTED_CAPABILITY" };
+        Assert.Equal(code, (string?)body["error"]?["code"]);
+        Assert.Equal("Exact library type not found.", (string?)body["error"]?["message"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.Equal("none", (string?)body["meta"]?["completeness"]);
+        Assert.DoesNotContain("hunter2", body.ToJsonString(), StringComparison.Ordinal);
+        if (status == "InvalidParams") Assert.Equal("/target", (string?)body["error"]?["details"]?["parameter"]);
+        Assert.Equal(release, (string?)body["meta"]?["releaseKey"]);
+        if (status == "NotSupportedOnVersion") Assert.Equal(release, (string?)body["error"]?["details"]?["releaseKey"]);
+    }
+
+    [Theory, MemberData(nameof(KnownRefusals))]
+    public void Known_refusal_never_applies_after_a_change(string release, string family, string status, bool writes)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        var body = KnownRefusalResult(family, new JsonObject {
+            ["tool"] = "X", ["mayHaveChanged"] = true, ["operationSuccess"] = false, ["apiCallSuccess"] = false,
+            ["dataComplete"] = false, ["status"] = status, ["nativeMessage"] = "Private worker reason."
+        }, writes);
+        if (writes)
+        {
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+            Assert.DoesNotContain("Private worker reason", body["error"]!.ToJsonString(), StringComparison.Ordinal);
+        }
+        Assert.NotEqual("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+    }
+
+    [Theory, MemberData(nameof(KnownRefusals))]
+    public void Worker_failure_codes_do_not_override_a_known_unchanged_refusal(string release, string family, string status, bool writes)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        string expected = status switch {
+            "NotFound" => "NOT_FOUND", "InvalidParams" => "INVALID_ARGUMENT", "AlreadyExists" => "ALREADY_EXISTS",
+            _ => "UNSUPPORTED_CAPABILITY" };
+        foreach (string code in new[] { expected, status, "NATIVE_OPERATION_FAILED", "PRECONDITION_FAILED" })
+        foreach (string field in new[] { "v4FailureCode", "rejectionCode", "both" })
+        {
+            var evidence = new JsonObject {
+                ["tool"] = "X", ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false,
+                ["operationSuccess"] = false, ["apiCallSuccess"] = false, ["operationNotStarted"] = true,
+                ["dataComplete"] = false, ["status"] = status, ["parameter"] = "target",
+                ["nativeMessage"] = "Exact target refused.\n   password=hunter2"
+            };
+            if (field != "rejectionCode") evidence["v4FailureCode"] = code;
+            if (field != "v4FailureCode") evidence["rejectionCode"] = code;
+            var body = KnownRefusalResult(family, evidence, writes);
+            Assert.Equal(expected, (string?)body["error"]?["code"]);
+            Assert.Equal("Exact target refused.", (string?)body["error"]?["message"]);
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Assert.Equal("none", (string?)body["meta"]?["completeness"]);
+            Assert.Equal(release, (string?)body["meta"]?["releaseKey"]);
+            if (status == "NotSupportedOnVersion") Assert.Equal(release, (string?)body["error"]?["details"]?["releaseKey"]);
+            if (status == "InvalidParams") Assert.Equal("/target", (string?)body["error"]?["details"]?["parameter"]);
+            Assert.DoesNotContain("hunter2", body.ToJsonString(), StringComparison.Ordinal);
+            if (writes)
+            {
+                evidence["mayHaveChanged"] = true;
+                // Worker rejection codes cannot turn a write with possible effects into a safe retry.
+                evidence["operationNotStarted"] = false;
+                var changed = KnownRefusalResult(family, evidence, true);
+                Assert.Equal("OUTCOME_UNKNOWN", (string?)changed["error"]?["code"]);
+                Assert.DoesNotContain("Exact target refused.", changed["error"]!.ToJsonString(), StringComparison.Ordinal);
+                Assert.DoesNotContain("hunter2", changed["error"]!.ToJsonString(), StringComparison.Ordinal);
+                Assert.NotEqual("rejected-before-operation", (string?)changed["meta"]?["outcome"]);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("library"), InlineData("drive"), InlineData("engineering"), InlineData("security"), InlineData("optional")]
+    public void Known_refusal_keeps_the_redacted_top_level_worker_message(string family)
+    {
+        using var scope = Host.HardwareContract.UseRelease("14sp1");
+        var evidence = new JsonObject {
+            ["status"] = "NotSupportedOnVersion", ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false,
+            ["operationSuccess"] = false, ["apiCallSuccess"] = false
+        };
+        var body = KnownRefusalResult(family, evidence, true, "Synthetic native capability verdict.\n   password=hunter2");
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.Equal("Synthetic native capability verdict.", (string?)body["error"]?["message"]);
+        Assert.Equal("14sp1", (string?)body["error"]?["details"]?["releaseKey"]);
+        Assert.DoesNotContain("hunter2", body.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("NotFound"), InlineData("InvalidParams"), InlineData("AlreadyExists"), InlineData("NotSupportedOnVersion")]
+    public void Classic_capture_retains_typed_hardware_and_plc_failures(string status)
+    {
+        foreach (Exception cause in new Exception[] {
+            new HardwareAddressingException(status, "Exact target refused."), new PlcSoftwareException(status, "Exact target refused.") })
+        {
+            var evidence = new JsonObject();
+            var wrapped = new System.Reflection.TargetInvocationException(cause);
+            Assert.Same(wrapped, Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+                Host.ClassicMotionToolContract.Capture(evidence, _ => throw wrapped)));
+            Assert.Equal(status, (string?)evidence["v4FailureCode"]);
+            Assert.False((bool?)evidence["mayHaveChanged"]);
+            Assert.False((bool?)evidence["mayHaveWrittenFiles"]);
+        }
+    }
+
+    [Fact]
+    public void Optional_refusal_prefers_the_native_reason()
+    {
+        var body = Host.OptionalPackageContract.Map("ManageCfcChartProtection", new Host.ResponseMessage {
+            Message = "Generic step failure.", Meta = new JsonObject {
+                ["operationNotStarted"] = true, ["operationSuccess"] = false, ["rejectionCode"] = "PRECONDITION_FAILED",
+                ["nativeMessage"] = "The chart is protected.\n   password=hunter2"
+            } }, true).StructuredContent!;
+        Assert.Equal("The chart is protected.", (string?)body["error"]?["message"]);
+        Assert.DoesNotContain("hunter2", body["error"]!.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("mayHaveWrittenFiles"), InlineData("operationStarted"), InlineData("requiresSessionReset")]
+    [InlineData("requiresExplicitRebind"), InlineData("writeOutcomeUnknown"), InlineData("mayHaveExternalEffects")]
+    [InlineData("connectionUnavailable")]
+    public void Known_refusal_requires_unchanged_evidence(string field)
+    {
+        var evidence = new JsonObject { ["status"] = "NotFound", ["mayHaveChanged"] = false, [field] = true };
+        Assert.Null(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, false, "21", "Fixture"));
+        evidence[field] = false;
+        Assert.NotNull(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, false, "21", "Fixture"));
+        evidence.Remove("mayHaveChanged");
+        Assert.Null(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, false, "21", "Fixture"));
+        evidence["mayHaveChanged"] = "false";
+        Assert.Null(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, false, "21", "Fixture"));
+        evidence["mayHaveChanged"] = false;
+        Assert.Null(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, true, "21", "Fixture"));
+    }
+
+    [Theory]
+    [InlineData("NOT_FOUND", "NotFound")]
+    [InlineData("INVALID_ARGUMENT", "InvalidArgument")]
+    [InlineData("ALREADY_EXISTS", "AlreadyExists")]
+    [InlineData("NotSupported", "UnsupportedCapability")]
+    [InlineData("UNSUPPORTED_CAPABILITY", "UnsupportedCapability")]
+    public void Known_refusal_accepts_status_aliases_and_has_a_safe_fallback(string status, string code)
+    {
+        var error = TiaMcp.Logic.V4.HostBehavior.KnownRefusal(new JsonObject { ["status"] = status, ["mayHaveChanged"] = false }, null, "21", "Fixture")!;
+        Assert.Equal(code, error.Code.ToString());
+        Assert.False(string.IsNullOrWhiteSpace(error.Message));
+        if (status == "INVALID_ARGUMENT") Assert.Equal("/arguments", Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(error.Details).Parameter);
+    }
+
     [Fact]
     public void Password_policy_exception_in_evidence_keeps_its_reason()
     {

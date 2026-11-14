@@ -63,7 +63,8 @@ namespace TiaMcp.Adapters
             Device device;
             if (devicePath.Length == 1)
                 device =
-                    (Device)(Find(EnumerateAllDevices().ToArray(), devicePath[0]) ?? throw new InvalidOperationException("Exact unique device not found."));
+                    (Device)(Find(EnumerateAllDevices().ToArray(), devicePath[0])
+                        ?? throw new HardwareAddressingException("NotFound", "Exact unique device not found."));
             else if (devicePath[0] == TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.UngroupedSegment)
             {
                 // The ungrouped system group has a localized name and no subgroups.
@@ -71,22 +72,22 @@ namespace TiaMcp.Adapters
                     throw new InvalidOperationException("Use [\"$ungrouped\", \"<device>\"] for a device in the ungrouped devices group.");
                 device =
                     (Device)(Find(project!.UngroupedDevicesGroup.Devices, devicePath[1])
-                        ?? throw new InvalidOperationException("Device not found in the ungrouped devices group."));
+                        ?? throw new HardwareAddressingException("NotFound", "Device not found in the ungrouped devices group."));
             }
             else
             {
                 var group = Find(project!.DeviceGroups, devicePath[0]) as DeviceUserGroup
-                    ?? throw new InvalidOperationException("Device group not found: " + devicePath[0]);
+                    ?? throw new HardwareAddressingException("NotFound", "Device group not found: " + devicePath[0]);
                 foreach (var name in devicePath.Skip(1).Take(devicePath.Length - 2))
-                    group = (DeviceUserGroup)(Find(group.Groups, name) ?? throw new InvalidOperationException("Device group not found: " + name));
-                device = (Device)(Find(group.Devices, devicePath.Last()) ?? throw new InvalidOperationException("Device not found."));
+                    group = (DeviceUserGroup)(Find(group.Groups, name) ?? throw new HardwareAddressingException("NotFound", "Device group not found: " + name));
+                device = (Device)(Find(group.Devices, devicePath.Last()) ?? throw new HardwareAddressingException("NotFound", "Device not found."));
             }
             HardwareObject current = device;
             foreach (var name in itemPath)
             {
                 var next = Find(current.DeviceItems, name)
                     ?? current.Items.Cast<object?>().FirstOrDefault(i => i is DeviceItem d && string.Equals(d.Name, name, StringComparison.Ordinal))
-                    ?? throw new InvalidOperationException("Device item not found: " + name + " (children of " + current.Name + ": " + string
+                    ?? throw new HardwareAddressingException("NotFound", "Device item not found: " + name + " (children of " + current.Name + ": " + string
                             .Join(", ", current.DeviceItems.Select(d => d.Name).Concat(current.Items.OfType<DeviceItem>().Select(d => d.Name)).Distinct()
                                 .Take(20))
                             + ").");
@@ -195,7 +196,7 @@ namespace TiaMcp.Adapters
             var segments = blockPath.Split('/');
             PlcBlockGroup group = software.BlockGroup;
             foreach (var name in segments.Take(segments.Length - 1))
-                group = group.Groups.Find(name) ?? throw new InvalidOperationException("Block group not found: " + name);
+                group = group.Groups.Find(name) ?? throw new HardwareAddressingException("NotFound", "Block group not found: " + name);
             return group.Blocks.Find(segments.Last());
         }
 
@@ -238,7 +239,8 @@ namespace TiaMcp.Adapters
                     if (cause.Data["nativeResultEvidence"] is Dictionary<string, object?> recovery)
                         foreach (var pair in recovery) meta[pair.Key] = pair.Value;
                 meta["error"] = ex.ToString(); meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
-                meta["status"] = ex.GetBaseException() is HardwareAddressingException failure ? failure.Status : "ReadOrWriteFailed";
+                meta["status"] = StepFailureStatus.Of(ex);
+                meta["parameter"] = StepFailureStatus.Parameter(ex);
                 if (ex.GetBaseException() is EngineeringException engineering)
                 {
                     try
@@ -254,6 +256,8 @@ namespace TiaMcp.Adapters
                     }
                     catch { /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ }
                 }
+                if (!meta.TryGetValue("nativeMessage", out var nativeMessage) || nativeMessage == null)
+                    meta["nativeMessage"] = ex.GetBaseException().Message;
                 reply.RequiresSessionReset = TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)
                     || reply.MayHaveChanged && !meta.ContainsKey("after")
                         && !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial");

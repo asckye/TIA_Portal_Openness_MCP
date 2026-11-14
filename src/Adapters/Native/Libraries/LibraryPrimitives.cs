@@ -168,7 +168,7 @@ namespace TiaMcp.Adapters
             var parts=PlcGroupOperations.Parts(path);
             var folder=EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName),string.Join("/",parts.Take(parts.Length-1)),"MasterCopyFolder");
             return (MasterCopy)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder,"MasterCopies"),parts.Last())
-                    ?? throw new InvalidOperationException("Exact master copy not found."));
+                    ?? throw new PlcSoftwareException("NotFound", "Exact master copy not found."));
         }
         private static object EngineeringLibraryFolder(object library, string folderPath, string rootProperty)
         {
@@ -178,7 +178,7 @@ namespace TiaMcp.Adapters
                         .NoTypeFolderMessage(library.GetType().Name, "resolving '" + folderPath + "' under " + rootProperty));
             foreach (var part in PlcGroupOperations.Parts(folderPath, true))
                 folder = PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Folders"), part)
-                    ?? throw new InvalidOperationException("Library folder not found: " + part);
+                    ?? throw new PlcSoftwareException("NotFound", "Library folder not found: " + part);
             return folder;
         }
         private object ExactMasterCopyPlcSource(string softwarePath, string sourcePath, bool block)

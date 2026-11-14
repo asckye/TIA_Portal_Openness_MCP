@@ -313,7 +313,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             releaseKey = ReleaseKey, tool,
                             arguments = TiaOpenness.Shared.CallJournalPayload.ProtectPlanArguments(JsonNode.Parse(PendingApproval.Canonical(normalized))),
                             hostLifetime = TiaOpenness.Shared.CallJournalPayload.PlanHostLifetime, inputFiles = inputs, targetIdentity = identity }))),
-                ["targetIdentity"] = identity, ["scope"] = "Normalized arguments, input file contents and target identity; native validation/readback occurs during execution." };
+                ["targetIdentity"] = identity, ["scope"] =
+                    "Normalized arguments, input file contents and target identity; native validation/readback occurs during execution." };
             if (writing)
             {
                 bool targetBound = PlanProjectFile(identity) != null;
@@ -417,12 +418,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 || argument.Parameter != "" && !argument.WholeArgumentValidation) return error;
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (arguments.Json.EnumerateObject().Any(p => !names.Add(p.Name))) return error;
-            var fields = new InputSchema(target.Tool.InputSchema).ValidateFields(arguments.Json);
+            var schema = new InputSchema(target.Tool.InputSchema);
+            var fields = schema.ValidateFields(arguments.Json);
             if (fields.Count == 0 || fields.Any(e => e.Details is not InvalidArgumentDetails)) return error;
-            if (fields.Any(e => ((InvalidArgumentDetails)e.Details).Parameter == "")) return error;
-            var parameters = fields.Select(e => ((InvalidArgumentDetails)e.Details).Parameter!.Split('/')[1]
-                .Replace("~1", "/").Replace("~0", "~")).Distinct(StringComparer.Ordinal);
-            return new Error("Missing or invalid target field(s): " + string.Join(", ", parameters) + ".",
+            return new Error(schema.FieldReport(arguments.Json),
                 new InvalidArgumentDetails(argument.Parameter, argument.AllowedValues, argument.Parameters, argument.Expected));
         }
         internal static bool CurrentBehaviorTargets(string tool, JsonElement arguments)

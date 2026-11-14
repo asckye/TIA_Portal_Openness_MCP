@@ -15,8 +15,9 @@ namespace TiaMcp.Adapters.Native.Plc
             var parts=Parse(path);
             var target=find(parts) ?? throw new PlcSoftwareException("NotFound", "PLC user block group not found: " + path);
             int blocks=blockCount(target), groups=childCount(target);
-            if (blocks!=0 || groups!=0) throw new PlcSoftwareException("InvalidParams",
-                $"Group '{path}' is not empty: {blocks} block(s), {groups} subgroup(s). Nothing deleted.");
+            if (blocks!=0 || groups!=0)
+                throw new AdapterPreconditionException($"Group '{path}' is not empty: {blocks} block(s), {groups} subgroup(s). Nothing deleted.",
+                    "groupPath", isArgument: false);
             var online=state();
             var result=new Dictionary<string, object?> { ["groupPath"]=string.Join("/",parts), ["dryRun"]=dryRun,
                 ["blockCount"]=blocks, ["subgroupCount"]=groups, ["onlineState"]=online,

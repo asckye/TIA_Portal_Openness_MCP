@@ -22,7 +22,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     var plc = _session.ExactPlcForEngineering(softwarePath, true); // Offline even for export preview.
                     var group = (PlcBlockGroup)PlcGroupOperations.Group(PlcBlockPrimitives.BlockGroup(plc), string.Join("/", parts.Take(parts.Length - 1)));
                     PlcBlock Resolve() => PlcBlockPrimitives.Find(PlcBlockPrimitives.Blocks(group), parts.Last())
-                        ?? throw new InvalidOperationException("Exact existing block not found in its target group.");
+                        ?? throw new PlcSoftwareException("NotFound", "Exact existing block not found in its target group.");
                     void Check() { _session.VerifyBinding("ImportPlcBlockVerified"); _session.ExactPlcForEngineering(softwarePath, true); }
                     void Export(string path) {
                         var block = Resolve();

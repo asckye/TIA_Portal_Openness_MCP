@@ -236,6 +236,8 @@ namespace TiaMcp.Adapters
                 if (di == null)
                 {
                     meta["error"] = "CPU device item not found";
+                    meta["status"] = "NotFound"; meta["parameter"] = "cpuPath";
+                    meta["nativeMessage"] = "CPU device item not found";
                     return new HardwareAddressingReply { Message = "CPU device item not found", Meta = meta };
                 }
 

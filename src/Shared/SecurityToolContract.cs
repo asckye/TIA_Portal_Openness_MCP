@@ -54,7 +54,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool knownFile = Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") == true && data["file"] is JsonObject;
             string status = data["status"]?.ToString() ?? "";
             Outcome outcome; Execution execution; Error? error = null;
-            if (HostBehavior.DocumentedRefusal(data) is Error refusal)
+            if ((HostBehavior.DocumentedRefusal(data)
+                ?? HostBehavior.KnownRefusalWithMessage(data, success, HardwareContract.ReleaseKey, tool, nativeMessage)) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(data, success))
             { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
@@ -86,7 +87,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
                 error = status == "NotSupportedOnVersion"
                     ? new Error(nativeMessage ?? "The requested security capability is unavailable.",
-                        new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null))
+                        new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
                     : status == "NotFound" ? new Error("The requested security target was not found.", new NotFoundDetails(null))
                     : new Error("Access to the security operation was denied.", new AccessDeniedDetails(tool, null));
             }
@@ -188,7 +189,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The security observation covers only the reported scope and available fields.",
                         new Dictionary<string, JsonElement>()));
-            var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
+            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 reset || outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));

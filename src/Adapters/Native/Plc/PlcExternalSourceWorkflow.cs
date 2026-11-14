@@ -91,7 +91,7 @@ namespace TiaMcp.Adapters
             var checkTarget=ExternalSourceTargetCheck(softwarePath,out var software,out var exactPath,out var projectFile,out var processId);
             var sources=Documents.Sources(Documents.ExternalSourceGroup(software));
             var source=Documents.Find(sources,externalSourceName)
-                ?? throw new AdapterPreconditionException("External source not found: "+externalSourceName,"externalSourceName");
+                ?? throw AdapterPreconditionException.NotFound("External source not found: "+externalSourceName,"externalSourceName");
             if(Documents.Name(source)!=externalSourceName)
                 throw new AdapterPreconditionException("Use the exact external source name including its extension.","externalSourceName");
             var result=new PlcExternalSourceGenerationResult {

@@ -20,6 +20,20 @@ namespace PlcExchangeTests
 {
     public sealed class PlcExchangeContractsTests : IDisposable
     {
+        [Theory, InlineData(false), InlineData(true)]
+        public void Precondition_refusal_carries_the_native_reason(bool native)
+        {
+            var response = new ResponseMessage { Message = "Summary refusal.", Meta = new JsonObject {
+                ["operationSuccess"] = false, ["mayHaveChanged"] = false,
+                ["nativeMessage"] = native ? "The target is not offline.\n   password=hunter2" : null } };
+            var body = Body((CallToolResult)Type("PlcToolContract").GetMethod("Map", BindingFlags.Static | BindingFlags.NonPublic)!
+                .Invoke(null, new object[] { "ManagePlcBlockProtection", response, true, true })!);
+            Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Equal(native ? "The target is not offline." : "Summary refusal.", (string?)body["error"]?["message"]);
+            Assert.Equal("plc-operation", (string?)body["error"]?["details"]?["condition"]);
+            Assert.DoesNotContain("hunter2", body["error"]!.ToJsonString(), StringComparison.Ordinal);
+        }
+
         [Theory]
         [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
         public void Missing_provider_names_the_tool_and_the_reason(string release)
@@ -96,7 +110,8 @@ namespace PlcExchangeTests
         }
         public void Dispose()
         {
-            var context = HostType("TiaMcp.FoundationHost.EngineHostConfiguration").GetProperty("Current", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
+            var context = HostType("TiaMcp.FoundationHost.EngineHostConfiguration").GetProperty("Current", BindingFlags.Static | BindingFlags.NonPublic)!
+                .GetValue(null)!;
             ((IDisposable)context.GetType().GetProperty("Exports", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(context)!).Dispose();
         }
         private sealed class HostWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
@@ -108,7 +123,8 @@ namespace PlcExchangeTests
             public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
             public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
             public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
-            public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new NotSupportedException();
+            public Task<enginehost::TiaMcp.FoundationHost
+                .EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new NotSupportedException();
             public void Dispose() { }
         }
         private static string Park(string tool, string target, string content)
@@ -228,13 +244,19 @@ namespace PlcExchangeTests
             var metadata = System.Reflection.Metadata.PEReaderExtensions.GetMetadataReader(pe);
             var names = metadata.TypeDefinitions.Select(handle => metadata.GetTypeDefinition(handle))
                 .Select(type => metadata.GetString(type.Namespace) + "." + metadata.GetString(type.Name)).ToArray();
-            foreach (var name in new[] { "TiaMcpServer.Isolation.OpennessWorkerSupervisor", "TiaMcpServer.HttpMcpServer", "TiaMcpServer.McpHttpResponseRouter", "TiaMcpServer.Worker.EngineWorkerHost" })
+            foreach (var name in new[] {
+                    "TiaMcpServer.Isolation.OpennessWorkerSupervisor", "TiaMcpServer.HttpMcpServer", "TiaMcpServer.McpHttpResponseRouter",
+                        "TiaMcpServer.Worker.EngineWorkerHost"
+                })
                 Assert.DoesNotContain(name, names);
             Assert.Contains(".Program", names);
             Assert.Contains("TiaMcp.PlcWorker.FoundationWorkerDispatcher", names);
-            Assert.DoesNotContain(metadata.MethodDefinitions.Select(handle => metadata.GetString(metadata.GetMethodDefinition(handle).Name)), name => name == "RunStdioHost");
+            Assert
+                .DoesNotContain(metadata.MethodDefinitions.Select(handle => metadata.GetString(metadata.GetMethodDefinition(handle).Name)), name =>
+                    name == "RunStdioHost");
 #else
-            foreach (var name in new[] { "TiaMcpServer.Isolation.OpennessWorkerSupervisor", "TiaMcpServer.HttpMcpServer", "TiaMcpServer.McpHttpResponseRouter" })
+            foreach (var name in new[] { "TiaMcpServer.Isolation.OpennessWorkerSupervisor", "TiaMcpServer.HttpMcpServer", "TiaMcpServer.McpHttpResponseRouter"
+                })
                 Assert.Null(Engine.GetType(name, false));
             Assert.Null(Engine.GetType("TiaMcpServer.Program", true)!.GetMethod("RunStdioHost", BindingFlags.Public | BindingFlags.Static));
             Assert.NotNull(Engine.GetType("TiaMcpServer.Worker.EngineWorkerHost", true));
@@ -346,7 +368,8 @@ namespace PlcExchangeTests
         [Fact]
         public void ExactPathBudgetsAndCaseInsensitiveUniquenessSurvive()
         {
-            var contract = (InputContract<string[]>)Type("PlcExchangeContract").GetField("Paths", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
+            var contract = (InputContract<string[]>)Type("PlcExchangeContract").GetField("Paths", BindingFlags.Static | BindingFlags.NonPublic)!
+                .GetValue(null)!;
             Assert.Null(contract.Read("[\"Group/A\",\"Group/B\"]", "blockPaths").Error);
             Assert.NotNull(contract.Read("\"[\\\"A\\\"]\"", "blockPaths").Error);
             Assert.Equal(ErrorCode.LimitExceeded, contract.Validate(new[] { new string('x', 65537) }, "blockPaths").Error!.Code);
@@ -365,7 +388,8 @@ namespace PlcExchangeTests
         [InlineData("\"{}\"", false)]
         public void ScalarTagMapIsClosedAndDoesNotDecodeStrings(string json, bool valid)
         {
-            var contract = (InputContract<AttributeMap<Scalar>>)Type("PlcExchangeContract").GetMethod("TagProperties", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, new object[] { "tag" })!;
+            var contract = (InputContract<AttributeMap<Scalar>>)Type("PlcExchangeContract")
+                .GetMethod("TagProperties", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, new object[] { "tag" })!;
             Assert.Equal(valid, contract.Read(json, "properties").IsValid);
         }
 
@@ -441,7 +465,11 @@ namespace PlcExchangeTests
             Func<ResponseMessage> action = () => {
                 adapter.GetMethod("StartWrite", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { "import" });
                 adapter.GetMethod("ConfirmWrite", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, null);
-                return new ResponseMessage { Meta = JsonNode.Parse("{\"success\":false,\"mayHaveChanged\":true,\"attemptedFiles\":1,\"succeededFiles\":1,\"responseReportingFailed\":true}")!.AsObject() };
+                return new ResponseMessage {
+                    Meta = JsonNode
+                        .Parse("{\"success\":false,\"mayHaveChanged\":true,\"attemptedFiles\":1,\"succeededFiles\":1,\"responseReportingFailed\":true}")!
+                        .AsObject()
+                };
             };
             var result = (CallToolResult)adapter.GetMethod("Run", BindingFlags.NonPublic | BindingFlags.Static)!
                 .Invoke(null, new object[] { "ImportPlcBlocksDocuments", action, true, true })!;

@@ -43,7 +43,8 @@ namespace PlcExchangeTests
             fake.Engine = engine;
             engineType.GetProperty("EngineeringPlcOrganisationSession")!.SetValue(engine, fake);
             engineType.GetProperty("EngineeringServicesStep")!.SetValue(engine,
-                (Func<string, bool, Func<Dictionary<string, object?>, string>, TiaMcp.Adapters.Contracts.HardwareAddressingReply>)((tool, requiresProject, action) =>
+                (Func<string, bool, Func<Dictionary<string, object?>, string>, TiaMcp.Adapters.Contracts
+                        .HardwareAddressingReply>)((tool, requiresProject, action) =>
                 {
                     var meta = new Dictionary<string, object?>();
                     try { action(meta); meta["success"] = !meta.TryGetValue("operationSuccess", out var success) || success is not false; }
@@ -55,11 +56,72 @@ namespace PlcExchangeTests
                 (Func<string, JsonObject, JsonNode?>)((operation, args) =>
                 {
                     Assert.Equal("cfc-charts.ExecuteOptionalProduct", operation);
-                    var request = System.Text.Json.JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.OptionalProductRequest>(args["request"]!.ToJsonString())!;
+                    var request = System.Text.Json.JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts
+                        .OptionalProductRequest>(args["request"]!.ToJsonString())!;
                     var reply = engineType.GetMethod("ExecuteOptionalProduct")!.Invoke(engine, new object[] { request, request.DryRun });
                     return System.Text.Json.JsonSerializer.SerializeToNode(reply);
                 }), (Func<string>)(() => "fixture.ap21") }, null)!;
             return (fake, service);
+        }
+
+        [Theory]
+        [InlineData("NotFound", "NotFound", "NOT_FOUND")]
+        [InlineData("InvalidParams", "InvalidParams", "INVALID_ARGUMENT")]
+        [InlineData("AlreadyExists", "AlreadyExists", "ALREADY_EXISTS")]
+        [InlineData("NotSupportedOnVersion", "NotSupportedOnVersion", "UNSUPPORTED_CAPABILITY")]
+        [InlineData("InvalidState", "PRECONDITION_FAILED", "PRECONDITION_FAILED")]
+        public void Native_failure_classifiers_preserve_typed_hardware_refusals(string status, string failureCode, string rejectionCode)
+        {
+            var (fixture, _) = CfcFixture();
+            var adapter = fixture.Engine.GetType().Assembly;
+            const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+            var error = new TargetInvocationException(new TiaMcp.Adapters.Contracts.HardwareAddressingException(status, "Exact target refused."));
+            var hmiObject = adapter.GetType("TiaMcp.Adapters.Native.Hmi.HmiObject", true)!;
+            object Meta() => Activator.CreateInstance(hmiObject, true)!;
+            foreach (var site in new[] {
+                ("Optional.OptionalEvidence", "RecordFailure", "v4FailureCode", failureCode),
+                ("Options.OptionalProductEvidence", "RecordFailure", "rejectionCode", rejectionCode),
+                ("Plc.PlcB5Adapter", "RecordOptionalFailure", "rejectionCode", rejectionCode) })
+            {
+                var meta = Meta();
+                adapter.GetType("TiaMcp.Adapters.Native." + site.Item1, true)!.GetMethod(site.Item2, all)!
+                    .Invoke(null, new[] { meta, error });
+                Assert.Equal(site.Item4, ((IDictionary<string, object?>)meta)[site.Item3]);
+            }
+            var hmiSession = adapter.GetType("TiaMcp.Adapters.Native.Hmi.HmiSession", true)!;
+            var capture = hmiSession.GetMethod("Capture", all)!;
+            var actionType = capture.GetParameters()[1].ParameterType;
+            var argument = Expression.Parameter(hmiObject);
+            var action = Expression.Lambda(actionType, Expression.Throw(Expression.Constant(error), typeof(string)), argument).Compile();
+            var hmiMeta = Meta();
+            Assert.Throws<TargetInvocationException>(() => capture.Invoke(RuntimeHelpers.GetUninitializedObject(hmiSession), new[] { hmiMeta, action }));
+            Assert.Equal(failureCode, ((IDictionary<string, object?>)hmiMeta)["v4FailureCode"]);
+            foreach (string name in new[] { "PlcOrganisationAdapter", "PlcB5Adapter" })
+            {
+                var type = adapter.GetType("TiaMcp.Adapters.Native.Plc." + name, true)!;
+                var sessionType = adapter.GetType("TiaMcp.Adapters.Native.Plc.IPlcOrganisationSession", true)!;
+                var session = (ClassifierSessionFake)DispatchProxy.Create(sessionType, typeof(ClassifierSessionFake));
+                var target = RuntimeHelpers.GetUninitializedObject(type);
+                type.GetField("_session", all)!.SetValue(target, session);
+                Func<Dictionary<string, object?>, string> fail = _ => throw error;
+                type.GetMethod("RunTool", all)!.Invoke(target, new object[] { "ManagePlcSupervision", fail });
+                Assert.Equal(failureCode, session.Meta["v4FailureCode"]);
+                Assert.Equal(false, session.Meta["mayHaveChanged"]);
+                Assert.Equal(false, session.Meta["mayHaveWrittenFiles"]);
+            }
+            Assert.Equal(0, fixture.NativeCalls);
+        }
+
+        public class ClassifierSessionFake : DispatchProxy
+        {
+            public Dictionary<string, object?> Meta = new();
+            protected override object? Invoke(MethodInfo? method, object?[]? args)
+            {
+                Assert.Equal("RunHmiStepTool", method!.Name);
+                try { ((Func<Dictionary<string, object?>, string>)args![1]!)(Meta); }
+                catch (TargetInvocationException) { /* The step runner records the adapter evidence after refusal. */ }
+                return new TiaMcp.Adapters.Contracts.HardwareAddressingReply { Meta = Meta };
+            }
         }
 
         [Theory]
@@ -76,7 +138,8 @@ namespace PlcExchangeTests
             var actionType = method.GetParameters()[1].ParameterType;
             var parameter = Expression.Parameter(actionType.GetGenericArguments()[0]);
             var action = Expression.Lambda(actionType,
-                Expression.Throw(Expression.Constant(new FileNotFoundException("fixture optional assembly", assemblyName)), typeof(string)), parameter).Compile();
+                Expression.Throw(Expression.Constant(new FileNotFoundException("fixture optional assembly", assemblyName)), typeof(string)), parameter)
+                    .Compile();
             var reply = (TiaMcp.Adapters.Contracts.OptionalProductReply)method.Invoke(session, new object[] { request.Operation, action, true })!;
             Assert.Equal("UNSUPPORTED_CAPABILITY", reply.Meta["rejectionCode"]);
             Assert.Equal(true, reply.Meta["operationNotStarted"]);
@@ -87,7 +150,8 @@ namespace PlcExchangeTests
             var map = typeof(McpServer).Assembly.GetType("TiaMcpServer.ModelContextProtocol.OptionalPackageContract", true)!
                 .GetMethod("Map", BindingFlags.NonPublic | BindingFlags.Static)!;
             var body = Body(map.Invoke(null, new object?[] { request.Operation,
-                new ResponseMessage { Message = reply.Message, Meta = System.Text.Json.JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() }, false, null, null })!);
+                new ResponseMessage { Message = reply.Message, Meta = System.Text.Json.JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() }, false, null,
+                    null })!);
             Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
@@ -149,8 +213,10 @@ namespace PlcExchangeTests
         public void HardwareAndScopedDocumentContractsUseReturnedNativeEvidence(string state, bool modifiesProject)
         {
             var evidence = new JsonObject { ["success"] = false,
-                ["nativeStateType"] = state == "Failure" ? TiaMcp.Adapters.Contracts.NativeResultStates.Documents : TiaMcp.Adapters.Contracts.NativeResultStates.Cax };
-            NativeResultState.Record(evidence, state, modifiesProject, "native.log", Path.Combine(Path.GetTempPath(), "missing.aml"), new JsonArray("native message"));
+                ["nativeStateType"] = state == "Failure" ? TiaMcp.Adapters.Contracts.NativeResultStates.Documents : TiaMcp.Adapters.Contracts.NativeResultStates
+                    .Cax };
+            NativeResultState
+                .Record(evidence, state, modifiesProject, "native.log", Path.Combine(Path.GetTempPath(), "missing.aml"), new JsonArray("native message"));
             foreach (string contract in new[] { "HardwareContract", "PlcExchangeContract" })
             {
                 var map = EngineType("ModelContextProtocol." + contract).GetMethod("Map", BindingFlags.Static | BindingFlags.NonPublic)!;
@@ -290,7 +356,8 @@ namespace PlcExchangeTests
                         Assert.False((bool)arguments["dryRun"]!);
                         Assert.True((bool)arguments["confirm"]!);
                         Assert.Equal(Previous, (string?)arguments["expectedProjectFile"]);
-                        EngineType("ModelContextProtocol.InvocationJournal").GetMethod("NativeCallStarted", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, null);
+                        EngineType("ModelContextProtocol.InvocationJournal").GetMethod("NativeCallStarted", BindingFlags.Static | BindingFlags.NonPublic)!
+                            .Invoke(null, null);
                         SaveCalls++;
                         return JsonValue.Create(true);
                     default: throw new Exception("Unexpected project lifecycle operation: " + operation);
@@ -307,7 +374,8 @@ namespace PlcExchangeTests
                         return new JsonObject { ["identity"] = SaveCalls == 0 && MissingBefore || SaveCalls != 0 && MissingAfter ? null
                             : new JsonObject { ["projectPath"] = SaveCalls == 0 ? Previous : New } };
                     case "SaveAsProject":
-                        EngineType("ModelContextProtocol.InvocationJournal").GetMethod("NativeCallStarted", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, null);
+                        EngineType("ModelContextProtocol.InvocationJournal").GetMethod("NativeCallStarted", BindingFlags.Static | BindingFlags.NonPublic)!
+                            .Invoke(null, null);
                         SaveCalls++;
                         return true;
                     default: throw new Exception("Unexpected session call: " + method.Name);

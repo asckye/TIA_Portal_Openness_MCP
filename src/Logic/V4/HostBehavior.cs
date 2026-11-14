@@ -103,7 +103,8 @@ namespace TiaMcp.Logic.V4
                         new InvalidArgumentDetails(parameter ?? "", Array.Empty<string>())),
                 HostFailureKind.Precondition =>
                     new Error(nativeMessage ?? "The request precondition failed before operation.",
-                        new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
+                        condition == "not-found" ? new NotFoundDetails(parameter)
+                            : new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
                 HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails(stage)),
                 HostFailureKind.Unknown =>
                     new Error("Only this call has an unknown outcome. Do not repeat this call. Read GetCallResult(requestId) and inspect its target. " +
@@ -237,6 +238,37 @@ namespace TiaMcp.Logic.V4
             string? message = SafeDiagnostic(evidence["nativeMessage"]?.ToString() ?? fallback);
             return new Error(message ?? "The native operation failed without changing the target.",
                 new NativeOperationFailedDetails(null, message, new Dictionary<string, JsonElement>()));
+        }
+
+        internal static Error? KnownRefusal(JsonObject evidence, bool? success, string release, string tool)
+        {
+            bool? Flag(string key) => evidence[key] is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
+            if (success == true || Flag("mayHaveChanged") != false || Flag("mayHaveWrittenFiles") == true
+                || Flag("operationStarted") == true || Flag("requiresSessionReset") == true || Flag("requiresExplicitRebind") == true
+                || Flag("mayHaveExternalEffects") == true || Flag("writeOutcomeUnknown") == true || Flag("connectionUnavailable") == true)
+                return null;
+            string? parameter = evidence["parameter"]?.ToString();
+            string? message = SafeDiagnostic(evidence["nativeMessage"]?.ToString());
+            var refusal = evidence["status"]?.ToString() switch
+            {
+                "NotFound" or "NOT_FOUND" => new Error(message ?? "The requested object was not found.", new NotFoundDetails(parameter)),
+                "InvalidParams" or "INVALID_ARGUMENT" => new Error(message ?? "The request argument was refused before operation.",
+                    new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
+                "AlreadyExists" or "ALREADY_EXISTS" => new Error(message ?? "The requested object already exists.", new AlreadyExistsDetails(null)),
+                "NotSupported" or "NotSupportedOnVersion" or "UNSUPPORTED_CAPABILITY" => new Error(message ?? "This capability is unavailable.",
+                    new UnsupportedCapabilityDetails(release, tool, null)),
+                _ => null
+            };
+            if (refusal != null && evidence.ContainsKey("nativeMessage")) evidence["nativeMessage"] = message;
+            return refusal;
+        }
+
+        internal static Error? KnownRefusalWithMessage(JsonObject evidence, bool? success, string release, string tool, string? message)
+        {
+            var refusal = KnownRefusal(evidence, success, release, tool);
+            if (refusal == null) return null;
+            string? nativeMessage = SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? SafeDiagnostic(message);
+            return nativeMessage == null ? refusal : new Error(nativeMessage, refusal.Details);
         }
 
         // A negative worker verdict with explicit unchanged evidence is known, even for a write-declared tool.

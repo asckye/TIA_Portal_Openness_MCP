@@ -39,6 +39,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         meta["v4FailureCode"] = cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
                             : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT"
                             : cause is FileNotFoundException || cause is DirectoryNotFoundException ? "NOT_FOUND"
+                            : cause is HardwareAddressingException hardware ? hardware.Status == "InvalidState" ? "PRECONDITION_FAILED" : hardware.Status
                             : cause is PlcSoftwareException portal ? portal.Code == "InvalidState" ? "PRECONDITION_FAILED" : portal.Code
                             : cause is InvalidOperationException ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED";
                     }
@@ -220,7 +221,10 @@ namespace TiaMcp.Adapters.Native.Plc
                     .Any(k => meta.TryGetValue(k, out var flag) && flag is true))
                 return;
             meta["operationNotStarted"] = true;
-            string? code = cause is PlcSoftwareException portal ? portal.Code switch {
+            string? code = cause is HardwareAddressingException hardware ? hardware.Status switch {
+                "InvalidParams" => "INVALID_ARGUMENT", "NotFound" => "NOT_FOUND", "NotSupportedOnVersion" => "UNSUPPORTED_CAPABILITY",
+                "InvalidState" => "PRECONDITION_FAILED", "AlreadyExists" => "ALREADY_EXISTS", _ => null
+            } : cause is PlcSoftwareException portal ? portal.Code switch {
                 "InvalidParams" => "INVALID_ARGUMENT", "NotFound" => "NOT_FOUND", "NotSupportedOnVersion" => "UNSUPPORTED_CAPABILITY", "InvalidState" =>
                     "PRECONDITION_FAILED", _ => null }
                 : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT" : cause is NotSupportedException

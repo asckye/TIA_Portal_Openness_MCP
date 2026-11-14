@@ -72,7 +72,9 @@ namespace TiaMcp.PlcWorker.Runtime
                 // envelope: legacy-plcsim-failure: Failed would append dataComplete, which this executor does not set.
                 meta["success"] = false; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
                 meta["status"] = cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported"
-                    : cause is PlcSimApiUnavailableException ? "ApiNotFound" : "ReadOrWriteFailed";
+                    : cause is PlcSimApiUnavailableException ? "ApiNotFound"
+                    : cause.GetType().Name == "SimulationRuntimeException" && cause.Message.Contains("DoesNotExist", StringComparison.Ordinal)
+                        ? "NOT_FOUND" : "ReadOrWriteFailed";
                 meta["error"] = cause.Message;
                 return new PlcSimAdvancedReport { Ok = false, Message = tool + " failed: " + cause.Message, Data = data, Meta = meta };
             }

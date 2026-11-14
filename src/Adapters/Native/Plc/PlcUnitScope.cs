@@ -30,7 +30,7 @@ namespace TiaMcp.Adapters.Native.Plc
             var provider = plc.GetService<PlcUnitProvider>()
                 ?? throw new AdapterPreconditionException("This PLC does not provide software units.", "unitName", false);
             var unit = provider.UnitGroup.Units.Find(unitName);
-            if (unit == null || unit.Name != unitName) throw new AdapterPreconditionException("Exact software unit not found: " + unitName, "unitName", false);
+            if (unit == null || unit.Name != unitName) throw AdapterPreconditionException.NotFound("Exact software unit not found: " + unitName, "unitName");
             return unit;
 #else
             throw new AdapterPreconditionException("unitName requires V16–V21.", "unitName", false);

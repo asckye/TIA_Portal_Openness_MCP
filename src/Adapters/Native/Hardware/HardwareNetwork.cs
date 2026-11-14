@@ -302,7 +302,8 @@ namespace TiaMcp.Adapters
                         .MrpDomains;
                 var target = HardwareGroupOperations.Find(composition(), name);
                 if ((action == "create") == (target != null))
-                    throw new InvalidOperationException(action == "create" ? "Domain exists: " + name : "Domain not found: " + name);
+                    throw new HardwareAddressingException(action == "create" ? "AlreadyExists" : "NotFound", action == "create" ? "Domain exists: " + name
+                            : "Domain not found: " + name);
                 int before = HardwareGroupOperations.Items(composition()).Count(); meta["countBefore"] = before;
                 Dictionary<string, object?> Row(object d) => d is SyncDomain s ? HardwareSyncDomainRow(s) : HardwareMrpDomainRow((MrpDomain)d);
                 if (target != null) meta["before"] = Row(target);

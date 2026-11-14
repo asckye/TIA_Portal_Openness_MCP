@@ -323,9 +323,9 @@ namespace TiaMcp.Adapters.Native.Plc
             if (parts.Length < 2) throw new ArgumentException("plcTagPath must be [group/...]/table/tag.");
             var group = PlcGroupOperations.Group(plc.TagTableGroup, string.Join("/", parts.Take(parts.Length - 2)));
             var table = PlcGroupOperations.Find(PlcGroupOperations.Get(group, "TagTables"), parts[parts.Length - 2])
-                ?? throw new InvalidOperationException("Exact PLC tag table not found.");
+                ?? throw new PlcSoftwareException("NotFound", "Exact PLC tag table not found.");
             return PlcGroupOperations.Find(PlcGroupOperations.Get(table, "Tags"), parts.Last()) as PlcTag
-                ?? throw new InvalidOperationException("Exact PLC tag not found.");
+                ?? throw new PlcSoftwareException("NotFound", "Exact PLC tag not found.");
         }
 
         private DeviceItem ExactDeviceItem(string[] devicePath, string[] itemPath)
@@ -338,7 +338,7 @@ namespace TiaMcp.Adapters.Native.Plc
             var plc = _session.ExactPlcForEngineering(softwarePath, writing); var parts = PlcGroupOperations.Parts(objectPath);
             var group = PlcGroupOperations.Group(WatchNative.TechnologyGroup(plc), string.Join("/", parts.Take(parts.Length - 1)));
             return PlcGroupOperations.Find(PlcGroupOperations.Get(group, "TechnologicalObjects"), parts.Last())
-                ?? throw new InvalidOperationException("Exact technology object not found.");
+                ?? throw new PlcSoftwareException("NotFound", "Exact technology object not found.");
         }
         public static Channel ExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber)
             => item.Channels

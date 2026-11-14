@@ -25,6 +25,8 @@ namespace TiaMcp.Adapters.Native.Optional
             var cause = error.GetBaseException();
             var refusal = OptionalEngineeringCapabilities.Refusal(cause);
             meta["v4FailureCode"] = refusal != null ? "UNSUPPORTED_CAPABILITY" : cause is ArgumentException ? "INVALID_ARGUMENT"
+                : cause is HardwareAddressingException hardware ? hardware.Status == "InvalidState" ? "PRECONDITION_FAILED" : hardware.Status
+                : cause is PlcSoftwareException plc ? plc.Code == "InvalidState" ? "PRECONDITION_FAILED" : plc.Code
                 : cause is InvalidOperationException ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED";
             if (refusal != null && meta["mayHaveChanged"]?.OptionalValue<bool>() != true
                 && meta["mayHaveWrittenFiles"]?.OptionalValue<bool>() != true)

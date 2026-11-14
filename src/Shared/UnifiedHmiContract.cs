@@ -35,7 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception error) when (tool == "EnsureUnifiedHmiConnection" && error.GetBaseException() is NotSupportedException)
             {
                 return Result(tool, null, new Error(error.GetBaseException().Message,
-                    new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+                    new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             }
             catch (Exception error) /* swallow(privacy): escaped writes have no confirmed outcome; diagnostics stay in the existing log */
             {
@@ -77,6 +77,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, refusal, Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success") ?? Flag(evidence, "ok") ?? Flag(data, "ok");
             if (Flag(data, "ok") == false || Flag(evidence, "ok") == false || Flag(evidence, "success") == false) success = false;
+            if (HostBehavior.KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool) is Error knownRefusal)
+                return Result(tool, data, knownRefusal, Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (NativeResultState.TryRollback(evidence, writes, out var rollbackOutcome, out var rollbackError, tool))
                 return Result(tool, data, rollbackError, rollbackOutcome,
                     rollbackOutcome == Outcome.Unknown ? Completeness.Unknown : rollbackOutcome == Outcome.Partial ? Completeness.Partial : Completeness.None,
@@ -96,7 +98,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var code = rejection ?? failureCode;
                 ErrorDetails details = code == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
-                    : code == "UNSUPPORTED_CAPABILITY" || code == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
+                    : code == "UNSUPPORTED_CAPABILITY" || code == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : code == "INVALID_ARGUMENT" || code == "InvalidParams" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : code == "NOT_FOUND" || code == "NotFound" ? new NotFoundDetails(null)
                     : new PreconditionFailedDetails(evidence["error"]?.ToString(), null);
@@ -111,7 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool == "ManageUnifiedListEntries" && evidence["action"]?.ToString() != "read" && Flag(evidence, "entriesSupported") == false)
                 return Result(tool, data,
                         new Error("The public API does not expose list entry editing.",
-                            new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "Unified list entries", evidence["action"]?.ToString())),
+                            new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "Unified list entries", evidence["action"]?.ToString())),
                     Outcome.RejectedBeforeOperation, Completeness.Partial, false, current);
 
             // A recipe's offline 'ok' is not the verdict of either native write.
@@ -186,7 +188,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error Unknown(JsonObject evidence) =>
             new Error("The HMI write outcome is unconfirmed. Inspect the target before repeating this call. Never replay it automatically. GetSessionState " +
                 "lists unsettled request IDs.",
-            new OutcomeUnknownDetails("HMI operation", Evidence(evidence)));
+            new OutcomeUnknownDetails("HMI operation", Evidence(evidence)
+                .Where(p => p.Key is not ("nativeMessage" or "workerMessage" or "readError")).ToDictionary(p => p.Key, p => p.Value)));
         private static Error NativeFailure(JsonObject evidence) =>
             new Error("The HMI operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));
         private static void Clean(JsonNode? node)
@@ -210,7 +213,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         new Dictionary<string, JsonElement>()));
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : writes ? Execution.Completed : Execution.ReadOnly;
-            var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
+            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired
                     || Flag(data?["evidence"], "connectionUnavailable") == true || Flag(data?["evidence"], "requiresExplicitRebind") == true
                     || Flag(data?["evidence"], "requiresSessionReset") == true,

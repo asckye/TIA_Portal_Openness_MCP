@@ -12,6 +12,27 @@ namespace TiaMcp.Engine.Tests
 {
     public sealed class BatchReplacementPolicyTests
     {
+        [Theory, InlineData(false), InlineData(true)]
+        public void No_file_matching_regex_explains_the_extension(bool program)
+        {
+            string folder = Path.Combine(AppContext.BaseDirectory, "batch-regex-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                File.WriteAllText(Path.Combine(folder, "A.xml"),
+                    "<Document><Engineering version=\"V17\"/><SW.Blocks.FC><AttributeList><Name>A</Name><Number>1</Number>" +
+                    "<ProgrammingLanguage>LAD</ProgrammingLanguage></AttributeList></SW.Blocks.FC></Document>");
+                var request = new PlcBatchImportRequest { Release = "17", Project = "C:/fixture.ap17", Software = "PLC",
+                    Directory = folder, Program = program, Regex = "^A$" };
+                int calls = 0;
+                var error = Assert.Throws<AdapterPreconditionException>(() => PlcBatchImportPolicy.Run(request,
+                    Array.Empty<PlcBatchImportObject>(), () => calls++, (_, item) => { calls++; return new[] { item }; }));
+                Assert.StartsWith("No file in dir matches regexName; it is matched against file names including the .xml extension.", error.Message,
+                    StringComparison.Ordinal);
+                Assert.Equal(0, calls);
+            }
+            finally { Directory.Delete(folder, true); }
+        }
 
         // Both host fixtures execute this production policy; every backup/import callback is observed.
         public sealed class AdmissionFixture : IDisposable
@@ -24,15 +45,24 @@ namespace TiaMcp.Engine.Tests
             public AdmissionFixture(string scenario, bool program)
             {
                 this.scenario=scenario;this.program=program; Directory.CreateDirectory(folder);
-                File.WriteAllText(Path.Combine(folder,"A.xml"),"<Document><Engineering version=\"V19\"/><SW.Blocks.FC><AttributeList><Name>A</Name><Number>1</Number><ProgrammingLanguage>LAD</ProgrammingLanguage></AttributeList></SW.Blocks.FC></Document>");
-                target.BackupBlocker=scenario.Contains("inconsistent") ? "inconsistent" : scenario.Contains("protected") ? "know-how-protected" : scenario.Contains("unknown-consistency") ? "unknown-consistency" : "";
+                File
+                    .WriteAllText(Path.Combine(folder,"A.xml"),
+                        "<Document><Engineering " +
+                        "version=\"V19\"/><SW.Blocks.FC><AttributeList><Name>A</Name><Number>1</Number>" +
+                        "<ProgrammingLanguage>LAD</ProgrammingLanguage></AttributeList></SW.Blocks.FC></Document>");
+                target.BackupBlocker=scenario.Contains("inconsistent") ? "inconsistent" : scenario.Contains("protected") ? "know-how-protected" : scenario
+                    .Contains("unknown-consistency") ? "unknown-consistency" : "";
             }
-            private PlcBatchImportRequest Request() => new PlcBatchImportRequest { Release="19",Project="C:/fixture.ap19",Software="CPU/PLC_1",Directory=folder,Program=program,Overwrite=true };
+            private PlcBatchImportRequest Request() => new PlcBatchImportRequest {
+                Release="19",Project="C:/fixture.ap19",Software="CPU/PLC_1",Directory=folder,Program=program,Overwrite=true };
             public JsonObject Arguments()
             {
-                var preview=PlcBatchImportPolicy.Run(Request(),new[]{target},()=>throw new Exception("Preview recheck"),(_,_)=>throw new Exception("Preview import"));
-                var args=new JsonObject { ["softwarePath"]="CPU/PLC_1", [program ? "sourceDir" : "dir"]=folder, [program ? "blockGroupPath" : "groupPath"]="", ["overwrite"]=true,
-                    ["dryRun"]=false,["confirm"]=true,["expectedProjectFile"]="C:/fixture.ap19",["expectedPlanHash"]=scenario.Contains("stale") ? new string('0',64) : preview.PlanHash,["importOrder"]=new JsonArray("A.xml") };
+                var preview=PlcBatchImportPolicy
+                    .Run(Request(),new[]{target},()=>throw new Exception("Preview recheck"),(_,_)=>throw new Exception("Preview import"));
+                var args=new JsonObject {
+                    ["softwarePath"]="CPU/PLC_1", [program ? "sourceDir" : "dir"]=folder, [program ? "blockGroupPath" : "groupPath"]="", ["overwrite"]=true,
+                    ["dryRun"]=false,["confirm"]=true,["expectedProjectFile"]="C:/fixture.ap19",["expectedPlanHash"]=scenario.Contains("stale")
+                        ? new string('0',64) : preview.PlanHash,["importOrder"]=new JsonArray("A.xml") };
                 if(scenario=="confirm") args.Remove("confirm");
                 if(scenario=="hash") args.Remove("expectedPlanHash");
                 if(scenario=="malformed-hash") args["expectedPlanHash"]=new string('z',64);
@@ -48,8 +78,10 @@ namespace TiaMcp.Engine.Tests
                 var r=Request();r.DryRun=(bool?)args["dryRun"] ?? true;r.Confirm=(bool?)args["confirm"] ?? false;
                 r.ExpectedHash=(string?)args["expectedPlanHash"] ?? "";r.ExpectedProject=(string?)args["expectedProjectFile"] ?? "";
                 r.Order=args["importOrder"]?.Deserialize<string[]>() ?? Array.Empty<string>();
-                r.CompileAfter=(bool?)args["compileAfter"] ?? false;r.StopOnImportFailure=(bool?)args["stopOnImportFailure"] ?? true;r.TechnologyGroup=(string?)args["technologyFolderPath"] ?? "";
-                IEnumerable<PlcBatchImportObject> Inventory() { if(scenario=="inventory-io") throw new IOException("Inventory cannot be observed.");yield return target; }
+                r.CompileAfter=(bool?)args["compileAfter"] ?? false;r.StopOnImportFailure=(bool?)args["stopOnImportFailure"] ?? true;r.TechnologyGroup=
+                    (string?)args["technologyFolderPath"] ?? "";
+                IEnumerable<PlcBatchImportObject> Inventory() {
+                    if(scenario=="inventory-io") throw new IOException("Inventory cannot be observed.");yield return target; }
                 return PlcBatchImportPolicy.Run(r,Inventory(),()=>{ if(scenario=="recheck-io") throw new IOException("Target recheck unavailable."); },
                     (_,item)=>{ Calls.Add("import");return new[]{item}; },
                     (_,_)=>{ Calls.Add("backup");throw new IOException("Recovery export refused for inconsistent object."); },
@@ -76,11 +108,17 @@ namespace TiaMcp.Engine.Tests
         {
             using var fixture=new AdmissionFixture("stale",program);
             var args=fixture.Arguments();
-            var request=new PlcBatchImportRequest { Release="19",Project="C:/fixture.ap19",ExpectedProject="C:/fixture.ap19",Software="CPU/PLC_1",Directory=(string)args[program ? "sourceDir" : "dir"]!,Program=program };
+            var request=new PlcBatchImportRequest {
+                Release="19",Project="C:/fixture.ap19",ExpectedProject="C:/fixture.ap19",Software="CPU/PLC_1",Directory=
+                    (string)args[program ? "sourceDir" : "dir"]!,Program=program
+            };
             int calls=0;
             var preview=PlcBatchImportPolicy.Run(request,Array.Empty<PlcBatchImportObject>(),()=>{},(_,item)=>new[]{item});
             request.DryRun=false;request.Confirm=true;request.Order=new[]{"A.xml"};request.ExpectedHash=preview.PlanHash;
-            var refusal=Assert.Throws<AdapterPreconditionException>(()=>PlcBatchImportPolicy.Run(request,Array.Empty<PlcBatchImportObject>(),()=>throw new IOException("Target became unavailable."),(_,item)=>{calls++;return new[]{item};}));
+            var refusal=Assert
+                .Throws<AdapterPreconditionException>(()=>PlcBatchImportPolicy
+                    .Run(request,Array.Empty<PlcBatchImportObject>(),()=>throw new IOException("Target became unavailable."),(_,item)=>{
+                        calls++;return new[]{item};}));
             Assert.False(refusal.IsArgument);Assert.Contains("before any import",refusal.Message);Assert.Equal(0,calls);
         }
         [Theory]
@@ -91,18 +129,25 @@ namespace TiaMcp.Engine.Tests
             Directory.CreateDirectory(folder);
             try
             {
-                File.WriteAllText(Path.Combine(folder, "A.xml"), "<Document><Engineering version=\"V17\"/><SW.Blocks.FC><AttributeList><Name>A</Name><Number>1</Number><ProgrammingLanguage>LAD</ProgrammingLanguage></AttributeList></SW.Blocks.FC></Document>");
+                File
+                    .WriteAllText(Path.Combine(folder, "A.xml"),
+                        "<Document><Engineering " +
+                        "version=\"V17\"/><SW.Blocks.FC><AttributeList><Name>A</Name><Number>1</Number>" +
+                        "<ProgrammingLanguage>LAD</ProgrammingLanguage></AttributeList></SW.Blocks.FC></Document>");
                 var target = new PlcBatchImportObject { Name = "A", Kind = "FC", Number = 1 };
                 var unrelated = new PlcBatchImportObject { Name = "Unrelated", Kind = "FC", Number = 99 };
-                var request = new PlcBatchImportRequest { Release = "17", Project = "C:/fixture.ap17", Software = "CPU/PLC", Directory = folder, Program = program, Overwrite = true };
+                var request = new PlcBatchImportRequest {
+                    Release = "17", Project = "C:/fixture.ap17", Software = "CPU/PLC", Directory = folder, Program = program, Overwrite = true };
                 var inspected = new List<string>(); int mutations = 0;
                 PlcBatchImportResult Run(IEnumerable<PlcBatchImportObject> inventory) => PlcBatchImportPolicy.Run(request, inventory,
                     () => mutations++, (_, item) => { mutations++; return new[] { item }; },
                     (_, _) => mutations++, (_, item) => { mutations++; return new[] { item }; }, () => { mutations++; return folder; }, () => mutations++,
                     item => { inspected.Add(item.Name); throw new IOException("Native property getter refused"); });
                 var result = Run(new[] { target, unrelated });
-                Assert.Equal(new[] { "A" }, inspected); Assert.Equal("replace-blocked: unknown-consistency", result.Items[0].Action); Assert.Equal(0, mutations);
-                request.DryRun = false; request.Confirm = true; request.ExpectedProject = request.Project; request.ExpectedHash = result.PlanHash; request.Order = new[] { "A.xml" };
+                Assert.Equal(new[] { "A" }, inspected); Assert.Equal("replace-blocked: unknown-consistency", result.Items[0].Action); Assert
+                    .Equal(0, mutations);
+                request.DryRun = false; request.Confirm = true; request.ExpectedProject = request.Project; request.ExpectedHash = result.PlanHash; request
+                    .Order = new[] { "A.xml" };
                 Assert.False(Assert.Throws<AdapterPreconditionException>(()=>Run(new[] { target, unrelated })).IsArgument); Assert.Equal(0, mutations);
                 request.DryRun = true; request.Overwrite = false; inspected.Clear();
                 Assert.Throws<AdapterPreconditionException>(() => Run(new[] { target, unrelated })); Assert.Empty(inspected);

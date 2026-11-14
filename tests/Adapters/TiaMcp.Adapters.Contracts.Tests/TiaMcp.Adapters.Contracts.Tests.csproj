@@ -22,6 +22,7 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiExchangePolicy.cs" Link="Hmi/HmiExchangePolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.cs" Link="Native/Hmi/HmiScalar.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.Values.cs" Link="Native/Hmi/HmiScalar.Values.cs" />
+    <Compile Include="../../../src/Adapters/Native/Options/OptionalProductEvidence.cs" Link="Native/Options/OptionalProductEvidence.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiValueTypes.cs" Link="Native/Hmi/HmiValueTypes.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestScalar.cs" Link="Native/Hmi/UnifiedRequestScalar.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestValues.cs" Link="Native/Hmi/UnifiedRequestValues.cs" />
@@ -29,6 +30,10 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiEngineeringSteps.cs" Link="Hmi/HmiEngineeringSteps.cs" />
     <Compile Include="../../../src/Adapters/Native/Security/ProjectProtection.cs" Link="Security/ProjectProtection.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingSteps.cs" Link="Hardware/HardwareAddressingSteps.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareServices.cs" Link="Hardware/HardwareServices.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareOfficialService.cs" Link="Hardware/HardwareOfficialService.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareServiceObjectPolicy.cs" Link="Hardware/HardwareServiceObjectPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareUtilityPolicy.cs" Link="Hardware/HardwareUtilityPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetwork.cs" Link="Hardware/HardwareNetwork.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkPrimitives.cs" Link="Hardware/HardwareNetworkPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAml.cs" Link="Hardware/HardwareAml.cs" />

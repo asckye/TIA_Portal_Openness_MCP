@@ -26,11 +26,12 @@ namespace TiaMcp.Adapters.Native.Plc
                 var group=PlcGroupOperations.Group(plc.TagTableGroup,string.Join("/",parts.Take(parts.Length-1)));
                 var table=
                     (PlcTagTable)(PlcGroupOperations.Find(PlcGroupOperations.Get(group,"TagTables"),parts.Last())
-                        ?? throw new InvalidOperationException("Exact PLC tag table not found."));
+                        ?? throw new PlcSoftwareException("NotFound", "Exact PLC tag table not found."));
                 object collection=kind=="tag" ? (object)table.Tags : table.UserConstants;
                 var target=PlcGroupOperations.Find(collection,name);
                 if((action=="create")== (target!=null))
-                    throw new InvalidOperationException(action=="create" ? "Definition exists." : "Exact definition not found.");
+                    throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action=="create" ? "Definition exists."
+                            : "Exact definition not found.");
                 var nativeType=kind=="tag" ? typeof(PlcTag) : typeof(PlcUserConstant);
                 var prepared=HardwareAddressingPolicy.Prepare(nativeType,request.Properties);
                 meta["dryRun"]=dryRun; meta["mayHaveChanged"]=false; meta["tablePath"]=tablePath; meta["name"]=name; meta["kind"]=kind;

@@ -218,7 +218,8 @@ namespace TiaMcp.Adapters
             var inventory=existing.Take(4097).ToArray(); if(inventory.Length>4096)
                 throw new AdapterPreconditionException("Target inventory exceeds 4096 objects.","maxItems");
             var files=TiaOpenness.Shared.NativeInputPolicy.Read(request.InputParameter,()=>Scan(request)); if(files.Length==0)
-                throw new AdapterPreconditionException("No selected XML inputs.",request.InputParameter);
+                throw new AdapterPreconditionException("No file in dir matches regexName; it is matched against file names including the .xml extension.",
+                        request.InputParameter);
             var root=TiaOpenness.Shared.NativeInputPolicy.FullPath(request.Directory).TrimEnd(Path.DirectorySeparatorChar,Path.AltDirectorySeparatorChar)+Path
                 .DirectorySeparatorChar;
             var byRelative=files.ToDictionary(x=>x.Substring(root.Length).Replace('\\','/'),x=>x,StringComparer.Ordinal);

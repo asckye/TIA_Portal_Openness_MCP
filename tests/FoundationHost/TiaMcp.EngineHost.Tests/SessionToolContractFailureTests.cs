@@ -7,6 +7,29 @@ namespace TiaMcp.EngineHost.Tests;
 
 public sealed class SessionToolContractFailureTests
 {
+    [Theory, InlineData(false), InlineData(true)]
+    public void Precondition_refusal_carries_the_native_reason(bool native)
+    {
+        var response = new ResponseMessage { Message = "Summary refusal.", Meta = new System.Text.Json.Nodes.JsonObject {
+            ["operationSuccess"] = false, ["mayHaveChanged"] = false,
+            ["nativeMessage"] = native ? "The target is not offline.\n   password=hunter2" : null } };
+        var body = SessionToolContract.Map("SaveProject", response, true, true).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal(native ? "The target is not offline." : "Summary refusal.", (string?)body["error"]?["message"]);
+        Assert.Equal("session-operation", (string?)body["error"]?["details"]?["condition"]);
+        Assert.DoesNotContain("hunter2", body["error"]!.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Argument_exception_without_a_native_call_is_invalid_argument()
+    {
+        var body = SessionToolContract.Failure("InspectSimaticSdCompatibility", new ArgumentException("Invalid mode.", "mode"),
+            false, false, false).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal("/mode", (string?)body["error"]?["details"]?["parameter"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+    }
+
     [Fact]
     public void Known_no_mutation_worker_refusal_keeps_its_reason_when_wrapped()
     {

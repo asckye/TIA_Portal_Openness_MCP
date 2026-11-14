@@ -125,6 +125,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
                 return Result(tool, root, refusal, Outcome.RejectedBeforeOperation, Completeness.None, current, writes);
+            if (HostBehavior.KnownRefusal(evidence, Bool(evidence["operationSuccess"]) ?? Bool(evidence["success"]),
+                HardwareContract.ReleaseKey, tool) is Error knownRefusal)
+                return Result(tool, root, knownRefusal, Outcome.RejectedBeforeOperation, Completeness.None, current, writes);
             if (HostBehavior.UnchangedNativeFailure(evidence, Bool(evidence["operationSuccess"]) ?? Bool(evidence["success"])))
                 return Result(tool, root, HostBehavior.UnchangedNativeError(evidence), writes ? Outcome.Failed : Outcome.ReadFailed, Completeness.Complete,
                     current, writes);
@@ -203,7 +206,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         new InvalidArgumentDetails(root["rejectedParameter"]?.ToString() ?? "tagPaths", Array.Empty<string>())),
                         Outcome.RejectedBeforeOperation, Completeness.None, current);
                 }
-                Error error = outcome == Outcome.RejectedBeforeOperation ? new Error("Input does not satisfy the declared contract.",
+                Error error = outcome == Outcome.RejectedBeforeOperation ? new Error(HostBehavior.SafeDiagnostic(Text("nativeMessage"))
+                    ?? HostBehavior.SafeDiagnostic(root["summary"]?.ToString()) ?? "Input does not satisfy the declared contract.",
                     new PreconditionFailedDetails("plc-operation", null))
                     : outcome == Outcome.Partial ? new Error("Some PLC operations did not complete.", new PartialFailureDetails(succeeded, failed, 0))
                     : new Error(HostBehavior.SafeDiagnostic(Text("readError")) ?? "The PLC operation did not establish success.",
@@ -221,7 +225,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error Unknown(JsonObject evidence) =>
             new Error("The write outcome is unconfirmed. Inspect the target before repeating this call. Never replay it automatically. GetSessionState lists " +
                 "unsettled request IDs.",
-            new OutcomeUnknownDetails("PLC operation", Evidence(evidence)));
+            new OutcomeUnknownDetails("PLC operation", Evidence(evidence)
+                .Where(p => p.Key is not ("nativeMessage" or "workerMessage" or "readError")).ToDictionary(p => p.Key, p => p.Value)));
 
         private static void Clean(JsonNode? node)
         {

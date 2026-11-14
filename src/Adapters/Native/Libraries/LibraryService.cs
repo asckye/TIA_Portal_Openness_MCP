@@ -36,7 +36,7 @@ namespace TiaMcp.Adapters
                 var folder = EngineeringLibraryFolder(library, string.Join("/", parts.Take(parts.Length - 1)), "TypeFolder");
                 var type =
                     (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last())
-                        ?? throw new InvalidOperationException("Exact library type not found."));
+                        ?? throw new PlcSoftwareException("NotFound", "Exact library type not found."));
                 var matches = type.Versions.Where(v => v.VersionNumber.ToString() == version).Take(2).ToArray();
                 if (matches.Length != 1) throw new InvalidOperationException("Expected exactly one matching version, found " + matches.Length);
                 var selected = matches[0];

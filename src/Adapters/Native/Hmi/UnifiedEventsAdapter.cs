@@ -32,7 +32,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var token=HmiExactAccess.Token(scope,before);
                 meta["before"]=before;meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;meta["exists"]=handler!=null;
                 if(action=="read")return "Exact event/script read without creation; raw script text preserved.";
-                if((action=="create")== (handler!=null))throw new InvalidOperationException(action=="create" ? "Event exists." : "Exact event not found.");
+                if((action=="create")== (handler!=null))
+                    throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action=="create" ? "Event exists."
+                        : "Exact event not found.");
                 var creation=action=="create" ? UnifiedEventOperations.Creation(handlers,eventType,propertyName) : default;
                 var script=action=="update" ? PlcGroupOperations.Get(handler!,"Script") : null;
                 var prepared=script==null ? null : UnifiedRequestScalar.Prepare(script.GetType(),changes);

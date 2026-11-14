@@ -63,7 +63,9 @@ namespace TiaMcp.Adapters.Native.Plc
                     string.Equals(x.Path, watchTableName, StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(x.Name, watchTableName, StringComparison.OrdinalIgnoreCase)).Table;
                 if (table == null)
-                    return new PlcWatchReport { Ok = false, Message = "Watch table not found.", Data = data };
+                    return new PlcWatchReport { Ok = false, Message = "Watch table not found.", Data = data, Meta = new Dictionary<string, object?> {
+                        ["status"] = "NotFound", ["mayHaveChanged"] = false, ["nativeMessage"] = "Watch table not found.",
+                        ["parameter"] = "watchTableName" } };
 
                 data["tableType"] = table.GetType().FullName ?? table.GetType().Name;
                 data["tableMembers"] = new List<object?>(DescribeMembers(table, 220).Select(m => $"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}").ToArray());

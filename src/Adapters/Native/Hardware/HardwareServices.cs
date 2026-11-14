@@ -69,7 +69,7 @@ namespace TiaMcp.Adapters
                 return nodes[0];
             }
             return HardwareGroupOperations.Find(network.Nodes, nodeName) as Node
-                ?? throw new InvalidOperationException("Node not found on interface: " + nodeName);
+                ?? throw new HardwareAddressingException("NotFound", "Node not found on interface: " + nodeName);
         }
 
         private static object[] HardwareConnectionsNamed(object composition, string name)
@@ -565,7 +565,8 @@ namespace TiaMcp.Adapters
                         try {
                             ExactHardware(devicePathJson, Array.Empty<string>()); throw new InvalidOperationException("Device is still present after Delete.");
                         }
-                        catch (InvalidOperationException ex) when (ex.Message == "Exact unique device not found." || ex.Message == "Device not found.") {
+                        catch (HardwareAddressingException ex) when (ex.Status == "NotFound"
+                            && (ex.Message == "Exact unique device not found." || ex.Message == "Device not found.")) {
                             meta["verifiedAbsent"] = true; }
                     }
                 }

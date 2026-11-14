@@ -126,7 +126,8 @@ internal sealed partial class LegacyOptionalAdapter
             throw new ArgumentException("Select a native SiVArc rule/folder/table collection.");
         var targetObject = Find(collection, _request.Name);
         if ((_request.Action == "create") == (targetObject != null))
-            throw new InvalidOperationException(_request.Action == "create" ? "Object exists." : "Exact object not found.");
+            throw new PlcSoftwareException(_request.Action == "create" ? "AlreadyExists" : "NotFound", _request.Action == "create" ? "Object exists."
+                    : "Exact object not found.");
         if (_request.Action == "delete") RequireEmpty(targetObject!);
         var type = targetObject?.GetType() ?? collection.GetType().GetMethod("Create", new[] { typeof(string) })?.ReturnType
             ?? throw new NotSupportedException("Native Create(string) unavailable.");

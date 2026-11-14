@@ -137,7 +137,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 || evidence["file"] is JsonObject && Flag(evidence, "mayHaveWrittenFiles") == true && Flag(evidence, "mayHaveChanged") == false;
             string status = evidence["failureCode"]?.ToString() ?? evidence["status"]?.ToString() ?? "";
             Outcome outcome; Execution execution; Error? error = null;
-            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            if ((HostBehavior.DocumentedRefusal(evidence)
+                ?? HostBehavior.KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool)) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =

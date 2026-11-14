@@ -142,7 +142,8 @@ namespace TiaMcp.Adapters.Native.Security
                 }
                 var server = servers.FirstOrDefault(s => s.Name == name);
                 if ((action == "create") == (server != null))
-                    throw new InvalidOperationException(action == "create" ? "Syslog server exists: " + name : "Syslog server not found: " + name);
+                    throw new HardwareAddressingException(action == "create" ? "AlreadyExists" : "NotFound", action == "create" ? "Syslog server exists: "
+                            + name : "Syslog server not found: " + name);
                 if (server != null) meta["before"] = SyslogServerRow(server);
                 meta["requestedProperties"] = properties.DeepClone();
                 DeviceItem? module = null;

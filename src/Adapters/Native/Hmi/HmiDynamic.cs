@@ -138,7 +138,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             var matches = HmiExactAccess.Items(composition).Where(x => string.Equals(Name(x), name, StringComparison.Ordinal)).Take(2).ToList();
             if (matches.Count > 1) throw new InvalidOperationException("Ambiguous exact entry name: " + name);
-            return matches.SingleOrDefault() ?? throw new InvalidOperationException("Exact entry not found: " + name);
+            return matches.SingleOrDefault() ?? throw new PlcSoftwareException("NotFound", "Exact entry not found: " + name);
         }
         internal static bool CanDelete(object item)
         {

@@ -9,7 +9,12 @@ namespace Siemens.Engineering
 {
     public sealed class EngineeringAttributeInfo { public string Name { get; set; } = ""; }
     public interface IEngineeringService { }
-    public interface IEngineeringServiceProvider { public T? GetService<T>() where T : class, IEngineeringService; }
+    public sealed class EngineeringServiceInfo { public Type Type { get; set; } = typeof(object); }
+    public interface IEngineeringServiceProvider
+    {
+        public T? GetService<T>() where T : class, IEngineeringService;
+        public IEnumerable<EngineeringServiceInfo> GetServiceInfos() => Array.Empty<EngineeringServiceInfo>();
+    }
     public enum ArchiveMode { Compressed }
     public sealed class FakeProjects : List<Project>
     {
@@ -35,6 +40,7 @@ namespace Siemens.Engineering
         public List<HW.DeviceUserGroup> DeviceGroups { get; } = new();
         public HW.DeviceGroup UngroupedDevicesGroup { get; } = new();
         public List<HW.Subnet> Subnets { get; } = new();
+        public HW.Utilities.HardwareUtilityComposition HwUtilities { get; } = new();
         public Dictionary<Type, object> Services { get; } = new();
         public T? GetService<T>() where T : class, IEngineeringService => Services.TryGetValue(typeof(T), out var value) ? (T)value : null;
     }
@@ -51,6 +57,13 @@ namespace Siemens.Engineering.HW
         public Dictionary<Type, object> Services { get; } = new();
         public List<string> Calls { get; } = new();
         public Exception? AttributeFailure { get; set; }
+        internal Action? Deleting;
+        internal int DeleteCalls;
+        public virtual void Delete() { DeleteCalls++; Deleting?.Invoke(); }
+        public bool CanPlugMove(DeviceItem item, int position) => throw new NotSupportedException();
+        public bool CanPlugCopy(DeviceItem item, int position) => throw new NotSupportedException();
+        public DeviceItem PlugMove(DeviceItem item, int position) => throw new NotSupportedException();
+        public DeviceItem PlugCopy(DeviceItem item, int position) => throw new NotSupportedException();
         public T? GetService<T>() where T : class, IEngineeringService => Services.TryGetValue(typeof(T), out var value) ? (T)value : null;
         public virtual IEnumerable<EngineeringAttributeInfo> GetAttributeInfos() => Array.Empty<EngineeringAttributeInfo>();
         public virtual object GetAttribute(string name) { Calls.Add("get:" + name); return false; }
@@ -97,7 +110,7 @@ namespace Siemens.Engineering.HW
         public int Number { get; set; }
         public Subnet? Subnet { get; set; }
         public List<object> ConnectedIoDevices { get; } = new();
-        public void Delete() { }
+        public override void Delete() { }
     }
     public sealed class IoController : HardwareObject
     {
@@ -139,6 +152,23 @@ namespace Siemens.Engineering.HW
         public List<NetworkPort> ConnectedPorts { get; } = new();
         public void ConnectToPort(NetworkPort port) => ConnectedPorts.Add(port);
         public void DisconnectFromPort(NetworkPort port) => ConnectedPorts.Remove(port);
+    }
+}
+namespace Siemens.Engineering.HW.Utilities
+{
+    public class HardwareUtility { public string Identifier { get; set; } = ""; }
+    public sealed class HardwareUtilityComposition : List<HardwareUtility>
+    {
+        public HardwareUtility? Find(string identifier) => this.FirstOrDefault(item => item.Identifier == identifier);
+    }
+    public sealed class ModuleInformationProvider : HardwareUtility
+    {
+        public string[] FindModuleTypes(string typeIdentifier) => throw new NotSupportedException();
+        public string[] FindContainerTypes(string typeIdentifier) => throw new NotSupportedException();
+    }
+    public sealed class OpcUaExportProvider : HardwareUtility
+    {
+        public void Export(DeviceItem item, System.IO.FileInfo file) => throw new NotSupportedException();
     }
 }
 namespace Siemens.Engineering.HW.Features
@@ -212,7 +242,9 @@ namespace TiaMcp.Adapters
         }
         private UmacLogin UmacCredentialsFor(string name, string password, string type, string parameter) => new();
         private bool HardwareProjectMissing() => EngineeringProjectMissing?.Invoke() ?? project == null;
-        private IEnumerable<Siemens.Engineering.HW.Device> EnumerateAllDevices() => project!.Devices;
+        internal Exception? DeviceInventoryFailure;
+        private IEnumerable<Siemens.Engineering.HW.Device> EnumerateAllDevices() => DeviceInventoryFailure != null
+            ? throw DeviceInventoryFailure : project!.Devices;
         private sealed class EngineeringAmbientAccess : IDisposable { public void Dispose() { } }
         private Siemens.Engineering.TiaPortal Portal() => portal!;
         private IEnumerable<(object Node, string Path)> FindNetworkNodes(Siemens.Engineering.HW.DeviceItem item) => Array.Empty<(object, string)>();

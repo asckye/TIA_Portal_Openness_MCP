@@ -10,7 +10,10 @@ namespace TiaMcp.Adapters.Contracts
         public bool IsArgument { get; }
         public string? ParamName { get; }
         // Explicit precondition code (for example openness-access-denied) reported as PRECONDITION_FAILED details.condition.
-        public string? Condition { get; }
+        public string? Condition { get; private set; }
+
+        public static AdapterPreconditionException NotFound(string message, string? parameter = null)
+            => new AdapterPreconditionException(message, parameter, false) { Condition = "not-found" };
 
         public AdapterPreconditionException(string message, string? parameter = null, bool isArgument = true, Exception? innerException = null)
             : base(new ArgumentException(message, parameter).Message, innerException)

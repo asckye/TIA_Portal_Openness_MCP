@@ -9,6 +9,8 @@ public sealed class TestDeadlineContracts
 {
     private static readonly string[] Files =
     [
+        "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/StepFailureStatusTests.cs",
+        "tests/Repository/TiaMcp.SourceContracts.Tests/NotFoundSources.cs",
         "tests/FoundationHost/TiaMcp.EngineHost.Tests/ConcurrencyTests.cs",
         "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ConcurrencyTests.cs",
@@ -60,7 +62,8 @@ public sealed class TestDeadlineContracts
     private static readonly HashSet<string> Remains = new(StringComparer.Ordinal)
     {
         "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs|while (duration.Elapsed < TimeSpan.FromSeconds(5))",
-        "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProtocolTests.cs|await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(TimeSpan.FromMilliseconds(40)));",
+        "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProtocolTests.cs|await " +
+            "Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(TimeSpan.FromMilliseconds(40)));",
         "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs|entered.Set(); release.Wait(TimeSpan.FromSeconds(2));",
         "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs|entered.Set(); release.Wait(TimeSpan.FromSeconds(4));",
         "tests/Tools/TiaMcp.ShippedTools.Tests/PluginLauncherTests.cs|process.Kill(); process.WaitForExit(15000);",

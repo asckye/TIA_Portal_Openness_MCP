@@ -233,7 +233,7 @@ internal sealed partial class OnlineDownloadAdapter
 #if PLC_UNITS
                 var unitRoot = objectKind == "units" ? plc.GetService<PlcUnitProvider>()?.UnitGroup.Units : null;
                 var units = objectKind == "units" ? names
-                    .Select(n => unitRoot?.Find(n) ?? throw new InvalidOperationException("Exact software unit not found: " + n)).ToArray() : Array
+                    .Select(n => unitRoot?.Find(n) ?? throw new PlcSoftwareException("NotFound", "Exact software unit not found: " + n)).ToArray() : Array
                     .Empty<PlcUnit>();
 #endif
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false; meta["targetOption"] = targetOption; meta["objectPaths"] =

@@ -78,6 +78,7 @@ namespace TiaOpenness.Shared
                 return error is OperationCanceledException ? HostFailureKind.Cancelled
                     : error is ArgumentException || reportedCode == -32602 ? HostFailureKind.Argument : HostFailureKind.Precondition;
             if (readOnly && error is OperationCanceledException) return HostFailureKind.Cancelled;
+            if (readOnly && !nativeRead && error is ArgumentException) return HostFailureKind.Argument;
             return readOnly || reportedOutcome == "read-failed"
                 ? nativeRead ? HostFailureKind.ReadFailed : HostFailureKind.InternalError : HostFailureKind.Unknown;
         }

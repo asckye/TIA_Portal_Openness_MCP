@@ -95,7 +95,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (TiaOpenness.Shared.HostFailurePolicy.Precondition(ex) is { } refusal)
                     return Result(tool, null, new Error(refusal.Message, refusal.IsArgument
                         ? McpServer.ArgumentDetails(tool, refusal.ParamName)
-                        : new PreconditionFailedDetails("native-admission", null, refusal.ParamName)), Outcome.RejectedBeforeOperation, current);
+                        : refusal.Condition == "not-found" ? new NotFoundDetails(refusal.ParamName)
+                            : new PreconditionFailedDetails("native-admission", null, refusal.ParamName)), Outcome.RejectedBeforeOperation, current);
                 var cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;
                 Error? error = cause is ArgumentException || cause is JsonException
@@ -150,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
             body.Remove("message"); body.Remove("ok"); body.Remove("success");
             body["summary"] = verdict == true && !unknown ? response.Message : "Hardware operation did not establish a complete successful result.";
             evidence.Remove("timestamp"); evidence.Remove("tool");
-            body["evidence"] = evidence.DeepClone();
+            body["evidence"] = evidence;
             if (body["data"] is JsonObject nested)
             {
                 body.Remove("data");
@@ -160,12 +161,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
             Outcome outcome;
             Error? error = null;
-            if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
+            if ((HostBehavior.DocumentedRefusal(evidence)
+                ?? HostBehavior.KnownRefusal(evidence, verdict, ReleaseKey, tool)) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, verdict))
             { outcome = write ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence); }
             else if (unknown || write && verdict != true && (issued || !started.HasValue) && applied == 0
-                && Bool(evidence, "postStateKnown") != true && status != "InvalidState" && status != "HmiReadSessionBlocked" && status != "NotFound")
+                && Bool(evidence, "postStateKnown") != true && status != "InvalidState" && status != "HmiReadSessionBlocked")
             { outcome = Outcome.Unknown; error = Failure(true, evidence); }
             else if (write && applied > 0 && verdict != true)
             {
@@ -178,7 +180,7 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "HmiReadSessionBlocked")
             { outcome = write ? Outcome.Unknown : Outcome.ReadFailed; error = HostBehavior.UnavailableCall(write); }
-            else if (status == "NotFound")
+            else if (status == "NotFound" && !issued)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("The requested object was not found.", new NotFoundDetails(null)); }
             else if (status == "InvalidParams" && started == false)
             { outcome = Outcome.RejectedBeforeOperation;
@@ -219,7 +221,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var details = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(evidence.ToJsonString())!;
             return unknown
                 ? new Error("The write outcome cannot be confirmed. Rebuild the session and inspect the target before continuing.",
-                    new OutcomeUnknownDetails("hardware-operation", details))
+                    new OutcomeUnknownDetails("hardware-operation", details.Where(p => p.Key is not ("nativeMessage" or "workerMessage" or "readError"))
+                        .ToDictionary(p => p.Key, p => p.Value)))
                 : new Error("The hardware operation did not succeed.", new NativeOperationFailedDetails(null, null, details));
         }
 

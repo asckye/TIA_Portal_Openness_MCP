@@ -53,7 +53,9 @@ namespace TiaMcp.Adapters.Native.Optional
                 if(collection.GetType().Namespace!="Siemens.Engineering.SiVArc"||!collection.GetType().Name.EndsWith("Composition",StringComparison.Ordinal))
                     throw new ArgumentException("Select a native SiVArc rule/folder/table collection.");
                 var target=EngineeringGroupOperations.Find(collection,name);
-                if((action=="create")== (target!=null))throw new InvalidOperationException(action=="create" ? "Object exists." : "Exact object not found.");
+                if((action=="create")== (target!=null))
+                    throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action=="create" ? "Object exists."
+                        : "Exact object not found.");
                 if(action=="delete")
                     foreach(var child in target!.GetType().GetProperties()
                         .Where(p=>p.GetIndexParameters().Length==0&&p.GetMethod?.IsPublic==true&&p.PropertyType.Name

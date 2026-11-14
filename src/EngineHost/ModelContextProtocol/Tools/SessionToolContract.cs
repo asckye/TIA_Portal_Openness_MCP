@@ -166,7 +166,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (success != true)
             {
                 var outcome = before ? Outcome.RejectedBeforeOperation : writes ? Outcome.Failed : Outcome.ReadFailed;
-                var error = before ? new Error("Input does not satisfy the declared contract.", new PreconditionFailedDetails("session-operation", null))
+                var error = before ? new Error(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString())
+                    ?? HostBehavior.SafeDiagnostic(data["summary"]?.ToString()) ?? "Input does not satisfy the declared contract.",
+                    new PreconditionFailedDetails("session-operation", null))
                     : new Error("The operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));
                 return Result(tool, data, error, outcome, incomplete ? Completeness.Partial : Completeness.None, writes, current);
             }

@@ -57,7 +57,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Unified HMI required.");
                 var collection = PlcGroupOperations.Get(hmi, collectionName);
                 var items = string.IsNullOrEmpty(name) ? PlcGroupOperations.Items(collection).ToArray()
-                    : new[] { PlcGroupOperations.Find(collection, name) ?? throw new InvalidOperationException("Exact object not found: " + name) };
+                    : new[] { PlcGroupOperations.Find(collection, name) ?? throw new PlcSoftwareException("NotFound", "Exact object not found: " + name) };
                 var rows = new HmiArray(items.Skip(offset).Take(limit).Select(x => (object)UnifiedRequestScalar.Read(x)).ToArray());
                 meta["category"] = category; meta["records"] = rows; meta["expectedCount"] = items.Length; meta["actualCount"] = rows.Count;
                 meta["nextOffset"] = offset + rows.Count < items.Length ? offset + rows.Count : (int?)null;
@@ -87,7 +87,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var target = PlcGroupOperations.Find(collection, name);
                 meta["category"] = category; meta["name"] = name; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (action == "create" && target != null) throw new InvalidOperationException("Object already exists; use update explicitly.");
-                if (action != "create" && target == null) throw new InvalidOperationException("Exact object not found: " + name);
+                if (action != "create" && target == null) throw new PlcSoftwareException("NotFound", "Exact object not found: " + name);
                 var create = collection.GetType().GetMethod("Create", new[] { typeof(string) });
                 var type = target?.GetType() ?? create?.ReturnType ?? throw new NotSupportedException("Native Create(string) is not exposed for " + category);
                 var prepared = UnifiedRequestScalar.Prepare(type, changes);

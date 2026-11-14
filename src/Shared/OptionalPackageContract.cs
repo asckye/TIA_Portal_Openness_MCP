@@ -91,19 +91,22 @@ namespace TiaMcpServer.ModelContextProtocol
             bool notStarted = Flag(data, "operationNotStarted") == true;
             bool unchangedFailure = HostBehavior.UnchangedNativeFailure(data, success);
             // A lost worker acknowledgement leaves writes unknown; reads report a read failure.
-            bool unknown = outcomeLost || rejection == null && writes && !notStarted && (stateRequired && !stateKnown
+            bool unknown = outcomeLost || writes && issued && success != true
+                || rejection == null && writes && !notStarted && (stateRequired && !stateKnown
                 || reset && issued || success != true && !nativeKnown && !verificationFailed && !unchangedFailure);
             int imported = (data["imported"] as JsonArray)?.Count ?? 0;
             bool knownPartial = verificationFailed && imported > 0
                 || success == false && nativeKnown && (data["file"] is JsonObject || data["output"] is JsonObject);
-            var refusal = HostBehavior.DocumentedRefusal(data);
+            var refusal = HostBehavior.DocumentedRefusal(data) ?? (outcomeLost ? null
+                : HostBehavior.KnownRefusalWithMessage(data, success, HardwareContract.ReleaseKey, tool, response.Message));
             Outcome outcome = status == "HmiReadSessionBlocked" ? writes ? Outcome.Unknown : Outcome.ReadFailed
                 : refusal != null ? Outcome.RejectedBeforeOperation : unknown ? Outcome.Unknown : rejection !=
                 null ? Outcome.RejectedBeforeOperation
                 : success == true ? Outcome.Succeeded : knownPartial ? Outcome.Partial
                 : writes && (nativeKnown || unchangedFailure) || verificationFailed ? Outcome.Failed : writes &&
                     !notStarted ? Outcome.Unknown : Outcome.ReadFailed;
-            string failureMessage = HostBehavior.SafeDiagnostic(response.Message) ?? (outcome == Outcome.RejectedBeforeOperation && rejection ==
+            string failureMessage = (rejection != null && outcome != Outcome.Unknown ? HostBehavior.SafeDiagnostic(data["nativeMessage"]?.ToString()) : null)
+                ?? HostBehavior.SafeDiagnostic(response.Message) ?? (outcome == Outcome.RejectedBeforeOperation && rejection ==
                 "UNSUPPORTED_CAPABILITY"
                 && (tool == "ExchangeCfcCharts" || tool == "ManageCfcChartProtection") && data["unsupportedReason"] is JsonValue reason
                 && reason.TryGetValue<string>(out var guardReason) ? guardReason : "The optional-package operation did not establish success.");
@@ -137,7 +140,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
-            var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
+            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
                 execution, reset || outcome == Outcome.Unknown, BehaviorPolicy.Current, completeness, paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
@@ -148,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             "PROJECT_NOT_BOUND" => new ProjectNotBoundDetails(),
             "INVALID_ARGUMENT" => McpServer.ArgumentDetails(tool, null, evidence),
-            "UNSUPPORTED_CAPABILITY" => new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null),
+            "UNSUPPORTED_CAPABILITY" => new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null),
             "NOT_FOUND" => new NotFoundDetails(null),
             "IO_FAILED" => new IoFailedDetails("optional-package-file", null),
             "LIMIT_EXCEEDED" => new LimitExceededDetails("arguments", null, null),

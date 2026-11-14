@@ -109,7 +109,7 @@ namespace TiaMcp.Adapters
         {
             if (selected == null) throw new AdapterPreconditionException("A path value is required.", parameter);
             var matches = items.Where(item => string.Equals(path(item), selected, StringComparison.Ordinal)).Take(2).ToArray();
-            if (matches.Length == 0) throw new AdapterPreconditionException("Object not found at exact path: " + selected, parameter);
+            if (matches.Length == 0) throw AdapterPreconditionException.NotFound("Object not found at exact path: " + selected, parameter);
             if (matches.Length != 1) throw new AdapterPreconditionException("Ambiguous object path: " + selected, parameter);
             return matches[0];
         }

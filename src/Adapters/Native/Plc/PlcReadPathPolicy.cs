@@ -33,7 +33,7 @@ namespace TiaMcp.Adapters
                 throw new AdapterPreconditionException("Ambiguous softwarePath '"+path+"'. Select an exact address: "+string
                     .Join(", ",all.Select(c=>c.ExactPath)),"softwarePath");
             if(selected<0)
-                throw new AdapterPreconditionException("PLC software not found at '"+path+"'. Use the exact address from GetProjectTree.","softwarePath");
+                throw AdapterPreconditionException.NotFound("PLC software not found at '"+path+"'. Use the exact address from GetProjectTree.","softwarePath");
             return all[selected];
         }
         private static bool Matches<T>(PlcReadCandidate<T> c,string[] parts)

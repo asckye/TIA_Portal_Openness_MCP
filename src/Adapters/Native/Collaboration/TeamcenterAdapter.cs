@@ -38,8 +38,9 @@ namespace TiaMcp.Adapters.Native.Collaboration
                     "TeamcenterConnectionProvider is not provided by this TIA Portal (Teamcenter Gateway not installed).");
         private TcGatewayConnectionInfo RequireTeamcenterConnection()
             => _teamcenterConnection
-                ?? throw new PortalException(PortalErrorCode.InvalidState,
-                    "No active Teamcenter connection in this engine session; run ManageTeamcenterConnection connect / connectSso first.");
+                ?? throw new AdapterPreconditionException(
+                    "No active Teamcenter connection in this engine session; run ManageTeamcenterConnection connect / connectSso first.",
+                    "teamcenter-connection", null);
         private IEngineeringServiceProvider ExactWorkflowOwner(string target, string libraryName)
             => target == "globalLibrary"
                 ? (IEngineeringServiceProvider)(PlcGroupOperations.Find(_session.CurrentPortal!.GlobalLibraries, libraryName) as GlobalLibrary

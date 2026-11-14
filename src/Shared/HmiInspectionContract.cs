@@ -74,7 +74,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 || evidence["effectiveState"]?.ToString() == "Unknown" || issued && success != true && !knownMismatch && !compileFailed);
             Error? error = null;
             Outcome outcome;
-            if (unknown) { outcome = Outcome.Unknown; error = Failure(true); }
+            if ((HostBehavior.DocumentedRefusal(evidence)
+                ?? HostBehavior.KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool)) is Error refusal)
+            { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
+            else if (unknown) { outcome = Outcome.Unknown; error = Failure(true); }
             else if (compileFailed) {
                 outcome = Outcome.Failed; error = CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) ?? Failure(false); }
             else if (knownMismatch) {

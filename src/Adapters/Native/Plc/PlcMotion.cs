@@ -179,7 +179,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     }
                     else
                     {
-                        if (existing == null) throw new InvalidOperationException("Exact mapping alias not found.");
+                        if (existing == null) throw new PlcSoftwareException("NotFound", "Exact mapping alias not found.");
                         meta["before"] = MappingRow(existing);
                         if (action == "deleteMapping")
                         {
@@ -438,6 +438,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     meta["v4FailureCode"] = cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
                         : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT"
                         : cause is FileNotFoundException || cause is DirectoryNotFoundException ? "NOT_FOUND"
+                        : cause is HardwareAddressingException hardware ? hardware.Status == "InvalidState" ? "PRECONDITION_FAILED" : hardware.Status
                         : cause is PlcSoftwareException portal ? portal.Code == "InvalidState" ? "PRECONDITION_FAILED" : portal.Code
                         : cause is InvalidOperationException ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED";
                     throw;

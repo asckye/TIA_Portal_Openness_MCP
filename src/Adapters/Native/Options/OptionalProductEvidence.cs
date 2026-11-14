@@ -46,7 +46,11 @@ internal static class OptionalProductEvidence
         meta["failureType"] = cause is PlcSoftwareException ? "PortalException" : cause.GetType().Name;
         if (Issued(meta)) return;
         meta["operationNotStarted"] = true;
-        string? code = cause is PlcSoftwareException portal ? portal.Code switch
+        string? code = cause is HardwareAddressingException hardware ? hardware.Status switch
+        {
+            "InvalidParams" => "INVALID_ARGUMENT", "NotFound" => "NOT_FOUND", "NotSupportedOnVersion" => "UNSUPPORTED_CAPABILITY",
+            "InvalidState" => "PRECONDITION_FAILED", "AlreadyExists" => "ALREADY_EXISTS", _ => null
+        } : cause is PlcSoftwareException portal ? portal.Code switch
         {
             "InvalidParams" => "INVALID_ARGUMENT",
             "NotFound" => "NOT_FOUND",

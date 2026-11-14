@@ -99,7 +99,7 @@ public sealed partial class ReadBatchAdmissionTests
         using var fixture = new Fixture(release);
         var result = await fixture.CallResult("CallTool", JsonNode.Parse(
             "{\"name\":\"CompareProjects\",\"arguments\":{\"kind\":\"software\",\"softwarePath\":false}}")!.AsObject());
-        Assert.Equal("Missing or invalid target field(s): softwarePath.", (string?)result.StructuredContent!["error"]!["message"]);
+        Assert.Equal("Invalid: softwarePath.", (string?)result.StructuredContent!["error"]!["message"]);
         Assert.Equal("/softwarePath", (string?)result.StructuredContent["error"]!["details"]!["parameter"]);
         Assert.Contains(result.StructuredContent["meta"]!["warnings"]!.AsArray(), w => (string?)w!["code"] == "RECOVERY_GUIDANCE");
         fixture.AssertNothingDispatched();

@@ -26,8 +26,8 @@ namespace TiaMcp.Adapters.Native.Session
             catch /* swallow(probe-optional): unverifiable saved state is refused below */ { modified = null; }
             if(modified is not bool isModified)throw new PortalException(PortalErrorCode.InvalidState,"Cannot verify saved project state.");
             if(isModified)
-                throw new PortalException(PortalErrorCode.InvalidState,
-                    "Project has unsaved changes. Save explicitly before archiving; no automatic save is performed.");
+                throw new AdapterPreconditionException(
+                    "Project has unsaved changes. Save explicitly before archiving; no automatic save is performed.", "unsaved-changes", null);
             var path=Path.GetFullPath(archivePath);
             if(!path.EndsWith(".zap" + PlcLifecyclePolicy.FileSuffix(release), StringComparison.OrdinalIgnoreCase))
                 throw new PortalException(PortalErrorCode.InvalidParams,"Use a .zap" + PlcLifecyclePolicy.FileSuffix(release)

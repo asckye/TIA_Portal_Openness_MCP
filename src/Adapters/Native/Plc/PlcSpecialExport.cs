@@ -31,8 +31,8 @@ namespace TiaMcp.Adapters
                 .Select(child=> { groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(child)))+"/"); return child;
                 }),
                 g=>g.Name);
-            if(!objects.TryGetValue(watchTableName,out var table)) throw new TiaMcp.Adapters.Contracts
-                .AdapterPreconditionException("Exact canonical watch-table path not found.");
+            if(!objects.TryGetValue(watchTableName,out var table)) throw TiaMcp.Adapters.Contracts
+                .AdapterPreconditionException.NotFound("Exact canonical watch-table path not found.", "watchTableName");
             return PlcSpecialExportPolicy
                 .Run("watch-table",ReleaseKey,Project().Path.FullName,selected.ExactPath,watchTableName,exportPath,NativeCalls.IsConsistent(table),dryRun,
                     expectedPlanHash,()=>RequireTargetOffline(selected),file=> {
@@ -70,8 +70,10 @@ namespace TiaMcp.Adapters
                 return new TechnologicalInstanceDBGroup[0];
 #endif
             },g=>NativeCalls.Name(g));
-            if(!objects.TryGetValue(toName,out var item)) throw new TiaMcp.Adapters.Contracts
-                .AdapterPreconditionException("Exact canonical technology-object path not found within this release's documented read scope.");
+            if(!objects.TryGetValue(toName,out var item))
+                throw TiaMcp.Adapters.Contracts
+                    .AdapterPreconditionException.NotFound("Exact canonical technology-object path not found within this release's documented read scope.",
+                        "toName");
             if(item.IsKnowHowProtected) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Know-how protected technology objects are outside this export scope.","export-plan",false);
             bool consistent=item.IsConsistent;

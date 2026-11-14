@@ -6,6 +6,154 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class HardwareWriteFailureTests
 {
+    [Theory]
+    [InlineData("root", "Exact unique device not found.")]
+    [InlineData("ungrouped", "Device not found in the ungrouped devices group.")]
+    [InlineData("group", "Device group not found: Missing")]
+    [InlineData("nested-group", "Device group not found: Missing")]
+    [InlineData("group-device", "Device not found.")]
+    [InlineData("item", "Device item not found: Missing (children of PLC: CPU).")]
+    public void Exact_hardware_lookup_reports_each_missing_target(string target, string message)
+    {
+        var fixture = NativeFixture();
+        fixture.Project.DeviceGroups.Add(new Siemens.Engineering.HW.DeviceUserGroup { Name = "Group" });
+        string[] devicePath = target switch {
+            "ungrouped" => new[] { "$ungrouped", "Missing" },
+            "group" => new[] { "Missing", "PLC" },
+            "nested-group" => new[] { "Group", "Missing", "PLC" },
+            "group-device" => new[] { "Group", "Missing" },
+            "item" => new[] { "PLC" },
+            _ => new[] { "Missing" }
+        };
+        var result = fixture.Engine.ReadHardwareAddressing(devicePath, target == "item" ? new[] { "Missing" } : Array.Empty<string>());
+        Assert.Equal("NotFound", result.Meta["status"]);
+        Assert.Equal(message, result.Meta["nativeMessage"]);
+        Assert.False(result.MayHaveChanged);
+        Assert.False(result.RequiresSessionReset);
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void Device_deletion_verifies_absence_with_the_typed_lookup(bool grouped)
+    {
+        var fixture = NativeFixture();
+        var device = fixture.Project.Devices.Single();
+        var devices = fixture.Project.Devices;
+        string[] path = new[] { "PLC" };
+        if (grouped)
+        {
+            var group = new Siemens.Engineering.HW.DeviceUserGroup { Name = "Group" };
+            fixture.Project.DeviceGroups.Add(group);
+            devices.Remove(device);
+            group.Devices.Add(device);
+            devices = group.Devices;
+            path = new[] { "Group", "PLC" };
+        }
+        device.Deleting = () => devices.Remove(device);
+        var result = fixture.Engine.HardwareManageHardwareObject(path, "deleteDevice", Array.Empty<string>(), dryRun: false);
+        Assert.Equal(1, device.DeleteCalls);
+        Assert.Empty(devices);
+        Assert.Equal(true, result.Meta["operationSuccess"]);
+        Assert.Equal(true, result.Meta["verifiedAbsent"]);
+        Assert.True(result.MayHaveChanged);
+        Assert.False(result.RequiresSessionReset);
+
+        var readback = fixture.Engine.ReadHardwareAddressing(path, Array.Empty<string>());
+        Assert.Equal("NotFound", readback.Meta["status"]);
+        Assert.Equal(grouped ? "Device not found." : "Exact unique device not found.", readback.Meta["nativeMessage"]);
+        Assert.False(readback.MayHaveChanged);
+    }
+
+    [Fact]
+    public void Device_still_present_after_delete_is_a_failed_verification()
+    {
+        var fixture = NativeFixture();
+        var device = fixture.Project.Devices.Single();
+        var result = fixture.Engine.HardwareManageHardwareObject(new[] { "PLC" }, "deleteDevice", Array.Empty<string>(), dryRun: false);
+        Assert.Equal(1, device.DeleteCalls);
+        Assert.Contains(device, fixture.Project.Devices);
+        Assert.Equal(false, result.Meta["operationSuccess"]);
+        Assert.False(result.Meta.ContainsKey("verifiedAbsent"));
+        Assert.Equal("Device is still present after Delete.", result.Meta["nativeMessage"]);
+        Assert.True(result.MayHaveChanged);
+    }
+
+    [Theory]
+    [InlineData("InvalidParams", "Exact unique device not found.")]
+    [InlineData("InvalidParams", "Device not found.")]
+    [InlineData("NotFound", "Different absence reason.")]
+    public void Delete_readback_requires_both_the_status_and_an_exact_message(string status, string message)
+    {
+        var fixture = NativeFixture();
+        var device = fixture.Project.Devices.Single();
+        device.Deleting = () => fixture.Engine.DeviceInventoryFailure = new HardwareAddressingException(status, message);
+        var result = fixture.Engine.HardwareManageHardwareObject(new[] { "PLC" }, "deleteDevice", Array.Empty<string>(), dryRun: false);
+        Assert.Equal(1, device.DeleteCalls);
+        Assert.Equal(false, result.Meta["operationSuccess"]);
+        Assert.False(result.Meta.ContainsKey("verifiedAbsent"));
+        Assert.Equal(message, result.Meta["nativeMessage"]);
+        Assert.True(result.MayHaveChanged);
+    }
+
+    [Fact]
+    public void Delete_readback_does_not_accept_an_untyped_matching_message()
+    {
+        var fixture = NativeFixture();
+        var device = fixture.Project.Devices.Single();
+        device.Deleting = () => fixture.Engine.DeviceInventoryFailure = new InvalidOperationException("Exact unique device not found.");
+        var result = fixture.Engine.HardwareManageHardwareObject(new[] { "PLC" }, "deleteDevice", Array.Empty<string>(), dryRun: false);
+        Assert.Equal(false, result.Meta["operationSuccess"]);
+        Assert.False(result.Meta.ContainsKey("verifiedAbsent"));
+        Assert.Equal("ReadOrWriteFailed", result.Meta["status"]);
+        Assert.True(result.MayHaveChanged);
+    }
+
+    [Fact]
+    public void Argument_refusal_reports_invalid_params_and_the_native_text()
+    {
+        var fixture = NativeFixture();
+        var result = fixture.Engine.ReadHardwareAddressing(new[] { "PLC" }, Array.Empty<string>(), -1);
+        Assert.Equal("InvalidParams", result.Meta["status"]);
+        Assert.Equal("offset>=0, limit 1..500 required.", result.Meta["nativeMessage"]);
+        Assert.False(result.MayHaveChanged);
+        Assert.False(result.RequiresSessionReset);
+    }
+
+    [Fact]
+    public void Not_supported_service_reports_the_status()
+    {
+        var fixture = NativeFixture();
+        var result = fixture.Engine.RunHmiStep("Fixture", _ => throw new NotSupportedException("Service unavailable."), true, false);
+        Assert.Equal("NotSupportedOnVersion", result.Meta["status"]);
+        Assert.Equal("Service unavailable.", result.Meta["nativeMessage"]);
+        Assert.False(result.MayHaveChanged);
+        Assert.False(result.RequiresSessionReset);
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void Typed_hmi_refusal_keeps_its_status_and_parameter(bool notFound)
+    {
+        var fixture = NativeFixture();
+        var result = fixture.Engine.RunHmiStep("Fixture", _ => throw (notFound
+            ? AdapterPreconditionException.NotFound("Target absent.", "target")
+            : new AdapterPreconditionException("Invalid target.", "target")), true, false);
+        Assert.Equal(notFound ? "NotFound" : "InvalidParams", result.Meta["status"]);
+        Assert.Equal("target", result.Meta["parameter"]);
+        Assert.False(result.MayHaveChanged);
+    }
+
+    [Fact]
+    public void Unsaved_archive_is_a_documented_precondition()
+    {
+        var fixture = NativeFixture();
+        fixture.Project.IsModified = true;
+        var result = fixture.Engine.ArchiveSavedProject(Path.Combine(AppContext.BaseDirectory, "unsaved.zap21"), false);
+        Assert.Equal("PreconditionFailed", result.Meta["status"]);
+        Assert.Equal("unsaved-changes", result.Meta["precondition"]);
+        Assert.Contains("Project has unsaved changes.", result.Meta["refusal"]!.ToString(), StringComparison.Ordinal);
+        Assert.False(result.MayHaveChanged);
+        Assert.Equal(0, fixture.Project.ArchiveCalls);
+    }
+
     [Fact]
     public void Archive_failure_without_hmi_recorder_retains_partial_file_evidence()
     {

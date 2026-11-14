@@ -6,6 +6,13 @@
 
 ### Fixed
 - STDIO writes each JSON-RPC message with its newline as one serialized frame. Cancellation during a session notification can no longer join it to the following reply.
+- Known unchanged worker refusals consistently report `NOT_FOUND`, `INVALID_ARGUMENT`, `ALREADY_EXISTS` or `UNSUPPORTED_CAPABILITY`
+  across all eight releases and tool families, with the redacted native reason. Writes that may have changed the target remain `OUTCOME_UNKNOWN`.
+  Missing PLC objects, watch tables, CPU settings targets and PLCSIM Advanced instances now report `NOT_FOUND`;
+  an unsaved project archive and a missing Teamcenter connection report `PRECONDITION_FAILED`.
+  Missing hardware devices, groups and items also report `NOT_FOUND`, and device deletion verifies absence through typed lookup failures.
+- Argument refusals separate unknown, missing and invalid fields while keeping undeclared keys private and retaining JSON pointers and expected types.
+  Precondition and optional-package refusals retain their safe native reason; batch import explains that `regexName` matches file names including `.xml`.
 - Native failures retain the redacted first-line reason and `error.innererror` with the worker's short exception type,
   HResult and request correlation ID. `GetNativeInvocationLog` accepts `diagnosticId` and bounded offset paging,
   excludes the current call's rows and returns empty pages after journal rotation.

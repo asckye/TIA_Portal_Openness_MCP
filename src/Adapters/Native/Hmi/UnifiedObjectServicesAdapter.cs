@@ -115,7 +115,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     throw new ArgumentException("Expected textLists/graphicLists/systemTextLists.");
                 if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Exact list name required; unbounded export refused.");
                 var collection = PlcGroupOperations.Get(_session.ExactUnifiedRoot(softwarePath), _session.UnifiedCollection(category));
-                if (PlcGroupOperations.Find(collection, name) == null) throw new InvalidOperationException("Exact list not found.");
+                if (PlcGroupOperations.Find(collection, name) == null) throw new PlcSoftwareException("NotFound", "Exact list not found.");
                 var signature = new[] { typeof(DirectoryInfo), typeof(string) };
                 if (collection.GetType().GetMethod("Export", signature) == null)
                     throw new NotSupportedException("Native Export(DirectoryInfo,string) unavailable.");
@@ -169,7 +169,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (action == "read")
                 {
                     var items = string.IsNullOrEmpty(name) ? PlcGroupOperations.Items(collection).ToArray() : new[] {
-                        PlcGroupOperations.Find(collection, name) ?? throw new InvalidOperationException("Logging tag not found.") };
+                        PlcGroupOperations.Find(collection, name) ?? throw new PlcSoftwareException("NotFound", "Logging tag not found.") };
                     meta["records"] = new HmiArray(items.Select(x => (object)UnifiedObjectAddress.Read(x)).ToArray());
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = false; meta["scope"] = "Scalar fields only; complex definitions excluded.";
                     meta["actualCount"] = items.Length; meta["expectedCount"] = items.Length; meta["truncated"] = false;
@@ -178,10 +178,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Exact logging tag name required.");
                 var target = PlcGroupOperations.Find(collection, name);
                 if ((action == "create") == (target != null))
-                    throw new InvalidOperationException(action == "create" ? "Logging tag exists." : "Logging tag not found.");
+                    throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action == "create" ? "Logging tag exists."
+                            : "Logging tag not found.");
                 if (changes.ContainsKey("DataLog") && PlcGroupOperations
                         .Find(PlcGroupOperations.Get(root, "DataLogs"), changes["DataLog"]!.GetValue<string>()) == null)
-                    throw new InvalidOperationException("Requested DataLog does not exist.");
+                    throw new PlcSoftwareException("NotFound", "Requested DataLog does not exist.");
                 var type = target?.GetType() ?? collection.GetType().GetMethod("Create", new[] { typeof(string) })?.ReturnType
                     ?? throw new NotSupportedException("Native LoggingTag.Create unavailable.");
                 var prepared = UnifiedRequestScalar.Prepare(type, changes);
@@ -235,10 +236,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var root = _session.ExactUnifiedRoot(softwarePath);
                 if (PlcGroupOperations.Find(PlcGroupOperations.Get(root, "Connections"), connection) == null)
-                    throw new InvalidOperationException("Exact HMI connection not found.");
+                    throw new PlcSoftwareException("NotFound", "Exact HMI connection not found.");
                 var collection = PlcGroupOperations.Get(root, "OpcUaAlarmTypes"); var target = PlcGroupOperations.Find(collection, name);
                 if ((action == "create") == (target != null))
-                    throw new InvalidOperationException(action == "create" ? "Alarm type exists." : "Alarm type not found.");
+                    throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action == "create" ? "Alarm type exists."
+                            : "Alarm type not found.");
                 var nativeMethod = action == "create" ? collection.GetType().GetMethod("Create", new[] { typeof(string), typeof(string), typeof(string) })
                     : target!.GetType().GetMethod("SetNodeIdAndConnection", new[] { typeof(string), typeof(string) });
                 if (nativeMethod == null) throw new NotSupportedException("Native OPC UA alarm binding method unavailable.");
@@ -260,9 +262,9 @@ namespace TiaMcp.Adapters.Native.Hmi
         private object ExactPlantNode(string path)
         {
             var parts=EngineeringInputValidation.AbsoluteHmiPath(path).Select(Uri.UnescapeDataString).ToArray();
-            object current=PlcGroupOperations.Find(ExactPlantViews(),parts[0]) ?? throw new InvalidOperationException("Exact plant view not found.");
+            object current=PlcGroupOperations.Find(ExactPlantViews(),parts[0]) ?? throw new PlcSoftwareException("NotFound", "Exact plant view not found.");
             foreach(var part in parts.Skip(1)) current=PlcGroupOperations.Find(PlcGroupOperations.Get(current,"PlantViewNodes"),part)
-                ?? throw new InvalidOperationException("Exact plant node not found: "+part);
+                ?? throw new PlcSoftwareException("NotFound", "Exact plant node not found: "+part);
             return current;
         }
 
@@ -299,7 +301,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     .Get(ExactPlantNode("/" + string.Join("/",parts.Take(parts.Length-1).Select(Uri.EscapeDataString))),"PlantViewNodes");
                 var target=PlcGroupOperations.Find(collection,parts.Last());
                 if((action=="create")== (target!=null))
-                    throw new InvalidOperationException(action=="create" ? "Plant object exists." : "Exact plant object not found.");
+                    throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action=="create" ? "Plant object exists."
+                            : "Exact plant object not found.");
                 if(action=="delete" && PlcGroupOperations.Items(PlcGroupOperations.Get(target!,"PlantViewNodes")).Any())
                     throw new InvalidOperationException("Only leaf nodes or empty plant views can be deleted; subtree deletion refused.");
                 var signature=plantObjectType=="" ? new[]{typeof(string)} : new[]{typeof(string),typeof(string)};

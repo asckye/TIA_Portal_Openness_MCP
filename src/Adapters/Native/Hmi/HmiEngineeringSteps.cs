@@ -50,8 +50,8 @@ namespace TiaMcp.Adapters
                 meta["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
                 meta["nativeMessage"] = error.GetBaseException().Message;
                 meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
-                meta["status"] = error.GetBaseException() is PlcSoftwareException native ? native.Code
-                    : error.GetBaseException() is HardwareAddressingException hardware ? hardware.Status : "ReadOrWriteFailed";
+                meta["status"] = StepFailureStatus.Of(error);
+                meta["parameter"] = StepFailureStatus.Parameter(error);
                 if (error.GetBaseException() is Siemens.Engineering.EngineeringException engineering)
                 {
                     try
@@ -74,7 +74,7 @@ namespace TiaMcp.Adapters
                     }
                     catch { /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ }
                 }
-                EngineeringCredentialRules.TryRecordRefusal(error, meta);
+                if (meta["status"] as string == "ReadOrWriteFailed") EngineeringCredentialRules.TryRecordRefusal(error, meta);
                 if (HmiReadSafety.ConnectionUnavailable(error)) RecordHmiFault(meta);
                 reply.Message = tool + " failed";
             }

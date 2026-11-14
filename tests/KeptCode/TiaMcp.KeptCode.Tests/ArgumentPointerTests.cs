@@ -85,7 +85,13 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(pointer, details.GetProperty("parameter").GetString());
             Assert.Equal(new[] { pointer }, details.GetProperty("parameters").EnumerateArray().Select(p => p.GetString()));
             Assert.Equal(expected, details.GetProperty("expected").GetString());
-            Assert.Equal("Input does not satisfy the declared contract.", error.Message);
+            string message = pointer switch {
+                "/devicePath/2" or "/devicePath" => "Invalid: devicePath.",
+                "/kind" => "Invalid: kind.",
+                "/a~0~1b" => "Invalid: a~/b.",
+                _ => "Input does not satisfy the declared contract."
+            };
+            Assert.Equal(message, error.Message);
             if (pointer == "/kind")
                 Assert.Equal(new[] { "software", "hardware" }, details.GetProperty("allowedValues").EnumerateArray().Select(p => p.GetString()));
         }

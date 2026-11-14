@@ -31,6 +31,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["v4FailureCode"] = cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
                     : cause is ArgumentException ? "INVALID_ARGUMENT"
                     : cause is FileNotFoundException || cause is DirectoryNotFoundException ? "NOT_FOUND"
+                    : cause is TiaMcp.Adapters.Contracts.HardwareAddressingException hardware
+                        ? hardware.Status == "InvalidState" ? "PRECONDITION_FAILED" : hardware.Status
+                    : cause is TiaMcp.Adapters.Contracts.PlcSoftwareException plc ? plc.Code == "InvalidState" ? "PRECONDITION_FAILED" : plc.Code
                     : cause is PortalException portal ? portal.Code == PortalErrorCode.InvalidState ? "PRECONDITION_FAILED" : portal.Code.ToString()
                     : cause is InvalidOperationException ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED";
                 throw;
@@ -59,7 +62,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool unknown = Flag(data, "mappingVerified") == false || !readOnly && (Flag(data, "requiresExplicitRebind") == true
                 || Flag(data, "requiresSessionReset") == true);
             string status = data["v4FailureCode"]?.ToString() ?? data["status"]?.ToString() ?? "";
-            var refusal = Refusal(tool, status, data);
+            var refusal = HostBehavior.DocumentedRefusal(data)
+                ?? HostBehavior.KnownRefusal(data, success, HardwareContract.ReleaseKey, tool) ?? Refusal(tool, status, data);
             Outcome outcome; Execution execution; Error? error;
             if (status == "HmiReadSessionBlocked")
             {
